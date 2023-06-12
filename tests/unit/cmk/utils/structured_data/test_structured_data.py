@@ -395,9 +395,9 @@ def test_filter_delta_tree_nt() -> None:
             [
                 SDFilter(
                     path=("path-to-nta", "nt"),
-                    filter_nodes=lambda n: False,
-                    filter_attributes=lambda k: k in ["nt1"],
+                    filter_pairs=lambda k: k in ["nt1"],
                     filter_columns=lambda k: k in ["nt1"],
+                    filter_nodes=lambda n: False,
                 )
             ],
         )
@@ -426,9 +426,9 @@ def test_filter_delta_tree_na() -> None:
             [
                 SDFilter(
                     path=("path-to-nta", "na"),
-                    filter_nodes=lambda n: False,
-                    filter_attributes=lambda k: k in ["na1"],
+                    filter_pairs=lambda k: k in ["na1"],
                     filter_columns=lambda k: k in ["na1"],
+                    filter_nodes=lambda n: False,
                 )
             ],
         )
@@ -452,9 +452,9 @@ def test_filter_delta_tree_ta() -> None:
             [
                 SDFilter(
                     path=("path-to-nta", "ta"),
-                    filter_nodes=lambda n: False,
-                    filter_attributes=lambda k: k in ["ta1"],
+                    filter_pairs=lambda k: k in ["ta1"],
                     filter_columns=lambda k: k in ["ta1"],
+                    filter_nodes=lambda n: False,
                 )
             ],
         )
@@ -483,15 +483,15 @@ def test_filter_delta_tree_nta_ta() -> None:
             [
                 SDFilter(
                     path=("path-to-nta", "ta"),
-                    filter_nodes=lambda n: False,
-                    filter_attributes=lambda k: k in ["ta0"],
+                    filter_pairs=lambda k: k in ["ta0"],
                     filter_columns=lambda k: k in ["ta0"],
+                    filter_nodes=lambda n: False,
                 ),
                 SDFilter(
                     path=("path-to-nta", "ta"),
-                    filter_nodes=lambda n: False,
-                    filter_attributes=lambda k: k in ["ta1"],
+                    filter_pairs=lambda k: k in ["ta1"],
                     filter_columns=lambda k: k in ["ta1"],
+                    filter_nodes=lambda n: False,
                 ),
             ],
         )
@@ -671,9 +671,9 @@ def test_filter_tree_wrong_node() -> None:
     filters = [
         SDFilter(
             path=("path-to-nta", "ta"),
-            filter_nodes=lambda k: True,
-            filter_attributes=lambda k: True,
+            filter_pairs=lambda k: True,
             filter_columns=lambda k: True,
+            filter_nodes=lambda k: True,
         ),
     ]
     filtered = filled_root.filter(filters)
@@ -687,9 +687,9 @@ def test_filter_tree_paths_no_keys() -> None:
     filters = [
         SDFilter(
             path=("path-to-nta", "ta"),
-            filter_nodes=lambda k: True,
-            filter_attributes=lambda k: True,
+            filter_pairs=lambda k: True,
             filter_columns=lambda k: True,
+            filter_nodes=lambda k: True,
         ),
     ]
     filtered_root = filled_root.filter(filters)
@@ -712,9 +712,9 @@ def test_filter_tree_paths_and_keys() -> None:
     filters = [
         SDFilter(
             path=("path-to-nta", "ta"),
-            filter_nodes=lambda k: True,
-            filter_attributes=lambda k: k in ["ta1"],
+            filter_pairs=lambda k: k in ["ta1"],
             filter_columns=lambda k: k in ["ta1"],
+            filter_nodes=lambda k: True,
         ),
     ]
     filtered_root = filled_root.filter(filters)
@@ -755,15 +755,15 @@ def test_filter_tree_mixed() -> None:
     filters = [
         SDFilter(
             path=("path-to", "another"),
-            filter_nodes=lambda k: True,
-            filter_attributes=lambda k: True,
+            filter_pairs=lambda k: True,
             filter_columns=lambda k: True,
+            filter_nodes=lambda k: True,
         ),
         SDFilter(
             path=("path-to-nta", "ta"),
-            filter_nodes=lambda k: True,
-            filter_attributes=lambda k: k in ["ta0"],
+            filter_pairs=lambda k: k in ["ta0"],
             filter_columns=lambda k: k in ["ta0"],
+            filter_nodes=lambda k: True,
         ),
     ]
     filtered_root = ImmutableTree(filled_root.tree).filter(filters)
@@ -1146,21 +1146,21 @@ def test_merge_trees_2() -> None:
             [
                 SDFilter(
                     path=("hardware", "components"),
-                    filter_nodes=lambda k: True,
-                    filter_attributes=lambda k: True,
+                    filter_pairs=lambda k: True,
                     filter_columns=lambda k: True,
+                    filter_nodes=lambda k: True,
                 ),
                 SDFilter(
                     path=("networking", "interfaces"),
-                    filter_nodes=lambda k: True,
-                    filter_attributes=lambda k: True,
+                    filter_pairs=lambda k: True,
                     filter_columns=lambda k: True,
+                    filter_nodes=lambda k: True,
                 ),
                 SDFilter(
                     path=("software", "os"),
-                    filter_nodes=lambda k: True,
-                    filter_attributes=lambda k: True,
+                    filter_pairs=lambda k: True,
                     filter_columns=lambda k: True,
+                    filter_nodes=lambda k: True,
                 ),
             ],
             [("hardware", "system"), ("software", "applications")],
@@ -1186,9 +1186,9 @@ def test_filter_real_tree(
             [
                 SDFilter(
                     path=("networking",),
-                    filter_nodes=lambda k: True,
-                    filter_attributes=lambda k: True,
+                    filter_pairs=lambda k: True,
                     filter_columns=lambda k: True,
+                    filter_nodes=lambda k: True,
                 )
             ],
             3178,
@@ -1197,9 +1197,9 @@ def test_filter_real_tree(
             [
                 SDFilter(
                     path=("networking",),
-                    filter_nodes=lambda k: False,
-                    filter_attributes=lambda k: False,
+                    filter_pairs=lambda k: False,
                     filter_columns=lambda k: False,
+                    filter_nodes=lambda k: False,
                 ),
             ],
             None,
@@ -1208,8 +1208,7 @@ def test_filter_real_tree(
             [
                 SDFilter(
                     path=("networking",),
-                    filter_nodes=lambda k: False,
-                    filter_attributes=(
+                    filter_pairs=(
                         lambda k: k
                         in ["total_interfaces", "total_ethernet_ports", "available_ethernet_ports"]
                     ),
@@ -1217,6 +1216,7 @@ def test_filter_real_tree(
                         lambda k: k
                         in ["total_interfaces", "total_ethernet_ports", "available_ethernet_ports"]
                     ),
+                    filter_nodes=lambda k: False,
                 ),
             ],
             None,
@@ -1225,9 +1225,9 @@ def test_filter_real_tree(
             [
                 SDFilter(
                     path=("networking", "interfaces"),
-                    filter_nodes=lambda k: True,
-                    filter_attributes=lambda k: True,
+                    filter_pairs=lambda k: True,
                     filter_columns=lambda k: True,
+                    filter_nodes=lambda k: True,
                 ),
             ],
             3178,
@@ -1236,9 +1236,9 @@ def test_filter_real_tree(
             [
                 SDFilter(
                     path=("networking", "interfaces"),
-                    filter_nodes=lambda k: False,
-                    filter_attributes=lambda k: k in ["admin_status"],
+                    filter_pairs=lambda k: k in ["admin_status"],
                     filter_columns=lambda k: k in ["admin_status"],
+                    filter_nodes=lambda k: False,
                 ),
             ],
             326,
@@ -1247,9 +1247,9 @@ def test_filter_real_tree(
             [
                 SDFilter(
                     path=("networking", "interfaces"),
-                    filter_nodes=lambda k: False,
-                    filter_attributes=lambda k: k in ["admin_status", "FOOBAR"],
+                    filter_pairs=lambda k: k in ["admin_status", "FOOBAR"],
                     filter_columns=lambda k: k in ["admin_status", "FOOBAR"],
+                    filter_nodes=lambda k: False,
                 ),
             ],
             326,
@@ -1258,9 +1258,9 @@ def test_filter_real_tree(
             [
                 SDFilter(
                     path=("networking", "interfaces"),
-                    filter_nodes=lambda k: False,
-                    filter_attributes=lambda k: k in ["admin_status", "oper_status"],
+                    filter_pairs=lambda k: k in ["admin_status", "oper_status"],
                     filter_columns=lambda k: k in ["admin_status", "oper_status"],
+                    filter_nodes=lambda k: False,
                 ),
             ],
             652,
@@ -1269,9 +1269,9 @@ def test_filter_real_tree(
             [
                 SDFilter(
                     path=("networking", "interfaces"),
-                    filter_nodes=lambda k: False,
-                    filter_attributes=lambda k: k in ["admin_status", "oper_status", "FOOBAR"],
+                    filter_pairs=lambda k: k in ["admin_status", "oper_status", "FOOBAR"],
                     filter_columns=lambda k: k in ["admin_status", "oper_status", "FOOBAR"],
+                    filter_nodes=lambda k: False,
                 ),
             ],
             652,

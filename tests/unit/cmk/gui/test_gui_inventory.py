@@ -254,14 +254,14 @@ def test__make_filters_from_permitted_paths(
 
     assert f.path == expected_path
 
-    assert f.filter_nodes("node") is expected_filter_results.nodes
-    assert f.filter_nodes("other") is expected_filter_results.restricted_nodes
-
-    assert f.filter_attributes("key") is expected_filter_results.attributes
-    assert f.filter_attributes("other") is expected_filter_results.restricted_attributes
+    assert f.filter_pairs("key") is expected_filter_results.attributes
+    assert f.filter_pairs("other") is expected_filter_results.restricted_attributes
 
     assert f.filter_columns("key") is expected_filter_results.columns
     assert f.filter_columns("other") is expected_filter_results.restricted_columns
+
+    assert f.filter_nodes("node") is expected_filter_results.nodes
+    assert f.filter_nodes("other") is expected_filter_results.restricted_nodes
 
 
 @pytest.mark.parametrize(
@@ -327,14 +327,14 @@ def test__make_filters_from_api_request_paths(
 
     assert f.path == expected_path
 
-    assert f.filter_nodes("node") is expected_filter_results.nodes
-    assert f.filter_nodes("other") is expected_filter_results.restricted_nodes
-
-    assert f.filter_attributes("key") is expected_filter_results.attributes
-    assert f.filter_attributes("other") is expected_filter_results.restricted_attributes
+    assert f.filter_pairs("key") is expected_filter_results.attributes
+    assert f.filter_pairs("other") is expected_filter_results.restricted_attributes
 
     assert f.filter_columns("key") is expected_filter_results.columns
     assert f.filter_columns("other") is expected_filter_results.restricted_columns
+
+    assert f.filter_nodes("node") is expected_filter_results.nodes
+    assert f.filter_nodes("other") is expected_filter_results.restricted_nodes
 
 
 @pytest.mark.parametrize(

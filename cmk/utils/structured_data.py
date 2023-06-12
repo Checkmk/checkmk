@@ -166,9 +166,9 @@ SDFilterFunc = Callable[[SDKey], bool]
 
 class SDFilter(NamedTuple):
     path: SDPath
-    filter_nodes: SDFilterFunc
-    filter_attributes: SDFilterFunc
+    filter_pairs: SDFilterFunc
     filter_columns: SDFilterFunc
+    filter_nodes: SDFilterFunc
 
 
 def make_filter_from_choice(
@@ -377,7 +377,7 @@ def _deserialize_legacy_node(path: SDPath, raw_tree: Mapping[str, object]) -> St
     return node
 
 
-def _filter_attributes(attributes: Attributes, filter_func: SDFilterFunc) -> Attributes:
+def _filter_pairs(attributes: Attributes, filter_func: SDFilterFunc) -> Attributes:
     filtered = Attributes(retentions=attributes.retentions)
     filtered.add_pairs(_get_filtered_dict(attributes.pairs, filter_func))
     return filtered
@@ -400,7 +400,7 @@ def _filter_node(node: StructuredDataNode, filters: Iterable[SDFilter]) -> Struc
 
         filtered_node = StructuredDataNode(
             path=f.path,
-            attributes=_filter_attributes(child.attributes, f.filter_attributes),
+            attributes=_filter_pairs(child.attributes, f.filter_pairs),
             table=_filter_table(child.table, f.filter_columns),
         )
         for name, sub_node in child.nodes_by_name.items():
@@ -724,7 +724,7 @@ def _filter_delta_node(
             node.path,
             DeltaStructuredDataNode(
                 path=node.path,
-                attributes=_filter_delta_attributes(node.attributes, f.filter_attributes),
+                attributes=_filter_delta_attributes(node.attributes, f.filter_pairs),
                 table=_filter_delta_table(node.table, f.filter_columns),
                 nodes={
                     name: child

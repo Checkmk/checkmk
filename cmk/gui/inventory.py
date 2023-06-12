@@ -134,7 +134,7 @@ def _make_filters_from_permitted_paths(
     def _make_filter(entry: PermittedPath) -> SDFilter:
         return SDFilter(
             path=parse_visible_raw_path(entry["visible_raw_path"]),
-            filter_attributes=make_filter_from_choice(entry.get("attributes")),
+            filter_pairs=make_filter_from_choice(entry.get("attributes")),
             filter_columns=make_filter_from_choice(entry.get("columns")),
             filter_nodes=make_filter_from_choice(entry.get("nodes")),
         )
@@ -685,15 +685,15 @@ def _make_filters_from_api_request_paths(api_request_paths: Sequence[str]) -> Se
         if keys is None:
             return SDFilter(
                 path=path,
-                filter_nodes=lambda k: True,
-                filter_attributes=lambda k: True,
+                filter_pairs=lambda k: True,
                 filter_columns=lambda k: True,
+                filter_nodes=lambda k: True,
             )
         return SDFilter(
             path=path,
-            filter_nodes=lambda k: False,
-            filter_attributes=_make_choices_filter(keys),
+            filter_pairs=_make_choices_filter(keys),
             filter_columns=_make_choices_filter(keys),
+            filter_nodes=lambda k: False,
         )
 
     return [

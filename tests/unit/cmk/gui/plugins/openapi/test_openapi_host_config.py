@@ -1505,6 +1505,7 @@ def test_openapi_host_config_effective_attributes_includes_tags_regression(
     assert resp.json["extensions"]["effective_attributes"]["tag_foo"] == "bar"
 
 
+@managedtest
 @freeze_time("2022-11-05")
 def test_openapi_host_config_effective_attributes_includes_all_host_attributes_regression(
     clients: ClientRegistry, with_admin: Tuple[str, str]

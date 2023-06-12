@@ -527,6 +527,11 @@ class StructuredDataNode:
                 if not value:
                     continue
 
+                if all(isinstance(v, (int, float, str)) or v is None for v in value):
+                    if w := ", ".join(str(v) for v in value if v):
+                        raw_pairs.setdefault(key, w)
+                    continue
+
                 inst = node.setdefault_node((key,))
                 if node._is_table(value):
                     inst.add_table(Table._deserialize_legacy(path=the_path, legacy_rows=value))

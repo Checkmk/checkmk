@@ -17,7 +17,6 @@ TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=__pycache__ --exclude=*.pyc
 # We could add clang's -Wshorten-64-to-32 and g++'c/clang's -Wsign-conversion here.
 CXX_FLAGS          := -gdwarf-4 -O3 -Wall -Wextra
-CLANG_FORMAT       := clang-format-$(CLANG_VERSION)
 SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 export DOXYGEN     := doxygen
 ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
@@ -40,14 +39,6 @@ LIVESTATUS_SOURCES := Makefile.am standalone/config_files.m4 \
                       src/include/neb/*.h \
                       src/src/*.cc \
                       src/test/*.{cc,h}
-
-FILES_TO_FORMAT_LINUX := \
-                      $(filter-out %.pb.cc %.pb.h, \
-                      $(wildcard $(addprefix livestatus/api/c++/,*.cc *.h)) \
-                      $(wildcard $(addprefix bin/,*.cc *.c *.h)) \
-                      $(wildcard enterprise/core/src/src/*.cc) \
-                      $(wildcard enterprise/core/src/include/cmc/*.h) \
-                      $(wildcard $(addprefix enterprise/core/src/test/,*.cc *.h)))
 
 CMAKE_FORMAT       := cmake-format
 CMAKE_TXT_FILES    = $$(find packages -name CMakeLists.txt \! -path '*/build/*')
@@ -536,20 +527,19 @@ analyze: config.h
 
 format: format-python format-c format-shell format-js format-css format-bazel
 
-# TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
-# src/configure.ac, but this needs at least automake-1.13, which in turn is only
-# available from e.g. Ubuntu Saucy (13) onwards, so some magic is needed.
-clang-format-with = $(CLANG_FORMAT) -style=file $(1) $$(find $(FILES_TO_FORMAT_LINUX) -type f)
-
 format-c:
 	packages/livestatus/run --format
 	$(MAKE) -C livestatus/src format
-	$(call clang-format-with,-i)
+ifeq ($(ENTERPRISE),yes)
+	$(MAKE) -C enterprise/core/src format
+endif
 
 test-format-c:
 	packages/livestatus/run --check-format
 	$(MAKE) -C livestatus/src check-format
-	$(call clang-format-with,-Werror --dry-run)
+ifeq ($(ENTERPRISE),yes)
+	$(MAKE) -C enterprise/core/src check-format
+endif
 
 format-python: format-python-isort format-python-black
 

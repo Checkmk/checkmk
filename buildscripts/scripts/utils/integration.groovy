@@ -51,6 +51,16 @@ def run_make_targets(Map args) {
                             "focal",
                         );
                     }
+                    else if (args.DISTRO_LIST == ["ubuntu-22.04"]) { // needed for saas nightly int tests
+                        artifacts_helper.download_deb(
+                            INTERNAL_DEPLOY_DEST,
+                            INTERNAL_DEPLOY_PORT,
+                            args.cmk_version,
+                            "${WORKSPACE}/packages/${args.cmk_version}",
+                            args.EDITION,
+                            "jammy",
+                        );
+                    }
                     else if(args.DISTRO_LIST.size() == 1) {
                         raise("Please add a case to download only the needed package for ${args.DISTRO_LIST}");
                     }

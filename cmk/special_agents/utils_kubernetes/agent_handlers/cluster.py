@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Iterable
+from typing import Iterable, Iterator
 
 from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     _node_collector_replicas,
@@ -14,25 +14,81 @@ from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     collect_memory_resources_from_api_pods,
     pod_resources_from_api_pods,
 )
+from cmk.special_agents.utils_kubernetes.common import SectionName, WriteableSection
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 
-def pod_resources(api_cluster: Cluster) -> section.PodResources:
+def create_api_sections(api_cluster: Cluster, cluster_name: str) -> Iterator[WriteableSection]:
+    yield from (
+        WriteableSection(
+            piggyback_name="",
+            section_name=SectionName("kube_pod_resources_v1"),
+            section=_pod_resources(api_cluster),
+        ),
+        WriteableSection(
+            piggyback_name="",
+            section_name=SectionName("kube_allocatable_pods_v1"),
+            section=_allocatable_pods(api_cluster),
+        ),
+        WriteableSection(
+            piggyback_name="",
+            section_name=SectionName("kube_node_count_v1"),
+            section=_node_count(api_cluster),
+        ),
+        WriteableSection(
+            piggyback_name="",
+            section_name=SectionName("kube_cluster_details_v1"),
+            section=section.ClusterDetails.parse_obj(api_cluster.cluster_details),
+        ),
+        WriteableSection(
+            piggyback_name="",
+            section_name=SectionName("kube_memory_resources_v1"),
+            section=_memory_resources(api_cluster),
+        ),
+        WriteableSection(
+            piggyback_name="",
+            section_name=SectionName("kube_cpu_resources_v1"),
+            section=_cpu_resources(api_cluster),
+        ),
+        WriteableSection(
+            piggyback_name="",
+            section_name=SectionName("kube_allocatable_memory_resource_v1"),
+            section=_allocatable_memory_resource(api_cluster),
+        ),
+        WriteableSection(
+            piggyback_name="",
+            section_name=SectionName("kube_allocatable_cpu_resource_v1"),
+            section=_allocatable_cpu_resource(api_cluster),
+        ),
+        WriteableSection(
+            piggyback_name="",
+            section_name=SectionName("kube_cluster_info_v1"),
+            section=section.ClusterInfo(name=cluster_name, version=_version(api_cluster)),
+        ),
+        WriteableSection(
+            piggyback_name="",
+            section_name=SectionName("kube_collector_daemons_v1"),
+            section=_node_collector_daemons(api_cluster.daemonsets),
+        ),
+    )
+
+
+def _pod_resources(api_cluster: Cluster) -> section.PodResources:
     return pod_resources_from_api_pods(api_cluster.aggregation_pods)
 
 
-def allocatable_pods(api_cluster: Cluster) -> section.AllocatablePods:
+def _allocatable_pods(api_cluster: Cluster) -> section.AllocatablePods:
     return section.AllocatablePods(
         capacity=sum(node.status.capacity.pods for node in api_cluster.aggregation_nodes),
         allocatable=sum(node.status.allocatable.pods for node in api_cluster.aggregation_nodes),
     )
 
 
-def node_count(api_cluster: Cluster) -> section.NodeCount:
+def _node_count(api_cluster: Cluster) -> section.NodeCount:
     return section.NodeCount(
         nodes=[
             section.CountableNode(
-                ready=node_is_ready(node),
+                ready=_node_is_ready(node),
                 roles=node.roles(),
             )
             for node in api_cluster.nodes
@@ -40,37 +96,33 @@ def node_count(api_cluster: Cluster) -> section.NodeCount:
     )
 
 
-def memory_resources(api_cluster: Cluster) -> section.Resources:
+def _memory_resources(api_cluster: Cluster) -> section.Resources:
     return collect_memory_resources_from_api_pods(api_cluster.aggregation_pods)
 
 
-def cpu_resources(api_cluster: Cluster) -> section.Resources:
+def _cpu_resources(api_cluster: Cluster) -> section.Resources:
     return collect_cpu_resources_from_api_pods(api_cluster.aggregation_pods)
 
 
-def allocatable_memory_resource(api_cluster: Cluster) -> section.AllocatableResource:
+def _allocatable_memory_resource(api_cluster: Cluster) -> section.AllocatableResource:
     return section.AllocatableResource(
         context="cluster",
         value=sum(node.status.allocatable.memory for node in api_cluster.aggregation_nodes),
     )
 
 
-def allocatable_cpu_resource(api_cluster: Cluster) -> section.AllocatableResource:
+def _allocatable_cpu_resource(api_cluster: Cluster) -> section.AllocatableResource:
     return section.AllocatableResource(
         context="cluster",
         value=sum(node.status.allocatable.cpu for node in api_cluster.aggregation_nodes),
     )
 
 
-def version(api_cluster: Cluster) -> api.GitVersion:
+def _version(api_cluster: Cluster) -> api.GitVersion:
     return api_cluster.cluster_details.version
 
 
-def node_collector_daemons(api_cluster: Cluster) -> section.CollectorDaemons:
-    return _node_collector_daemons(api_cluster.daemonsets)
-
-
-def node_is_ready(node: api.Node) -> bool:
+def _node_is_ready(node: api.Node) -> bool:
     for condition in node.status.conditions or []:
         if condition.type_.lower() == "ready":
             return condition.status == api.NodeConditionStatus.TRUE

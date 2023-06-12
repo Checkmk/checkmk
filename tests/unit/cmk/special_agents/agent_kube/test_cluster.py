@@ -10,15 +10,16 @@ import pytest
 
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.agent_handlers.cluster import (
+    _allocatable_cpu_resource,
+    _allocatable_memory_resource,
+    _allocatable_pods,
+    _cpu_resources,
+    _memory_resources,
     _node_collector_daemons,
-    allocatable_cpu_resource,
-    allocatable_memory_resource,
-    allocatable_pods,
-    cpu_resources,
-    memory_resources,
-    node_count,
-    node_is_ready,
-    pod_resources,
+    _node_count,
+    _node_is_ready,
+    _pod_resources,
+    create_api_sections,
 )
 from cmk.special_agents.utils_kubernetes.agent_handlers.common import Cluster
 from cmk.special_agents.utils_kubernetes.schemata import api, section
@@ -72,9 +73,9 @@ def test_cluster_resources(cluster_pods: int) -> None:
         for _ in range(cluster_pods)
     ]
     cluster = Cluster.from_api_resources((), APIDataFactory.build(pods=pods))
-    assert memory_resources(cluster).count_total == cluster_pods * pod_containers_count
-    assert cpu_resources(cluster).count_total == cluster_pods * pod_containers_count
-    assert sum(len(pods) for _phase, pods in pod_resources(cluster)) == cluster_pods
+    assert _memory_resources(cluster).count_total == cluster_pods * pod_containers_count
+    assert _cpu_resources(cluster).count_total == cluster_pods * pod_containers_count
+    assert sum(len(pods) for _phase, pods in _pod_resources(cluster)) == cluster_pods
 
 
 def test_cluster_allocatable_memory_resource() -> None:
@@ -87,7 +88,7 @@ def test_cluster_allocatable_memory_resource() -> None:
     cluster = Cluster.from_api_resources((), APIDataFactory.build(nodes=nodes))
 
     expected = section.AllocatableResource(context="cluster", value=memory * number_nodes)
-    actual = allocatable_memory_resource(cluster)
+    actual = _allocatable_memory_resource(cluster)
     assert actual == expected
 
 
@@ -101,13 +102,13 @@ def test_cluster_allocatable_cpu_resource():
     cluster = Cluster.from_api_resources((), APIDataFactory.build(nodes=nodes))
 
     expected = section.AllocatableResource(context="cluster", value=cpu * number_nodes)
-    actual = allocatable_cpu_resource(cluster)
+    actual = _allocatable_cpu_resource(cluster)
     assert actual == expected
 
 
 def test_write_cluster_api_sections_registers_sections_to_be_written() -> None:
     cluster = Cluster.from_api_resources((), APIDataFactory.build())
-    sections = agent.create_cluster_api_sections(cluster, "cluster")
+    sections = create_api_sections(cluster, "cluster")
     assert set(s.section_name for s in sections) == cluster_api_sections()
 
 
@@ -115,18 +116,18 @@ def test_write_cluster_api_sections_registers_sections_to_be_written() -> None:
 def test_node_count(cluster_node_count: int) -> None:
     nodes = APINodeFactory.batch(size=cluster_node_count)
     cluster = Cluster.from_api_resources((), APIDataFactory.build(nodes=nodes))
-    section_node_count = node_count(cluster)
+    section_node_count = _node_count(cluster)
     assert len(section_node_count.nodes) == cluster_node_count
 
 
 def test__node_is_ready_with_ready_node() -> None:
     api_node = APINodeFactory.build(status=node_status(api.NodeConditionStatus.TRUE))
-    assert node_is_ready(api_node) is True
+    assert _node_is_ready(api_node) is True
 
 
 def test__node_is_ready_with_unready_node() -> None:
     api_node = APINodeFactory.build(status=node_status(api.NodeConditionStatus.FALSE))
-    assert node_is_ready(api_node) is False
+    assert _node_is_ready(api_node) is False
 
 
 @pytest.mark.parametrize("cluster_daemon_sets", [0, 10, 20])
@@ -200,7 +201,7 @@ def test_cluster_allocatable_memory_resource_exclude_roles(
             ],
         ),
     )
-    actual = allocatable_memory_resource(cluster)
+    actual = _allocatable_memory_resource(cluster)
     assert actual == expected
 
 
@@ -253,7 +254,7 @@ def test_cluster_allocatable_cpu_resource_cluster(
             ],
         ),
     )
-    actual = allocatable_cpu_resource(cluster)
+    actual = _allocatable_cpu_resource(cluster)
     assert actual == expected
 
 
@@ -299,9 +300,9 @@ def test_cluster_usage_resources(
         APIDataFactory.build(pods=pods, nodes=nodes),
     )
 
-    assert memory_resources(cluster).count_total == len(APIPodFactory.build().containers) * total
-    assert cpu_resources(cluster).count_total == len(APIPodFactory.build().containers) * total
-    assert sum(len(pods) for _, pods in pod_resources(cluster)) == total
+    assert _memory_resources(cluster).count_total == len(APIPodFactory.build().containers) * total
+    assert _cpu_resources(cluster).count_total == len(APIPodFactory.build().containers) * total
+    assert sum(len(pods) for _, pods in _pod_resources(cluster)) == total
 
 
 @pytest.mark.parametrize(
@@ -354,8 +355,8 @@ def test_cluster_allocatable_pods(
         APIDataFactory.build(pods=pods, nodes=nodes),
     )
 
-    assert allocatable_pods(cluster).capacity == total * capacity
-    assert allocatable_pods(cluster).allocatable == total * allocatable
+    assert _allocatable_pods(cluster).capacity == total * capacity
+    assert _allocatable_pods(cluster).allocatable == total * allocatable
 
 
 @pytest.mark.parametrize("phase_all_pods", list(api.Phase))

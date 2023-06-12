@@ -81,8 +81,6 @@ from cmk.special_agents.utils_kubernetes.common import (
     PodLookupName,
     PodsToHost,
     RawMetrics,
-    SectionName,
-    WriteableSection,
 )
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
@@ -403,63 +401,6 @@ def _write_sections(sections: Mapping[str, Callable[[], section.Section | None]]
         if section_output := section_call():
             with SectionWriter(section_name) as writer:
                 writer.append(section_output.json())
-
-
-def create_cluster_api_sections(
-    api_cluster: Cluster, cluster_name: str
-) -> Iterator[WriteableSection]:
-    yield from (
-        WriteableSection(
-            piggyback_name="",
-            section_name=SectionName("kube_pod_resources_v1"),
-            section=cluster.pod_resources(api_cluster),
-        ),
-        WriteableSection(
-            piggyback_name="",
-            section_name=SectionName("kube_allocatable_pods_v1"),
-            section=cluster.allocatable_pods(api_cluster),
-        ),
-        WriteableSection(
-            piggyback_name="",
-            section_name=SectionName("kube_node_count_v1"),
-            section=cluster.node_count(api_cluster),
-        ),
-        WriteableSection(
-            piggyback_name="",
-            section_name=SectionName("kube_cluster_details_v1"),
-            section=section.ClusterDetails.parse_obj(api_cluster.cluster_details),
-        ),
-        WriteableSection(
-            piggyback_name="",
-            section_name=SectionName("kube_memory_resources_v1"),
-            section=cluster.memory_resources(api_cluster),
-        ),
-        WriteableSection(
-            piggyback_name="",
-            section_name=SectionName("kube_cpu_resources_v1"),
-            section=cluster.cpu_resources(api_cluster),
-        ),
-        WriteableSection(
-            piggyback_name="",
-            section_name=SectionName("kube_allocatable_memory_resource_v1"),
-            section=cluster.allocatable_memory_resource(api_cluster),
-        ),
-        WriteableSection(
-            piggyback_name="",
-            section_name=SectionName("kube_allocatable_cpu_resource_v1"),
-            section=cluster.allocatable_cpu_resource(api_cluster),
-        ),
-        WriteableSection(
-            piggyback_name="",
-            section_name=SectionName("kube_cluster_info_v1"),
-            section=section.ClusterInfo(name=cluster_name, version=cluster.version(api_cluster)),
-        ),
-        WriteableSection(
-            piggyback_name="",
-            section_name=SectionName("kube_collector_daemons_v1"),
-            section=cluster.node_collector_daemons(api_cluster),
-        ),
-    )
 
 
 def namespaced_name_from_metadata(metadata: api.MetaData) -> str:
@@ -911,7 +852,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
             # Sections based on API server data
             LOGGER.info("Write cluster sections based on API data")
             common.write_sections(
-                create_cluster_api_sections(composed_entities.cluster, arguments.cluster)
+                cluster.create_api_sections(composed_entities.cluster, arguments.cluster)
             )
 
             monitored_namespace_names = filter_monitored_namespaces(

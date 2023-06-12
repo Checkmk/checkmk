@@ -43,7 +43,7 @@ def get_package_type() -> str:
         and os.path.exists("/bin/rpm")
         or os.path.exists("/usr/bin/rpm")
     ):
-        return "rpm"
+        return "linux_rpm"
     raise NotImplementedError(
         "package_type recognition for the current environment is not supported yet. Please"
         " implement it if needed"

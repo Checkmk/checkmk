@@ -5,7 +5,6 @@
 
 from collections.abc import Iterable, Mapping, Sequence
 from typing import NoReturn
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -46,8 +45,8 @@ def _create_labels_from_roles(roles: Sequence[str]) -> dict[str, str]:
     return {f"node-role.kubernetes.io/{role}": "" for role in roles}
 
 
-def cluster_api_sections() -> Sequence[str]:
-    return [
+def cluster_api_sections() -> set[str]:
+    return {
         "kube_pod_resources_v1",
         "kube_allocatable_pods_v1",
         "kube_node_count_v1",
@@ -58,7 +57,7 @@ def cluster_api_sections() -> Sequence[str]:
         "kube_allocatable_cpu_resource_v1",
         "kube_cluster_info_v1",
         "kube_collector_daemons_v1",
-    ]
+    }
 
 
 @pytest.mark.parametrize("cluster_pods", [0, 10, 20])
@@ -106,23 +105,10 @@ def test_cluster_allocatable_cpu_resource():
     assert actual == expected
 
 
-def test_write_cluster_api_sections_registers_sections_to_be_written(
-    write_sections_mock: MagicMock,
-) -> None:
+def test_write_cluster_api_sections_registers_sections_to_be_written() -> None:
     cluster = Cluster.from_api_resources((), APIDataFactory.build())
-    agent.write_cluster_api_sections("cluster", cluster)
-    assert list(write_sections_mock.call_args[0][0]) == cluster_api_sections()
-
-
-def test_write_cluster_api_sections_maps_section_names_to_callables(
-    write_sections_mock: MagicMock,
-) -> None:
-    cluster = Cluster.from_api_resources((), APIDataFactory.build())
-    agent.write_cluster_api_sections("cluster", cluster)
-    assert all(
-        callable(write_sections_mock.call_args[0][0][section_name])
-        for section_name in cluster_api_sections()
-    )
+    sections = agent.create_cluster_api_sections(cluster, "cluster")
+    assert set(s.section_name for s in sections) == cluster_api_sections()
 
 
 @pytest.mark.parametrize("cluster_node_count", [0, 10, 20])

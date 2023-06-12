@@ -11,11 +11,14 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
     PodStatusFactory,
 )
 
-import cmk.special_agents.utils_kubernetes.agent_handlers.common
-from cmk.special_agents.utils_kubernetes.agent_handlers.common import AnnotationNonPatternOption
-from cmk.special_agents.utils_kubernetes.agent_handlers.namespace import (
+from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
+    AnnotationNonPatternOption,
+    CheckmkHostSettings,
+)
+from cmk.special_agents.utils_kubernetes.agent_handlers.namespace_handler import (
     _filter_pods_by_resource_quota_scope_selector,
     create_namespace_api_sections,
+    create_resource_quota_api_sections,
     filter_matching_namespace_resource_quota,
     filter_pods_by_resource_quota_scopes,
 )
@@ -27,7 +30,7 @@ def test_namespace_create_api_sections() -> None:
     sections = create_namespace_api_sections(
         namespace,
         APIPodFactory.batch(1),
-        cmk.special_agents.utils_kubernetes.agent_handlers.common.CheckmkHostSettings(
+        CheckmkHostSettings(
             cluster_name="cluster",
             kubernetes_cluster_hostname="host",
             annotation_key_pattern=AnnotationNonPatternOption.ignore_all,
@@ -51,7 +54,7 @@ def test_resource_quota_write_api_sections() -> None:
             )
         )
     )
-    sections = cmk.special_agents.utils_kubernetes.agent_handlers.namespace.create_resource_quota_api_sections(
+    sections = create_resource_quota_api_sections(
         resource_quota,
         "namespace",
     )
@@ -70,7 +73,7 @@ def test_resource_quota_write_partial_sections() -> None:
             )
         )
     )
-    sections = cmk.special_agents.utils_kubernetes.agent_handlers.namespace.create_resource_quota_api_sections(
+    sections = create_resource_quota_api_sections(
         resource_quota,
         "namespace",
     )

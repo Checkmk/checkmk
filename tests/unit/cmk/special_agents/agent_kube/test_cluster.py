@@ -9,7 +9,7 @@ from typing import NoReturn
 import pytest
 
 from cmk.special_agents import agent_kube as agent
-from cmk.special_agents.utils_kubernetes.agent_handlers.cluster import (
+from cmk.special_agents.utils_kubernetes.agent_handlers.cluster_handler import (
     _allocatable_cpu_resource,
     _allocatable_memory_resource,
     _allocatable_pods,

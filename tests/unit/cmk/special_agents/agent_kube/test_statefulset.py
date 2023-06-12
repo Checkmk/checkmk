@@ -16,7 +16,9 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
 
 import cmk.special_agents.utils_kubernetes.agent_handlers.common
 from cmk.special_agents import agent_kube
-from cmk.special_agents.utils_kubernetes.agent_handlers.statefulset import create_api_sections
+from cmk.special_agents.utils_kubernetes.agent_handlers.statefulset_handler import (
+    create_api_sections,
+)
 
 
 def statefulsets_api_sections() -> set[str]:

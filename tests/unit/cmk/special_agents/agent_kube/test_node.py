@@ -21,7 +21,7 @@ from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     AnnotationNonPatternOption,
     CheckmkHostSettings,
 )
-from cmk.special_agents.utils_kubernetes.agent_handlers.node import (
+from cmk.special_agents.utils_kubernetes.agent_handlers.node_handler import (
     _allocatable_cpu_resource,
     _allocatable_memory_resource,
     _allocatable_pods,

@@ -39,15 +39,15 @@ from cmk.special_agents.utils import vcrtrace
 from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
 from cmk.special_agents.utils_kubernetes import common, performance, prometheus_section, query
 from cmk.special_agents.utils_kubernetes.agent_handlers import (
-    cluster,
-    cronjob,
-    daemonset,
-    deployment,
-    namespace,
-    node,
+    cluster_handler,
+    cronjob_handler,
+    daemonset_handler,
+    deployment_handler,
+    namespace_handler,
+    node_handler,
+    pod_handler,
+    statefulset_handler,
 )
-from cmk.special_agents.utils_kubernetes.agent_handlers import pod as pod_handler
-from cmk.special_agents.utils_kubernetes.agent_handlers import statefulset
 from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     AnnotationNonPatternOption,
     any_match_from_list_of_infix_patterns,
@@ -64,7 +64,7 @@ from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
     pod_name,
     StatefulSet,
 )
-from cmk.special_agents.utils_kubernetes.agent_handlers.persistent_volume_claim import (
+from cmk.special_agents.utils_kubernetes.agent_handlers.persistent_volume_claim_handler import (
     attached_pvc_names_from_pods,
     create_pvc_sections,
     filter_kubelet_volume_metrics,
@@ -574,13 +574,13 @@ def determine_pods_to_host(
                 filter_pods_by_namespace(api_pods, namespace_name(api_namespace)),
                 api.Phase.RUNNING,
             )
-            resource_quota = namespace.filter_matching_namespace_resource_quota(
+            resource_quota = namespace_handler.filter_matching_namespace_resource_quota(
                 namespace_name(api_namespace), resource_quotas
             )
             if resource_quota is not None:
                 resource_quota_pod_names = [
                     pod_lookup_from_api_pod(pod)
-                    for pod in namespace.filter_pods_by_resource_quota_criteria(
+                    for pod in namespace_handler.filter_pods_by_resource_quota_criteria(
                         namespace_api_pods, resource_quota
                     )
                 ]
@@ -852,7 +852,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
             # Sections based on API server data
             LOGGER.info("Write cluster sections based on API data")
             common.write_sections(
-                cluster.create_api_sections(composed_entities.cluster, arguments.cluster)
+                cluster_handler.create_api_sections(composed_entities.cluster, arguments.cluster)
             )
 
             monitored_namespace_names = filter_monitored_namespaces(
@@ -881,7 +881,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
             if MonitoredObject.nodes in arguments.monitored_objects:
                 LOGGER.info("Write nodes sections based on API data")
                 for api_node in composed_entities.nodes:
-                    sections = node.create_api_sections(
+                    sections = node_handler.create_api_sections(
                         api_node,
                         host_settings=checkmk_host_settings,
                         piggyback_name=piggyback_formatter(api_node),
@@ -894,7 +894,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     composed_entities.deployments, monitored_namespace_names
                 ):
                     deployment_piggyback_name = piggyback_formatter(api_deployment)
-                    sections = deployment.create_api_sections(
+                    sections = deployment_handler.create_api_sections(
                         api_deployment,
                         host_settings=checkmk_host_settings,
                         piggyback_name=deployment_piggyback_name,
@@ -940,20 +940,20 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     api_pods_from_namespace = filter_pods_by_namespace(
                         api_data.pods, namespace_name(api_namespace)
                     )
-                    namespace_sections = namespace.create_namespace_api_sections(
+                    namespace_sections = namespace_handler.create_namespace_api_sections(
                         api_namespace,
                         api_pods_from_namespace,
                         host_settings=checkmk_host_settings,
                         piggyback_name=namespace_piggyback_name,
                     )
                     if (
-                        api_resource_quota := namespace.filter_matching_namespace_resource_quota(
+                        api_resource_quota := namespace_handler.filter_matching_namespace_resource_quota(
                             namespace_name(api_namespace), resource_quotas
                         )
                     ) is not None:
                         namespace_sections = chain(
                             namespace_sections,
-                            namespace.create_resource_quota_api_sections(
+                            namespace_handler.create_resource_quota_api_sections(
                                 api_resource_quota, piggyback_name=namespace_piggyback_name
                             ),
                         )
@@ -965,7 +965,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     composed_entities.daemonsets, monitored_namespace_names
                 ):
                     daemonset_piggyback_name = piggyback_formatter(api_daemonset)
-                    daemonset_sections = daemonset.create_api_sections(
+                    daemonset_sections = daemonset_handler.create_api_sections(
                         api_daemonset,
                         host_settings=checkmk_host_settings,
                         piggyback_name=daemonset_piggyback_name,
@@ -992,7 +992,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     composed_entities.statefulsets, monitored_namespace_names
                 ):
                     statefulset_piggyback_name = piggyback_formatter(api_statefulset)
-                    statefulset_sections = statefulset.create_api_sections(
+                    statefulset_sections = statefulset_handler.create_api_sections(
                         api_statefulset,
                         host_settings=checkmk_host_settings,
                         piggyback_name=statefulset_piggyback_name,
@@ -1026,7 +1026,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                 for api_cron_job in kube_objects_from_namespaces(
                     api_data.cron_jobs, monitored_namespace_names
                 ):
-                    sections = cronjob.create_api_sections(
+                    sections = cronjob_handler.create_api_sections(
                         api_cron_job,
                         filter_pods_by_cron_job(api_cron_job_pods, api_cron_job),
                         sorted(

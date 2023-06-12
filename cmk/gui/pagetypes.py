@@ -431,7 +431,9 @@ class PageRenderer(Base):
                         "hidden",
                         Checkbox(
                             title=_("Sidebar integration"),
-                            label=_("Do not add a link to this page in sidebar"),
+                            label=_(
+                                "Do not add a link to this page in sidebar and in monitor menu."
+                            ),
                         ),
                     ),
                 ],
@@ -627,9 +629,6 @@ class Overridable(Base):
 
     def _can_be_linked(self):
         """Whether or not the thing can be linked to"""
-        if self.is_hidden():
-            return False  # don't link to hidden things
-
         if self.is_mine():
             return True
 
@@ -1375,10 +1374,7 @@ class Overridable(Base):
                 # of type PageRenderer but has a dedicated sidebar snapin. Maybe
                 # the best option would be to make a dedicated method to decide whether
                 # or not to reload the sidebar.
-                if not page_dict.get("hidden") or new_page_dict.get("hidden") != page_dict.get(
-                    "hidden"
-                ):
-                    html.reload_whole_page(redirect_url)
+                html.reload_whole_page(redirect_url)
 
         else:
             html.show_localization_hint()

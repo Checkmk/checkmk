@@ -331,6 +331,11 @@ def _deserialize_legacy_node(path: SDPath, raw_tree: Mapping[str, object]) -> St
             if not value:
                 continue
 
+            if all(isinstance(v, (int, float, str)) or v is None for v in value):
+                if w := ", ".join(str(v) for v in value if v):
+                    raw_pairs.setdefault(key, w)
+                continue
+
             if all(not isinstance(v, (list, dict)) for row in value for v in row.values()):
                 # Either we get:
                 #   [

@@ -1322,6 +1322,7 @@ def test_legacy_tree() -> None:
             "idx-node": [
                 {
                     "idx-attr": "value",
+                    "idx-enum": ["v1", 1.0, 2, None],
                     "idx-table": [{"idx-col": "value"}],
                     "idx-sub-node": {
                         "foo-node": {
@@ -1377,7 +1378,7 @@ def test_legacy_tree() -> None:
 
     idx_node_attr = tree.get_node(("path-to", "idx-node", "0"))
     assert idx_node_attr is not None
-    assert idx_node_attr.attributes.pairs == {"idx-attr": "value"}
+    assert idx_node_attr.attributes.pairs == {"idx-attr": "value", "idx-enum": "v1, 1.0, 2"}
     assert idx_node_attr.table.rows_by_ident == {}
     assert idx_node_attr.table.rows == []
 

@@ -188,6 +188,27 @@ def make_filter_from_choice(choice: Literal["nothing", "all"] | Sequence[str]) -
     return lambda k: k in choice
 
 
+@dataclass(frozen=True, kw_only=True)
+class _FilterTree:
+    nodes: dict[SDNodeName, _FilterTree] = field(default_factory=dict)
+    filters: list[SDFilter] = field(default_factory=list)
+
+
+def _make_filter_tree(filters: Iterable[SDFilter]) -> _FilterTree:
+    filter_tree = _FilterTree()
+    for f in filters:
+        if not f.path:
+            filter_tree.filters.append(f)
+            continue
+
+        node = filter_tree.nodes.setdefault(f.path[0], _FilterTree())
+        for name in f.path[1:]:
+            node = node.nodes.setdefault(name, _FilterTree())
+
+        node.filters.append(f)
+    return filter_tree
+
+
 # .
 #   .--mutable tree--------------------------------------------------------.
 #   |                      _        _     _        _                       |
@@ -377,41 +398,48 @@ def _deserialize_legacy_node(path: SDPath, raw_tree: Mapping[str, object]) -> St
     return node
 
 
-def _filter_pairs(attributes: Attributes, filter_func: SDFilterFunc) -> Attributes:
+def _filter_attributes(attributes: Attributes, filter_funcs: Sequence[SDFilterFunc]) -> Attributes:
     filtered = Attributes(retentions=attributes.retentions)
-    filtered.add_pairs(_get_filtered_dict(attributes.pairs, filter_func))
+    if not filter_funcs:
+        filtered.add_pairs(attributes.pairs)
+        return filtered
+
+    for filter_func in filter_funcs:
+        filtered.add_pairs(_get_filtered_dict(attributes.pairs, filter_func))
     return filtered
 
 
-def _filter_table(table: Table, filter_func: SDFilterFunc) -> Table:
+def _filter_table(table: Table, filter_funcs: Sequence[SDFilterFunc]) -> Table:
     filtered = Table(key_columns=table.key_columns, retentions=table.retentions)
     for ident, row in table.rows_by_ident.items():
-        filtered.add_row(ident, _get_filtered_dict(row, filter_func))
-    return filtered
-
-
-def _filter_node(node: StructuredDataNode, filters: Iterable[SDFilter]) -> StructuredDataNode:
-    filtered = StructuredDataNode(path=node.path)
-
-    for f in filters:
-        # First check if node exists
-        if (child := node.get_node(f.path)) is None:
+        if not filter_funcs:
+            filtered.add_row(ident, row)
             continue
 
-        filtered_node = StructuredDataNode(
-            path=f.path,
-            attributes=_filter_pairs(child.attributes, f.filter_pairs),
-            table=_filter_table(child.table, f.filter_columns),
-        )
-        for name, sub_node in child.nodes_by_name.items():
-            # From GUI::permitted_paths: We always get a list of strs.
-            if f.filter_nodes(str(name)):
-                filtered_node.add_node((str(name),), sub_node)
-
-        if filtered_node:
-            filtered.add_node(f.path, filtered_node)
-
+        for filter_func in filter_funcs:
+            filtered.add_row(ident, _get_filtered_dict(row, filter_func))
     return filtered
+
+
+def _filter_tree(tree: StructuredDataNode, filter_tree: _FilterTree) -> StructuredDataNode:
+    filtered_nodes: dict[SDNodeName, StructuredDataNode] = {}
+    for name in set(
+        name for name in tree.nodes_by_name for f in filter_tree.filters if f.filter_nodes(name)
+    ).union(filter_tree.nodes):
+        if filtered_node := _filter_tree(
+            tree.nodes_by_name.get(name, StructuredDataNode(path=tree.path + (name,))),
+            filter_tree.nodes.get(name, _FilterTree()),
+        ):
+            filtered_nodes.setdefault(name, filtered_node)
+
+    return StructuredDataNode(
+        path=tree.path,
+        attributes=(
+            _filter_attributes(tree.attributes, [f.filter_pairs for f in filter_tree.filters])
+        ),
+        table=_filter_table(tree.table, [f.filter_columns for f in filter_tree.filters]),
+        nodes=filtered_nodes,
+    )
 
 
 def _merge_attributes(left: Attributes, right: Attributes) -> Attributes:
@@ -656,7 +684,7 @@ class ImmutableTree:
         return not self.__eq__(other)
 
     def filter(self, filters: Iterable[SDFilter]) -> ImmutableTree:
-        return ImmutableTree(_filter_node(self.tree, filters))
+        return ImmutableTree(_filter_tree(self.tree, _make_filter_tree(filters)))
 
     def merge(self, rhs: ImmutableTree) -> ImmutableTree:
         return ImmutableTree(_merge_nodes(self.tree, rhs.tree))
@@ -691,27 +719,6 @@ class ImmutableTree:
 #   |              \__,_|\___|_|\__\__,_|  \__|_|  \___|\___|              |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
-@dataclass(frozen=True, kw_only=True)
-class _FilterTree:
-    nodes: dict[SDNodeName, _FilterTree] = field(default_factory=dict)
-    filters: list[SDFilter] = field(default_factory=list)
-
-
-def _make_filter_tree(filters: Iterable[SDFilter]) -> _FilterTree:
-    filter_tree = _FilterTree()
-    for f in filters:
-        if not f.path:
-            filter_tree.filters.append(f)
-            continue
-
-        node = filter_tree.nodes.setdefault(f.path[0], _FilterTree())
-        for name in f.path[1:]:
-            node = node.nodes.setdefault(name, _FilterTree())
-
-        node.filters.append(f)
-    return filter_tree
 
 
 def _filter_delta_attributes(
@@ -1215,11 +1222,12 @@ class StructuredDataNode:
         path: SDPath | None = None,
         attributes: Attributes | None = None,
         table: Table | None = None,
+        nodes: dict[SDNodeName, StructuredDataNode] | None = None,
     ) -> None:
         self.path = path if path else tuple()
         self.attributes = attributes or Attributes()
         self.table = table or Table()
-        self._nodes: dict[SDNodeName, StructuredDataNode] = {}
+        self._nodes = nodes or {}
 
     @property
     def nodes(self) -> Iterator[StructuredDataNode]:

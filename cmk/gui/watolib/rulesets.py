@@ -388,20 +388,23 @@ class RulesetCollection:
             else:
                 self._unknown_rulesets.setdefault(folder.path(), {})[varname] = ruleset_config
 
-    def _save_folder(self, folder: CREFolder) -> None:
+    @staticmethod
+    def _save_folder(
+        folder: CREFolder,
+        rulesets: Mapping[RulesetName, Ruleset],
+        unknown: Mapping[str, Mapping[str, Sequence[RuleSpec[object]]]],
+    ) -> None:
         store.mkdir(folder.get_root_dir())
 
         content = [
             *(
                 ruleset.to_config(folder)
-                for _name, ruleset in sorted(self._rulesets.items())
+                for _name, ruleset in sorted(rulesets.items())
                 if not ruleset.is_empty_in_folder(folder)
             ),
             *(
                 Ruleset.format_raw_value(varname, raw_value, False)
-                for varname, raw_value in sorted(
-                    self._unknown_rulesets.get(folder.path(), {}).items()
-                )
+                for varname, raw_value in sorted(unknown.get(folder.path(), {}).items())
             ),
         ]
 
@@ -482,7 +485,7 @@ class AllRulesets(RulesetCollection):
         return self
 
     def save_folder(self, folder: CREFolder) -> None:
-        self._save_folder(folder)
+        RulesetCollection._save_folder(folder, self._rulesets, self._unknown_rulesets)
 
     def save(self) -> None:
         """Save all rulesets of all folders recursively"""
@@ -492,7 +495,7 @@ class AllRulesets(RulesetCollection):
         for subfolder in folder.subfolders():
             self._save_rulesets_recursively(subfolder)
 
-        self._save_folder(folder)
+        self._save_folder(folder, self._rulesets, self._unknown_rulesets)
 
 
 class SingleRulesetRecursively(RulesetCollection):
@@ -556,7 +559,7 @@ class FolderRulesets(RulesetCollection):
         return self
 
     def save(self) -> None:
-        self._save_folder(self._folder)
+        self._save_folder(self._folder, self._rulesets, self._unknown_rulesets)
 
 
 class Ruleset:

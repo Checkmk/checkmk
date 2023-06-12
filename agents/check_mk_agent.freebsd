@@ -418,6 +418,9 @@ run_purely_synchronous_sections() {
 
     # processes including username, without kernel processes
     echo '<<<ps>>>'
+    echo "[time]"
+    get_epoch
+    echo "[processes]"
     if [ "${is_jailed}" = "0" ]; then
         ps ax -ww -o state,user,vsz,rss,pcpu,command | sed -e 1d -e '/\([^ ]*J\) */d' -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\2,\3,\4,\5) /'
     else

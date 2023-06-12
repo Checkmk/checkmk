@@ -609,8 +609,9 @@ class StructuredDataNode:
             if node is None:
                 continue
 
-            filtered_node = filtered.setdefault_node(f.path)
-
+            filtered_node = StructuredDataNode(
+                name=f.path[-1] if f.path else "", path=tuple(f.path)
+            )
             filtered_node.add_attributes(
                 node.attributes.get_filtered_attributes(f.filter_attributes)
             )
@@ -620,6 +621,9 @@ class StructuredDataNode:
                 # From GUI::permitted_paths: We always get a list of strs.
                 if f.filter_nodes(str(name)):
                     filtered_node.add_node(sub_node)
+
+            if not filtered_node.is_empty():
+                filtered.setdefault_node(f.path[:-1]).add_node(filtered_node)
 
         return filtered
 

@@ -2,8 +2,7 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from collections.abc import Sequence
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -34,8 +33,8 @@ from cmk.special_agents.utils_kubernetes.agent_handlers.node import (
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 
-def api_nodes_api_sections() -> Sequence[str]:
-    return [
+def api_nodes_api_sections() -> set[str]:
+    return {
         "kube_node_container_count_v1",
         "kube_node_kubelet_v1",
         "kube_pod_resources_v1",
@@ -47,7 +46,7 @@ def api_nodes_api_sections() -> Sequence[str]:
         "kube_allocatable_memory_resource_v1",
         "kube_node_conditions_v1",
         "kube_node_custom_conditions_v1",
-    ]
+    }
 
 
 def test_api_node_allocatable_memory_resource() -> None:
@@ -89,51 +88,16 @@ def test_write_api_nodes_api_sections_registers_sections_to_be_written(
     write_sections_mock: MagicMock,
 ) -> None:
     api_node = api_to_agent_node(APINodeFactory.build())
-    agent.write_nodes_api_sections(
-        [api_node],
+    sections = agent.create_nodes_api_sections(
+        api_node,
         cmk.special_agents.utils_kubernetes.agent_handlers.common.CheckmkHostSettings(
             cluster_name="cluster",
             kubernetes_cluster_hostname="host",
             annotation_key_pattern=AnnotationNonPatternOption.ignore_all,
         ),
-        Mock(),
+        "node",
     )
-    assert list(write_sections_mock.call_args[0][0]) == api_nodes_api_sections()
-
-
-def test_write_api_nodes_api_sections_maps_section_names_to_callables(
-    write_sections_mock: MagicMock,
-) -> None:
-    api_node = api_to_agent_node(APINodeFactory.build())
-    agent.write_nodes_api_sections(
-        [api_node],
-        cmk.special_agents.utils_kubernetes.agent_handlers.common.CheckmkHostSettings(
-            cluster_name="cluster",
-            kubernetes_cluster_hostname="host",
-            annotation_key_pattern=AnnotationNonPatternOption.ignore_all,
-        ),
-        Mock(),
-    )
-    assert all(
-        callable(write_sections_mock.call_args[0][0][section_name])
-        for section_name in api_nodes_api_sections()
-    )
-
-
-def test_write_api_nodes_api_sections_calls_write_sections_for_each_api_node(
-    write_sections_mock: MagicMock,
-) -> None:
-    cluster_api_nodes = 3
-    agent.write_nodes_api_sections(
-        [api_to_agent_node(APINodeFactory.build()) for _ in range(cluster_api_nodes)],
-        cmk.special_agents.utils_kubernetes.agent_handlers.common.CheckmkHostSettings(
-            cluster_name="cluster",
-            kubernetes_cluster_hostname="host",
-            annotation_key_pattern=AnnotationNonPatternOption.ignore_all,
-        ),
-        Mock(),
-    )
-    assert write_sections_mock.call_count == cluster_api_nodes
+    assert set(s.section_name for s in sections) == api_nodes_api_sections()
 
 
 def test_conditions_returns_all_native_conditions() -> None:

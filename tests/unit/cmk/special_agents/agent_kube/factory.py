@@ -24,7 +24,7 @@ from pydantic_factories import ModelFactory, Use
 import cmk.special_agents.utils_kubernetes.agent_handlers.common
 import cmk.special_agents.utils_kubernetes.agent_handlers.daemonset
 import cmk.special_agents.utils_kubernetes.agent_handlers.deployment
-import cmk.special_agents.utils_kubernetes.agent_handlers.node
+import cmk.special_agents.utils_kubernetes.agent_handlers.node as node_handler
 import cmk.special_agents.utils_kubernetes.agent_handlers.statefulset
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes import common, performance, prometheus_api
@@ -288,8 +288,19 @@ NPD_NODE_CONDITION_TYPES = [
 ]
 
 
+def _node_conditions() -> Iterator[str]:
+    yield from (node_handler.NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES)
+
+
 class NodeConditionFactory(ModelFactory):
     __model__ = api.NodeCondition
+
+    type_ = Use(
+        next,
+        itertools.cycle(
+            node_handler.NATIVE_NODE_CONDITION_TYPES + NPD_NODE_CONDITION_TYPES  # type: ignore [arg-type]
+        ),
+    )
 
 
 class NodeStatusFactory(ModelFactory):
@@ -297,10 +308,7 @@ class NodeStatusFactory(ModelFactory):
 
     conditions = Use(
         NodeConditionFactory.batch,
-        size=len(
-            cmk.special_agents.utils_kubernetes.agent_handlers.node.NATIVE_NODE_CONDITION_TYPES
-        )
-        + len(NPD_NODE_CONDITION_TYPES),
+        size=len(node_handler.NATIVE_NODE_CONDITION_TYPES) + len(NPD_NODE_CONDITION_TYPES),
         factory_use_construct=True,
     )
     allocatable = Use(NodeResourcesFactory.build, factory_use_construct=True)

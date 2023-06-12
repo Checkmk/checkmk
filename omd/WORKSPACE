@@ -148,10 +148,3 @@ http_archive(
         UPSTREAM_MIRROR_URL + "Crypt-SSLeay-0.72.tar.gz",
     ],
 )
-
-load("//packages/nrpe:nrpe_http.bzl", "nrpe")
-
-nrpe(
-    sha256 = "8ad2d1846ab9011fdd2942b8fc0c99dfad9a97e57f4a3e6e394a4ead99c0f1f0",
-    version_str = "3.2.1",
-)

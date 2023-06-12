@@ -68,6 +68,7 @@ from cmk.special_agents.utils_kubernetes.agent_handlers.common import (
 )
 from cmk.special_agents.utils_kubernetes.agent_handlers.persistent_volume_claim import (
     attached_pvc_names_from_pods,
+    create_pvc_sections,
     filter_kubelet_volume_metrics,
     group_parsed_pvcs_by_namespace,
     group_serialized_volumes_by_namespace,
@@ -380,51 +381,6 @@ class ComposedEntities:
             deployments=agent_deployments,
             nodes=agent_nodes,
             cluster=agent_cluster,
-        )
-
-
-def create_pvc_sections(
-    piggyback_name: str,
-    attached_pvc_names: Sequence[str],
-    api_pvcs: Mapping[str, section.PersistentVolumeClaim],
-    api_pvs: Mapping[str, section.PersistentVolume],
-    attached_volumes: Mapping[str, section.AttachedVolume],
-) -> Iterator[WriteableSection]:
-    """Create PVC & PV related sections"""
-    if not attached_pvc_names:
-        return
-
-    attached_pvcs = {pvc_name: api_pvcs[pvc_name] for pvc_name in attached_pvc_names}
-
-    yield WriteableSection(
-        piggyback_name=piggyback_name,
-        section_name=SectionName("kube_pvc_v1"),
-        section=section.PersistentVolumeClaims(claims=attached_pvcs),
-    )
-
-    pvc_attached_api_pvs = {
-        pvc.volume_name: api_pvs[pvc.volume_name]
-        for pvc in attached_pvcs.values()
-        if pvc.volume_name is not None
-    }
-
-    if pvc_attached_api_pvs:
-        yield WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_pvc_pvs_v1"),
-            section=section.AttachedPersistentVolumes(volumes=pvc_attached_api_pvs),
-        )
-
-    pvc_attached_volumes = {
-        pvc_name: volume
-        for pvc_name in attached_pvc_names
-        if (volume := attached_volumes.get(pvc_name)) is not None
-    }
-    if pvc_attached_volumes:
-        yield WriteableSection(
-            piggyback_name=piggyback_name,
-            section_name=SectionName("kube_pvc_volumes_v1"),
-            section=section.PersistentVolumeClaimAttachedVolumes(volumes=pvc_attached_volumes),
         )
 
 

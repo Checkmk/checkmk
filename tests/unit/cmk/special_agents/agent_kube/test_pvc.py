@@ -7,7 +7,6 @@ from pydantic_factories import ModelFactory
 from tests.unit.cmk.special_agents.agent_kube import factory
 
 import cmk.special_agents.utils_kubernetes.agent_handlers.persistent_volume_claim
-from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 
 
@@ -71,7 +70,7 @@ def test_create_pvc_sections():
     volume = AttachedVolumeFactory.build()
 
     sections = list(
-        agent.create_pvc_sections(
+        cmk.special_agents.utils_kubernetes.agent_handlers.persistent_volume_claim.create_pvc_sections(
             piggyback_name="default",
             attached_pvc_names=[attached_pvc_name],
             api_pvcs={api_pvc.metadata.name: api_pvc},

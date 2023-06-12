@@ -28,7 +28,7 @@ PACKAGE_GOOGLETEST := $(abs_top_srcdir)/third_party/googletest
 GOOGLETEST_VERSION := googletest-71140c3ca7-patched
 GOOGLETEST_INCLUDE := $(INCLUDES_DIR)/googletest
 
-.PHONY: unit-test tidy iwyu documentation
+.PHONY: unit-test tidy iwyu documentation check-format format
 
 AM_CPPFLAGS = \
     -Iinclude \
@@ -165,6 +165,15 @@ iwyu: compile_commands.json
 documentation: compile_commands.json
 	PLANTUML_JAR_PATH=$(PLANTUML_JAR_PATH) $(DOXYGEN) doc/Doxyfile
 	$(RM) '$$depbase.Tpo'
+
+clang_format_with = FILES="$(FILES_TO_CHECK)"; find $${FILES:-src test include unixcat.cc} -type f \( -name "*.h" -o -name "*.cc" \) -print0 | \
+                        xargs --no-run-if-empty --null "clang-format-$(CLANG_VERSION)" -style=file $(1)
+
+check-format:
+	@$(call clang_format_with, --dry-run -Werror)
+
+format:
+	@$(call clang_format_with,-i)
 
 all-local: livestatus.o
 

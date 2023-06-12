@@ -44,10 +44,6 @@ LIVESTATUS_SOURCES := Makefile.am standalone/config_files.m4 \
 FILES_TO_FORMAT_LINUX := \
                       $(filter-out %.pb.cc %.pb.h, \
                       $(wildcard $(addprefix livestatus/api/c++/,*.cc *.h)) \
-                      $(wildcard livestatus/src/*.cc) \
-                      $(wildcard livestatus/src/include/neb/*.h) \
-                      $(wildcard livestatus/src/src/*.cc) \
-                      $(wildcard $(addprefix livestatus/src/test/,*.cc *.h)) \
                       $(wildcard $(addprefix bin/,*.cc *.c *.h)) \
                       $(wildcard $(addprefix enterprise/core/src/,*.cc *.h)) \
                       $(wildcard $(addprefix enterprise/core/src/test/,*.cc *.h)))
@@ -545,12 +541,14 @@ format: format-python format-c format-shell format-js format-css format-bazel
 clang-format-with = $(CLANG_FORMAT) -style=file $(1) $$(find $(FILES_TO_FORMAT_LINUX) -type f)
 
 format-c:
-	$(call clang-format-with,-i)
 	packages/livestatus/run --format
+	$(MAKE) -C livestatus/src format
+	$(call clang-format-with,-i)
 
 test-format-c:
-	@$(call clang-format-with,-Werror --dry-run)
-	@packages/livestatus/run --check-format
+	packages/livestatus/run --check-format
+	$(MAKE) -C livestatus/src check-format
+	$(call clang-format-with,-Werror --dry-run)
 
 format-python: format-python-isort format-python-black
 

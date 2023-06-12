@@ -17,6 +17,7 @@ from typing import Any
 from livestatus import SiteId
 
 import cmk.utils.paths
+import cmk.utils.version as cmk_version
 
 import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
@@ -570,6 +571,17 @@ class SidebarRenderer:
             html.write_html(content)
         html.close_div()
 
+    def _show_saas_link(self) -> None:
+        html.open_div(
+            id_="saas",
+            title=_("Go to the Saas Admin Panel"),
+            onclick="window.open('https://admin-panel.saas-prod.check-mk.net/', '_blank')",
+        )
+        html.icon("saas")
+        if not user.get_attribute("nav_hide_icons_title"):
+            html.div(_("Admin"))
+        html.close_div()
+
     def _show_sidebar_head(self):
         html.open_div(id_="side_header")
         html.open_a(
@@ -582,6 +594,9 @@ class SidebarRenderer:
         html.close_div()
 
         MainMenuRenderer().show()
+
+        if cmk_version.is_saas_edition():
+            self._show_saas_link()
 
         html.open_div(
             id_="side_fold", title=_("Toggle the sidebar"), onclick="cmk.sidebar.toggle_sidebar()"

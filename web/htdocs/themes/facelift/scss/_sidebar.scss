@@ -171,16 +171,13 @@ body.main .popup_menu #side_header > span {
   background-size: auto 30px;
 }
 
-#side_fold {
+#side_fold,
+#saas {
   margin: $spacing 0;
   font-size: $font-size-small;
   color: $font-color;
   text-align: center;
   cursor: pointer;
-
-  &:not(.folded) {
-    color: $font-color-green;
-  }
 
   img {
     margin-bottom: 8px;
@@ -189,11 +186,14 @@ body.main .popup_menu #side_header > span {
       opacity: 1;
     }
   }
+}
 
-  &:not(.folded) img.folded {
-    display: none;
+#side_fold {
+  &:not(.folded) {
+    color: $font-color-green;
   }
 
+  &:not(.folded) img.folded,
   &.folded img:not(.folded) {
     display: none;
   }

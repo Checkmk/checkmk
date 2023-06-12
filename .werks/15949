@@ -1,0 +1,26 @@
+Title: <tt>omd update</tt> reports <tt>etc/omd/allocated_ports</tt> as obsolete and changed
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1686587526
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0p3
+
+During an update from 2.1.0 to 2.2.0, users might have encountered the following message:
+
+F+:
+Changes in obsolete file etc/omd/allocated_ports
+The file etc/omd/allocated_ports has become obsolete in the new version, but
+you have changed its contents. Do you want to keep your file or may I remove
+it for you, please?
+
+keep        keep your file, though it is obsolete
+remove      remove your file
+shell       Open a shell for looking around
+abort       Stop here and abort update!
+F-:
+
+This file can be safely removed. Furthermore, as of this werk, this message will not be displayed
+anymore.

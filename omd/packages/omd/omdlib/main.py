@@ -2910,6 +2910,22 @@ def main_update(  # pylint: disable=too-many-branches
     if os.path.lexists(site.dir + "/etc/icinga/icinga.d/pnp4nagios.cfg"):
         os.unlink(site.dir + "/etc/icinga/icinga.d/pnp4nagios.cfg")
 
+    # allocated_ports is not used anymore. Deleting it in an update_config - plugin is too late,
+    # since we might encounter a merged version of allocated_ports which looks for example like
+    # this:
+
+    # This file is deprecated and will be removed in 2.3.
+    # It shouldn't be edited manually.
+    # AGENT_RECEIVER_PORT='8000'
+    # APACHE_TCP_PORT='5000'
+
+    # In this case, the user will be presented with the following dialog, which we want to avoid.
+    # Changes in obsolete file etc/omd/allocated_ports
+    # The file etc/omd/allocated_ports has become obsolete in the new version, but
+    # you have changed its contents. Do you want to keep your file or may I remove
+    # it for you, please?
+    (Path(site.dir) / "etc/omd/allocated_ports").unlink(missing_ok=True)
+
     # Now apply changes of skeleton files. This can be done
     # in two ways:
     # 1. creating a patch from the old default files to the new

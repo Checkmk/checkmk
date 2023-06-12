@@ -1,0 +1,40 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+filegroup(
+    name = "all_srcs",
+    srcs = glob(
+        ["**/*"],
+        exclude = ["bazel-*"],
+    ),
+)
+
+configure_make(
+    name = "nrpe",
+    args = [
+        "-j4",
+        "SRC_INCLUDE=${BUILD_TMPDIR}/include",
+    ],
+    configure_command = "configure",
+    # configure does just configure and copy the .in files, but not the other
+    # non .in header files from external/PACKAGE to bazel-out/*/*.build_tmpdir
+    # without "configure_in_place = True"
+    configure_in_place = True,
+    lib_source = ":all_srcs",
+    out_bin_dir = "lib/nagios/plugins",
+    out_binaries = [
+        "check_nrpe",
+    ],
+    # without this bazel complains about missing .a files, lol
+    out_headers_only = True,
+    postfix_script = """
+        mkdir -p ${INSTALLDIR}/lib/nagios/plugins
+        install -m 755 ${BUILD_TMPDIR}/src/check_nrpe ${INSTALLDIR}/lib/nagios/plugins
+
+        mkdir -p ${INSTALLDIR}/share/doc/nrpe
+        install -m 644 ${BUILD_TMPDIR}/*.md ${INSTALLDIR}/share/doc/nrpe
+        install -m 644 ${BUILD_TMPDIR}/LEGAL ${INSTALLDIR}/share/doc/nrpe
+    """,
+    targets = [
+        "-C src check_nrpe",
+    ],
+)

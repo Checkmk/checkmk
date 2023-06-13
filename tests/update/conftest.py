@@ -36,10 +36,6 @@ class BaseVersions:
     # minimal version supported for an update that can merge the configuration
     MIN_VERSION = os.getenv("MIN_VERSION", "2.1.0p20")
     BASE_VERSIONS_STR = [
-        "2.1.0p25",
-        "2.1.0p26",
-        "2.1.0p27",
-        "2.1.0p28",
         "2.1.0p29",
     ]
     BASE_VERSIONS = [

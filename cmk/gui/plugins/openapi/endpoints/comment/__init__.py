@@ -40,13 +40,16 @@ from cmk.gui.livestatus_utils.commands.comment import (
 )
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.endpoints import utils
-from cmk.gui.plugins.openapi.restful_objects import (
-    constructors,
-    Endpoint,
-    permissions,
-    request_schemas,
-    response_schemas,
+from cmk.gui.plugins.openapi.endpoints.comment.request_schemas import (
+    CreateHostRelatedComment,
+    CreateServiceRelatedComment,
+    DeleteComments,
 )
+from cmk.gui.plugins.openapi.endpoints.comment.response_schemas import (
+    CommentCollection,
+    CommentObject,
+)
+from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.plugins.openapi.utils import problem, serve_json
 
@@ -124,7 +127,7 @@ class GetCommentsByQuery(BaseSchema):
     method="get",
     tag_group="Monitoring",
     path_params=[COMMENT_ID],
-    response_schema=response_schemas.CommentObject,
+    response_schema=CommentObject,
 )
 def show_comment(params: Mapping[str, Any]) -> Response:
     """Show a comment"""
@@ -148,7 +151,7 @@ def show_comment(params: Mapping[str, Any]) -> Response:
     ".../collection",
     method="get",
     tag_group="Monitoring",
-    response_schema=response_schemas.CommentCollection,
+    response_schema=CommentCollection,
     update_config_generation=False,
     path_params=[COLLECTION_NAME],
     query_params=[GetCommentsByQuery, HOST_NAME_SHOW, SERVICE_DESCRIPTION_SHOW],
@@ -185,7 +188,7 @@ def show_comments(params: Mapping[str, Any]) -> Response:
     method="post",
     tag_group="Monitoring",
     skip_locking=True,
-    request_schema=request_schemas.CreateHostRelatedComment,
+    request_schema=CreateHostRelatedComment,
     output_empty=True,
     update_config_generation=False,
     permissions_required=RW_PERMISSIONS,
@@ -239,7 +242,7 @@ def create_host_comment(params: Mapping[str, Any]) -> Response:
     method="post",
     tag_group="Monitoring",
     skip_locking=True,
-    request_schema=request_schemas.CreateServiceRelatedComment,
+    request_schema=CreateServiceRelatedComment,
     output_empty=True,
     update_config_generation=False,
     permissions_required=RW_PERMISSIONS,
@@ -293,7 +296,7 @@ def create_service_comment(params: Mapping[str, Any]) -> Response:
     ".../delete",
     method="post",
     tag_group="Monitoring",
-    request_schema=request_schemas.DeleteComments,
+    request_schema=DeleteComments,
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
 )

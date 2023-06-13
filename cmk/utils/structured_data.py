@@ -349,16 +349,20 @@ def _deserialize_legacy_table(raw_rows: Sequence[Mapping[SDKey, SDValue]]) -> Ta
     return table
 
 
-def _deserialize_legacy_node(path: SDPath, raw_tree: Mapping[str, object]) -> StructuredDataNode:
+def _deserialize_legacy_node(  # pylint: disable=too-many-branches
+    path: SDPath,
+    raw_tree: Mapping[str, object],
+    raw_rows: Sequence[Mapping] | None = None,
+) -> StructuredDataNode:
     raw_pairs: dict[SDKey, SDValue] = {}
-    raw_tables: dict[SDPath, list[dict]] = {}
-    raw_nodes: dict[SDPath, dict] = {}
+    raw_tables: dict[SDNodeName, list[dict]] = {}
+    raw_nodes: dict[SDNodeName, dict] = {}
 
     for key, value in raw_tree.items():
         if isinstance(value, dict):
             if not value:
                 continue
-            raw_nodes.setdefault((str(key),), value)
+            raw_nodes.setdefault(key, value)
 
         elif isinstance(value, list):
             if not value:
@@ -381,33 +385,38 @@ def _deserialize_legacy_node(path: SDPath, raw_tree: Mapping[str, object]) -> St
                 #       {"attr": "attr1", "table": [...], "node": {...}, "idx-node": [...]},
                 #       ...
                 #   ]
-                raw_tables.setdefault((str(key),), value)
+                raw_tables.setdefault(key, value)
                 continue
 
             for idx, entry in enumerate(value):
-                raw_nodes.setdefault((str(key), str(idx)), entry)
+                raw_nodes.setdefault(key, {}).setdefault(str(idx), entry)
 
         else:
             raw_pairs.setdefault(key, value)
 
-    node = StructuredDataNode(
+    return StructuredDataNode(
         path=path,
         attributes=_deserialize_legacy_attributes(raw_pairs),
+        table=_deserialize_legacy_table(raw_rows) if raw_rows else Table(),
+        nodes={
+            **{
+                name: _deserialize_legacy_node(
+                    path + (name,),
+                    raw_node,
+                    raw_tables.get(name),
+                )
+                for name, raw_node in raw_nodes.items()
+            },
+            **{
+                name: StructuredDataNode(
+                    path=path + (name,),
+                    table=_deserialize_legacy_table(raw_rows),
+                )
+                for name in set(raw_tables) - set(raw_nodes)
+                if (raw_rows := raw_tables[name])
+            },
+        },
     )
-
-    for child_path, raw_rows in raw_tables.items():
-        node.add_node(
-            child_path,
-            StructuredDataNode(table=_deserialize_legacy_table(raw_rows)),
-        )
-
-    for child_path, raw_node in raw_nodes.items():
-        node.add_node(
-            child_path,
-            _deserialize_legacy_node(path + child_path, raw_node),
-        )
-
-    return node
 
 
 def _filter_attributes(attributes: Attributes, filter_funcs: Sequence[SDFilterFunc]) -> Attributes:
@@ -1296,24 +1305,6 @@ class StructuredDataNode:
         name = path[0]
         node = self._nodes.setdefault(name, StructuredDataNode(path=self.path + (name,)))
         return node.setdefault_node(path[1:])
-
-    def add_node(self, path: SDPath, node: StructuredDataNode) -> None:
-        if not path:
-            return
-
-        node_name = path[0]
-        node_path = self.path + (path[0],)
-        if len(path) == 1:
-            if node_name in self._nodes:
-                merge_node = self._nodes[node_name]
-            else:
-                merge_node = StructuredDataNode(path=node_path)
-            self._nodes[node_name] = _merge_nodes(merge_node, node)
-            return
-
-        self._nodes.setdefault(node_name, StructuredDataNode(path=node_path)).add_node(
-            path[1:], node
-        )
 
     def get_node(self, path: SDPath) -> StructuredDataNode | None:
         if not path:

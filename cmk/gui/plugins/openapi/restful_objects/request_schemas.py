@@ -192,14 +192,6 @@ EXISTING_HOST_GROUP_NAME = gui_fields.GroupField(
     should_exist=True,
 )
 
-EXISTING_SERVICE_GROUP_NAME = gui_fields.GroupField(
-    group_type="service",
-    example="windows",
-    required=True,
-    description="The name of the service group.",
-    should_exist=True,
-)
-
 
 class InputGroup(BaseSchema):
     customer = gui_fields.customer_field(
@@ -277,64 +269,6 @@ class BulkUpdateHostGroup(BaseSchema):
             }
         ],
         description="A list of host group entries.",
-    )
-
-
-class InputServiceGroup(InputGroup):
-    """Creating a service group"""
-
-    name = gui_fields.GroupField(
-        group_type="service",
-        example="windows",
-        required=True,
-        description="A name used as identifier",
-        should_exist=False,
-        pattern=GROUP_NAME_PATTERN,
-    )
-    alias = fields.String(
-        description="The name used for displaying in the GUI.",
-        example="Environment Sensors",
-        required=True,
-    )
-
-
-class BulkInputServiceGroup(BaseSchema):
-    """Bulk creating service groups"""
-
-    entries = fields.List(
-        fields.Nested(InputServiceGroup),
-        example=[
-            {
-                "name": "environment",
-                "alias": "Environment Sensors",
-            }
-        ],
-        uniqueItems=True,
-        description="A list of service group entries.",
-    )
-
-
-class UpdateServiceGroup(BaseSchema):
-    """Updating a service group"""
-
-    name = EXISTING_SERVICE_GROUP_NAME
-    attributes = fields.Nested(UpdateGroup)
-
-
-class BulkUpdateServiceGroup(BaseSchema):
-    """Bulk update service groups"""
-
-    entries = fields.List(
-        fields.Nested(UpdateServiceGroup),
-        example=[
-            {
-                "name": "windows",
-                "attributes": {
-                    "alias": "Windows Servers",
-                },
-            }
-        ],
-        description="A list of service group entries.",
     )
 
 
@@ -550,17 +484,4 @@ class BulkDeleteHostGroup(BaseSchema):
         required=True,
         example=["windows", "panels"],
         description="A list of host group names.",
-    )
-
-
-class BulkDeleteServiceGroup(BaseSchema):
-    entries = fields.List(
-        fields.String(
-            required=True,
-            description="The name of the service group config",
-            example="windows",
-        ),
-        required=True,
-        example=["windows", "panels"],
-        description="A list of service group names.",
     )

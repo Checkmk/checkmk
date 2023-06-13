@@ -13,7 +13,8 @@ import cmk.utils.version as cmk_version
 from cmk.utils.site import omd_site
 
 from cmk.gui.http import request
-from cmk.gui.plugins.openapi.restful_objects import Endpoint, response_schemas
+from cmk.gui.plugins.openapi.endpoints.version.response_schemas import InstalledVersions
+from cmk.gui.plugins.openapi.restful_objects import Endpoint
 from cmk.gui.plugins.openapi.utils import serve_json
 
 
@@ -22,7 +23,7 @@ from cmk.gui.plugins.openapi.utils import serve_json
     "cmk/show",
     tag_group="Monitoring",
     method="get",
-    response_schema=response_schemas.InstalledVersions,
+    response_schema=InstalledVersions,
 )
 def search(param):
     """Display some version information"""

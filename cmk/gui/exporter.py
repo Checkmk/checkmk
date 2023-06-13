@@ -16,7 +16,6 @@ from cmk.gui.http import request, response
 from cmk.gui.painter.v0.base import Cell, join_row
 from cmk.gui.type_defs import Rows, ViewSpec
 from cmk.gui.utils.html import HTML
-from cmk.gui.views.layout import output_csv_headers
 
 
 class Exporter(NamedTuple):
@@ -27,6 +26,14 @@ class Exporter(NamedTuple):
 class ViewExporterRegistry(Registry[Exporter]):
     def plugin_name(self, instance):
         return instance.name
+
+
+def output_csv_headers(view: ViewSpec) -> None:
+    filename = "{}-{}.csv".format(
+        view["name"],
+        time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime(time.time())),
+    )
+    response.headers["Content-Disposition"] = 'Attachment; filename="%s"' % filename
 
 
 exporter_registry = ViewExporterRegistry()

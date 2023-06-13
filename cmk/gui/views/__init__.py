@@ -199,6 +199,7 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     for name in (
         "Exporter",
         "exporter_registry",
+        "output_csv_headers",
     ):
         api_module.__dict__[name] = exporter.__dict__[name]
 
@@ -247,7 +248,6 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     for name in (
         "Layout",
         "layout_registry",
-        "output_csv_headers",
         "group_value",
     ):
         api_module.__dict__[name] = layout.__dict__[name]

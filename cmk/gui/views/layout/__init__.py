@@ -4,14 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from .base import Layout
-from .helpers import group_value, output_csv_headers
+from .helpers import group_value
 from .layouts import register_layouts
 from .registry import layout_registry, LayoutRegistry
 
 __all__ = [
     "Layout",
     "group_value",
-    "output_csv_headers",
     "layout_registry",
     "LayoutRegistry",
     "register_layouts",

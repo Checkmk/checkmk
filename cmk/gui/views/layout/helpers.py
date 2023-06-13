@@ -3,20 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import time
 from collections.abc import Hashable, Sequence
 
-from cmk.gui.http import response
 from cmk.gui.painter.v0.base import Cell
-from cmk.gui.type_defs import Row, ViewSpec
-
-
-def output_csv_headers(view: ViewSpec) -> None:
-    filename = "{}-{}.csv".format(
-        view["name"],
-        time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime(time.time())),
-    )
-    response.headers["Content-Disposition"] = 'Attachment; filename="%s"' % filename
+from cmk.gui.type_defs import Row
 
 
 def group_value(row: Row, group_cells: Sequence[Cell]) -> Hashable:

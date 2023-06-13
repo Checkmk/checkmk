@@ -16,14 +16,13 @@ from cmk.utils import version
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.openapi.endpoints.utils import complement_customer, update_customer_info
-from cmk.gui.plugins.openapi.restful_objects import (
-    constructors,
-    Endpoint,
-    permissions,
-    request_schemas,
-    response_schemas,
+from cmk.gui.plugins.openapi.endpoints.password.request_schemas import InputPassword, UpdatePassword
+from cmk.gui.plugins.openapi.endpoints.password.response_schemas import (
+    PasswordCollection,
+    PasswordObject,
 )
+from cmk.gui.plugins.openapi.endpoints.utils import complement_customer, update_customer_info
+from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_ID_FIELD
 from cmk.gui.plugins.openapi.utils import problem, serve_json
 from cmk.gui.watolib.passwords import (
@@ -55,9 +54,9 @@ RW_PERMISSIONS = permissions.AllPerm(
     constructors.collection_href("password"),
     "cmk/create",
     method="post",
-    request_schema=request_schemas.InputPassword,
+    request_schema=InputPassword,
     etag="output",
-    response_schema=response_schemas.PasswordObject,
+    response_schema=PasswordObject,
     permissions_required=RW_PERMISSIONS,
 )
 def create_password(params: Mapping[str, Any]) -> Response:
@@ -91,9 +90,9 @@ def create_password(params: Mapping[str, Any]) -> Response:
     ".../update",
     method="put",
     path_params=[NAME_ID_FIELD],
-    request_schema=request_schemas.UpdatePassword,
+    request_schema=UpdatePassword,
     etag="both",
-    response_schema=response_schemas.PasswordObject,
+    response_schema=PasswordObject,
     permissions_required=RW_PERMISSIONS,
 )
 def update_password(params: Mapping[str, Any]) -> Response:
@@ -143,7 +142,7 @@ def delete_password(params: Mapping[str, Any]) -> Response:
     "cmk/show",
     method="get",
     path_params=[NAME_ID_FIELD],
-    response_schema=response_schemas.PasswordObject,
+    response_schema=PasswordObject,
     permissions_required=PERMISSIONS,
 )
 def show_password(params: Mapping[str, Any]) -> Response:
@@ -165,7 +164,7 @@ def show_password(params: Mapping[str, Any]) -> Response:
     constructors.collection_href("password"),
     ".../collection",
     method="get",
-    response_schema=response_schemas.PasswordCollection,
+    response_schema=PasswordCollection,
     permissions_required=PERMISSIONS,
 )
 def list_passwords(params: Mapping[str, Any]) -> Response:

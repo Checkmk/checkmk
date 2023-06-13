@@ -21,11 +21,19 @@ from cmk.utils.tags import BuiltinTagConfig, TagGroup, TagGroupID, TagGroupSpec
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
+from cmk.gui.plugins.openapi.endpoints.host_tag_group.request_schemas import (
+    DeleteHostTagGroup,
+    InputHostTagGroup,
+    UpdateHostTagGroup,
+)
+from cmk.gui.plugins.openapi.endpoints.host_tag_group.response_schemas import (
+    ConcreteHostTagGroup,
+    HostTagGroupCollection,
+)
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
     permissions,
-    request_schemas,
     response_schemas,
 )
 from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
@@ -91,7 +99,7 @@ HOST_TAG_GROUP_NAME = {
     "cmk/create",
     method="post",
     etag="output",
-    request_schema=request_schemas.InputHostTagGroup,
+    request_schema=InputHostTagGroup,
     response_schema=response_schemas.DomainObject,
     permissions_required=RW_PERMISSIONS,
 )
@@ -109,7 +117,7 @@ def create_host_tag_group(params: Mapping[str, Any]) -> Response:
     method="get",
     etag="output",
     path_params=[HOST_TAG_GROUP_NAME],
-    response_schema=response_schemas.ConcreteHostTagGroup,
+    response_schema=ConcreteHostTagGroup,
     permissions_required=PERMISSIONS,
 )
 def show_host_tag_group(params: Mapping[str, Any]) -> Response:
@@ -124,7 +132,7 @@ def show_host_tag_group(params: Mapping[str, Any]) -> Response:
     constructors.collection_href("host_tag_group"),
     ".../collection",
     method="get",
-    response_schema=response_schemas.HostTagGroupCollection,
+    response_schema=HostTagGroupCollection,
     permissions_required=PERMISSIONS,
 )
 def list_host_tag_groups(params: Mapping[str, Any]) -> Response:
@@ -151,9 +159,9 @@ def list_host_tag_groups(params: Mapping[str, Any]) -> Response:
     etag="both",
     path_params=[HOST_TAG_GROUP_NAME],
     additional_status_codes=[401, 405],
-    request_schema=request_schemas.UpdateHostTagGroup,
+    request_schema=UpdateHostTagGroup,
     permissions_required=RW_PERMISSIONS,
-    response_schema=response_schemas.ConcreteHostTagGroup,
+    response_schema=ConcreteHostTagGroup,
 )
 def update_host_tag_group(params: Mapping[str, Any]) -> Response:
     """Update a host tag group"""
@@ -195,7 +203,7 @@ def update_host_tag_group(params: Mapping[str, Any]) -> Response:
     method="delete",
     path_params=[HOST_TAG_GROUP_NAME],
     additional_status_codes=[401, 405],
-    query_params=[request_schemas.DeleteHostTagGroup],
+    query_params=[DeleteHostTagGroup],
     permissions_required=RW_PERMISSIONS,
     output_empty=True,
 )

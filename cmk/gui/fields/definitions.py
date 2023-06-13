@@ -28,6 +28,7 @@ from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hostgroups, Hosts, Servicegroups
 from cmk.utils.livestatus_helpers.types import Column, Table
 from cmk.utils.tags import TagGroupID, TagID
+from cmk.utils.user import UserId
 
 from cmk.gui import sites
 from cmk.gui.config import builtin_role_ids
@@ -38,6 +39,7 @@ from cmk.gui.groups import GroupName, GroupType, load_group_information
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import permission_registry
 from cmk.gui.site_config import configured_sites
+from cmk.gui.userdb import load_users
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.host_attributes import host_attribute
 from cmk.gui.watolib.hosts_and_folders import CREFolder, folder_tree, Host
@@ -1409,6 +1411,45 @@ class PermissionField(base.String):
             raise self.make_error("invalid_permission", value=value)
 
 
+class Username(base.String):
+    default_error_messages = {
+        "should_exist": "Username missing: {username!r}",
+        "should_not_exist": "Username {username!r} already exists",
+        "invalid_name": "Username {username!r} is not a valid checkmk username",
+    }
+
+    def __init__(  # type: ignore[no-untyped-def]
+        self,
+        example,
+        required=True,
+        validate=None,
+        should_exist: bool = True,
+        **kwargs,
+    ):
+        self._should_exist = should_exist
+        super().__init__(
+            example=example,
+            required=required,
+            validate=validate,
+            **kwargs,
+        )
+
+    def _validate(self, value):
+        super()._validate(value)
+
+        try:
+            UserId(value)
+        except ValueError:
+            raise self.make_error("invalid_name", username=value)
+
+        # TODO: change to names list only
+        usernames = load_users()
+        if self._should_exist and value not in usernames:
+            raise self.make_error("should_exist", username=value)
+        if not self._should_exist and value in usernames:
+            raise self.make_error("should_not_exist", username=value)
+
+
 __all__ = [
     "host_attributes_field",
     "column_field",
@@ -1429,6 +1470,7 @@ __all__ = [
     "query_field",
     "SiteField",
     "Timestamp",
+    "Username",
     "UserRoleID",
     "X509ReqPEMFieldUUID",
 ]

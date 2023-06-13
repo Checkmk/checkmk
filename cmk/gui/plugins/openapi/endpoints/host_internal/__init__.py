@@ -25,14 +25,16 @@ from cmk.gui.http import Response
 from cmk.gui.i18n import _l
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.plugins.openapi.endpoints.utils import ProblemException
-from cmk.gui.plugins.openapi.restful_objects import (
-    constructors,
-    Endpoint,
-    permissions,
-    request_schemas,
-    response_schemas,
+from cmk.gui.plugins.openapi.endpoints.host_internal.request_schemas import (
+    LinkHostUUID,
+    RegisterHost,
 )
+from cmk.gui.plugins.openapi.endpoints.host_internal.response_schemas import (
+    ConnectionMode,
+    HostConfigSchemaInternal,
+)
+from cmk.gui.plugins.openapi.endpoints.utils import ProblemException
+from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.plugins.openapi.utils import serve_json
 from cmk.gui.watolib.hosts_and_folders import CREHost, Host
@@ -76,8 +78,8 @@ permission_registry.register(
         405: "This host cannot be registered on this site.",
     },
     path_params=[HOST_NAME],
-    request_schema=request_schemas.RegisterHost,
-    response_schema=response_schemas.ConnectionMode,
+    request_schema=RegisterHost,
+    response_schema=ConnectionMode,
     permissions_required=permissions.AnyPerm(
         [
             permissions.Perm("agent_registration.register_any_existing_host"),
@@ -200,7 +202,7 @@ def _link_with_uuid(
         401: "You do not have the permissions to edit this host.",
     },
     path_params=[HOST_NAME],
-    request_schema=request_schemas.LinkHostUUID,
+    request_schema=LinkHostUUID,
     permissions_required=permissions.AnyPerm(
         [
             permissions.Perm("wato.all_folders"),
@@ -240,7 +242,7 @@ def link_with_uuid(params: Mapping[str, Any]) -> Response:
         401: "You do not have read access to this host.",
     },
     path_params=[HOST_NAME],
-    response_schema=response_schemas.HostConfigSchemaInternal,
+    response_schema=HostConfigSchemaInternal,
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
 )
 def show_host(params: Mapping[str, Any]) -> Response:

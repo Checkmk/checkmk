@@ -12,7 +12,6 @@ from marshmallow import Schema
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk.gui import fields as gui_fields
-from cmk.gui.agent_registration import CONNECTION_MODE_FIELD
 from cmk.gui.fields.utils import attr_openapi_schema, BaseSchema
 
 from cmk import fields
@@ -587,21 +586,6 @@ class Version(LinkSchema):
         required=False,
     )
     additionalCapabilities = fields.Nested(VersionCapabilities)
-
-
-class ConnectionMode(BaseSchema):
-    connection_mode = CONNECTION_MODE_FIELD
-
-
-class HostConfigSchemaInternal(BaseSchema):
-    site = fields.String(
-        required=True,
-        description="The site the host is monitored on.",
-    )
-    is_cluster = fields.Boolean(
-        required=True,
-        description="Indicates if the host is a cluster host.",
-    )
 
 
 class AgentObject(DomainObject):

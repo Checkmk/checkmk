@@ -160,22 +160,6 @@ class UpdateHost(BaseSchema):
     )
 
 
-class LinkHostUUID(BaseSchema):
-    uuid = fields.UUID(
-        required=True,
-        example="34e4c967-1591-4883-8cdf-0e335b09618d",
-        description="A valid UUID.",
-    )
-
-
-class RegisterHost(BaseSchema):
-    uuid = fields.UUID(
-        required=True,
-        example="34e4c967-1591-4883-8cdf-0e335b09618d",
-        description="A valid UUID.",
-    )
-
-
 class UpdateHostEntry(UpdateHost):
     host_name = gui_fields.HostField(
         description="The hostname or IP address itself.",

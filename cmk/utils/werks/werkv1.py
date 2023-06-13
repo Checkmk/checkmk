@@ -5,7 +5,6 @@
 
 
 import datetime
-from pathlib import Path
 from typing import Any
 
 from pydantic import BaseModel, Extra, Field
@@ -57,7 +56,7 @@ class RawWerkV1(BaseModel, RawWerk):
         )
 
 
-def load_werk_v1(path: Path, werk_id: int) -> RawWerkV1:
+def load_werk_v1(content: str, werk_id: int) -> RawWerkV1:
     werk: dict[str, Any] = {
         "description": [],
         "compatible": "compat",
@@ -65,21 +64,20 @@ def load_werk_v1(path: Path, werk_id: int) -> RawWerkV1:
         "id": werk_id,
     }
     in_header = True
-    with path.open(encoding="utf-8") as fp:
-        for line in fp:
-            line = line.strip()
-            if in_header and not line:
-                in_header = False
-            elif in_header:
-                key, text = line.split(":", 1)
-                try:
-                    value: int | str = int(text.strip())
-                except ValueError:
-                    value = text.strip()
-                field = key.lower()
-                werk[field] = value
-            else:
-                werk["description"].append(line)
+    for line in content.split("\n"):
+        line = line.strip()
+        if in_header and not line:
+            in_header = False
+        elif in_header:
+            key, text = line.split(":", 1)
+            try:
+                value: int | str = int(text.strip())
+            except ValueError:
+                value = text.strip()
+            field = key.lower()
+            werk[field] = value
+        else:
+            werk["description"].append(line)
 
     # TODO: Check if all fields have an allowed value, see .werks/config.
     try:

@@ -72,12 +72,12 @@ def load_raw_files(werks_dir: Path) -> list[RawWerkV1 | RawWerkV2]:
     werks: list[RawWerkV1 | RawWerkV2] = []
     for file_name in werks_dir.glob("[0-9]*"):
         if file_name.name.endswith(".md"):
-            werk2 = load_werk_v2(file_name, werk_id=file_name.name.removesuffix(".md"))
+            werk2 = load_werk_v2(file_name.read_text(), werk_id=file_name.name.removesuffix(".md"))
             werks.append(werk2)
         else:
             werk_id = int(file_name.name)
             try:
-                werks.append(load_werk_v1(file_name, werk_id))
+                werks.append(load_werk_v1(file_name.read_text(), werk_id))
             except Exception as e:
                 raise WerkError(_('Failed to load werk "%s": %s') % (werk_id, e)) from e
     return werks

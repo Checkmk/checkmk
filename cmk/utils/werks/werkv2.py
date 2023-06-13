@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import datetime
-from pathlib import Path
 from typing import Any, Literal
 
 import markdown
@@ -86,14 +85,11 @@ class RawWerkV2(BaseModel, RawWerk):
         )
 
 
-def load_werk_v2(path: Path, werk_id: str) -> RawWerkV2:
-    with path.open(encoding="utf-8") as fp:
-        werk_raw = fp.read()
-
+def load_werk_v2(content: str, werk_id: str) -> RawWerkV2:
     # no need to parse the werk version here. markdown version and werk version
     # could potentially be different: a markdown version 3 could be parsed to a
     # werk version 2. let's hope we will keep v2 for a long time :-)
-    if not werk_raw.startswith("[//]: # (werk v2)"):
+    if not content.startswith("[//]: # (werk v2)"):
         raise WerkError("Markdown formatted werks need to start with '[//]: # (werk v2)'")
 
     class WerkExtractor(Treeprocessor):
@@ -134,7 +130,7 @@ def load_werk_v2(path: Path, werk_id: str) -> RawWerkV2:
         "id": werk_id,
     }
     result = markdown.markdown(
-        werk_raw, extensions=["tables", WerkExtractorExtension(werk)], output_format="html"
+        content, extensions=["tables", WerkExtractorExtension(werk)], output_format="html"
     )
 
     # werk was passed by reference into WerkExtractorExtension which got passed

@@ -17,7 +17,6 @@ TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=__pycache__ --exclude=*.pyc
 # We could add clang's -Wshorten-64-to-32 and g++'c/clang's -Wsign-conversion here.
 CXX_FLAGS          := -gdwarf-4 -O3 -Wall -Wextra
-SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 export DOXYGEN     := doxygen
 ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
 # TODO: Prefixing the command with the environment variable breaks xargs usage below!
@@ -39,10 +38,6 @@ LIVESTATUS_SOURCES := Makefile.am standalone/config_files.m4 \
                       src/include/neb/*.h \
                       src/src/*.cc \
                       src/test/*.{cc,h}
-
-CMAKE_FORMAT       := cmake-format
-CMAKE_TXT_FILES    = $$(find packages -name CMakeLists.txt \! -path '*/build/*')
-
 
 WERKS              := $(wildcard .werks/[0-9]*)
 
@@ -72,7 +67,7 @@ ifneq ("$(wildcard $(PY_PATH))","")
   PY_VIRT_MAJ_MIN := $(shell "${PY_PATH}" -c "from sys import version_info as v; print(f'{v.major}.{v.minor}')")
 endif
 
-.PHONY: all analyze build check check-binaries check-permissions check-version \
+.PHONY: all build check check-binaries check-permissions check-version \
         clean compile-neb-cmc compile-neb-cmc-docker css dist documentation \
         format format-c test-format-c format-python format-shell \
         format-js GTAGS help install iwyu mrproper mrclean optimize-images \
@@ -170,7 +165,7 @@ dist: $(LIVESTATUS_INTERMEDIATE_ARCHIVE) config.h.in $(SOURCE_BUILT_AGENTS) $(SO
 	    --exclude .gitmodules \
 	    --exclude .gitattributes \
 	    $$EXCLUDES \
-	    * .werks .clang* | tar x -C check-mk-$(EDITION)-$(OMD_VERSION)
+	    * .werks | tar x -C check-mk-$(EDITION)-$(OMD_VERSION)
 	if [ -f COMMIT ]; then \
 	    rm COMMIT ; \
 	fi
@@ -326,7 +321,7 @@ $(THEME_CSS_FILES): .ran-webpack
 # https://www.gnu.org/prep/standards/html_node/Standard-Targets.html).
 clean:
 	$(MAKE) -C omd clean
-	rm -rf clang-analyzer dist.tmp rpm.topdir *.rpm *.deb *.exe \
+	rm -rf dist.tmp rpm.topdir *.rpm *.deb *.exe \
 	       omd/packages/mk-livestatus/mk-livestatus-*.tar.gz \
 	       $(NAME)-*.tar.gz *~ counters autochecks \
 	       precompiled cache web/htdocs/js/*_min.js \
@@ -519,11 +514,6 @@ iwyu: config.status
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src iwyu
 endif
-
-# Not really perfect rules, but better than nothing
-analyze: config.h
-	$(MAKE) -C livestatus clean
-	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE) CXXFLAGS="-std=c++17"
 
 format: format-python format-c format-shell format-js format-css format-bazel
 

@@ -1059,11 +1059,3 @@ class BulkDeleteContactGroup(BaseSchema):
         example=["windows", "panels"],
         description="A list of contract group names.",
     )
-
-
-class X509ReqPEMUUID(BaseSchema):
-    csr = gui_fields.X509ReqPEMFieldUUID(
-        required=True,
-        example="-----BEGIN CERTIFICATE REQUEST-----\n...\n-----END CERTIFICATE REQUEST-----\n",
-        description="PEM-encoded X.509 CSR. The CN must a valid version-4 UUID.",
-    )

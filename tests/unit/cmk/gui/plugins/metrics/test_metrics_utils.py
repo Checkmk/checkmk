@@ -4,9 +4,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+from typing import Optional
+
 import pytest
 
 import cmk.utils.version
+from cmk.utils.type_defs import MetricName
 
 import cmk.gui.metrics as metrics
 from cmk.gui.globals import config
@@ -171,22 +175,26 @@ def test_reverse_translation_metric_name(
     "metric_names, check_command, graph_ids",
     [
         (["user", "system", "wait", "util"], "check_mk-kernel_util", ["cpu_utilization_5_util"]),
-        (["util1", "util15"], None, ["util_average_2"]),
-        (["util"], None, ["util_fallback"]),
+        (["util1", "util15"], "check_mk-kernel_util", ["util_average_2"]),
+        (["util"], "check_mk-kernel_util", ["util_fallback"]),
         (["util"], "check_mk-lxc_container_cpu", ["util_fallback"]),
         (
             ["wait", "util", "user", "system"],
             "check_mk-lxc_container_cpu",
             ["cpu_utilization_5_util"],
         ),
-        (["util", "util_average"], None, ["util_average_1"]),
-        (["user", "util_numcpu_as_max"], None, ["cpu_utilization_numcpus"]),
-        (["user", "util"], None, ["util_fallback", "METRIC_user"]),  # METRIC_user has no recipe
+        (["util", "util_average"], "check_mk-kernel_util", ["util_average_1"]),
+        (["user", "util_numcpu_as_max"], "check_mk-kernel_util", ["cpu_utilization_numcpus"]),
+        (
+            ["user", "util"],
+            "check_mk-kernel_util",
+            ["util_fallback", "METRIC_user"],
+        ),  # METRIC_user has no recipe
         (["util"], "check_mk-netapp_api_cpu_utilization", ["cpu_utilization_numcpus"]),
         (["user", "util"], "check_mk-winperf_processor_util", ["cpu_utilization_numcpus"]),
-        (["user", "system", "idle", "nice"], None, ["cpu_utilization_3"]),
-        (["user", "system", "idle", "io_wait"], None, ["cpu_utilization_4"]),
-        (["user", "system", "io_wait"], None, ["cpu_utilization_5"]),
+        (["user", "system", "idle", "nice"], "check_mk-kernel_util", ["cpu_utilization_3"]),
+        (["user", "system", "idle", "io_wait"], "check_mk-kernel_util", ["cpu_utilization_4"]),
+        (["user", "system", "io_wait"], "check_mk-kernel_util", ["cpu_utilization_5"]),
         (
             ["util_average", "util", "wait", "user", "system", "guest"],
             "check_mk-kernel_util",
@@ -197,7 +205,7 @@ def test_reverse_translation_metric_name(
             "check_mk-statgrab_cpu",
             ["cpu_utilization_7"],
         ),
-        (["user", "system", "interrupt"], None, ["cpu_utilization_8"]),
+        (["user", "system", "interrupt"], "check_mk-kernel_util", ["cpu_utilization_8"]),
         (
             ["user", "system", "wait", "util", "cpu_entitlement", "cpu_entitlement_util"],
             "check_mk-lparstat_aix_cpu_util",
@@ -413,3 +421,55 @@ def test_horizontal_rules_from_thresholds(perf_string, result):
 )
 def test_hex_color_to_rgb_color(hex_color, expected_rgb):
     assert hex_color_to_rgb_color(hex_color) == expected_rgb
+
+
+@pytest.mark.parametrize(
+    ["all_translations", "check_command", "expected_result"],
+    [
+        pytest.param(
+            {},
+            "check_mk-x",
+            None,
+            id="no matching entry",
+        ),
+        pytest.param(
+            {
+                "check_mk-x": {MetricName("old"): {"name": MetricName("new")}},
+                "check_mk-y": {MetricName("a"): {"scale": 2}},
+            },
+            "check_mk-x",
+            {MetricName("old"): {"name": MetricName("new")}},
+            id="standard check",
+        ),
+        pytest.param(
+            {
+                "check_mk-x": {MetricName("old"): {"name": MetricName("new")}},
+                "check_mk-y": {MetricName("a"): {"scale": 2}},
+            },
+            "check_mk-mgmt_x",
+            {MetricName("old"): {"name": MetricName("new")}},
+            id="management board, fallback to standard check",
+        ),
+        pytest.param(
+            {
+                "check_mk_x": {MetricName("old"): {"name": MetricName("new")}},
+                "check_mk-mgmt_x": {MetricName("old"): {"scale": 3}},
+            },
+            "check_mk-mgmt_x",
+            {MetricName("old"): {"scale": 3}},
+            id="management board, explicit entry",
+        ),
+    ],
+)
+def test_lookup_metric_translations_for_check_command(
+    all_translations: Mapping[str, Mapping[MetricName, utils.CheckMetricEntry]],
+    check_command: str,
+    expected_result: Optional[Mapping[MetricName, utils.CheckMetricEntry]],
+) -> None:
+    assert (
+        utils.lookup_metric_translations_for_check_command(
+            all_translations,
+            check_command,
+        )
+        == expected_result
+    )

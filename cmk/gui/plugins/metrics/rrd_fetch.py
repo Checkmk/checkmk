@@ -18,7 +18,12 @@ import cmk.gui.plugins.metrics.timeseries as ts
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKGeneralException
 from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics.utils import check_metrics, reverse_translate_metric_name, RRDData
+from cmk.gui.plugins.metrics.utils import (
+    check_metrics,
+    lookup_metric_translations_for_check_command,
+    reverse_translate_metric_name,
+    RRDData,
+)
 from cmk.gui.type_defs import ColumnName
 
 
@@ -202,7 +207,7 @@ def merge_multicol(row: Dict, rrdcols: List[ColumnName], params: Dict) -> TimeSe
     relevant_ts = []
     desired_metric = params["metric"]
     check_command = row["service_check_command"]
-    translations = check_metrics.get(check_command, {})
+    translations = lookup_metric_translations_for_check_command(check_metrics, check_command) or {}
 
     for rrdcol in rrdcols:
         if not rrdcol.startswith("rrddata"):

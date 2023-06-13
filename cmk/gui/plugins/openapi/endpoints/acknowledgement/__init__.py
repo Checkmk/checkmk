@@ -30,12 +30,11 @@ from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_servicegroup_problem,
 )
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.openapi.restful_objects import (
-    constructors,
-    Endpoint,
-    permissions,
-    request_schemas,
+from cmk.gui.plugins.openapi.endpoints.acknowledgement.request_schemas import (
+    AcknowledgeHostRelatedProblem,
+    AcknowledgeServiceRelatedProblem,
 )
+from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.utils import ProblemException
 
 from cmk import fields
@@ -74,7 +73,7 @@ RW_PERMISSIONS = permissions.AllPerm(
     status_descriptions={
         422: "The query yielded no result.",
     },
-    request_schema=request_schemas.AcknowledgeHostRelatedProblem,
+    request_schema=AcknowledgeHostRelatedProblem,
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
     update_config_generation=False,
@@ -164,7 +163,7 @@ def set_acknowledgement_on_hosts(params: Mapping[str, Any]) -> Response:
     status_descriptions={
         422: "Service was not in a problem state.",
     },
-    request_schema=request_schemas.AcknowledgeServiceRelatedProblem,
+    request_schema=AcknowledgeServiceRelatedProblem,
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
     update_config_generation=False,

@@ -19,7 +19,7 @@ import cmk.utils.tty as tty
 from cmk.utils.log import console, section
 from cmk.utils.structured_data import (
     ImmutableTree,
-    make_filter_from_choice,
+    make_filter_func,
     MutableTree,
     parse_visible_raw_path,
     RawIntervalsFromConfig,
@@ -456,7 +456,7 @@ def _may_update(
                     now,
                     node_path,
                     previous_tree,
-                    make_filter_from_choice(
+                    make_filter_func(
                         a[-1] if isinstance(a := choices_for_attributes, tuple) else a
                     ),
                     RetentionIntervals.make(
@@ -477,9 +477,7 @@ def _may_update(
                     now,
                     node_path,
                     previous_tree,
-                    make_filter_from_choice(
-                        c[-1] if isinstance(c := choices_for_table, tuple) else c
-                    ),
+                    make_filter_func(c[-1] if isinstance(c := choices_for_table, tuple) else c),
                     RetentionIntervals.make(
                         (
                             (now, 0)

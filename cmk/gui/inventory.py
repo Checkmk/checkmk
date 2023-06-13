@@ -29,10 +29,8 @@ from cmk.utils.structured_data import (
     ImmutableDeltaTree,
     ImmutableTree,
     load_tree,
-    make_filter_from_choice,
     parse_visible_raw_path,
     SDFilter,
-    SDFilterFunc,
     SDKey,
     SDPath,
     SDRawTree,
@@ -131,21 +129,16 @@ class PermittedPath(_PermittedPath, total=False):
 def _make_filters_from_permitted_paths(
     permitted_paths: Sequence[PermittedPath],
 ) -> Sequence[SDFilter]:
-    def _make_filter(entry: PermittedPath) -> SDFilter:
-        return SDFilter(
+    return [
+        SDFilter.from_choices(
             path=parse_visible_raw_path(entry["visible_raw_path"]),
-            filter_pairs=make_filter_from_choice(
-                a[-1] if isinstance(a := entry.get("attributes", "all"), tuple) else a
-            ),
-            filter_columns=make_filter_from_choice(
-                c[-1] if isinstance(c := entry.get("columns", "all"), tuple) else c
-            ),
-            filter_nodes=make_filter_from_choice(
-                n[-1] if isinstance(n := entry.get("nodes", "all"), tuple) else n
-            ),
+            choice_pairs=a[-1] if isinstance(a := entry.get("attributes", "all"), tuple) else a,
+            choice_columns=c[-1] if isinstance(c := entry.get("columns", "all"), tuple) else c,
+            choice_nodes=n[-1] if isinstance(n := entry.get("nodes", "all"), tuple) else n,
         )
-
-    return [_make_filter(entry) for entry in permitted_paths if entry]
+        for entry in permitted_paths
+        if entry
+    ]
 
 
 def load_filtered_and_merged_tree(row: Row) -> ImmutableTree:
@@ -683,30 +676,22 @@ def has_inventory(hostname: HostName) -> bool:
 
 
 def _make_filters_from_api_request_paths(api_request_paths: Sequence[str]) -> Sequence[SDFilter]:
-    def _make_choices_filter(choices: Sequence[str | int]) -> SDFilterFunc:
-        return lambda key: key in choices
-
-    def _make_filter(entry: tuple[SDPath, Sequence[str] | None]) -> SDFilter:
-        path, keys = entry
-        if keys is None:
-            return SDFilter(
-                path=path,
-                filter_pairs=lambda k: True,
-                filter_columns=lambda k: True,
-                filter_nodes=lambda k: True,
+    def _make_filter(inventory_path: InventoryPath) -> SDFilter:
+        if inventory_path.key is None:
+            return SDFilter.from_choices(
+                path=inventory_path.path,
+                choice_pairs="all",
+                choice_columns="all",
+                choice_nodes="all",
             )
-        return SDFilter(
-            path=path,
-            filter_pairs=_make_choices_filter(keys),
-            filter_columns=_make_choices_filter(keys),
-            filter_nodes=lambda k: False,
+        return SDFilter.from_choices(
+            path=inventory_path.path,
+            choice_pairs=[inventory_path.key],
+            choice_columns=[inventory_path.key],
+            choice_nodes="nothing",
         )
 
-    return [
-        _make_filter((inventory_path.path, [inventory_path.key] if inventory_path.key else None))
-        for raw_path in api_request_paths
-        for inventory_path in (InventoryPath.parse(raw_path),)
-    ]
+    return [_make_filter(InventoryPath.parse(raw_path)) for raw_path in api_request_paths]
 
 
 def inventory_of_host(host_name: HostName, api_request) -> SDRawTree:  # type: ignore[no-untyped-def]

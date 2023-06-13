@@ -164,14 +164,7 @@ def parse_visible_raw_path(raw_path: str) -> SDPath:
 SDFilterFunc = Callable[[SDKey], bool]
 
 
-class SDFilter(NamedTuple):
-    path: SDPath
-    filter_pairs: SDFilterFunc
-    filter_columns: SDFilterFunc
-    filter_nodes: SDFilterFunc
-
-
-def make_filter_from_choice(choice: Literal["nothing", "all"] | Sequence[str]) -> SDFilterFunc:
+def make_filter_func(choice: Literal["nothing", "all"] | Sequence[str]) -> SDFilterFunc:
     # TODO Improve:
     # For contact groups (via make_filter)
     #   - ('choices', ['some', 'keys'])
@@ -186,6 +179,29 @@ def make_filter_from_choice(choice: Literal["nothing", "all"] | Sequence[str]) -
     if choice == "all":
         return lambda k: True
     return lambda k: k in choice
+
+
+class SDFilter(NamedTuple):
+    path: SDPath
+    filter_pairs: SDFilterFunc
+    filter_columns: SDFilterFunc
+    filter_nodes: SDFilterFunc
+
+    @classmethod
+    def from_choices(
+        cls,
+        *,
+        path: SDPath,
+        choice_pairs: Literal["nothing", "all"] | Sequence[str],
+        choice_columns: Literal["nothing", "all"] | Sequence[str],
+        choice_nodes: Literal["nothing", "all"] | Sequence[str],
+    ) -> SDFilter:
+        return cls(
+            path=path,
+            filter_pairs=make_filter_func(choice_pairs),
+            filter_columns=make_filter_func(choice_columns),
+            filter_nodes=make_filter_func(choice_nodes),
+        )
 
 
 @dataclass(frozen=True, kw_only=True)

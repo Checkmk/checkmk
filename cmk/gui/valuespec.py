@@ -866,7 +866,7 @@ def UserID(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
 ):
     """Internal ID as used in many places (for contact names, group name, an so on)"""
 
-    def _validate(varprefix: str, userid_str: str) -> None:
+    def _validate(userid_str: str, varprefix: str) -> None:
         try:
             UserId(userid_str)
             if userid_str.strip() == "":

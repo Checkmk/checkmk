@@ -15,7 +15,7 @@ from cmk.gui.groups import (
     GroupSpec,
     GroupType,
 )
-from cmk.gui.plugins.watolib.utils import wato_fileheader
+from cmk.gui.watolib.config_domain_name import wato_fileheader
 from cmk.gui.watolib.utils import format_config_value
 
 

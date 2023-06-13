@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.plugins.wato.utils import ConfigVariableGroupUserInterface
-from cmk.gui.plugins.watolib.utils import config_variable_registry
 from cmk.gui.utils.theme import theme_choices
 from cmk.gui.valuespec import DropdownChoice
+from cmk.gui.watolib.config_domain_name import config_variable_registry
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 
 

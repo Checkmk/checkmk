@@ -37,7 +37,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
-from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.flashed_messages import flash
@@ -55,6 +54,7 @@ from cmk.gui.valuespec import (
     SetupSiteChoice,
     TextInput,
 )
+from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.hosts_and_folders import make_action_link
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 

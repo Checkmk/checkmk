@@ -10,14 +10,14 @@ from cmk.utils.log import VERBOSE
 
 from cmk.gui.i18n import is_community_translation
 from cmk.gui.plugins.wato.check_mk_configuration import ConfigVariableEnableCommunityTranslations
-from cmk.gui.plugins.watolib.utils import (
+from cmk.gui.site_config import is_wato_slave_site
+from cmk.gui.type_defs import GlobalSettings
+from cmk.gui.userdb import load_users
+from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
     filter_unknown_settings,
     UNREGISTERED_SETTINGS,
 )
-from cmk.gui.site_config import is_wato_slave_site
-from cmk.gui.type_defs import GlobalSettings
-from cmk.gui.userdb import load_users
 from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
     load_site_global_settings,

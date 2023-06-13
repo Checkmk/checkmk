@@ -46,10 +46,10 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui.config import active_config
 from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopic
-from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.type_defs import Icon, PermissionName
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.watolib.audit_log import log_audit
+from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.mkeventd import (
     export_mkp_rule_pack,
     get_rule_stats_from_ec,
@@ -103,16 +103,6 @@ from cmk.gui.plugins.wato.utils import (
     WatoMode,
 )
 from cmk.gui.plugins.wato.utils.base_modes import ModeRegistry
-from cmk.gui.plugins.watolib.utils import (
-    config_variable_group_registry,
-    config_variable_registry,
-    ConfigVariable,
-    ConfigVariableGroup,
-    ConfigVariableGroupRegistry,
-    ConfigVariableRegistry,
-    SampleConfigGenerator,
-    SampleConfigGeneratorRegistry,
-)
 from cmk.gui.site_config import enabled_sites
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult, Choices
@@ -161,6 +151,16 @@ from cmk.gui.wato.pages.global_settings import (
     MatchItemGeneratorSettings,
 )
 from cmk.gui.watolib.attributes import SNMPCredentials
+from cmk.gui.watolib.config_domain_name import (
+    config_variable_group_registry,
+    config_variable_registry,
+    ConfigVariable,
+    ConfigVariableGroup,
+    ConfigVariableGroupRegistry,
+    ConfigVariableRegistry,
+    SampleConfigGenerator,
+    SampleConfigGeneratorRegistry,
+)
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
 from cmk.gui.watolib.hosts_and_folders import HostsWithAttributes, make_action_link

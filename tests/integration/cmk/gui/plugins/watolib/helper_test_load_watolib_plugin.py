@@ -6,6 +6,6 @@
 from cmk.gui import main_modules
 
 main_modules.load_plugins()
-from cmk.gui.plugins.watolib.utils import config_domain_registry
+from cmk.gui.watolib.config_domain_name import config_domain_registry
 
 print("test" in config_domain_registry)

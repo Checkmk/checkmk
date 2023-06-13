@@ -34,16 +34,16 @@ from cmk.gui.config import active_config, get_default_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, get_language_alias, is_community_translation
 from cmk.gui.log import logger
-from cmk.gui.plugins.watolib.utils import (
+from cmk.gui.site_config import is_wato_slave_site
+from cmk.gui.userdb import load_users, save_users
+from cmk.gui.watolib.audit_log import log_audit
+from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
+    ConfigDomainName,
     DomainRequest,
     generate_hosts_to_update_settings,
     SerializedSettings,
 )
-from cmk.gui.site_config import is_wato_slave_site
-from cmk.gui.userdb import load_users, save_users
-from cmk.gui.watolib.audit_log import log_audit
-from cmk.gui.watolib.config_domain_name import ConfigDomainName
 from cmk.gui.watolib.utils import liveproxyd_config_dir, multisite_dir, wato_root_dir
 
 

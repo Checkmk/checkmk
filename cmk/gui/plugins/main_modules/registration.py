@@ -22,12 +22,6 @@ from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.plugins.visuals import filters
 from cmk.gui.plugins.visuals.utils import visual_type_registry
 from cmk.gui.plugins.wato.utils import mode_registry
-from cmk.gui.plugins.watolib.utils import (
-    config_domain_registry,
-    config_variable_group_registry,
-    config_variable_registry,
-    sample_config_generator_registry,
-)
 from cmk.gui.query_filters import cre_sites_options
 from cmk.gui.valuespec import autocompleter_registry
 from cmk.gui.views.command import command_registry
@@ -38,6 +32,12 @@ from cmk.gui.views.join_service_rows import join_service_row_post_processor
 from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.row_post_processing import register_row_post_processor
 from cmk.gui.views.sorter import sorter_registry
+from cmk.gui.watolib.config_domain_name import (
+    config_domain_registry,
+    config_variable_group_registry,
+    config_variable_registry,
+    sample_config_generator_registry,
+)
 from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 

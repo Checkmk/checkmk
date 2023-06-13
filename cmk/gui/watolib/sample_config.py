@@ -18,8 +18,11 @@ from cmk.utils.tags import sample_tag_config, TagConfig
 
 from cmk.gui.groups import AllGroupSpecs, GroupName
 from cmk.gui.log import logger
-from cmk.gui.plugins.watolib.utils import sample_config_generator_registry, SampleConfigGenerator
 from cmk.gui.userdb import create_cmk_automation_user
+from cmk.gui.watolib.config_domain_name import (
+    sample_config_generator_registry,
+    SampleConfigGenerator,
+)
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
 from cmk.gui.watolib.global_settings import save_global_settings
 from cmk.gui.watolib.group_writer import save_group_information

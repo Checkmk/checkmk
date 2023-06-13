@@ -15,12 +15,6 @@ from cmk.gui.plugins.wato.utils import (
     ConfigVariableGroupNotifications,
     notification_parameter_registry,
 )
-from cmk.gui.plugins.watolib.utils import (
-    ABCConfigDomain,
-    config_variable_registry,
-    ConfigVariable,
-    ConfigVariableGroup,
-)
 from cmk.gui.valuespec import (
     Age,
     CascadingDropdown,
@@ -31,6 +25,12 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
     ValueSpec,
+)
+from cmk.gui.watolib.config_domain_name import (
+    ABCConfigDomain,
+    config_variable_registry,
+    ConfigVariable,
+    ConfigVariableGroup,
 )
 from cmk.gui.watolib.config_domains import ConfigDomainCore, ConfigDomainGUI
 from cmk.gui.watolib.utils import site_neutral_path

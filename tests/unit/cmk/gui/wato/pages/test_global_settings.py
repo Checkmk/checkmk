@@ -7,13 +7,13 @@ from collections.abc import Iterable
 
 from pytest import MonkeyPatch
 
-from cmk.gui.plugins.watolib.utils import ConfigVariable, ConfigVariableGroup
 from cmk.gui.valuespec import TextInput, ValueSpec
 from cmk.gui.wato.pages.global_settings import (
     ABCConfigDomain,
     MatchItemGeneratorSettings,
     ModeEditGlobals,
 )
+from cmk.gui.watolib.config_domain_name import ConfigVariable, ConfigVariableGroup
 from cmk.gui.watolib.search import MatchItem
 
 

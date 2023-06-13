@@ -5,10 +5,9 @@
 
 import cmk.utils.version as cmk_version
 
-import cmk.gui.plugins.watolib.utils as utils
-
 # Following import is used to trigger plugin loading
 import cmk.gui.wato  # noqa: F401 # pylint: disable=unused-import
+import cmk.gui.watolib.config_domain_name as utils
 
 
 def test_registered_generators() -> None:

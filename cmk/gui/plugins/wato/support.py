@@ -5,14 +5,14 @@
 
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.watolib.utils import (
+from cmk.gui.valuespec import HTTPUrl, TextInput, ValueSpec
+from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_variable_group_registry,
     config_variable_registry,
     ConfigVariable,
     ConfigVariableGroup,
 )
-from cmk.gui.valuespec import HTTPUrl, TextInput, ValueSpec
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 
 

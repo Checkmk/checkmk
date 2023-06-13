@@ -331,7 +331,7 @@ test-shellcheck:
 
 test-cycles:
 	$(CYCLES) \
-		--threshold 4 \
+		--threshold 3 \
 		--packages cmk omd/packages/omd/omdlib agent-receiver/agent_receiver \
 		--project-path $$(realpath -L ..) \
 		--strategy johnson \

@@ -5,7 +5,7 @@
 
 import cmk.utils.paths
 
-from cmk.gui.plugins.watolib.utils import (
+from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_domain_registry,
     ConfigurationWarnings,

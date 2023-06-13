@@ -22,7 +22,6 @@ from cmk.gui.cron import register_job as _register_job
 from cmk.gui.inventory import (
     execute_inventory_housekeeping_job as _execute_inventory_housekeeping_job,
 )
-from cmk.gui.plugins.watolib.utils import config_domain_registry as _config_domain_registry
 from cmk.gui.utils import load_web_plugins as _load_web_plugins
 from cmk.gui.watolib import autodiscovery as _autodiscovery
 from cmk.gui.watolib import automatic_host_removal as _automatic_host_removal
@@ -30,6 +29,7 @@ from cmk.gui.watolib._host_attributes import register as _register_host_attribut
 from cmk.gui.watolib.activate_changes import (
     execute_activation_cleanup_background_job as _execute_activation_cleanup_background_job,
 )
+from cmk.gui.watolib.config_domain_name import config_domain_registry as _config_domain_registry
 from cmk.gui.watolib.host_attributes import ABCHostAttribute
 from cmk.gui.watolib.host_attributes import host_attribute_registry as _host_attributes_registry
 from cmk.gui.watolib.host_rename import (

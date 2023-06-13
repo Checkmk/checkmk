@@ -68,7 +68,6 @@ import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.plugins.wato.utils
 import cmk.gui.plugins.wato.utils.base_modes
-import cmk.gui.plugins.watolib.utils
 import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
@@ -80,6 +79,7 @@ import cmk.gui.wato.permissions
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.attributes
 import cmk.gui.watolib.changes
+import cmk.gui.watolib.config_domain_name
 import cmk.gui.watolib.config_hostname
 import cmk.gui.watolib.host_attributes
 import cmk.gui.watolib.hosts_and_folders
@@ -494,7 +494,7 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "SampleConfigGenerator",
         "wato_fileheader",
     ):
-        api_module.__dict__[name] = cmk.gui.plugins.watolib.utils.__dict__[name]
+        api_module.__dict__[name] = cmk.gui.watolib.config_domain_name.__dict__[name]
     for name in ("rule_option_elements",):
         api_module.__dict__[name] = cmk.gui.valuespec.__dict__[name]
 

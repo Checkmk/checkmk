@@ -6,7 +6,7 @@
 """Register the builtin global setting configuration variable groups"""
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.watolib.utils import config_variable_group_registry, ConfigVariableGroup
+from cmk.gui.watolib.config_domain_name import config_variable_group_registry, ConfigVariableGroup
 
 
 @config_variable_group_registry.register

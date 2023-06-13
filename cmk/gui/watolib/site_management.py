@@ -30,12 +30,12 @@ from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.site_config import site_is_local
 from cmk.gui.watolib.activate_changes import clear_site_replication_status
 from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.automations import do_site_login
 from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.sites import prepare_raw_site_config, SiteManagementFactory
 

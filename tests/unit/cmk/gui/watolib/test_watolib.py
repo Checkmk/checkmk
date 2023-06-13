@@ -7,7 +7,9 @@ import pytest
 
 import cmk.utils.version as cmk_version
 
-from cmk.gui.plugins.watolib.utils import (
+from cmk.gui.valuespec import ValueSpec
+from cmk.gui.watolib.automation_commands import automation_command_registry
+from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_domain_registry,
     config_variable_group_registry,
@@ -15,8 +17,6 @@ from cmk.gui.plugins.watolib.utils import (
     configvar_order,
     ConfigVariableGroup,
 )
-from cmk.gui.valuespec import ValueSpec
-from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.utils import format_php
 
 

@@ -226,6 +226,16 @@ STAGES:
       RESULT_CHECK_TYPE: "PYLINT"
       RESULT_CHECK_FILE_PATTERN: "results/pylint.txt"
 
+    - NAME: 'Python Bandit'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT
+      DIR: 'tests'
+      ENV_VARS:
+          BANDIT_OUTPUT_ARGS: "-f xml -o ${RESULTS}/bandit_results.xml"
+      COMMAND: "make test-bandit-docker"
+      TEXT_ON_SKIP: 'No Python files changed'
+      RESULT_CHECK_TYPE: "JUNIT"
+      RESULT_CHECK_FILE_PATTERN: "results/bandit_results.xml"
+
     - NAME: 'Shell Format'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_SHELL_FILES
       DIR: 'tests'

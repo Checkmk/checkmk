@@ -168,6 +168,9 @@ test-bandit: bandit.ini
 # go and enable the medium/low checks.
 	$(BANDIT) -c ../bandit.yaml -r -ll --ini bandit.ini $(BANDIT_OUTPUT_ARGS)
 
+test-bandit-docker:
+	../scripts/run-in-docker.sh make test-bandit
+
 test-bandit-nosec-markers:
 	$(PIPENV) run python bandit-nosec-markers/nosec_reason.py --doc bandit-nosec-markers/bandit-exclusions.md check $(realpath ..)
 

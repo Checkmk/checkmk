@@ -1,0 +1,13 @@
+Title: Management boards: Use correct metric units and scalings
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1686667892
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Metrics and graphs of management interface services might have used wrong units or might have been
+scaled incorrectly. For example, some of the filesystem metrics produced by the plugin
+<tt>hr_fs</tt> were displayed too small by a factor of 1024^2 for management boards.

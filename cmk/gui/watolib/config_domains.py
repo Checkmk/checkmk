@@ -5,6 +5,7 @@
 
 import logging
 import os
+import shutil
 import signal
 import subprocess
 import traceback
@@ -141,6 +142,16 @@ class ConfigDomainGUI(ABCConfigDomain):
                     )
                     user_config.pop("language", None)
             save_users(users, datetime.now())
+
+        if active_config.wato_use_git and shutil.which("git") is None:
+            raise MKUserError(
+                "",
+                _(
+                    "'git' command was not found on this system, but it is requried for versioning the configuration."
+                    "Please either install 'git' or disable git configuration tracking in WATO."
+                ),
+            )
+
         return warnings
 
     def default_globals(self) -> Mapping[str, Any]:

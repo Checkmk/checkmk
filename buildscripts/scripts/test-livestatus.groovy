@@ -3,15 +3,23 @@
 /// file: test-livestatus.groovy
 
 def main() {
-    def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
-
     dir("${checkout_dir}") {
-        test_jenkins_helper.execute_test([
-            name: "Compile & Test Livestatus",
-            cmd: "packages/livestatus/run --clean --all",
-        ]);
-
-        test_jenkins_helper.analyse_issues("GCC", "");
+        docker_image_from_alias("IMAGE_TESTING").inside() {
+            stage('Compile & Test Livestatus') {
+                sh("packages/livestatus/run --clean --all");
+            }
+        }
+        stage("Analyse Issues") {
+            publishIssues(
+                issues: [scanForIssues( tool: gcc())],
+                trendChartType: 'TOOLS_ONLY',
+                qualityGates: [[
+                    threshold: 1,
+                    type: 'TOTAL',
+                    unstable: false,
+                ]],
+            );
+        }
     }
 }
 

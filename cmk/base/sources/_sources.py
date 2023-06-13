@@ -3,6 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# TODO This module should be freed from base deps.
+
 from collections.abc import Mapping
 from typing import Final
 
@@ -23,12 +25,14 @@ from cmk.fetchers.filecache import (
     SNMPFileCache,
 )
 
-from cmk.checkengine import Source, SourceInfo, SourceType
+from cmk.checkengine import SourceInfo, SourceType
 from cmk.checkengine.type_defs import SectionNameCollection
 
-import cmk.base.config as config  # This module should be free from base deps.
+import cmk.base.config as config
 import cmk.base.core_config as core_config
 from cmk.base.config import ConfigCache
+
+from ._api import Source
 
 __all__ = [
     "SNMPSource",

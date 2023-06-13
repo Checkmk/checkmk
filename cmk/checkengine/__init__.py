@@ -36,7 +36,6 @@ from ._api import (
     parse_raw_data,
     ParserFunction,
     SectionPlugin,
-    Source,
     SummarizerFunction,
 )
 from ._markers import PiggybackMarker, SectionMarker

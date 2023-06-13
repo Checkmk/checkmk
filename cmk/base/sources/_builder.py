@@ -22,7 +22,7 @@ from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
-from cmk.checkengine import Parser, SNMPParser, Source, SourceInfo
+from cmk.checkengine import Parser, SNMPParser, SourceInfo
 from cmk.checkengine.type_defs import AgentRawDataSection, NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
@@ -31,6 +31,7 @@ from cmk.base.api.agent_based.register.snmp_plugin_store import make_plugin_stor
 from cmk.base.config import ConfigCache
 from cmk.base.ip_lookup import AddressFamily
 
+from ._api import Source
 from ._sources import (
     IPMISource,
     MgmtSNMPSource,
@@ -44,7 +45,7 @@ from ._sources import (
     TCPSource,
 )
 
-__all__ = ["make_sources", "make_parser", "Source"]
+__all__ = ["make_sources", "make_parser"]
 
 
 def make_parser(

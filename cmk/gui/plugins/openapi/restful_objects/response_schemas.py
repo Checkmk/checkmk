@@ -404,12 +404,6 @@ class ServiceGroup(DomainObject):
     )
 
 
-class ContactGroup(DomainObject):
-    domainType = fields.Constant(
-        "contact_group", required=True, description="The domain type of the object."
-    )
-
-
 class Configuration(DomainObject):
     domainType = fields.Constant("config", required=True)
 
@@ -603,24 +597,6 @@ class AgentCollection(DomainObjectCollection):
     value = fields.List(
         fields.Nested(AgentObject),
         description="A list of agent objects.",
-    )
-
-
-class ContactGroupObject(DomainObject):
-    domainType = fields.Constant(
-        "contact_group_config",
-        description="The domain type of the object.",
-    )
-
-
-class ContactGroupCollection(DomainObjectCollection):
-    domainType = fields.Constant(
-        "contact_group_config",
-        description="The domain type of the objects in the collection.",
-    )
-    value = fields.List(
-        fields.Nested(ContactGroupObject),
-        description="A list of contact group objects.",
     )
 
 

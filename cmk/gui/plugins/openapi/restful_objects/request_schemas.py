@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import MutableMapping
-from typing import Any, Literal
+from typing import Any
 
 import marshmallow
 from marshmallow_oneofschema import OneOfSchema
@@ -13,9 +13,9 @@ from cmk.utils.regex import GROUP_NAME_PATTERN, REGEX_ID, WATO_FOLDER_PATH_NAME_
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import fields as gui_fields
-from cmk.gui.config import builtin_role_ids
 from cmk.gui.exceptions import MKInternalError
 from cmk.gui.fields import AuxTagIDField
+from cmk.gui.fields.definitions import UserRoleID
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.livestatus_utils.commands.acknowledgments import (
     acknowledge_host_problem,
@@ -28,12 +28,10 @@ from cmk.gui.livestatus_utils.commands.downtimes import (
     schedule_service_downtime,
     schedule_servicegroup_service_downtime,
 )
-from cmk.gui.permissions import permission_registry
 from cmk.gui.plugins.openapi.utils import param_description
 from cmk.gui.plugins.userdb.utils import user_attribute_registry
 from cmk.gui.userdb import load_users, register_custom_user_attributes
 from cmk.gui.utils.temperate_unit import TemperatureUnit
-from cmk.gui.watolib import userroles
 from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
 from cmk.gui.watolib.tags import tag_group_exists
 
@@ -815,45 +813,6 @@ class Username(fields.String):
             raise self.make_error("should_exist", username=value)
         if not self._should_exist and value in usernames:
             raise self.make_error("should_not_exist", username=value)
-
-
-class UserRoleID(fields.String):
-    default_error_messages = {
-        "should_not_exist": "The role should not exist but it does: {role!r}",
-        "should_exist": "The role should exist but it doesn't: {role!r}",
-        "should_be_custom": "The role should be a custom role but it's not: {role!r}",
-        "should_be_builtin": "The role should be a builtin role but it's not: {role!r}",
-    }
-
-    def __init__(  # type:ignore[no-untyped-def]
-        self,
-        presence: Literal["should_exist", "should_not_exist", "ignore"] = "ignore",
-        userrole_type: Literal["should_be_custom", "should_be_builtin", "ignore"] = "ignore",
-        required=False,
-        **kwargs,
-    ) -> None:
-        super().__init__(required=required, **kwargs)
-        self.presence = presence
-        self.userrole_type = userrole_type
-
-    def _validate(self, value) -> None:  # type:ignore[no-untyped-def]
-        super()._validate(value)
-
-        if self.presence == "should_not_exist":
-            if userroles.role_exists(value):
-                raise self.make_error("should_not_exist", role=value)
-
-        elif self.presence == "should_exist":
-            if not userroles.role_exists(value):
-                raise self.make_error("should_exist", role=value)
-
-        if self.userrole_type == "should_be_builtin":
-            if value not in builtin_role_ids:
-                raise self.make_error("should_be_builtin", role=value)
-
-        elif self.userrole_type == "should_be_custom":
-            if value in builtin_role_ids:
-                raise self.make_error("should_be_custom", role=value)
 
 
 class CustomTimeRange(BaseSchema):
@@ -1790,77 +1749,4 @@ class X509ReqPEMUUID(BaseSchema):
         required=True,
         example="-----BEGIN CERTIFICATE REQUEST-----\n...\n-----END CERTIFICATE REQUEST-----\n",
         description="PEM-encoded X.509 CSR. The CN must a valid version-4 UUID.",
-    )
-
-
-class CreateUserRole(BaseSchema):
-    role_id = UserRoleID(
-        required=True,
-        description="Existing userrole that you want to clone.",
-        example="admin",
-        presence="should_exist",
-    )
-    new_role_id = UserRoleID(
-        required=False,
-        description="The new role id for the newly created user role.",
-        example="limited_permissions_user",
-        presence="should_not_exist",
-    )
-    new_alias = fields.String(
-        required=False,
-        description="A new alias that you want to give to the newly created user role.",
-        example="user_a",
-    )
-
-
-class PermissionField(fields.String):
-    default_error_messages = {
-        "invalid_permission": "The specified permission name doesn't exist: {value!r}",
-    }
-
-    def __init__(  # type:ignore[no-untyped-def]
-        self, required=True, validate=None, **kwargs
-    ) -> None:
-        super().__init__(
-            example="general.edit_profile",
-            description="The name of a permission",
-            required=required,
-            validate=validate,
-            **kwargs,
-        )
-
-    def _validate(self, value) -> None:  # type:ignore[no-untyped-def]
-        super()._validate(value)
-        if value not in permission_registry:
-            raise self.make_error("invalid_permission", value=value)
-
-
-class EditUserRole(BaseSchema):
-    new_role_id = UserRoleID(
-        required=False,
-        description="New role_id for the userrole that must be unique.",
-        example="new_userrole_id",
-        presence="should_not_exist",
-    )
-    new_alias = fields.String(
-        required=False,
-        description="New alias for the userrole that must be unique.",
-        example="new_userrole_alias",
-    )
-    new_basedon = UserRoleID(
-        required=False,
-        description="A builtin user role that you want the user role to be based on.",
-        example="guest",
-        presence="should_exist",
-        userrole_type="should_be_builtin",
-    )
-    new_permissions = fields.Dict(
-        keys=PermissionField(),
-        values=fields.String(required=True, enum=["yes", "no", "default"]),
-        required=False,
-        example={"general.edit_profile": "yes", "general.message": "no"},
-        description="A map of permission names to their state.  The following values can be set: "
-        "'yes' - the permission is active for this role."
-        "'no' - the permission is deactivated for this role, even if it was active in the role it was based on."
-        "'default' - takes the activation state from the role this role was based on. ",
     )

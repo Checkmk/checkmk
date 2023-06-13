@@ -36,15 +36,15 @@ from typing import Any
 
 from marshmallow import ValidationError
 
+from cmk.gui.fields.definitions import UserRoleID
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.openapi.restful_objects import (
-    constructors,
-    Endpoint,
-    permissions,
-    request_schemas,
-    response_schemas,
+from cmk.gui.plugins.openapi.endpoints.user_role.request_schemas import CreateUserRole, EditUserRole
+from cmk.gui.plugins.openapi.endpoints.user_role.response_schemas import (
+    UserRoleCollection,
+    UserRoleObject,
 )
+from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.plugins.openapi.utils import problem, serve_json
 from cmk.gui.type_defs import UserRole
@@ -88,7 +88,7 @@ def serialize_user_role(user_role: UserRole) -> DomainObject:
     tag_group="Setup",
     path_params=[
         {
-            "role_id": request_schemas.UserRoleID(
+            "role_id": UserRoleID(
                 required=True,
                 description="An existing user role.",
                 example="userx",
@@ -96,7 +96,7 @@ def serialize_user_role(user_role: UserRole) -> DomainObject:
             )
         }
     ],
-    response_schema=response_schemas.UserRoleObject,
+    response_schema=UserRoleObject,
     permissions_required=PERMISSIONS,
 )
 def show_user_role(params: Mapping[str, Any]) -> Response:
@@ -111,7 +111,7 @@ def show_user_role(params: Mapping[str, Any]) -> Response:
     ".../collection",
     method="get",
     tag_group="Setup",
-    response_schema=response_schemas.UserRoleCollection,
+    response_schema=UserRoleCollection,
     permissions_required=PERMISSIONS,
 )
 def list_user_roles(params: Mapping[str, Any]) -> Response:
@@ -133,8 +133,8 @@ def list_user_roles(params: Mapping[str, Any]) -> Response:
     "cmk/create",
     method="post",
     tag_group="Setup",
-    request_schema=request_schemas.CreateUserRole,
-    response_schema=response_schemas.UserRoleObject,
+    request_schema=CreateUserRole,
+    response_schema=UserRoleObject,
     permissions_required=RW_PERMISSIONS,
 )
 def create_userrole(params: Mapping[str, Any]) -> Response:
@@ -157,7 +157,7 @@ def create_userrole(params: Mapping[str, Any]) -> Response:
     tag_group="Setup",
     path_params=[
         {
-            "role_id": request_schemas.UserRoleID(
+            "role_id": UserRoleID(
                 required=True,
                 description="An existing custom user role that you want to delete.",
                 example="userx",
@@ -183,11 +183,11 @@ def delete_userrole(params: Mapping[str, Any]) -> Response:
     ".../update",
     method="put",
     tag_group="Setup",
-    request_schema=request_schemas.EditUserRole,
-    response_schema=response_schemas.UserRoleObject,
+    request_schema=EditUserRole,
+    response_schema=UserRoleObject,
     path_params=[
         {
-            "role_id": request_schemas.UserRoleID(
+            "role_id": UserRoleID(
                 required=True,
                 description="An existing user role.",
                 example="userx",

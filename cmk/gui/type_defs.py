@@ -149,7 +149,7 @@ class UserSpec(TypedDict, total=False):
     alias: str
     authorized_sites: Any  # TODO: Improve this
     automation_secret: str
-    connector: str | None
+    connector: str | None  # Contains the connection id this user was synced from
     contactgroups: list[ContactgroupName]
     customer: str | None
     disable_notifications: DisabledNotificationsOptions

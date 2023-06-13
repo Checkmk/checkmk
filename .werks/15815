@@ -1,0 +1,20 @@
+Title: LDAP connection ids that are invalid user ids will no longer crash Checkmk
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1686117166
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+LDAP connection names have have stricter requirements in Checkmk version 2.2.0.
+Up until now, Checkmk did not check these requirements when creating new LDAP
+connections nor did an update convert them to fit the new requirements.
+
+This Werk tightens LDAP connection id validation to fit the new requirements.
+Updating Checkmk will cause all spaces in connection ids to be replaced with
+underscores, as this is the most common manifestation of this incompetability.
+
+If you still are unable to update, please check if your connection id consist only
+of letters and dashes, starting with a letter.

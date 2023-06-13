@@ -26,6 +26,17 @@ import cmk.gui.watolib.groups as groups
 from cmk.gui.groups import load_service_group_information
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
+from cmk.gui.plugins.openapi.endpoints.service_group_config.request_schemas import (
+    BulkDeleteServiceGroup,
+    BulkInputServiceGroup,
+    BulkUpdateServiceGroup,
+    InputServiceGroup,
+    UpdateGroup,
+)
+from cmk.gui.plugins.openapi.endpoints.service_group_config.response_schemas import (
+    ServiceGroup,
+    ServiceGroupCollection,
+)
 from cmk.gui.plugins.openapi.endpoints.utils import (
     fetch_group,
     fetch_specific_groups,
@@ -42,7 +53,6 @@ from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
     permissions,
-    request_schemas,
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import GROUP_NAME_FIELD
@@ -64,7 +74,7 @@ RW_PERMISSIONS = permissions.AllPerm(
     "cmk/create",
     method="post",
     etag="output",
-    request_schema=request_schemas.InputServiceGroup,
+    request_schema=InputServiceGroup,
     response_schema=response_schemas.DomainObject,
     permissions_required=RW_PERMISSIONS,
 )
@@ -86,8 +96,8 @@ def create(params: Mapping[str, Any]) -> Response:
     constructors.domain_type_action_href("service_group_config", "bulk-create"),
     "cmk/bulk_create",
     method="post",
-    request_schema=request_schemas.BulkInputServiceGroup,
-    response_schema=response_schemas.ServiceGroupCollection,
+    request_schema=BulkInputServiceGroup,
+    response_schema=ServiceGroupCollection,
     permissions_required=RW_PERMISSIONS,
 )
 def bulk_create(params: Mapping[str, Any]) -> Response:
@@ -111,7 +121,7 @@ def bulk_create(params: Mapping[str, Any]) -> Response:
     constructors.collection_href("service_group_config"),
     ".../collection",
     method="get",
-    response_schema=response_schemas.ServiceGroupCollection,
+    response_schema=ServiceGroupCollection,
     permissions_required=PERMISSIONS,
 )
 def list_groups(params: Mapping[str, Any]) -> Response:
@@ -127,7 +137,7 @@ def list_groups(params: Mapping[str, Any]) -> Response:
     constructors.object_href("service_group_config", "{name}"),
     "cmk/show",
     method="get",
-    response_schema=response_schemas.ServiceGroup,
+    response_schema=ServiceGroup,
     etag="output",
     path_params=[GROUP_NAME_FIELD],
     permissions_required=PERMISSIONS,
@@ -176,7 +186,7 @@ def delete(params: Mapping[str, Any]) -> Response:
     constructors.domain_type_action_href("service_group_config", "bulk-delete"),
     ".../delete",
     method="post",
-    request_schema=request_schemas.BulkDeleteServiceGroup,
+    request_schema=BulkDeleteServiceGroup,
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
     additional_status_codes=[404, 409],
@@ -211,8 +221,8 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     method="put",
     path_params=[GROUP_NAME_FIELD],
     etag="both",
-    response_schema=response_schemas.ServiceGroup,
-    request_schema=request_schemas.UpdateGroup,
+    response_schema=ServiceGroup,
+    request_schema=UpdateGroup,
     permissions_required=RW_PERMISSIONS,
 )
 def update(params: Mapping[str, Any]) -> Response:
@@ -231,8 +241,8 @@ def update(params: Mapping[str, Any]) -> Response:
     constructors.domain_type_action_href("service_group_config", "bulk-update"),
     "cmk/bulk_update",
     method="put",
-    request_schema=request_schemas.BulkUpdateServiceGroup,
-    response_schema=response_schemas.ServiceGroupCollection,
+    request_schema=BulkUpdateServiceGroup,
+    response_schema=ServiceGroupCollection,
     permissions_required=RW_PERMISSIONS,
 )
 def bulk_update(params: Mapping[str, Any]) -> Response:

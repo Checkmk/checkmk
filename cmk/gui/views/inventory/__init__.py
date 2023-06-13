@@ -24,7 +24,7 @@ from cmk.utils.structured_data import (
     DeltaTable,
     ImmutableDeltaTree,
     ImmutableTree,
-    RetentionIntervals,
+    RetentionInterval,
     SDKey,
     SDPath,
     SDRawDeltaTree,
@@ -2231,7 +2231,7 @@ class ABCNodeRenderer(abc.ABC):
                     retention_intervals=(
                         None
                         if isinstance(table, DeltaTable)
-                        else table.get_retention_intervals(column.key, row)
+                        else table.get_retention_interval(column.key, row)
                     ),
                 )
                 html.close_td()
@@ -2243,7 +2243,7 @@ class ABCNodeRenderer(abc.ABC):
         self,
         value: Any,
         col_hint: ColumnDisplayHint,
-        retention_intervals: RetentionIntervals | None = None,
+        retention_intervals: RetentionInterval | None = None,
     ) -> None:
         raise NotImplementedError()
 
@@ -2265,7 +2265,7 @@ class ABCNodeRenderer(abc.ABC):
                 retention_intervals=(
                     None
                     if isinstance(attributes, DeltaAttributes)
-                    else attributes.get_retention_intervals(key)
+                    else attributes.get_retention_interval(key)
                 ),
             )
             html.close_td()
@@ -2277,7 +2277,7 @@ class ABCNodeRenderer(abc.ABC):
         self,
         value: Any,
         attr_hint: AttributeDisplayHint,
-        retention_intervals: RetentionIntervals | None = None,
+        retention_intervals: RetentionInterval | None = None,
     ) -> None:
         raise NotImplementedError()
 
@@ -2293,7 +2293,7 @@ class ABCNodeRenderer(abc.ABC):
         self,
         value: Any,
         hint: ColumnDisplayHint | AttributeDisplayHint,
-        retention_intervals: RetentionIntervals | None = None,
+        retention_intervals: RetentionInterval | None = None,
     ) -> None:
         if not isinstance(value, HTML):
             _tdclass, code = hint.paint_function(value)
@@ -2305,7 +2305,7 @@ class ABCNodeRenderer(abc.ABC):
             html.write_html(value)
 
     @staticmethod
-    def _is_outdated(retention_intervals: RetentionIntervals | None) -> bool:
+    def _is_outdated(retention_intervals: RetentionInterval | None) -> bool:
         return (
             False if retention_intervals is None else time.time() > retention_intervals.keep_until
         )
@@ -2316,7 +2316,7 @@ class NodeRenderer(ABCNodeRenderer):
         self,
         value: Any,
         col_hint: ColumnDisplayHint,
-        retention_intervals: RetentionIntervals | None = None,
+        retention_intervals: RetentionInterval | None = None,
     ) -> None:
         self._show_child_value(value, col_hint, retention_intervals)
 
@@ -2324,7 +2324,7 @@ class NodeRenderer(ABCNodeRenderer):
         self,
         value: Any,
         attr_hint: AttributeDisplayHint,
-        retention_intervals: RetentionIntervals | None = None,
+        retention_intervals: RetentionInterval | None = None,
     ) -> None:
         self._show_child_value(value, attr_hint, retention_intervals)
 
@@ -2334,7 +2334,7 @@ class DeltaNodeRenderer(ABCNodeRenderer):
         self,
         value: Any,
         col_hint: ColumnDisplayHint,
-        retention_intervals: RetentionIntervals | None = None,
+        retention_intervals: RetentionInterval | None = None,
     ) -> None:
         self._show_delta_child_value(value, col_hint)
 
@@ -2342,7 +2342,7 @@ class DeltaNodeRenderer(ABCNodeRenderer):
         self,
         value: Any,
         attr_hint: AttributeDisplayHint,
-        retention_intervals: RetentionIntervals | None = None,
+        retention_intervals: RetentionInterval | None = None,
     ) -> None:
         self._show_delta_child_value(value, attr_hint)
 

@@ -17,7 +17,7 @@ from cmk.utils.structured_data import (
     ImmutableTree,
     MutableTree,
     parse_visible_raw_path,
-    RetentionIntervals,
+    RetentionInterval,
     SDFilter,
     SDNodeName,
     SDPath,
@@ -1450,16 +1450,16 @@ def test_update_from_previous_1() -> None:
         (),  # path
         previous_tree,
         lambda k: True,  # filter func
-        RetentionIntervals(4, 5, 6),
+        RetentionInterval(4, 5, 6),
     )
 
     assert current_tree.tree.table.key_columns == ["kc"]
     assert current_tree.tree.table.retentions == {
         ("KC",): {
-            "c1": RetentionIntervals(4, 5, 6),
-            "c2": RetentionIntervals(1, 2, 3),
-            "c3": RetentionIntervals(4, 5, 6),
-            "kc": RetentionIntervals(4, 5, 6),
+            "c1": RetentionInterval(4, 5, 6),
+            "c2": RetentionInterval(1, 2, 3),
+            "c3": RetentionInterval(4, 5, 6),
+            "kc": RetentionInterval(4, 5, 6),
         }
     }
     assert ImmutableTree(current_tree.tree).get_rows(()) == [
@@ -1499,13 +1499,13 @@ def test_update_from_previous_2() -> None:
         (),  # path
         previous_tree,
         lambda k: k in ["c2", "c3"],  # filter func
-        RetentionIntervals(4, 5, 6),
+        RetentionInterval(4, 5, 6),
     )
     assert current_tree.tree.table.key_columns == ["kc"]
     assert current_tree.tree.table.retentions == {
         ("KC",): {
-            "c2": RetentionIntervals(1, 2, 3),
-            "c3": RetentionIntervals(4, 5, 6),
+            "c2": RetentionInterval(1, 2, 3),
+            "c3": RetentionInterval(4, 5, 6),
         }
     }
     assert ImmutableTree(current_tree.tree).get_rows(()) == [

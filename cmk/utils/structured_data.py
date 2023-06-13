@@ -78,18 +78,14 @@ class _RawIntervalFromConfig(_RawIntervalFromConfigMandatory, total=False):
 RawIntervalsFromConfig = Sequence[_RawIntervalFromConfig]
 
 
-class RetentionIntervals(NamedTuple):
+class RetentionInterval(NamedTuple):
     cached_at: int
     cache_interval: int
     retention_interval: int
 
     @classmethod
-    def make(cls, cache_info: tuple[int, int], interval: int) -> RetentionIntervals:
+    def make(cls, cache_info: tuple[int, int], interval: int) -> RetentionInterval:
         return cls(cache_info[0], cache_info[1], interval)
-
-    @property
-    def valid_until(self) -> int:
-        return self.cached_at + self.cache_interval
 
     @property
     def keep_until(self) -> int:
@@ -99,11 +95,11 @@ class RetentionIntervals(NamedTuple):
         return self.cached_at, self.cache_interval, self.retention_interval
 
     @classmethod
-    def deserialize(cls, raw_intervals: tuple[int, int, int]) -> RetentionIntervals:
-        return cls(*raw_intervals)
+    def deserialize(cls, raw_interval: tuple[int, int, int]) -> RetentionInterval:
+        return cls(*raw_interval)
 
 
-RetentionIntervalsByKeys = dict[SDKey, RetentionIntervals]
+_RetentionIntervalsByKey = dict[SDKey, RetentionInterval]
 
 
 @dataclass(frozen=True)
@@ -277,32 +273,32 @@ class MutableTree:
         self,
         now: int,
         path: SDPath,
-        tree: ImmutableTree,
+        previous_tree: ImmutableTree,
         filter_func: SDFilterFunc,
-        inv_intervals: RetentionIntervals,
+        retention_interval: RetentionInterval,
     ) -> UpdateResult:
-        return self.tree.setdefault_node(path).attributes.update_from_previous(
+        return self.tree.setdefault_node(path).attributes.update_pairs(
             now,
             path,
-            tree.get_tree(path).tree.attributes,
+            previous_tree.get_tree(path).tree.attributes,
             filter_func,
-            inv_intervals,
+            retention_interval,
         )
 
     def update_rows(
         self,
         now: int,
         path: SDPath,
-        tree: ImmutableTree,
+        previous_tree: ImmutableTree,
         filter_func: SDFilterFunc,
-        inv_intervals: RetentionIntervals,
+        retention_interval: RetentionInterval,
     ) -> UpdateResult:
-        return self.tree.setdefault_node(path).table.update_from_previous(
+        return self.tree.setdefault_node(path).table.update_rows(
             now,
             path,
-            tree.get_tree(path).tree.table,
+            previous_tree.get_tree(path).tree.table,
             filter_func,
-            inv_intervals,
+            retention_interval,
         )
 
     def count_entries(self) -> int:
@@ -925,7 +921,7 @@ class Attributes:
     def __init__(
         self,
         *,
-        retentions: RetentionIntervalsByKeys | None = None,
+        retentions: _RetentionIntervalsByKey | None = None,
     ) -> None:
         self.retentions = retentions if retentions else {}
         self._pairs: dict[SDKey, SDValue] = {}
@@ -957,20 +953,20 @@ class Attributes:
 
     #   ---retentions-----------------------------------------------------------
 
-    def update_from_previous(
+    def update_pairs(
         self,
         now: int,
         path: SDPath,
         other: Attributes,
         filter_func: SDFilterFunc,
-        inv_intervals: RetentionIntervals,
+        retention_interval: RetentionInterval,
     ) -> UpdateResult:
         compared_filtered_keys = _compare_dict_keys(
             old_dict=_get_filtered_dict(
                 other.pairs,
                 _make_retentions_filter_func(
                     filter_func=filter_func,
-                    intervals_by_keys=other.retentions,
+                    intervals_by_key=other.retentions,
                     now=now,
                 ),
             ),
@@ -978,13 +974,13 @@ class Attributes:
         )
 
         pairs: dict[SDKey, SDValue] = {}
-        retentions: RetentionIntervalsByKeys = {}
+        retentions: _RetentionIntervalsByKey = {}
         for key in compared_filtered_keys.only_old:
             pairs.setdefault(key, other.pairs[key])
             retentions[key] = other.retentions[key]
 
         for key in compared_filtered_keys.both.union(compared_filtered_keys.only_new):
-            retentions[key] = inv_intervals
+            retentions[key] = retention_interval
 
         update_result = UpdateResult()
         if pairs:
@@ -993,14 +989,14 @@ class Attributes:
 
         if retentions:
             self.set_retentions(retentions)
-            update_result.add_attr_reason(path, "intervals", retentions)
+            update_result.add_attr_reason(path, "interval", retentions)
 
         return update_result
 
-    def set_retentions(self, intervals_by_keys: RetentionIntervalsByKeys) -> None:
-        self.retentions = intervals_by_keys
+    def set_retentions(self, intervals_by_key: _RetentionIntervalsByKey) -> None:
+        self.retentions = intervals_by_key
 
-    def get_retention_intervals(self, key: SDKey) -> RetentionIntervals | None:
+    def get_retention_interval(self, key: SDKey) -> RetentionInterval | None:
         return self.retentions.get(key)
 
     #   ---representation-------------------------------------------------------
@@ -1029,7 +1025,7 @@ class Attributes:
 
 # TODO Table: {IDENT: Attributes}?
 
-TableRetentions = dict[SDRowIdent, RetentionIntervalsByKeys]
+TableRetentions = dict[SDRowIdent, _RetentionIntervalsByKey]
 
 
 class Table:
@@ -1096,13 +1092,13 @@ class Table:
 
     #   ---retentions-----------------------------------------------------------
 
-    def update_from_previous(  # pylint: disable=too-many-branches
+    def update_rows(  # pylint: disable=too-many-branches
         self,
         now: int,
         path: SDPath,
         other: Table,
         filter_func: SDFilterFunc,
-        inv_intervals: RetentionIntervals,
+        retention_interval: RetentionInterval,
     ) -> UpdateResult:
         self.add_key_columns(other.key_columns)
 
@@ -1114,7 +1110,7 @@ class Table:
                     row,
                     _make_retentions_filter_func(
                         filter_func=filter_func,
-                        intervals_by_keys=other.retentions.get(ident),
+                        intervals_by_key=other.retentions.get(ident),
                         now=now,
                     ),
                 )
@@ -1155,7 +1151,7 @@ class Table:
                 retentions.setdefault(ident, {})[key] = other.retentions[ident][key]
 
             for key in compared_filtered_keys.both.union(compared_filtered_keys.only_new):
-                retentions.setdefault(ident, {})[key] = inv_intervals
+                retentions.setdefault(ident, {})[key] = retention_interval
 
             if row:
                 # Update row with key column entries
@@ -1170,21 +1166,21 @@ class Table:
 
         for ident in compared_filtered_idents.only_new:
             for key in self_filtered_rows[ident]:
-                retentions.setdefault(ident, {})[key] = inv_intervals
+                retentions.setdefault(ident, {})[key] = retention_interval
 
         if retentions:
             self.set_retentions(retentions)
-            for ident, intervals in retentions.items():
-                update_result.add_row_reason(path, ident, "intervals", intervals)
+            for ident, interval in retentions.items():
+                update_result.add_row_reason(path, ident, "interval", interval)
 
         return update_result
 
     def set_retentions(self, table_retentions: TableRetentions) -> None:
         self.retentions = table_retentions
 
-    def get_retention_intervals(
+    def get_retention_interval(
         self, key: SDKey, row: Mapping[SDKey, SDValue]
-    ) -> RetentionIntervals | None:
+    ) -> RetentionInterval | None:
         return self.retentions.get(self._make_row_ident(row), {}).get(key)
 
     #   ---representation-------------------------------------------------------
@@ -1207,8 +1203,8 @@ class Table:
 
         if self.retentions:
             raw_table["Retentions"] = {
-                ident: _serialize_retentions(intervals)
-                for ident, intervals in self.retentions.items()
+                ident: _serialize_retentions(interval)
+                for ident, interval in self.retentions.items()
             }
         return raw_table
 
@@ -1223,8 +1219,8 @@ class Table:
         table = cls(
             key_columns=list(key_columns),
             retentions={
-                ident: _deserialize_retentions(raw_intervals)
-                for ident, raw_intervals in raw_table.get("Retentions", {}).items()
+                ident: _deserialize_retentions(raw_interval)
+                for ident, raw_interval in raw_table.get("Retentions", {}).items()
             },
         )
         table.add_rows(rows)
@@ -1574,14 +1570,14 @@ def _compare_dict_keys(*, old_dict: Mapping, new_dict: Mapping) -> ComparedDictK
 def _make_retentions_filter_func(
     *,
     filter_func: SDFilterFunc,
-    intervals_by_keys: RetentionIntervalsByKeys | None,
+    intervals_by_key: _RetentionIntervalsByKey | None,
     now: int,
 ) -> SDFilterFunc:
     return lambda k: bool(
         filter_func(k)
-        and intervals_by_keys
-        and (intervals := intervals_by_keys.get(k))
-        and now <= intervals.keep_until
+        and intervals_by_key
+        and (interval := intervals_by_key.get(k))
+        and now <= interval.keep_until
     )
 
 
@@ -1590,17 +1586,17 @@ def _get_filtered_dict(dict_: Mapping, filter_func: SDFilterFunc) -> dict:
 
 
 def _serialize_retentions(
-    intervals_by_keys: RetentionIntervalsByKeys,
+    intervals_by_key: _RetentionIntervalsByKey,
 ) -> Mapping[SDKey, tuple[int, int, int]]:
-    return {key: intervals.serialize() for key, intervals in intervals_by_keys.items()}
+    return {key: interval.serialize() for key, interval in intervals_by_key.items()}
 
 
 def _deserialize_retentions(
-    raw_intervals_by_keys: Mapping[SDKey, tuple[int, int, int]] | None,
-) -> RetentionIntervalsByKeys:
-    if not raw_intervals_by_keys:
+    raw_intervals_by_key: Mapping[SDKey, tuple[int, int, int]] | None,
+) -> _RetentionIntervalsByKey:
+    if not raw_intervals_by_key:
         return {}
     return {
-        key: RetentionIntervals.deserialize(intervals)
-        for key, intervals in raw_intervals_by_keys.items()
+        key: RetentionInterval.deserialize(interval)
+        for key, interval in raw_intervals_by_key.items()
     }

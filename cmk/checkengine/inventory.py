@@ -23,7 +23,7 @@ from cmk.utils.structured_data import (
     MutableTree,
     parse_visible_raw_path,
     RawIntervalsFromConfig,
-    RetentionIntervals,
+    RetentionInterval,
     UpdateResult,
 )
 from cmk.utils.type_defs import (
@@ -448,22 +448,21 @@ def _may_update(
 
     results = []
     for entry in raw_intervals_from_config:
-        node_path = tuple(parse_visible_raw_path(entry["visible_raw_path"]))
+        path = tuple(parse_visible_raw_path(entry["visible_raw_path"]))
 
         if choices_for_attributes := entry.get("attributes"):
             results.append(
                 inventory_tree.update_pairs(
                     now,
-                    node_path,
+                    path,
                     previous_tree,
                     make_filter_func(
                         a[-1] if isinstance(a := choices_for_attributes, tuple) else a
                     ),
-                    RetentionIntervals.make(
+                    RetentionInterval.make(
                         (
                             (now, 0)
-                            if (ci := cache_info_by_path_and_type.get((node_path, "Attributes")))
-                            is None
+                            if (ci := cache_info_by_path_and_type.get((path, "Attributes"))) is None
                             else ci
                         ),
                         entry["interval"],
@@ -475,14 +474,13 @@ def _may_update(
             results.append(
                 inventory_tree.update_rows(
                     now,
-                    node_path,
+                    path,
                     previous_tree,
                     make_filter_func(c[-1] if isinstance(c := choices_for_table, tuple) else c),
-                    RetentionIntervals.make(
+                    RetentionInterval.make(
                         (
                             (now, 0)
-                            if (ci := cache_info_by_path_and_type.get((node_path, "TableRow")))
-                            is None
+                            if (ci := cache_info_by_path_and_type.get((path, "TableRow"))) is None
                             else ci
                         ),
                         entry["interval"],

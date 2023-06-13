@@ -626,13 +626,6 @@ class ConnectionMode(BaseSchema):
     connection_mode = CONNECTION_MODE_FIELD
 
 
-class X509PEM(BaseSchema):
-    cert = fields.String(
-        required=True,
-        description="PEM-encoded X.509 certificate.",
-    )
-
-
 class HostConfigSchemaInternal(BaseSchema):
     site = fields.String(
         required=True,
@@ -641,14 +634,6 @@ class HostConfigSchemaInternal(BaseSchema):
     is_cluster = fields.Boolean(
         required=True,
         description="Indicates if the host is a cluster host.",
-    )
-
-
-class AgentControllerCertificateSettings(BaseSchema):
-    lifetime_in_months = fields.Integer(
-        description="Lifetime of agent controller certificates in months",
-        required=True,
-        example=60,
     )
 
 

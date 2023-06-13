@@ -115,7 +115,7 @@ def test_root_cert_200(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     mocker.patch(
-        "cmk.gui.plugins.openapi.endpoints.certs._serialized_root_cert",
+        "cmk.gui.plugins.openapi.endpoints.cert._serialized_root_cert",
         return_value="fake_root_cert",
     )
     resp = aut_user_auth_wsgi_app.call_method(
@@ -183,7 +183,7 @@ def test_csr_200(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     mocker.patch(
-        "cmk.gui.plugins.openapi.endpoints.certs._serialized_signed_cert",
+        "cmk.gui.plugins.openapi.endpoints.cert._serialized_signed_cert",
         return_value="3pi4ghjwerihg",
     )
     aut_user_auth_wsgi_app.call_method(

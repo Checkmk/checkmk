@@ -25,12 +25,12 @@ from cmk.gui.http import Response
 from cmk.gui.i18n import _l
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.plugins.openapi.restful_objects import (
-    Endpoint,
-    permissions,
-    request_schemas,
-    response_schemas,
+from cmk.gui.plugins.openapi.endpoints.cert.request_schemas import X509ReqPEMUUID
+from cmk.gui.plugins.openapi.endpoints.cert.response_schemas import (
+    AgentControllerCertificateSettings,
+    X509PEM,
 )
+from cmk.gui.plugins.openapi.restful_objects import Endpoint, permissions
 from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
 
 _403_STATUS_DESCRIPTION = "You do not have the permission for agent pairing."
@@ -90,7 +90,7 @@ def _serialized_signed_cert(csr: CertificateSigningRequest) -> str:
         403: _403_STATUS_DESCRIPTION,
     },
     permissions_required=permissions.Perm("general.agent_pairing"),
-    response_schema=response_schemas.X509PEM,
+    response_schema=X509PEM,
 )
 def root_cert(param: Mapping[str, Any]) -> Response:
     """X.509 PEM-encoded root certificate"""
@@ -115,8 +115,8 @@ def root_cert(param: Mapping[str, Any]) -> Response:
     status_descriptions={
         403: _403_STATUS_DESCRIPTION,
     },
-    request_schema=request_schemas.X509ReqPEMUUID,
-    response_schema=response_schemas.X509PEM,
+    request_schema=X509ReqPEMUUID,
+    response_schema=X509PEM,
     permissions_required=permissions.Perm("general.agent_pairing"),
 )
 def make_certificate(param: Mapping[str, Any]) -> Response:
@@ -142,7 +142,7 @@ def make_certificate(param: Mapping[str, Any]) -> Response:
     status_descriptions={
         403: "Unauthorized to read the global settings",
     },
-    response_schema=response_schemas.AgentControllerCertificateSettings,
+    response_schema=AgentControllerCertificateSettings,
     permissions_required=permissions.AnyPerm(
         [
             permissions.Perm("wato.seeall"),

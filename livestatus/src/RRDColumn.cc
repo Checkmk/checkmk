@@ -21,6 +21,7 @@
 #include "livestatus/Logger.h"
 #include "livestatus/Metric.h"
 #include "livestatus/MonitoringCore.h"
+#include "livestatus/StringUtils.h"
 #include "livestatus/strutil.h"
 
 RRDColumnArgs::RRDColumnArgs(const std::string &arguments,
@@ -283,7 +284,16 @@ detail::Data RRDDataMaker::make(const std::pair<std::string, std::string>
     if (rrd_xport(static_cast<int>(argv_s.size()),
                   const_cast<char **>(argv.data()), &xxsize, &start, &end,
                   &step, &col_cnt, &legend_v, &rrd_data) != 0) {
-        Warning(logger) << "Error accessing RRD: " << rrd_get_error();
+        std::string rrd_error{rrd_get_error()};
+        if (mk::starts_with(rrd_error, "don't understand ")) {
+            // The error msg "don't understand '<metric_name>'" is logged on
+            // info lvl only as preventing such queries for non-given metrics is
+            // not feasible atm
+            Informational(logger)
+                << "Error parsing RPN expression: " << rrd_error;
+        } else {
+            Warning(logger) << "Error accessing RRD: " << rrd_error;
+        }
         return {};
     }
 

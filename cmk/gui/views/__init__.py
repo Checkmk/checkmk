@@ -11,6 +11,9 @@ import cmk.gui.visuals as visuals
 from cmk.gui.config import default_authorized_builtin_role_ids
 from cmk.gui.i18n import _, _u
 from cmk.gui.pages import PageRegistry
+from cmk.gui.painter.v0 import painters
+from cmk.gui.painter.v0.base import painter_registry, register_painter
+from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.permissions import (
     declare_dynamic_permissions,
     declare_permission,
@@ -43,9 +46,6 @@ from .page_create_view import page_create_view
 from .page_edit_view import page_edit_view, PageAjaxCascadingRenderPainterParameters
 from .page_edit_views import page_edit_views
 from .page_show_view import page_show_view
-from .painter.v0 import painters
-from .painter.v0.base import painter_registry, register_painter
-from .painter_options import painter_option_registry
 from .sorter import register_sorter, register_sorters, sorter_registry
 from .store import multisite_builtin_views
 from .view_choices import format_view_title
@@ -172,11 +172,11 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     """
     # Needs to be a local import to not influence the regular plugin loading order
     import cmk.gui.exporter as exporter
+    import cmk.gui.painter.v0.base as painter_base
+    import cmk.gui.painter.v0.helpers as painter_helpers
+    import cmk.gui.painter.v1.helpers as painter_v1_helpers
+    import cmk.gui.painter_options as painter_options
     import cmk.gui.plugins.views as api_module
-    import cmk.gui.views.painter.v0.base as painter_base
-    import cmk.gui.views.painter.v0.helpers as painter_helpers
-    import cmk.gui.views.painter.v1.helpers as painter_v1_helpers
-    import cmk.gui.views.painter_options as painter_options
     import cmk.gui.visual_link as visual_link
     from cmk.gui import display_options
     from cmk.gui.plugins.views.icons import utils as icon_utils

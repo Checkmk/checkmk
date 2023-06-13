@@ -19,12 +19,12 @@ from cmk.utils.type_defs import UserId
 
 from cmk.gui import sites
 from cmk.gui.http import request
+from cmk.gui.painter.v0.base import painter_registry
+from cmk.gui.painter.v0.painters import _paint_custom_notes
 from cmk.gui.type_defs import ColumnSpec, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.view import View
 from cmk.gui.views.page_edit_view import painters_of_datasource
-from cmk.gui.views.painter.v0.base import painter_registry
-from cmk.gui.views.painter.v0.painters import _paint_custom_notes
 from cmk.gui.visual_link import render_link_to_view
 
 

@@ -15,12 +15,12 @@ import cmk.gui.plugins.metrics.graph_images as graph_images
 import cmk.gui.plugins.metrics.html_render as html_render
 from cmk.gui.i18n import _
 from cmk.gui.metrics import page_graph_dashlet, page_host_service_graph_popup
+from cmk.gui.painter.v0 import painters
+from cmk.gui.painter.v0.base import Cell, painter_registry
 from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
 from cmk.gui.type_defs import CombinedGraphSpec, Row
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views import graph
-from cmk.gui.views.painter.v0 import painters
-from cmk.gui.views.painter.v0.base import Cell, painter_registry
 
 
 def resolve_combined_single_metric_spec(

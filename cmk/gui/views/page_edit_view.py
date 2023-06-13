@@ -12,6 +12,7 @@ import string
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Any, Literal, NamedTuple, overload, TypedDict
 
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.structured_data import SDPath
 from cmk.utils.type_defs import UserId
 
@@ -20,6 +21,7 @@ from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageResult
+from cmk.gui.painter.v0.base import Cell, Painter, painter_registry, PainterRegistry
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry
 from cmk.gui.type_defs import (
     ColumnName,
@@ -54,10 +56,8 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.views.inventory import DISPLAY_HINTS, DisplayHints
 
-from ...utils.exceptions import MKGeneralException
 from .data_source import ABCDataSource, data_source_registry
 from .layout import layout_registry
-from .painter.v0.base import Cell, Painter, painter_registry, PainterRegistry
 from .sorter import ParameterizedSorter, Sorter, sorter_registry, SorterRegistry
 from .store import get_all_views
 from .view_choices import view_choices

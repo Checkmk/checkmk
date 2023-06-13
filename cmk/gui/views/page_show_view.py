@@ -30,6 +30,8 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_external_link, PageMenuEntry, PageMenuTopic
+from cmk.gui.painter.v0.base import Cell, columns_of_cells
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.type_defs import (
     ColumnName,
@@ -46,8 +48,6 @@ from cmk.gui.view_renderer import ABCViewRenderer, GUIViewRenderer
 from cmk.gui.views.data_source import data_source_registry
 
 from . import availability
-from .painter.v0.base import Cell, columns_of_cells
-from .painter_options import PainterOptions
 from .row_post_processing import post_process_rows
 from .sorter import SorterEntry
 from .store import get_all_views, get_permitted_views

@@ -26,6 +26,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
+from cmk.gui.painter_options import paint_age, PainterOption, PainterOptionRegistry, PainterOptions
 from cmk.gui.plugins.metrics.utils import metric_info, render_color_icon, TranslatedMetrics
 from cmk.gui.site_config import get_site_config
 from cmk.gui.type_defs import ColumnName, PainterParameters, Row, SorterName, VisualLinkSpec
@@ -55,12 +56,6 @@ from cmk.gui.view_utils import (
     get_labels,
     render_labels,
     render_tag_groups,
-)
-from cmk.gui.views.painter_options import (
-    paint_age,
-    PainterOption,
-    PainterOptionRegistry,
-    PainterOptions,
 )
 from cmk.gui.visual_link import render_link_to_view
 

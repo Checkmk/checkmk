@@ -13,6 +13,7 @@ from cmk.utils.structured_data import ImmutableDeltaTree, ImmutableTree, SDKey, 
 import cmk.gui.inventory
 import cmk.gui.utils
 from cmk.gui.num_split import cmp_version
+from cmk.gui.painter.v0.base import JoinCell
 from cmk.gui.plugins.visuals.inventory import FilterInvtableVersion
 from cmk.gui.type_defs import ColumnSpec, PainterParameters
 from cmk.gui.view import View
@@ -36,7 +37,6 @@ from cmk.gui.views.inventory import (
     TableViewSpec,
 )
 from cmk.gui.views.inventory.row_post_processor import _join_inventory_rows
-from cmk.gui.views.painter.v0.base import JoinCell
 from cmk.gui.views.sorter import sorter_registry
 from cmk.gui.views.store import multisite_builtin_views
 

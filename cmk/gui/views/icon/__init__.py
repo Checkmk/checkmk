@@ -5,9 +5,9 @@
 
 from collections.abc import Callable
 
+from cmk.gui.painter.v0.base import PainterRegistry
 from cmk.gui.permissions import PermissionSectionRegistry
 
-from ..painter.v0.base import PainterRegistry
 from .base import Icon
 from .builtin import (
     AcknowledgeIcon,

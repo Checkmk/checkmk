@@ -7,9 +7,9 @@ from typing import Any
 
 from cmk.utils.plugin_registry import Registry
 
+from cmk.gui.painter.v0.base import painter_registry
 from cmk.gui.type_defs import ColumnName, PainterName, SorterFunction
 
-from ..painter.v0.base import painter_registry
 from .base import Sorter
 
 

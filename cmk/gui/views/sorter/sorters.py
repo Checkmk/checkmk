@@ -11,13 +11,13 @@ from typing import Any
 import cmk.gui.utils as utils
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
+from cmk.gui.painter.v0.helpers import get_tag_groups
+from cmk.gui.painter.v1.helpers import get_perfdata_nth_value
 from cmk.gui.site_config import get_site_config
 from cmk.gui.type_defs import ColumnName, ColumnSpec, Row
 from cmk.gui.valuespec import Dictionary, DropdownChoice
 from cmk.gui.view_utils import get_labels
 
-from ..painter.v0.helpers import get_tag_groups
-from ..painter.v1.helpers import get_perfdata_nth_value
 from .base import ParameterizedSorter, Sorter
 from .helpers import (
     cmp_custom_variable,

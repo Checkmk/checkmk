@@ -9,10 +9,10 @@ from typing import Any, Generic, TypeVar
 import cmk.utils
 from cmk.utils.type_defs import TimeRange
 
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnName, PainterParameters, Rows
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.view_utils import CellSpec
-from cmk.gui.views.painter_options import PainterOptions
 
 T = TypeVar("T")
 

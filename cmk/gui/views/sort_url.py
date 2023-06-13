@@ -5,9 +5,9 @@
 
 from collections.abc import Iterable, Sequence
 
+from cmk.gui.painter.v0.base import painter_exists, painter_registry
 from cmk.gui.type_defs import ColumnSpec, PainterName, PainterParameters, SorterName, SorterSpec
 
-from .painter.v0.base import painter_exists, painter_registry
 from .sorter import ParameterizedSorter, sorter_registry
 
 

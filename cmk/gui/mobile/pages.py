@@ -22,6 +22,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenuEntry, PageMenuLink
 from cmk.gui.page_menu_utils import collect_context_links
 from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.plugins.userdb.utils import active_connections_by_type
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import Rows, VisualContext
@@ -41,7 +42,6 @@ from cmk.gui.views.page_show_view import (
     get_want_checkboxes,
     process_view,
 )
-from cmk.gui.views.painter_options import PainterOptions
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.visuals import view_title
 

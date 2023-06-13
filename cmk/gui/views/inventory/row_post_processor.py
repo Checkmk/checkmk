@@ -17,12 +17,12 @@ from cmk.gui.inventory import (
     load_filtered_and_merged_tree,
     LoadStructuredDataError,
 )
+from cmk.gui.painter.v0.base import Cell, JoinCell
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import Row, Rows, ViewSpec
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.view import View
 
-from ..painter.v0.base import Cell, JoinCell
 from ..sorter import SorterEntry
 
 

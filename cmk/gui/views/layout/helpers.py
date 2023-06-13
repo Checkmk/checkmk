@@ -7,9 +7,8 @@ import time
 from collections.abc import Hashable, Sequence
 
 from cmk.gui.http import response
+from cmk.gui.painter.v0.base import Cell
 from cmk.gui.type_defs import Row, ViewSpec
-
-from ..painter.v0.base import Cell
 
 
 def output_csv_headers(view: ViewSpec) -> None:

@@ -11,6 +11,7 @@ from cmk.utils.type_defs import HostName, ServiceName
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.plugins.metrics.identification import graph_identification_types, GraphIdentification
 from cmk.gui.plugins.metrics.utils import (
     evaluate,
@@ -33,7 +34,6 @@ from cmk.gui.plugins.metrics.utils import (
     TranslatedMetrics,
 )
 from cmk.gui.type_defs import GraphMetric, MetricDefinition, Row, RPNExpression, TemplateGraphSpec
-from cmk.gui.views.painter_options import PainterOptions
 
 
 # Performance graph dashlets already use graph_id, but for example in reports, we still use

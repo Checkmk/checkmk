@@ -11,7 +11,7 @@ from freezegun import freeze_time
 
 from cmk.base.plugins.agent_based.utils import cache_helper
 
-from cmk.gui.views.painter.v0.helpers import render_cache_info
+from cmk.gui.painter.v0.helpers import render_cache_info
 
 NOW_SIMULATED = "2021-06-08 17:02:00.000000"
 

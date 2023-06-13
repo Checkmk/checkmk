@@ -7,8 +7,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from functools import partial
 
+from cmk.gui.painter.v0.painters import host_state_short, service_state_short
 from cmk.gui.type_defs import Row
-from cmk.gui.views.painter.v0.painters import host_state_short, service_state_short
 
 
 @dataclass

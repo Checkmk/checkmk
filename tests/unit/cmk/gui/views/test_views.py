@@ -20,6 +20,9 @@ from cmk.gui.config import active_config
 from cmk.gui.exporter import exporter_registry
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
+from cmk.gui.painter.v0 import base as painter_base
+from cmk.gui.painter.v0.base import Cell, Painter, painter_registry, PainterRegistry
+from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.type_defs import ColumnSpec, SorterSpec
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view import View
@@ -31,9 +34,6 @@ from cmk.gui.views.data_source import ABCDataSource, data_source_registry, RowTa
 from cmk.gui.views.inventory import inventory_displayhints
 from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.page_show_view import get_limit
-from cmk.gui.views.painter.v0 import base as painter_base
-from cmk.gui.views.painter.v0.base import Cell, Painter, painter_registry, PainterRegistry
-from cmk.gui.views.painter_options import painter_option_registry
 from cmk.gui.views.sorter import sorter_registry
 from cmk.gui.views.store import multisite_builtin_views
 

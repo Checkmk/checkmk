@@ -47,6 +47,13 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
+from cmk.gui.painter.v0.base import Cell, Painter, painter_registry, register_painter
+from cmk.gui.painter_options import (
+    paint_age,
+    painter_option_registry,
+    PainterOption,
+    PainterOptions,
+)
 from cmk.gui.plugins.visuals.inventory import (
     FilterInvBool,
     FilterInvFloat,
@@ -91,8 +98,6 @@ from cmk.gui.views.data_source import ABCDataSource, data_source_registry, RowTa
 from cmk.gui.views.sorter import cmp_simple_number, declare_1to1_sorter, register_sorter
 from cmk.gui.views.store import multisite_builtin_views
 
-from ..painter.v0.base import Cell, Painter, painter_registry, register_painter
-from ..painter_options import paint_age, painter_option_registry, PainterOption, PainterOptions
 from . import builtin_display_hints
 from .registry import inventory_displayhints, InventoryHintSpec
 

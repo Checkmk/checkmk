@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.gui.pages import PageRegistry
+from cmk.gui.painter.v0.base import PainterRegistry
 from cmk.gui.views.command import CommandRegistry
 from cmk.gui.views.data_source import DataSourceRegistry
-from cmk.gui.views.painter.v0.base import PainterRegistry
 from cmk.gui.views.sorter import SorterRegistry
 
 from .pages import PageCrash, PageDownloadCrashReport

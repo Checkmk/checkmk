@@ -7,10 +7,10 @@ from collections.abc import Sequence
 from livestatus import LivestatusColumn, OnlySites, Query, QuerySpecification
 
 from cmk.gui.i18n import _
+from cmk.gui.painter.v0.base import Cell
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import ColumnName, Rows, SingleInfos, VisualContext
 
-from ..painter.v0.base import Cell
 from .base import ABCDataSource, RowTable
 from .livestatus import DataSourceLivestatus, query_livestatus, RowTableLivestatus
 from .registry import DataSourceRegistry

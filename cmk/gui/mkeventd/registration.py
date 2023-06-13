@@ -3,11 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.painter.v0.base import PainterRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.plugins.wato.utils.base_modes import ModeRegistry
 from cmk.gui.valuespec import AutocompleterRegistry
-from cmk.gui.views.data_source import DataSourceRegistry
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.watolib.config_domain_name import (
     ConfigDomainRegistry,

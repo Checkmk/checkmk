@@ -9,6 +9,7 @@ from typing import Any
 import cmk.gui.utils as utils
 import cmk.gui.visuals as visuals
 from cmk.gui.config import default_authorized_builtin_role_ids
+from cmk.gui.data_source import data_source_registry, register_data_sources
 from cmk.gui.i18n import _, _u
 from cmk.gui.pages import PageRegistry
 from cmk.gui.painter.v0 import painters
@@ -33,7 +34,6 @@ from .command import (
     register_commands,
     register_legacy_command,
 )
-from .data_source import data_source_registry, register_data_sources
 from .datasource_selection import page_select_datasource
 from .host_tag_plugins import register_tag_plugins
 from .icon import Icon, icon_and_action_registry
@@ -171,6 +171,7 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     CMK-12228
     """
     # Needs to be a local import to not influence the regular plugin loading order
+    import cmk.gui.data_source as data_source
     import cmk.gui.exporter as exporter
     import cmk.gui.painter.v0.base as painter_base
     import cmk.gui.painter.v0.helpers as painter_helpers
@@ -182,7 +183,7 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     from cmk.gui.plugins.views.icons import utils as icon_utils
     from cmk.gui.views.perfometer.legacy_perfometers import utils as legacy_perfometers_utils
 
-    from . import command, data_source, layout, sorter, store
+    from . import command, layout, sorter, store
 
     for name in (
         "ABCDataSource",

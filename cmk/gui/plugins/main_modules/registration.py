@@ -15,6 +15,7 @@ from cmk.gui import autocompleters, crash_reporting, dashboard, mobile, views, v
 from cmk.gui.bi import registration as bi_registration
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.dashboard import dashlet_registry
+from cmk.gui.data_source import data_source_registry
 from cmk.gui.mkeventd import registration as mkeventd_registration
 from cmk.gui.painter.v0.base import painter_registry
 from cmk.gui.painter_options import painter_option_registry
@@ -25,7 +26,6 @@ from cmk.gui.plugins.wato.utils import mode_registry
 from cmk.gui.query_filters import cre_sites_options
 from cmk.gui.valuespec import autocompleter_registry
 from cmk.gui.views.command import command_registry
-from cmk.gui.views.data_source import data_source_registry
 from cmk.gui.views.icon import icon_and_action_registry
 from cmk.gui.views.inventory.row_post_processor import inventory_row_post_processor
 from cmk.gui.views.join_service_rows import join_service_row_post_processor

@@ -6,8 +6,8 @@ import pytest
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
+from cmk.gui.data_source import RowTableLivestatus
 from cmk.gui.view import View
-from cmk.gui.views.data_source import RowTableLivestatus
 from cmk.gui.views.store import multisite_builtin_views
 
 

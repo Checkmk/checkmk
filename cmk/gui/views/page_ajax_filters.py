@@ -6,13 +6,13 @@
 import abc
 
 from cmk.gui import visuals
+from cmk.gui.data_source import data_source_registry
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage
 from cmk.gui.type_defs import VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
 
-from .data_source import data_source_registry
 from .store import get_permitted_views
 
 

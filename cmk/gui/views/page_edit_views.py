@@ -6,9 +6,9 @@
 """Show list of all views with buttons for editing"""
 
 from cmk.gui import visuals
+from cmk.gui.data_source import data_source_registry
 from cmk.gui.i18n import _
 
-from .data_source import data_source_registry
 from .store import get_all_views
 
 

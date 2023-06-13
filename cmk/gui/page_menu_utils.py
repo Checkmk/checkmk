@@ -11,6 +11,7 @@ import cmk.gui.pagetypes as pagetypes
 import cmk.gui.visuals as visuals
 from cmk.gui.bi import is_part_of_aggregation
 from cmk.gui.config import active_config
+from cmk.gui.data_source import ABCDataSource
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -31,7 +32,6 @@ from cmk.gui.plugins.visuals.utils import (
 from cmk.gui.type_defs import InfoName, Rows, SingleInfos, Visual
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.view import View
-from cmk.gui.views.data_source import ABCDataSource
 from cmk.gui.visual_link import get_linked_visual_request_vars, make_linked_visual_url
 from cmk.gui.visuals import view_title
 

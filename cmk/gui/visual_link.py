@@ -8,6 +8,7 @@ from contextlib import suppress
 from typing import cast
 
 import cmk.gui.visuals as visuals
+from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request, response
@@ -24,7 +25,6 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
-from cmk.gui.views.data_source import data_source_registry
 
 
 def render_link_to_view(content: str | HTML, row: Row, link_spec: VisualLinkSpec) -> str | HTML:

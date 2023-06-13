@@ -22,6 +22,7 @@ from cmk.gui.bi.foldable_tree_renderer import (
     FoldableTreeRendererTopDown,
     FoldableTreeRendererTree,
 )
+from cmk.gui.data_source import ABCDataSource, RowTable
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -47,7 +48,6 @@ from cmk.gui.views.command import (
     PermissionSectionAction,
 )
 from cmk.gui.views.command.base import CommandSpecWithoutSite
-from cmk.gui.views.data_source import ABCDataSource, RowTable
 
 from cmk.bi.aggregation import BIAggregation
 from cmk.bi.computer import BIAggregationFilter

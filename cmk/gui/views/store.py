@@ -8,6 +8,7 @@ from __future__ import annotations
 from typing import Any, Final
 
 import cmk.gui.visuals as visuals
+from cmk.gui.data_source import data_source_registry
 from cmk.gui.hooks import request_memoize
 from cmk.gui.type_defs import (
     AllViewSpecs,
@@ -17,7 +18,6 @@ from cmk.gui.type_defs import (
     ViewName,
     ViewSpec,
 )
-from cmk.gui.views.data_source import data_source_registry
 
 # TODO: Refactor to plugin_registries
 multisite_builtin_views: dict[ViewName, ViewSpec] = {}

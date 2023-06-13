@@ -15,6 +15,7 @@ from cmk.utils.type_defs import HostName, UserId
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config, default_authorized_builtin_role_ids
 from cmk.gui.dashboard import DashletConfig, LinkedViewDashletConfig, ViewDashletConfig
+from cmk.gui.data_source import ABCDataSource, DataSourceRegistry, row_id, RowTableLivestatus
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -43,7 +44,6 @@ from cmk.gui.utils.urls import makeactionuri, makeuri_contextless, urlencode_var
 from cmk.gui.valuespec import MonitoringState
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.command import Command, command_registry, CommandActionResult, CommandSpec
-from cmk.gui.views.data_source import ABCDataSource, DataSourceRegistry, row_id, RowTableLivestatus
 from cmk.gui.views.sorter import (
     cmp_num_split,
     cmp_simple_number,

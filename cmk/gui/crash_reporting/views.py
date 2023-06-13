@@ -11,6 +11,7 @@ import livestatus
 from livestatus import MKLivestatusNotFoundError, OnlySites, SiteId
 
 import cmk.gui.sites as sites
+from cmk.gui.data_source import ABCDataSource, DataSourceLivestatus, RowTable
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
@@ -23,7 +24,6 @@ from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.command import Command, CommandActionResult, PermissionSectionAction
-from cmk.gui.views.data_source import ABCDataSource, DataSourceLivestatus, RowTable
 from cmk.gui.views.sorter import cmp_simple_number, Sorter
 
 from .helpers import local_files_involved_in_crash

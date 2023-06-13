@@ -17,6 +17,7 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 import cmk.gui.plugins.views
 import cmk.gui.views
 from cmk.gui.config import active_config
+from cmk.gui.data_source import ABCDataSource, data_source_registry, RowTable
 from cmk.gui.exporter import exporter_registry
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
@@ -30,7 +31,6 @@ from cmk.gui.views import command
 from cmk.gui.views.command import command_group_registry, command_registry
 from cmk.gui.views.command import group as group_module
 from cmk.gui.views.command import registry as registry_module
-from cmk.gui.views.data_source import ABCDataSource, data_source_registry, RowTable
 from cmk.gui.views.inventory import inventory_displayhints
 from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.page_show_view import get_limit

@@ -17,6 +17,7 @@ from cmk.utils.structured_data import SDPath
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import visuals
+from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
@@ -56,7 +57,6 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.views.inventory import DISPLAY_HINTS, DisplayHints
 
-from .data_source import ABCDataSource, data_source_registry
 from .layout import layout_registry
 from .sorter import ParameterizedSorter, Sorter, sorter_registry, SorterRegistry
 from .store import get_all_views

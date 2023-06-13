@@ -12,6 +12,7 @@ from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.utils as utils
 from cmk.gui.config import active_config
+from cmk.gui.data_source import row_id
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -23,7 +24,6 @@ from cmk.gui.type_defs import GroupSpec, Row, Rows, ViewSpec
 from cmk.gui.utils.theme import theme
 from cmk.gui.visual_link import render_link_to_view
 
-from ..data_source import row_id
 from .base import Layout
 from .helpers import group_value, output_csv_headers
 from .registry import LayoutRegistry

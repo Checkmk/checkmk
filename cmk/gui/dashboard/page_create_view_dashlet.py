@@ -10,6 +10,7 @@ from collections.abc import Callable
 import cmk.gui.visuals as visuals
 from cmk.gui import forms
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.data_source import data_source_registry
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -20,7 +21,6 @@ from cmk.gui.type_defs import ViewName
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.valuespec import DropdownChoice
-from cmk.gui.views.data_source import data_source_registry
 from cmk.gui.views.datasource_selection import show_create_view_dialog
 from cmk.gui.views.view_choices import view_choices
 

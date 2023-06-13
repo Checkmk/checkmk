@@ -10,6 +10,7 @@ from livestatus import SiteId
 
 import cmk.gui.weblib as weblib
 from cmk.gui.config import active_config
+from cmk.gui.data_source import ABCDataSource
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -19,7 +20,6 @@ from cmk.gui.logged_in import user
 from cmk.gui.type_defs import InfoName, Row, Rows, ViewSpec
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 
-from ..data_source import ABCDataSource
 from .base import Command, CommandExecutor, CommandGroup, CommandSpec
 from .registry import command_registry
 

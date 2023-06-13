@@ -1037,28 +1037,25 @@ class Site:
     def open_livestatus_tcp(self, encrypted: bool) -> None:
         """This opens a currently free TCP port and remembers it in the object for later use
         Not free of races, but should be sufficient."""
-        if self.get_config("LIVESTATUS_TCP").rstrip() == "on":
-            return
-
         start_again = False
+
         if not self.is_stopped():
             start_again = True
             self.stop()
 
         self.set_config("LIVESTATUS_TCP", "on")
-        self.gather_livestatus_port()
+        self._gather_livestatus_port()
         self.set_config("LIVESTATUS_TCP_PORT", str(self._livestatus_port))
         self.set_config("LIVESTATUS_TCP_TLS", "on" if encrypted else "off")
 
         if start_again:
             self.start()
 
-    def gather_livestatus_port(self) -> None:
-        config_port = self.get_config("LIVESTATUS_TCP_PORT")
-        if config_port.isdigit():
-            self._livestatus_port = int(config_port)
-        else:
-            self._livestatus_port = self.get_free_port_from(9123)
+    def set_livestatus_port_from_config(self) -> None:
+        self._livestatus_port = int(self.get_config("LIVESTATUS_TCP_PORT"))
+
+    def _gather_livestatus_port(self) -> None:
+        self._livestatus_port = self.get_free_port_from(9123)
 
     def get_free_port_from(self, port: int) -> int:
         used_ports = set()
@@ -1209,7 +1206,7 @@ class SiteFactory:
         # For convenience, allow to retrieve site by name or full ident
         if name in self._sites:
             return self._sites[name]
-        return self._existing_site(name)
+        return self._site_obj(name)
 
     def get_test_site(
         self,
@@ -1298,16 +1295,6 @@ class SiteFactory:
         # There seem to be still some changes that want to be activated
         site.activate_changes_and_wait_for_core_reload()
         logger.debug("Created site %s", site.id)
-        return site
-
-    def _existing_site(self, name: str) -> Site:
-        site = self._site_obj(name)
-        if not site.exists():
-            return site
-
-        site.gather_livestatus_port()
-        site.start()
-        logger.debug("Reused site %s", site.id)
         return site
 
     def save_results(self) -> None:

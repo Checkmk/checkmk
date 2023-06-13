@@ -26,6 +26,17 @@ from cmk.utils import version
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
+from cmk.gui.plugins.openapi.endpoints.contact_group_config.request_schemas import (
+    BulkDeleteContactGroup,
+    BulkInputContactGroup,
+    BulkUpdateContactGroup,
+    InputContactGroup,
+    UpdateGroup,
+)
+from cmk.gui.plugins.openapi.endpoints.contact_group_config.response_schemas import (
+    ContactGroup,
+    ContactGroupCollection,
+)
 from cmk.gui.plugins.openapi.endpoints.utils import (
     fetch_group,
     fetch_specific_groups,
@@ -43,7 +54,6 @@ from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
     permissions,
-    request_schemas,
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import GROUP_NAME_FIELD
@@ -74,7 +84,7 @@ RW_PERMISSIONS = permissions.AllPerm(
     "cmk/create",
     method="post",
     etag="output",
-    request_schema=request_schemas.InputContactGroup,
+    request_schema=InputContactGroup,
     response_schema=response_schemas.DomainObject,
     permissions_required=RW_PERMISSIONS,
 )
@@ -96,8 +106,8 @@ def create(params: Mapping[str, Any]) -> Response:
     constructors.domain_type_action_href("contact_group_config", "bulk-create"),
     "cmk/bulk_create",
     method="post",
-    request_schema=request_schemas.BulkInputContactGroup,
-    response_schema=response_schemas.ContactGroupCollection,
+    request_schema=BulkInputContactGroup,
+    response_schema=ContactGroupCollection,
     permissions_required=RW_PERMISSIONS,
 )
 def bulk_create(params: Mapping[str, Any]) -> Response:
@@ -121,7 +131,7 @@ def bulk_create(params: Mapping[str, Any]) -> Response:
     constructors.collection_href("contact_group_config"),
     ".../collection",
     method="get",
-    response_schema=response_schemas.ContactGroupCollection,
+    response_schema=ContactGroupCollection,
     permissions_required=PERMISSIONS,
 )
 def list_group(params: Mapping[str, Any]) -> Response:
@@ -139,7 +149,7 @@ def list_group(params: Mapping[str, Any]) -> Response:
     constructors.object_href("contact_group_config", "{name}"),
     "cmk/show",
     method="get",
-    response_schema=response_schemas.ContactGroup,
+    response_schema=ContactGroup,
     etag="output",
     path_params=[GROUP_NAME_FIELD],
     permissions_required=PERMISSIONS,
@@ -191,7 +201,7 @@ def delete(params: Mapping[str, Any]) -> Response:
     constructors.domain_type_action_href("contact_group_config", "bulk-delete"),
     ".../delete",
     method="post",
-    request_schema=request_schemas.BulkDeleteContactGroup,
+    request_schema=BulkDeleteContactGroup,
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
     additional_status_codes=[404, 409],
@@ -228,9 +238,9 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     ".../update",
     method="put",
     path_params=[GROUP_NAME_FIELD],
-    response_schema=response_schemas.ContactGroup,
+    response_schema=ContactGroup,
     etag="both",
-    request_schema=request_schemas.UpdateGroup,
+    request_schema=UpdateGroup,
     permissions_required=RW_PERMISSIONS,
 )
 def update(params: Mapping[str, Any]) -> Response:
@@ -249,8 +259,8 @@ def update(params: Mapping[str, Any]) -> Response:
     constructors.domain_type_action_href("contact_group_config", "bulk-update"),
     "cmk/bulk_update",
     method="put",
-    request_schema=request_schemas.BulkUpdateContactGroup,
-    response_schema=response_schemas.ContactGroupCollection,
+    request_schema=BulkUpdateContactGroup,
+    response_schema=ContactGroupCollection,
     permissions_required=RW_PERMISSIONS,
 )
 def bulk_update(params: Mapping[str, Any]) -> Response:

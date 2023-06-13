@@ -7,9 +7,9 @@
 from marshmallow_oneofschema import OneOfSchema
 
 from cmk.gui import fields as gui_fields
+from cmk.gui.fields.definitions import Username
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.plugins.openapi.endpoints.site_management.common import default_config_example
-from cmk.gui.plugins.openapi.restful_objects import request_schemas
 
 from cmk import fields
 
@@ -362,7 +362,7 @@ class ConfigurationConnectionAttributes(BaseSchema):
 
 
 class SiteLoginRequest(BaseSchema):
-    username = request_schemas.Username(
+    username = Username(
         required=True,
         should_exist=True,
         description="An administrative user's username.",

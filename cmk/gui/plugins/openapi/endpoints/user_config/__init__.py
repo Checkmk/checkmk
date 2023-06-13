@@ -16,14 +16,13 @@ from cmk.gui import userdb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.openapi.endpoints.utils import complement_customer, update_customer_info
-from cmk.gui.plugins.openapi.restful_objects import (
-    constructors,
-    Endpoint,
-    permissions,
-    request_schemas,
-    response_schemas,
+from cmk.gui.plugins.openapi.endpoints.user_config.request_schemas import CreateUser, UpdateUser
+from cmk.gui.plugins.openapi.endpoints.user_config.response_schemas import (
+    UserCollection,
+    UserObject,
 )
+from cmk.gui.plugins.openapi.endpoints.utils import complement_customer, update_customer_info
+from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.restful_objects.parameters import USERNAME
 from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.type_defs import UserSpec
@@ -66,7 +65,7 @@ RW_PERMISSIONS = permissions.AllPerm(
     method="get",
     path_params=[USERNAME],
     etag="output",
-    response_schema=response_schemas.UserObject,
+    response_schema=UserObject,
     permissions_required=PERMISSIONS,
 )
 def show_user(params: Mapping[str, Any]) -> Response:
@@ -87,7 +86,7 @@ def show_user(params: Mapping[str, Any]) -> Response:
     constructors.collection_href("user_config"),
     ".../collection",
     method="get",
-    response_schema=response_schemas.UserCollection,
+    response_schema=UserCollection,
     permissions_required=PERMISSIONS,
 )
 def list_users(params: Mapping[str, Any]) -> Response:
@@ -106,8 +105,8 @@ def list_users(params: Mapping[str, Any]) -> Response:
     "cmk/create",
     method="post",
     etag="output",
-    request_schema=request_schemas.CreateUser,
-    response_schema=response_schemas.UserObject,
+    request_schema=CreateUser,
+    response_schema=UserObject,
     permissions_required=permissions.AllPerm(
         [
             *RW_PERMISSIONS.perms,
@@ -168,8 +167,8 @@ def delete_user(params: Mapping[str, Any]) -> Response:
     method="put",
     path_params=[USERNAME],
     etag="both",
-    request_schema=request_schemas.UpdateUser,
-    response_schema=response_schemas.UserObject,
+    request_schema=UpdateUser,
+    response_schema=UserObject,
     permissions_required=RW_PERMISSIONS,
 )
 def edit_user(params: Mapping[str, Any]) -> Response:

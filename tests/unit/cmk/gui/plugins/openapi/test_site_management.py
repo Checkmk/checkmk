@@ -66,9 +66,7 @@ def test_login(
     clients: ClientRegistry,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        "cmk.gui.plugins.openapi.restful_objects.request_schemas.load_users", lambda: ["cmkadmin"]
-    )
+    monkeypatch.setattr("cmk.gui.fields.definitions.load_users", lambda: ["cmkadmin"])
     monkeypatch.setattr(
         "cmk.gui.watolib.site_management.do_site_login",
         lambda site_id, username, password: "watosecret",
@@ -84,9 +82,7 @@ def test_login_site_doesnt_exist(
     clients: ClientRegistry,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        "cmk.gui.plugins.openapi.restful_objects.request_schemas.load_users", lambda: ["cmkadmin"]
-    )
+    monkeypatch.setattr("cmk.gui.fields.definitions.load_users", lambda: ["cmkadmin"])
     clients.SiteManagement.login(
         site_id="NON_SITE",
         username="cmkadmin",
@@ -99,9 +95,7 @@ def test_login_site_problem(
     clients: ClientRegistry,
     monkeypatch: MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(
-        "cmk.gui.plugins.openapi.restful_objects.request_schemas.load_users", lambda: ["cmkadmin"]
-    )
+    monkeypatch.setattr("cmk.gui.fields.definitions.load_users", lambda: ["cmkadmin"])
 
     class MockLoginException:
         def __init__(self, *args, **kwargs):

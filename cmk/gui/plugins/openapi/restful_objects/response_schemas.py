@@ -392,18 +392,6 @@ class MoveFolder(BaseSchema):
     )
 
 
-class HostGroup(DomainObject):
-    domainType = fields.Constant(
-        "host_group", required=True, description="The domain type of the object."
-    )
-
-
-class ServiceGroup(DomainObject):
-    domainType = fields.Constant(
-        "service_group", required=True, description="The domain type of the object."
-    )
-
-
 class Configuration(DomainObject):
     domainType = fields.Constant("config", required=True)
 
@@ -597,40 +585,4 @@ class AgentCollection(DomainObjectCollection):
     value = fields.List(
         fields.Nested(AgentObject),
         description="A list of agent objects.",
-    )
-
-
-class HostGroupObject(DomainObject):
-    domainType = fields.Constant(
-        "host_group_config",
-        description="The domain type of the object.",
-    )
-
-
-class HostGroupCollection(DomainObjectCollection):
-    domainType = fields.Constant(
-        "host_group_config",
-        description="The domain type of the objects in the collection.",
-    )
-    value = fields.List(
-        fields.Nested(HostGroupObject),
-        description="A list of host group objects.",
-    )
-
-
-class ServiceGroupObject(DomainObject):
-    domainType = fields.Constant(
-        "service_group_config",
-        description="The domain type of the object.",
-    )
-
-
-class ServiceGroupCollection(DomainObjectCollection):
-    domainType = fields.Constant(
-        "service_group_config",
-        description="The domain type of the objects in the collection.",
-    )
-    value = fields.List(
-        fields.Nested(ServiceGroupObject),
-        description="A list of service group objects.",
     )

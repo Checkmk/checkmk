@@ -73,8 +73,6 @@ from cmk.checkengine.sectionparserutils import (
 )
 from cmk.checkengine.submitters import Submittee, Submitter
 
-import cmk.base.core
-import cmk.base.utils
 from cmk.base.api.agent_based import cluster_mode, value_store
 from cmk.base.api.agent_based.checking_classes import consume_check_results, IgnoreResultsError
 from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionResult

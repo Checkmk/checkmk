@@ -45,11 +45,15 @@ from cmk.gui.http import Response
 from cmk.gui.livestatus_utils.commands import downtimes as downtime_commands
 from cmk.gui.livestatus_utils.commands.downtimes import QueryException
 from cmk.gui.logged_in import user
+from cmk.gui.plugins.openapi.endpoints.downtime.request_schemas import (
+    CreateHostRelatedDowntime,
+    CreateServiceRelatedDowntime,
+    DeleteDowntime,
+)
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
     permissions,
-    request_schemas,
     response_schemas,
 )
 from cmk.gui.plugins.openapi.utils import problem, serve_json
@@ -135,7 +139,7 @@ class DowntimeParameter(BaseSchema):
     method="post",
     tag_group="Monitoring",
     skip_locking=True,
-    request_schema=request_schemas.CreateHostRelatedDowntime,
+    request_schema=CreateHostRelatedDowntime,
     additional_status_codes=[422],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
@@ -224,7 +228,7 @@ def _with_defaulted_timezone(
     method="post",
     tag_group="Monitoring",
     skip_locking=True,
-    request_schema=request_schemas.CreateServiceRelatedDowntime,
+    request_schema=CreateServiceRelatedDowntime,
     additional_status_codes=[422],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
@@ -428,7 +432,7 @@ def show_downtime(params: Mapping[str, Any]) -> Response:
     method="post",
     tag_group="Monitoring",
     skip_locking=True,
-    request_schema=request_schemas.DeleteDowntime,
+    request_schema=DeleteDowntime,
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
     update_config_generation=False,

@@ -504,27 +504,24 @@ def _merge_tables(left: Table, right: Table) -> Table:
 
 
 def _merge_nodes(left: StructuredDataNode, right: StructuredDataNode) -> StructuredDataNode:
-    node = StructuredDataNode(
+    compared_keys = _compare_dict_keys(old_dict=right.nodes_by_name, new_dict=left.nodes_by_name)
+
+    nodes: dict[SDNodeName, StructuredDataNode] = {}
+    for key in compared_keys.only_old:
+        nodes[key] = right.nodes_by_name[key]
+
+    for key in compared_keys.both:
+        nodes[key] = _merge_nodes(left=left.nodes_by_name[key], right=right.nodes_by_name[key])
+
+    for key in compared_keys.only_new:
+        nodes[key] = left.nodes_by_name[key]
+
+    return StructuredDataNode(
         path=left.path,
         attributes=_merge_attributes(left.attributes, right.attributes),
         table=_merge_tables(left.table, right.table),
+        nodes=nodes,
     )
-
-    compared_keys = _compare_dict_keys(old_dict=right.nodes_by_name, new_dict=left.nodes_by_name)
-
-    for key in compared_keys.only_old:
-        node.add_node((key,), right.nodes_by_name[key])
-
-    for key in compared_keys.both:
-        node.add_node(
-            (key,),
-            _merge_nodes(left=left.nodes_by_name[key], right=right.nodes_by_name[key]),
-        )
-
-    for key in compared_keys.only_new:
-        node.add_node((key,), left.nodes_by_name[key])
-
-    return node
 
 
 def _new_delta_tree_node(value: SDValue) -> tuple[None, SDValue]:
@@ -1353,24 +1350,20 @@ class StructuredDataNode:
         raw_table: SDRawTable,
         raw_nodes: Mapping[SDNodeName, SDRawTree],
     ) -> StructuredDataNode:
-        node = cls(
+        return cls(
             path=path,
             attributes=Attributes.deserialize(raw_attributes),
             table=Table.deserialize(raw_table),
-        )
-
-        for raw_name, raw_node in raw_nodes.items():
-            node.add_node(
-                (raw_name,),
-                cls.deserialize(
-                    path=path + (raw_name,),
+            nodes={
+                name: cls.deserialize(
+                    path=path + (name,),
                     raw_attributes=raw_node["Attributes"],
                     raw_table=raw_node["Table"],
                     raw_nodes=raw_node["Nodes"],
-                ),
-            )
-
-        return node
+                )
+                for name, raw_node in raw_nodes.items()
+            },
+        )
 
 
 # .

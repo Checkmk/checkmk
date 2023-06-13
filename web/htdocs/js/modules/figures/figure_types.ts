@@ -14,17 +14,29 @@ import {FigureData} from "cmk_figures";
 
 //types from: cmk/gui/cee/plugins/dashboard/site_overview.py
 export interface ABCElement {
+    type: string;
     title: string;
     tooltip: string;
 }
 
 export interface SiteElement extends ABCElement {
+    type: "site_element";
     url_add_vars: Record<string, string>;
     total: Part;
     parts: Part[];
 }
 
 export interface HostElement extends ABCElement {
+    hexagon_config: {
+        css_class: string;
+        path: string;
+        color?: number;
+        tooltip: string;
+        id: string;
+    }[];
+    x: number;
+    y: number;
+    type: "host_element";
     link: string;
     host_css_class: string;
     service_css_class: string;
@@ -34,6 +46,7 @@ export interface HostElement extends ABCElement {
 }
 
 export interface IconElement extends ABCElement {
+    type: "icon_element";
     css_class: string;
 }
 

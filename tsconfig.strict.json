@@ -19,9 +19,6 @@
         "web/htdocs/js/mobile.ts",
         "./enterprise/web/htdocs/js/modules/graphs_cee.ts",
         "./enterprise/web/htdocs/js/modules/figures/cmk_figures_plugins_cee.ts",
-        "./enterprise/web/htdocs/js/modules/figures/cmk_site_overview.ts",
-        "./enterprise/web/htdocs/js/modules/figures/cmk_dc_table.ts",
-        "./enterprise/web/htdocs/js/modules/figures/cmk_alert_overview.ts",
         "./enterprise/web/htdocs/js/modules/figures/cmk_timeseries.ts",
         "web/htdocs/js/modules/nodevis/**/*",
         "node_modules"

@@ -45,12 +45,7 @@ AM_CPPFLAGS = \
 AM_LDFLAGS = \
     -static-libstdc++
 
-bin_PROGRAMS = unixcat
 noinst_PROGRAMS = test_neb
-
-unixcat_SOURCES = unixcat.cc
-$(unixcat_SOURCES): $(ASIO_INCLUDE)
-unixcat_LDADD = -lpthread
 
 test_neb_SOURCES = \
     test/DummyNagios.cc \
@@ -95,7 +90,7 @@ liblivestatusneb_a_SOURCES = \
 $(liblivestatusneb_a_SOURCES): $(ASIO_INCLUDE)
 
 # Called during packaging. Copied from Makefile.am "all-am" to exclude noinst* targets
-all-packaging-local: Makefile $(bin_PROGRAMS) $(pkglib_LIBRARIES) all-local
+all-packaging-local: Makefile $(pkglib_LIBRARIES) all-local
 
 $(ASIO_INCLUDE): $(ASIO_VERSION)
 	mkdir -p $@
@@ -141,7 +136,7 @@ livestatus.o: $(liblivestatusneb_a_OBJECTS) $(LIBLIVESTATUS_SO)
 
 # NOTE: Using make's -B flag destroys all dependencies via the am--depfiles
 # target, so we use a cruel sed hack below. :-P
-compile_commands.json: Makefile $(unixcat_SOURCES) $(test_neb_SOURCES) $(liblivestatusneb_a_SOURCES)
+compile_commands.json: Makefile $(test_neb_SOURCES) $(liblivestatusneb_a_SOURCES)
 	@$(MAKE) -nwk $$(echo " $^" | sed 's/ / -W /g') | $(top_srcdir)/scripts/run-pipenv run compiledb
 
 tidy: compile_commands.json

@@ -155,6 +155,7 @@ include \
     packages/snap7/snap7.make \
     packages/appliance/appliance.make \
     packages/livestatus/livestatus.make \
+    packages/unixcat/unixcat.make \
     packages/xmlsec1/xmlsec1.make
 
 ifeq ($(EDITION),enterprise)

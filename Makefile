@@ -34,7 +34,6 @@ LIVESTATUS_SOURCES := Makefile.am standalone/config_files.m4 \
                       api/python/{README,*.py} \
                       {nagios,nagios4}/{README,*.h} \
                       src/Makefile.am \
-                      src/*.cc \
                       src/include/neb/*.h \
                       src/src/*.cc \
                       src/test/*.{cc,h}
@@ -204,7 +203,7 @@ $(LIVESTATUS_INTERMEDIATE_ARCHIVE):
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)
 	set -o pipefail; tar chf - $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) ) | tar xf - -C mk-livestatus-$(VERSION)
-	set -o pipefail; tar chf - $(TAROPTS) --exclude=build packages/livestatus third_party/re2 third_party/asio third_party/googletest third_party/rrdtool | tar xf - -C mk-livestatus-$(VERSION)
+	set -o pipefail; tar chf - $(TAROPTS) --exclude=build packages/livestatus packages/unixcat third_party/re2 third_party/asio third_party/googletest third_party/rrdtool | tar xf - -C mk-livestatus-$(VERSION)
 	cp -a configure.ac defines.make m4 mk-livestatus-$(VERSION)
 	cd mk-livestatus-$(VERSION) && \
 	    autoreconf --install --include=m4 && \
@@ -440,7 +439,7 @@ setup:
 	$(MAKE) check-setup
 
 linesofcode:
-	@wc -l $$(find -type f -name "*.py" -o -name "*.js" -o -name "*.cc" -o -name "*.h" -o -name "*.css" | grep -v openhardwaremonitor | grep -v jquery | grep -v livestatus/src ) | sort -n
+	@wc -l $$(find -type f -name "*.py" -o -name "*.js" -o -name "*.cc" -o -name "*.h" -o -name "*.css" | grep -v openhardwaremonitor | grep -v jquery ) | sort -n
 
 ar-lib compile config.guess config.sub install-sh missing depcomp: configure.ac
 	autoreconf --install --include=m4
@@ -519,6 +518,7 @@ format: format-python format-c format-shell format-js format-css format-bazel
 
 format-c:
 	packages/livestatus/run --format
+	packages/unixcat/run --format
 	$(MAKE) -C livestatus/src format
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src format
@@ -526,6 +526,7 @@ endif
 
 test-format-c:
 	packages/livestatus/run --check-format
+	packages/unixcat/run --check-format
 	$(MAKE) -C livestatus/src check-format
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src check-format

@@ -3062,11 +3062,13 @@ main_queries() {
 main() {
     # See werk 13732 for more details about this main function
 
-    if [ "$0" = "./mk_oracle" ]; then
-        parent_dir=$(basename "$(pwd)")
-    else
-        parent_dir=$(basename "$(dirname "$0")")
-    fi
+    parent_dir=$(basename "$(
+        cd "$(dirname "$0")" || {
+            echo "Can't access the parent directory" >&2
+            exit 1
+        }
+        pwd
+    )")
 
     if $MK_ORA_ON_CL || [ "$parent_dir" = plugins ]; then
         # Does not work properly (async sections) on distros

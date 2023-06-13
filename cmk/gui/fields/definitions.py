@@ -30,12 +30,15 @@ from cmk.utils.livestatus_helpers.types import Column, Table
 from cmk.utils.tags import TagGroupID, TagID
 
 from cmk.gui import sites
+from cmk.gui.config import builtin_role_ids
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.base import BaseSchema, MultiNested, ValueTypedDictSchema
 from cmk.gui.fields.utils import attr_openapi_schema, ObjectContext, ObjectType, tree_to_expr
 from cmk.gui.groups import GroupName, GroupType, load_group_information
 from cmk.gui.logged_in import user
+from cmk.gui.permissions import permission_registry
 from cmk.gui.site_config import configured_sites
+from cmk.gui.watolib import userroles
 from cmk.gui.watolib.host_attributes import host_attribute
 from cmk.gui.watolib.hosts_and_folders import CREFolder, folder_tree, Host
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
@@ -1345,6 +1348,67 @@ class X509ReqPEMFieldUUID(base.String):
             raise self.make_error("malformed")
 
 
+class UserRoleID(base.String):
+    default_error_messages = {
+        "should_not_exist": "The role should not exist but it does: {role!r}",
+        "should_exist": "The role should exist but it doesn't: {role!r}",
+        "should_be_custom": "The role should be a custom role but it's not: {role!r}",
+        "should_be_builtin": "The role should be a builtin role but it's not: {role!r}",
+    }
+
+    def __init__(  # type: ignore[no-untyped-def]
+        self,
+        presence: Literal["should_exist", "should_not_exist", "ignore"] = "ignore",
+        userrole_type: Literal["should_be_custom", "should_be_builtin", "ignore"] = "ignore",
+        required=False,
+        **kwargs,
+    ) -> None:
+        super().__init__(required=required, **kwargs)
+        self.presence = presence
+        self.userrole_type = userrole_type
+
+    def _validate(self, value) -> None:  # type: ignore[no-untyped-def]
+        super()._validate(value)
+
+        if self.presence == "should_not_exist":
+            if userroles.role_exists(value):
+                raise self.make_error("should_not_exist", role=value)
+
+        elif self.presence == "should_exist":
+            if not userroles.role_exists(value):
+                raise self.make_error("should_exist", role=value)
+
+        if self.userrole_type == "should_be_builtin":
+            if value not in builtin_role_ids:
+                raise self.make_error("should_be_builtin", role=value)
+
+        elif self.userrole_type == "should_be_custom":
+            if value in builtin_role_ids:
+                raise self.make_error("should_be_custom", role=value)
+
+
+class PermissionField(base.String):
+    default_error_messages = {
+        "invalid_permission": "The specified permission name doesn't exist: {value!r}",
+    }
+
+    def __init__(  # type: ignore[no-untyped-def]
+        self, required=True, validate=None, **kwargs
+    ) -> None:
+        super().__init__(
+            example="general.edit_profile",
+            description="The name of a permission",
+            required=required,
+            validate=validate,
+            **kwargs,
+        )
+
+    def _validate(self, value) -> None:  # type: ignore[no-untyped-def]
+        super()._validate(value)
+        if value not in permission_registry:
+            raise self.make_error("invalid_permission", value=value)
+
+
 __all__ = [
     "host_attributes_field",
     "column_field",
@@ -1360,9 +1424,11 @@ __all__ = [
     "PasswordIdent",
     "PasswordOwner",
     "PasswordShare",
+    "PermissionField",
     "PythonString",
     "query_field",
     "SiteField",
     "Timestamp",
+    "UserRoleID",
     "X509ReqPEMFieldUUID",
 ]

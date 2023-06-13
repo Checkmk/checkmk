@@ -15,7 +15,6 @@ from marshmallow_oneofschema import OneOfSchema
 import cmk.gui.userdb as userdb
 from cmk.gui import fields as gui_fields
 from cmk.gui.agent_registration import CONNECTION_MODE_FIELD
-from cmk.gui.config import builtin_role_ids
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.base import MultiNested, ValueTypedDictSchema
 from cmk.gui.fields.definitions import ensure_string
@@ -830,43 +829,6 @@ class UserCollection(DomainObjectCollection):
     value = fields.List(
         fields.Nested(UserObject),
         description="A list of user objects.",
-    )
-
-
-class UserRoleAttributes(BaseSchema):
-    alias = fields.String(required=True, description="The alias of the user role.")
-    permissions = fields.List(
-        fields.String(),
-        required=True,
-        description="A list of permissions for the user role. ",
-    )
-    builtin = fields.Boolean(
-        required=True,
-        description="True if it's a builtin user role, otherwise False.",
-    )
-    basedon = fields.String(
-        enum=builtin_role_ids,
-        required=False,
-        description="The builtin user role id that the user role is based on.",
-    )
-
-
-class UserRoleObject(DomainObject):
-    domainType = fields.Constant(
-        "user_role",
-        description="The domain type of the object.",
-    )
-    extensions = fields.Nested(UserRoleAttributes, description="All the attributes of a user role.")
-
-
-class UserRoleCollection(DomainObjectCollection):
-    domainType = fields.Constant(
-        "user_role",
-        description="The domain type of the objects in the collection.",
-    )
-    value = fields.List(
-        fields.Nested(UserRoleObject),
-        description="A list of user role objects.",
     )
 
 

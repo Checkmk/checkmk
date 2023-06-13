@@ -7,7 +7,6 @@
 
 from typing import Literal
 
-from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.ciphers import algorithms, Cipher, modes
 
@@ -56,8 +55,8 @@ def encrypt_for_rsa_key(recipient_key: certificate.RsaPublicKey, data: bytes) ->
     return recipient_key._key.encrypt(
         data,
         padding.OAEP(
-            mgf=padding.MGF1(algorithm=hashes.SHA1()),
-            algorithm=hashes.SHA1(),
+            mgf=padding.MGF1(algorithm=HashAlgorithm.Sha1.value),
+            algorithm=HashAlgorithm.Sha1.value,
             label=None,
         ),
     )
@@ -68,8 +67,8 @@ def decrypt_with_rsa_key(recipient_key: certificate.RsaPrivateKey, data: bytes) 
     return recipient_key._key.decrypt(
         data,
         padding.OAEP(
-            mgf=padding.MGF1(algorithm=hashes.SHA1()),
-            algorithm=hashes.SHA1(),
+            mgf=padding.MGF1(algorithm=HashAlgorithm.Sha1.value),
+            algorithm=HashAlgorithm.Sha1.value,
             label=None,
         ),
     )

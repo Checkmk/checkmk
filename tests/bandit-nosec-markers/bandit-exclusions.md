@@ -18,4 +18,5 @@ Note that Bandit is picky about the exact format.
 | `BNS:bbfc92` | `B701` | The test code in the examples is hard coded and does not currently take in external input. |
 | `BNS:016141` | `B501` | certificate validation not performed as it may break existing deployments of clients. |
 | `BNS:e9bfaa` | `B303` | Only used to display fingerprints and in testing. |
+| `BNS:02774b` | `B303` | SHA1 is still used by the agent bakery and mkbackup for compatibility reasons. Switching is planned. |
 | `BNS:773085` | `B113` | Timeout policy to be reviewed. |

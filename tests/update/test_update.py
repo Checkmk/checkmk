@@ -28,7 +28,6 @@ from .conftest import (
     reschedule_services,
     update_config,
     update_site,
-    version_supported,
 )
 
 logger = logging.getLogger(__name__)
@@ -96,15 +95,8 @@ def test_update(test_site: Site, agent_ctl: Path) -> None:
 
     # Triggering cmk config update
     update_config_result = update_config(target_site)
-    if version_supported(base_version.version):
-        assert update_config_result == 0, "Updating the configuration failed unexpectedly!"
-    else:
-        assert (
-            update_config_result != 0
-        ), "Updating the configuration succeeded for an unsupported release!"
-        assert (
-            update_config_result != 2
-        ), "Trying to update the config resulted in an unexpected error!"
+
+    assert update_config_result == 0, "Updating the configuration failed unexpectedly!"
 
     # get the service status codes and check them
     assert get_site_status(target_site) == "running", "Invalid service status after updating!"

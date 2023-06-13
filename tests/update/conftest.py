@@ -38,8 +38,9 @@ class BaseVersions:
     """Get all base versions used for the test."""
 
     # minimal version supported for an update that can merge the configuration
-    MIN_VERSION = os.getenv("MIN_VERSION", "2.1.0p20")
+    MIN_VERSION = os.getenv("MIN_VERSION", "2.1.0p29")
     BASE_VERSIONS_STR = [
+        "2.1.0p28",
         "2.1.0p29",
     ]
     BASE_VERSIONS = [
@@ -222,6 +223,38 @@ def _get_site(
                 "#######################################################################"
                 "\033[0m"
             )
+
+        pexpect_dialogs = []
+        if update:
+            if version_supported(source_version):
+                logger.info("Updating to a supported version.")
+                pexpect_dialogs.extend(
+                    [
+                        PExpectDialog(
+                            expect=(
+                                f"You are going to update the site {site.id} "
+                                f"from version {source_version} "
+                                f"to version {target_version}."
+                            ),
+                            send="u\r",
+                        ),
+                        PExpectDialog(expect="Wrong permission", send="d", count=0, optional=True),
+                    ]
+                )
+            else:
+                logger.info("%s is not a supported version for %s", source_version, target_version)
+                pexpect_dialogs.extend(
+                    [
+                        PExpectDialog(
+                            expect=(
+                                f"ERROR: You are trying to update from {source_version} to "
+                                f"{target_version} which is not supported."
+                            ),
+                            send="\r",
+                        )
+                    ]
+                )
+
         rc = spawn_expect_process(
             [
                 "/usr/bin/sudo",
@@ -244,21 +277,12 @@ def _get_site(
                 "--apache-reload",
                 site.id,
             ],
-            [
-                PExpectDialog(
-                    expect=(
-                        f"You are going to update the site {site.id} "
-                        f"from version {source_version} "
-                        f"to version {target_version}."
-                    ),
-                    send="u\r",
-                ),
-                PExpectDialog(expect="Wrong permission", send="d", count=0, optional=True),
-            ]
-            if update
-            else [],
+            dialogs=pexpect_dialogs,
             logfile_path=logfile_path,
         )
+
+        if update and not version_supported(source_version):
+            pytest.skip(f"{source_version} is not a supported version for {target_version}")
 
         assert rc == 0, f"Executed command returned {rc} exit status. Expected: 0"
 

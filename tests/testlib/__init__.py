@@ -168,7 +168,7 @@ def wait_until(condition: Callable[[], bool], timeout: float = 1, interval: floa
             return  # Success. Stop waiting...
         time.sleep(interval)
 
-    raise Exception("Timeout out waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
+    raise Exception("Timeout waiting for %r to finish (Timeout: %d sec)" % (condition, timeout))
 
 
 def wait_until_liveproxyd_ready(site: Site, site_ids: Collection[str]) -> None:

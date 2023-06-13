@@ -9,5 +9,5 @@ Level: 1
 Version: 2.3.0b1
 
 Several view filters, which perform either regex or exact match queries, did not indicate the match type in their filter title.
-This is fixed to all such filters being named "<filter_name> (regex)" or "<filter_name> (exact match)" respectively.
+This is fixed to all such filters being named "<i>filter_name</i> (regex)" or "<i>filter_name</i> (exact match)" respectively.
 

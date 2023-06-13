@@ -15,7 +15,7 @@ the host details. An associating wait-for-completion endpoint is also introduced
 to accompany the rename endpoint. Scripts should be adjusted accordingly.
 
 Prior to this werk, the rename process was initiated by calling the endpoint:
-/objects/host_config/<host_id>/actions/rename/invoke
+/objects/host_config/<i>host_id</i>/actions/rename/invoke
 
 This endpoint remains the same but the werk introduces the additional endpoint to
 wait for the process' completion:

@@ -1,4 +1,6 @@
 import * as cmk_figures from "cmk_figures";
+import { BaseType } from "d3";
+import * as d3 from "d3";
 import * as d3Hexbin from "d3-hexbin";
 
 interface FigurePart {
@@ -7,31 +9,35 @@ interface FigurePart {
     title: string;
     url: string;
 }
-interface FigureResponceData extends cmk_figures.FigureData {
+interface FigureResponseData extends cmk_figures.FigureData {
+    title: string;
+    title_url: string;
     parts: FigurePart[];
     total: FigurePart;
 }
 
-interface Hex_Config {
+interface HexConfig {
     title: string;
-    path: [number, number][];
-    css_class;
+    path: string;
+    css_class: string;
     tooltip: string;
     count: number;
 }
 
-export class HostStats extends cmk_figures.FigureBase<FigureResponceData> {
-    _table_div;
-    _hexagon_box;
+export class HostStats extends cmk_figures.FigureBase<FigureResponseData> {
+    _table_div!: d3.Selection<HTMLDivElement, any, BaseType, any>;
+    _hexagon_box!: d3.Selection<SVGGElement, unknown, BaseType, unknown>;
     _max_radius!: number;
-    _title = "";
-    _title_url = "";
+    _title!: string;
+    _title_url!: string;
     ident() {
         return "hoststats";
     }
 
-    getEmptyData(): FigureResponceData {
+    getEmptyData(): FigureResponseData {
         return {
+            title: "",
+            title_url: "",
             data: [],
             plot_definitions: [],
             total: {count: 0, css_class: "", title: "", url: ""},
@@ -39,7 +45,7 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponceData> {
         };
     }
 
-    initialize(debug) {
+    initialize(debug?: boolean) {
         super.initialize(debug);
 
         this._div_selection.classed("stats_dashlet", true);
@@ -54,7 +60,7 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponceData> {
         this._max_radius = 48;
     }
 
-    update_data(data) {
+    update_data(data: FigureResponseData) {
         this._title = data.title;
         this._title_url = data.title_url;
         //This assignment changes the type of our Data so it not FigureData but FigureData.Data
@@ -68,7 +74,7 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponceData> {
         this.resize();
         const parts = this._data.parts;
         const hexbin = d3Hexbin.hexbin();
-        const hexagon_config: Hex_Config[] = [];
+        const hexagon_config: HexConfig[] = [];
 
         let largest_element_count = 0;
         for (const element of this._data.parts) {
@@ -131,7 +137,7 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponceData> {
         ]);
         a.join(enter => enter.append("td").append("a"))
             .attr("class", d => d.css_class)
-            .text(d => d.text)
+            .text(d => String(d.text))
             .attr("href", d => d.url);
 
         this.render_title(this._title, this._title_url);

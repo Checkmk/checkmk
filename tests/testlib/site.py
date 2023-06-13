@@ -977,7 +977,7 @@ class Site:
             self.start()
             logger.debug("Started site")
 
-    def get_config(self, key: str) -> str:
+    def get_config(self, key: str, default: str = "") -> str:
         p = self.execute(
             ["omd", "config", "show", key], stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
@@ -985,7 +985,7 @@ class Site:
         logger.debug("omd config: %s is set to %r", key, stdout.strip())
         if stderr:
             logger.error(stderr)
-        return stdout.strip()
+        return stdout.strip() or default
 
     def core_name(self) -> Literal["cmc", "nagios"]:
         return "nagios" if self.version.is_raw_edition() else "cmc"
@@ -1056,28 +1056,26 @@ class Site:
     def open_livestatus_tcp(self, encrypted: bool) -> None:
         """This opens a currently free TCP port and remembers it in the object for later use
         Not free of races, but should be sufficient."""
-        start_again = False
-        logger.info("Opening Livestatus TCP port")
+        # Check if livestatus is already enabled and has correct TLS setting
+        if self.get_config("LIVESTATUS_TCP").rstrip() == "on" and (
+            self.get_config("LIVESTATUS_TCP_TLS", "off") == ("on" if encrypted else "off")
+        ):
+            return
 
-        if not self.is_stopped():
-            logger.info("Site was running, stopping...")
-            start_again = True
-            self.stop()
-
+        restart_site = self.is_running()
+        self.stop()
         self.set_config("LIVESTATUS_TCP", "on")
-        self._gather_livestatus_port()
+        self.gather_livestatus_port()
         self.set_config("LIVESTATUS_TCP_PORT", str(self._livestatus_port))
         self.set_config("LIVESTATUS_TCP_TLS", "on" if encrypted else "off")
-
-        if start_again:
-            logger.info("Starting site again...")
+        if restart_site:
             self.start()
 
-    def set_livestatus_port_from_config(self) -> None:
-        self._livestatus_port = int(self.get_config("LIVESTATUS_TCP_PORT"))
-
-    def _gather_livestatus_port(self) -> None:
-        self._livestatus_port = self.get_free_port_from(9123)
+    def gather_livestatus_port(self, from_config: bool = False) -> None:
+        if from_config and (config_port := int(self.get_config("LIVESTATUS_TCP_PORT", "0"))):
+            self._livestatus_port = config_port
+        else:
+            self._livestatus_port = self.get_free_port_from(9123)
 
     def get_free_port_from(self, port: int) -> int:
         used_ports = set()
@@ -1093,6 +1091,10 @@ class Site:
 
         logger.debug("Livestatus ports already in use: %r, using port: %d", used_ports, port)
         return port
+
+    def toggle_liveproxyd(self, enabled: bool = True) -> None:
+        self.set_config("LIVEPROXYD", "on" if enabled else "off", with_restart=True)
+        assert self.file_exists("tmp/run/liveproxyd.pid") == enabled
 
     def save_results(self) -> None:
         if not is_containerized():
@@ -1217,21 +1219,32 @@ class SiteFactory:
     def sites(self) -> Mapping[str, Site]:
         return self._sites
 
-    def get_site(self, name: str) -> Site:
-        if f"{self._base_ident}{name}" in self._sites:
-            return self._sites[f"{self._base_ident}{name}"]
-        # For convenience, allow to retrieve site by name or full ident
-        if name in self._sites:
-            return self._sites[name]
-        return self._new_site(name)
+    def get_site(self, name: str, init_livestatus: bool = True) -> Site:
+        site = self._site_obj(name)
 
-    def get_existing_site(self, name: str) -> Site:
-        if f"{self._base_ident}{name}" in self._sites:
-            return self._sites[f"{self._base_ident}{name}"]
-        # For convenience, allow to retrieve site by name or full ident
-        if name in self._sites:
-            return self._sites[name]
-        return self._site_obj(name)
+        site.create()
+        self._sites[site.id] = site
+
+        if init_livestatus:
+            site.open_livestatus_tcp(encrypted=False)
+        site.start()
+        site.prepare_for_tests()
+        # There seem to be still some changes that want to be activated
+        site.activate_changes_and_wait_for_core_reload()
+        logger.debug("Created site %s", site.id)
+        return site
+
+    def get_existing_site(self, name: str, init_livestatus: bool = True) -> Site:
+        site = self._site_obj(name)
+
+        if not site.exists():
+            return site
+
+        if init_livestatus:
+            site.gather_livestatus_port(from_config=True)
+        site.start()
+        logger.debug("Reused site %s", site.id)
+        return site
 
     def get_test_site(
         self,
@@ -1239,6 +1252,7 @@ class SiteFactory:
         description: str = "",
         auto_cleanup: bool = True,
         auto_restart_httpd: bool = False,
+        init_livestatus: bool = True,
     ) -> Generator[Site, None, None]:
         """Return a fully setup test site (for use in site fixtures)."""
         reuse_site = os.environ.get("REUSE", "0") == "1"
@@ -1249,15 +1263,15 @@ class SiteFactory:
             if os.environ.get("CLEANUP") is None
             else os.environ.get("CLEANUP") == "1"
         )
-        site_to_return = self.get_existing_site(name)
-        if site_to_return.exists():
+        site = self.get_existing_site(name)
+        if site.exists():
             if reuse_site:
-                logger.info('Reusing existing site "%s" (REUSE=1)', site_to_return.id)
+                logger.info('Reusing existing site "%s" (REUSE=1)', site.id)
             else:
-                logger.info('Dropping existing site "%s" (REUSE=0)', site_to_return.id)
-                site_to_return.rm()
-        if not site_to_return.exists():
-            site_to_return = self.get_site(name)
+                logger.info('Dropping existing site "%s" (REUSE=0)', site.id)
+                site.rm()
+        if not site.exists():
+            site = self.get_site(name, init_livestatus)
 
         if auto_restart_httpd:
             # When executed locally and undockerized, the DISTRO may not be set
@@ -1271,18 +1285,18 @@ class SiteFactory:
                 execute(["sudo", "httpd", "-k", "restart"])
         logger.info(
             'Site "%s" is ready!%s',
-            site_to_return.id,
+            site.id,
             f" [{description}]" if description else "",
         )
 
         try:
-            yield site_to_return
+            yield site
         finally:
             # teardown: saving results and removing site
-            site_to_return.save_results()
+            site.save_results()
             if auto_cleanup and cleanup_site:
-                logger.info('Dropping site "%s" (CLEANUP=1)', site_to_return.id)
-                site_to_return.rm()
+                logger.info('Dropping site "%s" (CLEANUP=1)', site.id)
+                site.rm()
 
     def remove_site(self, name: str) -> None:
         if f"{self._base_ident}{name}" in self._sites:
@@ -1302,6 +1316,12 @@ class SiteFactory:
         return new_ident
 
     def _site_obj(self, name: str) -> Site:
+        if f"{self._base_ident}{name}" in self._sites:
+            return self._sites[f"{self._base_ident}{name}"]
+        # For convenience, allow to retrieve site by name or full ident
+        if name in self._sites:
+            return self._sites[name]
+
         site_id = f"{self._base_ident}{name}"
         return Site(
             version=self.version,
@@ -1311,20 +1331,6 @@ class SiteFactory:
             update=self._update,
             enforce_english_gui=self._enforce_english_gui,
         )
-
-    def _new_site(self, name: str) -> Site:
-        site = self._site_obj(name)
-
-        site.create()
-        self._sites[site.id] = site
-
-        site.open_livestatus_tcp(encrypted=False)
-        site.start()
-        site.prepare_for_tests()
-        # There seem to be still some changes that want to be activated
-        site.activate_changes_and_wait_for_core_reload()
-        logger.info("Created site %s", site.id)
-        return site
 
     def save_results(self) -> None:
         logger.info("Saving results")

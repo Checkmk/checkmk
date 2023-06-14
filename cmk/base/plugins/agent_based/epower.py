@@ -10,8 +10,9 @@ from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 
 def discover_epower(section: Mapping[str, int]) -> DiscoveryResult:
-    for phase in section:
-        yield Service(item=phase)
+    for phase, value in section.items():
+        if vlaue:
+            yield Service(item=phase)
 
 
 def check_epower(item: str, params: dict, section: dict[str, int]) -> CheckResult:

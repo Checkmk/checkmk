@@ -12,7 +12,7 @@ from markdown.treeprocessors import Treeprocessor
 from pydantic import BaseModel, Field, validator
 from pydantic.error_wrappers import ValidationError
 
-from cmk.utils.version import parse_check_mk_version
+from cmk.utils.version import Version
 
 from .werk import Class, Compatibility, Edition, Level, RawWerk, Werk, WerkError, WerkTranslator
 
@@ -34,7 +34,7 @@ class RawWerkV2(BaseModel, RawWerk):
 
     @validator("version")
     def parse_version(cls, v: str) -> str:  # pylint: disable=no-self-argument
-        parse_check_mk_version(v)
+        Version.from_str(v)
         return v
 
     @validator("level", pre=True)

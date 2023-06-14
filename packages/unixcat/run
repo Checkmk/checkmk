@@ -22,6 +22,8 @@ usage() {
     echo "  -c, --clean             remove artifacts first"
     echo "  -F, --check-format      check for correct formatting"
     echo "  -b, --build             build unixcat executable"
+    echo "  -U, --build-unit-tests  build unit tests"
+    echo "  -u, --unit-tests        run unit tests"
     echo "  -i, --iwyu              check C/C++ includes via include-what-you-use"
     echo "  -t, --clang-tidy        check sources with clang-tidy linter"
     echo "  -a, --all               shortcut for -F -b -U -u -i -t"
@@ -37,13 +39,15 @@ parse_options() {
     RUN_CLEAN=no
     RUN_CHECK_FORMAT=no
     RUN_BUILD=no
+    RUN_BUILD_UNIT_TESTS=no
+    RUN_UNIT_TESTS=no
     RUN_IWYU=no
     RUN_CLANG_TIDY=no
     RUN_FORMAT=no
     RUN_DOCUMENTATION=no
     FILES=()
 
-    if ! OPTIONS=$(getopt --options 'cFbUuitaAfDj:h' --long 'clean,check-format,build,iwyu,clang-tidy,all,build-all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
+    if ! OPTIONS=$(getopt --options 'cFbUuitaAfDj:h' --long 'clean,check-format,build,build-unit-tests,unit-tests,iwyu,clang-tidy,all,build-all,format,documentation,jobs:,help' --name "$(basename "$0")" -- "$@"); then
         usage >&2
         failure
     fi
@@ -67,6 +71,16 @@ parse_options() {
                 shift
                 continue
                 ;;
+            '-U' | '--build-unit-tests')
+                RUN_BUILD_UNIT_TESTS=yes
+                shift
+                continue
+                ;;
+            '-u' | '--unit-tests')
+                RUN_UNIT_TESTS=yes
+                shift
+                continue
+                ;;
             '-i' | '--iwyu')
                 RUN_IWYU=yes
                 shift
@@ -80,6 +94,7 @@ parse_options() {
             '-a' | '--all')
                 RUN_CHECK_FORMAT=yes
                 RUN_BUILD=yes
+                RUN_UNIT_TESTS=yes
                 RUN_IWYU=yes
                 RUN_CLANG_TIDY=yes
                 shift
@@ -87,6 +102,7 @@ parse_options() {
                 ;;
             '-A' | '--build-all')
                 RUN_BUILD=yes
+                RUN_BUILD_UNIT_TESTS=yes
                 shift
                 continue
                 ;;
@@ -126,9 +142,10 @@ parse_options() {
     # building things.
     if [ ${#FILES[@]} -eq 0 ] && { [ ${RUN_IWYU} = yes ] || [ ${RUN_CLANG_TIDY} = yes ]; }; then
         RUN_BUILD=yes
+        RUN_BUILD_UNIT_TESTS=yes
     fi
 
-    readonly RUN_CLEAN RUN_CHECK_FORMAT RUN_BUILD RUN_IWYU RUN_CLANG_TIDY RUN_FORMAT RUN_DOCUMENTATION FILES JOBS
+    readonly RUN_CLEAN RUN_CHECK_FORMAT RUN_BUILD RUN_BUILD_UNIT_TESTS RUN_UNIT_TESTS RUN_IWYU RUN_CLANG_TIDY RUN_FORMAT RUN_DOCUMENTATION FILES JOBS
 }
 
 update_cmake_artifacts() {
@@ -175,12 +192,35 @@ run_build() {
         sort)
 }
 
+run_build_unit_tests() {
+    update_cmake_artifacts
+    touch build/.run-build-unit-tests-stamp
+    echo "no unit tests for unixcat yet"
+    return
+    cmake --build build --parallel "${JOBS}" --target test
+    # collect all (re-)compiled sources for later, could use readarray/mapfile with bash >=4.0
+    while IFS= read -r line; do
+        COMPILED_SOURCES+=("$line")
+    done < <(find build/test/CMakeFiles -name "*.o" -newer build/.run-build-unit-tests-stamp |
+        sed 's,^build/test/CMakeFiles/test.dir/\(.*\)\.o,test/\1,' |
+        sort)
+}
+
 calculate_files_to_use() {
     if [ ${#FILES[@]} -eq 0 ]; then
         FILES_TO_USE=("${COMPILED_SOURCES[@]}")
     else
         FILES_TO_USE=("${FILES[@]}")
     fi
+}
+
+run_unit_tests() {
+    run_build_unit_tests
+    return
+    if test -z ${VALGRIND+x} && command -v valgrind >/dev/null; then
+        VALGRIND="valgrind --quiet --num-callers=30 --error-exitcode=42"
+    fi
+    GTEST_OUTPUT=xml ${VALGRIND} build/test/test
 }
 
 run_iwyu() {
@@ -221,7 +261,9 @@ main() {
     test ${RUN_CLEAN} = yes && run_clean
     test ${RUN_CHECK_FORMAT} = yes && run_clang_format --dry-run -Werror && run_cmake_format --check
     test ${RUN_BUILD} = yes && run_build
+    test ${RUN_BUILD_UNIT_TESTS} = yes && run_build_unit_tests
     calculate_files_to_use
+    test ${RUN_UNIT_TESTS} = yes && run_unit_tests
     test ${RUN_IWYU} = yes && run_iwyu
     test ${RUN_CLANG_TIDY} = yes && run_clang_tidy
     test ${RUN_FORMAT} = yes && run_clang_format -i && run_cmake_format --in-place

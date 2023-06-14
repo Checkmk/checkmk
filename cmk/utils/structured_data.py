@@ -98,9 +98,6 @@ class RetentionInterval(NamedTuple):
         return cls(*raw_interval)
 
 
-_RetentionIntervalsByKey = dict[SDKey, RetentionInterval]
-
-
 @dataclass(frozen=True)
 class UpdateResult:
     reasons_by_path: dict[SDPath, list[str]] = field(default_factory=dict)
@@ -920,7 +917,7 @@ class Attributes:
     def __init__(
         self,
         *,
-        retentions: _RetentionIntervalsByKey | None = None,
+        retentions: Mapping[SDKey, RetentionInterval] | None = None,
     ) -> None:
         self.retentions = retentions if retentions else {}
         self._pairs: dict[SDKey, SDValue] = {}
@@ -973,7 +970,7 @@ class Attributes:
         )
 
         pairs: dict[SDKey, SDValue] = {}
-        retentions: _RetentionIntervalsByKey = {}
+        retentions: dict[SDKey, RetentionInterval] = {}
         for key in compared_filtered_keys.only_old:
             pairs.setdefault(key, other.pairs[key])
             retentions[key] = other.retentions[key]
@@ -987,13 +984,10 @@ class Attributes:
             update_result.add_attr_reason(path, "pairs", pairs)
 
         if retentions:
-            self.set_retentions(retentions)
+            self.retentions = retentions
             update_result.add_attr_reason(path, "interval", retentions)
 
         return update_result
-
-    def set_retentions(self, intervals_by_key: _RetentionIntervalsByKey) -> None:
-        self.retentions = intervals_by_key
 
     def get_retention_interval(self, key: SDKey) -> RetentionInterval | None:
         return self.retentions.get(key)
@@ -1029,17 +1023,12 @@ class Attributes:
         return attributes
 
 
-# TODO Table: {IDENT: Attributes}?
-
-TableRetentions = dict[SDRowIdent, _RetentionIntervalsByKey]
-
-
 class Table:
     def __init__(
         self,
         *,
         key_columns: list[SDKey] | None = None,
-        retentions: TableRetentions | None = None,
+        retentions: Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]] | None = None,
     ) -> None:
         self.key_columns = key_columns if key_columns else []
         self.retentions = retentions if retentions else {}
@@ -1132,7 +1121,7 @@ class Table:
             new_dict=self_filtered_rows,
         )
 
-        retentions: TableRetentions = {}
+        retentions: dict[SDRowIdent, dict[SDKey, RetentionInterval]] = {}
         update_result = UpdateResult()
         for ident in compared_filtered_idents.only_old:
             old_row: dict[SDKey, SDValue] = {}
@@ -1175,14 +1164,11 @@ class Table:
                 retentions.setdefault(ident, {})[key] = retention_interval
 
         if retentions:
-            self.set_retentions(retentions)
+            self.retentions = retentions
             for ident, interval in retentions.items():
                 update_result.add_row_reason(path, ident, "interval", interval)
 
         return update_result
-
-    def set_retentions(self, table_retentions: TableRetentions) -> None:
-        self.retentions = table_retentions
 
     def get_retention_interval(
         self, key: SDKey, row: Mapping[SDKey, SDValue]
@@ -1551,7 +1537,7 @@ def _compare_dict_keys(*, old_dict: Mapping, new_dict: Mapping) -> ComparedDictK
 def _make_retentions_filter_func(
     *,
     filter_func: SDFilterFunc,
-    intervals_by_key: _RetentionIntervalsByKey | None,
+    intervals_by_key: Mapping[SDKey, RetentionInterval] | None,
     now: int,
 ) -> SDFilterFunc:
     return lambda k: bool(

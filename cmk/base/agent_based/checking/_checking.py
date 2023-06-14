@@ -17,6 +17,7 @@ from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.log import console
 from cmk.utils.regex import regex
+from cmk.utils.resulttype import Result
 from cmk.utils.structured_data import TreeStore
 from cmk.utils.timeperiod import check_timeperiod, timeperiod_active, TimeperiodName
 from cmk.utils.type_defs import (
@@ -30,7 +31,6 @@ from cmk.utils.type_defs import (
     ServiceName,
     state_markers,
 )
-from cmk.utils.type_defs.result import Result
 
 from cmk.snmplib.type_defs import SNMPRawData
 

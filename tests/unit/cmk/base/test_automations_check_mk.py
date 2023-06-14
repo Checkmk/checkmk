@@ -10,7 +10,7 @@ import pytest
 from tests.testlib.base import Scenario
 
 import cmk.utils.exceptions as exceptions
-from cmk.utils.type_defs import result
+import cmk.utils.resulttype as result
 
 from cmk.automations import results as automation_results
 from cmk.automations.results import DiagHostResult

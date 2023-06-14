@@ -5,8 +5,8 @@
 
 from functools import partial
 
+import cmk.utils.resulttype as result
 from cmk.utils.exceptions import MKFetcherError
-from cmk.utils.type_defs import result
 
 from cmk.snmplib.type_defs import TRawData
 

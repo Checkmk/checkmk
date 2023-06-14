@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
+import cmk.utils.resulttype as result
 from cmk.utils.exceptions import (
     MKAgentError,
     MKFetcherError,
@@ -15,7 +16,7 @@ from cmk.utils.exceptions import (
     MKTimeout,
 )
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackTimeSettings
-from cmk.utils.type_defs import ExitSpec, HostAddress, HostName, result
+from cmk.utils.type_defs import ExitSpec, HostAddress, HostName
 
 from cmk.fetchers import FetcherType
 

@@ -8,15 +8,9 @@ from dataclasses import dataclass
 from functools import partial
 from typing import Protocol
 
+import cmk.utils.resulttype as result
 from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.type_defs import (
-    AgentRawData,
-    HostAddress,
-    HostName,
-    ParsedSectionName,
-    result,
-    RuleSetName,
-)
+from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, ParsedSectionName, RuleSetName
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
 

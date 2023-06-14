@@ -10,9 +10,10 @@ from pathlib import Path
 from typing import Literal
 
 import cmk.utils.paths
+import cmk.utils.resulttype as result
 from cmk.utils.exceptions import OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
-from cmk.utils.type_defs import AgentRawData, HostName, Item, result, SectionName, ServiceName
+from cmk.utils.type_defs import AgentRawData, HostName, Item, SectionName, ServiceName
 
 from cmk.snmplib.type_defs import SNMPRawData
 

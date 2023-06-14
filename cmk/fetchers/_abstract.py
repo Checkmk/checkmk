@@ -9,9 +9,9 @@ import logging
 from collections.abc import Mapping
 from typing import Any, final, Generic, Literal, TypeVar
 
+import cmk.utils.resulttype as result
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import result
 
 from cmk.snmplib.type_defs import TRawData
 

@@ -8,6 +8,7 @@ from typing import Literal
 
 import pytest
 
+import cmk.utils.resulttype as result
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.structured_data import (
     ImmutableTree,
@@ -22,7 +23,6 @@ from cmk.utils.type_defs import (
     HostAddress,
     HostName,
     ParsedSectionName,
-    result,
     SectionName,
 )
 

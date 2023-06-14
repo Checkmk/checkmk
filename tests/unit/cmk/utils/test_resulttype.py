@@ -7,7 +7,7 @@ from collections.abc import Iterable
 
 import pytest
 
-from cmk.utils.type_defs.result import Error, OK, Result
+from cmk.utils.resulttype import Error, OK, Result
 
 
 class TestOk:

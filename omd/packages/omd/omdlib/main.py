@@ -121,7 +121,7 @@ from cmk.utils.exceptions import MKTerminate
 from cmk.utils.licensing.helper import get_instance_id_file_path, save_instance_id
 from cmk.utils.log import VERBOSE
 from cmk.utils.paths import mkbackup_lock_dir
-from cmk.utils.type_defs.result import Error, OK, Result
+from cmk.utils.resulttype import Error, OK, Result
 from cmk.utils.version import Version, versions_compatible, VersionsIncompatible
 
 Arguments = list[str]

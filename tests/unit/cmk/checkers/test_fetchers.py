@@ -20,10 +20,11 @@ import pytest
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
 from pytest import MonkeyPatch
 
+import cmk.utils.resulttype as result
 import cmk.utils.version as cmk_version
 from cmk.utils.encryption import TransportProtocol
 from cmk.utils.exceptions import MKFetcherError, OnError
-from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, result, SectionName
+from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, SectionName
 
 from cmk.snmplib import snmp_table
 from cmk.snmplib.type_defs import (

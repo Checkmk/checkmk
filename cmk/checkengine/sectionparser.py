@@ -10,8 +10,9 @@ from dataclasses import dataclass
 from typing import Any, Final, Generic, NamedTuple
 
 import cmk.utils.piggyback
+import cmk.utils.resulttype as result
 from cmk.utils.log import console
-from cmk.utils.type_defs import HostName, ParsedSectionName, result, SectionName
+from cmk.utils.type_defs import HostName, ParsedSectionName, SectionName
 
 from ._typedefs import HostKey, SourceInfo, SourceType
 from .crash_reporting import create_section_crash_dump

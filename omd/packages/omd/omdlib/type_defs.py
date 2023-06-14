@@ -24,7 +24,7 @@
 
 from abc import ABC, abstractmethod
 
-from cmk.utils.type_defs import result
+import cmk.utils.resulttype as result
 
 Config = dict[str, str]
 Replacements = dict[str, str]

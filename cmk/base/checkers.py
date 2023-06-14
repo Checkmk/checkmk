@@ -13,6 +13,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from functools import partial
 from typing import Final
 
+import cmk.utils.resulttype as result
 import cmk.utils.tty as tty
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import OnError
@@ -23,7 +24,6 @@ from cmk.utils.type_defs import (
     ExitSpec,
     HostAddress,
     HostName,
-    result,
     SectionName,
     ServiceState,
 )

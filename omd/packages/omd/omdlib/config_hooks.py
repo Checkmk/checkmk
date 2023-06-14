@@ -46,9 +46,9 @@ from typing import TYPE_CHECKING
 
 from omdlib.type_defs import ConfigChoiceHasError
 
+import cmk.utils.resulttype as result
 from cmk.utils.exceptions import MKTerminate
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import result
 
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext

@@ -53,13 +53,27 @@ from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import user
+from cmk.gui.plugins.openapi.endpoints.host_config.request_schemas import (
+    BulkCreateHost,
+    BulkDeleteHost,
+    BulkUpdateHost,
+    CreateClusterHost,
+    CreateHost,
+    MoveHost,
+    RenameHost,
+    UpdateHost,
+    UpdateNodes,
+)
+from cmk.gui.plugins.openapi.endpoints.host_config.response_schemas import (
+    HostConfigCollection,
+    HostConfigSchema,
+)
 from cmk.gui.plugins.openapi.endpoints.utils import folder_slug
 from cmk.gui.plugins.openapi.restful_objects import (
     api_error,
     constructors,
     Endpoint,
     permissions,
-    request_schemas,
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
@@ -160,8 +174,8 @@ def with_access_check_permission(perm: permissions.BasePerm) -> permissions.Base
     "cmk/create",
     method="post",
     etag="output",
-    request_schema=request_schemas.CreateHost,
-    response_schema=response_schemas.HostConfigSchema,
+    request_schema=CreateHost,
+    response_schema=HostConfigSchema,
     query_params=[BAKE_AGENT_PARAM],
     permissions_required=PERMISSIONS,
 )
@@ -188,8 +202,8 @@ def create_host(params: Mapping[str, Any]) -> Response:
     "cmk/create_cluster",
     method="post",
     etag="output",
-    request_schema=request_schemas.CreateClusterHost,
-    response_schema=response_schemas.HostConfigSchema,
+    request_schema=CreateClusterHost,
+    response_schema=HostConfigSchema,
     permissions_required=with_access_check_permission(PERMISSIONS),
     query_params=[BAKE_AGENT_PARAM],
 )
@@ -215,7 +229,7 @@ def create_cluster_host(params: Mapping[str, Any]) -> Response:
 
 class FailedHosts(BaseSchema):
     succeeded_hosts = fields.Nested(
-        response_schemas.HostConfigCollection(),
+        HostConfigCollection,
         description="The list of succeeded host objects",
     )
     failed_hosts = fields.Dict(
@@ -236,8 +250,8 @@ class BulkHostActionWithFailedHosts(api_error.ApiError):
     constructors.domain_type_action_href("host_config", "bulk-create"),
     "cmk/bulk_create",
     method="post",
-    request_schema=request_schemas.BulkCreateHost,
-    response_schema=response_schemas.HostConfigCollection,
+    request_schema=BulkCreateHost,
+    response_schema=HostConfigCollection,
     error_schemas={
         400: BulkHostActionWithFailedHosts,
     },
@@ -304,7 +318,7 @@ def _bulk_host_action_response(
     constructors.collection_href("host_config"),
     ".../collection",
     method="get",
-    response_schema=response_schemas.HostConfigCollection,
+    response_schema=HostConfigCollection,
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
     query_params=[EFFECTIVE_ATTRIBUTES],
 )
@@ -355,7 +369,7 @@ def _host_collection(
         }
     ],
     etag="both",
-    request_schema=request_schemas.UpdateNodes,
+    request_schema=UpdateNodes,
     response_schema=response_schemas.ObjectProperty,
     permissions_required=UPDATE_PERMISSIONS,
 )
@@ -386,8 +400,8 @@ def update_nodes(params: Mapping[str, Any]) -> Response:
     method="put",
     path_params=[HOST_NAME],
     etag="both",
-    request_schema=request_schemas.UpdateHost,
-    response_schema=response_schemas.HostConfigSchema,
+    request_schema=UpdateHost,
+    response_schema=HostConfigSchema,
     permissions_required=UPDATE_PERMISSIONS,
 )
 def update_host(params: Mapping[str, Any]) -> Response:
@@ -432,8 +446,8 @@ def update_host(params: Mapping[str, Any]) -> Response:
     constructors.domain_type_action_href("host_config", "bulk-update"),
     "cmk/bulk_update",
     method="put",
-    request_schema=request_schemas.BulkUpdateHost,
-    response_schema=response_schemas.HostConfigCollection,
+    request_schema=BulkUpdateHost,
+    response_schema=HostConfigCollection,
     error_schemas={
         400: BulkHostActionWithFailedHosts,
     },
@@ -502,8 +516,8 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
             permissions.Perm("wato.see_all_folders"),
         ]
     ),
-    request_schema=request_schemas.RenameHost,
-    response_schema=response_schemas.HostConfigSchema,
+    request_schema=RenameHost,
+    response_schema=HostConfigSchema,
 )
 def rename_host(params: Mapping[str, Any]) -> Response:
     """Rename a host
@@ -584,8 +598,8 @@ def renaming_job_wait_for_completion(params: Mapping[str, Any]) -> Response:
     path_params=[HOST_NAME],
     etag="both",
     additional_status_codes=[403],
-    request_schema=request_schemas.MoveHost,
-    response_schema=response_schemas.HostConfigSchema,
+    request_schema=MoveHost,
+    response_schema=HostConfigSchema,
     permissions_required=permissions.AllPerm(
         [
             permissions.Perm("wato.edit"),
@@ -668,7 +682,7 @@ def delete(params: Mapping[str, Any]) -> Response:
     constructors.domain_type_action_href("host_config", "bulk-delete"),
     ".../delete",
     method="post",
-    request_schema=request_schemas.BulkDeleteHost,
+    request_schema=BulkDeleteHost,
     permissions_required=with_access_check_permission(PERMISSIONS),
     output_empty=True,
 )
@@ -704,7 +718,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     path_params=[HOST_NAME],
     query_params=[EFFECTIVE_ATTRIBUTES],
     etag="output",
-    response_schema=response_schemas.HostConfigSchema,
+    response_schema=HostConfigSchema,
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
 )
 def show_host(params: Mapping[str, Any]) -> Response:

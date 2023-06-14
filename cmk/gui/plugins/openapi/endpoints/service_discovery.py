@@ -20,6 +20,7 @@ from cmk.gui import fields as gui_fields
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import user
+from cmk.gui.plugins.openapi.endpoints.host_config.request_schemas import EXISTING_HOST_NAME
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
@@ -33,7 +34,6 @@ from cmk.gui.plugins.openapi.restful_objects.constructors import (
     object_property,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
-from cmk.gui.plugins.openapi.restful_objects.request_schemas import EXISTING_HOST_NAME
 from cmk.gui.plugins.openapi.restful_objects.type_defs import LinkType
 from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.watolib.bulk_discovery import (

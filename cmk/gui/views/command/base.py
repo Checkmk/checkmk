@@ -6,7 +6,7 @@
 import abc
 import time
 from collections.abc import Callable, Sequence
-from typing import Literal, Union
+from typing import Literal
 
 from livestatus import SiteId
 
@@ -20,7 +20,7 @@ from .group import command_group_registry, CommandGroup
 CommandSpecWithoutSite = str
 CommandSpecWithSite = tuple[str | None, CommandSpecWithoutSite]
 CommandSpec = CommandSpecWithoutSite | CommandSpecWithSite
-CommandActionResult = Union[tuple[CommandSpecWithoutSite | Sequence[CommandSpec], str] | None]
+CommandActionResult = tuple[CommandSpecWithoutSite | Sequence[CommandSpec], str] | None
 CommandExecutor = Callable[[CommandSpec, SiteId | None], None]
 
 

@@ -16,7 +16,7 @@ from collections import Counter
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Final, Literal, NamedTuple, TypedDict
+from typing import Final, Literal, NamedTuple, TypedDict
 
 from cmk.utils import store
 from cmk.utils.type_defs import HostName
@@ -28,8 +28,7 @@ SDNodeName = str
 SDPath = tuple[SDNodeName, ...]
 
 SDKey = str
-# TODO be more specific (None, str, float, int, DeltaValue:Tuple of previous)
-SDValue = Any  # needs only to support __eq__
+SDValue = int | float | str | bool | None
 SDRowIdent = tuple[SDValue, ...]
 
 
@@ -359,7 +358,7 @@ def _deserialize_legacy_node(  # pylint: disable=too-many-branches
             if not value:
                 continue
 
-            if all(isinstance(v, (int, float, str)) or v is None for v in value):
+            if all(isinstance(v, (int, float, str, bool)) or v is None for v in value):
                 if w := ", ".join(str(v) for v in value if v):
                     raw_pairs.setdefault(key, w)
                 continue
@@ -382,8 +381,11 @@ def _deserialize_legacy_node(  # pylint: disable=too-many-branches
             for idx, entry in enumerate(value):
                 raw_nodes.setdefault(key, {}).setdefault(str(idx), entry)
 
-        else:
+        elif isinstance(value, (int, float, str, bool)) or value is None:
             raw_pairs.setdefault(key, value)
+
+        else:
+            raise TypeError(value)
 
     return StructuredDataNode(
         path=path,
@@ -541,7 +543,7 @@ def _identical_delta_tree_node(value: SDValue) -> tuple[SDValue, SDValue]:
 
 
 class ComparedDictResult(NamedTuple):
-    result_dict: dict[SDKey, tuple[SDValue | None, SDValue | None]]
+    result_dict: dict[SDKey, tuple[SDValue, SDValue]]
     has_changes: bool
 
 
@@ -556,7 +558,7 @@ def _compare_dicts(
       identical:    {k: (value, value), ...}
     """
     compared_keys = _compare_dict_keys(old_dict=old_dict, new_dict=new_dict)
-    compared_dict: dict[SDKey, tuple[SDValue | None, SDValue | None]] = {}
+    compared_dict: dict[SDKey, tuple[SDValue, SDValue]] = {}
 
     has_changes = False
     for k in compared_keys.both:
@@ -589,7 +591,7 @@ def _compare_tables(left: Table, right: Table) -> DeltaTable:
     key_columns = sorted(set(left.key_columns).union(right.key_columns))
     compared_keys = _compare_dict_keys(old_dict=right._rows, new_dict=left._rows)
 
-    delta_rows: list[dict[SDKey, tuple[SDValue | None, SDValue | None]]] = []
+    delta_rows: list[dict[SDKey, tuple[SDValue, SDValue]]] = []
 
     for key in compared_keys.only_old:
         delta_rows.append({k: _removed_delta_tree_node(v) for k, v in right._rows[key].items()})
@@ -1359,7 +1361,7 @@ class StructuredDataNode:
 #   '----------------------------------------------------------------------'
 
 
-_SDEncodeAs = Callable[[SDValue], tuple[SDValue | None, SDValue | None]]
+_SDEncodeAs = Callable[[SDValue], tuple[SDValue, SDValue]]
 _SDDeltaCounter = Counter[Literal["new", "changed", "removed"]]
 
 

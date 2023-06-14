@@ -3,12 +3,22 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 
 # No stub file
 import pytest
 
-from cmk.utils.structured_data import ImmutableDeltaTree, ImmutableTree, SDKey, SDPath, SDValue
+from cmk.utils.structured_data import (
+    Attributes,
+    DeltaAttributes,
+    DeltaTable,
+    ImmutableDeltaTree,
+    ImmutableTree,
+    SDKey,
+    SDPath,
+    SDValue,
+    Table,
+)
 
 import cmk.gui.inventory
 import cmk.gui.utils
@@ -460,29 +470,79 @@ def test_make_node_displayhint_from_hint(
 
 
 @pytest.mark.parametrize(
-    "rows, expected",
+    "table, expected",
     [
-        ([], []),
-        ([{}], [{}]),
+        (Table(), []),
         (
+            Table.deserialize(
+                {
+                    "KeyColumns": ["sid"],
+                    "Rows": [
+                        {"sid": "SID 2", "flashback": "Flashback 2", "other": "Other 2"},
+                        {"sid": "SID 1", "flashback": "Flashback 1", "other": "Other 1"},
+                    ],
+                }
+            ),
             [
-                {"sid": "SID 2", "flashback": "Flashback 2", "other": "Other 2"},
-                {"sid": "SID 1", "flashback": "Flashback 1", "other": "Other 1"},
+                [
+                    ("sid", "SID 1"),
+                    ("flashback", "Flashback 1"),
+                    ("other", "Other 1"),
+                ],
+                [
+                    ("sid", "SID 2"),
+                    ("flashback", "Flashback 2"),
+                    ("other", "Other 2"),
+                ],
             ],
+        ),
+        (DeltaTable(), []),
+        (
+            DeltaTable.deserialize(
+                {
+                    "KeyColumns": ["sid"],
+                    "Rows": [
+                        {
+                            "sid": ("SID 2", None),
+                            "flashback": (None, "Flashback 2"),
+                            "other": ("Other 2", "Other 2"),
+                            "changed": ("Changed 21", "Changed 22"),
+                        },
+                        {
+                            "sid": ("SID 1", None),
+                            "flashback": (None, "Flashback 1"),
+                            "other": ("Other 1", "Other 1"),
+                            "changed": ("Changed 11", "Changed 12"),
+                        },
+                    ],
+                }
+            ),
             [
-                {"flashback": "Flashback 1", "other": "Other 1", "sid": "SID 1"},
-                {"flashback": "Flashback 2", "other": "Other 2", "sid": "SID 2"},
+                [
+                    ("sid", ("SID 1", None)),
+                    ("changed", ("Changed 11", "Changed 12")),
+                    ("flashback", (None, "Flashback 1")),
+                    ("other", ("Other 1", "Other 1")),
+                ],
+                [
+                    ("sid", ("SID 2", None)),
+                    ("changed", ("Changed 21", "Changed 22")),
+                    ("flashback", (None, "Flashback 2")),
+                    ("other", ("Other 2", "Other 2")),
+                ],
             ],
         ),
     ],
 )
 def test_sort_table_rows_displayhint(
-    rows: Sequence[Mapping[SDKey, SDValue]], expected: Sequence[Mapping[SDKey, SDValue]]
+    table: Table | DeltaTable,
+    expected: Sequence[Sequence[tuple[SDKey, SDValue]]]
+    | Sequence[Sequence[tuple[SDKey, tuple[SDValue, SDValue]]]],
 ) -> None:
     raw_path = ".software.applications.oracle.dataguard_stats:"
     path = cmk.gui.inventory.InventoryPath.parse(raw_path).path
     hints = DISPLAY_HINTS.get_hints(path)
-    assert hints.sort_rows(rows, hints.make_columns(rows, ["sid"])) == expected
+    assert hints.sort_rows(hints.make_columns(table), table) == expected
 
 
 @pytest.mark.parametrize(
@@ -621,26 +681,55 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
 
 
 @pytest.mark.parametrize(
-    "pairs, expected",
+    "attributes, expected",
     [
-        ({}, []),
+        (Attributes(), []),
         (
-            {"namespace": "Namespace", "name": "Name", "object": "Object", "other": "Other"},
+            Attributes.deserialize(
+                {
+                    "Pairs": {
+                        "b": "B",
+                        "d": "D",
+                        "c": "C",
+                        "a": "A",
+                    },
+                }
+            ),
             [
-                ("object", "Object"),
-                ("name", "Name"),
-                ("namespace", "Namespace"),
-                ("other", "Other"),
+                ("a", "A"),
+                ("b", "B"),
+                ("c", "C"),
+                ("d", "D"),
+            ],
+        ),
+        (DeltaAttributes(), []),
+        (
+            DeltaAttributes.deserialize(
+                {
+                    "Pairs": {
+                        "b": ("B", None),
+                        "d": (None, "D"),
+                        "c": ("C", "C"),
+                        "a": ("A1", "A2"),
+                    },
+                }
+            ),
+            [
+                ("a", ("A1", "A2")),
+                ("b", ("B", None)),
+                ("c", ("C", "C")),
+                ("d", (None, "D")),
             ],
         ),
     ],
 )
 def test_sort_attributes_pairs_displayhint(
-    pairs: Mapping[SDKey, SDValue], expected: Sequence[tuple[SDKey, SDValue]]
+    attributes: Attributes | DeltaAttributes,
+    expected: Sequence[tuple[SDKey, SDValue]] | Sequence[tuple[SDKey, tuple[SDValue, SDValue]]],
 ) -> None:
     raw_path = ".software.applications.kube.metadata."
     path = cmk.gui.inventory.InventoryPath.parse(raw_path).path
-    assert DISPLAY_HINTS.get_hints(path).sort_pairs(pairs) == expected
+    assert DISPLAY_HINTS.get_hints(path).sort_pairs(attributes) == expected
 
 
 @pytest.mark.parametrize(

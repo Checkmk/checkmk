@@ -8,16 +8,14 @@ import string
 from collections.abc import Callable, Iterable, Mapping
 from typing import get_args, NamedTuple, NoReturn, Union
 
-from cmk.utils.structured_data import MutableTree
+from cmk.utils.structured_data import MutableTree, SDKey, SDValue
 from cmk.utils.type_defs import ParsedSectionName, RuleSetName
 
 from cmk.checkengine.inventory import InventoryPluginName
 
 from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
 
-_ATTR_DICT_KEY_TYPE = str
-
-AttrDict = Mapping[_ATTR_DICT_KEY_TYPE, Union[None, int, float, str]]
+AttrDict = Mapping[SDKey, SDValue]
 
 # get allowed value types back as a tuple to guarantee consistency
 _ATTR_DICT_VAL_TYPES = get_args(get_args(AttrDict)[1])
@@ -37,7 +35,7 @@ def _parse_valid_path(path: list[str]) -> list[str]:
 def _raise_invalid_attr_dict(kwarg_name: str, dict_: AttrDict) -> NoReturn:
     value_types = ", ".join(t.__name__ for t in _ATTR_DICT_VAL_TYPES)
     raise TypeError(
-        f"{kwarg_name} must be a dict with keys of type {_ATTR_DICT_KEY_TYPE.__name__}"
+        f"{kwarg_name} must be a dict with keys of type {SDKey.__name__}"
         f" and values of type {value_types}. Got {dict_!r}"
     )
 
@@ -48,8 +46,7 @@ def _parse_valid_dict(kwarg_name: str, dict_: AttrDict | None) -> AttrDict:
     if not isinstance(dict_, dict):
         _raise_invalid_attr_dict(kwarg_name, dict_)
     if not all(
-        isinstance(k, _ATTR_DICT_KEY_TYPE) and isinstance(v, _ATTR_DICT_VAL_TYPES)
-        for k, v in dict_.items()
+        isinstance(k, SDKey) and isinstance(v, _ATTR_DICT_VAL_TYPES) for k, v in dict_.items()
     ):
         _raise_invalid_attr_dict(kwarg_name, dict_)
     return dict_

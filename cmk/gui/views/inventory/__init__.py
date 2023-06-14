@@ -11,7 +11,7 @@ from collections import OrderedDict
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import total_ordering
-from typing import Any, Literal, NamedTuple, Protocol, TypeVar
+from typing import Any, Literal, overload, Protocol, TypeVar
 
 from livestatus import LivestatusResponse, OnlySites, SiteId
 
@@ -333,11 +333,13 @@ def decorate_inv_paint(
 
 
 @decorate_inv_paint()
-def inv_paint_generic(v: str | float | int) -> PaintResult:
+def inv_paint_generic(v: int | float | str | bool) -> PaintResult:
     if isinstance(v, float):
         return "number", "%.2f" % v
     if isinstance(v, int):
         return "number", "%d" % v
+    if isinstance(v, bool):
+        return "", _("Yes") if v else _("No")
     return "", escape_text("%s" % v)
 
 
@@ -907,12 +909,6 @@ class _RelatedRawHints:
     by_attributes: dict[str, InventoryHintSpec] = field(default_factory=dict)
 
 
-class _Column(NamedTuple):
-    hint: ColumnDisplayHint
-    key: str
-    is_key_column: bool
-
-
 class DisplayHints:
     def __init__(
         self,
@@ -1093,23 +1089,32 @@ class DisplayHints:
             return self.attribute_hints[key]
         return AttributeDisplayHint.from_raw(self.abc_path, key, {})
 
-    def make_columns(
-        self, rows: Sequence[Mapping[SDKey, SDValue]], key_columns: Sequence[SDKey]
-    ) -> Sequence[_Column]:
-        sorting_keys = list(self.table_hint.key_order) + sorted(
-            {k for r in rows for k in r} - set(self.table_hint.key_order)
+    def make_columns(self, table: Table | DeltaTable) -> Sequence[SDKey]:
+        return list(self.table_hint.key_order) + sorted(
+            {k for r in table.rows for k in r} - set(self.table_hint.key_order)
         )
-        return [_Column(self.get_column_hint(k), k, k in key_columns) for k in sorting_keys]
 
+    @overload
     @staticmethod
     def sort_rows(
-        rows: Sequence[Mapping[SDKey, SDValue]], columns: Sequence[_Column]
-    ) -> Sequence[Mapping[SDKey, SDValue]]:
+        columns: Sequence[SDKey], table: Table
+    ) -> Sequence[Sequence[tuple[SDKey, SDValue]]]:
+        ...
+
+    @overload
+    @staticmethod
+    def sort_rows(
+        columns: Sequence[SDKey], table: DeltaTable
+    ) -> Sequence[Sequence[tuple[SDKey, tuple[SDValue, SDValue]]]]:
+        ...
+
+    @staticmethod
+    def sort_rows(columns, table):
         # The sorting of rows is overly complicated here, because of the type SDValue = Any and
         # because the given values can be from both an inventory tree or from a delta tree.
         # Therefore, values may also be tuples of old and new value (delta tree), see _compare_dicts
         # in cmk.utils.structured_data.
-        # TODO: Improve SDValue
+
         @total_ordering
         class _MinType:
             def __le__(self, other: object) -> bool:
@@ -1135,15 +1140,29 @@ class DisplayHints:
 
             return value
 
-        return sorted(
-            rows, key=lambda r: tuple(_sanitize_value_for_sorting(r.get(c.key)) for c in columns)
-        )
+        return [
+            [(c, row[c]) for c in columns if c in row]
+            for row in sorted(
+                table.rows,
+                key=lambda r: tuple(_sanitize_value_for_sorting(r.get(k)) for k in columns),
+            )
+        ]
 
-    def sort_pairs(self, pairs: Mapping[SDKey, SDValue]) -> Sequence[tuple[SDKey, SDValue]]:
-        sorting_keys = list(self.attributes_hint.key_order) + sorted(
-            set(pairs) - set(self.attributes_hint.key_order)
+    @overload
+    def sort_pairs(self, attributes: Attributes) -> Sequence[tuple[SDKey, SDValue]]:
+        ...
+
+    @overload
+    def sort_pairs(
+        self, attributes: DeltaAttributes
+    ) -> Sequence[tuple[SDKey, tuple[SDValue, SDValue]]]:
+        ...
+
+    def sort_pairs(self, attributes):
+        sorted_keys = list(self.attributes_hint.key_order) + sorted(
+            set(attributes.pairs) - set(self.attributes_hint.key_order)
         )
-        return [(k, pairs[k]) for k in sorting_keys if k in pairs]
+        return [(k, attributes.pairs[k]) for k in sorted_keys if k in attributes.pairs]
 
     def replace_placeholders(self, path: SDPath) -> str:
         if "%d" not in self.node_hint.title and "%s" not in self.node_hint.title:
@@ -1344,7 +1363,7 @@ def _register_attribute_column(
     filter_registry.register(hint.make_filter(name, inventory_path))
 
 
-def _compute_attribute_painter_data(row: Row, path: SDPath, key: str) -> str | int | float | None:
+def _compute_attribute_painter_data(row: Row, path: SDPath, key: SDKey) -> SDValue:
     try:
         _validate_inventory_tree_uniqueness(row)
     except MultipleInventoryTreesError:
@@ -2184,7 +2203,7 @@ class ABCNodeRenderer(abc.ABC):
                 class_="invtablelink",
             )
 
-        columns = hints.make_columns(table.rows, table.key_columns)
+        columns = hints.make_columns(table)
 
         # TODO: Use table.open_table() below.
         html.open_table(class_="data")
@@ -2192,13 +2211,13 @@ class ABCNodeRenderer(abc.ABC):
         for column in columns:
             html.th(
                 self._get_header(
-                    column.hint.title,
-                    "%s*" % column.key if column.is_key_column else column.key,
+                    hints.get_column_hint(column).title,
+                    "%s*" % column if column in table.key_columns else column,
                 )
             )
         html.close_tr()
 
-        def _empty_or_equal(value: tuple[SDValue | None, SDValue | None] | SDValue | None) -> bool:
+        def _empty_or_equal(value: tuple[SDValue, SDValue] | SDValue) -> bool:
             # Some refactorings broke werk 6821. Especially delta trees may contain empty or
             # unchanged rows.
             if value is None:
@@ -2208,25 +2227,33 @@ class ABCNodeRenderer(abc.ABC):
                 return True
             return False
 
-        for row in hints.sort_rows(table.rows, columns):
-            if all(_empty_or_equal(row.get(column.key)) for column in columns):
+        def _get_retention_interval(
+            table: Table | DeltaTable,
+            key: SDKey,
+            row: Sequence[tuple[SDKey, SDValue | tuple[SDValue, SDValue]]],
+        ) -> RetentionInterval | None:
+            if isinstance(table, DeltaTable):
+                return None
+            return table.get_retention_interval(
+                key, {k: v for k, v in row if not isinstance(v, tuple)}
+            )
+
+        for row in hints.sort_rows(columns, table):
+            if all(_empty_or_equal(v) for _k, v in row):
                 continue
 
             html.open_tr(class_="even0")
-            for column in columns:
-                value = row.get(column.key)
+            for key, value in row:
+                column_hint = hints.get_column_hint(key)
+
                 # TODO separate tdclass from rendered value
-                tdclass, _rendered_value = column.hint.paint_function(None)
+                tdclass, _rendered_value = column_hint.paint_function(None)
 
                 html.open_td(class_=tdclass)
                 self._show_row_value(
                     value,
-                    column.hint,
-                    retention_interval=(
-                        None
-                        if isinstance(table, DeltaTable)
-                        else table.get_retention_interval(column.key, row)
-                    ),
+                    column_hint,
+                    _get_retention_interval(table, key, row),
                 )
                 html.close_td()
             html.close_tr()
@@ -2234,10 +2261,7 @@ class ABCNodeRenderer(abc.ABC):
 
     @abc.abstractmethod
     def _show_row_value(
-        self,
-        value: Any,
-        col_hint: ColumnDisplayHint,
-        retention_interval: RetentionInterval | None = None,
+        self, value: Any, col_hint: ColumnDisplayHint, retention_interval: RetentionInterval | None
     ) -> None:
         raise NotImplementedError()
 
@@ -2247,7 +2271,7 @@ class ABCNodeRenderer(abc.ABC):
         self, attributes: Attributes | DeltaAttributes, hints: DisplayHints
     ) -> None:
         html.open_table()
-        for key, value in hints.sort_pairs(attributes.pairs):
+        for key, value in hints.sort_pairs(attributes):
             attr_hint = hints.get_attribute_hint(key)
 
             html.open_tr()
@@ -2330,10 +2354,7 @@ class NodeRenderer(ABCNodeRenderer):
         return header
 
     def _show_row_value(
-        self,
-        value: Any,
-        col_hint: ColumnDisplayHint,
-        retention_interval: RetentionInterval | None = None,
+        self, value: Any, col_hint: ColumnDisplayHint, retention_interval: RetentionInterval | None
     ) -> None:
         self._show_child_value(value, col_hint, retention_interval)
 
@@ -2371,10 +2392,7 @@ class DeltaNodeRenderer(ABCNodeRenderer):
         return HTML(title)
 
     def _show_row_value(
-        self,
-        value: Any,
-        col_hint: ColumnDisplayHint,
-        retention_interval: RetentionInterval | None = None,
+        self, value: Any, col_hint: ColumnDisplayHint, retention_interval: RetentionInterval | None
     ) -> None:
         self._show_delta_child_value(value, col_hint)
 

@@ -1067,7 +1067,8 @@ def test_updater_merge_tables(
     if expected_retentions:
         for row in inv_node.tree.table.rows:
             assert "old" in row
-            assert row["keys"].startswith("New Keys")
+            assert isinstance(v := row["keys"], str)
+            assert v.startswith("New Keys")
 
 
 @pytest.mark.parametrize(

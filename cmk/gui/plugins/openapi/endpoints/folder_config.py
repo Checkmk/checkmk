@@ -42,6 +42,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.endpoints.host_config import serve_host_collection
+from cmk.gui.plugins.openapi.endpoints.host_config.response_schemas import HostConfigCollection
 from cmk.gui.plugins.openapi.endpoints.utils import folder_slug
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
@@ -122,7 +123,7 @@ def create(params: Mapping[str, Any]) -> Response:
     ".../collection",
     method="get",
     path_params=[PATH_FOLDER_FIELD],
-    response_schema=response_schemas.HostConfigCollection,
+    response_schema=HostConfigCollection,
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
 )
 def hosts_of_folder(params: Mapping[str, Any]) -> Response:

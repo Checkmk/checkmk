@@ -118,7 +118,11 @@ def test_update(test_site: Site, agent_ctl: Path) -> None:
         base_data_host.pop(nullmailer_service)
         base_ok_services.remove(nullmailer_service)
 
-    assert len(target_data_host) >= len(base_data_host)
+    err_msg = (
+        f"The following services were found in base-version but not in target-version: "
+        f"{[service for service in base_data_host if service not in target_data_host]}"
+    )
+    assert len(target_data_host) >= len(base_data_host), err_msg
 
     err_msg = (
         f"The following services were `OK` in base-version but not in target-version: "

@@ -1012,12 +1012,19 @@ class Attributes:
             raw_attributes["Pairs"] = self._pairs
 
         if self.retentions:
-            raw_attributes["Retentions"] = _serialize_retentions(self.retentions)
+            raw_attributes["Retentions"] = {
+                key: interval.serialize() for key, interval in self.retentions.items()
+            }
         return raw_attributes
 
     @classmethod
     def deserialize(cls, raw_attributes: SDRawAttributes) -> Attributes:
-        attributes = cls(retentions=_deserialize_retentions(raw_attributes.get("Retentions")))
+        attributes = cls(
+            retentions={
+                key: RetentionInterval.deserialize(interval)
+                for key, interval in raw_attributes.get("Retentions", {}).items()
+            }
+        )
         attributes.add_pairs(raw_attributes.get("Pairs", {}))
         return attributes
 
@@ -1202,8 +1209,8 @@ class Table:
 
         if self.retentions:
             raw_table["Retentions"] = {
-                ident: _serialize_retentions(interval)
-                for ident, interval in self.retentions.items()
+                ident: {key: interval.serialize() for key, interval in intervals_by_key.items()}
+                for ident, intervals_by_key in self.retentions.items()
             }
         return raw_table
 
@@ -1218,8 +1225,11 @@ class Table:
         table = cls(
             key_columns=list(key_columns),
             retentions={
-                ident: _deserialize_retentions(raw_interval)
-                for ident, raw_interval in raw_table.get("Retentions", {}).items()
+                ident: {
+                    key: RetentionInterval.deserialize(interval)
+                    for key, interval in raw_intervals_by_key.items()
+                }
+                for ident, raw_intervals_by_key in raw_table.get("Retentions", {}).items()
             },
         )
         table.add_rows(rows)
@@ -1554,20 +1564,3 @@ def _make_retentions_filter_func(
 
 def _get_filtered_dict(dict_: Mapping, filter_func: SDFilterFunc) -> dict:
     return {k: v for k, v in dict_.items() if filter_func(k)}
-
-
-def _serialize_retentions(
-    intervals_by_key: _RetentionIntervalsByKey,
-) -> Mapping[SDKey, tuple[int, int, int]]:
-    return {key: interval.serialize() for key, interval in intervals_by_key.items()}
-
-
-def _deserialize_retentions(
-    raw_intervals_by_key: Mapping[SDKey, tuple[int, int, int]] | None,
-) -> _RetentionIntervalsByKey:
-    if not raw_intervals_by_key:
-        return {}
-    return {
-        key: RetentionInterval.deserialize(interval)
-        for key, interval in raw_intervals_by_key.items()
-    }

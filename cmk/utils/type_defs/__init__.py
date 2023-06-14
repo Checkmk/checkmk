@@ -16,7 +16,6 @@ __all__ = [
     "EvalableFloat",
     "EVERYTHING",
     "ExitSpec",
-    "ensure_mrpe_configs",
     "HostAddress",
     "HostgroupName",
     "HostName",
@@ -29,8 +28,6 @@ __all__ = [
     "Item",
     "JsonSerializable",
     "LegacyCheckParameters",
-    "MrpeConfig",
-    "MrpeConfigDeprecated",
     "MetricName",
     "MetricTuple",
     "ParametersTypeAlias",
@@ -85,7 +82,6 @@ from ._misc import (
     Timestamp,
 )
 from .host import HostAddress, HostgroupName, HostName, HostState
-from .mrpe_config import ensure_mrpe_configs, MrpeConfig, MrpeConfigDeprecated
 from .pluginname import ParsedSectionName, RuleSetName, SectionName, ValidatedString
 from .protocol import Deserializer, Serializer
 from .user_id import UserId

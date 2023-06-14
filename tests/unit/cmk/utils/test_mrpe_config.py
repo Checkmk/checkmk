@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.utils.type_defs import ensure_mrpe_configs, MrpeConfig, MrpeConfigDeprecated
+from cmk.utils.mrpe_config import ensure_mrpe_configs, MrpeConfig, MrpeConfigDeprecated
 
 
 @pytest.mark.parametrize(

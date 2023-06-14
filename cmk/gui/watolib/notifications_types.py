@@ -13,7 +13,8 @@ from cmk.utils.notify_types import (
     NotifyPluginParams,
     PluginOption,
 )
-from cmk.utils.type_defs.rule_notification_api_types import (
+
+from .notifications_rule_types import (
     API_AsciiMailData,
     API_CiscoData,
     API_CustomPlugin,

@@ -572,7 +572,7 @@ class Site:
             raise Exception("The site %s already exists." % self.id)
 
         if self.update or not self.exists():
-            logger.info("Updating site '%s'" if self.update else "Creating site '%s'", self.id)
+            logger.info('Updating site "%s"' if self.update else 'Creating site "%s"', self.id)
             completed_process = subprocess.run(
                 [
                     "/usr/bin/sudo",
@@ -1088,6 +1088,7 @@ class Site:
             "%s/logs" % self.result_dir(),
             ignore_dangling_symlinks=True,
             ignore=shutil.ignore_patterns(".*"),
+            dirs_exist_ok=True,
         )
 
         for nagios_log_path in glob.glob(self.path("var/nagios/*.log")):
@@ -1107,6 +1108,7 @@ class Site:
                 self.path("var/check_mk/crashes"),
                 "%s/crashes" % self.result_dir(),
                 ignore=shutil.ignore_patterns(".*"),
+                dirs_exist_ok=True,
             )
 
     def result_dir(self) -> str:
@@ -1216,18 +1218,20 @@ class SiteFactory:
         auto_restart_httpd: bool = False,
     ) -> Generator[Site, None, None]:
         """Return a fully setup test site (for use in site fixtures)."""
-        reuse = os.environ.get("REUSE")
-        # if REUSE is undefined, a site will neither be reused nor be dropped
-        reuse_site = reuse == "1"
-        drop_site = reuse == "0"
+        reuse_site = os.environ.get("REUSE", "0") == "1"
+        cleanup_site = (
+            not reuse_site
+            if os.environ.get("CLEANUP") is None
+            else os.environ.get("CLEANUP") == "1"
+        )
         site_to_return = self.get_existing_site(name)
-        if site_to_return.exists() and reuse_site:
-            logger.info('Reusing existing site "%s" (REUSE=1)', site_to_return.id)
-        else:
-            if site_to_return.exists() and drop_site:
+        if site_to_return.exists():
+            if reuse_site:
+                logger.info('Reusing existing site "%s" (REUSE=1)', site_to_return.id)
+            else:
                 logger.info('Dropping existing site "%s" (REUSE=0)', site_to_return.id)
                 site_to_return.rm()
-            logger.info('Creating new site "%s"', site_to_return.id)
+        if not site_to_return.exists():
             site_to_return = self.get_site(name)
 
         if auto_restart_httpd:
@@ -1251,8 +1255,8 @@ class SiteFactory:
         finally:
             # teardown: saving results and removing site
             site_to_return.save_results()
-            if auto_cleanup and os.environ.get("REUSE") == "0":
-                logger.info("Dropping existing site (REUSE=0)")
+            if auto_cleanup and cleanup_site:
+                logger.info('Dropping site "%s" (CLEANUP=1)', site_to_return.id)
                 site_to_return.rm()
 
     def remove_site(self, name: str) -> None:

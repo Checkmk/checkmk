@@ -107,8 +107,12 @@ def _discovery_mode(default_mode: str):  # type: ignore[no-untyped-def]
         discovery which will contact the host and identify undecided and vanished services and host
         labels. Those services and host labels can be added or removed accordingly with the
         'fix_all' mode. The 'tabula_rasa' mode combines these two procedures. The 'new', 'remove'
-        and 'only_host_labels' modes give you more granular control. The corresponding user
-        interface option for each discovery mode is shown below.
+        and 'only_host_labels' modes give you more granular control. Both the 'tabula_rasa' and
+        'refresh' modes will start a background job and the endpoint will return a redirect to
+        the 'wait-for-completion' endpoint. All other modes will return an immediate result instead.
+        Keep in mind that the non background job modes only work with scanned data, so you may need
+        to run "refresh" first. The corresponding user interface option for each discovery mode is
+        shown below.
 
  * `new` - Monitor undecided services
  * `remove` - Remove vanished services

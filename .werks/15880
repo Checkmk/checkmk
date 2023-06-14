@@ -1,0 +1,11 @@
+Title: service_discovery: add further documentation details to execute service discovery endpoint
+Class: fix 
+Compatible: compat
+Component: rest-api
+Date: 1686732437
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+This werk adds further details to how the different service discovery modes behave.

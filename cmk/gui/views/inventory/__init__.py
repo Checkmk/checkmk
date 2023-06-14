@@ -2111,17 +2111,22 @@ multisite_builtin_views["inv_host_history"] = {
 
 
 class ABCNodeRenderer(abc.ABC):
-    def __init__(
-        self,
-        site_id: SiteId,
-        hostname: HostName,
-        tree_id: str = "",
-        show_internal_tree_paths: bool = False,
-    ) -> None:
+    def __init__(self, site_id: SiteId, hostname: HostName) -> None:
         self._site_id = site_id
         self._hostname = hostname
-        self._tree_id = tree_id
-        self._show_internal_tree_paths = show_internal_tree_paths
+
+    @property
+    @abc.abstractmethod
+    def _tree_name(self) -> str:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _fetch_url(self, raw_path: str) -> str:
+        raise NotImplementedError()
+
+    @abc.abstractmethod
+    def _get_header(self, title: str, key_info: str) -> HTML:
+        raise NotImplementedError()
 
     def show(self, node: StructuredDataNode | DeltaStructuredDataNode, hints: DisplayHints) -> None:
         if node.attributes:
@@ -2143,7 +2148,7 @@ class ABCNodeRenderer(abc.ABC):
         hints = DISPLAY_HINTS.get_hints(node.path)
 
         with foldable_container(
-            treename=f"inv_{self._hostname}{self._tree_id}",
+            treename=self._tree_name,
             id_=raw_path,
             isopen=False,
             title=self._get_header(
@@ -2151,17 +2156,7 @@ class ABCNodeRenderer(abc.ABC):
                 ".".join(map(str, node.path)),
             ),
             icon=hints.node_hint.icon,
-            fetch_url=makeuri_contextless(
-                request,
-                [
-                    ("site", self._site_id),
-                    ("host", self._hostname),
-                    ("raw_path", raw_path),
-                    ("show_internal_tree_paths", "on" if self._show_internal_tree_paths else ""),
-                    ("tree_id", self._tree_id),
-                ],
-                "ajax_inv_render_tree.py",
-            ),
+            fetch_url=self._fetch_url(raw_path),
         ) as is_open:
             if is_open:
                 self.show(node, hints)
@@ -2282,12 +2277,6 @@ class ABCNodeRenderer(abc.ABC):
 
     #   ---helper---------------------------------------------------------------
 
-    def _get_header(self, title: str, key_info: str) -> HTML:
-        header = HTML(title)
-        if self._show_internal_tree_paths:
-            header += " " + HTMLWriter.render_span("(%s)" % key_info, css="muted-text")
-        return header
-
     def _show_child_value(
         self,
         value: Any,
@@ -2311,6 +2300,37 @@ class ABCNodeRenderer(abc.ABC):
 
 
 class NodeRenderer(ABCNodeRenderer):
+    def __init__(
+        self,
+        site_id: SiteId,
+        hostname: HostName,
+        show_internal_tree_paths: bool = False,
+    ) -> None:
+        super().__init__(site_id, hostname)
+        self._show_internal_tree_paths = show_internal_tree_paths
+
+    @property
+    def _tree_name(self) -> str:
+        return f"inv_{self._hostname}"
+
+    def _fetch_url(self, raw_path: str) -> str:
+        return makeuri_contextless(
+            request,
+            [
+                ("site", self._site_id),
+                ("host", self._hostname),
+                ("raw_path", raw_path),
+                ("show_internal_tree_paths", "on" if self._show_internal_tree_paths else ""),
+            ],
+            "ajax_inv_render_tree.py",
+        )
+
+    def _get_header(self, title: str, key_info: str) -> HTML:
+        header = HTML(title)
+        if self._show_internal_tree_paths:
+            header += " " + HTMLWriter.render_span("(%s)" % key_info, css="muted-text")
+        return header
+
     def _show_row_value(
         self,
         value: Any,
@@ -2329,6 +2349,29 @@ class NodeRenderer(ABCNodeRenderer):
 
 
 class DeltaNodeRenderer(ABCNodeRenderer):
+    def __init__(self, site_id: SiteId, hostname: HostName, tree_id: str) -> None:
+        super().__init__(site_id, hostname)
+        self._tree_id = tree_id
+
+    @property
+    def _tree_name(self) -> str:
+        return f"inv_{self._hostname}{self._tree_id}"
+
+    def _fetch_url(self, raw_path: str) -> str:
+        return makeuri_contextless(
+            request,
+            [
+                ("site", self._site_id),
+                ("host", self._hostname),
+                ("raw_path", raw_path),
+                ("tree_id", self._tree_id),
+            ],
+            "ajax_inv_render_tree.py",
+        )
+
+    def _get_header(self, title: str, key_info: str) -> HTML:
+        return HTML(title)
+
     def _show_row_value(
         self,
         value: Any,

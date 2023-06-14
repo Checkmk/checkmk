@@ -1,0 +1,13 @@
+Title: Bakery avoids rebaking packages if it is possible
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1686739974
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+This optimisation occurs if the agent package already exists and 
+only for specific platfroms: Windows and Linux TGZ.
+

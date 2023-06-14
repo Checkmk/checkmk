@@ -1219,6 +1219,8 @@ class SiteFactory:
     ) -> Generator[Site, None, None]:
         """Return a fully setup test site (for use in site fixtures)."""
         reuse_site = os.environ.get("REUSE", "0") == "1"
+        # by default, the site will be cleaned up if REUSE=1 is not set
+        # you can also explicitly set CLEANUP=[0|1] though (for debug purposes)
         cleanup_site = (
             not reuse_site
             if os.environ.get("CLEANUP") is None

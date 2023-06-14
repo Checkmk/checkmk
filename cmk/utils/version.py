@@ -24,7 +24,6 @@ from pathlib import Path
 from typing import Any, Final, NamedTuple, Self
 
 import cmk.utils.paths
-from cmk.utils.i18n import _
 
 
 class _EditionValue(NamedTuple):
@@ -147,7 +146,7 @@ class _Release:
         return cls(RType.na, 0)
 
 
-@dataclass(order=True)
+@dataclass(order=True, frozen=True)
 class _BaseVersion:
     major: int
     minor: int
@@ -351,14 +350,6 @@ def parse_check_mk_version(v: str) -> int:
     return int("%02d%02d%02d%05d" % (int(major), int(minor), sub, val))
 
 
-def base_version_parts(version: str) -> tuple[int, int, int]:
-    match = re.match(r"(\d+).(\d+).(\d+)", version)
-    if not match or len(match.groups()) != 3:
-        raise ValueError(_("Unable to parse version: %r") % version)
-    groups = match.groups()
-    return int(groups[0]), int(groups[1]), int(groups[2])
-
-
 def is_daily_build_of_master(version: str) -> bool:
     """
     >>> f = is_daily_build_of_master
@@ -463,23 +454,14 @@ def versions_compatible(
     """
 
     # Daily builds of the master branch (format: YYYY.MM.DD) are always treated to be compatbile
-    if any(
-        (
-            is_daily_build_of_master(str(from_v)),
-            is_daily_build_of_master(str(to_v)),
-        )
-    ):
+    if from_v.base is None or to_v.base is None:
         return VersionsCompatible()
 
-    from_v_parts = base_version_parts(str(from_v))
-    to_v_parts = base_version_parts(str(to_v))
-
-    # Same major version is allowed
-    if from_v_parts == to_v_parts:
+    if from_v.base == to_v.base:
         return VersionsCompatible()
 
     # Newer major to older is not allowed
-    if from_v_parts > to_v_parts:
+    if from_v.base > to_v.base:
         return VersionsIncompatible(
             "Target version too old (older major version is not supported)."
         )
@@ -518,23 +500,23 @@ def versions_compatible(
         "Target version too new (one major version jump at maximum)."
     )
 
-    if to_v_parts[0] - from_v_parts[0] > 1:
+    if to_v.base.major - from_v.base.major > 1:
         return target_too_new  # preprev 1st number
 
     last_major_releases = {
-        1: (1, 6, 0),
+        1: _BaseVersion(1, 6, 0),
     }
 
-    if to_v_parts[0] - from_v_parts[0] == 1 and to_v_parts[1] == 0:
+    if to_v.base.major - from_v.base.major == 1 and to_v.base.minor == 0:
         # prev major (e.g. last 1.x.0 before 2.0.0)
-        if last_major_releases[from_v_parts[0]] == from_v_parts:
+        if last_major_releases[from_v.base.major] == from_v.base:
             return _check_minimum_patch_release(from_v, to_v)
         return target_too_new  # preprev 1st number
 
-    if to_v_parts[0] == from_v_parts[0]:
-        if to_v_parts[1] - from_v_parts[1] > 1:
+    if to_v.base.major == from_v.base.major:
+        if to_v.base.minor - from_v.base.minor > 1:
             return target_too_new  # preprev in 2nd number
-        if to_v_parts[1] - from_v_parts[1] == 1:
+        if to_v.base.minor - from_v.base.minor == 1:
             return _check_minimum_patch_release(from_v, to_v)  # prev in 2nd number, ignoring 3rd
 
     # Everything else is incompatible
@@ -543,7 +525,7 @@ def versions_compatible(
 
 _REQUIRED_PATCH_RELEASES_MAP: Final = {
     # max can be evaluated in place, obviously, but we keep a list for documentation.
-    (2, 3, 0): max(
+    _BaseVersion(2, 3, 0): max(
         (Version.from_str("2.2.0p1"),),  # at least the last major version, by default.
     ),
 }
@@ -552,9 +534,9 @@ _REQUIRED_PATCH_RELEASES_MAP: Final = {
 def _check_minimum_patch_release(
     from_v: Version, to_v: Version, /
 ) -> VersionsCompatible | VersionsIncompatible:
-    if not (
-        required_patch_release := _REQUIRED_PATCH_RELEASES_MAP.get(base_version_parts(str(to_v)))
-    ):
+    if to_v.base is None:
+        return VersionsCompatible()
+    if not (required_patch_release := _REQUIRED_PATCH_RELEASES_MAP.get(to_v.base)):
         return VersionsCompatible()
     if from_v >= required_patch_release:
         return VersionsCompatible()

@@ -1113,30 +1113,27 @@ def test_merge_trees_1(
     tree_name: HostName, edges: Sequence[str], sub_children: Sequence[tuple[str, Sequence[str]]]
 ) -> None:
     tree_store = _get_tree_store()
-
-    tree = (
-        tree_store.load(host_name=HostName("tree_old_addresses"))
-        .merge(tree_store.load(host_name=tree_name))
-        .tree
+    tree = tree_store.load(host_name=HostName("tree_old_addresses")).merge(
+        tree_store.load(host_name=tree_name)
     )
 
-    assert id(tree) == id(tree)
     for edge in edges:
-        assert tree.get_node((edge,)) is not None
+        assert bool(tree.get_tree((edge,)))
 
     for m_name, path in sub_children:
-        m = getattr(tree, m_name)
-        assert m is not None
-        assert m(path) is not None
+        if m_name == "get_attributes":
+            assert bool(tree.get_tree(tuple(path)).tree.attributes)
+        elif m_name == "get_table":
+            assert bool(tree.get_tree(tuple(path)).tree.table)
 
 
 def test_merge_trees_2() -> None:
     tree_store = _get_tree_store()
     inventory_tree = tree_store.load(host_name=HostName("tree_inv"))
     status_data_tree = tree_store.load(host_name=HostName("tree_status"))
-    tree = inventory_tree.merge(status_data_tree).tree
+    tree = inventory_tree.merge(status_data_tree)
     assert "foobar" in tree.serialize()["Nodes"]
-    table = tree.get_table(("foobar",))
+    table = tree.get_tree(("foobar",)).tree.table
     assert table is not None
     assert len(table.rows) == 5
 
@@ -1275,18 +1272,13 @@ def test_filter_networking_tree(
     amount_if_entries: int,
 ) -> None:
     tree = _get_tree_store().load(host_name=HostName("tree_new_interfaces"))
-    filtered = tree.filter(filters).tree
-    assert filtered.get_node(("networking",)) is not None
-    assert filtered.get_node(("hardware",)) is None
-    assert filtered.get_node(("software",)) is None
+    filtered = tree.filter(filters)
+    assert bool(filtered.get_tree(("networking",)))
+    assert not filtered.get_tree(("hardware",))
+    assert not filtered.get_tree(("software",))
 
     if amount_if_entries is not None:
-        interfaces = filtered.get_table(
-            (
-                "networking",
-                "interfaces",
-            )
-        )
+        interfaces = filtered.get_tree(("networking", "interfaces")).tree.table
         assert interfaces is not None
         assert interfaces.count_entries() == amount_if_entries
 

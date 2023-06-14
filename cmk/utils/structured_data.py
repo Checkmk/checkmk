@@ -303,7 +303,7 @@ class MutableTree:
         return MutableTree(self.tree.get_node(path))
 
     def has_table(self, path: SDPath) -> bool:
-        return bool(self.tree.get_table(path))
+        return bool(MutableTree(self.tree.get_node(path)).tree.table)
 
 
 # .
@@ -1303,12 +1303,6 @@ class StructuredDataNode:
         if not path:
             return self
         return None if (node := self._nodes.get(path[0])) is None else node.get_node(path[1:])
-
-    def get_table(self, path: SDPath) -> Table | None:
-        return None if (node := self.get_node(path)) is None else node.table
-
-    def get_attributes(self, path: SDPath) -> Attributes | None:
-        return None if (node := self.get_node(path)) is None else node.attributes
 
     #   ---representation-------------------------------------------------------
 

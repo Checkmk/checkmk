@@ -2128,10 +2128,13 @@ def _need_to_update_mkps_after_sync() -> bool:
 def _need_to_update_config_after_sync() -> bool:
     if not (central_version := _request.headers.get("x-checkmk-version")):
         raise ValueError("Request header x-checkmk-version is missing")
-    return not version.is_same_major_version(
-        version.__version__,
-        central_version,
-    )
+    this_v = version.Version.from_str(version.__version__)
+    other_v = version.Version.from_str(central_version)
+    if this_v.base is None or other_v.base is None:
+        # We can not decide which is the current base version of the master daily builds.
+        # For this reason we always treat them to be compatbile.
+        return False
+    return (this_v.base.major, this_v.base.minor) != (other_v.base.major, other_v.base.minor)
 
 
 def _execute_cmk_update_config() -> None:

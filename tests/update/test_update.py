@@ -19,6 +19,9 @@ from .conftest import (
     get_host_data,
     get_services_with_status,
     get_site_status,
+    logger_services_crit,
+    logger_services_ok,
+    logger_services_warn,
     reschedule_services,
     update_config,
     update_site,
@@ -66,9 +69,11 @@ def test_update(test_site: Site, agent_ctl: Path) -> None:
     assert len(base_ok_services) > 0
     assert len(base_pend_services) == 0
 
-    logger.info("Services found in `OK` status in base-version: %s", len(base_ok_services))
-    logger.info("Services found in `WARN` status in base-version: %s", len(base_warn_services))
-    logger.info("Services found in `CRIT` status in base-version: %s", len(base_crit_services))
+    logger_services_ok("base", base_ok_services)
+    if len(base_warn_services) > 0:
+        logger_services_warn("base", base_warn_services)
+    if len(base_crit_services) > 0:
+        logger_services_crit("base", base_crit_services)
 
     target_version = version_from_env(
         fallback_version_spec=CMKVersion.DAILY,
@@ -108,9 +113,11 @@ def test_update(test_site: Site, agent_ctl: Path) -> None:
 
     assert len(target_pend_services) == 0
 
-    logger.info("Services found in `OK` status in target-version: %s", len(target_ok_services))
-    logger.info("Services found in `WARN` status in target-version: %s", len(target_warn_services))
-    logger.info("Services found in `CRIT` status in target-version: %s", len(target_crit_services))
+    logger_services_ok("target", target_ok_services)
+    if len(target_warn_services) > 0:
+        logger_services_warn("target", target_warn_services)
+    if len(target_crit_services) > 0:
+        logger_services_crit("target", target_crit_services)
 
     # TODO: 'Nullmailer Queue' service is not found after the update. Investigate.
     nullmailer_service = "Nullmailer Queue"

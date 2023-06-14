@@ -1,0 +1,14 @@
+Title: Fix selection while editing downtimes
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1686733713
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+If you edited downtimes in a distributed setup, the selection via checkboxes
+was not processed correctly if downtime IDs were identical on different sites.
+This resulted in editing all downtimes with the same ID even if e.g. only one
+downtime was selected for editing.

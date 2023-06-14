@@ -235,8 +235,8 @@ class MutableTree:
     def serialize(self) -> SDRawTree:
         return self.tree.serialize()
 
-    def __bool__(self) -> bool:
-        return bool(self.tree)
+    def __len__(self) -> int:
+        return len(self.tree)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, (MutableTree, ImmutableTree)):
@@ -287,9 +287,6 @@ class MutableTree:
             filter_func,
             retention_interval,
         )
-
-    def count_entries(self) -> int:
-        return self.tree.count_entries()
 
     def get_attribute(self, path: SDPath, key: SDKey) -> SDValue:
         return (
@@ -622,17 +619,14 @@ def _compare_nodes(left: StructuredDataNode, right: StructuredDataNode) -> Delta
     compared_keys = _compare_dict_keys(old_dict=right.nodes_by_name, new_dict=left.nodes_by_name)
 
     for key in compared_keys.only_new:
-        child_left = left.nodes_by_name[key]
-        if child_left.count_entries():
+        if child_left := left.nodes_by_name[key]:
             delta_nodes[key] = DeltaStructuredDataNode.make_from_node(
                 node=child_left,
                 encode_as=_new_delta_tree_node,
             )
 
     for key in compared_keys.both:
-        child_left = left.nodes_by_name[key]
-        child_right = right.nodes_by_name[key]
-        if child_left == child_right:
+        if (child_left := left.nodes_by_name[key]) == (child_right := right.nodes_by_name[key]):
             continue
 
         delta_node = _compare_nodes(child_left, child_right)
@@ -640,8 +634,7 @@ def _compare_nodes(left: StructuredDataNode, right: StructuredDataNode) -> Delta
             delta_nodes[key] = delta_node
 
     for key in compared_keys.only_old:
-        child_right = right.nodes_by_name[key]
-        if child_right.count_entries():
+        if child_right := right.nodes_by_name[key]:
             delta_nodes[key] = DeltaStructuredDataNode.make_from_node(
                 node=child_right,
                 encode_as=_removed_delta_tree_node,
@@ -655,9 +648,58 @@ def _compare_nodes(left: StructuredDataNode, right: StructuredDataNode) -> Delta
     )
 
 
+@dataclass(frozen=True, kw_only=True)
+class ImmutableAttributes:
+    pairs: Mapping[SDKey, SDValue] = field(default_factory=dict)
+    retentions: Mapping[SDKey, RetentionInterval] = field(default_factory=dict)
+
+    def __len__(self) -> int:
+        # The attribute 'pairs' is decisive. Other attributes like 'retentions' have no impact
+        # if there are no pairs.
+        return len(self.pairs)
+
+
+@dataclass(frozen=True, kw_only=True)
+class ImmutableTable:
+    key_columns: Sequence[SDKey] = field(default_factory=list)
+    rows_by_ident: Mapping[SDRowIdent, Mapping[SDKey, SDValue]] = field(default_factory=dict)
+    retentions: Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]] = field(default_factory=dict)
+
+    @property
+    def rows(self) -> Sequence[Mapping[SDKey, SDValue]]:
+        return list(self.rows_by_ident.values())
+
+    def __len__(self) -> int:
+        # The attribute 'rows' is decisive. Other attributes like 'key_columns' or 'retentions'
+        # have no impact if there are no rows.
+        return sum(map(len, self.rows_by_ident.values()))
+
+
 class ImmutableTree:
     def __init__(self, tree: StructuredDataNode | None = None) -> None:
-        self.tree: Final = StructuredDataNode() if tree is None else tree
+        self.attributes: Final = (
+            ImmutableAttributes()
+            if tree is None
+            else ImmutableAttributes(
+                pairs=tree.attributes.pairs,
+                retentions=tree.attributes.retentions,
+            )
+        )
+        self.table: Final = (
+            ImmutableTable()
+            if tree is None
+            else ImmutableTable(
+                key_columns=tree.table.key_columns,
+                rows_by_ident=tree.table.rows_by_ident,
+                retentions=tree.table.retentions,
+            )
+        )
+        self.tree: Final[StructuredDataNode] = StructuredDataNode() if tree is None else tree
+        self.path: Final = () if tree is None else tree.path
+
+    @property
+    def nodes_by_name(self) -> Mapping[SDNodeName, ImmutableTree]:
+        return {name: ImmutableTree(node) for name, node in self.tree.nodes_by_name.items()}
 
     @classmethod
     def deserialize(cls, raw_tree: Mapping) -> ImmutableTree:
@@ -680,8 +722,8 @@ class ImmutableTree:
     def serialize(self) -> SDRawTree:
         return self.tree.serialize()
 
-    def __bool__(self) -> bool:
-        return bool(self.tree)
+    def __len__(self) -> int:
+        return len(self.tree)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, (MutableTree, ImmutableTree)):
@@ -789,9 +831,35 @@ def _filter_delta_tree(
     )
 
 
+@dataclass(frozen=True, kw_only=True)
+class ImmutableDeltaAttributes:
+    pairs: Mapping[SDKey, tuple[SDValue, SDValue]] = field(default_factory=dict)
+
+
+@dataclass(frozen=True, kw_only=True)
+class ImmutableDeltaTable:
+    key_columns: Sequence[SDKey] = field(default_factory=list)
+    rows: Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]] = field(default_factory=list)
+
+
 class ImmutableDeltaTree:
     def __init__(self, tree: DeltaStructuredDataNode | None = None) -> None:
+        self.attributes: Final = (
+            ImmutableDeltaAttributes()
+            if tree is None
+            else ImmutableDeltaAttributes(pairs=tree.attributes.pairs)
+        )
+        self.table: Final = (
+            ImmutableDeltaTable()
+            if tree is None
+            else ImmutableDeltaTable(key_columns=tree.table.key_columns, rows=tree.table.rows)
+        )
         self.tree: Final = tree or DeltaStructuredDataNode()
+        self.path: Final = () if tree is None else tree.path
+
+    @property
+    def nodes_by_name(self) -> Mapping[SDNodeName, ImmutableDeltaTree]:
+        return {name: ImmutableDeltaTree(node) for name, node in self.tree.nodes_by_name.items()}
 
     @classmethod
     def deserialize(cls, raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
@@ -800,8 +868,8 @@ class ImmutableDeltaTree:
     def serialize(self) -> SDRawDeltaTree:
         return self.tree.serialize()
 
-    def __bool__(self) -> bool:
-        return bool(self.tree)
+    def __len__(self) -> int:
+        return len(self.tree)
 
     def filter(self, filters: Iterable[SDFilter]) -> ImmutableDeltaTree:
         return ImmutableDeltaTree(_filter_delta_tree(self.tree, _make_filter_tree(filters)))
@@ -928,8 +996,10 @@ class Attributes:
 
     #   ---common methods-------------------------------------------------------
 
-    def __bool__(self) -> bool:
-        return bool(self.pairs)
+    def __len__(self) -> int:
+        # The attribute 'pairs' is decisive. Other attributes like 'retentions' have no impact
+        # if there are no pairs.
+        return len(self.pairs)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Attributes):
@@ -938,9 +1008,6 @@ class Attributes:
 
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
-
-    def count_entries(self) -> int:
-        return len(self.pairs)
 
     #   ---attributes methods---------------------------------------------------
 
@@ -1046,8 +1113,10 @@ class Table:
 
     #   ---common methods-------------------------------------------------------
 
-    def __bool__(self) -> bool:
-        return bool(self._rows)
+    def __len__(self) -> int:
+        # The attribute 'rows' is decisive. Other attributes like 'key_columns' or 'retentions'
+        # have no impact if there are no rows.
+        return sum(map(len, self._rows.values()))
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Table):
@@ -1065,9 +1134,6 @@ class Table:
 
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
-
-    def count_entries(self) -> int:
-        return sum(map(len, self._rows.values()))
 
     #   ---table methods--------------------------------------------------------
 
@@ -1238,15 +1304,14 @@ class StructuredDataNode:
 
     #   ---common methods-------------------------------------------------------
 
-    def __bool__(self) -> bool:
-        if self.attributes or self.table:
-            return True
-
-        for node in self._nodes.values():
-            if node:
-                return True
-
-        return False
+    def __len__(self) -> int:
+        return sum(
+            [
+                len(self.attributes),
+                len(self.table),
+            ]
+            + [len(node) for node in self._nodes.values()]
+        )
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, StructuredDataNode):
@@ -1267,15 +1332,6 @@ class StructuredDataNode:
 
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
-
-    def count_entries(self) -> int:
-        return sum(
-            [
-                self.attributes.count_entries(),
-                self.table.count_entries(),
-            ]
-            + [node.count_entries() for node in self._nodes.values()]
-        )
 
     #   ---node methods---------------------------------------------------------
 
@@ -1370,8 +1426,8 @@ class DeltaAttributes:
     ) -> DeltaAttributes:
         return cls(pairs={key: encode_as(value) for key, value in attributes.pairs.items()})
 
-    def __bool__(self) -> bool:
-        return bool(self.pairs)
+    def __len__(self) -> int:
+        return len(self.pairs)
 
     def serialize(self) -> SDRawDeltaAttributes:
         return {"Pairs": self.pairs} if self.pairs else {}
@@ -1396,8 +1452,8 @@ class DeltaTable:
             rows=[{key: encode_as(value) for key, value in row.items()} for row in table.rows],
         )
 
-    def __bool__(self) -> bool:
-        return bool(self.rows)
+    def __len__(self) -> int:
+        return sum(map(len, self.rows))
 
     def serialize(self) -> SDRawDeltaTable:
         return {"KeyColumns": self.key_columns, "Rows": self.rows} if self.rows else {}
@@ -1443,15 +1499,14 @@ class DeltaStructuredDataNode:
             },
         )
 
-    def __bool__(self) -> bool:
-        if self.attributes or self.table:
-            return True
-
-        for node in self.nodes.values():
-            if node:
-                return True
-
-        return False
+    def __len__(self) -> int:
+        return sum(
+            [
+                len(self.attributes),
+                len(self.table),
+            ]
+            + [len(node) for node in self.nodes.values()]
+        )
 
     def get_node(self, path: SDPath) -> DeltaStructuredDataNode | None:
         if not path:

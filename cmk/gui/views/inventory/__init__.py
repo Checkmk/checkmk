@@ -19,11 +19,11 @@ import cmk.utils.defines as defines
 import cmk.utils.render
 from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
-    Attributes,
-    DeltaAttributes,
-    DeltaStructuredDataNode,
-    DeltaTable,
+    ImmutableAttributes,
+    ImmutableDeltaAttributes,
+    ImmutableDeltaTable,
     ImmutableDeltaTree,
+    ImmutableTable,
     ImmutableTree,
     RetentionInterval,
     SDKey,
@@ -31,8 +31,6 @@ from cmk.utils.structured_data import (
     SDRawDeltaTree,
     SDRawTree,
     SDValue,
-    StructuredDataNode,
-    Table,
 )
 from cmk.utils.user import UserId
 
@@ -216,7 +214,7 @@ class PainterInventoryTree(Painter):
         )
 
         with output_funnel.plugged():
-            tree_renderer.show(tree.tree, DISPLAY_HINTS.get_hints(tree.tree.path))
+            tree_renderer.show(tree, DISPLAY_HINTS.get_hints(tree.path))
             code = HTML(output_funnel.drain())
 
         return "invtree", code
@@ -1198,7 +1196,7 @@ def _compute_node_painter_data(row: Row, path: SDPath) -> ImmutableTree:
 
 
 def _paint_host_inventory_tree(row: Row, hints: DisplayHints) -> CellSpec:
-    if not (node := _compute_node_painter_data(row, hints.abc_path)):
+    if not (tree := _compute_node_painter_data(row, hints.abc_path)):
         return "", ""
 
     painter_options = PainterOptions.get_instance()
@@ -1209,7 +1207,7 @@ def _paint_host_inventory_tree(row: Row, hints: DisplayHints) -> CellSpec:
     )
 
     with output_funnel.plugged():
-        tree_renderer.show(node.tree, hints)
+        tree_renderer.show(tree, hints)
         code = HTML(output_funnel.drain())
 
     return "invtree", code
@@ -1817,7 +1815,7 @@ class RowTableInventoryHistory(ABCRowTable):
         for history_entry in inv_data:
             yield {
                 "invhist_time": history_entry.timestamp,
-                "invhist_delta": history_entry.delta_tree.tree,
+                "invhist_delta": history_entry.delta_tree,
                 "invhist_removed": history_entry.removed,
                 "invhist_new": history_entry.new,
                 "invhist_changed": history_entry.changed,
@@ -1907,7 +1905,7 @@ class PainterInvhistDelta(Painter):
         )
 
         with output_funnel.plugged():
-            tree_renderer.show(tree.tree, DISPLAY_HINTS.get_hints(tree.tree.path))
+            tree_renderer.show(tree, DISPLAY_HINTS.get_hints(tree.path))
             code = HTML(output_funnel.drain())
 
         return "invtree", code
@@ -2200,21 +2198,21 @@ class ABCNodeRenderer(abc.ABC):
     def _get_header(self, title: str, key_info: str) -> HTML:
         raise NotImplementedError()
 
-    def show(self, node: StructuredDataNode | DeltaStructuredDataNode, hints: DisplayHints) -> None:
-        if node.attributes:
-            self._show_attributes(node.attributes, hints)
+    def show(self, tree: ImmutableTree | ImmutableDeltaTree, hints: DisplayHints) -> None:
+        if tree.attributes:
+            self._show_attributes(tree.attributes, hints)
 
-        if node.table:
-            self._show_table(node.table, hints)
+        if tree.table:
+            self._show_table(tree.table, hints)
 
-        for _name, child in sorted(node.nodes_by_name.items(), key=lambda t: t[0]):
-            if isinstance(child, (StructuredDataNode, DeltaStructuredDataNode)):
+        for _name, node in sorted(tree.nodes_by_name.items(), key=lambda t: t[0]):
+            if isinstance(node, (ImmutableTree, ImmutableDeltaTree)):
                 # sorted tries to find the common base class, which is object :(
-                self._show_node(child)
+                self._show_node(node)
 
     #   ---node-----------------------------------------------------------------
 
-    def _show_node(self, node: StructuredDataNode | DeltaStructuredDataNode) -> None:
+    def _show_node(self, node: ImmutableTree | ImmutableDeltaTree) -> None:
         raw_path = f".{'.'.join(map(str, node.path))}." if node.path else "."
 
         hints = DISPLAY_HINTS.get_hints(node.path)
@@ -2235,7 +2233,7 @@ class ABCNodeRenderer(abc.ABC):
 
     #   ---table----------------------------------------------------------------
 
-    def _show_table(self, table: Table | DeltaTable, hints: DisplayHints) -> None:
+    def _show_table(self, table: ImmutableTable | ImmutableDeltaTable, hints: DisplayHints) -> None:
         if hints.table_hint.view_spec:
             # Link to Multisite view with exactly this table
             html.div(
@@ -2271,7 +2269,7 @@ class ABCNodeRenderer(abc.ABC):
         html.close_tr()
 
         rows: Sequence[_RowOrRetentions] | Sequence[_DeltaRowOrRetentions]
-        if isinstance(table, Table):
+        if isinstance(table, ImmutableTable):
             rows = [
                 _RowOrRetentions(row, table.retentions.get(ident, {}))
                 for ident, row in table.rows_by_ident.items()
@@ -2302,12 +2300,12 @@ class ABCNodeRenderer(abc.ABC):
     #   ---attributes-----------------------------------------------------------
 
     def _show_attributes(
-        self, attributes: Attributes | DeltaAttributes, hints: DisplayHints
+        self, attributes: ImmutableAttributes | ImmutableDeltaAttributes, hints: DisplayHints
     ) -> None:
         html.open_table()
         for key, value, retention_interval in _sort_pairs(
             attributes.pairs,
-            attributes.retentions if isinstance(attributes, Attributes) else {},
+            attributes.retentions if isinstance(attributes, ImmutableAttributes) else {},
             hints.attributes_hint.key_order,
         ):
             attr_hint = hints.get_attribute_hint(key)
@@ -2487,12 +2485,12 @@ def ajax_inv_render_tree() -> None:
         return
 
     inventory_path = inventory.InventoryPath.parse(raw_path or "")
-    if not (node := tree.get_tree(inventory_path.path)):
+    if not (tree := tree.get_tree(inventory_path.path)):
         html.show_error(_("No such tree below %r") % inventory_path.path)
         return
 
     NodeRenderer(site_id, hostname, show_internal_tree_paths=show_internal_tree_paths).show(
-        node.tree, DISPLAY_HINTS.get_hints(node.tree.path)
+        tree, DISPLAY_HINTS.get_hints(tree.path)
     )
 
 
@@ -2519,10 +2517,10 @@ def ajax_inv_render_delta_tree() -> None:
         return
 
     inventory_path = inventory.InventoryPath.parse(raw_path or "")
-    if not (node := tree.get_tree(inventory_path.path)):
+    if not (tree := tree.get_tree(inventory_path.path)):
         html.show_error(_("No such tree below %r") % inventory_path.path)
         return
 
     DeltaNodeRenderer(site_id, hostname, tree_id=tree_id).show(
-        node.tree, DISPLAY_HINTS.get_hints(node.tree.path)
+        tree, DISPLAY_HINTS.get_hints(tree.path)
     )

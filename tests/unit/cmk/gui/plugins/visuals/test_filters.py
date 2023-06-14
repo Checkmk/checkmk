@@ -1172,7 +1172,7 @@ def test_filters_filter_table(test: FilterTableTest, monkeypatch: pytest.MonkeyP
                 ("is_has_inv", "1"),
             ],
             rows=[
-                {"host_inventory": ImmutableTree.deserialize({}).tree},
+                {"host_inventory": ImmutableTree.deserialize({})},
                 {"host_inventory": ImmutableTree.deserialize({"a": "b"})},
             ],
             expected_rows=[
@@ -1186,11 +1186,11 @@ def test_filters_filter_table(test: FilterTableTest, monkeypatch: pytest.MonkeyP
                 ("is_has_inv", "-1"),
             ],
             rows=[
-                {"host_inventory": ImmutableTree.deserialize({}).tree},
+                {"host_inventory": ImmutableTree.deserialize({})},
                 {"host_inventory": ImmutableTree.deserialize({"a": "b"})},
             ],
             expected_rows=[
-                {"host_inventory": ImmutableTree.deserialize({}).tree},
+                {"host_inventory": ImmutableTree.deserialize({})},
                 {"host_inventory": ImmutableTree.deserialize({"a": "b"})},
             ],
         ),

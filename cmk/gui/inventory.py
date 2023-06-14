@@ -261,7 +261,7 @@ def load_latest_delta_tree(hostname: HostName) -> ImmutableDeltaTree:
     def _get_latest_timestamps(
         tree_paths: Sequence[InventoryHistoryPath],
     ) -> FilteredInventoryHistoryPaths:
-        if len(tree_paths) == 0:
+        if not tree_paths:
             raise FilterInventoryHistoryPathsError()
         return FilteredInventoryHistoryPaths(
             start_tree_path=(

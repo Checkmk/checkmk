@@ -11,13 +11,7 @@ import pytest
 import cmk.utils.resulttype as result
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.structured_data import (
-    ImmutableTree,
-    MutableTree,
-    RetentionInterval,
-    StructuredDataNode,
-    UpdateResult,
-)
+from cmk.utils.structured_data import ImmutableTree, MutableTree, RetentionInterval, UpdateResult
 from cmk.utils.type_defs import AgentRawData, EVERYTHING, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawData
@@ -136,7 +130,7 @@ def test__inventorize_real_host_only_items() -> None:
         previous_tree=ImmutableTree(),
     )
 
-    assert trees.inventory.tree.serialize() == {
+    assert trees.inventory.serialize() == {
         "Attributes": {},
         "Nodes": {
             "path-to": {
@@ -319,7 +313,7 @@ def test__inventorize_real_host_only_intervals(
     else:
         table_retentions = {}
 
-    assert trees.inventory.tree.serialize() == {
+    assert trees.inventory.serialize() == {
         "Attributes": {},
         "Nodes": {
             "path-to": {
@@ -502,7 +496,7 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
     else:
         table_retentions = {}
 
-    assert trees.inventory.tree.serialize() == {
+    assert trees.inventory.serialize() == {
         "Attributes": {},
         "Nodes": {
             "path-to": {
@@ -678,31 +672,24 @@ def _make_tree_or_items(
     ],
 )
 @pytest.mark.parametrize(
-    "previous_node, expected_inv_tree",
+    "previous_node",
     [
-        (ImmutableTree(), StructuredDataNode()),
-        (
-            _make_tree_or_items(
-                previous_attributes_retentions={},
-                previous_table_retentions={},
-                raw_cache_info=None,
-            )[0],
-            StructuredDataNode(),
-        ),
-        (
-            _make_tree_or_items(
-                previous_attributes_retentions={},
-                previous_table_retentions={},
-                raw_cache_info=(1, 2),
-            )[0],
-            StructuredDataNode(),
-        ),
+        ImmutableTree(),
+        _make_tree_or_items(
+            previous_attributes_retentions={},
+            previous_table_retentions={},
+            raw_cache_info=None,
+        )[0],
+        _make_tree_or_items(
+            previous_attributes_retentions={},
+            previous_table_retentions={},
+            raw_cache_info=(1, 2),
+        )[0],
     ],
 )
 def test__inventorize_real_host_no_items(
     raw_intervals: list,
     previous_node: ImmutableTree,
-    expected_inv_tree: StructuredDataNode,
 ) -> None:
     trees, update_result = _inventorize_real_host(
         now=10,
@@ -757,11 +744,11 @@ def test_updater_merge_previous_attributes(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    inv_node = trees.inventory.get_tree(("path-to", "node-with-attrs"))
-    assert inv_node.tree.attributes.retentions == expected_retentions
+    inv_node = ImmutableTree(trees.inventory.get_tree(("path-to", "node-with-attrs")).tree)
+    assert inv_node.attributes.retentions == expected_retentions
 
     if expected_retentions:
-        assert "old" in inv_node.tree.attributes.pairs
+        assert "old" in inv_node.attributes.pairs
 
 
 @pytest.mark.parametrize(
@@ -794,8 +781,8 @@ def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str
     assert not update_result.save_tree
     assert not update_result.reasons_by_path
 
-    inv_node = trees.inventory.get_tree(("path-to", "node-with-attrs"))
-    assert inv_node.tree.attributes.retentions == {}
+    inv_node = ImmutableTree(trees.inventory.get_tree(("path-to", "node-with-attrs")).tree)
+    assert inv_node.attributes.retentions == {}
 
 
 @pytest.mark.parametrize(
@@ -843,11 +830,11 @@ def test_updater_merge_previous_tables(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    inv_node = trees.inventory.get_tree(("path-to", "node-with-table"))
-    assert inv_node.tree.table.retentions == expected_retentions
+    inv_node = ImmutableTree(trees.inventory.get_tree(("path-to", "node-with-table")).tree)
+    assert inv_node.table.retentions == expected_retentions
 
     if expected_retentions:
-        for row in inv_node.tree.table.rows:
+        for row in inv_node.table.rows:
             assert "old" in row
 
 
@@ -884,8 +871,8 @@ def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]]) 
     assert not update_result.save_tree
     assert not update_result.reasons_by_path
 
-    inv_node = trees.inventory.get_tree(("path-to", "node-with-table"))
-    assert inv_node.tree.table.retentions == {}
+    inv_node = ImmutableTree(trees.inventory.get_tree(("path-to", "node-with-table")).tree)
+    assert inv_node.table.retentions == {}
 
 
 @pytest.mark.parametrize(
@@ -927,8 +914,6 @@ def test_updater_merge_attributes(
         previous_tree=previous_tree,
     )
 
-    inv_node = trees.inventory.get_tree(("path-to", "node-with-attrs"))
-
     if expected_retentions:
         assert update_result.save_tree
         assert update_result.reasons_by_path
@@ -936,11 +921,12 @@ def test_updater_merge_attributes(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    assert inv_node.tree.attributes.retentions == expected_retentions
+    inv_node = ImmutableTree(trees.inventory.get_tree(("path-to", "node-with-attrs")).tree)
+    assert inv_node.attributes.retentions == expected_retentions
 
     if expected_retentions:
-        assert "old" in inv_node.tree.attributes.pairs
-        assert inv_node.tree.attributes.pairs.get("keys") == "New Keys"
+        assert "old" in inv_node.attributes.pairs
+        assert inv_node.attributes.pairs.get("keys") == "New Keys"
 
 
 @pytest.mark.parametrize(
@@ -981,8 +967,6 @@ def test_updater_merge_attributes_outdated(
         previous_tree=previous_tree,
     )
 
-    inv_node = trees.inventory.get_tree(("path-to", "node-with-attrs"))
-
     if expected_retentions:
         assert update_result.save_tree
         assert update_result.reasons_by_path
@@ -990,7 +974,8 @@ def test_updater_merge_attributes_outdated(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    assert inv_node.tree.attributes.retentions == expected_retentions
+    inv_node = ImmutableTree(trees.inventory.get_tree(("path-to", "node-with-attrs")).tree)
+    assert inv_node.attributes.retentions == expected_retentions
 
 
 @pytest.mark.parametrize(
@@ -1048,8 +1033,6 @@ def test_updater_merge_tables(
         previous_tree=previous_tree,
     )
 
-    inv_node = trees.inventory.get_tree(("path-to", "node-with-table"))
-
     if expected_retentions:
         assert update_result.save_tree
         assert update_result.reasons_by_path
@@ -1057,10 +1040,11 @@ def test_updater_merge_tables(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    assert inv_node.tree.table.retentions == expected_retentions
+    inv_node = ImmutableTree(trees.inventory.get_tree(("path-to", "node-with-table")).tree)
+    assert inv_node.table.retentions == expected_retentions
 
     if expected_retentions:
-        for row in inv_node.tree.table.rows:
+        for row in inv_node.table.rows:
             assert "old" in row
             assert isinstance(v := row["keys"], str)
             assert v.startswith("New Keys")
@@ -1113,8 +1097,6 @@ def test_updater_merge_tables_outdated(
         previous_tree=previous_tree,
     )
 
-    inv_node = trees.inventory.get_tree(("path-to", "node-with-table"))
-
     if expected_retentions:
         assert update_result.save_tree
         assert update_result.reasons_by_path
@@ -1122,7 +1104,8 @@ def test_updater_merge_tables_outdated(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    assert inv_node.tree.table.retentions == expected_retentions
+    inv_node = ImmutableTree(trees.inventory.get_tree(("path-to", "node-with-table")).tree)
+    assert inv_node.table.retentions == expected_retentions
 
 
 @pytest.mark.parametrize(

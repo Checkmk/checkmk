@@ -220,13 +220,7 @@ def test_serialize_filled_delta_tree() -> None:
 
 
 def test_deserialize_empty_delta_tree() -> None:
-    assert not ImmutableDeltaTree.deserialize(
-        {
-            "Attributes": {},
-            "Table": {},
-            "Nodes": {},
-        }
-    )
+    assert len(ImmutableDeltaTree()) == 0
 
 
 def test_deserialize_filled_delta_tree() -> None:
@@ -271,6 +265,7 @@ def test_deserialize_filled_delta_tree() -> None:
             "Table": {},
         }
     )
+    assert len(delta_tree) == 12
     stats = delta_tree.get_stats()
     assert stats["new"] == 0
     assert stats["changed"] == 0
@@ -279,20 +274,11 @@ def test_deserialize_filled_delta_tree() -> None:
 
 def test_get_tree_empty() -> None:
     root = _create_empty_imm_tree()
-    nta = root.get_tree(("path-to-nta",))
-    nt = root.get_tree(("path-to-nta", "nt"))
-    na = root.get_tree(("path-to-nta", "na"))
-    ta = root.get_tree(("path-to-nta", "ta"))
-    assert not bool(nta)
-    assert nta.tree.path == ("path-to-nta",)
-    assert not bool(nt)
-    assert nt.tree.path == ("path-to-nta", "nt")
-    assert not bool(na)
-    assert na.tree.path == ("path-to-nta", "na")
-    assert not bool(ta)
-    assert ta.tree.path == ("path-to-nta", "ta")
-    assert not bool(root.get_tree(("path-to", "unknown")))
-    assert root.tree.count_entries() == 0
+    assert len(root) == 0
+    assert root.get_tree(("path-to-nta",)).path == ("path-to-nta",)
+    assert root.get_tree(("path-to-nta", "nt")).path == ("path-to-nta", "nt")
+    assert root.get_tree(("path-to-nta", "na")).path == ("path-to-nta", "na")
+    assert root.get_tree(("path-to-nta", "ta")).path == ("path-to-nta", "ta")
 
 
 def test_get_tree_not_empty() -> None:
@@ -301,42 +287,38 @@ def test_get_tree_not_empty() -> None:
     nt = root.get_tree(("path-to-nta", "nt"))
     na = root.get_tree(("path-to-nta", "na"))
     ta = root.get_tree(("path-to-nta", "ta"))
-    assert bool(nta)
-    assert nta.tree.path == ("path-to-nta",)
+    assert len(root) == 12
+    assert len(nta) == 12
+    assert len(nt) == 4
+    assert len(na) == 2
+    assert len(ta) == 6
 
-    assert bool(nt)
-    assert nt.tree.path == ("path-to-nta", "nt")
+    assert nta.path == ("path-to-nta",)
+    assert nt.path == ("path-to-nta", "nt")
     assert root.get_attribute(("path-to-nta", "nt"), "foo") is None
     nt_rows = root.get_rows(("path-to-nta", "nt"))
-    assert len(nt_rows) == 2
     for row in [
         {"nt0": "NT 00", "nt1": "NT 01"},
         {"nt0": "NT 10", "nt1": "NT 11"},
     ]:
         assert row in nt_rows
 
-    assert bool(na)
-    assert na.tree.path == ("path-to-nta", "na")
+    assert na.path == ("path-to-nta", "na")
     assert root.get_attribute(("path-to-nta", "na"), "na0") == "NA 0"
     assert root.get_attribute(("path-to-nta", "na"), "na1") == "NA 1"
     assert root.get_attribute(("path-to-nta", "na"), "foo") is None
     assert root.get_rows(("path-to-nta", "na")) == []
 
-    assert bool(ta)
-    assert ta.tree.path == ("path-to-nta", "ta")
+    assert ta.path == ("path-to-nta", "ta")
     assert root.get_attribute(("path-to-nta", "ta"), "ta0") == "TA 0"
     assert root.get_attribute(("path-to-nta", "ta"), "ta1") == "TA 1"
     assert root.get_attribute(("path-to-nta", "ta"), "foo") is None
     ta_rows = root.get_rows(("path-to-nta", "ta"))
-    assert len(ta_rows) == 2
     for row in [
         {"ta0": "TA 00", "ta1": "TA 01"},
         {"ta0": "TA 10", "ta1": "TA 11"},
     ]:
         assert row in ta_rows
-
-    assert not bool(root.get_tree(("path-to", "unknown")))
-    assert root.tree.count_entries() == 12
 
 
 def test_add_pairs_or_rows() -> None:
@@ -350,7 +332,7 @@ def test_add_pairs_or_rows() -> None:
             {"sn0": "SN 10", "sn1": "SN 11"},
         ],
     )
-    assert root.count_entries() == 18
+    assert len(root) == 18
 
 
 def test_compare_tree_with_itself_1() -> None:
@@ -403,19 +385,19 @@ def test_filter_delta_tree_nt() -> None:
         )
     )
 
-    assert not filtered.get_tree(("path-to-nta", "na"))
-    assert not filtered.get_tree(("path-to-nta", "ta"))
+    assert len(filtered.get_tree(("path-to-nta", "na"))) == 0
+    assert len(filtered.get_tree(("path-to-nta", "ta"))) == 0
 
     filtered_child = filtered.get_tree(("path-to-nta", "nt"))
-    assert bool(filtered_child)
-    assert filtered_child.tree.path == ("path-to-nta", "nt")
-    assert filtered_child.tree.attributes.pairs == {}
-    assert len(filtered_child.tree.table.rows) == 2
+    assert len(filtered_child) == 2
+    assert filtered_child.path == ("path-to-nta", "nt")
+    assert filtered_child.attributes.pairs == {}
+    assert len(filtered_child.table.rows) == 2
     for row in (
         {"nt1": (None, "NT 01")},
         {"nt1": (None, "NT 11")},
     ):
-        assert row in filtered_child.tree.table.rows
+        assert row in filtered_child.table.rows
 
 
 def test_filter_delta_tree_na() -> None:
@@ -434,14 +416,14 @@ def test_filter_delta_tree_na() -> None:
         )
     )
 
-    assert not filtered.get_tree(("path-to-nta", "nt"))
-    assert not filtered.get_tree(("path-to-nta", "ta"))
+    assert len(filtered.get_tree(("path-to-nta", "nt"))) == 0
+    assert len(filtered.get_tree(("path-to-nta", "ta"))) == 0
 
     filtered_child = filtered.get_tree(("path-to-nta", "na"))
-    assert bool(filtered_child)
-    assert filtered_child.tree.path == ("path-to-nta", "na")
-    assert filtered_child.tree.attributes.pairs == {"na1": (None, "NA 1")}
-    assert filtered_child.tree.table.rows == []
+    assert len(filtered_child) == 1
+    assert filtered_child.path == ("path-to-nta", "na")
+    assert filtered_child.attributes.pairs == {"na1": (None, "NA 1")}
+    assert filtered_child.table.rows == []
 
 
 def test_filter_delta_tree_ta() -> None:
@@ -460,19 +442,19 @@ def test_filter_delta_tree_ta() -> None:
         )
     )
 
-    assert not filtered.get_tree(("path-to-nta", "nt"))
-    assert not filtered.get_tree(("path-to-nta", "na"))
+    assert len(filtered.get_tree(("path-to-nta", "nt"))) == 0
+    assert len(filtered.get_tree(("path-to-nta", "na"))) == 0
 
     filtered_child = filtered.get_tree(("path-to-nta", "ta"))
-    assert bool(filtered_child)
-    assert filtered_child.tree.path == ("path-to-nta", "ta")
-    assert filtered_child.tree.attributes.pairs == {"ta1": (None, "TA 1")}
-    assert len(filtered_child.tree.table.rows) == 2
+    assert len(filtered_child) == 3
+    assert filtered_child.path == ("path-to-nta", "ta")
+    assert filtered_child.attributes.pairs == {"ta1": (None, "TA 1")}
+    assert len(filtered_child.table.rows) == 2
     for row in (
         {"ta1": (None, "TA 01")},
         {"ta1": (None, "TA 11")},
     ):
-        assert row in filtered_child.tree.table.rows
+        assert row in filtered_child.table.rows
 
 
 def test_filter_delta_tree_nta_ta() -> None:
@@ -498,22 +480,22 @@ def test_filter_delta_tree_nta_ta() -> None:
     )
 
     nta = filtered.get_tree(("path-to-nta",))
-    assert bool(nta)
-    assert nta.tree.attributes.pairs == {}
-    assert nta.tree.table.rows == []
+    assert len(nta) == 5
+    assert nta.attributes.pairs == {}
+    assert nta.table.rows == []
 
-    assert not filtered.get_tree(("path-to-nta", "nt"))
-    assert not filtered.get_tree(("path-to-nta", "na"))
+    assert len(filtered.get_tree(("path-to-nta", "nt"))) == 0
+    assert len(filtered.get_tree(("path-to-nta", "na"))) == 0
 
     filtered_ta = filtered.get_tree(("path-to-nta", "ta"))
-    assert bool(filtered_ta)
-    assert filtered_ta.tree.attributes.pairs == {"ta0": (None, "TA 0")}
-    assert len(filtered_ta.tree.table.rows) == 2
+    assert len(filtered_ta) == 5
+    assert filtered_ta.attributes.pairs == {"ta0": (None, "TA 0")}
+    assert len(filtered_ta.table.rows) == 2
     for row in (
         {"ta0": (None, "TA 00"), "ta1": (None, "TA 01")},
         {"ta0": (None, "TA 10"), "ta1": (None, "TA 11")},
     ):
-        assert row in filtered_ta.tree.table.rows
+        assert row in filtered_ta.table.rows
 
 
 @pytest.mark.parametrize(
@@ -632,9 +614,9 @@ def test_difference_rows(
 
     delta_tree = ImmutableTree(current_tree.tree).difference(ImmutableTree(previous_tree.tree))
     if any(result):
-        assert delta_tree
+        assert len(delta_tree) > 0
     else:
-        assert not delta_tree
+        assert len(delta_tree) == 0
 
     stats = delta_tree.get_stats()
     assert (stats["new"], stats["changed"], stats["removed"]) == result
@@ -662,11 +644,11 @@ def test_difference_rows_keys(
     current_tree.add_rows(path=(), key_columns=["id"], rows=[current_row])
 
     delta_tree = ImmutableTree(current_tree.tree).difference(ImmutableTree(previous_tree.tree))
-    assert {k for r in delta_tree.tree.table.rows for k in r} == expected_keys
+    assert {k for r in delta_tree.table.rows for k in r} == expected_keys
 
 
 def test_filter_tree_no_paths() -> None:
-    assert not _create_filled_imm_tree().filter([])
+    assert len(_create_filled_imm_tree().filter([])) == 0
 
 
 def test_filter_tree_wrong_node() -> None:
@@ -680,9 +662,9 @@ def test_filter_tree_wrong_node() -> None:
         ),
     ]
     filtered = filled_root.filter(filters)
-    assert not filtered.get_tree(("path-to-nta", "na"))
-    assert not filtered.get_tree(("path-to-nta", "nt"))
-    assert bool(filtered.get_tree(("path-to-nta", "ta")))
+    assert len(filtered.get_tree(("path-to-nta", "na"))) == 0
+    assert len(filtered.get_tree(("path-to-nta", "nt"))) == 0
+    assert len(filtered.get_tree(("path-to-nta", "ta"))) == 6
 
 
 def test_filter_tree_paths_no_keys() -> None:
@@ -735,12 +717,12 @@ def test_filter_tree_paths_and_keys() -> None:
 
 
 def test_filter_tree_mixed() -> None:
-    filled_root = _create_filled_mut_tree()
-    filled_root.add_pairs(
+    filled_root_ = _create_filled_mut_tree()
+    filled_root_.add_pairs(
         path=("path-to", "another", "node1"),
         pairs={"ak11": "Another value 11", "ak12": "Another value 12"},
     )
-    filled_root.add_rows(
+    filled_root_.add_rows(
         path=("path-to", "another", "node2"),
         key_columns=["ak21"],
         rows=[
@@ -769,13 +751,13 @@ def test_filter_tree_mixed() -> None:
             filter_nodes=lambda k: True,
         ),
     ]
-    filtered_root = ImmutableTree(filled_root.tree).filter(filters)
+    filtered_root = ImmutableTree(filled_root_.tree).filter(filters)
 
-    assert filtered_root.tree.count_entries() == 9
-    assert not filtered_root.get_tree(("path-to-nta", "nt"))
-    assert not filtered_root.get_tree(("path-to-nta", "na"))
-    assert bool(filtered_root.get_tree(("path-to", "another", "node1")))
-    assert bool(filtered_root.get_tree(("path-to", "another", "node2")))
+    assert len(filtered_root) == 9
+    assert len(filtered_root.get_tree(("path-to-nta", "nt"))) == 0
+    assert len(filtered_root.get_tree(("path-to-nta", "na"))) == 0
+    assert len(filtered_root.get_tree(("path-to", "another", "node1"))) == 2
+    assert len(filtered_root.get_tree(("path-to", "another", "node2"))) == 4
 
 
 def _get_tree_store() -> TreeStore:
@@ -838,7 +820,7 @@ def test_save_tree(tmp_path: Path) -> None:
     ],
 )
 def test_load_real_tree(tree_name: HostName) -> None:
-    assert _get_tree_store().load(host_name=tree_name)
+    assert len(_get_tree_store().load(host_name=tree_name)) > 0
 
 
 @pytest.mark.parametrize(
@@ -939,7 +921,7 @@ def test_save_and_load_real_tree(tree_name: HostName, tmp_path: Path) -> None:
     ],
 )
 def test_count_entries(tree_name: HostName, result: int) -> None:
-    assert _get_tree_store().load(host_name=tree_name).tree.count_entries() == result
+    assert len(_get_tree_store().load(host_name=tree_name)) == result
 
 
 @pytest.mark.parametrize(
@@ -1050,9 +1032,9 @@ def test_get_node(
 ) -> None:
     tree = _get_tree_store().load(host_name=tree_name)
     for edge_t in edges_t:
-        assert tree.tree.get_node((edge_t,)) is not None
+        assert len(tree.get_tree((edge_t,))) > 0
     for edge_f in edges_f:
-        assert tree.tree.get_node((edge_f,)) is None
+        assert len(tree.get_tree((edge_f,))) == 0
 
 
 @pytest.mark.parametrize(
@@ -1068,7 +1050,7 @@ def test_get_node(
 )
 def test_amount_of_nodes(tree_name: HostName, amount_of_nodes: int) -> None:
     tree = _get_tree_store().load(host_name=tree_name)
-    assert len(list(tree.tree.nodes)) == amount_of_nodes
+    assert len(list(tree.nodes_by_name.values())) == amount_of_nodes
 
 
 @pytest.mark.parametrize(
@@ -1122,9 +1104,9 @@ def test_merge_trees_1(
 
     for m_name, path in sub_children:
         if m_name == "get_attributes":
-            assert bool(tree.get_tree(tuple(path)).tree.attributes)
+            assert len(tree.get_tree(tuple(path)).attributes) > 0
         elif m_name == "get_table":
-            assert bool(tree.get_tree(tuple(path)).tree.table)
+            assert len(tree.get_tree(tuple(path)).table) > 0
 
 
 def test_merge_trees_2() -> None:
@@ -1133,8 +1115,8 @@ def test_merge_trees_2() -> None:
     status_data_tree = tree_store.load(host_name=HostName("tree_status"))
     tree = inventory_tree.merge(status_data_tree)
     assert "foobar" in tree.serialize()["Nodes"]
-    table = tree.get_tree(("foobar",)).tree.table
-    assert table is not None
+    table = tree.get_tree(("foobar",)).table
+    assert len(table) == 19
     assert len(table.rows) == 5
 
 
@@ -1176,7 +1158,7 @@ def test_filter_real_tree(
     assert id(tree) != id(filtered)
     assert tree != filtered
     for path in unavail:
-        assert filtered.tree.get_node(path) is None
+        assert len(filtered.get_tree(path)) == 0
 
 
 @pytest.mark.parametrize(
@@ -1273,14 +1255,13 @@ def test_filter_networking_tree(
 ) -> None:
     tree = _get_tree_store().load(host_name=HostName("tree_new_interfaces"))
     filtered = tree.filter(filters)
-    assert bool(filtered.get_tree(("networking",)))
-    assert not filtered.get_tree(("hardware",))
-    assert not filtered.get_tree(("software",))
+    assert len(filtered.get_tree(("networking",))) > 0
+    assert len(filtered.get_tree(("hardware",))) == 0
+    assert len(filtered.get_tree(("software",))) == 0
 
     if amount_if_entries is not None:
-        interfaces = filtered.get_tree(("networking", "interfaces")).tree.table
-        assert interfaces is not None
-        assert interfaces.count_entries() == amount_if_entries
+        interfaces = filtered.get_tree(("networking", "interfaces"))
+        assert len(interfaces) == amount_if_entries
 
 
 def test_filter_networking_tree_empty() -> None:
@@ -1294,10 +1275,10 @@ def test_filter_networking_tree_empty() -> None:
                 filter_nodes=lambda k: False,
             ),
         ]
-    ).tree
-    assert filtered.get_node(("networking",)) is None
-    assert filtered.get_node(("hardware",)) is None
-    assert filtered.get_node(("software",)) is None
+    )
+    assert len(filtered.get_tree(("networking",))) == 0
+    assert len(filtered.get_tree(("hardware",))) == 0
+    assert len(filtered.get_tree(("software",))) == 0
 
 
 @pytest.mark.parametrize(
@@ -1369,42 +1350,42 @@ def test_legacy_tree() -> None:
     #     }
     # }
 
-    tree = ImmutableTree.deserialize(raw_tree).tree
+    tree = ImmutableTree.deserialize(raw_tree)
 
-    idx_node_attr = tree.get_node(("path-to", "idx-node", "0"))
-    assert idx_node_attr is not None
+    idx_node_attr = tree.get_tree(("path-to", "idx-node", "0"))
+    assert len(idx_node_attr) > 0
     assert idx_node_attr.attributes.pairs == {"idx-attr": "value", "idx-enum": "v1, 1.0, 2"}
     assert idx_node_attr.table.rows_by_ident == {}
-    assert idx_node_attr.table.rows == []
+    assert not idx_node_attr.table.rows
 
-    idx_sub_idx_node_attr = tree.get_node(
+    idx_sub_idx_node_attr = tree.get_tree(
         ("path-to", "idx-node", "0", "idx-sub-idx-node", "0", "bar-node")
     )
-    assert idx_sub_idx_node_attr is not None
+    assert len(idx_sub_idx_node_attr) > 0
     assert idx_sub_idx_node_attr.attributes.pairs == {"bar-attr": "value"}
     assert idx_sub_idx_node_attr.table.rows_by_ident == {}
-    assert idx_sub_idx_node_attr.table.rows == []
+    assert not idx_sub_idx_node_attr.table.rows
 
-    idx_sub_node_attr = tree.get_node(("path-to", "idx-node", "0", "idx-sub-node", "foo-node"))
-    assert idx_sub_node_attr is not None
+    idx_sub_node_attr = tree.get_tree(("path-to", "idx-node", "0", "idx-sub-node", "foo-node"))
+    assert len(idx_sub_node_attr) > 0
     assert idx_sub_node_attr.attributes.pairs == {"foo-attr": "value"}
     assert idx_sub_node_attr.table.rows_by_ident == {}
-    assert idx_sub_node_attr.table.rows == []
+    assert not idx_sub_node_attr.table.rows
 
-    idx_table = tree.get_node(("path-to", "idx-node", "0", "idx-table"))
-    assert idx_table is not None
+    idx_table = tree.get_tree(("path-to", "idx-node", "0", "idx-table"))
+    assert len(idx_table) > 0
     assert idx_table.attributes.pairs == {}
     assert idx_table.table.rows_by_ident == {("value",): {"idx-col": "value"}}
     assert idx_table.table.rows == [{"idx-col": "value"}]
 
-    attr_node = tree.get_node(("path-to", "node"))
-    assert attr_node is not None
+    attr_node = tree.get_tree(("path-to", "node"))
+    assert len(attr_node) > 0
     assert attr_node.attributes.pairs == {"attr": "value"}
     assert attr_node.table.rows_by_ident == {}
-    assert attr_node.table.rows == []
+    assert not attr_node.table.rows
 
-    table_node = tree.get_node(("path-to", "table"))
-    assert table_node is not None
+    table_node = tree.get_tree(("path-to", "table"))
+    assert len(table_node) > 0
     assert table_node.attributes.pairs == {}
     assert table_node.table.rows_by_ident == {("value",): {"col": "value"}}
     assert table_node.table.rows == [{"col": "value"}]
@@ -1429,24 +1410,24 @@ def test_update_from_previous_1() -> None:
             "Nodes": {},
         }
     )
-    current_tree = MutableTree()
-    current_tree.add_rows(
+    current_tree_ = MutableTree()
+    current_tree_.add_rows(
         path=(),
         key_columns=["kc"],
         rows=[
             {"kc": "KC", "c1": "C1: cur", "c3": "C3: only cur"},
         ],
     )
-    current_tree.update_rows(
+    current_tree_.update_rows(
         0,  # now
         (),  # path
         previous_tree,
         lambda k: True,  # filter func
         RetentionInterval(4, 5, 6),
     )
-
-    assert current_tree.tree.table.key_columns == ["kc"]
-    assert current_tree.tree.table.retentions == {
+    current_tree = ImmutableTree(current_tree_.tree)
+    assert current_tree.table.key_columns == ["kc"]
+    assert current_tree.table.retentions == {
         ("KC",): {
             "c1": RetentionInterval(4, 5, 6),
             "c2": RetentionInterval(1, 2, 3),
@@ -1454,7 +1435,7 @@ def test_update_from_previous_1() -> None:
             "kc": RetentionInterval(4, 5, 6),
         }
     }
-    assert ImmutableTree(current_tree.tree).get_rows(()) == [
+    assert current_tree.get_rows(()) == [
         {"c1": "C1: cur", "c2": "C2: only prev", "c3": "C3: only cur", "kc": "KC"}
     ]
 
@@ -1478,28 +1459,27 @@ def test_update_from_previous_2() -> None:
             "Nodes": {},
         }
     )
-    current_tree = MutableTree()
-    current_tree.add_rows(
+    current_tree_ = MutableTree()
+    current_tree_.add_rows(
         path=(),
         key_columns=["kc"],
         rows=[
             {"kc": "KC", "c3": "C3: only cur"},
         ],
     )
-    current_tree.update_rows(
+    current_tree_.update_rows(
         0,  # now
         (),  # path
         previous_tree,
         lambda k: k in ["c2", "c3"],  # filter func
         RetentionInterval(4, 5, 6),
     )
-    assert current_tree.tree.table.key_columns == ["kc"]
-    assert current_tree.tree.table.retentions == {
+    current_tree = ImmutableTree(current_tree_.tree)
+    assert current_tree.table.key_columns == ["kc"]
+    assert current_tree.table.retentions == {
         ("KC",): {
             "c2": RetentionInterval(1, 2, 3),
             "c3": RetentionInterval(4, 5, 6),
         }
     }
-    assert ImmutableTree(current_tree.tree).get_rows(()) == [
-        {"c2": "C2: only prev", "c3": "C3: only cur", "kc": "KC"}
-    ]
+    assert current_tree.get_rows(()) == [{"c2": "C2: only prev", "c3": "C3: only cur", "kc": "KC"}]

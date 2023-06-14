@@ -163,7 +163,7 @@ def _extract_table_rows(
         for (path, ident), painter_macros in painter_macros_by_path_and_ident.items():
             if tree := row["host_inventory"].get_tree(path):
                 table_rows_by_master_key.setdefault(master_key, []).extend(
-                    list(_find_table_rows(ident, painter_macros, tree.tree.table.rows))
+                    list(_find_table_rows(ident, painter_macros, tree.table.rows))
                 )
 
     return table_rows_by_master_key

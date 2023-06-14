@@ -107,11 +107,11 @@ class Attributes(
 
     def populate_inventory_tree(self, tree: MutableTree) -> None:
         if self.inventory_attributes:
-            tree.add_pairs(path=self.path, pairs=self.inventory_attributes)
+            tree.add_pairs(path=tuple(self.path), pairs=self.inventory_attributes)
 
     def populate_status_data_tree(self, tree: MutableTree) -> None:
         if self.status_attributes:
-            tree.add_pairs(path=self.path, pairs=self.status_attributes)
+            tree.add_pairs(path=tuple(self.path), pairs=self.status_attributes)
 
 
 class TableRow(
@@ -178,7 +178,7 @@ class TableRow(
     def populate_inventory_tree(self, tree: MutableTree) -> None:
         # No guard: always set key columns.
         tree.add_rows(
-            path=self.path,
+            path=tuple(self.path),
             key_columns=list(self.key_columns),
             rows=[{**self.key_columns, **self.inventory_columns}],
         )
@@ -186,7 +186,7 @@ class TableRow(
     def populate_status_data_tree(self, tree: MutableTree) -> None:
         if self.status_columns:
             tree.add_rows(
-                path=self.path,
+                path=tuple(self.path),
                 key_columns=list(self.key_columns),
                 rows=[{**self.key_columns, **self.status_columns}],
             )

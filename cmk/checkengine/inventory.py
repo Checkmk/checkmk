@@ -211,11 +211,11 @@ def inventorize_cluster(
 def _inventorize_cluster(*, nodes: Sequence[HostName]) -> MutableTree:
     tree = MutableTree()
     tree.add_pairs(
-        path=["software", "applications", "check_mk", "cluster"],
+        path=("software", "applications", "check_mk", "cluster"),
         pairs={"is_cluster": True},
     )
     tree.add_rows(
-        path=["software", "applications", "check_mk", "cluster", "nodes"],
+        path=("software", "applications", "check_mk", "cluster", "nodes"),
         key_columns=["name"],
         rows=[{"name": name} for name in nodes],
     )
@@ -263,7 +263,7 @@ def _inventorize_real_host(
 
     if trees.inventory:
         trees.inventory.add_pairs(
-            path=["software", "applications", "check_mk", "cluster"],
+            path=("software", "applications", "check_mk", "cluster"),
             pairs={"is_cluster": False},
         )
 

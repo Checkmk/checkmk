@@ -1225,7 +1225,7 @@ def test_inventorize_host_with_no_data_nor_files() -> None:
 
 def _create_cluster_tree(pairs: Mapping[str, int | float | str | None]) -> MutableTree:
     tree = MutableTree()
-    tree.add_pairs(path=["software", "applications", "check_mk", "cluster"], pairs=pairs)
+    tree.add_pairs(path=("software", "applications", "check_mk", "cluster"), pairs=pairs)
     return tree
 
 
@@ -1305,7 +1305,7 @@ def test__check_fetched_data_or_trees_only_cluster_property(
 
 def _create_root_tree(pairs: Mapping[str, int | float | str | None]) -> MutableTree:
     tree = MutableTree()
-    tree.add_pairs(path=[], pairs=pairs)
+    tree.add_pairs(path=(), pairs=pairs)
     return tree
 
 

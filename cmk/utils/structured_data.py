@@ -127,7 +127,7 @@ class UpdateResult:
         self, path: SDPath, ident: SDRowIdent, name: str, iterable: Iterable[str]
     ) -> None:
         self.reasons_by_path.setdefault(path, []).append(
-            f"[Table] '{', '.join(ident)}': Added {name}: {', '.join(iterable)}"
+            f"[Table] '{', '.join(map(str, ident))}': Added {name}: {', '.join(iterable)}"
         )
 
     def __repr__(self) -> str:
@@ -250,20 +250,11 @@ class MutableTree:
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
-    def add_pairs(
-        self,
-        *,
-        path: list[str],
-        pairs: Mapping[str, int | float | str | None],
-    ) -> None:
+    def add_pairs(self, *, path: SDPath, pairs: Mapping[SDKey, SDValue]) -> None:
         self.tree.setdefault_node(tuple(path)).attributes.add_pairs(pairs)
 
     def add_rows(
-        self,
-        *,
-        path: list[str],
-        key_columns: list[str],
-        rows: Sequence[Mapping[str, int | float | str | None]],
+        self, *, path: SDPath, key_columns: Sequence[SDKey], rows: Sequence[Mapping[SDKey, SDValue]]
     ) -> None:
         node = self.tree.setdefault_node(tuple(path))
         node.table.add_key_columns(sorted(key_columns))
@@ -304,7 +295,7 @@ class MutableTree:
     def count_entries(self) -> int:
         return self.tree.count_entries()
 
-    def get_attribute(self, path: SDPath, key: str) -> int | float | str | None:
+    def get_attribute(self, path: SDPath, key: SDKey) -> SDValue:
         return (
             None if (node := self.tree.get_node(path)) is None else node.attributes.pairs.get(key)
         )
@@ -710,7 +701,7 @@ class ImmutableTree:
     def difference(self, rhs: ImmutableTree) -> ImmutableDeltaTree:
         return ImmutableDeltaTree(_compare_nodes(self.tree, rhs.tree))
 
-    def get_attribute(self, path: SDPath, key: str) -> int | float | str | None:
+    def get_attribute(self, path: SDPath, key: SDKey) -> SDValue:
         return (
             None if (node := self.tree.get_node(path)) is None else node.attributes.pairs.get(key)
         )
@@ -1085,14 +1076,14 @@ class Table:
 
     #   ---table methods--------------------------------------------------------
 
-    def add_rows(self, rows: Sequence[Mapping[str, int | float | str | None]]) -> None:
+    def add_rows(self, rows: Sequence[Mapping[SDKey, SDValue]]) -> None:
         for row in rows:
             self.add_row(self._make_row_ident(row), row)
 
-    def _make_row_ident(self, row: Mapping[str, int | float | str | None]) -> SDRowIdent:
+    def _make_row_ident(self, row: Mapping[SDKey, SDValue]) -> SDRowIdent:
         return tuple(row[k] for k in self.key_columns if k in row)
 
-    def add_row(self, ident: SDRowIdent, row: Mapping[str, int | float | str | None]) -> None:
+    def add_row(self, ident: SDRowIdent, row: Mapping[SDKey, SDValue]) -> None:
         if row:
             self._rows.setdefault(ident, {}).update(row)
 

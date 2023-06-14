@@ -33,10 +33,10 @@ def _create_empty_mut_tree() -> MutableTree:
     # na: has StructuredDataNode, Attributes
     # ta: has Table, Attributes
     root = MutableTree()
-    root.add_rows(path=["path-to-nta", "nt"], key_columns=[], rows=[])
-    root.add_pairs(path=["path-to-nta", "na"], pairs={})
-    root.add_pairs(path=["path-to-nta", "ta"], pairs={})
-    root.add_rows(path=["path-to-nta", "ta"], key_columns=[], rows=[])
+    root.add_rows(path=("path-to-nta", "nt"), key_columns=[], rows=[])
+    root.add_pairs(path=("path-to-nta", "na"), pairs={})
+    root.add_pairs(path=("path-to-nta", "ta"), pairs={})
+    root.add_rows(path=("path-to-nta", "ta"), key_columns=[], rows=[])
     return root
 
 
@@ -52,17 +52,17 @@ def _create_filled_mut_tree() -> MutableTree:
     # ta: has Table, Attributes
     root = MutableTree()
     root.add_rows(
-        path=["path-to-nta", "nt"],
+        path=("path-to-nta", "nt"),
         key_columns=["nt0"],
         rows=[
             {"nt0": "NT 00", "nt1": "NT 01"},
             {"nt0": "NT 10", "nt1": "NT 11"},
         ],
     )
-    root.add_pairs(path=["path-to-nta", "na"], pairs={"na0": "NA 0", "na1": "NA 1"})
-    root.add_pairs(path=["path-to-nta", "ta"], pairs={"ta0": "TA 0", "ta1": "TA 1"})
+    root.add_pairs(path=("path-to-nta", "na"), pairs={"na0": "NA 0", "na1": "NA 1"})
+    root.add_pairs(path=("path-to-nta", "ta"), pairs={"ta0": "TA 0", "ta1": "TA 1"})
     root.add_rows(
-        path=["path-to-nta", "ta"],
+        path=("path-to-nta", "ta"),
         key_columns=["ta0"],
         rows=[
             {"ta0": "TA 00", "ta1": "TA 01"},
@@ -341,9 +341,9 @@ def test_get_tree_not_empty() -> None:
 
 def test_add_pairs_or_rows() -> None:
     root = _create_filled_mut_tree()
-    root.add_pairs(path=["path-to-nta", "node"], pairs={"sn0": "SN 0", "sn1": "SN 1"})
+    root.add_pairs(path=("path-to-nta", "node"), pairs={"sn0": "SN 0", "sn1": "SN 1"})
     root.add_rows(
-        path=["path-to-nta", "node"],
+        path=("path-to-nta", "node"),
         key_columns=["sn0"],
         rows=[
             {"sn0": "SN 00", "sn1": "SN 01"},
@@ -559,10 +559,10 @@ def test_difference_pairs(
     result: tuple[int, int, int],
 ) -> None:
     previous_tree = MutableTree()
-    previous_tree.add_pairs(path=[], pairs=previous_pairs)
+    previous_tree.add_pairs(path=(), pairs=previous_pairs)
 
     current_tree = MutableTree()
-    current_tree.add_pairs(path=[], pairs=current_pairs)
+    current_tree.add_pairs(path=(), pairs=current_pairs)
 
     stats = (
         ImmutableTree(current_tree.tree).difference(ImmutableTree(previous_tree.tree)).get_stats()
@@ -625,10 +625,10 @@ def test_difference_rows(
     result: tuple[int, int, int],
 ) -> None:
     previous_tree = MutableTree()
-    previous_tree.add_rows(path=[], key_columns=["id"], rows=previous_rows)
+    previous_tree.add_rows(path=(), key_columns=["id"], rows=previous_rows)
 
     current_tree = MutableTree()
-    current_tree.add_rows(path=[], key_columns=["id"], rows=current_rows)
+    current_tree.add_rows(path=(), key_columns=["id"], rows=current_rows)
 
     delta_tree = ImmutableTree(current_tree.tree).difference(ImmutableTree(previous_tree.tree))
     if any(result):
@@ -656,10 +656,10 @@ def test_difference_rows_keys(
     expected_keys: set[str],
 ) -> None:
     previous_tree = MutableTree()
-    previous_tree.add_rows(path=[], key_columns=["id"], rows=[previous_row])
+    previous_tree.add_rows(path=(), key_columns=["id"], rows=[previous_row])
 
     current_tree = MutableTree()
-    current_tree.add_rows(path=[], key_columns=["id"], rows=[current_row])
+    current_tree.add_rows(path=(), key_columns=["id"], rows=[current_row])
 
     delta_tree = ImmutableTree(current_tree.tree).difference(ImmutableTree(previous_tree.tree))
     assert {k for r in delta_tree.tree.table.rows for k in r} == expected_keys
@@ -737,11 +737,11 @@ def test_filter_tree_paths_and_keys() -> None:
 def test_filter_tree_mixed() -> None:
     filled_root = _create_filled_mut_tree()
     filled_root.add_pairs(
-        path=["path-to", "another", "node1"],
+        path=("path-to", "another", "node1"),
         pairs={"ak11": "Another value 11", "ak12": "Another value 12"},
     )
     filled_root.add_rows(
-        path=["path-to", "another", "node2"],
+        path=("path-to", "another", "node2"),
         key_columns=["ak21"],
         rows=[
             {
@@ -807,7 +807,7 @@ def test_save_tree(tmp_path: Path) -> None:
     host_name = HostName("heute")
     target = tmp_path / "inventory" / str(host_name)
     tree = MutableTree()
-    tree.add_pairs(path=["path-to", "node"], pairs={"foo": 1, "bär": 2})
+    tree.add_pairs(path=("path-to", "node"), pairs={"foo": 1, "bär": 2})
     tree_store = TreeStore(tmp_path / "inventory")
     tree_store.save(host_name=host_name, tree=tree)
 
@@ -1439,7 +1439,7 @@ def test_update_from_previous_1() -> None:
     )
     current_tree = MutableTree()
     current_tree.add_rows(
-        path=[],
+        path=(),
         key_columns=["kc"],
         rows=[
             {"kc": "KC", "c1": "C1: cur", "c3": "C3: only cur"},
@@ -1488,7 +1488,7 @@ def test_update_from_previous_2() -> None:
     )
     current_tree = MutableTree()
     current_tree.add_rows(
-        path=[],
+        path=(),
         key_columns=["kc"],
         rows=[
             {"kc": "KC", "c3": "C3: only cur"},

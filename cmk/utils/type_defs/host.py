@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import enum
 from typing import NewType, TypeAlias
 
 __all__ = [
-    "HostAgentConnectionMode",
     "HostName",
     "HostAddress",
     "HostgroupName",
@@ -21,8 +19,3 @@ HostName: TypeAlias = HostAddress
 
 HostgroupName = str
 HostState = int
-
-
-class HostAgentConnectionMode(enum.Enum):
-    PULL = "pull-agent"
-    PUSH = "push-agent"

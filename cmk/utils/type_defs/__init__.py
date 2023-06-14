@@ -19,7 +19,6 @@ __all__ = [
     "ExitSpec",
     "ensure_mrpe_configs",
     "HostAddress",
-    "HostAgentConnectionMode",
     "HostgroupName",
     "HostName",
     "HostOrServiceConditionRegex",
@@ -89,7 +88,7 @@ from ._misc import (
     TimeRange,
     Timestamp,
 )
-from .host import HostAddress, HostAgentConnectionMode, HostgroupName, HostName, HostState
+from .host import HostAddress, HostgroupName, HostName, HostState
 from .mrpe_config import ensure_mrpe_configs, MrpeConfig, MrpeConfigDeprecated
 from .pluginname import ParsedSectionName, RuleSetName, SectionName, ValidatedString
 from .protocol import Deserializer, Serializer

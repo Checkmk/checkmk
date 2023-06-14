@@ -15,7 +15,8 @@ from tests.testlib.agent import (
 )
 from tests.testlib.site import Site
 
-from cmk.utils.type_defs import HostAgentConnectionMode, HostName
+from cmk.utils.agent_registration import HostAgentConnectionMode
+from cmk.utils.type_defs import HostName
 
 from ..utils import LOGGER
 

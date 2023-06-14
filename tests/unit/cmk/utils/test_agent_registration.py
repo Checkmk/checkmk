@@ -9,7 +9,12 @@ from uuid import UUID
 
 import pytest
 
-from cmk.utils.agent_registration import get_r4r_filepath, UUIDLink, UUIDLinkManager
+from cmk.utils.agent_registration import (
+    get_r4r_filepath,
+    HostAgentConnectionMode,
+    UUIDLink,
+    UUIDLinkManager,
+)
 from cmk.utils.paths import (
     data_source_push_agent_dir,
     r4r_declined_dir,
@@ -18,7 +23,7 @@ from cmk.utils.paths import (
     r4r_pending_dir,
     received_outputs_dir,
 )
-from cmk.utils.type_defs import HostAgentConnectionMode, HostName
+from cmk.utils.type_defs import HostName
 
 
 class TestUUIDLink:

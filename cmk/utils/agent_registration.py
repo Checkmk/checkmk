@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+import enum
 from collections.abc import Container, Iterator, Mapping, Sequence
 from os.path import relpath
 from pathlib import Path
@@ -12,7 +13,12 @@ from typing import Any, NamedTuple
 from uuid import UUID
 
 import cmk.utils.paths
-from cmk.utils.type_defs import HostAgentConnectionMode, HostName
+from cmk.utils.type_defs import HostName
+
+
+class HostAgentConnectionMode(enum.Enum):
+    PULL = "pull-agent"
+    PUSH = "push-agent"
 
 
 def get_r4r_filepath(folder: Path, uuid: UUID) -> Path:

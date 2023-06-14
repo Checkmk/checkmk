@@ -2364,7 +2364,7 @@ class DeltaNodeRenderer(ABCNodeRenderer):
                 ("raw_path", raw_path),
                 ("tree_id", self._tree_id),
             ],
-            "ajax_inv_render_tree.py",
+            "ajax_inv_render_delta_tree.py",
         )
 
     def _get_header(self, title: str, key_info: str) -> HTML:
@@ -2423,51 +2423,58 @@ def ajax_inv_render_tree() -> None:
     inventory.verify_permission(hostname, site_id)
 
     raw_path = request.get_ascii_input_mandatory("raw_path")
-    tree_id = request.get_ascii_input("tree_id", "")
     show_internal_tree_paths = bool(request.var("show_internal_tree_paths"))
 
-    tree: ImmutableTree | ImmutableDeltaTree
-    if tree_id:
-        tree, corrupted_history_files = inventory.load_delta_tree(hostname, int(tree_id[1:]))
-        if corrupted_history_files:
-            user_errors.add(
-                MKUserError(
-                    "load_inventory_delta_tree",
-                    _(
-                        "Cannot load HW/SW inventory history entries %s. Please remove the corrupted files."
-                    )
-                    % ", ".join(corrupted_history_files),
-                )
+    row = inventory.get_status_data_via_livestatus(site_id, hostname)
+    try:
+        tree = inventory.load_filtered_and_merged_tree(row)
+    except inventory.LoadStructuredDataError:
+        user_errors.add(
+            MKUserError(
+                "load_inventory_tree",
+                _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.")
+                % inventory.get_short_inventory_filepath(hostname),
             )
-            return
-        tree_renderer: ABCNodeRenderer = DeltaNodeRenderer(
-            site_id,
-            hostname,
-            tree_id=tree_id,
         )
-
-    else:
-        row = inventory.get_status_data_via_livestatus(site_id, hostname)
-        try:
-            tree = inventory.load_filtered_and_merged_tree(row)
-        except inventory.LoadStructuredDataError:
-            user_errors.add(
-                MKUserError(
-                    "load_inventory_tree",
-                    _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.")
-                    % inventory.get_short_inventory_filepath(hostname),
-                )
-            )
-            return
-        tree_renderer = NodeRenderer(
-            site_id,
-            hostname,
-            show_internal_tree_paths=show_internal_tree_paths,
-        )
+        return
 
     inventory_path = inventory.InventoryPath.parse(raw_path or "")
     if not (node := tree.get_tree(inventory_path.path)):
         html.show_error(_("No such tree below %r") % inventory_path.path)
         return
 
-    tree_renderer.show(node.tree, DISPLAY_HINTS.get_hints(node.tree.path))
+    NodeRenderer(site_id, hostname, show_internal_tree_paths=show_internal_tree_paths).show(
+        node.tree, DISPLAY_HINTS.get_hints(node.tree.path)
+    )
+
+
+@cmk.gui.pages.register("ajax_inv_render_delta_tree")
+def ajax_inv_render_delta_tree() -> None:
+    site_id = SiteId(request.get_ascii_input_mandatory("site"))
+    hostname = HostName(request.get_ascii_input_mandatory("host"))
+    inventory.verify_permission(hostname, site_id)
+
+    raw_path = request.get_ascii_input_mandatory("raw_path")
+    tree_id = request.get_ascii_input_mandatory("tree_id")
+
+    tree, corrupted_history_files = inventory.load_delta_tree(hostname, int(tree_id[1:]))
+    if corrupted_history_files:
+        user_errors.add(
+            MKUserError(
+                "load_inventory_delta_tree",
+                _(
+                    "Cannot load HW/SW inventory history entries %s. Please remove the corrupted files."
+                )
+                % ", ".join(corrupted_history_files),
+            )
+        )
+        return
+
+    inventory_path = inventory.InventoryPath.parse(raw_path or "")
+    if not (node := tree.get_tree(inventory_path.path)):
+        html.show_error(_("No such tree below %r") % inventory_path.path)
+        return
+
+    DeltaNodeRenderer(site_id, hostname, tree_id=tree_id).show(
+        node.tree, DISPLAY_HINTS.get_hints(node.tree.path)
+    )

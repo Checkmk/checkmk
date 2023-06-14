@@ -2220,9 +2220,8 @@ class ABCNodeRenderer(abc.ABC):
             html.open_tr(class_="even0")
             for column in columns:
                 value = row.get(column.key)
-                tdclass, _rendered_value = column.hint.paint_function(
-                    value[1] if isinstance(value, tuple) else value
-                )
+                # TODO separate tdclass from rendered value
+                tdclass, _rendered_value = column.hint.paint_function(None)
 
                 html.open_td(class_=tdclass)
                 self._show_row_value(

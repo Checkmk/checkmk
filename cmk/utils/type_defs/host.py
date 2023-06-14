@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
-from typing import NewType
+from typing import NewType, TypeAlias
 
 __all__ = [
     "HostAgentConnectionMode",
@@ -17,7 +17,7 @@ __all__ = [
 HostAddress = NewType("HostAddress", str)
 # Let us be honest here, we do not actually make a difference
 # between HostAddress and HostName in our code.
-HostName = HostAddress
+HostName: TypeAlias = HostAddress
 
 HostgroupName = str
 HostState = int

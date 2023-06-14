@@ -392,9 +392,9 @@ class RulesetCollection:
     def _save_folder(
         folder: CREFolder,
         rulesets: Mapping[RulesetName, Ruleset],
-        unknown: Mapping[str, Mapping[str, Sequence[RuleSpec[object]]]],
+        unknown_rulesets: Mapping[str, Mapping[str, Sequence[RuleSpec[object]]]],
     ) -> None:
-        store.mkdir(folder.get_root_dir())
+        store.mkdir(folder.tree.get_root_dir())
 
         content = [
             *(
@@ -404,7 +404,7 @@ class RulesetCollection:
             ),
             *(
                 Ruleset.format_raw_value(varname, raw_value, False)
-                for varname, raw_value in sorted(unknown.get(folder.path(), {}).items())
+                for varname, raw_value in sorted(unknown_rulesets.get(folder.path(), {}).items())
             ),
         ]
 
@@ -428,7 +428,7 @@ class RulesetCollection:
             )
         finally:
             if may_use_redis():
-                get_wato_redis_client().folder_updated(folder.filesystem_path())
+                get_wato_redis_client(folder.tree).folder_updated(folder.filesystem_path())
 
     def exists(self, name: RulesetName) -> bool:
         return name in self._rulesets
@@ -458,11 +458,12 @@ class AllRulesets(RulesetCollection):
         self._load_folder_rulesets(folder)
 
     def _load_rulesets_via_redis(self, folder: CREFolder) -> None:
+        tree = folder_tree()
         # Search relevant folders with rules.mk files
         # Note: The sort order of the folders does not matter here
         #       self._load_folder_rulesets ultimately puts each folder into a dict
         #       and groups/sorts them later on with a different mechanism
-        all_folders = get_wato_redis_client().recursive_subfolders_for_path(
+        all_folders = get_wato_redis_client(tree).recursive_subfolders_for_path(
             f"{folder.path()}/".lstrip("/")
         )
 
@@ -474,7 +475,7 @@ class AllRulesets(RulesetCollection):
 
         for folder_path_with_slash in relevant_folders:
             stripped_folder = folder_path_with_slash.strip("/")
-            self._load_folder_rulesets(folder_tree().folder(stripped_folder))
+            self._load_folder_rulesets(tree.folder(stripped_folder))
 
     @staticmethod
     def load_all_rulesets() -> AllRulesets:
@@ -515,11 +516,12 @@ class SingleRulesetRecursively(RulesetCollection):
     def _load_rulesets_via_redis(self, folder: CREFolder, only_varname: RulesetName) -> None:
         # Copy/paste from AllRulesets
 
+        tree = folder_tree()
         # Search relevant folders with rules.mk files
         # Note: The sort order of the folders does not matter here
         #       self._load_folder_rulesets ultimately puts each folder into a dict
         #       and groups/sorts them later on with a different mechanism
-        all_folders = get_wato_redis_client().recursive_subfolders_for_path(
+        all_folders = get_wato_redis_client(tree).recursive_subfolders_for_path(
             f"{folder.path()}/".lstrip("/")
         )
 
@@ -531,7 +533,7 @@ class SingleRulesetRecursively(RulesetCollection):
 
         for folder_path_with_slash in relevant_folders:
             stripped_folder = folder_path_with_slash.strip("/")
-            self._load_folder_rulesets(folder_tree().folder(stripped_folder), only_varname)
+            self._load_folder_rulesets(tree.folder(stripped_folder), only_varname)
 
     @staticmethod
     def load_single_ruleset_recursively(name: RulesetName) -> SingleRulesetRecursively:

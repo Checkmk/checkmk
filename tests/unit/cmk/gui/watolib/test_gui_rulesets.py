@@ -754,44 +754,45 @@ def test_diff_to_secret_and_other_attribute_changed(
 
 def test_rules_grouped_by_folder() -> None:
     """Test sort order of rules"""
+    tree = folder_tree()
     expected_folder_order: list[CREFolder] = [
         # TODO: The arguments look wrong here, they looks kind of mixed up
-        Folder(name="folder2/folder2/folder2", folder_path="folder2"),
-        Folder(name="folder2/folder2/folder1", folder_path="folder1"),
-        Folder(name="folder2/folder2", folder_path="folder2"),
-        Folder(name="folder2/folder1/folder2", folder_path="folder2"),
-        Folder(name="folder2/folder1/folder1", folder_path="folder1"),
-        Folder(name="folder2/folder1", folder_path="folder1"),
-        Folder(name="folder2", folder_path="folder2"),
-        Folder(name="folder1/folder2/folder2", folder_path="folder2"),
-        Folder(name="folder1/folder2/folder1", folder_path="folder1"),
-        Folder(name="folder1/folder2", folder_path="folder2"),
-        Folder(name="folder1/folder1/folder2", folder_path="folder2"),
-        Folder(name="folder1/folder1/folder1", folder_path="folder1"),
-        Folder(name="folder1/folder1", folder_path="folder1"),
-        Folder(name="folder1", folder_path="folder1"),
-        Folder(name="folder4", folder_path="abc"),
-        Folder(name="", folder_path="Main"),
+        Folder(tree=tree, name="folder2/folder2/folder2", folder_path="folder2"),
+        Folder(tree=tree, name="folder2/folder2/folder1", folder_path="folder1"),
+        Folder(tree=tree, name="folder2/folder2", folder_path="folder2"),
+        Folder(tree=tree, name="folder2/folder1/folder2", folder_path="folder2"),
+        Folder(tree=tree, name="folder2/folder1/folder1", folder_path="folder1"),
+        Folder(tree=tree, name="folder2/folder1", folder_path="folder1"),
+        Folder(tree=tree, name="folder2", folder_path="folder2"),
+        Folder(tree=tree, name="folder1/folder2/folder2", folder_path="folder2"),
+        Folder(tree=tree, name="folder1/folder2/folder1", folder_path="folder1"),
+        Folder(tree=tree, name="folder1/folder2", folder_path="folder2"),
+        Folder(tree=tree, name="folder1/folder1/folder2", folder_path="folder2"),
+        Folder(tree=tree, name="folder1/folder1/folder1", folder_path="folder1"),
+        Folder(tree=tree, name="folder1/folder1", folder_path="folder1"),
+        Folder(tree=tree, name="folder1", folder_path="folder1"),
+        Folder(tree=tree, name="folder4", folder_path="abc"),
+        Folder(tree=tree, name="", folder_path="Main"),
     ]
 
-    root: CREFolder = folder_tree().root_folder()
+    root: CREFolder = tree.root_folder()
     ruleset: Ruleset = Ruleset("only_hosts", {TagID("TAG1"): TagGroupID("TG1")})
     rules: list[tuple[CREFolder, int, Rule]] = [
         (root, 0, Rule.from_ruleset_defaults(root, ruleset))
     ]
 
     for nr in range(1, 3):
-        folder = Folder(name="folder%d" % nr, parent_folder=root)
+        folder = Folder(tree=tree, name="folder%d" % nr, parent_folder=root)
         rules.append((folder, 0, Rule.from_ruleset_defaults(folder, ruleset)))
         for x in range(1, 3):
-            subfolder = Folder(name="folder%d" % x, parent_folder=folder)
+            subfolder = Folder(tree=tree, name="folder%d" % x, parent_folder=folder)
             rules.append((subfolder, 0, Rule.from_ruleset_defaults(folder, ruleset)))
             for y in range(1, 3):
-                sub_subfolder = Folder(name="folder%d" % y, parent_folder=subfolder)
+                sub_subfolder = Folder(tree=tree, name="folder%d" % y, parent_folder=subfolder)
                 rules.append((sub_subfolder, 0, Rule.from_ruleset_defaults(folder, ruleset)))
 
     # Also test renamed folder
-    folder4 = Folder(name="folder4", parent_folder=root)
+    folder4 = Folder(tree=tree, name="folder4", parent_folder=root)
     folder4._title = "abc"  # pylint: disable=protected-access
     rules.append((folder4, 0, Rule.from_ruleset_defaults(folder4, ruleset)))
 

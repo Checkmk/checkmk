@@ -169,14 +169,15 @@ def test_write_and_read_host_attributes(
     tmp_path: Path, attributes: dict[str, str | list[str]]
 ) -> None:
     folder_path = str(tmp_path)
+    tree = folder_tree()
     # Used to write the data
     write_data_folder = hosts_and_folders.Folder(
-        name="testfolder", folder_path=folder_path, parent_folder=None
+        tree=tree, name="testfolder", folder_path=folder_path, parent_folder=None
     )
 
     # Used to read the previously written data
     read_data_folder = hosts_and_folders.Folder(
-        name="testfolder", folder_path=folder_path, parent_folder=None
+        tree=tree, name="testfolder", folder_path=folder_path, parent_folder=None
     )
 
     # Write data
@@ -206,12 +207,13 @@ def in_chdir(directory: str) -> Iterator[None]:
 
 def test_create_nested_folders(request_context: None) -> None:
     with in_chdir("/"):
-        root = folder_tree().root_folder()
+        tree = folder_tree()
+        root = tree.root_folder()
 
-        folder1 = hosts_and_folders.Folder(name="folder1", parent_folder=root)
+        folder1 = hosts_and_folders.Folder(tree=tree, name="folder1", parent_folder=root)
         folder1.persist_instance()
 
-        folder2 = hosts_and_folders.Folder(name="folder2", parent_folder=folder1)
+        folder2 = hosts_and_folders.Folder(tree=tree, name="folder2", parent_folder=folder1)
         folder2.persist_instance()
 
         shutil.rmtree(os.path.dirname(folder1.wato_info_path()))
@@ -219,18 +221,19 @@ def test_create_nested_folders(request_context: None) -> None:
 
 def test_eq_operation(request_context: None) -> None:
     with in_chdir("/"):
-        root = folder_tree().root_folder()
-        folder1 = hosts_and_folders.Folder(name="folder1", parent_folder=root)
+        tree = folder_tree()
+        root = tree.root_folder()
+        folder1 = hosts_and_folders.Folder(tree=tree, name="folder1", parent_folder=root)
         folder1.persist_instance()
 
-        folder1_new = hosts_and_folders.Folder(name="folder1", folder_path="folder1")
+        folder1_new = hosts_and_folders.Folder(tree=tree, name="folder1", folder_path="folder1")
         folder1_new.load_instance()
 
         assert folder1 == folder1_new
         assert id(folder1) != id(folder1_new)
         assert folder1 in [folder1_new]
 
-        folder2 = hosts_and_folders.Folder(name="folder2", parent_folder=folder1)
+        folder2 = hosts_and_folders.Folder(tree=tree, name="folder2", parent_folder=folder1)
         folder2.persist_instance()
 
         assert folder1 not in [folder2]
@@ -451,12 +454,15 @@ def fixture_make_folder(mocker: MagicMock) -> Callable:
     def f(
         name: str,
         title: str,
-        root_dir: str = "/",
         parent_folder: hosts_and_folders.CREFolder | None = None,
         may_see: bool = True,
     ) -> hosts_and_folders.CREFolder:
         folder = hosts_and_folders.Folder(
-            name=name, folder_path=None, parent_folder=parent_folder, title=title, root_dir=root_dir
+            tree=folder_tree(),
+            name=name,
+            folder_path=None,
+            parent_folder=parent_folder,
+            title=title,
         )
         # Attribute only used for testing
         folder._may_see = may_see  # type: ignore[attr-defined]
@@ -617,6 +623,7 @@ def make_monkeyfree_folder(
     tree_structure: _TreeStructure, parent: hosts_and_folders.CREFolder | None = None
 ) -> hosts_and_folders.CREFolder:
     new_folder = hosts_and_folders.CREFolder(
+        tree=hosts_and_folders.folder_tree(),
         name=tree_structure.path,
         parent_folder=parent,
         title=f"Title of {tree_structure.path}",
@@ -984,14 +991,15 @@ def get_fake_setup_redis_client(
     monkeypatch.setattr(hosts_and_folders, "may_use_redis", lambda: True)
     mock_redis_client = MockRedisClient(redis_answers)
     monkeypatch.setattr(hosts_and_folders._RedisHelper, "_cache_integrity_ok", lambda x: True)
-    redis_helper = hosts_and_folders.get_wato_redis_client()
+    tree = folder_tree()
+    redis_helper = hosts_and_folders.get_wato_redis_client(tree)
     monkeypatch.setattr(redis_helper, "_client", mock_redis_client)
     monkeypatch.setattr(redis_helper, "_folder_paths", [f"{x}/" for x in all_folders.keys()])
     monkeypatch.setattr(
         redis_helper,
         "_folder_metadata",
         {
-            f"{x}/": hosts_and_folders.FolderMetaData(f"{x}/", "nix", "nix", [])
+            f"{x}/": hosts_and_folders.FolderMetaData(tree, f"{x}/", "nix", "nix", [])
             for x in all_folders.keys()
         },
     )
@@ -1047,8 +1055,10 @@ def test_folder_access() -> None:
 
 def test_new_empty_folder(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(uuid, "uuid4", lambda: uuid.UUID("a8098c1a-f86e-11da-bd1a-00112444be1e"))
+    tree = folder_tree()
     with on_time("2018-01-10 02:00:00", "CET"):
         folder = Folder(
+            tree=tree,
             name="bla",
             title="Bla",
             attributes={},
@@ -1070,11 +1080,11 @@ def test_new_loaded_folder(monkeypatch: pytest.MonkeyPatch) -> None:
 
     tree = folder_tree()
     with on_time("2018-01-10 02:00:00", "CET"):
-        folder1 = Folder(name="folder1", parent_folder=tree.root_folder())
+        folder1 = Folder(tree=tree, name="folder1", parent_folder=tree.root_folder())
         folder1.persist_instance()
         tree.invalidate_caches()
 
-    folder = Folder(name="bla", folder_path="/folder1")
+    folder = Folder(tree=tree, name="bla", folder_path="/folder1")
     assert folder.name() == "bla"
     assert folder.id() == "c6bda767ae5c47038f73d8906fb91bb4"
     assert folder.title() == "folder1"
@@ -1107,6 +1117,7 @@ def test_next_network_scan_at(
     next_time: float,
 ) -> None:
     folder = Folder(
+        tree=folder_tree(),
         name="bla",
         title="Bla",
         attributes={
@@ -1131,12 +1142,13 @@ def test_next_network_scan_at(
 
 @pytest.mark.usefixtures("request_context")
 def test_folder_times() -> None:
-    root = folder_tree().root_folder()
+    tree = folder_tree()
+    root = tree.root_folder()
 
     with freezegun.freeze_time(datetime.datetime(2020, 2, 2, 2, 2, 2)):
         current = time.time()
-        Folder(name="test", parent_folder=root).save()
-        folder = Folder(name="test", folder_path="")
+        Folder(tree=tree, name="test", parent_folder=root).save()
+        folder = Folder(tree=tree, name="test", folder_path="")
         folder.save()
 
     meta_data = folder.attributes()["meta_data"]

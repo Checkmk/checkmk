@@ -122,11 +122,13 @@ class FolderMetaData:
 
     def __init__(
         self,
+        tree: FolderTree,
         path: PathWithSlash,
         title: str,
         title_path_without_root: str,
         permitted_contact_groups: list[ContactgroupName],
     ):
+        self.tree: Final = tree
         self._path: Final = path
         self._title: Final = title
         self._title_path_without_root: Final[str] = title_path_without_root
@@ -157,13 +159,13 @@ class FolderMetaData:
     def num_hosts_recursively(self) -> int:
         if self._num_hosts_recursively is None:
             if may_use_redis():
-                self._num_hosts_recursively = get_wato_redis_client().num_hosts_recursively_lua(
-                    self._path
-                )
+                self._num_hosts_recursively = get_wato_redis_client(
+                    self.tree
+                ).num_hosts_recursively_lua(self._path)
             else:
-                self._num_hosts_recursively = (
-                    folder_tree().folder(self._path.rstrip("/")).num_hosts_recursively()
-                )
+                self._num_hosts_recursively = self.tree.folder(
+                    self._path.rstrip("/")
+                ).num_hosts_recursively()
         return self._num_hosts_recursively
 
 
@@ -283,7 +285,8 @@ class _RedisHelper:
     - computes the metadata out of CREFolder instances and stores it in redis
     - provides functions to compute the number of hosts and fetch the metadata for folders"""
 
-    def __init__(self) -> None:
+    def __init__(self, tree: FolderTree) -> None:
+        self.tree = tree
         self._client = get_redis_client()
         self._folder_metadata: dict[str, FolderMetaData] = {}
 
@@ -302,7 +305,7 @@ class _RedisHelper:
     def _get_latest_timestamp_and_folders(self) -> tuple[str, Mapping[str, CREFolder]]:
         # Timestamp has to be determined first, otherwise unobserved changes can slip through
         latest_timestamp = self._get_latest_timestamps_from_disk()[-1]
-        wato_folders = _get_fully_loaded_wato_folders()
+        wato_folders = _get_fully_loaded_wato_folders(self.tree)
         return latest_timestamp, wato_folders
 
     @property
@@ -368,6 +371,7 @@ class _RedisHelper:
             # It won't happen if the key is found, adding fallbacks anyway.
             permitted_groups = results[2].split(",") if results[2] is not None else []
             self._folder_metadata[path_with_slash] = FolderMetaData(
+                self.tree,
                 path_with_slash,
                 results[0] or path_with_slash,
                 results[1] or path_with_slash,
@@ -408,7 +412,11 @@ class _RedisHelper:
             results[0]
         ):
             self._folder_metadata[folder_path] = FolderMetaData(
-                folder_path, title, title_path_without_root, permitted_contact_groups.split(",")
+                self.tree,
+                folder_path,
+                title,
+                title_path_without_root,
+                permitted_contact_groups.split(","),
             )
 
     def _create_cache_from_scratch(
@@ -651,9 +659,9 @@ class _RedisHelper:
         return self._timestamp_to_fixed_precision_str(0.0)
 
 
-def _get_fully_loaded_wato_folders() -> Mapping[PathWithoutSlash, CREFolder]:
+def _get_fully_loaded_wato_folders(tree: FolderTree) -> Mapping[PathWithoutSlash, CREFolder]:
     wato_folders: dict[PathWithoutSlash, CREFolder] = {}
-    Folder(name="", folder_path="").add_to_dictionary(wato_folders)
+    Folder(tree=tree, name="", folder_path="").add_to_dictionary(wato_folders)
     return wato_folders
 
 
@@ -1009,9 +1017,9 @@ def update_metadata(
     return attributes_updated
 
 
-def get_wato_redis_client() -> _RedisHelper:
+def get_wato_redis_client(tree: FolderTree) -> _RedisHelper:
     if "wato_redis_client" not in g:
-        g.wato_redis_client = _RedisHelper()
+        g.wato_redis_client = _RedisHelper(tree)
     return g.wato_redis_client
 
 
@@ -1049,17 +1057,17 @@ def _disable_redis_locally() -> Iterator[None]:
         _REDIS_ENABLED_LOCALLY = last_value
 
 
-def _wato_folders_factory() -> Mapping[PathWithoutSlash, CREFolder]:
+def _wato_folders_factory(tree: FolderTree) -> Mapping[PathWithoutSlash, CREFolder]:
     if not may_use_redis():
-        return _get_fully_loaded_wato_folders()
+        return _get_fully_loaded_wato_folders(tree)
 
-    wato_redis_client = get_wato_redis_client()
+    wato_redis_client = get_wato_redis_client(tree)
     if wato_redis_client.loaded_wato_folders is not None:
         # Folders were already completely loaded during cache generation -> use these
         return wato_redis_client.loaded_wato_folders
 
     # Provide a dict where the values are generated on demand
-    return WATOFoldersOnDemand({x.rstrip("/"): None for x in wato_redis_client.folder_paths})
+    return WATOFoldersOnDemand(tree, {x.rstrip("/"): None for x in wato_redis_client.folder_paths})
 
 
 def _generate_domain_settings(
@@ -1071,12 +1079,13 @@ def _generate_domain_settings(
 class FolderTree:
     """Folder tree for organizing hosts in Setup"""
 
-    def __init__(self) -> None:
+    def __init__(self, root_dir: str | None = None) -> None:
+        self._root_dir = _ensure_trailing_slash(root_dir) if root_dir else wato_root_dir()
         self._root_folder = self.folder("")
 
     def all_folders(self) -> Mapping[PathWithoutSlash, CREFolder]:
         if "wato_folders" not in g:
-            g.wato_folders = _wato_folders_factory()
+            g.wato_folders = _wato_folders_factory(self)
         return g.wato_folders
 
     def folder_choices(self) -> Sequence[tuple[str, str]]:
@@ -1114,7 +1123,7 @@ class FolderTree:
         # We need the slash '/' here
         if regex(r"^[%s/]*$" % WATO_FOLDER_PATH_NAME_CHARS).match(folder_path) is None:
             raise MKUserError("folder", "Folder name is not valid.")
-        return os.path.exists(wato_root_dir() + folder_path)
+        return os.path.exists(self._root_dir + folder_path)
 
     def root_folder(self) -> CREFolder:
         return self._root_folder
@@ -1122,7 +1131,7 @@ class FolderTree:
     def invalidate_caches(self) -> None:
         self._root_folder.drop_caches()
         if may_use_redis():
-            get_wato_redis_client().clear_cached_folders()
+            get_wato_redis_client(self).clear_cached_folders()
         g.pop("wato_folders", {})
         for cache_id in ["folder_choices", "folder_choices_full_title"]:
             g.pop(cache_id, None)
@@ -1159,6 +1168,13 @@ class FolderTree:
         mapping: dict[str, CREFolder] = SetOnceDict()
         _update_mapping(self.root_folder(), mapping)
         return mapping
+
+    def get_root_dir(self) -> PathWithSlash:
+        return self._root_dir
+
+    # Dangerous operation! Only use this if you have a good knowledge of the internas
+    def set_root_dir(self, root_dir: str) -> None:
+        self._root_dir = _ensure_trailing_slash(root_dir)
 
 
 # Hope that we can cleanup these request global objects one day
@@ -1215,14 +1231,15 @@ def disk_or_search_folder_from_request() -> CREFolder | SearchFolder:
 
 def _search_folder_from_request() -> SearchFolder | None:
     if request.has_var("host_search"):
-        base_folder = folder_tree().folder(request.get_str_input_mandatory("folder", ""))
+        tree = folder_tree()
+        base_folder = tree.folder(request.get_str_input_mandatory("folder", ""))
         search_criteria = {".name": request.var("host_search_host")}
         search_criteria.update(
             collect_attributes(
                 "host_search", new=False, do_validate=False, varprefix="host_search_"
             )
         )
-        return SearchFolder(base_folder, search_criteria)
+        return SearchFolder(tree, base_folder, search_criteria)
     return None
 
 
@@ -1244,14 +1261,16 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
     def __init__(
         self,
         *,
+        tree,
         name,
         folder_path=None,
         parent_folder=None,
         title=None,
         attributes=None,
-        root_dir=None,
     ):
         super().__init__()
+        self.tree = tree
+
         self._name = name
         self._parent = parent_folder
 
@@ -1264,12 +1283,6 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         attributes.setdefault("meta_data", {})
 
         self._choices_for_moving_host = None
-
-        self._root_dir = root_dir
-        if self._root_dir:
-            self._root_dir = _ensure_trailing_slash(root_dir)
-        else:
-            self._root_dir = wato_root_dir()
 
         self._hosts: dict[HostName, CREHost] | None
         if self._path_existing_folder is not None:
@@ -1295,13 +1308,6 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
 
     def __repr__(self) -> str:
         return f"Folder({self.path()!r}, {self._title!r})"
-
-    def get_root_dir(self) -> PathWithoutSlash:
-        return self._root_dir
-
-    # Dangerous operation! Only use this if you have a good knowledge of the internas
-    def set_root_dir(self, root_dir: str) -> None:
-        self._root_dir = _ensure_trailing_slash(root_dir)
 
     def parent(self) -> CREFolder:
         """Give the parent instance.
@@ -1372,7 +1378,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
             self._save_hosts_file()
             if may_use_redis():
                 # Inform redis that the modified-timestamp of the folder has been updated.
-                get_wato_redis_client().folder_updated(self.filesystem_path())
+                get_wato_redis_client(self.tree).folder_updated(self.filesystem_path())
 
         call_hook_hosts_changed(self)
 
@@ -1560,7 +1566,8 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
     def _load_subfolders(self) -> dict[PathWithoutSlash, CREFolder]:
         loaded_subfolders: dict[str, CREFolder] = {}
 
-        dir_path = self._root_dir + self.path()
+        root_dir = self.tree.get_root_dir()
+        dir_path = root_dir + self.path()
         if not os.path.exists(dir_path):
             return loaded_subfolders
 
@@ -1574,10 +1581,10 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
                     subfolder_path = entry
 
                 loaded_subfolders[entry] = Folder(
+                    tree=self.tree,
                     name=entry,
                     folder_path=subfolder_path,
                     parent_folder=self,
-                    root_dir=self._root_dir,
                 )
 
         return loaded_subfolders
@@ -1633,7 +1640,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         store.makedirs(os.path.dirname(self.wato_info_path()))
         self.wato_info_storage_manager().write(Path(self.wato_info_path()), self.serialize())
         if may_use_redis():
-            get_wato_redis_client().save_folder_info(self)
+            get_wato_redis_client(self.tree).save_folder_info(self)
 
     def load_instance(self) -> None:
         """Load the data of this instance and return it.
@@ -1663,7 +1670,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         return self._title
 
     def filesystem_path(self) -> PathWithoutSlash:
-        return (self._root_dir + self.path()).rstrip("/")
+        return (self.tree.get_root_dir() + self.path()).rstrip("/")
 
     def ident(self) -> str:
         return self.path()
@@ -1706,7 +1713,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
 
     def num_hosts_recursively(self) -> int:
         if may_use_redis():
-            if folder_metadata := get_wato_redis_client().folder_metadata(self.path()):
+            if folder_metadata := get_wato_redis_client(self.tree).folder_metadata(self.path()):
                 return folder_metadata.num_hosts_recursively
             return 0
 
@@ -1849,7 +1856,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
 
         if may_use_redis():
             return self._get_sorted_choices(
-                get_wato_redis_client().choices_for_moving(self.path(), _MoveType(what))
+                get_wato_redis_client(self.tree).choices_for_moving(self.path(), _MoveType(what))
             )
 
         for folder_path, folder in folder_tree().all_folders().items():
@@ -2214,7 +2221,9 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         attributes = update_metadata(attributes, created_by=user.id)
 
         # 2. Actual modification
-        new_subfolder = Folder(name=name, parent_folder=self, title=title, attributes=attributes)
+        new_subfolder = Folder(
+            tree=self.tree, name=name, parent_folder=self, title=title, attributes=attributes
+        )
         self._subfolders[name] = new_subfolder
         new_subfolder.save()
         new_subfolder.save_hosts()
@@ -2810,7 +2819,8 @@ class FolderLookupCache:
 
 
 class WATOFoldersOnDemand(Mapping[PathWithoutSlash, CREFolder]):
-    def __init__(self, values: dict[PathWithoutSlash, CREFolder | None]) -> None:
+    def __init__(self, tree: FolderTree, values: dict[PathWithoutSlash, CREFolder | None]) -> None:
+        self.tree = tree
         self._raw_dict: dict[PathWithoutSlash, CREFolder | None] = values
 
     def __getitem__(self, path_without_slash: PathWithoutSlash) -> CREFolder:
@@ -2832,7 +2842,10 @@ class WATOFoldersOnDemand(Mapping[PathWithoutSlash, CREFolder]):
             parent_folder = self[str(Path(folder_path).parent).lstrip(".")]
 
         return Folder(
-            name=os.path.basename(folder_path), folder_path=folder_path, parent_folder=parent_folder
+            tree=self.tree,
+            name=os.path.basename(folder_path),
+            folder_path=folder_path,
+            parent_folder=parent_folder,
         )
 
 
@@ -2865,15 +2878,16 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):  # pylint: disa
     # | CONSTRUCTION                                                       |
     # '--------------------------------------------------------------------'
 
-    def __init__(self, base_folder, criteria) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, tree: FolderTree, base_folder, criteria) -> None:  # type: ignore[no-untyped-def]
         super().__init__()
+        self.tree = tree
         self._criteria = criteria
         self._base_folder = base_folder
         self._found_hosts = None
         self._name = None
 
     def __repr__(self) -> str:
-        return f"SearchFolder({self._base_folder.path()!r}, {self._name})"
+        return f"SearchFolder({self.tree!r}, {self._base_folder.path()!r}, {self._name})"
 
     # .--------------------------------------------------------------------.
     # | ACCESS                                                             |
@@ -2915,7 +2929,7 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):  # pylint: disa
         return False
 
     def choices_for_moving_host(self) -> Sequence[tuple[str, str]]:
-        return folder_tree().folder_choices()
+        return self.tree.folder_choices()
 
     def path(self):
         if self._name:

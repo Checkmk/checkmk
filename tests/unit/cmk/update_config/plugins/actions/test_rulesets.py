@@ -17,7 +17,7 @@ from cmk.checkengine.checking import CheckPluginName
 
 import cmk.gui.watolib.timeperiods as timeperiods
 from cmk.gui.valuespec import Dictionary, Float, Migrate
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.rulesets import Rule, Ruleset, RulesetCollection
 from cmk.gui.watolib.rulespec_groups import RulespecGroupMonitoringConfigurationVarious
 from cmk.gui.watolib.rulespecs import Rulespec
@@ -103,9 +103,10 @@ def _instantiate_ruleset(
     rulespec: Rulespec | None = None,
 ) -> Ruleset:
     ruleset = Ruleset(ruleset_name, {}, rulespec=rulespec)
-    rule = Rule.from_ruleset_defaults(Folder(name=""), ruleset)
+    folder = Folder(tree=folder_tree(), name="")
+    rule = Rule.from_ruleset_defaults(folder, ruleset)
     rule.value = param_value
-    ruleset.append_rule(Folder(name=""), rule)
+    ruleset.append_rule(folder, rule)
     assert ruleset.get_rules()
     return ruleset
 
@@ -193,7 +194,7 @@ def test_transform_replaced_wato_rulesets_and_params(
 def test_remove_removed_check_plugins_from_ignored_checks() -> None:
     ruleset = Ruleset("ignored_checks", {})
     ruleset.replace_folder_config(
-        Folder(name=""),
+        Folder(tree=folder_tree(), name=""),
         [
             {
                 "id": "1",

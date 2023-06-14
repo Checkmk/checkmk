@@ -31,6 +31,8 @@ from cmk.gui.views.inventory import (
     _cmp_inv_generic,
     _decorate_sort_function,
     _register_sorter,
+    _sort_pairs,
+    _sort_rows,
     AttributeDisplayHint,
     AttributesDisplayHint,
     ColumnDisplayHint,
@@ -480,6 +482,7 @@ def test_make_node_displayhint_from_hint(
                     "Rows": [
                         {"sid": "SID 2", "flashback": "Flashback 2", "other": "Other 2"},
                         {"sid": "SID 1", "flashback": "Flashback 1", "other": "Other 1"},
+                        {"sid": None, "flashback": None, "other": None},
                     ],
                 }
             ),
@@ -514,6 +517,12 @@ def test_make_node_displayhint_from_hint(
                             "other": ("Other 1", "Other 1"),
                             "changed": ("Changed 11", "Changed 12"),
                         },
+                        {
+                            "sid": ("SID 3", "SID 3"),
+                            "flashback": ("Flashback 3", "Flashback 3"),
+                            "other": (None, None),
+                            "changed": (None, None),
+                        },
                     ],
                 }
             ),
@@ -539,10 +548,7 @@ def test_sort_table_rows_displayhint(
     expected: Sequence[Sequence[tuple[SDKey, SDValue]]]
     | Sequence[Sequence[tuple[SDKey, tuple[SDValue, SDValue]]]],
 ) -> None:
-    raw_path = ".software.applications.oracle.dataguard_stats:"
-    path = cmk.gui.inventory.InventoryPath.parse(raw_path).path
-    hints = DISPLAY_HINTS.get_hints(path)
-    assert hints.sort_rows(hints.make_columns(table), table) == expected
+    assert _sort_rows(table, ["sid", "changed", "flashback", "other"]) == expected
 
 
 @pytest.mark.parametrize(
@@ -698,8 +704,8 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
             [
                 ("a", "A"),
                 ("b", "B"),
-                ("c", "C"),
                 ("d", "D"),
+                ("c", "C"),
             ],
         ),
         (DeltaAttributes(), []),
@@ -717,8 +723,8 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
             [
                 ("a", ("A1", "A2")),
                 ("b", ("B", None)),
-                ("c", ("C", "C")),
                 ("d", (None, "D")),
+                ("c", ("C", "C")),
             ],
         ),
     ],
@@ -727,9 +733,7 @@ def test_sort_attributes_pairs_displayhint(
     attributes: Attributes | DeltaAttributes,
     expected: Sequence[tuple[SDKey, SDValue]] | Sequence[tuple[SDKey, tuple[SDValue, SDValue]]],
 ) -> None:
-    raw_path = ".software.applications.kube.metadata."
-    path = cmk.gui.inventory.InventoryPath.parse(raw_path).path
-    assert DISPLAY_HINTS.get_hints(path).sort_pairs(attributes) == expected
+    assert _sort_pairs(attributes, ["a", "b", "d", "c"]) == expected
 
 
 @pytest.mark.parametrize(

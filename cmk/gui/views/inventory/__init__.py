@@ -1089,81 +1089,6 @@ class DisplayHints:
             return self.attribute_hints[key]
         return AttributeDisplayHint.from_raw(self.abc_path, key, {})
 
-    def make_columns(self, table: Table | DeltaTable) -> Sequence[SDKey]:
-        return list(self.table_hint.key_order) + sorted(
-            {k for r in table.rows for k in r} - set(self.table_hint.key_order)
-        )
-
-    @overload
-    @staticmethod
-    def sort_rows(
-        columns: Sequence[SDKey], table: Table
-    ) -> Sequence[Sequence[tuple[SDKey, SDValue]]]:
-        ...
-
-    @overload
-    @staticmethod
-    def sort_rows(
-        columns: Sequence[SDKey], table: DeltaTable
-    ) -> Sequence[Sequence[tuple[SDKey, tuple[SDValue, SDValue]]]]:
-        ...
-
-    @staticmethod
-    def sort_rows(columns, table):
-        # The sorting of rows is overly complicated here, because of the type SDValue = Any and
-        # because the given values can be from both an inventory tree or from a delta tree.
-        # Therefore, values may also be tuples of old and new value (delta tree), see _compare_dicts
-        # in cmk.utils.structured_data.
-
-        @total_ordering
-        class _MinType:
-            def __le__(self, other: object) -> bool:
-                return True
-
-            def __eq__(self, other: object) -> bool:
-                return self is other
-
-        min_type = _MinType()
-
-        def _sanitize_value_for_sorting(
-            value: SDValue,
-        ) -> _MinType | SDValue | tuple[_MinType | SDValue, _MinType | SDValue]:
-            # Replace None values with min_type to enable comparison for type SDValue, i.e. Any.
-            if value is None:
-                return min_type
-
-            if isinstance(value, tuple):
-                return (
-                    min_type if value[0] is None else value[0],
-                    min_type if value[1] is None else value[1],
-                )
-
-            return value
-
-        return [
-            [(c, row[c]) for c in columns if c in row]
-            for row in sorted(
-                table.rows,
-                key=lambda r: tuple(_sanitize_value_for_sorting(r.get(k)) for k in columns),
-            )
-        ]
-
-    @overload
-    def sort_pairs(self, attributes: Attributes) -> Sequence[tuple[SDKey, SDValue]]:
-        ...
-
-    @overload
-    def sort_pairs(
-        self, attributes: DeltaAttributes
-    ) -> Sequence[tuple[SDKey, tuple[SDValue, SDValue]]]:
-        ...
-
-    def sort_pairs(self, attributes):
-        sorted_keys = list(self.attributes_hint.key_order) + sorted(
-            set(attributes.pairs) - set(self.attributes_hint.key_order)
-        )
-        return [(k, attributes.pairs[k]) for k in sorted_keys if k in attributes.pairs]
-
     def replace_placeholders(self, path: SDPath) -> str:
         if "%d" not in self.node_hint.title and "%s" not in self.node_hint.title:
             return self.node_hint.title
@@ -2129,6 +2054,111 @@ multisite_builtin_views["inv_host_history"] = {
 #   '----------------------------------------------------------------------'
 
 
+@overload
+def _sort_pairs(
+    attributes: Attributes, key_order: Sequence[SDKey]
+) -> Sequence[tuple[SDKey, SDValue]]:
+    ...
+
+
+@overload
+def _sort_pairs(
+    attributes: DeltaAttributes, key_order: Sequence[SDKey]
+) -> Sequence[tuple[SDKey, tuple[SDValue, SDValue]]]:
+    ...
+
+
+def _sort_pairs(attributes, key_order):
+    sorted_keys = list(key_order) + sorted(set(attributes.pairs) - set(key_order))
+    return [(k, attributes.pairs[k]) for k in sorted_keys if k in attributes.pairs]
+
+
+def _make_columns(table: Table | DeltaTable, key_order: Sequence[SDKey]) -> Sequence[SDKey]:
+    return list(key_order) + sorted({k for r in table.rows for k in r} - set(key_order))
+
+
+def _empty_or_equal_row_value(value: SDValue | tuple[SDValue, SDValue]) -> bool:
+    # Some refactorings broke werk 6821. Especially delta trees may contain empty or
+    # unchanged rows.
+    if value is None:
+        return True
+    if isinstance(value, tuple) and len(value) == 2 and value[0] == value[1]:
+        # Only applies to delta tree
+        return True
+    return False
+
+
+@overload
+def _sort_row(
+    row: Mapping[SDKey, SDValue], columns: Sequence[SDKey]
+) -> Sequence[tuple[SDKey, SDValue]]:
+    ...
+
+
+@overload
+def _sort_row(
+    row: Mapping[SDKey, tuple[SDValue, SDValue]], columns: Sequence[SDKey]
+) -> Sequence[tuple[SDKey, tuple[SDValue, SDValue]]]:
+    ...
+
+
+def _sort_row(row, columns):
+    return [(c, row[c]) for c in columns if c in row]
+
+
+@overload
+def _sort_rows(table: Table, columns: Sequence[SDKey]) -> Sequence[Sequence[tuple[SDKey, SDValue]]]:
+    ...
+
+
+@overload
+def _sort_rows(
+    table: DeltaTable, columns: Sequence[SDKey]
+) -> Sequence[Sequence[tuple[SDKey, tuple[SDValue, SDValue]]]]:
+    ...
+
+
+def _sort_rows(table, columns):
+    # The sorting of rows is overly complicated here, because of the type SDValue = Any and
+    # because the given values can be from both an inventory tree or from a delta tree.
+    # Therefore, values may also be tuples of old and new value (delta tree), see _compare_dicts
+    # in cmk.utils.structured_data.
+
+    @total_ordering
+    class _MinType:
+        def __le__(self, other: object) -> bool:
+            return True
+
+        def __eq__(self, other: object) -> bool:
+            return self is other
+
+    min_type = _MinType()
+
+    def _sanitize_value_for_sorting(
+        value: SDValue,
+    ) -> _MinType | SDValue | tuple[_MinType | SDValue, _MinType | SDValue]:
+        # Replace None values with min_type to enable comparison for type SDValue, i.e. Any.
+        if value is None:
+            return min_type
+
+        if isinstance(value, tuple):
+            return (
+                min_type if value[0] is None else value[0],
+                min_type if value[1] is None else value[1],
+            )
+
+        return value
+
+    return [
+        _sort_row(row, columns)
+        for row in sorted(
+            table.rows,
+            key=lambda r: tuple(_sanitize_value_for_sorting(r.get(k)) for k in columns),
+        )
+        if not all(_empty_or_equal_row_value(v) for _k, v in row.items())
+    ]
+
+
 class ABCNodeRenderer(abc.ABC):
     def __init__(self, site_id: SiteId, hostname: HostName) -> None:
         self._site_id = site_id
@@ -2203,7 +2233,7 @@ class ABCNodeRenderer(abc.ABC):
                 class_="invtablelink",
             )
 
-        columns = hints.make_columns(table)
+        columns = _make_columns(table, hints.table_hint.key_order)
 
         # TODO: Use table.open_table() below.
         html.open_table(class_="data")
@@ -2217,16 +2247,6 @@ class ABCNodeRenderer(abc.ABC):
             )
         html.close_tr()
 
-        def _empty_or_equal(value: tuple[SDValue, SDValue] | SDValue) -> bool:
-            # Some refactorings broke werk 6821. Especially delta trees may contain empty or
-            # unchanged rows.
-            if value is None:
-                return True
-            if isinstance(value, tuple) and len(value) == 2 and value[0] == value[1]:
-                # Only applies to delta tree
-                return True
-            return False
-
         def _get_retention_interval(
             table: Table | DeltaTable,
             key: SDKey,
@@ -2238,10 +2258,7 @@ class ABCNodeRenderer(abc.ABC):
                 key, {k: v for k, v in row if not isinstance(v, tuple)}
             )
 
-        for row in hints.sort_rows(columns, table):
-            if all(_empty_or_equal(v) for _k, v in row):
-                continue
-
+        for row in _sort_rows(table, columns):
             html.open_tr(class_="even0")
             for key, value in row:
                 column_hint = hints.get_column_hint(key)
@@ -2271,7 +2288,7 @@ class ABCNodeRenderer(abc.ABC):
         self, attributes: Attributes | DeltaAttributes, hints: DisplayHints
     ) -> None:
         html.open_table()
-        for key, value in hints.sort_pairs(attributes):
+        for key, value in _sort_pairs(attributes, hints.attributes_hint.key_order):
             attr_hint = hints.get_attribute_hint(key)
 
             html.open_tr()

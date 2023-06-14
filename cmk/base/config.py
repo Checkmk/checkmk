@@ -87,7 +87,6 @@ from cmk.utils.tags import ComputedDataSources, TagGroupID, TagID
 from cmk.utils.timeperiod import TimeperiodName
 from cmk.utils.type_defs import (
     ActiveCheckPluginName,
-    AgentTargetVersion,
     CheckPluginNameStr,
     ClusterMode,
     ContactgroupName,
@@ -167,6 +166,9 @@ SERVICE_CHECK_INTERVAL: Final = 1.0
 
 service_service_levels = []
 host_service_levels = []
+
+# We still need "Union" because of https://github.com/python/mypy/issues/11098
+_AgentTargetVersion = Union[None, str, tuple[str, str], tuple[str, dict[str, str]]]
 
 AllHosts = list[HostName]
 ShadowHosts = dict[HostName, dict]
@@ -4440,7 +4442,7 @@ class ConfigCache:
             return {}
         return settings[0]
 
-    def agent_target_version(self, host_name: HostName) -> AgentTargetVersion:
+    def agent_target_version(self, host_name: HostName) -> _AgentTargetVersion:
         agent_target_versions = self.host_extra_conf(host_name, check_mk_agent_target_versions)
         if not agent_target_versions:
             return None

@@ -8,13 +8,12 @@ from __future__ import annotations
 import sys
 from collections.abc import Container, Mapping
 from dataclasses import dataclass
-from typing import Any, Literal, NewType, TypeAlias, TypedDict, Union
+from typing import Any, Literal, NewType, TypeAlias, TypedDict
 
 __all__ = [
     "ServiceName",
     "ServicegroupName",
     "ContactgroupName",
-    "AgentTargetVersion",
     "AgentRawData",
     "HostOrServiceConditionRegex",
     "HostOrServiceConditionsSimple",
@@ -48,8 +47,6 @@ ServiceName = str
 ServicegroupName = str
 ContactgroupName = str
 
-# We still need "Union" because of https://github.com/python/mypy/issues/11098
-AgentTargetVersion = Union[None, str, tuple[str, str], tuple[str, dict[str, str]]]
 
 AgentRawData = NewType("AgentRawData", bytes)
 

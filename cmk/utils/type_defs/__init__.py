@@ -8,7 +8,6 @@ __all__ = [
     "ValidatedString",
     "ActiveCheckPluginName",
     "AgentRawData",
-    "AgentTargetVersion",
     "CheckPluginNameStr",
     "ClusterMode",
     "ContactgroupName",
@@ -57,7 +56,6 @@ __all__ = [
 from ._misc import (
     ActiveCheckPluginName,
     AgentRawData,
-    AgentTargetVersion,
     CheckPluginNameStr,
     ClusterMode,
     ContactgroupName,

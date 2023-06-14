@@ -132,7 +132,11 @@ def test_update(test_site: Site, agent_ctl: Path) -> None:
     if len(target_crit_services) > 0:
         logger_services_crit("target", target_crit_services)
 
-    assert len(target_data_host) >= len(base_data_host)
+    err_msg = (
+        f"The following services were found in base-version but not in target-version: "
+        f"{[service for service in base_data_host if service not in target_data_host]}"
+    )
+    assert len(target_data_host) >= len(base_data_host), err_msg
 
     # TODO: 'Interface 2' service is not found after the update. Investigate: CMK-13495
     base_ok_services.remove("Interface 2")

@@ -1,0 +1,13 @@
+Title: epower: Check levels if power is 0
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1686915188
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, Power phase service didn't check power against
+thresholds if power was 0.
+

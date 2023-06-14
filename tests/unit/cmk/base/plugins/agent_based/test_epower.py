@@ -54,6 +54,16 @@ UPS_POWER_0 = """
 .1.3.6.1.2.1.33.1.4.4.1.4.3  4800
 """
 
+# power is 0
+UPS_POWER_1 = """
+.1.3.6.1.2.1.33.1.4.4.1.2.1  230
+.1.3.6.1.2.1.33.1.4.4.1.2.2  230
+.1.3.6.1.2.1.33.1.4.4.1.2.3  229
+.1.3.6.1.2.1.33.1.4.4.1.4.1  0
+.1.3.6.1.2.1.33.1.4.4.1.4.2  3500
+.1.3.6.1.2.1.33.1.4.4.1.4.3  4800
+"""
+
 
 @pytest.mark.parametrize(
     "walk, section_name, result",
@@ -181,6 +191,14 @@ def test_power_discover(
                 Metric("power", 3500.0),
             ],
             id="ups-power-2-crit",
+        ),
+        pytest.param(
+            UPS_POWER_1,
+            SectionName("ups_power"),
+            "1",
+            {},
+            [Result(state=State.OK, summary="Power: 0 W"), Metric("power", 0.0)],
+            id="ups-power is 0",
         ),
     ],
 )

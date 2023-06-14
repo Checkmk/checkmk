@@ -21,6 +21,9 @@ from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.endpoints.host_config.request_schemas import EXISTING_HOST_NAME
+from cmk.gui.plugins.openapi.endpoints.service_discovery.response_schemas import (
+    DiscoveryBackgroundJobStatusObject,
+)
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
     Endpoint,
@@ -637,7 +640,7 @@ class BulkDiscovery(BaseSchema):
     },
     additional_status_codes=[409],
     request_schema=BulkDiscovery,
-    response_schema=response_schemas.DiscoveryBackgroundJobStatusObject,
+    response_schema=DiscoveryBackgroundJobStatusObject,
 )
 def execute_bulk_discovery(params: Mapping[str, Any]) -> Response:
     """Start a bulk discovery job"""
@@ -667,7 +670,7 @@ def execute_bulk_discovery(params: Mapping[str, Any]) -> Response:
     status_descriptions={
         404: "There is no running background job with this job_id.",
     },
-    response_schema=response_schemas.DiscoveryBackgroundJobStatusObject,
+    response_schema=DiscoveryBackgroundJobStatusObject,
 )
 def show_bulk_discovery_status(params: Mapping[str, Any]) -> Response:
     """Show the status of a bulk discovery job"""

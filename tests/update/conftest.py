@@ -346,3 +346,21 @@ def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
         agent_controller_daemon(installed_agent_ctl_in_unknown_state),
     ):
         yield installed_agent_ctl_in_unknown_state
+
+
+def logger_services_ok(version: str, services: list) -> None:
+    logger.info(
+        "%s service(s) found in `OK` status in %s-version: %s", len(services), version, services
+    )
+
+
+def logger_services_warn(version: str, services: list) -> None:
+    logger.warning(
+        "%s service(s) found in `WARN` status in %s-version: %s", len(services), version, services
+    )
+
+
+def logger_services_crit(version: str, services: list) -> None:
+    logger.error(
+        "%s service(s) found in `CRIT` status in %s-version: %s", len(services), version, services
+    )

@@ -10,7 +10,6 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib import CMKVersion
 from tests.testlib.agent import (
     agent_controller_daemon,
     clean_agent_controller,

@@ -1,23 +1,21 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
 import {call_ajax} from "ajax";
 
-var iCurrent: number | null = null;
-var oCurrent: HTMLAnchorElement | null = null;
-var oldValue = "";
+let iCurrent: number | null = null;
+let oCurrent: HTMLAnchorElement | null = null;
+let oldValue = "";
 
 // Register an input field to be a search field and add eventhandlers
-export function register_search_field(field) {
-    var oField = document.getElementById(field);
+export function register_search_field(field: string) {
+    const oField = document.getElementById(field) as HTMLInputElement | null;
     if (oField) {
         oField.onkeydown = function (e) {
-            if (!e) e = window.event as KeyboardEvent;
             return mkSearchKeyDown(e, oField);
         };
         oField.onkeyup = function (e) {
-            if (!e) e = window.event as KeyboardEvent;
             return mkSearchKeyUp(e, oField);
         };
         oField.onclick = function () {
@@ -33,8 +31,8 @@ export function register_search_field(field) {
 }
 
 // On key release event handler
-function mkSearchKeyUp(e, oField) {
-    var keyCode = e.which || e.keyCode;
+function mkSearchKeyUp(e: KeyboardEvent, oField: HTMLInputElement) {
+    const keyCode = e.which || e.keyCode;
 
     switch (keyCode) {
         // 18: Return/Enter
@@ -61,8 +59,10 @@ function mkSearchKeyUp(e, oField) {
 
 // On key press down event handler
 export function on_search_click() {
-    var oField = document.getElementById("mk_side_search_field");
-    var ev = {which: 0, keyCode: 13};
+    const oField = document.getElementById(
+        "mk_side_search_field"
+    ) as HTMLInputElement;
+    const ev = {which: 0, keyCode: 13} as KeyboardEvent;
     return mkSearchKeyDown(ev, oField);
 }
 
@@ -71,20 +71,20 @@ function search_dropdown_value() {
     else return null;
 }
 
-function mkSearchKeyDown(e, oField) {
-    var keyCode = e.which || e.keyCode;
-
+function mkSearchKeyDown(e: KeyboardEvent, oField: HTMLInputElement) {
+    const keyCode = e.which || e.keyCode;
     switch (keyCode) {
         // Return/Enter
         case 13:
             if (oCurrent != null) {
                 mkSearchNavigate();
-                oField.value = search_dropdown_value();
+                oField.value = search_dropdown_value() ?? "";
                 close_popup();
             } else {
                 if (oField.value == "")
                     return; /* search field empty, rather not show all services! */
                 // When nothing selected, navigate with the current contents of the field
+                //@ts-ignore
                 top!.frames["main"].location.href =
                     "search_open.py?q=" + encodeURIComponent(oField.value);
                 close_popup();
@@ -125,18 +125,19 @@ function mkSearchKeyDown(e, oField) {
 
 // Navigate to the target of the selected event
 function mkSearchNavigate() {
-    top!.frames["main"].location.href = oCurrent?.href;
+    //@ts-ignore
+    top!.frames["main"].location.href = oCurrent!.href;
 }
 
 // Move one step of given size in the result list
-function mkSearchMoveElement(step) {
+function mkSearchMoveElement(step: number) {
     if (iCurrent == null) {
         iCurrent = -1;
     }
 
     iCurrent += step;
 
-    var oResults: HTMLElement | null | HTMLElement[] =
+    let oResults: HTMLElement | null | HTMLElement[] =
         document.getElementById("mk_search_results");
 
     if (!oResults) return;
@@ -147,11 +148,11 @@ function mkSearchMoveElement(step) {
 
     oResults = Array.from(oResults.childNodes) as HTMLElement[];
 
-    var a = 0;
-    for (var i = 0; i < oResults.length; i++) {
+    let a = 0;
+    for (let i = 0; i < oResults.length; i++) {
         if (oResults[i].tagName == "A") {
-            oCurrent = oResults[i] as HTMLAnchorElement;
             if (a == iCurrent) {
+                oCurrent = oResults[i] as HTMLAnchorElement;
                 oResults[i].setAttribute("class", "active");
             } else {
                 oResults[i].setAttribute("class", "inactive");
@@ -163,11 +164,11 @@ function mkSearchMoveElement(step) {
 
 // Is the result list shown at the moment?
 function mkSearchResultShown() {
-    return document.getElementById("mk_search_results") ? true : false;
+    return !!document.getElementById("mk_search_results");
 }
 
 // Toggle the result list
-function toggle_popup(oField) {
+function toggle_popup(oField: HTMLInputElement) {
     if (mkSearchResultShown()) {
         close_popup();
     } else {
@@ -177,7 +178,7 @@ function toggle_popup(oField) {
 
 // Close the result list
 export function close_popup() {
-    var oContainer = document.getElementById("mk_search_results");
+    const oContainer = document.getElementById("mk_search_results");
     if (oContainer) {
         oContainer.parentNode?.removeChild(oContainer);
     }
@@ -186,13 +187,13 @@ export function close_popup() {
     oCurrent = null;
 }
 
-function handle_search_response(oField, code) {
+function handle_search_response(oField: HTMLInputElement, code: string) {
     if (code != "") {
-        var oContainer = document.getElementById("mk_search_results");
+        let oContainer = document.getElementById("mk_search_results");
         if (!oContainer) {
             oContainer = document.createElement("div");
             oContainer.setAttribute("id", "mk_search_results");
-            oField.parentNode.appendChild(oContainer);
+            oField.parentNode!.appendChild(oContainer);
         }
 
         oContainer.innerHTML = code;
@@ -202,10 +203,10 @@ function handle_search_response(oField, code) {
 }
 
 // Build a new result list and show it up
-function mkSearch(oField) {
+function mkSearch(oField: HTMLInputElement | null) {
     if (oField == null) return;
 
-    var val = oField.value;
+    const val = oField.value;
     if (mkSearchResultShown() && val == oldValue) return; // nothing changed, no new search
     oldValue = val;
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,7 +7,7 @@ import io
 import os
 from collections.abc import Collection
 
-from PIL import Image, PngImagePlugin  # type: ignore[import]
+from PIL import Image, PngImagePlugin
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -64,6 +64,8 @@ class ModeIcons(WatoMode):
                     "icon",
                     ImageUpload(
                         title=_("Icon"),
+                        allowed_extensions=[".png"],
+                        mime_types=["image/png"],
                         max_size=(80, 80),
                         validate=self._validate_icon,
                     ),
@@ -90,7 +92,7 @@ class ModeIcons(WatoMode):
             raise MKUserError(
                 varprefix,
                 _(
-                    "Your icon conflicts with a Check_MK builtin icon. Please "
+                    "Your icon conflicts with a Checkmk builtin icon. Please "
                     "choose another name for your icon."
                 ),
             )
@@ -122,7 +124,7 @@ class ModeIcons(WatoMode):
         meta = PngImagePlugin.PngInfo()
         for k, v in im.info.items():
             if isinstance(v, (bytes, str)):
-                meta.add_text(k, v, 0)
+                meta.add_text(k, v, False)
 
         # and finally save the image
         dest_dir = "%s/local/share/check_mk/web/htdocs/images/icons" % cmk.utils.paths.omd_root

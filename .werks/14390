@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Deprecated hashes of user passwords stored in the htpasswd file will now be automatically updated to a more modern hash format when the respective user logs in.
 Specifically, password hashes created with the sha256-crypt algorithm will be udpated to bcrypt hashes.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,154 +7,48 @@ import fcntl
 import getopt
 import glob
 import grp
-import json
 import os
-import re
 import signal
-import socket
-import subprocess
 import sys
 import tempfile
 import textwrap
 import time
 import traceback
-from collections.abc import Callable, Generator, Iterator, Mapping, Sequence
+from collections.abc import Callable, Generator, Mapping, Sequence
 from contextlib import contextmanager, ExitStack
-from hashlib import md5
 from pathlib import Path
 from typing import Any, IO, NamedTuple, NoReturn
-
-from Cryptodome.Cipher import AES, PKCS1_OAEP
-from Cryptodome.Cipher._mode_cbc import CbcMode
-from Cryptodome.PublicKey import RSA
-from OpenSSL import crypto
 
 import cmk.utils.daemon as daemon
 import cmk.utils.render as render
 import cmk.utils.schedule as schedule
-import cmk.utils.store as store
+import cmk.utils.version as cmk_version
 from cmk.utils.backup.config import Config
+from cmk.utils.backup.job import Job
+from cmk.utils.backup.targets import TargetId
 from cmk.utils.backup.targets.aws_s3_bucket import S3Target
 from cmk.utils.backup.targets.azure_blob_storage import BlobStorageTarget
 from cmk.utils.backup.targets.local import LocalTarget
 from cmk.utils.backup.targets.protocol import Target
-from cmk.utils.backup.type_defs import Backup, Job, SiteBackupInfo, TargetId
+from cmk.utils.backup.type_defs import SiteBackupInfo
 from cmk.utils.backup.utils import (
     current_site_id,
+    do_site_backup,
+    do_site_restore,
+    hostname,
     log,
+    Log,
     makedirs,
     set_permissions,
     SITE_BACKUP_MARKER,
+    State,
 )
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
 from cmk.utils.paths import mkbackup_lock_dir
 
-VERSION = "2.2.0i1"
-
-
-# Some typed wrappers around OpenSSL.crypto, there are only Python 2 interface
-# files available... :-/
-
 ################
 # Utility Code #
 ################
-
-g_state: dict[str, Any] | None = None
-
-
-# The state file is in JSON format because it is 1:1 transferred
-# to the Checkmk server through the Checkmk agent.
-class State:
-    def __init__(self, path: Path) -> None:
-        self.path = path
-
-    def save(self, new_attrs: Mapping[str, Any], update: bool = True) -> None:
-        if update:
-            state = _load_state(self.path)
-        else:
-            state = {}
-        state.update(new_attrs)
-        store.save_text_to_file(
-            self.path,
-            json.dumps(
-                state,
-                sort_keys=True,
-                indent=4,
-                separators=(",", ": "),
-            ),
-        )
-
-    def load(self) -> dict[str, Any]:
-        return _load_state(self.path)
-
-
-class ProgressLogger:
-    def __init__(self, state: State):
-        self._state = state
-        self._last_state_update = time.time()
-        self._last_bps: float | None = None
-
-    def update(self, bytes_copied: int) -> None:
-        timedif = time.time() - self._last_state_update
-        if timedif >= 1:
-            this_bps = bytes_copied / timedif
-
-            if self._last_bps is None:
-                bps = this_bps  # initialize the value
-            else:
-                percentile, backlog_sec = 0.50, 10
-                weight_per_sec = (1 - percentile) ** (1.0 / backlog_sec)
-                weight = weight_per_sec**timedif
-                bps = self._last_bps * weight + this_bps * (1 - weight)
-
-            self._state.save(new_attrs={"bytes_per_second": bps})
-            self._last_state_update, self._last_bps = time.time(), bps
-
-
-def _load_state(path: Path) -> dict[str, Any]:
-    global g_state
-    if g_state is None:
-        g_state = json.loads(path.read_text())
-
-    return g_state
-
-
-def add_output(s: str, state: State) -> None:
-    state_content = state.load()
-    state_content["output"] += s
-    state.save(state_content, update=False)
-
-
-# Is used to duplicate output from stdout/stderr to a the job log. This
-# is e.g. used during "mkbackup backup" to store the output.
-class Log:
-    def __init__(self, fd: int, state: State) -> None:
-        self.fd = fd
-        self.state = state
-        if self.fd == 1:
-            self.orig = sys.stdout
-            sys.stdout = self  # type: ignore[assignment]
-        else:
-            self.orig = sys.stderr
-            sys.stderr = self  # type: ignore[assignment]
-
-        self.color_replace = re.compile("\033\\[\\d{1,2}m", re.UNICODE)
-
-    def __del__(self) -> None:
-        if self.fd == 1:
-            sys.stdout = self.orig
-        else:
-            sys.stderr = self.orig
-
-    def write(self, data: str) -> None:
-        self.orig.write(data)
-        try:
-            add_output(self.color_replace.sub("", data), self.state)
-        except Exception as e:
-            self.orig.write("Failed to add output: %s\n" % e)
-
-    def flush(self) -> None:
-        self.orig.flush()
 
 
 g_stdout_log = None
@@ -171,32 +65,6 @@ def stop_logging() -> None:
     global g_stdout_log, g_stderr_log
     g_stderr_log = None
     g_stdout_log = None
-
-
-def verbose(s):
-    # type (str) -> None
-    if opt_verbose > 0:
-        log(s)
-
-
-def hostname() -> str:
-    return socket.gethostname()
-
-
-def load_certificate_pem(buf: bytes) -> crypto.X509:
-    return crypto.load_certificate(crypto.FILETYPE_PEM, buf)
-
-
-def dump_publickey_pem(pkey: crypto.PKey) -> bytes:
-    return crypto.dump_publickey(crypto.FILETYPE_PEM, pkey)
-
-
-def load_privatekey_pem(buf: bytes, passphrase: bytes) -> crypto.PKey:
-    return crypto.load_privatekey(crypto.FILETYPE_PEM, buf, passphrase)
-
-
-def dump_privatekey_pem(pkey: crypto.PKey) -> bytes:
-    return crypto.dump_privatekey(crypto.FILETYPE_PEM, pkey)
 
 
 def _ensure_lock_file(lock_file_path: Path) -> None:
@@ -259,258 +127,6 @@ def acquire_single_lock(lock_file_path: Path) -> Generator[IO[bytes], None, None
         yield backup_lock
 
 
-# Using RSA directly to encrypt the whole backup is a bad idea. So we use the RSA
-# public key to generate and encrypt a shared secret which is then used to encrypt
-# the backup with AES.
-#
-# When encryption is active, this function uses the configured RSA public key to
-# a) create a random secret key which is encrypted with the RSA public key
-# b) the encrypted key is used written to the backup file
-# c) the unencrypted random key is used as AES key for encrypting the backup stream
-class MKBackupStream:
-    def __init__(
-        self, stream: IO[bytes], is_alive: Callable[[], bool], key_ident: str | None
-    ) -> None:
-        self._stream = stream
-        self._is_alive = is_alive
-        self._cipher: CbcMode | None = None
-        self._key_ident = key_ident
-        self._next_chunk: bytes | None = None
-
-        # The iv is an initialization vector for the CBC mode of operation. It
-        # needs to be unique per key per message. Normally, it's sent alongside
-        # the data in cleartext. Here, since the key is only ever used once,
-        # you can use a known IV.
-        self._iv = b"\x00" * AES.block_size
-
-    def process(self) -> Iterator[bytes]:
-        head = self._init_processing()
-        if head is not None:
-            yield head
-
-        while True:
-            chunk, finished = self._read_chunk()
-            yield self._process_chunk(chunk)
-            if finished and not self._is_alive():
-                break  # end of stream reached
-
-    def _init_processing(self) -> bytes | None:
-        raise NotImplementedError()
-
-    def _read_from_stream(self, size: int) -> bytes:
-        try:
-            return self._stream.read(size)
-        except ValueError:
-            if self._stream.closed:
-                return b""  # handle EOF transparently
-            raise
-
-    def _read_chunk(self) -> tuple[bytes, bool]:
-        raise NotImplementedError()
-
-    def _process_chunk(self, chunk: bytes) -> bytes:
-        raise NotImplementedError()
-
-    def _get_key_spec(self, key_id: bytes) -> dict[str, bytes]:
-        keys = self._load_backup_keys()
-
-        for key in keys.values():
-            digest: bytes = load_certificate_pem(key["certificate"]).digest("md5")
-            if key_id == digest:
-                return key
-
-        raise MKGeneralException("Failed to load the configured backup key: %s" % key_id.decode())
-
-    # TODO: The return type is a bit questionable...
-    def _load_backup_keys(self) -> dict[str, dict[str, bytes]]:
-        path = Path(os.environ["OMD_ROOT"], "etc/check_mk/backup_keys.mk")
-
-        variables: dict[str, dict[str, Any]] = {"keys": {}}
-        if path.exists():
-            exec(path.read_text(), variables, variables)
-        # TODO: Verify value of keys.
-        return variables["keys"]
-
-
-class BackupStream(MKBackupStream):
-    def _init_processing(self) -> bytes | None:
-        if self._key_ident is None:
-            return None
-
-        secret_key, encrypted_secret_key = self._derive_key(
-            self._get_encryption_public_key(self._key_ident.encode("utf-8")), 32
-        )
-        cipher = AES.new(secret_key, AES.MODE_CBC, self._iv)
-        assert isinstance(cipher, CbcMode)
-        self._cipher = cipher
-
-        # Write out a file version marker and  the encrypted secret key, preceded by
-        # a length indication. All separated by \0.
-        # Version 1: Encrypted secret key written with pubkey.encrypt(). Worked with
-        #            early versions of 1.4 until moving from PyCrypto to PyCryptodome
-        # Version 2: Use PKCS1_OAEP for encrypting the encrypted_secret_key.
-        return b"%d\0%d\0%s\0" % (2, len(encrypted_secret_key), encrypted_secret_key)
-
-    def _read_chunk(self) -> tuple[bytes, bool]:
-        finished = False
-        if self._key_ident is not None:
-            chunk = self._read_from_stream(1024 * AES.block_size)
-
-            # Detect end of file and add padding to fill up to block size
-            if chunk == b"" or len(chunk) % AES.block_size != 0:
-                padding_length = (AES.block_size - len(chunk) % AES.block_size) or AES.block_size
-                chunk += padding_length * bytes((padding_length,))
-                finished = True
-        else:
-            chunk = self._read_from_stream(1024 * 1024)
-            if chunk == b"":
-                finished = True
-
-        return chunk, finished
-
-    def _process_chunk(self, chunk: bytes) -> bytes:
-        if self._key_ident is not None:
-            assert self._cipher is not None
-            return self._cipher.encrypt(chunk)
-        return chunk
-
-    def _get_encryption_public_key(self, key_id: bytes) -> RSA.RsaKey:
-        key = self._get_key_spec(key_id)
-
-        # First extract the public key part from the certificate
-        cert = load_certificate_pem(key["certificate"])
-        pub: crypto.PKey = cert.get_pubkey()
-        pub_pem = dump_publickey_pem(pub)
-
-        # Now construct the public key object
-        return RSA.importKey(pub_pem)
-
-    # logic from http://stackoverflow.com/questions/6309958/encrypting-a-file-with-rsa-in-python
-    # Since our packages moved from PyCrypto to PyCryptodome we need to change this to use PKCS1_OAEP.
-    def _derive_key(self, pubkey, key_length):
-        secret_key = os.urandom(key_length)
-
-        # Encrypt the secret key with the RSA public key
-        cipher_rsa = PKCS1_OAEP.new(pubkey)
-        encrypted_secret_key = cipher_rsa.encrypt(secret_key)
-
-        return secret_key, encrypted_secret_key
-
-
-class RestoreStream(MKBackupStream):
-    def _init_processing(self) -> bytes | None:
-        self._next_chunk = None
-        if self._key_ident is None:
-            return None
-
-        file_version, encrypted_secret_key = self._read_encrypted_secret_key()
-        secret_key = self._decrypt_secret_key(
-            file_version, encrypted_secret_key, self._key_ident.encode("utf-8")
-        )
-        cipher = AES.new(secret_key, AES.MODE_CBC, self._iv)
-        assert isinstance(cipher, CbcMode)
-        self._cipher = cipher
-        return None
-
-    def _read_chunk(self) -> tuple[bytes, bool]:
-        if self._key_ident is None:
-            # process unencrypted backup
-            chunk = self._read_from_stream(1024 * 1024)
-            return chunk, chunk == b""
-
-        assert self._cipher is not None
-        this_chunk = self._cipher.decrypt(self._read_from_stream(1024 * AES.block_size))
-
-        if self._next_chunk is None:
-            # First chunk. Only store for next loop
-            self._next_chunk = this_chunk
-            return b"", False
-
-        if len(this_chunk) == 0:
-            # Processing last chunk. Stip off padding.
-            pad = self._next_chunk[-1]
-            chunk = self._next_chunk[:-pad]
-            return chunk, True
-
-        # Processing regular chunk
-        chunk = self._next_chunk
-        self._next_chunk = this_chunk
-        return chunk, False
-
-    def _process_chunk(self, chunk: bytes) -> bytes:
-        return chunk
-
-    def _read_encrypted_secret_key(self) -> tuple[bytes, bytes]:
-        def read_field() -> bytes:
-            buf = b""
-            while True:
-                c = self._stream.read(1)
-                if c == b"\0":
-                    break
-                buf += c
-            return buf
-
-        file_version = read_field()
-        if file_version not in [b"1", b"2"]:
-            raise MKGeneralException(
-                "Failed to process backup file (invalid version %r)" % file_version
-            )
-
-        try:
-            key_len = int(read_field())
-        except ValueError:
-            raise MKGeneralException("Failed to parse the encrypted backup file (key length)")
-
-        if int(key_len) > 256:
-            raise MKGeneralException("Failed to process backup file (invalid key length)")
-
-        encrypted_secret_key = self._stream.read(int(key_len))
-
-        if self._stream.read(1) != b"\0":
-            raise MKGeneralException("Failed to parse the encrypted backup file (header broken)")
-
-        return file_version, encrypted_secret_key
-
-    def _get_encryption_private_key(self, key_id: bytes) -> RSA.RsaKey:
-        key = self._get_key_spec(key_id)
-
-        try:
-            passphrase = os.environ["MKBACKUP_PASSPHRASE"]
-        except KeyError:
-            raise MKGeneralException(
-                "Failed to get passphrase for decryption the backup. "
-                "It needs to be given as environment variable "
-                '"MKBACKUP_PASSPHRASE".'
-            )
-
-        # First decrypt the private key using PyOpenSSL (was unable to archieve
-        # this with RSA.importKey(). :-(
-        pkey = load_privatekey_pem(key["private_key"], passphrase.encode("utf-8"))
-        priv_pem = dump_privatekey_pem(pkey)
-
-        try:
-            return RSA.importKey(priv_pem)
-        except (ValueError, IndexError, TypeError):
-            if opt_debug:
-                raise
-            raise MKGeneralException("Failed to load private key (wrong passphrase?)")
-
-    def _decrypt_secret_key(
-        self, file_version: bytes, encrypted_secret_key: bytes, key_id: bytes
-    ) -> bytes:
-        private_key = self._get_encryption_private_key(key_id)
-
-        if file_version == b"1":
-            raise MKGeneralException(
-                "You can not restore this backup using your current Check_MK "
-                "version. You need to use a Check_MK 1.4 version that has "
-                "been released before 2017-03-24. The last compatible "
-                "release is 1.4.0b4."
-            )
-        cipher_rsa = PKCS1_OAEP.new(private_key)
-        return cipher_rsa.decrypt(encrypted_secret_key)
-
-
 #########################################################
 # Lock files are shared with cma backup tool            #
 # We want to avoid running two backups at the same time #
@@ -522,6 +138,7 @@ def local_lock_file_path(site_name: str) -> Path:
 
 
 def get_needed_lock_files() -> Sequence[Path]:
+    # TODO: this doesn't seem to need to return a list
     site_id = current_site_id()
     return [local_lock_file_path(site_id)]
 
@@ -559,11 +176,6 @@ def restore_state() -> State:
     path = Path("/tmp")
     name = f"restore-{current_site_id()}.state"
     return State(path / name)
-
-
-def site_version(site_id: str) -> str:
-    linkpath = os.readlink("/omd/sites/%s/version" % site_id)
-    return linkpath.split("/")[-1]
 
 
 #   List: Alle Backups auflisten
@@ -683,7 +295,6 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
     job = load_job(local_job_id, config)
     target = load_target(config, job.config["target"])
     target.check_ready()
-    state = backup_state(job)
 
     with ExitStack() as stack:
         for cm in [
@@ -691,25 +302,21 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
         ]:
             stack.enter_context(cm)
 
-        init_new_run(state)
+        state = backup_state(job)
         save_next_run(job, state)
 
         if "background" in opts:
             daemon.daemonize()
-            state.save({"pid": os.getpid()})
+            state.update_and_save(pid=os.getpid())
 
         start_logging(state)
         log(f"--- Starting backup ({job.id} to {target.id}) ---")
 
         success = False
         try:
-            state.save(
-                {
-                    "state": "running",
-                },
-            )
+            state.update_and_save(state="running")
             temp_path = target.start_backup(job)
-            info = do_site_backup(temp_path, job, state)
+            info = do_site_backup(temp_path, job, state, opt_verbose, opt_debug)
             target.finish_backup(info, job)
             complete_backup(state, info)
             success = True
@@ -727,89 +334,22 @@ def mode_backup(local_job_id: str, opts: dict[str, str], config: Config) -> None
 
         finally:
             stop_logging()
-            state.save(
-                {
-                    "state": "finished",
-                    "finished": time.time(),
-                    "success": success,
-                },
+            state.update_and_save(
+                state="finished",
+                finished=time.time(),
+                success=success,
             )
 
 
-class InfoCalculator:
-    def __init__(self, filename: str) -> None:
-        self.filename = filename
-        self.hash = md5(usedforsecurity=False)  # pylint: disable=unexpected-keyword-arg
-        self.size = 0
-
-    def update(self, chunk: bytes) -> None:
-        self.hash.update(chunk)
-        self.size += len(chunk)
-
-    def info(self, job: Job, site_id: str) -> SiteBackupInfo:
-        return SiteBackupInfo(
-            config=job.config,
-            filename=self.filename,
-            checksum=self.hash.hexdigest(),
-            finished=time.time(),
-            hostname=hostname(),
-            job_id=job.local_id,
-            site_id=site_id,
-            site_version=site_version(site_id),
-            size=self.size,
-        )
-
-
-def do_site_backup(backup_path: Path, job: Job, state: State) -> SiteBackupInfo:
-    cmd = ["omd", "backup"]
-    if not job.config["compress"]:
-        cmd.append("--no-compression")
-    if job.config.get("no_history", False):
-        cmd.append("--no-past")
-    cmd.append("-")
-    site = current_site_id()
-    info = InfoCalculator(backup_path.name)
-    verbose("Command: %s" % " ".join(cmd))
-    with subprocess.Popen(
-        cmd,
-        close_fds=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        stdin=subprocess.DEVNULL,
-    ) as p:
-        assert p.stdout is not None
-        assert p.stderr is not None
-
-        with open(backup_path, "wb") as backup_file:
-            s = BackupStream(
-                stream=p.stdout,
-                is_alive=lambda: p.poll() is None,
-                key_ident=job.config["encrypt"],
-            )
-            progress_logger = ProgressLogger(state)
-            for chunk in s.process():
-                backup_file.write(chunk)
-                progress_logger.update(len(chunk))
-                info.update(chunk)
-
-        err = p.stderr.read().decode()
-
-    if p.returncode != 0:
-        raise MKGeneralException("Site backup failed: %s" % err)
-
-    return info.info(job, site_id=site)
-
-
-def complete_backup(state: State, info: SiteBackupInfo) -> None:
-    state.save({"size": info.size})
-    state_content = state.load()
-    duration = time.time() - state_content["started"]
+def complete_backup(state_admin: State, info: SiteBackupInfo) -> None:
+    state_admin.update_and_save(size=info.size)
+    duration = time.time() - (state_admin.current_state.started or 0)
     log(
         "--- Backup completed (Duration: %s, Size: %s, IO: %s/s) ---"
         % (
             render.timespan(duration),
             render.fmt_bytes(info.size),
-            render.fmt_bytes(state_content["bytes_per_second"]),
+            render.fmt_bytes(state_admin.current_state.bytes_per_second or 0),
         )
     )
 
@@ -829,19 +369,6 @@ def globalize_job_id(local_job_id: str) -> str:
     return "-".join(p.replace("-", "+") for p in parts)
 
 
-def init_new_run(state: State) -> None:
-    state.save(
-        {
-            "state": "started",
-            "pid": os.getpid(),
-            "started": time.time(),
-            "output": "",
-            "bytes_per_second": 0,
-        },
-        update=False,
-    )
-
-
 def save_next_run(job: Job, state: State) -> None:
     schedule_cfg = job.config["schedule"]
     if not schedule_cfg:
@@ -857,7 +384,7 @@ def save_next_run(job: Job, state: State) -> None:
             times.append(schedule.next_scheduled_time(schedule_cfg["period"], timespec))
         next_schedule = min(times)
 
-    state.save({"next_schedule": next_schedule})
+    state.update_and_save(next_schedule=next_schedule)
 
 
 def cleanup_backup_job_states() -> None:
@@ -873,7 +400,6 @@ def cleanup_backup_job_states() -> None:
 def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: Config) -> None:
     target = load_target(config, TargetId(target_id))
     target.check_ready()
-    state = restore_state()
 
     with ExitStack() as stack:
         for cm in [
@@ -881,11 +407,11 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
         ]:
             stack.enter_context(cm)
 
-        init_new_run(state)
+        state = restore_state()
 
         if "background" in opts:
             daemon.daemonize()
-            state.save({"pid": os.getpid()})
+            state.update_and_save(pid=os.getpid())
 
         start_logging(state)
 
@@ -896,13 +422,9 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
 
         success = False
         try:
-            state.save(
-                {
-                    "state": "running",
-                },
-            )
+            state.update_and_save(state="running")
 
-            do_site_restore(backup, state)
+            do_site_restore(backup, state, opt_debug)
             complete_restore(state)
             success = True
 
@@ -919,58 +441,19 @@ def mode_restore(target_id: str, backup_id: str, opts: dict[str, str], config: C
 
         finally:
             stop_logging()
-            state.save(
-                {
-                    "state": "finished",
-                    "finished": time.time(),
-                    "success": success,
-                },
+            state.update_and_save(
+                state="finished",
+                finished=time.time(),
+                success=success,
             )
-
-
-def do_site_restore(
-    backup: Backup,
-    state: State,
-) -> None:
-    cmd = ["omd", "restore", "--kill"]
-
-    cmd.append("-")
-
-    with subprocess.Popen(cmd, close_fds=True, stderr=subprocess.PIPE, stdin=subprocess.PIPE) as p:
-        assert p.stdin is not None
-        assert p.stderr is not None
-
-        with backup.open() as backup_file:
-            s = RestoreStream(
-                stream=backup_file,
-                is_alive=lambda: False,
-                key_ident=backup.info.config["encrypt"],
-            )
-            progress_logger = ProgressLogger(state)
-            try:
-                for chunk in s.process():
-                    p.stdin.write(chunk)
-                    progress_logger.update(len(chunk))
-            except OSError as e:
-                log("Error while sending data to restore process: %s" % e)
-
-        _stdout, stderr = p.communicate()
-
-    if p.returncode:
-        log(stderr.decode(encoding="utf-8", errors="strict"))
-        raise MKGeneralException("Site restore failed")
-
-    if subprocess.call(["omd", "start"]) != 0:
-        raise MKGeneralException("Failed to start the site after restore")
 
 
 def complete_restore(state: State) -> None:
     cleanup_backup_job_states()
-    state_content = state.load()
-    duration = time.time() - state_content["started"]
+    duration = time.time() - (state.current_state.started or 0)
     log(
         "--- Restore completed (Duration: %s, IO: %s/s) ---"
-        % (render.timespan(duration), render.fmt_bytes(state_content["bytes_per_second"]))
+        % (render.timespan(duration), render.fmt_bytes(state.current_state.bytes_per_second or 0))
     )
 
 
@@ -1095,7 +578,7 @@ def parse_arguments():
         if o in ["-h", "--help"]:
             usage()
         elif o == "--version":
-            sys.stdout.write("mkbackup %s\n" % VERSION)
+            sys.stdout.write("mkbackup %s\n" % cmk_version.__version__)
             sys.exit(0)
         elif o == "--verbose":
             opt_verbose += 1

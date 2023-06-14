@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -13,8 +13,8 @@ class TestCheckbox:
     def test_validate(self) -> None:
         expect_validate_success(vs.Checkbox(), True)
         expect_validate_success(vs.Checkbox(), False)
-        expect_validate_failure(vs.Checkbox(), "abc")  # type: ignore
-        expect_validate_failure(vs.Checkbox(), 123)  # type: ignore
+        expect_validate_failure(vs.Checkbox(), "abc")  # type: ignore[misc]
+        expect_validate_failure(vs.Checkbox(), 123)  # type: ignore[misc]
 
     def test_canonical_value(self) -> None:
         assert vs.Checkbox().canonical_value() is False

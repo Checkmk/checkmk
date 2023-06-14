@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If a remote site with replication enabled was succesfully logged in and the
 option "Direct login to Web GUI allowed" for this site was disabled afterwards,

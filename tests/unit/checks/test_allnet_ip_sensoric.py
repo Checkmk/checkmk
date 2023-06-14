@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -193,7 +193,7 @@ def test_parse_allnet_ip_sensoric() -> None:
 
 def test_inventory_allnet_ip_sensoric_humidity() -> None:
     assert Check("allnet_ip_sensoric.humidity").run_discovery(_SECTION) == [
-        ("Feuchtigkeit Sensor 105", "allnet_ip_sensoric_humidity_default_levels"),
-        ("Serverraum Sensor 113", "allnet_ip_sensoric_humidity_default_levels"),
-        ("Humidity1 Sensor 2", "allnet_ip_sensoric_humidity_default_levels"),
+        ("Feuchtigkeit Sensor 105", (35, 40, 60, 65)),
+        ("Serverraum Sensor 113", (35, 40, 60, 65)),
+        ("Humidity1 Sensor 2", (35, 40, 60, 65)),
     ]

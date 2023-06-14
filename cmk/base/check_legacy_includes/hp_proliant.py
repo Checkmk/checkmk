@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -266,28 +266,6 @@ def check_hp_proliant_temp(item, params, info):
                 dev_status_name="Unit: %s" % snmp_status,
             )
     return 3, "item not found in snmp data"
-
-
-# .
-#   .--scan function-------------------------------------------------------.
-#   |                           __                  _   _                  |
-#   |    ___  ___ __ _ _ __    / _|_   _ _ __   ___| |_(_) ___  _ __       |
-#   |   / __|/ __/ _` | '_ \  | |_| | | | '_ \ / __| __| |/ _ \| '_ \      |
-#   |   \__ \ (_| (_| | | | | |  _| |_| | | | | (__| |_| | (_) | | | |     |
-#   |   |___/\___\__,_|_| |_| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|     |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def hp_proliant_scan_function(oid):
-    # migrated!
-    return (
-        "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower()
-        or "storeeasy" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower()
-        or "synergy" in oid(".1.3.6.1.4.1.232.2.2.4.2.0", "").lower()
-    )
 
 
 # .

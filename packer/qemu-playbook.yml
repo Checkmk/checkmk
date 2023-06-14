@@ -1,0 +1,8 @@
+---
+- name: qemu specific installation
+  hosts: 127.0.0.1
+  connection: local
+
+  tasks:
+   - name: force password reset
+     ansible.builtin.shell: "sudo passwd --expire $(whoami)"

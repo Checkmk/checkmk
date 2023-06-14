@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -242,5 +242,5 @@ def test_check_function(monkeypatch: pytest.MonkeyPatch) -> None:
         Metric("State_Logging", 0),
         Metric("State_Finishing", 0),
         Metric("State_IdleCleanup", 0),
-        Result(state=State.OK, notice=("Scoreboard states:\n  Waiting: 49\n  SendingReply: 1")),
+        Result(state=State.OK, notice="Scoreboard states:\n  Waiting: 49\n  SendingReply: 1"),
     ]

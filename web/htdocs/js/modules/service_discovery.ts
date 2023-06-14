@@ -1,10 +1,10 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-import * as utils from "utils";
 import * as ajax from "ajax";
 import * as async_progress from "async_progress";
+import * as utils from "utils";
 
 //#   +--------------------------------------------------------------------+
 //#   | Handling of the asynchronous service discovery dialog              |
@@ -12,10 +12,10 @@ import * as async_progress from "async_progress";
 
 interface Check {
     site: string;
-    folder_path;
+    folder_path: string;
     hostname: string;
     checktype: string;
-    item;
+    item: any;
     divid: string;
 }
 
@@ -23,15 +23,64 @@ interface Check {
 // code to render the current page. It will be sent back to the python
 // code for further actions. It contains the check_table which actions of
 // the user are based on.
-var g_service_discovery_result = null;
-var g_show_updating_timer: number | null = null;
+let g_service_discovery_result: string | null = null;
+let g_show_updating_timer: number | null = null;
+
+type DiscoveryAction =
+    | ""
+    | "stop"
+    | "fix_all"
+    | "refresh"
+    | "tabula_rasa"
+    | "single_update"
+    | "bulk_update"
+    | "update_host_labels"
+    | "update_services";
+
+interface DiscoveryOptions {
+    action: DiscoveryAction;
+    show_checkboxes: boolean;
+    show_parameters: boolean;
+    show_discovered_labels: boolean;
+    show_plugin_names: boolean;
+    ignore_errors: boolean;
+}
+interface AjaxServiceDiscovery {
+    is_finished: boolean;
+    job_state: any;
+    message: string | null;
+    body: string;
+    datasources: string;
+    fixall: string;
+    page_menu: string;
+    pending_changes_info: string | null;
+    pending_changes_tooltip: string;
+    discovery_options: DiscoveryOptions;
+    discovery_result: string;
+}
+
+interface ServiceDiscoveryHandlerData {
+    update_url: string;
+    error_function: (response: AjaxServiceDiscovery) => void;
+    update_function: (
+        update_data: ServiceDiscoveryHandlerData,
+        response: AjaxServiceDiscovery
+    ) => void;
+    is_finished_function: (response: AjaxServiceDiscovery) => void;
+    finish_function: (response: AjaxServiceDiscovery) => void;
+    post_data: string;
+    start_time?: number;
+    host_name: string;
+    folder_path: string;
+    transid: string;
+}
 
 export function start(
-    host_name,
-    folder_path,
-    discovery_options,
-    transid,
-    request_vars
+    host_name: string,
+    folder_path: string,
+    discovery_options: DiscoveryOptions,
+    transid: string,
+    request_vars: Record<string, any> | null
 ) {
     // When we receive no response for 2 seconds, then show the updating message
     g_show_updating_timer = window.setTimeout(function () {
@@ -48,7 +97,8 @@ export function start(
         folder_path: folder_path,
         transid: transid,
         start_time: utils.time(),
-        is_finished_function: response => response.is_finished,
+        is_finished_function: (response: AjaxServiceDiscovery) =>
+            response.is_finished,
         update_function: update,
         finish_function: finish,
         error_function: error,
@@ -63,13 +113,13 @@ export function start(
 }
 
 function get_post_data(
-    host_name,
-    folder_path,
-    discovery_options,
-    transid,
-    request_vars
+    host_name: string,
+    folder_path: string,
+    discovery_options: DiscoveryOptions,
+    transid: string,
+    request_vars: Record<string, any> | null
 ) {
-    var request = {
+    let request: Record<string, any> = {
         host_name: host_name,
         folder_path: folder_path,
         discovery_options: discovery_options,
@@ -81,11 +131,11 @@ function get_post_data(
     }
 
     if (["bulk_update", "update_services"].includes(discovery_options.action)) {
-        var checked_checkboxes: string[] = [];
-        var checkboxes = document.getElementsByClassName(
+        const checked_checkboxes: string[] = [];
+        const checkboxes = document.getElementsByClassName(
             "service_checkbox"
         ) as HTMLCollectionOf<HTMLInputElement>;
-        for (var i = 0; i < checkboxes.length; i++) {
+        for (let i = 0; i < checkboxes.length; i++) {
             if (checkboxes[i].checked) {
                 checked_checkboxes.push(checkboxes[i].name);
             }
@@ -93,7 +143,7 @@ function get_post_data(
         request["update_services"] = checked_checkboxes;
     }
 
-    var post_data = "request=" + encodeURIComponent(JSON.stringify(request));
+    let post_data = "request=" + encodeURIComponent(JSON.stringify(request));
 
     // Can currently not be put into "request" because the generic transaction
     // manager relies on the HTTP var _transid.
@@ -103,9 +153,9 @@ function get_post_data(
     return post_data;
 }
 
-function finish(response) {
+function finish(response: AjaxServiceDiscovery) {
     if (response.job_state == "exception" || response.job_state == "stopped") {
-        async_progress.show_error(response.message);
+        async_progress.show_error(response.message!);
     } else {
         //async_progress.hide_msg();
     }
@@ -115,14 +165,17 @@ function finish(response) {
     lock_controls(false, get_state_independent_controls());
 }
 
-function error(response) {
+function error(response: string) {
     if (g_show_updating_timer) {
         clearTimeout(g_show_updating_timer);
     }
     async_progress.show_error(response);
 }
 
-function update(handler_data, response) {
+function update(
+    handler_data: ServiceDiscoveryHandlerData,
+    response: AjaxServiceDiscovery
+) {
     if (g_show_updating_timer) {
         clearTimeout(g_show_updating_timer);
     }
@@ -143,10 +196,10 @@ function update(handler_data, response) {
     );
 
     // Save values not meant for update
-    var menu_display = document.getElementById("general_display_options")!;
+    const menu_display = document.getElementById("general_display_options")!;
 
     // Update the page menu
-    var page_menu_bar = document.getElementById("page_menu_bar")!;
+    const page_menu_bar = document.getElementById("page_menu_bar")!;
     page_menu_bar.outerHTML = response.page_menu;
     utils.execute_javascript_by_object(page_menu_bar);
 
@@ -155,14 +208,18 @@ function update(handler_data, response) {
         .getElementById("general_display_options")!
         .replaceWith(menu_display);
 
+    // Update datasources
+    const ds_container = document.getElementById("datasources_container")!;
+    ds_container.innerHTML = response.datasources;
+
     // Update fix all button
-    var fixall_container = document.getElementById("fixall_container")!;
-    fixall_container.style.display = "block";
+    const fixall_container = document.getElementById("fixall_container")!;
+    fixall_container.style.display = response.fixall ? "block" : "none";
     fixall_container.innerHTML = response.fixall;
     utils.execute_javascript_by_object(fixall_container);
 
     // Update the content table
-    var container = document.getElementById("service_container")!;
+    const container = document.getElementById("service_container")!;
     container.style.display = "block";
     container.innerHTML = response.body;
     utils.execute_javascript_by_object(container);
@@ -179,7 +236,7 @@ function update(handler_data, response) {
 }
 
 function get_state_independent_controls() {
-    var elements: HTMLElement[] = [];
+    let elements: HTMLElement[] = [];
     elements = elements.concat(
         Array.prototype.slice.call(
             document.getElementsByClassName("service_checkbox"),
@@ -193,40 +250,46 @@ function get_state_independent_controls() {
         )
     );
     elements = elements.concat(
-        Array.prototype.slice.call(document.getElementsByClassName("toggle"), 0)
+        Array.prototype.slice.call<
+            HTMLCollectionOf<Element>,
+            [number],
+            HTMLElement[]
+        >(document.getElementsByClassName("toggle"), 0)
     );
     return elements;
 }
 
 function get_page_menu_controls() {
-    return Array.prototype.slice.call(
-        document.getElementsByClassName("action"),
-        0
-    );
+    return Array.prototype.slice.call<
+        HTMLCollectionOf<Element>,
+        [number],
+        HTMLElement[]
+    >(document.getElementsByClassName("action"), 0);
 }
 
-function lock_controls(lock, elements) {
+function lock_controls(lock: boolean, elements: HTMLElement[]) {
     let element;
-    for (var i = 0; i < elements.length; i++) {
+    for (let i = 0; i < elements.length; i++) {
         element = elements[i];
         if (!element) continue;
 
         if (lock) utils.add_class(element, "disabled");
         else utils.remove_class(element, "disabled");
 
+        //@ts-ignore
         element.disabled = lock;
     }
 }
 
-var g_delayed_active_checks: Check[] = [];
+const g_delayed_active_checks: Check[] = [];
 
 export function register_delayed_active_check(
-    site,
-    folder_path,
-    hostname,
-    checktype,
-    item,
-    divid
+    site: string,
+    folder_path: string,
+    hostname: string,
+    checktype: string,
+    item: string | null,
+    divid: string
 ) {
     // Register event listeners on first call
     if (g_delayed_active_checks.length == 0) {
@@ -251,12 +314,12 @@ export function register_delayed_active_check(
 // Is executed on scroll / resize events in case at least one graph is
 // using the delayed graph rendering mechanism
 function trigger_delayed_active_checks() {
-    var num_delayed = g_delayed_active_checks.length;
+    const num_delayed = g_delayed_active_checks.length;
     if (num_delayed == 0) return; // no delayed graphs: Nothing to do
 
-    var i = num_delayed;
+    let i = num_delayed;
     while (i--) {
-        var entry = g_delayed_active_checks[i];
+        const entry = g_delayed_active_checks[i];
         if (utils.is_in_viewport(document.getElementById(entry.divid)!)) {
             execute_active_check(entry);
             g_delayed_active_checks.splice(i, 1);
@@ -265,8 +328,8 @@ function trigger_delayed_active_checks() {
     return true;
 }
 
-export function execute_active_check(entry) {
-    var div = document.getElementById(entry.divid);
+export function execute_active_check(entry: Check) {
+    const div = document.getElementById(entry.divid)!;
     ajax.call_ajax("wato_ajax_execute_check.py", {
         post_data:
             "site=" +
@@ -285,10 +348,10 @@ export function execute_active_check(entry) {
     });
 }
 
-function handle_execute_active_check(oDiv, response_json) {
-    var response = JSON.parse(response_json);
+function handle_execute_active_check(oDiv: HTMLElement, response_json: string) {
+    const response = JSON.parse(response_json);
 
-    var state, statename, output;
+    let state, statename, output;
     if (response.result_code == 1) {
         state = 3;
         statename = "UNKN";
@@ -303,16 +366,16 @@ function handle_execute_active_check(oDiv, response_json) {
     oDiv.innerHTML = output;
 
     // Change name and class of status columns
-    var oTr = oDiv.parentNode.parentNode;
+    const oTr = oDiv.parentNode!.parentNode as HTMLElement;
     if (utils.has_class(oTr, "even0")) utils.add_class(oTr, "even" + state);
     else utils.add_class(oTr, "odd" + state);
 
-    var oTdState = oTr.getElementsByClassName("state")[0];
+    const oTdState = oTr.getElementsByClassName("state")[0] as HTMLElement;
     utils.remove_class(oTdState, "statep");
     utils.add_class(oTdState, "state" + state);
 
-    let span = document.createElement("span");
+    const span = document.createElement("span");
     utils.add_class(span, "state_rounded_fill");
     span.innerHTML = statename;
-    oTdState.replaceChild(span, oTdState.firstChild);
+    oTdState.replaceChild(span, oTdState.firstChild!);
 }

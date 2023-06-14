@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
@@ -8,7 +8,7 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.api.agent_based.checking_classes import CheckFunction, CheckPlugin, DiscoveryFunction
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
@@ -19,6 +19,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 )
 
 check_name = "fast_lta_headunit_replication"
+
 
 # TODO: drop this after migration
 @pytest.fixture(scope="module", name="plugin")

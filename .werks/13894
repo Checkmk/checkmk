@@ -6,7 +6,7 @@ Date: 1657877136
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When filtering for fixed texts in the event console history, the search text
 was incorrectly handled as a case-insensitive regex.  This has been fixed.

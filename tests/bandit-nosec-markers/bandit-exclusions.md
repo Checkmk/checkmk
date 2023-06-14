@@ -12,4 +12,11 @@ Note that Bandit is picky about the exact format.
 | `BNS:6b61d9` | `B310` | The URL is explicitly validated. |
 | `BNS:97f639` | `B321`, `B402` | The checked service requires FTP. |
 | `BNS:67522a` | `B602`, `B605` | External inputs to the command have been quoted for shell-safety. |
+| `BNS:2b5952` | `B602`, `B605` | Intended Shell functionaility, should be reviewed for mitigating security layers in the future. |
 | `BNS:f6c1b9` | `B605` | Shell command has been reviewed. |
+| `BNS:537c43` | `B104` | Comparison against "0.0.0.0", if true then the address is set to "127.0.0.1" |
+| `BNS:bbfc92` | `B701` | The test code in the examples is hard coded and does not currently take in external input. |
+| `BNS:016141` | `B501` | certificate validation not performed as it may break existing deployments of clients. |
+| `BNS:e9bfaa` | `B303` | Only used to display fingerprints and in testing. |
+| `BNS:02774b` | `B303` | SHA1 is still used by the agent bakery and mkbackup for compatibility reasons. Switching is planned. |
+| `BNS:773085` | `B113` | Timeout policy to be reviewed. |

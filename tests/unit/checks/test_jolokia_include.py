@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
+from collections.abc import MutableSequence
 
 import pytest
 
@@ -19,7 +21,9 @@ pytestmark = pytest.mark.checks
         (list("AB"), 2, list("AB")),
     ],
 )
-def test_jolokia_basic_split(line, length, result) -> None:  # type:ignore[no-untyped-def]
+def test_jolokia_basic_split(
+    line: MutableSequence[str], length: int, result: MutableSequence[str]
+) -> None:
     split_up = jolokia_basic_split(line, length)
     assert result == split_up
 
@@ -31,7 +35,7 @@ def test_jolokia_basic_split(line, length, result) -> None:  # type:ignore[no-un
         (["too", "short", "aswell"], 4),
     ],
 )
-def test_jolokia_basic_split_fail_value(line, length) -> None:  # type:ignore[no-untyped-def]
+def test_jolokia_basic_split_fail_value(line: MutableSequence[str], length: int) -> None:
     with pytest.raises(ValueError):
         jolokia_basic_split(line, length)
 
@@ -42,8 +46,6 @@ def test_jolokia_basic_split_fail_value(line, length) -> None:  # type:ignore[no
         (["too", "short"], 1),
     ],
 )
-def test_jolokia_basic_split_fail_notimplemented(  # type:ignore[no-untyped-def]
-    line, length
-) -> None:
+def test_jolokia_basic_split_fail_notimplemented(line: MutableSequence[str], length: int) -> None:
     with pytest.raises(NotImplementedError):
         jolokia_basic_split(line, length)

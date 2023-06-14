@@ -1,0 +1,14 @@
+Title: Extension packages: Packages missing on remote sites
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1682422034
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+In Checkmk 2.2.0b1 to 2.2.0b5 enabled but inactive packages have not been activated on the remote sites where they should have been.
+
+

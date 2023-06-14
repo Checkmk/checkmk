@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,5 +12,5 @@ class ESXVMFactory(ModelFactory):
     __model__ = esx_vsphere.ESXVm
 
 
-def esx_vm_section(**kwargs) -> esx_vsphere.ESXVm:  # type:ignore[no-untyped-def]
+def esx_vm_section(**kwargs) -> esx_vsphere.ESXVm:  # type: ignore[no-untyped-def]
     return ESXVMFactory.build(**kwargs)

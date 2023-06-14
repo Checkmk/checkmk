@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,9 +7,9 @@
 
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
+from cmk.gui.painter.v0.base import Painter, painter_registry
+from cmk.gui.painter.v0.helpers import get_tag_groups
 
-from .painter.v0.base import Painter, painter_registry
-from .painter.v0.helpers import get_tag_groups
 from .sorter import Sorter, sorter_registry
 
 
@@ -92,7 +92,7 @@ def _cmp_host_tag(r1, r2, tgid):
     return (host_tag_1 > host_tag_2) - (host_tag_1 < host_tag_2)
 
 
-def _get_tag_group_value(row, what, tag_group_id) -> str:  # type:ignore[no-untyped-def]
+def _get_tag_group_value(row, what, tag_group_id) -> str:  # type: ignore[no-untyped-def]
     tag_id = get_tag_groups(row, "host").get(tag_group_id)
 
     tag_group = active_config.tags.get_tag_group(tag_group_id)

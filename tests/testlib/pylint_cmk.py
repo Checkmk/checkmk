@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -16,10 +16,10 @@ def register(linter: PyLinter) -> None:
         # disabled using this, but this does not seem to be possible :(
         linter.global_set_option(
             "ignored-modules",
-            "cmk.base.cee,cmk.gui.cee,cmk.gui.cme,cmk.gui.cme.managed,cmk.base.cce,cmk.gui.cce",
+            "cmk.base.cee,cmk.gui.cee,cmk.gui.cme,cmk.gui.cme.managed,cmk.gui.cce,cmk.gui.cse",
         )
         # This disables no-member errors
         linter.global_set_option(
             "generated-members",
-            r"(cmk\.base\.cee|cmk\.gui\.cee|cmk\.gui\.cme|cmk\.base\.cce|cmk\.gui\.cce)(\..*)?",
+            r"(cmk\.base\.cee|cmk\.gui\.cee|cmk\.gui\.cme|cmk\.gui\.cce|cmk\.gui\.cse)(\..*)?",
         )

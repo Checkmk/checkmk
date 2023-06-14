@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,8 +9,7 @@ from typing import Any
 
 from cmk.base.api.agent_based.checking_classes import Metric, Result, State
 from cmk.base.check_api import get_bytes_human_readable, get_percent_human_readable
-from cmk.base.config import RuleSpec
-from cmk.base.plugins.agent_based.utils.df import (  # noqa: 401
+from cmk.base.plugins.agent_based.utils.df import (  # noqa: F401
     check_filesystem_levels,
     check_inodes,
     FILESYSTEM_DEFAULT_LEVELS,
@@ -23,19 +22,6 @@ from cmk.base.plugins.agent_based.utils.df import (  # noqa: 401
 from .size_trend import size_trend
 
 # Common include file for all filesystem checks (df, df_netapp, hr_fs, ...)
-
-# Settings for filesystem checks (df, df_vms, df_netapp and maybe others)
-filesystem_levels: list[Any] = []  # obsolete. Just here to check config and warn if changed
-filesystem_default_levels: dict[str, Any] = {}  # can also be dropped some day in future
-
-# Grouping of filesystems into groups that are monitored as one entity
-# Example:
-# filesystem_groups = [
-#     ( [ ( "Storage pool", "/data/pool*" ) ], [ 'linux', 'prod' ], ALL_HOSTS ),
-#     ( [ ( "Backup space 1", "/usr/backup/*.xyz" ),
-#         ( "Backup space 2", "/usr/backup2/*.xyz" ) ], ALL_HOSTS ),
-# ]
-filesystem_groups: list[RuleSpec] = []
 
 
 # ==================================================================================================
@@ -162,7 +148,7 @@ def df_check_filesystem_single_coroutine(  # pylint: disable=too-many-branches
 
     state = State.OK
     infotext = []
-    perfdata = []
+    perfdata: list[tuple[str, float, float | None, float | None, float | None, float | None]] = []
     for result in check_filesystem_levels(
         size_mb, used_max, avail_mb, used_mb, params, show_levels
     ):
@@ -182,7 +168,7 @@ def df_check_filesystem_single_coroutine(  # pylint: disable=too-many-branches
                 perfboundaries = None, None
             perfdata.append((name, value, *perflevels, *perfboundaries))
 
-    perfdata.append(("fs_size", size_mb, None, None, 0, None))  # type: ignore
+    perfdata.append(("fs_size", size_mb, None, None, 0, None))
 
     if show_reserved:
         reserved_perc_hr = get_percent_human_readable(100.0 * reserved_mb / size_mb)
@@ -194,7 +180,7 @@ def df_check_filesystem_single_coroutine(  # pylint: disable=too-many-branches
         )
 
     if subtract_reserved or show_reserved:
-        perfdata.append(("reserved", reserved_mb))  # type: ignore
+        perfdata.append(("reserved", reserved_mb, None, None, None, None))
 
     yield int(state), ", ".join(infotext), perfdata
 

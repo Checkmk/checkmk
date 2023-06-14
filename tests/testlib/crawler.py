@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -22,7 +22,7 @@ from urllib.parse import parse_qs, parse_qsl, urlencode, urljoin, urlparse, urls
 import playwright.async_api
 import requests
 import requests.utils
-from bs4 import BeautifulSoup  # type: ignore[import]
+from bs4 import BeautifulSoup
 from lxml import etree
 from playwright.async_api import async_playwright
 
@@ -52,7 +52,7 @@ class Progress:
         self.done_total = 0
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type:ignore[no-untyped-def]
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore[no-untyped-def]
         logger.info(
             "%d done in %.3f secs %s",
             self.done_total,
@@ -152,7 +152,7 @@ class Crawler:
 
         self._todos = deque([Url(self.site.internal_url)])
 
-    async def crawl(self, max_tasks: int = 10) -> None:
+    async def crawl(self, max_tasks: int) -> None:
         browser, storage_state = await self.create_browser_and_storage_state()
         # makes sure authentication cookies is also available in the "requests" session.
         for cookie_dict in storage_state["cookies"]:
@@ -331,6 +331,7 @@ class Crawler:
             "application/x-redhat-package-manager",
             "application/x-pkg",
             "application/x-tar",
+            "application/x-yaml; charset=utf-8",
             "application/json",
             "application/pdf",
             "image/png",
@@ -437,7 +438,7 @@ class Crawler:
             else:
                 self.handle_new_reference(url, referer_url=referer_url)
 
-    def check_logs(self, url: Url, logs: Iterable[str]):  # type:ignore[no-untyped-def]
+    def check_logs(self, url: Url, logs: Iterable[str]):  # type: ignore[no-untyped-def]
         accepted_logs = [
             "Missing object for SimpleBar initiation.",
         ]
@@ -619,6 +620,16 @@ class XssCrawler(Crawler):
 
 
 def mutate_url_with_xss_payload(url: Url, payload: str) -> Generator[Url, None, None]:
+    """For each query parameter in `url`, produce a URL where that parameter is set to `payload`
+
+    >>> urls = mutate_url_with_xss_payload(Url("example.com?foo=bar&empty="), "PAYLOAD")
+    >>> next(urls).url
+    'example.com?foo=PAYLOAD&empty='
+    >>> next(urls).url
+    'example.com?foo=bar&empty=PAYLOAD'
+
+    (Be aware that this doctest is not run.)
+    """
     parsed_url = urlparse(url.url)
     parsed_query = parse_qs(parsed_url.query, keep_blank_values=True)
     for key, values in parsed_query.items():

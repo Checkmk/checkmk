@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -41,3 +41,13 @@ def site_config_path() -> Path:
 @functools.lru_cache
 def log_path() -> Path:
     return _omd_root() / "var/log/agent-receiver/agent-receiver.log"
+
+
+@functools.lru_cache
+def site_ca_path() -> Path:
+    return _omd_root() / "etc" / "ssl" / "ca.pem"
+
+
+@functools.lru_cache
+def agent_ca_path() -> Path:
+    return _omd_root() / "etc" / "ssl" / "agents" / "ca.pem"

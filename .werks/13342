@@ -6,7 +6,7 @@ Date: 1646216451
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In the HW/SW inventory of Kubernetes objects the Network section would
 provide the superfluous columns label_name and label_value. They are

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -21,7 +21,8 @@ _UUID_REGEX: Final = re.compile(
     "^{[a-f0-9]{8}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[a-f0-9]{12}}", re.I
 )
 
-_EXPECTED_WIN_VERSION: Final = "600"  # this value must be in sync with Windows Agent product.wxs
+# TODO(sk): remove 600 after all builds will be green, we need 600 temporary
+_EXPECTED_WIN_VERSIONS: Final = ["600", "601"]  # Vist & 7: must be in sync with product.wxs
 _MSI_WIN_VERSION_TEMPLATE: Final = "( VersionNT >= {} )"  # must be in sync with product.wxs
 
 
@@ -156,18 +157,17 @@ def patch_windows_version(
         print(f"The file {p} isn't found")
         return False
 
-    expected_blob = _MSI_WIN_VERSION_TEMPLATE.format(_EXPECTED_WIN_VERSION).encode("ascii")
-    required_blob = _MSI_WIN_VERSION_TEMPLATE.format(new_version).encode("ascii")
     data = p.read_bytes()
-    pos = data.find(expected_blob)
-    if pos == -1:
-        print("VersionNT matrix isn't found, impossible to patch")
-        return False
+    for version in _EXPECTED_WIN_VERSIONS:
+        expected_blob = _MSI_WIN_VERSION_TEMPLATE.format(version).encode("ascii")
+        if data.find(expected_blob) != -1:
+            required_blob = _MSI_WIN_VERSION_TEMPLATE.format(new_version).encode("ascii")
+            ret = data.replace(expected_blob, required_blob, 1)
+            p.write_bytes(ret)
+            return True
 
-    ret = data.replace(expected_blob, required_blob, 1)
-    p.write_bytes(ret)
-
-    return True
+    print("VersionNT matrix isn't found, impossible to patch")
+    return False
 
 
 def valid_uuid(uuid_value: str) -> bool:

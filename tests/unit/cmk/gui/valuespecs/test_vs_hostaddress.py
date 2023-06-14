@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -66,8 +66,7 @@ def test_host_address_validate_value(
         or (value_type is ValueType.ipv4 and allow_ipv4_address)
         or (value_type is ValueType.ipv6 and allow_ipv6_address)
     )
-    # mypy is wrong about the nullcontext object type :-(
-    with pytest.raises(MKUserError) if not expected_valid else nullcontext():  # type: ignore[attr-defined]
+    with pytest.raises(MKUserError) if not expected_valid else nullcontext():
         vs.HostAddress(
             allow_host_name=allow_host_name,
             allow_ipv4_address=allow_ipv4_address,

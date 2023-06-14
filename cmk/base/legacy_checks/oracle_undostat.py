@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# In cooperation with Thorsten Bruhns from OPITZ Consulting
+
+# <<<oracle_undostat>>>
+# TUX2 160 0 1081 300 0
+
+
+from cmk.base.check_api import (
+    check_levels,
+    get_age_human_readable,
+    LegacyCheckDefinition,
+    MKCounterWrapped,
+)
+from cmk.base.config import check_info
+
+
+def parse_oracle_undostat(info):
+    return {line[0]: [int(v) for v in line[1:]] for line in info if len(line) == 6}
+
+
+def discover_oracle_undostat(parsed):
+    for item in parsed:
+        yield item, {}
+
+
+def check_oracle_undostat(item, params, parsed):
+    data = parsed.get(item)
+    if data is None:
+        # In case of missing information we assume that the login into
+        # the database has failed and we simply skip this check. It won't
+        # switch to UNKNOWN, but will get stale.
+        raise MKCounterWrapped("Login into database failed")
+
+    activeblks, maxconcurrency, tuned_undoretention, maxquerylen, nospaceerrcnt = data
+    warn, crit = params["levels"]
+
+    yield check_levels(
+        tuned_undoretention,
+        None,
+        params=None if tuned_undoretention == -1 else (None, None, warn, crit),
+        human_readable_func=get_age_human_readable,
+        infoname="Undo retention",
+    )
+
+    if tuned_undoretention >= 0:
+        yield 0, "Active undo blocks: %d" % activeblks
+
+    yield 0, "Max concurrent transactions: %d" % maxconcurrency
+    yield 0, "Max querylen: %s" % get_age_human_readable(maxquerylen)
+    state_errcnt = params["nospaceerrcnt_state"] if nospaceerrcnt else 0
+    yield state_errcnt, "Space errors: %d" % nospaceerrcnt
+
+    yield 0, "", [
+        ("activeblk", activeblks),
+        ("transconcurrent", maxconcurrency),
+        # lower levels are unorthodox here (at least), but we keep it for compatibility (for now)
+        ("tunedretention", tuned_undoretention, warn, crit),
+        ("querylen", maxquerylen),
+        ("nonspaceerrcount", nospaceerrcnt),
+    ]
+
+
+check_info["oracle_undostat"] = LegacyCheckDefinition(
+    parse_function=parse_oracle_undostat,
+    check_function=check_oracle_undostat,
+    discovery_function=discover_oracle_undostat,
+    service_name="ORA %s Undo Retention",
+    check_ruleset_name="oracle_undostat",
+    check_default_parameters={
+        "levels": (600, 300),
+        "nospaceerrcnt_state": 2,
+    },
+)

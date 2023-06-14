@@ -6,7 +6,7 @@ Date: 1675686196
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The logic for the processing of performance data was broken: It should only
 be done when the global switch is activated <em>and</em> the processing is

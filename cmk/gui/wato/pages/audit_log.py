@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Handling of the audit logfiles"""
@@ -70,7 +70,7 @@ class ModeAuditLog(WatoMode):
     def __init__(self) -> None:
         self._options = {key: vs.default_value() for key, vs in self._audit_log_options()}
         super().__init__()
-        self._store = AuditLogStore(AuditLogStore.make_path())
+        self._store = AuditLogStore()
         self._show_details = request.get_integer_input_mandatory("show_details", 1) == 1
 
     def title(self) -> str:
@@ -191,7 +191,7 @@ class ModeAuditLog(WatoMode):
                 title=_("Details"),
                 entries=[
                     PageMenuEntry(
-                        title=_("Hide details") if self._show_details else _("Show details"),
+                        title=_("Show details"),
                         icon_name="toggle_on" if self._show_details else "toggle_off",
                         item=make_simple_link(
                             makeactionuri(
@@ -444,7 +444,7 @@ class ModeAuditLog(WatoMode):
 
         for name, vs in self._audit_log_options():
 
-            def renderer(name=name, vs=vs) -> None:  # type:ignore[no-untyped-def]
+            def renderer(name=name, vs=vs) -> None:  # type: ignore[no-untyped-def]
                 vs.render_input("options_" + name, self._options[name])
 
             html.render_floating_option(name, "single", vs.title(), renderer)

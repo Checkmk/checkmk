@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -71,7 +71,7 @@ def SNMPCredentials(  # pylint: disable=redefined-builtin
                 return 3  # authPriv
         raise MKGeneralException("invalid SNMP credential format %s" % x)
 
-    def allow_none_match(x) -> int:  # type:ignore[no-untyped-def]
+    def allow_none_match(x) -> int:  # type: ignore[no-untyped-def]
         return 0 if x is None else (alternative_match(x) + 1)
 
     if allow_none:
@@ -158,6 +158,8 @@ def _snmpv3_auth_priv_credentials_element(for_ec: bool = False) -> ValueSpec:
     priv_protocol_choices = [
         ("DES", _("CBC-DES")),
         ("AES", _("AES-128")),
+        ("AES-192", _("AES-192")),
+        ("AES-256", _("AES-256")),
     ]
     if for_ec:
         # EC uses pysnmp which supports these protocols
@@ -165,8 +167,6 @@ def _snmpv3_auth_priv_credentials_element(for_ec: bool = False) -> ValueSpec:
         priv_protocol_choices.extend(
             [
                 ("3DES-EDE", _("3DES-EDE")),
-                ("AES-192", _("AES-192")),
-                ("AES-256", _("AES-256")),
                 ("AES-192-Blumenthal", _("AES-192-Blumenthal")),
                 ("AES-256-Blumenthal", _("AES-256-Blumenthal")),
             ]

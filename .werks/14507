@@ -6,7 +6,7 @@ Date: 1656514425
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The management board address can hold IPv4 addresses, IPv6 addresses and
 hostnames. The REST API only validated the IP addresses but rejected

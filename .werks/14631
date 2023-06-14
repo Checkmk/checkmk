@@ -6,7 +6,7 @@ Date: 1666261059
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If the resource role was 'Unknown' and the disk state was 'DUnknown' the check result used to be UNKNOWN.
 Now the check result will be CRIT, if not otherwise set in the appropriate ruleset.

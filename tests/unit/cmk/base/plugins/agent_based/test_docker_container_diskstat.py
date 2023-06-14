@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from tests.unit.conftest import FixRegister
 
+from cmk.utils.type_defs import SectionName
+
+from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResultsError,
     Metric,
@@ -234,6 +240,7 @@ def test_parser() -> None:
     assert parser.names.names == {"b": "2"}
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section_name, plugin_name, string_table_0, string_table_10, read_bytes, write_bytes, read_ops, write_ops",
     [
@@ -279,16 +286,16 @@ def test_parser() -> None:
         ],
     ],
 )
-def test_docker_container_diskstat(  # type:ignore[no-untyped-def]
-    fix_register,
+def test_docker_container_diskstat(
+    fix_register: FixRegister,
     section_name: str,
     plugin_name: str,
-    string_table_0,
-    string_table_10,
-    read_bytes,
-    write_bytes,
-    read_ops,
-    write_ops,
+    string_table_0: list[StringTable],
+    string_table_10: list[StringTable],
+    read_bytes: float,
+    write_bytes: float,
+    read_ops: float,
+    write_ops: float,
 ) -> None:
     agent_section = fix_register.agent_sections[SectionName(section_name)]
     plugin = fix_register.check_plugins[CheckPluginName(plugin_name)]
@@ -353,14 +360,13 @@ def test_docker_container_diskstat(  # type:ignore[no-untyped-def]
         ["physical", "sda"],
     ],
 )
-def test_docker_container_diskstat_discovery(  # type:ignore[no-untyped-def]
+def test_docker_container_diskstat_discovery(
     section_name: str,
     plugin_name: str,
-    mocker,
-    discovery_mode,
-    string_table_0,
-    fix_register,
-    expected_item,
+    discovery_mode: str,
+    string_table_0: list[StringTable],
+    fix_register: FixRegister,
+    expected_item: str,
 ) -> None:
     agent_section = fix_register.agent_sections[SectionName(section_name)]
     plugin = fix_register.check_plugins[CheckPluginName(plugin_name)]

@@ -6,7 +6,7 @@ Date: 1667890125
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Before this change a call to this endpoint aquited the WATO lock which blocked
 other operations, although there is no need to, because this endpoint does not

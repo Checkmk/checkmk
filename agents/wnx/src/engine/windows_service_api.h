@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -28,7 +28,7 @@ int TestIo();                           // on check -io
 int TestMt();                           // on check -mt
 int TestMainServiceSelf(int interval);  // on check self
 int TestLegacy();                       // on test
-int RestoreWATOConfig();                // on restore
+int RestoreWatoConfig();                // on restore
 int ExecFirewall(srv::FwMode fw_mode, std::wstring_view app_name,
                  std::wstring_view name);  // on fw
 int ExecMainService(StdioLog stdio_log);   // on exec
@@ -77,8 +77,7 @@ wtools::WinService::StartMode GetServiceStartModeFromCfg(std::string_view text);
 
 // NAMES
 constexpr const wchar_t *kServiceName = L"CheckMkService";
-constexpr const wchar_t *kServiceDisplayName =
-    L"Check MK windows agent service";
+constexpr const wchar_t *kServiceDisplayName = L"Checkmk windows agent service";
 
 // PARAMETERS
 constexpr int kServiceStartType = SERVICE_DEMAND_START;  //  SERVICE_AUTO_START;

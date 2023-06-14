@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,8 +12,8 @@ use openssl::x509::{X509Name, X509Req};
 use reqwest::blocking::{Client, ClientBuilder};
 use rustls::{
     client::ServerCertVerified, client::ServerCertVerifier, client::ServerName,
-    client::WebPkiVerifier, Certificate, Certificate as RustlsCertificate, Error as RusttlsError,
-    PrivateKey as RustlsPrivateKey, RootCertStore,
+    client::WebPkiVerifier, Certificate, Certificate as RustlsCertificate, CertificateError,
+    Error as RusttlsError, PrivateKey as RustlsPrivateKey, RootCertStore,
 };
 use rustls_pemfile::Item;
 use std::net::TcpStream;
@@ -30,7 +30,6 @@ pub fn make_csr(cn: &str) -> AnyhowResult<(String, String)> {
     let name = name.build();
 
     let mut crt_builder = X509Req::builder()?;
-    crt_builder.set_version(2)?;
     crt_builder.set_subject_name(&name)?;
     crt_builder.set_pubkey(&key_pair)?;
     crt_builder.sign(&key_pair, MessageDigest::sha256())?;
@@ -71,16 +70,12 @@ impl std::convert::TryFrom<&Certificate> for CNCheckerUUID {
     type Error = RusttlsError;
 
     fn try_from(certificate: &Certificate) -> Result<Self, RusttlsError> {
-        let (_rem, cert) = x509_parser::certificate::X509Certificate::from_der(
-            certificate.as_ref(),
-        )
-        .map_err(|e| {
-            RusttlsError::InvalidCertificateData(format!("Certificate parsing failed: {e}"))
-        })?;
+        let (_rem, cert) =
+            x509_parser::certificate::X509Certificate::from_der(certificate.as_ref())
+                .map_err(|_e| RusttlsError::InvalidCertificate(CertificateError::BadEncoding))?;
 
-        let common_names = common_names(cert.subject()).map_err(|e| {
-            RusttlsError::InvalidCertificateData(format!("Certificate parsing failed: {e}"))
-        })?;
+        let common_names =
+            common_names(cert.subject()).map_err(|e| RusttlsError::General(e.to_string()))?;
 
         if common_names.len() != 1 {
             return Err(RusttlsError::General(format!(
@@ -243,6 +238,18 @@ pub fn rustls_certificate(cert_pem: &str) -> AnyhowResult<RustlsCertificate> {
 mod test_cn_no_uuid {
     use super::super::constants;
     use super::*;
+
+    #[test]
+    fn test_csr_version() {
+        let (csr, _key_pair) = make_csr("stuff").unwrap();
+        let csr_obj = X509Req::from_pem(csr.as_bytes()).unwrap();
+        // A CSR is a simple x509 structure without any extensions, and must be of version 1,
+        // which equals to a raw version value of 0.
+        // See also https://www.rfc-editor.org/rfc/rfc2986 .
+        // This is actually tested in recent versions of python-cryptography and a registration call
+        // with a non-compliant CSR would fail.
+        assert!(csr_obj.version() == 0)
+    }
 
     #[test]
     fn test_cn_extraction() {

@@ -6,7 +6,7 @@ Date: 1645715325
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Via the command {{netsh dhcp server show mibinfo}} in the agent plugin
 {{win_dhcp_pools.bat}} the collected statistics about free or used leases are

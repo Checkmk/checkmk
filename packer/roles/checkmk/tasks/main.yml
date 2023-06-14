@@ -1,0 +1,79 @@
+---
+- name: "Preflight - Fail if target host is not stable for this Role."
+  ansible.builtin.fail:
+    msg: "This role is not stable for the target operating system, {{ ansible_distribution }} {{ ansible_distribution_major_version }}."
+  when: (ansible_distribution is not defined) or
+        (ansible_distribution_version is not defined) or
+        (ansible_distribution + "-" + ansible_distribution_major_version not in checkmk_server_server_stable_os)
+
+- name: "Include OS Family specific Variables."
+  ansible.builtin.include_vars: "{{ ansible_os_family }}.yml"
+
+- name: "Update APT Cache."
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+  when: ansible_os_family == "Debian"
+
+- name: "Install Checkmk Prerequisites."
+  become: true
+  ansible.builtin.package:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - "{{ checkmk_server_prerequisites }}"
+
+- name: "Download Checkmk Server Setup."
+  ansible.builtin.get_url:
+    url: "{{ checkmk_server_download_url }}"
+    dest: "/tmp/{{ checkmk_server_setup_file }}"
+    mode: "0640"
+    url_username: "{{ checkmk_server_download_user | default(omit) }}"
+    url_password: "{{ checkmk_server_download_pass | default(omit) }}"
+  retries: 3
+
+- name: "Download Checkmk GPG Key."
+  ansible.builtin.get_url:
+    url: "https://download.checkmk.com/checkmk/Check_MK-pubkey.gpg"
+    dest: "/tmp/Check_MK-pubkey.gpg"
+    mode: "0640"
+  when: checkmk_server_verify_setup | bool
+  retries: 3
+
+- name: "GPG Verification on Debian Derivatives."
+  block:
+    - name: "Import Checkmk GPG Key."
+      ansible.builtin.command: "gpg --import /tmp/Check_MK-pubkey.gpg"
+      register: checkmk_gpg_import
+      when: checkmk_server_verify_setup | bool
+      changed_when: "'imported: 1' in checkmk_gpg_import"
+
+    - name: "Verify Checkmk Setup."
+      ansible.builtin.command: gpg --verify "/tmp/{{ checkmk_server_setup_file }}"
+      register: checkmk_server_verify_state
+      changed_when: "'Good signature' in checkmk_server_verify_state.stderr"
+      failed_when: "'Bad signature' in checkmk_server_verify_state.stderr"
+
+    - name: "Print Verification Output."
+      ansible.builtin.debug:
+        msg: "{{ checkmk_server_verify_state.stderr_lines }} "
+  when: checkmk_server_verify_setup | bool and ansible_os_family == "Debian"
+
+- name: "Import Checkmk GPG Key."
+  become: true
+  ansible.builtin.rpm_key:
+    key: "/tmp/Check_MK-pubkey.gpg"
+    state: present
+  when: checkmk_server_verify_setup | bool and ansible_os_family == "RedHat"
+
+- name: "Install Checkmk Server."
+  become: true
+  ansible.builtin.apt:
+    deb: "/tmp/{{ checkmk_server_setup_file }}"
+    update_cache: 'yes'
+    state: present
+  notify: Start Apache
+
+- name: "Flush Handlers."
+  ansible.builtin.meta:
+    flush_handlers

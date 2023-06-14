@@ -1,11 +1,11 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
 #include <ctime>
 
-#include "nagios.h"
+#include "neb/nagios.h"
 
 extern "C" {
 // official exports ------------------------------------------------------------
@@ -82,7 +82,7 @@ nagios_compat_schedule_new_event_t schedule_new_event(
 }
 int submit_external_command(char * /*unused*/, int * /*unused*/) { return 0; }
 int write_to_all_logs(char * /*unused*/, unsigned long /*unused*/) { return 0; }
-// inofficial exports ----------------------------------------------------------
+// unofficial exports ----------------------------------------------------------
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 int check_external_commands;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)

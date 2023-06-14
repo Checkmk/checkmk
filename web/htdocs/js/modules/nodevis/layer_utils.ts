@@ -1,9 +1,8 @@
-// Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
 import {d3SelectionDiv, d3SelectionG, NodevisWorld} from "nodevis/type_defs";
-import {AbstractGUINode} from "nodevis/node_utils";
 import {AbstractClassRegistry} from "nodevis/utils";
 
 export interface LayerSelections {
@@ -103,14 +102,11 @@ export class AbstractLayer extends Object {
         return;
     }
 
-    update_gui(): void {
+    update_gui(_force_gui_update = false): void {
         return;
     }
 
-    render_context_menu(
-        _event: MouseEvent,
-        _node_instance: null | AbstractGUINode = null
-    ): void {
+    render_context_menu(_event: MouseEvent, _node_id: string | null): void {
         return;
     }
 

@@ -20,7 +20,7 @@ packer {
 }
 
 
-source "qemu" "ubuntu-2204-amd64-qemu" {
+source "qemu" "builder" {
   vm_name          = "ubuntu-2204-amd64-qemu-build"
   iso_url          = "http://www.releases.ubuntu.com/22.04/ubuntu-22.04.1-live-server-amd64.iso"
   iso_checksum     = "sha256:10f19c5b2b8d6db711582e0e27f5116296c34fe4b313ba45f9b201a5007056cb"
@@ -98,10 +98,16 @@ source "amazon-ebs" "builder" {
 build {
   name = "checkmk-ansible"
   sources = [
-    #"source.qemu.ubuntu-2204-amd64-qemu"
+    "source.qemu.builder",
     "source.amazon-ebs.builder",
     "source.azure-arm.builder"
   ]
+  # wait a minute for backround update processes. Might help with flakyness
+  provisioner "shell" {
+    inline = [
+      "sleep 60",
+    ]
+  }
   # setup apt-get
   provisioner "shell" {
     inline = [
@@ -119,10 +125,8 @@ build {
   }
   # run playbook
   provisioner "ansible-local" {
-    playbook_file           = "./playbook.yml"
-    galaxy_file             = "./requirements.yml"
-    galaxy_collections_path = "/tmp/ansible/collections"
-    role_paths              = ["./roles/change-motd/", "./roles/configure-apache/"]
+    playbook_file = "./playbook.yml"
+    role_paths    = ["./roles/change-motd/", "./roles/configure-apache/", "./roles/checkmk/"]
     extra_arguments = [
       "--extra-vars",
       "checkmk_server_version=${var.cmk_version}",
@@ -132,15 +136,17 @@ build {
     "checkmk_server_download_pass=${var.cmk_download_pass}", ]
   }
   # update user
-  provisioner "shell" {
-    inline = [
-      "sudo passwd --expire $(whoami)",
-    ]
+  provisioner "ansible-local" {
+    playbook_file = "./qemu-playbook.yml"
+    only          = ["qemu.builder"]
   }
-  # run azure playbook
   provisioner "ansible-local" {
     playbook_file = "./azure-playbook.yml"
     only          = ["azure-arm.builder"]
+  }
+  provisioner "ansible-local" {
+    playbook_file = "./aws-playbook.yml"
+    only          = ["amazon-ebs.builder"]
   }
   # uninstall ansible
   provisioner "shell" {

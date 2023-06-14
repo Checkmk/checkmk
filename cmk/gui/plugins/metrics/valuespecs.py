@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -89,15 +89,13 @@ def vs_graph_render_options(default_values=None, exclude=None):
     )
 
 
-def vs_title_infos(with_metric: bool = False):  # type:ignore[no-untyped-def]
+def vs_title_infos() -> ListChoice:
     choices = [
         ("plain", _("Graph title")),
         ("add_host_name", _("Host name")),
         ("add_host_alias", _("Host alias")),
         ("add_service_description", _("Service description")),
     ]
-    if with_metric:
-        choices.append(("add_metric_name", _("Add metric name")))
     return ListChoice(title=_("Title format"), choices=choices, default_value=["plain"])
 
 
@@ -272,7 +270,7 @@ class ValuesWithUnits(CascadingDropdown):
         ]
 
     @staticmethod
-    def resolve_units(request) -> PageResult:  # type:ignore[no-untyped-def]
+    def resolve_units(request) -> PageResult:  # type: ignore[no-untyped-def]
         # This relies on python3.8 dictionaries being always ordered
         # Otherwise it is not possible to mach the unit name to value
         # CascadingDropdowns enumerate the options instead of using keys

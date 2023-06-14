@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -75,7 +75,7 @@ def check(
         yield from _check_node_custom_conditions(section_kube_node_custom_conditions)
 
 
-def _check_node_conditions(  # type:ignore[no-untyped-def]
+def _check_node_conditions(  # type: ignore[no-untyped-def]
     params: Mapping[str, int], section: NodeConditions
 ):
     cond: Union[Optional[FalsyNodeCondition], FalsyNodeCondition, TruthyNodeCondition] = None
@@ -95,7 +95,7 @@ def _check_node_conditions(  # type:ignore[no-untyped-def]
             )
 
 
-def _check_node_custom_conditions(section: NodeCustomConditions):  # type:ignore[no-untyped-def]
+def _check_node_custom_conditions(section: NodeCustomConditions):  # type: ignore[no-untyped-def]
     for cond in section.custom_conditions:
         if cond.is_ok():
             yield Result(
@@ -132,12 +132,12 @@ register.check_plugin(
     sections=["kube_node_conditions", "kube_node_custom_conditions"],
     discovery_function=discovery,
     check_function=check,
-    check_default_parameters=dict(
-        ready=int(State.CRIT),
-        memorypressure=int(State.CRIT),
-        diskpressure=int(State.CRIT),
-        pidpressure=int(State.CRIT),
-        networkunavailable=int(State.CRIT),
-    ),
+    check_default_parameters={
+        "ready": int(State.CRIT),
+        "memorypressure": int(State.CRIT),
+        "diskpressure": int(State.CRIT),
+        "pidpressure": int(State.CRIT),
+        "networkunavailable": int(State.CRIT),
+    },
     check_ruleset_name="kube_node_conditions",
 )

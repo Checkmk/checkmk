@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for services and discovery"""
@@ -8,18 +8,21 @@ import json
 import pprint
 import traceback
 from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
-from typing import Any, NamedTuple
+from typing import Any, Literal, NamedTuple
 
 from livestatus import SiteId
 
 import cmk.utils.render
+from cmk.utils.check_utils import worst_service_state
 from cmk.utils.defines import short_service_state_name
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.html import get_html_state_marker
+from cmk.utils.labels import HostLabelValueDict
 from cmk.utils.site import omd_site
+from cmk.utils.type_defs import HostName
+from cmk.utils.version import __version__, Version
 
 from cmk.automations.results import CheckPreviewEntry
-
-from cmk.checkers.checkresults import ServiceCheckResult
 
 from cmk.gui.background_job import JobStatusStates
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
@@ -47,7 +50,7 @@ from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.site_config import sitenames
-from cmk.gui.table import Foldable, table_element
+from cmk.gui.table import Foldable, Table, table_element
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.html import HTML
@@ -59,8 +62,15 @@ from cmk.gui.wato.pages.hosts import ModeEditHost
 from cmk.gui.watolib.activate_changes import ActivateChanges, get_pending_changes_tooltip
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automations import cmk_version_of_remote_automation_source
 from cmk.gui.watolib.check_mk_automations import active_check
-from cmk.gui.watolib.hosts_and_folders import CREHost, Folder, folder_preserving_link, Host
+from cmk.gui.watolib.hosts_and_folders import (
+    CREHost,
+    folder_from_request,
+    folder_preserving_link,
+    folder_tree,
+    Host,
+)
 from cmk.gui.watolib.rulespecs import rulespec_registry
 from cmk.gui.watolib.services import (
     checkbox_id,
@@ -70,13 +80,14 @@ from cmk.gui.watolib.services import (
     DiscoveryState,
     execute_discovery_job,
     get_check_table,
-    has_active_job,
     has_discovery_action_specific_permissions,
+    has_modification_specific_permissions,
     initial_discovery_result,
     perform_fix_all,
     perform_host_label_discovery,
     perform_service_discovery,
     StartDiscoveryRequest,
+    UpdateType,
 )
 from cmk.gui.watolib.utils import may_edit_ruleset, mk_repr
 
@@ -112,7 +123,7 @@ class ModeDiscovery(WatoMode):
         return ModeEditHost
 
     def _from_vars(self):
-        self._host = Folder.current().load_host(request.get_ascii_input_mandatory("host"))
+        self._host = folder_from_request().load_host(request.get_ascii_input_mandatory("host"))
         if not self._host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
 
@@ -153,9 +164,10 @@ class ModeDiscovery(WatoMode):
         # button. The help texts on this page are only added dynamically via
         # AJAX.
         html.enable_help_toggle()
-        self._fix_all_container()
+        self._container("datasources")
+        self._container("fixall", True)
         self._async_progress_msg_container()
-        self._service_container()
+        self._container("service", True)
         html.javascript(
             "cmk.service_discovery.start(%s, %s, %s)"
             % (
@@ -165,17 +177,13 @@ class ModeDiscovery(WatoMode):
             )
         )
 
+    def _container(self, name: str, hidden: bool = False) -> None:
+        html.open_div(id_=f"{name}_container", style=("display:none" if hidden else ""))
+        html.close_div()
+
     def _async_progress_msg_container(self):
         html.open_div(id_="async_progress_msg")
         html.show_message(_("Loading..."))
-        html.close_div()
-
-    def _service_container(self):
-        html.open_div(id_="service_container", style="display:none")
-        html.close_div()
-
-    def _fix_all_container(self):
-        html.open_div(id_="fixall_container")
         html.close_div()
 
 
@@ -215,7 +223,8 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
         )
 
     def execute(self, api_request: StartDiscoveryRequest) -> str:
-        return execute_discovery_job(api_request).serialize()
+        central_version = cmk_version_of_remote_automation_source(request)
+        return execute_discovery_job(api_request).serialize(central_version)
 
 
 @page_registry.register_page("ajax_service_discovery")
@@ -226,7 +235,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
         api_request: AjaxDiscoveryRequest = self.webapi_request()
         request.del_var("request")  # Do not add this to URLs constructed later
-        update_target = api_request.get("update_target", None)
+        update_target = (
+            None if (raw := api_request.get("update_target", None)) is None else UpdateType(raw)
+        )
         update_source = api_request.get("update_source", None)
         api_request.setdefault("update_services", [])
         update_services = api_request.get("update_services", [])
@@ -234,7 +245,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         # Make Folder() be able to detect the current folder correctly
         request.set_var("folder", api_request["folder_path"])
 
-        folder = Folder.folder(api_request["folder_path"])
+        folder = folder_tree().folder(api_request["folder_path"])
         host = folder.host(api_request["host_name"])
         if not host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
@@ -250,7 +261,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
         # If the user has the wrong permissions, then we still return a discovery result
         # which is different from the REST API behavior.
-        if not has_discovery_action_specific_permissions(discovery_options.action):
+        if not has_discovery_action_specific_permissions(discovery_options.action, update_target):
             discovery_options = discovery_options._replace(action=DiscoveryAction.NONE)
 
         discovery_result = self._perform_discovery_action(
@@ -258,19 +269,17 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             discovery_options=discovery_options,
             previous_discovery_result=previous_discovery_result,
             update_source=update_source,
-            update_target=update_target,
+            update_target=None if update_target is None else update_target.value,
             update_services=update_services,
         )
+        if self._sources_failed_on_first_attempt(previous_discovery_result, discovery_result):
+            discovery_result = discovery_result._replace(
+                check_table=(), host_labels={}, new_labels={}, vanished_labels={}, changed_labels={}
+            )
 
         if not discovery_result.check_table_created and previous_discovery_result:
-            discovery_result = DiscoveryResult(
-                job_status=discovery_result.job_status,
-                check_table_created=previous_discovery_result.check_table_created,
-                check_table=previous_discovery_result.check_table,
-                host_labels=previous_discovery_result.host_labels,
-                new_labels=previous_discovery_result.new_labels,
-                vanished_labels=previous_discovery_result.vanished_labels,
-                changed_labels=previous_discovery_result.changed_labels,
+            discovery_result = previous_discovery_result._replace(
+                job_status=discovery_result.job_status
             )
 
         show_checkboxes = user.discovery_checkboxes
@@ -291,23 +300,30 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             discovery_options,
         )
         page_code = renderer.render(discovery_result, api_request)
+        datasources_code = renderer.render_datasources(discovery_result.sources)
         fix_all_code = renderer.render_fix_all(discovery_result)
 
         # Clean the requested action after performing it
         performed_action = discovery_options.action
         discovery_options = discovery_options._replace(action=DiscoveryAction.NONE)
+        message = (
+            self._get_status_message(previous_discovery_result, discovery_result, performed_action)
+            if discovery_result.sources
+            else None
+        )
 
         return {
-            "is_finished": not has_active_job(discovery_result),
+            "is_finished": not discovery_result.is_active(),
             "job_state": discovery_result.job_status["state"],
-            "message": self._get_status_message(discovery_result, performed_action),
+            "message": message,
             "body": page_code,
+            "datasources": datasources_code,
             "fixall": fix_all_code,
             "page_menu": self._get_page_menu(discovery_options, host),
             "pending_changes_info": ActivateChanges().get_pending_changes_info().message,
             "pending_changes_tooltip": get_pending_changes_tooltip(),
             "discovery_options": discovery_options._asdict(),
-            "discovery_result": discovery_result.serialize(),
+            "discovery_result": discovery_result.serialize(Version.from_str(__version__)),
         }
 
     def _perform_discovery_action(
@@ -399,9 +415,12 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             return make_main_menu_breadcrumb(mode.main_menu()) + mode.breadcrumb()
 
     def _get_status_message(
-        self, discovery_result: DiscoveryResult, performed_action: str
-    ) -> str | None:
-        if performed_action == DiscoveryAction.UPDATE_HOST_LABELS:
+        self,
+        previous_discovery_result: DiscoveryResult | None,
+        discovery_result: DiscoveryResult,
+        performed_action: DiscoveryAction,
+    ) -> str:
+        if performed_action is DiscoveryAction.UPDATE_HOST_LABELS:
             return _("The discovered host labels have been updated.")
 
         cmk_check_entries = [
@@ -409,7 +428,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         ]
 
         if discovery_result.job_status["state"] == JobStatusStates.INITIALIZED:
-            if has_active_job(discovery_result):
+            if discovery_result.is_active():
                 return _("Initializing discovery...")
             if not cmk_check_entries:
                 return _("No discovery information available. Please perform a rescan.")
@@ -438,27 +457,21 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             )
 
         messages = []
+        if self._sources_failed_on_first_attempt(previous_discovery_result, discovery_result):
+            messages.append(
+                _("The problems above might be caused by missing caches. Please trigger a rescan.")
+            )
+
         if discovery_result.job_status["state"] == JobStatusStates.STOPPED:
             messages.append(
                 _("%s was stopped after %s at %s.") % (job_title, duration_txt, finished_txt)
             )
 
-        if cmk_check_entries:
-            no_data_result = ServiceCheckResult.received_no_data()
-            no_data = all(
-                e.state == no_data_result.state and e.output == no_data_result.output
-                for e in cmk_check_entries
-            )
-            if no_data:
-                messages.append(_("No data for discovery available. Please perform a rescan."))
-        else:
-            messages.append(_("Found no services yet. To retry please execute a rescan."))
-
         progress_update_log = discovery_result.job_status["loginfo"]["JobProgressUpdate"]
         warnings = [f"<br>{line}" for line in progress_update_log if line.startswith("WARNING")]
 
         if discovery_result.job_status["state"] == JobStatusStates.FINISHED and not warnings:
-            return None
+            return " ".join(messages)
 
         messages.extend(warnings)
 
@@ -475,10 +488,15 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 html.close_div()
             messages.append(output_funnel.drain())
 
-        if messages:
-            return " ".join(messages)
+        return " ".join(messages)
 
-        return None
+    @staticmethod
+    def _sources_failed_on_first_attempt(
+        previous: DiscoveryResult | None,
+        current: DiscoveryResult,
+    ) -> bool:
+        """Only consider CRIT sources failed"""
+        return previous is None and any(source[0] == 2 for source in current.sources.values())
 
 
 class DiscoveryPageRenderer:
@@ -500,6 +518,57 @@ class DiscoveryPageRenderer:
             self._show_fix_all(discovery_result)
             return output_funnel.drain()
 
+    def render_datasources(self, sources: Mapping[str, tuple[int, str]]) -> str | None:
+        if not sources:
+            return None
+
+        states = [s for s, _output in sources.values()]
+        overall_state = worst_service_state(*states, default=0)
+
+        with output_funnel.plugged():
+            # Colored overall state field
+            html.open_div(class_="state_bar state%s" % overall_state)
+            html.open_span()
+            match overall_state:
+                case 0:
+                    html.icon("check")
+                case 1:
+                    html.icon("host_svc_problems_dark")
+                case 2 | 3:
+                    html.icon("host_svc_problems")
+            html.close_span()
+            html.close_div()
+
+            # Output per data source
+            html.open_div(class_="message_container")
+            if overall_state == 0:
+                html.h2(_("All datasources are OK"))
+            else:
+                num_problem_states: int = len([s for s in states if s != 0])
+                html.h2(
+                    ungettext(
+                        "Problems with %d datasource detected",
+                        "Problems with %d datasources detected",
+                        num_problem_states,
+                    )
+                    % num_problem_states
+                )
+
+            html.open_table()
+            for state, output in sources.values():
+                html.open_tr()
+                html.open_td()
+                html.write_html(HTML(get_html_state_marker(state)))
+                html.close_td()
+                # Make sure not to show long output
+                html.td(format_plugin_output(output.split("\n", 1)[0].replace(" ", ": ", 1)))
+                html.close_tr()
+            html.close_table()
+
+            html.close_div()
+
+            return output_funnel.drain()
+
     def _show_discovered_host_labels(self, discovery_result: DiscoveryResult) -> None:
         if not discovery_result.host_labels:
             return None
@@ -519,13 +588,13 @@ class DiscoveryPageRenderer:
                 discovery_result,
             )
 
-    def _render_host_labels(  # type:ignore[no-untyped-def]
+    def _render_host_labels(  # type: ignore[no-untyped-def]
         self,
         table,
         discovery_result: DiscoveryResult,
     ) -> None:
-        active_host_labels: dict[str, dict[str, str]] = {}
-        changed_host_labels: dict[str, dict[str, str]] = {}
+        active_host_labels: dict[str, HostLabelValueDict] = {}
+        changed_host_labels: dict[str, HostLabelValueDict] = {}
 
         for label_id, label in discovery_result.host_labels.items():
             # For visualization of the changed host labels the old value and the new value
@@ -567,7 +636,7 @@ class DiscoveryPageRenderer:
             _("Active"),
         )
 
-    def _create_host_label_row(  # type:ignore[no-untyped-def]
+    def _create_host_label_row(  # type: ignore[no-untyped-def]
         self, table, host_labels, text
     ) -> None:
         if not host_labels:
@@ -608,25 +677,9 @@ class DiscoveryPageRenderer:
         return
 
     def _show_discovery_details(self, discovery_result: DiscoveryResult, api_request: dict) -> None:
-        if not discovery_result.check_table and self._is_active(discovery_result):
-            return
-
-        if not discovery_result.check_table and self._host.is_cluster():
-            html.br()
-            url = folder_preserving_link(
-                [("mode", "edit_ruleset"), ("varname", "clustered_services")]
-            )
-            html.show_message(
-                _(
-                    "Could not find any service for your cluster. You first need to "
-                    "specify which services of your nodes shal be added to the "
-                    'cluster. This is done using the <a href="%s">%s</a> ruleset.'
-                )
-                % (url, _("Clustered services"))
-            )
-            return
-
         if not discovery_result.check_table:
+            if not discovery_result.is_active() and self._host.is_cluster():
+                self._show_empty_cluster_hint()
             return
 
         # We currently don't get correct information from cmk.base (the data sources). Better
@@ -664,12 +717,22 @@ class DiscoveryPageRenderer:
                     )
 
             if entry.show_bulk_actions:
-                self._toggle_bulk_action_page_menu_entries(discovery_result, entry.table_group)
+                self._toggle_bulk_action_page_menu_entries(entry.table_group)
             html.hidden_fields()
             html.end_form()
 
-    def _is_active(self, discovery_result) -> bool:  # type:ignore[no-untyped-def]
-        return discovery_result.job_status["is_active"]
+    @staticmethod
+    def _show_empty_cluster_hint() -> None:
+        html.br()
+        url = folder_preserving_link([("mode", "edit_ruleset"), ("varname", "clustered_services")])
+        html.show_message(
+            _(
+                "Could not find any service for your cluster. You first need to "
+                "specify which services of your nodes shal be added to the "
+                'cluster. This is done using the <a href="%s">%s</a> ruleset.'
+            )
+            % (url, _("Clustered services"))
+        )
 
     def _group_check_table_by_state(
         self, check_table: Iterable[CheckPreviewEntry]
@@ -765,15 +828,16 @@ class DiscoveryPageRenderer:
         if not user.may("wato.services"):
             return
 
-        fixall = 0
-        already_has_services = False
-        for check in discovery_result.check_table:
-            if check.check_source in [DiscoveryState.MONITORED, DiscoveryState.VANISHED]:
-                already_has_services = True
-            if check.check_source in [DiscoveryState.UNDECIDED, DiscoveryState.VANISHED]:
-                fixall += 1
+        has_changes = any(
+            check.check_source in (DiscoveryState.UNDECIDED, DiscoveryState.VANISHED)
+            for check in discovery_result.check_table
+        )
+        had_services_before = any(
+            check.check_source in (DiscoveryState.MONITORED, DiscoveryState.VANISHED)
+            for check in discovery_result.check_table
+        )
 
-        if self._is_active(discovery_result):
+        if discovery_result.is_active():
             enable_page_menu_entry(html, "stop")
             return
 
@@ -781,14 +845,14 @@ class DiscoveryPageRenderer:
         enable_page_menu_entry(html, "refresh")
 
         if (
-            fixall >= 1
+            has_changes
             and user.may("wato.service_discovery_to_monitored")
             and user.may("wato.service_discovery_to_removed")
         ):
             enable_page_menu_entry(html, "fix_all")
 
         if (
-            already_has_services
+            had_services_before
             and user.may("wato.service_discovery_to_undecided")
             and user.may("wato.service_discovery_to_monitored")
             and user.may("wato.service_discovery_to_ignored")
@@ -799,58 +863,63 @@ class DiscoveryPageRenderer:
         if discovery_result.host_labels:
             enable_page_menu_entry(html, "update_host_labels")
 
-        if already_has_services:
+        if had_services_before:
             enable_page_menu_entry(html, "show_checkboxes")
             enable_page_menu_entry(html, "show_parameters")
             enable_page_menu_entry(html, "show_discovered_labels")
             enable_page_menu_entry(html, "show_plugin_names")
 
     def _toggle_bulk_action_page_menu_entries(  # pylint: disable=too-many-branches
-        self,
-        discovery_result,
-        table_source,
-    ):
+        self, table_source: str
+    ) -> None:
         if not user.may("wato.services"):
             return
 
         if table_source == DiscoveryState.MONITORED:
-            if user.may("wato.service_discovery_to_undecided"):
+            if has_modification_specific_permissions(UpdateType.UNDECIDED):
                 self._enable_bulk_button(table_source, DiscoveryState.UNDECIDED)
-            if user.may("wato.service_discovery_to_ignored"):
+            if has_modification_specific_permissions(UpdateType.IGNORED):
                 self._enable_bulk_button(table_source, DiscoveryState.IGNORED)
 
         elif table_source == DiscoveryState.IGNORED:
-            if user.may("wato.service_discovery_to_monitored"):
-                self._enable_bulk_button(table_source, DiscoveryState.MONITORED)
-            if user.may("wato.service_discovery_to_undecided"):
-                self._enable_bulk_button(table_source, DiscoveryState.UNDECIDED)
+            if may_edit_ruleset("ignored_services"):
+                if has_modification_specific_permissions(UpdateType.MONITORED):
+                    self._enable_bulk_button(table_source, DiscoveryState.MONITORED)
+                if has_modification_specific_permissions(UpdateType.UNDECIDED):
+                    self._enable_bulk_button(table_source, DiscoveryState.UNDECIDED)
 
         elif table_source == DiscoveryState.VANISHED:
-            if user.may("wato.service_discovery_to_removed"):
+            if has_modification_specific_permissions(UpdateType.REMOVED):
                 self._enable_bulk_button(table_source, DiscoveryState.REMOVED)
-            if user.may("wato.service_discovery_to_ignored"):
+            if has_modification_specific_permissions(UpdateType.IGNORED):
                 self._enable_bulk_button(table_source, DiscoveryState.IGNORED)
 
         elif table_source == DiscoveryState.UNDECIDED:
-            if user.may("wato.service_discovery_to_monitored"):
+            if has_modification_specific_permissions(UpdateType.MONITORED):
                 self._enable_bulk_button(table_source, DiscoveryState.MONITORED)
-            if user.may("wato.service_discovery_to_ignored"):
+            if has_modification_specific_permissions(UpdateType.IGNORED):
                 self._enable_bulk_button(table_source, DiscoveryState.IGNORED)
 
     def _enable_bulk_button(self, source, target):
         enable_page_menu_entry(html, f"bulk_{source}_{target}")
 
-    def _show_check_row(  # type:ignore[no-untyped-def]
-        self, table, discovery_result, api_request, entry: CheckPreviewEntry, show_bulk_actions
+    def _show_check_row(
+        self,
+        table: Table,
+        discovery_result: DiscoveryResult,
+        api_request: dict,
+        entry: CheckPreviewEntry,
+        show_bulk_actions: bool,
     ) -> None:
         statename = "" if entry.state is None else short_service_state_name(entry.state, "")
         if statename == "":
             statename = short_service_state_name(-1)
             stateclass = "state svcstate statep"
-            table.row(css="data", state=0)
+            table.row(css=["data"], state=0)
         else:
+            assert entry.state is not None
             stateclass = f"state svcstate state{entry.state}"
-            table.row(css="data", state=entry.state)
+            table.row(css=["data"], state=entry.state)
 
         self._show_bulk_checkbox(
             table,
@@ -865,10 +934,10 @@ class DiscoveryPageRenderer:
         table.cell(
             _("State"),
             HTMLWriter.render_span(statename, class_=["state_rounded_fill"]),
-            css=stateclass,
+            css=[stateclass],
         )
-        table.cell(_("Service"), entry.description, css="service")
-        table.cell(_("Status detail"), css="expanding")
+        table.cell(_("Service"), entry.description, css=["service"])
+        table.cell(_("Status detail"), css=["expanding"])
         self._show_status_detail(entry)
 
         if entry.check_source in [DiscoveryState.ACTIVE, DiscoveryState.ACTIVE_IGNORED]:
@@ -878,7 +947,7 @@ class DiscoveryPageRenderer:
         manpage_url = folder_preserving_link([("mode", "check_manpage"), ("check_type", ctype)])
 
         if self._options.show_parameters:
-            table.cell(_("Check parameters"), css="expanding")
+            table.cell(_("Check parameters"), css=["expanding"])
             self._show_check_parameters(entry)
 
         if self._options.show_discovered_labels:
@@ -889,7 +958,7 @@ class DiscoveryPageRenderer:
             table.cell(
                 _("Check plugin"),
                 HTMLWriter.render_a(content=ctype, href=manpage_url),
-                css="plugins",
+                css=["plugins"],
             )
 
     def _show_status_detail(self, entry: CheckPreviewEntry) -> None:
@@ -931,6 +1000,11 @@ class DiscoveryPageRenderer:
             return
 
         params = entry.effective_parameters
+        if not params:
+            # Avoid error message in this case.
+            # For instance: Ruleset requires a key, but discovered parameters are empty.
+            return
+
         rulespec = rulespec_registry[varname]
         try:
             if isinstance(params, dict) and "tp_computed_params" in params:
@@ -975,7 +1049,7 @@ class DiscoveryPageRenderer:
             return
 
         css_classes = ["service_checkbox"]
-        if self._is_active(discovery_result):
+        if discovery_result.is_active():
             css_classes.append("disabled")
 
         table.cell(
@@ -996,13 +1070,13 @@ class DiscoveryPageRenderer:
         )
         html.checkbox(varname=name, deflt=checked, class_=css_classes)
 
-    def _show_actions(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
+    def _show_actions(  # pylint: disable=too-many-branches
         self,
-        table,
-        discovery_result,
+        table: Table,
+        discovery_result: DiscoveryResult,
         entry: CheckPreviewEntry,
-    ):
-        table.cell(css="buttons")
+    ) -> None:
+        table.cell(css=["buttons"])
         if not user.may("wato.services"):
             html.empty_icon()
             html.empty_icon()
@@ -1011,26 +1085,24 @@ class DiscoveryPageRenderer:
             return
 
         button_classes = ["service_button"]
-        if self._is_active(discovery_result):
+        if discovery_result.is_active():
             button_classes.append("disabled")
 
         checkbox_name = checkbox_id(entry.check_plugin_name, entry.item)
 
         num_buttons = 0
         if entry.check_source == DiscoveryState.MONITORED:
-            if user.may("wato.service_discovery_to_undecided"):
+            if has_modification_specific_permissions(UpdateType.UNDECIDED):
                 num_buttons += self._icon_button(
-                    entry.check_source,
+                    DiscoveryState.MONITORED,
                     checkbox_name,
                     DiscoveryState.UNDECIDED,
                     "undecided",
                     button_classes,
                 )
-            if may_edit_ruleset("ignored_services") and user.may(
-                "wato.service_discovery_to_ignored"
-            ):
+            if has_modification_specific_permissions(UpdateType.IGNORED):
                 num_buttons += self._icon_button(
-                    entry.check_source,
+                    DiscoveryState.MONITORED,
                     checkbox_name,
                     DiscoveryState.IGNORED,
                     "disabled",
@@ -1038,36 +1110,35 @@ class DiscoveryPageRenderer:
                 )
 
         elif entry.check_source == DiscoveryState.IGNORED:
-            if may_edit_ruleset("ignored_services"):
-                if user.may("wato.service_discovery_to_monitored"):
-                    num_buttons += self._icon_button(
-                        entry.check_source,
-                        checkbox_name,
-                        DiscoveryState.MONITORED,
-                        "monitored",
-                        button_classes,
-                    )
-                if user.may("wato.service_discovery_to_ignored"):
-                    num_buttons += self._icon_button(
-                        entry.check_source,
-                        checkbox_name,
-                        DiscoveryState.UNDECIDED,
-                        "undecided",
-                        button_classes,
-                    )
+            if may_edit_ruleset("ignored_services") and has_modification_specific_permissions(
+                UpdateType.MONITORED
+            ):
+                num_buttons += self._icon_button(
+                    DiscoveryState.IGNORED,
+                    checkbox_name,
+                    DiscoveryState.MONITORED,
+                    "monitored",
+                    button_classes,
+                )
+            if has_modification_specific_permissions(UpdateType.IGNORED):
+                num_buttons += self._icon_button(
+                    DiscoveryState.IGNORED,
+                    checkbox_name,
+                    DiscoveryState.UNDECIDED,
+                    "undecided",
+                    button_classes,
+                )
                 num_buttons += self._disabled_services_button(entry.description)
 
         elif entry.check_source == DiscoveryState.VANISHED:
-            if user.may("wato.service_discovery_to_removed"):
+            if has_modification_specific_permissions(UpdateType.REMOVED):
                 num_buttons += self._icon_button_removed(
                     entry.check_source, checkbox_name, button_classes
                 )
 
-            if may_edit_ruleset("ignored_services") and user.may(
-                "wato.service_discovery_to_ignored"
-            ):
+            if has_modification_specific_permissions(UpdateType.IGNORED):
                 num_buttons += self._icon_button(
-                    entry.check_source,
+                    DiscoveryState.VANISHED,
                     checkbox_name,
                     DiscoveryState.IGNORED,
                     "disabled",
@@ -1075,19 +1146,17 @@ class DiscoveryPageRenderer:
                 )
 
         elif entry.check_source == DiscoveryState.UNDECIDED:
-            if user.may("wato.service_discovery_to_monitored"):
+            if has_modification_specific_permissions(UpdateType.MONITORED):
                 num_buttons += self._icon_button(
-                    entry.check_source,
+                    DiscoveryState.UNDECIDED,
                     checkbox_name,
                     DiscoveryState.MONITORED,
                     "monitored",
                     button_classes,
                 )
-            if may_edit_ruleset("ignored_services") and user.may(
-                "wato.service_discovery_to_ignored"
-            ):
+            if has_modification_specific_permissions(UpdateType.IGNORED):
                 num_buttons += self._icon_button(
-                    entry.check_source,
+                    DiscoveryState.UNDECIDED,
                     checkbox_name,
                     DiscoveryState.IGNORED,
                     "disabled",
@@ -1109,7 +1178,14 @@ class DiscoveryPageRenderer:
             html.empty_icon()
             num_buttons += 1
 
-    def _icon_button(self, table_source, checkbox_name, table_target, descr_target, button_classes):
+    def _icon_button(
+        self,
+        table_source: Literal["new", "old", "ignored", "vanished"],
+        checkbox_name: str,
+        table_target: Literal["new", "old", "ignored"],
+        descr_target: Literal["undecided", "monitored", "disabled"],
+        button_classes: list[str],
+    ) -> Literal[1]:
         options = self._options._replace(action=DiscoveryAction.SINGLE_UPDATE)
         html.icon_button(
             url="",
@@ -1162,7 +1238,7 @@ class DiscoveryPageRenderer:
         )
         return 1
 
-    def _check_parameters_button(self, entry: CheckPreviewEntry):  # type:ignore[no-untyped-def]
+    def _check_parameters_button(self, entry: CheckPreviewEntry):  # type: ignore[no-untyped-def]
         if not entry.ruleset_name:
             return 0
 
@@ -1227,7 +1303,8 @@ class DiscoveryPageRenderer:
             return f"active_checks:{entry.check_plugin_name}"
         return None
 
-    def _ordered_table_groups(self) -> list[TableGroupEntry]:
+    @staticmethod
+    def _ordered_table_groups() -> list[TableGroupEntry]:
         return [
             TableGroupEntry(
                 table_group=DiscoveryState.UNDECIDED,
@@ -1294,9 +1371,9 @@ class DiscoveryPageRenderer:
                 show_bulk_actions=False,
                 title=_("Active checks"),
                 help_text=_(
-                    "These services do not use the Check_MK agent or Check_MK-SNMP engine but actively "
+                    "These services do not use the Checkmk agent or Checkmk-SNMP engine but actively "
                     "call classical check plugins. They have been added by a rule in the section "
-                    "<i>Active checks</i> or implicitely by Check_MK."
+                    "<i>Active checks</i> or implicitely by Checkmk."
                 ),
             ),
             TableGroupEntry(
@@ -1308,23 +1385,12 @@ class DiscoveryPageRenderer:
                     "manually by a Setup rule <i>Enforced services</i>."
                 ),
             ),
-            # TODO: Were removed in 1.6 from base. Keeping this for
-            # compatibility with older remote sites. Remove with 1.7.
-            TableGroupEntry(
-                table_group=DiscoveryState.LEGACY,
-                show_bulk_actions=False,
-                title=_("Legacy services - defined in main.mk"),
-                help_text=_(
-                    "These services have been configured by the deprecated variable <tt>legacy_checks</tt> "
-                    "in <tt>main.mk</tt> or a similar configuration file."
-                ),
-            ),
             TableGroupEntry(
                 table_group=DiscoveryState.CUSTOM,
                 show_bulk_actions=False,
                 title=_("Custom checks - defined via rule"),
                 help_text=_(
-                    "These services do not use the Check_MK agent or Check_MK-SNMP engine but actively "
+                    "These services do not use the Checkmk agent or Checkmk-SNMP engine but actively "
                     "call a classical check plugin, that you have installed yourself."
                 ),
             ),
@@ -1371,9 +1437,9 @@ class DiscoveryPageRenderer:
                 show_bulk_actions=False,
                 title=_("Disabled active checks"),
                 help_text=_(
-                    "These services do not use the Check_MK agent or Check_MK-SNMP engine but actively "
+                    "These services do not use the Checkmk agent or Checkmk-SNMP engine but actively "
                     "call classical check plugins. They have been added by a rule in the section "
-                    "<i>Active checks</i> or implicitely by Check_MK. "
+                    "<i>Active checks</i> or implicitely by Checkmk. "
                     "These services have been disabled by creating a rule in the rule set "
                     "<i>Disabled services</i> oder <i>Disabled checks</i>."
                 ),
@@ -1383,21 +1449,8 @@ class DiscoveryPageRenderer:
                 show_bulk_actions=False,
                 title=_("Disabled custom checks - defined via rule"),
                 help_text=_(
-                    "These services do not use the Check_MK agent or Check_MK-SNMP engine but actively "
+                    "These services do not use the Checkmk agent or Checkmk-SNMP engine but actively "
                     "call a classical check plugin, that you have installed yourself. "
-                    "These services have been disabled by creating a rule in the rule set "
-                    "<i>Disabled services</i> oder <i>Disabled checks</i>."
-                ),
-            ),
-            # TODO: Were removed in 1.6 from base. Keeping this for
-            # compatibility with older remote sites. Remove with 1.7.
-            TableGroupEntry(
-                table_group=DiscoveryState.LEGACY_IGNORED,
-                show_bulk_actions=False,
-                title=_("Disabled legacy services - defined in main.mk"),
-                help_text=_(
-                    "These services have been configured by the deprecated variable <tt>legacy_checks</tt> "
-                    "in <tt>main.mk</tt> or a similar configuration file. "
                     "These services have been disabled by creating a rule in the rule set "
                     "<i>Disabled services</i> oder <i>Disabled checks</i>."
                 ),
@@ -1412,8 +1465,8 @@ class ModeAjaxExecuteCheck(AjaxPage):
         if self._site not in sitenames():
             raise MKUserError("site", _("You called this page with an invalid site."))
 
-        self._host_name = request.get_ascii_input_mandatory("host")
-        self._host = Folder.current().host(self._host_name)
+        self._host_name = HostName(request.get_ascii_input_mandatory("host"))
+        self._host = folder_from_request().host(self._host_name)
         if not self._host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
         self._host.need_permission("read")
@@ -1445,7 +1498,7 @@ class ModeAjaxExecuteCheck(AjaxPage):
         }
 
 
-def service_page_menu(  # type:ignore[no-untyped-def]
+def service_page_menu(  # type: ignore[no-untyped-def]
     breadcrumb, host: CREHost, options: DiscoveryOptions
 ):
     menu = PageMenu(
@@ -1595,7 +1648,7 @@ def _extend_help_dropdown(menu: PageMenu) -> None:
 
 def _page_menu_entry_show_parameters(host: CREHost, options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
-        title=_("Hide check parameters") if options.show_parameters else _("Show check parameters"),
+        title=_("Show check parameters"),
         icon_name="toggle_on" if options.show_parameters else "toggle_off",
         item=make_simple_link(
             _checkbox_js_url(
@@ -1610,7 +1663,7 @@ def _page_menu_entry_show_parameters(host: CREHost, options: DiscoveryOptions) -
 
 def _page_menu_entry_show_checkboxes(host: CREHost, options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
-        title=_("Hide checkboxes") if options.show_checkboxes else _("Show checkboxes"),
+        title=_("Show checkboxes"),
         icon_name="toggle_on" if options.show_checkboxes else "toggle_off",
         item=make_simple_link(
             _checkbox_js_url(
@@ -1631,9 +1684,7 @@ def _page_menu_entry_show_discovered_labels(
     host: CREHost, options: DiscoveryOptions
 ) -> PageMenuEntry:
     return PageMenuEntry(
-        title=_("Hide discovered service labels")
-        if options.show_discovered_labels
-        else _("Show discovered service labels"),
+        title=_("Show discovered service labels"),
         icon_name="toggle_on" if options.show_discovered_labels else "toggle_off",
         item=make_simple_link(
             _checkbox_js_url(
@@ -1648,7 +1699,7 @@ def _page_menu_entry_show_discovered_labels(
 
 def _page_menu_entry_show_plugin_names(host: CREHost, options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
-        title=_("Hide plugin names") if options.show_plugin_names else _("Show plugin names"),
+        title=_("Show plugin names"),
         icon_name="toggle_on" if options.show_plugin_names else "toggle_off",
         item=make_simple_link(
             _checkbox_js_url(

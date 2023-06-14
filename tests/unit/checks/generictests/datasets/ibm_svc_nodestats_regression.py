@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
+ibm_svc_cpu_default_levels = (90.0, 95.0)
 
 
 checkname = "ibm_svc_nodestats"
@@ -60,8 +61,8 @@ info = [
 discovery = {
     "cache": [("BLUBBSVC01", None)],
     "cpu_util": [
-        ("BLUBBSVC01", "ibm_svc_cpu_default_levels"),
-        ("BLUBBSVC02", "ibm_svc_cpu_default_levels"),
+        ("BLUBBSVC01", ibm_svc_cpu_default_levels),
+        ("BLUBBSVC02", ibm_svc_cpu_default_levels),
     ],
     "disk_latency": [
         ("Drives BLUBBSVC01", None),
@@ -105,10 +106,10 @@ checks = {
             [
                 (
                     0,
-                    "Latency is 0 ms for read, 0 ms for write",
+                    "Latency is 0.0 ms for read, 0.0 ms for write",
                     [
-                        ("read_latency", 0, None, None, None, None),
-                        ("write_latency", 0, None, None, None, None),
+                        ("read_latency", 0.0, None, None, None, None),
+                        ("write_latency", 0.0, None, None, None, None),
                     ],
                 )
             ],
@@ -119,10 +120,10 @@ checks = {
             [
                 (
                     0,
-                    "Latency is 5 ms for read, 1 ms for write",
+                    "Latency is 5.0 ms for read, 1.0 ms for write",
                     [
-                        ("read_latency", 5, None, None, None, None),
-                        ("write_latency", 1, None, None, None, None),
+                        ("read_latency", 5.0, None, None, None, None),
+                        ("write_latency", 1.0, None, None, None, None),
                     ],
                 )
             ],
@@ -133,10 +134,10 @@ checks = {
             [
                 (
                     0,
-                    "Latency is 2 ms for read, 0 ms for write",
+                    "Latency is 2.0 ms for read, 0.0 ms for write",
                     [
-                        ("read_latency", 2, None, None, None, None),
-                        ("write_latency", 0, None, None, None, None),
+                        ("read_latency", 2.0, None, None, None, None),
+                        ("write_latency", 0.0, None, None, None, None),
                     ],
                 )
             ],
@@ -150,7 +151,10 @@ checks = {
                 (
                     0,
                     "0.00 B/s read, 0.00 B/s write",
-                    [("read", 0, None, None, None, None), ("write", 0, None, None, None, None)],
+                    [
+                        ("read", 0.0, None, None, None, None),
+                        ("write", 0.0, None, None, None, None),
+                    ],
                 )
             ],
         ),
@@ -162,8 +166,8 @@ checks = {
                     0,
                     "1.05 MB/s read, 16.8 MB/s write",
                     [
-                        ("read", 1048576, None, None, None, None),
-                        ("write", 16777216, None, None, None, None),
+                        ("read", 1048576.0, None, None, None, None),
+                        ("write", 16777216.0, None, None, None, None),
                     ],
                 )
             ],
@@ -175,7 +179,10 @@ checks = {
                 (
                     0,
                     "0.00 B/s read, 0.00 B/s write",
-                    [("read", 0, None, None, None, None), ("write", 0, None, None, None, None)],
+                    [
+                        ("read", 0.0, None, None, None, None),
+                        ("write", 0.0, None, None, None, None),
+                    ],
                 )
             ],
         ),
@@ -187,8 +194,11 @@ checks = {
             [
                 (
                     0,
-                    "0 IO/s read, 0 IO/s write",
-                    [("read", 0, None, None, None, None), ("write", 0, None, None, None, None)],
+                    "0.0 IO/s read, 0.0 IO/s write",
+                    [
+                        ("read", 0.0, None, None, None, None),
+                        ("write", 0.0, None, None, None, None),
+                    ],
                 )
             ],
         ),
@@ -198,8 +208,11 @@ checks = {
             [
                 (
                     0,
-                    "15 IO/s read, 865 IO/s write",
-                    [("read", 15, None, None, None, None), ("write", 865, None, None, None, None)],
+                    "15.0 IO/s read, 865.0 IO/s write",
+                    [
+                      ("read", 15.0, None, None, None, None),
+                      ("write", 865.0, None, None, None, None),
+                    ],
                 )
             ],
         ),
@@ -209,8 +222,11 @@ checks = {
             [
                 (
                     0,
-                    "19 IO/s read, 110 IO/s write",
-                    [("read", 19, None, None, None, None), ("write", 110, None, None, None, None)],
+                    "19.0 IO/s read, 110.0 IO/s write",
+                    [
+                      ("read", 19.0, None, None, None, None),
+                      ("write", 110.0, None, None, None, None),
+                    ],
                 )
             ],
         ),

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Using Clustered services with predefined cluster mode certain services would crash
 if no summary (therefore only notice) was available for a node result.

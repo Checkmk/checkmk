@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -96,7 +96,6 @@ def parse_oracle_rman(  # pylint: disable=too-many-branches
                 backupscn = int(backupscn_str)
 
             if backuptype == "DB_INCR":
-
                 if inventory_oracle_rman_incremental_details:
                     item = "%s.%s_%s" % (sid, backuptype, backuplevel)
                 else:
@@ -135,10 +134,8 @@ def parse_oracle_rman(  # pylint: disable=too-many-branches
     # some tweaks in section for change in behavior of oracle
     # correct backupage for INCR_1 when newer INCR_0 is existing
     for elem in section:
-
         # search DB_INCR_1 in section
         if elem.rsplit(".", 1)[1] == "DB_INCR_1":
-
             # check backupage
             sid_level0 = "%s0" % (elem[0:-1])
             if sid_level0 in section:
@@ -165,13 +162,11 @@ register.agent_section(
 
 def discovery_oracle_rman(section: SectionOracleRman) -> DiscoveryResult:
     for elem in section.values():
-
         sid = elem["sid"]
         backuptype = elem["backuptype"]
         backuplevel = elem["backuplevel"]
 
         if backuptype in ("ARCHIVELOG", "DB_FULL", "DB_INCR", "CONTROLFILE"):
-
             if inventory_oracle_rman_incremental_details and backuptype == "DB_INCR":
                 yield Service(item="%s.%s_%s" % (sid, backuptype, backuplevel))
                 continue
@@ -181,27 +176,23 @@ def discovery_oracle_rman(section: SectionOracleRman) -> DiscoveryResult:
 def check_oracle_rman(
     item: str, params: Mapping[str, Any], section: SectionOracleRman
 ) -> CheckResult:
-
     rman_backup = section.get(item)
 
     sid_level0 = ""
 
     if not rman_backup:
-
         # some versions of Oracle removes the last Level 1 after a new Level 0
         # => we have no Level 1 in agent output. level 1 is shown as level 0
 
         sid_level0 = "%s0" % (item[0:-1])
 
         if item[-1] == "1" and sid_level0 in section:
-
             # => INCR_1 in item and INCR_0 found
             # => Switch to INCR_0 + used_incr_0
             rman_backup = section[sid_level0]
             rman_backup.update({"used_incr_0": True})
 
         else:
-
             # In case of missing information we assume that the login into
             # the database has failed and we simply skip this check. It won't
             # switch to UNKNOWN, but will get stale.
@@ -212,7 +203,6 @@ def check_oracle_rman(
     backupscn = rman_backup["backupscn"]
 
     if status in ("COMPLETED", "COMPLETED WITH WARNINGS"):
-
         if backupage is None:
             # backupage in agent was empty. That's only possible with really old agents.
             yield Result(
@@ -245,7 +235,6 @@ def check_oracle_rman(
 def cluster_check_oracle_rman(
     item: str, params: Mapping[str, Any], section: Mapping[str, Optional[SectionOracleRman]]
 ) -> CheckResult:
-
     youngest_backup_age: Optional[int] = None
     # take the most current backupage in clustered environments
     for node_data in section.values():

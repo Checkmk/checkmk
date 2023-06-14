@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Verify or find out a hosts agent related configuration"""
@@ -42,7 +42,7 @@ from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.attributes import SNMPCredentials
 from cmk.gui.watolib.check_mk_automations import diag_host
 from cmk.gui.watolib.host_attributes import host_attribute_registry
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Host
+from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_preserving_link, Host
 
 
 @mode_registry.register
@@ -73,7 +73,7 @@ class ModeDiagHost(WatoMode):
 
     def _from_vars(self):
         self._hostname = request.get_ascii_input_mandatory("host")
-        self._host = Folder.current().load_host(self._hostname)
+        self._host = folder_from_request().load_host(self._hostname)
         self._host.need_permission("read")
 
         if self._host.is_cluster():
@@ -170,7 +170,7 @@ class ModeDiagHost(WatoMode):
                 mode_url(
                     "edit_host",
                     host=self._hostname,
-                    folder=Folder.current().path(),
+                    folder=folder_from_request().path(),
                 )
             )
         return None
@@ -359,7 +359,7 @@ class ModeDiagHost(WatoMode):
                         ),
                         help=_(
                             "This variable allows to specify a timeout for the "
-                            "TCP connection to the Check_MK agent on a per-host-basis."
+                            "TCP connection to the Checkmk agent on a per-host-basis."
                             "If the agent does not respond within this time, it is considered to be unreachable."
                         ),
                     ),

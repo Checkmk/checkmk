@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import re
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping, Optional, Sequence, Tuple, TypedDict
+from typing import Any, Iterable, Mapping, NotRequired, Optional, Sequence, Tuple, TypedDict
 
 import pytz
 from dateutil import parser as date_parser
-from typing_extensions import NotRequired
 
 from .agent_based_api.v1 import (
     check_levels,
@@ -157,7 +156,10 @@ def parse_timesyncd_ntpmessage(string_table: StringTable) -> NTPMessageSection |
     if len(ntp_message_lines) == 0:
         return None
     [ntp_message_line] = ntp_message_lines
-    [timezone_line] = [line[0] for line in string_table if line[0].startswith("Timezone")]
+    timezone_lines = [line[0] for line in string_table if line[0].startswith("Timezone")]
+    if len(timezone_lines) == 0:
+        return None
+    [timezone_line] = timezone_lines
     section = NTPMessageSection(
         receivetimestamp=_parse_ntp_message_timestamp(ntp_message_line, timezone_line)
     )

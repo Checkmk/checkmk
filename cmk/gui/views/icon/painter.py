@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -18,13 +18,13 @@ from cmk.gui.config import active_config
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.painter.v0.base import Cell, Painter
+from cmk.gui.painter.v0.helpers import replace_action_url_macros, transform_action_url
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
 from cmk.gui.view_utils import CellSpec
 
-from ..painter.v0.base import Cell, Painter
-from ..painter.v0.helpers import replace_action_url_macros, transform_action_url
 from .base import Icon
 from .registry import get_multisite_icons
 
@@ -53,7 +53,7 @@ class PainterServiceIcons(Painter):
     def ident(self) -> str:
         return "service_icons"
 
-    def title(self, cell) -> str:  # type:ignore[no-untyped-def]
+    def title(self, cell) -> str:  # type: ignore[no-untyped-def]
         return _("Service icons")
 
     def short_title(self, cell: Cell) -> str:

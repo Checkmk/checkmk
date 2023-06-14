@@ -64,12 +64,12 @@ known_cmk_cee = "cmk.cee.dcd,cmk.cee.liveproxy,cmk.cee.mknotifyd"
 known_cmk_notification_plugins = "cmk.notification_plugins"
 known_cmk_snmplib = "cmk.snmplib"
 known_cmk_fetchers = "cmk.fetchers"
-known_cmk_checkers = "cmk.checkers"
+known_cmk_checkengine = "cmk.checkengine"
 known_first_party = "cmk"
 
 # Order sections according to our layering.
 sections = """FUTURE,STDLIB,THIRDPARTY,CMC_PROTO,TESTLIB,COMPOSITIONTESTS,UNITTESTS,LIVESTATUS,OMD,
-CMK_UTILS,CMK_AUTOMATIONS,CMK_SNMPLIB,CMK_FETCHERS,CMK_CHECKERS,CMK_BASE,CMK_EC,CMK_GUI,CMK_CEE,
+CMK_UTILS,CMK_AUTOMATIONS,CMK_SNMPLIB,CMK_FETCHERS,CMK_CHECKENGINE,CMK_BASE,CMK_EC,CMK_GUI,CMK_CEE,
 CMK_NOTIFICATION_PLUGINS,FIRSTPARTY,LOCALFOLDER"""
 
 # configuration options compatible with black
@@ -109,7 +109,7 @@ strict_equality = true
 warn_redundant_casts = true
 warn_return_any = false  # 821 errors in 304 files
 warn_unused_configs = true
-warn_unused_ignores = false  # 1324 errors in 1281 files
+warn_unused_ignores = false  # 55 errors in 31 files
 # Miscellaneous stuff not in --strict
 disallow_any_decorated = false  # 3433 errors in 997 files
 disallow_any_explicit = false  # 2854 errors in 836 files
@@ -119,15 +119,20 @@ warn_unreachable = false  # 240 errors in 133 files
 
 [[tool.mypy.overrides]]
 module = [
+    "cmk.cee.bakery.*",
+    "cmk.gui.background_job",
+    "cmk.gui.backup",
     "cmk.gui.mobile.views",
     "cmk.gui.views.layout",
     "cmk.gui.views.painter",
-    "cmk.gui.background_job",
     "cmk.notification_plugins.*",
+    "cmk.update_config.*",
+    "cmk.utils.crypto.*",
     "tests.gui_e2e.*",
+    "tests.testlib.event_console",
     "tests.testlib.playwright.*",
     "tests.unit.cmk.ec.*",
-    "tests.testlib.event_console",
+    "tests.unit.cmk.update_config.*",
 ]
 disallow_untyped_calls = true
 disallow_untyped_defs = true
@@ -140,3 +145,29 @@ init_forbid_extra = true
 init_typed = true
 warn_required_dynamic_aliases = true
 warn_untyped_fields = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# --durations=20: Show the 20 slowest tests
+addopts = "--log-cli-level=INFO --log-cli-format=\"%(asctime)s %(levelname)s %(message)s\" -rs --durations=20"
+markers = [
+    "checks: Run all existing test cases for checks.",
+]
+# See: https://docs.python.org/3/library/warnings.html#the-warnings-filter
+filterwarnings = [
+    # Breaking change, only in new major version, see https://github.com/marshmallow-code/apispec/pull/759
+    'ignore:^distutils Version classes are deprecated\. Use packaging.version instead\.$:DeprecationWarning:apispec.utils:0',
+    # Internal copy of distutils in setuptools :-P
+    'ignore:^distutils Version classes are deprecated\. Use packaging.version instead\.$:DeprecationWarning:distutils.version:0',
+    # pysnmp uses the dprecated asyncore module
+    'ignore:^The asyncore module is deprecated and will be removed in Python 3.12. The recommended replacement is asyncio$:DeprecationWarning',
+    # We have a doctest which intentionally checks for a failure
+    'ignore:^Invalid value for tag-group tag_agent. None$:UserWarning:cmk.gui.fields.definitions:0',
+    # The ReportLab package uses deprecated features, see: https://github.com/Distrotech/reportlab/blob/master/src/reportlab/__init__.py
+    'ignore:^the load_module\(\) method is deprecated and slated for removal in Python 3.12; use exec_module\(\) instead$:DeprecationWarning',
+    # Make marshmallow warnings errors, otherwise typos may go unnoticed.
+    'error::marshmallow.warnings.RemovedInMarshmallow4Warning',
+]
+# When writing a junit.xml, also write the output of a test to the junit
+# file in addition to the console.
+junit_logging = "all"

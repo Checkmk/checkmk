@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Aux Tags
@@ -18,7 +18,7 @@ tag for resolving conditions.
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.utils.tags import AuxTag, TagID
+from cmk.utils.tags import AuxTag, AuxTagInUseError, TagID
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -27,12 +27,13 @@ from cmk.gui.plugins.openapi.endpoints.aux_tags.schemas import (
     AuxTagAttrsUpdate,
     AuxTagID,
     AuxTagIDShouldExist,
+    AuxTagIDShouldExistShouldBeCustom,
     AuxTagResponse,
     AuxTagResponseCollection,
 )
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
-from cmk.gui.plugins.openapi.utils import serve_json
+from cmk.gui.plugins.openapi.utils import problem, serve_json
 from cmk.gui.watolib.tags import load_all_tag_config_read_only, load_tag_config, update_tag_config
 
 PERMISSIONS = permissions.Perm("wato.hosttags")
@@ -105,6 +106,7 @@ def create_aux_tag(params: Mapping[str, Any]) -> Response:
         tag_id=params["body"]["aux_tag_id"],
         title=params["body"]["title"],
         topic=params["body"].get("topic"),
+        help=params["body"].get("help"),
     )
     tag_config.insert_aux_tag(aux_tag)
     update_tag_config(tag_config)
@@ -116,7 +118,7 @@ def create_aux_tag(params: Mapping[str, Any]) -> Response:
     "cmk/update",
     method="put",
     tag_group="Setup",
-    path_params=[AuxTagID],
+    path_params=[AuxTagIDShouldExistShouldBeCustom],
     request_schema=AuxTagAttrsUpdate,
     response_schema=AuxTagResponse,
     permissions_required=RW_PERMISSIONS,
@@ -132,6 +134,7 @@ def put_aux_tag(params: Mapping[str, Any]) -> Response:
         tag_id=params["aux_tag_id"],
         title=params["body"].get("title", existing_tag.title),
         topic=params["body"].get("topic", existing_tag.topic),
+        help=params["body"].get("help", existing_tag.help),
     )
     tag_config.update_aux_tag(TagID(params["aux_tag_id"]), aux_tag)
     update_tag_config(tag_config)
@@ -145,6 +148,7 @@ def put_aux_tag(params: Mapping[str, Any]) -> Response:
     path_params=[AuxTagID],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
+    additional_status_codes=[409],
 )
 def delete_aux_tag(params: Mapping[str, Any]) -> Response:
     """Delete an Auxiliary Tag"""
@@ -152,7 +156,15 @@ def delete_aux_tag(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.hosttags")
 
     tag_config = load_tag_config()
-    tag_config.remove_aux_tag(TagID(params["aux_tag_id"]))
+    try:
+        tag_config.remove_aux_tag(TagID(params["aux_tag_id"]))
+    except AuxTagInUseError as exc:
+        return problem(
+            status=409,
+            title="Aux tag in use",
+            detail=str(exc),
+        )
+
     update_tag_config(tag_config)
     return Response(status=204)
 
@@ -164,6 +176,7 @@ def _serialize_aux_tag(aux_tag: AuxTag) -> DomainObject:
         title=aux_tag.title,
         extensions={
             "topic": "Tags" if aux_tag.topic is None else aux_tag.topic,
+            "help": "" if aux_tag.help is None else aux_tag.help,
         },
         editable=True,
         deletable=True,

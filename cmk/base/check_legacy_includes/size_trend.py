@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -57,7 +57,7 @@ def _check_shrinking(
     return state, problem
 
 
-def size_trend(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
+def size_trend(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
     check,
     item,
     resource,
@@ -232,7 +232,8 @@ def size_trend(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branch
                 return "%0.1f days" % (hours / 24)  # fixed: true-division
             return "%d hours" % hours
 
-        hours_left = (size_mb - used_mb) / trend * range_hours
+        # CMK-13217: size_mb - used_mb < 0: the device reported nonsense
+        hours_left = max((size_mb - used_mb) / trend * range_hours, 0)
         hours_txt = format_hours(hours_left)
 
         timeleft = levels.get("trend_timeleft")

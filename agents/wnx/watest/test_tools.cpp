@@ -228,7 +228,7 @@ void ChangeSectionMode(std::string_view value, bool update_global,
     PutInternalArray(groups::kGlobal, section_del, del);
 
     if (update_global) {
-        groups::global.loadFromMainConfig();
+        groups::g_global.loadFromMainConfig();
     }
 }
 

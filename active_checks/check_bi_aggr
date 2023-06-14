@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,13 +10,14 @@ import subprocess
 import sys
 import time
 import traceback
-from pathlib import Path
 
 import requests
 import urllib3
 from requests_kerberos import HTTPKerberosAuth  # type: ignore[import]
 
 import cmk.utils.password_store
+from cmk.utils.crypto.secrets import AutomationUserSecret
+from cmk.utils.type_defs import UserId
 
 cmk.utils.password_store.replace_passwords()
 
@@ -121,11 +122,9 @@ if not aggr_name:
 
 if use_automation_user:
     username = "automation"
-    secret_file_path = Path(cmk.utils.paths.var_dir) / "web" / username / "automation.secret"
     try:
-        with secret_file_path.open(encoding="utf-8") as f:
-            password = f.read().rstrip("\n")
-    except IOError:
+        password = AutomationUserSecret(UserId(username)).read()
+    except (OSError, ValueError):
         sys.stderr.write('Unable to read credentials for "automation" user.\n')
         sys.exit(1)
 
@@ -145,8 +144,7 @@ def init_auth(pw: str) -> requests.auth.AuthBase | None:
         kinit_completed = subprocess.run(
             ["kinit", username],
             input="%s\n" % pw,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             encoding="utf-8",
             check=False,
         )
@@ -200,7 +198,7 @@ except Exception as e:
 try:
     response_data = json.loads(raw_response)
 except Exception as e:
-    sys.stdout.write("ERROR: Invalid response (%s): %s\n" % (e, raw_response))
+    sys.stdout.write(f"ERROR: Invalid response ({e}): {raw_response}\n")
     sys.exit(3)
 
 try:
@@ -244,11 +242,12 @@ if track_downtime:
         (
             "GET downtimes\n"
             "Columns: id\n"
-            "Filter: service_description = Aggr Host %s\n"
+            "Filter: host_name = %s\n"
+            "Filter: service_description = %s\n"
             "Filter: author = tracking\n"
             "Filter: end_time > %d"
         )
-        % (hostname, now)
+        % (hostname, aggr_name, now)
     )
     downtime_tracked = len(ids) > 0
     if downtime_tracked != is_aggr_in_downtime:
@@ -256,8 +255,8 @@ if track_downtime:
         if is_aggr_in_downtime:
             # need to track downtime
             conn.command(
-                "[%d] SCHEDULE_SVC_DOWNTIME;%s;Aggr Host %s;%d;%d;1;0;0;"
-                "tracking;Automatic downtime" % (now, hostname, hostname, now, 2147483647)
+                "[%d] SCHEDULE_SVC_DOWNTIME;%s;%s;%d;%d;1;0;0;"
+                "tracking;Automatic downtime" % (now, hostname, aggr_name, now, 2147483647)
             )
         else:
             for dt_id in ids:

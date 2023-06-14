@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 """Wrapper for a page, with some often used functionality"""
 
+import re
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Literal, Optional, Pattern
+from re import Pattern
+from typing import Literal
 from urllib.parse import urljoin, urlsplit
 
 from playwright._impl import _api_types
@@ -26,23 +28,27 @@ class LocatorHelper(ABC):
     def locator(self, selector: str = "xpath=.") -> Locator:
         """return locator for this subpart"""
 
-    def check_success(self, message: str | Pattern) -> None:
+    def check_success(self, message: str | Pattern, timeout_ms: int = 15000) -> None:
         """check for a success div and its content"""
-        expect(self.locator("div.success")).to_have_text(message)
+        expect(self.locator("div.success")).to_have_text(message, timeout=timeout_ms)
 
-    def check_error(self, message: str | Pattern) -> None:
+    def check_error(self, message: str | Pattern, timeout_ms: int = 15000) -> None:
         """check for an error div and its content"""
-        expect(self.locator("div.error")).to_have_text(message)
+        expect(self.locator("div.error")).to_have_text(message, timeout=timeout_ms)
+
+    def check_warning(self, message: str | Pattern, timeout_ms: int = 15000) -> None:
+        """check for a warning div and its content"""
+        expect(self.locator("div.warning")).to_have_text(message, timeout=timeout_ms)
 
     def get_input(self, input_name: str) -> Locator:
         return self.locator(f'input[name="{input_name}"]')
 
     def get_suggestion(self, suggestion: str) -> Locator:
-        return self.locator(f"#suggestions >> text={suggestion}")
+        return self.locator("#suggestions .suggestion").filter(has_text=re.compile(suggestion))
 
     def get_text(self, text: str, is_visible: bool = True) -> Locator:
         is_visible_str = ">> visible=true" if is_visible else ""
-        return self.locator(f"text={text}" + is_visible_str)
+        return self.locator(f"text={text} {is_visible_str}").first
 
     def get_element_including_texts(self, element_id: str, texts: list[str]) -> Locator:
         has_text_str = "".join([f":has-text('{t}')" for t in texts])
@@ -193,7 +199,7 @@ class MainArea(LocatorHelper):
 
     def check_page_title(self, title: str) -> None:
         """check the page title"""
-        expect(self.locator("div.titlebar > a")).to_have_text(title)
+        expect(self.locator(".titlebar a>>nth=0")).to_have_text(title)
 
     def expect_no_entries(self) -> None:
         """Expect no previous entries are found in the page.
@@ -255,7 +261,7 @@ class PPage(LocatorHelper):
 
     def activate_selected(self) -> None:
         with TemporaryTimeout(self.page, TIMEOUT_ACTIVATE_CHANGES_MS):
-            return self.main_area.locator("#menu_suggestion_activate_selected").click()
+            self.main_area.locator("#menu_suggestion_activate_selected").click()
 
     def expect_success_state(self) -> None:
         expect(
@@ -283,12 +289,12 @@ class PPage(LocatorHelper):
     def goto_setup_hosts(self) -> None:
         """main menu -> setup -> Hosts"""
         self.megamenu_setup.click()
-        return self.main_menu.locator('#setup_topic_hosts a:has-text("Hosts")').click()
+        self.main_menu.locator('#setup_topic_hosts a:has-text("Hosts")').click()
 
     def goto_edit_users(self) -> None:
         """main menu -> setup -> Users"""
         self.megamenu_setup.click()
-        return self.main_menu.locator('#setup_topic_hosts a:has-text("Users")').click()
+        self.main_menu.locator('#setup_topic_hosts a:has-text("Users")').click()
 
     @property
     def megamenu_monitoring(self) -> Locator:
@@ -333,31 +339,39 @@ class PPage(LocatorHelper):
         self,
         locator: Locator,
         navigate: bool = False,
-        expected_locator: Optional[Locator] = None,
+        expected_locator: Locator | None = None,
         reload_on_error: bool = False,
         max_tries: int = 10,
     ) -> None:
-        """Click the located element and wait until the current URL has changed and is loaded or an
-        expected locator is found.
+        """Wait until the specified locator could be clicked.
+        After a successful click, wait until the current URL has changed and is loaded
+        or an expected locator is found.
         """
         url = self.page.url
-        locator.click()
+        clicked = False
 
         for _ in range(max_tries):
-            try:
-                if navigate:
-                    expect(self.page).not_to_have_url(url)
-                elif expected_locator:
-                    expect(expected_locator).to_be_visible()
-                self.page.wait_for_load_state("networkidle")
-                return
-            except AssertionError:
-                pass
+            if not clicked:
+                try:
+                    locator.click()
+                    clicked = True
+                except _api_types.TimeoutError:
+                    pass
+
+            if clicked:
+                try:
+                    if navigate:
+                        expect(self.page).not_to_have_url(url)
+                    if expected_locator:
+                        expect(expected_locator).to_be_visible()
+                    self.page.wait_for_load_state("networkidle")
+                    return
+                except AssertionError:
+                    pass
 
             try:
                 if reload_on_error:
-                    self.page.reload()
-                    self.page.wait_for_load_state("networkidle")
+                    self.page.reload(wait_until="networkidle")
             except _api_types.Error:
                 continue
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -219,7 +219,7 @@ class FilterInvtableAvailable(FilterOption):
         )
 
 
-def port_types(info: str):  # type:ignore[no-untyped-def]
+def port_types(info: str):  # type: ignore[no-untyped-def]
     return [
         (str(k), str(v))
         for k, v in sorted(defines.interface_port_types().items(), key=lambda t: t[0])
@@ -241,7 +241,6 @@ class FilterInvtableInterfaceType(DualListFilter):
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.query_filter.ident, {})
-        assert not isinstance(value, str)
         selection = self.query_filter.selection(value)
 
         if not selection:
@@ -354,7 +353,6 @@ class _FilterInvHasSoftwarePackage(Filter):
 
     def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
         value = context.get(self.ident, {})
-        assert not isinstance(value, str)
         name: str | re.Pattern = value.get(self._varprefix + "name", "")
         if not name:
             return rows
@@ -378,10 +376,7 @@ class _FilterInvHasSoftwarePackage(Filter):
 
         new_rows = []
         for row in rows:
-            packages_table = row["host_inventory"].get_table(["software", "packages"])
-            if packages_table is None:
-                continue
-            packages = packages_table.rows
+            packages = row["host_inventory"].get_rows(("software", "packages"))
             is_in = self.find_package(packages, name, from_version, to_version)
             if is_in != negate:
                 new_rows.append(row)

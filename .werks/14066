@@ -6,7 +6,7 @@ Date: 1650539832
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, configuring any levels for the kube_node_container_count check
 resulted in an error because the check was unable to process the specified

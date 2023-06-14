@@ -1,0 +1,13 @@
+Title: DCD: Trust "Trusted certificate authorities for SSL"
+Class: fix
+Compatible: compat
+Component: dcd
+Date: 1677496604
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The DCD did not trust the certificates configured with the global setting
+"Trusted certificate authorities for SSL" but trusted the certificates that
+ship with the requests library.

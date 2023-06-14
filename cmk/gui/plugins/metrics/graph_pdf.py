@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Render graphs in PDF. Is also used for PNG image rendering."""
@@ -23,7 +23,7 @@ from cmk.gui.plugins.metrics.utils import (
 from cmk.gui.type_defs import SizeMM
 
 
-def render_graph_pdf(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
+def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
     instance,
     graph_artwork: GraphArtwork,
     graph_data_range: GraphDataRange,

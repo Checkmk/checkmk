@@ -2,10 +2,17 @@
 
 /// file: test-agent-plugin-unit.groovy
 
+def get_agent_plugin_python_versions(String git_dir=".") {
+    dir(git_dir) {
+        def versions = (cmd_output("make --no-print-directory --file=defines.make print-AGENT_PLUGIN_PYTHON_VERSIONS")
+                ?: raise("Could not read AGENT_PLUGIN_PYTHON_VERSIONS from defines.make"));
+        return versions.split(" ")
+    }
+}
+
+
 def main() {
-    // Due to https://github.com/pypa/pypi-support/issues/978, we need to disable Plugin tests for py2.6
-    // until we have a feasible solution or we drop the support for 2.6 completly.
-    def python_versions = ["2.7", "3.4", "3.5", "3.6", "3.7", "3.8", "3.9"];
+    def python_versions = get_agent_plugin_python_versions(checkout_dir);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
     def docker_args = "-v /var/run/docker.sock:/var/run/docker.sock --group-add=${get_docker_group_id()}";

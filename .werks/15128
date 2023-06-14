@@ -1,0 +1,15 @@
+Title: Fix visible published visuals without permission "See user ..."
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1677488861
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+If a user with permission "Modify builtin ..." published a visual (view,
+dashboard, etc.) to all users, even users without the permission "See user ..."
+could see those visuals.
+

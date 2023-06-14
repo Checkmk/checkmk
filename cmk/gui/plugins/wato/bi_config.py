@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""WATO-Module for the rules and aggregations of Check_MK BI"""
+"""WATO-Module for the rules and aggregations of Checkmk BI"""
 
 import copy
 import json
@@ -47,9 +47,8 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
-from cmk.gui.node_vis_lib import BILayoutManagement
+from cmk.gui.nodevis_lib import BILayoutManagement
 from cmk.gui.page_menu import (
-    make_checkbox_selection_json_text,
     make_checkbox_selection_topic,
     make_confirmed_form_submit_link,
     make_simple_form_page_menu,
@@ -217,7 +216,7 @@ class ABCBIMode(WatoMode):
             if html.get_checkbox(varname)
         ]
 
-    def render_rule_tree(  # type:ignore[no-untyped-def]
+    def render_rule_tree(  # type: ignore[no-untyped-def]
         self, rule_id, tree_path, tree_prefix=""
     ) -> None:
         bi_pack = self._bi_packs.get_pack_of_rule(rule_id)
@@ -567,7 +566,7 @@ class ModeBIPacks(ABCBIMode):
                     HTML(", ").join(map(self._render_contact_group, pack.contact_groups)),
                 )
 
-    def _render_contact_group(self, c) -> HTML:  # type:ignore[no-untyped-def]
+    def _render_contact_group(self, c) -> HTML:  # type: ignore[no-untyped-def]
         display_name = self._contact_group_names.get(c, {"alias": c})["alias"]
         return HTMLWriter.render_a(display_name, "wato.py?mode=edit_contact_group&edit=%s" % c)
 
@@ -789,7 +788,7 @@ class ModeBIRules(ABCBIMode):
             self._add_change("bi-delete-rule", _("Deleted BI rule with ID %s") % rule_id)
         self._bi_packs.save_config()
 
-    def _check_delete_rule_id_permission(self, rule_id) -> None:  # type:ignore[no-untyped-def]
+    def _check_delete_rule_id_permission(self, rule_id) -> None:  # type: ignore[no-untyped-def]
         aggr_refs, rule_refs, _level = self._bi_packs.count_rule_references(rule_id)
         if aggr_refs:
             raise MKUserError(
@@ -896,7 +895,7 @@ class ModeBIRules(ABCBIMode):
             if pack_id is not self.bi_pack.id and bi_valuespecs.is_contact_for_pack(bi_pack)
         ]
 
-    def render_rules(self, title, only_unused) -> None:  # type:ignore[no-untyped-def]
+    def render_rules(self, title, only_unused) -> None:  # type: ignore[no-untyped-def]
         aggregations_that_use_rule = self._find_aggregation_rule_usages()
 
         rules = self.bi_pack.get_rules().items()
@@ -917,8 +916,7 @@ class ModeBIRules(ABCBIMode):
                             "_toggle_group",
                             type_="button",
                             class_="checkgroup",
-                            onclick="cmk.selection.toggle_all_rows(this.form, %s, %s);"
-                            % make_checkbox_selection_json_text(),
+                            onclick="cmk.selection.toggle_all_rows(this.form);",
                             value="X",
                         ),
                         sortable=False,
@@ -1002,7 +1000,7 @@ class ModeBIRules(ABCBIMode):
                     table.cell(_("Nodes"), str(bi_rule.num_nodes()), css=["number"])
                     table.cell(_("Used by"))
                     have_this = set()
-                    for (pack_id, aggr_id, bi_aggregation) in aggregations_that_use_rule.get(
+                    for pack_id, aggr_id, bi_aggregation in aggregations_that_use_rule.get(
                         rule_id, []
                     ):
                         if aggr_id not in have_this:
@@ -1241,7 +1239,7 @@ class ModeBIEditRule(ABCBIMode):
         return None
 
     @classmethod
-    def valuespec(cls, rule_id: str | None):  # type:ignore[no-untyped-def]
+    def valuespec(cls, rule_id: str | None):  # type: ignore[no-untyped-def]
         if rule_id:
             id_valuespec: ValueSpec = FixedValue(
                 value=rule_id,
@@ -1443,11 +1441,13 @@ class ModeBIEditRule(ABCBIMode):
 class BIRuleForm(Dictionary):
     def render_input(self, varprefix: str, value: Any) -> None:
         super().render_input(varprefix, value)
+        html.javascript("new cmk.bi.BIRulePreview('#form_birule', '%s')" % varprefix)
 
 
 class BIAggregationForm(Dictionary):
     def render_input(self, varprefix: str, value: Any) -> None:
         super().render_input(varprefix, value)
+        html.javascript("new cmk.bi.BIAggregationPreview('#form_biaggr', '%s')" % varprefix)
 
 
 @page_registry.register_page("ajax_bi_rule_preview")
@@ -1723,7 +1723,7 @@ class BIModeEditAggregation(ABCBIMode):
         self._add_rule_arguments_lookup()
 
     @classmethod
-    def get_vs_aggregation(cls, aggregation_id: str | None):  # type:ignore[no-untyped-def]
+    def get_vs_aggregation(cls, aggregation_id: str | None):  # type: ignore[no-untyped-def]
         if cmk_version.is_managed_edition():
             cme_elements = managed.customer_choice_element()
         else:
@@ -1813,6 +1813,17 @@ class BIModeEditAggregation(ABCBIMode):
                     Checkbox(
                         title=_("Disabled"),
                         label=_("Currently disable this aggregation"),
+                    ),
+                ),
+                (
+                    "freeze_aggregations",
+                    Checkbox(
+                        title=_("Freeze aggregations"),
+                        label=_("New aggregations are frozen"),
+                        help=_(
+                            "The structure of frozen aggregations are saved initially and does not change afterwards, unless triggered by the user. "
+                            "An icon indicates whether the aggregate is frozen. This icon can also be used to update the frozen structure of the aggregates."
+                        ),
                     ),
                 ),
                 (
@@ -2224,7 +2235,7 @@ class BIModeAggregations(ABCBIMode):
                 table.cell(_("Rule Tree"), css=["bi_rule_tree"])
                 self.render_aggregation_rule_tree(bi_aggregation)
 
-    def render_aggregation_rule_tree(self, bi_aggregation) -> None:  # type:ignore[no-untyped-def]
+    def render_aggregation_rule_tree(self, bi_aggregation) -> None:  # type: ignore[no-untyped-def]
         toplevel_rule = self._bi_packs.get_rule(bi_aggregation.node.action.rule_id)
         if not toplevel_rule:
             html.show_error(_("The top level rule does not exist."))
@@ -2283,13 +2294,13 @@ class ModeBIRuleTree(ABCBIMode):
                 self.render_rule_tree(self._rule_id, self._rule_id)
 
 
-#   .--WATO Permissions----------------------------------------------------.
-#   |                     __        ___  _____ ___                         |
-#   |                     \ \      / / \|_   _/ _ \                        |
-#   |                      \ \ /\ / / _ \ | || | | |                       |
-#   |                       \ V  V / ___ \| || |_| |                       |
-#   |                        \_/\_/_/   \_\_| \___/                        |
-#   |                                                                      |
+#   .--Setup Permissions---------------------------------------------------.
+#   |                     ____       _                                     |
+#   |                    / ___|  ___| |_ _   _ _ __                        |
+#   |                    \___ \ / _ \ __| | | | '_ \                       |
+#   |                     ___) |  __/ |_| |_| | |_) |                      |
+#   |                    |____/ \___|\__|\__,_| .__/                       |
+#   |                                         |_|                          |
 #   |        ____                     _         _                          |
 #   |       |  _ \ ___ _ __ _ __ ___ (_)___ ___(_) ___  _ __  ___          |
 #   |       | |_) / _ \ '__| '_ ` _ \| / __/ __| |/ _ \| '_ \/ __|         |
@@ -2297,6 +2308,8 @@ class ModeBIRuleTree(ABCBIMode):
 #   |       |_|   \___|_|  |_| |_| |_|_|___/___/_|\___/|_| |_|___/         |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 permission_registry.register(
     Permission(
@@ -2304,7 +2317,7 @@ permission_registry.register(
         name="bi_rules",
         title=_l("Business Intelligence Rules and Aggregations"),
         description=_l(
-            "Use the WATO BI module, create, modify and delete BI rules and "
+            "Use the Setup BI module, create, modify and delete BI rules and "
             "aggregations in packs that you are a contact of."
         ),
         defaults=["admin", "user"],

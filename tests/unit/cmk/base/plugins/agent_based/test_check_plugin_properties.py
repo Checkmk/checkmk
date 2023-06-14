@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections import defaultdict
 from collections.abc import Generator, Sequence
 from itertools import chain
 
+from pytest import MonkeyPatch
+
 from tests.testlib.base import Scenario
 
-from cmk.utils.type_defs import ParsedSectionName
+from tests.unit.conftest import FixRegister
 
-from cmk.checkers.plugin_contexts import current_host
+from cmk.utils.type_defs import HostName, ParsedSectionName
+
+from cmk.checkengine.plugin_contexts import current_host
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base.api.agent_based.type_defs import SectionPlugin, SNMPSectionPlugin
@@ -20,7 +23,6 @@ from cmk.base.api.agent_based.type_defs import SectionPlugin, SNMPSectionPlugin
 def _section_permutations(
     parsed_section_names: Sequence[ParsedSectionName],
 ) -> Generator[tuple[SectionPlugin, ...], None, None]:
-
     if not parsed_section_names:
         yield ()
         return
@@ -39,8 +41,8 @@ def _get_empty_parsed_result(section: SectionPlugin) -> object:
     )
 
 
-def test_check_plugins_do_not_discover_upon_empty_snmp_input(  # type:ignore[no-untyped-def]
-    monkeypatch, fix_register
+def test_check_plugins_do_not_discover_upon_empty_snmp_input(
+    monkeypatch: MonkeyPatch, fix_register: FixRegister
 ) -> None:
     """
     In Checkmk < 1.6 the parse function has not been called for empty table data,
@@ -87,14 +89,14 @@ def test_check_plugins_do_not_discover_upon_empty_snmp_input(  # type:ignore[no-
                     else [plugin.discovery_default_parameters]
                 )
 
-            with current_host("testhost"):  # host_extra_conf needs a host_name()
+            with current_host(HostName("testhost")):  # host_extra_conf needs a host_name()
                 if list(plugin.discovery_function(**kwargs)):
                     plugins_discovering_upon_empty.add(str(plugin.name))
 
     assert plugins_discovering_upon_empty == plugins_expected_to_discover_upon_empty
 
 
-def test_no_plugins_with_trivial_sections(fix_register) -> None:  # type:ignore[no-untyped-def]
+def test_no_plugins_with_trivial_sections(fix_register: FixRegister) -> None:
     """
     This is a sanity test for registered inventory and check plugins. It ensures that plugins
     have a non trivial section. Trivial sections may be created accidentally e.g. if a typo
@@ -103,44 +105,7 @@ def test_no_plugins_with_trivial_sections(fix_register) -> None:  # type:ignore[
     to the known exceptions below.
     """
     known_exceptions = {
-        ParsedSectionName(s)
-        for s in [
-            "aix_baselevel",
-            "aix_packages",
-            "aix_service_packs",
-            "couchbase_nodes_ports",
-            "docker_container_network",
-            "docker_node_images",
-            "lnx_block_devices",
-            "lnx_cpuinfo",
-            "lnx_distro",
-            "lnx_ip_r",
-            "lnx_packages",
-            "lnx_sysctl",
-            "lnx_uname",
-            "lnx_video",
-            "mssql_clusters",
-            "oracle_systemparameter",
-            "prtconf",
-            "solaris_addresses",
-            "solaris_pkginfo",
-            "solaris_prtdiag",
-            "solaris_routes",
-            "solaris_uname",
-            "statgrab_net",
-            "win_bios",
-            "win_computersystem",
-            "win_cpuinfo",
-            "win_disks",
-            "win_exefiles",
-            "win_ip_r",
-            "win_networkadapter",
-            "win_os",
-            "win_reg_uninstall",
-            "win_video",
-            "win_wmi_software",
-            "win_wmi_updates",
-        ]
+        ParsedSectionName("statgrab_net"),
     }
 
     # fix_register does not include trivial sections created by the trivial_section_factory
@@ -153,23 +118,33 @@ def test_no_plugins_with_trivial_sections(fix_register) -> None:  # type:ignore[
         chain(fix_register.check_plugins.values(), fix_register.inventory_plugins.values())
     )
 
-    if unknown_plugins := {str(p) for p in known_exceptions}.difference(
-        {str(p.name) for p in registered_check_and_inventory_plugins}
-    ):
-        raise AssertionError(f"Unknown plugins in exception list: {', '.join(unknown_plugins)}")
+    sections_ok_to_subscribe_to = registered_sections | known_exceptions
+    all_subscribed_sections = {
+        s for plugin in registered_check_and_inventory_plugins for s in plugin.sections
+    }
 
-    plugins_with_trivial_sections: dict[str, set[str]] = defaultdict(set)
-    for plugin in registered_check_and_inventory_plugins:
-        for section in plugin.sections:
-            if section not in registered_sections and section not in known_exceptions:
-                plugins_with_trivial_sections[plugin.name].add(str(section))
+    # make sure this test is up to date:
+    outdated_exceptions = (known_exceptions & registered_sections) | (
+        known_exceptions - all_subscribed_sections
+    )
+    assert not outdated_exceptions
 
-    if plugins_with_trivial_sections:
-        msg = "\n".join(
-            f"{plugin}: {', '.join(sections)}"
-            for plugin, sections in sorted(plugins_with_trivial_sections.items())
+    if all_subscribed_sections < sections_ok_to_subscribe_to:
+        return
+
+    plugins_with_trivial_sections = {
+        plugin.name: unknown_sections
+        for plugin in registered_check_and_inventory_plugins
+        if (
+            unknown_sections := [s for s in plugin.sections if s not in sections_ok_to_subscribe_to]
         )
-        assert 0, f"""Found new plugins with trivial sections:
+    }
+
+    msg = "\n".join(
+        f"{plugin}: {', '.join(str(s) for s in sections)}"
+        for plugin, sections in plugins_with_trivial_sections.items()
+    )
+    assert 0, f"""Found new plugins with trivial sections:
 PLUGIN - TRIVIAL SECTIONS'
 ----------------
 {msg}"""

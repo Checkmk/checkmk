@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -91,7 +91,6 @@ while getopts "hv" opt; do
     case "$opt" in
         h)
             print_help
-            exit 0
             ;;
         v)
             echo "$PROGNAME version: $REVISION"
@@ -99,7 +98,6 @@ while getopts "hv" opt; do
             ;;
         \?)
             print_help
-            exit 0
             ;;
     esac
 done

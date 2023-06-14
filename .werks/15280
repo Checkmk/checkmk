@@ -1,0 +1,15 @@
+Title: synology_disk: use diskRole to ignore "not initialized" warning
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1677680603
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+It's okay if a disk is not initialized (this is normally a warning) if the disk
+is not used at all, a SSD-cache or a hot-spare.
+Before all disks containing SSD or NVME in the disk model were assumed to be
+caches.
+

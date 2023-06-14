@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -134,7 +134,7 @@ def _create_interface(raw_stats: Mapping[str, str]) -> InterfaceWithCounters:
     )
 
 
-def parse_lnx_container_host_if(string_table) -> Section:  # type:ignore[no-untyped-def]
+def parse_lnx_container_host_if(string_table) -> Section:  # type: ignore[no-untyped-def]
     return [_create_interface(_parse_raw_stats(i)) for i in string_table], {}
 
 

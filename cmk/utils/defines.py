@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module serves constants which are needed in several components
 of Check_MK."""
 
+from typing import Final
+
 from cmk.utils.i18n import _
+
+ALL_SITES_INFLUX_TAG: Final = "-all-sites"
 
 # TODO: Investigate Checkmk code for more defines and other places
 #       where similar strucures are defined and use the things from

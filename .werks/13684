@@ -6,7 +6,7 @@ Date: 1655114093
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, the agent bakery (or more precisely: The background job
 scheduling a call to the agent bakery) locked the Checkmk configuration

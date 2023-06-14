@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,12 +8,12 @@ import subprocess
 import time
 from collections.abc import Iterable
 from logging import Logger
-from typing import Any
 
 import cmk.utils.debug
 import cmk.utils.defines
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import ContactgroupName, ECEventContext
+from cmk.utils.notify_types import ECEventContext
+from cmk.utils.type_defs import ContactgroupName
 
 from .config import Action, Config, EMailActionConfig, Rule, ScriptActionConfig
 from .core_queries import query_contactgroups_members, query_status_enable_notifications
@@ -42,7 +42,7 @@ def event_has_opened(
     config: Config,
     logger: Logger,
     host_config: HostConfig,
-    event_columns: Iterable[tuple[str, Any]],
+    event_columns: Iterable[tuple[str, object]],
     rule: Rule,
     event: Event,
 ) -> None:
@@ -78,7 +78,7 @@ def do_event_actions(
     config: Config,
     logger: Logger,
     host_config: HostConfig,
-    event_columns: Iterable[tuple[str, Any]],
+    event_columns: Iterable[tuple[str, object]],
     actions: Iterable[str],
     event: Event,
     is_cancelling: bool,
@@ -106,7 +106,7 @@ def do_event_action(
     settings: Settings,
     config: Config,
     logger: Logger,
-    event_columns: Iterable[tuple[str, Any]],
+    event_columns: Iterable[tuple[str, object]],
     action: Action,
     event: Event,
     user: str,
@@ -133,7 +133,7 @@ def _do_email_action(
     history: History,
     config: Config,
     logger: Logger,
-    event_columns: Iterable[tuple[str, Any]],
+    event_columns: Iterable[tuple[str, object]],
     action_config: EMailActionConfig,
     event: Event,
     user: str,
@@ -148,7 +148,7 @@ def _do_email_action(
 def _do_script_action(
     history: History,
     logger: Logger,
-    event_columns: Iterable[tuple[str, Any]],
+    event_columns: Iterable[tuple[str, object]],
     action_config: ScriptActionConfig,
     action_id: str,
     event: Event,
@@ -163,7 +163,7 @@ def _do_script_action(
     history.add(event, "SCRIPT", user, action_id)
 
 
-def _prepare_text(text: str, event_columns: Iterable[tuple[str, Any]], event: Event) -> str:
+def _prepare_text(text: str, event_columns: Iterable[tuple[str, object]], event: Event) -> str:
     return _escape_null_bytes(_substitute_event_tags(text, event_columns, event))
 
 
@@ -172,7 +172,7 @@ def _escape_null_bytes(s: str) -> str:
 
 
 def _substitute_event_tags(
-    text: str, event_columns: Iterable[tuple[str, Any]], event: Event
+    text: str, event_columns: Iterable[tuple[str, object]], event: Event
 ) -> str:
     for key, value in _get_event_tags(event_columns, event).items():
         text = text.replace(f"${key.upper()}$", value)
@@ -215,7 +215,7 @@ def _send_email(config: Config, to: str, subject: str, body: str, logger: Logger
 
 
 def _execute_script(
-    event_columns: Iterable[tuple[str, Any]], body: str, event: Event, logger: Logger
+    event_columns: Iterable[tuple[str, object]], body: str, event: Event, logger: Logger
 ) -> None:
     script_env = os.environ.copy()
     for key, value in _get_event_tags(event_columns, event).items():
@@ -239,10 +239,10 @@ def _execute_script(
 
 
 def _get_event_tags(
-    event_columns: Iterable[tuple[str, Any]],
+    event_columns: Iterable[tuple[str, object]],
     event: Event,
 ) -> dict[str, str]:
-    substs: list[tuple[str, Any]] = [
+    substs: list[tuple[str, object]] = [
         (f"match_group_{nr + 1}", g) for nr, g in enumerate(event.get("match_groups", ()))
     ]
 
@@ -452,7 +452,7 @@ def _add_infos_from_monitoring_host(
 
     # Add custom variables to the notification context
     for key, val in config.custom_variables.items():
-        # TypedDict with dynamic keys... The typing we have is worth the supression
+        # TypedDict with dynamic keys... The typing we have is worth the suppression
         context[f"HOST_{key}"] = val  # type: ignore[literal-required]
 
     context["HOSTDOWNTIME"] = "1" if event["host_in_downtime"] else "0"
@@ -482,7 +482,8 @@ def _add_contact_information_to_context(
 ) -> None:
     try:
         contact_names = query_contactgroups_members(contact_groups)
-    except Exception:
+    except Exception as e:
+        logger.error(f"Cannot get contact group members, assuming none: {e}")
         contact_names = set()
     context["CONTACTS"] = ",".join(contact_names)
     context["SERVICECONTACTGROUPNAMES"] = ",".join(contact_groups)
@@ -499,7 +500,7 @@ def _core_has_notifications_enabled(logger: Logger) -> bool:
     try:
         return query_status_enable_notifications()
     except Exception as e:
-        logger.info(
-            f"Cannot determine whether notifications are enabled in core: {e}. Assuming YES."
+        logger.error(
+            f"Cannot determine whether notifications are enabled in core, assuming YES: {e}"
         )
         return True

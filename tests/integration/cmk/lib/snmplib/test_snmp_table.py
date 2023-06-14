@@ -1,24 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import MutableMapping
+from pathlib import Path
+from subprocess import CalledProcessError
 
 import pytest
 
-from cmk.utils.exceptions import MKSNMPError
-from cmk.utils.type_defs import SectionName
+from tests.testlib.site import Site
 
-import cmk.snmplib.snmp_modes as snmp_modes
-import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib.type_defs import (
-    BackendOIDSpec,
-    BackendSNMPTree,
-    SNMPBackend,
-    SNMPBackendEnum,
-    SpecialColumn,
-)
+from cmk.utils.type_defs import HostAddress
+
+from cmk.snmplib.type_defs import BackendOIDSpec, BackendSNMPTree, SNMPBackendEnum, SpecialColumn
 
 INFO_TREE = BackendSNMPTree(
     base=".1.3.6.1.2.1.1",
@@ -29,18 +23,7 @@ INFO_TREE = BackendSNMPTree(
     ],
 )
 
-
-# Found no other way to achieve this
-# https://github.com/pytest-dev/pytest/issues/363
-@pytest.fixture(scope="module")
-def monkeymodule(request):
-    # pylint: disable=import-outside-toplevel
-    from _pytest.monkeypatch import MonkeyPatch
-
-    # pylint: enable=import-outside-toplevel
-    mpatch = MonkeyPatch()
-    yield mpatch
-    mpatch.undo()
+from .snmp_helpers import default_config, get_single_oid, get_snmp_table
 
 
 # Missing in currently used dump:
@@ -59,76 +42,86 @@ def monkeymodule(request):
         ("TimeTicks", ".1.3.6.1.2.1.1.3.0", "449613886"),
     ],
 )
+@pytest.mark.usefixtures("snmpsim")
 def test_get_data_types(
-    backend: SNMPBackend, type_name: str, oid: str, expected_response: str
+    site: Site, backend_type: SNMPBackendEnum, type_name: str, oid: str, expected_response: str
 ) -> None:
-    response = snmp_modes.get_single_oid(oid, backend=backend)
+    response = get_single_oid(site, oid, backend_type, default_config(backend_type))[0]
     assert response == expected_response
     assert isinstance(response, str)
 
     oid_start, oid_end = oid.rsplit(".", 1)
-    table = snmp_table.get_snmp_table(
-        section_name=SectionName("my_Section"),
+    table, _ = get_snmp_table(
+        site,
         tree=BackendSNMPTree(base=oid_start, oids=[BackendOIDSpec(oid_end, "string", False)]),
-        backend=backend,
-        walk_cache={},
+        backend_type=backend_type,
+        config=default_config(backend_type),
     )
 
     assert table[0][0] == expected_response
     assert isinstance(table[0][0], str)
 
 
-def test_get_simple_snmp_table_not_resolvable(backend: SNMPBackend) -> None:
-    if backend.config.snmp_backend is SNMPBackendEnum.STORED_WALK:
+@pytest.mark.usefixtures("snmpsim")
+def test_get_simple_snmp_table_not_resolvable(site: Site, backend_type: SNMPBackendEnum) -> None:
+    if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
-    backend.config = backend.config._replace(ipaddress="bla.local")
+    config = default_config(backend_type)._replace(ipaddress=HostAddress("bla.local"))
 
     # TODO: Unify different error messages
-    if backend.config.snmp_backend is SNMPBackendEnum.INLINE:
+    if config.snmp_backend is SNMPBackendEnum.INLINE:
         exc_match = "Failed to initiate SNMP"
     else:
         exc_match = "Unknown host"
 
-    with pytest.raises(MKSNMPError, match=exc_match):
-        snmp_table.get_snmp_table(
-            section_name=SectionName("my_Section"),
-            tree=INFO_TREE,
-            walk_cache={},
-            backend=backend,
+    with pytest.raises(CalledProcessError) as e:
+        site.python_helper("helper_get_snmp_table.py").check_output(
+            input=repr(
+                (
+                    INFO_TREE.to_json(),
+                    backend_type.serialize(),
+                    config.serialize(),
+                    str(Path(__file__).parent.resolve() / "snmp_data" / "cmk-walk"),
+                )
+            )
         )
+    assert exc_match in e.value.stderr
 
 
-def test_get_simple_snmp_table_wrong_credentials(backend: SNMPBackend) -> None:
-    if backend.config.snmp_backend is SNMPBackendEnum.STORED_WALK:
+@pytest.mark.usefixtures("snmpsim")
+def test_get_simple_snmp_table_wrong_credentials(site: Site, backend_type: SNMPBackendEnum) -> None:
+    if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
-    backend.config = backend.config._replace(credentials="dingdong")
+    config = default_config(backend_type)._replace(credentials="dingdong")
 
     # TODO: Unify different error messages
-    if backend.config.snmp_backend == SNMPBackendEnum.INLINE:
+    if config.snmp_backend is SNMPBackendEnum.INLINE:
         exc_match = "SNMP query timed out"
     else:
         exc_match = "Timeout: No Response from"
 
-    with pytest.raises(MKSNMPError, match=exc_match):
-        snmp_table.get_snmp_table(
-            section_name=SectionName("my_Section"),
-            tree=INFO_TREE,
-            walk_cache={},
-            backend=backend,
+    with pytest.raises(CalledProcessError) as e:
+        site.python_helper("helper_get_snmp_table.py").check_output(
+            input=repr(
+                (
+                    INFO_TREE.to_json(),
+                    backend_type.serialize(),
+                    config.serialize(),
+                    str(Path(__file__).parent.resolve() / "snmp_data" / "cmk-walk"),
+                )
+            )
         )
+    assert exc_match in e.value.stderr
 
 
 @pytest.mark.parametrize("bulk", [True, False])
-def test_get_simple_snmp_table_bulkwalk(backend: SNMPBackend, bulk: bool) -> None:
-    backend.config = backend.config._replace(is_bulkwalk_host=bulk)
-    table = snmp_table.get_snmp_table(
-        section_name=SectionName("my_Section"),
-        tree=INFO_TREE,
-        walk_cache={},
-        backend=backend,
-    )
+def test_get_simple_snmp_table_bulkwalk(
+    site: Site, backend_type: SNMPBackendEnum, bulk: bool
+) -> None:
+    config = default_config(backend_type)._replace(is_bulkwalk_host=bulk)
+    table, _ = get_snmp_table(site, INFO_TREE, backend_type, config)
 
     assert table == [
         [
@@ -140,17 +133,9 @@ def test_get_simple_snmp_table_bulkwalk(backend: SNMPBackend, bulk: bool) -> Non
     assert isinstance(table[0][0], str)
 
 
-def test_get_simple_snmp_table_fills_cache(backend: SNMPBackend) -> None:
-
-    walk_cache: MutableMapping[str, tuple[bool, list[tuple[str, bytes]]]] = {}
-
-    _ = snmp_table.get_snmp_table(
-        section_name=SectionName("my_Section"),
-        tree=INFO_TREE,
-        walk_cache=walk_cache,
-        backend=backend,
-    )
-
+@pytest.mark.usefixtures("snmpsim")
+def test_get_simple_snmp_table_fills_cache(site: Site, backend_type: SNMPBackendEnum) -> None:
+    _, walk_cache = get_snmp_table(site, INFO_TREE, backend_type, default_config(backend_type))
     assert sorted(walk_cache) == [
         ".1.3.6.1.2.1.1.1.0",
         ".1.3.6.1.2.1.1.2.0",
@@ -158,13 +143,9 @@ def test_get_simple_snmp_table_fills_cache(backend: SNMPBackend) -> None:
     ]
 
 
-def test_get_simple_snmp_table(backend: SNMPBackend) -> None:
-    table = snmp_table.get_snmp_table(
-        section_name=SectionName("my_Section"),
-        tree=INFO_TREE,
-        walk_cache={},
-        backend=backend,
-    )
+@pytest.mark.usefixtures("snmpsim")
+def test_get_simple_snmp_table(site: Site, backend_type: SNMPBackendEnum) -> None:
+    table, _ = get_snmp_table(site, INFO_TREE, backend_type, default_config(backend_type))
 
     assert table == [
         [
@@ -176,7 +157,8 @@ def test_get_simple_snmp_table(backend: SNMPBackend) -> None:
     assert isinstance(table[0][0], str)
 
 
-def test_get_simple_snmp_table_oid_end(backend: SNMPBackend) -> None:
+@pytest.mark.usefixtures("snmpsim")
+def test_get_simple_snmp_table_oid_end(site: Site, backend_type: SNMPBackendEnum) -> None:
     oid_info = BackendSNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
         oids=[
@@ -186,12 +168,7 @@ def test_get_simple_snmp_table_oid_end(backend: SNMPBackend) -> None:
             BackendOIDSpec(SpecialColumn.END, "string", False),
         ],
     )
-    table = snmp_table.get_snmp_table(
-        section_name=SectionName("my_Section"),
-        tree=oid_info,
-        walk_cache={},
-        backend=backend,
-    )
+    table, _ = get_snmp_table(site, oid_info, backend_type, default_config(backend_type))
 
     assert table == [
         ["1", "lo", "24", "1"],
@@ -199,7 +176,8 @@ def test_get_simple_snmp_table_oid_end(backend: SNMPBackend) -> None:
     ]
 
 
-def test_get_simple_snmp_table_oid_string(backend: SNMPBackend) -> None:
+@pytest.mark.usefixtures("snmpsim")
+def test_get_simple_snmp_table_oid_string(site: Site, backend_type: SNMPBackendEnum) -> None:
     oid_info = BackendSNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
         # deprecated with checkmk version 2.0
@@ -210,12 +188,7 @@ def test_get_simple_snmp_table_oid_string(backend: SNMPBackend) -> None:
             BackendOIDSpec(SpecialColumn.STRING, "string", False),
         ],
     )
-    table = snmp_table.get_snmp_table(
-        section_name=SectionName("my_Section"),
-        tree=oid_info,
-        walk_cache={},
-        backend=backend,
-    )
+    table, _ = get_snmp_table(site, oid_info, backend_type, default_config(backend_type))
 
     assert table == [
         ["1", "lo", "24", ".1.3.6.1.2.1.2.2.1.1.1"],
@@ -223,7 +196,8 @@ def test_get_simple_snmp_table_oid_string(backend: SNMPBackend) -> None:
     ]
 
 
-def test_get_simple_snmp_table_oid_bin(backend: SNMPBackend) -> None:
+@pytest.mark.usefixtures("snmpsim")
+def test_get_simple_snmp_table_oid_bin(site: Site, backend_type: SNMPBackendEnum) -> None:
     oid_info = BackendSNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
         # deprecated with checkmk version 2.0
@@ -234,12 +208,7 @@ def test_get_simple_snmp_table_oid_bin(backend: SNMPBackend) -> None:
             BackendOIDSpec(SpecialColumn.BIN, "string", False),
         ],
     )
-    table = snmp_table.get_snmp_table(
-        section_name=SectionName("my_Section"),
-        tree=oid_info,
-        walk_cache={},
-        backend=backend,
-    )
+    table, _ = get_snmp_table(site, oid_info, backend_type, default_config(backend_type))
 
     assert table == [
         ["1", "lo", "24", "\x01\x03\x06\x01\x02\x01\x02\x02\x01\x01\x01"],
@@ -247,7 +216,8 @@ def test_get_simple_snmp_table_oid_bin(backend: SNMPBackend) -> None:
     ]
 
 
-def test_get_simple_snmp_table_oid_end_bin(backend: SNMPBackend) -> None:
+@pytest.mark.usefixtures("snmpsim")
+def test_get_simple_snmp_table_oid_end_bin(site: Site, backend_type: SNMPBackendEnum) -> None:
     oid_info = BackendSNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
         # deprecated with checkmk version 2.0
@@ -258,12 +228,7 @@ def test_get_simple_snmp_table_oid_end_bin(backend: SNMPBackend) -> None:
             BackendOIDSpec(SpecialColumn.END_BIN, "string", False),
         ],
     )
-    table = snmp_table.get_snmp_table(
-        section_name=SectionName("my_Section"),
-        tree=oid_info,
-        walk_cache={},
-        backend=backend,
-    )
+    table, _ = get_snmp_table(site, oid_info, backend_type, default_config(backend_type))
 
     assert table == [
         ["1", "lo", "24", "\x01"],
@@ -271,18 +236,14 @@ def test_get_simple_snmp_table_oid_end_bin(backend: SNMPBackend) -> None:
     ]
 
 
-def test_get_simple_snmp_table_with_hex_str(backend: SNMPBackend) -> None:
+@pytest.mark.usefixtures("snmpsim")
+def test_get_simple_snmp_table_with_hex_str(site: Site, backend_type: SNMPBackendEnum) -> None:
     oid_info = BackendSNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
         oids=[BackendOIDSpec("6", "string", False)],
     )
 
-    table = snmp_table.get_snmp_table(
-        section_name=SectionName("my_Section"),
-        tree=oid_info,
-        walk_cache={},
-        backend=backend,
-    )
+    table, _ = get_snmp_table(site, oid_info, backend_type, default_config(backend_type))
 
     assert table == [
         [""],

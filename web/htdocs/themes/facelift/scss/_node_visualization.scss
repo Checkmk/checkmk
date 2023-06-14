@@ -1,5 +1,5 @@
 @charset "UTF-8";
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -64,6 +64,10 @@ div.node_vis {
 
     img[title="Search"] {
       filter: $toggle-button-search-img-filter;
+    }
+
+    &.down {
+      background: $node-vis-togglebox-enabled;
     }
   }
 
@@ -251,12 +255,51 @@ div.node_vis {
     stroke-width: 3;
   }
 
+  .node_element.white_focus circle {
+    stroke: $white !important;
+    stroke-width: 4;
+  }
+
+  .link_element.crit {
+    stroke: $danger !important;
+    stroke-width: 4;
+  }
+
+  .link_element.white_focus {
+    stroke: $white !important;
+    stroke-width: 4;
+  }
+
+  .link_element.only_in_reference {
+    stroke: $bi-new-element-bright !important;
+    stroke-width: 4;
+  }
+
+  .link_element.only_in_reference.white_focus {
+    stroke: $bi-new-element-bright !important;
+    stroke-width: 4;
+  }
+
+  .link_element.missing_in_reference {
+    stroke: $bi-missing-element-bright !important;
+    stroke-width: 4;
+  }
+
+  .link_element.missing_in_reference.white_focus {
+    stroke: $bi-missing-element-bright !important;
+    stroke-width: 4;
+  }
+
+  div.togglebox_wrap {
+    margin: 5px;
+  }
+
   .togglebox {
     display: table-cell;
+    vertical-align: middle;
     width: 150px;
     height: 27px;
     text-align: center;
-    vertical-align: middle;
     cursor: pointer;
     background: $input-background-color;
     border-radius: $theme-border-radius;
@@ -279,7 +322,7 @@ div.node_vis {
   /* Style indicators */
   .style_indicator {
     opacity: 0.3;
-    stroke: "black";
+    stroke: $black;
     stroke-width: 1;
   }
 
@@ -348,12 +391,6 @@ div.node_vis {
 
   div#togglebuttons {
     display: flex;
-
-    div#togglebutton_layouting_toolbar + div.togglebox {
-      padding-top: 6px;
-      margin: 7px;
-      box-sizing: border-box;
-    }
   }
 }
 

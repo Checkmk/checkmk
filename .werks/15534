@@ -1,0 +1,15 @@
+Title: Discovery service details: include host labels
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1683104596
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+The service details of the discovery check now feature a full list of new and vanished host lables.
+This is consistent with the way the vanished/new services are listed.
+
+

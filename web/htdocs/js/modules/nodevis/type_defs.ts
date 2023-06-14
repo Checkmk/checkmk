@@ -1,17 +1,19 @@
 import * as d3 from "d3";
 import {HierarchyNode} from "d3";
-import {InfoBox} from "nodevis/infobox";
 import {DatasourceManager} from "nodevis/datasources";
-import {Toolbar} from "nodevis/toolbar";
-import {LayeredViewport} from "nodevis/viewport";
+import {ForceOptions, ForceSimulation} from "nodevis/force_simulation";
+import {InfoBox} from "nodevis/infobox";
+import {LayeredNodesLayer} from "nodevis/layers";
+import {LayoutManagerLayer} from "nodevis/layout";
 import {
     AbstractLayoutStyle,
     LineConfig,
     NodeVisualizationLayout,
+    StyleConfig,
 } from "nodevis/layout_utils";
-import {ForceSimulation} from "nodevis/force_simulation";
-import {LayoutManagerLayer} from "nodevis/layout";
-import {LayeredNodesLayer} from "nodevis/layers";
+import {NodeVisualization} from "nodevis/main";
+import {Toolbar} from "nodevis/toolbar";
+import {LayeredViewport} from "nodevis/viewport";
 
 export type d3SelectionDiv = d3.Selection<
     HTMLDivElement,
@@ -35,6 +37,7 @@ export type d3NodeSelection = d3.Selection<
 >;
 
 export class NodevisWorld {
+    root_div: d3SelectionDiv;
     datasource_manager: DatasourceManager;
     toolbar: Toolbar;
     viewport: LayeredViewport;
@@ -43,20 +46,28 @@ export class NodevisWorld {
     force_simulation: ForceSimulation;
     current_datasource: "bi_aggregations" | "topology" = "bi_aggregations";
     nodes_layer: LayeredNodesLayer;
+    main_instance: NodeVisualization;
 
     update_data: () => void;
     update_browser_url: () => void;
+    save_layout: () => void;
+    delete_layout: () => void;
 
     constructor(
+        root_div: d3SelectionDiv,
         datasource_manager: DatasourceManager,
         toolbar: Toolbar,
         viewport: LayeredViewport,
         infobox: InfoBox,
         force_simulation: ForceSimulation,
         callback_update_data: () => void,
-        callback_update_browser_url: () => void
+        callback_update_browser_url: () => void,
+        callback_save_layout: () => void,
+        callback_delete_layout: () => void,
+        main_instance: NodeVisualization
     ) {
         // TODO: This code is never called :) o.O
+        this.root_div = root_div;
         this.datasource_manager = datasource_manager;
         this.viewport = viewport;
         this.infobox = infobox;
@@ -66,8 +77,11 @@ export class NodevisWorld {
         this.nodes_layer = this.viewport.get_layer(
             "nodes"
         ) as LayeredNodesLayer;
+        this.main_instance = main_instance;
         this.update_data = callback_update_data;
         this.update_browser_url = callback_update_browser_url;
+        this.save_layout = callback_save_layout;
+        this.delete_layout = callback_delete_layout;
     }
 }
 
@@ -125,17 +139,6 @@ export interface SerializedNodeChunk {
     links: SerializedNodevisLink[];
 }
 
-export interface ForceOptions {
-    force_node: number;
-    link_strength: number;
-    link_force_aggregator: number;
-    link_force_node: number;
-    force_aggregator: number; // TODO: check duplicate
-    collision_force_node: number;
-    collision_force_aggregator: number;
-    center_force: number;
-}
-
 export interface NodeData {
     children?: NodeData[];
     id: string;
@@ -175,7 +178,6 @@ export interface NodeData {
         hide_node_link?: boolean;
     };
 
-    force_options: ForceOptions;
     explicit_force_options: ForceOptions | null;
 
     transition_info: {
@@ -195,12 +197,15 @@ export interface NodeData {
         rule: string;
         aggregation_function_description: string;
     };
+    rule_layout_style?: {[name: string]: any};
 }
 
 export interface LinkConfig {
     type: "default";
     width?: number;
     color?: string;
+    css?: string;
+    link_info?: string;
 }
 
 export interface SerializedNodevisLink {
@@ -237,8 +242,15 @@ declare module "d3" {
 // TODO: add class
 interface LayoutSettings {
     origin_info: string;
-    origin_type: "explicit" | "default";
-    config: {line_config: LineConfig};
+    origin_type: "explicit" | "default_template";
+    default_id: string;
+    config: {
+        line_config: LineConfig;
+        style_configs: StyleConfig[];
+        delayed_style_configs?: StyleConfig[];
+        force_options?: ForceOptions;
+        ignore_rule_styles?: boolean;
+    };
 }
 
 // TODO: Change to interface, create instance elsewhere
@@ -257,6 +269,7 @@ export class NodeChunk {
     layout_instance: NodeVisualizationLayout | null;
     layout_settings: LayoutSettings;
     aggr_type: "single" | "multi" = "multi";
+    template_id: string | null = null;
 
     constructor(
         type: string,
@@ -311,12 +324,5 @@ export class NodeChunk {
         return links;
     }
 }
-
-export type SimulationForce =
-    | "charge_force"
-    | "collide"
-    | "center"
-    | "link_distance"
-    | "link_strength";
 
 export type NodevisNode = HierarchyNode<NodeData>;

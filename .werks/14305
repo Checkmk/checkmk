@@ -1,0 +1,15 @@
+Title: Crash report list: Add new column "Crash source"
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1678175327
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+This column displays "Builtin" for all crashes that only involve files shipped
+with Checkmk and "Extension" for all crashes involving a file located in the
+local hierarchy of the site, like files from extension packages.
+

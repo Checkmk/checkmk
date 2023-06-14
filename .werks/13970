@@ -6,7 +6,7 @@ Date: 1670582236
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Calling the "/objects/agent/" endpoint would always fail with a Permission Mismatch.
 This is no longer the case.

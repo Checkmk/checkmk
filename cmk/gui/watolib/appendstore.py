@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
 import ast
 import os
+from collections.abc import Iterator, Sequence
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Generic, TypeVar
 
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 
 _VT = TypeVar("_VT")
@@ -20,18 +23,8 @@ _VT = TypeVar("_VT")
 class ABCAppendStore(Generic[_VT], abc.ABC):
     """Managing a file with structured data that can be appended in a cheap way
 
-    The file holds basic python structures separated by "\0".
+    The file holds basic python structures separated by "\\0".
     """
-
-    @staticmethod
-    @abc.abstractmethod
-    def make_path(*args: str) -> Path:
-        """Note:
-        Abstract static methods do not make any sense.  This should
-        be a free function.
-
-        """
-        raise NotImplementedError()
 
     @staticmethod
     @abc.abstractmethod
@@ -63,54 +56,52 @@ class ABCAppendStore(Generic[_VT], abc.ABC):
     def exists(self) -> bool:
         return self._path.exists()
 
-    # TODO: Implement this locking as context manager
-    def read(self, lock: bool = False) -> list[_VT]:
+    def __read(self) -> list[_VT]:
         """Parse the file and return the entries"""
-        path = self._path
-
-        if lock:
-            store.acquire_lock(path)
-
-        entries = []
         try:
-            with path.open("rb") as f:
-                for entry in f.read().split(b"\0"):
-                    if entry:
-                        entries.append(self._deserialize(ast.literal_eval(entry.decode("utf-8"))))
+            with self._path.open("rb") as f:
+                return [
+                    self._deserialize(ast.literal_eval(entry.decode("utf-8")))
+                    for entry in f.read().split(b"\0")
+                    if entry
+                ]
         except FileNotFoundError:
-            pass
-        except Exception:
-            if lock:
-                store.release_lock(path)
-            raise
+            return []
+        except SyntaxError as e:
+            raise MKUserError(
+                None,
+                _(
+                    "The audit log can not be shown because of "
+                    "a syntax error in %s.<br><br>Please review and fix the file "
+                    "content or remove the file before you visit this page "
+                    "again.<br><br>The problematic entry is:<br>%s"
+                )
+                % (f.name, e.text),
+            )
 
-        return entries
-
-    def write(self, entries: list[_VT]) -> None:
-        # First truncate the file
-        with self._path.open("wb"):
-            pass
-
-        for entry in entries:
-            self.append(entry)
+    def read(self) -> Sequence[_VT]:
+        with store.locked(self._path):
+            return self.__read()
 
     def append(self, entry: _VT) -> None:
-        path = self._path
-        try:
-            store.acquire_lock(path)
+        with store.locked(self._path):
+            try:
+                with self._path.open("ab+") as f:
+                    f.write(repr(self._serialize(entry)).encode("utf-8") + b"\0")
+                    f.flush()
+                    os.fsync(f.fileno())
+                self._path.chmod(0o660)
+            except Exception as e:
+                raise MKGeneralException(_('Cannot write file "%s": %s') % (self._path, e))
 
-            with path.open("ab+") as f:
-                f.write(repr(self._serialize(entry)).encode("utf-8") + b"\0")
-                f.flush()
-                os.fsync(f.fileno())
-
-            path.chmod(0o660)
-
-        except Exception as e:
-            raise MKGeneralException(_('Cannot write file "%s": %s') % (path, e))
-
-        finally:
-            store.release_lock(path)
-
-    def clear(self) -> None:
-        self._path.unlink(missing_ok=True)
+    @contextmanager
+    def mutable_view(self) -> Iterator[list[_VT]]:
+        with store.locked(self._path):
+            entries = self.__read()
+            try:
+                yield entries
+            finally:
+                with self._path.open("wb"):  # truncate the file
+                    pass
+                for entry in entries:
+                    self.append(entry)

@@ -1,0 +1,16 @@
+Title: Crash during discovery (Fortigate CPU)
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1679996834
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+During discovery the fortigate_cpu and fortigate_cpu_base
+check plugins would crash with error:
+
+<b>TypeError (inventory_fortigate_cpu() takes 0 positional arguments but 1 was given)</b>
+
+Now the discovery works again as intended.

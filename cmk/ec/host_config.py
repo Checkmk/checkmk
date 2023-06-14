@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -20,7 +20,7 @@ from .core_queries import HostInfo, query_hosts_infos, query_status_program_star
 #   |                                                      |___/           |
 #   +----------------------------------------------------------------------+
 #   | Manages the configuration of the hosts of the local monitoring core. |
-#   | It fetches and caches the information during runtine of the EC.      |
+#   | It fetches and caches the information during runtime of the EC.      |
 #   '----------------------------------------------------------------------'
 
 
@@ -59,8 +59,8 @@ class HostConfig:
             if self._cache_timestamp is None or self._cache_timestamp < timestamp:
                 self._update_cache()
                 self._cache_timestamp = timestamp
-        except Exception:
-            self._logger.exception("Failed to get host info from core. Try again later.")
+        except Exception as e:
+            self._logger.error(f"Cannot get host info from core: {e}")
             return False
         return True
 

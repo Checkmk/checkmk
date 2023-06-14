@@ -127,7 +127,7 @@ TEST(CmaCfg, RemoveLegacy_Base) {
         registry::kMsiRemoveLegacyDefault));
 }
 
-TEST(CmaCfg, RemoveLegacy_Long) {
+TEST(CmaCfg, RemoveLegacy_Simulation) {
     auto temp_dir = cfg::GetTempDir();
     auto path = cfg::CreateWmicUninstallFile(temp_dir, "zzz");
     EXPECT_TRUE(!path.empty());
@@ -505,7 +505,7 @@ TEST_F(CmaCfg_F, CleanDataFolderSmart) {
     EXPECT_TRUE(fs::exists(pd / files::kUserYmlFile))
         << "this file must be left on disk";
 
-    int exists_count = 0;
+    uint32_t exists_count = 0;
     for (const auto &n : table) {
         if (fs::exists(pd / n / "1.tmp")) {
             ++exists_count;
@@ -574,7 +574,7 @@ private:
 };
 }  // namespace
 
-TEST(CmaCfg, SetupPluginEnvironmentIntegration) {
+TEST(CmaCfg, SetupPluginEnvironmentComponent) {
     JobToCheckEnvironment job(test_info_->name());
     cfg::SetupPluginEnvironment();
     auto table = job.getEnvironment();

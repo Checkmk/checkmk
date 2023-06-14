@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Sequence
 
 import pytest
 
@@ -34,11 +36,11 @@ def test_registered_permission_sections() -> None:
         ("view", (50, "Views", True)),
         ("icons_and_actions", (50, "Icons", True)),
         ("pagetype_topic", (50, "Topics", True)),
+        ("agent_registration", (50, "Agent registration", False)),
     ]
 
     if not cmk_version.is_raw_edition():
         expected_sections += [
-            ("agent_registration", (50, "Agent registration", False)),
             ("custom_graph", (50, "Custom graphs", True)),
             ("forecast_graph", (50, "Forecast graphs", True)),
             ("graph_collection", (50, "Graph collections", True)),
@@ -63,6 +65,7 @@ def test_registered_permissions() -> None:
     expected_permissions = [
         "action.acknowledge",
         "action.addcomment",
+        "action.aggregation_freeze",
         "action.clearmodattr",
         "action.customnotification",
         "action.downtimes",
@@ -71,8 +74,9 @@ def test_registered_permissions() -> None:
         "action.notifications",
         "action.remove_all_downtimes",
         "action.reschedule",
-        "action.star",
         "action.delete_crash_report",
+        "agent_registration.register_any_existing_host",
+        "agent_registration.register_managed_existing_host",
         "background_jobs.delete_foreign_jobs",
         "background_jobs.delete_jobs",
         "background_jobs.manage_jobs",
@@ -143,6 +147,8 @@ def test_registered_permissions() -> None:
         "general.see_failed_notifications_24h",
         "general.see_sidebar",
         "general.see_stales_in_tactical_overview",
+        "general.see_packaged_views",
+        "general.see_packaged_dashboards",
         "general.see_user_bookmark_list",
         "general.see_user_custom_snapin",
         "general.see_user_dashboards",
@@ -231,9 +237,11 @@ def test_registered_permissions() -> None:
         "pagetype_topic.analyze",
         "pagetype_topic.applications",
         "pagetype_topic.bi",
+        "pagetype_topic.cloud",
         "pagetype_topic.events",
         "pagetype_topic.history",
         "pagetype_topic.inventory",
+        "pagetype_topic.it_efficiency",
         "pagetype_topic.monitoring",
         "pagetype_topic.my_workplace",
         "pagetype_topic.network_statistics",
@@ -260,6 +268,7 @@ def test_registered_permissions() -> None:
         "sidesnap.views",
         "sidesnap.wato_foldertree",
         "view.aggr_all",
+        "view.aggr_frozen_diff",
         "view.aggr_all_api",
         "view.aggr_group",
         "view.aggr_host",
@@ -395,6 +404,13 @@ def test_registered_permissions() -> None:
         "view.invtunnels_search",
         "view.invunknown_of_host",
         "view.invunknown_search",
+        "view.it_efficiency_servers_cpumem_esxi",
+        "view.it_efficiency_servers_cpumem_linux",
+        "view.it_efficiency_servers_cpumem_nutanix",
+        "view.it_efficiency_servers_cpumem_windows",
+        "view.it_efficiency_servers_fs_esxi",
+        "view.it_efficiency_servers_fs_linux",
+        "view.it_efficiency_servers_fs_windows",
         "view.logfile",
         "view.mobile_contactnotifications",
         "view.mobile_events",
@@ -498,6 +514,7 @@ def test_registered_permissions() -> None:
         "wato.update_dns_cache",
         "wato.use",
         "wato.users",
+        "wato.user_migrate",
         "wato.show_last_user_activity",
         "view.cmk_servers",
         "view.cmk_sites",
@@ -509,7 +526,6 @@ def test_registered_permissions() -> None:
     if not cmk_version.is_raw_edition():
         expected_permissions += [
             "agent_registration.edit",
-            "agent_registration.register_new_hosts",
             "dashboard.kubernetes_cluster",
             "dashboard.kubernetes_daemonset",
             "dashboard.kubernetes_deployment",
@@ -598,6 +614,7 @@ def test_registered_permissions() -> None:
             "general.publish_to_sites_graph_collection",
             "general.publish_to_sites_graph_tuning",
             "general.publish_to_sites_sla_configuration",
+            "general.see_packaged_reports",
             "general.see_user_custom_graph",
             "general.see_user_forecast_graph",
             "general.see_user_graph_collection",
@@ -633,6 +650,18 @@ def test_registered_permissions() -> None:
             "graph_collection.default",
         ]
 
+    if cmk_version.is_cloud_edition():
+        expected_permissions += [
+            "dashboard.aws_s3_overview",
+            "dashboard.azure_storage_overview",
+            "dashboard.gcp_storage_overview",
+            "agent_registration.register_any_new_host",
+            "agent_registration.register_new_host_in_managed_folder",
+            "dashboard.aws_ec2_overview",
+            "dashboard.azure_vm_overview",
+            "dashboard.gcp_gce_overview",
+        ]
+
     assert sorted(expected_permissions) == sorted(permission_registry.keys())
 
     for perm in permission_registry.values():
@@ -641,7 +670,7 @@ def test_registered_permissions() -> None:
         assert isinstance(perm.defaults, list)
 
 
-def test_declare_permission_section(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_declare_permission_section(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         permissions, "permission_section_registry", permissions.PermissionSectionRegistry()
     )
@@ -655,7 +684,7 @@ def test_declare_permission_section(monkeypatch) -> None:  # type:ignore[no-unty
     assert section.do_sort is False
 
 
-def test_declare_permission(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_declare_permission(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         permissions, "permission_section_registry", permissions.PermissionSectionRegistry()
     )
@@ -683,7 +712,7 @@ def test_declare_permission(monkeypatch) -> None:  # type:ignore[no-untyped-def]
         (False, ["sec1.Z", "sec1.z", "sec1.A", "sec1.b", "sec1.a", "sec1.1", "sec1.g"]),
     ],
 )
-def test_permission_sorting(do_sort, result) -> None:  # type:ignore[no-untyped-def]
+def test_permission_sorting(do_sort: bool, result: Sequence[str]) -> None:
     sections = permissions.PermissionSectionRegistry()
     perms = permissions.PermissionRegistry()
 

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This fixes missing agent sections when users upgrade from a <b>1.6.0 systemd</b> Checkmk agent package to a <b>2.0.0 xinetd</b> package.
 Since from 1.6.0 to 2.0.0 we changed the default network service <b>from xinetd to systemd</b>, this is a very rare scenario.

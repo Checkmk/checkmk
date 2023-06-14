@@ -1,28 +1,21 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 # No stub file
 import pytest
 
-from cmk.utils.structured_data import (
-    DeltaStructuredDataNode,
-    SDKey,
-    SDPairs,
-    SDPath,
-    SDRow,
-    SDValue,
-    StructuredDataNode,
-)
+from cmk.utils.structured_data import ImmutableDeltaTree, ImmutableTree, SDKey, SDPath, SDValue
 
 import cmk.gui.inventory
 import cmk.gui.utils
 from cmk.gui.num_split import cmp_version
+from cmk.gui.painter.v0.base import JoinCell
 from cmk.gui.plugins.visuals.inventory import FilterInvtableVersion
-from cmk.gui.type_defs import ColumnSpec, PainterParameters, UserId
+from cmk.gui.type_defs import ColumnSpec, PainterParameters
 from cmk.gui.view import View
 from cmk.gui.views.inventory import (
     _cmp_inv_generic,
@@ -35,6 +28,7 @@ from cmk.gui.views.inventory import (
     inv_paint_generic,
     inv_paint_if_oper_status,
     inv_paint_number,
+    inv_paint_service_status,
     inv_paint_size,
     NodeDisplayHint,
     RowTableInventory,
@@ -64,9 +58,9 @@ EXPECTED_INV_KEYS = [
 ]
 
 INV_HIST_ROWS = [
-    cmk.gui.inventory.HistoryEntry(123, 1, 2, 3, DeltaStructuredDataNode.deserialize({})),
-    cmk.gui.inventory.HistoryEntry(456, 4, 5, 6, DeltaStructuredDataNode.deserialize({})),
-    cmk.gui.inventory.HistoryEntry(789, 7, 8, 9, DeltaStructuredDataNode.deserialize({})),
+    cmk.gui.inventory.HistoryEntry(123, 1, 2, 3, ImmutableDeltaTree()),
+    cmk.gui.inventory.HistoryEntry(456, 4, 5, 6, ImmutableDeltaTree()),
+    cmk.gui.inventory.HistoryEntry(789, 7, 8, 9, ImmutableDeltaTree()),
 ]
 
 EXPECTED_INV_HIST_KEYS = [
@@ -482,17 +476,13 @@ def test_make_node_displayhint_from_hint(
         ),
     ],
 )
-def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[SDRow]) -> None:
+def test_sort_table_rows_displayhint(
+    rows: Sequence[Mapping[SDKey, SDValue]], expected: Sequence[Mapping[SDKey, SDValue]]
+) -> None:
     raw_path = ".software.applications.oracle.dataguard_stats:"
     path = cmk.gui.inventory.InventoryPath.parse(raw_path).path
     hints = DISPLAY_HINTS.get_hints(path)
-    assert (
-        hints.sort_rows(
-            rows,
-            hints.make_columns(rows, ["sid"], path),
-        )
-        == expected
-    )
+    assert hints.sort_rows(rows, hints.make_columns(rows, ["sid"])) == expected
 
 
 @pytest.mark.parametrize(
@@ -504,6 +494,7 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
             ColumnDisplayHint(
                 paint_function=inv_paint_generic,
                 title="Key",
+                short=None,
                 _long_title_function=lambda: "Key",
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=None,
@@ -515,6 +506,7 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
             ColumnDisplayHint(
                 paint_function=inv_paint_if_oper_status,
                 title="Operational Status",
+                short=None,
                 _long_title_function=lambda: "Network interfaces ➤ Operational Status",
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=None,
@@ -526,7 +518,20 @@ def test_sort_table_rows_displayhint(rows: Sequence[SDRow], expected: Sequence[S
             ColumnDisplayHint(
                 paint_function=inv_paint_generic,
                 title="Key",
+                short=None,
                 _long_title_function=lambda: "Node ➤ Key",
+                sort_function=_decorate_sort_function(_cmp_inv_generic),
+                filter_class=None,
+            ),
+        ),
+        (
+            ("software", "applications", "check_mk", "sites"),
+            "cmc",
+            ColumnDisplayHint(
+                paint_function=inv_paint_service_status,
+                title="CMC status",
+                short="CMC",
+                _long_title_function=lambda: "Checkmk sites ➤ CMC status",
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=None,
             ),
@@ -537,6 +542,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
     hint = DISPLAY_HINTS.get_hints(path).get_column_hint(key)
 
     assert hint.title == expected.title
+    assert hint.short == expected.short
     assert hint.long_title == expected.long_title
     assert hint.long_inventory_title == expected.long_inventory_title
     assert callable(hint.paint_function)
@@ -551,6 +557,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
             ColumnDisplayHint(
                 paint_function=inv_paint_generic,
                 title="Bar",
+                short=None,
                 _long_title_function=lambda: "Foo ➤ Bar",
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=None,
@@ -561,6 +568,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
             ColumnDisplayHint(
                 paint_function=inv_paint_generic,
                 title="Package Version",
+                short=None,
                 _long_title_function=lambda: "Software packages ➤ Package Version",
                 sort_function=_decorate_sort_function(cmp_version),
                 filter_class=None,
@@ -571,6 +579,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
             ColumnDisplayHint(
                 paint_function=inv_paint_generic,
                 title="Version",
+                short=None,
                 _long_title_function=lambda: "Software packages ➤ Version",
                 sort_function=_decorate_sort_function(cmp_version),
                 filter_class=FilterInvtableVersion,
@@ -581,6 +590,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
             ColumnDisplayHint(
                 paint_function=inv_paint_number,
                 title="Index",
+                short=None,
                 _long_title_function=lambda: "Network interfaces ➤ Index",
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=None,
@@ -591,6 +601,7 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
             ColumnDisplayHint(
                 paint_function=inv_paint_if_oper_status,
                 title="Operational Status",
+                short=None,
                 _long_title_function=lambda: "Network interfaces ➤ Operational Status",
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 filter_class=None,
@@ -625,7 +636,7 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
     ],
 )
 def test_sort_attributes_pairs_displayhint(
-    pairs: SDPairs, expected: Sequence[tuple[SDKey, SDValue]]
+    pairs: Mapping[SDKey, SDValue], expected: Sequence[tuple[SDKey, SDValue]]
 ) -> None:
     raw_path = ".software.applications.kube.metadata."
     path = cmk.gui.inventory.InventoryPath.parse(raw_path).path
@@ -643,6 +654,7 @@ def test_sort_attributes_pairs_displayhint(
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 title="Key",
+                short=None,
                 _long_title_function=lambda: "Key",
                 is_show_more=True,
             ),
@@ -655,6 +667,7 @@ def test_sort_attributes_pairs_displayhint(
                 paint_function=inv_paint_size,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 title="Size",
+                short=None,
                 _long_title_function=lambda: "Block Devices ➤ Size",
                 is_show_more=True,
             ),
@@ -667,6 +680,7 @@ def test_sort_attributes_pairs_displayhint(
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 title="Key",
+                short=None,
                 _long_title_function=lambda: "Node ➤ Key",
                 is_show_more=True,
             ),
@@ -695,6 +709,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 title="Bar",
+                short=None,
                 _long_title_function=lambda: "Foo ➤ Bar",
                 is_show_more=True,
             ),
@@ -706,6 +721,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 title="CPU Architecture",
+                short=None,
                 _long_title_function=lambda: "Processor ➤ CPU Architecture",
                 is_show_more=True,
             ),
@@ -717,6 +733,7 @@ def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeD
                 paint_function=inv_paint_generic,
                 sort_function=_decorate_sort_function(_cmp_inv_generic),
                 title="Product",
+                short=None,
                 _long_title_function=lambda: "System ➤ Product",
                 is_show_more=False,
             ),
@@ -776,6 +793,7 @@ def test_registered_sorter_cmp() -> None:
         paint_function=inv_paint_generic,
         sort_function=_decorate_sort_function(_cmp_inv_generic),
         title="Product",
+        short=None,
         _long_title_function=lambda: "System ➤ Product",
         is_show_more=False,
     )
@@ -795,12 +813,18 @@ def test_registered_sorter_cmp() -> None:
 
 
 def test_row_post_processor() -> None:
+    class _FakeJoinCell(JoinCell):
+        def painter_parameters(self) -> PainterParameters | None:
+            return self._painter_params
+
     rows = [
         {
             "site": "mysite",
             "host_name": "my-host-name1",
             "invorainstance_sid": "sid1",
-            "host_inventory": StructuredDataNode.deserialize(
+            "invorainstance_version": "version1",
+            "invorainstance_bar": "bar",
+            "host_inventory": ImmutableTree.deserialize(
                 {
                     "Attributes": {},
                     "Nodes": {
@@ -827,7 +851,41 @@ def test_row_post_processor() -> None:
                                             },
                                         ],
                                     },
-                                }
+                                },
+                                "ora-versions": {
+                                    "Attributes": {},
+                                    "Nodes": {},
+                                    "Table": {
+                                        "KeyColumns": ["version"],
+                                        "Rows": [
+                                            {
+                                                "version": "version1",
+                                                "edition": "edition1",
+                                            },
+                                            {
+                                                "version": "version2",
+                                                "edition": "edition2",
+                                            },
+                                        ],
+                                    },
+                                },
+                                "ora-foobar": {
+                                    "Attributes": {},
+                                    "Nodes": {},
+                                    "Table": {
+                                        "KeyColumns": ["foo"],
+                                        "Rows": [
+                                            {
+                                                "foo": "foo1",
+                                                "bar": "bar",
+                                            },
+                                            {
+                                                "foo": "foo2",
+                                                "bar": "bar",
+                                            },
+                                        ],
+                                    },
+                                },
                             },
                             "Table": {},
                         },
@@ -841,72 +899,85 @@ def test_row_post_processor() -> None:
     expected_len = len(rows)
 
     _join_inventory_rows(
-        View(
-            "invorainstance",
-            {
-                "datasource": "invorainstance",
-                "group_painters": [],
-                "painters": [
-                    # Match
-                    ColumnSpec(
-                        name="invoradataguardstats_db_unique",
-                        parameters=PainterParameters(
-                            path_to_table=("path-to", "ora-dataguard-stats"),
-                            column_to_display="db_unique",
-                            columns_to_match=[("sid", "$SID$")],
-                        ),
-                        join_value="invoradataguardstats_db_unique",
-                        _column_type="join_inv_column",
+        view_macros=[
+            ("sid", "$SID$"),
+            ("version", "$VERSION$"),
+            ("bar", "$BAR$"),
+        ],
+        view_join_cells=[
+            # Matches 'sid'
+            _FakeJoinCell(
+                ColumnSpec(
+                    name="invoradataguardstats_db_unique",
+                    parameters=PainterParameters(
+                        path_to_table=("path-to", "ora-dataguard-stats"),
+                        column_to_display="db_unique",
+                        columns_to_match=[("sid", "$SID$")],
                     ),
-                    # Unknown macro
-                    ColumnSpec(
-                        name="invoradataguardstats_role",
-                        parameters=PainterParameters(
-                            path_to_table=("path-to", "ora-dataguard-stats"),
-                            column_to_display="role",
-                            columns_to_match=[("sid", "$BAR$")],
-                        ),
-                        join_value="invoradataguardstats_role",
-                        _column_type="join_inv_column",
+                    join_value="invoradataguardstats_db_unique",
+                    _column_type="join_inv_column",
+                ),
+                "",
+            ),
+            # Match 'version'
+            _FakeJoinCell(
+                ColumnSpec(
+                    name="invoraversions_edition",
+                    parameters=PainterParameters(
+                        path_to_table=("path-to", "ora-versions"),
+                        column_to_display="edition",
+                        columns_to_match=[("version", "$VERSION$")],
                     ),
-                    # Unknown node
-                    ColumnSpec(
-                        name="invunknown_column_name",
-                        parameters=PainterParameters(
-                            path_to_table=("path-to", "somewhere-else"),
-                            column_to_display="column_name",
-                            columns_to_match=[("sid", "$SID$")],
-                        ),
-                        join_value="invunknown_column_name",
-                        _column_type="join_inv_column",
+                    join_value="invoraversions_edition",
+                    _column_type="join_inv_column",
+                ),
+                "",
+            ),
+            # Match 'bar', not unique
+            _FakeJoinCell(
+                ColumnSpec(
+                    name="invorafoobar_foo",
+                    parameters=PainterParameters(
+                        path_to_table=("path-to", "ora-foobar"),
+                        column_to_display="foo",
+                        columns_to_match=[("bar", "$BAR$")],
                     ),
-                ],
-                "inventory_join_macros": {"macros": [("sid", "$SID$")]},
-                # These fields do not matter here
-                "layout": "layout",
-                "browser_reload": 0,
-                "num_columns": 0,
-                "column_headers": "off",
-                "sorters": [],
-                "link_from": {},
-                "owner": UserId("its-me"),
-                "name": "name",
-                "context": {},
-                "single_infos": [],
-                "add_context_to_title": False,
-                "title": "title",
-                "description": "description",
-                "topic": "topic",
-                "sort_index": 0,
-                "is_show_more": False,
-                "icon": None,
-                "hidden": False,
-                "hidebutton": False,
-                "public": False,
-            },
-            {},
-        ),
-        rows,
+                    join_value="invorafoobar_foo",
+                    _column_type="join_inv_column",
+                ),
+                "",
+            ),
+            # Unknown macro
+            _FakeJoinCell(
+                ColumnSpec(
+                    name="invoradataguardstats_role",
+                    parameters=PainterParameters(
+                        path_to_table=("path-to", "ora-dataguard-stats"),
+                        column_to_display="role",
+                        columns_to_match=[("sid", "$BAZ$")],
+                    ),
+                    join_value="invoradataguardstats_role",
+                    _column_type="join_inv_column",
+                ),
+                "",
+            ),
+            # Unknown node
+            _FakeJoinCell(
+                ColumnSpec(
+                    name="invunknown_column_name",
+                    parameters=PainterParameters(
+                        path_to_table=("path-to", "somewhere-else"),
+                        column_to_display="column_name",
+                        columns_to_match=[("sid", "$SID$")],
+                    ),
+                    join_value="invunknown_column_name",
+                    _column_type="join_inv_column",
+                ),
+                "",
+            ),
+        ],
+        view_datasource_ident="invorainstance",
+        rows=rows,
     )
 
     assert len(rows) == expected_len
@@ -918,7 +989,9 @@ def test_row_post_processor() -> None:
                 "site": "mysite",
                 "host_name": "my-host-name1",
                 "invorainstance_sid": "sid1",
-                "host_inventory": StructuredDataNode.deserialize(
+                "invorainstance_version": "version1",
+                "invorainstance_bar": "bar",
+                "host_inventory": ImmutableTree.deserialize(
                     {
                         "Attributes": {},
                         "Nodes": {
@@ -945,7 +1018,41 @@ def test_row_post_processor() -> None:
                                                 },
                                             ],
                                         },
-                                    }
+                                    },
+                                    "ora-versions": {
+                                        "Attributes": {},
+                                        "Nodes": {},
+                                        "Table": {
+                                            "KeyColumns": ["version"],
+                                            "Rows": [
+                                                {
+                                                    "version": "version1",
+                                                    "edition": "edition1",
+                                                },
+                                                {
+                                                    "version": "version2",
+                                                    "edition": "edition2",
+                                                },
+                                            ],
+                                        },
+                                    },
+                                    "ora-foobar": {
+                                        "Attributes": {},
+                                        "Nodes": {},
+                                        "Table": {
+                                            "KeyColumns": ["foo"],
+                                            "Rows": [
+                                                {
+                                                    "foo": "foo1",
+                                                    "bar": "bar",
+                                                },
+                                                {
+                                                    "foo": "foo2",
+                                                    "bar": "bar",
+                                                },
+                                            ],
+                                        },
+                                    },
                                 },
                                 "Table": {},
                             },
@@ -954,7 +1061,8 @@ def test_row_post_processor() -> None:
                     }
                 ),
                 "JOIN": {
-                    "invoradataguardstats_db_unique": {"invoradataguardstats_db_unique": "name1"}
+                    "invoradataguardstats_db_unique": {"invoradataguardstats_db_unique": "name1"},
+                    "invoraversions_edition": {"invoraversions_edition": "edition1"},
                 },
             },
         ],
@@ -964,11 +1072,6 @@ def test_row_post_processor() -> None:
         assert row["site"] == expected_row["site"]
         assert row["host_name"] == expected_row["host_name"]
         assert row["invorainstance_sid"] == expected_row["invorainstance_sid"]
+        assert row["invorainstance_version"] == expected_row["invorainstance_version"]
         assert row["JOIN"] == expected_row["JOIN"]
-
-        tree = row["host_inventory"]
-        expected_tree = expected_row["host_inventory"]
-
-        assert isinstance(tree, StructuredDataNode)
-        assert isinstance(expected_tree, StructuredDataNode)
-        assert tree.is_equal(expected_tree)
+        assert row["host_inventory"] == expected_row["host_inventory"]

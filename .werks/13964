@@ -6,7 +6,7 @@ Date: 1668696269
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Instead of returning only the title of a Host Tag Group, the REST API will now als return a topic field
 and a list of tags belonging to the the group.

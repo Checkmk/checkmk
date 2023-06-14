@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,19 +10,16 @@ from pathlib import Path
 
 import pytest
 
+from tests.testlib.agent import (
+    agent_controller_daemon,
+    clean_agent_controller,
+    install_agent_package,
+)
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import current_branch_name
+from tests.testlib.utils import current_branch_name, execute
 from tests.testlib.version import CMKVersion, version_from_env
 
-from tests.composition.utils import (
-    agent_controller_daemon,
-    bake_agent,
-    clean_agent_controller,
-    execute,
-    get_cre_agent_path,
-    install_agent_package,
-    is_containerized,
-)
+from tests.composition.utils import bake_agent, get_cre_agent_path, is_containerized
 
 from cmk.utils.version import Edition
 
@@ -108,7 +105,10 @@ def _remote_site(central_site: Site, site_factory: SiteFactory) -> Site:
         }
     )
     central_site.openapi.login_to_site(remote_site.id)
-    central_site.openapi.activate_changes_and_wait_for_completion()
+    central_site.openapi.activate_changes_and_wait_for_completion(
+        # this seems to be necessary to avoid sporadic CI failures
+        force_foreign_changes=True,
+    )
     return remote_site
 
 
@@ -120,7 +120,8 @@ def _create_site_and_restart_httpd(site_factory: SiteFactory, site_name: str) ->
     see eg. sles-15sp4.
     """
     site = site_factory.get_site(site_name)
-    if os.environ["DISTRO"] in {"centos-7", "centos-8", "almalinux-9"}:
+    # When executed locally and undockerized, the DISTRO may not be set
+    if os.environ.get("DISTRO") in {"centos-7", "centos-8", "almalinux-9"}:
         execute(["sudo", "httpd", "-k", "restart"])
     return site
 
@@ -169,3 +170,9 @@ def _run_cron() -> Iterator[None]:
     else:
         raise RuntimeError(f"No cron executable found (tried {','.join(cron_cmds)})")
     yield
+
+
+@pytest.fixture(name="skip_if_saas_edition")
+def _skip_if_saas_edition(version: CMKVersion) -> None:
+    if version.is_saas_edition():
+        pytest.skip("Skipping test for SaaS edition")

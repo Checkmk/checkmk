@@ -1,0 +1,12 @@
+Title: KUBE: Supported versions of Kubernetes are 1.22, 1.23 1.24, 1.25 and 1.26
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1677488812
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+With this release of Checkmk, we support versions 1.24, 1.25 and 1.26 of Kubernetes. Support for
+version 1.21 is removed.

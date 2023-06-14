@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -22,6 +22,7 @@ import cmk.gui.log as log
 import cmk.gui.visuals as visuals
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
+from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.exporter import exporter_registry
@@ -30,6 +31,8 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_external_link, PageMenuEntry, PageMenuTopic
+from cmk.gui.painter.v0.base import Cell, columns_of_cells
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.type_defs import (
     ColumnName,
@@ -43,11 +46,8 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view import View
 from cmk.gui.view_renderer import ABCViewRenderer, GUIViewRenderer
-from cmk.gui.views.data_source import data_source_registry
 
 from . import availability
-from .painter.v0.base import Cell, columns_of_cells
-from .painter_options import PainterOptions
 from .row_post_processing import post_process_rows
 from .sorter import SorterEntry
 from .store import get_all_views, get_permitted_views
@@ -173,16 +173,17 @@ def _process_regular_view(view_renderer: ABCViewRenderer) -> None:
             all_active_filters,
             only_count=False,
         )
+        intercepted_queries = queries
 
     if html.output_format != "html":
         _export_view(view_renderer.view, rows)
         return
 
-    _add_rest_api_menu_entries(view_renderer, queries)
+    _add_rest_api_menu_entries(view_renderer, intercepted_queries)
     _show_view(view_renderer, unfiltered_amount_of_rows, rows)
 
 
-def _add_rest_api_menu_entries(view_renderer, queries: list[str]):  # type:ignore[no-untyped-def]
+def _add_rest_api_menu_entries(view_renderer, queries: list[str]):  # type: ignore[no-untyped-def]
     from cmk.utils.livestatus_helpers.queries import Query
 
     from cmk.gui.plugins.openapi.utils import create_url
@@ -383,7 +384,7 @@ def _get_all_active_filters(view: View) -> list[Filter]:
     for filt in use_filters:
         # TODO: Clean this up! E.g. make the Filter class implement a default method
         if hasattr(filt, "derived_columns"):
-            filt.derived_columns(view.row_cells)  # type: ignore[attr-defined]
+            filt.derived_columns(view.row_cells)
 
     return use_filters
 
@@ -401,7 +402,7 @@ def _export_view(view: View, rows: Rows) -> None:
             "output_format", _("Output format '%s' not supported") % html.output_format
         )
 
-    exporter.handler(view, rows)
+    exporter.handler(view.row_cells, view.group_cells, rows, view.name, view.spec)
 
 
 def _is_ec_unrelated_host_view(view_spec: ViewSpec) -> bool:
@@ -465,7 +466,7 @@ def _get_needed_regular_columns(
     return list(columns)
 
 
-def save_state_for_playing_alarm_sounds(row: "Row") -> None:
+def save_state_for_playing_alarm_sounds(row: Row) -> None:
     if not active_config.enable_sounds or not active_config.sounds:
         return
 
@@ -567,7 +568,7 @@ def get_limit() -> int | None:
 
 
 def _link_to_folder_by_path(path: str) -> str:
-    """Return an URL to a certain WATO folder when we just know its path"""
+    """Return an URL to a certain Setup folder when we just know its path"""
     return makeuri_contextless(
         request,
         [("mode", "folder"), ("folder", path)],
@@ -575,7 +576,7 @@ def _link_to_folder_by_path(path: str) -> str:
     )
 
 
-def _sort_data(data: "Rows", sorters: list[SorterEntry]) -> None:
+def _sort_data(data: Rows, sorters: list[SorterEntry]) -> None:
     """Sort data according to list of sorters."""
     if not sorters:
         return

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,7 +10,9 @@ from typing import NamedTuple
 
 import pytest
 import requests
+from agent_receiver.certs import serialize_to_pem, sign_agent_csr
 from cryptography.hazmat.primitives import serialization
+from cryptography.x509 import load_pem_x509_certificate
 
 from tests.testlib.certs import generate_csr_pair
 from tests.testlib.site import Site
@@ -57,20 +59,17 @@ class KeyPairInfo(NamedTuple):
 
 @pytest.fixture(scope="module", name="paired_keypair")
 def paired_keypair_fixture(
-    agent_receiver_url: str,
     site: Site,
     tmp_path_factory: pytest.TempPathFactory,
 ) -> KeyPairInfo:
     uuid_ = str(uuid.uuid4())
     private_key, csr = generate_csr_pair(uuid_)
 
-    agent_receiver_response = requests.post(
-        f"{agent_receiver_url}/pairing",
-        auth=("cmkadmin", site.admin_password),
-        json={"csr": csr},
-        verify=False,
+    pem_bytes = site.read_file("etc/ssl/agents/ca.pem").encode("utf-8")
+    root_ca = (
+        load_pem_x509_certificate(pem_bytes),
+        serialization.load_pem_private_key(pem_bytes, None),
     )
-    assert agent_receiver_response.status_code == 200
 
     private_key_path = tmp_path_factory.mktemp("certs") / "private_key.key"
     with private_key_path.open("wb") as private_key_file:
@@ -84,7 +83,7 @@ def paired_keypair_fixture(
         )
     public_key_path = tmp_path_factory.mktemp("certs") / "public.pem"
     with public_key_path.open("w") as public_key_file:
-        public_key_file.write(agent_receiver_response.json()["client_cert"])
+        public_key_file.write(serialize_to_pem(sign_agent_csr(csr, 12, root_ca)))
 
     return KeyPairInfo(
         uuid_=uuid_,
@@ -100,7 +99,7 @@ def test_failing_pairing_no_uuid(agent_receiver_url: str, site: Site) -> None:
     agent_receiver_response = requests.post(
         f"{agent_receiver_url}/pairing",
         auth=("cmkadmin", site.admin_password),
-        json={"csr": csr},
+        json={"csr": serialize_to_pem(csr)},
         verify=False,
     )
     assert agent_receiver_response.status_code == 400
@@ -117,14 +116,50 @@ def test_registration_status_not_registered(
     assert response.json()["detail"] == "Host is not registered"
 
 
-def test_register_with_hostname_non_existing(
-    agent_receiver_url: str, paired_keypair: KeyPairInfo, site: Site
+def test_register_existing_non_existing(
+    agent_receiver_url: str,
+    site: Site,
 ) -> None:
+    uuid_ = str(uuid.uuid4())
+    csr = generate_csr_pair(uuid_)[1]
+
+    response = requests.post(
+        f"{agent_receiver_url}/register_existing",
+        auth=("cmkadmin", site.admin_password),
+        json={
+            "uuid": uuid_,
+            "csr": serialize_to_pem(csr),
+            "host_name": "non-existing",
+        },
+        verify=False,
+    )
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Host non-existing does not exist."
+
+    response = requests.post(
+        f"{agent_receiver_url}/register_existing",
+        auth=("cmkadmin", site.admin_password),
+        json={
+            "uuid": uuid_,
+            "csr": serialize_to_pem(csr),
+            "host_name": "../../../dirtraversal",
+        },
+        verify=False,
+    )
+    assert response.status_code == 400
+
+
+def test_register_with_hostname_non_existing(
+    agent_receiver_url: str,
+    site: Site,
+) -> None:
+    uuid_ = str(uuid.uuid4())
+
     response = requests.post(
         f"{agent_receiver_url}/register_with_hostname",
         auth=("cmkadmin", site.admin_password),
         json={
-            "uuid": paired_keypair.uuid_,
+            "uuid": uuid_,
             "host_name": "non-existing",
         },
         verify=False,
@@ -136,7 +171,7 @@ def test_register_with_hostname_non_existing(
         f"{agent_receiver_url}/register_with_hostname",
         auth=("cmkadmin", site.admin_password),
         json={
-            "uuid": paired_keypair.uuid_,
+            "uuid": uuid_,
             "host_name": "../../../dirtraversal",
         },
         verify=False,

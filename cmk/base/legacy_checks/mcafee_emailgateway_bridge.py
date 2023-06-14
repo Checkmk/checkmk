@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
+import time
+
+from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_legacy_includes.mcafee_gateway import inventory_mcafee_gateway_generic
+from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.utils.mcafee_gateway import DETECT_EMAIL_GATEWAY
+
+# TODO states, traffic, params?
+
+
+def check_mcafee_emailgateway_bridge(item, params, info):
+    bridge_present, bridge_state, tcp_packets, udp_packets, icmp_packets = info[0]
+    if bridge_present == "0":
+        state = 0
+        state_readable = "present"
+    else:
+        state = 2
+        state_readable = "not present"
+    yield state, "Bridge: %s" % state_readable
+
+    if bridge_state == "0":
+        state = 0
+        state_readable = "UP"
+    else:
+        state = 2
+        state_readable = "down"
+    yield state, "Status: %s" % state_readable
+
+    now = time.time()
+    for title, packets in [
+        ("TCP", tcp_packets),
+        ("UDP", udp_packets),
+        ("ICMP", icmp_packets),
+    ]:
+        key = title.lower()
+        packets_rate = get_rate("mcafee_emailgateway_bridge.%s" % key, now, int(packets))
+        perfdata = ["%s_packets_received" % key, packets_rate]
+        infotext = "%s: %.2f packets received/s" % (title, packets_rate)
+        state = 0
+        if params.get(key):
+            warn, crit = params[key]
+            perfdata += [warn, crit]
+            if packets_rate >= crit:
+                state = 2
+            elif packets_rate >= warn:
+                state = 1
+            if state:
+                infotext += " (warn/crit at %s/%s packets/s)" % (warn, crit)
+        yield state, infotext, [tuple(perfdata)]
+
+
+check_info["mcafee_emailgateway_bridge"] = LegacyCheckDefinition(
+    detect=DETECT_EMAIL_GATEWAY,
+    discovery_function=inventory_mcafee_gateway_generic,
+    check_function=check_mcafee_emailgateway_bridge,
+    service_name="Bridge",
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.1230.2.4.1.2.2.1",
+        oids=["1", "2", "3", "4", "5"],
+    ),
+    check_ruleset_name="mcafee_emailgateway_bridge",
+)

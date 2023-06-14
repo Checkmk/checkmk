@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -84,7 +84,7 @@ private:
     [[nodiscard]] HCRYPTKEY generateKey(Length key_length) const;
     HCRYPTKEY importKey(const BYTE *key, DWORD key_size) const;
     // derive key and iv from the password in the same manner as openssl does
-    [[nodiscard]] HCRYPTKEY deriveOpenSSLKey(const std::string &password,
+    [[nodiscard]] HCRYPTKEY deriveOpenSslKey(const std::string &password,
                                              Length key_length,
                                              int iterations) const;
     void releaseKey();

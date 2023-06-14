@@ -1,0 +1,13 @@
+title: Nutanix Prism: VM Tools
+agents: nutanix
+catalog: virtual/nutanix
+license: GPLv2
+distribution: check_mk
+description:
+ This check shows the actual status of the VM Tools on the Nutanix VM.
+ The desired state of the tools can be configured thrue the coresponding rule.
+
+ This check requires the special agent configurable through "Nutanix Prism".
+
+discovery:
+ One service is created.

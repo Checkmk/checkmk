@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -15,10 +15,10 @@ import * as utils from "utils";
 //#   | Code for detecting the visibility of the current browser window/tab  |
 //#   '----------------------------------------------------------------------'
 
-var g_visibility_detection_enabled = true;
+let g_visibility_detection_enabled = true;
 
 export function initialize() {
-    var hidden_attr_name = "hidden";
+    let hidden_attr_name = "hidden";
 
     // Standards:
     if (hidden_attr_name in document)
@@ -53,10 +53,10 @@ export function initialize() {
         g_visibility_detection_enabled = false;
     }
 
-    function on_visibility_change(evt) {
-        var v = "visible",
+    function on_visibility_change(evt: {type: string}) {
+        const v = "visible",
             h = "hidden",
-            evtMap = {
+            evtMap: Record<string, "visible" | "hidden"> = {
                 focus: v,
                 focusin: v,
                 pageshow: v,
@@ -70,9 +70,7 @@ export function initialize() {
         utils.remove_class(document.body, "visible");
         utils.remove_class(document.body, "hidden");
 
-        evt = evt || window.event;
-
-        var new_class;
+        let new_class: "visible" | "hidden";
         if (evt.type in evtMap) {
             new_class = evtMap[evt.type];
         } else {
@@ -84,8 +82,10 @@ export function initialize() {
     }
 
     // set the initial state (but only if browser supports the Page Visibility API)
+    //@ts-ignore
     if (document[hidden_attr_name] !== undefined)
         on_visibility_change({
+            //@ts-ignore
             type: document[hidden_attr_name] ? "blur" : "focus",
         });
 }

@@ -1,0 +1,145 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# exemplary output of special agent agent_ucs_bladecenter (<TAB> is tabulator):
+#
+# <<<ucs_c_rack_server_psu:sep(9)>>>
+# equipmentPsu<TAB>dn  sys/rack-unit-1/psu-1<TAB>id 1<TAB>model blabla<TAB>operability operable<TAB>voltage upper-critical
+# equipmentPsu<TAB>dn sys/rack-unit-1/psu-2 <TAB>id 2<TAB>model blabla<TAB>operability inoperable<TAB>voltage ok
+
+
+from cmk.base.check_api import get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.config import check_info
+
+
+def parse_ucs_c_rack_server_psu(info):
+    """
+    Returns dict with indexed PSUs mapped to keys and operability, voltage values mapped to dicts.
+    """
+    parsed = {}
+    for psu in info:
+        try:
+            key_value_pairs = [kv.split(" ", 1) for kv in psu[1:]]
+            psu = (
+                key_value_pairs[0][1]
+                .replace("sys/", "")
+                .replace("rack-unit-", "Rack Unit ")
+                .replace("/psu-", " PSU ")
+            )
+            parsed[psu] = {
+                "operability": key_value_pairs[3][1],
+                "voltage": key_value_pairs[4][1],
+                "model": key_value_pairs[2][1],
+            }
+        except IndexError:
+            continue  # skip info line in case agent output is incomplete or invalid
+    return parsed
+
+
+def inventory_ucs_c_rack_server_psu_voltage(parsed):
+    for key, value in parsed.items():
+        if value.get("voltage") == "unknown" and value.get("model", "").startswith("UCS-"):
+            continue  # see SUP-11285
+        yield key, {}
+
+
+def inventory_ucs_c_rack_server_psu(parsed):
+    """
+    Yields indexed PSUs as items (e.g. Rack Unit 1 PSU 1).
+    """
+    for key in parsed:
+        yield key, {}
+
+
+#########################
+# ucs_c_rack_server_psu #
+#########################
+
+
+@get_parsed_item_data
+def check_ucs_c_rack_server_psu(item, _no_params, data):
+    # maps XML API v2.0 XML entity values to check function status values
+    operability_to_status_mapping = {
+        "unknown": 3,
+        "operable": 0,
+        "inoperable": 2,
+        "degraded": 2,
+        "powered-off": 1,
+        "power-problem": 2,
+        "removed": 1,
+        "voltage-problem": 2,
+        "thermal-problem": 2,
+        "performance-problem": 2,
+        "accessibility-problem": 2,
+        "identity-unestablishable": 1,
+        "bios-post-timeout": 1,
+        "disabled": 1,
+        "malformed-fru": 1,
+        "fabric-conn-problem": 2,
+        "fabric-unsupported-conn": 1,
+        "config": 1,
+        "equipment-problem": 2,
+        "decomissioning": 1,
+        "chassis-limit-exceeded": 1,
+        "not-supported": 1,
+        "discovery": 1,
+        "discovery-failed": 1,
+        "identify": 1,
+        "post-failure": 1,
+        "upgrade-problem": 1,
+        "peer-comm-problem": 2,
+        "auto-upgrade": 1,
+    }
+    operability = data["operability"]
+    try:
+        status = operability_to_status_mapping[operability]
+        status_readable = operability
+    except KeyError:
+        status = 3
+        status_readable = "unknown[%s]" % operability
+    yield status, "Status: %s" % status_readable
+
+
+check_info["ucs_c_rack_server_psu"] = LegacyCheckDefinition(
+    parse_function=parse_ucs_c_rack_server_psu,
+    discovery_function=inventory_ucs_c_rack_server_psu,
+    check_function=check_ucs_c_rack_server_psu,
+    service_name="Output Power %s",
+)
+
+#################################
+# ucs_c_rack_server_psu.voltage #
+#################################
+
+
+@get_parsed_item_data
+def check_ucs_c_rack_server_psu_voltage(item, _no_params, data):
+    # maps XML API v2.0 XML entity values to check function status values
+    voltage_to_status_mapping = {
+        "unknown": 3,
+        "ok": 0,
+        "upper-non-recoverable": 2,
+        "upper-critical": 2,
+        "upper-non-critical": 1,
+        "lower-non-critical": 1,
+        "lower-critical": 2,
+        "lower-non-recoverable": 2,
+        "not-supported": 1,
+    }
+    voltage_status = data["voltage"]
+    try:
+        status = voltage_to_status_mapping[voltage_status]
+        status_readable = voltage_status
+    except KeyError:
+        status = 3
+        status_readable = "unknown[%s]" % voltage_status
+    yield status, "Status: %s" % status_readable
+
+
+check_info["ucs_c_rack_server_psu.voltage"] = LegacyCheckDefinition(
+    discovery_function=inventory_ucs_c_rack_server_psu_voltage,
+    check_function=check_ucs_c_rack_server_psu_voltage,
+    service_name="Output Voltage %s",
+)

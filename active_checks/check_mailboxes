@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -127,7 +127,7 @@ def check_mailboxes(args: Args) -> CheckResult:
                     )
 
             if args.crit_age_newest is not None and args.warn_age_newest is not None:
-                new_mails = sorted(mailbox.mails_by_date(after=(now - args.crit_age_newest)))
+                new_mails = sorted(mailbox.mails_by_date(after=now - args.crit_age_newest))
                 logging.debug("timestamps fetched from folder %r: %s", folder, new_mails)
 
                 if new_mails and (newest := now - new_mails[-1]) >= args.warn_age_newest:

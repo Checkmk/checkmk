@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Tool for updating Checkmk configuration files after version updates
@@ -20,6 +20,7 @@ from typing import Final
 from cmk.utils import debug, log, paths, tty
 from cmk.utils.log import VERBOSE
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
+from cmk.utils.redis import disable_redis
 from cmk.utils.version import is_raw_edition
 
 # This special script needs persistence and conversion code from different
@@ -30,36 +31,50 @@ from cmk.base import config as base_config
 from cmk.base.check_api import get_check_api_context
 
 from cmk.gui import main_modules
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.session import SuperUserContext
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.changes import ActivateChangesWriter, add_change
-from cmk.gui.watolib.hosts_and_folders import disable_redis
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
-from .pre_update_check import passed_pre_checks
-from .registry import update_action_registry
+from cmk.update_config.plugins.pre_actions.utils import ConflictMode
+
+from .registry import pre_update_action_registry, update_action_registry
 from .update_state import UpdateState
 
 
-def main(args: Sequence[str]) -> bool:
+def main(args: Sequence[str]) -> int:
     arguments = _parse_arguments(args)
-
-    if not passed_pre_checks(arguments.conflict):
-        sys.exit(
-            "\nUpdate aborted due incompatible local files.\n"
-            "The Checkmk configuration has not been modified.\n\n"
-            "You can downgrade to your previous version again using "
-            "'omd update' and start the site again."
-        )
-        return False
-
-    logger = _setup_logging(arguments)
 
     if arguments.debug:
         debug.enable()
+
+    _load_pre_plugins()
+    try:
+        ConfigChecker(arguments.conflict)()
+    except MKUserError as e:
+        sys.stderr.write(
+            f"\nUpdate aborted: {e}.\n"
+            "The Checkmk configuration has not been modified.\n\n"
+            "You can downgrade to your previous version again using "
+            "'omd update' and start the site again.\n"
+        )
+        return 1
+    except Exception as e:
+        if debug.enabled():
+            raise
+        sys.stderr.write(
+            "Unknown error on pre update action.\n"
+            f"Error: {e}\n\n"
+            "Please repair this and run 'cmk-update-config'"
+            "BEFORE starting the site again."
+        )
+        return 1
+
+    logger = _setup_logging(arguments)
 
     update_state = UpdateState.load(Path(paths.var_dir))
     _load_plugins(logger)
@@ -70,10 +85,10 @@ def main(args: Sequence[str]) -> bool:
         if debug.enabled():
             raise
         logger.exception(
-            'ERROR: Please repair this and run "cmk-update-config -v" '
+            'ERROR: Please repair this and run "cmk-update-config" '
             "BEFORE starting the site again."
         )
-        return False
+        return 1
 
 
 def _parse_arguments(args: Sequence[str]) -> argparse.Namespace:
@@ -88,12 +103,14 @@ def _parse_arguments(args: Sequence[str]) -> argparse.Namespace:
     )
     p.add_argument(
         "--conflict",
-        choices=["ask", "install", "keepold", "abort"],
-        default="ask",
-        help="If you choose 'ask', you will need to manually answer all "
-        "upcoming questions. With 'install' or 'keepold' no interaction is "
-        "needed. If you choose 'abort', the update will be aborted if "
-        "interaction is needed.",
+        choices=list(ConflictMode),
+        default=ConflictMode.ASK,
+        type=ConflictMode,
+        help=(
+            f"If you choose '{ConflictMode.ASK}', you will need to manually answer all upcoming questions. "
+            f"With '{ConflictMode.INSTALL}' or '{ConflictMode.KEEP_OLD}' no interaction is needed. "
+            f"If you choose '{ConflictMode.ABORT}', the update will be aborted if interaction is needed."
+        ),
     )
     return p.parse_args(args)
 
@@ -141,12 +158,36 @@ def _load_plugins(logger: logging.Logger) -> None:
             raise exc
 
 
+def _load_pre_plugins() -> None:
+    for plugin, exc in load_plugins_with_exceptions("cmk.update_config.plugins.pre_actions"):
+        sys.stderr.write(f"Error in pre action plugin {plugin}: {exc}\n")
+        if debug.enabled():
+            raise exc
+
+
+class ConfigChecker:
+    def __init__(self, conflict_mode: ConflictMode) -> None:
+        self.conflict_mode = conflict_mode
+
+    def __call__(self) -> None:
+        pre_update_actions = sorted(pre_update_action_registry.values(), key=lambda a: a.sort_index)
+        total = len(pre_update_actions)
+        sys.stdout.write("Processing pre update actions...\n")
+        for count, pre_action in enumerate(pre_update_actions, start=1):
+            sys.stdout.write(
+                f" {tty.bgmagenta}{count:02d}/{total:02d}{tty.normal} {pre_action.title}...\n"
+            )
+            pre_action(self.conflict_mode)
+
+        sys.stdout.write("Finished pre update actions...\n")
+
+
 class ConfigUpdater:
     def __init__(self, logger: logging.Logger, update_state: UpdateState) -> None:
         self._logger: Final = logger
         self.update_state: Final = update_state
 
-    def __call__(self) -> bool:
+    def __call__(self) -> int:
         self._has_errors = False
         self._logger.log(VERBOSE, "Initializing application...")
 
@@ -163,22 +204,23 @@ class ConfigUpdater:
             self._check_failed_gui_plugins()
             self._initialize_base_environment()
 
-            self._logger.log(VERBOSE, "Updating Checkmk configuration...")
-            self._logger.log(
-                VERBOSE,
-                f"{tty.red}ATTENTION: Some steps may take a long time depending "
-                f"on your installation, e.g. during major upgrades.{tty.normal}",
+            self._logger.info("Updating Checkmk configuration...")
+            self._logger.info(
+                f"{tty.red}ATTENTION{tty.normal}: Some steps may take a long time depending "
+                f"on your installation. Please be patient.",
             )
 
             for count, action in enumerate(actions, start=1):
-                self._logger.log(VERBOSE, " %i/%i %s..." % (count, total, action.title))
+                self._logger.info(
+                    f" {tty.yellow}{count:02d}/{total:02d}{tty.normal} {action.title}..."
+                )
                 try:
                     with ActivateChangesWriter.disable():
                         action(self._logger, self.update_state.setdefault(action.name))
                 except Exception:
                     self._has_errors = True
                     self._logger.error(' + "%s" failed' % action.title, exc_info=True)
-                    if debug.enabled():
+                    if not action.continue_on_failure or debug.enabled():
                         raise
 
             if not self._has_errors and not is_wato_slave_site():
@@ -190,8 +232,13 @@ class ConfigUpdater:
                 )
 
         self.update_state.save()
-        self._logger.log(VERBOSE, "Done")
-        return self._has_errors
+
+        if self._has_errors:
+            self._logger.error(f"Done ({tty.red}with errors{tty.normal})")
+            return 1
+
+        self._logger.info(f"Done ({tty.green}success{tty.normal})")
+        return 0
 
     def _check_failed_gui_plugins(self) -> None:
         if get_failed_plugins():
@@ -204,7 +251,11 @@ class ConfigUpdater:
             self._logger.error("")
 
     def _initialize_base_environment(self) -> None:
-        # Failing to load the config here will result in the loss of *all* services due to (...)
-        # EDIT: This is no longer the case; but we probably need the config for other reasons?
+        base_config.load_all_agent_based_plugins(
+            get_check_api_context,
+            local_checks_dir=paths.local_checks_dir,
+            checks_dir=paths.checks_dir,
+        )
+        # Watch out: always load the plugins before loading the config.
+        # The validation step will not be executed otherwise.
         base_config.load()
-        base_config.load_all_agent_based_plugins(get_check_api_context)

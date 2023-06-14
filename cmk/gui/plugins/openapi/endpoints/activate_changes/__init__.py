@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Activate changes
@@ -26,6 +26,7 @@ from cmk.gui.plugins.openapi.endpoints.activate_changes.request_schemas import A
 from cmk.gui.plugins.openapi.endpoints.activate_changes.response_schemas import (
     ActivationRunCollection,
     ActivationRunResponse,
+    PendingChangesCollection,
 )
 from cmk.gui.plugins.openapi.endpoints.utils import may_fail
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
@@ -35,8 +36,10 @@ from cmk.gui.watolib.activate_changes import (
     activate_changes_start,
     ActivationRestAPIResponseExtensions,
     get_activation_ids,
+    get_pending_changes,
     get_restapi_response_for_activation_id,
     load_activate_change_manager_with_id,
+    MKLicensingError,
 )
 
 from cmk import fields
@@ -50,7 +53,7 @@ ACTIVATION_ID = {
 }
 
 # NOTE: These are not needed for the activation of changes, but are asked for different queries
-RO_PERMISSIONS = permissions.Ignore(
+RO_PERMISSIONS = permissions.Undocumented(
     permissions.AnyPerm(
         [
             permissions.Perm("general.see_all"),
@@ -73,7 +76,7 @@ PERMISSIONS = permissions.AllPerm(
     "cmk/activate",
     method="post",
     status_descriptions={
-        200: "The activation has been completed.",
+        200: "Activation has been started, but not completed (if you need to wait for completion, see documentation for this endpoint).",
         302: (
             "The activation has been started and is still running. Redirecting to the "
             "'Wait for completion' endpoint."
@@ -82,11 +85,13 @@ PERMISSIONS = permissions.AllPerm(
             "The API user may not activate another users changes, "
             "or the user may and activation was not forced explicitly."
         ),
+        403: "Activation not possible because of licensing issues.",
         409: "Some sites could not be activated.",
         422: "There are no changes to be activated.",
         423: "There is already an activation running.",
     },
-    additional_status_codes=[302, 401, 409, 422, 423],
+    additional_status_codes=[302, 401, 403, 409, 422, 423],
+    etag="input",
     request_schema=ActivateChanges,
     response_schema=ActivationRunResponse,
     permissions_required=permissions.AllPerm(
@@ -100,12 +105,18 @@ PERMISSIONS = permissions.AllPerm(
 def activate_changes(params: Mapping[str, Any]) -> Response:
     """Activate pending changes
 
-    If redirect is set to True a link to the wait-for-completion resource for the activation job is included.
+    This endpoint will start an asynchronous background job activating the changes and
+    will return immediately with a response containing an ID for the just triggered activation run.
+    Use the 'wait-for-completion' endpoint with that ID to wait for the pending changes to activate.
+    Setting the 'redirect' flag to 'true' will redirect you to this endpoint.
     """
     user.need_permission("wato.activate")
     body = params["body"]
     sites = body["sites"]
-    with may_fail(MKUserError), may_fail(MKAuthException, status=401):
+    constructors.require_etag(constructors.hash_of_dict(get_pending_changes()))
+    with may_fail(MKUserError), may_fail(MKAuthException, status=401), may_fail(
+        MKLicensingError, status=403
+    ):
         activation_response = activate_changes_start(
             sites, force_foreign_changes=body["force_foreign_changes"]
         )
@@ -130,7 +141,6 @@ def _completion_link(activation_id: str) -> LinkType:
 def _activation_run_domain_object(
     activation_response: ActivationRestAPIResponseExtensions,
 ) -> DomainObject:
-
     return constructors.domain_object(
         domain_type="activation_run",
         identifier=activation_response.activation_id,
@@ -173,7 +183,12 @@ def activate_changes_wait_for_completion(params: Mapping[str, Any]) -> Response:
     try:
         manager = load_activate_change_manager_with_id(activation_id)
     except MKUserError:
-        raise ProblemException(status=404, title=f"Activation {activation_id!r} not found.")
+        raise ProblemException(
+            status=404,
+            title="The requested activation was not found",
+            detail=f"Could not find an activation with id {activation_id!r}.",
+        )
+
     done = manager.wait_for_completion(timeout=request.request_timeout - 10)
     if not done:
         response = Response(status=302)
@@ -207,7 +222,8 @@ def show_activation(params: Mapping[str, Any]) -> Response:
     except MKUserError:
         raise ProblemException(
             status=404,
-            title=f"Activation {activation_id!r} not found.",
+            title="The requested activation was not found",
+            detail=f"Could not find an activation with id {activation_id!r}.",
         )
 
     return serve_json(_activation_run_domain_object(activation_response))
@@ -232,3 +248,31 @@ def list_activations(params: Mapping[str, Any]) -> Response:
             ],
         )
     )
+
+
+@Endpoint(
+    constructors.collection_href("activation_run", "pending_changes"),
+    "cmk/pending-activation-changes",
+    method="get",
+    permissions_required=RO_PERMISSIONS,
+    response_schema=PendingChangesCollection,
+)
+def list_pending_changes(params: Mapping[str, Any]) -> Response:
+    """Show all pending changes"""
+
+    pending_changes = get_pending_changes()
+    response = serve_json(
+        {
+            "id": "activation_run",
+            "domainType": "activation_run",
+            "links": [
+                constructors.link_endpoint(
+                    module_name="cmk.gui.plugins.openapi.endpoints.activate_changes",
+                    rel="cmk/activate",
+                    parameters={},
+                )
+            ],
+            "value": [asdict(change) for change in pending_changes.values()],
+        }
+    )
+    return constructors.response_with_etag_created_from_dict(response, pending_changes)

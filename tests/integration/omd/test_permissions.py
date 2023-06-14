@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import ast
 import logging
 import stat
 from collections.abc import Iterator
@@ -29,7 +30,6 @@ KNOWN_WORLD_WRITABLE_FILES = {
     "tmp/run/mkeventd/events",  # So others can write events
 }
 KNOWN_WORLD_READABLE_FILES = {
-    "etc/omd/allocated_ports",  # Other sites use this to check for free ports
     "etc/omd/site.conf",  # Other sites use this to check for free ports
 }
 
@@ -49,22 +49,26 @@ def iter_dir(path: Path) -> Iterator[Path]:
             yield from iter_dir(sub_path)
 
 
+def get_site_file_permission(site: Site) -> list[tuple[int, str]]:
+    return ast.literal_eval(
+        site.python_helper("helper_get_site_file_permissions.py").check_output()
+    )
+
+
 @pytest.mark.parametrize(
     "mode,known_files_set",
     ((Mode.WORLD_WRITEABLE, KNOWN_WORLD_WRITABLE_FILES),),
 )
 def test_site_file_permissions(site: Site, mode: Mode, known_files_set: set[str]) -> None:
-    def rel_path(p: Path) -> str:
-        return str(p.relative_to(site.root))
-
-    offenders: set[Path] = set()
-    for p in iter_dir(Path(site.root)):
-        if not has_permission(p, mode):
-            continue
-        if rel_path(p) in known_files_set:
+    offenders: set[str] = set()
+    for file_mode, rel_path in get_site_file_permission(site):
+        if (file_mode & mode) == 0:
             continue
 
-        offenders.add(p)
+        if rel_path in known_files_set:
+            continue
+
+        offenders.add(rel_path)
 
     assert not offenders
 
@@ -90,11 +94,11 @@ def test_version_file_permissions(site: Site) -> None:
     if site.update_from_git:
         pytest.skip("The f12ed files do not have the proper permissions")
 
-    assert not set(
+    assert not {
         p
         for p in iter_dir(Path(site.version.version_path()))
         if has_permission(p, Mode.WORLD_WRITEABLE ^ Mode.GROUP_WRITEABLE)
-    )
+    }
 
 
 def test_version_file_ownership(site: Site) -> None:

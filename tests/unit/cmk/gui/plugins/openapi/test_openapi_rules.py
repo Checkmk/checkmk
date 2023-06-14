@@ -1,20 +1,26 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import json
 import os
 import random
 import string
 import typing
 import urllib
+from typing import Any
 
 import pytest
-import webtest  # type: ignore[import]
+from webtest import TestResponse  # type: ignore[import]
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.testlib.rest_api_client import (
+    ClientRegistry,
+    Response,
+    RestApiClient,
+    RuleConditions,
+    RuleProperties,
+)
 
-from cmk.utils import paths, version
+from cmk.utils import paths
 from cmk.utils.store import load_mk_file
 from cmk.utils.type_defs import UserId
 
@@ -23,9 +29,9 @@ import cmk.gui.watolib.rulespecs
 
 
 @pytest.fixture(scope="function", name="new_rule")
-def new_rule_fixture(logged_in_admin_wsgi_app):
+def new_rule_fixture(clients: ClientRegistry) -> tuple[TestResponse, dict[str, Any]]:
     return _create_rule(
-        logged_in_admin_wsgi_app,
+        clients,
         folder="/",
         comment="They made me do it!",
         description="This is my title for this very important rule.",
@@ -34,144 +40,143 @@ def new_rule_fixture(logged_in_admin_wsgi_app):
 
 
 def _create_rule(
-    wsgi_app: WebTestAppForCMK,
+    clients: ClientRegistry,
     folder: str,
     comment: str = "",
     description: str = "",
     documentation_url: str = "",
     disabled: bool = False,
     ruleset: str = "inventory_df_rules",
+    value: dict[str, Any] | list[Any] | tuple | str | None = None,
     value_raw: str = """{
         "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
         "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
     }""",
-) -> tuple[webtest.TestResponse, dict[str, typing.Any]]:
-    base = "/NO_SITE/check_mk/api/1.0"
-    properties = {
+) -> tuple[TestResponse, dict[str, Any]]:
+    if value is None:
+        value = {
+            "ignore_fs_types": ["tmpfs", "nfs", "smbfs", "cifs", "iso9660"],
+            "never_ignore_mountpoints": ["~.*/omd/sites/[^/]+/tmp$"],
+        }
+
+    properties: RuleProperties = {
         "description": description,
         "comment": comment,
         "disabled": disabled,
     }
     if documentation_url:
         properties["documentation_url"] = documentation_url
+
+    conditions: RuleConditions = {
+        "host_tags": [
+            {
+                "key": "criticality",
+                "operator": "is",
+                "value": "prod",
+            },
+            {
+                "key": "networking",
+                "operator": "is_not",
+                "value": "wan",
+            },
+        ],
+        "host_labels": [{"key": "os", "operator": "is", "value": "windows"}],
+    }
+
     values = {
         "ruleset": ruleset,
         "folder": folder,
         "properties": properties,
         "value_raw": value_raw,
-        "conditions": {
-            "host_tags": [
-                {
-                    "key": "criticality",
-                    "operator": "is",
-                    "value": "prod",
-                },
-                {
-                    "key": "networking",
-                    "operator": "is_not",
-                    "value": "wan",
-                },
-            ],
-            "host_labels": [{"key": "os", "operator": "is", "value": "windows"}],
-        },
+        "conditions": conditions,
     }
-    resp = wsgi_app.post(
-        base + "/domain-types/rule/collections/all",
-        headers={"Accept": "application/json", "Content-Type": "application/json"},
-        params=json.dumps(values),
+
+    resp = clients.Rule.create(
+        ruleset=ruleset,
+        folder=folder,
+        properties=properties,
+        value_raw=value_raw,
+        conditions=conditions,
     )
     return resp, values
 
 
 @pytest.fixture(scope="function", name="test_folders")
-def site_with_test_folders(wsgi_app, base):
+def site_with_test_folders(clients: ClientRegistry) -> tuple[str, str]:
     test_folder_name_one = "test_folder_1"
     test_folder_name_two = "test_folder_2"
 
-    _create_folder(wsgi_app, base, test_folder_name_one)
-    _create_folder(wsgi_app, base, test_folder_name_two)
+    clients.Folder.create(
+        folder_name=test_folder_name_one,
+        title=test_folder_name_one,
+        parent="/",
+        expect_ok=True,
+    )
+    clients.Folder.create(
+        folder_name=test_folder_name_two,
+        title=test_folder_name_two,
+        parent="/",
+        expect_ok=True,
+    )
 
     return test_folder_name_one, test_folder_name_two
 
 
-def _create_folder(wsgi_app, base, folder_name, parent="/"):
-    return wsgi_app.post(
-        base + "/domain-types/folder_config/collections/all",
-        params=json.dumps(
-            {
-                "name": folder_name,
-                "title": folder_name,
-                "parent": parent,
-            }
-        ),
-        headers={
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        },
-        status=200,
+def test_openapi_get_non_existing_rule(clients: ClientRegistry) -> None:
+    clients.Rule.get(rule_id="non_existing_rule_id", expect_ok=False).assert_status_code(404)
+
+
+def test_openapi_create_rule_regression(clients: ClientRegistry) -> None:
+    value_raw = '{"inodes_levels": (10.0, 5.0), "levels": [(0, (0, 0)), (0, (0.0, 0.0))], "magic": 0.8, "trend_perfdata": True}'
+    clients.Rule.create(
+        ruleset="checkgroup_parameters:filesystem",
+        value_raw=value_raw,
+        conditions={},
+        folder="~",
+        properties={"disabled": False, "description": "API2I"},
     )
 
 
-def test_openapi_create_rule_regression(
-    logged_in_admin_wsgi_app: WebTestAppForCMK,
-) -> None:
-    wsgi_app = logged_in_admin_wsgi_app
-    base = "/NO_SITE/check_mk/api/1.0"
-    values = {
-        "ruleset": "checkgroup_parameters:filesystem",
-        "folder": "~",
-        "properties": {"disabled": False, "description": "API2I"},
-        "value_raw": '{"inodes_levels": (10.0, 5.0), "levels": [(0, (0, 0)), (0, (0.0, 0.0))], "magic": 0.8, "trend_perfdata": True}',
-        "conditions": {},
-    }
-    _ = wsgi_app.post(
-        base + "/domain-types/rule/collections/all",
-        headers={"Accept": "application/json", "Content-Type": "application/json"},
-        params=json.dumps(values),
-        status=200,
-    )
-
-
-def test_openapi_value_raw_is_unaltered(
-    logged_in_admin_wsgi_app: WebTestAppForCMK,
-) -> None:
-    wsgi_app = logged_in_admin_wsgi_app
+def test_openapi_value_raw_is_unaltered(clients: ClientRegistry) -> None:
     value_raw = "{'levels': (10.0, 5.0)}"
-    base = "/NO_SITE/check_mk/api/1.0"
-    values = {
-        "ruleset": "checkgroup_parameters:memory_percentage_used",
-        "folder": "~",
-        "properties": {
-            "disabled": False,
-        },
-        "value_raw": value_raw,
-        "conditions": {},
-    }
-    new_resp = wsgi_app.post(
-        base + "/domain-types/rule/collections/all",
-        headers={"Accept": "application/json", "Content-Type": "application/json"},
-        params=json.dumps(values),
-        status=200,
+    resp = clients.Rule.create(
+        ruleset="checkgroup_parameters:memory_percentage_used",
+        value_raw=value_raw,
+        conditions={},
+        folder="~",
+        properties={"disabled": False},
     )
-    resp = wsgi_app.get(
-        base + f"/objects/rule/{new_resp.json['id']}",
-        headers={"Accept": "application/json"},
-        status=200,
-    )
-    resp_value = resp.json["extensions"]["value_raw"]
-    assert value_raw == resp_value
+    resp2 = clients.Rule.get(rule_id=resp.json["id"])
+    assert value_raw == resp2.json["extensions"]["value_raw"]
 
 
-def test_openapi_rules_href_escaped(
-    logged_in_admin_wsgi_app: WebTestAppForCMK,
-) -> None:
-    wsgi_app = logged_in_admin_wsgi_app
-    base = "/NO_SITE/check_mk/api/1.0"
-    resp = wsgi_app.get(
-        base + "/domain-types/ruleset/collections/all",
-        headers={"Accept": "application/json", "Content-Type": "application/json"},
-        status=200,
+def test_openapi_value_active_check_http(clients: ClientRegistry) -> None:
+    value_raw = """{
+        "name": "Halli-gALLI",
+        "host": {"address": "mimi.ch", "virthost": "mimi.ch"},
+        "mode": (
+            "url",
+            {
+                "uri": "/lala/misite.html",
+                "ssl": "auto",
+                "expect_string": "status:UP",
+                "urlize": True,
+            },
+        ),
+    }"""
+    resp = clients.Rule.create(
+        ruleset="active_checks:http",
+        value_raw=value_raw,
+        conditions={},
+        folder="~",
+        properties={"disabled": False},
     )
+
+    clients.Rule.get(rule_id=resp.json["id"])
+
+
+def test_openapi_rules_href_escaped(clients: ClientRegistry) -> None:
+    resp = clients.Ruleset.list(search_options="?used=0")
     ruleset = next(r for r in resp.json["value"] if "special_agents:gcp" == r["id"])
     assert (
         ruleset["links"][0]["href"]
@@ -179,57 +184,38 @@ def test_openapi_rules_href_escaped(
     )
 
 
-def test_openapi_create_rule_failure(
-    logged_in_admin_wsgi_app: WebTestAppForCMK,
-) -> None:
-    wsgi_app = logged_in_admin_wsgi_app
-    base = "/NO_SITE/check_mk/api/1.0"
-
-    values = {
-        "ruleset": "host_groups",
-        "folder": "~",
-        "properties": {
+def test_openapi_create_rule_failure(clients: ClientRegistry) -> None:
+    resp = clients.Rule.create(
+        ruleset="host_groups",
+        folder="~",
+        properties={
             "description": "This is my title for this very important rule.",
             "comment": "They made me do it!",
             "documentation_url": "http://example.com/",
             "disabled": False,
         },
-        "value_raw": "{}",
-        "conditions": {},
-    }
-    resp = wsgi_app.post(
-        base + "/domain-types/rule/collections/all",
-        headers={"Accept": "application/json", "Content-Type": "application/json"},
-        params=json.dumps(values),
-        status=400,
+        value_raw="{}",
+        conditions={},
+        expect_ok=False,
     )
+    resp.assert_status_code(400)
+
     # Its not really important that this text is in the response, just that this call failed.
-    assert "You have not defined any host group yet" in resp.json["detail"]
+    # assert "You have not defined any host group yet" in resp.json["detail"]
 
 
 def test_openapi_create_rule(
-    logged_in_admin_wsgi_app: WebTestAppForCMK,
-    new_rule: tuple[webtest.TestResponse, dict[str, typing.Any]],
+    clients: ClientRegistry,
+    new_rule: tuple[TestResponse, dict[str, typing.Any]],
 ) -> None:
-    wsgi_app = logged_in_admin_wsgi_app
-    base = "/NO_SITE/check_mk/api/1.0"
-
     new_resp, values = new_rule
 
-    resp = wsgi_app.get(
-        base + f"/objects/ruleset/{values['ruleset']}",
-        headers={"Accept": "application/json"},
-        status=200,
-    )
+    resp = clients.Ruleset.get(ruleset_id=values["ruleset"])
     assert resp.json["extensions"]["number_of_rules"] == 1
 
     # Also fetch the newly created rule and check if it's actually persisted.
-    resp = wsgi_app.get(
-        base + f"/objects/rule/{new_resp.json['id']}",
-        headers={"Accept": "application/json"},
-        status=200,
-    )
-    ext = resp.json["extensions"]
+    resp2 = clients.Rule.get(new_resp.json["id"])
+    ext = resp2.json["extensions"]
     assert ext["ruleset"] == values["ruleset"]
     assert ext["folder"] == values["folder"]
     assert ext["properties"] == values["properties"]
@@ -238,7 +224,7 @@ def test_openapi_create_rule(
     # Check that the format on disk is as expected.
     rules_mk = os.path.join(paths.omd_root, "etc", "check_mk", "conf.d", "wato", "rules.mk")
     environ = load_mk_file(rules_mk, default={})
-    stored_condition = environ[values["ruleset"]][0]["condition"]
+    stored_condition = environ[values["ruleset"]][0]["condition"]  # type: ignore[index]
     expected_condition = {
         "host_tags": {"criticality": "prod", "networking": {"$ne": "wan"}},
         "host_labels": {"os": "windows"},
@@ -246,34 +232,20 @@ def test_openapi_create_rule(
     assert stored_condition == expected_condition
 
 
-def test_create_rule_with_string_value(
-    logged_in_admin_wsgi_app: WebTestAppForCMK,
-) -> None:
-    wsgi_app = logged_in_admin_wsgi_app
-    base = "/NO_SITE/check_mk/api/1.0"
-
-    resp = wsgi_app.post(
-        base + "/domain-types/rule/collections/all",
-        headers={"Accept": "application/json", "Content-Type": "application/json"},
-        params=json.dumps(
-            {
-                "ruleset": "extra_host_conf:notification_options",
-                "folder": "/",
-                "properties": {
-                    "description": "Test",
-                    "disabled": False,
-                },
-                "value_raw": "'d,u,r,f,s'",
-                "conditions": {},
-            }
-        ),
+def test_create_rule_with_string_value(clients: ClientRegistry) -> None:
+    resp = clients.Rule.create(
+        ruleset="extra_host_conf:notification_options",
+        folder="/",
+        properties={"description": "Test", "disabled": False},
+        value_raw="'d,u,r,f,s'",
+        conditions={},
     )
-
     assert resp.json["extensions"]["value_raw"] == "'d,u,r,f,s'"
 
 
 def test_openapi_list_rules_with_hyphens(
-    base: str, logged_in_admin_wsgi_app: WebTestAppForCMK, monkeypatch: pytest.MonkeyPatch
+    clients: ClientRegistry,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
         cmk.gui.watolib.rulespecs.CheckTypeGroupSelection,
@@ -282,38 +254,27 @@ def test_openapi_list_rules_with_hyphens(
     )
     STATIC_CHECKS_FILEINFO_GROUPS = "static_checks:fileinfo-groups"
     _, result = _create_rule(
-        logged_in_admin_wsgi_app,
+        clients,
         "/",
         ruleset=STATIC_CHECKS_FILEINFO_GROUPS,
         value_raw="('fileinfo_groups', '', {'group_patterns': []})",
     )
+
     assert result["ruleset"] == STATIC_CHECKS_FILEINFO_GROUPS
 
-    resp = logged_in_admin_wsgi_app.get(
-        base + f"/domain-types/rule/collections/all?ruleset_name={STATIC_CHECKS_FILEINFO_GROUPS}",
-        headers={"Accept": "application/json"},
-        status=200,
-    ).json
+    resp2 = clients.Rule.list(ruleset=STATIC_CHECKS_FILEINFO_GROUPS)
 
-    assert len(resp["value"]) == 1
-    assert resp["value"][0]["extensions"]["ruleset"] == STATIC_CHECKS_FILEINFO_GROUPS
+    assert len(resp2.json["value"]) == 1
+    assert resp2.json["value"][0]["extensions"]["ruleset"] == STATIC_CHECKS_FILEINFO_GROUPS
 
 
 def test_openapi_list_rules(
-    logged_in_admin_wsgi_app: WebTestAppForCMK,
-    new_rule: tuple[webtest.TestResponse, dict[str, typing.Any]],
+    clients: ClientRegistry,
+    new_rule: tuple[TestResponse, dict[str, typing.Any]],
 ) -> None:
-    wsgi_app = logged_in_admin_wsgi_app
-    base = "/NO_SITE/check_mk/api/1.0"
-
     _, values = new_rule
     rule_set = values["ruleset"]
-
-    resp = wsgi_app.get(
-        base + f"/domain-types/rule/collections/all?ruleset_name={rule_set}",
-        headers={"Accept": "application/json"},
-        status=200,
-    )
+    resp = clients.Rule.list(ruleset=rule_set)
 
     for entry in resp.json["value"]:
         assert entry["domainType"] == "rule"
@@ -327,225 +288,180 @@ def test_openapi_list_rules(
 
 
 def test_openapi_delete_rule(
-    logged_in_admin_wsgi_app: WebTestAppForCMK,
-    new_rule: tuple[webtest.TestResponse, dict[str, typing.Any]],
+    api_client: RestApiClient,
+    clients: ClientRegistry,
+    new_rule: tuple[TestResponse, dict[str, typing.Any]],
 ) -> None:
-    wsgi_app = logged_in_admin_wsgi_app
-    base = "/NO_SITE/check_mk/api/1.0"
-
     resp, values = new_rule
 
-    _resp = wsgi_app.get(
-        base + f"/objects/ruleset/{values['ruleset']}",
-        headers={"Accept": "application/json"},
-    )
+    _resp = clients.Ruleset.get(ruleset_id=values["ruleset"])
     assert _resp.json["extensions"]["number_of_rules"] == 1
 
-    wsgi_app.follow_link(
-        resp,
+    api_client.follow_link(
+        resp.json,
         ".../delete",
-        status=204,
-        headers={"Accept": "application/json"},
-    )
+        headers={"If-Match": _resp.headers["ETag"]},
+    ).assert_status_code(204)
 
-    list_resp = wsgi_app.get(
-        base + f"/objects/ruleset/{values['ruleset']}",
-        headers={"Accept": "application/json"},
-    )
+    list_resp = clients.Ruleset.get(ruleset_id=values["ruleset"])
     assert list_resp.json["extensions"]["number_of_rules"] == 0
 
-    wsgi_app.follow_link(
-        resp,
+    api_client.follow_link(
+        resp.json,
         ".../delete",
-        status=404,
-        headers={"Accept": "application/json"},
-    )
+        expect_ok=False,
+    ).assert_status_code(404)
 
 
 @pytest.mark.parametrize("ruleset", ["host_groups", "special_agents:gcp"])
-def test_openapi_show_ruleset(logged_in_admin_wsgi_app: WebTestAppForCMK, ruleset: str) -> None:
-    wsgi_app = logged_in_admin_wsgi_app
-    base = "/NO_SITE/check_mk/api/1.0"
-    resp = wsgi_app.get(
-        base + f"/objects/ruleset/{urllib.parse.quote(ruleset)}",
-        headers={"Accept": "application/json", "Content-Type": "application/json"},
-    )
+def test_openapi_show_ruleset(clients: ClientRegistry, ruleset: str) -> None:
+    resp = clients.Ruleset.get(ruleset_id=urllib.parse.quote(ruleset))
     assert resp.json["extensions"]["name"] == ruleset
 
 
-def test_openapi_show_non_existing_ruleset(
-    logged_in_admin_wsgi_app: WebTestAppForCMK,
-) -> None:
-    wsgi_app = logged_in_admin_wsgi_app
-    base = "/NO_SITE/check_mk/api/1.0"
+def test_openapi_show_non_existing_ruleset(clients: ClientRegistry) -> None:
     # Request a ruleset that doesn't exist should return a 400 Bad Request.
-    wsgi_app.get(
-        base + "/objects/ruleset/non_existing_ruleset",
-        headers={"Accept": "application/json", "Content-Type": "application/json"},
-        status=404,
-    )
+    resp = clients.Ruleset.get(ruleset_id="non_existing_ruleset", expect_ok=False)
+    resp.assert_status_code(404)
 
 
-def test_openapi_list_rulesets(logged_in_admin_wsgi_app: WebTestAppForCMK) -> None:
-    wsgi_app = logged_in_admin_wsgi_app
-
-    base = "/NO_SITE/check_mk/api/1.0"
-    resp = wsgi_app.get(
-        base + "/domain-types/ruleset/collections/all?fulltext=cisco_qos",
-        headers={"Accept": "application/json", "Content-Type": "application/json"},
-    )
+def test_openapi_list_rulesets(clients: ClientRegistry) -> None:
+    resp = clients.Ruleset.list(search_options="?fulltext=cisco_qos&used=False")
     assert len(resp.json["value"]) == 2
 
 
 @pytest.mark.usefixtures("new_rule")
-def test_openapi_has_rule(
-    aut_user_auth_wsgi_app: WebTestAppForCMK, base: str, test_folders: tuple[str, str]
-) -> None:
-    wsgi_app = aut_user_auth_wsgi_app
-    assert _order_of_rules(wsgi_app, base) == ["They made me do it!"]
+def test_openapi_has_rule(clients: ClientRegistry) -> None:
+    assert _order_of_rules(clients) == ["They made me do it!"]
 
 
 @pytest.mark.usefixtures("new_rule")
 def test_openapi_create_rule_order(
-    aut_user_auth_wsgi_app: WebTestAppForCMK, base: str, test_folders: tuple[str, str]
+    clients: ClientRegistry,
+    test_folders: tuple[str, str],
 ) -> None:
-    wsgi_app = aut_user_auth_wsgi_app
     folder_name_one, folder_name_two = test_folders
-    rule1, _ = _create_rule(wsgi_app, f"/{folder_name_one}", comment="rule1")
+    rule1, _ = _create_rule(clients, f"/{folder_name_one}", comment="rule1")
     rule1_id = rule1.json["id"]
 
-    assert _order_of_rules(wsgi_app, base) == ["rule1", "They made me do it!"]
+    assert _order_of_rules(clients) == ["rule1", "They made me do it!"]
 
-    rule2, _ = _create_rule(wsgi_app, f"/{folder_name_two}", comment="rule2")
+    rule2, _ = _create_rule(clients, f"/{folder_name_two}", comment="rule2")
     rule2_id = rule2.json["id"]
 
-    assert _order_of_rules(wsgi_app, base) == ["rule2", "rule1", "They made me do it!"]
+    assert _order_of_rules(clients) == ["rule2", "rule1", "They made me do it!"]
 
-    _ensure_on_folder(wsgi_app, base, rule1_id, f"/{folder_name_one}")
-    _ensure_on_folder(wsgi_app, base, rule2_id, f"/{folder_name_two}")
+    rule_resp1 = clients.Rule.get(rule1_id)
+    assert rule_resp1.json["extensions"]["folder"] == f"/{folder_name_one}"
+
+    rule_resp2 = clients.Rule.get(rule2_id)
+    assert rule_resp2.json["extensions"]["folder"] == f"/{folder_name_two}"
 
 
 def test_openapi_move_rule_to_top_of_folder(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-    base: str,
-    new_rule: tuple[webtest.TestResponse, dict[str, typing.Any]],
+    clients: ClientRegistry,
+    new_rule: tuple[TestResponse, dict[str, typing.Any]],
     test_folders: tuple[str, str],
 ) -> None:
-    wsgi_app = aut_user_auth_wsgi_app
     folder_name_one, folder_name_two = test_folders
     resp, _ = new_rule
     rule_id = resp.json["id"]
 
-    _rule1, _ = _create_rule(wsgi_app, f"/{folder_name_one}", comment="rule1")
-    _rule2, _ = _create_rule(wsgi_app, f"/{folder_name_two}", comment="rule2")
+    _rule1, _ = _create_rule(clients, f"/{folder_name_one}", comment="rule1")
+    _rule2, _ = _create_rule(clients, f"/{folder_name_two}", comment="rule2")
 
-    _move_to(wsgi_app, base, rule_id, "top_of_folder", folder=f"/{folder_name_one}")
-    _ensure_on_folder(wsgi_app, base, rule_id, f"/{folder_name_one}")
-    assert _order_of_rules(wsgi_app, base) == ["rule2", "They made me do it!", "rule1"]
+    _move_to(clients, rule_id, "top_of_folder", folder=f"/{folder_name_one}")
+
+    rule_resp1 = clients.Rule.get(rule_id)
+    assert rule_resp1.json["extensions"]["folder"] == f"/{folder_name_one}"
+
+    assert _order_of_rules(clients) == ["rule2", "They made me do it!", "rule1"]
 
 
 def test_openapi_move_rule_to_bottom_of_folder(
-    aut_user_auth_wsgi_app, base, new_rule, test_folders
-):
-    wsgi_app = aut_user_auth_wsgi_app
+    clients: ClientRegistry,
+    new_rule: tuple[TestResponse, dict[str, typing.Any]],
+    test_folders: tuple[str, str],
+) -> None:
     folder_name_one, folder_name_two = test_folders
     resp, _ = new_rule
     rule_id = resp.json["id"]
 
-    _rule1, _ = _create_rule(wsgi_app, f"/{folder_name_one}", comment="rule1")
-    _rule2, _ = _create_rule(wsgi_app, f"/{folder_name_two}", comment="rule2")
+    _rule1, _ = _create_rule(clients, f"/{folder_name_one}", comment="rule1")
+    _rule2, _ = _create_rule(clients, f"/{folder_name_two}", comment="rule2")
 
-    _move_to(wsgi_app, base, rule_id, "bottom_of_folder", folder=f"/{folder_name_two}")
-    _ensure_on_folder(wsgi_app, base, rule_id, f"/{folder_name_two}")
+    _move_to(clients, rule_id, "bottom_of_folder", folder=f"/{folder_name_two}")
 
-    assert _order_of_rules(wsgi_app, base) == ["rule2", "They made me do it!", "rule1"]
+    rule_resp1 = clients.Rule.get(rule_id)
+    assert rule_resp1.json["extensions"]["folder"] == f"/{folder_name_two}"
+
+    assert _order_of_rules(clients) == ["rule2", "They made me do it!", "rule1"]
 
 
 def test_openapi_move_rule_after_specific_rule(
-    aut_user_auth_wsgi_app, base, new_rule, test_folders
-):
-    wsgi_app = aut_user_auth_wsgi_app
+    clients: ClientRegistry,
+    new_rule: tuple[TestResponse, dict[str, typing.Any]],
+    test_folders: tuple[str, str],
+) -> None:
     folder_name_one, folder_name_two = test_folders
     resp, _ = new_rule
     rule_id = resp.json["id"]
 
-    rule1, _ = _create_rule(wsgi_app, f"/{folder_name_one}", comment="rule1")
-    _rule2, _ = _create_rule(wsgi_app, f"/{folder_name_two}", comment="rule2")
+    rule1, _ = _create_rule(clients, f"/{folder_name_one}", comment="rule1")
+    _rule2, _ = _create_rule(clients, f"/{folder_name_two}", comment="rule2")
 
-    _move_to(wsgi_app, base, rule_id, "after_specific_rule", dest_rule_id=rule1.json["id"])
-    _ensure_on_folder(wsgi_app, base, rule_id, f"/{folder_name_one}")
+    _move_to(clients, rule_id, "after_specific_rule", dest_rule_id=rule1.json["id"])
 
-    assert _order_of_rules(wsgi_app, base) == ["rule2", "rule1", "They made me do it!"]
+    rule_resp1 = clients.Rule.get(rule_id)
+    assert rule_resp1.json["extensions"]["folder"] == f"/{folder_name_one}"
+
+    assert _order_of_rules(clients) == ["rule2", "rule1", "They made me do it!"]
 
 
 def test_openapi_move_rule_before_specific_rule(
-    aut_user_auth_wsgi_app, base, new_rule, test_folders
-):
-    wsgi_app = aut_user_auth_wsgi_app
+    clients: ClientRegistry,
+    new_rule: tuple[TestResponse, dict[str, typing.Any]],
+    test_folders: tuple[str, str],
+) -> None:
     folder_name_one, folder_name_two = test_folders
     resp, _ = new_rule
     rule_id = resp.json["id"]
 
-    _rule1, _ = _create_rule(wsgi_app, f"/{folder_name_one}", comment="rule1")
-    rule2, _ = _create_rule(wsgi_app, f"/{folder_name_two}", comment="rule2")
+    _rule1, _ = _create_rule(clients, f"/{folder_name_one}", comment="rule1")
+    rule2, _ = _create_rule(clients, f"/{folder_name_two}", comment="rule2")
 
-    _move_to(wsgi_app, base, rule_id, "before_specific_rule", dest_rule_id=rule2.json["id"])
-    _ensure_on_folder(wsgi_app, base, rule_id, f"/{folder_name_two}")
+    _move_to(clients, rule_id, "before_specific_rule", dest_rule_id=rule2.json["id"])
 
-    assert _order_of_rules(wsgi_app, base) == ["They made me do it!", "rule2", "rule1"]
+    rule_resp = clients.Rule.get(rule_id)
+    assert rule_resp.json["extensions"]["folder"] == f"/{folder_name_two}"
+
+    assert _order_of_rules(clients) == ["They made me do it!", "rule2", "rule1"]
 
 
-def test_create_rule_permission_error_regression(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-    base: str,
-    with_admin: tuple[UserId, str],
-) -> None:
-    user, password = with_admin
-    aut_user_auth_wsgi_app.set_authorization(("Bearer", f"{user} {password}"))
-
-    _resp = aut_user_auth_wsgi_app.post(
-        url=base + "/domain-types/rule/collections/all",
-        params=json.dumps(
-            {
-                "ruleset": "active_checks:cmk_inv",
-                "folder": "~",
-                "properties": {"disabled": False},
-                "value_raw": '{"status_data_inventory": True}',
-                "conditions": {},
-            }
-        ),
-        headers={
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        },
-        status=200,
+def test_create_rule_permission_error_regression(clients: ClientRegistry) -> None:
+    clients.Rule.create(
+        ruleset="active_checks:cmk_inv",
+        folder="~",
+        properties={"disabled": False},
+        value_raw='{"status_data_inventory": True}',
+        conditions={},
     )
 
 
-def _ensure_on_folder(wsgi_app, base, _rule_id, folder):
-    rule_resp = wsgi_app.get(
-        base + f"/objects/rule/{_rule_id}",
-        headers={"Accept": "application/json"},
-    )
-    assert rule_resp.json["extensions"]["folder"] == folder
-
-
-def _move_to(wsgi_app, base, _rule_id, position, dest_rule_id=None, folder=None):
-    options = {"position": position}
+def _move_to(
+    clients: ClientRegistry,
+    _rule_id: str,
+    position: str,
+    dest_rule_id: str | None = None,
+    folder: str | None = None,
+) -> Response:
+    options: dict[str, Any] = {"position": position}
     if position in ("top_of_folder", "bottom_of_folder"):
         options["folder"] = folder
     elif position in ("before_specific_rule", "after_specific_rule"):
         options["rule_id"] = dest_rule_id
 
-    _resp = wsgi_app.post(
-        base + f"/objects/rule/{_rule_id}/actions/move/invoke",
-        params=json.dumps(options),
-        headers={
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        },
-        status=200,
-    )
+    _resp = clients.Rule.move(rule_id=_rule_id, options=options)
 
     if position in ("top_of_folder", "bottom_of_folder"):
         assert _resp.json["extensions"]["folder"] == folder
@@ -553,12 +469,8 @@ def _move_to(wsgi_app, base, _rule_id, position, dest_rule_id=None, folder=None)
     return _resp
 
 
-def _order_of_rules(wsgi_app: WebTestAppForCMK, base: str) -> list[str]:
-    _resp = wsgi_app.get(
-        base + "/domain-types/rule/collections/all?ruleset_name=inventory_df_rules",
-        headers={"Accept": "application/json"},
-        status=200,
-    )
+def _order_of_rules(clients: ClientRegistry) -> list[str]:
+    _resp = clients.Rule.list(ruleset="inventory_df_rules")
     comments = []
     for rule in _resp.json["value"]:
         comments.append(rule["extensions"]["properties"]["comment"])
@@ -566,79 +478,127 @@ def _order_of_rules(wsgi_app: WebTestAppForCMK, base: str) -> list[str]:
 
 
 def test_user_needs_folder_permissions_to_move_rules(
-    base: str,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-    wsgi_app: WebTestAppForCMK,
+    clients: ClientRegistry,
     with_user: tuple[UserId, str],
 ) -> None:
     source_folder = "source"
     dest_folder = "dest"
-    _create_folder(aut_user_auth_wsgi_app, base, source_folder)
-    _create_folder(aut_user_auth_wsgi_app, base, dest_folder)
 
-    _make_folder_inaccessible(aut_user_auth_wsgi_app, base, dest_folder)
+    clients.Folder.create(
+        folder_name=source_folder,
+        title=source_folder,
+        parent="/",
+        expect_ok=True,
+    )
+    clients.Folder.create(
+        folder_name=dest_folder,
+        title=dest_folder,
+        parent="/",
+        expect_ok=True,
+    )
 
-    resp = aut_user_auth_wsgi_app.post(
-        url=base + "/domain-types/rule/collections/all",
-        params=json.dumps(
+    # make_folder_inaccessible
+    nobody = "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
+    clients.ContactGroup.create(name=nobody, alias=nobody)
+    clients.Folder.edit(
+        folder_name=f"~{dest_folder}",
+        title=nobody,
+        attributes={"contactgroups": {"groups": [nobody]}},
+    )
+
+    resp = clients.Rule.create(
+        ruleset="active_checks:cmk_inv",
+        folder="~" + source_folder,
+        properties={"disabled": False},
+        value_raw='{"status_data_inventory": True}',
+        conditions={},
+    )
+
+    clients.Rule.set_credentials(username=with_user[0], password=with_user[1])
+
+    clients.Rule.move(
+        rule_id=resp.json["id"],
+        options={"position": "top_of_folder", "folder": "~" + dest_folder},
+        expect_ok=False,
+    ).assert_status_code(401)
+
+
+def test_openapi_only_show_used_rulesets_by_default_regression(
+    clients: ClientRegistry,
+) -> None:
+    """With default parameters, the 'list rulesets' endpoint should only show rulessets that are in use."""
+    # make one ruleset used, so this tests won't pass on an empty result
+    _create_rule(clients, "~")
+    rulesets = clients.Ruleset.list().json["value"]
+    assert len(rulesets) > 0
+    for ruleset in rulesets:
+        assert ruleset["extensions"]["number_of_rules"] > 0
+
+
+def test_openapi_fulltext_crash_regression(clients: ClientRegistry) -> None:
+    """A fulltext search shouldn't crash the endpoint."""
+    clients.Ruleset.list(fulltext="cluster").assert_status_code(200)
+
+
+def test_openapi_deprecated_filter_regression(clients: ClientRegistry) -> None:
+    """No deprecated rules should be shown when they are filtered out."""
+
+    # checkgroup_parameters:jvm_threads is deprecated.
+    clients.Rule.create(
+        ruleset="checkgroup_parameters:jvm_threads",
+        value_raw="'(80, 100)'",
+        conditions={"host_name": {"match_on": ["heute"], "operator": "one_of"}},
+        properties={},
+        expect_ok=False,
+    )
+
+    resp = clients.Ruleset.list(deprecated=False)
+    assert len(resp.json["value"]) == 0
+
+
+def test_openapi_ruleset_search_invalid_regex_regression(clients: ClientRegistry) -> None:
+    """Searching for an invalid regex shouldn't crash"""
+    clients.Ruleset.list(
+        search_options="?fulltext=%5C&used=false",
+        expect_ok=False,
+    ).assert_status_code(400)
+
+
+def test_openapi_cannot_move_rules_from_different_rulesets_regression(
+    clients: ClientRegistry,
+) -> None:
+    resp = clients.Rule.create(
+        "custom_checks",
+        value_raw=repr(
             {
-                "ruleset": "active_checks:cmk_inv",
-                "folder": "~" + source_folder,
-                "properties": {"disabled": False},
-                "value_raw": '{"status_data_inventory": True}',
-                "conditions": {},
+                "service_description": "Test-Service",
+                "command_line": 'echo "123"',
             }
         ),
-        headers={
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        },
-        status=200,
+        conditions={},
     )
+    lhs_rule_id = resp.json["id"]
 
-    wsgi_app.set_authorization(("Bearer", " ".join(with_user)))
-    wsgi_app.post(
-        url=base + f"/objects/rule/{resp.json['id']}/actions/move/invoke",
-        params=json.dumps({"position": "top_of_folder", "folder": "~" + dest_folder}),
-        headers={
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        },
-        status=401,
-    )
+    resp = clients.Rule.create("active_checks:tcp", value_raw=repr((1, {})), conditions={})
+    rhs_rule_id = resp.json["id"]
+
+    clients.Rule.move(
+        lhs_rule_id, {"after_specific_rule": rhs_rule_id}, expect_ok=False
+    ).assert_status_code(400)
+
+    clients.Rule.move(
+        lhs_rule_id, {"before_specific_rule": rhs_rule_id}, expect_ok=False
+    ).assert_status_code(400)
 
 
-def _make_folder_inaccessible(wsgi_app: WebTestAppForCMK, base: str, folder: str) -> None:
-    resp = wsgi_app.get(
-        url=base + "/objects/folder_config/~" + folder,
-        headers={"Accept": "application/json"},
-        status=200,
-    )
-    etag = resp.headers["etag"]
+def test_openapi_cannot_move_rule_before_or_after_itself(clients: ClientRegistry) -> None:
+    resp = clients.Rule.create("active_checks:tcp", value_raw=repr((1, {})), conditions={})
+    rule_id = resp.json["id"]
 
-    nobody = "".join(random.choices(string.ascii_uppercase + string.digits, k=8))
+    clients.Rule.move(
+        rule_id, {"after_specific_rule": rule_id}, expect_ok=False
+    ).assert_status_code(400)
 
-    params = {"name": nobody, "alias": nobody}
-    if version.is_managed_edition():
-        params["customer"] = "provider"
-
-    wsgi_app.post(
-        url=base + "/domain-types/contact_group_config/collections/all",
-        params=json.dumps(params),
-        headers={
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        },
-        status=200,
-    )
-
-    wsgi_app.put(
-        url=base + "/objects/folder_config/~" + folder,
-        params=json.dumps({"attributes": {"contactgroups": {"groups": [nobody]}}}),
-        headers={
-            "If-Match": etag,
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        },
-        status=200,
-    )
+    clients.Rule.move(
+        rule_id, {"before_specific_rule": rule_id}, expect_ok=False
+    ).assert_status_code(400)

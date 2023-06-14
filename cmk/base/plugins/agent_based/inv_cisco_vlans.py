@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -33,8 +33,9 @@
 
 from typing import NamedTuple, Sequence
 
-from .agent_based_api.v1 import contains, OIDEnd, register, SNMPTree, TableRow
+from .agent_based_api.v1 import OIDEnd, register, SNMPTree, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
+from .utils.cisco import DETECT_CISCO
 
 
 class _IfInfo(NamedTuple):
@@ -52,7 +53,6 @@ MAP_VLANS = {
 
 
 def _bitmask(raw: str) -> Sequence[int]:
-
     """
     >>> _bitmask("F")
     [1, 5, 6]
@@ -141,7 +141,8 @@ register.snmp_section(
             "4",  # vmVlans
         ],
     ),
-    detect=contains(".1.3.6.1.2.1.1.1.0", "cisco"),
+    detect=DETECT_CISCO,
+    parse_function=parse_inv_cisco_vlans,
 )
 
 

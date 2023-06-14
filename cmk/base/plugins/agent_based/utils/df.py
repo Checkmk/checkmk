@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -332,7 +332,6 @@ def get_filesystem_levels(
     filesystem_size_gb: float,
     params: Mapping[str, Any],
 ) -> FilesystemLevels:
-
     filesystem_size = Bytes(int(filesystem_size_gb * 1024 * 1024 * 1024))
 
     filesystem_levels = _parse_filesystem_levels(params["levels"], filesystem_size)
@@ -553,7 +552,7 @@ def check_filesystem_levels(
     yield Result(state=status, summary=summary)
 
 
-def df_check_filesystem_single(  # type:ignore[no-untyped-def]
+def df_check_filesystem_single(  # type: ignore[no-untyped-def]
     value_store: MutableMapping[str, Any],
     mountpoint: str,
     filesystem_size: float | None,
@@ -620,7 +619,7 @@ def df_check_filesystem_single(  # type:ignore[no-untyped-def]
         yield from check_inodes(params, inodes_total, inodes_avail)
 
 
-def df_check_filesystem_list(  # type:ignore[no-untyped-def]
+def df_check_filesystem_list(  # type: ignore[no-untyped-def]
     value_store: MutableMapping[str, Any],
     item: str,
     params: Mapping[str, Any],

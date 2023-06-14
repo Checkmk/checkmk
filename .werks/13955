@@ -6,7 +6,7 @@ Date: 1659002855
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The REST API now has endpoints for querying metric data.
 They are analogous to the Web API endpoint.

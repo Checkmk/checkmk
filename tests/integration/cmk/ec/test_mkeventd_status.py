@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,7 +11,7 @@ from tests.testlib.site import Site
 
 
 @pytest.mark.skip("needs to be analyzed later...")
-def test_command_reload(site: Site, ec) -> None:  # type:ignore[no-untyped-def]
+def test_command_reload(site: Site, ec) -> None:  # type: ignore[no-untyped-def]
     live = site.live
 
     old_t = live.query_value("GET eventconsolestatus\nColumns: status_config_load_time\n")
@@ -29,9 +29,7 @@ def test_command_reload(site: Site, ec) -> None:  # type:ignore[no-untyped-def]
 
 @pytest.mark.parametrize(("via_core"), [True, False])
 @pytest.mark.skip("needs to be analyzed later...")
-def test_status_table_via_core(  # type:ignore[no-untyped-def]
-    site: Site, ec, via_core: bool
-) -> None:
+def test_status_table_via_core(site: Site, ec, via_core: bool) -> None:  # type: ignore[no-untyped-def]
     live = site.live if via_core else ec.status
     prefix = "eventconsole" if via_core else ""
     result = live.query_table_assoc("GET %sstatus\n" % prefix)
@@ -79,9 +77,7 @@ def test_status_table_via_core(  # type:ignore[no-untyped-def]
 
 @pytest.mark.parametrize(("via_core"), [True, False])
 @pytest.mark.skip("needs to be analyzed later...")
-def test_rules_table_via_core(  # type:ignore[no-untyped-def]
-    site: Site, ec, via_core: bool
-) -> None:
+def test_rules_table_via_core(site: Site, ec, via_core: bool) -> None:  # type: ignore[no-untyped-def]
     live = site.live if via_core else ec.status
     prefix = "eventconsole" if via_core else ""
     result = live.query_table_assoc("GET %srules\n" % prefix)

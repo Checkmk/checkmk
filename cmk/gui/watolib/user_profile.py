@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -38,7 +38,7 @@ from cmk.gui.watolib.utils import mk_eval, mk_repr
 # slave sites anymore with the master sites cookie since the serials differ. In
 # case the slave sites sync with LDAP on their own this issue will be repaired after
 # the next LDAP sync on the slave, but in case the slaves do not sync, this problem
-# will be repaired automagically once an admin performs the next WATO sync for
+# will be repaired automagically once an admin performs the next Setup sync for
 # another reason.
 # Now, to solve this issue, we issue a user profile sync in case the password has
 # been changed. We do this only when only the password has changed.
@@ -49,7 +49,7 @@ from cmk.gui.watolib.utils import mk_eval, mk_repr
 
 
 class SynchronizationResult:
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
         self, site_id, error_text=None, disabled=False, succeeded=False, failed=False
     ) -> None:
         self.site_id = site_id
@@ -211,7 +211,7 @@ def _legacy_push_user_profile_to_site(site, user_id, profile):
         site.get("insecure", False),
         data={
             "user_id": user_id,
-            "profile": mk_repr(profile),
+            "profile": mk_repr(profile).decode("ascii"),
         },
         timeout=60,
     )

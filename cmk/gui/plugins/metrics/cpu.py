@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -560,7 +560,7 @@ graph_info["util_average_1"] = {
         "util:warn",
         "util:crit",
     ],
-    "range": (0, 100),
+    "range": (0, "util,100,MAX"),
     "conflicting_metrics": [
         "idle",
         "cpu_util_guest",
@@ -578,7 +578,7 @@ graph_info["util_average_2"] = {
         "util1:warn",
         "util1:crit",
     ],
-    "range": (0, 100),
+    "range": (0, "util1,util15,100,MAX,MAX"),
 }
 
 graph_info["cpu_utilization_numcpus"] = {
@@ -610,7 +610,7 @@ graph_info["cpu_utilization_simple"] = {
         "cpu_util_steal",
         "io_wait",
     ],
-    "range": (0, 100),
+    "range": (0, "util,100,MAX"),
     "optional_metrics": ["util_average"],
 }
 
@@ -623,7 +623,7 @@ graph_info["cpu_utilization_3"] = {
         ("idle", "stack"),
         ("nice", "stack"),
     ],
-    "range": (0, 100),
+    "range": (0, "user,system,nice,idle,+,+,+,100,MAX"),
 }
 
 # TODO which warn,crit?
@@ -635,7 +635,7 @@ graph_info["cpu_utilization_4"] = {
         ("idle", "stack"),
         ("io_wait", "stack"),
     ],
-    "range": (0, 100),
+    "range": (0, "user,system,io_wait,idle,+,+,+,100,MAX"),
 }
 
 # The following 8 graphs come in pairs.
@@ -658,7 +658,7 @@ graph_info["cpu_utilization_5"] = {
         "cpu_util_guest",
         "cpu_util_steal",
     ],
-    "range": (0, 100),
+    "range": (0, "user,system,io_wait,+,+,100,MAX"),
     "optional_metrics": ["util_average"],
 }
 
@@ -679,7 +679,7 @@ graph_info["cpu_utilization_5_util"] = {
         "cpu_util_guest",
         "cpu_util_steal",
     ],
-    "range": (0, 100),
+    "range": (0, "util,100,MAX"),
     "optional_metrics": ["util_average"],
 }
 
@@ -699,7 +699,7 @@ graph_info["cpu_utilization_6_steal"] = {
         "cpu_util_guest",
     ],
     "omit_zero_metrics": True,
-    "range": (0, 100),
+    "range": (0, "user,system,io_wait,cpu_util_steal,+,+,+,100,MAX"),
     "optional_metrics": ["util_average"],
 }
 
@@ -721,7 +721,7 @@ graph_info["cpu_utilization_6_steal_util"] = {
         "cpu_util_guest",
     ],
     "omit_zero_metrics": True,
-    "range": (0, 100),
+    "range": (0, "util,100,MAX"),
     "optional_metrics": ["util_average"],
 }
 # TODO which warn,crit?
@@ -740,7 +740,7 @@ graph_info["cpu_utilization_6_guest"] = {
         "cpu_util_steal",
     ],
     "omit_zero_metrics": True,
-    "range": (0, 100),
+    "range": (0, "user,system,io_wait,cpu_util_steal,+,+,+,100,MAX"),
     "optional_metrics": ["util_average"],
 }
 
@@ -762,7 +762,7 @@ graph_info["cpu_utilization_6_guest_util"] = {
         "cpu_util_steal",
     ],
     "omit_zero_metrics": True,
-    "range": (0, 100),
+    "range": (0, "util,100,MAX"),
     "optional_metrics": ["util_average"],
 }
 
@@ -782,7 +782,7 @@ graph_info["cpu_utilization_7"] = {
         "util",
     ],
     "omit_zero_metrics": True,
-    "range": (0, 100),
+    "range": (0, "user,system,io_wait,cpu_util_guest,cpu_util_steal,+,+,+,+,100,MAX"),
     "optional_metrics": ["util_average"],
 }
 
@@ -802,7 +802,7 @@ graph_info["cpu_utilization_7_util"] = {
         "util:crit",
     ],
     "omit_zero_metrics": True,
-    "range": (0, 100),
+    "range": (0, "util,100,MAX"),
     "optional_metrics": ["util_average"],
 }
 
@@ -816,7 +816,7 @@ graph_info["cpu_utilization_8"] = {
         ("system", "stack"),
         ("interrupt", "stack"),
     ],
-    "range": (0, 100),
+    "range": (0, "util,100,MAX"),
 }
 
 graph_info["cpu_utilization_percentile"] = {
@@ -838,7 +838,7 @@ graph_info["util_fallback"] = {
         "util:crit",
     ],
     "conflicting_metrics": ["util_average", "system", "engine_cpu_util"],
-    "range": (0, 100),
+    "range": (0, "util,100,MAX"),
 }
 
 graph_info["cpu_entitlement"] = {

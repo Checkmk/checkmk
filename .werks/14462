@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Since version 2.1.0 multiple HW/SW inventory filter showed "From:" and "To:" as
 input fields instead of text input for e.g. the software package name.

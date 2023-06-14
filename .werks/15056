@@ -6,7 +6,7 @@ Date: 1670431702
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This werk introduces the implementation of the Auxiliary Tags endpoints. These
 endpoints replace the old Web-API functionality. Users can now GET, CREATE, PUT

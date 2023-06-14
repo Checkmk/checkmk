@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,11 +9,9 @@ import gettext as gettext_module
 from pathlib import Path
 from typing import NamedTuple
 
-from flask import g
-
 import cmk.utils.paths
 
-from cmk.gui.ctx_stack import request_local_attr, set_global_var
+from cmk.gui.ctx_stack import global_var, request_local_attr, set_global_var
 from cmk.gui.hooks import request_memoize
 from cmk.gui.utils.speaklater import LazyString
 
@@ -136,7 +134,7 @@ def _unlocalize() -> None:
 
 
 def localize(lang: str) -> None:
-    _.cache_clear()  # type:ignore[attr-defined]
+    _.cache_clear()  # type: ignore[attr-defined]
     if lang == "en":
         _unlocalize()
         return None
@@ -158,8 +156,9 @@ def _init_language(lang: str) -> gettext_module.NullTranslations | None:
     translations: list[gettext_module.NullTranslations] = []
     for locale_base_dir in _get_language_dirs():
         try:
-            g.translation = gettext_module.translation(
-                "multisite", str(locale_base_dir), languages=[lang]
+            set_global_var(
+                "translation",
+                gettext_module.translation("multisite", str(locale_base_dir), languages=[lang]),
             )
 
         except OSError:
@@ -167,8 +166,8 @@ def _init_language(lang: str) -> gettext_module.NullTranslations | None:
 
         # Create a chain of fallback translations
         if translations:
-            g.translation.add_fallback(translations[-1])
-        translations.append(g.translation)
+            global_var("translation").add_fallback(translations[-1])
+        translations.append(global_var("translation"))
 
     if not translations:
         return None

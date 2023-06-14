@@ -1,0 +1,14 @@
+Title: df_netscaler: wrong unit shown in graphs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1678286666
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+The check "df_netscaler" shows information on filesystem size and usage. The
+metrics themselves are correct, but the wrong units were shown in the
+associated graphs. This has been fixed.

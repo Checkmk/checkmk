@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
 from cmk.base.plugins.agent_based.inventory_checkpoint_vpn_tunnels import (
     inventory_checkpoint_vpn_tunnels,
     parse_checkpoint_vpn_tunnels,
@@ -66,7 +67,7 @@ from cmk.base.plugins.agent_based.inventory_checkpoint_vpn_tunnels import (
         ),
     ],
 )
-def test_inv_aix_baselevel(raw_section, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_inv_aix_baselevel(raw_section: StringTable, expected_result: InventoryResult) -> None:
     assert (
         list(inventory_checkpoint_vpn_tunnels(parse_checkpoint_vpn_tunnels(raw_section)))
         == expected_result

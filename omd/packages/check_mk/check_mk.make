@@ -12,9 +12,10 @@ CHECK_MK_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(CHECK_MK_DIR)
 
 CHECK_MK_LANGUAGES := de ro nl fr it ja pt_PT es
 
-CHECK_MK_TAROPTS := --owner=root --group=root --exclude=.svn --exclude=*~ \
-                    --exclude=.gitignore --exclude=*.swp --exclude=.f12 \
-                    --exclude=__pycache__ --exclude=*.pyc
+CHECK_MK_TAROPTS := \
+	--owner=root --group=root --exclude=.svn --exclude=*~ \
+	--exclude=.gitignore --exclude=*.swp --exclude=.f12 \
+	--exclude=__pycache__ --exclude=*.pyc
 
 # It is used from top-level Makefile and this makefile as an intermediate step.
 # We should end up with one central place to care for packaging our files
@@ -61,30 +62,37 @@ ifeq ($(filter $(EDITION),cloud free),)
 	    --exclude "cce" \
 	    --exclude "cce.py"
 endif
+ifeq ($(filter $(EDITION),saas),)
+	EDITION_EXCLUDE += \
+	    --exclude "saas" \
+	    --exclude "cse" \
+	    --exclude "cse.py"
+endif
 
 $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PACKAGE_PYTHON3_MODULES_PYTHON_DEPS)
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/werks
 	install -m 644 $(CHECK_MK_RAW_PRECOMPILED_WERKS) $(CHECK_MK_INSTALL_DIR)/share/check_mk/werks
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks
-	install -m 664 $(REPO_PATH)/checks/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks
+	install -m 644 $(REPO_PATH)/cmk/base/legacy_checks/[!__init__.py]* $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks
+	find $(CHECK_MK_INSTALL_DIR)/share/check_mk/checks -type f | sed -e 'p;s~.py$$~~' | xargs -n2 mv
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications
-	install -m 775 $(REPO_PATH)/notifications/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications
+	install -m 755 $(REPO_PATH)/notifications/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/notifications
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/web
 	tar -c -C $(REPO_PATH)/web \
 	    $(CHECK_MK_TAROPTS) \
-            app \
-            htdocs/openapi \
-            htdocs/css \
-            htdocs/images \
-            htdocs/jquery \
-            $(patsubst $(REPO_PATH)/web/%,%,$(JAVASCRIPT_MINI)) \
-            $(patsubst $(REPO_PATH)/web/%,%.map,$(JAVASCRIPT_MINI)) \
-            htdocs/sounds \
-            $(patsubst $(REPO_PATH)/web/%,%,$(THEME_RESOURCES)) \
-	    | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/check_mk/web
+	    app \
+	    htdocs/openapi \
+	    htdocs/css \
+	    htdocs/images \
+	    htdocs/jquery \
+	    $(patsubst $(REPO_PATH)/web/%,%,$(JAVASCRIPT_MINI)) \
+	    $(patsubst $(REPO_PATH)/web/%,%.map,$(JAVASCRIPT_MINI)) \
+	    htdocs/sounds \
+	    $(patsubst $(REPO_PATH)/web/%,%,$(THEME_RESOURCES)) | \
+	    tar -x -C $(CHECK_MK_INSTALL_DIR)/share/check_mk/web
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk
 	install -m 644 $(REPO_PATH)/{COPYING,AUTHORS,ChangeLog} $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk
@@ -98,7 +106,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	    . | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/doc/check_mk/livestatus/
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/checkman
-	install -m 664 $(REPO_PATH)/checkman/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/checkman
+	install -m 644 $(REPO_PATH)/checkman/* $(CHECK_MK_INSTALL_DIR)/share/check_mk/checkman
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/check_mk/agents
 	tar -c -C $(REPO_PATH)/agents \
@@ -142,7 +150,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	    windows/check_mk.user.yml \
 	    windows/OpenHardwareMonitorLib.dll \
 	    windows/OpenHardwareMonitorCLI.exe \
-	    windows/CONTENTS \
+	    windows/windows_files_hashes.txt \
 	    windows/mrpe \
 	    windows/plugins \
 	    | tar -x -C $(CHECK_MK_INSTALL_DIR)/share/check_mk/agents/
@@ -155,10 +163,13 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	    . | tar -x -C $(CHECK_MK_INSTALL_DIR)/bin
 
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/lib/python3
-	tar -C $(REPO_PATH) -c \
+	tar -c -C $(REPO_PATH) \
 	    $(CHECK_MK_TAROPTS) \
 	    $(EDITION_EXCLUDE) \
 	    cmk | tar -x -C $(CHECK_MK_INSTALL_DIR)/lib/python3
+
+	# legacy checks have been moved to checks/ in a dedicated step above.
+	rm -rf $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/legacy_checks
 
 	# cmk needs to be a namespace package (CMK-3979)
 	rm -f \
@@ -221,8 +232,7 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/plugins/__init__.py \
 	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/plugins/wato/__init__.py \
 	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/plugins/wato/check_parameters/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/plugins/wato/watolib/__init__.py \
-	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/base/cce/plugins/agent_based/__init__.py
+	    $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk/gui/cce/plugins/wato/watolib/__init__.py
 
 	# After installing all python modules, ensure they are compiled
 	$(PACKAGE_PYTHON3_MODULES_PYTHON) -m compileall $(CHECK_MK_INSTALL_DIR)/lib/python3/cmk
@@ -236,6 +246,9 @@ $(CHECK_MK_INTERMEDIATE_INSTALL): $(SOURCE_BUILT_AGENTS) $(CHECK_MK_BUILD) $(PAC
 	# Create the plugin namespaces
 	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/base/plugins/agent_based
 	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/special_agents
+	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/gui/plugins/views
+	$(MKDIR) -p $(CHECK_MK_INSTALL_DIR)/skel/local/lib/python3/cmk/gui/plugins/dashboard
+
 
 	# Install the diskspace cleanup plugin
 	$(MKDIR) $(CHECK_MK_INSTALL_DIR)/share/diskspace

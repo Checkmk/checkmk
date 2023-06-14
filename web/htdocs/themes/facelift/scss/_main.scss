@@ -1,5 +1,5 @@
 @charset "UTF-8";
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -190,10 +190,12 @@ input.button.hot,
   &:active {
     color: $font-color-light-bg;
     background-color: $success-dimmed;
+    border-color: $success-dimmed;
   }
 
   &:hover {
     background-color: $success;
+    border-color: $success;
   }
 }
 
@@ -249,8 +251,11 @@ img.emblem {
   height: 10px;
 }
 
-td.buttons img.emblem {
+td.buttons img.emblem,
+table.data img.emblem {
   right: 0;
+  width: 11px;
+  height: 11px;
 }
 
 a.inline img.icon,
@@ -311,7 +316,7 @@ img.treeangle {
 }
 
 b.treeangle.title {
-  font-weight: bold;
+  font-weight: $font-weight-bold;
   color: $font-color;
   cursor: pointer;
 }
@@ -363,8 +368,11 @@ ul.treeangle {
     display: block;
     padding-left: 20px;
     margin: 0;
-    margin-left: 16px;
     list-style: disc;
+
+    &:not(.single) {
+      margin-left: 16px;
+    }
   }
 }
 
@@ -419,6 +427,10 @@ div.really {
   h3 {
     padding: 0;
     margin: 0;
+  }
+
+  &.hidden {
+    display: none;
   }
 }
 
@@ -508,7 +520,7 @@ table.dictionary {
 
   b.header {
     font-size: $font-size-small;
-    font-weight: normal;
+    font-weight: $font-weight-default;
   }
 
   td.dictright {
@@ -607,7 +619,7 @@ table.vs_date {
   th {
     padding: 0;
     font-size: $font-size-small;
-    font-weight: normal;
+    font-weight: $font-weight-default;
     text-align: center;
   }
 }
@@ -938,7 +950,7 @@ table.data.werks {
     }
 
     &.werklevel3 {
-      font-weight: bold;
+      font-weight: $font-weight-bold;
       background-color: $color-state-6-background;
     }
 
@@ -951,13 +963,13 @@ table.data.werks {
     }
 
     &.werkclasssecurity {
-      font-weight: bold;
+      font-weight: $font-weight-bold;
       color: $font-color-white;
       background-color: $color-state-2-background;
     }
 
     &.werkcompincomp_unack {
-      font-weight: bold;
+      font-weight: $font-weight-bold;
       background-color: $color-state-7-background;
     }
 
@@ -980,7 +992,7 @@ table.werks td a {
 td.nowiki {
   h3 {
     font-size: $font-size-large;
-    font-weight: bold;
+    font-weight: $font-weight-bold;
   }
 
   pre {
@@ -1000,7 +1012,7 @@ td.nowiki {
   div.filename {
     padding: 3px 8px;
     margin-bottom: -12px;
-    font-weight: bold;
+    font-weight: $font-weight-bold;
     color: $font-color-light-bg;
     background-color: $info;
   }
@@ -1183,7 +1195,7 @@ body.main.visible div.foldable .title {
 
 div.info {
   margin: 16px 0 8px;
-  font-weight: 500;
+  font-weight: $font-weight-default;
   letter-spacing: $letter-spacing-default;
   color: $font-color;
 }

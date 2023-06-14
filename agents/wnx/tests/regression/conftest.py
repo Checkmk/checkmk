@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,7 +8,7 @@ import subprocess
 import time
 
 import pytest
-import telnetlib3  # type: ignore
+import telnetlib3  # type: ignore[import]
 import yaml
 
 from .local import DEFAULT_CONFIG, host, main_exe, port, run_agent, user_yaml_config
@@ -22,7 +22,7 @@ def make_yaml_config():
 
 @pytest.fixture(name="write_config")
 def write_config_engine(testconfig):
-    with open(user_yaml_config, "wt") as yaml_file:
+    with open(user_yaml_config, "w") as yaml_file:
         ret = yaml.dump(testconfig)
         yaml_file.write(ret)
     yield

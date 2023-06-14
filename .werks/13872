@@ -6,7 +6,7 @@ Date: 1648737439
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If you use the RobotMK extension package (mkp), each RobotMK service will now
 have an icon for the last log file and the last error log file in the action

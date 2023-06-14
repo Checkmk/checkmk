@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
 
 import pytest
+
+from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
@@ -16,25 +18,38 @@ managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #
 
 @managedtest
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_password(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+def test_openapi_password(
+    clients: ClientRegistry, aut_user_auth_wsgi_app: WebTestAppForCMK
+) -> None:
     base = "/NO_SITE/check_mk/api/1.0"
 
-    resp = aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/password/collections/all",
-        params=json.dumps(
-            {
-                "ident": "foo",
-                "title": "foobar",
-                "owner": "admin",
-                "password": "tt",
-                "shared": ["all"],
-                "customer": "global",
-            }
-        ),
-        headers={"Accept": "application/json"},
-        status=200,
-        content_type="application/json",
+    clients.Password.create(
+        ident="invalid%$",
+        title="foobar",
+        owner="admin",
+        password="tt",
+        shared=["all"],
+        customer="global",
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    clients.Password.create(
+        ident="foo:invalid",
+        title="foobar",
+        owner="admin",
+        password="tt",
+        shared=["all"],
+        customer="global",
+        expect_ok=False,
+    ).assert_status_code(400)
+
+    resp = clients.Password.create(
+        ident="foo",
+        title="foobar",
+        owner="admin",
+        password="tt",
+        shared=["all"],
+        customer="global",
     )
 
     _resp = aut_user_auth_wsgi_app.call_method(
@@ -64,7 +79,7 @@ def test_openapi_password(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     assert resp.json["extensions"] == {
         "comment": "Something but nothing random",
         "documentation_url": "",
-        "owned_by": None,
+        "owned_by": "admin",
         "shared": ["all"],
         "customer": "global",
     }
@@ -243,3 +258,54 @@ def test_password_with_newlines(aut_user_auth_wsgi_app: WebTestAppForCMK) -> Non
     password_store.load()  # see if it loads correctly
     stored_credentials = password_store.extract("gcp")
     assert stored_credentials == credentials_with_newlines.replace("\n", "")
+
+
+@managedtest
+def test_openapi_password_without_owner_regression(clients: ClientRegistry) -> None:
+    clients.Password.create(
+        ident="so_secret",
+        title="so_secret",
+        owner="admin",
+        password="no_one_can_know",
+        shared=["all"],
+    )
+
+    resp = clients.Password.get("so_secret")
+    assert resp.json["extensions"].get("owned_by") is not None
+
+
+@managedtest
+def test_password_min_length_create(clients: ClientRegistry) -> None:
+    resp = clients.Password.create(
+        ident="so_secret",
+        title="so_secret",
+        owner="admin",
+        password="",
+        shared=["all"],
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(400)
+    assert resp.json["fields"] == {"password": ["string '' is too short. The minimum length is 1."]}
+
+
+@managedtest
+def test_password_min_length_update(clients: ClientRegistry) -> None:
+    clients.Password.create(
+        ident="so_secret",
+        title="so_secret",
+        owner="admin",
+        password="no_one_can_know",
+        shared=["all"],
+    )
+    resp = clients.Password.edit(
+        ident="so_secret",
+        title="so_secret",
+        owner="admin",
+        password="",
+        shared=["all"],
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(400)
+    assert resp.json["fields"] == {"password": ["string '' is too short. The minimum length is 1."]}

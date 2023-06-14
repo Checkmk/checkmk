@@ -1,4 +1,4 @@
-// Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -9,17 +9,17 @@
 #include <utility>
 #include <vector>
 
+#include "livestatus/Interface.h"
 #include "livestatus/StringUtils.h"
 
-AuthUser::AuthUser(
-    const IContact &auth_user, ServiceAuthorization service_auth,
-    GroupAuthorization group_auth,
-    std::function<std::unique_ptr<IContactGroup>(const std::string &)>
-        make_contact_group)
+AuthUser::AuthUser(const IContact &auth_user, ServiceAuthorization service_auth,
+                   GroupAuthorization group_auth,
+                   std::function<const IContactGroup *(const std::string &)>
+                       find_contact_group)
     : auth_user_{auth_user}
     , service_auth_{service_auth}
     , group_auth_{group_auth}
-    , make_contact_group_{std::move(make_contact_group)} {}
+    , find_contact_group_{std::move(find_contact_group)} {}
 
 bool AuthUser::is_authorized_for_object(const IHost *hst, const IService *svc,
                                         bool authorized_if_no_host) const {
@@ -35,7 +35,7 @@ bool AuthUser::is_authorized_for_host(const IHost &hst) const {
 bool AuthUser::is_authorized_for_service(const IService &svc) const {
     return svc.hasContact(auth_user_) ||
            (service_auth_ == ServiceAuthorization::loose &&
-            svc.hasHostContact(auth_user_));
+            svc.host().hasContact(auth_user_));
 }
 
 bool AuthUser::is_authorized_for_host_group(const IHostGroup &hg) const {
@@ -63,10 +63,11 @@ bool AuthUser::is_authorized_for_event(const std::string &precedence,
                                        const IHost *hst) const {
     auto is_authorized_via_contactgroups = [this, &contact_groups]() {
         auto groups{mk::ec::split_list(contact_groups)};
-        return std::any_of(
-            groups.begin(), groups.end(), [this](const auto &group) {
-                return make_contact_group_(group)->isMember(auth_user_);
-            });
+        return std::any_of(groups.begin(), groups.end(),
+                           [this](const auto &group) {
+                               const auto *cg = find_contact_group_(group);
+                               return cg && cg->isMember(auth_user_);
+                           });
     };
     if (precedence == "rule") {
         if (!mk::ec::is_none(contact_groups)) {

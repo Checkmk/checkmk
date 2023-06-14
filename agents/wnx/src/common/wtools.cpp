@@ -47,7 +47,9 @@ bool ChangeAccessRights(
     PACL old_dacl = nullptr;
     PSECURITY_DESCRIPTOR sd = nullptr;
 
-    if (nullptr == object_name) return false;
+    if (object_name == nullptr) {
+        return false;
+    }
 
     // Get a pointer to the existing DACL.
     auto result = ::GetNamedSecurityInfo(object_name, object_type,
@@ -152,6 +154,19 @@ int KillProcessesByDir(const fs::path &dir) noexcept {
     });
 
     return killed_count;
+}
+
+void KillProcessesByFullPath(const fs::path &path) noexcept {
+    ScanProcessList([path](const PROCESSENTRY32W &entry) {
+        const auto pid = entry.th32ProcessID;
+        const auto exe = fs::path{wtools::GetProcessPath(pid)};
+
+        if (exe == path) {
+            XLOG::d.i("Killing process '{}'", exe);
+            KillProcess(pid, 99);
+        }
+        return true;
+    });
 }
 
 void AppRunner::prepareResources(std::wstring_view command_line,
@@ -534,6 +549,35 @@ bool UninstallService(const wchar_t *service_name,
     XLOG::l(XLOG::kStdio)
         .i("The Service '{}' is successfully removed.\n", name);
     return true;
+}
+
+//
+//   FUNCTION: ServiceController::setServiceStatus(DWORD, DWORD, DWORD)
+//
+//   PURPOSE: The function sets the service status and reports the
+//   status to the SCM.
+//
+//   PARAMETERS:
+//   * CurrentState - the state of the service
+//   * Win32ExitCode - error code to report
+//   * WaitHint - estimated time for pending operation, in milliseconds
+//
+void ServiceController::setServiceStatus(DWORD current_state,
+                                         DWORD win32_exit_code,
+                                         DWORD wait_hint) {
+    static DWORD check_point = 1;
+    status_.dwCurrentState = current_state;
+    status_.dwWin32ExitCode = win32_exit_code;
+    status_.dwWaitHint = wait_hint;
+
+    status_.dwCheckPoint =
+        current_state == SERVICE_RUNNING || current_state == SERVICE_STOPPED
+            ? 0
+            : check_point++;
+
+    const auto ret = ::SetServiceStatus(status_handle_, &status_);
+    XLOG::l("Setting state {} result {}", current_state,
+            ret != 0 ? 0 : GetLastError());
 }
 
 void ServiceController::initStatus(bool can_stop, bool can_shutdown,
@@ -1148,12 +1192,11 @@ static uint64_t GetCounterValueFromBlock(
             // situation. Once upon a time in future we might implement a
             // conversion as described in
             // http://msdn.microsoft.com/en-us/library/aa373178%28v=vs.85%29.aspx
-            const int size = counter.CounterSize;
-            if (size == 4) {
+            if (counter.CounterSize == 4) {
                 return static_cast<uint64_t>(dwords[0]);
             }
 
-            if (size == 8) {
+            if (counter.CounterSize == 8) {
                 // i am not sure that this must be should so complicated
                 return static_cast<uint64_t>(dwords[0]) +
                        (static_cast<uint64_t>(dwords[1]) << 32);
@@ -1795,7 +1838,7 @@ HMODULE LoadWindowsLibrary(const std::wstring &dll_path) {
 std::vector<std::string> EnumerateAllRegistryKeys(const char *reg_path) {
     HKEY key = nullptr;
     auto r =
-        ::RegOpenKeyExW(HKEY_LOCAL_MACHINE, ConvertToUTF16(reg_path).c_str(), 0,
+        ::RegOpenKeyExW(HKEY_LOCAL_MACHINE, ConvertToUtf16(reg_path).c_str(), 0,
                         KEY_ENUMERATE_SUB_KEYS, &key);  // NOLINT
     if (r != ERROR_SUCCESS) {
         XLOG::l(" Cannot open registry key '{}' error [{}]", reg_path,
@@ -2584,17 +2627,27 @@ std::wstring CmaUserPrefix() noexcept {
 }
 }  // namespace
 
-std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) noexcept {
+std::wstring GenerateCmaUserNameInGroup(std::wstring_view group,
+                                        std::wstring_view prefix) noexcept {
     if (group.empty()) {
         return {};
     }
 
-    auto prefix = CmaUserPrefix();
-    return prefix.empty() ? std::wstring{} : prefix + group.data();
+    return prefix.empty() ? std::wstring{}
+                          : std::wstring{prefix} + group.data();
+}
+
+std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) noexcept {
+    return GenerateCmaUserNameInGroup(group, CmaUserPrefix());
 }
 
 InternalUser CreateCmaUserInGroup(const std::wstring &group_name) noexcept {
-    auto name = GenerateCmaUserNameInGroup(group_name);
+    return CreateCmaUserInGroup(group_name, CmaUserPrefix());
+}
+
+InternalUser CreateCmaUserInGroup(const std::wstring &group_name,
+                                  std::wstring_view prefix) noexcept {
+    auto name = GenerateCmaUserNameInGroup(group_name, prefix);
     if (name.empty()) {
         XLOG::l("Failed to create user name");
         return {};
@@ -2628,7 +2681,7 @@ InternalUser CreateCmaUserInGroup(const std::wstring &group_name) noexcept {
 }
 
 bool RemoveCmaUser(const std::wstring &user_name) noexcept {
-    uc::LdapControl primary_dc;
+    const uc::LdapControl primary_dc;
     return primary_dc.userDel(user_name) != uc::Status::error;
 }
 
@@ -2876,7 +2929,8 @@ ACL *CombineSidsIntoACl(const SidStore &first, const SidStore &second) {
 
     // init
     if (acl != nullptr &&
-        ::InitializeAcl(acl, (int32_t)acl_size, ACL_REVISION) == TRUE &&
+        ::InitializeAcl(acl, static_cast<int32_t>(acl_size), ACL_REVISION) ==
+            TRUE &&
         ::AddAccessAllowedAce(acl, ACL_REVISION, FILE_ALL_ACCESS,
                               first.sid()) == TRUE &&
         ::AddAccessAllowedAce(acl, ACL_REVISION, FILE_ALL_ACCESS,
@@ -3105,7 +3159,7 @@ public:
                 case ERROR_SUCCESS:
                     return;
                 default:
-                    delete static_cast<void *>(table_);
+                    ::operator delete(static_cast<void *>(table_));
                     table_ = nullptr;
                     XLOG::l("Error [{}] GetTcpTable2", ret);
                     return;
@@ -3118,7 +3172,7 @@ public:
     MibTcpTable2Wrapper(MibTcpTable2Wrapper &&) = delete;
     MibTcpTable2Wrapper &operator=(MibTcpTable2Wrapper &&) = delete;
 
-    ~MibTcpTable2Wrapper() { delete static_cast<void *>(table_); }
+    ~MibTcpTable2Wrapper() { ::operator delete(static_cast<void *>(table_)); }
 
     [[nodiscard]] const MIB_TCPROW2 *row(size_t index) const {
         return table_ == nullptr || index >= table_->dwNumEntries
@@ -3131,7 +3185,7 @@ public:
 
 private:
     void reallocateBuffer(size_t size) {
-        delete static_cast<void *>(table_);
+        ::operator delete(static_cast<void *>(table_));
         table_ = static_cast<MIB_TCPTABLE2 *>(::operator new(size));
     }
 
@@ -3366,6 +3420,38 @@ uint32_t GetServiceStatus(const std::wstring &name) noexcept {
     const ServiceControl sc(name, ServiceControl::Mode::query);
     return sc.getStatus();
 }
+
+InternalUser InternalUsersDb::obtainUser(std::wstring_view group) {
+    const std::wstring group_name(group);
+    std::lock_guard lk(users_lock_);
+
+    if (auto it = users_.find(group_name); it != users_.end()) {
+        return it->second;
+    }
+
+    auto iu = wtools::CreateCmaUserInGroup(group_name);
+    if (iu.first.empty()) {
+        return {};
+    }
+
+    users_[group_name] = iu;
+
+    return iu;
+}
+
+void InternalUsersDb::killAll() {
+    std::lock_guard lk(users_lock_);
+    for (const auto &iu : users_ | std::views::values) {
+        RemoveCmaUser(iu.first);
+    }
+    users_.clear();
+}
+
+size_t InternalUsersDb::size() const {
+    std::lock_guard lk(users_lock_);
+    return users_.size();
+}
+
 }  // namespace wtools
 
 // verified code from the legacy client

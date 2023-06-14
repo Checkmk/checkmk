@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,7 +12,7 @@ import livestatus
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.macros import MacroMapping
-from cmk.utils.type_defs import MetricName
+from cmk.utils.type_defs import HostName, MetricName
 
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
@@ -22,7 +22,7 @@ from cmk.gui.plugins.metrics.html_render import (
     default_dashlet_graph_render_options,
     resolve_graph_recipe,
 )
-from cmk.gui.plugins.metrics.utils import graph_info, metric_info
+from cmk.gui.plugins.metrics.utils import graph_info, metric_info, MKCombinedGraphLimitExceededError
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
 from cmk.gui.type_defs import (
@@ -271,6 +271,8 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
             raise make_mk_missing_data_error()
         except MKUserError as e:
             raise MKGeneralException(_("Failed to calculate a graph recipe. (%s)") % str(e))
+        except MKCombinedGraphLimitExceededError as limit_exceeded_error:
+            raise limit_exceeded_error
         except Exception:
             raise MKGeneralException(_("Failed to calculate a graph recipe."))
 
@@ -294,7 +296,9 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
         return "dashboard_render_graph(%d, %s, %s, %s)" % (
             self._dashlet_id,
             json.dumps(self._graph_identification),
-            json.dumps(self._dashlet_spec["graph_render_options"]),
+            json.dumps(
+                self._dashlet_spec.get("graph_render_options", default_dashlet_graph_render_options)
+            ),
             json.dumps(self._dashlet_spec["timerange"]),
         )
 
@@ -355,13 +359,15 @@ class TemplateGraphDashlet(ABCGraphDashlet[TemplateGraphDashletConfig, TemplateG
         if not host:
             raise MKUserError("host", _("Missing needed host parameter."))
 
+        host = HostName(host)
+
         service = single_context.get("service")
         if not service:
             service = "_HOST_"
 
         site = get_only_sites_from_context(context) or self._resolve_site(host)
         if isinstance(site, list):
-            site_id: str | None = "".join(site)
+            site_id: livestatus.SiteId | None = livestatus.SiteId("".join(site))
         else:
             site_id = site
 

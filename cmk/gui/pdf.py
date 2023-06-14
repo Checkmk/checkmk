@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -25,7 +25,8 @@ from dataclasses import dataclass
 from textwrap import wrap
 from typing import Literal, overload, Protocol, TypedDict, Union
 
-from PIL import Image, PngImagePlugin  # type: ignore[import]
+from PIL import PngImagePlugin
+from PIL.Image import Image
 from reportlab.lib.units import mm  # type: ignore[import]
 from reportlab.lib.utils import ImageReader  # type: ignore[import]
 
@@ -459,7 +460,7 @@ class Document:
     # Functions for adding floating text
 
     def add_paragraph(self, txt: str) -> None:
-        lines = self.wrap_text(txt, width=(self._right - self._left))
+        lines = self.wrap_text(txt, width=self._right - self._left)
         for line in lines:
             self.add_text_line(line)
 
@@ -734,7 +735,7 @@ class Document:
     def get_line_skip(self) -> SizeMM:
         return self.lineskip() / mm  # fixed: true-division
 
-    def text_width(self, text) -> SizeMM:  # type:ignore[no-untyped-def]
+    def text_width(self, text) -> SizeMM:  # type: ignore[no-untyped-def]
         return self._canvas.stringWidth(text) / mm  # fixed: true-division
 
     # TODO: unify with render_text()
@@ -841,7 +842,7 @@ class Document:
     def close_path(self) -> None:
         self._path.close()
 
-    def fill_path(self, color: RGBColor, gradient=None) -> None:  # type:ignore[no-untyped-def]
+    def fill_path(self, color: RGBColor, gradient=None) -> None:  # type: ignore[no-untyped-def]
         self.save_state()
 
         # The gradient is dramatically increasing the size of the PDFs. For example a PDF with
@@ -955,6 +956,7 @@ class Document:
     ) -> tuple[SizeInternal, SizeInternal]:
         # Get bounding box of image in order to get aspect (width / height)
         bbox = pil.getbbox()
+        assert bbox is not None  # TODO: Why is this the case here?
         pix_width, pix_height = bbox[2], bbox[3]
         if resolution_dpi is not None:
             resolution_mm = resolution_dpi / 2.45
@@ -1231,7 +1233,7 @@ class TableRenderer:
 
         self.pdf.restore_state()
 
-    def _paint_headers(  # type:ignore[no-untyped-def]
+    def _paint_headers(
         self,
         headers: Sequence[CellRenderer],
         column_widths: Sequence[SizeMM],
@@ -1243,7 +1245,7 @@ class TableRenderer:
         vrules: bool,
         rule_width: SizeMM,
         row_shading: RowShading,
-    ):
+    ) -> None:
         self._paint_hrule(hrules, rule_width)
         if headers:
             self._paint_row(
@@ -1263,7 +1265,7 @@ class TableRenderer:
                 row_oddeven="heading",
             )
 
-    def _paint_row(  # type:ignore[no-untyped-def]
+    def _paint_row(
         self,
         row: Sequence[CellRenderer],
         column_widths: Sequence[SizeMM],
@@ -1279,7 +1281,7 @@ class TableRenderer:
         paint_header: bool,
         is_header: bool,
         row_oddeven: OddEven,
-    ):
+    ) -> None:
         # Give each cell information about its final width so it can reorganize internally.
         # This is used for text cells that do the wrapping.
         for column_width, render_object in zip(column_widths, row):
@@ -1611,8 +1613,10 @@ def is_pdf2png_possible() -> bool:
 def pdf2png(pdf_source: bytes) -> bytes:
     # Older version of pdftoppm cannot read pipes. The need to seek around
     # in the file. Therefore we need to save the PDF source into a temporary file.
+    pdf_tmp_dir = cmk.utils.paths.tmp_dir / "pdf"
+    pdf_tmp_dir.mkdir(exist_ok=True)
     with tempfile.NamedTemporaryFile(
-        dir=str(cmk.utils.paths.tmp_dir),
+        dir=str(pdf_tmp_dir),
         delete=False,
     ) as temp_file:
         temp_file.write(pdf_source)

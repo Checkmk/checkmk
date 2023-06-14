@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# Author: Lars Michelsen <lm@mathias-kettner.de>
+
+# Manager:
+# '.1.3.6.1.4.1.232.22.2.3.1.6.1.3'  => 'cpqRackCommonEnclosureManagerIndex',
+# '.1.3.6.1.4.1.232.22.2.3.1.6.1.6'  => 'cpqRackCommonEnclosureManagerPartNumber',
+# '.1.3.6.1.4.1.232.22.2.3.1.6.1.7'  => 'cpqRackCommonEnclosureManagerSparePartNumber',
+# '.1.3.6.1.4.1.232.22.2.3.1.6.1.8'  => 'cpqRackCommonEnclosureManagerSerialNum',
+# '.1.3.6.1.4.1.232.22.2.3.1.6.1.9'  => 'cpqRackCommonEnclosureManagerRole',
+# '.1.3.6.1.4.1.232.22.2.3.1.6.1.10' => 'cpqRackCommonEnclosureManagerPresent',
+# '.1.3.6.1.4.1.232.22.2.3.1.6.1.12' => 'cpqRackCommonEnclosureManagerCondition',
+
+
+from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.utils.hp import DETECT_HP_BLADE
+
+# GENERAL MAPS:
+
+hp_blade_present_map = {1: "other", 2: "absent", 3: "present"}
+hp_blade_status_map = {1: "Other", 2: "Ok", 3: "Degraded", 4: "Failed"}
+hp_blade_role_map = {1: "standby", 2: "active"}
+
+hp_blade_status2nagios_map = {
+    "Other": 2,
+    "Ok": 0,
+    "Degraded": 1,
+    "Failed": 2,
+}
+
+
+def inventory_hp_blade_manager(info):
+    # FIXME: Check if the implementation of the condition is correct or again a wrong implemented value
+    # => if hp_blade_present_map[int(line[1])] == 'present'
+    return [(line[0], (line[3],)) for line in info]
+
+
+def check_hp_blade_manager(item, params, info):
+    for line in info:
+        if line[0] == item:
+            expected_role = params[0]
+            if line[3] != expected_role:
+                return (
+                    2,
+                    "Unexpected role: %s (Expected: %s)"
+                    % (hp_blade_role_map[int(line[3])], hp_blade_role_map[int(expected_role)]),
+                )
+
+            # The SNMP answer is not fully compatible to the MIB file. The value of 0 will
+            # be set to "fake OK" to display the other gathered information.
+            state = 2 if int(line[2]) == 0 else int(line[2])
+
+            snmp_state = hp_blade_status_map[state]
+            status = hp_blade_status2nagios_map[snmp_state]
+            return (
+                status,
+                "Enclosure Manager condition is %s (Role: %s, S/N: %s)"
+                % (snmp_state, hp_blade_role_map[int(line[3])], line[4]),
+            )
+    return (3, "item not found in snmp data")
+
+
+check_info["hp_blade_manager"] = LegacyCheckDefinition(
+    detect=DETECT_HP_BLADE,
+    check_function=check_hp_blade_manager,
+    discovery_function=inventory_hp_blade_manager,
+    service_name="Manager %s",
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.232.22.2.3.1.6.1",
+        oids=["3", "10", "12", "9", "8"],
+    ),
+)

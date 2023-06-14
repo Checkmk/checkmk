@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
 from typing import Any
+
+from cmk.utils import aws_constants
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -23,8 +25,8 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,
     HTTPUrl,
-    Integer,
     ListOf,
+    NetworkPort,
     RegExp,
     TextInput,
 )
@@ -226,11 +228,11 @@ def api_request_authentication() -> DictionaryEntry:
     )
 
 
-def api_request_connection_elements(  # type:ignore[no-untyped-def]
+def api_request_connection_elements(  # type: ignore[no-untyped-def]
     help_text: str, default_port: int
 ):
     return [
-        ("port", Integer(title=_("Port"), default_value=default_port)),
+        ("port", NetworkPort(title=_("Port"), default_value=default_port)),
         (
             "path-prefix",
             TextInput(title=_("Custom path prefix"), help=help_text, allow_empty=False),
@@ -277,7 +279,7 @@ def connection_set(options: list[str] | None = None, auth_option: str | None = N
             string which specify which connection authentication element to include
 
     Returns:
-        list of WATO connection elements
+        list of Setup connection elements
 
     """
     connection_options: list[Any] = []
@@ -328,7 +330,7 @@ def connection_set(options: list[str] | None = None, auth_option: str | None = N
         connection_options.append(
             (
                 "port",
-                Integer(
+                NetworkPort(
                     title=_("TCP port number"),
                     help=_("Port number that server is listening on."),
                     default_value=4223,
@@ -496,3 +498,14 @@ def ssl_verification():
             default_value=False,
         ),
     )
+
+
+def aws_region_to_monitor() -> list[tuple[str, str]]:
+    def key(regionid_display: tuple[str, str]) -> str:
+        return regionid_display[1]
+
+    regions_by_display_order = [
+        *sorted((r for r in aws_constants.AWSRegions if "GovCloud" not in r[1]), key=key),
+        *sorted((r for r in aws_constants.AWSRegions if "GovCloud" in r[1]), key=key),
+    ]
+    return [(id_, " | ".join((region, id_))) for id_, region in regions_by_display_order]

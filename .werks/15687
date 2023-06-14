@@ -1,0 +1,25 @@
+Title: Update openssl to 1.1.1t
+Class: security
+Compatible: compat
+Component: core
+Date: 1684439662
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+With this Werk openssl is updated from 1.1.1q to 1.1.1t.
+
+This fixes several CVEs:
+
+LI: CVE-2023-0215
+LI: CVE-2023-0286
+LI: CVE-2023-0464
+LI: CVE-2023-0465
+LI: CVE-2023-0466
+LI: CVE-2022-4304
+LI: CVE-2022-4450
+
+To our knowledge none of these vulnerabilities is exploitable in Checkmk.
+
+We rate this with a CVSS of 0 (None) (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:N). This CVSS is primarily meant to please automatic scanners.

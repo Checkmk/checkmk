@@ -6,7 +6,7 @@ Date: 1675249828
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The SAML integration approach on Apache level based on mod_auth_mellon is
 deprecated. In all Enterprise Editions of Checkmk, SAML is now configurable via

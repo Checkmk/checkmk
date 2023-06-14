@@ -6,7 +6,7 @@ Date: 1647521139
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The check <tt>cisco_cpu_multiitem</tt> may discovered also other Physical Entities like Fans, Chassies etc.
 This may have led to funny service descriptions like "CPU Utilization Fan".

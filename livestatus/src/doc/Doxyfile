@@ -864,7 +864,7 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  =
+INPUT                  = unixcat.cc include src
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -942,7 +942,7 @@ FILE_PATTERNS          = *.c \
 # be searched for input files as well.
 # The default value is: NO.
 
-RECURSIVE              = NO
+RECURSIVE              = YES
 
 # The EXCLUDE tag can be used to specify files and/or directories that should be
 # excluded from the INPUT source files. This way you can easily exclude a
@@ -1172,16 +1172,14 @@ CLANG_ADD_INC_PATHS    = YES
 # This tag requires that the tag CLANG_ASSISTED_PARSING is set to YES.
 
 CLANG_OPTIONS          = -std=c++17 \
-                         -DHAVE_CONFIG_H \
-                         -I. \
-                         -I../.. \
                          -I.. \
-                         -isystem \
-                         includes/asio \
+                         -I ../../packages/livestatus/include \
+                         -isystem includes/asio \
                          -DASIO_DISABLE_CONCEPTS \
-                         -I../../omd/packages/re2/destdir/include \
-                         -Iincludes/googletest \
-                         -I../../omd/build/package_build/rrdtool-1.7.2/src
+                         -DVERSION=\"2.3.0b1\" \
+                         -DBUILD_CXX=\"some C++ compiler\" \
+                         -DBUILD_DATE=\"right now\" \
+                         -DBUILD_HOSTNAME=\"the_host\"
 
 # If clang assisted parsing is enabled you can provide the clang parser with the
 # path to the directory containing a file called compile_commands.json. This
@@ -2245,7 +2243,7 @@ SEARCH_INCLUDES        = YES
 # preprocessor.
 # This tag requires that the tag SEARCH_INCLUDES is set to YES.
 
-INCLUDE_PATH           =
+INCLUDE_PATH           = include
 
 # You can use the INCLUDE_FILE_PATTERNS tag to specify one or more wildcard
 # patterns (like *.h and *.hpp) to filter out the header-files in the

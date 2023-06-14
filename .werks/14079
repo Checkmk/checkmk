@@ -6,7 +6,7 @@ Date: 1653990628
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 There were some user permission issues with the agent registration (<tt>cmk-agent-ctl
 register ...</tt>). For example, the registration crashed with "500 Internal Server

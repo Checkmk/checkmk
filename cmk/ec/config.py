@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -19,7 +19,7 @@ from cmk.utils.exceptions import MKException
 from cmk.utils.translations import TranslationOptions
 from cmk.utils.type_defs import Seconds
 
-TextPattern = str | Pattern[str] | None
+TextPattern = str | Pattern[str]
 TextMatchResult = Literal[False] | Sequence[str]
 
 
@@ -113,6 +113,8 @@ class ContactGroups(TypedDict):
 
 
 class Expect(TypedDict):
+    interval: int  # seconds
+    count: int
     merge: Literal["open", "acked", "never"]
 
 
@@ -124,9 +126,9 @@ class ServiceLevel(TypedDict):
 StatePatterns = TypedDict(
     "StatePatterns",
     {
-        "0": str,
-        "1": str,
-        "2": str,
+        "0": TextPattern,
+        "1": TextPattern,
+        "2": TextPattern,
     },
     total=False,
 )
@@ -137,6 +139,17 @@ State = Union[
 ]
 
 
+class Count(TypedDict):
+    count: int
+    period: int  # seconds
+    algorithm: Literal["interval", "tokenbucket", "dynabucket"]
+    count_duration: int | None  # seconds
+    count_ack: bool
+    separate_host: bool
+    separate_application: bool
+    separate_match_groups: bool
+
+
 # TODO: This is only a rough approximation.
 class Rule(TypedDict, total=False):
     actions: Iterable[str]
@@ -144,20 +157,24 @@ class Rule(TypedDict, total=False):
     autodelete: bool
     cancel_actions: Iterable[str]
     cancel_action_phases: str
-    cancel_application: str
+    cancel_application: TextPattern
     cancel_priority: tuple[int, int]
+    comment: str
     contact_groups: ContactGroups
-    count: int
+    count: Count
+    description: str
+    docu_url: str
     disabled: bool
     expect: Expect
+    event_limit: EventLimit
     hits: int
     id: str
     invert_matching: bool
     livetime: tuple[Seconds, Iterable[Literal["open", "ack"]]]
     match: TextPattern
-    match_application: str
+    match_application: TextPattern
     match_facility: int
-    match_host: str
+    match_host: TextPattern
     match_ipaddress: str
     match_ok: TextPattern
     match_priority: tuple[int, int]
@@ -178,8 +195,7 @@ class ECRulePackSpec(TypedDict, total=False):
     id: str
     title: str
     disabled: bool
-    rules: Collection[Any]  # TODO: This should acutally be Collection[Rule]
-    hits: int  # TODO: This is a GUI-only feature, which doesn't belong here at all.
+    rules: Collection[Rule]
     customer: str  # TODO: This is a GUI-only feature, which doesn't belong here at all.
 
 
@@ -246,6 +262,11 @@ class MkpRulePackProxy(MutableMapping[str, Any]):  # pylint: disable=too-many-an
             )
 
         self.rule_pack = mkp_rule_pack
+
+    def get_rule_pack_spec(self) -> ECRulePackSpec:
+        if self.rule_pack is None:
+            raise MkpRulePackBindingError("Proxy is not bound")
+        return self.rule_pack
 
     @property
     def is_bound(self) -> bool:

@@ -24,7 +24,7 @@
 # B201 : flask_debug_true
 # B301 : pickle
 # B302 : marshal
-# B303 : md5
+# B303 : Use of insecure MD2, MD4, MD5, or SHA1 hash function.
 # B304 : ciphers
 # B305 : cipher_modes
 # B306 : mktemp_q

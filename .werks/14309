@@ -6,7 +6,7 @@ Date: 1653306010
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The incompatibility of this werk affects users who have SAP Hana servers that
 are not in the same timezone as their monitoring servers, and monitor their

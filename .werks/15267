@@ -1,0 +1,16 @@
+Title: License verification: Incorrect error message when saving licensing credentials
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1684911588
+Edition: cce
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk is relevant for users that use the Checkmk Cloud Edition and use the Online Verification modus to verify their license.
+If the licensing credentials are configured under <tt>Setup > Maintenance > Licensing > Edit settings</tt> and the settings are saved, an error message will be shown.
+The message claims that the last verification failed with the specific error "Verification failed (The Licensing ID or password you entered is incorrect.)". In this instance, the message is incorrect and the verification can be attempted regardless.
+
+With this werk this has been fixed.
+

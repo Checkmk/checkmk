@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.defines as defines
+import cmk.utils.paths
 
 from cmk.gui.i18n import _
 from cmk.gui.inventory import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
@@ -23,6 +24,7 @@ from cmk.gui.valuespec import (
     ListOfStrings,
     MonitoringState,
     RegExp,
+    TextInput,
     ValueSpec,
 )
 
@@ -119,6 +121,75 @@ rulespec_registry.register(
         match_type="all",
         name="active_checks:cmk_inv",
         valuespec=_valuespec_active_checks_cmk_inv,
+    )
+)
+
+
+def _valuespec_inv_exports_software_csv() -> Dictionary:
+    return Dictionary(
+        title=_("Export List of Software packages as CSV file"),
+        elements=[
+            (
+                "filename",
+                TextInput(
+                    title=_(
+                        "Export file to create, containing <tt>&lt;HOST&gt;</tt> for the hostname"
+                    ),
+                    help=_(
+                        "Please specify the path to the export file. The text <tt>[HOST]</tt> "
+                        "will be replaced with the host name the inventory has been done for. "
+                        "If you use a relative path then that will be relative to Checkmk's directory "
+                        "for variable data, which is <tt>%s</tt>."
+                    )
+                    % cmk.utils.paths.var_dir,
+                    allow_empty=False,
+                    size=64,
+                    default_value="csv-export/[HOST].csv",
+                ),
+            ),
+            (
+                "separator",
+                TextInput(
+                    title=_("Separator"),
+                    allow_empty=False,
+                    size=1,
+                    default_value=";",
+                ),
+            ),
+            (
+                "quotes",
+                DropdownChoice(
+                    title=_("Quoting"),
+                    choices=[
+                        (None, _("Don't use quotes")),
+                        ("single", _("Use single quotes, escape contained quotes with backslash")),
+                        ("double", _("Use double quotes, escape contained quotes with backslash")),
+                    ],
+                    default_value=None,
+                ),
+            ),
+            (
+                "headers",
+                DropdownChoice(
+                    title=_("Column headers"),
+                    choices=[
+                        (False, _("Do not add column headers")),
+                        (True, _("Add a first row with column titles")),
+                    ],
+                    default_value=False,
+                ),
+            ),
+        ],
+        required_keys=["filename"],
+    )
+
+
+rulespec_registry.register(
+    HostRulespec(
+        group=RulespecGroupInventory,
+        name="inv_exports:software_csv",
+        valuespec=_valuespec_inv_exports_software_csv,
+        is_deprecated=True,
     )
 )
 

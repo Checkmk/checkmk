@@ -1,0 +1,24 @@
+Title: New option to migrate users to another user connector
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1681803822
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.3.0b1
+
+You can now migrate existing users to another user connector, e.g. users with
+connector "htpasswd" to a SAML or LDAP connector.
+
+The option "Migrate users" is available within "Setup" - "Users" in the page
+menu "Users" for users with permission "Migrate users to another connection".
+Please note: The option is disabled if there is only one active user connector
+configured.
+
+To migrate users, please select the desired users on the "Users" page and use
+the page menu entry "Migrate users". On the next page you have to choose the
+target user connector and optionally, user attributes to unset on migration.
+With "Migrate selected users" you will be aksed if you want to start the
+migration. If you choose "Migrate" you will see a summary of migrated users and
+possible problems that occurred during the migration.

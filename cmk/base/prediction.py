@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Code for predictive monitoring / anomaly detection"""
@@ -10,6 +10,8 @@ import math
 import time
 from collections.abc import Callable
 from typing import Final, NamedTuple
+
+import livestatus
 
 import cmk.utils.debug
 import cmk.utils.defines as defines
@@ -276,7 +278,7 @@ def get_levels(
         time_windows = _time_slices(now, int(params["horizon"] * 86400), period_info, timegroup)
 
         rrd_datacolumn = cmk.utils.prediction.rrd_datacolum(
-            hostname, service_description, dsname, cf
+            livestatus.LocalConnection(), hostname, service_description, dsname, cf
         )
 
         data_for_pred = _calculate_data_for_prediction(time_windows, rrd_datacolumn)

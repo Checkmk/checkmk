@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 
 
 checkname = "aws_dynamodb_summary"
@@ -345,11 +345,11 @@ checks = {
             {},
             [
                 (0, "Total number of tables: 4"),
-                (0, "EU (Frankfurt): 3"),
+                (0, "Europe (Frankfurt): 3"),
                 (0, "US East (N. Virginia): 1"),
                 (
                     0,
-                    "\nEU (Frankfurt):\njoerg-herbel-global-table -- Items: 2, Size: 123 B, "
+                    "\nEurope (Frankfurt):\njoerg-herbel-global-table -- Items: 2, Size: 123 B, "
                     "Status: ACTIVE\njoerg-herbel-on-demand -- Items: 1, Size: 10 B, Status: "
                     "ACTIVE\njoerg-herbel-table -- Items: 6, Size: 481 B, Status: ACTIVE\nUS "
                     "East (N. Virginia):\njoerg-herbel-global-table -- Items: 2, Size: 123 B, "

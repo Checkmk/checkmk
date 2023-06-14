@@ -1,0 +1,15 @@
+Title: service: remove non functioning endpoint example from swagger-ui
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1676360541
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+The "Try out" in Swagger-UI does not work for endpoint examples which make use
+of the "query" query parameter. The change must be adapted on the Swagger side.
+In the meantime, such endpoints will be removed to avoid any confusion and the user
+should refer to the examples in the ReDoc instead.
+

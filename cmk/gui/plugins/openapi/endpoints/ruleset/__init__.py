@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Rulesets"""
@@ -16,7 +16,7 @@ from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, perm
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
 from cmk.gui.utils.escaping import strip_tags
-from cmk.gui.watolib.rulesets import AllRulesets, FilteredRulesetCollection, FolderRulesets, Ruleset
+from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Ruleset
 from cmk.gui.watolib.rulesets import RulesetCollection as RulesetCollection_
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively
 
@@ -48,11 +48,12 @@ def list_rulesets(param):
         return options
 
     if search_options := _get_search_options(param):
-        rulesets: (
-            RulesetCollection_ | FilteredRulesetCollection
-        ) = FilteredRulesetCollection.filter(
-            all_sets.get_rulesets(),
-            key=lambda ruleset: ruleset.matches_search_with_rules(search_options),
+        rulesets = RulesetCollection_(
+            {
+                name: ruleset
+                for name, ruleset in all_sets.get_rulesets().items()
+                if ruleset.matches_search_with_rules(search_options)
+            }
         )
     else:
         rulesets = all_sets

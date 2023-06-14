@@ -1,0 +1,13 @@
+Title: saml2: addition of encryption option
+Class: feature
+Compatible: compat
+Component: setup
+Date: 1683625841
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+This werk introduces the option to configure encryption for the SAML2
+authentication request response. The appropriate encryption option
+must be configured on both the Identity Provider as well as on Checkmk.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,14 +8,14 @@ from enum import Enum
 from http import HTTPStatus
 from typing import Any, Concatenate, ParamSpec, TypeVar
 from urllib.parse import quote
-from uuid import UUID
 
 import requests
 from agent_receiver.log import logger
+from agent_receiver.models import ConnectionMode
 from agent_receiver.site_context import site_config_path, site_name
 from fastapi import HTTPException
 from fastapi.security import HTTPBasicCredentials
-from pydantic import BaseModel
+from pydantic import BaseModel, UUID4
 
 
 class CMKEdition(Enum):
@@ -24,11 +24,11 @@ class CMKEdition(Enum):
     cme = "Managed Services"
     cce = "Cloud"
 
-    def supports_registration_with_labels(self) -> bool:
+    def supports_register_new(self) -> bool:
         """
-        >>> CMKEdition["cre"].supports_registration_with_labels()
+        >>> CMKEdition.cre.supports_register_new()
         False
-        >>> CMKEdition["cce"].supports_registration_with_labels()
+        >>> CMKEdition.cce.supports_register_new()
         True
         """
         return self is CMKEdition.cce
@@ -59,7 +59,7 @@ def _forward_post(
     credentials: HTTPBasicCredentials,
     json_body: Any,
 ) -> requests.Response:
-    return requests.post(
+    return requests.post(  # nosec B113
         f"{_local_rest_api_url()}/{endpoint}",
         headers={
             "Authorization": _credentials_to_rest_api_auth(credentials),
@@ -73,7 +73,7 @@ def _forward_get(
     endpoint: str,
     credentials: HTTPBasicCredentials,
 ) -> requests.Response:
-    return requests.get(
+    return requests.get(  # nosec B113
         f"{_local_rest_api_url()}/{endpoint}",
         headers={
             "Authorization": _credentials_to_rest_api_auth(credentials),
@@ -86,7 +86,7 @@ def _forward_put(
     credentials: HTTPBasicCredentials,
     json_body: Any,
 ) -> requests.Response:
-    return requests.put(
+    return requests.put(  # nosec B113
         f"{_local_rest_api_url()}/{endpoint}",
         headers={
             "Authorization": _credentials_to_rest_api_auth(credentials),
@@ -122,6 +122,47 @@ def log_http_exception(
     return wrapper
 
 
+class ControllerCertSettings(BaseModel, frozen=True):
+    lifetime_in_months: int
+
+
+@log_http_exception
+def controller_certificate_settings(credentials: HTTPBasicCredentials) -> ControllerCertSettings:
+    response = _forward_get(
+        "agent_controller_certificates_settings",
+        credentials,
+    )
+    _verify_response(response, HTTPStatus.OK)
+    return ControllerCertSettings.parse_obj(response.json())
+
+
+class RegisterResponse(BaseModel, frozen=True):
+    connection_mode: ConnectionMode
+
+
+@log_http_exception
+def register(
+    credentials: HTTPBasicCredentials,
+    uuid: UUID4,
+    host_name: str,
+) -> RegisterResponse:
+    response = _forward_put(
+        f"objects/host_config_internal/{_url_encode_hostname(host_name)}/actions/register/invoke",
+        credentials,
+        {
+            "uuid": str(uuid),
+        },
+    )
+    if response.status_code == HTTPStatus.NOT_FOUND:
+        # The REST API error message is a bit obscure in this case
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND,
+            detail=f"Host {host_name} does not exist.",
+        )
+    _verify_response(response, HTTPStatus.OK)
+    return RegisterResponse.parse_obj(response.json())
+
+
 @log_http_exception
 def get_root_cert(credentials: HTTPBasicCredentials) -> str:
     response = _forward_get(
@@ -146,7 +187,7 @@ def post_csr(
     return response.json()["cert"]
 
 
-class HostConfiguration(BaseModel):
+class HostConfiguration(BaseModel, frozen=True):
     site: str
     is_cluster: bool
 
@@ -197,7 +238,7 @@ def host_configuration(
 def link_host_with_uuid(
     credentials: HTTPBasicCredentials,
     host_name: str,
-    uuid: UUID,
+    uuid: UUID4,
 ) -> None:
     response = _forward_put(
         f"objects/host_config_internal/{_url_encode_hostname(host_name)}/actions/link_uuid/invoke",
@@ -228,7 +269,7 @@ def _verify_response(
         )
 
 
-class _RestApiErrorDescr(BaseModel):
+class _RestApiErrorDescr(BaseModel, frozen=True):
     title: str
     detail: str | None = None
 

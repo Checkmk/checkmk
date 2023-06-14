@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for activating pending changes. Does also replication with
-remote sites in distributed WATO."""
+remote sites in distributed Setup."""
 
 import ast
+import enum
 import json
 import os
 import tarfile
-from collections.abc import Collection, Iterator
+from collections.abc import Collection, Iterator, Sequence
 from dataclasses import asdict
 from typing import NamedTuple
 
@@ -18,7 +19,10 @@ from six import ensure_str
 from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils.render as render
-from cmk.utils.licensing import get_license_usage_report_validity, LicenseUsageReportValidity
+from cmk.utils.licensing.registry import get_licensing_user_effect
+from cmk.utils.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
+from cmk.utils.setup_search_index import request_index_rebuild
+from cmk.utils.version import is_cloud_edition
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
@@ -46,7 +50,7 @@ from cmk.gui.page_menu import (
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
-from cmk.gui.plugins.watolib.utils import ABCConfigDomain, DomainRequest, DomainRequests
+from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Foldable, init_rowselect, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.user_sites import activation_sites
@@ -58,9 +62,40 @@ from cmk.gui.valuespec import Checkbox, Dictionary, DictionaryEntry, TextAreaUni
 from cmk.gui.watolib import activate_changes, backup_snapshots
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import MKAutomationException
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, Host
+from cmk.gui.watolib.config_domain_name import ABCConfigDomain, DomainRequest, DomainRequests
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, Host
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
-from cmk.gui.watolib.search import build_index_background
+
+
+class ActivationState(enum.Enum):
+    WARNING = 1  # same int values as for Check results to be able to reuse CSS mappings
+    ERROR = 2
+
+
+def _show_activation_state_messages(
+    title: str, messages: Sequence[str], state: ActivationState
+) -> None:
+    html.open_div(id="activation_state_message_container")
+
+    html.open_div(class_="state_bar state%s" % state.value)
+    html.open_span()
+    match state:
+        case ActivationState.WARNING:
+            html.icon("host_svc_problems_dark")
+        case ActivationState.ERROR:
+            html.icon("host_svc_problems")
+    html.close_span()
+    html.close_div()  # activation_state
+
+    html.open_div(class_="message_container")
+    html.h2(title)
+    html.open_div()
+    for msg in messages:
+        html.span(msg)
+    html.close_div()
+    html.close_div()  # activation_state_message
+
+    html.close_div()  # activation_state_message_container
 
 
 @mode_registry.register
@@ -177,6 +212,22 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
 
         return True
 
+    def _license_allows_activation(self):
+        if is_cloud_edition():
+            # TODO: move to CCE handler to avoid is_cloud_edition check
+            license_usage_report_valid = (
+                self._license_usage_report_validity
+                != LicenseUsageReportValidity.older_than_five_days
+            )
+            block_effect = get_licensing_user_effect(
+                licensing_settings_link=makeuri_contextless(
+                    request, [("mode", "licensing")], filename="wato.py"
+                ),
+            )
+            return block_effect.block is None and license_usage_report_valid
+
+        return True
+
     def _may_activate_changes(self) -> bool:
         if not user.may("wato.activate"):
             return False
@@ -187,9 +238,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         if read_only.is_enabled() and not read_only.may_override():
             return False
 
-        return (
-            self._license_usage_report_validity != LicenseUsageReportValidity.older_than_five_days
-        )
+        return self._license_allows_activation()
 
     def action(self) -> ActionResult:
         if request.var("_action") != "discard":
@@ -204,7 +253,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         if not self.has_changes():
             return None
 
-        if self._license_usage_report_validity == LicenseUsageReportValidity.older_than_five_days:
+        if not self._license_allows_activation():
             return None
 
         # Now remove all currently pending changes by simply restoring the last automatically
@@ -212,7 +261,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         file_to_restore = self._get_last_wato_snapshot_file()
 
         if not file_to_restore:
-            raise MKUserError(None, _("There is no WATO snapshot to be restored."))
+            raise MKUserError(None, _("There is no Setup snapshot to be restored."))
 
         msg = _("Discarded pending changes (Restored %s)") % file_to_restore
 
@@ -232,7 +281,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         for site_id in activation_sites():
             self.confirm_site_changes(site_id)
 
-        build_index_background()
+        request_index_rebuild()
 
         make_header(
             html,
@@ -284,7 +333,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         self._activation_msg()
         self._activation_form()
 
-        self._show_license_usage_report_validity()
+        self._show_license_validity()
 
         self._activation_status()
 
@@ -401,22 +450,42 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 else:
                     html.write_text(", ".join(sorted(change["affected_sites"])))
 
-    def _show_license_usage_report_validity(self) -> None:
-        if self._license_usage_report_validity == LicenseUsageReportValidity.older_than_five_days:
-            html.show_error(
-                _("Cannot activate changes: The license usage history is older than five days.")
-            )
+    def _show_license_validity(self) -> None:
+        errors = []
+        warnings = []
 
-        elif (
-            self._license_usage_report_validity == LicenseUsageReportValidity.older_than_three_days
-        ):
-            html.show_warning(
-                _(
-                    "The license usage history was updated at least three days ago."
-                    "<br>Note: If it cannot be updated within five days activate changes"
-                    " will be blocked."
+        if block_effect := get_licensing_user_effect(
+            licensing_settings_link=makeuri_contextless(
+                request, [("mode", "licensing")], filename="wato.py"
+            ),
+        ).block:
+            errors.append(block_effect.message_html)
+
+        if is_cloud_edition():
+            # TODO move to CCE handler to avoid is_cloud_edition check
+            if (
+                self._license_usage_report_validity
+                == LicenseUsageReportValidity.older_than_five_days
+            ):
+                errors.append(_("The license usage history is older than five days."))
+            elif (
+                self._license_usage_report_validity
+                == LicenseUsageReportValidity.older_than_three_days
+            ):
+                warnings.append(
+                    _(
+                        "The license usage history was updated at least three days ago."
+                        "<br>Note: If it cannot be updated within five days activate changes"
+                        " will be blocked."
+                    )
                 )
-            )
+        if errors:
+            error_title = _("Activation not possible because of the following licensing issues:")
+            _show_activation_state_messages(error_title, errors, ActivationState.ERROR)
+
+            return
+        if warnings:
+            _show_activation_state_messages("", warnings, ActivationState.WARNING)
 
     def _activation_status(self):
         with table_element(
@@ -427,7 +496,6 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
             css="activation",
             foldable=Foldable.FOLDABLE_STATELESS,
         ) as table:
-
             for site_id, site in sort_sites(activation_sites()):
                 table.row()
 
@@ -517,21 +585,37 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 table.cell(_("Details"), css=["details"])
                 html.open_div(id_="site_%s_details" % site_id)
 
-                last_state = self._last_activation_state(site_id)
-
-                if not is_logged_in:
-                    html.write_text(_("Is not logged in.") + " ")
-
-                if not last_state:
-                    html.write_text(_("Has never been activated"))
-                elif need_action and last_state["_state"] == activate_changes.STATE_SUCCESS:
-                    html.write_text(_("Activation needed"))
-                else:
-                    html.javascript(
-                        "cmk.activation.update_site_activation_state(%s);" % json.dumps(last_state)
-                    )
+                self._display_site_activation_status_details(
+                    need_action, is_logged_in, site_id, site_status, status
+                )
 
                 html.close_div()
+
+    def _display_site_activation_status_details(
+        self,
+        need_action: bool,
+        is_logged_in: bool,
+        site_id: SiteId,
+        site_status: SiteStatus,
+        status: str,
+    ) -> None:
+        if status == "dead":
+            html.write_text(str(site_status["exception"]))
+            return
+
+        last_state = self._last_activation_state(site_id)
+
+        if not is_logged_in:
+            html.write_text(_("Is not logged in.") + " ")
+
+        if not last_state:
+            html.write_text(_("Has never been activated"))
+        elif need_action and last_state["_state"] == activate_changes.STATE_SUCCESS:
+            html.write_text(_("Activation needed"))
+        else:
+            html.javascript(
+                "cmk.activation.update_site_activation_state(%s);" % json.dumps(last_state)
+            )
 
     def _can_activate_all(self, site_id: SiteId) -> bool:
         return not self._site_has_foreign_changes(site_id) or user.may("wato.activateforeign")
@@ -603,8 +687,9 @@ def _get_object_reference(object_ref: ObjectRef | None) -> tuple[str | None, str
         return None, object_ref.ident
 
     if object_ref.object_type is ObjectRefType.Folder:
-        if Folder.folder_exists(object_ref.ident):
-            folder = Folder.folder(object_ref.ident)
+        tree = folder_tree()
+        if tree.folder_exists(object_ref.ident):
+            folder = tree.folder(object_ref.ident)
             return folder.url(), folder.title()
         return None, object_ref.ident
 

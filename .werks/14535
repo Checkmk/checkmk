@@ -6,7 +6,7 @@ Date: 1664984917
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This werk fixes a bug in the runas plugin that was preventing it to run
 the plugins as any user other than root.

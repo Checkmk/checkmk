@@ -33,7 +33,8 @@ def main() {
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
 
     def package_dir = "${checkout_dir}/download";
-    def branch_name = versioning.safe_branch_name(scm);
+    // When building from a git tag (VERSION != "daily"), we cannot get the branch name from the scm so used defines.make instead.
+    def branch_name = (VERSION == "daily") ? versioning.safe_branch_name(scm) : versioning.get_branch_version(checkout_dir);
     def cmk_version_rc_aware = versioning.get_cmk_version(branch_name, VERSION);
     def cmk_version = versioning.strip_rc_number_from_version(cmk_version_rc_aware);
     def source_dir = package_dir + "/" + cmk_version_rc_aware
@@ -66,9 +67,7 @@ def main() {
         docker_image_from_alias("IMAGE_TESTING").inside("${docker_args}") {
             withCredentials([
                 usernamePassword(
-                    credentialsId: (EDITION == "raw") ? // FIXME getCredentialsId() mergen
-                        "11fb3d5f-e44e-4f33-a651-274227cc48ab" :
-                        "registry.checkmk.com",
+                    credentialsId: registry_credentials_id(EDITION),
                     passwordVariable: 'DOCKER_PASSPHRASE',
                     usernameVariable: 'DOCKER_USERNAME'),
                 usernamePassword(
@@ -105,12 +104,12 @@ def main() {
                             /// to have an arbitrary location, so we have to provide
                             /// `download` inside the checkout_dir
                             sh("""buildscripts/scripts/build-cmk-container.sh \
-                                ${branch_name} ${EDITION} ${cmk_version_rc_aware} \
+                                ${branch_name} ${EDITION} ${cmk_version} \
                                 ${source_dir} ${SET_LATEST_TAG} ${SET_BRANCH_LATEST_TAG} \
                                 build""");
                         }
 
-                        def filename = versioning.get_docker_artifact_name(EDITION, cmk_version_rc_aware);
+                        def filename = versioning.get_docker_artifact_name(EDITION, cmk_version);
                         on_dry_run_omit(LONG_RUNNING, "Upload ${filename}") {
                             stage("Upload ${filename}") {
                                 artifacts_helper.upload_via_rsync(
@@ -123,11 +122,10 @@ def main() {
                             }
                         }
 
-                        def image_archive_file = "check-mk-${EDITION}-docker-${cmk_version_rc_aware}.tar.gz";
                         if (branch_name.contains("sandbox") ) {
-                            print("Skip uploading ${image_archive_file} due to sandbox branch");
+                            print("Skip uploading ${filename} due to sandbox branch");
                         } else {
-                            stage("Upload ${image_archive_file}") {
+                            stage("Upload ${filename}") {
                                 artifacts_helper.upload_via_rsync(
                                     "${package_dir}",
                                     "${cmk_version_rc_aware}",
@@ -141,9 +139,9 @@ def main() {
 
                     conditional_stage("Push images", push_to_registry) {
                         sh("""buildscripts/scripts/build-cmk-container.sh \
-                            ${BRANCH} \
+                            ${branch_name} \
                             ${EDITION} \
-                            ${cmk_version_rc_aware} \
+                            ${cmk_version} \
                             ${source_dir} \
                             ${SET_LATEST_TAG} \
                             ${SET_BRANCH_LATEST_TAG} \
@@ -154,4 +152,20 @@ def main() {
         }
     }
 }
+
+def registry_credentials_id(edition) {
+   switch(edition) {
+       case "raw":
+       case "cloud":
+           return "11fb3d5f-e44e-4f33-a651-274227cc48ab"
+       case "enterprise":
+       case "managed":
+           return "registry.checkmk.com"
+       case "saas":
+           return "nexus"
+       default:
+           throw new Exception("Cannot provide registry credentials id for edition '${edition}'")
+    }
+}
+
 return this;

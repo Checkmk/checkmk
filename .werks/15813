@@ -1,0 +1,14 @@
+Title: Clarify combined graph dashlet error message for filtered boards
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1686039438
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+As of publishing of this Werk, the combined graph dashlet (as used in the Main Dashboard) does not yet
+support filtering.
+The corresponding error message was updated to better inform the user about that fact.
+

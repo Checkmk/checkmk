@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
 import json
 import urllib.parse
-from collections.abc import Iterable
-from typing import Any, Callable, Generic, Literal, TypeVar
+from collections.abc import Callable, Iterable
+from typing import Any, Generic, Literal, TypeVar
 
 from cmk.utils.macros import MacroMapping, replace_macros_in_str
 
@@ -104,9 +104,12 @@ class Dashlet(abc.ABC, Generic[T]):
     @classmethod
     def vs_parameters(
         cls,
-    ) -> None | list[DictionaryEntry] | ValueSpec | tuple[
-        Callable[[T], None], Callable[[DashletId, T, T], T]
-    ]:
+    ) -> (
+        None
+        | list[DictionaryEntry]
+        | ValueSpec
+        | tuple[Callable[[T], None], Callable[[DashletId, T, T], T]]
+    ):
         """Returns a valuespec instance in case the dashlet has parameters, otherwise None"""
         # For legacy reasons this may also return a list of Dashboard() elements. (TODO: Clean this up)
         return None

@@ -6,7 +6,7 @@ Date: 1659099614
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The windows updates agent plugin got packaged to the Windows agent,
 even if the corresponding agent ruleset "Windows Updates" was set to

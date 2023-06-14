@@ -6,7 +6,7 @@ Date: 1666769141
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Since at least systemd v250 <tt>/var/lib/systemd/timesync/clock</tt> should no longer be used to determine the time since the last synchronisation, instead the modification time of <tt>/run/systemd/timesync/synchronized</tt> is now used.
 To monitor the reliability of this time, this werk also introduces two new metrics:

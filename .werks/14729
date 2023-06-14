@@ -1,0 +1,17 @@
+Title: Add cmk/vsphere_vcenter host label
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1678699997
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+The <b>cmk/vsphere_object:vcenter</b> host label value is replaced
+by the <b>cmk/vsphere_vcenter:yes</b> host label.
+
+The <b>cmk/vsphere_object</b> host label can no longer have the value
+<b>vcenter</b> and all rules matching this host label value have to be
+replaced by the new host label <b>cmk/vsphere_vcenter:yes</b>.
+

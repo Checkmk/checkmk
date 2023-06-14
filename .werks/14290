@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The intended update warning that should be shown in case the
 Apache hook was not up-to-date was not shown correctly in 2.1.0p9.

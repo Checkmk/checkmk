@@ -1,0 +1,14 @@
+Title: password: changing 500 error to 400 for invalid password identifier
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1678714974
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, the REST API raised a 500 error when the user attempted
+to create a password with an identifier containing ":" (colon). This werk
+modifies this so that the error is catched properly by the schema.
+

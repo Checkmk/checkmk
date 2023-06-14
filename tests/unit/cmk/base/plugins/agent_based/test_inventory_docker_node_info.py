@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
 
+from tests.unit.conftest import FixRegister
+
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
 from cmk.base.plugins.agent_based.docker_node_info import inventory_docker_node_info
+from cmk.base.plugins.agent_based.utils.docker import NodeInfoSection as Section
 
 from .utils_inventory import sort_inventory_result
 
@@ -151,8 +155,8 @@ from .utils_inventory import sort_inventory_result
         ({"Labels": None}, []),
     ],
 )
-def test_inv_docker_node_info(  # type:ignore[no-untyped-def]
-    fix_register, parsed, expected
+def test_inv_docker_node_info(
+    fix_register: FixRegister, parsed: Section, expected: InventoryResult
 ) -> None:
     assert sort_inventory_result(inventory_docker_node_info(parsed)) == sort_inventory_result(
         expected

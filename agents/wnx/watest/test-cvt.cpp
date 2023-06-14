@@ -124,24 +124,6 @@ YAML::Node ConvertToYaml(std::string_view test_name) {
 }
 }  // namespace
 
-TEST(CvtTest, CrLf) {
-    auto yaml = YAML::Load("global:\n  test: True\n");
-    cma::OnStartTest();
-
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
-    std::filesystem::path p = cma::cfg::GetTempDir();
-    p /= "tst.yml";
-    {
-        std::ofstream ofs(p);
-        ofs << yaml;
-    }
-    std::ifstream in(wtools::ToStr(p), std::ios::binary);
-    std::stringstream sstr;
-    sstr << in.rdbuf();
-    auto content = sstr.str();
-    EXPECT_TRUE(content.find("\r\n") != std::string::npos);
-}
-
 void AddKeyedPattern(YAML::Node Node, const std::string &Key,
                      const std::string &Pattern, const std::string &Value);
 
@@ -214,7 +196,7 @@ TEST(CvtTest, LogWatchSection) {
 
     ASSERT_TRUE(logwatch[vars::kLogWatchEventLogFile].size() == 4);
     auto logfiles = logwatch[vars::kLogWatchEventLogFile];
-    const cma::provider::RawLogWatchData base[4] = {
+    constexpr provider::RawLogWatchData base[4] = {
         {true, "application", EventLevels::kCrit,
          provider::LogWatchContext::with},
         {true, "system", EventLevels::kWarn, provider::LogWatchContext::hide},
@@ -224,7 +206,7 @@ TEST(CvtTest, LogWatchSection) {
     };
 
     for (int i = 0; i < 4; ++i) {
-        cma::provider::LogWatchEntry lwe;
+        provider::LogWatchEntry lwe;
         lwe.loadFromMapNode(logfiles[i]);
         EXPECT_EQ(lwe.name(), base[i].name_);
         EXPECT_EQ(lwe.level(), base[i].level_);

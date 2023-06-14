@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Callable, Mapping
 
 import pytest
 
@@ -15,7 +17,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.utils import uptime
 from cmk.base.plugins.agent_based.utils.docker import AgentOutputMalformatted
 
@@ -120,8 +122,10 @@ def test_parse_docker_container_status_multiple_nodes() -> None:
     )
 
 
-def _test_discovery(  # type:ignore[no-untyped-def]
-    discovery_function, section: docker.SectionStandard, expected_discovery
+def _test_discovery(
+    discovery_function: Callable[[docker.Section], DiscoveryResult],
+    section: docker.SectionStandard,
+    expected_discovery: DiscoveryResult,
 ) -> None:
     for status in ["running", "exited"]:
         assert list(discovery_function({**section, "Status": status})) == expected_discovery
@@ -176,8 +180,8 @@ def test_check_docker_container_status_multiple_nodes() -> None:
         ),
     ],
 )
-def test_discovery_docker_container_status_uptime(  # type:ignore[no-untyped-def]
-    section_uptime, expected_services
+def test_discovery_docker_container_status_uptime(
+    section_uptime: uptime.Section | None, expected_services: DiscoveryResult
 ) -> None:
     _test_discovery(
         lambda parsed: docker.discover_docker_container_status_uptime(parsed, section_uptime),
@@ -236,8 +240,8 @@ def test_discover_docker_container_status_uptime_multiple_nodes() -> None:
         ),
     ],
 )
-def test_check_docker_container_status_uptime(  # type:ignore[no-untyped-def]
-    params,
+def test_check_docker_container_status_uptime(
+    params: Mapping[str, object],
     section: docker.Section,
     expected_results: CheckResult,
 ) -> None:
@@ -311,8 +315,8 @@ def test_discover_docker_container_status_health_multiple_nodes() -> None:
         ),
     ],
 )
-def test_check_docker_container_status_health(  # type:ignore[no-untyped-def]
-    section, expected
+def test_check_docker_container_status_health(
+    section: docker.Section, expected: CheckResult
 ) -> None:
     yielded_results = list(docker.check_docker_container_status_health(section))
     assert yielded_results == expected

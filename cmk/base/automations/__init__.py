@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,6 +12,7 @@ from typing import Any, NoReturn
 
 import cmk.utils.debug
 import cmk.utils.log as log
+import cmk.utils.paths as paths
 from cmk.utils import version as cmk_version
 from cmk.utils.exceptions import MKException, MKTimeout
 from cmk.utils.log import console
@@ -54,6 +55,8 @@ class Automations:
                     log.setup_console_logging()
                     config.load_all_agent_based_plugins(
                         check_api.get_check_api_context,
+                        local_checks_dir=paths.local_checks_dir,
+                        checks_dir=paths.checks_dir,
                     )
 
             if automation.needs_config:
@@ -76,7 +79,7 @@ class Automations:
         finally:
             profiling.output_profile()
 
-        out.output(result.serialize(cmk_version.Version(cmk_version.__version__)))
+        out.output(result.serialize(cmk_version.Version.from_str(cmk_version.__version__)))
         out.output("\n")
 
         return 0

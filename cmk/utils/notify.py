@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -18,7 +18,7 @@ import cmk.utils.defines
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
-from cmk.utils.type_defs import EventContext, NotificationContext
+from cmk.utils.notify_types import EventContext, NotificationContext
 
 logger = logging.getLogger("cmk.utils.notify")
 

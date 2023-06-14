@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for managing users and contacts"""
@@ -33,7 +33,6 @@ from cmk.gui.i18n import _, _u, get_language_alias, get_languages, is_community_
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
-    make_checkbox_selection_json_text,
     make_checkbox_selection_topic,
     make_confirmed_form_submit_link,
     make_simple_form_page_menu,
@@ -44,7 +43,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.userdb.utils import get_connection, UserAttribute
+from cmk.gui.plugins.userdb.utils import active_connections, get_connection, UserAttribute
 from cmk.gui.plugins.wato.utils import (
     flash,
     make_confirm_delete_link,
@@ -123,20 +122,7 @@ class ModeUsers(WatoMode):
                         ),
                         PageMenuTopic(
                             title=_("On selected users"),
-                            entries=[
-                                PageMenuEntry(
-                                    title=_("Delete users"),
-                                    shortcut_title=_("Delete selected users"),
-                                    icon_name="delete",
-                                    item=make_confirmed_form_submit_link(
-                                        form_name="bulk_delete_form",
-                                        button_name="_bulk_delete_users",
-                                        title=_("Delete selected users"),
-                                    ),
-                                    is_shortcut=True,
-                                    is_suggested=True,
-                                ),
-                            ],
+                            entries=list(self._page_menu_entries_on_selected_users()),
                         ),
                         PageMenuTopic(
                             title=_("Synchronized users"),
@@ -165,6 +151,40 @@ class ModeUsers(WatoMode):
         )
         menu.add_doc_reference(_("Users, roles and permissions"), DocReference.WATO_USER)
         return menu
+
+    def _page_menu_entries_on_selected_users(self) -> Iterator[PageMenuEntry]:
+        yield PageMenuEntry(
+            title=_("Delete users"),
+            shortcut_title=_("Delete selected users"),
+            icon_name="delete",
+            item=make_confirmed_form_submit_link(
+                form_name="bulk_delete_form",
+                button_name="_bulk_delete_users",
+                title=_("Delete selected users"),
+            ),
+            is_shortcut=True,
+            is_suggested=True,
+        )
+
+        if user.may("wato.user_migrate"):
+            yield PageMenuEntry(
+                title=_("Migrate users"),
+                shortcut_title=_("Migrate selected users"),
+                icon_name="migrate",
+                item=make_simple_link(
+                    makeuri_contextless(
+                        request,
+                        [
+                            ("selection", weblib.selection_id()),
+                            ("mode", "user_migrate"),
+                        ],
+                    )
+                ),
+                is_shortcut=True,
+                is_suggested=True,
+                is_enabled=len(active_connections()) > 1,
+                disabled_tooltip=_("There is only one active user connector available"),
+            )
 
     def _page_menu_entries_synchronized_users(self) -> Iterator[PageMenuEntry]:
         if userdb.sync_possible():
@@ -205,7 +225,7 @@ class ModeUsers(WatoMode):
 
         if not cmk_version.is_raw_edition():
             yield PageMenuEntry(
-                title=_("SAML Authentication"),
+                title=_("SAML authentication"),
                 icon_name="saml",
                 item=make_simple_link(folder_preserving_link([("mode", "saml_config")])),
             )
@@ -220,7 +240,6 @@ class ModeUsers(WatoMode):
 
         if request.var("_sync"):
             try:
-
                 job = userdb.UserSyncBackgroundJob()
 
                 try:
@@ -354,8 +373,7 @@ class ModeUsers(WatoMode):
                         "_toggle_group",
                         type_="button",
                         class_="checkgroup",
-                        onclick="cmk.selection.toggle_all_rows(this.form, %s, %s);"
-                        % make_checkbox_selection_json_text(),
+                        onclick="cmk.selection.toggle_all_rows(this.form);",
                         value="X",
                     ),
                     sortable=False,
@@ -444,7 +462,7 @@ class ModeUsers(WatoMode):
                     auth_method = _("Password")
                     if _is_two_factor_enabled(user_spec):
                         auth_method += " (+2FA)"
-                    elif connection and connection.type() == "saml2":
+                    elif connection and connection.type() == userdb_utils.ConnectorType.SAML2:
                         auth_method = connection.short_title()
                 else:
                     auth_method = HTMLWriter.render_i(_("none"))
@@ -513,7 +531,7 @@ class ModeUsers(WatoMode):
                     table.cell(_u(vs_title) if isinstance(vs_title, str) else vs_title)
                     html.write_text(vs.value_to_html(user_spec.get(name, vs.default_value())))
 
-        html.hidden_field("selection_id", weblib.selection_id())
+        html.hidden_field("selection", weblib.selection_id())
         html.hidden_fields()
         html.end_form()
 
@@ -804,7 +822,7 @@ class ModeEditUser(WatoMode):
         if is_ntop_available():
             ntop_connection = get_ntop_connection_mandatory()
             # ntop_username_attribute will be the name of the custom attribute or false
-            # see corresponding WATO rule
+            # see corresponding Setup rule
             ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
             if ntop_username_attribute:
                 # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
@@ -862,8 +880,7 @@ class ModeEditUser(WatoMode):
         # ID
         forms.section(_("Username"), simple=not self._is_new_user, is_required=True)
         if self._is_new_user:
-            vs_user_id = UserID(allow_empty=False)
-
+            vs_user_id = UserID(allow_empty=False, size=73)
         else:
             vs_user_id = FixedValue(value=self._user_id)
         vs_user_id.render_input("user_id", self._user_id)
@@ -875,7 +892,7 @@ class ModeEditUser(WatoMode):
                 html.write_text(value)
                 html.hidden_field(name, value)
             else:
-                html.text_input(name, value, size=50)
+                html.text_input(name, value, size=73)
 
         # Full name
         forms.section(_("Full name"), is_required=True)
@@ -886,7 +903,7 @@ class ModeEditUser(WatoMode):
         forms.section(_("Email address"))
         email = self._user.get("email", "")
         if not self._is_locked("email"):
-            EmailAddress().render_input("email", email)
+            EmailAddress(size=73).render_input("email", email)
         else:
             html.write_text(email)
             html.hidden_field("email", email)
@@ -926,7 +943,7 @@ class ModeEditUser(WatoMode):
         if is_ntop_available():
             ntop_connection = get_ntop_connection_mandatory()
             # ntop_username_attribute will be the name of the custom attribute or false
-            # see corresponding WATO rule
+            # see corresponding Setup rule
             ntop_username_attribute = ntop_connection.get("use_custom_attribute_as_ntop_username")
             if ntop_username_attribute:
                 forms.section(_("ntopng Username"))
@@ -998,7 +1015,7 @@ class ModeEditUser(WatoMode):
         )
 
         html.open_ul()
-        html.text_input(
+        html.password_input(
             "_auth_secret",
             "",
             size=30,
@@ -1010,8 +1027,9 @@ class ModeEditUser(WatoMode):
         html.open_b(style=["position: relative", "top: 4px;"])
         html.write_text(" &nbsp;")
         html.icon_button(
-            "javascript:cmk.wato.randomize_secret('automation_secret', 20);",
-            _("Create random secret"),
+            "javascript:cmk.wato.randomize_secret('automation_secret', 20, '%s');"
+            % _("Copied secret to clipboard"),
+            _("Create random secret and copy secret to clipboard"),
             "random",
         )
         html.close_b()
@@ -1187,7 +1205,7 @@ class ModeEditUser(WatoMode):
         assert self._user_id is not None
         return base64.b64encode(self._user_id.encode("utf-8")).decode("ascii")
 
-    def _is_locked(self, attr) -> bool:  # type:ignore[no-untyped-def]
+    def _is_locked(self, attr) -> bool:  # type: ignore[no-untyped-def]
         """Returns true if an attribute is locked and should be read only. Is only
         checked when modifying an existing user"""
         return not self._is_new_user and attr in self._locked_attributes

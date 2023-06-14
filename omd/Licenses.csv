@@ -107,7 +107,7 @@ Perl module: XML-Simple,2.20,GPL-3.0,https://opensource.org/licenses/GPL-3.0,omd
 Perl module: XML-Twig,3.48,GPL-3.0,https://opensource.org/licenses/GPL-3.0,omd/packages/perl-modules/src/XML-Twig-3.48.tar.gz,,,,
 Perl module: YAML-Tiny,1.67,GPL-3.0,https://opensource.org/licenses/GPL-3.0,omd/packages/perl-modules/src/YAML-Tiny-1.67.tar.gz,,,,
 pnp4nagios,0.6.26,GPL-2.0,https://opensource.org/licenses/GPL-2.0,omd/packages/pnp4nagios/pnp4nagios-0.6.26.tar.gz,,,,
-Python,3.11.1,Python-2.0,https://spdx.org/licenses/Python-2.0.html,omd/packages/Python/Python-3.11.1.tar.xz,,,,
+Python,3.11.2,Python-2.0,https://spdx.org/licenses/Python-2.0.html,omd/packages/Python/Python-3.11.2.tar.xz,,,,
 Python for Windows agent (PyWinAg),3.4,Python-2.0,https://spdx.org/licenses/Python-2.0.html,agents/windows/python-3.4.cab
 Python for Windows agent (PyWinAg),3.9,Python-2.0,https://spdx.org/licenses/Python-2.0.html,agents/windows/python-3.cab
 Python for Windows agent (PyWinAg),3.9,Python-2.0,https://spdx.org/licenses/Python-2.0.html,agents/wnx/install/resources/modules/python-3.cab
@@ -201,7 +201,6 @@ Python module: setuptools_scm,4.1.2,MIT,https://opensource.org/licenses/MIT,,
 Python module: six,1.16.0,MIT,https://opensource.org/licenses/MIT,,
 Python module: snmpsim,0.4.7,BSD-2-Clause,https://opensource.org/licenses/bsd-license.php,,
 Python module: tenacity,6.3.1,Apache-2.0,https://opensource.org/licenses/Apache-2.0,,
-Python module: typing_extensions,3.10,PSF-2.0,https://spdx.org/licenses/PSF-2.0,,
 Python module: urllib3,1.26.7,MIT,https://opensource.org/licenses/MIT,,
 Python module: uvicorn,0.16.0,BSD-3-Clause,https://opensource.org/licenses/BSD-3-Clause,,
 Python module: vcrpy,4.1.1,MIT,https://opensource.org/licenses/MIT,,

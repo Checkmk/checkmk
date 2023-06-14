@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -355,7 +355,6 @@ def test_parse_mssql_counters(string_table:StringTable, expected_parsed_data:Map
 ])
 def test_discovery_mssql_counters_cache_hits(params:Mapping, section:Section, expected_services:Sequence[Service]) -> None:
     results = list(discovery_mssql_counters_cache_hits(params, section))
-    print(",\n".join(str(r) for r in results))
     assert results == expected_services
 
 
@@ -367,7 +366,6 @@ def test_discovery_mssql_counters_cache_hits(params:Mapping, section:Section, ex
 ])
 def test_check_mssql_counters_cache_hits(item:str, section:Section, expected_results:Sequence[Result|Metric]) -> None:
     results = list(check_mssql_counters_cache_hits(item, section))
-    print(",\n".join(str(r) for r in results))
     assert results == expected_results
 
 
@@ -378,7 +376,6 @@ def test_check_mssql_counters_cache_hits(item:str, section:Section, expected_res
 ])
 def test_discovery_mssql_counters_file_sizes(section:Section, expected_services:Sequence[Service]) -> None:
     results = list(discovery_mssql_counters_file_sizes(section=section))
-    print(",\n".join(str(r) for r in results))
     assert results == expected_services
 
 
@@ -414,7 +411,6 @@ def test_check_mssql_counters_file_sizes(item:str, params:Mapping[str,object], s
         params=params,
         section=section,
     ))
-    print(",\n".join(str(r) for r in results))
     assert results == expected_results
 
 
@@ -423,7 +419,6 @@ def test_check_mssql_counters_file_sizes(item:str, params:Mapping[str,object], s
 ])
 def test_discovery_mssql_counters_locks_per_batch(section:Section, expected_services:Sequence[Service]) -> None:
     results = list(discovery_mssql_counters_locks_per_batch(section))
-    print(",\n".join(str(r) for r in results))
     assert results == expected_services
 
 
@@ -441,7 +436,6 @@ def test_check_mssql_locks_per_batch(item:str, params:Mapping[str,object], secti
     for time in range(2):
         for result in check_locks_per_batch_base(vs, item, params, section, time*60):
             results.append(result)
-    print(",\n".join(str(r) for r in results))
     assert results == expected_results
 
 
@@ -453,7 +447,6 @@ def test_check_mssql_locks_per_batch(item:str, params:Mapping[str,object], secti
 ])
 def test_discovery_mssql_counters_locks(section:Section, expected_services:Sequence[Service]) -> None:
     results = list(discovery_mssql_counters_locks(section))
-    print(",\n".join(str(r) for r in results))
     assert results == expected_services
 
 
@@ -481,7 +474,6 @@ def test_check_mssql_locks(item:str, params:Mapping[str,object], section:Section
     for i in range(2):
         for result in check_locks_base(vs, t0 + i, item, params, section):
             results.append(result)
-    print(",\n".join(str(r) for r in results))
     assert results == expected_results
 
 
@@ -492,7 +484,6 @@ def test_check_mssql_locks(item:str, params:Mapping[str,object], section:Section
 ])
 def test_discovery_mssql_counters_pageactivity(section:Section, expected_services:Sequence[Service]) -> None:
     results = list(discovery_mssql_counters_pageactivity(section))
-    print(",\n".join(str(r) for r in results))
     assert results == expected_services
 
 
@@ -514,7 +505,6 @@ def test_check_mssql_counters_pageactivity(item:str, params:Mapping[str,object],
     for i in range(2):
         for result in check_pageactivity_base(vs, t0 + i, item, params, section):
             results.append(result)
-    print(",\n".join(str(r) for r in results))
     assert results == expected_results
 
 
@@ -527,7 +517,6 @@ def test_check_mssql_counters_pageactivity(item:str, params:Mapping[str,object],
 ])
 def test_discovery_mssql_counters_sqlstats(section:Section, expected_services:Sequence[Service]) -> None:
     results = list(discovery_mssql_counters_sqlstats(section))
-    print(",\n".join(str(r) for r in results))
     assert results == expected_services
 
 
@@ -546,7 +535,6 @@ def test_check_mssql_counters_sqlstats(item:str, params:Mapping[str,object], sec
     for i in range(2):
         for result in check_sqlstats_base(vs, t0 + i, item, params, section):
             results.append(result)
-    print(",\n".join(str(r) for r in results))
     assert results == expected_results
 
 
@@ -557,7 +545,6 @@ def test_check_mssql_counters_sqlstats(item:str, params:Mapping[str,object], sec
 ])
 def test_discovery_mssql_counters_transactions(section:Section, expected_services:Sequence[Service]) -> None:
     results = list(discovery_mssql_counters_transactions(section))
-    print(",\n".join(str(r) for r in results))
     assert results == expected_services
 
 
@@ -582,7 +569,6 @@ def test_check_mssql_counters_transactions(item:str, params:Mapping[str,object],
     for i in range(2):
         for result in check_transactions_base(vs, t0 + i, item, params, section):
             results.append(result)
-    print(",\n".join(str(r) for r in results))
     assert results == expected_results
 
 

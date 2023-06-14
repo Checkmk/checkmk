@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,6 +12,7 @@ from cmk.utils.misc import (  # pylint: disable=cmk-module-layer-violation
     is_daily_build_version,
     normalize_ip_addresses,
 )
+from cmk.utils.type_defs import HostName  # pylint: disable=cmk-module-layer-violation
 
 # The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
 from cmk.utils.version import (  # pylint: disable=cmk-module-layer-violation
@@ -38,7 +39,7 @@ from .utils.checkmk import (
 
 
 def _get_configured_only_from() -> Union[None, str, list[str]]:
-    return get_config_cache().only_from(host_name())
+    return get_config_cache().only_from(HostName(host_name()))
 
 
 def discover_checkmk_agent(
@@ -56,7 +57,6 @@ def _check_cmk_agent_installation(
     agent_info: CheckmkSection,
     controller_info: Optional[ControllerSection],
 ) -> CheckResult:
-
     yield from _check_version(
         agent_info.get("version"),
         __version__,
@@ -82,6 +82,7 @@ def _check_cmk_agent_installation(
     yield from _check_python_plugins(
         agent_info.get("failedpythonplugins"), agent_info.get("failedpythonreason")
     )
+    yield from _check_encryption_panic(agent_info.get("encryptionpanic"))
 
 
 def _check_version(
@@ -176,6 +177,16 @@ def _check_python_plugins(
         )
 
 
+def _check_encryption_panic(
+    panic: Optional[str],
+) -> CheckResult:
+    if panic:
+        yield Result(
+            state=State.CRIT,
+            summary="Failed to apply symmetric encryption, aborting communication.",
+        )
+
+
 def _check_agent_update(
     update_fail_reason: Optional[str],
     on_update_fail_action: Optional[str],
@@ -227,18 +238,26 @@ def _get_error_result(error: str, params: Mapping[str, Any]) -> CheckResult:
         return
 
     default_state = State.WARN
-    if "deployment is currently globally disabled" in error:
+    summary = first_line if (first_line := error.split("\n")[0].strip()) else "See details"
+    details = None if summary == error else error  # drop details if same as the summary
+    if "deployment is currently globally disabled" in error.lower():
         yield Result(
             state=State(params.get("error_deployment_globally_disabled", default_state)),
-            summary=error,
+            summary=summary,
+            details=details,
         )
-    if "agent updates are disabled for hostname" in error.lower():
+    elif "agent updates are disabled for hostname" in error.lower():
         yield Result(
             state=State(params.get("error_deployment_disabled_for_hostname", default_state)),
-            summary=error,
+            summary=summary,
+            details=details,
         )
     else:
-        yield Result(state=default_state, summary=f"Update error: {error}")
+        yield Result(
+            state=default_state,
+            summary=f"Update error: {summary}",
+            details=details,
+        )
 
 
 def _check_cmk_agent_update_certificates(parsed: CMKAgentUpdateSection) -> CheckResult:
@@ -299,7 +318,6 @@ def _check_cmk_agent_update(
     section_check_mk: CheckmkSection | None,
     section_cmk_update_agent_status: CMKAgentUpdateSection | None,
 ) -> CheckResult:
-
     if (
         section := (
             section_cmk_update_agent_status

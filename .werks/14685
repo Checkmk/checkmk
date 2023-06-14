@@ -6,7 +6,7 @@ Date: 1666944966
 Edition: cee
 Knowledge: doc
 Level: 2
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Real-time check data which contains a 0-byte was not processed correctly, so
 this mainly affected encrypted RTC data. This has been fixed.

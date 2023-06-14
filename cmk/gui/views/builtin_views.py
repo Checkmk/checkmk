@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -18,6 +18,7 @@ from cmk.gui.type_defs import (
     ViewSpec,
     VisualLinkSpec,
 )
+from cmk.gui.utils.labels import filter_http_vars_for_simple_label_group
 
 builtin_views: dict[ViewName, ViewSpec] = {}
 
@@ -110,6 +111,7 @@ builtin_views.update(
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         "unmonitored_services": {
             "browser_reload": 0,
@@ -159,6 +161,7 @@ builtin_views.update(
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         "pending_discovery": {
             "browser_reload": 0,
@@ -205,6 +208,7 @@ builtin_views.update(
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         "allservices": {
             "browser_reload": 90,
@@ -267,6 +271,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "service_check_durations": {
             "browser_reload": 90,
@@ -321,6 +326,7 @@ builtin_views.update(
             "owner": UserId.builtin(),
             "link_from": {},
             "add_context_to_title": True,
+            "packaged": False,
         },
         "comments": {
             "browser_reload": 0,
@@ -367,6 +373,7 @@ builtin_views.update(
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         "comments_of_host": {
             "browser_reload": 0,
@@ -400,6 +407,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "comments_of_service": {
             "browser_reload": 0,
@@ -433,6 +441,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "downtimes": {
             "browser_reload": 0,
@@ -486,6 +495,7 @@ builtin_views.update(
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         "downtime_history": {
             "browser_reload": 0,
@@ -537,6 +547,7 @@ builtin_views.update(
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         "api_downtimes": {
             "browser_reload": 0,
@@ -591,6 +602,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "downtimes_of_host": {
             "browser_reload": 0,
@@ -628,6 +640,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "downtimes_of_service": {
             "browser_reload": 0,
@@ -665,6 +678,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "host": {
             "browser_reload": 30,
@@ -704,6 +718,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "host_export": {
             "browser_reload": 30,
@@ -748,6 +763,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "hosts": {
             "browser_reload": 30,
@@ -789,6 +805,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "host_ok": {
             "browser_reload": 30,
@@ -825,6 +842,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "host_warn": {
             "browser_reload": 30,
@@ -861,6 +879,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "host_crit": {
             "browser_reload": 30,
@@ -897,6 +916,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "host_unknown": {
             "browser_reload": 30,
@@ -933,6 +953,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "host_pending": {
             "browser_reload": 30,
@@ -969,6 +990,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "problemsofhost": {
             "browser_reload": 30,
@@ -1007,6 +1029,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "hostgroup": {
             "browser_reload": 30,
@@ -1046,6 +1069,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "hostgroup_up": {
             "browser_reload": 30,
@@ -1092,6 +1116,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "hostgroup_down": {
             "browser_reload": 30,
@@ -1138,6 +1163,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "hostgroup_unreach": {
             "browser_reload": 30,
@@ -1184,6 +1210,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "hostgroup_pend": {
             "browser_reload": 30,
@@ -1230,6 +1257,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "hostgroupservices": {
             "browser_reload": 90,
@@ -1296,6 +1324,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "hostgroupservices_ok": {
             "browser_reload": 60,
@@ -1362,6 +1391,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "hostgroupservices_warn": {
             "browser_reload": 60,
@@ -1428,6 +1458,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "hostgroupservices_crit": {
             "browser_reload": 60,
@@ -1494,6 +1525,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "hostgroupservices_unknwn": {
             "browser_reload": 60,
@@ -1560,6 +1592,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "hostgroupservices_pend": {
             "browser_reload": 60,
@@ -1626,6 +1659,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "hostgroups": {
             "browser_reload": 30,
@@ -1697,6 +1731,7 @@ builtin_views.update(
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         "hostproblems": {
             "browser_reload": 30,
@@ -1734,6 +1769,7 @@ builtin_views.update(
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         "hoststatus": {
             "num_columns": 1,
@@ -1825,6 +1861,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "pendingsvc": {
             "browser_reload": 30,
@@ -1863,6 +1900,7 @@ builtin_views.update(
             "context": {"svcstate": {"st0": "", "st1": "", "st2": "", "st3": "", "stp": "on"}},
             "link_from": {},
             "add_context_to_title": True,
+            "packaged": False,
         },
         "searchhost": {
             "browser_reload": 60,
@@ -1898,6 +1936,7 @@ builtin_views.update(
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         "searchsvc": {
             "browser_reload": 60,
@@ -1951,6 +1990,7 @@ builtin_views.update(
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         "service": {
             "browser_reload": 30,
@@ -2026,6 +2066,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "servicedesc": {
             "browser_reload": 30,
@@ -2065,6 +2106,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "servicegroup": {
             "browser_reload": 30,
@@ -2106,6 +2148,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "sitehosts": {
             "browser_reload": 30,
@@ -2142,6 +2185,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "svcgroups": {
             "browser_reload": 30,
@@ -2182,6 +2226,7 @@ builtin_views.update(
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         "svcproblems": {
             "browser_reload": 30,
@@ -2225,6 +2270,7 @@ builtin_views.update(
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         "searchpnp": {
             "browser_reload": 90,
@@ -2282,6 +2328,7 @@ builtin_views.update(
             },
             "link_from": {},
             "add_context_to_title": True,
+            "packaged": False,
         },
         "hostpnp": {
             "browser_reload": 90,
@@ -2326,6 +2373,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "recentsvc": {
             "browser_reload": 30,
@@ -2361,6 +2409,7 @@ builtin_views.update(
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         "uncheckedsvc": {
             "browser_reload": 30,
@@ -2405,6 +2454,7 @@ builtin_views.update(
             },
             "link_from": {},
             "add_context_to_title": True,
+            "packaged": False,
         },
         "stale_hosts": {
             "browser_reload": 30,
@@ -2440,6 +2490,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "events": {
             "browser_reload": 0,
@@ -2494,6 +2545,7 @@ builtin_views.update(
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         "hostevents": {
             "browser_reload": 0,
@@ -2537,6 +2589,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "host_dt_hist": {
             "browser_reload": 0,
@@ -2577,6 +2630,7 @@ builtin_views.update(
             "link_from": {},
             "add_context_to_title": True,
             "sort_index": 99,
+            "packaged": False,
         },
         "svcevents": {
             "browser_reload": 0,
@@ -2618,6 +2672,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "svc_dt_hist": {
             "browser_reload": 0,
@@ -2658,6 +2713,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "hostsvcevents": {
             "browser_reload": 0,
@@ -2708,6 +2764,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "logfile": {
             "browser_reload": 0,
@@ -2772,6 +2829,7 @@ builtin_views.update(
             },
             "link_from": {},
             "add_context_to_title": True,
+            "packaged": False,
         },
         "sitesvcs_ok": {
             "browser_reload": 60,
@@ -2828,6 +2886,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "sitesvcs_warn": {
             "browser_reload": 60,
@@ -2884,6 +2943,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "sitesvcs_crit": {
             "browser_reload": 60,
@@ -2940,6 +3000,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "sitesvcs_unknwn": {
             "browser_reload": 60,
@@ -2996,6 +3057,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "sitesvcs_pend": {
             "browser_reload": 60,
@@ -3052,6 +3114,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "sitesvcs": {
             "browser_reload": 60,
@@ -3108,6 +3171,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "alertstats": {
             "browser_reload": 0,
@@ -3166,6 +3230,7 @@ builtin_views.update(
             },
             "link_from": {},
             "add_context_to_title": True,
+            "packaged": False,
         },
         # Special views for NagStaMon
         "nagstamon_hosts": {
@@ -3221,6 +3286,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "nagstamon_svc": {
             "browser_reload": 30,
@@ -3285,6 +3351,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "perf_matrix": {
             "browser_reload": 60,
@@ -3338,6 +3405,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "perf_matrix_search": {
             "browser_reload": 60,
@@ -3390,6 +3458,7 @@ builtin_views.update(
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         #
         #    ____            _
@@ -3406,6 +3475,76 @@ builtin_views.update(
         #                            |___/
         #
         # All aggregations
+        "aggr_frozen_diff": {
+            "browser_reload": 0,
+            "column_headers": "pergroup",
+            "datasource": "bi_aggregations",
+            "description": _l("Displays all BI aggregations."),
+            "group_painters": [
+                ColumnSpec(
+                    name="aggr_group",
+                    link_spec=VisualLinkSpec(type_name="views", name="aggr_group"),
+                )
+            ],
+            "hidden": True,
+            "hidebutton": False,
+            "force_checkboxes": True,
+            "icon": "aggr",
+            "layout": "table",
+            "mustsearch": False,
+            "name": "aggr_all",
+            "num_columns": 1,
+            "owner": UserId.builtin(),
+            "painters": [
+                ColumnSpec(name="aggr_icons"),
+                ColumnSpec(name="aggr_treestate"),
+                ColumnSpec(name="aggr_treestate_frozen_diff"),
+            ],
+            "play_sounds": False,
+            "public": True,
+            "sorters": [
+                SorterSpec(sorter="aggr_group", negate=False),
+                SorterSpec(sorter="aggr_name", negate=False),
+            ],
+            "title": _l("All frozen aggregations"),
+            "topic": "bi",
+            "sort_index": 10,
+            "user_sortable": True,
+            "single_infos": [],
+            "context": {
+                "aggr_group": {},
+                "aggr_group_tree": {},
+                "aggr_hosts": {},
+                "aggr_name_regex": {"aggr_name_regex": ""},
+                "aggr_state": {
+                    "birs-1": "on",
+                    "birs0": "on",
+                    "birs1": "on",
+                    "birs2": "on",
+                    "birs3": "on",
+                },
+                "aggr_output": {"aggr_output": ""},
+                "aggr_assumed_state": {
+                    "bias0": "on",
+                    "bias1": "on",
+                    "bias2": "on",
+                    "bias3": "on",
+                    "biasn": "on",
+                },
+                "aggr_effective_state": {
+                    "bies-1": "on",
+                    "bies0": "on",
+                    "bies1": "on",
+                    "bies2": "on",
+                    "bies3": "on",
+                },
+                "aggregation_types": {"aggr_type_frozen": "on", "aggr_type_dynamic": ""},
+            },
+            "link_from": {},
+            "add_context_to_title": True,
+            "is_show_more": False,
+            "packaged": False,
+        },
         "aggr_all": {
             "browser_reload": 0,
             "column_headers": "pergroup",
@@ -3473,6 +3612,7 @@ builtin_views.update(
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         # All aggregations of a certain group
         "aggr_group": {
@@ -3532,6 +3672,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # All host-only aggregations
         "aggr_singlehosts": {
@@ -3608,6 +3749,7 @@ builtin_views.update(
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         # Aggregations that bear the name of a host
         "aggr_hostnameaggrs": {
@@ -3684,6 +3826,7 @@ builtin_views.update(
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         # Single-Host Aggregations of a host
         "aggr_singlehost": {
@@ -3717,6 +3860,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # All aggregations affected by a certain host
         "aggr_host": {
@@ -3782,6 +3926,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # All aggregations affected by a certain service (one one site/host!)
         "aggr_service": {
@@ -3847,6 +3992,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # All aggregations that have (real) problems
         "aggr_problems": {
@@ -3918,6 +4064,7 @@ builtin_views.update(
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         # All single-host aggregations with problems
         "aggr_hostproblems": {
@@ -3997,6 +4144,7 @@ builtin_views.update(
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         # Shows a single aggregation which has to be set via aggr_name=<Name>
         "aggr_single": {
@@ -4031,6 +4179,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # Shows minimal information about a multiple aggregation
         # Use together with output_format=python for API calls
@@ -4072,6 +4221,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # Shows minimal information about a single aggregation which has to be set via aggr_name=<Name>.
         # Use together with output_format=python for API calls
@@ -4110,6 +4260,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # Summary of all aggregations for usage as web services
         "aggr_summary": {
@@ -4146,6 +4297,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # Host group with boxed BIs for each host
         "aggr_hostgroup_boxed": {
@@ -4191,6 +4343,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         #   +----------------------------------------------------------------------+
         #   |       _   _       _   _  __ _           _   _                        |
@@ -4254,6 +4407,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "hostsvcnotifications": {
             "browser_reload": 0,
@@ -4320,6 +4474,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "notifications": {
             "browser_reload": 0,
@@ -4385,6 +4540,7 @@ builtin_views.update(
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         "failed_notifications": {
             "browser_reload": 0,
@@ -4460,6 +4616,7 @@ builtin_views.update(
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         "svcnotifications": {
             "browser_reload": 0,
@@ -4514,6 +4671,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "contactnotifications": {
             "browser_reload": 0,
@@ -4576,6 +4734,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         #   +----------------------------------------------------------------------+
         #   |     _    _           _     _                     _ _                 |
@@ -4648,6 +4807,7 @@ builtin_views.update(
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
     }
 )
@@ -4713,6 +4873,7 @@ def _simple_host_view(custom_attributes, add_context=None):
         "public": True,
         "link_from": {},
         "is_show_more": False,
+        "packaged": False,
     }
 
     view_spec.update(custom_attributes)
@@ -4740,7 +4901,10 @@ builtin_views["docker_nodes"] = _simple_host_view(
         "name": "docker_nodes",
     },
     add_context={
-        "host_labels": {"host_label": '[{"value":"cmk/docker_object:node"}]'},
+        "host_labels": filter_http_vars_for_simple_label_group(
+            labels=["cmk/docker_object:node"],
+            object_type="host",
+        )
     },
 )
 
@@ -4773,7 +4937,10 @@ builtin_views["docker_containers"] = _simple_host_view(
         "name": "docker_containers",
     },
     add_context={
-        "host_labels": {"host_label": '[{"value":"cmk/docker_object:container"}]'},
+        "host_labels": filter_http_vars_for_simple_label_group(
+            labels=["cmk/docker_object:container"],
+            object_type="host",
+        )
     },
 )
 
@@ -4791,7 +4958,10 @@ builtin_views["vsphere_servers"] = _simple_host_view(
         "name": "vsphere_servers",
     },
     add_context={
-        "host_labels": {"host_label": '[{"value":"cmk/vsphere_object:server"}]'},
+        "host_labels": filter_http_vars_for_simple_label_group(
+            labels=["cmk/vsphere_object:server"],
+            object_type="host",
+        )
     },
 )
 
@@ -4827,7 +4997,10 @@ builtin_views["vpshere_vms"] = _simple_host_view(
         "name": "vpshere_vms",
     },
     add_context={
-        "host_labels": {"host_label": '[{"value":"cmk/vsphere_object:vm"}]'},
+        "host_labels": filter_http_vars_for_simple_label_group(
+            labels=["cmk/vsphere_object:vm"],
+            object_type="host",
+        )
     },
 )
 
@@ -4853,6 +5026,7 @@ builtin_views["crash_reports"] = {
     "painters": [
         ColumnSpec(name="crash_ident"),
         ColumnSpec(name="crash_type"),
+        ColumnSpec(name="crash_source"),
         ColumnSpec(name="crash_version"),
         ColumnSpec(name="crash_time"),
         ColumnSpec(name="crash_exception"),
@@ -4871,14 +5045,19 @@ builtin_views["crash_reports"] = {
     "public": True,
     "link_from": {},
     "add_context_to_title": True,
+    "packaged": False,
 }
-
 
 builtin_views["cmk_servers"] = {
     "add_context_to_title": False,
     "browser_reload": 0,
     "column_headers": "pergroup",
-    "context": {"host_labels": {"host_label": '[{"value":"cmk/check_mk_server:yes"}]'}},
+    "context": {
+        "host_labels": filter_http_vars_for_simple_label_group(
+            labels=["cmk/check_mk_server:yes"],
+            object_type="host",
+        )
+    },
     "datasource": "hosts",
     "description": _l("Displaying the overall state of Checkmk servers\n"),
     "force_checkboxes": False,
@@ -4949,6 +5128,7 @@ builtin_views["cmk_servers"] = {
     "public": True,
     "link_from": {},
     "is_show_more": False,
+    "packaged": False,
 }
 
 
@@ -5011,7 +5191,10 @@ builtin_views["cmk_sites"] = {
     "browser_reload": 0,
     "column_headers": "pergroup",
     "context": {
-        "host_labels": {"host_label": '[{"value":"cmk/check_mk_server:yes"}]'},
+        "host_labels": filter_http_vars_for_simple_label_group(
+            labels=["cmk/check_mk_server:yes"],
+            object_type="host",
+        )
     },
     "datasource": "invcmksites",
     "description": _l("Displaying the state of Checkmk sites\n"),
@@ -5040,6 +5223,7 @@ builtin_views["cmk_sites"] = {
     "public": True,
     "link_from": {},
     "is_show_more": False,
+    "packaged": False,
 }
 
 builtin_views["cmk_sites_of_host"] = {
@@ -5074,6 +5258,541 @@ builtin_views["cmk_sites_of_host"] = {
     "link_from": {},
     "sort_index": 99,
     "is_show_more": False,
+    "packaged": False,
+}
+
+#   +------------------------------------------------------------+
+#   |  ___ _____   _____  __  __ _      _                        |
+#   | |_ _|_   _| | ____|/ _|/ _(_) ___(_) ___ _ __   ___ _   _  |
+#   |  | |  | |   |  _| | |_| |_| |/ __| |/ _ \ '_ \ / __| | | | |
+#   |  | |  | |   | |___|  _|  _| | (__| |  __/ | | | (__| |_| | |
+#   | |___| |_|   |_____|_| |_| |_|\___|_|\___|_| |_|\___|\__, | |
+#   |                                                     |___/  |
+#   +------------------------------------------------------------+
+
+builtin_views["it_efficiency_servers_cpumem_linux"] = {
+    "name": "it_efficiency_servers_cpumem_linux",
+    "title": "Linux [CPU & Memory]",
+    "description": _l("Measure the CPU and Memory efficiency of your Linux servers\n"),
+    "datasource": "hosts",
+    "context": {
+        "host_labels": filter_http_vars_for_simple_label_group(
+            labels=["cmk/os_family:linux"],
+            object_type="host",
+        )
+    },
+    "painters": [
+        ColumnSpec(
+            name="host",
+            link_spec=VisualLinkSpec(type_name="views", name="host"),
+        ),
+        ColumnSpec(
+            name="svc_metrics_hist",
+            parameters=PainterParameters(
+                metric="util",
+                rrd_consolidation="average",
+                time_range=("age", 31536000),
+                aggregation="avg",
+                column_title="CPU utilization (last 365d)",
+                uuid="37c949ff-83a2-4f2d-8d00-c9830668fbee",
+            ),
+            link_spec=VisualLinkSpec(type_name="views", name="service"),
+            join_value="CPU utilization",
+        ),
+        ColumnSpec(
+            name="svc_metrics_hist",
+            parameters=PainterParameters(
+                metric="mem_used_percent",
+                rrd_consolidation="average",
+                time_range=("age", 31536000),
+                aggregation="avg",
+                column_title="Memory utilization (last 365d)",
+                uuid="12113b2c-4b41-4315-a1e9-804d2770ce67",
+            ),
+            link_spec=VisualLinkSpec(type_name="views", name="service"),
+            join_value="Memory",
+        ),
+        ColumnSpec(
+            name="inv_hardware_cpu_cores",
+            column_title="CPU cores",
+        ),
+        ColumnSpec(
+            name="svc_metrics_hist",
+            parameters=PainterParameters(
+                metric="mem_total",
+                rrd_consolidation="average",
+                time_range=("age", 31536000),
+                aggregation="avg",
+                column_title="Memory installed (last 365d)",
+                uuid="34a13b2c-4b41-4315-a1e9-804d2770ce67",
+            ),
+            link_spec=VisualLinkSpec(type_name="views", name="service"),
+            join_value="Memory",
+        ),
+    ],
+    "topic": "it_efficiency",
+    "add_context_to_title": False,
+    "browser_reload": 0,
+    "column_headers": "pergroup",
+    "force_checkboxes": False,
+    "group_painters": [],
+    "hidden": False,
+    "hidebutton": False,
+    "icon": None,
+    "layout": "table",
+    "mobile": False,
+    "mustsearch": False,
+    "num_columns": 1,
+    "sorters": [],
+    "play_sounds": False,
+    "single_infos": [],
+    "user_sortable": True,
+    "sort_index": 99,
+    "owner": UserId.builtin(),
+    "public": True,
+    "link_from": {},
+    "is_show_more": True,
+    "packaged": False,
+}
+
+builtin_views["it_efficiency_servers_cpumem_esxi"] = {
+    "name": "it_efficiency_servers_cpumem_esxi",
+    "title": "VMware ESXi [CPU & Memory]",
+    "topic": "it_efficiency",
+    "description": _l("Measure the CPU and Memory efficiency of your VMware ESXi servers\n"),
+    "datasource": "hosts",
+    "context": {
+        "host_labels": filter_http_vars_for_simple_label_group(
+            labels=["cmk/vsphere_object:server"],
+            object_type="host",
+        )
+    },
+    "painters": [
+        ColumnSpec(
+            name="host",
+            link_spec=VisualLinkSpec(type_name="views", name="host"),
+        ),
+        ColumnSpec(
+            name="svc_metrics_hist",
+            parameters=PainterParameters(
+                metric="util",
+                rrd_consolidation="average",
+                time_range=("age", 31536000),
+                aggregation="avg",
+                column_title="CPU utilization (last 365d)",
+                uuid="37c949ff-83a2-4f2d-8d00-c9830668fbee",
+            ),
+            link_spec=VisualLinkSpec(type_name="views", name="service"),
+            join_value="CPU utilization",
+        ),
+        ColumnSpec(
+            name="svc_metrics_hist",
+            parameters=PainterParameters(
+                metric="mem_used",
+                rrd_consolidation="average",
+                time_range=("age", 31536000),
+                aggregation="avg",
+                column_title="Memory used (last 365d)",
+                uuid="12113b2c-4b41-4315-a1e9-804d2770ce67",
+            ),
+            link_spec=VisualLinkSpec(type_name="views", name="service"),
+            join_value="Memory",
+        ),
+        ColumnSpec(
+            name="inv_hardware_cpu_cores",
+            column_title="CPU cores",
+        ),
+        ColumnSpec(
+            name="svc_metrics_hist",
+            parameters=PainterParameters(
+                metric="mem_total",
+                rrd_consolidation="average",
+                time_range=("age", 31536000),
+                aggregation="avg",
+                column_title="Memory installed (last 365d)",
+                uuid="326d4d9a-8651-4389-9216-2ef20e32f17c",
+            ),
+            link_spec=VisualLinkSpec(type_name="views", name="service"),
+            join_value="Memory",
+        ),
+    ],
+    "add_context_to_title": False,
+    "browser_reload": 0,
+    "column_headers": "pergroup",
+    "force_checkboxes": False,
+    "group_painters": [],
+    "hidden": False,
+    "hidebutton": False,
+    "icon": None,
+    "layout": "table",
+    "mobile": False,
+    "mustsearch": False,
+    "num_columns": 1,
+    "sorters": [],
+    "play_sounds": False,
+    "single_infos": [],
+    "user_sortable": True,
+    "sort_index": 99,
+    "owner": UserId.builtin(),
+    "public": True,
+    "link_from": {},
+    "is_show_more": True,
+    "packaged": False,
+}
+
+builtin_views["it_efficiency_servers_cpumem_nutanix"] = {
+    "name": "it_efficiency_servers_cpumem_nutanix",
+    "title": "Nutanix [CPU & Memory]",
+    "topic": "it_efficiency",
+    "description": _l("Measure the CPU and Memory efficiency of your Nutanix servers\n"),
+    "datasource": "hosts",
+    "context": {},
+    "painters": [
+        ColumnSpec(
+            name="host",
+            link_spec=VisualLinkSpec(type_name="views", name="host"),
+        ),
+        ColumnSpec(
+            name="svc_metrics_hist",
+            parameters=PainterParameters(
+                metric="util",
+                rrd_consolidation="average",
+                time_range=("age", 31536000),
+                aggregation="avg",
+                column_title="CPU utilization (last 365d)",
+                uuid="37c949ff-83a2-4f2d-8d00-c9830668fbee",
+            ),
+            link_spec=VisualLinkSpec(type_name="views", name="service"),
+            join_value="NTNX Cluster CPU",
+        ),
+        ColumnSpec(
+            name="svc_metrics_hist",
+            parameters=PainterParameters(
+                metric="prism_cluster_mem_used",
+                rrd_consolidation="average",
+                time_range=("age", 31536000),
+                aggregation="avg",
+                column_title="Memory utilization (last 365d)",
+                uuid="12113b2c-4b41-4315-a1e9-804d2770ce67",
+            ),
+            link_spec=VisualLinkSpec(type_name="views", name="service"),
+            join_value="NTNX Cluster Memory",
+        ),
+    ],
+    "add_context_to_title": False,
+    "browser_reload": 0,
+    "column_headers": "pergroup",
+    "force_checkboxes": False,
+    "group_painters": [],
+    "hidden": False,
+    "hidebutton": False,
+    "icon": None,
+    "layout": "table",
+    "mobile": False,
+    "mustsearch": False,
+    "num_columns": 1,
+    "sorters": [],
+    "play_sounds": False,
+    "single_infos": [],
+    "user_sortable": True,
+    "sort_index": 99,
+    "owner": UserId.builtin(),
+    "public": True,
+    "link_from": {},
+    "is_show_more": True,
+    "packaged": False,
+}
+
+builtin_views["it_efficiency_servers_cpumem_windows"] = {
+    "name": "it_efficiency_servers_cpumem_windows",
+    "title": "Windows [CPU & Memory]",
+    "topic": "it_efficiency",
+    "description": _l("Measure the CPU and Memory efficiency of your Windows servers\n"),
+    "datasource": "hosts",
+    "context": {
+        "host_labels": filter_http_vars_for_simple_label_group(
+            labels=["cmk/os_family:windows"],
+            object_type="host",
+        )
+    },
+    "painters": [
+        ColumnSpec(
+            name="host",
+            link_spec=VisualLinkSpec(type_name="views", name="host"),
+        ),
+        ColumnSpec(
+            name="svc_metrics_hist",
+            parameters=PainterParameters(
+                metric="util_numcpu_as_max",
+                rrd_consolidation="average",
+                time_range=("age", 31536000),
+                aggregation="avg",
+                column_title="CPU utilization (last 365d)",
+                uuid="37c949ff-83a2-4f2d-8d00-c9830668fbee",
+            ),
+            link_spec=VisualLinkSpec(type_name="views", name="service"),
+            join_value="CPU utilization",
+        ),
+        ColumnSpec(
+            name="svc_metrics_hist",
+            parameters=PainterParameters(
+                metric="mem_used_percent",
+                rrd_consolidation="average",
+                time_range=("age", 31536000),
+                aggregation="avg",
+                column_title="Memory utilization (last 365d)",
+                uuid="12113b2c-4b41-4315-a1e9-804d2770ce67",
+            ),
+            link_spec=VisualLinkSpec(type_name="views", name="service"),
+            join_value="Memory",
+        ),
+        ColumnSpec(
+            name="inv_hardware_cpu_cores",
+            column_title="CPU cores",
+        ),
+        ColumnSpec(
+            name="svc_metrics_hist",
+            parameters=PainterParameters(
+                metric="mem_total",
+                rrd_consolidation="average",
+                time_range=("age", 31536000),
+                aggregation="avg",
+                column_title="Memory installed (last 365d)",
+                uuid="34a13b2c-4b41-4315-a1e9-804d2770ce67",
+            ),
+            link_spec=VisualLinkSpec(type_name="views", name="service"),
+            join_value="Memory",
+        ),
+    ],
+    "add_context_to_title": False,
+    "browser_reload": 0,
+    "column_headers": "pergroup",
+    "force_checkboxes": False,
+    "group_painters": [],
+    "hidden": False,
+    "hidebutton": False,
+    "icon": None,
+    "layout": "table",
+    "mobile": False,
+    "mustsearch": False,
+    "num_columns": 1,
+    "sorters": [],
+    "play_sounds": False,
+    "single_infos": [],
+    "user_sortable": True,
+    "sort_index": 99,
+    "owner": UserId.builtin(),
+    "public": True,
+    "link_from": {},
+    "is_show_more": True,
+    "packaged": False,
+}
+
+builtin_views["it_efficiency_servers_fs_linux"] = {
+    "name": "it_efficiency_servers_fs_linux",
+    "title": "Linux [Filesystems]",
+    "topic": "it_efficiency",
+    "description": _l("Measure the Filesystem efficiency of your Linux servers.\n"),
+    "datasource": "services",
+    "context": {
+        "host_labels": filter_http_vars_for_simple_label_group(
+            labels=["cmk/os_family:linux"],
+            object_type="host",
+        ),
+        "serviceregex": {"service_regex": "^Filesystem*", "neg_service_regex": ""},
+    },
+    "painters": [
+        ColumnSpec(
+            name="host",
+            link_spec=VisualLinkSpec(type_name="views", name="host"),
+        ),
+        ColumnSpec(
+            name="service_description",
+            link_spec=VisualLinkSpec(type_name="views", name="service"),
+        ),
+        ColumnSpec(
+            name="svc_metrics_hist",
+            parameters=PainterParameters(
+                metric="fs_used_percent",
+                rrd_consolidation="average",
+                time_range=("age", 31536000),
+                aggregation="avg",
+                column_title="Filesystem utilization (last 365d)",
+                uuid="6615ead2-a56e-4acb-9ffd-9ad9502aa4a9",
+            ),
+        ),
+        ColumnSpec(
+            name="svc_metrics_hist",
+            parameters=PainterParameters(
+                metric="fs_size",
+                rrd_consolidation="average",
+                time_range=("age", 31536000),
+                aggregation="avg",
+                column_title="Filesystem size (last 365d)",
+                uuid="cef4df25-eb3b-41c7-9ccb-e4b3cc15cb55",
+            ),
+        ),
+    ],
+    "add_context_to_title": False,
+    "browser_reload": 0,
+    "column_headers": "pergroup",
+    "force_checkboxes": False,
+    "group_painters": [],
+    "hidden": False,
+    "hidebutton": False,
+    "icon": None,
+    "layout": "table",
+    "mobile": False,
+    "mustsearch": False,
+    "num_columns": 1,
+    "sorters": [],
+    "play_sounds": False,
+    "single_infos": [],
+    "user_sortable": True,
+    "sort_index": 99,
+    "owner": UserId.builtin(),
+    "public": True,
+    "link_from": {},
+    "is_show_more": True,
+    "packaged": False,
+}
+
+builtin_views["it_efficiency_servers_fs_windows"] = {
+    "name": "it_efficiency_servers_fs_windows",
+    "title": "Windows [Filesystems]",
+    "topic": "it_efficiency",
+    "description": _l("Measure the Filesystem efficiency of your Windows servers\n"),
+    "datasource": "services",
+    "context": {
+        "host_labels": filter_http_vars_for_simple_label_group(
+            labels=["cmk/os_family:windows"],
+            object_type="host",
+        ),
+        "serviceregex": {"service_regex": "^Filesystem*", "neg_service_regex": ""},
+    },
+    "painters": [
+        ColumnSpec(
+            name="host",
+            link_spec=VisualLinkSpec(type_name="views", name="host"),
+        ),
+        ColumnSpec(
+            name="service_description",
+            link_spec=VisualLinkSpec(type_name="views", name="service"),
+        ),
+        ColumnSpec(
+            name="svc_metrics_hist",
+            parameters=PainterParameters(
+                metric="fs_used_percent",
+                rrd_consolidation="average",
+                time_range=("age", 31536000),
+                aggregation="avg",
+                column_title="Filesystem utilization (last 365d)",
+                uuid="6615ead2-a56e-4acb-9ffd-9ad9502aa4a9",
+            ),
+        ),
+        ColumnSpec(
+            name="svc_metrics_hist",
+            parameters=PainterParameters(
+                metric="fs_size",
+                rrd_consolidation="average",
+                time_range=("age", 31536000),
+                aggregation="avg",
+                column_title="Filesystem size (last 365d)",
+                uuid="cef4df25-eb3b-41c7-9ccb-e4b3cc15cb55",
+            ),
+        ),
+    ],
+    "add_context_to_title": False,
+    "browser_reload": 0,
+    "column_headers": "pergroup",
+    "force_checkboxes": False,
+    "group_painters": [],
+    "hidden": False,
+    "hidebutton": False,
+    "icon": None,
+    "layout": "table",
+    "mobile": False,
+    "mustsearch": False,
+    "num_columns": 1,
+    "sorters": [],
+    "play_sounds": False,
+    "single_infos": [],
+    "user_sortable": True,
+    "sort_index": 99,
+    "owner": UserId.builtin(),
+    "public": True,
+    "link_from": {},
+    "is_show_more": True,
+    "packaged": False,
+}
+
+builtin_views["it_efficiency_servers_fs_esxi"] = {
+    "name": "it_efficiency_servers_fs_esxi",
+    "title": "VMware ESXi [Filesystems]",
+    "topic": "it_efficiency",
+    "description": _l("Measure the Filesystem efficiency of your VMware ESXi servers\n"),
+    "datasource": "services",
+    "context": {
+        "host_labels": filter_http_vars_for_simple_label_group(
+            labels=["cmk/vsphere_object:server"],
+            object_type="host",
+        ),
+        "serviceregex": {"service_regex": "^Filesystem*", "neg_service_regex": ""},
+    },
+    "painters": [
+        ColumnSpec(
+            name="host",
+            link_spec=VisualLinkSpec(type_name="views", name="host"),
+        ),
+        ColumnSpec(
+            name="service_description",
+            link_spec=VisualLinkSpec(type_name="views", name="service"),
+        ),
+        ColumnSpec(
+            name="svc_metrics_hist",
+            parameters=PainterParameters(
+                metric="fs_used_percent",
+                rrd_consolidation="average",
+                time_range=("age", 31536000),
+                aggregation="avg",
+                column_title="Filesystem utilization (last 365d)",
+                uuid="6615ead2-a56e-4acb-9ffd-9ad9502aa4a9",
+            ),
+        ),
+        ColumnSpec(
+            name="svc_metrics_hist",
+            parameters=PainterParameters(
+                metric="fs_size",
+                rrd_consolidation="average",
+                time_range=("age", 31536000),
+                aggregation="avg",
+                column_title="Filesystem size (last 365d)",
+                uuid="cef4df25-eb3b-41c7-9ccb-e4b3cc15cb55",
+            ),
+        ),
+    ],
+    "add_context_to_title": False,
+    "browser_reload": 0,
+    "column_headers": "pergroup",
+    "force_checkboxes": False,
+    "group_painters": [],
+    "hidden": False,
+    "hidebutton": False,
+    "icon": None,
+    "layout": "table",
+    "mobile": False,
+    "mustsearch": False,
+    "num_columns": 1,
+    "sorters": [],
+    "play_sounds": False,
+    "single_infos": [],
+    "user_sortable": True,
+    "sort_index": 99,
+    "owner": UserId.builtin(),
+    "public": True,
+    "link_from": {},
+    "is_show_more": True,
+    "packaged": False,
 }
 
 # FIXME: Can be removed once all dashboards have been converted
@@ -5122,6 +5841,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # Similar view, but for the dashboard
         "svcproblems_dash": {
@@ -5176,6 +5896,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         # Similar view, but for dashboard
         "events_dash": {
@@ -5217,6 +5938,7 @@ builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
     }
 )

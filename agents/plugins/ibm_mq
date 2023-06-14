@@ -1,6 +1,6 @@
 #!/bin/sh
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,7 +10,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.2.0i1"
+CMK_VERSION="2.3.0b1"
 
 #
 # Collects monitoring information of all IBM MQ Queue Managers.
@@ -36,6 +36,19 @@ load_config() {
     # shellcheck source=/dev/null
     if test -s "$MK_CONFDIR/ibm_mq.cfg"; then
         . "$MK_CONFDIR"/ibm_mq.cfg
+    fi
+}
+
+run_command() {
+    input_command="$1"
+
+    if test -n "$EXEC_USER" && test "$EXEC_USER" = "MQM"; then
+        # Variable is defined and not empty
+        concatenated_command="su mqm -c \"$input_command\""
+        eval "$concatenated_command"
+    else
+        # Variable is not defined or empty
+        eval "$input_command"
     fi
 }
 
@@ -90,13 +103,13 @@ dspmq -n | while read -r dspmqline; do
     if is_qm_monitored "$QM"; then
         echo '<<<ibm_mq_channels:sep(10)>>>'
         echo "$dspmqline NOW($now)"
-        runmqsc -e "$QM" <<EOF
+        run_command "runmqsc -e \"$QM\"" <<EOF
 display channel(*) xmitq
 display chstatus(*) monitor
 EOF
         echo '<<<ibm_mq_queues:sep(10)>>>'
         echo "$dspmqline NOW($now)"
-        runmqsc -e "$QM" <<EOF
+        run_command "runmqsc -e \"$QM\"" <<EOF
 display qlocal(*) maxdepth maxmsgl crdate crtime altdate alttime monq
 display qstatus(*) monitor ipprocs opprocs
 EOF
@@ -104,4 +117,4 @@ EOF
 done
 
 echo "<<<ibm_mq_managers:sep(10)>>>"
-dspmq -o all -x -n
+run_command "dspmq -o all -x -n"

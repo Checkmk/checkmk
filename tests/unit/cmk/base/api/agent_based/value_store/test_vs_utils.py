@@ -1,23 +1,25 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ast import literal_eval
 from pathlib import Path
+from unittest.mock import Mock
 
-# pylint: disable=protected-access
 import pytest
 
 from cmk.utils import store
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import HostName
+
+from cmk.checkengine.check_table import ServiceID
+from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.api.agent_based.value_store._utils import (
     _DiskSyncedMapping,
     _DynamicDiskSyncedMapping,
     _StaticDiskSyncedMapping,
     _ValueStore,
-    ServiceID,
     ValueStoreManager,
 )
 
@@ -107,8 +109,7 @@ class Test_StaticDiskSyncedMapping:
             deserializer=literal_eval,
         )
 
-    def test_mapping_features(self, mocker, tmp_path: Path) -> None:  # type:ignore[no-untyped-def]
-
+    def test_mapping_features(self, mocker: Mock, tmp_path: Path) -> None:
         self._mock_load(mocker)
         sdsm = self._get_sdsm(tmp_path)
         assert sdsm.get(("check_no", None, "moo")) is None
@@ -124,8 +125,7 @@ class Test_StaticDiskSyncedMapping:
         ]
         assert len(sdsm) == 2
 
-    def test_store(self, mocker, tmp_path: Path) -> None:  # type:ignore[no-untyped-def]
-
+    def test_store(self, mocker: Mock, tmp_path: Path) -> None:
         self._mock_load(mocker)
         self._mock_store(mocker)
 
@@ -216,13 +216,14 @@ class Test_DiskSyncedMapping:
 class Test_ValueStore:
     @staticmethod
     def _get_store() -> _ValueStore:
+        host_name = HostName("moritz")
         return _ValueStore(
             data={
-                ("moritz", "check1", "item", "key1"): 42,
-                ("moritz", "check2", "item", "key2"): 23,
+                (host_name, "check1", "item", "key1"): 42,
+                (host_name, "check2", "item", "key2"): 23,
             },
             service_id=(CheckPluginName("check1"), "item"),
-            host_name="moritz",
+            host_name=host_name,
         )
 
     def test_separation(self) -> None:
@@ -239,7 +240,7 @@ class Test_ValueStore:
 class TestValueStoreManager:
     @staticmethod
     def test_namespace_context() -> None:
-        vsm = ValueStoreManager("test-host")
+        vsm = ValueStoreManager(HostName("test-host"))
         service_inner = ServiceID(CheckPluginName("unit_test_inner"), None)
         service_outer = ServiceID(CheckPluginName("unit_test_outer"), None)
 

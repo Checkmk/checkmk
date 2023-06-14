@@ -6,12 +6,14 @@ Date: 1668692793
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 It's now possible to monitor Azure Status from
-https://azure.status.microsoft/en-us/status in Checkmk.
-One new check has been added, Microsoft Azure: Status.
+https://azure.status.microsoft/en-us/status in Checkmk. Since this
+site is publicly available, no authentication is required for this
+monitoring.
 
-To monitor Azure Status you have to configure the related
-special agent Microsoft Azure Status.
+One new check has been added, azure_status. To monitor Azure Status
+you have to configure the related special agent Microsoft Azure
+Status.
 

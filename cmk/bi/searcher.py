@@ -1,18 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from typing import Any
 
 from cmk.utils.regex import regex
-from cmk.utils.rulesets.ruleset_matcher import (
-    matches_labels,
-    matches_tag_condition,
-    TaggroupIDToTagCondition,
-)
-from cmk.utils.type_defs import HostName
+from cmk.utils.rulesets.ruleset_matcher import matches_labels, matches_tag_condition, TagCondition
+from cmk.utils.tags import TagGroupID
 
 from cmk.bi.lib import ABCBISearcher, BIHostData, BIHostSearchMatch, BIServiceSearchMatch
 
@@ -38,8 +34,9 @@ from cmk.bi.lib import ABCBISearcher, BIHostData, BIHostSearchMatch, BIServiceSe
 
 
 class BISearcher(ABCBISearcher):
-    def set_hosts(self, hosts: dict[HostName, BIHostData]) -> None:
+    def set_hosts(self, hosts: dict[str, BIHostData]) -> None:
         self.cleanup()
+        # The key may be a pattern / regex, so `str` is the correct type for the key.
         self.hosts = hosts
 
     def cleanup(self) -> None:
@@ -82,7 +79,6 @@ class BISearcher(ABCBISearcher):
         hosts: list[BIHostData],
         pattern: str,
     ) -> tuple[list[BIHostData], dict]:
-
         if pattern == "(.*)":
             return hosts, self._host_match_groups(hosts)
 
@@ -181,7 +177,7 @@ class BISearcher(ABCBISearcher):
     def filter_host_tags(
         self,
         hosts: Iterable[BIHostData],
-        tag_conditions: TaggroupIDToTagCondition,
+        tag_conditions: Mapping[TagGroupID, TagCondition],
     ) -> Iterable[BIHostData]:
         return (
             host

@@ -1,15 +1,22 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import datetime
 import json
 
 import pytest
 
+from tests.testlib.rest_api_client import ClientRegistry
+
 from tests.unit.cmk.gui.conftest import SetConfig, WebTestAppForCMK
 
+from cmk.utils import version
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+
+from cmk.gui.plugins.openapi.endpoints.downtime import _with_defaulted_timezone
+
+managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")
@@ -60,10 +67,12 @@ def test_openapi_schedule_hostgroup_downtime(
     live.expect_query(
         "GET hosts\nColumns: name\nFilter: name = example.com\nFilter: name = heute\nOr: 2"
     )
+    live.expect_query("GET hosts\nColumns: name\nFilter: name = heute")
     live.expect_query(
         "COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;1577836800;1577923200;1;0;0;test123-...;Downtime for ...",
         match_type="ellipsis",
     )
+    live.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
     live.expect_query(
         "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;1577836800;1577923200;1;0;0;test123-...;Downtime for ...",
         match_type="ellipsis",
@@ -96,6 +105,7 @@ def test_openapi_schedule_host_downtime(
 
     live.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
     live.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
+    live.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
     live.expect_query(
         "COMMAND [...] SCHEDULE_HOST_DOWNTIME;example.com;1577836800;1577923200;1;0;0;test123-...;Downtime for ...",
         match_type="ellipsis",
@@ -117,6 +127,7 @@ def test_openapi_schedule_host_downtime(
         )
 
 
+@pytest.mark.usefixtures("with_host")
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_schedule_host_downtime_for_host_without_config(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
@@ -126,22 +137,23 @@ def test_openapi_schedule_host_downtime_for_host_without_config(
 
     base = "/NO_SITE/check_mk/api/1.0"
 
-    monitored_only_host = "this-host-only.exists-in.livestatus"
+    host_name = "example.com"
 
     live.add_table(
         "hosts",
         [
             {
-                "name": monitored_only_host,
+                "name": host_name,
             },
         ],
     )
 
-    live.expect_query("GET hosts\nColumns: name\nFilter: name = %s" % monitored_only_host)
-    live.expect_query("GET hosts\nColumns: name\nFilter: name = %s" % monitored_only_host)
+    live.expect_query("GET hosts\nColumns: name\nFilter: name = %s" % host_name)
+    live.expect_query("GET hosts\nColumns: name\nFilter: name = %s" % host_name)
+    live.expect_query("GET hosts\nColumns: name\nFilter: name = %s" % host_name)
     live.expect_query(
         "COMMAND [...] SCHEDULE_HOST_DOWNTIME;%s;1577836800;1577923200;1;0;0;test123-...;Downtime for ..."
-        % monitored_only_host,
+        % host_name,
         match_type="ellipsis",
     )
     with live:
@@ -151,7 +163,7 @@ def test_openapi_schedule_host_downtime_for_host_without_config(
             params=json.dumps(
                 {
                     "downtime_type": "host",
-                    "host_name": monitored_only_host,
+                    "host_name": host_name,
                     "start_time": "2020-01-01T00:00:00Z",
                     "end_time": "2020-01-02T00:00:00Z",
                 }
@@ -185,12 +197,21 @@ def test_openapi_schedule_servicegroup_downtime(
     )
     live.expect_query("GET servicegroups\nColumns: members\nFilter: name = routers")
     live.expect_query(
+        "GET services\nColumns: description\nFilter: description = Memory\nFilter: host_name = example.com\nAnd: 2"
+    )
+    live.expect_query(
         "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;1577836800;1577923200;1;0;0;test123-...;Downtime for ...",
         match_type="ellipsis",
     )
     live.expect_query(
+        "GET services\nColumns: description\nFilter: description = CPU load\nFilter: host_name = example.com\nAnd: 2"
+    )
+    live.expect_query(
         "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;1577836800;1577923200;1;0;0;test123-...;Downtime for ...",
         match_type="ellipsis",
+    )
+    live.expect_query(
+        "GET services\nColumns: description\nFilter: description = CPU load\nFilter: host_name = heute\nAnd: 2"
     )
     live.expect_query(
         "COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;CPU load;1577836800;1577923200;1;0;0;test123-...;Downtime for ...",
@@ -223,10 +244,15 @@ def test_openapi_schedule_service_downtime(
     base = "/NO_SITE/check_mk/api/1.0"
 
     live.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
-    live.expect_query("GET hosts\nColumns: name\nFilter: name = example.com")
+    live.expect_query(
+        "GET services\nColumns: description\nFilter: description = Memory\nFilter: host_name = example.com\nAnd: 2"
+    )
     live.expect_query(
         "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;Memory;1577836800;1577923200;1;0;0;test123-...;Downtime for ...",
         match_type="ellipsis",
+    )
+    live.expect_query(
+        "GET services\nColumns: description\nFilter: description = CPU load\nFilter: host_name = example.com\nAnd: 2"
     )
     live.expect_query(
         "COMMAND [...] SCHEDULE_SVC_DOWNTIME;example.com;CPU load;1577836800;1577923200;1;0;0;test123-...;Downtime for ...",
@@ -400,15 +426,16 @@ def test_openapi_show_downtime_with_params(
         [
             "GET downtimes",
             "Columns: id host_name service_description is_service author start_time end_time recurring comment",
-            "Filter: host_name = example.com",
             "Filter: is_service = 0",
+            "Filter: host_name = example.com",
             "And: 2",
         ]
     )
     with live:
         resp = aut_user_auth_wsgi_app.call_method(
             "get",
-            base + "/domain-types/downtime/collections/all?host_name=example.com",
+            base
+            + "/domain-types/downtime/collections/all?host_name=example.com&downtime_type=host",
             headers={"Accept": "application/json"},
             status=200,
         )
@@ -457,8 +484,6 @@ def test_openapi_show_downtime_of_non_existing_host(
             "GET downtimes",
             "Columns: id host_name service_description is_service author start_time end_time recurring comment",
             "Filter: host_name = nothing",
-            "Filter: is_service = 0",
-            "And: 2",
         ]
     )
     with live:
@@ -529,6 +554,7 @@ def test_openapi_create_host_downtime_with_query(
 
     live.expect_query(["GET hosts", "Columns: name", "Filter: name ~ heute"])
     live.expect_query(["GET hosts", "Columns: name", "Filter: name = heute"])
+    live.expect_query("GET hosts\nColumns: name\nFilter: name = heute")
     live.expect_query(
         "COMMAND [...] SCHEDULE_HOST_DOWNTIME;heute;1577836800;1577923200;1;0;0;test123-...;Downtime for ...",
         match_type="ellipsis",
@@ -585,6 +611,9 @@ def test_openapi_create_service_downtime_with_query(
 
     live.expect_query(
         ["GET services", "Columns: description host_name", "Filter: host_name ~ heute"],
+    )
+    live.expect_query(
+        "GET services\nColumns: description\nFilter: description = Memory\nFilter: host_name = heute\nAnd: 2"
     )
     live.expect_query(
         "COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;Memory;1577836800;1577923200;1;0;0;...;Downtime for service Memory@heute",
@@ -886,21 +915,22 @@ def test_openapi_delete_downtime_with_params_but_missing_downtime(
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_downtime_non_existing_instance(
-    aut_user_auth_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    mock_livestatus: MockLiveStatusConnection,
 ) -> None:
-    base = "/NO_SITE/check_mk/api/1.0"
     live: MockLiveStatusConnection = mock_livestatus
 
-    live.expect_query(["GET hosts", "Columns: name", "Filter: name = non-existant"])
+    live.expect_query("GET hosts\nColumns: name\nFilter: name = non-existent")
 
+    base = "/NO_SITE/check_mk/api/1.0"
     with live:
-        aut_user_auth_wsgi_app.post(
+        resp = aut_user_auth_wsgi_app.post(
             base + "/domain-types/downtime/collections/host",
             content_type="application/json",
             params=json.dumps(
                 {
                     "downtime_type": "host",
-                    "host_name": "non-existant",
+                    "host_name": "non-existent",
                     "start_time": "2020-01-01T00:00:00Z",
                     "end_time": "2020-01-02T00:00:00Z",
                 }
@@ -908,6 +938,9 @@ def test_openapi_downtime_non_existing_instance(
             headers={"Accept": "application/json"},
             status=400,
         )
+    assert resp.json["fields"]["host_name"] == [
+        "Host 'non-existent' should be monitored but it's not. Activate the configuration?"
+    ]
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -920,7 +953,7 @@ def test_openapi_downtime_non_existing_groups(aut_user_auth_wsgi_app: WebTestApp
         params=json.dumps(
             {
                 "downtime_type": "hostgroup",
-                "hostgroup_name": "non-existant",
+                "hostgroup_name": "non-existent",
                 "start_time": "2020-01-01T00:00:00Z",
                 "end_time": "2020-01-02T00:00:00Z",
             }
@@ -1013,3 +1046,92 @@ def test_openapi_downtime_invalid_single(
             headers={"Accept": "application/json"},
             status=404,
         )
+
+
+@managedtest
+@pytest.mark.usefixtures("with_host")
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_user_in_service_but_not_in_host_contact_group_regression(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+    with_user: tuple[str, str],
+) -> None:
+    """Tests whether a user can put a service into downtime, even if she has no access to the host
+    the service is run on.
+
+    This test currently only checks that the right livestatus commands are send as mock_livestatus
+    doesn't regard permissions as of now."""
+    username, password = with_user
+
+    clients.ContactGroup.bulk_create(
+        groups=(
+            {
+                "name": "host_contact_group",
+                "alias": "host_contact_group",
+                "customer": "provider",
+            },
+            {
+                "name": "service_contact_group",
+                "alias": "service_contact_group",
+                "customer": "provider",
+            },
+        )
+    )
+
+    clients.User.edit(username, contactgroups=["service_contact_group"])
+    clients.HostConfig.edit(
+        host_name="heute", attributes={"contactgroups": {"groups": ["host_contact_group"]}}
+    )
+
+    mock_livestatus.add_table(
+        "services",
+        [
+            {
+                "host_name": "heute",
+                "host_alias": "heute",
+                "description": "Filesystem /opt/omd/sites/heute/tmp",
+                "state": 0,
+                "state_type": "hard",
+                "last_check": 1593697877,
+                "acknowledged": 0,
+                "contact_groups": ["service_contact_group"],
+            },
+        ],
+    )
+
+    mock_livestatus.expect_query(
+        f"GET hosts\nColumns: name\nFilter: name = heute\nAuthUser: {username}", match_type="loose"
+    )
+
+    mock_livestatus.expect_query(
+        f"GET services\nColumns: description\nFilter: description = Filesystem /opt/omd/sites/heute/tmp\nFilter: host_name = heute\nAnd: 2\nAuthUser: {username}"
+    )
+
+    mock_livestatus.expect_query(
+        f"COMMAND [...] SCHEDULE_SVC_DOWNTIME;heute;Filesystem /opt/omd/sites/heute/tmp;...;{username};Security updates",
+        match_type="ellipsis",
+    )
+
+    with mock_livestatus():
+        clients.Downtime.set_credentials(username, password)
+        clients.Downtime.create_for_services(
+            start_time=datetime.datetime.now(),
+            end_time=datetime.datetime.now() + datetime.timedelta(minutes=5),
+            recur="hour",
+            duration=5 * 60,
+            comment="Security updates",
+            host_name="heute",
+            service_descriptions=["Filesystem /opt/omd/sites/heute/tmp"],
+        )
+
+
+def test_with_defaulted_timezone() -> None:
+    def _get_local_timezone():
+        return datetime.UTC
+
+    assert _with_defaulted_timezone(
+        datetime.datetime(year=1666, month=9, day=2), _get_local_timezone
+    ) == datetime.datetime(1666, 9, 2, 0, 0, tzinfo=datetime.UTC)
+    assert _with_defaulted_timezone(
+        datetime.datetime(year=1, month=1, day=1, tzinfo=datetime.timezone.min), _get_local_timezone
+    ) == datetime.datetime(1, 1, 1, 0, 0, tzinfo=datetime.timezone.min)

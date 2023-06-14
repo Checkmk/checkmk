@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,6 +8,7 @@ import pytest
 from tests.testlib.base import Scenario
 
 from cmk.utils.type_defs import result
+from cmk.utils.type_defs.host import HostName
 
 from cmk.fetchers import PiggybackFetcher
 
@@ -47,6 +48,8 @@ class TestModeDumpAgent:
 
     @pytest.mark.usefixtures("scenario")
     @pytest.mark.usefixtures("patch_fetch")
-    def test_success(self, hostname, raw_data, capsys) -> None:  # type:ignore[no-untyped-def]
+    def test_success(
+        self, hostname: HostName, raw_data: bytes, capsys: pytest.CaptureFixture[str]
+    ) -> None:
         check_mk.mode_dump_agent({}, hostname)
         assert capsys.readouterr().out == raw_data.decode()

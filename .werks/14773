@@ -6,7 +6,7 @@ Date: 1663850153
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 For example, users may now define a custom service attribute
 "PORT" in the global settings, set a value to this attribute

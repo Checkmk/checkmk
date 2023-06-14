@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
+
+from collections.abc import Mapping, Sequence
 
 import pytest
 
@@ -61,8 +63,10 @@ DEFAULT_AGRS = {
         (["-s", "I like listening to Folk music"], {"secret": "I like listening to Folk music"}),
     ],
 )
-def test_parse_arguments(argv, expected_non_default_args) -> None:  # type:ignore[no-untyped-def]
-    args = agent_vsphere.parse_arguments(argv + ["test_host"])
+def test_parse_arguments(
+    argv: Sequence[str], expected_non_default_args: Mapping[str, object]
+) -> None:
+    args = agent_vsphere.parse_arguments([*argv, "test_host"])
     for attr in DEFAULT_AGRS:
         expected = expected_non_default_args.get(attr, DEFAULT_AGRS[attr])
         actual = getattr(args, attr)
@@ -80,7 +84,9 @@ def test_parse_arguments(argv, expected_non_default_args) -> None:  # type:ignor
         ["--vm_piggyname", "MissPiggy"],
     ],
 )
-def test_parse_arguments_invalid(invalid_argv, monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_parse_arguments_invalid(
+    invalid_argv: Sequence[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
     monkeypatch.setattr("cmk.special_agents.utils.vcrtrace", lambda **vcr_init_kwargs: None)
     with pytest.raises(SystemExit):
         agent_vsphere.parse_arguments(invalid_argv)

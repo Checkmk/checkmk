@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.utils.regex import GROUP_NAME_PATTERN, REGEX_ID
+
 from cmk.gui.fields import FolderField, HostField
+from cmk.gui.watolib.timeperiods import TIMEPERIOD_ID_PATTERN
 
 from cmk.fields import List, String
 
@@ -39,7 +42,32 @@ IDENT_FIELD = {
             "in this number."
         ),
         example="49167bd012b44719a67956cf3ef7b3dd",
-        pattern="[a-fA-F0-9]{32}|root",
+        pattern="^[a-fA-F0-9]{32}$|root",
+    )
+}
+
+TIMEPERIOD_NAME_FIELD = {
+    "name": String(
+        description="A name used as an identifier. Can be of arbitrary (sensible) length.",
+        example="pathname",
+        pattern=TIMEPERIOD_ID_PATTERN,
+    )
+}
+
+
+GROUP_NAME_FIELD = {
+    "name": String(
+        description="The identifier name of the group.",
+        example="pathname",
+        pattern=GROUP_NAME_PATTERN,
+    )
+}
+
+NAME_ID_FIELD = {
+    "name": String(
+        description="A name used as an identifier. Can be of arbitrary (sensible) length.",
+        example="pathname",
+        pattern=REGEX_ID,
     )
 }
 
@@ -94,6 +122,22 @@ CONTENT_TYPE = {
         ),
         example="application/json",
     )
+}
+
+HEADER_CHECKMK_EDITION = {
+    "X-Checkmk-Edition": String(
+        required=True,
+        description=("The checkmk edition."),
+        example="cre",
+    ),
+}
+
+HEADER_CHECKMK_VERSION = {
+    "X-Checkmk-Version": String(
+        required=True,
+        description=("The checkmk version."),
+        example="2.2.0p10",
+    ),
 }
 
 SERVICE_DESCRIPTION = {

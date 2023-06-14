@@ -1,0 +1,27 @@
+Title: Prefer enforced services over discovered ones if clustered
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1678881336
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+This werk only affects users that have cluster nodes with enforced services which are clustered <b>and could be discovered</b> on the node as well.
+
+This werk changes the preference of services that are both enforced and discovered if they are clustered.
+
+For non-clustered services, an enforced service will take precedence over a discovered service (if they share the description).
+Prior to this werk, the order of preference was reversed if the service was clustered.
+This is now fixed:
+An enforced service will always take precedence over a discovered one in case both are present.
+
+Note that the parameters of these two services might not be the same:
+The enforced service will have parameters as specified in the corresponding rule.
+The discovered services parameters are determined by the rules matching the host were it will be shown.
+
+This change makes the parameters of the clustered enforced service more reliable in the sense that they no longer depend on whether a service by the same description is discovered on the nodes.
+
+

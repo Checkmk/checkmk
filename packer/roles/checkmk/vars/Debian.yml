@@ -1,0 +1,7 @@
+---
+checkmk_server_setup_file: "check-mk-{{ checkmk_server_edition_mapping[checkmk_server_edition] }}-{{ checkmk_server_version }}_0.{{ ansible_distribution_release }}_amd64.deb"  # noqa yaml[line-length]
+
+checkmk_server_prerequisites:
+  - freeipmi
+  - gpg
+  - gpg-agent

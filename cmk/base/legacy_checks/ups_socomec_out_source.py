@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
+from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.utils.ups_socomec import DETECT_SOCOMEC
+
+
+def inventory_ups_socomec_out_source(info):
+    if info:
+        return [(None, None)]
+    return []
+
+
+def check_ups_socomec_out_source(_no_item, _no_params, info):
+    # This is from the old (v5.01) MIB and is incompatible with the new one below
+    #    ups_socomec_source_states = {
+    #        1: (3, "Other"),
+    #        2: (2, "Offline"),
+    #        3: (0, "Normal"),
+    #        4: (1, "Internal Maintenance Bypass"),
+    #        5: (2, "On battery"),
+    #        6: (0, "Booster"),
+    #        7: (0, "Reducer"),
+    #        8: (0, "Standby"),
+    #        9: (0, "Eco mode"),
+    #    }
+
+    # This is from the new (v6) MIB
+    ups_socomec_source_states = {
+        1: (3, "Unknown"),
+        2: (2, "On inverter"),
+        3: (0, "On mains"),
+        4: (0, "Eco mode"),
+        5: (1, "On bypass"),
+        6: (0, "Standby"),
+        7: (1, "On maintenance bypass"),
+        8: (2, "UPS off"),
+        9: (0, "Normal mode"),
+    }
+
+    return ups_socomec_source_states[int(info[0][0])]
+
+
+check_info["ups_socomec_out_source"] = LegacyCheckDefinition(
+    detect=DETECT_SOCOMEC,
+    discovery_function=inventory_ups_socomec_out_source,
+    check_function=check_ups_socomec_out_source,
+    service_name="Output Source",
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.4555.1.1.1.1.4",
+        oids=["1"],
+    ),
+)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -88,7 +88,7 @@ def _vs_add_common_mail_elements(elements):
                         "address",
                         EmailAddress(
                             title=_("Email address"),
-                            size=40,
+                            size=73,
                             allow_empty=False,
                         ),
                     ),
@@ -96,7 +96,7 @@ def _vs_add_common_mail_elements(elements):
                         "display_name",
                         TextInput(
                             title=_("Display name"),
-                            size=40,
+                            size=73,
                             allow_empty=False,
                         ),
                     ),
@@ -119,7 +119,7 @@ def _vs_add_common_mail_elements(elements):
                         "address",
                         EmailAddress(
                             title=_("Email address"),
-                            size=40,
+                            size=73,
                             allow_empty=False,
                         ),
                     ),
@@ -127,7 +127,7 @@ def _vs_add_common_mail_elements(elements):
                         "display_name",
                         TextInput(
                             title=_("Display name"),
-                            size=40,
+                            size=73,
                             allow_empty=False,
                         ),
                     ),
@@ -148,7 +148,7 @@ def _vs_add_common_mail_elements(elements):
                     "notification context."
                 ),
                 default_value="Check_MK: $HOSTNAME$ - $EVENT_TXT$",
-                size=64,
+                size=76,
             ),
         ),
         (
@@ -160,7 +160,7 @@ def _vs_add_common_mail_elements(elements):
                     "notification context."
                 ),
                 default_value="Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
-                size=64,
+                size=76,
             ),
         ),
     ]
@@ -203,7 +203,6 @@ def _vs_add_common_mail_elements(elements):
 
 
 def _get_url_prefix_specs(default_choice, default_value=DEF_VALUE):
-
     return Transform(
         valuespec=CascadingDropdown(
             title=_("URL prefix for links to Checkmk"),
@@ -212,9 +211,9 @@ def _get_url_prefix_specs(default_choice, default_value=DEF_VALUE):
                 "and service links within the notification is filled "
                 "automatically. If you specify an URL prefix here, then "
                 "several parts of the notification are armed with hyperlinks "
-                "to your Check_MK GUI. In both cases, the recipient of the "
+                "to your Checkmk GUI. In both cases, the recipient of the "
                 "notification can directly visit the host or service in "
-                "question in Check_MK. Specify an absolute URL including the "
+                "question in Checkmk. Specify an absolute URL including the "
                 "<tt>.../check_mk/</tt>."
             ),
             choices=[
@@ -263,7 +262,7 @@ class NotificationParameterMail(NotificationParameter):
                     ListChoice(
                         title=_("Display additional information"),
                         choices=[
-                            ("omdsite", _("OMD Site")),
+                            ("omdsite", _("Site ID")),
                             ("hosttags", _("Tags of the Host")),
                             ("address", _("IP Address of Host")),
                             ("abstime", _("Absolute Time of Alert")),
@@ -273,12 +272,12 @@ class NotificationParameterMail(NotificationParameter):
                             ("ack_comment", _("Acknowledgement Comment")),
                             ("notification_author", _("Notification Author")),
                             ("notification_comment", _("Notification Comment")),
-                            ("perfdata", _("Performance Data")),
-                            ("graph", _("Performance Graphs")),
+                            ("perfdata", _("Metrics")),
+                            ("graph", _("Time series graph")),
                             ("notesurl", _("Custom Host/Service Notes URL")),
                             ("context", _("Complete variable list (for testing)")),
                         ],
-                        default_value=["perfdata", "graph", "abstime", "address", "longoutput"],
+                        default_value=["graph", "abstime", "address", "longoutput"],
                     ),
                 ),
                 (
@@ -286,8 +285,8 @@ class NotificationParameterMail(NotificationParameter):
                     TextAreaUnicode(
                         title=_("Add HTML section above table (e.g. title, description…)"),
                         default_value="<HTMLTAG>CONTENT</HTMLTAG>",
-                        cols=40,
-                        rows="auto",
+                        cols=76,
+                        rows=3,
                     ),
                 ),
                 (
@@ -1663,7 +1662,7 @@ class NotificationParameterPushover(NotificationParameter):
                         help=_(
                             "You need to provide a valid API key to be able to send push notifications "
                             'using Pushover. Register and login to <a href="https://www.pushover.net" '
-                            'target="_blank">Pushover</a>, thn create your Check_MK installation as '
+                            'target="_blank">Pushover</a>, thn create your Checkmk installation as '
                             "application and obtain your API key."
                         ),
                         size=40,
@@ -1691,9 +1690,9 @@ class NotificationParameterPushover(NotificationParameter):
                         title=_("URL prefix for links to Checkmk"),
                         help=_(
                             "If you specify an URL prefix here, then several parts of the "
-                            "email body are armed with hyperlinks to your Check_MK GUI, so "
+                            "email body are armed with hyperlinks to your Checkmk GUI, so "
                             "that the recipient of the email can directly visit the host or "
-                            "service in question in Check_MK. Specify an absolute URL including "
+                            "service in question in Checkmk. Specify an absolute URL including "
                             "the <tt>.../check_mk/</tt>"
                         ),
                         regex="^(http|https)://.*/check_mk/$",

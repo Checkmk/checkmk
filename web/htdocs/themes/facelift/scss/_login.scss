@@ -1,5 +1,5 @@
 @charset "UTF-8";
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -47,6 +47,46 @@ body.login {
       display: block;
       width: 120px;
       height: auto;
+    }
+
+    div.trial_expiration_info {
+      margin: 24px 0;
+      padding: 12px 16px;
+      text-align: left;
+      background-color: $bg-color;
+      border-radius: $theme-border-radius;
+
+      span.remaining_time {
+        font-weight: $font-weight-bold;
+        color: darken($new-success, 5%);
+      }
+
+      div.time_bar {
+        div {
+          display: inline-block;
+          height: 4px;
+
+          &.passed {
+            background-color: $navbar-color;
+          }
+
+          &.remaining {
+            background-color: darken($new-success, 5%);
+          }
+        }
+      }
+
+      &.warning {
+        color: $font-color;
+
+        span.remaining_time {
+          color: $trial-expiration-warn-color;
+        }
+
+        div.time_bar div.remaining {
+          background-color: $trial-expiration-warn-color;
+        }
+      }
     }
 
     table {
@@ -104,6 +144,7 @@ body.login {
     margin: 0;
     font-weight: $font-weight-bold;
     border: 1px solid $default-submit-button-border-color;
+    background-color: darken($new-success, 5%);
   }
 
   #_login:not(.hot),
@@ -117,29 +158,19 @@ body.login {
     }
   }
 
-  #_saml2_login_button {
+  div#saml_button {
     margin-top: 20px;
   }
 
   h2.login_separator {
-    position: relative;
-    margin: 20px auto;
-    letter-spacing: 1px;
+    margin: 26px 0;
+    text-align: center;
+    border-bottom: 1px solid $font-color-light-grey;
+    line-height: 0.1em;
 
-    &::before,
-    &::after {
-      content: " ";
-      height: 8%;
-      width: 130px;
-      position: absolute;
-      top: 50%;
-      background: $font-color-light-grey;
-    }
-    &::before {
-      left: 0;
-    }
-    &::after {
-      right: 0;
+    span {
+      background-color: $navbar-color;
+      padding: 0 $spacing;
     }
   }
 
@@ -203,26 +234,34 @@ body.login {
     }
 
     #label_pass {
+      position: absolute;
       top: 153px;
+      left: 40px;
     }
 
     #input_pass {
+      position: absolute;
       top: 146px;
+      left: 135px;
     }
 
     #_use_backup_code {
       bottom: 20px;
+      left: 40px;
+      padding: 8px 16px;
+      position: absolute;
+      width: calc(100% - 80px);
     }
 
     .foldable {
+      height: 140px;
       .foldable_header {
         position: absolute;
         top: 125px;
         left: 40px;
-        text-align: left;
 
         b {
-          font-weight: normal;
+          font-weight: $font-weight-default;
         }
       }
 

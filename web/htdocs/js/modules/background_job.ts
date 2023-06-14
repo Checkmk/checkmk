@@ -1,11 +1,18 @@
-// Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
 import * as async_progress from "async_progress";
 import * as utils from "utils";
 
-export function start(update_url, job_id) {
+interface BackGroundJobStart {
+    status_container_content: string;
+    is_finished: boolean;
+    job_state?: string;
+    message?: string;
+}
+
+export function start(update_url: string, job_id: string) {
     async_progress.monitor({
         update_url: update_url,
         is_finished_function: response => response.is_finished,
@@ -17,7 +24,7 @@ export function start(update_url, job_id) {
     });
 }
 
-function update(handler_data, response) {
+function update(_handler_data: any, response: BackGroundJobStart) {
     async_progress.hide_msg();
 
     const old_log = document.getElementById("progress_log");
@@ -40,12 +47,14 @@ function update(handler_data, response) {
     }
 }
 
-function error(response) {
-    async_progress.show_error(response);
+function error(response: BackGroundJobStart) {
+    async_progress.show_error(String(response));
 }
 
-function finish(response) {
+function finish(response: BackGroundJobStart) {
     if (response.job_state == "exception" || response.job_state == "stopped") {
-        async_progress.show_error(response.message);
+        async_progress.show_error(response.message!);
+    } else {
+        utils.reload_whole_page();
     }
 }

@@ -1,21 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pxlint: disable=redefined-outer-name
-
-import fcntl
 import fnmatch
-import functools
 import os
 import re
 import subprocess
-import tarfile
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
+from pathlib import Path
 
 import pytest
+from psutil import Process
 
 from tests.testlib.site import Site
 from tests.testlib.web_session import CMKWebSession
@@ -24,21 +21,50 @@ from cmk.utils.paths import mkbackup_lock_dir
 
 
 @contextmanager
-def simulate_backup_lock(site_id):
-    with open(mkbackup_lock_dir / f"mkbackup-{site_id}.lock", "ab") as flock:
-        fcntl.flock(flock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        yield flock
+def simulate_backup_lock(site: Site) -> Iterator[None]:
+    with site.execute(
+        [
+            "flock",
+            "-o",
+            "-x",
+            "-n",
+            str(mkbackup_lock_dir / f"mkbackup-{site.id}.lock"),
+            "sleep",
+            "300",
+        ]
+    ) as p:
+        try:
+            yield None
+        finally:
+            for c in Process(p.pid).children(recursive=True):
+                if c.name() == "sleep":
+                    assert site.execute(["kill", str(c.pid)]).wait() == 0
+            p.wait()
+
+
+@pytest.fixture(name="cleanup_restore_lock")
+def cleanup_restore_lock_fixture(site: Site) -> Iterator[None]:
+    """Prevent conflict with file from other test runs
+
+    The restore lock is left behind after the restore. In case a new site
+    is created with the same name, there will be a permission conflict
+    resulting in a test failure."""
+
+    def rm() -> None:
+        restore_lock_path = Path(f"/tmp/restore-{site.id}.state")
+        if restore_lock_path.exists():
+            subprocess.run(["/usr/bin/sudo", "rm", str(restore_lock_path)], check=True)
+
+    rm()
+    try:
+        yield
+    finally:
+        rm()
 
 
 @pytest.fixture(name="backup_path")
-def backup_path_fixture(tmp_path):
-
-    backup_path = str(tmp_path / "backup")
-
-    if not os.path.exists(backup_path):
-        os.makedirs(backup_path)
-
-    return backup_path
+def backup_path_fixture(site: Site) -> Iterator[str]:
+    yield from site.system_temp_dir()
 
 
 @pytest.fixture(
@@ -48,22 +74,25 @@ def backup_path_fixture(tmp_path):
         {"exists": False},
     ],
 )
-def backup_lock_dir_fixture(request):
+def backup_lock_dir_fixture(site: Site, request: pytest.FixtureRequest) -> None:
     # This fixture should prepare two possible scenarios:
     # 1) The folder for the backup locks does already exist *and* has the correct permissions
     # 2) The folder does not yet exist.
     # --> In both scenarios mkbackup must not fail
 
-    # As get_site_factory executes "sudo omd start", the backup dir will already be created as
-    # root. Therefore we need to perform the setup steps as root as well (due to the sticky bit of
-    # /run/lock).
-    if request.param["exists"]:
-        subprocess.call(["sudo", "mkdir", str(mkbackup_lock_dir)])
-        subprocess.call(["sudo", "chmod", "0770", str(mkbackup_lock_dir)])
-        subprocess.call(["sudo", "chgrp", "omd", str(mkbackup_lock_dir)])
+    # In the second case the "omd" command executed as root ensures that the directory is created.
+    # This functionality has been added to the "omd" command, because it is the only command which
+    # can reliably create the directory when started as root.
+    if not request.param["exists"]:
+        subprocess.check_call(["sudo", "rm", "-r", str(mkbackup_lock_dir)])
+        assert not mkbackup_lock_dir.exists()
 
-    else:
-        subprocess.call(["sudo", "rm", "-r", str(mkbackup_lock_dir)])
+        # This omd call triggers the creation of the lock dir with the correct permissions. In
+        # production there is always at least one command executed before being able to execute
+        # the backup code. So we can assume it has been executed before.
+        site.omd("status")
+
+    assert mkbackup_lock_dir.exists()
 
 
 @pytest.fixture(name="test_cfg", scope="function")
@@ -176,13 +205,14 @@ def _execute_backup(site: Site, job_id: str = "testjob") -> str:
 
 
 def _execute_restore(
-    site: Site, backup_id: str, env: Mapping[str, str] | None = None, restore_site: bool = True
+    site: Site, backup_id: str, env: Mapping[str, str] | None = None, stop_on_failure: bool = False
 ) -> None:
     p = site.execute(
         ["mkbackup", "restore", "test-target", backup_id],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         env=env,
+        preserve_env=["MKBACKUP_PASSPHRASE"] if env and "MKBACKUP_PASSPHRASE" in env else None,
         encoding="utf-8",
     )
     stdout, stderr = p.communicate()
@@ -192,10 +222,8 @@ def _execute_restore(
         assert "Restore completed" in stdout, "Invalid output: %r" % stdout
         assert p.wait() == 0
     except Exception:
-        if restore_site:
-            # Bring back the site in case the restore test fails which may leave the
-            # site in a stopped state
-            site.start()
+        if stop_on_failure:
+            pytest.exit("Stop test run after failed restore")
         raise
 
 
@@ -213,7 +241,8 @@ def _execute_restore(
 #   '----------------------------------------------------------------------'
 
 
-def test_mkbackup_help(site: Site, test_cfg: None) -> None:
+@pytest.mark.usefixtures("test_cfg")
+def test_mkbackup_help(site: Site) -> None:
     p = site.execute(["mkbackup"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8")
     stdout, stderr = p.communicate()
     assert stderr == "ERROR: Missing operation mode\n"
@@ -274,13 +303,12 @@ def test_mkbackup_list_jobs(site: Site) -> None:
     assert "Tästjob" in stdout
 
 
-@pytest.mark.usefixtures("test_cfg")
-@pytest.mark.usefixtures("backup_lock_dir")
+@pytest.mark.usefixtures("test_cfg", "backup_lock_dir")
 def test_mkbackup_simple_backup(site: Site) -> None:
     _execute_backup(site)
 
 
-@pytest.mark.usefixtures("test_cfg")
+@pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
 def test_mkbackup_simple_restore(site: Site) -> None:
     backup_id = _execute_backup(site)
     _execute_restore(site, backup_id)
@@ -291,7 +319,7 @@ def test_mkbackup_encrypted_backup(site: Site) -> None:
     _execute_backup(site, job_id="testjob-encrypted")
 
 
-@pytest.mark.usefixtures("test_cfg")
+@pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
 def test_mkbackup_encrypted_backup_and_restore(site: Site) -> None:
     backup_id = _execute_backup(site, job_id="testjob-encrypted")
 
@@ -301,20 +329,23 @@ def test_mkbackup_encrypted_backup_and_restore(site: Site) -> None:
     _execute_restore(site, backup_id, env)
 
 
-@pytest.mark.usefixtures("test_cfg")
+@pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
 def test_mkbackup_compressed_backup_and_restore(site: Site) -> None:
     backup_id = _execute_backup(site, job_id="testjob-compressed")
     _execute_restore(site, backup_id)
 
 
-@pytest.mark.usefixtures("test_cfg")
+@pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
 def test_mkbackup_no_history_backup_and_restore(site: Site, backup_path: str) -> None:
     backup_id = _execute_backup(site, job_id="testjob-no-history")
 
     tar_path = os.path.join(backup_path, backup_id, "site-%s.tar" % site.id)
 
-    with tarfile.open(tar_path) as tar_file:
-        member_names = [m.name for m in tar_file.getmembers()]
+    p = site.execute(["tar", "-tvf", tar_path], stdout=subprocess.PIPE)
+    stdout = p.communicate()[0]
+    assert p.returncode == 0
+    member_names = [l.split(" ")[-1] for l in stdout.split("\n")]
+
     history = [n for n in member_names if fnmatch.fnmatch(n, "*/var/check_mk/core/archive/*")]
     logs = [n for n in member_names if fnmatch.fnmatch(n, "*/var/log/*.log")]
     rrds = [n for n in member_names if n.endswith(".rrd")]
@@ -326,14 +357,13 @@ def test_mkbackup_no_history_backup_and_restore(site: Site, backup_path: str) ->
     _execute_restore(site, backup_id)
 
 
-@pytest.mark.usefixtures("test_cfg")
+@pytest.mark.usefixtures("test_cfg", "cleanup_restore_lock")
 def test_mkbackup_locking(site: Site) -> None:
     backup_id = _execute_backup(site, job_id="testjob-no-history")
-    with simulate_backup_lock(site.id):
-        for what in (
-            _execute_backup,
-            functools.partial(_execute_restore, backup_id=backup_id),
-        ):
-            with pytest.raises(AssertionError) as locking_issue:
-                what(site)  # type: ignore
-            assert "Failed to get the exclusive backup lock" in str(locking_issue)
+    with simulate_backup_lock(site):
+        with pytest.raises(AssertionError) as locking_issue:
+            _execute_backup(site)
+        assert "Failed to get the exclusive backup lock" in str(locking_issue)
+        with pytest.raises(AssertionError) as locking_issue:
+            _execute_restore(site, backup_id=backup_id, stop_on_failure=False)
+        assert "Failed to get the exclusive backup lock" in str(locking_issue)

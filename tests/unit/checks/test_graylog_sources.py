@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,7 +9,9 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import SectionName
+
+from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base import item_state
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
@@ -22,6 +24,7 @@ def _graylog_sources_check_plugin(fix_register: FixRegister) -> CheckPlugin:
     return fix_register.check_plugins[CheckPluginName("graylog_sources")]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section, item, expected_check_result",
     [

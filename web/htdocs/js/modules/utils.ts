@@ -1,11 +1,10 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-import SimpleBar from "simplebar";
-
 import * as ajax from "ajax";
 import * as selection from "selection";
+import SimpleBar from "simplebar";
 
 export type Nullable<T> = null | T;
 let g_content_scrollbar: SimpleBar | null | undefined = null;
@@ -34,20 +33,20 @@ export function prevent_default_events(event: Event) {
 
 // Updates the contents of a snapin or dashboard container after get_url
 export function update_contents(id: string, code: string) {
-    var obj = document.getElementById(id);
+    const obj = document.getElementById(id);
     if (obj) {
         obj.innerHTML = code;
         execute_javascript_by_object(obj);
     }
 }
 
-export var current_script: HTMLScriptElement | null = null;
+export let current_script: HTMLScriptElement | null = null;
 
 export function execute_javascript_by_object(obj: HTMLElement) {
-    var aScripts = obj.getElementsByTagName("script");
-    for (var i = 0; i < aScripts.length; i++) {
+    const aScripts = obj.getElementsByTagName("script");
+    for (let i = 0; i < aScripts.length; i++) {
         if (aScripts[i].src && aScripts[i].src !== "") {
-            var oScr = document.createElement("script");
+            const oScr = document.createElement("script");
             oScr.src = aScripts[i].src;
             document.getElementsByTagName("HEAD")[0].appendChild(oScr);
         } else {
@@ -85,8 +84,8 @@ export function has_class(o: Nullable<HTMLElement>, cn: string) {
         // SVG className
         classname = o.className.baseVal;
 
-    var parts = classname.split(" ");
-    for (var x = 0; x < parts.length; x++) {
+    const parts = classname.split(" ");
+    for (let x = 0; x < parts.length; x++) {
         if (parts[x] == cn) return true;
     }
     return false;
@@ -94,9 +93,9 @@ export function has_class(o: Nullable<HTMLElement>, cn: string) {
 
 export function remove_class(o: Nullable<HTMLElement>, cn: string) {
     if (!o) throw new Error("The given HTMLElement is Null!");
-    var parts = o.className.split(" ");
-    var new_parts = Array();
-    for (var x = 0; x < parts.length; x++) {
+    const parts = o.className.split(" ");
+    const new_parts: string[] = [];
+    for (let x = 0; x < parts.length; x++) {
         if (parts[x] != cn) new_parts.push(parts[x]);
     }
     o.className = new_parts.join(" ");
@@ -222,7 +221,7 @@ export function get_content_wrapper_object() {
     ];
 
     for (const id of content_wrapper_ids) {
-        let container = document.getElementById(id);
+        const container = document.getElementById(id);
         if (container) {
             return container;
         }
@@ -232,7 +231,7 @@ export function get_content_wrapper_object() {
 
 // Whether or not an element is partially in the the visible viewport
 export function is_in_viewport(element: HTMLElement) {
-    var rect = element.getBoundingClientRect(),
+    const rect = element.getBoundingClientRect(),
         window_height =
             window.innerHeight || document.documentElement.clientHeight,
         window_width =
@@ -247,26 +246,26 @@ export function is_in_viewport(element: HTMLElement) {
 }
 
 export function update_header_timer() {
-    var container = document.getElementById("headertime");
+    const container = document.getElementById("headertime");
     if (!container) return;
 
-    var t = new Date();
+    const t = new Date();
 
-    var hours: string = t.getHours().toString();
+    let hours: string = t.getHours().toString();
     if (parseInt(hours) < 10) hours = "0" + hours;
 
-    var min: string = t.getMinutes().toString();
+    let min: string = t.getMinutes().toString();
     if (parseInt(min) < 10) min = "0" + min;
 
     container.innerHTML = hours + ":" + min;
 
-    var date = document.getElementById("headerdate");
+    const date = document.getElementById("headerdate");
     if (!date) return;
 
-    var day = ("0" + t.getDate()).slice(-2);
-    var month = ("0" + (t.getMonth() + 1)).slice(-2);
-    var year = t.getFullYear().toString();
-    var date_format = date.getAttribute("format");
+    const day = ("0" + t.getDate()).slice(-2);
+    const month = ("0" + (t.getMonth() + 1)).slice(-2);
+    const year = t.getFullYear().toString();
+    const date_format = date.getAttribute("format");
     date.innerHTML = date_format!
         .replace(/yyyy/, year)
         .replace(/mm/, month)
@@ -296,8 +295,8 @@ export function get_url_param(
     name = name.replace("[", "\\[").replace("]", "\\]");
     url = typeof url === "undefined" ? window.location.toString() : url;
 
-    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
-    var results = regex.exec(url);
+    const regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
+    const results = regex.exec(url);
     if (results === null) return "";
     return results[1];
 }
@@ -318,8 +317,8 @@ export function makeuri(
     // following logic
     url = url.replace(/[#?]+$/g, "");
 
-    var tmp = url.split("?");
-    var base = typeof filename === "undefined" ? tmp[0] : filename;
+    let tmp = url.split("?");
+    const base = typeof filename === "undefined" ? tmp[0] : filename;
     if (tmp.length > 1) {
         // Remove maybe existing anchors
         tmp = tmp[1].split("#");
@@ -330,11 +329,11 @@ export function makeuri(
         tmp = [];
     }
 
-    var params: string[] = [];
-    var pair: string[] | null = null;
+    const params: string[] = [];
+    let pair: string[] | null = null;
 
     // Skip unwanted params
-    for (var i = 0; i < tmp.length; i++) {
+    for (let i = 0; i < tmp.length; i++) {
         pair = tmp[i].split("=");
         if (
             pair[0][0] == "_" &&
@@ -344,14 +343,14 @@ export function makeuri(
         )
             // Skip _<vars>
             continue;
-        if (addvars.hasOwnProperty(pair[0]))
+        if (Object.prototype.hasOwnProperty.call(addvars, pair[0]))
             // Skip vars present in addvars
             continue;
         params.push(tmp[i]);
     }
 
     // Add new params
-    for (var key in addvars) {
+    for (const key in addvars) {
         params.push(
             encodeURIComponent(key) + "=" + encodeURIComponent(addvars[key])
         );
@@ -361,9 +360,9 @@ export function makeuri(
 }
 
 export function makeuri_contextless(vars: any, filename: string) {
-    var params: string[] = [];
+    const params: string[] = [];
     // Add new params
-    for (var key in vars) {
+    for (const key in vars) {
         params.push(
             encodeURIComponent(key) + "=" + encodeURIComponent(vars[key])
         );
@@ -391,7 +390,7 @@ export function update_url_parameter(name: string, value: string) {
     const url = window.location.href;
     let new_url;
     if (url.indexOf("start_url") !== -1) {
-        var frame_url = decodeURIComponent(get_url_param("start_url", url));
+        let frame_url = decodeURIComponent(get_url_param("start_url", url));
         frame_url = makeuri({[name]: value}, frame_url);
         new_url = makeuri({start_url: frame_url}, url);
     } else {
@@ -419,17 +418,17 @@ export function delete_user_message(msg_id: string, btn: HTMLButtonElement) {
         method: "POST",
         post_data: "id=" + msg_id,
     });
-    var row = btn.parentNode!.parentNode!;
+    const row = btn.parentNode!.parentNode!;
     row.parentNode!.removeChild(row);
 }
 
 export function add_height_to_simple_bar_content_of_iframe(
     target_iframe: string
 ) {
-    var iframe = document.getElementById(target_iframe);
+    const iframe = document.getElementById(target_iframe);
     if (!iframe) return;
 
-    var simple_bar_content = iframe.parentElement;
+    const simple_bar_content = iframe.parentElement;
     if (!simple_bar_content) return;
     simple_bar_content.style.height = "100%";
 }
@@ -447,13 +446,13 @@ export function add_height_to_simple_bar_content_of_iframe(
 //#   '--------------------------------------------------------------------'
 
 // Stores the reload timer object (of views and also dashboards)
-var g_reload_timer: number | null = null;
+let g_reload_timer: number | null = null;
 // This stores the refresh time of the page (But never 0)
-var g_reload_interval = 0; // seconds
+let g_reload_interval = 0; // seconds
 // This flag tells the handle_content_reload_error() function to add an
 // error message about outdated data to the content container or not.
 // The error message is only being added on the first error.
-var g_reload_error = false;
+let g_reload_error = false;
 
 // Reschedule the global timer to the given interval.
 export function set_reload(secs: number, url?: string) {
@@ -500,7 +499,7 @@ function update_page_state_reload_indicator(remaining_ms: number) {
     if (!icon) return; // Not present, no update needed
     const div = icon.closest(".page_state.reload");
     if (!div) return; // Not a reload page state, no update
-    let perc = (remaining_ms / (g_reload_interval * 1000)) * 100;
+    const perc = (remaining_ms / (g_reload_interval * 1000)) * 100;
 
     icon.style.clipPath = get_clip_path_polygon(perc);
     if (div instanceof HTMLElement) {
@@ -591,12 +590,12 @@ function do_reload(url: string) {
     } else {
         // Enforce specific display_options to get only the content data.
         // All options in "opts" will be forced. Existing upper-case options will be switched.
-        var display_options = get_url_param("display_options");
+        let display_options = get_url_param("display_options");
         // Removed "w" to reflect original rendering mechanism during reload
         // For example show the "Your query produced more than 1000 results." message
         // in views even during reload.
-        var opts = ["h", "t", "b", "f", "c", "o", "d", "e", "r", "u"];
-        var i;
+        const opts = ["h", "t", "b", "f", "c", "o", "d", "e", "r", "u"];
+        let i;
         for (i = 0; i < opts.length; i++) {
             if (display_options.indexOf(opts[i].toUpperCase()) > -1)
                 display_options = display_options.replace(
@@ -606,15 +605,8 @@ function do_reload(url: string) {
             else display_options += opts[i];
         }
 
-        // Add optional display_options if not defined in original display_options
-        opts = ["w"];
-        for (i = 0; i < opts.length; i++) {
-            if (display_options.indexOf(opts[i].toUpperCase()) == -1)
-                display_options += opts[i];
-        }
-
-        var params = {_display_options: display_options} as any;
-        var real_display_options = get_url_param("display_options");
+        const params = {_display_options: display_options} as any;
+        const real_display_options = get_url_param("display_options");
         if (real_display_options !== "")
             params["display_options"] = real_display_options;
 
@@ -637,7 +629,7 @@ function do_reload(url: string) {
 
 function handle_content_reload(_unused: any, code: string) {
     g_reload_error = false;
-    var o = document.getElementById("data_container")!;
+    const o = document.getElementById("data_container")!;
     o.innerHTML = code;
     execute_javascript_by_object(o);
 
@@ -652,7 +644,7 @@ function handle_content_reload_error(
     status_code: number | string
 ) {
     if (!g_reload_error) {
-        var o = document.getElementById("data_container")!;
+        const o = document.getElementById("data_container")!;
         o.innerHTML =
             "<div class=error>Update failed (" +
             status_code +
@@ -710,7 +702,7 @@ export function toggle_more(
     event!.stopPropagation();
     let container: HTMLElement | ParentNode | null = trigger;
     let state;
-    for (var i = 0; i < dom_levels_up; i++) {
+    for (let i = 0; i < dom_levels_up; i++) {
         container = container!.parentNode;
         while ((container as HTMLElement).className.includes("simplebar-"))
             container = container!.parentNode;
@@ -859,4 +851,9 @@ export function querySelectorAllByClassName<T extends HTMLElement>(
     className: string
 ) {
     return document.querySelectorAll<T>(`.${className}`);
+}
+
+export interface FunctionSpec {
+    function: (...args: any[]) => void;
+    arguments: any[];
 }

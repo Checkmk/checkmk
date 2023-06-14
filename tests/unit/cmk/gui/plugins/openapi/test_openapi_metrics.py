@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -164,7 +164,6 @@ def test_openapi_get_graph_metric_without_site(
         "GET services\nColumns: rrddata:load1:load1.average:1.0:2.0:60\nFilter: host_name = heute\nFilter: service_description = CPU load\nColumnHeaders: off"
     )
     with mock_livestatus():
-
         resp = api_client.get_graph(
             host_name="heute",
             service_description="CPU load",

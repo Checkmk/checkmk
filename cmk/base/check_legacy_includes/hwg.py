@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -33,14 +33,11 @@ HWG_TEMP_DEFAULTLEVELS = {"levels": (30.0, 35.0)}
 
 
 def parse_hwg(info):
-
     parsed: dict[str, dict] = {}
 
     for index, descr, sensorstatus, current, unit in info:
-
         # Parse Humidity
         if int(sensorstatus) != 0 and map_units.get(unit, "") == "%":
-
             parsed.setdefault(
                 index,
                 {
@@ -73,7 +70,6 @@ def parse_hwg(info):
 
 
 def inventory_hwg_humidity(parsed):
-
     for index, attrs in parsed.items():
         if attrs.get("humidity"):
             yield index, {}
@@ -81,7 +77,6 @@ def inventory_hwg_humidity(parsed):
 
 @get_parsed_item_data
 def check_hwg_humidity(item, params, parsed):
-
     status, infotext, perfdata = check_humidity(parsed["humidity"], params)
     infotext += " (Description: {}, Status: {})".format(parsed["descr"], parsed["dev_status_name"])
     return status, infotext, perfdata
@@ -95,7 +90,6 @@ def inventory_hwg_temp(parsed):
 
 @get_parsed_item_data
 def check_hwg_temp(item, params, parsed):
-
     state = map_readable_states.get(parsed["dev_status_name"], 3)
     state_readable = parsed["dev_status_name"]
     temp = parsed["temperature"]

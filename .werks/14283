@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The gadgets in NagVis maps did not work anymore. You get an access denied for
 all gadgets after it is added to the map.

@@ -1,0 +1,42 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# <<<windows_broadcom_bonding>>>
+# Caption            RedundancyStatus
+# BOND_10.3          2
+# BOND_HeartbeatMS   2
+#
+
+
+from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.config import check_info
+
+
+def inventory_windows_broadcom_bonding(info):
+    inventory = []
+    for line in info[1:]:
+        inventory.append((" ".join(line[:-1]), None))
+    return inventory
+
+
+def check_windows_broadcom_bonding(item, params, info):
+    for line in info:
+        if " ".join(line[:-1]) == item:
+            status = int(line[-1])
+            if status == 5:
+                return 2, "Bond not working"
+            if status == 4:
+                return 1, "Bond partly working"
+            if status == 2:
+                return 0, "Bond fully working"
+            return 3, "Bond status cannot be recognized"
+    return 3, "Bond %s not found in agent output" % item
+
+
+check_info["windows_broadcom_bonding"] = LegacyCheckDefinition(
+    check_function=check_windows_broadcom_bonding,
+    discovery_function=inventory_windows_broadcom_bonding,
+    service_name="Bonding Interface %s",
+)

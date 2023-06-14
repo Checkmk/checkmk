@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-import dataclasses
-from typing import Iterable, Sequence, Type, TypeVar
 
-from cmk.special_agents.utils.node_exporter import (
-    CPULoad,
-    MemUsed,
-    NodeExporter,
-    PromQLMetric,
-    SectionStr,
-)
+from collections.abc import Iterable, Sequence
+from typing import TypeVar
+
+from cmk.special_agents.utils.node_exporter import NodeExporter, PromQLMetric, SectionStr
 from cmk.special_agents.utils_kubernetes import common, prometheus_api, query
 from cmk.special_agents.utils_kubernetes.schemata import section
 
@@ -22,7 +17,7 @@ class Measurement(common.IdentifiableSample):
     value: float
 
     @classmethod
-    def from_sample(cls: Type[Self], sample: prometheus_api.Sample) -> Self:
+    def from_sample(cls: type[Self], sample: prometheus_api.Sample) -> Self:
         return cls(
             pod_name=sample.metric["pod"],
             namespace=sample.metric["namespace"],
@@ -36,12 +31,6 @@ class CPUMeasurement(Measurement):
 
 class MemoryMeasurement(Measurement):
     pass
-
-
-@dataclasses.dataclass
-class ClusterAggregation:
-    cpu_section: CPULoad | None = None
-    memory_section: MemUsed | None = None
 
 
 def _filter_fully_labeled(samples: Sequence[prometheus_api.Sample]) -> list[prometheus_api.Sample]:
@@ -106,26 +95,20 @@ def debug_section(base_url: str, *responses: query.HTTPResponse) -> common.Write
 
 def machine_sections(
     config: query.PrometheusSessionConfig,
-) -> tuple[ClusterAggregation, dict[str, str]]:
+) -> dict[str, str]:
     def promql_getter(promql_expression: str) -> list[PromQLMetric]:
         return query.node_exporter_getter(config, common.LOGGER, promql_expression)
 
     node_exporter = NodeExporter(promql_getter)
-    cpu_cluster_section, cpu_summary = node_exporter.cpu_summary()
-    memory_cluster_section, memory_summary = node_exporter.memory_summary()
     result_list: dict[str, list[SectionStr]] = {}
     for node_to_section in [
         node_exporter.df_summary(),
         node_exporter.diskstat_summary(),
         node_exporter.kernel_summary(),
-        memory_summary,
+        node_exporter.memory_summary(),
         node_exporter.uptime_summary(),
-        cpu_summary,
+        node_exporter.cpu_summary(),
     ]:
         for node, section_str in node_to_section.items():
             result_list.setdefault(node, []).append(section_str)
-    cluster_aggregation = ClusterAggregation(
-        cpu_section=cpu_cluster_section, memory_section=memory_cluster_section
-    )
-    node_sections = {node: "\n".join([*node_list, ""]) for node, node_list in result_list.items()}
-    return cluster_aggregation, node_sections
+    return {node: "\n".join([*node_list, ""]) for node, node_list in result_list.items()}

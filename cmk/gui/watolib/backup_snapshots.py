@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -14,9 +14,7 @@ import traceback
 from collections.abc import Callable
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, IO, Literal, TypeVar
-
-from typing_extensions import NotRequired, TypedDict
+from typing import Any, IO, Literal, NotRequired, TypedDict, TypeVar
 
 import cmk.utils
 import cmk.utils.paths
@@ -122,7 +120,6 @@ def _do_create_snapshot(data: SnapshotData) -> None:
 
         # Initialize the snapshot tar file and populate with initial information
         with tarfile.open(filename_work, "w") as tar_in_progress:
-
             for key in ("comment", "created_by", "type"):
                 tarinfo = get_basic_tarinfo(key)
                 # key is basically Literal["comment", "created_by", "type"] but
@@ -297,7 +294,7 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
         if using_cmc and not snapshot_cmc:
             raise MKGeneralException(
                 _(
-                    "You are currently using the Check_MK Micro Core, but this snapshot does not use the "
+                    "You are currently using the Checkmk Micro Core, but this snapshot does not use the "
                     "Check_MK Micro Core. If you need to migrate your data, you could consider changing "
                     "the core, restoring the snapshot and changing the core back again."
                 )
@@ -305,7 +302,7 @@ def get_snapshot_status(  # pylint: disable=too-many-branches
         if not using_cmc and snapshot_cmc:
             raise MKGeneralException(
                 _(
-                    "You are currently not using the Check_MK Micro Core, but this snapshot uses the "
+                    "You are currently not using the Checkmk Micro Core, but this snapshot uses the "
                     "Check_MK Micro Core. If you need to migrate your data, you could consider changing "
                     "the core, restoring the snapshot and changing the core back again."
                 )

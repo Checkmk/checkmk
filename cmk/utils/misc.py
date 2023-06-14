@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This is an unsorted collection of small unrelated helper functions which are
@@ -8,13 +8,11 @@ usable in all components of Check_MK
 Please try to find a better place for the things you want to put here."""
 
 import itertools
-import os
 import sys
 import time
 from collections.abc import Callable, Iterator, Mapping, MutableMapping, Sequence
-from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, ParamSpec, TypeVar
+from typing import Any
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostAddress
@@ -111,30 +109,6 @@ def cachefile_age(path: Path | str) -> float:
         path = Path(path)
 
     return time.time() - path.stat().st_mtime
-
-
-P = ParamSpec("P")
-R = TypeVar("R")
-
-
-def with_umask(mask: int) -> Callable[[Callable[P, R]], Callable[P, R]]:
-    def wrap(f: Callable[P, R]) -> Callable[P, R]:
-        def wrapped_f(*args: P.args, **kwargs: P.kwargs) -> R:
-            with umask(mask):
-                return f(*args, **kwargs)
-
-        return wrapped_f
-
-    return wrap
-
-
-@contextmanager
-def umask(mask: int) -> Iterator[None]:
-    old_mask = os.umask(mask)
-    try:
-        yield None
-    finally:
-        os.umask(old_mask)
 
 
 def normalize_ip_addresses(ip_addresses: str | Sequence[str]) -> list[HostAddress]:

@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-import os
-import shutil
 import subprocess
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Iterator, Mapping
 from itertools import groupby
 from pathlib import Path
 from stat import filemode
@@ -17,16 +15,8 @@ from pydantic import BaseModel
 
 import cmk.utils.paths
 import cmk.utils.store as store
-import cmk.utils.version as cmk_version
-from cmk.utils.i18n import _  # noqa: F401
+from cmk.utils.setup_search_index import request_index_rebuild
 from cmk.utils.version import is_daily_build_of_master, parse_check_mk_version
-
-# It's OK to import centralized config load logic
-from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
-    install_packaged_rule_packs,
-    release_packaged_rule_packs,
-    uninstall_packaged_rule_packs,
-)
 
 from ._installed import Installer
 from ._mkp import (  # noqa: F401
@@ -40,9 +30,15 @@ from ._mkp import (  # noqa: F401
     PackagePart,
     read_manifest_optionally,
 )
-from ._parts import CONFIG_PARTS, PathConfig, permissions, ui_title  # noqa: F401
+from ._parts import (  # noqa: F401
+    CONFIG_PARTS,
+    PackageOperationCallbacks,
+    PathConfig,
+    permissions,
+    ui_title,
+)
 from ._reporter import all_local_files, all_rule_pack_files
-from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
+from ._type_defs import PackageError, PackageID, PackageName, PackageVersion
 
 _logger = logging.getLogger(__name__)
 
@@ -71,9 +67,13 @@ def format_file_name(package_id: PackageID) -> str:
     return f"{package_id.name}-{package_id.version}.mkp"
 
 
-def release(installer: Installer, pacname: PackageName) -> None:
+def release(
+    installer: Installer,
+    pacname: PackageName,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
+) -> None:
     if (manifest := installer.get_installed_manifest(pacname)) is None:
-        raise PackageException(f"Package {pacname} not installed or corrupt.")
+        raise PackageError(f"Package {pacname} not installed or corrupt.")
 
     _logger.info("Releasing files of package %s into freedom...", pacname)
     for part, files in manifest.files.items():
@@ -81,35 +81,24 @@ def release(installer: Installer, pacname: PackageName) -> None:
         for f in files:
             _logger.info("    %s", f)
 
-    if filenames := manifest.files.get(PackagePart.EC_RULE_PACKS):
-        release_packaged_rule_packs(filenames)
+    for part in set(manifest.files) & set(callbacks):
+        callbacks[part].release(manifest.files[part])
 
     installer.remove_installed_manifest(pacname)
-
-
-def create_mkp_object(manifest: Manifest, path_config: PathConfig) -> bytes:
-    return create_mkp(manifest, cmk_version.__version__, path_config.get_path)
 
 
 def uninstall(
     installer: Installer,
     path_config: PathConfig,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     manifest: Manifest,
     post_package_change_actions: bool = True,
 ) -> None:
-    for part, filenames in manifest.files.items():
-        _logger.info("  Part '%s':", part.ident)
-        if part is PackagePart.EC_RULE_PACKS:
-            uninstall_packaged_rule_packs(filenames)
+    if err := list(_remove_files(manifest, keep_files={}, path_config=path_config)):
+        raise PackageError(", ".join(err))
 
-        for fn in filenames:
-            _logger.info("    %s", fn)
-            try:
-                (path_config.get_path(part) / fn).unlink(missing_ok=True)
-            except Exception as exc:
-                raise PackageException(
-                    f"Cannot uninstall {manifest.name} {manifest.version}: {exc}\n"
-                ) from exc
+    for part in set(manifest.files) & set(callbacks):
+        callbacks[part].uninstall(manifest.files[part])
 
     installer.remove_installed_manifest(manifest.name)
 
@@ -123,20 +112,20 @@ class PackageStore:
     This should become the single source of truth regarding package contents.
     """
 
-    def __init__(self) -> None:
-        self.local_packages: Final = cmk.utils.paths.local_optional_packages_dir
-        self.shipped_packages: Final = cmk.utils.paths.optional_packages_dir
+    def __init__(self, *, shipped_dir: Path, local_dir: Path, enabled_dir: Path) -> None:
+        self.shipped_packages: Final = shipped_dir
+        self.local_packages: Final = local_dir
+        self.enabled_packages: Final = enabled_dir
 
-    def store(self, file_content: bytes) -> Manifest:
-
+    def store(self, file_content: bytes, overwrite: bool = False) -> Manifest:
         package = extract_manifest(file_content)
 
         base_name = format_file_name(package.id)
         local_package_path = self.local_packages / base_name
         shipped_package_path = self.shipped_packages / base_name
 
-        if local_package_path.exists() or shipped_package_path.exists():
-            raise PackageException("Package '%s' already exists on the site!" % base_name)
+        if shipped_package_path.exists() or (not overwrite and local_package_path.exists()):
+            raise PackageError(f"Package {package.name} {package.version} exists on the site!")
 
         local_package_path.parent.mkdir(parents=True, exist_ok=True)
         store.save_bytes_to_file(str(local_package_path), file_content)
@@ -159,100 +148,127 @@ class PackageStore:
         except FileNotFoundError:
             return []
 
-    def get_existing_package_path(self, package_id: PackageID) -> Path:
+    def read_bytes(self, package_id: PackageID) -> bytes:
+        return self._get_existing_package_path(package_id).read_bytes()
+
+    def _get_existing_package_path(self, package_id: PackageID) -> Path:
         """Return the path of an existing package
 
         (not to confuse with the path of a package file that is to be created!)
         """
-        # TODO: can we drop this, and just hand out the bytes or create the "enabled link"?
         base_name = format_file_name(package_id)
+
         if (local_package_path := self.local_packages / base_name).exists():
             return local_package_path
-        if not (shipped_package_path := self.shipped_packages / base_name).exists():
-            # yes, this is a race condition. But we want to make the intention clear.
-            raise PackageException(f"no such package: {package_id.name} {package_id.version}")
-        return shipped_package_path
+
+        # if we're on the remote site, we have to consider this one:
+        if (
+            enabled_package_path := cmk.utils.paths.local_enabled_packages_dir / base_name
+        ).exists():
+            return enabled_package_path
+
+        if (shipped_package_path := self.shipped_packages / base_name).exists():
+            return shipped_package_path
+
+        raise PackageError(f"No such package: {package_id.name} {package_id.version}")
+
+    def _enabled_path(self, package_id: PackageID) -> Path:
+        return self.enabled_packages / format_file_name(package_id)
+
+    def mark_as_enabled(self, package_id: PackageID) -> None:
+        """Mark the package as one of the enabled ones
+
+        Copying the packages into the local hierarchy is the easiest way to get them to
+        be synchronized with the remote sites.
+        """
+        package_path = self._get_existing_package_path(package_id)
+        destination = self._enabled_path(package_id)
+        if package_path == destination:
+            return
+
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        # We create a copy of the file in the local directory.
+        # That way it'll be synced to the remote sites.
+        # This creates redundant data on the system, but what are our options?
+        #  a) extend the syncing mechanism: complex and makes the code more entangled
+        #  b) move the file: also requires adjustments in a lot of places
+        #  c) softlink: depends on the syncing mechanisms idea of how to handle a symlink -> see a)
+        #  d) hardlink: *should* not work, see the linux kernel doc on "/proc/sys/fs/protect_hardlinks"
+        destination.write_bytes(package_path.read_bytes())
+
+    def remove_enabled_mark(self, package_id: PackageID) -> None:
+        # should never be missing, but don't crash in messed up state
+        self._enabled_path(package_id).unlink(missing_ok=True)
+
+    def get_enabled_manifests(self) -> Mapping[PackageID, Manifest]:
+        try:
+            enabled_paths = list(self.enabled_packages.iterdir())
+        except FileNotFoundError:
+            return {}
+        return {m.id: m for m in extract_manifests(enabled_paths)}
 
 
 def disable(
     installer: Installer,
+    package_store: PackageStore,
     path_config: PathConfig,
-    package_name: PackageName,
-    package_version: PackageVersion | None,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
+    package_id: PackageID,
 ) -> None:
-    package_path, manifest = _find_path_and_package_info(package_name, package_version)
-
-    if (installed := installer.get_installed_manifest(package_name)) is not None:
-        if package_version is None or installed.version == package_version:
-            uninstall(installer, path_config, manifest)
-
-    package_path.unlink()
+    if (
+        installed := installer.get_installed_manifest(package_id.name)
+    ) is not None and installed.version == package_id.version:
+        uninstall(installer, path_config, callbacks, installed)
+    package_store.remove_enabled_mark(package_id)
 
 
-def _find_path_and_package_info(
-    package_name: PackageName, package_version: PackageVersion | None
-) -> tuple[Path, Manifest]:
-
-    # not sure if we need this, but better safe than sorry.
-    def filename_matches(manifest: Manifest, name: str) -> bool:
-        return format_file_name(manifest.id) == name
-
-    def package_matches(
-        manifest: Manifest, package_name: PackageName, package_version: PackageVersion | None
-    ) -> bool:
-        return manifest.name == package_name and (
-            package_version is None or manifest.version == package_version
-        )
-
-    matching_packages = [
-        (package_path, manifest)
-        for package_path in _get_enabled_package_paths()
-        if (manifest := extract_manifest_optionally(package_path)) is not None
-        and (
-            package_matches(manifest, package_name, package_version)
-            or filename_matches(manifest, package_name)
-        )
-    ]
-
-    package_str = f"{package_name}" + ("" if package_version is None else f" {package_version}")
-    if not matching_packages:
-        raise PackageException(f"Package {package_str} is not enabled")
-    if len(matching_packages) > 1:
-        raise PackageException(f"Package not unique: {package_str}")
-
-    return matching_packages[0]
-
-
-def create(installer: Installer, manifest: Manifest, path_config: PathConfig) -> None:
+def create(
+    installer: Installer, manifest: Manifest, path_config: PathConfig, *, version_packaged: str
+) -> None:
     if installer.is_installed(manifest.name):
-        raise PackageException("Packet already exists.")
+        raise PackageError("Package already exists.")
 
-    package_store = PackageStore()
+    package_store = PackageStore(
+        shipped_dir=path_config.packages_shipped_dir,
+        local_dir=path_config.packages_local_dir,
+        enabled_dir=path_config.packages_enabled_dir,
+    )
 
     _raise_for_nonexisting_files(manifest, path_config)
-    _validate_package_files(manifest, installer, path_config)
+    _validate_package_files(manifest, installer)
     installer.add_installed_manifest(manifest)
-    _create_enabled_mkp_from_installed_package(package_store, manifest, path_config)
+    _create_enabled_mkp_from_installed_package(
+        package_store, manifest, path_config, version_packaged=version_packaged
+    )
 
 
 def edit(
-    installer: Installer, pacname: PackageName, new_manifest: Manifest, path_config: PathConfig
+    installer: Installer,
+    pacname: PackageName,
+    new_manifest: Manifest,
+    path_config: PathConfig,
+    *,
+    version_packaged: str,
 ) -> None:
     if not installer.is_installed(pacname):
-        raise PackageException("No such package")
+        raise PackageError(f"No such package installed: {pacname}")
 
     # Renaming: check for collision
     if pacname != new_manifest.name:
         if installer.is_installed(new_manifest.name):
-            raise PackageException(
-                "Cannot rename package: a package with that name already exists."
-            )
-    package_store = PackageStore()
+            raise PackageError("Cannot rename package: a package with that name already exists.")
+    package_store = PackageStore(
+        shipped_dir=path_config.packages_shipped_dir,
+        local_dir=path_config.packages_local_dir,
+        enabled_dir=path_config.packages_enabled_dir,
+    )
 
     _raise_for_nonexisting_files(new_manifest, path_config)
-    _validate_package_files(new_manifest, installer, path_config)
+    _validate_package_files(new_manifest, installer)
 
-    _create_enabled_mkp_from_installed_package(package_store, new_manifest, path_config)
+    _create_enabled_mkp_from_installed_package(
+        package_store, new_manifest, path_config, version_packaged=version_packaged
+    )
     installer.remove_installed_manifest(pacname)
     installer.add_installed_manifest(new_manifest)
 
@@ -261,55 +277,24 @@ def _raise_for_nonexisting_files(manifest: Manifest, path_config: PathConfig) ->
     for part, rel_path in manifest.files.items():
         for rp in rel_path:
             if not (fp := (path_config.get_path(part) / rp).exists()):
-                raise PackageException(f"File {fp} does not exist.")
+                raise PackageError(f"File {fp} does not exist.")
 
 
 def _create_enabled_mkp_from_installed_package(
-    package_store: PackageStore, manifest: Manifest, path_config: PathConfig
+    package_store: PackageStore,
+    manifest: Manifest,
+    path_config: PathConfig,
+    *,
+    version_packaged: str,
 ) -> None:
     """Creates an MKP, saves it on disk and enables it
 
     After we changed and or created an MKP, we must make sure it is present on disk as
     an MKP, just like the uploaded ones.
     """
-    base_name = format_file_name(manifest.id)
-    file_path = cmk.utils.paths.local_optional_packages_dir / base_name
-
-    file_path.parent.mkdir(parents=True, exist_ok=True)
-
-    mkp = create_mkp_object(manifest, path_config)
-    file_path.write_bytes(mkp)
-
-    mark_as_enabled(package_store, manifest.id)
-
-
-def mark_as_enabled(package_store: PackageStore, package_id: PackageID) -> None:
-    """Mark the package as one of the enabled ones
-
-    Copying (or linking) the packages into the local hierarchy is the easiest way to get them to
-    be synchronized with the remote sites.
-    """
-    package_path = package_store.get_existing_package_path(package_id)
-    destination = cmk.utils.paths.local_enabled_packages_dir / package_path.name
-
-    destination.parent.mkdir(parents=True, exist_ok=True)
-
-    # linking fails if the destination exists
-    destination.unlink(missing_ok=True)
-
-    try:
-        os.link(str(package_path), str(destination))
-    except OSError:
-        # if the source belongs to root (as the shipped packages do) we may not be allowed
-        # to hardlink them. We fall back to copying.
-        shutil.copy(str(package_path), str(destination))
-
-
-def remove_enabled_mark(manifest: Manifest) -> None:
-    base_name = format_file_name(manifest.id)
-    (cmk.utils.paths.local_enabled_packages_dir / base_name).unlink(
-        missing_ok=True
-    )  # should never be missing, but don't crash in messed up state
+    mkp = create_mkp(manifest, path_config.get_path, version_packaged)
+    package_store.store(mkp, overwrite=True)
+    package_store.mark_as_enabled(manifest.id)
 
 
 def install(
@@ -317,31 +302,40 @@ def install(
     package_store: PackageStore,
     package_id: PackageID,
     path_config: PathConfig,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
+    *,
     allow_outdated: bool = True,
     post_package_change_actions: bool = True,
+    site_version: str,
 ) -> Manifest:
     try:
         return _install(
             installer,
-            package_store.get_existing_package_path(package_id).read_bytes(),
+            package_store,
+            package_store.read_bytes(package_id),
             path_config,
+            callbacks,
+            site_version=site_version,
             allow_outdated=allow_outdated,
             post_package_change_actions=post_package_change_actions,
         )
     finally:
         # it is enabled, even if installing failed
-        mark_as_enabled(package_store, package_id)
+        package_store.mark_as_enabled(package_id)
 
 
 def _install(
     installer: Installer,
+    package_store: PackageStore,
     mkp: bytes,
     path_config: PathConfig,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
+    *,
+    site_version: str,
     # I am not sure whether we should install outdated packages by default -- but
     #  a) this is the compatible way to go
     #  b) users cannot even modify packages without installing them
     # Reconsider!
-    *,
     allow_outdated: bool,
     post_package_change_actions: bool,
 ) -> Manifest:
@@ -358,41 +352,26 @@ def _install(
         _logger.info("[%s %s]: Installing", manifest.name, manifest.version)
 
     _raise_for_installability(
-        installer, path_config, manifest, old_manifest, cmk_version.__version__, allow_outdated
+        installer, path_config, manifest, old_manifest, site_version, allow_outdated
     )
 
     extract_mkp(manifest, mkp, path_config.get_path)
 
     _fix_files_permissions(manifest, path_config)
 
-    install_packaged_rule_packs(manifest.files.get(PackagePart.EC_RULE_PACKS, []))
+    for part in set(manifest.files) & set(callbacks):
+        callbacks[part].install(manifest.files[part])
 
     # In case of an update remove files from old_package not present in new one
     if old_manifest is not None:
-        for part, old_files in old_manifest.files.items():
+        for err in _remove_files(old_manifest, keep_files=manifest.files, path_config=path_config):
+            _logger.error(err)
+
+        for part in set(old_manifest.files) & set(callbacks):
             new_files = set(manifest.files.get(part, []))
-            remove_files = set(old_files) - new_files
-            for fn in remove_files:
-                path = path_config.get_path(part) / fn
-                try:
-                    path.unlink(missing_ok=True)
-                except OSError as e:
-                    _logger.error(
-                        "[%s %s]: Error removing %s: %s",
-                        old_manifest.name,
-                        old_manifest.version,
-                        path,
-                        e,
-                    )
-                else:
-                    _logger.info(
-                        "[%s %s]: Removed %s", old_manifest.name, old_manifest.version, path
-                    )
+            callbacks[part].uninstall([f for f in old_manifest.files[part] if f not in new_files])
 
-            if part is PackagePart.EC_RULE_PACKS:
-                uninstall_packaged_rule_packs(remove_files)
-
-        remove_enabled_mark(old_manifest)
+        package_store.remove_enabled_mark(old_manifest.id)
 
     # Last but not least install package file
     installer.add_installed_manifest(manifest)
@@ -403,6 +382,22 @@ def _install(
     return manifest
 
 
+def _remove_files(
+    manifest: Manifest, keep_files: Mapping[PackagePart, Iterable[Path]], path_config: PathConfig
+) -> Iterator[str]:
+    for part, files in manifest.files.items():
+        _logger.debug("  Part '%s':", part.ident)
+        remove_files = set(files) - set(keep_files.get(part, []))
+        for fn in remove_files:
+            path = path_config.get_path(part) / fn
+            try:
+                path.unlink(missing_ok=True)
+            except OSError as e:
+                yield f"[{manifest.name} {manifest.version}]: Error removing {path}: {e}"
+            else:
+                _logger.info("[%s %s]: Removed %s", manifest.name, manifest.version, path)
+
+
 def _raise_for_installability(
     installer: Installer,
     path_config: PathConfig,
@@ -411,10 +406,7 @@ def _raise_for_installability(
     site_version: str,
     allow_outdated: bool,
 ) -> None:
-    """Raise a `PackageException` if we should not install this package.
-
-    Note: this currently ignores the packages "max version".
-    """
+    """Raise a `PackageException` if we should not install this package"""
     _raise_for_too_old_cmk_version(package.version_min_required, site_version)
     if not allow_outdated:
         _raise_for_too_new_cmk_version(package.version_usable_until, site_version)
@@ -430,7 +422,7 @@ def _raise_for_conflicts(
     for file_path, type_of_collision in _conflicting_files(
         package, old_package, installer, path_config
     ):
-        raise PackageException(f"File conflict: {file_path} ({type_of_collision})")
+        raise PackageError(f"File conflict: {file_path} ({type_of_collision})")
 
 
 def _conflicting_files(
@@ -442,7 +434,7 @@ def _conflicting_files(
     packaged_files = installer.get_packaged_files()
     # Before installing check for conflicts
     for part, files in package.files.items():
-        packaged = packaged_files.get(part, ())
+        packaged = packaged_files.get(part, {})
 
         old_files = set(old_package.files.get(part, [])) if old_package else set()
 
@@ -450,8 +442,8 @@ def _conflicting_files(
             if fn in old_files:
                 continue
             path = path_config.get_path(part) / fn
-            if fn in packaged:
-                yield path, "part of another package"
+            if (collision := packaged.get(fn)) is not None:
+                yield path, f"already part of {collision.name} {collision.version}"
             elif path.exists():
                 yield path, "already existing"
 
@@ -469,28 +461,28 @@ def _fix_files_permissions(manifest: Manifest, path_config: PathConfig) -> None:
                 path.chmod(desired_perm)
 
 
-def _validate_package_files(
-    manifest: Manifest, installer: Installer, path_config: PathConfig
-) -> None:
+def _validate_package_files(manifest: Manifest, installer: Installer) -> None:
     """Packaged files must not already belong to another package"""
     for other_manifest in installer.get_installed_manifests():
         if manifest.name == other_manifest.name:
             continue
-        _raise_for_collision(path_config, manifest, other_manifest)
+        _raise_for_collision(manifest, other_manifest)
 
 
-def _raise_for_collision(
-    path_config: PathConfig, manifest: Manifest, other_manifest: Manifest
-) -> None:
+def _raise_for_collision(manifest: Manifest, other_manifest: Manifest) -> None:
     """Packaged files must not already belong to another package"""
-    if collisions := set(
-        str(path_config.get_path(part) / fn)
+    if collisions := {
+        (part, fn)
         for part in PackagePart
-        for fn in manifest.files.get(part, ())
-        if fn in other_manifest.files.get(part, ())
-    ):
-        raise PackageException(
-            f"Files already belong to {other_manifest.name} {other_manifest.version}: {', '.join(collisions)}"
+        for fn in (set(manifest.files.get(part, ())) & set(other_manifest.files.get(part, ())))
+    }:
+        raise PackageError(
+            "Files already belong to %s %s: %s"
+            % (
+                other_manifest.name,
+                other_manifest.version,
+                ", ".join(f"{fn} ({part})" for part, fn in collisions),
+            )
         )
 
 
@@ -509,7 +501,7 @@ def _raise_for_too_old_cmk_version(min_version: str, site_version: str) -> None:
         return
 
     if too_old:
-        raise PackageException(
+        raise PackageError(
             f"Package requires Checkmk version {min_version} (this is {site_version})"
         )
 
@@ -533,7 +525,7 @@ def _raise_for_too_new_cmk_version(until_version: str | None, site_version: str)
         return
 
     if too_new:
-        raise PackageException(
+        raise PackageError(
             f"Package requires Checkmk version below {until_version} (this is {site_version})"
         )
 
@@ -559,7 +551,6 @@ class ClassifiedManifests(BaseModel):
 
     @property
     def enabled(self) -> list[Manifest]:
-
         return [*self.installed, *self.inactive]
 
 
@@ -571,64 +562,74 @@ def get_classified_manifests(
     return ClassifiedManifests(
         stored=get_stored_manifests(package_store),
         installed=list(installed),
-        inactive=[m for id_, m in get_enabled_manifests().items() if id_ not in installed_ids],
+        inactive=[
+            m
+            for id_, m in package_store.get_enabled_manifests().items()
+            if id_ not in installed_ids
+        ],
     )
-
-
-def get_enabled_manifests() -> Mapping[PackageID, Manifest]:
-    return {m.id: m for m in extract_manifests(_get_enabled_package_paths())}
-
-
-def _get_enabled_package_paths() -> list[Path]:
-    try:
-        return list(cmk.utils.paths.local_enabled_packages_dir.iterdir())
-    except FileNotFoundError:
-        return []
 
 
 def get_unpackaged_files(
     installer: Installer, path_config: PathConfig
 ) -> dict[PackagePart, list[Path]]:
     packaged = installer.get_packaged_files()
-    present = all_local_files(path_config)
-    return {
-        **{
-            part: sorted(present[part] - (packaged.get(part) or set()))
-            for part in PackagePart
-            if part is not None
-        },
-        PackagePart.EC_RULE_PACKS: sorted(
-            all_rule_pack_files(path_config.get_path(PackagePart.EC_RULE_PACKS))
-            - packaged[PackagePart.EC_RULE_PACKS]
+    present: dict[PackagePart | None, set[Path]] = {
+        **all_local_files(path_config),
+        PackagePart.EC_RULE_PACKS: all_rule_pack_files(
+            path_config.get_path(PackagePart.EC_RULE_PACKS)
         ),
     }
-
-
-def rule_pack_id_to_mkp(
-    installer: Installer, rule_pack_files: Iterable[Path]
-) -> dict[str, PackageName | None]:
-    """
-    Returns a dictionary of rule pack ID to MKP package for a given manifest.
-    Every rule pack is contained exactly once in this mapping. If no corresponding
-    MKP exists, the value of that mapping is None.
-    """
-    package_map = {
-        file: manifest.name
-        for manifest in installer.get_installed_manifests()
-        for file in manifest.files.get(PackagePart.EC_RULE_PACKS, ())
+    return {
+        part: sorted(set(present.get(part, ())) - set(packaged.get(part, ())))
+        for part in PackagePart
     }
 
-    return {f.stem: package_map.get(f) for f in rule_pack_files}
+
+def id_to_mkp(
+    installer: Installer,
+    rule_pack_files: Iterable[Path],
+    package_part: PackagePart,
+) -> dict[str, PackageName | None]:
+    """
+    Returns a dictionary of ID to MKP package for a given manifest.
+    Every ID is contained exactly once in this mapping. If no corresponding
+    MKP exists, the value of that mapping is None.
+    """
+    package_map = installer.get_packaged_files()[package_part]
+    return {
+        f.stem: package_id.name
+        for f in rule_pack_files
+        if (package_id := package_map.get(f)) is not None
+    }
 
 
-def update_active_packages(installer: Installer, path_config: PathConfig) -> None:
+def update_active_packages(
+    installer: Installer,
+    path_config: PathConfig,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
+    site_version: str,
+) -> None:
     """Update which of the enabled packages are actually active (installed)"""
-    package_store = PackageStore()
+    package_store = PackageStore(
+        shipped_dir=path_config.packages_shipped_dir,
+        local_dir=path_config.packages_local_dir,
+        enabled_dir=path_config.packages_enabled_dir,
+    )
     _deinstall_inapplicable_active_packages(
-        installer, path_config, post_package_change_actions=False
+        installer,
+        path_config,
+        callbacks,
+        post_package_change_actions=False,
+        site_version=site_version,
     )
     _install_applicable_inactive_packages(
-        package_store, installer, path_config, post_package_change_actions=False
+        package_store,
+        installer,
+        path_config,
+        callbacks,
+        post_package_change_actions=False,
+        site_version=site_version,
     )
     _execute_post_package_change_actions(None)
 
@@ -636,8 +637,10 @@ def update_active_packages(installer: Installer, path_config: PathConfig) -> Non
 def _deinstall_inapplicable_active_packages(
     installer: Installer,
     path_config: PathConfig,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
     post_package_change_actions: bool,
+    site_version: str,
 ) -> None:
     for manifest in installer.get_installed_manifests():
         try:
@@ -646,14 +649,15 @@ def _deinstall_inapplicable_active_packages(
                 path_config,
                 manifest,
                 manifest,
-                cmk_version.__version__,
+                site_version,
                 allow_outdated=False,
             )
-        except PackageException as exc:
+        except PackageError as exc:
             _logger.info("[%s %s]: Uninstalling: %s", manifest.name, manifest.version, exc)
             uninstall(
                 installer,
                 path_config,
+                callbacks,
                 manifest,
                 post_package_change_actions=post_package_change_actions,
             )
@@ -665,10 +669,12 @@ def _install_applicable_inactive_packages(
     package_store: PackageStore,
     installer: Installer,
     path_config: PathConfig,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
     post_package_change_actions: bool,
+    site_version: str,
 ) -> None:
-    for name, manifests in _sort_enabled_packages_for_installation():
+    for name, manifests in _sort_enabled_packages_for_installation(package_store):
         for manifest in manifests:
             try:
                 install(
@@ -676,10 +682,12 @@ def _install_applicable_inactive_packages(
                     package_store,
                     manifest.id,
                     path_config,
+                    callbacks,
                     allow_outdated=False,
                     post_package_change_actions=post_package_change_actions,
+                    site_version=site_version,
                 )
-            except PackageException as exc:
+            except PackageError as exc:
                 _logger.info("[%s %s]: Not installed: %s", name, manifest.version, exc)
             else:
                 _logger.info("[%s %s]: Installed", name, manifest.version)
@@ -689,11 +697,15 @@ def _install_applicable_inactive_packages(
                 break
 
 
-def _sort_enabled_packages_for_installation() -> Iterable[tuple[PackageName, Iterable[Manifest]]]:
+def _sort_enabled_packages_for_installation(
+    package_store: PackageStore,
+) -> Iterable[tuple[PackageName, Iterable[Manifest]]]:
     return groupby(
         sorted(
             sorted(
-                get_enabled_manifests().values(), key=lambda m: m.version.sort_key, reverse=True
+                package_store.get_enabled_manifests().values(),
+                key=lambda m: m.version.sort_key,
+                reverse=True,
             ),
             key=lambda m: m.name,
         ),
@@ -701,7 +713,14 @@ def _sort_enabled_packages_for_installation() -> Iterable[tuple[PackageName, Ite
     )
 
 
-def disable_outdated(installer: Installer, path_config: PathConfig) -> None:
+def disable_outdated(
+    installer: Installer,
+    package_store: PackageStore,
+    path_config: PathConfig,
+    callbacks: Mapping[PackagePart, PackageOperationCallbacks],
+    *,
+    site_version: str,
+) -> None:
     """Check installed packages and disables the outdated ones
 
     Packages that contain a valid version number in the "version.usable_until" field can be disabled
@@ -709,50 +728,30 @@ def disable_outdated(installer: Installer, path_config: PathConfig) -> None:
     """
     for manifest in installer.get_installed_manifests():
         try:
-            _raise_for_too_new_cmk_version(manifest.version_usable_until, cmk_version.__version__)
-        except PackageException as exc:
+            _raise_for_too_new_cmk_version(manifest.version_usable_until, site_version)
+        except PackageError as exc:
             _logger.info(
                 "[%s %s]: Disabling: %s",
                 manifest.name,
                 manifest.version,
                 exc,
             )
-            disable(installer, path_config, manifest.name, manifest.version)
+            disable(installer, package_store, path_config, callbacks, manifest.id)
         else:
             _logger.info("[%s %s]: Not disabling", manifest.name, manifest.version)
 
 
 def _execute_post_package_change_actions(package: Manifest | None) -> None:
-    _build_setup_search_index_background()
-
     if package is None or _package_contains_gui_files(package):
+        _invalidate_visuals_cache()
         _reload_apache()
+    request_index_rebuild()
 
 
-def _build_setup_search_index_background() -> None:
-    # Only trigger an index update if redis is running.
-    #
-    # This is mainly important in the context of 01_mkp-disable-outdated: Without the check if redis
-    # is up, `mkp update-active` would attempt to trigger an update of the search index in a
-    # background job. This involves deserializing a status file which was written during the
-    # previous execution. In 2.2, the format of this file changed, which makes the deserialization
-    # fail (CMK-12128). We have an update action which takes care of this, however,
-    # cmk-update-config is called after mkp-disable-outdated, which is too late.
-    #
-    # Note that calling init-redis when redis is not running does not cause an error on the command
-    # line. However, the background job would fail, which is shown in the background jobs page.
-    if not subprocess.run(
-        [
-            cmk.utils.paths.omd_root / "etc/init.d/redis",
-            "status",
-        ],
-        check=False,
-        capture_output=True,
-    ).returncode:
-        subprocess.run(
-            ["init-redis"],
-            check=False,
-        )
+def _invalidate_visuals_cache():
+    """Invalidate visuals cache to use the current data"""
+    for file in cmk.utils.paths.visuals_cache_dir.glob("last*"):
+        file.unlink(missing_ok=True)
 
 
 def _package_contains_gui_files(package: Manifest) -> bool:
@@ -761,10 +760,11 @@ def _package_contains_gui_files(package: Manifest) -> bool:
 
 def _reload_apache() -> None:
     try:
-        subprocess.run(
-            ["omd", "reload", "apache"],
-            capture_output=True,
-            check=True,
-        )
+        subprocess.run(["omd", "status", "apache"], capture_output=True, check=True)
+    except subprocess.CalledProcessError:
+        return
+
+    try:
+        subprocess.run(["omd", "reload", "apache"], capture_output=True, check=True)
     except subprocess.CalledProcessError:
         _logger.error("Error reloading apache", exc_info=True)

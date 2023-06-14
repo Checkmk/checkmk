@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
+from pytest_mock import MockerFixture
 
 from cmk.utils.rulesets.ruleset_matcher import TagConditionNE
-from cmk.utils.tags import TagConfig, TaggroupID, TagID
+from cmk.utils.tags import TagConfig, TagGroupID, TagID
+from cmk.utils.type_defs import HostOrServiceConditions
 
 from cmk.gui.utils.html import HTML
-from cmk.gui.wato.pages.rulesets import _get_groups, active_config, Rule, RuleConditionRenderer
-from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, Host
-from cmk.gui.watolib.rulesets import Ruleset
+from cmk.gui.wato.pages.rulesets import active_config, RuleConditionRenderer
+from cmk.gui.watolib.hosts_and_folders import FolderLookupCache, Host
 
 
 @pytest.fixture(name="tag_config")
@@ -22,54 +24,54 @@ def fixture_tag_config():
         {
             "aux_tags": [
                 {
-                    "id": "aux_tag_1",
+                    "id": TagID("aux_tag_1"),
                     "topic": "Auxiliary tags",
                     "title": "Auxiliary tag 1",
                 }
             ],
             "tag_groups": [
                 {
-                    "id": "tag_grp_1",
+                    "id": TagGroupID("tag_grp_1"),
                     "topic": "Topic 1",
                     "title": "Tag group 1",
                     "tags": [
                         {
                             "aux_tags": [],
-                            "id": "grp_1_tg_1",
+                            "id": TagID("grp_1_tg_1"),
                             "title": "Tag 1.1",
                         },
                         {
                             "aux_tags": [],
-                            "id": "grp_1_tg_2",
+                            "id": TagID("grp_1_tg_2"),
                             "title": "Tag 1.2",
                         },
                     ],
                 },
                 {
-                    "id": "tag_grp_2",
+                    "id": TagGroupID("tag_grp_2"),
                     "topic": "Topic 2",
                     "title": "Tag group 2",
                     "tags": [
                         {
                             "aux_tags": [],
-                            "id": "grp_2_tg_1",
+                            "id": TagID("grp_2_tg_1"),
                             "title": "Tag 2.1",
                         },
                         {
                             "aux_tags": [],
-                            "id": "grp_2_tg_2",
+                            "id": TagID("grp_2_tg_2"),
                             "title": "Tag 2.2",
                         },
                     ],
                 },
                 {
-                    "id": "tag_grp_3",
+                    "id": TagGroupID("tag_grp_3"),
                     "topic": "Topic 3",
                     "title": "Tag group 3",
                     "tags": [
                         {
                             "aux_tags": [],
-                            "id": "grp_3_tg_1",
+                            "id": TagID("grp_3_tg_1"),
                             "title": "Tag 3.1",
                         },
                     ],
@@ -81,22 +83,18 @@ def fixture_tag_config():
 
 
 @pytest.fixture(autouse=True)
-def patch_tag_config(  # type:ignore[no-untyped-def]
-    request_context,
-    monkeypatch: MonkeyPatch,
-    tag_config: TagConfig,
-) -> None:
-    monkeypatch.setattr(
-        active_config,
-        "tags",
-        tag_config,
-    )
+def patch_tag_config(
+    request_context: None, monkeypatch: MonkeyPatch, tag_config: TagConfig
+) -> Iterable[None]:
+    with monkeypatch.context() as m:
+        m.setattr(active_config, "tags", tag_config)
+        yield
 
 
 @pytest.fixture(name="folder_lookup")
-def fixture_folder_lookup(mocker):
+def fixture_folder_lookup(mocker: MockerFixture) -> None:
     folder_cache = {"cached_host": "cached_host_value"}
-    mocker.patch.object(Folder, "get_folder_lookup_cache", return_value=folder_cache)
+    mocker.patch.object(FolderLookupCache, "get_cache", return_value=folder_cache)
 
     class MockHost:
         def edit_url(self):
@@ -149,7 +147,7 @@ class TestRuleConditionRenderer:
     )
     def test_single_tag_condition(
         self,
-        taggroup_id: TaggroupID,
+        taggroup_id: TagGroupID,
         tag_spec: TagID | None | TagConditionNE,
         rendered_condition: HTML,
     ) -> None:
@@ -165,20 +163,20 @@ class TestRuleConditionRenderer:
         assert list(
             RuleConditionRenderer()._tag_conditions(
                 {
-                    "tag_grp_1": {
+                    TagGroupID("tag_grp_1"): {
                         "$or": [
-                            "grp_1_tg_1",
-                            "grp_1_tg_2",
+                            TagID("grp_1_tg_1"),
+                            TagID("grp_1_tg_2"),
                         ]
                     },
-                    "tag_grp_2": {
+                    TagGroupID("tag_grp_2"): {
                         "$nor": [
-                            "grp_2_tg_1",
-                            "grp_2_tg_2",
+                            TagID("grp_2_tg_1"),
+                            TagID("grp_2_tg_2"),
                         ]
                     },
-                    "tag_grp_3": "grp_3_tg_1",
-                    "aux_tag_1": {"$ne": "aux_tag_1"},
+                    TagGroupID("tag_grp_3"): TagID("grp_3_tg_1"),
+                    TagGroupID("aux_tag_1"): {"$ne": TagID("aux_tag_1")},
                 }
             )
         ) == [
@@ -273,8 +271,9 @@ class TestRuleConditionRenderer:
             ),
         ],
     )
-    def test_render_host_condition_text(  # type:ignore[no-untyped-def]
-        self, folder_lookup, conditions, expected
+    @pytest.mark.usefixtures("folder_lookup")
+    def test_render_host_condition_text(
+        self, conditions: HostOrServiceConditions, expected: str
     ) -> None:
         assert RuleConditionRenderer()._render_host_condition_text(conditions) == HTML(expected)
 
@@ -298,8 +297,9 @@ class TestRuleConditionRenderer:
             ),
         ],
     )
-    def test_render_host_condition_text_raises(  # type:ignore[no-untyped-def]
-        self, folder_lookup, conditions, exception
+    @pytest.mark.usefixtures("folder_lookup")
+    def test_render_host_condition_text_raises(
+        self, conditions: HostOrServiceConditions, exception: type[Exception]
     ) -> None:
         with pytest.raises(exception):
             assert RuleConditionRenderer()._render_host_condition_text(conditions)
@@ -411,59 +411,14 @@ class TestRuleConditionRenderer:
             ),
         ],
     )
-    def test_service_conditions(  # type:ignore[no-untyped-def]
-        self, item_type, item_name, conditions, expected
+    def test_service_conditions(
+        self,
+        item_type: str | None,
+        item_name: str | None,
+        conditions: HostOrServiceConditions | None,
+        expected: list[HTML],
     ) -> None:
         assert (
             list(RuleConditionRenderer()._service_conditions(item_type, item_name, conditions))
             == expected
         )
-
-
-def test_get_groups() -> None:
-    """Test sort order of rules"""
-    expected_folder_order: list[CREFolder] = [
-        Folder("folder2/folder2/folder2", "folder2"),
-        Folder("folder2/folder2/folder1", "folder1"),
-        Folder("folder2/folder2", "folder2"),
-        Folder("folder2/folder1/folder2", "folder2"),
-        Folder("folder2/folder1/folder1", "folder1"),
-        Folder("folder2/folder1", "folder1"),
-        Folder("folder2", "folder2"),
-        Folder("folder1/folder2/folder2", "folder2"),
-        Folder("folder1/folder2/folder1", "folder1"),
-        Folder("folder1/folder2", "folder2"),
-        Folder("folder1/folder1/folder2", "folder2"),
-        Folder("folder1/folder1/folder1", "folder1"),
-        Folder("folder1/folder1", "folder1"),
-        Folder("folder1", "folder1"),
-        Folder("folder4", "abc"),
-        Folder("", "Main"),
-    ]
-
-    root: CREFolder = Folder.root_folder()
-    ruleset: Ruleset = Ruleset("only_hosts", {"TAG1": "TG1"})
-    rules: list[tuple[CREFolder, int, Rule]] = [
-        (root, 0, Rule.from_ruleset_defaults(root, ruleset))
-    ]
-
-    for nr in range(1, 3):
-        folder = Folder("folder%d" % nr, parent_folder=root)
-        rules.append((folder, 0, Rule.from_ruleset_defaults(folder, ruleset)))
-        for x in range(1, 3):
-            subfolder = Folder("folder%d" % x, parent_folder=folder)
-            rules.append((subfolder, 0, Rule.from_ruleset_defaults(folder, ruleset)))
-            for y in range(1, 3):
-                sub_subfolder = Folder("folder%d" % y, parent_folder=subfolder)
-                rules.append((sub_subfolder, 0, Rule.from_ruleset_defaults(folder, ruleset)))
-
-    # Also test renamed folder
-    folder4 = Folder("folder4", parent_folder=root)
-    folder4._title = "abc"  # pylint: disable=protected-access
-    rules.append((folder4, 0, Rule.from_ruleset_defaults(folder4, ruleset)))
-
-    sorted_rules = sorted(
-        rules, key=lambda x: (x[0].path().split("/"), len(rules) - x[1]), reverse=True
-    )
-
-    assert list(rule[0] for rule in _get_groups(sorted_rules, root)) == expected_folder_order

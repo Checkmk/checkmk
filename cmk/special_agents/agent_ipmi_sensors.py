@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
@@ -10,11 +10,29 @@ import os
 import subprocess
 import sys
 from argparse import _SubParsersAction
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Sequence
+from dataclasses import dataclass
 from itertools import chain
+from typing import Literal
 
 from cmk.special_agents.utils.agent_common import special_agent_main
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
+
+
+@dataclass(frozen=True)
+class Query:
+    section_name: Literal["ipmi", "ipmi_discrete", "ipmi_sensors"]
+    types: tuple[str, ...]
+    excludes: tuple[str, ...]
+
+
+QUERIES_IPMITOOL: Iterable[Query] = (
+    Query("ipmi", types=("sensor", "list"), excludes=("command failed", "discrete")),
+    Query("ipmi_discrete", types=("sdr", "elist", "compact"), excludes=()),
+)
+
+
+QUERIES_FREEIPMI: Iterable[Query] = (Query("ipmi_sensors", types=(), excludes=()),)
 
 
 def _add_freeipmi_args(subparsers: _SubParsersAction) -> None:
@@ -170,22 +188,19 @@ def _freeipmi_additional_args(
 
 def _prepare_freeipmi_call(
     args: Args,
-) -> tuple[Sequence[str], Mapping[str, tuple[Iterable[str], Iterable[str]]]]:
-    return (
-        [
-            "ipmi-sensors",
-            "-h",
-            args.host,
-            "-u",
-            args.user,
-            "-p",
-            args.password,
-            "-l",
-            args.privilege_lvl,
-            *_freeipmi_additional_args(args),
-        ],
-        {"_sensors": ([], [])},
-    )
+) -> Sequence[str]:
+    return [
+        "ipmi-sensors",
+        "-h",
+        args.host,
+        "-u",
+        args.user,
+        "-p",
+        args.password,
+        "-l",
+        args.privilege_lvl,
+        *_freeipmi_additional_args(args),
+    ]
 
 
 def _ipmitool_additional_args(
@@ -198,71 +213,57 @@ def _ipmitool_additional_args(
 
 def _prepare_ipmitool_call(
     args: Args,
-) -> tuple[Sequence[str], Mapping[str, tuple[Iterable[str], Iterable[str]]]]:
-    return (
-        [
-            "ipmitool",
-            "-H",
-            args.host,
-            "-U",
-            args.user,
-            "-P",
-            args.password,
-            "-L",
-            args.privilege_lvl,
-            *_ipmitool_additional_args(args),
-        ],
-        {
-            "": (
-                ["sensor", "list"],
-                ["command failed", "discrete"],
-            ),
-            "_discrete": (
-                ["sdr", "elist", "compact"],
-                [],
-            ),
-        },
-    )
+) -> Sequence[str]:
+    return [
+        "ipmitool",
+        "-H",
+        args.host,
+        "-U",
+        args.user,
+        "-P",
+        args.password,
+        "-L",
+        args.privilege_lvl,
+        *_ipmitool_additional_args(args),
+    ]
 
 
-def parse_data(
-    data: Iterable[str],
+def _filter_output(
+    data: str,
     excludes: Iterable[str],
-) -> None:
-    for line in data:
-        if line.startswith("ID"):
-            continue
-        if excludes:
-            has_excludes = False
-            for exclude in excludes:
-                if exclude in line:
-                    has_excludes = True
-                    break
-            if not has_excludes:
-                sys.stdout.write("%s\n" % line)
-        else:
-            sys.stdout.write("%s\n" % line)
+) -> Iterable[str]:
+    return [
+        f"{line}\n"
+        for line in data.splitlines()
+        if not line.startswith("ID") and not any(e in line for e in excludes)
+    ]
 
 
 def _main(args: Args) -> int:
     os.environ["PATH"] = "/usr/local/sbin:/usr/sbin:/sbin:" + os.environ["PATH"]
 
-    ipmi_cmd, queries = {"freeipmi": _prepare_freeipmi_call, "ipmitool": _prepare_ipmitool_call,}[
-        args.ipmi_cmd
-    ](args)
+    match args.ipmi_cmd:
+        case "freeipmi":
+            ipmi_call = _prepare_freeipmi_call(args)
+            queries = QUERIES_FREEIPMI
+        case "ipmitool":
+            ipmi_call = _prepare_ipmitool_call(args)
+            queries = QUERIES_IPMITOOL
+        case unknown:
+            raise NotImplementedError(f"No such command: {unknown}")
 
     if args.debug:
-        sys.stderr.write("Executing: '%s'\n" % subprocess.list2cmdline(ipmi_cmd))
+        sys.stderr.write("Executing: '%s'\n" % subprocess.list2cmdline(ipmi_call))
 
     errors = []
-    for section, (types, excludes) in queries.items():
-        sys.stdout.write("<<<ipmi%s:sep(124)>>>\n" % section)
+    for query in queries:
+        sys.stdout.write(f"<<<{query.section_name}:sep(124)>>>\n")
         try:
             try:
                 completed_process = subprocess.run(
                     [
-                        *ipmi_cmd,
-                        *types,
+                        *ipmi_call,
+                        *query.types,
                     ],
                     close_fds=True,
                     stdin=subprocess.DEVNULL,
@@ -278,7 +279,9 @@ def _main(args: Args) -> int:
 
             if completed_process.stderr:
                 errors.append(completed_process.stderr)
-            parse_data(completed_process.stdout.splitlines(), excludes)
+
+            sys.stdout.writelines(_filter_output(completed_process.stdout, query.excludes))
+
         except Exception as e:
             errors.append(str(e))
 

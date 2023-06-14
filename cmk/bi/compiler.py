@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import annotations
 
+import ast
+import os
 import pickle
 import time
 from pathlib import Path
@@ -24,7 +26,8 @@ from cmk.bi.data_fetcher import BIStructureFetcher, get_cache_dir, SiteProgramSt
 from cmk.bi.lib import SitesCallback
 from cmk.bi.packs import BIAggregationPacks
 from cmk.bi.searcher import BISearcher
-from cmk.bi.trees import BICompiledAggregation
+from cmk.bi.trees import BICompiledAggregation, BICompiledRule, FrozenBIInfo
+from cmk.bi.type_defs import frozen_aggregations_dir
 
 
 class ConfigStatus(TypedDict):
@@ -57,6 +60,15 @@ class BICompiler:
     def compiled_aggregations(self) -> dict[str, BICompiledAggregation]:
         return self._compiled_aggregations
 
+    def get_aggregation_by_name(
+        self, aggr_name: str
+    ) -> tuple[BICompiledAggregation, BICompiledRule] | None:
+        for _name, compiled_aggregation in self._compiled_aggregations.items():
+            for branch in compiled_aggregation.branches:
+                if branch.properties.title == aggr_name:
+                    return compiled_aggregation, branch
+        return None
+
     def cleanup(self) -> None:
         self._compiled_aggregations.clear()
 
@@ -65,6 +77,114 @@ class BICompiler:
             self._check_compilation_status()
         finally:
             self._load_compiled_aggregations()
+
+    def get_frozen_aggr_id(self, frozen_info: FrozenBIInfo) -> str:
+        return f"frozen_{frozen_info.based_on_aggregation_id}_{frozen_info.based_on_branch_title}"
+
+    def _frozen_branch_file(self, branch_name: str) -> Path:
+        return frozen_aggregations_dir / branch_name
+
+    def _frozen_aggr_hint_path(self, aggr_id: str) -> Path:
+        return frozen_aggregations_dir / f"origin_hints_{aggr_id}"
+
+    def _freeze_new_branches(self, compiled_aggregation: BICompiledAggregation) -> bool:
+        new_branch_found = False
+        for branch in list(compiled_aggregation.branches):
+            if self._frozen_branch_file(branch.properties.title).exists():
+                continue
+            new_branch_found = True
+            self.freeze_branch(branch.properties.title)
+        return new_branch_found
+
+    def freeze_branch(self, branch_name: str) -> None:
+        # Creates a frozen aggregation in the frozen_aggregations_dir
+        # And an additional hint-file in an aggregation sub-folder, so that we know
+        # where the frozen aggregation branch initially came from
+
+        result = self.get_aggregation_by_name(aggr_name=branch_name)
+        if not result:
+            raise MKGeneralException("Unknown aggregation %s" % branch_name)
+        aggregation, branch = result
+
+        # Prepare a single frozen configuration specifically for this branch
+        # This includes the aggregation configuration and the frozen branch
+        if frozen_info := aggregation.frozen_info:
+            aggr_id = frozen_info.based_on_aggregation_id
+        else:
+            aggr_id = aggregation.id
+
+        aggr_hint_path = self._frozen_aggr_hint_path(aggr_id)
+        aggr_hint_path.mkdir(exist_ok=True, parents=True)
+        (aggr_hint_path / branch_name).touch()
+
+        original_branches = aggregation.branches
+        original_id = aggregation.id
+        try:
+            aggregation.branches = [branch]
+            aggregation.id = self.get_frozen_aggr_id(FrozenBIInfo(aggr_id, branch_name))
+            store.save_object_to_file(
+                self._frozen_branch_file(branch_name), aggregation.serialize()
+            )
+        finally:
+            aggregation.branches = original_branches
+            aggregation.id = original_id
+
+    def _unfreeze_all_branches(self, aggr_id: str) -> None:
+        aggr_hint_path = self._frozen_aggr_hint_path(aggr_id)
+        if not aggr_hint_path.exists():
+            return
+        for filename in aggr_hint_path.iterdir():
+            filename.unlink(missing_ok=True)
+            branch_file = frozen_aggregations_dir / filename.name
+            branch_file.unlink(missing_ok=True)
+
+        aggr_hint_path.rmdir()
+
+    def _manage_frozen_branches(
+        self, compiled_aggregations: dict[str, BICompiledAggregation]
+    ) -> dict[str, BICompiledAggregation]:
+        updated_aggregations = {}
+
+        frozen_aggregations_dir.mkdir(exist_ok=True)
+        computed_new_frozen_branch = False
+        for aggr_id, compiled_aggregation in compiled_aggregations.items():
+            updated_aggregations[aggr_id] = compiled_aggregation
+            if compiled_aggregation.frozen_info is not None:
+                # Already frozen
+                continue
+
+            if not compiled_aggregation.computation_options.freeze_aggregations:
+                self._unfreeze_all_branches(aggr_id)
+                continue
+
+            computed_new_frozen_branch = (
+                self._freeze_new_branches(compiled_aggregation) or computed_new_frozen_branch
+            )
+            frozen_branch_names = set(os.listdir(frozen_aggregations_dir))
+
+            # Read frozen branches. Each branch gets a separate aggregation ID since
+            # the computation time may differ, which also means possibly changed computation options
+            for branch in list(compiled_aggregation.branches):
+                if branch.properties.title in frozen_branch_names:
+                    frozen_aggregation = BIAggregation.create_trees_from_schema(
+                        ast.literal_eval(
+                            (frozen_aggregations_dir / branch.properties.title).read_text()
+                        )
+                    )
+                    frozen_aggregation.frozen_info = FrozenBIInfo(
+                        compiled_aggregation.id, branch.properties.title
+                    )
+                    updated_aggregations[
+                        self.get_frozen_aggr_id(frozen_aggregation.frozen_info)
+                    ] = frozen_aggregation
+
+            # Remove all branches from the original aggregation, since all of them are now frozen
+            compiled_aggregation.branches = []
+
+        if computed_new_frozen_branch:
+            self._generate_part_of_aggregation_lookup(updated_aggregations)
+
+        return updated_aggregations
 
     def _load_compiled_aggregations(self) -> None:
         for path_object in self._path_compiled_aggregations.iterdir():
@@ -75,8 +195,11 @@ class BICompiler:
                 continue
 
             self._logger.debug("Loading cached aggregation results %s" % aggr_id)
-            aggr_data = self._load_data(path_object)
-            self._compiled_aggregations[aggr_id] = BIAggregation.create_trees_from_schema(aggr_data)
+            self._compiled_aggregations[aggr_id] = BIAggregation.create_trees_from_schema(
+                self._load_data(path_object)
+            )
+
+        self._compiled_aggregations = self._manage_frozen_branches(self._compiled_aggregations)
 
     def _check_compilation_status(self) -> None:
         current_configstatus = self.compute_current_configstatus()
@@ -95,22 +218,25 @@ class BICompiler:
             self.prepare_for_compilation(current_configstatus["online_sites"])
 
             # Compile the raw tree
-            for aggregation in self._bi_packs.get_all_aggregations():
+            all_aggregations_by_id: dict[str, BIAggregation] = {
+                x.id: x for x in self._bi_packs.get_all_aggregations()
+            }
+            for aggregation in all_aggregations_by_id.values():
                 start = time.time()
                 self._compiled_aggregations[aggregation.id] = aggregation.compile(self.bi_searcher)
                 self._logger.debug(f"Compilation of {aggregation.id} took {time.time() - start:f}")
-
             self._verify_aggregation_title_uniqueness(self._compiled_aggregations)
 
-            for aggr_id, aggr in self._compiled_aggregations.items():
+            for aggr_id, compiled_aggr in self._compiled_aggregations.items():
                 start = time.time()
-                result = aggr.serialize()
+                result = compiled_aggr.serialize()
                 self._logger.debug(
                     "Schema dump %s took config took %f (%d branches)"
-                    % (aggr_id, time.time() - start, len(aggr.branches))
+                    % (aggr_id, time.time() - start, len(compiled_aggr.branches))
                 )
                 self._save_data(self._path_compiled_aggregations.joinpath(aggr_id), result)
 
+            self._compiled_aggregations = self._manage_frozen_branches(self._compiled_aggregations)
             self._generate_part_of_aggregation_lookup(self._compiled_aggregations)
 
         known_sites = {kv[0]: kv[1] for kv in current_configstatus.get("known_sites", set())}
@@ -127,6 +253,7 @@ class BICompiler:
                 continue
             if path_object.name not in valid_aggregations:
                 path_object.unlink(missing_ok=True)
+                self._unfreeze_all_branches(path_object.name)
 
     def _verify_aggregation_title_uniqueness(
         self, compiled_aggregations: dict[str, BICompiledAggregation]

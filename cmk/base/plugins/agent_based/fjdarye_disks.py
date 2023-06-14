@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -101,7 +101,6 @@ def discover_fjdarye_disks(section: SectionFjdaryeDisk) -> DiscoveryResult:
 def check_fjdarye_disks(
     item: str, params: Mapping[str, Any], section: SectionFjdaryeDisk
 ) -> CheckResult:
-
     if (fjdarye_disk := section.get(item)) is None:
         return
 
@@ -172,7 +171,6 @@ def _fjdarye_disks_printstates(states: Mapping[str, int]) -> str:
 def check_fjdarye_disks_summary(
     params: Mapping[str, int | bool], section: SectionFjdaryeDisk
 ) -> CheckResult:
-
     current_disk_states = _fjdarye_disks_states_summary(section)
     current_disks_states_text = _fjdarye_disks_printstates(current_disk_states)
 

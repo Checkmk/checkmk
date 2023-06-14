@@ -1,0 +1,18 @@
+Title: mk-job.solaris: do not add artificial metrics
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1681460493
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The mk-job agent plugin for Solaris would add 0 values as placeholders for
+metrics that cannot be retrieved using the /usr/bin/time command. This is
+misleading and incorrect. The affected metrics are: 'reads', 'writes',
+'max_res_kbytes', 'navg_mem_kbytes', 'invol_context_switches', and
+'vol_context_switches'. This has been fixed.
+
+The mk-job.solaris plugin needs to be rolled out to the host in order to apply
+this fix.

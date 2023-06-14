@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,7 +8,9 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import SectionName
+
+from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
@@ -43,10 +45,10 @@ def test_discover_hp_proliant_raid_no_snmp_data(
     check_plugin: CheckPlugin,
     section_plugin: SNMPSectionPlugin,
 ) -> None:
-    assert list(check_plugin.discovery_function({})) == []
+    assert not list(check_plugin.discovery_function({}))
 
 
-def test_discover_hp_proliant_raid_aa(  # type:ignore[no-untyped-def]
+def test_discover_hp_proliant_raid_aa(  # type: ignore[no-untyped-def]
     check_plugin: CheckPlugin,
     section_plugin: SNMPSectionPlugin,
     string_table,
@@ -64,24 +66,21 @@ def test_discover_hp_proliant_raid_aa(  # type:ignore[no-untyped-def]
     ]
 
 
-def test_check_hp_proliant_raid_item_not_found(  # type:ignore[no-untyped-def]
+def test_check_hp_proliant_raid_item_not_found(  # type: ignore[no-untyped-def]
     check_plugin: CheckPlugin,
     section_plugin: SNMPSectionPlugin,
     string_table,
 ) -> None:
-    assert (
-        list(
-            check_plugin.check_function(
-                item="!111elf",
-                params={},
-                section=section_plugin.parse_function(string_table),
-            )
+    assert not list(
+        check_plugin.check_function(
+            item="!111elf",
+            params={},
+            section=section_plugin.parse_function(string_table),
         )
-        == []
     )
 
 
-def test_check_hp_proliant_raid(  # type:ignore[no-untyped-def]
+def test_check_hp_proliant_raid(  # type: ignore[no-untyped-def]
     check_plugin: CheckPlugin,
     section_plugin: SNMPSectionPlugin,
     string_table,

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
-from typing import Any, Type
+from typing import Any
 
 import pytest
 from freezegun import freeze_time
@@ -39,7 +39,7 @@ pytestmark = pytest.mark.checks
         ("some string", int),
     ],
 )
-def test__cast_value(value: str | None, cast_type: Type[float] | Type[int]) -> None:
+def test__cast_value(value: str | None, cast_type: type[float] | type[int]) -> None:
     cast_value = _cast_value(value, cast_type)
     assert cast_value is None
 
@@ -555,8 +555,8 @@ def test_check_fileinfo_groups_data(
         ),
     ],
 )
-def test__fileinfo_check_function(  # type:ignore[no-untyped-def]
-    check_definition, params, expected_result
+def test__fileinfo_check_function(
+    check_definition: list[MetricInfo], params: Mapping[str, object], expected_result: CheckResult
 ) -> None:
     result = list(_fileinfo_check_function(check_definition, params))
     assert result == expected_result
@@ -580,8 +580,8 @@ def test__fileinfo_check_function(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test__fileinfo_check_conjunctions(  # type:ignore[no-untyped-def]
-    check_definition, params, expected_result
+def test__fileinfo_check_conjunctions(
+    check_definition: list[MetricInfo], params: Mapping[str, object], expected_result: CheckResult
 ) -> None:
     result = list(_fileinfo_check_conjunctions(check_definition, params))
     assert result == expected_result

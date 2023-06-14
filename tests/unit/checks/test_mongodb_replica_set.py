@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,7 +12,9 @@ from tests.testlib import on_time
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import SectionName
+
+from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
@@ -43,6 +45,7 @@ def test_discover_mongodb_replica_set(
     assert list(check_plugin.discovery_function(section)) == [Service()]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_mongodb_replica_set(
     check_plugin: CheckPlugin,
     section: Mapping[str, Any],

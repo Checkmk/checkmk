@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 hosts.mk files are currently held as fallback configuration in case the newer pickle formatted data is not valid/available.
 Contact groups configured on a folder level were currently broken for these hosts.mk files.

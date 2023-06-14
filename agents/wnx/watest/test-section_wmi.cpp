@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -101,7 +101,7 @@ TEST_F(WmiWrapperFixture, QueryTableTimeout) {
 
 TEST_F(WmiWrapperFixture, TablePostProcess) {
     auto [result, status] = wmi.queryTable(
-        {}, L"Win32_Process", L",", cma::cfg::groups::global.getWmiTimeout());
+        {}, L"Win32_Process", L",", cma::cfg::groups::g_global.getWmiTimeout());
     ASSERT_TRUE(!result.empty());
     EXPECT_EQ(status, WmiStatus::ok);
     EXPECT_TRUE(result.back() == L'\n');
@@ -151,7 +151,7 @@ TEST_F(WmiWrapperFixture, TablePostProcess) {
 
 TEST_F(WmiWrapperFixture, Table) {
     auto [result, status] = wmi.queryTable(
-        {}, L"Win32_Process", L",", cma::cfg::groups::global.getWmiTimeout());
+        {}, L"Win32_Process", L",", cma::cfg::groups::g_global.getWmiTimeout());
     ASSERT_TRUE(!result.empty());
     EXPECT_EQ(status, WmiStatus::ok);
     EXPECT_TRUE(result.back() == L'\n');
@@ -172,8 +172,6 @@ TEST_F(WmiWrapperFixture, Table) {
 namespace cma::provider {
 
 TEST(WmiProviderTest, WmiBadName) {  //
-    cma::OnStart(cma::AppType::test);
-
     Wmi badname("badname", wmi::kSepChar);
     EXPECT_EQ(badname.object(), L"");
     EXPECT_EQ(badname.nameSpace(), L"");
@@ -192,7 +190,7 @@ TEST(WmiProviderTest, OhmCtor) {
     EXPECT_EQ(ohm.columns().size(), 5);
 }
 
-TEST(WmiProviderTest, OhmIntegration) {
+TEST(WmiProviderTest, OhmComponent) {
     auto temp_fs{tst::TempCfgFs::Create()};
     ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
     Wmi ohm(kOhm, ohm::kSepChar);
@@ -204,19 +202,16 @@ TEST(WmiProviderTest, OhmIntegration) {
 }
 
 TEST(WmiProviderTest, WmiConfiguration) {
-    {
-        EXPECT_TRUE(IsHeaderless(kMsExch));
-        EXPECT_FALSE(IsHeaderless(kWmiCpuLoad));
-        EXPECT_FALSE(IsHeaderless("xdf"));
-    }
-    {
-        auto type = GetSubSectionType(kMsExch);
-        EXPECT_TRUE(type == SubSection::Type::full);
-        type = GetSubSectionType(kWmiCpuLoad);
-        EXPECT_TRUE(type == SubSection::Type::sub);
-        type = GetSubSectionType("xdf");
-        EXPECT_TRUE(type == SubSection::Type::sub);
-    }
+    EXPECT_TRUE(IsHeaderless(kMsExch));
+    EXPECT_FALSE(IsHeaderless(kWmiCpuLoad));
+    EXPECT_FALSE(IsHeaderless("xdf"));
+
+    auto type = GetSubSectionType(kMsExch);
+    EXPECT_TRUE(type == SubSection::Type::full);
+    type = GetSubSectionType(kWmiCpuLoad);
+    EXPECT_TRUE(type == SubSection::Type::sub);
+    type = GetSubSectionType("xdf");
+    EXPECT_TRUE(type == SubSection::Type::sub);
 }
 
 constexpr std::array exch_names = {kMsExchActiveSync,     //
@@ -228,7 +223,7 @@ constexpr std::array exch_names = {kMsExchActiveSync,     //
                                    kMsExchRpcClientAccess};
 constexpr size_t exch_count{exch_names.size()};
 
-TEST(WmiProviderTest, WmiSubSection_Integration) {
+TEST(WmiProviderTest, WmiSubSection_Component) {
     for (auto n : exch_names) {
         SubSection ss(n, SubSection::Type::full);
         auto ret = ss.generateContent(SubSection::Mode::standard);
@@ -261,7 +256,7 @@ TEST(WmiProviderTest, WmiSubSection_Integration) {
               std::string{"["} + std::string{kSubSectionSystemPerf} + "]");
 }
 
-TEST(WmiProviderTest, SubSectionMsExchIntegration) {
+TEST(WmiProviderTest, SubSectionMsExchComponent) {
     auto temp_fs = tst::TempCfgFs::CreateNoIo();
     EXPECT_TRUE(
         temp_fs->loadContent("global:\n"
@@ -283,7 +278,7 @@ TEST(WmiProviderTest, SubSectionMsExchIntegration) {
     }
 }
 
-TEST(WmiProviderTest, SimulationIntegration) {
+TEST(WmiProviderTest, SimulationComponent) {
     auto temp_fs = tst::TempCfgFs::CreateNoIo();
     EXPECT_TRUE(
         temp_fs->loadContent("global:\n"
@@ -444,7 +439,7 @@ TEST(WmiProviderTest, WmiWebServicesDefaults) {
     EXPECT_TRUE(wmi_web.isAllowedByTime());
 }
 
-TEST(WmiProviderTest, WmiWebServicesIntegration) {
+TEST(WmiProviderTest, WmiWebServicesComponent) {
     Wmi wmi_web(kWmiWebservices, wmi::kSepChar);
     auto body = wmi_web.generateContent();
 
@@ -457,7 +452,7 @@ TEST(WmiProviderTest, WmiWebServicesIntegration) {
 
 static const std::string section_name{cma::section::kUseEmbeddedName};
 #define FNAME_USE "x.xxx"
-TEST(WmiProviderTest, WmiDotnet_Integration) {
+TEST(WmiProviderTest, WmiDotnet_Component) {
     using namespace cma::section;
     using namespace cma::provider;
 
@@ -613,7 +608,7 @@ TEST_F(WmiProviderTestFixture, WmiMsExch) {
               cma::section::MakeHeader(kMsExch, wmi::kSepChar));
 }
 
-TEST_F(WmiProviderTestFixture, WmiWebServicesAbsentIntegration) {
+TEST_F(WmiProviderTestFixture, WmiWebServicesAbsentComponent) {
     if (wtools::GetServiceStatus(web_services_service) != 0) {
         GTEST_SKIP() << fmt::format(L"'{}' is presented", web_services_service);
     }
@@ -624,7 +619,7 @@ TEST_F(WmiProviderTestFixture, WmiWebServicesAbsentIntegration) {
     ASSERT_TRUE(table.empty());
 }
 
-TEST_F(WmiProviderTestFixture, WmiWebServicesPresentedIntegration) {
+TEST_F(WmiProviderTestFixture, WmiWebServicesPresentedComponent) {
     if (wtools::GetServiceStatus(web_services_service) == 0) {
         GTEST_SKIP() << fmt::format(L"'{}' is absent", web_services_service);
     }

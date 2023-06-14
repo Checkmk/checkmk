@@ -1,17 +1,21 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
 import os
 import sys
-from collections.abc import Callable, Container, Mapping, Sequence
+import time
+from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from contextlib import suppress
 from functools import partial
 from pathlib import Path
-from typing import Final, Literal, overload, Protocol, TypedDict, TypeVar, Union
+from typing import Final, Literal, NamedTuple, overload, Protocol, TypedDict, TypeVar, Union
 
+import livestatus
+
+import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.paths
@@ -30,17 +34,23 @@ from cmk.utils.diagnostics import (
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
 )
-from cmk.utils.exceptions import MKBailOut, MKGeneralException, OnError
-from cmk.utils.log import console
+from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
+from cmk.utils.log import console, section
+from cmk.utils.structured_data import (
+    ImmutableTree,
+    load_tree,
+    MutableTree,
+    RawIntervalsFromConfig,
+    TreeOrArchiveStore,
+    UpdateResult,
+)
 from cmk.utils.tags import TagID
+from cmk.utils.timeout import Timeout
 from cmk.utils.type_defs import (
-    CheckPluginName,
     EVERYTHING,
     HostAddress,
     HostgroupName,
     HostName,
-    HWSWInventoryParameters,
-    InventoryPluginName,
     SectionName,
     ServiceState,
 )
@@ -52,14 +62,24 @@ from cmk.fetchers import FetcherType, get_raw_data
 from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers.filecache import FileCacheOptions
 
-from cmk.checkers import parse_raw_data
-from cmk.checkers.error_handling import CheckResultErrorHandler
-from cmk.checkers.submitters import get_submitter, Submitter
-from cmk.checkers.summarize import summarize
-from cmk.checkers.type_defs import NO_SELECTION, SectionNameCollection
+import cmk.checkengine.inventory as inventory
+from cmk.checkengine import (
+    FetcherFunction,
+    parse_raw_data,
+    ParserFunction,
+    SectionPlugin,
+    SourceType,
+    SummarizerFunction,
+)
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checkresults import ActiveCheckResult
+from cmk.checkengine.error_handling import CheckResultErrorHandler
+from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin, InventoryPluginName
+from cmk.checkengine.submitters import get_submitter, Submitter
+from cmk.checkengine.summarize import summarize
+from cmk.checkengine.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.agent_based.discovery as discovery
-import cmk.base.agent_based.inventory as inventory
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
 import cmk.base.core
@@ -71,17 +91,19 @@ import cmk.base.obsolete_output as out
 import cmk.base.parent_scan
 import cmk.base.profiling as profiling
 import cmk.base.sources as sources
-from cmk.base.agent_based.confcheckers import (
+from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
+from cmk.base.checkers import (
     CheckPluginMapper,
-    ConfiguredFetcher,
-    ConfiguredParser,
-    ConfiguredSummarizer,
+    CMKFetcher,
+    CMKParser,
+    CMKSummarizer,
+    DiscoveryPluginMapper,
+    HostLabelPluginMapper,
     InventoryPluginMapper,
     SectionPluginMapper,
 )
-from cmk.base.agent_based.inventory import execute_active_check_inventory
-from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
-from cmk.base.core_factory import create_core
+from cmk.base.config import ConfigCache
+from cmk.base.core_factory import create_core, get_licensing_handler_type
 from cmk.base.modes import keepalive_option, Mode, modes, Option
 from cmk.base.sources import make_parser
 
@@ -150,7 +172,7 @@ modes.register_general_option(
 )
 
 
-def option_fake_dns(a: str) -> None:
+def option_fake_dns(a: HostAddress) -> None:
     ip_lookup.enforce_fake_dns(a)
 
 
@@ -188,14 +210,16 @@ modes.register_general_option(
 # .
 
 
-def _handle_fetcher_options(options: Mapping[str, object]) -> FileCacheOptions:
-    file_cache_options = FileCacheOptions()
+def _handle_fetcher_options(
+    options: Mapping[str, object], *, defaults: FileCacheOptions | None = None
+) -> FileCacheOptions:
+    file_cache_options = defaults or FileCacheOptions()
 
     if options.get("cache", False):
-        file_cache_options = file_cache_options._replace(use_outdated=True)
+        file_cache_options = file_cache_options._replace(disabled=False, use_outdated=True)
 
     if options.get("no-cache", False):
-        file_cache_options = file_cache_options._replace(disabled=True)
+        file_cache_options = file_cache_options._replace(disabled=True, use_outdated=False)
 
     if options.get("no-tcp", False):
         file_cache_options = file_cache_options._replace(tcp_use_only_cache=True)
@@ -210,7 +234,7 @@ def _handle_fetcher_options(options: Mapping[str, object]) -> FileCacheOptions:
 _FETCHER_OPTIONS: Final = [
     Option(
         long_option="cache",
-        short_help="Read info from data source cache files when existant, even when it "
+        short_help="Read info from data source cache files when existent, even when it "
         "is outdated. Only contact the data sources when the cache file "
         "is absent",
     ),
@@ -313,13 +337,13 @@ modes.register(
 
 
 def mode_list_tag(args: list[str]) -> None:
-    hosts = _list_all_hosts_with_tags(args)
+    hosts = _list_all_hosts_with_tags(tuple(TagID(_) for _ in args))
     out.output("\n".join(sorted(hosts)))
     if hosts:
         out.output("\n")
 
 
-def _list_all_hosts_with_tags(tags: list[TagID]) -> list[HostName]:
+def _list_all_hosts_with_tags(tags: Sequence[TagID]) -> Sequence[HostName]:
     config_cache = config.get_config_cache()
     hosts = []
 
@@ -400,7 +424,6 @@ def _get_check_plugin_title(
     check_plugin_name: str,
     all_man_pages: dict[str, str],
 ) -> str:
-
     man_filename = all_man_pages.get(check_plugin_name)
     if man_filename is None:
         return "(no man page present)"
@@ -436,6 +459,7 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
     file_cache_options = _handle_fetcher_options(options)
     try:
         config_cache = config.get_config_cache()
+        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
         if config_cache.is_cluster(hostname):
             raise MKBailOut("Can not be used with cluster hosts")
 
@@ -444,22 +468,31 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
         output = []
         # Show errors of problematic data sources
         has_errors = False
-        for source, file_cache, fetcher in sources.make_sources(
+        for source in sources.make_sources(
             hostname,
             ipaddress,
+            ConfigCache.address_family(hostname),
             config_cache=config_cache,
             simulation_mode=config.simulation_mode,
             file_cache_options=file_cache_options,
             file_cache_max_age=config.max_cachefile_age(),
         ):
-            if source.fetcher_type is FetcherType.SNMP:
+            source_info = source.source_info()
+            if source_info.fetcher_type is FetcherType.SNMP:
                 continue
 
-            raw_data = get_raw_data(file_cache, fetcher, FetchMode.CHECKING)
+            raw_data = get_raw_data(
+                source.file_cache(
+                    simulation=config.simulation_mode,
+                    file_cache_options=file_cache_options,
+                ),
+                source.fetcher(),
+                FetchMode.CHECKING,
+            )
             host_sections = parse_raw_data(
                 make_parser(
                     config_cache,
-                    source,
+                    source_info,
                     checking_sections=config_cache.make_checking_sections(
                         hostname, selected_sections=NO_SELECTION
                     ),
@@ -470,20 +503,20 @@ def mode_dump_agent(options: Mapping[str, Literal[True]], hostname: HostName) ->
                 selection=NO_SELECTION,
             )
             source_results = summarize(
-                source.hostname,
-                source.ipaddress,
+                hostname,
+                ipaddress,
                 host_sections,
-                exit_spec=config_cache.exit_code_spec(source.hostname, source.ident),
+                exit_spec=config_cache.exit_code_spec(hostname, source_info.ident),
                 time_settings=config.get_config_cache().get_piggybacked_hosts_time_settings(
                     piggybacked_hostname=hostname,
                 ),
                 is_piggyback=config_cache.is_piggyback_host(hostname),
-                fetcher_type=source.fetcher_type,
+                fetcher_type=source_info.fetcher_type,
             )
             if any(r.state != 0 for r in source_results):
                 console.error(
                     "ERROR [%s]: %s\n",
-                    source.ident,
+                    source_info.ident,
                     ", ".join(r.summary for r in source_results),
                 )
                 has_errors = True
@@ -528,12 +561,17 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
-def mode_dump_hosts(hostlist: list[HostName]) -> None:
+def mode_dump_hosts(hostlist: Iterable[HostName]) -> None:
     config_cache = config.get_config_cache()
-    if not hostlist:
-        hostlist = sorted(config_cache.all_active_hosts())
+    all_hosts = frozenset(config_cache.all_active_hosts())
+    hosts = frozenset(hostlist)
+    if not hosts:
+        hosts = all_hosts
 
-    for hostname in hostlist:
+    config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(hosts)
+    for hostname in sorted(hosts - all_hosts):
+        sys.stderr.write(f"unknown host: {hostname}\n")
+    for hostname in sorted(hosts & all_hosts):
         cmk.base.dump_host.dump_host(hostname)
 
 
@@ -784,26 +822,6 @@ modes.register(
 )
 
 # .
-#   .--config-check--------------------------------------------------------.
-#   |                      __ _                  _               _         |
-#   |      ___ ___  _ __  / _(_) __ _        ___| |__   ___  ___| | __     |
-#   |     / __/ _ \| '_ \| |_| |/ _` |_____ / __| '_ \ / _ \/ __| |/ /     |
-#   |    | (_| (_) | | | |  _| | (_| |_____| (__| | | |  __/ (__|   <      |
-#   |     \___\___/|_| |_|_| |_|\__, |      \___|_| |_|\___|\___|_|\_\     |
-#   |                           |___/                                      |
-#   '----------------------------------------------------------------------'
-# TODO: Can we remove this?
-
-modes.register(
-    Mode(
-        long_option="config-check",
-        short_option="X",
-        handler_function=lambda: None,
-        short_help="Check configuration for invalid vars",
-    )
-)
-
-# .
 #   .--update-dns-cache----------------------------------------------------.
 #   |                        _            _                                |
 #   |        _   _ _ __   __| |        __| |_ __  ___        ___           |
@@ -823,7 +841,7 @@ def mode_update_dns_cache() -> None:
         configured_ipv6_addresses=config.ipaddresses,
         configured_ipv4_addresses=config.ipv6addresses,
         simulation_mode=config.simulation_mode,
-        override_dns=config.fake_dns,
+        override_dns=HostAddress(config.fake_dns) if config.fake_dns is not None else None,
     )
 
 
@@ -872,11 +890,16 @@ modes.register(
 
 def mode_scan_parents(options: dict, args: list[str]) -> None:
     config.load(exclude_parents_mk=True)
+    config_cache = config.get_config_cache()
 
     if "procs" in options:
         config.max_num_processes = options["procs"]
 
-    cmk.base.parent_scan.do_scan_parents([HostName(hn) for hn in args])
+    cmk.base.parent_scan.do_scan_parents(
+        config_cache,
+        HostName(config.monitoring_host) if config.monitoring_host is not None else None,
+        [HostName(hn) for hn in args],
+    )
 
 
 modes.register(
@@ -970,7 +993,7 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
-        snmp_config = config_cache.make_snmp_config(hostname, ipaddress)
+        snmp_config = config_cache.make_snmp_config(hostname, ipaddress, SourceType.HOST)
         snmp_modes.do_snmpwalk(options, backend=snmp_factory.make_backend(snmp_config, log.logger))
 
 
@@ -1042,7 +1065,7 @@ def mode_snmpget(args: list[str]) -> None:
         if not ipaddress:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
-        snmp_config = config_cache.make_snmp_config(hostname, ipaddress)
+        snmp_config = config_cache.make_snmp_config(hostname, ipaddress, SourceType.HOST)
         snmp_modes.do_snmpget(oid, backend=snmp_factory.make_backend(snmp_config, log.logger))
 
 
@@ -1179,7 +1202,12 @@ def mode_dump_nagios_config(args: list[HostName]) -> None:
 
     from cmk.base.core_nagios import create_config  # pylint: disable=import-outside-toplevel
 
-    create_config(sys.stdout, next(VersionedConfigPath.current()), args if len(args) else None)
+    create_config(
+        sys.stdout,
+        next(VersionedConfigPath.current()),
+        args if len(args) else None,
+        get_licensing_handler_type().make(),
+    )
 
 
 modes.register(
@@ -1471,73 +1499,6 @@ modes.register(
     )
 )
 
-# .
-#   .--discover-marked-hosts-----------------------------------------------.
-#   |           _ _                                 _            _         |
-#   |        __| (_)___  ___   _ __ ___   __ _ _ __| | _____  __| |        |
-#   |       / _` | / __|/ __| | '_ ` _ \ / _` | '__| |/ / _ \/ _` |        |
-#   |      | (_| | \__ \ (__ _| | | | | | (_| | |  |   <  __/ (_| |        |
-#   |       \__,_|_|___/\___(_)_| |_| |_|\__,_|_|  |_|\_\___|\__,_|        |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def mode_discover_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
-    file_cache_options = _handle_fetcher_options(options)._replace(use_outdated=True)
-
-    if not (queue := AutoQueue(cmk.utils.paths.autodiscovery_dir)):
-        console.verbose("Autodiscovery: No hosts marked by discovery check\n")
-        return
-
-    config.load()
-    config_cache = config.get_config_cache()
-    parser = ConfiguredParser(
-        config_cache,
-        selected_sections=NO_SELECTION,
-        keep_outdated=file_cache_options.keep_outdated,
-        logger=logging.getLogger("cmk.base.discovery"),
-    )
-    fetcher = ConfiguredFetcher(
-        config_cache,
-        file_cache_options=file_cache_options,
-        force_snmp_cache_refresh=False,
-        mode=FetchMode.DISCOVERY,
-        on_error=OnError.IGNORE,
-        selected_sections=NO_SELECTION,
-        simulation_mode=config.simulation_mode,
-        # autodiscovery is run every 5 minutes (see
-        # omd/packages/check_mk/skel/etc/cron.d/cmk_discovery)
-        # make sure we may use the file the active discovery check left behind:
-        max_cachefile_age=config.max_cachefile_age(discovery=600),
-    )
-    discovery.discover_marked_hosts(
-        create_core(config.monitoring_core),
-        queue,
-        config_cache=config_cache,
-        parser=parser,
-        fetcher=fetcher,
-        section_plugins=SectionPluginMapper(),
-        check_plugins=CheckPluginMapper(),
-        find_service_description=config.service_description,
-        on_error=OnError.IGNORE,
-    )
-
-
-modes.register(
-    Mode(
-        long_option="discover-marked-hosts",
-        handler_function=mode_discover_marked_hosts,
-        short_help="Run discovery for hosts known to have changed services",
-        long_help=[
-            "Run actual service discovery on all hosts that "
-            "are known to have new/vanished services due to an earlier run of "
-            "check-discovery. The results of this discovery may be activated "
-            "automatically if configured.",
-        ],
-        sub_options=_FETCHER_OPTIONS,
-        needs_config=False,
-    )
-)
 
 # .
 #   .--check-discovery-----------------------------------------------------.
@@ -1560,7 +1521,8 @@ def mode_check_discovery(
     file_cache_options = _handle_fetcher_options(options)
     discovery_file_cache_max_age = None if file_cache_options.use_outdated else 0
     config_cache = config.get_config_cache()
-    fetcher = ConfiguredFetcher(
+    config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
+    fetcher = CMKFetcher(
         config_cache,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -1570,16 +1532,15 @@ def mode_check_discovery(
         simulation_mode=config.simulation_mode,
         max_cachefile_age=config.max_cachefile_age(discovery=discovery_file_cache_max_age),
     )
-    parser = ConfiguredParser(
+    parser = CMKParser(
         config_cache,
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
     )
-    summarizer = ConfiguredSummarizer(
+    summarizer = CMKSummarizer(
         config_cache,
         hostname,
-        include_ok_results=False,
         override_non_ok_state=None,
     )
     error_handler = CheckResultErrorHandler(
@@ -1601,7 +1562,8 @@ def mode_check_discovery(
             parser=parser,
             summarizer=summarizer,
             section_plugins=SectionPluginMapper(),
-            check_plugins=CheckPluginMapper(),
+            host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
+            plugins=DiscoveryPluginMapper(config_cache=config_cache),
             find_service_description=config.service_description,
         )
         state, text = check_result.state, check_result.as_text()
@@ -1635,7 +1597,7 @@ def register_mode_check_discovery(
                 "Make Check_MK behave as monitoring plugins that checks if an "
                 "inventory would find new or vanished services for the host. "
                 "If configured to do so, this will queue those hosts for automatic "
-                "discover-marked-hosts"
+                "autodiscovery"
             ],
             sub_options=_FETCHER_OPTIONS,
         )
@@ -1799,23 +1761,36 @@ _DiscoveryOptions = TypedDict(
 
 
 def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
-    file_cache_options = _handle_fetcher_options(options)
     hostnames = modes.parse_hostname_list(args)
+    if hostnames:
+        # In case of discovery with host restriction, do not use the cache
+        # file by default as -I and -II are used for debugging.
+        file_cache_options = FileCacheOptions(disabled=True, use_outdated=False)
+    else:
+        # In case of discovery without host restriction, use the cache file
+        # by default. Otherwise Checkmk would have to connect to ALL hosts.
+        file_cache_options = FileCacheOptions(disabled=False, use_outdated=True)
+
+    file_cache_options = _handle_fetcher_options(options, defaults=file_cache_options)
+    hostnames = modes.parse_hostname_list(args)
+    config_cache = config.get_config_cache()
     if not hostnames:
         # In case of discovery without host restriction, use the cache file
         # by default. Otherwise Checkmk would have to connect to ALL hosts.
         file_cache_options = file_cache_options._replace(use_outdated=True)
+    else:
+        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hostnames))
 
     on_error = OnError.RAISE if cmk.utils.debug.enabled() else OnError.WARN
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
     config_cache = config.get_config_cache()
-    parser = ConfiguredParser(
+    parser = CMKParser(
         config_cache,
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.discovery"),
     )
-    fetcher = ConfiguredFetcher(
+    fetcher = CMKFetcher(
         config_cache,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -1831,7 +1806,8 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         parser=parser,
         fetcher=fetcher,
         section_plugins=SectionPluginMapper(),
-        check_plugins=CheckPluginMapper(),
+        host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
+        plugins=DiscoveryPluginMapper(config_cache=config_cache),
         run_plugin_names=run_plugin_names,
         arg_only_new=options["discover"] == 1,
         only_host_labels="only-host-labels" in options,
@@ -1852,7 +1828,7 @@ modes.register(
             "Make Check_MK behave as monitoring plugins that checks if an "
             "inventory would find new or vanished services for the host. "
             "If configured to do so, this will queue those hosts for automatic "
-            "discover-marked-hosts",
+            "autodiscovery",
             "Can be restricted to certain check types. Write '--checks df -I' if "
             "you just want to look for new filesystems. Use 'cmk -L' for a "
             "list of all check types.",
@@ -1944,11 +1920,12 @@ def mode_check(
     hostname = HostName(args[0])
     ipaddress: HostAddress | None = None
     if len(args) == 2:
-        ipaddress = args[1]
+        ipaddress = HostAddress(args[1])
 
     config_cache = config.get_config_cache()
+    config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     selected_sections, run_plugin_names = _extract_plugin_selection(options, CheckPluginName)
-    fetcher = ConfiguredFetcher(
+    fetcher = CMKFetcher(
         config_cache,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -1957,16 +1934,15 @@ def mode_check(
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
     )
-    parser = ConfiguredParser(
+    parser = CMKParser(
         config_cache,
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.checking"),
     )
-    summarizer = ConfiguredSummarizer(
+    summarizer = CMKSummarizer(
         config_cache,
         hostname,
-        include_ok_results=True,
         override_non_ok_state=None,
     )
     error_handler = CheckResultErrorHandler(
@@ -2044,7 +2020,7 @@ def register_mode_check(
                 "the option '-n', the results will not be sent to the core and the "
                 "counters of the check will not be stored.",
                 "You can use '-v' to see the results of the checks. Add '-p' to "
-                "also see the performance data of the checks."
+                "also see the performance data of the checks. "
                 "Can be restricted to certain check types. Write '--checks df -I' if "
                 "you just want to look for new filesystems. Use 'check_mk -L' for a "
                 "list of all check types. Use 'tcp' for all TCP based checks and "
@@ -2106,6 +2082,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
 
     if args:
         hostnames = modes.parse_hostname_list(args, with_clusters=True)
+        config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts(set(hostnames))
         console.verbose("Doing HW/SW inventory on: %s\n" % ", ".join(hostnames))
     else:
         # No hosts specified: do all hosts and force caching
@@ -2116,7 +2093,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         file_cache_options = file_cache_options._replace(keep_outdated=True)
 
     selected_sections, run_plugin_names = _extract_plugin_selection(options, InventoryPluginName)
-    fetcher = ConfiguredFetcher(
+    fetcher = CMKFetcher(
         config_cache,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -2125,7 +2102,7 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
         selected_sections=selected_sections,
         simulation_mode=config.simulation_mode,
     )
-    parser = ConfiguredParser(
+    parser = CMKParser(
         config_cache,
         selected_sections=selected_sections,
         keep_outdated=file_cache_options.keep_outdated,
@@ -2134,26 +2111,54 @@ def mode_inventory(options: _InventoryOptions, args: list[str]) -> None:
 
     store.makedirs(cmk.utils.paths.inventory_output_dir)
     store.makedirs(cmk.utils.paths.inventory_archive_dir)
+
+    section_plugins = SectionPluginMapper()
+    inventory_plugins = InventoryPluginMapper()
+
     for hostname in hostnames:
         parameters = config_cache.hwsw_inventory_parameters(hostname)
-        summarizer = ConfiguredSummarizer(
+        raw_intervals_from_config = config_cache.inv_retention_intervals(hostname)
+        summarizer = CMKSummarizer(
             config_cache,
             hostname,
-            include_ok_results=False,
             override_non_ok_state=parameters.fail_status,
         )
 
-        inventory.commandline_inventory(
-            hostname,
-            config_cache=config_cache,
-            fetcher=fetcher,
-            parser=parser,
-            summarizer=summarizer,
-            parameters=parameters,
-            section_plugins=SectionPluginMapper(),
-            inventory_plugins=InventoryPluginMapper(),
-            run_plugin_names=run_plugin_names,
-        )
+        section.section_begin(hostname)
+        section.section_step("Inventorizing")
+        try:
+            previous_tree = load_tree(Path(cmk.utils.paths.inventory_output_dir, hostname))
+            if config_cache.is_cluster(hostname):
+                check_result = inventory.inventorize_cluster(
+                    config_cache.nodes_of(hostname) or (),
+                    parameters=parameters,
+                    previous_tree=previous_tree,
+                ).check_result
+            else:
+                check_result = inventory.inventorize_host(
+                    hostname,
+                    fetcher=fetcher,
+                    parser=parser,
+                    summarizer=summarizer,
+                    inventory_parameters=config_cache.inventory_parameters,
+                    section_plugins=section_plugins,
+                    inventory_plugins=inventory_plugins,
+                    run_plugin_names=run_plugin_names,
+                    parameters=parameters,
+                    raw_intervals_from_config=raw_intervals_from_config,
+                    previous_tree=previous_tree,
+                ).check_result
+            if check_result.state:
+                section.section_error(check_result.summary)
+            else:
+                section.section_success(check_result.summary)
+
+        except Exception as e:
+            if cmk.utils.debug.enabled():
+                raise
+            section.section_error("%s" % e)
+        finally:
+            cmk.utils.cleanup.cleanup_globals()
 
 
 modes.register(
@@ -2164,7 +2169,7 @@ modes.register(
         argument=True,
         argument_descr="HOST1 HOST2...",
         argument_optional=True,
-        short_help="Do a HW/SW-Inventory on some ar all hosts",
+        short_help="Do a HW/SW-Inventory on some or all hosts",
         long_help=[
             "Does a HW/SW-Inventory for all, one or several "
             "hosts. If you add the option -f, --force then persisted sections "
@@ -2195,6 +2200,101 @@ modes.register(
 #   '----------------------------------------------------------------------'
 
 
+def _execute_active_check_inventory(
+    host_name: HostName,
+    *,
+    config_cache: ConfigCache,
+    fetcher: FetcherFunction,
+    parser: ParserFunction,
+    summarizer: SummarizerFunction,
+    section_plugins: Mapping[SectionName, SectionPlugin],
+    inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
+    inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
+    parameters: HWSWInventoryParameters,
+    raw_intervals_from_config: RawIntervalsFromConfig,
+) -> ActiveCheckResult:
+    tree_or_archive_store = TreeOrArchiveStore(
+        cmk.utils.paths.inventory_output_dir,
+        cmk.utils.paths.inventory_archive_dir,
+    )
+    previous_tree = tree_or_archive_store.load_previous(host_name=host_name)
+
+    if config_cache.is_cluster(host_name):
+        result = inventory.inventorize_cluster(
+            config_cache.nodes_of(host_name) or (),
+            parameters=parameters,
+            previous_tree=previous_tree,
+        )
+    else:
+        result = inventory.inventorize_host(
+            host_name,
+            fetcher=fetcher,
+            parser=parser,
+            summarizer=summarizer,
+            inventory_parameters=inventory_parameters,
+            section_plugins=section_plugins,
+            inventory_plugins=inventory_plugins,
+            run_plugin_names=EVERYTHING,
+            parameters=parameters,
+            raw_intervals_from_config=raw_intervals_from_config,
+            previous_tree=previous_tree,
+        )
+
+    if result.no_data_or_files:
+        path = Path(cmk.utils.paths.autoinventory_dir)
+        path.mkdir(parents=True, exist_ok=True)
+        file_path = path / str(host_name)
+        if not file_path.exists():
+            # Why not always touch?  Then we'd have a one liner.
+            file_path.touch()
+
+    if not (result.processing_failed or result.no_data_or_files):
+        save_tree_actions = _get_save_tree_actions(
+            previous_tree=previous_tree,
+            inventory_tree=result.inventory_tree,
+            update_result=result.update_result,
+        )
+        # The order of archive or save is important:
+        if save_tree_actions.do_archive:
+            tree_or_archive_store.archive(host_name=host_name)
+        if save_tree_actions.do_save:
+            tree_or_archive_store.save(host_name=host_name, tree=result.inventory_tree)
+
+    return result.check_result
+
+
+class _SaveTreeActions(NamedTuple):
+    do_archive: bool
+    do_save: bool
+
+
+def _get_save_tree_actions(
+    *,
+    previous_tree: ImmutableTree,
+    inventory_tree: MutableTree,
+    update_result: UpdateResult,
+) -> _SaveTreeActions:
+    if not inventory_tree:
+        # Archive current inventory tree file if it exists. Important for host inventory icon
+        console.verbose("No inventory tree.\n")
+        return _SaveTreeActions(do_archive=True, do_save=False)
+
+    if not previous_tree:
+        console.verbose("New inventory tree.\n")
+        return _SaveTreeActions(do_archive=False, do_save=True)
+
+    if has_changed := previous_tree != inventory_tree:
+        console.verbose("Inventory tree has changed. Add history entry.\n")
+
+    if update_result.save_tree:
+        console.verbose(str(update_result))
+
+    return _SaveTreeActions(
+        do_archive=has_changed,
+        do_save=(has_changed or update_result.save_tree),
+    )
+
+
 def mode_inventory_as_check(
     options: dict,
     hostname: HostName,
@@ -2203,10 +2303,11 @@ def mode_inventory_as_check(
     keepalive: bool,
 ) -> ServiceState:
     config_cache = config.get_config_cache()
+    config_cache.ruleset_matcher.ruleset_optimizer.set_all_processed_hosts({hostname})
     file_cache_options = _handle_fetcher_options(options)
     parameters = HWSWInventoryParameters.from_raw(options)
 
-    fetcher = ConfiguredFetcher(
+    fetcher = CMKFetcher(
         config_cache,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -2215,16 +2316,15 @@ def mode_inventory_as_check(
         selected_sections=NO_SELECTION,
         simulation_mode=config.simulation_mode,
     )
-    parser = ConfiguredParser(
+    parser = CMKParser(
         config_cache,
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),
     )
-    summarizer = ConfiguredSummarizer(
+    summarizer = CMKSummarizer(
         config_cache,
         hostname,
-        include_ok_results=False,
         override_non_ok_state=parameters.fail_status,
     )
     error_handler = CheckResultErrorHandler(
@@ -2238,7 +2338,7 @@ def mode_inventory_as_check(
     )
     state, text = (3, "unknown error")
     with error_handler:
-        check_result = execute_active_check_inventory(
+        check_result = _execute_active_check_inventory(
             hostname,
             config_cache=config_cache,
             fetcher=fetcher,
@@ -2248,6 +2348,7 @@ def mode_inventory_as_check(
             inventory_plugins=InventoryPluginMapper(),
             inventory_parameters=config_cache.inventory_parameters,
             parameters=parameters,
+            raw_intervals_from_config=config_cache.inv_retention_intervals(hostname),
         )
         state, text = check_result.state, check_result.as_text()
     if error_handler.result is not None:
@@ -2346,13 +2447,13 @@ def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
 
     config.load()
     config_cache = config.get_config_cache()
-    parser = ConfiguredParser(
+    parser = CMKParser(
         config_cache,
         selected_sections=NO_SELECTION,
         keep_outdated=file_cache_options.keep_outdated,
         logger=logging.getLogger("cmk.base.inventory"),
     )
-    fetcher = ConfiguredFetcher(
+    fetcher = CMKFetcher(
         config_cache,
         file_cache_options=file_cache_options,
         force_snmp_cache_refresh=False,
@@ -2362,23 +2463,61 @@ def mode_inventorize_marked_hosts(options: Mapping[str, Literal[True]]) -> None:
         simulation_mode=config.simulation_mode,
     )
 
-    def summarizer(host_name: HostName) -> ConfiguredSummarizer:
-        return ConfiguredSummarizer(
+    def summarizer(host_name: HostName) -> CMKSummarizer:
+        return CMKSummarizer(
             config_cache,
             host_name,
-            include_ok_results=False,
             override_non_ok_state=config_cache.hwsw_inventory_parameters(host_name).fail_status,
         )
 
-    inventory.inventorize_marked_hosts(
-        config_cache,
-        queue,
-        parser=parser,
-        fetcher=fetcher,
-        summarizer=summarizer,
-        section_plugins=SectionPluginMapper(),
-        inventory_plugins=InventoryPluginMapper(),
-    )
+    for host_name in queue:
+        if host_name not in config_cache.all_configured_hosts():
+            console.verbose(f"  Removing mark '{host_name}' (host not configured\n")
+            (queue.path / str(host_name)).unlink(missing_ok=True)
+
+    if queue.oldest() is None:
+        console.verbose("Autoinventory: No hosts marked by inventory check\n")
+        return
+
+    console.verbose("Autoinventory: Inventorize all hosts marked by inventory check:\n")
+    try:
+        response = livestatus.LocalConnection().query("GET hosts\nColumns: name state")
+        process_hosts: Container[HostName] = {
+            HostName(name) for name, state in response if state == 0
+        }
+    except (livestatus.MKLivestatusNotFoundError, livestatus.MKLivestatusSocketError):
+        process_hosts = EVERYTHING
+
+    section_plugins = SectionPluginMapper()
+    inventory_plugins = InventoryPluginMapper()
+
+    start = time.monotonic()
+    limit = 120
+    message = f"  Timeout of {limit} seconds reached. Let's do the remaining hosts next time."
+
+    try:
+        with Timeout(limit + 10, message=message):
+            for host_name in queue:
+                if time.monotonic() > start + limit:
+                    raise TimeoutError(message)
+
+                if host_name not in process_hosts:
+                    continue
+
+                _execute_active_check_inventory(
+                    host_name,
+                    config_cache=config_cache,
+                    parser=parser,
+                    fetcher=fetcher,
+                    summarizer=summarizer(host_name),
+                    section_plugins=section_plugins,
+                    inventory_plugins=inventory_plugins,
+                    inventory_parameters=config_cache.inventory_parameters,
+                    parameters=config_cache.hwsw_inventory_parameters(host_name),
+                    raw_intervals_from_config=config_cache.inv_retention_intervals(host_name),
+                )
+    except (MKTimeout, TimeoutError) as exc:
+        console.verbose(str(exc))
 
 
 modes.register(

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This package contains cryptographic functionality for Checkmk.
@@ -17,9 +17,8 @@ from cryptography.hazmat.primitives import hashes as crypto_hashes
 class HashAlgorithm(Enum):
     """This is just a facade to selected hash algorithms from cryptography"""
 
-    # TODO: burn it...
-    MD5 = crypto_hashes.MD5()  # nosec
-    Sha1 = crypto_hashes.SHA1()  # nosec
+    MD5 = crypto_hashes.MD5()  # nosec B303 # BNS:e9bfaa
+    Sha1 = crypto_hashes.SHA1()  # nosec B303 # BNS:02774b
     Sha256 = crypto_hashes.SHA256()
     Sha384 = crypto_hashes.SHA384()
     Sha512 = crypto_hashes.SHA512()

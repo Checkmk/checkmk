@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Event Console
@@ -20,7 +20,8 @@ The event console endpoints allow for
     * Query the event console table using filters, id or live status query and archive those events.
 
 """
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from cmk.utils.livestatus_helpers.tables.eventconsoleevents import Eventconsoleevents
 
@@ -61,7 +62,7 @@ from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, perm
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
 from cmk.gui.plugins.openapi.utils import problem, serve_json
 
-IGNORE_PERMISSIONS = permissions.Ignore(
+IGNORE_PERMISSIONS = permissions.Undocumented(
     permissions.AnyPerm(
         [
             permissions.Perm("mkeventd.seeall"),

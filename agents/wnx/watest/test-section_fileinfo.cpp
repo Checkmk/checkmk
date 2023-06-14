@@ -44,7 +44,7 @@ static void CheckTableMissing(const std::vector<std::string> &table,
     EXPECT_EQ(table[1], FileInfo::kMissing.data());
     if (mode == FileInfo::Mode::legacy) {
         ASSERT_TRUE(table.size() == 3);
-        EXPECT_TRUE(std::stoll(table[2].c_str()) > 0LL);
+        EXPECT_TRUE(std::stoll(table[2]) > 0LL);
     }
 }
 
@@ -256,7 +256,7 @@ TEST(FileInfoTest, CheckDriveLetter) {
         FileInfo fi{FileInfo::Mode::legacy};
         auto table = MakeBody(fi);
         ASSERT_EQ(table.size(), 4);
-        EXPECT_TRUE(std::stoll(table[0].c_str()) > 0LL);
+        EXPECT_TRUE(std::stoll(table[0]) > 0LL);
         EXPECT_EQ(table[1][0], value[0]);
         EXPECT_EQ(table[2][0], value[0]);
         EXPECT_EQ(table[3][0], value[0]);
@@ -269,7 +269,7 @@ TEST(FileInfoTest, CheckDriveLetter) {
         FileInfo fi{FileInfo::Mode::legacy};
         auto table = MakeBody(fi);
         ASSERT_EQ(table.size(), 4);
-        EXPECT_TRUE(std::stoll(table[0].c_str()) > 0LL);
+        EXPECT_TRUE(std::stoll(table[0]) > 0LL);
         EXPECT_EQ(table[1][0], value[0]);
         EXPECT_EQ(table[2][0], value[0]);
         EXPECT_EQ(table[3][0], value[0]);
@@ -304,7 +304,7 @@ TEST(FileInfoTest, CheckOutput) {
         FileInfo fi{FileInfo::Mode::legacy};
         auto table = MakeBody(fi);
         ASSERT_EQ(table.size(), 5);
-        EXPECT_TRUE(std::stoll(table[0].c_str()) > 0LL);
+        EXPECT_TRUE(std::stoll(table[0]) > 0LL);
         table.erase(table.begin());
 
         auto missing = table.back();
@@ -318,8 +318,8 @@ TEST(FileInfoTest, CheckOutput) {
             auto values = tools::SplitString(line, "|");
             ASSERT_TRUE(values.size() == 3);
             EXPECT_TRUE(fs::exists(values[0], ec));
-            EXPECT_TRUE(std::stoll(values[1].c_str()) == 2);
-            EXPECT_TRUE(std::stoll(values[2].c_str()) > 0LL);
+            EXPECT_TRUE(std::stoll(values[1]) == 2);
+            EXPECT_TRUE(std::stoll(values[2]) > 0LL);
             auto f = rs::any_of(
                 data, [values](std::tuple<fs::path, std::string_view> &entry) {
                     auto const &[path, _] = entry;
@@ -333,7 +333,7 @@ TEST(FileInfoTest, CheckOutput) {
         FileInfo fi{FileInfo::Mode::modern};
         auto table = MakeBody(fi);
         ASSERT_EQ(table.size(), 8);
-        EXPECT_TRUE(std::stoll(table[0].c_str()) > 0);
+        EXPECT_TRUE(std::stoll(table[0]) > 0);
         table.erase(table.begin());
         EXPECT_EQ(table[0], "[[[header]]]");
         table.erase(table.begin());
@@ -354,8 +354,8 @@ TEST(FileInfoTest, CheckOutput) {
             ASSERT_TRUE(values.size() == 4);
             EXPECT_TRUE(fs::exists(values[0], ec));
             EXPECT_EQ(values[1], FileInfo::kOk);
-            EXPECT_TRUE(std::stoll(values[2].c_str()) == 2);
-            EXPECT_TRUE(std::stoll(values[2].c_str()) > 0LL);
+            EXPECT_TRUE(std::stoll(values[2]) == 2);
+            EXPECT_TRUE(std::stoll(values[2]) > 0LL);
             auto f = rs::any_of(
                 data, [values](std::tuple<fs::path, std::string_view> &entry) {
                     auto const &[path, _] = entry;
@@ -491,7 +491,7 @@ TEST(FileInfoTest, MakeFileInfoMissing) {
 }
 
 namespace {
-/// \brief - returns Unix time of the file
+/// - returns Unix time of the file
 ///
 /// function which was valid in 1.6 and still valid
 /// because experimental is deprecated we can't it use anymore, but we can test
@@ -522,7 +522,7 @@ TEST(FileInfoTest, MakeFileInfoExisting) {
 
         auto table = cma::tools::SplitString(x, "|");
         CheckTablePresent(table, name, mode);
-        auto ftime = std::stoll(table[table.size() - 1].c_str());
+        auto ftime = std::stoll(table[table.size() - 1]);
         auto cur_time = std::chrono::system_clock::to_time_t(
             std::chrono::system_clock::now());
         EXPECT_GT(cur_time, ftime);
@@ -536,11 +536,11 @@ TEST(FileInfoTest, MakeFileInfoPagefile) {
         auto x = details::MakeFileInfoString(name, mode);
         x.pop_back();
         auto table = tools::SplitString(x, "|");
-        auto ftime = std::stoll(table[table.size() - 1].c_str());
+        auto ftime = std::stoll(table[table.size() - 1]);
         auto cur_time = std::chrono::system_clock::to_time_t(
             std::chrono::system_clock::now());
         EXPECT_GT(cur_time, ftime);
-        auto sz = std::stoll(table[table.size() - 2].c_str());
+        auto sz = std::stoll(table[table.size() - 2]);
         EXPECT_GT(sz, 0);
     }
 }

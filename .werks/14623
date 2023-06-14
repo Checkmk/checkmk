@@ -6,7 +6,7 @@ Date: 1665056213
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The check used to fail because of an invalid line in the agent ouput.
 A parse function has been introduced which fixed the error.

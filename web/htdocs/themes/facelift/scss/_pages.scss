@@ -1,5 +1,5 @@
 @charset "UTF-8";
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -27,7 +27,7 @@ h4 {
 
 h3:not(.table) {
   font-size: $font-size-large;
-  font-weight: normal;
+  font-weight: $font-weight-default;
 }
 
 @mixin table-header-mixin {
@@ -230,7 +230,7 @@ body {
 
 #reload_pause_counter {
   font-size: $font-size-large;
-  font-weight: bold;
+  font-weight: $font-weight-bold;
   color: $font-color-light-grey;
   text-align: center;
   text-decoration: none;
@@ -316,7 +316,7 @@ table.data {
 
     /* e.g. numeric columns on alert statistics views */
     &.count {
-      font-weight: bold;
+      font-weight: $font-weight-bold;
       text-align: right;
       white-space: nowrap;
     }
@@ -397,7 +397,7 @@ table.data {
     padding: 4px;
     margin: 0;
     font-size: $font-size-small;
-    font-weight: bold;
+    font-weight: $font-weight-bold;
     line-height: 5px;
     text-align: center;
     vertical-align: middle;
@@ -637,6 +637,13 @@ span.select2 .select2-selection {
   }
 }
 
+.select2-container--default.select2-container--disabled .select2-selection--single {
+  background-color: transparent;
+  .select2-selection__arrow {
+    display: none;
+  }
+}
+
 input[type="text"],
 textarea {
   position: relative;
@@ -678,6 +685,7 @@ input[type="checkbox"] {
   letter-spacing: $letter-spacing-table;
   color: $font-color;
   background-color: $input-button-bg-color;
+  border: 1px solid $default-button-border-color;
   box-shadow: none;
 
   &:hover,
@@ -709,7 +717,7 @@ select {
 input.button {
   &:not([type="text"]),
   &:not([type="password"]) {
-    padding: 5px 8px;
+    padding: 6px 8px 4px;
   }
 }
 
@@ -1089,9 +1097,14 @@ body.main .popup_menu {
 
   img {
     width: 12px;
-    height: auto;
+    height: 12px;
     margin-right: 3px;
     vertical-align: bottom;
+
+    &.emblem {
+      width: 10px;
+      height: 10px;
+    }
   }
 
   ul {
@@ -1103,7 +1116,7 @@ body.main .popup_menu {
   span {
     padding-left: 0;
     margin-top: 8px;
-    font-weight: bold;
+    font-weight: $font-weight-bold;
   }
 
   li:first-child span {
@@ -1125,6 +1138,10 @@ body.main .popup_menu {
   a:hover {
     text-decoration: underline;
     cursor: pointer;
+  }
+
+  span.emblem {
+    display: initial;
   }
 }
 
@@ -1190,7 +1207,7 @@ body.main .popup_menu {
       width: 142px;
       margin: 0;
       overflow: hidden;
-      font-weight: normal;
+      font-weight: $font-weight-default;
       line-height: 19px;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -1288,7 +1305,7 @@ table.debug_vars {
 
   th,
   td.left {
-    font-weight: bold;
+    font-weight: $font-weight-bold;
   }
 
   td.right {

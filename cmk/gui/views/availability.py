@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -50,6 +50,7 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
+from cmk.gui.painter.v0.helpers import format_plugin_output
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import FilterHeader, HTTPVariables, Rows
 from cmk.gui.utils.escaping import escape_to_html_permissive
@@ -71,7 +72,6 @@ from cmk.gui.valuespec import (
     TextInput,
 )
 from cmk.gui.view import View
-from cmk.gui.views.painter.v0.helpers import format_plugin_output
 from cmk.gui.visuals import page_menu_dropdown_add_to_visual, view_title
 
 # Variable name conventions
@@ -121,7 +121,7 @@ def _show_availability_options(
 
     for name, height, _show_in_reporting, vs in valuespecs:
 
-        def renderer(name=name, vs=vs, avoptions=avoptions) -> None:  # type:ignore[no-untyped-def]
+        def renderer(name=name, vs=vs, avoptions=avoptions) -> None:  # type: ignore[no-untyped-def]
             vs.render_input("avo_" + name, avoptions.get(name))
 
         html.render_floating_option(name, height, vs.title(), renderer)
@@ -343,7 +343,7 @@ def show_availability_page(  # pylint: disable=too-many-branches
         html.body_end()
 
 
-def _page_menu_availability(  # type:ignore[no-untyped-def]
+def _page_menu_availability(  # type: ignore[no-untyped-def]
     breadcrumb: Breadcrumb,
     view,
     what: AVObjectType,
@@ -432,7 +432,6 @@ def _render_avoptions_form(
 def _page_menu_entries_av_mode(
     what: AVObjectType, av_mode: AVMode, av_object: AVObjectSpec, time_range: AVTimeRange
 ) -> Iterator[PageMenuEntry]:
-
     if av_mode == "timeline" or av_object:
         yield PageMenuEntry(
             title=_("Table"),
@@ -509,7 +508,7 @@ def do_render_availability(
     show_annotations(annotations, av_rawdata, what, avoptions, omit_service=av_object is not None)
 
 
-def render_availability_tables(  # type:ignore[no-untyped-def]
+def render_availability_tables(  # type: ignore[no-untyped-def]
     availability_tables, what, avoptions
 ) -> None:
     if not availability_tables:
@@ -614,7 +613,8 @@ def _render_availability_timeline(
 
             if "omit_timeline_plugin_output" not in avoptions["labelling"]:
                 table.cell(
-                    _("Last known summary"), format_plugin_output(row.get("log_output", ""), row)
+                    _("Summary at last status change"),
+                    format_plugin_output(row.get("log_output", ""), row),
                 )
 
             if "timeline_long_output" in avoptions["labelling"]:
@@ -657,7 +657,7 @@ def render_timeline_legend(what: AVObjectType) -> None:
     html.close_div()
 
 
-def render_availability_table(  # type:ignore[no-untyped-def]
+def render_availability_table(  # type: ignore[no-untyped-def]
     group_title, availability_table, what, avoptions
 ) -> None:
     av_table = availability.layout_availability_table(
@@ -675,7 +675,6 @@ def render_availability_table(  # type:ignore[no-untyped-def]
         limit=None,
         omit_headers="omit_headers" in avoptions["labelling"],
     ) as table:
-
         show_urls, show_timeline = False, False
         for row in av_table["rows"]:
             table.row()
@@ -721,7 +720,7 @@ def render_availability_table(  # type:ignore[no-untyped-def]
                 )
 
 
-def render_timeline_bar(  # type:ignore[no-untyped-def]
+def render_timeline_bar(  # type: ignore[no-untyped-def]
     timeline_layout, style, timeline_nr=0
 ) -> None:
     render_date = timeline_layout["render_date"]
@@ -742,7 +741,6 @@ def render_timeline_bar(  # type:ignore[no-untyped-def]
     html.open_table(id_="timeline_%d" % timeline_nr, class_=["timeline", style])
     html.open_tr(class_="timeline")
     for row_nr, title, width, css in timeline_layout["spans"]:
-
         td_attrs = {
             "style": "width: %.3f%%" % width,
             "title": title,

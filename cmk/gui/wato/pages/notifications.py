@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for managing notification configuration"""
@@ -7,11 +7,12 @@
 import abc
 import time
 from collections.abc import Collection, Iterator, Mapping
+from copy import deepcopy
 from datetime import datetime
 from typing import Any, NamedTuple, overload
 
 import cmk.utils.store as store
-from cmk.utils.type_defs import EventRule
+from cmk.utils.notify_types import EventRule
 
 import cmk.gui.forms as forms
 import cmk.gui.permissions as permissions
@@ -76,6 +77,7 @@ from cmk.gui.valuespec import (
     rule_option_elements,
     TextInput,
     Tuple,
+    UUID,
 )
 from cmk.gui.wato.pages.user_profile.async_replication import user_profile_async_replication_dialog
 from cmk.gui.wato.pages.user_profile.page_menu import page_menu_dropdown_user_related
@@ -92,6 +94,7 @@ from cmk.gui.watolib.notifications import (
     load_user_notification_rules,
     save_notification_rules,
 )
+from cmk.gui.watolib.sample_config import get_default_notification_rule, new_notification_rule_id
 from cmk.gui.watolib.user_scripts import load_notification_scripts
 from cmk.gui.watolib.users import notification_script_choices
 
@@ -186,9 +189,9 @@ class ABCNotificationsMode(ABCEventsMode):
                 Alternative(
                     title=_("Event Console alerts"),
                     help=_(
-                        "The Event Console can have events create notifications in Check_MK. "
+                        "The Event Console can have events create notifications in Checkmk. "
                         "These notifications will be processed by the rule based notification "
-                        "system of Check_MK. This matching option helps you distinguishing "
+                        "system of Checkmk. This matching option helps you distinguishing "
                         "and also gives you access to special event fields."
                     ),
                     elements=[
@@ -692,7 +695,7 @@ class ModeNotifications(ABCNotificationsMode):
             # Warn if there are unsent bulk notifications
             self._render_bulks(only_ripe=True)
 
-    def _render_bulks(self, only_ripe) -> bool:  # type:ignore[no-untyped-def]
+    def _render_bulks(self, only_ripe) -> bool:  # type: ignore[no-untyped-def]
         bulks = notification_get_bulks(only_ripe).result
         if not bulks:
             return False
@@ -773,7 +776,7 @@ class ModeNotifications(ABCNotificationsMode):
                         or _("Unknown date")
                     )
 
-                table.cell(_("Date/Time"), date, css=["nobr"])
+                table.cell(_("Time"), date, css=["nobr"])
                 nottype = context.get("NOTIFICATIONTYPE", "")
                 table.cell(_("Type"), nottype)
 
@@ -1150,13 +1153,13 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
 
         if self._new:
             if self._clone_nr >= 0 and not request.var("_clear"):
-                self._rule = EventRule()
                 try:
-                    self._rule.update(self._rules[self._clone_nr])
+                    self._rule = deepcopy(self._rules[self._clone_nr])
+                    self._rule["rule_id"] = new_notification_rule_id()
                 except IndexError:
                     raise MKUserError(None, _("This %s does not exist.") % "notification rule")
             else:
-                self._rule = {}
+                self._rule = get_default_notification_rule()
         else:
             try:
                 self._rule = self._rules[self._edit_nr]
@@ -1451,6 +1454,12 @@ class ABCEditNotificationRuleMode(ABCNotificationsMode):
             + section_override
             + self._rule_match_conditions()
             + section_contacts
+            + [
+                (
+                    "rule_id",
+                    UUID(),
+                ),
+            ]
             + [
                 # Notification
                 (

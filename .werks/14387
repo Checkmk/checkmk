@@ -6,7 +6,7 @@ Date: 1664200466
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This werk removes the option to configure Custom URL Dashlets that are not rendered within an iframe.
 Such non-iframe dashlets could not be rendered successfully due to broken update logic.

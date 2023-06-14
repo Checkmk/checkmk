@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -101,7 +101,7 @@ def test_discover_liebert_temp_air(
             PARSED_EXTRA_SECTION,
             [
                 Metric(name="temp", value=42.0, levels=(50.0, 55.0)),
-                Result(state=State.OK, summary="Temperature: 42.0°C"),
+                Result(state=State.OK, summary="Temperature: 42.0 °C"),
                 Result(
                     state=State.OK,
                     notice="Configuration: prefer user levels over device levels (used user levels)",
@@ -154,19 +154,19 @@ def test_check_liebert_temp_air_trend() -> None:
 
     with freezegun.freeze_time("1970-01-01 01:00:00"):
         with pytest.raises(IgnoreResultsError):
-            _get_check_result("20.0")  # -6.66°C
+            _get_check_result("20.0")  # -6.66 °C
 
     with freezegun.freeze_time("1970-01-01 02:00:00"):
         with pytest.raises(IgnoreResultsError):
-            _get_check_result("30.0")  # -1.11°C
+            _get_check_result("30.0")  # -1.11 °C
 
     with freezegun.freeze_time("1970-01-01 03:00:00"):
-        result = _get_check_result("40.0")  # 4.44 °C
+        result = _get_check_result("40.0")  # 4.44  °C
 
     assert result == [
         Metric("temp", 4.444444444444445, levels=(50.0, 55.0)),
-        Result(state=State.CRIT, summary="Temperature: 4.4°C (warn/crit below 10°C/15°C)"),
-        Result(state=State.OK, summary="Temperature trend: +5.6°C per 60 min"),
+        Result(state=State.CRIT, summary="Temperature: 4.4 °C (warn/crit below 10 °C/15 °C)"),
+        Result(state=State.OK, summary="Temperature trend: +5.6 °C per 60 min"),
         Result(
             state=State.OK,
             notice="Configuration: prefer user levels over device levels (used user levels)",

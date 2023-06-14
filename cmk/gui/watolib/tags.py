@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions for dealing with host tags"""
@@ -14,13 +14,13 @@ import cmk.utils.store as store
 import cmk.utils.tags
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
-from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagConfigSpec, TagGroup
+from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagConfigSpec, TagGroup, TagGroupID
 
 from cmk.gui.config import load_config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.hooks import request_memoize
 from cmk.gui.logged_in import user
-from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, Folder
+from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, folder_tree
 from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Ruleset
 from cmk.gui.watolib.utils import format_php, multisite_dir, wato_root_dir
 
@@ -82,7 +82,7 @@ def load_all_tag_config_read_only() -> TagConfig:
     return tag_config
 
 
-def update_tag_config(tag_config: TagConfig):  # type:ignore[no-untyped-def]
+def update_tag_config(tag_config: TagConfig):  # type: ignore[no-untyped-def]
     """Persist the tag config saving the information to the mk file
     and update the current environment
 
@@ -97,7 +97,7 @@ def update_tag_config(tag_config: TagConfig):  # type:ignore[no-untyped-def]
     _update_tag_dependencies()
 
 
-def load_tag_group(ident: str) -> TagGroup | None:
+def load_tag_group(ident: TagGroupID) -> TagGroup | None:
     """Load a tag group
 
     Args:
@@ -110,7 +110,7 @@ def load_tag_group(ident: str) -> TagGroup | None:
     return tag_config.get_tag_group(ident)
 
 
-def save_tag_group(tag_group: TagGroup):  # type:ignore[no-untyped-def]
+def save_tag_group(tag_group: TagGroup):  # type: ignore[no-untyped-def]
     """Save a new tag group
 
     Args:
@@ -124,7 +124,7 @@ def save_tag_group(tag_group: TagGroup):  # type:ignore[no-untyped-def]
     update_tag_config(tag_config)
 
 
-def is_builtin(ident: str) -> bool:
+def is_builtin(ident: TagGroupID) -> bool:
     """Verify if a tag group is a built-in"""
     if user:
         user.need_permission("wato.hosttags")
@@ -132,7 +132,7 @@ def is_builtin(ident: str) -> bool:
     return tag_config.tag_group_exists(ident)
 
 
-def tag_group_exists(ident: str, builtin_included=False) -> bool:  # type:ignore[no-untyped-def]
+def tag_group_exists(ident: TagGroupID, builtin_included=False) -> bool:  # type: ignore[no-untyped-def]
     """Verify if a tag group exists"""
     tag_config = load_tag_config()
     if builtin_included:
@@ -142,17 +142,16 @@ def tag_group_exists(ident: str, builtin_included=False) -> bool:  # type:ignore
 
 def _update_tag_dependencies():
     load_config()
-    Folder.invalidate_caches()
-    Folder.root_folder().rewrite_hosts_files()
+    tree = folder_tree()
+    tree.invalidate_caches()
+    tree.root_folder().rewrite_hosts_files()
 
 
 class RepairError(MKGeneralException):
     pass
 
 
-def edit_tag_group(  # type:ignore[no-untyped-def]
-    ident: str, edited_group: TagGroup, allow_repair=False
-):
+def edit_tag_group(ident: TagGroupID, edited_group: TagGroup, allow_repair: bool = False) -> None:
     """Update attributes of a tag group & update the relevant positions which used the relevant tag group
 
     Args:
@@ -188,7 +187,7 @@ def edit_tag_group(  # type:ignore[no-untyped-def]
     update_tag_config(tag_config)
 
 
-def identify_modified_tags(  # type:ignore[no-untyped-def]
+def identify_modified_tags(  # type: ignore[no-untyped-def]
     updated_group: TagGroup, old_group: TagGroup
 ):
     """Identify which ids were changed and which ids are to be deleted
@@ -294,7 +293,7 @@ def change_host_tags(
     affected_folder, affected_hosts = _change_host_tags_in_folders(
         operation,
         mode,
-        Folder.root_folder(),
+        folder_tree().root_folder(),
     )
 
     affected_rulesets = change_host_tags_in_rulesets(operation, mode)
@@ -400,7 +399,7 @@ def _change_host_tags_in_host_or_folder(operation, mode, host_or_folder):
     return affected
 
 
-def _change_host_tags_in_rule(operation, mode, ruleset, rule):
+def _change_host_tags_in_rule(operation, mode, ruleset, rule):  # pylint: disable=too-many-branches
     affected_rulesets: set[FolderRulesets] = set()
     if operation.tag_group_id not in rule.conditions.host_tags:
         return affected_rulesets  # The tag group is not used
@@ -413,9 +412,17 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):
             pass
 
         elif mode == TagCleanupMode.DELETE:
-            ruleset.delete_rule(rule)
-        else:
+            # Just remove if negated
+            if (
+                condition := rule.conditions.host_tags[operation.tag_group_id]
+            ) is not None and list(condition)[0] in ["$ne", "$nor"]:
+                del rule.conditions.host_tags[operation.tag_group_id]
+            else:
+                ruleset.delete_rule(rule)
+        elif mode == TagCleanupMode.REMOVE:
             del rule.conditions.host_tags[operation.tag_group_id]
+        else:
+            raise NotImplementedError()
 
         return affected_rulesets
 
@@ -433,7 +440,10 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):
         if not old_tag:
             continue
 
-        current_value = rule.conditions.host_tags[operation.tag_group_id]
+        current_value = rule.conditions.host_tags.get(operation.tag_group_id)
+        if current_value is None:
+            continue
+
         if current_value not in (old_tag, {"$ne": old_tag}):
             continue  # old_tag id is not configured
 
@@ -450,7 +460,10 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):
             was_negated = isinstance(current_value, dict) and "$ne" in current_value
             new_value = {"$ne": new_tag} if was_negated else new_tag
             rule.conditions.host_tags[operation.tag_group_id] = new_value
-        elif mode == TagCleanupMode.DELETE:
+        # Example for current_value: {'$ne': 'my_tag'} / my_tag
+        elif mode == TagCleanupMode.DELETE and (
+            not isinstance(current_value, dict) and list(current_value)[0] not in ["$ne", "$nor"]
+        ):
             ruleset.delete_rule(rule)
 
     return affected_rulesets
@@ -461,7 +474,7 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):
 # the following API:
 #
 # taggroup_title(group_id)
-# Returns the title of a WATO tag group
+# Returns the title of a Setup tag group
 #
 # taggroup_choice(group_id, list_of_object_tags)
 # Returns either
@@ -483,7 +496,7 @@ def _export_hosttags_to_php(cfg):
     tag_config = cmk.utils.tags.TagConfig.from_config(cfg)
     tag_config += cmk.utils.tags.BuiltinTagConfig()
 
-    # Transform WATO internal data structures into easier usable ones
+    # Transform Setup internal data structures into easier usable ones
     hosttags_dict = {}
     for tag_group in tag_config.tag_groups:
         tags = {}

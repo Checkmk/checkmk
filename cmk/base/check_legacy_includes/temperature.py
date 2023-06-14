@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -86,7 +86,6 @@ def check_temperature_determine_levels(  # pylint: disable=too-many-branches
     dev_warn_lower,
     dev_crit_lower,
 ):
-
     # Default values if none of the branches will match.
     warn = crit = warn_lower = crit_lower = None
 
@@ -471,7 +470,6 @@ def check_temperature_list(sensorlist, params, unique_name):
     status = 0
     detailtext = ""
     for entry in sensorlist:
-
         if len(entry) == 2:
             sub_item, temp = entry
             kwargs = {}

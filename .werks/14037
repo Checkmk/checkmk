@@ -6,7 +6,7 @@ Date: 1650439640
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 After setting up Oracle Performance Discovery rule and a threshold
 in Oracle Performance rule the service would go to UNKNOWN and no

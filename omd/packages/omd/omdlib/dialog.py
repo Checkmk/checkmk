@@ -34,6 +34,8 @@ from typing import TYPE_CHECKING
 from cmk.utils import tty
 from cmk.utils.exceptions import MKTerminate
 
+from .config_hooks import ConfigChoiceHasError
+
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext
 
@@ -79,6 +81,34 @@ def dialog_regex(
             return False, value
         if not regex.match(new_value):
             dialog_message("Invalid value. Please try again.")
+            value = new_value
+        else:
+            return True, new_value
+
+
+def dialog_config_choice_has_error(
+    title: str, text: str, pattern: ConfigChoiceHasError, value: str, oktext: str, canceltext: str
+) -> DialogResult:
+    while True:
+        args = [
+            "--ok-label",
+            oktext,
+            "--cancel-label",
+            canceltext,
+            "--title",
+            title,
+            "--inputbox",
+            text,
+            "0",
+            "0",
+            value,
+        ]
+        change, new_value = _run_dialog(args)
+        if not change:
+            return False, value
+        validity = pattern(new_value)
+        if validity.is_error():
+            dialog_message(validity.error)
             value = new_value
         else:
             return True, new_value

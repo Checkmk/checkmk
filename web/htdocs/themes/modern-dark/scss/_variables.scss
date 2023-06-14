@@ -1,5 +1,5 @@
 @charset "UTF-8";
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -43,6 +43,7 @@ $font-color-orange: $orange-1;
 // Form elements (input, textarea, button, etc.)
 // -----------------------------------------------------------------------------
 $button-background-hover: lighten($grey-6, 10%);
+$default-button-border-color: $ux-theme-5;
 $default-submit-button-border-color: darken($success, 25%);
 
 $input-background-color: $ux-theme-5;
@@ -209,3 +210,4 @@ $dashlet-figures-grid-color: rgb(128, 151, 177);
 $scatterplot-hilite-color: rgb(70, 130, 180);
 $gauge-span-color: $ux-theme-5;
 $gauge-single-value-color: $font-color;
+$label-filter-last-row-opacity: 0.5;

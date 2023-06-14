@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -147,6 +147,8 @@ class TimeSeries:
             Includes [start, end, step, *values]
         timewindow: tuple
             describes (start, end, step), in this case data has only values
+        conversion:
+            optional conversion to account for user-specific unit settings
         **metadata:
             additional information arguments
 
@@ -156,6 +158,7 @@ class TimeSeries:
         self,
         data: TimeSeriesValues,
         timewindow: tuple[Timestamp, Timestamp, Seconds] | None = None,
+        conversion: Callable[[float], float] = lambda v: v,
         **metadata: str,
     ) -> None:
         if timewindow is None:
@@ -169,7 +172,7 @@ class TimeSeries:
         self.start = int(timewindow[0])
         self.end = int(timewindow[1])
         self.step = int(timewindow[2])
-        self.values = data
+        self.values = [v if v is None else conversion(v) for v in data]
         self.metadata = metadata
 
     @property
@@ -197,7 +200,7 @@ class TimeSeries:
         return self.values
 
     def downsample(
-        self, twindow: TimeWindow, cf: ConsolidationFunctionName = "max"
+        self, twindow: TimeWindow, cf: ConsolidationFunctionName | None = "max"
     ) -> TimeSeriesValues:
         """Downsample time series by consolidation function
 
@@ -253,6 +256,9 @@ class TimeSeries:
     def __iter__(self) -> Iterator[TimeSeriesValue]:
         yield from self.values
 
+    def count(self, /, v: TimeSeriesValue) -> int:
+        return self.values.count(v)
+
 
 def lq_logic(filter_condition: str, values: list[str], join: str) -> str:
     """JOIN with (Or, And) FILTER_CONDITION the VALUES for a livestatus query"""
@@ -281,6 +287,7 @@ def livestatus_lql(
 
 
 def get_rrd_data(
+    connection: livestatus.SingleSiteConnection,
     hostname: HostName,
     service_description: ServiceName,
     varname: MetricName,
@@ -321,9 +328,6 @@ def get_rrd_data(
     lql = livestatus_lql([hostname], [column], service_description) + "OutputFormat: python\n"
 
     try:
-        connection = livestatus.SingleSiteConnection(
-            "unix:%s" % cmk.utils.paths.livestatus_unix_socket
-        )
         response = connection.query_value(lql)
     except livestatus.MKLivestatusNotFoundError as e:
         if cmk.utils.debug.enabled():
@@ -337,6 +341,7 @@ def get_rrd_data(
 
 
 def rrd_datacolum(
+    connection: livestatus.SingleSiteConnection,
     hostname: HostName,
     service_description: ServiceName,
     varname: MetricName,
@@ -345,7 +350,9 @@ def rrd_datacolum(
     "Partial helper function to get rrd data"
 
     def time_boundaries(fromtime: Timestamp, untiltime: Timestamp) -> TimeSeries:
-        return get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime)
+        return get_rrd_data(
+            connection, hostname, service_description, varname, cf, fromtime, untiltime
+        )
 
     return time_boundaries
 
@@ -478,7 +485,6 @@ def _get_levels_from_params(
     stdev: float | None,
     levels_factor: float,
 ) -> tuple[float, float]:
-
     levels_type, (warn, crit) = levels
 
     reference_deviation = _get_reference_deviation(

@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
+from collections.abc import Mapping
 from contextlib import ExitStack
 from pathlib import Path
 
 import pytest
 
-from cmk.special_agents.agent_proxmox_ve import BackupTask, collect_vm_backup_info
+from cmk.special_agents.agent_proxmox_ve import BackupInfo, BackupTask, collect_vm_backup_info
 
 
 @pytest.mark.parametrize(
@@ -434,8 +435,10 @@ from cmk.special_agents.agent_proxmox_ve import BackupTask, collect_vm_backup_in
         ),
     ),
 )
-def test_parse_backup_logs(  # type:ignore[no-untyped-def]
-    logfile, expected_results, expected_exception
+def test_parse_backup_logs(
+    logfile: str,
+    expected_results: Mapping[str, BackupInfo],
+    expected_exception: None | type[BackupTask.LogParseWarning],
 ) -> None:
     file_path = Path(os.path.dirname(__file__)) / "proxmox_ve-files" / logfile
     log = ({"n": i, "t": line} for i, line in enumerate(file_path.open().readlines()))

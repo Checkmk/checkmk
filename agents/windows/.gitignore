@@ -10,3 +10,5 @@ check_mk_agent_unsigned.msi
 python-3.4.cab
 python-3.cab
 unsign-msi.patch
+windows_files_hashes.txt
+

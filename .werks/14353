@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The check expects two services, one for IN and one for OUT, to be created. We now again
 created two services, instead of only one.

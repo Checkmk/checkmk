@@ -1,0 +1,14 @@
+Title: Fixed topology error message in web.log
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1679994091
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+This error message had no real negative effect.
+
+

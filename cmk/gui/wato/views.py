@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,10 +10,10 @@ from cmk.utils.exceptions import MKGeneralException
 
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.painter.v0.base import Cell, Painter
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.view_utils import CellSpec
-from cmk.gui.views.painter.v0.base import Cell, Painter
 from cmk.gui.views.sorter import Sorter
 from cmk.gui.watolib.hosts_and_folders import (
     get_folder_title_path,
@@ -54,7 +54,7 @@ def get_wato_folder(row: dict, how: str, with_links: bool = True) -> str | HTML:
             else get_folder_title_path(wato_path)
         )
     except MKGeneralException:
-        # happens when a path can not be resolved using the local WATO.
+        # happens when a path can not be resolved using the local Setup.
         # e.g. when having an independent site with different folder
         # hierarchy added to the GUI.
         # Display the raw path rather than the exception text.
@@ -66,7 +66,7 @@ def get_wato_folder(row: dict, how: str, with_links: bool = True) -> str | HTML:
         return title_path[-1]
     if how == "abs":
         return HTML(" / ").join(title_path)
-    # We assume that only hosts are show, that are below the current WATO path.
+    # We assume that only hosts are show, that are below the current Setup path.
     # If not then better output absolute path then wrong path.
     current_path = request.var("wato_folder")
     if not current_path or not wato_path.startswith(current_path):

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -19,6 +19,11 @@ for SRC_PATH in "$@"; do
     DIRNAME="${FILENAME%.tar.gz}"
     REMOVE_DIRS=""
     echo "=> $SRC_PATH"
+
+    if tar tvzf "$SRC_PATH" | grep -E "$DIRNAME/saas/.+" >/dev/null; then
+        echo "Found CSE specific components..."
+        REMOVE_DIRS+=" $DIRNAME/saas/*"
+    fi
 
     if tar tvzf "$SRC_PATH" | grep -E "$DIRNAME/cloud/.+" >/dev/null; then
         echo "Found CCE specific components..."
@@ -45,8 +50,8 @@ for SRC_PATH in "$@"; do
     gunzip -c "$SRC_PATH" | tar -v --wildcards --delete$REMOVE_DIRS | gzip >"$SRC_PATH.new"
     mv "$SRC_PATH.new" "$SRC_PATH"
 
-    echo "Checking for remaining CEE/CME/CCE files..."
-    if tar tvzf "$SRC_PATH" | grep -E "$DIRNAME/(cloud|managed|enterprise)/.+"; then
+    echo "Checking for remaining CEE/CME/CCE/CSE files..."
+    if tar tvzf "$SRC_PATH" | grep -E "$DIRNAME/(cloud|managed|enterprise|saas)/.+"; then
         echo "ERROR: Still found some CEE/CME specific components."
         exit 1
     fi

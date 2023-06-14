@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -14,10 +14,12 @@ from cmk.base.plugins.agent_based.utils.kube import (
     ControlChain,
     FilteredAnnotations,
     kube_annotations_to_cmk_labels,
+    kube_labels_to_cmk_labels,
+    Labels,
 )
 
 
-def result_simple(  # type:ignore[no-untyped-def]
+def result_simple(  # type: ignore[no-untyped-def]
     display_name: str, notice_only=False
 ) -> Callable[[object], Result]:
     key = "notice" if notice_only else "summary"
@@ -109,6 +111,7 @@ class Info(Protocol):
     name: str
     kubernetes_cluster_hostname: str
     annotations: FilteredAnnotations
+    labels: Labels
 
 
 def host_labels(
@@ -158,5 +161,6 @@ def host_labels(
         yield HostLabel(f"cmk/kubernetes/{object_type}", section.name)
         yield HostLabel("cmk/kubernetes/cluster-host", section.kubernetes_cluster_hostname)
         yield from kube_annotations_to_cmk_labels(section.annotations)
+        yield from kube_labels_to_cmk_labels(section.labels)
 
     return _host_labels

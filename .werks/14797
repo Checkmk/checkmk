@@ -1,0 +1,16 @@
+Title: Enable recursive look-up and ignore case for Samba shares
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1676632768
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+It is now possible to search for files recursively with the agent_smb_share.
+The recursion is started if "**" is found within the pattern and the option
+"Recursive pattern search" is enabled.
+The search is only started from the needed directory on.
+
+The Samba agent now ignores case when matching patterns.

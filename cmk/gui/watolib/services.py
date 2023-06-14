@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
 import dataclasses
+import enum
+import functools
 import json
 import os
 import sys
 import time
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from hashlib import sha256
-from typing import Any, NamedTuple, TypedDict
+from typing import Any, assert_never, Literal, NamedTuple, TypedDict, TypeVar
 
-from mypy_extensions import NamedArg
+from mypy_extensions import Arg, NamedArg
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
+from cmk.utils.labels import HostLabel, HostLabelValueDict
 from cmk.utils.object_diff import make_diff_text
-from cmk.utils.type_defs import HostOrServiceConditions, Item
+from cmk.utils.type_defs import HostName, HostOrServiceConditions, Item
+from cmk.utils.version import Version
 
 from cmk.automations.results import (
     CheckPreviewEntry,
@@ -31,6 +35,7 @@ from cmk.gui.background_job import (
     BackgroundProcessInterface,
     InitialStatusArgs,
     job_registry,
+    JobStatusSpec,
     JobStatusStates,
 )
 from cmk.gui.config import active_config
@@ -54,6 +59,7 @@ from cmk.gui.watolib.rulesets import (
     Ruleset,
     service_description_to_condition,
 )
+from cmk.gui.watolib.utils import may_edit_ruleset
 
 
 # Would rather use an Enum for this, but this information is exported to javascript
@@ -63,10 +69,12 @@ from cmk.gui.watolib.rulesets import (
 # - passive: new/vanished/old/ignored/removed
 # - active/custom/legacy: old/ignored
 class DiscoveryState:
-    UNDECIDED = "new"
-    VANISHED = "vanished"
-    MONITORED = "old"
-    IGNORED = "ignored"
+    # not sure why `Literal` this is needed explicitly.
+    # Should be gone once we use `StrEnum`
+    UNDECIDED: Literal["new"] = "new"
+    VANISHED: Literal["vanished"] = "vanished"
+    MONITORED: Literal["old"] = "old"
+    IGNORED: Literal["ignored"] = "ignored"
     REMOVED = "removed"
 
     MANUAL = "manual"
@@ -78,13 +86,9 @@ class DiscoveryState:
     CLUSTERED_IGNORED = "clustered_ignored"
     ACTIVE_IGNORED = "active_ignored"
     CUSTOM_IGNORED = "custom_ignored"
-    # TODO: Were removed in 1.6 from base. Keeping this for
-    # compatibility with older remote sites. Remove with 1.7.
-    LEGACY = "legacy"
-    LEGACY_IGNORED = "legacy_ignored"
 
     @classmethod
-    def is_discovered(cls, table_source) -> bool:  # type:ignore[no-untyped-def]
+    def is_discovered(cls, table_source) -> bool:  # type: ignore[no-untyped-def]
         return table_source in [
             cls.UNDECIDED,
             cls.VANISHED,
@@ -98,9 +102,14 @@ class DiscoveryState:
         ]
 
 
-# Would rather use an Enum for this, but this information is exported to javascript
-# using JSON and Enum is not serializable
-class DiscoveryAction:
+class DiscoveryAction(enum.StrEnum):
+    """This is exported to javascript, so it has to be json serializable
+
+    >>> import json
+    >>> [json.dumps(a) for a in DiscoveryAction]
+    ['""', '"stop"', '"fix_all"', '"refresh"', '"tabula_rasa"', '"single_update"', '"bulk_update"', '"update_host_labels"', '"update_services"']
+    """
+
     NONE = ""  # corresponds to Full Scan in WATO
     STOP = "stop"
     FIX_ALL = "fix_all"
@@ -112,16 +121,55 @@ class DiscoveryAction:
     UPDATE_SERVICES = "update_services"
 
 
+class UpdateType(enum.Enum):
+    "States that an individual service can be changed to by clicking a button"
+    UNDECIDED = "new"
+    MONITORED = "old"
+    IGNORED = "ignored"
+    REMOVED = "removed"
+
+
 class DiscoveryResult(NamedTuple):
     job_status: dict
     check_table_created: int
     check_table: Sequence[CheckPreviewEntry]
-    host_labels: dict
-    new_labels: dict
-    vanished_labels: dict
-    changed_labels: dict
+    host_labels: Mapping[str, HostLabelValueDict]
+    new_labels: Mapping[str, HostLabelValueDict]
+    vanished_labels: Mapping[str, HostLabelValueDict]
+    changed_labels: Mapping[str, HostLabelValueDict]
+    labels_by_host: Mapping[HostName, Sequence[HostLabel]]
+    sources: Mapping[str, tuple[int, str]]
 
-    def serialize(self) -> str:
+    def serialize(self, for_cmk_version: Version) -> str:
+        if for_cmk_version >= Version.from_str("2.2.0b6"):
+            return repr(
+                (
+                    self.job_status,
+                    self.check_table_created,
+                    [dataclasses.astuple(cpe) for cpe in self.check_table],
+                    self.host_labels,
+                    self.new_labels,
+                    self.vanished_labels,
+                    self.changed_labels,
+                    {
+                        str(host_name): [label.serialize() for label in host_labels]
+                        for host_name, host_labels in self.labels_by_host.items()
+                    },
+                    self.sources,
+                )
+            )
+        if for_cmk_version < Version.from_str("2.1.0p27"):
+            return repr(
+                (
+                    self.job_status,
+                    self.check_table_created,
+                    [dataclasses.astuple(cpe) for cpe in self.check_table],
+                    self.host_labels,
+                    self.new_labels,
+                    self.vanished_labels,
+                    self.changed_labels,
+                )
+            )
         return repr(
             (
                 self.job_status,
@@ -131,22 +179,46 @@ class DiscoveryResult(NamedTuple):
                 self.new_labels,
                 self.vanished_labels,
                 self.changed_labels,
+                self.sources,
             )
         )
 
     @classmethod
     def deserialize(cls, raw: str) -> "DiscoveryResult":
-        job_status, check_table_created, raw_check_table, *rest = ast.literal_eval(raw)
+        (
+            job_status,
+            check_table_created,
+            raw_check_table,
+            host_labels,
+            new_labels,
+            vanished_labels,
+            changed_labels,
+            raw_labels_by_host,
+            sources,
+        ) = ast.literal_eval(raw)
         return cls(
             job_status,
             check_table_created,
             [CheckPreviewEntry(*cpe) for cpe in raw_check_table],
-            *rest,
+            host_labels,
+            new_labels,
+            vanished_labels,
+            changed_labels,
+            {
+                HostName(raw_host_name): [
+                    HostLabel.deserialize(raw_label) for raw_label in raw_host_labels
+                ]
+                for raw_host_name, raw_host_labels in raw_labels_by_host.items()
+            },
+            sources,
         )
+
+    def is_active(self) -> bool:
+        return bool(self.job_status["is_active"])
 
 
 class DiscoveryOptions(NamedTuple):
-    action: str
+    action: DiscoveryAction
     show_checkboxes: bool
     show_parameters: bool
     show_discovered_labels: bool
@@ -167,7 +239,7 @@ class DiscoveryInfo(TypedDict):
 
 
 class Discovery:
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
         self,
         host,
         discovery_options,
@@ -190,7 +262,7 @@ class Discovery:
             )
         self.do_discovery(discovery_result)
 
-    def do_discovery(self, discovery_result: DiscoveryResult):  # type:ignore[no-untyped-def]
+    def do_discovery(self, discovery_result: DiscoveryResult):  # type: ignore[no-untyped-def]
         old_autochecks: SetAutochecksTable = {}
         autochecks_to_save: SetAutochecksTable = {}
         remove_disabled_rule: set[str] = set()
@@ -397,7 +469,7 @@ class Discovery:
                 return rule
         return None
 
-    def _get_table_target(self, entry: CheckPreviewEntry):  # type:ignore[no-untyped-def]
+    def _get_table_target(self, entry: CheckPreviewEntry):  # type: ignore[no-untyped-def]
         if self._options.action == DiscoveryAction.FIX_ALL or (
             self._options.action == DiscoveryAction.UPDATE_SERVICES
             and self._service_is_checked(entry.check_plugin_name, entry.item)
@@ -440,27 +512,41 @@ class Discovery:
         )
 
 
-def service_discovery_call(  # type:ignore[no-untyped-def]
-    perform_action_call: Callable[
-        [DiscoveryOptions, DiscoveryResult, NamedArg(CREHost, "host")],
-        DiscoveryResult,
-    ]
-    | Callable[
+_ActionCall = TypeVar(
+    "_ActionCall",
+    Callable[
         [
-            DiscoveryOptions,
-            DiscoveryResult,
-            list[str],
-            str | None,
-            str | None,
+            Arg(DiscoveryOptions, "discovery_options"),
+            Arg(DiscoveryResult, "discovery_result"),
             NamedArg(CREHost, "host"),
         ],
         DiscoveryResult,
-    ]
-):
-    def decorate(*args, **kwargs) -> DiscoveryResult:  # type:ignore[no-untyped-def]
+    ],
+    Callable[
+        [
+            Arg(DiscoveryOptions, "discovery_options"),
+            Arg(DiscoveryResult, "discovery_result"),
+            NamedArg(CREHost, "host"),
+            NamedArg(list[str], "update_services"),
+            NamedArg(str | None, "update_source"),
+            NamedArg(str | None, "update_target"),
+        ],
+        DiscoveryResult,
+    ],
+)
+
+
+def _service_discovery_call(perform_action_call: _ActionCall) -> _ActionCall:
+    @functools.wraps(perform_action_call)
+    def decorate(  # type: ignore[no-untyped-def]
+        discovery_options: DiscoveryOptions,
+        discovery_result: DiscoveryResult,
+        *,
+        host: CREHost,
+        **kwargs,
+    ) -> DiscoveryResult:
         user.need_permission("wato.services")
-        result = perform_action_call(*args, **kwargs)
-        host: CREHost = kwargs["host"]
+        result = perform_action_call(discovery_options, discovery_result, host=host, **kwargs)
         if not host.locked():
             host.clear_discovery_failed()
         return result
@@ -468,7 +554,7 @@ def service_discovery_call(  # type:ignore[no-untyped-def]
     return decorate
 
 
-@service_discovery_call
+@_service_discovery_call
 def perform_fix_all(
     discovery_options: DiscoveryOptions,
     discovery_result: DiscoveryResult,
@@ -478,7 +564,7 @@ def perform_fix_all(
     """
     Handle fix all ('Accept All' on UI) discovery action
     """
-    _perform_update_host_labels(host, discovery_result.host_labels)
+    _perform_update_host_labels(discovery_result.labels_by_host)
     Discovery(
         host,
         discovery_options,
@@ -492,7 +578,7 @@ def perform_fix_all(
     return discovery_result
 
 
-@service_discovery_call
+@_service_discovery_call
 def perform_host_label_discovery(
     discovery_options: DiscoveryOptions,
     discovery_result: DiscoveryResult,
@@ -500,14 +586,14 @@ def perform_host_label_discovery(
     host: CREHost,
 ) -> DiscoveryResult:
     """Handle update host labels discovery action"""
-    _perform_update_host_labels(host, discovery_result.host_labels)
+    _perform_update_host_labels(discovery_result.labels_by_host)
     discovery_result = get_check_table(
         StartDiscoveryRequest(host, host.folder(), discovery_options)
     )
     return discovery_result
 
 
-@service_discovery_call
+@_service_discovery_call
 def perform_service_discovery(
     discovery_options: DiscoveryOptions,
     discovery_result: DiscoveryResult,
@@ -533,17 +619,64 @@ def perform_service_discovery(
     return discovery_result
 
 
-def has_discovery_action_specific_permissions(intended_discovery_action: str) -> bool:
-    if intended_discovery_action == DiscoveryAction.NONE and not user.may("wato.services"):
-        return False
-    if intended_discovery_action != DiscoveryAction.TABULA_RASA and not (
-        user.may("wato.service_discovery_to_undecided")
-        and user.may("wato.service_discovery_to_monitored")
-        and user.may("wato.service_discovery_to_ignored")
-        and user.may("wato.service_discovery_to_removed")
-    ):
-        return False
-    return True
+def has_discovery_action_specific_permissions(
+    intended_discovery_action: DiscoveryAction, update_target: UpdateType | None
+) -> bool:
+    def may_all(*permissions: str) -> bool:
+        return all(user.may(p) for p in permissions)
+
+    # not sure if the function even gets called for all of these.
+    match intended_discovery_action:
+        case DiscoveryAction.NONE:
+            return user.may("wato.services")
+        case DiscoveryAction.STOP:
+            return user.may("wato.services")
+        case DiscoveryAction.TABULA_RASA:
+            return may_all(
+                "wato.service_discovery_to_undecided",
+                "wato.service_discovery_to_monitored",
+                "wato.service_discovery_to_removed",
+            )
+        case DiscoveryAction.FIX_ALL:
+            return may_all(
+                "wato.service_discovery_to_monitored",
+                "wato.service_discovery_to_removed",
+            )
+        case DiscoveryAction.REFRESH:
+            return user.may("wato.services")
+        case DiscoveryAction.SINGLE_UPDATE:
+            if update_target is None:
+                # This should never happen.
+                # The typing possibilities are currently so limited that I don't see a better solution.
+                # We only get here via the REST API, which does not allow SINGLE_UPDATES.
+                return False
+            return has_modification_specific_permissions(update_target)
+        case DiscoveryAction.BULK_UPDATE:
+            return may_all(
+                "wato.service_discovery_to_monitored",
+                "wato.service_discovery_to_removed",
+            )
+        case DiscoveryAction.UPDATE_HOST_LABELS:
+            return user.may("wato.services")
+        case DiscoveryAction.UPDATE_SERVICES:
+            return user.may("wato.services")
+
+    assert_never(intended_discovery_action)
+
+
+def has_modification_specific_permissions(update_target: UpdateType) -> bool:
+    match update_target:
+        case UpdateType.MONITORED:
+            return user.may("wato.service_discovery_to_monitored")
+        case UpdateType.UNDECIDED:
+            return user.may("wato.service_discovery_to_undecided")
+        case UpdateType.REMOVED:
+            return user.may("wato.service_discovery_to_removed")
+        case UpdateType.IGNORED:
+            return user.may("wato.service_discovery_to_ignored") and may_edit_ruleset(
+                "ignored_services"
+            )
+    assert_never(update_target)
 
 
 def initial_discovery_result(
@@ -551,42 +684,36 @@ def initial_discovery_result(
     host: CREHost,
     previous_discovery_result: DiscoveryResult | None,
 ) -> DiscoveryResult:
-    if _use_previous_discovery_result(previous_discovery_result):
-        assert previous_discovery_result is not None
-        return previous_discovery_result
-
-    return get_check_table(StartDiscoveryRequest(host, host.folder(), discovery_options))
-
-
-def _use_previous_discovery_result(previous_discovery_result: DiscoveryResult | None) -> bool:
-    if not previous_discovery_result:
-        return False
-
-    if has_active_job(previous_discovery_result):
-        return False
-
-    return True
-
-
-def _perform_update_host_labels(host, host_labels):
-    message = _("Updated discovered host labels of '%s' with %d labels") % (
-        host.name(),
-        len(host_labels),
-    )
-    _changes.add_service_change(
-        "update-host-labels",
-        message,
-        host.object_ref(),
-        host.site_id(),
-    )
-    update_host_labels(
-        host.site_id(),
-        host.name(),
-        host_labels,
+    return (
+        get_check_table(StartDiscoveryRequest(host, host.folder(), discovery_options))
+        if previous_discovery_result is None or previous_discovery_result.is_active()
+        else previous_discovery_result
     )
 
 
-def _apply_state_change(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
+def _perform_update_host_labels(labels_by_nodes: Mapping[HostName, Sequence[HostLabel]]) -> None:
+    for host_name, host_labels in labels_by_nodes.items():
+        if (host := CREHost.host(host_name)) is None:
+            raise ValueError(f"no such host: {host_name!r}")
+
+        message = _("Updated discovered host labels of '%s' with %d labels") % (
+            host_name,
+            len(host_labels),
+        )
+        _changes.add_service_change(
+            "update-host-labels",
+            message,
+            host.object_ref(),
+            host.site_id(),
+        )
+        update_host_labels(
+            host.site_id(),
+            host.name(),
+            host_labels,
+        )
+
+
+def _apply_state_change(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
     table_source: str,
     table_target: str,
     key: tuple[Any, Any],
@@ -722,13 +849,15 @@ def get_check_table(discovery_request: StartDiscoveryRequest) -> DiscoveryResult
     sync_changes_before_remote_automation(discovery_request.host.site_id())
 
     return DiscoveryResult.deserialize(
-        do_remote_automation(
-            get_site_config(discovery_request.host.site_id()),
-            "service-discovery-job",
-            [
-                ("host_name", discovery_request.host.name()),
-                ("options", json.dumps(discovery_request.options._asdict())),
-            ],
+        str(
+            do_remote_automation(
+                get_site_config(discovery_request.host.site_id()),
+                "service-discovery-job",
+                [
+                    ("host_name", discovery_request.host.name()),
+                    ("options", json.dumps(discovery_request.options._asdict())),
+                ],
+            )
         )
     )
 
@@ -781,6 +910,8 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
                 new_labels={},
                 vanished_labels={},
                 changed_labels={},
+                source_results={},
+                labels_by_host={},
             ),
         )
 
@@ -804,7 +935,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         print("Completed.")
 
     def _perform_service_scan(self, api_request: StartDiscoveryRequest) -> None:
-        """The try-inventory automation refreshes the Check_MK internal cache and makes the new
+        """The try-inventory automation refreshes the Checkmk internal cache and makes the new
         information available to the next try-inventory call made by get_result()."""
         sys.stdout.write(
             discovery_preview(
@@ -833,24 +964,26 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
 
     def get_result(self, api_request: StartDiscoveryRequest) -> DiscoveryResult:
         """Executed from the outer world to report about the job state"""
-        job_status = dict(self.get_status())
-        job_status["is_active"] = self.is_active()
+        job_status = self.get_status()
+        job_status.is_active = self.is_active()
 
-        if job_status["is_active"]:
+        if job_status.is_active:
             check_table_created, result = self._pre_discovery_preview
         else:
             check_table_created, result = self._get_discovery_preview(api_request)
-            if job_status["state"] == JobStatusStates.EXCEPTION:
-                job_status.update(self._cleaned_up_status(job_status))
+            if job_status.state == JobStatusStates.EXCEPTION:
+                job_status = self._cleaned_up_status(job_status)
 
         return DiscoveryResult(
-            job_status=job_status,
+            job_status=dict(job_status),
             check_table_created=check_table_created,
             check_table=result.check_table,
             host_labels=result.host_labels,
             new_labels=result.new_labels,
             vanished_labels=result.vanished_labels,
             changed_labels=result.changed_labels,
+            labels_by_host=result.labels_by_host,
+            sources=result.source_results,
         )
 
     @staticmethod
@@ -871,27 +1004,26 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         )
 
     @staticmethod
-    def _cleaned_up_status(job_status):
+    def _cleaned_up_status(job_status: JobStatusSpec) -> JobStatusSpec:
         # There might be an exception when calling above 'check_mk_automation'. For example
         # this may happen if a hostname is not resolvable. Then if the error is fixed, ie.
         # configuring an IP address of this host, and the discovery is started again, we put
         # the cached/last job exception into the current job progress update instead of displaying
         # the error in a CRIT message box again.
-        return {
-            "state": JobStatusStates.FINISHED,
-            "loginfo": {
-                "JobProgressUpdate": ["%s:" % _("Last progress update")]
-                + job_status["loginfo"]["JobProgressUpdate"]
-                + ["%s:" % _("Last exception")]
-                + job_status["loginfo"]["JobException"],
-                "JobException": [],
-                "JobResult": job_status["loginfo"]["JobResult"],
-            },
+        new_loginfo = {
+            "JobProgressUpdate": [
+                "%s:" % _("Last progress update"),
+                *job_status.loginfo["JobProgressUpdate"],
+                "%s:" % _("Last exception"),
+                *job_status.loginfo["JobException"],
+            ],
+            "JobException": [],
+            "JobResult": job_status.loginfo["JobResult"],
         }
+        return job_status.copy(
+            update={"state": JobStatusStates.FINISHED, "loginfo": new_loginfo},
+            deep=True,  # not sure, better play it safe.
+        )
 
     def _check_table_file_path(self):
         return os.path.join(self.get_work_dir(), "check_table.mk")
-
-
-def has_active_job(discovery_result: DiscoveryResult) -> bool:
-    return discovery_result.job_status["is_active"]

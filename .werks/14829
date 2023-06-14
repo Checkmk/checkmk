@@ -6,7 +6,7 @@ Date: 1668442670
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Elasticsearch can be configured to automatically add a timestamp to index names, see
 <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/date-index-name-processor.html" target="_blank">the documentation</a>.

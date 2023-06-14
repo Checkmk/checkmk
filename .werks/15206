@@ -6,7 +6,7 @@ Date: 1673964990
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Prior to this werk, DCD was unable to complete Phase 2.2 whenever the REST API
 returned host configs which included locked attributes. This werk resolves this

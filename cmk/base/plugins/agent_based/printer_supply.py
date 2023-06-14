@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -72,7 +72,6 @@ def parse_printer_supply(string_table: List[StringTable]) -> Section:
     for index, (name, unit_info, raw_max_capacity, raw_level, supply_class, color_id) in enumerate(
         string_table[1]
     ):
-
         try:
             max_capacity = int(raw_max_capacity)
             level = int(raw_level)

@@ -18,12 +18,12 @@ abstract class UnitPrefixes {
 }
 
 export class SIUnitPrefixes extends UnitPrefixes {
-    static _BASE: number = 1000;
+    static _BASE = 1000;
     static _PREFIXES: string[] = ["", "k", "M", "G", "T", "P", "E", "Z", "Y"];
 }
 
 export class IECUnitPrefixes extends UnitPrefixes {
-    static _BASE: number = 1024;
+    static _BASE = 1024;
     static _PREFIXES: string[] = [
         "",
         "Ki",
@@ -37,12 +37,12 @@ export class IECUnitPrefixes extends UnitPrefixes {
     ];
 }
 
-export function drop_dotzero(value, digits = 2) {
+export function drop_dotzero(value: number, digits = 2) {
     return value.toFixed(digits).replace(/\.0+$/, "");
 }
 
 export function fmt_number_with_precision(
-    v,
+    v: number,
     unit_prefix_type: typeof UnitPrefixes = SIUnitPrefixes,
     precision = 2,
     drop_zeroes = false,
@@ -57,7 +57,7 @@ export function fmt_number_with_precision(
 }
 
 export function fmt_bytes(
-    b,
+    b: number,
     unit_prefix_type: typeof UnitPrefixes = IECUnitPrefixes,
     precision = 2,
     unit = "B"
@@ -71,14 +71,14 @@ export function fmt_bytes(
     );
 }
 
-export function fmt_nic_speed(speed) {
+export function fmt_nic_speed(speed: string) {
     const speedi = parseInt(speed);
     if (isNaN(speedi)) return speed;
 
     return fmt_number_with_precision(speedi, SIUnitPrefixes, 2, false, "bit/s");
 }
 
-export function percent(perc, scientific_notation = false) {
+export function percent(perc: number, scientific_notation = false) {
     if (perc == 0) return "0%";
     let result = "";
     if (scientific_notation && Math.abs(perc) >= 100000) {
@@ -103,23 +103,25 @@ export function percent(perc, scientific_notation = false) {
     return result + "%";
 }
 
-export function scientific(v, precision) {
+export function scientific(v: number, precision: number): string {
     if (v == 0) return "0";
     if (v < 0) return "-" + scientific(-1 * v, precision);
 
-    let [mantissa, exponent] = frexpb(v, 10);
+    const exponent = frexpb(v, 10)[1];
     if (-3 <= exponent && exponent <= 4) {
         return v.toFixed(
             Math.min(precision, Math.max(0, precision - exponent))
         );
     }
-    return v.toExponetial(precision);
+    return v.toExponential(precision);
 }
 
-export function calculate_physical_precision(v, precision) {
+export function calculate_physical_precision(
+    v: number,
+    precision: number
+): [string, number, number] {
     if (v == 0) return ["", precision - 1, 1];
-
-    let [_mantissa, exponent] = frexpb(v, 10);
+    let exponent = frexpb(v, 10)[1];
 
     if (Number.isInteger(v)) precision = Math.min(precision, exponent + 1);
 
@@ -138,24 +140,28 @@ export function calculate_physical_precision(v, precision) {
         places_after_comma = precision - places_before_comma;
     }
 
-    const scale_symbols = {
+    const scale_symbols: Record<string, string> = {
         "-5": "f",
         "-4": "p",
         "-3": "n",
         "-2": "µ",
         "-1": "m",
-        0: "",
-        1: "k",
-        2: "M",
-        3: "G",
-        4: "T",
-        5: "P",
+        "0": "",
+        "1": "k",
+        "2": "M",
+        "3": "G",
+        "4": "T",
+        "5": "P",
     };
 
     return [scale_symbols[scale], places_after_comma, 1000 ** scale];
 }
 
-export function physical_precision(v, precision, unit_symbol) {
+export function physical_precision(
+    v: number,
+    precision: number,
+    unit_symbol: string
+): string {
     if (v < 0) return "-" + physical_precision(-1 * v, precision, unit_symbol);
     const [symbol, places_after_comma, factor] = calculate_physical_precision(
         v,
@@ -167,7 +173,7 @@ export function physical_precision(v, precision, unit_symbol) {
     );
 }
 
-export function frexpb(x, base) {
+export function frexpb(x: number, base: number) {
     let exp = Math.floor(Math.log(x) / Math.log(base));
     let mantissa = x / base ** exp;
     if (mantissa < 1) {
@@ -177,7 +183,7 @@ export function frexpb(x, base) {
     return [mantissa, exp];
 }
 
-export function approx_age(secs) {
+export function approx_age(secs: number): string {
     if (secs < 0) return approx_age(-1 * secs);
 
     if (0 < secs && secs < 1) return physical_precision(secs, 3, "s");
@@ -205,18 +211,22 @@ export function approx_age(secs) {
 // When labeling domains we place ticks on integer values. Return integer
 // divisors of the base we work on. Decimal by default, yet for Bytes we call
 // it binary stepping and use the Hexadecimal.
-export function domainIntervals(stepping) {
+export function domainIntervals(stepping: string) {
     if (stepping === "binary") return [1, 2, 4, 8, 16];
     return [1, 2, 5, 10];
 }
 
-function tickStep(range, ticks, increments) {
+function tickStep(range: number, ticks: number, increments: number[]) {
     const base = increments[increments.length - 1];
     const [mantissa, exp] = frexpb(range / ticks, base);
-    return increments.find(e => mantissa <= e) * base ** exp;
+    return increments.find(e => mantissa <= e)! * base ** exp;
 }
 
-export function partitionableDomain(domain, ticks, increments) {
+export function partitionableDomain(
+    domain: [number, number],
+    ticks: number,
+    increments: number[]
+) {
     let [start, end] = domain.map(x => x || 0).sort((a, b) => a - b);
     if (start === end) end += 1;
     let step = tickStep(end - start, ticks, increments);
@@ -226,6 +236,7 @@ export function partitionableDomain(domain, ticks, increments) {
     step = tickStep(end - start, ticks, increments);
     return [start, end, step];
 }
+
 // test for later on a suite. JS can't compare arrays in a simple way ARRGG!
 //function comp_array(a, b) {
 //return a.every((val, i) => val === b[i]);

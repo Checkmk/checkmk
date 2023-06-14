@@ -6,7 +6,7 @@ Date: 1670849604
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The configuration of MRPE checks (legacy Nagios remote plugins) includes an option
 to specify a caching interval for asynchronous plugin execution.

@@ -1,29 +1,21 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+import * as d3 from "d3";
+import {ForceOptions, SimulationForce} from "nodevis/force_simulation";
 import {
     ContextMenuElement,
     d3SelectionG,
-    d3SelectionSvg,
     NodevisNode,
     NodevisWorld,
-    SimulationForce,
 } from "nodevis/type_defs";
-import * as d3 from "d3";
-
 import {
     AbstractClassRegistry,
     DefaultTransition,
     TypeWithName,
 } from "nodevis/utils";
 
-type d3SelectionNodeText = d3.Selection<
-    SVGTextElement,
-    NodevisNode,
-    SVGGElement,
-    any
->;
 type d3SelectionQuickinfo = d3.Selection<
     HTMLDivElement,
     NodevisNode,
@@ -51,7 +43,12 @@ export class AbstractGUINode implements TypeWithName {
 
     // DOM references
     _selection: d3SelectionG | null;
-    _text_selection: d3SelectionNodeText | null;
+    _text_selection: d3.Selection<
+        SVGTextElement,
+        string,
+        SVGGElement,
+        any
+    > | null;
     _quickinfo_selection: d3SelectionQuickinfo | null;
 
     constructor(world: NodevisWorld, node: NodevisNode) {
@@ -78,7 +75,7 @@ export class AbstractGUINode implements TypeWithName {
         return this._selection;
     }
 
-    text_selection(): d3SelectionNodeText {
+    text_selection(): d3.Selection<SVGTextElement, string, SVGGElement, any> {
         if (this._text_selection == null)
             throw Error("Missing text selection for node " + this.id());
         return this._text_selection;
@@ -144,7 +141,7 @@ export class AbstractGUINode implements TypeWithName {
         dt_selection.exit().remove();
     }
 
-    render_into(selection: d3SelectionSvg) {
+    render_into(selection: d3SelectionG) {
         this._selection = this._render_into_transform(selection);
         // TODO: check usage
         this.node.data.selection = this._selection;
@@ -154,13 +151,15 @@ export class AbstractGUINode implements TypeWithName {
         this.update_node_state();
     }
 
-    _get_text(node: NodevisNode): string {
+    _get_text(node_id: string): string {
+        const node = this._world.nodes_layer.get_nodevis_node_by_id(node_id);
+        if (!node) return "";
         if (node.data.chunk.aggr_type == "single" && node.data.service)
             return node.data.service;
         return node.data.name;
     }
 
-    render_text() {
+    render_text(): void {
         if (this.node.data.show_text == false) {
             if (this._text_selection) this.text_selection().remove();
             this._text_selection = null;
@@ -169,8 +168,8 @@ export class AbstractGUINode implements TypeWithName {
 
         if (this._text_selection == null) {
             const text_selection = this.selection()
-                .selectAll<SVGTextElement, NodevisNode>("g text")
-                .data([this.node]);
+                .selectAll<SVGTextElement, string>("g text")
+                .data([this.id()]);
             this._text_selection = text_selection
                 .enter()
                 .append("g")
@@ -191,7 +190,10 @@ export class AbstractGUINode implements TypeWithName {
                 })
                 .merge(text_selection);
         }
+    }
 
+    _update_text_position() {
+        if (!this._text_selection) return;
         const text_positioning =
             this.node.data.current_positioning.text_positioning;
         if (text_positioning) {
@@ -215,7 +217,9 @@ export class AbstractGUINode implements TypeWithName {
         selection.attr("text-anchor", "start");
     }
 
-    _render_into_transform(selection: d3SelectionSvg): d3SelectionG {
+    _render_into_transform(selection: d3SelectionG): d3SelectionG {
+        if (selection.attr("transform") != null) return selection;
+
         let spawn_reference = this.node;
         if (this.node.parent && this.node.parent.x) {
             spawn_reference = this.node.parent;
@@ -223,10 +227,9 @@ export class AbstractGUINode implements TypeWithName {
         const spawn_point_x = spawn_reference.x;
         const spawn_point_y = spawn_reference.y;
 
-        this.node.data.target_coords = {x: spawn_point_x, y: spawn_point_y};
-        return selection
-            .append("g")
-            .classed("node_element", true)
+        if (this.node.data.target_coords == null)
+            this.node.data.target_coords = {x: spawn_point_x, y: spawn_point_y};
+        selection
             .attr(
                 "transform",
                 "translate(" + spawn_point_x + "," + spawn_point_y + ")"
@@ -235,8 +238,9 @@ export class AbstractGUINode implements TypeWithName {
             .on("mouseover", () => this._show_quickinfo())
             .on("mouseout", () => this._hide_quickinfo())
             .on("contextmenu", event => {
-                this._world.nodes_layer.render_context_menu(event, this);
+                this._world.nodes_layer.render_context_menu(event, this.id());
             });
+        return selection;
     }
 
     _get_details_url(): string {
@@ -427,8 +431,8 @@ export class AbstractGUINode implements TypeWithName {
 
     _show_table_quickinfo() {
         const table_selection = this.quickinfo_selection()
-            .selectAll<HTMLTableSectionElement, NodevisNode>("body table tbody")
-            .data([this.node], d => d.data.id);
+            .selectAll<HTMLTableSectionElement, string>("body table tbody")
+            .data([this.id()], d => d);
         const table = table_selection
             .enter()
             .append("body")
@@ -474,13 +478,21 @@ export class AbstractGUINode implements TypeWithName {
 
     render_object() {
         this.selection()
-            .append("a")
-            .attr("xlink:href", this._get_details_url())
-            .append("circle")
-            .attr("r", this.radius)
-            .classed("state_circle", true);
-
-        this.update_node_state();
+            .selectAll("a")
+            .data([this.id()])
+            .join(enter =>
+                enter
+                    .append("a")
+                    .each((_data, idx, nodes) => {
+                        const a = d3.select(nodes[idx]);
+                        const details_url = this._get_details_url();
+                        if (details_url != "")
+                            a.attr("xlink:href", details_url);
+                    })
+                    .append("circle")
+                    .attr("r", this.radius)
+                    .classed("state_circle", true)
+            );
     }
 
     update_position(enforce_transition = false) {
@@ -499,6 +511,7 @@ export class AbstractGUINode implements TypeWithName {
         if (parseInt(this.selection().attr("in_transit")) > 0) {
             return;
         }
+
         const transition = this.add_optional_transition(
             this.selection(),
             enforce_transition
@@ -513,7 +526,7 @@ export class AbstractGUINode implements TypeWithName {
         );
 
         this.update_quickinfo_position();
-        this.render_text();
+        this._update_text_position();
         this.node.data.transition_info.type =
             this.node.data.current_positioning.type;
     }
@@ -530,12 +543,17 @@ export class AbstractGUINode implements TypeWithName {
     }
 
     add_optional_transition(selection, enforce_transition = false) {
+        // TODO: remove
+        if (this._world.layout_manager.skip_optional_transitions)
+            return selection;
+
         if (
             (!this.node.data.transition_info.use_transition &&
                 !enforce_transition) ||
             this._world.layout_manager.dragging
         )
             return selection;
+
         return DefaultTransition.add_transition(
             selection.attr("in_transit", 100)
         )
@@ -564,27 +582,18 @@ export class AbstractGUINode implements TypeWithName {
             .attr("in_transit", 0);
     }
 
-    get_force(force_name: SimulationForce): number {
-        const explicit_force = this._get_explicit_force_option(force_name);
-        if (explicit_force) return explicit_force;
-        return this._get_node_type_specific_force(force_name);
+    get_force(
+        force_name: SimulationForce,
+        force_options: ForceOptions
+    ): number {
+        return this._get_node_type_specific_force(force_name, force_options);
     }
 
-    _get_node_type_specific_force(force_name: SimulationForce): number {
-        switch (force_name) {
-            case "charge_force":
-                return this.node.data.force_options.force_node;
-            case "collide":
-                return this.node.data.force_options.collision_force_node;
-            case "center":
-                return this.node.data.force_options.center_force / 300;
-            case "link_distance":
-                return this.node.data.force_options.link_force_node;
-            case "link_strength":
-                return this.node.data.force_options.link_strength / 100;
-            default:
-                return 0;
-        }
+    _get_node_type_specific_force(
+        force_name: SimulationForce,
+        force_options: ForceOptions
+    ): number {
+        return force_options[force_name];
     }
 
     _get_explicit_force_option(force_name: string): number | null {
@@ -596,6 +605,17 @@ export class AbstractGUINode implements TypeWithName {
         }
         return null;
     }
+
+    simulation_end_actions(): void {
+        return;
+    }
+}
+
+export function get_custom_node_settings(node: NodevisNode) {
+    node.data.custom_node_settings = node.data.custom_node_settings || {
+        id: node.data.id,
+    };
+    return node.data.custom_node_settings;
 }
 
 // Stores node visualization classes

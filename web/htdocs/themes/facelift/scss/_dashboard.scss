@@ -1,5 +1,5 @@
 @charset "UTF-8";
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -63,7 +63,7 @@ div.dashlet {
     padding-left: 9px;
     margin: 0;
     overflow: hidden;
-    font-weight: 500;
+    font-weight: $font-weight-default;
     letter-spacing: 2px;
     color: $font-color;
     text-align: center;
@@ -151,7 +151,8 @@ div.dashlet_inner div.stats {
   }
 }
 
-div.site_overview div.dashlet_inner {
+div.site_overview div.dashlet_inner,
+div.average_scatterplot div.dashlet_inner {
   overflow: visible;
 }
 

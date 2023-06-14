@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -56,7 +56,6 @@ def _check_esx_vsphere_hostsystem_cpu_usage_common(
     cpu_section: EsxVsphereHostsystemCpuSection,
     total_mhz: float,
 ) -> CheckResult:
-
     yield from cpu_util.check_cpu_util(
         util=cpu_section.used_mhz / total_mhz * 100,
         params=params,
@@ -120,7 +119,6 @@ def cluster_check_esx_vsphere_hostsystem_cpu_usage(
     section_esx_vsphere_hostsystem: Mapping[str, Optional[Section]],
     section_winperf_processor: Mapping[str, Optional[List]],
 ) -> CheckResult:
-
     aggregated_section = None
     total_mhz = 0.0
     for _node, section in section_esx_vsphere_hostsystem.items():

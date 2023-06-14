@@ -6,7 +6,7 @@ Date: 1667890436
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The agent update interval (configurable in ruleset <i>Agent updater</i>) is now
 limited to a maximum value of 30 days.

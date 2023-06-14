@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 
 import pytest
 from pytest import MonkeyPatch
@@ -180,14 +180,17 @@ def test_theme_broken_meta(my_theme: Path) -> None:
 
 def test_modern_dark_images(th: Theme) -> None:
     """For each modern dark image there must be a (default) facelift variant, i.e. a file under the
-    same name within the facelift images dir. This holds only for the root theme dirs where the
-    builtin images are located, not for the local theme dirs (th.base_dir())."""
+    same name (may have a different file extension) within the facelift images dir. This holds only
+    for the root theme dirs where the builtin images are located, not for the local theme dirs
+    (th.base_dir())."""
     root_themes_dir: Path = Path(cmk.utils.paths.web_dir, "htdocs/themes")
     md_images_dir: Path = root_themes_dir / th.get() / "images"
     fl_images_dir: Path = root_themes_dir / "facelift" / "images"
 
     for md_image in md_images_dir.iterdir():
         if md_image.is_file():
-            assert Path(
-                fl_images_dir, md_image.name
-            ).is_file(), f"Missing image '{md_image.name}' in the facelift theme"
+            assert any(
+                fl_images_dir.glob(
+                    md_image.stem + ".*"
+                )  # accept different file extensions per theme as our code does
+            ), f"Missing image '{md_image.stem}.*' in the facelift theme"

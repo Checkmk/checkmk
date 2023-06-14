@@ -1,0 +1,20 @@
+Title: downtime: make the show downtimes endpoint more explicit
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1679488884
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, it was unclear under what circumstances the endpoint returned
+service, host or both types of downtimes. In short, specifying the host_name parameter
+limited the response to only return host downtimes. This werk introduces the downtime_type
+parameter in order to make it easier to filter the results. This parameter is optional
+as the same result can be achieved through the query parameter only.
+
+Since the endpoint response is now more specific, user scripts must potentially be
+adjusted accordingly:
+* when the host_name parameter was previously specified, the user must now specify
+the downtime_type parameter to "host" in order to receive the same downtimes as before

@@ -6,7 +6,7 @@ Date: 1654607531
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The services "Cluster Info", "CPU utilization Cluster", "Memory Cluster" and
 "Sessions Cluster" where discovered even if the FortiGate device was in

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,6 +11,7 @@ from cmk.gui.plugins.wato.utils import (
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
+from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     Alternative,
     Checkbox,
@@ -19,6 +20,7 @@ from cmk.gui.valuespec import (
     FixedValue,
     Integer,
     ListChoice,
+    NetworkPort,
     TextInput,
 )
 from cmk.gui.watolib.rulespecs import Rulespec
@@ -63,7 +65,7 @@ def _valuespec_special_agents_vsphere() -> Dictionary:
             ),
             (
                 "tcp_port",
-                Integer(
+                NetworkPort(
                     title=_("TCP Port number"),
                     help=_("Port number for HTTPS connection to vSphere"),
                     default_value=443,
@@ -92,7 +94,7 @@ def _valuespec_special_agents_vsphere() -> Dictionary:
                     title=_("Connect Timeout"),
                     help=_(
                         "The network timeout in seconds when communicating with vSphere or "
-                        "to the Check_MK Agent. The default is 60 seconds. Please note that this "
+                        "to the Checkmk Agent. The default is 60 seconds. Please note that this "
                         "is not a total timeout but is applied to each individual network transation."
                     ),
                     default_value=60,
@@ -217,5 +219,6 @@ rulespec_registry.register(
         group=RulespecGroupVMCloudContainer,
         name="special_agents:vsphere",
         valuespec=_valuespec_special_agents_vsphere,
+        doc_references={DocReference.VMWARE: _("Monitoring VMWare ESXi")},
     )
 )

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -25,7 +25,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, Integer, Tuple, ValueSpec
 from cmk.gui.watolib.changes import add_service_change
 from cmk.gui.watolib.check_mk_automations import discovery
-from cmk.gui.watolib.hosts_and_folders import Folder, Host
+from cmk.gui.watolib.hosts_and_folders import disk_or_search_folder_from_request, folder_tree, Host
 
 DiscoveryMode = NewType("DiscoveryMode", str)
 DoFullScan = NewType("DoFullScan", bool)
@@ -127,7 +127,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         )
 
     def _back_url(self):
-        return Folder.current().url()
+        return disk_or_search_folder_from_request().url()
 
     def do_execute(
         self,
@@ -172,7 +172,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
 
         job_interface.send_result_message(_("Bulk discovery successful"))
 
-    def _initialize_statistics(self, *, num_hosts_total: int):  # type:ignore[no-untyped-def]
+    def _initialize_statistics(self, *, num_hosts_total: int):  # type: ignore[no-untyped-def]
         self._num_hosts_total = num_hosts_total
         self._num_hosts_processed = 0
         self._num_hosts_succeeded = 0
@@ -185,7 +185,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         self._num_host_labels_total = 0
         self._num_host_labels_added = 0
 
-    def _bulk_discover_item(  # type:ignore[no-untyped-def]
+    def _bulk_discover_item(  # type: ignore[no-untyped-def]
         self,
         task: DiscoveryTask,
         mode: DiscoveryMode,
@@ -193,7 +193,6 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         ignore_errors: IgnoreErrors,
         job_interface,
     ):
-
         try:
             response = discovery(
                 task.site_id,
@@ -218,17 +217,18 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
 
         self._num_hosts_processed += len(task.host_names)
 
-    def _process_discovery_results(  # type:ignore[no-untyped-def]
+    def _process_discovery_results(  # type: ignore[no-untyped-def]
         self,
         task: DiscoveryTask,
         job_interface,
         response: AutomationDiscoveryResult,
     ) -> None:
-        # The following code updates the host config. The progress from loading the WATO folder
+        # The following code updates the host config. The progress from loading the Setup folder
         # until it has been saved needs to be locked.
         with store.lock_checkmk_configuration():
-            Folder.invalidate_caches()
-            folder = Folder.folder(task.folder_path)
+            tree = folder_tree()
+            tree.invalidate_caches()
+            folder = tree.folder(task.folder_path)
             for count, hostname in enumerate(task.host_names, self._num_hosts_processed + 1):
                 self._process_service_counts_for_host(response.hosts[hostname])
                 msg = self._process_discovery_result_for_host(
@@ -246,7 +246,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         self._num_host_labels_added += result.self_new_host_labels
         self._num_host_labels_total += result.self_total_host_labels
 
-    def _process_discovery_result_for_host(  # type:ignore[no-untyped-def]
+    def _process_discovery_result_for_host(  # type: ignore[no-untyped-def]
         self, host, result: DiscoveryResult
     ) -> str:
         if result.error_text == "":

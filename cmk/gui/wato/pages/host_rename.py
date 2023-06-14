@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for renaming one or multiple existing hosts"""
 
 import socket
-from collections.abc import Collection, Sequence
+from collections.abc import Collection, Mapping, Sequence
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
@@ -14,7 +14,6 @@ from cmk.utils.type_defs import HostName
 
 import cmk.gui.background_job as background_job
 import cmk.gui.forms as forms
-from cmk.gui.background_job import BackgroundJob, job_registry
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, MKAuthException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -35,7 +34,6 @@ from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 from cmk.gui.utils.html import HTML
-from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Checkbox,
@@ -50,45 +48,18 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.activate_changes import confirm_all_local_changes
-from cmk.gui.watolib.host_rename import perform_rename_hosts
-from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, Host, validate_host_uniqueness
+from cmk.gui.watolib.host_rename import (
+    perform_rename_hosts,
+    RenameHostBackgroundJob,
+    RenameHostsBackgroundJob,
+)
+from cmk.gui.watolib.hosts_and_folders import (
+    CREFolder,
+    folder_from_request,
+    Host,
+    validate_host_uniqueness,
+)
 from cmk.gui.watolib.site_changes import SiteChanges
-
-
-@job_registry.register
-class RenameHostsBackgroundJob(BackgroundJob):
-    job_prefix = "rename-hosts"
-
-    @classmethod
-    def gui_title(cls) -> str:
-        return _("Host renaming")
-
-    def __init__(self, title: str | None = None) -> None:
-        super().__init__(
-            self.job_prefix,
-            background_job.InitialStatusArgs(
-                title=title or self.gui_title(),
-                lock_wato=True,
-                stoppable=False,
-                estimated_duration=BackgroundJob(self.job_prefix).get_status().duration,
-            ),
-        )
-
-        if self.is_active():
-            raise MKGeneralException(_("Another renaming operation is currently in progress"))
-
-    def _back_url(self) -> str:
-        return makeuri(request, [])
-
-
-@job_registry.register
-class RenameHostBackgroundJob(RenameHostsBackgroundJob):
-    def __init__(self, host, title=None) -> None:  # type:ignore[no-untyped-def]
-        super().__init__(title)
-        self._host = host
-
-    def _back_url(self):
-        return self._host.folder().url()
 
 
 @mode_registry.register
@@ -214,7 +185,7 @@ class ModeBulkRenameHost(WatoMode):
         return None
 
     def _collect_host_renamings(self, renaming_config):
-        return self._recurse_hosts_for_renaming(Folder.current(), renaming_config)
+        return self._recurse_hosts_for_renaming(folder_from_request(), renaming_config)
 
     def _recurse_hosts_for_renaming(self, folder, renaming_config):
         entries = []
@@ -425,13 +396,14 @@ class ModeRenameHost(WatoMode):
     def _from_vars(self):
         host_name = request.get_ascii_input_mandatory("host")
 
-        if not Folder.current().has_host(host_name):
+        folder = folder_from_request()
+        if not folder.has_host(host_name):
             raise MKUserError("host", _("You called this page with an invalid host name."))
 
         if not user.may("wato.rename_hosts"):
             raise MKAuthException(_("You don't have the right to rename hosts"))
 
-        self._host = Folder.current().load_host(host_name)
+        self._host = folder.load_host(host_name)
         self._host.need_permission("write")
 
     def title(self) -> str:
@@ -483,10 +455,7 @@ class ModeRenameHost(WatoMode):
     def action(self) -> ActionResult:
         local_site = omd_site()
         renamed_host_site = self._host.site_id()
-        if (
-            SiteChanges(SiteChanges.make_path(local_site)).read()
-            or SiteChanges(SiteChanges.make_path(renamed_host_site)).read()
-        ):
+        if SiteChanges(local_site).read() or SiteChanges(renamed_host_site).read():
             raise MKUserError(
                 "newname",
                 _(
@@ -497,14 +466,15 @@ class ModeRenameHost(WatoMode):
                 % (local_site, renamed_host_site),
             )
 
-        newname = request.get_ascii_input_mandatory("newname")
-        self._check_new_host_name("newname", newname)
+        newname = HostName(request.get_ascii_input_mandatory("newname"))
+        folder = folder_from_request()
+        self._check_new_host_name(folder, "newname", newname)
         # Creating pending entry. That makes the site dirty and that will force a sync of
         # the config to that site before the automation is being done.
         host_renaming_job = RenameHostBackgroundJob(
             self._host, title=_("Renaming of %s -> %s") % (self._host.name(), newname)
         )
-        renamings = [(Folder.current(), self._host.name(), newname)]
+        renamings = [(folder, self._host.name(), newname)]
 
         try:
             host_renaming_job.start(
@@ -515,10 +485,10 @@ class ModeRenameHost(WatoMode):
 
         return redirect(host_renaming_job.detail_url())
 
-    def _check_new_host_name(self, varname: str, host_name: HostName) -> None:
+    def _check_new_host_name(self, folder: CREFolder, varname: str, host_name: HostName) -> None:
         if not host_name:
             raise MKUserError(varname, _("Please specify a host name."))
-        if Folder.current().has_host(host_name):
+        if folder.has_host(host_name):
             raise MKUserError(varname, _("A host with this name already exists in this folder."))
         validate_host_uniqueness(varname, host_name)
         Hostname().validate_value(host_name, varname)
@@ -559,7 +529,7 @@ def rename_hosts(renamings, job_interface=None):
     return action_texts, auth_problems
 
 
-def render_renaming_actions(action_counts) -> list[str]:  # type:ignore[no-untyped-def]
+def render_renaming_actions(action_counts: Mapping[str, int]) -> list[str]:
     action_titles = {
         "folder": _("Folder"),
         "notify_user": _("Users' notification rule"),
@@ -588,6 +558,7 @@ def render_renaming_actions(action_counts) -> list[str]:  # type:ignore[no-untyp
         "retention": _("The current monitoring state (including acknowledgements and downtimes)"),
         "inv": _("Recent hardware/software inventory"),
         "invarch": _("History of hardware/software inventory"),
+        "uuid_link": _("UUID links for TLS-encrypting agent communication"),
     }
 
     texts = []

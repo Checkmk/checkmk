@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Hosts
@@ -48,9 +48,10 @@ from cmk.utils.type_defs import HostName
 
 import cmk.gui.watolib.bakery as bakery
 from cmk.gui import fields as gui_fields
+from cmk.gui.background_job import BackgroundJobAlreadyRunning
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.fields.utils import BaseSchema
-from cmk.gui.http import Response
+from cmk.gui.http import request, Response
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.endpoints.utils import folder_slug
 from cmk.gui.plugins.openapi.restful_objects import (
@@ -62,12 +63,13 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
-from cmk.gui.plugins.openapi.utils import problem, serve_json
+from cmk.gui.plugins.openapi.utils import EXT, problem, ProblemException, serve_json
 from cmk.gui.valuespec import Hostname
+from cmk.gui.wato.pages.host_rename import rename_hosts_background_job
 from cmk.gui.watolib.activate_changes import has_pending_changes
 from cmk.gui.watolib.check_mk_automations import delete_hosts
-from cmk.gui.watolib.host_rename import perform_rename_hosts
-from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, Folder, Host
+from cmk.gui.watolib.host_rename import RenameHostBackgroundJob, RenameHostsBackgroundJob
+from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, folder_tree, Host
 
 from cmk import fields
 
@@ -104,7 +106,24 @@ PERMISSIONS = permissions.AllPerm(
         permissions.Perm("wato.edit"),
         permissions.Perm("wato.manage_hosts"),
         permissions.Optional(permissions.Perm("wato.all_folders")),
-        permissions.Ignore(
+        permissions.Undocumented(
+            permissions.AnyPerm(
+                [
+                    permissions.Perm("bi.see_all"),
+                    permissions.Perm("general.see_all"),
+                    permissions.Perm("mkeventd.seeall"),
+                ]
+            )
+        ),
+    ]
+)
+
+BULK_CREATE_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.edit"),
+        permissions.Optional(permissions.Perm("wato.manage_hosts")),
+        permissions.Optional(permissions.Perm("wato.all_folders")),
+        permissions.Undocumented(
             permissions.AnyPerm(
                 [
                     permissions.Perm("bi.see_all"),
@@ -121,8 +140,19 @@ UPDATE_PERMISSIONS = permissions.AllPerm(
         permissions.Perm("wato.edit"),
         permissions.Perm("wato.edit_hosts"),
         permissions.Optional(permissions.Perm("wato.all_folders")),
+        permissions.Undocumented(
+            permissions.Perm("wato.see_all_folders")
+        ),  # only used to check if user can see a host
     ]
 )
+
+
+def with_access_check_permission(perm: permissions.BasePerm) -> permissions.BasePerm:
+    """To check if a user can see a host, we currently need the 'wato.see_all_folders' permission.
+    Since this use is done internally only, we want to add it without documenting it."""
+    return permissions.AllPerm(
+        [perm, permissions.Undocumented(permissions.Perm("wato.see_all_folders"))]
+    )
 
 
 @Endpoint(
@@ -160,7 +190,7 @@ def create_host(params: Mapping[str, Any]) -> Response:
     etag="output",
     request_schema=request_schemas.CreateClusterHost,
     response_schema=response_schemas.HostConfigSchema,
-    permissions_required=PERMISSIONS,
+    permissions_required=with_access_check_permission(PERMISSIONS),
     query_params=[BAKE_AGENT_PARAM],
 )
 def create_cluster_host(params: Mapping[str, Any]) -> Response:
@@ -190,7 +220,7 @@ class FailedHosts(BaseSchema):
     )
     failed_hosts = fields.Dict(
         keys=fields.String(description="Name of the host"),
-        values=fields.List(fields.String(description="The error messages")),
+        values=fields.String(description="The error message"),
         description="Detailed error messages on hosts failing the action",
     )
 
@@ -211,7 +241,7 @@ class BulkHostActionWithFailedHosts(api_error.ApiError):
     error_schemas={
         400: BulkHostActionWithFailedHosts,
     },
-    permissions_required=PERMISSIONS,
+    permissions_required=BULK_CREATE_PERMISSIONS,
     query_params=[BAKE_AGENT_PARAM],
 )
 def bulk_create_hosts(params: Mapping[str, Any]) -> Response:
@@ -259,10 +289,12 @@ def _bulk_host_action_response(
             title="Some actions failed",
             detail=f"Some of the actions were performed but the following were faulty and "
             f"were skipped: {' ,'.join(failed_hosts)}.",
-            ext={
-                "succeeded_hosts": _host_collection(succeeded_hosts),
-                "failed_hosts": failed_hosts,
-            },
+            ext=EXT(
+                {
+                    "succeeded_hosts": _host_collection(succeeded_hosts),
+                    "failed_hosts": failed_hosts,
+                }
+            ),
         )
 
     return serve_host_collection(succeeded_hosts)
@@ -276,13 +308,14 @@ def _bulk_host_action_response(
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
     query_params=[EFFECTIVE_ATTRIBUTES],
 )
-def list_hosts(param) -> Response:  # type:ignore[no-untyped-def]
+def list_hosts(param) -> Response:  # type: ignore[no-untyped-def]
     """Show all hosts"""
-    root_folder = Folder.root_folder()
-    root_folder.need_recursive_permission("read")
+    root_folder = folder_tree().root_folder()
     effective_attributes: bool = param.get("effective_attributes", False)
+
+    hosts = (host for host in root_folder.all_hosts_recursively().values() if host.may("read"))
     return serve_host_collection(
-        root_folder.all_hosts_recursively().values(),
+        hosts,
         effective_attributes=effective_attributes,
     )
 
@@ -456,24 +489,29 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
     method="put",
     path_params=[HOST_NAME],
     etag="both",
-    additional_status_codes=[409, 422],
+    additional_status_codes=[302, 409, 422],
     status_descriptions={
-        409: "There are pending changes not yet activated.",
+        302: "The host rename process is still running. Redirecting to the 'Wait for completion' endpoint",
+        409: "There are pending changes not yet activated or a rename background job is already running.",
         422: "The host could not be renamed.",
     },
-    request_schema=request_schemas.RenameHost,
-    response_schema=response_schemas.HostConfigSchema,
     permissions_required=permissions.AllPerm(
         [
-            *PERMISSIONS.perms,
             permissions.Perm("wato.edit_hosts"),
             permissions.Perm("wato.rename_hosts"),
+            permissions.Perm("wato.see_all_folders"),
         ]
     ),
+    request_schema=request_schemas.RenameHost,
+    response_schema=response_schemas.HostConfigSchema,
 )
 def rename_host(params: Mapping[str, Any]) -> Response:
-    """Rename a host"""
-    user.need_permission("wato.edit")
+    """Rename a host
+
+    This endpoint will start a background job to rename the host. Only one rename background job
+    can run at a time.
+    """
+    user.need_permission("wato.edit_hosts")
     user.need_permission("wato.rename_hosts")
     if has_pending_changes():
         return problem(
@@ -484,14 +522,59 @@ def rename_host(params: Mapping[str, Any]) -> Response:
     host_name = params["host_name"]
     host: CREHost = Host.load_host(host_name)
     new_name = params["body"]["new_name"]
-    _, auth_problems = perform_rename_hosts([(host.folder(), host_name, new_name)])
-    if auth_problems:
-        return problem(
-            status=422,
-            title="Rename process failed",
-            detail=f"It was not possible to rename the host {host_name} to {new_name}",
+
+    try:
+        background_job = RenameHostBackgroundJob(host)
+        background_job.start(
+            lambda job_interface: rename_hosts_background_job(
+                [(host.folder(), host_name, new_name)], job_interface
+            )
         )
-    return _serve_host(host, effective_attributes=False)
+    except BackgroundJobAlreadyRunning:
+        return problem(
+            status=409,
+            title="A host rename process is already running",
+        )
+
+    response = Response(status=302)
+    response.location = constructors.link_endpoint(
+        "cmk.gui.plugins.openapi.endpoints.host_config", "cmk/wait-for-completion", parameters={}
+    )["href"]
+    return response
+
+
+@Endpoint(
+    constructors.domain_type_action_href("host_config", "wait-for-completion"),
+    "cmk/wait-for-completion",
+    method="post",
+    status_descriptions={
+        204: "The renaming job has been completed.",
+        302: (
+            "The renaming job is still running. Redirecting to the "
+            "'Wait for completion' endpoint."
+        ),
+        404: "There is no running renaming job",
+    },
+    additional_status_codes=[302, 404],
+    output_empty=True,
+)
+def renaming_job_wait_for_completion(params: Mapping[str, Any]) -> Response:
+    """Wait for renaming process completion
+
+    This endpoint will redirect on itself to prevent timeouts.
+    """
+    job_exists, job_is_active = RenameHostsBackgroundJob.status_checks()
+    if not job_exists:
+        return problem(
+            status=404,
+            title="No running renaming job was found",
+        )
+
+    if job_is_active:
+        response = Response(status=302)
+        response.location = request.url
+        return response
+    return Response(status=204)
 
 
 @Endpoint(
@@ -500,6 +583,7 @@ def rename_host(params: Mapping[str, Any]) -> Response:
     method="post",
     path_params=[HOST_NAME],
     etag="both",
+    additional_status_codes=[403],
     request_schema=request_schemas.MoveHost,
     response_schema=response_schemas.HostConfigSchema,
     permissions_required=permissions.AllPerm(
@@ -507,6 +591,7 @@ def rename_host(params: Mapping[str, Any]) -> Response:
             permissions.Perm("wato.edit"),
             permissions.Perm("wato.edit_hosts"),
             permissions.Perm("wato.move_hosts"),
+            permissions.Undocumented(permissions.Perm("wato.see_all_folders")),
             *PERMISSIONS.perms,
         ]
     ),
@@ -520,6 +605,28 @@ def move(params: Mapping[str, Any]) -> Response:
     _require_host_etag(host)
     current_folder = host.folder()
     target_folder: CREFolder = params["body"]["target_folder"]
+
+    # Here we make sure the user has write access to the destination folder,
+    # the source folder and the host itself. This should be handled in the schema.
+    # TODO: We're addressing this in CMK-13171
+
+    objs_not_part_of_the_user_contact_group = []
+    if not current_folder.is_contact(user):
+        objs_not_part_of_the_user_contact_group.append(str(current_folder))
+
+    if not target_folder.is_contact(user):
+        objs_not_part_of_the_user_contact_group.append(str(target_folder))
+
+    if not host.is_contact(user):
+        objs_not_part_of_the_user_contact_group.append(str(host))
+
+    if objs_not_part_of_the_user_contact_group:
+        raise ProblemException(
+            status=403,
+            title="Permission denied",
+            detail=f"The user doesn't belong to the required contact groups of the following objects to perform this action: {', '.join(objs_not_part_of_the_user_contact_group)}",
+        )
+
     if target_folder is current_folder:
         return problem(
             status=400,
@@ -544,7 +651,7 @@ def move(params: Mapping[str, Any]) -> Response:
     method="delete",
     path_params=[HOST_NAME],
     output_empty=True,
-    permissions_required=PERMISSIONS,
+    permissions_required=with_access_check_permission(PERMISSIONS),
 )
 def delete(params: Mapping[str, Any]) -> Response:
     """Delete a host"""
@@ -562,7 +669,7 @@ def delete(params: Mapping[str, Any]) -> Response:
     ".../delete",
     method="post",
     request_schema=request_schemas.BulkDeleteHost,
-    permissions_required=PERMISSIONS,
+    permissions_required=with_access_check_permission(PERMISSIONS),
     output_empty=True,
 )
 def bulk_delete(params: Mapping[str, Any]) -> Response:
@@ -609,9 +716,7 @@ def show_host(params: Mapping[str, Any]) -> Response:
 
 def _serve_host(host: CREHost, effective_attributes: bool = False) -> Response:
     response = serve_json(serialize_host(host, effective_attributes))
-    etag = constructors.etag_of_dict(_host_etag_values(host))
-    response.headers.add("ETag", etag.to_header())
-    return response
+    return constructors.response_with_etag_created_from_dict(response, _host_etag_values(host))
 
 
 def serialize_host(host: CREHost, effective_attributes: bool) -> dict[str, Any]:
@@ -676,8 +781,8 @@ def _except_keys(dict_: dict[str, Any], exclude_keys: list[str]) -> dict[str, An
 def _require_host_etag(host):
     etag_values = _host_etag_values(host)
     constructors.require_etag(
-        constructors.etag_of_dict(etag_values),
-        error_details=etag_values,
+        constructors.hash_of_dict(etag_values),
+        error_details=EXT(etag_values),
     )
 
 

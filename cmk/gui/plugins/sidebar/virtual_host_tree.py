@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Sequence
 from contextlib import nullcontext
 from typing import Any, ContextManager
 
@@ -18,7 +19,7 @@ from cmk.gui.logged_in import user
 from cmk.gui.plugins.sidebar.utils import SidebarSnapin, snapin_registry
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.watolib.hosts_and_folders import Folder, get_folder_title_path
+from cmk.gui.watolib.hosts_and_folders import folder_tree, get_folder_title_path
 
 
 @snapin_registry.register
@@ -117,7 +118,7 @@ class VirtualHostTree(SidebarSnapin):
             [(tree["id"], tree["title"]) for tree in self._trees.values()], key=lambda x: x[1]
         )
 
-    def _render_tag_tree_level(  # type:ignore[no-untyped-def]
+    def _render_tag_tree_level(  # type: ignore[no-untyped-def]
         self, tree_spec, path, cwd, title, tree
     ) -> None:
         if not self._is_tag_subdir(path=path, cwd=cwd) and not self._is_tag_subdir(
@@ -173,7 +174,7 @@ class VirtualHostTree(SidebarSnapin):
                 else:
                     self._render_tag_tree_level(tree_spec, subpath, cwd, node_title, subtree)
 
-    def _is_tag_subdir(self, path, cwd) -> bool:  # type:ignore[no-untyped-def]
+    def _is_tag_subdir(self, path, cwd) -> bool:  # type: ignore[no-untyped-def]
         if not cwd:
             return True
         if not path:
@@ -182,7 +183,7 @@ class VirtualHostTree(SidebarSnapin):
             return False
         return self._is_tag_subdir(path[1:], cwd[1:])
 
-    def _tag_tree_bullet(self, state, path, leaf) -> HTML:  # type:ignore[no-untyped-def]
+    def _tag_tree_bullet(self, state, path, leaf) -> HTML:  # type: ignore[no-untyped-def]
         code = HTMLWriter.render_div(
             "&nbsp;",
             class_=["tagtree"] + (["leaf"] if leaf else []) + ["statebullet", "state%d" % state],
@@ -209,8 +210,10 @@ class VirtualHostTree(SidebarSnapin):
 
         return makeuri_contextless(request, urlvars, "view.py")
 
-    def _get_tag_url_vars(self, tree_spec, node_values):
-        urlvars = []
+    def _get_tag_url_vars(  # type: ignore[no-untyped-def]
+        self, tree_spec, node_values
+    ) -> Sequence[tuple[str, str]]:
+        urlvars: list[tuple[str, str]] = []
 
         tag_tree_spec = [
             l for l in tree_spec if not l.startswith("foldertree:") and not l.startswith("folder:")
@@ -228,7 +231,7 @@ class VirtualHostTree(SidebarSnapin):
                         if grouped_tag.id == tag:
                             urlvars.append(("host_tag_%d_grp" % nr, tag_group.id))
                             urlvars.append(("host_tag_%d_op" % nr, "is"))
-                            urlvars.append(("host_tag_%d_val" % nr, grouped_tag.id))
+                            urlvars.append(("host_tag_%d_val" % nr, str(grouped_tag.id)))
                             break
 
             else:
@@ -332,7 +335,7 @@ function virtual_host_tree_enter(path)
         if wato_folder.startswith("/wato/"):
             folder_path = wato_folder[6:-9]
             folder_path_components = folder_path.split("/")
-            if Folder.folder_exists(folder_path):
+            if folder_tree().folder_exists(folder_path):
                 folder_titles = get_folder_title_path(folder_path)[1:]  # omit main folder
         else:
             folder_titles = []

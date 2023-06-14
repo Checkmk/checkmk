@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -26,7 +26,7 @@ namespace fs = std::filesystem;
 namespace cma::provider {
 static const std::string section_name{section::kUseEmbeddedName};
 
-class Empty final: public Synchronous {
+class Empty final : public Synchronous {
 public:
     Empty() : Synchronous("empty") {}
     std::string makeBody() override { return "****"; }
@@ -146,7 +146,7 @@ public:
 
     std::filesystem::path createDataDir() {
         if (!temp_fs_) {
-            temp_fs_ = std::move(tst::TempCfgFs::Create());
+            temp_fs_ = tst::TempCfgFs::Create();
         }
         return temp_fs_->data();
     }
@@ -296,7 +296,7 @@ private:
 TEST_F(SectionProvidersFixture, ServicesCtor) {
     EXPECT_EQ(getEngine().getUniqName(), section::kServices);
 }
-TEST_F(SectionProvidersFixture, ServicesIntegration) {
+TEST_F(SectionProvidersFixture, ServicesComponent) {
     auto content = getEngine().generateContent(section_name);
 
     // Validate content is presented and correct

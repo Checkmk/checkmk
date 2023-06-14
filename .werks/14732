@@ -6,7 +6,7 @@ Date: 1661422870
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The agent updater is designed to have no more than one instance running
 at a time on a host. This is implemented by holding a file lock while running.

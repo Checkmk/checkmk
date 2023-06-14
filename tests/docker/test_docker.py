@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,7 +7,6 @@
 
 import logging
 import os
-import re
 import subprocess
 from collections.abc import Mapping
 from pathlib import Path
@@ -20,7 +19,7 @@ from docker.models.containers import Container  # type: ignore[import]
 from docker.models.images import Image  # type: ignore[import]
 
 import tests.testlib as testlib
-from tests.testlib.utils import cmk_path, get_cmk_download_credentials_file
+from tests.testlib.utils import cmk_path
 from tests.testlib.version import CMKVersion, version_from_env
 
 from cmk.utils.version import Edition
@@ -96,13 +95,13 @@ def _cleanup_old_packages() -> None:
 
 
 def resolve_image_alias(alias: str) -> str:
-    """Resolves given "Docker image alias" using the common `resolve.sh` and returns an image
+    """Resolves given "Docker image alias" using the common `resolve.py` and returns an image
     name which can be used with `docker run`
     >>> image = resolve_image_alias("IMAGE_CMK_BASE")
     >>> assert image and isinstance(image, str)
     """
     return subprocess.check_output(
-        [os.path.join(cmk_path(), "buildscripts/docker_image_aliases/resolve.sh"), alias],
+        [os.path.join(cmk_path(), "buildscripts/docker_image_aliases/resolve.py"), alias],
         text=True,
     ).split("\n", maxsplit=1)[0]
 
@@ -118,16 +117,6 @@ def _build(
     if prepare_package:
         _prepare_package(version)
 
-    logger.info("Starting helper container for build secrets")
-    secret_container = client.containers.run(
-        image="busybox",
-        command=["timeout", "180", "httpd", "-f", "-p", "8000", "-h", "/files"],
-        detach=True,
-        remove=True,
-        volumes={get_cmk_download_credentials_file(): {"bind": "/files/secret", "mode": "ro"}},
-    )
-    request.addfinalizer(lambda: secret_container.remove(force=True))
-
     logger.info("Building docker image (or reuse existing): %s", _image_name(version))
     try:
         image: Image
@@ -135,7 +124,6 @@ def _build(
         image, build_logs = client.images.build(
             path=build_path,
             tag=_image_name(version),
-            network_mode="container:%s" % secret_container.id,
             buildargs={
                 "CMK_VERSION": version.version,
                 "CMK_EDITION": version.edition.long,
@@ -172,11 +160,11 @@ def _build(
     config = attrs["Config"]
 
     assert config["Labels"] == {
-        "org.opencontainers.image.vendor": "tribe29 GmbH",
+        "org.opencontainers.image.vendor": "Checkmk GmbH",
         "org.opencontainers.image.version": version.version,
         "maintainer": "feedback@checkmk.com",
         "org.opencontainers.image.description": "Checkmk is a leading tool for Infrastructure & Application Monitoring",
-        "org.opencontainers.image.source": "https://github.com/tribe29/checkmk",
+        "org.opencontainers.image.source": "https://github.com/checkmk/checkmk",
         "org.opencontainers.image.title": "Checkmk",
         "org.opencontainers.image.url": "https://checkmk.com/",
     }
@@ -287,9 +275,7 @@ def _start(
         logger.error(c.logs().decode("utf-8"))
         raise
 
-    else:
-        logger.debug(c.logs().decode("utf-8"))
-
+    logger.debug(c.logs().decode("utf-8"))
     return c
 
 
@@ -332,6 +318,12 @@ def test_start_simple(
     assert _exec_run(c, ["id", "-g", "cmk"])[1].rstrip() == "1000"
 
     assert exit_code == 0
+
+
+def test_needed_packages(request: pytest.FixtureRequest, client: docker.DockerClient) -> None:
+    """Ensure that important tools can be executed in the container"""
+    c = _start(request, client)
+    assert _exec_run(c, ["logrotate", "--version"])[0] == 0
 
 
 def test_start_cmkadmin_passsword(
@@ -415,22 +407,6 @@ def test_build_using_local_deb(
         _build(request, client, version, prepare_package=False)
     os.unlink(str(package_path))
     _prepare_package(version)
-
-
-# Test that the deb package from the download server is used.
-# Works only with daily enterprise builds.
-def test_build_using_package_from_download_server(
-    request: pytest.FixtureRequest, client: docker.DockerClient, version: CMKVersion
-) -> None:
-    if not (
-        version.is_enterprise_edition() and re.match(r"^\d\d\d\d\.\d\d\.\d\d$", version.version)
-    ):
-        pytest.skip("only enterprise daily packages are available on the download server")
-    package_path = Path(build_path, _package_name(version))
-    # make sure no local package is used.
-    if package_path.exists():
-        os.unlink(str(package_path))
-    _build(request, client, version, prepare_package=False)
 
 
 # Test that the local GPG file is used by making the build fail because of an empty file

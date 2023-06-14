@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Wrapper layer between WSGI and GUI application code"""
@@ -19,8 +19,8 @@ from werkzeug.utils import get_content_type
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.site import url_prefix
+from cmk.utils.urls import is_allowed_url
 
-import cmk.gui.utils as utils
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -278,12 +278,18 @@ class Request(
     These should be basic HTTP request handling things and no application specific mechanisms.
     """
 
+    meta: dict[str, Any]
+
     # pylint: disable=too-many-ancestors
 
-    def __init__(  # type:ignore[no-untyped-def]
-        self, environ, populate_request=True, shallow=False
-    ) -> None:
+    def __init__(self, environ: dict, populate_request: bool = True, shallow: bool = False) -> None:
+        # Modify the environment to fix double URLs in some apache configurations, only once.
+        if "apache.version" in environ and environ.get("SCRIPT_NAME"):
+            environ["PATH_INFO"] = environ["SCRIPT_NAME"]
+            del environ["SCRIPT_NAME"]
+
         super().__init__(environ, populate_request=populate_request, shallow=shallow)
+        self.meta = {}
         self._verify_not_using_threaded_mpm()
 
     def _verify_not_using_threaded_mpm(self) -> None:
@@ -439,7 +445,6 @@ class Request(
         return mandatory_parameter(varname, self.get_binary_input(varname, deflt))
 
     def get_integer_input(self, varname: str, deflt: int | None = None) -> int | None:
-
         value = self.var(varname, "%d" % deflt if deflt is not None else None)
         if value is None:
             return None
@@ -453,7 +458,6 @@ class Request(
         return mandatory_parameter(varname, self.get_integer_input(varname, deflt))
 
     def get_float_input(self, varname: str, deflt: float | None = None) -> float | None:
-
         value = self.var(varname, "%s" % deflt if deflt is not None else None)
         if value is None:
             return None
@@ -496,7 +500,7 @@ class Request(
         url = self.var(varname)
         assert url is not None
 
-        if not utils.is_allowed_url(url):
+        if not is_allowed_url(url):
             if deflt:
                 return deflt
             raise MKUserError(varname, _('The parameter "%s" is not a valid URL.') % varname)

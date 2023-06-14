@@ -1,0 +1,17 @@
+Title: Putting a service into downtime no longer requires access to the corresponding host in the REST API
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1676635381
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Putting a service into downtime using the REST API required permissions to access the corresponding host in the REST API.
+The REST API call would fail with an error message stating that,
+C+:
+Host 'myhost' exists, but is not monitored. Activate the configuration?
+C-:
+This behaviour doesn't match the GUI's and is now no longer the case.
+

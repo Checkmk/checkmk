@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
-This module implements generic functionality of the Check_MK backup
+This module implements generic functionality of the Checkmk backup
 system. It is used to configure the site and system backup.
 """
 
@@ -12,7 +12,6 @@ from __future__ import annotations
 import abc
 import contextlib
 import errno
-import json
 import os
 import shutil
 import signal
@@ -22,31 +21,31 @@ import time
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from io import TextIOWrapper
 from pathlib import Path
-from typing import cast, Final, Generic, TypedDict, TypeVar
-
-from typing_extensions import assert_never
+from typing import assert_never, cast, Final, Generic, TypeVar
 
 import cmk.utils.render as render
 import cmk.utils.version as cmk_version
 from cmk.utils.backup.config import Config as RawConfig
-from cmk.utils.backup.targets.aws_s3_bucket import S3Bucket, S3Target
-from cmk.utils.backup.targets.azure_blob_storage import BlobStorage, BlobStorageTarget
-from cmk.utils.backup.targets.local import LocalTarget
-from cmk.utils.backup.targets.protocol import Target as TargetProtocol
-from cmk.utils.backup.targets.remote_interface import RemoteTarget, TRemoteStorage
-from cmk.utils.backup.type_defs import (
+from cmk.utils.backup.job import JobConfig, JobState, ScheduleConfig
+from cmk.utils.backup.targets import TargetId
+from cmk.utils.backup.targets.aws_s3_bucket import S3Bucket, S3Params, S3Target
+from cmk.utils.backup.targets.azure_blob_storage import (
+    BlobStorage,
     BlobStorageParams,
-    JobConfig,
-    LocalTargetParams,
-    RemoteTargetParams,
-    S3Params,
-    ScheduleConfig,
-    SiteBackupInfo,
-    TargetConfig,
-    TargetId,
-    TRemoteParams,
+    BlobStorageTarget,
 )
+from cmk.utils.backup.targets.config import TargetConfig
+from cmk.utils.backup.targets.local import LocalTarget, LocalTargetParams
+from cmk.utils.backup.targets.protocol import Target as TargetProtocol
+from cmk.utils.backup.targets.remote_interface import (
+    RemoteTarget,
+    RemoteTargetParams,
+    TRemoteParams,
+    TRemoteStorage,
+)
+from cmk.utils.backup.type_defs import SiteBackupInfo
 from cmk.utils.backup.utils import BACKUP_INFO_FILENAME
+from cmk.utils.crypto.password import Password as PasswordType
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.paths import omd_root
 from cmk.utils.plugin_registry import Registry
@@ -63,7 +62,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.key_mgmt import Key
-from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
     make_simple_form_page_menu,
@@ -188,7 +186,7 @@ class Config:
         del self._config.site.targets[target_id]
         self._config.save()
 
-    def add_job(self, job: "Job") -> None:
+    def add_job(self, job: Job) -> None:
         self._config.site.jobs[job.ident] = job.config
         self._config.save()
         self._save_cronjobs()
@@ -211,7 +209,7 @@ class Config:
     def _write_cronjob_header(self, f: TextIOWrapper) -> None:
         f.write("# Written by mkbackup configuration\n")
 
-    def _apply_cron_config(self):
+    def _apply_cron_config(self) -> None:
         completed_process = subprocess.run(
             ["omd", "restart", "crontab"],
             close_fds=True,
@@ -242,14 +240,6 @@ class Config:
 #   '----------------------------------------------------------------------'
 
 
-class StateConfig(TypedDict, total=False):
-    state: str | None
-    started: None
-    output: str
-    pid: int
-    success: bool
-
-
 # Abstract class for backup jobs (Job) and restore job (RestoreJob)
 class MKBackupJob(abc.ABC):
     @classmethod
@@ -268,30 +258,26 @@ class MKBackupJob(abc.ABC):
     def cleanup(self) -> None:
         self.state_file_path().unlink(missing_ok=True)
 
-    def state(self) -> StateConfig:
+    def state(self) -> JobState:
         try:
-            with self.state_file_path().open(encoding="utf-8") as f:
-                state = json.load(f)
+            state = JobState.parse_file(self.state_file_path())
         except FileNotFoundError:
-            state = {
-                "state": None,
-                "started": None,
-                "output": "",
-            }
+            state = JobState(
+                state=None,
+                started=None,
+                output="",
+            )
         except Exception as e:
             raise MKGeneralException(
                 _('Failed to parse state file "%s": %s') % (self.state_file_path(), e)
             )
 
         # Fix data structure when the process has been killed
-        if state["state"] == "running" and not os.path.exists("/proc/%d" % state["pid"]):
-            state.update(
-                {
-                    "state": "finished",
-                    "finished": max(state["started"], self.state_file_path().stat().st_mtime),
-                    "success": False,
-                }
-            )
+        if state.state == "running" and not os.path.exists("/proc/%d" % state.pid):  # type: ignore[str-format]
+            assert state.started is not None
+            state.state = "finished"
+            state.finished = max(state.started, self.state_file_path().stat().st_mtime)
+            state.success = False
 
         return state
 
@@ -303,11 +289,9 @@ class MKBackupJob(abc.ABC):
             return False
 
         state = self.state()
-        return state["state"] in ["started", "running"] and os.path.exists(
-            "/proc/%d" % state["pid"]
-        )
+        return state.state in ["started", "running"] and os.path.exists("/proc/%d" % state.pid)  # type: ignore[str-format]
 
-    def start(self, env: Mapping[str, str] | None = None) -> None:
+    def start(self, **env_updates: str) -> None:
         completed_process = subprocess.run(
             self._start_command(),
             close_fds=True,
@@ -315,7 +299,11 @@ class MKBackupJob(abc.ABC):
             stderr=subprocess.STDOUT,
             stdin=subprocess.DEVNULL,
             encoding="utf-8",
-            env=env,
+            env={
+                # we always need os.environ, otherwise, mkbackup won't start in the site context
+                **os.environ,
+                **env_updates,
+            },
             check=False,
         )
         if completed_process.returncode != 0:
@@ -327,7 +315,8 @@ class MKBackupJob(abc.ABC):
 
     def stop(self) -> None:
         state = self.state()
-        pgid = os.getpgid(state["pid"])
+        assert state.pid is not None
+        pgid = os.getpgid(state.pid)
 
         try:
             os.killpg(pgid, signal.SIGTERM)
@@ -338,7 +327,7 @@ class MKBackupJob(abc.ABC):
                 raise
 
         wait = 5.0  # sec
-        while os.path.exists("/proc/%d" % state["pid"]) and wait > 0:
+        while os.path.exists("/proc/%d" % state.pid) and wait > 0:
             time.sleep(0.5)
             wait -= 0.5
 
@@ -404,7 +393,7 @@ class Job(MKBackupJob):
             dayspec = "%d * *" % period[1]
 
         else:
-            assert_never()
+            assert_never(period)
 
         # times: list of two element tuples (hours, minutes)
         timespecs = []
@@ -540,14 +529,13 @@ class PageBackup:
     def _show_job_list(self) -> None:  # pylint: disable=too-many-branches
         html.h3(_("Jobs"))
         with table_element(sortable=False, searchable=False) as table:
-
             for nr, job in enumerate(sorted(Config.load().jobs.values(), key=lambda j: j.ident)):
                 table.row()
                 table.cell("#", css=["narrow nowrap"])
                 html.write_text(nr)
                 table.cell(_("Actions"), css=["buttons"])
                 state = job.state()
-                job_state = state["state"]
+                job_state = state.state
                 delete_url = make_confirm_delete_link(
                     url=makeactionuri_contextless(
                         request,
@@ -607,7 +595,7 @@ class PageBackup:
                 css = "state0"
                 state_txt = job.state_name(job_state)
                 if job_state == "finished":
-                    if not state["success"]:
+                    if not state.success:
                         css = "state2"
                         state_txt = _("Failed")
                     else:
@@ -619,26 +607,26 @@ class PageBackup:
                 html.write_html(HTMLWriter.render_span(state_txt))
 
                 table.cell(_("Runtime"))
-                if state["started"]:
-                    html.write_text(_("Started at %s") % render.date_and_time(state["started"]))
-                    duration = time.time() - state["started"]
+                if state.started:
+                    html.write_text(_("Started at %s") % render.date_and_time(state.started))
+                    duration = time.time() - state.started
                     if job_state == "finished":
-                        html.write_text(
-                            ", Finished at %s" % render.date_and_time(state["finished"])
-                        )
-                        duration = state["finished"] - state["started"]
+                        assert state.finished is not None
+                        html.write_text(", Finished at %s" % render.date_and_time(state.finished))
+                        duration = state.finished - state.started
 
-                    if "size" in state:
-                        size_txt = "Size: %s, " % render.fmt_bytes(state["size"])
+                    if state.size is not None:
+                        size_txt = "Size: %s, " % render.fmt_bytes(state.size)
                     else:
                         size_txt = ""
 
+                    assert state.bytes_per_second is not None
                     html.write_text(
                         _(" (Duration: %s, %sIO: %s/s)")
                         % (
                             render.timespan(duration),
                             size_txt,
-                            render.fmt_bytes(state["bytes_per_second"]),
+                            render.fmt_bytes(state.bytes_per_second),
                         )
                     )
 
@@ -682,7 +670,7 @@ class PageEditBackupJob:
             self._new = True
             self._ident = None
             self._job_cfg = {}
-            self._title = _("New backup job")
+            self._title = _("Add backup job")
 
     def title(self) -> str:
         return self._title
@@ -946,13 +934,13 @@ class PageAbstractMKBackupJobState(abc.ABC, Generic[_TBackupJob]):
 
         html.open_table(class_=["data", "backup_job"])
 
-        if state["state"] is None:
+        if state.state is None:
             css = []
-            state_txt = self.job.state_name(state["state"])
-        elif state["state"] != "finished":
+            state_txt = self.job.state_name(state.state)
+        elif state.state != "finished":
             css = ["state0"]
-            state_txt = self.job.state_name(state["state"])
-        elif state["success"]:
+            state_txt = self.job.state_name(state.state)
+        elif state.success:
             css = ["state0"]
             state_txt = _("Finished")
         else:
@@ -967,12 +955,13 @@ class PageAbstractMKBackupJobState(abc.ABC, Generic[_TBackupJob]):
         html.open_tr(class_=["data", "odd0"])
         html.td(_("Runtime"), class_="left")
         html.open_td()
-        if state["started"]:
-            html.write_text(_("Started at %s") % render.date_and_time(state["started"]))
-            duration = time.time() - state["started"]
-            if state["state"] == "finished":
-                html.write_text(", Finished at %s" % render.date_and_time(state["started"]))
-                duration = state["finished"] - state["started"]
+        if state.started:
+            html.write_text(_("Started at %s") % render.date_and_time(state.started))
+            duration = time.time() - state.started
+            if state.state == "finished":
+                assert state.finished is not None
+                html.write_text(", Finished at %s" % render.date_and_time(state.started))
+                duration = state.finished - state.started
 
             html.write_text(_(" (Duration: %s)") % render.timespan(duration))
         html.close_td()
@@ -982,7 +971,7 @@ class PageAbstractMKBackupJobState(abc.ABC, Generic[_TBackupJob]):
         html.td(_("Output"), class_=["left", "legend"])
         html.open_td()
         html.open_div(class_="log_output", style="height: 400px;", id_="progress_log")
-        html.pre(state["output"])
+        html.pre(state.output)
         html.close_div()
         html.close_td()
         html.close_tr()
@@ -1137,12 +1126,12 @@ class ABCBackupTargetRemote(ABCBackupTargetType, Generic[TRemoteParams, TRemoteS
     # right
     _INNER_PASSWORD_FIELD_SIZE = 61
 
-    def __init__(self, params: RemoteTargetParams[TRemoteParams]) -> None:
+    def __init__(self, params: RemoteTargetParams) -> None:
         self._params = params
         self._target = self._instantiate_target(params)
 
     @property
-    def parameters(self) -> RemoteTargetParams[TRemoteParams]:
+    def parameters(self) -> RemoteTargetParams:
         return self._params
 
     @property
@@ -1192,7 +1181,7 @@ class ABCBackupTargetRemote(ABCBackupTargetType, Generic[TRemoteParams, TRemoteS
     @staticmethod
     @abc.abstractmethod
     def _instantiate_target(
-        params: RemoteTargetParams[TRemoteParams],
+        params: RemoteTargetParams,
     ) -> RemoteTarget[TRemoteParams, TRemoteStorage]:
         ...
 
@@ -1433,8 +1422,10 @@ def _validate_remote_target(
 @contextlib.contextmanager
 def _write_access_test_file(path: Path) -> Iterator[Path]:
     test_file_path = path / (f"write_test_{int(time.time())}")
-    yield test_file_path
-    test_file_path.unlink(missing_ok=True)
+    try:
+        yield test_file_path
+    finally:
+        test_file_path.unlink(missing_ok=True)
 
 
 # .
@@ -1478,7 +1469,6 @@ class Target:
 
     def show_backup_list(self) -> None:
         with table_element(sortable=False, searchable=False) as table:
-
             for backup_ident, info in sorted(self.backups().items()):
                 table.row()
                 table.cell(_("Actions"), css=["buttons"])
@@ -1558,7 +1548,6 @@ def _show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
         )
 
     with table_element(sortable=False, searchable=False) as table:
-
         for nr, target in enumerate(sorted(targets, key=lambda t: t.ident)):
             table.row()
             table.cell("#", css=["narrow nowrap"])
@@ -1596,10 +1585,10 @@ def _show_target_list(targets: Iterable[Target], targets_are_cma: bool) -> None:
                 html.icon_button(edit_url, _("Edit this backup target"), "edit")
                 html.icon_button(delete_url, _("Delete this backup target"), "delete")
 
-                table.cell(_("ID"), target.ident, css=["narrow nowrap"])
-                table.cell(_("Title"), target.title, css=["narrow nowrap"])
-                table.cell(_("Type"), target.render_type())
-                table.cell(_("Destination"), target.render_destination())
+            table.cell(_("ID"), target.ident, css=["narrow nowrap"])
+            table.cell(_("Title"), target.title, css=["narrow nowrap"])
+            table.cell(_("Type"), target.render_type())
+            table.cell(_("Destination"), target.render_destination())
 
 
 class PageBackupTargets:
@@ -1690,7 +1679,7 @@ class PageEditBackupTarget:
             self._new = True
             self._ident = None
             self._target_cfg = {}
-            self._title = _("New backup target")
+            self._title = _("Add backup target")
 
     def title(self) -> str:
         return self._title
@@ -1873,14 +1862,6 @@ class PageBackupEditKey(key_mgmt.PageEditKey):
             "passphrase to decrypt the backup."
         )
 
-    def _generate_key(self, alias: str, passphrase: str) -> key_mgmt.Key:
-        assert user.id is not None
-        key = key_mgmt.generate_key(alias, passphrase, user.id, omd_site())
-        # Mark key as not downloaded yet to issue a warning to the user that the key
-        # should be backed up. The warning is removed on first download.
-        key.not_downloaded = True
-        return key
-
 
 class PageBackupUploadKey(key_mgmt.PageUploadKey):
     back_mode = "backup_keys"
@@ -1942,8 +1923,11 @@ def show_key_download_warning(keys: dict[int, key_mgmt.Key]) -> None:
 
 
 class RestoreJob(MKBackupJob):
-    def __init__(  # type:ignore[no-untyped-def]
-        self, target_ident, backup_ident, passphrase=None
+    def __init__(
+        self,
+        target_ident: TargetId | None,
+        backup_ident: str | None,
+        passphrase: PasswordType | None = None,
     ) -> None:
         super().__init__()
         self._target_ident = target_ident
@@ -1956,19 +1940,18 @@ class RestoreJob(MKBackupJob):
     def state_file_path(self) -> Path:
         return Path("/tmp/restore-%s.state" % os.environ["OMD_SITE"])
 
-    def complete(self):
+    def complete(self) -> None:
         self.cleanup()
 
-    def _start_command(self):
+    def _start_command(self) -> Sequence[str | Path]:
+        assert self._target_ident is not None
+        assert self._backup_ident is not None
         return [mkbackup_path(), "restore", "--background", self._target_ident, self._backup_ident]
 
-    def start(self, env=None):
-        if self._passphrase is not None:
-            if env is None:
-                env = {}
-            env.update(os.environ.copy())
-            env["MKBACKUP_PASSPHRASE"] = self._passphrase
-        super().start(env)
+    def start(self, **env_updates: str) -> None:
+        if self._passphrase:
+            env_updates["MKBACKUP_PASSPHRASE"] = self._passphrase.raw
+        super().start(**env_updates)
 
 
 class PageBackupRestore:
@@ -1977,7 +1960,7 @@ class PageBackupRestore:
         self.key_store = key_store
         self._load_target()
 
-    def _load_target(self):
+    def _load_target(self) -> None:
         ident = request.var("target")
         if ident is None:
             self._target_ident = None
@@ -2073,7 +2056,7 @@ class PageBackupRestore:
 
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_restore")]))
 
-    def _delete_backup(self, backup_ident) -> None:  # type:ignore[no-untyped-def]
+    def _delete_backup(self, backup_ident: str | None) -> None:
         if self._restore_is_running():
             raise MKUserError(
                 None,
@@ -2088,29 +2071,30 @@ class PageBackupRestore:
         if backup_ident not in self._target.backups():
             raise MKUserError(None, _("This backup does not exist."))
 
+        assert backup_ident is not None
+
         self._target.remove_backup(backup_ident)
         flash(_("The backup has been deleted."))
 
-    def _restore_was_started(self):
+    def _restore_was_started(self) -> bool:
         return RestoreJob(self._target_ident, None).was_started()
 
-    def _restore_is_running(self):
+    def _restore_is_running(self) -> bool:
         return RestoreJob(self._target_ident, None).is_running()
 
-    def _start_restore(self, backup_ident) -> ActionResult:  # type:ignore[no-untyped-def]
+    def _start_restore(self, backup_ident: str | None) -> ActionResult:
         if self._target is None:
             raise Exception("no backup target")
+        assert backup_ident is not None
         backup_info = self._target.backups()[backup_ident]
         if (key_digest := backup_info.config["encrypt"]) is not None:
             return self._start_encrypted_restore(backup_ident, key_digest)
         return self._start_unencrypted_restore(backup_ident)
 
-    def _complete_restore(self, backup_ident) -> None:  # type:ignore[no-untyped-def]
+    def _complete_restore(self, backup_ident: str | None) -> None:
         RestoreJob(self._target_ident, None).complete()
 
-    def _start_encrypted_restore(  # type:ignore[no-untyped-def]
-        self, backup_ident, key_digest: str
-    ) -> ActionResult:
+    def _start_encrypted_restore(self, backup_ident: str, key_digest: str) -> ActionResult:
         try:
             _key_id, key = self.key_store.get_key_by_digest(key_digest)
         except KeyError:
@@ -2128,10 +2112,13 @@ class PageBackupRestore:
                 value = self._vs_key().from_html_vars("_key")
                 if request.has_var("_key_p_passphrase"):
                     self._vs_key().validate_value(value, "_key")
-                    passphrase = value["passphrase"]
+                    passphrase = PasswordType(value["passphrase"])
 
                     # Validate the passphrase
-                    key_mgmt.decrypt_private_key(key.private_key, passphrase)
+                    try:
+                        key.to_certificate_with_private_key(passphrase)
+                    except ValueError:
+                        raise MKUserError("_key_p_passphrase", _("Invalid pass phrase"))
 
                     transactions.check_transaction()  # invalidate transid
                     RestoreJob(self._target_ident, backup_ident, passphrase).start()
@@ -2164,7 +2151,7 @@ class PageBackupRestore:
         html.footer()
         return FinalizeRequest(code=200)
 
-    def _vs_key(self):
+    def _vs_key(self) -> Dictionary:
         return Dictionary(
             title=_("Properties"),
             elements=[
@@ -2181,14 +2168,12 @@ class PageBackupRestore:
             render="form",
         )
 
-    def _start_unencrypted_restore(  # type:ignore[no-untyped-def]
-        self, backup_ident
-    ) -> ActionResult:
+    def _start_unencrypted_restore(self, backup_ident: str) -> ActionResult:
         RestoreJob(self._target_ident, backup_ident).start()
         flash(_("The restore has been started."))
         return HTTPRedirect(makeuri_contextless(request, [("mode", "backup_restore")]))
 
-    def _stop_restore(self, backup_ident) -> None:  # type:ignore[no-untyped-def]
+    def _stop_restore(self, backup_ident: str | None) -> None:
         RestoreJob(self._target_ident, backup_ident).stop()
         flash(_("The restore has been stopped."))
 
@@ -2202,7 +2187,7 @@ class PageBackupRestore:
         else:
             self._show_target_list()
 
-    def _show_target_list(self):
+    def _show_target_list(self) -> None:
         html.p(_("Please choose a target to perform the restore from."))
         _show_site_and_system_targets(Config.load())
 
@@ -2210,7 +2195,7 @@ class PageBackupRestore:
         assert self._target is not None
         self._target.show_backup_list()
 
-    def _show_restore_progress(self):
+    def _show_restore_progress(self) -> None:
         PageBackupRestoreState().page()
 
 

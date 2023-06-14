@@ -6,7 +6,7 @@ Date: 1673626041
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The TagGroup choices allowed are set at runtime but they can be modified which
 was causing a 500 internal error in the REST API.  This fix removes the enum

@@ -1,8 +1,9 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
 import $ from "jquery";
+import Swal from "sweetalert2";
 import * as utils from "utils";
 
 // ----------------------------------------------------------------------------
@@ -20,7 +21,7 @@ interface Dialog {
     hide_attributes: string[];
 }
 
-var dialog_properties: null | Dialog = null;
+let dialog_properties: null | Dialog = null;
 
 export function prepare_edit_dialog(attrs: Dialog) {
     dialog_properties = attrs;
@@ -31,20 +32,20 @@ export function prepare_edit_dialog(attrs: Dialog) {
 export function fix_visibility() {
     /* First collect the current selection of all host attributes.
        They are in the same table as we are */
-    var current_tags = get_effective_tags();
+    const current_tags = get_effective_tags();
     if (!current_tags) return;
     dialog_properties = dialog_properties!;
-    var hide_topics = dialog_properties.volatile_topics.slice(0);
+    const hide_topics = dialog_properties.volatile_topics.slice(0);
     /* Now loop over all attributes that have conditions. Those are
        stored in the global variable depends_on_tags, which is filled
        during the creation of the web page. */
 
-    var index;
-    for (var i = 0; i < dialog_properties.check_attributes.length; i++) {
-        let attrname: string = dialog_properties.check_attributes[i];
+    let index;
+    for (let i = 0; i < dialog_properties.check_attributes.length; i++) {
+        const attrname: string = dialog_properties.check_attributes[i];
         /* Now comes the tricky part: decide whether that attribute should
            be visible or not: */
-        var display = "";
+        let display = "";
 
         // Always invisible
         if (dialog_properties.hide_attributes.indexOf(attrname) > -1) {
@@ -58,10 +59,11 @@ export function fix_visibility() {
                 index < dialog_properties.depends_on_roles[attrname].length;
                 index++
             ) {
-                var role = dialog_properties.depends_on_roles[attrname][index];
-                var negate = role[0] == "!";
-                var rolename = negate ? role.substr(1) : role;
-                var have_role =
+                const role =
+                    dialog_properties.depends_on_roles[attrname][index];
+                const negate = role[0] == "!";
+                const rolename = negate ? role.substr(1) : role;
+                const have_role =
                     dialog_properties.user_roles.indexOf(rolename) != -1;
                 if (have_role == negate) {
                     display = "none";
@@ -77,10 +79,10 @@ export function fix_visibility() {
                 index < dialog_properties.depends_on_tags[attrname].length;
                 index++
             ) {
-                var tag = dialog_properties.depends_on_tags[attrname][index];
-                var negate_tag = tag[0] == "!";
-                var tagname = negate_tag ? tag.substr(1) : tag;
-                var have_tag = current_tags.indexOf(tagname) != -1;
+                const tag = dialog_properties.depends_on_tags[attrname][index];
+                const negate_tag = tag[0] == "!";
+                const tagname = negate_tag ? tag.substr(1) : tag;
+                const have_tag = current_tags.indexOf(tagname) != -1;
                 if (have_tag == negate_tag) {
                     display = "none";
                     break;
@@ -88,16 +90,14 @@ export function fix_visibility() {
             }
         }
 
-        var oTr = document.getElementById(
-            "attr_" + attrname
-        ) as HTMLTableRowElement;
-        if (oTr) {
-            oTr.style.display = display;
+        const tableRow = document.getElementById("attr_" + attrname);
+        if (tableRow instanceof HTMLTableRowElement) {
+            tableRow.style.display = display;
 
             // Prepare current visibility information which is used
             // within the attribut validation in wato
             // Hidden attributes are not validated at all
-            var oAttrDisp = <HTMLInputElement>(
+            let oAttrDisp = <HTMLInputElement>(
                 document.getElementById("attr_display_" + attrname)
             );
             if (!oAttrDisp) {
@@ -106,12 +106,13 @@ export function fix_visibility() {
                 oAttrDisp.id = "attr_display_" + attrname;
                 oAttrDisp.type = "hidden";
                 oAttrDisp.className = "text";
-                oTr.appendChild(oAttrDisp);
+                tableRow.appendChild(oAttrDisp);
             }
             if (display == "none") {
                 // Uncheck checkboxes of hidden fields
-                var input_fields = oTr.cells[0].getElementsByTagName("input");
-                var chkbox = input_fields[0];
+                const input_fields =
+                    tableRow.cells[0].getElementsByTagName("input");
+                const chkbox = input_fields[0];
                 chkbox.checked = false;
                 toggle_attribute(chkbox, attrname);
 
@@ -121,7 +122,7 @@ export function fix_visibility() {
             }
 
             // There is at least one item in this topic -> show it
-            var topic = oTr.parentNode!.childNodes[0].textContent;
+            const topic = tableRow.parentNode!.childNodes[0].textContent;
             if (display == "") {
                 index = hide_topics.indexOf(topic!);
                 if (index != -1) delete hide_topics[index];
@@ -130,20 +131,23 @@ export function fix_visibility() {
     }
 
     // FIXME: use generic identifier for each form
-    var available_forms = ["form_edit_host", "form_editfolder"];
-    for (var try_form = 0; try_form < available_forms.length; try_form++) {
-        var my_form = document.getElementById(available_forms[try_form]);
+    const available_forms = ["form_edit_host", "form_editfolder"];
+    for (let try_form = 0; try_form < available_forms.length; try_form++) {
+        const my_form = document.getElementById(available_forms[try_form]);
         if (my_form != null) {
-            for (var child in my_form.childNodes) {
-                oTr = my_form.childNodes[child] as HTMLTableRowElement;
-                if (oTr.className == "nform") {
+            for (const child in my_form.childNodes) {
+                const myFormTableRow = my_form.childNodes[
+                    child
+                ] as HTMLTableRowElement;
+                if (myFormTableRow.className == "nform") {
                     if (
                         hide_topics.indexOf(
-                            oTr.childNodes[0].childNodes[0].textContent!
+                            myFormTableRow.childNodes[0].childNodes[0]
+                                .textContent!
                         ) > -1
                     )
-                        oTr.style.display = "none";
-                    else oTr.style.display = "";
+                        myFormTableRow.style.display = "none";
+                    else myFormTableRow.style.display = "";
                 }
             }
             break;
@@ -156,8 +160,8 @@ export function toggle_attribute(
     oCheckbox: HTMLInputElement,
     attrname: string
 ) {
-    var oEntry = document.getElementById("attr_entry_" + attrname);
-    var oDefault = document.getElementById("attr_default_" + attrname);
+    const oEntry = document.getElementById("attr_entry_" + attrname);
+    const oDefault = document.getElementById("attr_default_" + attrname);
 
     // Permanent invisible attributes do
     // not have attr_entry / attr_default
@@ -183,22 +187,22 @@ function get_containers() {
 }
 
 function get_effective_tags() {
-    var current_tags: string[] = [];
+    let current_tags: string[] = [];
 
-    var containers = get_containers()!;
+    const containers = get_containers()!;
 
-    for (var a = 0; a < containers.length; a++) {
-        var tag_container = containers[a];
-        for (var i = 0; i < tag_container.rows.length; i++) {
+    for (let a = 0; a < containers.length; a++) {
+        const tag_container = containers[a];
+        for (let i = 0; i < tag_container.rows.length; i++) {
             dialog_properties = dialog_properties!;
-            var row = tag_container.rows[i];
-            var add_tag_id;
+            const row = tag_container.rows[i];
+            let add_tag_id;
             if (row.tagName == "TR") {
-                var legend_cell = row.cells[0];
+                const legend_cell = row.cells[0];
                 if (!utils.has_class(legend_cell, "legend")) {
                     continue;
                 }
-                var content_cell = row.cells[1];
+                const content_cell = row.cells[1];
 
                 /*
                  * If the Checkbox is unchecked try to get a value from the inherited_tags
@@ -206,19 +210,19 @@ function get_effective_tags() {
                  * The checkbox may be disabled. In this case there is a hidden field with the original
                  * name of the checkbox. Get that value instead of the checkbox checked state.
                  */
-                var input_fields = legend_cell.getElementsByTagName("input");
+                const input_fields = legend_cell.getElementsByTagName("input");
                 if (input_fields.length == 0) continue;
-                var checkbox = input_fields[0];
-                var attr_enabled = false;
+                const checkbox = input_fields[0];
+                let attr_enabled = false;
                 if (checkbox.name.indexOf("ignored_") === 0) {
-                    var hidden_field = input_fields[input_fields.length - 1];
+                    const hidden_field = input_fields[input_fields.length - 1];
                     attr_enabled = hidden_field.value == "on";
                 } else {
                     attr_enabled = checkbox.checked;
                 }
 
                 if (attr_enabled == false) {
-                    var attr_ident =
+                    const attr_ident =
                         "attr_" + checkbox.name.replace(/.*_change_/, "");
                     if (
                         attr_ident in dialog_properties.inherited_tags &&
@@ -229,14 +233,14 @@ function get_effective_tags() {
                     }
                 } else {
                     /* Find the <select>/<checkbox> object in this tr */
-                    var elements: HTMLCollectionOf<HTMLElement> =
+                    let elements: HTMLCollectionOf<HTMLElement> =
                         content_cell.getElementsByTagName("input");
                     if (elements.length == 0)
                         elements = content_cell.getElementsByTagName("select");
 
                     if (elements.length == 0) continue;
 
-                    var oElement = elements[0] as HTMLInputElement;
+                    const oElement = elements[0] as HTMLInputElement;
                     if (oElement.type == "checkbox" && oElement.checked) {
                         add_tag_id = oElement.name.substr(4);
                     } else if (oElement.tagName == "SELECT") {
@@ -256,18 +260,26 @@ function get_effective_tags() {
     return current_tags;
 }
 
-export function randomize_secret(id: string, len: number) {
-    var secret = "";
-    for (var i = 0; i < len; i++) {
-        var c = parseInt(String(26 * Math.random() + 64));
+export function randomize_secret(id: string, len: number, message: string) {
+    let secret = "";
+    for (let i = 0; i < len; i++) {
+        const c = parseInt(String(26 * Math.random() + 64));
         secret += String.fromCharCode(c);
     }
-    var oInput = document.getElementById(id) as HTMLInputElement;
+    const oInput = document.getElementById(id) as HTMLInputElement;
     oInput.value = secret;
+    navigator.clipboard.writeText(secret);
+    Swal.fire({
+        icon: "success",
+        title: message,
+        showConfirmButton: false,
+        timer: 1500,
+        width: 350,
+    });
 }
 
 export function toggle_container(id: string) {
-    var obj = document.getElementById(id);
+    const obj = document.getElementById(id);
     if (utils.has_class(obj, "hidden")) utils.remove_class(obj, "hidden");
     else utils.add_class(obj, "hidden");
 }
@@ -277,8 +289,7 @@ export function toggle_container(id: string) {
 // ----------------------------------------------------------------------------
 
 export function open_folder(event: Event | undefined, link: string) {
-    if (!event) event = window.event;
-    var target = event!.target;
+    const target = event!.target;
     if ((target as HTMLElement).tagName != "DIV") {
         // Skip this event on clicks on other elements than the pure div
         return false;
@@ -288,30 +299,16 @@ export function open_folder(event: Event | undefined, link: string) {
 }
 
 export function toggle_folder(
-    event: Event | undefined,
+    _event: Event | undefined,
     oDiv: HTMLElement,
     on: boolean
 ) {
-    if (!event) event = window.event;
+    const obj = oDiv.parentNode as HTMLElement;
+    const id = obj.id.substr(7);
 
-    // Skip mouseout event when moving mouse over a child element of the
-    // folder element
-    if (!on) {
-        var node: HTMLElement | null | Node = event!.target as HTMLElement;
-        while (node) {
-            if (node == oDiv) {
-                return false;
-            }
-            node = node.parentNode;
-        }
-    }
-
-    var obj = oDiv.parentNode as HTMLElement;
-    var id = obj.id.substr(7);
-
-    var elements = ["edit", "popup_trigger_move", "delete"];
-    for (var num in elements) {
-        var elem = document.getElementById(elements[num] + "_" + id);
+    const elements = ["edit", "popup_trigger_move", "delete"];
+    for (const num in elements) {
+        const elem = document.getElementById(elements[num] + "_" + id);
         if (elem) {
             if (on) {
                 elem.style.display = "inline";
@@ -327,7 +324,7 @@ export function toggle_folder(
         utils.remove_class(obj, "open");
 
         // Hide the eventual open move dialog
-        var move_dialog = document.getElementById("move_dialog_" + id);
+        const move_dialog = document.getElementById("move_dialog_" + id);
         if (move_dialog) {
             move_dialog.style.display = "none";
         }
@@ -335,7 +332,8 @@ export function toggle_folder(
 }
 
 export function toggle_rule_condition_type(select_id: string) {
-    var value = (document.getElementById(select_id) as HTMLInputElement).value;
+    const value = (document.getElementById(select_id) as HTMLInputElement)
+        .value;
     $(".condition").hide();
     $(".condition." + value).show();
 }

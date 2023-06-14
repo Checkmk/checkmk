@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -24,7 +24,7 @@ from cmk.special_agents.agent_aws import (
     StatusEnum,
 )
 
-from .agent_aws_fake_clients import FakeCloudwatchClient
+from .agent_aws_fake_clients import FakeCloudwatchClient, FakeServiceQuotasClient
 
 GetSectionsCallable = Callable[
     [Sequence[str] | None, OverallTags], tuple[ECSLimits, ECSSummary, ECS]
@@ -83,37 +83,6 @@ CLUSTERS_CLIENT_RESPONSE2: Final[Sequence[Mapping[str, object]]] = [
         "defaultCapacityProviderStrategy": [],
     },
 ]
-
-
-class FakeQuotaClient:
-    def list_service_quotas(self, ServiceCode: str) -> object:
-        return {
-            "Quotas": [
-                {
-                    "ServiceCode": "ecs",
-                    "ServiceName": "Amazon Elastic Container Service (Amazon ECs)",
-                    "QuotaArn": "arn:aws:servicequotas:us-east-1:710145618630:ecs/L-85EED4F7",
-                    "QuotaCode": "L-85EED4F7",
-                    "QuotaName": "Container instances per cluster",
-                    "Value": 20,
-                    "Unit": "None",
-                    "Adjustable": True,
-                    "GlobalQuota": False,
-                }
-            ],
-            "ResponseMetadata": {
-                "RequestId": "3158f3b7-9788-4394-8d8c-ede95a113476",
-                "HTTPStatusCode": 200,
-                "HTTPHeaders": {
-                    "date": "Thu, 20 Oct 2022 08:10:44 GMT",
-                    "content-type": "application/x-amz-json-1.1",
-                    "content-length": "13",
-                    "connection": "keep-alive",
-                    "x-amzn-requestid": "3158f3b7-9788-4394-8d8c-ede95a113476",
-                },
-                "RetryAttempts": 0,
-            },
-        }
 
 
 class Paginator:
@@ -183,13 +152,14 @@ def get_ecs_sections() -> GetSectionsCallable:
         fake_ecs_client1 = FakeECSClient(CLUSTERS_CLIENT_RESPONSE1)
         fake_ecs_client2 = FakeECSClient(CLUSTERS_CLIENT_RESPONSE2)
         fake_cloudwatch_client = FakeCloudwatchClient()
-        fake_quota_client = FakeQuotaClient()
+        fake_quota_client = FakeServiceQuotasClient()
 
         distributor = ResultDistributor()
 
-        ecs_limits = ECSLimits(fake_ecs_client2, region, config, distributor, fake_quota_client)
-        ecs_summary = ECSSummary(fake_ecs_client1, region, config, distributor)
-        ecs = ECS(fake_cloudwatch_client, region, config)
+        # TODO: FakeECSClient shoud actually subclass ECSClient, etc.
+        ecs_limits = ECSLimits(fake_ecs_client2, region, config, distributor, fake_quota_client)  # type: ignore[arg-type]
+        ecs_summary = ECSSummary(fake_ecs_client1, region, config, distributor)  # type: ignore[arg-type]
+        ecs = ECS(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
 
         distributor.add(ecs_limits.name, ecs_summary)
         distributor.add(ecs_summary.name, ecs)
@@ -314,7 +284,8 @@ def test_agent_aws_ecs_limits_without_quota_client(
     config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
     fake_ecs_client = FakeECSClient(CLUSTERS_CLIENT_RESPONSE2)
 
-    ecs_limits = ECSLimits(fake_ecs_client, region, config)
+    # TODO: FakeECSClient shoud actually subclass ECSClient, etc.
+    ecs_limits = ECSLimits(fake_ecs_client, region, config)  # type: ignore[arg-type]
 
     assert ecs_limits.cache_interval == 300
     assert ecs_limits.period == 600

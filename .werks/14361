@@ -6,7 +6,7 @@ Date: 1659967331
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, Windows agent used retry_count as a maximal allowed 
 count of plugin's failures. If the count of failures exceeded the 

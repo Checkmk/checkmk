@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, the state would be UNKNOWN if a file has a creation time from the future.
 A new parameter 'Negative age tolerance' has been added to 'Size and age of single files'

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """The bulk import for hosts can be used to import multiple new hosts into a
-single WATO folder. The hosts can either be provided by uploading a CSV file or
+single Setup folder. The hosts can either be provided by uploading a CSV file or
 by pasting the contents of a CSV file into a textbox."""
 
 import csv
@@ -50,7 +50,7 @@ from cmk.gui.valuespec import (
 from cmk.gui.wato.pages.custom_attributes import ModeCustomHostAttrs
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.host_attributes import host_attribute_registry
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import folder_from_request
 
 # Was not able to get determine the type of csv._reader / _csv.reader
 CSVReader = Any
@@ -224,6 +224,7 @@ class ModeBulkImport(WatoMode):
         fail_messages = []
         selected = []
         imported_hosts = []
+        folder = folder_from_request()
 
         for row_num, row in enumerate(csv_reader):
             if not row:
@@ -231,7 +232,7 @@ class ModeBulkImport(WatoMode):
 
             host_name, attributes = self._get_host_info_from_row(row, row_num)
             try:
-                Folder.current().create_hosts([(host_name, attributes, None)])
+                folder.create_hosts([(host_name, attributes, None)])
                 imported_hosts.append(host_name)
                 selected.append("_c_%s" % host_name)
                 num_succeeded += 1
@@ -253,7 +254,7 @@ class ModeBulkImport(WatoMode):
                 msg += "<li>%s</li>" % fail_msg
             msg += "</ul>"
 
-        folder_path = Folder.current().path()
+        folder_path = folder.path()
         if num_succeeded > 0 and request.var("do_service_detection") == "1":
             # Create a new selection for performing the bulk discovery
             user.set_rowselection(
@@ -362,6 +363,8 @@ class ModeBulkImport(WatoMode):
                     "file",
                     UploadOrPasteTextFile(
                         elements=[],
+                        allowed_extensions=[".csv"],
+                        mime_types=["text/csv"],
                         title=_("Import Hosts"),
                         file_title=_("CSV File"),
                     ),
@@ -435,7 +438,6 @@ class ModeBulkImport(WatoMode):
         with table_element(
             sortable=False, searchable=False, omit_headers=not self._has_title_line
         ) as table:
-
             # Render attribute selection fields
             table.row()
             for col_num in range(num_columns):

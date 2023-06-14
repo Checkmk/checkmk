@@ -1,0 +1,11 @@
+Title: Graph IO flow added for ingress and egress metrics
+Class: feature
+Compatible: compat
+Component: metrics
+Date: 1677074039
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+

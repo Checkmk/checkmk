@@ -1,0 +1,20 @@
+Title: Jolokia JVM Memory Pools
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1679498653
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Jolokia JVM Memory Pools may crash with the following traceback:
+C+:
+ File "/omd/sites/site_name/share/check_mk/checks/jolokia_jvm_memory", line 145, in check_jolokia_jvm_memory_pools
+ value_max = usage.get("max", -1)
+AttributeError: 'str' object has no attribute 'get'
+C-:
+
+This can be caused by an issue in the jolokia API and will result now in an UNKNOWN state.
+

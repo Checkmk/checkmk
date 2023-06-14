@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,13 +8,10 @@ import pytest
 from tests.testlib import create_linux_test_host
 from tests.testlib.site import Site
 
-from cmk.utils.type_defs import HostName
-
-from cmk.checkers.discovery import AutochecksStore
+from cmk.checkengine.discovery._autochecks import _AutochecksSerializer
 
 
 def test_test_check_1_merged_rule(request: pytest.FixtureRequest, site: Site) -> None:
-
     host_name = "disco-params-test-host"
 
     create_linux_test_host(request, site, host_name)
@@ -64,7 +61,9 @@ register.check_plugin(
     site.openapi.discover_services_and_wait_for_completion(host_name)
 
     # Verify that the discovery worked as expected
-    entries = AutochecksStore(HostName(host_name)).read()
+    entries = _AutochecksSerializer().deserialize(
+        site.read_file(f"var/check_mk/autochecks/{host_name}.mk").encode("utf-8")
+    )
     for entry in entries:
         if str(entry.check_plugin_name) == "test_check_1":
             assert entry.item == "Parameters({'default': 42})"
@@ -81,7 +80,9 @@ register.check_plugin(
     # rediscover with the setting in the config
     site.delete_file(f"var/check_mk/autochecks/{host_name}.mk")
     site.openapi.discover_services_and_wait_for_completion(host_name)
-    entries = AutochecksStore(HostName(host_name)).read()
+    entries = _AutochecksSerializer().deserialize(
+        site.read_file(f"var/check_mk/autochecks/{host_name}.mk").encode("utf-8")
+    )
     for entry in entries:
         if str(entry.check_plugin_name) == "test_check_1":
             assert entry.item == "Parameters({'default': 42, 'levels': (1, 2)})"
@@ -91,7 +92,6 @@ register.check_plugin(
 
 
 def test_test_check_1_all_rule(request: pytest.FixtureRequest, site: Site) -> None:
-
     host_name = "disco-params-test-host"
 
     create_linux_test_host(request, site, host_name)
@@ -143,7 +143,9 @@ register.check_plugin(
     site.openapi.discover_services_and_wait_for_completion(host_name)
 
     # Verify that the discovery worked as expected
-    entries = AutochecksStore(HostName(host_name)).read()
+    entries = _AutochecksSerializer().deserialize(
+        site.read_file(f"var/check_mk/autochecks/{host_name}.mk").encode("utf-8")
+    )
 
     for entry in entries:
         if str(entry.check_plugin_name) == "test_check_2":
@@ -161,7 +163,9 @@ register.check_plugin(
     # rediscover with the setting in the config
     site.delete_file(f"var/check_mk/autochecks/{host_name}.mk")
     site.openapi.discover_services_and_wait_for_completion(host_name)
-    entries = AutochecksStore(HostName(host_name)).read()
+    entries = _AutochecksSerializer().deserialize(
+        site.read_file(f"var/check_mk/autochecks/{host_name}.mk").encode("utf-8")
+    )
     for entry in entries:
         if str(entry.check_plugin_name) == "test_check_2":
             assert entry.item == (

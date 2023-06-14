@@ -7,12 +7,17 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
-Since werk 12185 we automatically show metrics in the output of local checks. The metric names
-are now consistently converted to sentence case. Below are examples for the automatic conversion
+Since werk 12185 we automatically show metrics in the output of local checks.
+The metric names are now consistently converted to sentence case.
+Below are examples for the automatic conversion
 
-	LONG_METRIC_NAME -> Long metric name
-	recommendation4WHO -> Recommendation 4 WHO
-	weekIncidence -> Week incidence
-	zombie_apocalypse -> Zombie apocalypse
+<tt>LONG_METRIC_NAME</tt> -> <i>Long metric name</i>
+
+<tt>recommendation4WHO</tt> -> <i>Recommendation 4 WHO</i>
+
+<tt>weekIncidence</tt> -> <i>Week incidence</i>
+
+<tt>zombie_apocalypse</tt> -> <i>Zombie apocalypse</i>
+

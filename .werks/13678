@@ -6,7 +6,7 @@ Date: 1648820368
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 It is now possible to prevent the Solaris .pkg package from the agent bakery
 to install an inetd service on the target systems.

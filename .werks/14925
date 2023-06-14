@@ -6,7 +6,7 @@ Date: 1670226843
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 For some internal communication of the <i>Event Console</i> Unix sockets are used.
 These reside in <tt>tmp/run/mkeventd/</tt> and used to be world readable.

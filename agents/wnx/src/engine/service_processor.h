@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -122,7 +122,7 @@ public:
             [this, port_name](const std::string &command_line,
                               AnswerId answer) {
                 engine_.updateSectionStatus();  // actual data gathering is
-                                                // here for plugins and local
+                                                // here for g_plugins and local
 
                 engine_.registerCommandLine(command_line);
                 auto id = AnswerIdToNumber(answer);
@@ -211,10 +211,10 @@ public:
     }
 
     // boiler plate
-    ServiceProcessor(const ServiceProcessor &Rhs) = delete;
-    ServiceProcessor &operator=(ServiceProcessor &Rhs) = delete;
-    ServiceProcessor(const ServiceProcessor &&Rhs) = delete;
-    ServiceProcessor &operator=(ServiceProcessor &&Rhs) = delete;
+    ServiceProcessor(const ServiceProcessor &rhs) = delete;
+    ServiceProcessor &operator=(ServiceProcessor &rhs) = delete;
+    ServiceProcessor(const ServiceProcessor &&rhs) = delete;
+    ServiceProcessor &operator=(ServiceProcessor &&rhs) = delete;
 
     // Standard Windows API to Service
     void stopService(wtools::StopMode stop_mode) override;
@@ -222,6 +222,7 @@ public:
     void pauseService() override;
     void shutdownService(wtools::StopMode stop_mode) override;
     void continueService() override;
+    wtools::InternalUsersDb *getInternalUsers() override { return &iu_; }
 
     // \brief - serves test in command line
     void startServiceAsLegacyTest();
@@ -264,6 +265,11 @@ public:
     bool stopRunningOhmProcess() noexcept;
 
 private:
+    wtools::InternalUsersDb iu_;
+    struct OptionalTasksResults {
+        bool cap_installed{false};
+    };
+    static OptionalTasksResults executeOptionalTasks();
     std::vector<uint8_t> makeTestString(const char *text) const {
         const std::string test{text == nullptr ? "" : text};
         return std::vector<uint8_t>{test.begin(), test.end()};
@@ -292,8 +298,6 @@ private:
     std::mutex lock_stopper_;
     bool stop_requested_ = false;
     thread_callback callback_ = [] { return true; };  // nothing
-
-    uint16_t working_port_ = cma::cfg::kMainPort;
 
     // First Class Objects
     cma::world::ExternalPort external_port_;
@@ -407,7 +411,7 @@ private:
         return section.generateContent();
     }
 
-    /// \brief wraps resulting data with CheckMk and SystemTime sections
+    /// wraps resulting data with CheckMk and SystemTime sections
     ///
     /// Answer must be build in specific order:
     /// pre sections[s] - usually Check_MK
@@ -460,7 +464,7 @@ private:
                   answer_.getStopWatch().getUsCount() / 1000);
     }
 
-    /// \brief wait for all answers from all providers
+    /// wait for all answers from all providers
     /// The call is *blocking*
     AsyncAnswer::DataBlock getAnswer(int count) {
         XLOG::t.i("waiting futures(only start)");
@@ -594,7 +598,7 @@ private:
                     full_path,  // exe
                     log_file.empty() ? L"" : L"@" + log_file + L" ",
                     segment,                                        //
-                    wtools::ConvertToUTF16(sp->getInternalPort()),  //
+                    wtools::ConvertToUtf16(sp->getInternalPort()),  //
                     AnswerIdToNumber(answer),                       // answer id
                     tout, command);
                 XLOG::d.i("async RunStdCmd: {}", wtools::ToUtf8(cmd_line));
@@ -620,7 +624,7 @@ private:
         ServiceProcessor *service_processor,  // host
         const std::wstring &segment_name,     // identifies exe
         int timeout,                          // for exe
-        const std::wstring &command_line) {
+        const std::wstring &command_line) const {
         return kickExe(async, exe_name, answer_id, service_processor,
                        segment_name, timeout, command_line, {});
     }

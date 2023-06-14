@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from collections.abc import MutableMapping
+from collections.abc import Iterator, MutableMapping
 from pathlib import Path
 
 import pytest
@@ -16,7 +16,7 @@ from cmk.update_config import main, registry
 
 
 @pytest.fixture(autouse=True)
-def ensure_logging_framework_not_altered():
+def ensure_logging_framework_not_altered() -> Iterator[None]:
     logger = logging.getLogger()
     before_handlers = list(logger.handlers)
     yield
@@ -49,12 +49,18 @@ def test_main_calls_config_updater(
     packages_dir = Path(cmk.utils.paths.var_dir, "packages")
     packages_dir.mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(cmk.utils.paths, "installed_packages_dir", packages_dir)
+    mock_config_checker_call = mocker.patch.object(
+        main.ConfigChecker,
+        "__call__",
+        return_value=False,
+    )
     mock_config_udpater_call = mocker.patch.object(
         main.ConfigUpdater,
         "__call__",
         return_value=False,
     )
     assert not main.main([])
+    mock_config_checker_call.assert_called_once()
     mock_config_udpater_call.assert_called_once()
 
 
@@ -83,6 +89,7 @@ def test_config_updater_executes_plugins(
             sort_index=4,
         )
     )
+    mocker.patch.object(main, "pre_update_action_registry", registry.PreUpdateActionRegistry())
     mocker.patch.object(main, "update_action_registry", reg)
     mocker.patch.object(main.ConfigUpdater, "_initialize_base_environment")
 
@@ -90,8 +97,8 @@ def test_config_updater_executes_plugins(
 
     output = capsys.readouterr()
     assert output.err == ""
-    assert "1/1 Test Title..." in output.out
-    assert output.out.endswith("Done\n")
+    assert "01/01 Test Title..." in output.out
+    assert output.out.endswith("Done (success)\n")
 
     assert mock_plugin.calls == 1
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.utils.livestatus_helpers.types import Column, Table
@@ -24,12 +24,12 @@ class Status(Table):
     )
     """Whether passive service checks are activated in general (0/1)"""
 
-    average_latency_cmk = Column(
-        'average_latency_cmk',
+    average_latency_checker = Column(
+        'average_latency_checker',
         col_type='float',
-        description='The average latency for executing Check_MK checks (i.e. the time the start of the execution is behind the schedule)',
+        description='The average latency for executing Check_MK checkers (i.e. the time the start of the execution is behind the schedule)',
     )
-    """The average latency for executing Check_MK checks (i.e. the time the start of the execution is behind the schedule)"""
+    """The average latency for executing Check_MK checkers (i.e. the time the start of the execution is behind the schedule)"""
 
     average_latency_fetcher = Column(
         'average_latency_fetcher',
@@ -157,6 +157,13 @@ class Status(Table):
     )
     """The process ID of the monitoring core"""
 
+    edition = Column(
+        'edition',
+        col_type='string',
+        description='The edition of the site',
+    )
+    """The edition of the site"""
+
     enable_event_handlers = Column(
         'enable_event_handlers',
         col_type='int',
@@ -255,13 +262,6 @@ class Status(Table):
     )
     """The average usage of the checker helpers, ranging from 0.0 (0%) up to 1.0 (100%)"""
 
-    helper_usage_cmk = Column(
-        'helper_usage_cmk',
-        col_type='float',
-        description='The average usage of the Check_MK check helpers, ranging from 0.0 (0%) up to 1.0 (100%)',
-    )
-    """The average usage of the Check_MK check helpers, ranging from 0.0 (0%) up to 1.0 (100%)"""
-
     helper_usage_fetcher = Column(
         'helper_usage_fetcher',
         col_type='float',
@@ -272,9 +272,9 @@ class Status(Table):
     helper_usage_generic = Column(
         'helper_usage_generic',
         col_type='float',
-        description='The average usage of the generic check helpers, ranging from 0.0 (0%) up to 1.0 (100%)',
+        description='The average usage of the active check helpers, ranging from 0.0 (0%) up to 1.0 (100%)',
     )
-    """The average usage of the generic check helpers, ranging from 0.0 (0%) up to 1.0 (100%)"""
+    """The average usage of the active check helpers, ranging from 0.0 (0%) up to 1.0 (100%)"""
 
     helper_usage_real_time = Column(
         'helper_usage_real_time',
@@ -345,13 +345,6 @@ class Status(Table):
         description='The default interval length',
     )
     """The default interval length"""
-
-    is_trial_expired = Column(
-        'is_trial_expired',
-        col_type='int',
-        description='Whether or not expired trial of demo version',
-    )
-    """Whether or not expired trial of demo version"""
 
     last_command_check = Column(
         'last_command_check',

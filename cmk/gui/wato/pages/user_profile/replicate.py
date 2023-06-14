@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -32,9 +32,9 @@ class UserProfileReplicate(Page):
             raise MKAuthException(_("You are not allowed to edit your user profile."))
 
         if not active_config.wato_enabled:
-            raise MKAuthException(_("User profiles can not be edited (WATO is disabled)."))
+            raise MKAuthException(_("User profiles can not be edited (Setup is disabled)."))
 
-    def _page_menu(self, breadcrumb) -> PageMenu:  # type:ignore[no-untyped-def]
+    def _page_menu(self, breadcrumb) -> PageMenu:  # type: ignore[no-untyped-def]
         menu = make_simple_form_page_menu(
             _("Profile"), breadcrumb, form_name="profile", button_name="_save"
         )
@@ -47,7 +47,7 @@ class UserProfileReplicate(Page):
         make_header(html, title, breadcrumb, self._page_menu(breadcrumb))
 
         for message in get_flashed_messages():
-            html.show_message(message)
+            html.show_message(message.msg)
 
         # Now, if in distributed environment where users can login to remote sites, set the trigger for
         # pushing the new user profile to the remote sites asynchronously

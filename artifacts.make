@@ -1,8 +1,12 @@
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 #
 CHECK_MK_RAW_PRECOMPILED_WERKS := $(REPO_PATH)/.werks/werks
+CHECK_MK_ANNOUNCE_TAR := $(REPO_PATH)/announce-$(VERSION).tar.gz
+CHECK_MK_ANNOUNCE_FOLDER := $(REPO_PATH)/announce
+CHECK_MK_ANNOUNCE_MD := $(CHECK_MK_ANNOUNCE_FOLDER)/announce.md
+CHECK_MK_ANNOUNCE_TXT := $(CHECK_MK_ANNOUNCE_FOLDER)/announce.txt
 
 JAVASCRIPT_MINI    := $(foreach jmini,main mobile side zxcvbn,$(REPO_PATH)/web/htdocs/js/$(jmini)_min.js)
 

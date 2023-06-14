@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,7 +10,7 @@ from typing import Any
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import (
-    ip_address_family_element,
+    ip_address_family_http,
     RulespecGroupActiveChecks,
 )
 from cmk.gui.plugins.wato.utils import (
@@ -108,7 +108,7 @@ def _active_checks_http_hostspec() -> Dictionary:
                 "port",
                 _active_checks_http_portspec(443),
             ),
-            ip_address_family_element(),
+            ip_address_family_http(),
             (
                 "virthost",
                 TextInput(
@@ -490,7 +490,7 @@ def _valuespec_active_checks_http() -> Migrate:
                         totext="",
                         title=_("Advanced: Disable SSL/TLS hostname extension support (SNI)"),
                         help=_(
-                            "In earlier versions of Check_MK users had to enable SNI explicitly."
+                            "In earlier versions of Checkmk users had to enable SNI explicitly."
                             " We now assume users allways want SNI support. If you don't, you"
                             " can disable it with this option."
                         ),

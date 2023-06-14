@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -37,14 +37,9 @@ def register() -> None:
     perfometers["check_mk-systemtime"] = lambda r, c, p: perfometer_check_mk_ntp(r, c, p, "s")
     perfometers["check_mk-ipmi_sensors"] = perfometer_ipmi_sensors
     perfometers["check_mk-nvidia.temp"] = perfometer_temperature
-    perfometers["check_mk-cisco_temp_sensor"] = perfometer_temperature
-    perfometers["check_mk-cisco_temp_perf"] = perfometer_temperature
     perfometers["check_mk-cmctc_lcp.temp"] = perfometer_temperature
     perfometers["check_mk-cmctc.temp"] = perfometer_temperature
     perfometers["check_mk-smart.temp"] = perfometer_temperature
-    perfometers["check_mk-f5_bigip_chassis_temp"] = perfometer_temperature
-    perfometers["check_mk-f5_bigip_cpu_temp"] = perfometer_temperature
-    perfometers["check_mk-hp_proliant_temp"] = perfometer_temperature
     perfometers["check_mk-akcp_sensor_temp"] = perfometer_temperature
     perfometers["check_mk-akcp_daisy_temp"] = perfometer_temperature
     perfometers["check_mk-fsc_temp"] = perfometer_temperature
@@ -53,14 +48,9 @@ def register() -> None:
     perfometers["check_mk-sensatronics_temp"] = perfometer_temperature
     perfometers["check_mk-apc_inrow_temperature"] = perfometer_temperature
     perfometers["check_mk-hitachi_hnas_temp"] = perfometer_temperature
-    perfometers["check_mk-dell_poweredge_temp"] = perfometer_temperature
-    perfometers["check_mk-dell_chassis_temp"] = perfometer_temperature
-    perfometers["check_mk-dell_om_sensors"] = perfometer_temperature
     perfometers["check_mk-innovaphone_temp"] = perfometer_temperature
-    perfometers["check_mk-cmciii.temp"] = perfometer_temperature
     perfometers["check_mk-ibm_svc_enclosurestats.temp"] = perfometer_temperature
     perfometers["check_mk-wagner_titanus_topsense.temp"] = perfometer_temperature
-    perfometers["check_mk-enterasys_temp"] = perfometer_temperature
     perfometers["check_mk-adva_fsp_temp"] = perfometer_temperature
     perfometers["check_mk-allnet_ip_sensoric.temp"] = perfometer_temperature
     perfometers["check_mk-qlogic_sanbox.temp"] = perfometer_temperature
@@ -70,15 +60,9 @@ def register() -> None:
     perfometers["check_mk-casa_cpu_temp"] = perfometer_temperature
     perfometers["check_mk-rms200_temp"] = perfometer_temperature
     perfometers["check_mk-juniper_screenos_temp"] = perfometer_temperature
-    perfometers["check_mk-lnx_thermal"] = perfometer_temperature
     perfometers["check_mk-climaveneta_temp"] = perfometer_temperature
     perfometers["check_mk-carel_sensors"] = perfometer_temperature
-    perfometers["check_mk-netscaler_health.temp"] = perfometer_temperature
     perfometers["check_mk-kentix_temp"] = perfometer_temperature
-    perfometers["check_mk-ucs_bladecenter_fans.temp"] = perfometer_temperature
-    perfometers["check_mk-ucs_bladecenter_psu.chassis_temp"] = perfometer_temperature
-    perfometers["check_mk-cisco_temperature"] = perfometer_temperature
-    perfometers["check_mk-brocade_mlx_temp"] = perfometer_temperature_multi
     perfometers["check_mk-dell_poweredge_amperage.power"] = perfometer_power
     perfometers["check_mk-dell_chassis_power"] = perfometer_power
     perfometers["check_mk-dell_chassis_powersupplies"] = perfometer_power
@@ -88,23 +72,6 @@ def register() -> None:
     perfometers["check_mk-hitachi_hnas_cifs"] = perfometer_users
     perfometers["check_mk-cmctc_lcp.blower"] = perfometer_blower
     perfometers["check_mk-cmctc_lcp.regulator"] = perfometer_lcp_regulator
-    perfometers["check_mk-if"] = perfometer_check_mk_if
-    perfometers["check_mk-if64"] = perfometer_check_mk_if
-    perfometers["check_mk-if64_tplink"] = perfometer_check_mk_if
-    perfometers["check_mk-winperf_if"] = perfometer_check_mk_if
-    perfometers["check_mk-vms_if"] = perfometer_check_mk_if
-    perfometers["check_mk-if_lancom"] = perfometer_check_mk_if
-    perfometers["check_mk-lnx_if"] = perfometer_check_mk_if
-    perfometers["check_mk-hpux_if"] = perfometer_check_mk_if
-    perfometers["check_mk-mcdata_fcport"] = perfometer_check_mk_if
-    perfometers["check_mk-esx_vsphere_counters.if"] = perfometer_check_mk_if
-    perfometers["check_mk-hitachi_hnas_fc_if"] = perfometer_check_mk_if
-    perfometers["check_mk-statgrab_net"] = perfometer_check_mk_if
-    perfometers["check_mk-netapp_api_if"] = perfometer_check_mk_if
-    perfometers["check_mk-if_brocade"] = perfometer_check_mk_if
-    perfometers["check_mk-ucs_bladecenter_if"] = perfometer_check_mk_if
-    perfometers["check_mk-aix_if"] = perfometer_check_mk_if
-    perfometers["check_mk-if_fortigate"] = perfometer_check_mk_if
     perfometers["check_mk-fc_port"] = perfometer_check_mk_fc_port
     perfometers["check_mk-brocade_fcport"] = perfometer_check_mk_brocade_fcport
     perfometers["check_mk-qlogic_fcport"] = perfometer_check_mk_brocade_fcport
@@ -390,26 +357,6 @@ def perfometer_temperature(
     return "%d °C" % int(value), perfometer_logarithmic(value, 40, 1.2, color)
 
 
-def perfometer_temperature_multi(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    display_value = -1
-    display_color = "#60f020"
-
-    for _sensor, value, _uom, warn, crit, _min, _max in perf_data:
-        value = int(value)
-        if value > display_value:
-            display_value = value
-
-            if warn is not None and display_value > int(warn):
-                display_color = "#FFC840"
-            if crit is not None and display_value > int(crit):
-                display_color = "#FF0000"
-
-    display_string = "%s °C" % display_value
-    return display_string, perfometer_linear(display_value, display_color)
-
-
 def perfometer_power(row: Row, check_command: str, perf_data: Perfdata) -> LegacyPerfometerResult:
     display_color = "#60f020"
 
@@ -484,19 +431,6 @@ def perfometer_bandwidth(in_traffic, out_traffic, in_bw, out_bw, unit="B"):
         else:
             data.extend([a, b])  # color right, white left
     return " &nbsp; ".join(txt), render_perfometer(data)
-
-
-def perfometer_check_mk_if(
-    row: Row, check_command: str, perf_data: Perfdata
-) -> LegacyPerfometerResult:
-    unit = "Bit" if "Bit/s" in row["service_plugin_output"] else "B"
-    return perfometer_bandwidth(
-        in_traffic=utils.savefloat(perf_data[0][1]),
-        out_traffic=utils.savefloat(perf_data[5][1]),
-        in_bw=utils.savefloat(perf_data[0][6]),
-        out_bw=utils.savefloat(perf_data[5][6]),
-        unit=unit,
-    )
 
 
 def perfometer_check_mk_fc_port(

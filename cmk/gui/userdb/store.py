@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -20,6 +20,7 @@ from six import ensure_str
 import cmk.utils.paths
 from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password, PasswordHash
+from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.paths import htpasswd_file, var_dir
 from cmk.utils.store import (
     acquire_lock,
@@ -209,8 +210,7 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
     ]
 
     # Now read the user specific files
-    directory = cmk.utils.paths.var_dir + "/web/"
-    for user_dir in os.listdir(directory):
+    for user_dir in os.listdir(cmk.utils.paths.profile_dir):
         if user_dir[0] == ".":
             continue
 
@@ -223,23 +223,19 @@ def load_users(lock: bool = False) -> Users:  # pylint: disable=too-many-branche
                 if val is not None:
                     result[uid][attr] = val
 
-        # read automation secrets and add them to existing
-        # users or create new users automatically
+        # read automation secrets and add them to existing users or create new users automatically
         try:
-            user_secret_path = Path(directory) / user_dir / "automation.secret"
-            with user_secret_path.open(encoding="utf-8") as f:
-                secret: str | None = f.read().strip()
-        except OSError:
-            secret = None
+            secret = AutomationUserSecret(uid).read()
+            if uid not in result:
+                # new guest automation user
+                result[uid] = {"roles": ["guest"]}
 
-        if secret:
-            if uid in result:
-                result[uid]["automation_secret"] = secret
-            else:
-                result[uid] = {
-                    "roles": ["guest"],
-                    "automation_secret": secret,
-                }
+            result[uid]["automation_secret"] = secret
+        except OSError:
+            # no secret; nothing to do
+            pass
+        # Empty secret files will raise a value error that we don't want to ignore here. Otherwise
+        # checking if a user is an automation user via existence of the file will go wrong.
 
     return result
 
@@ -321,15 +317,14 @@ def _save_user_profiles(  # pylint: disable=too-many-branches
     multisite_keys = _multisite_keys()
 
     for user_id, user in updated_profiles.items():
-        user_dir = cmk.utils.paths.var_dir + "/web/" + user_id
-        mkdir(user_dir)
+        mkdir(cmk.utils.paths.profile_dir / user_id)
 
         # authentication secret for local processes
-        auth_file = user_dir + "/automation.secret"
+        secret = AutomationUserSecret(user_id)
         if "automation_secret" in user:
-            save_text_to_file(auth_file, "%s\n" % user["automation_secret"])
-        elif os.path.exists(auth_file):
-            os.unlink(auth_file)
+            secret.save(user["automation_secret"])
+        else:
+            secret.delete()
 
         # Write out user attributes which are written to dedicated files in the user
         # profile directory. The primary reason to have separate files, is to reduce

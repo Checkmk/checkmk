@@ -6,7 +6,7 @@ Date: 1660125522
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In some situations, it could happen that some agent packages are signed
 with an invalid signature after baking/signing with "Bake and sign agents"

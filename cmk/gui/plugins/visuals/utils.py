@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for main module internals and the plugins"""
@@ -288,7 +288,7 @@ class Filter(abc.ABC):
 
     def available(self) -> bool:
         """Some filters can be unavailable due to the configuration
-        (e.g. the WATO Folder filter is only available if WATO is enabled."""
+        (e.g. the Setup Folder filter is only available if Setup is enabled."""
         return True
 
     def visible(self) -> bool:
@@ -510,7 +510,7 @@ def get_ranged_table_filter_name(s: str) -> RangedTableFilterName | None:
     return None
 
 
-def recover_pre_2_1_range_filter_request_vars(  # type:ignore[no-untyped-def]
+def recover_pre_2_1_range_filter_request_vars(  # type: ignore[no-untyped-def]
     query: query_filters.NumberRangeQuery,
 ):
     """Some range filters used the _to suffix instead of the standard _until.
@@ -599,7 +599,7 @@ class FilterTime(Filter):
             is_show_more=is_show_more,
         )
 
-    def display(self, value: FilterHTTPVariables):  # type:ignore[no-untyped-def]
+    def display(self, value: FilterHTTPVariables):  # type: ignore[no-untyped-def]
         html.open_table(class_="filtertime")
         for what, whatname in [("from", _("From")), ("until", _("Until"))]:
             varprefix = self.ident + "_" + what
@@ -629,7 +629,7 @@ class FilterTime(Filter):
         return recover_pre_2_1_range_filter_request_vars(self.query_filter)
 
 
-def checkbox_component(  # type:ignore[no-untyped-def]
+def checkbox_component(  # type: ignore[no-untyped-def]
     htmlvar: str, value: FilterHTTPVariables, label: str
 ):
     html.open_nobr()

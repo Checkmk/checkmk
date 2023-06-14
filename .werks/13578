@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In case a Debian host receives kernel security updates,
 the apt plugin may miss the data, which results in the service becoming stale.

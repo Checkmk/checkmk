@@ -6,7 +6,7 @@ Date: 1674469223
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Azure Blob Storage containers can now be selected as destination when configuring <a href="https://docs.checkmk.com/latest/en/backup.html">backup</a> targets.
 

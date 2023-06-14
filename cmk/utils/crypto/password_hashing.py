@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module implements password hashing and validation of password hashes.
@@ -13,15 +13,18 @@ The format contains an identifier for the hash algorithm that was used, the numb
 a salt, and the actual checksum -- which is all the information needed to verify the hash with a
 given password (see `verify`).
 """
+import logging
+import sys
 
-# Import errors from passlib are suppressed since stub files for mypy are not available.
 # pylint errors are suppressed since this is the only module that should import passlib.
-import passlib.context  # type: ignore[import]  # pylint: disable=passlib-module-import
-import passlib.exc  # type: ignore[import]  # pylint: disable=passlib-module-import
+import passlib.context  # pylint: disable=passlib-module-import
+import passlib.exc  # pylint: disable=passlib-module-import
 from passlib import hash as passlib_hash  # pylint: disable=passlib-module-import
 
 from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.exceptions import MKException
+
+logger = logging.getLogger(__name__)
 
 # Using code should not be able to change the number of rounds (to unsafe values), but test code
 # has to run with reduced rounds. They can be monkeypatched here.
@@ -60,7 +63,8 @@ def hash_password(password: Password, *, allow_truncation: bool = False) -> Pass
     """
     try:
         return PasswordHash(
-            passlib_hash.bcrypt.using(
+            # The typing stubs for passlib are buggy (incorrect use of multiple inheritance).
+            passlib_hash.bcrypt.using(  # type: ignore[call-arg]
                 rounds=BCRYPT_ROUNDS, truncate_error=not allow_truncation, ident=BCRYPT_IDENT
             ).hash(password.raw)
         )
@@ -98,17 +102,13 @@ def verify(password: Password, password_hash: PasswordHash) -> None:
     try:
         valid = _context.verify(password.raw, password_hash)
     except passlib.exc.UnknownHashError:
+        logger.warning(
+            "Invalid hash. Only bcrypt is supported.",
+            exc_info=sys.exc_info(),
+        )
         raise ValueError("Invalid hash")
     if not valid:
         raise PasswordInvalidError
-
-
-def needs_update(password_hash: PasswordHash) -> bool:
-    """Check if a password hash should be re-calculated because the hash algorithm is deprecated.
-
-    See _context for the list of deprecated algorithms.
-    """
-    return _context.needs_update(password_hash)
 
 
 def is_unsupported_legacy_hash(password_hash: PasswordHash) -> bool:

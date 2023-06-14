@@ -6,7 +6,7 @@ Date: 1659629321
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, the Windows agent controller used TCP-IP as a channel to 
 local Windows agent, but this type of communication can lead to port 

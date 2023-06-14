@@ -1,5 +1,5 @@
-$CMK_VERSION = "2.2.0i1"
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+$CMK_VERSION = "2.3.0b1"
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -59,7 +59,7 @@ $run_async = $null
 
 
 # Sections that run fast and are not run with caching
-$SYNC_SECTIONS = @("instance", "sessions", "logswitches", "undostat", "recovery_area", "processes", "recovery_status", "longactivesessions", "dataguard_stats", "performance")
+$SYNC_SECTIONS = @("instance", "sessions", "logswitches", "undostat", "recovery_area", "processes", "recovery_status", "longactivesessions", "dataguard_stats", "performance", "systemparameter")
 
 # Set debug to 1 to turn it on, set to zero to turn it off
 # if debug is on, debug messages are shown on the screen
@@ -1642,6 +1642,24 @@ Function sql_version {
 
 
 ################################################################################
+# SQL for Oracle system parameters
+################################################################################
+Function sql_systemparameter {
+     $query_systemparameter = @'
+     prompt <<<oracle_systemparameter:sep(124)>>>;
+     select upper(i.instance_name)
+             || '|' || NAME
+             || '|' || DISPLAY_VALUE
+             || '|' || ISDEFAULT
+        from v$system_parameter, v$instance i
+        where name not like '!_%' ESCAPE '!';
+'@
+ echo $query_systemparameter
+}
+
+
+
+################################################################################
 # SQL for sql_instance information
 ################################################################################
 Function sql_instance {
@@ -1659,6 +1677,7 @@ Function sql_instance {
                || '|' || 'ASM'
                || '|' || 'NO'
                || '|' || i.instance_name
+               || '|' || i.host_name
           from v$instance i;
 
 '@
@@ -1689,8 +1708,9 @@ Function sql_instance {
                     || '|' || precovery_status
                     || '|' || round(nvl(popen_time, -1))
                     || '|' || pblock_size
+                    || '|' || host_name
                from(
-                    select i.instance_name, i.version, i.status, i.logins, i.archiver
+                    select i.instance_name, i.host_name, i.version, i.status, i.logins, i.archiver
                          ,i.startup_time, d.dbid, d.log_mode, d.database_role, d.force_logging
                          ,d.name, d.created, p.value, vp.con_id, vp.name pname
                          ,vp.dbid pdbid, vp.open_mode popen_mode, vp.restricted prestricted, vp.total_size ptotal_time
@@ -1703,7 +1723,7 @@ Function sql_instance {
                     where p.name = 'enable_pluggable_database'
                     union all
                     select
-                         i.instance_name, i.version, i.status, i.logins, i.archiver
+                         i.instance_name, i.host_name, i.version, i.status, i.logins, i.archiver
                          ,i.startup_time, d.dbid, d.log_mode, d.database_role, d.force_logging
                          ,d.name, d.created, p.value, 0 con_id, null pname
                          ,0 pdbis, null popen_mode, null prestricted, null ptotal_time
@@ -1732,6 +1752,7 @@ Function sql_instance {
                          || '|' || FORCE_LOGGING
                          || '|' || d.name
                          || '|' || to_char(d.created, 'ddmmyyyyhh24mi')
+                         || '|' || i.host_name
                     from v$instance i, v$database d;
 
 '@

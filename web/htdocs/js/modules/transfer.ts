@@ -1,15 +1,16 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
 import * as ajax from "ajax";
 
-declare var XDomainRequest;
+// @ts-ignore
+declare let XDomainRequest;
 //# +--------------------------------------------------------------------+
 //# | Posting crash report to official Checkmk crash reporting API      |
 //# '--------------------------------------------------------------------'
 
-export function submit_crash_report(url, post_data) {
+export function submit_crash_report(url: string, post_data: string) {
     document.getElementById("pending_msg")!.style.display = "block";
 
     if (has_cross_domain_ajax_support()) {
@@ -40,46 +41,55 @@ function has_cross_domain_ajax_support() {
     return "withCredentials" in new XMLHttpRequest();
 }
 
+// @ts-ignore
 function submit_with_ie(url, post_data) {
-    var handler_data = {
+    const handler_data = {
         base_url: url,
     };
     //not sure if this is the best solution
     //see for another solution: https://stackoverflow.com/questions/66120513/property-does-not-exist-on-type-window-typeof-globalthis
-    var xdr = new (window as any).XDomainRequest();
+    const xdr = new (window as any).XDomainRequest();
     xdr.onload = function () {
         handle_report_response(handler_data, xdr.responseText);
     };
     xdr.onerror = function () {
         handle_report_error(handler_data, null, xdr.responseText);
     };
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     xdr.onprogress = function () {};
     xdr.open("post", url);
     xdr.send(post_data);
 }
 
-function handle_report_response(handler_data, response_body) {
+function handle_report_response(
+    _handler_data: {base_url: string},
+    response_body: string
+) {
     hide_report_processing_msg();
 
     if (response_body.substr(0, 2) == "OK") {
-        var id = response_body.split(" ")[1];
-        var success_container = document.getElementById("success_msg")!;
+        const id = response_body.split(" ")[1];
+        const success_container = document.getElementById("success_msg")!;
         success_container.style.display = "block";
         success_container.innerHTML = success_container.innerHTML.replace(
             /###ID###/,
             id
         );
     } else {
-        var fail_container = document.getElementById("fail_msg")!;
+        const fail_container = document.getElementById("fail_msg")!;
         fail_container.style.display = "block";
         fail_container.children[0].innerHTML += " (" + response_body + ").";
     }
 }
 
-function handle_report_error(handler_data, status_code, error_msg) {
+function handle_report_error(
+    handler_data: {base_url: string} | null,
+    status_code: number | null,
+    error_msg: string
+) {
     hide_report_processing_msg();
 
-    var fail_container = document.getElementById("fail_msg")!;
+    const fail_container = document.getElementById("fail_msg")!;
     fail_container.style.display = "block";
     if (status_code) {
         fail_container.children[0].innerHTML += " (HTTP: " + status_code + ").";
@@ -88,20 +98,20 @@ function handle_report_error(handler_data, status_code, error_msg) {
     } else {
         fail_container.children[0].innerHTML +=
             " (<tt>" +
-            handler_data["base_url"] +
+            handler_data!["base_url"] +
             "</tt> is not reachable. Does your browser block XMLHttpRequest requests?).";
     }
 }
 
 function hide_report_processing_msg() {
-    var msg = document.getElementById("pending_msg")!;
+    const msg = document.getElementById("pending_msg")!;
     msg.parentNode?.removeChild(msg);
 }
 
 // Download function only for crash reports
 
-export function download(data_url) {
-    var link = document.createElement("a");
+export function download(data_url: string) {
+    const link = document.createElement("a");
     link.download =
         "Check_MK_GUI_Crash-" + new Date().toISOString() + ".tar.gz";
     link.href = data_url;

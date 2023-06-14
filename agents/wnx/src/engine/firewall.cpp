@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -96,8 +96,8 @@ IEnumVARIANT *Policy::getEnum() const {
     ON_OUT_OF_SCOPE(enumerator->Release());
 
     IEnumVARIANT *variant = nullptr;
-    const auto hr =
-        enumerator->QueryInterface(__uuidof(IEnumVARIANT), (void **)&variant);
+    const auto hr = enumerator->QueryInterface(
+        __uuidof(IEnumVARIANT), reinterpret_cast<void **>(&variant));
 
     return SUCCEEDED(hr) ? variant : nullptr;
 }
@@ -411,7 +411,7 @@ INetFwPolicy2 *WFCOMInitialize() {
 
     auto hr = ::CoCreateInstance(__uuidof(NetFwPolicy2), nullptr,
                                  CLSCTX_INPROC_SERVER, __uuidof(INetFwPolicy2),
-                                 (void **)&net_fw_policy2);
+                                 reinterpret_cast<void **>(&net_fw_policy2));
 
     if (FAILED(hr)) {
         XLOG::l("CoCreateInstance for INetFwPolicy2 failed: [{:#X}]", hr);

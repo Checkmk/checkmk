@@ -1,0 +1,16 @@
+Title: SAML: remove empty encryption certificate entry from metadata
+Class: fix
+Compatible: compat
+Component: setup
+Date: 1676930702
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Encryption is currently not a supported security feature. However, Checkmk's
+service provider metadata endpoint listed an empty entry for the encryption
+certificate. This may cause issues with some identity providers, which flag the
+metadata XML as malformed (e.g. NetIQ). This has been fixed by removing the
+empty encryption certificate entry from the metadata.
+

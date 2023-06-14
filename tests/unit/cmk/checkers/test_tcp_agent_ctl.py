@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -44,13 +44,23 @@ class TestAgentCtlMessage:
         self,
         uncompressed_data: bytes,
     ) -> None:
-        assert hash(AgentCtlMessage(Version.V1, uncompressed_data,)) == hash(
+        assert hash(
+            AgentCtlMessage(
+                Version.V1,
+                uncompressed_data,
+            )
+        ) == hash(
             AgentCtlMessage(
                 Version.V1,
                 uncompressed_data,
             )
         )
-        assert hash(AgentCtlMessage(Version.V1, uncompressed_data,)) != hash(
+        assert hash(
+            AgentCtlMessage(
+                Version.V1,
+                uncompressed_data,
+            )
+        ) != hash(
             AgentCtlMessage(
                 Version.V1,
                 uncompressed_data + b"blablub",
@@ -61,11 +71,17 @@ class TestAgentCtlMessage:
         self,
         uncompressed_data: bytes,
     ) -> None:
-        assert AgentCtlMessage(Version.V1, uncompressed_data,) == AgentCtlMessage(
+        assert AgentCtlMessage(
+            Version.V1,
+            uncompressed_data,
+        ) == AgentCtlMessage(
             Version.V1,
             uncompressed_data,
         )
-        assert AgentCtlMessage(Version.V1, uncompressed_data,) != AgentCtlMessage(
+        assert AgentCtlMessage(
+            Version.V1,
+            uncompressed_data,
+        ) != AgentCtlMessage(
             Version.V1,
             uncompressed_data + b"blablub",
         )
@@ -116,19 +132,34 @@ class TestMessageV1:
         uncompressed_data: bytes,
         zlib_compressed_data: bytes,
     ) -> None:
-        assert hash(MessageV1(HeaderV1(CompressionType.UNCOMPRESSED), uncompressed_data,)) == hash(
+        assert hash(
+            MessageV1(
+                HeaderV1(CompressionType.UNCOMPRESSED),
+                uncompressed_data,
+            )
+        ) == hash(
             MessageV1(
                 HeaderV1(CompressionType.UNCOMPRESSED),
                 uncompressed_data,
             )
         )
-        assert hash(MessageV1(HeaderV1(CompressionType.UNCOMPRESSED), uncompressed_data,)) != hash(
+        assert hash(
+            MessageV1(
+                HeaderV1(CompressionType.UNCOMPRESSED),
+                uncompressed_data,
+            )
+        ) != hash(
             MessageV1(
                 HeaderV1(CompressionType.UNCOMPRESSED),
                 uncompressed_data + b"hallo",
             )
         )
-        assert hash(MessageV1(HeaderV1(CompressionType.UNCOMPRESSED), uncompressed_data,)) != hash(
+        assert hash(
+            MessageV1(
+                HeaderV1(CompressionType.UNCOMPRESSED),
+                uncompressed_data,
+            )
+        ) != hash(
             MessageV1(
                 HeaderV1(CompressionType.ZLIB),
                 zlib_compressed_data,
@@ -140,15 +171,24 @@ class TestMessageV1:
         uncompressed_data: bytes,
         zlib_compressed_data: bytes,
     ) -> None:
-        assert MessageV1(HeaderV1(CompressionType.UNCOMPRESSED), uncompressed_data,) == MessageV1(
+        assert MessageV1(
+            HeaderV1(CompressionType.UNCOMPRESSED),
+            uncompressed_data,
+        ) == MessageV1(
             HeaderV1(CompressionType.UNCOMPRESSED),
             uncompressed_data,
         )
-        assert MessageV1(HeaderV1(CompressionType.UNCOMPRESSED), uncompressed_data,) != MessageV1(
+        assert MessageV1(
+            HeaderV1(CompressionType.UNCOMPRESSED),
+            uncompressed_data,
+        ) != MessageV1(
             HeaderV1(CompressionType.UNCOMPRESSED),
             uncompressed_data + b"hallo",
         )
-        assert MessageV1(HeaderV1(CompressionType.UNCOMPRESSED), uncompressed_data,) != MessageV1(
+        assert MessageV1(
+            HeaderV1(CompressionType.UNCOMPRESSED),
+            uncompressed_data,
+        ) != MessageV1(
             HeaderV1(CompressionType.ZLIB),
             zlib_compressed_data,
         )

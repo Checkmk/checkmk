@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -148,7 +148,7 @@ def inv_lnx_parse_debian(line: _Line) -> _KVPairs:
 
 def inv_lnx_parse_cma(line: _Line) -> _KVPairs:
     yield "name", "Checkmk Appliance " + line[0]
-    yield "vendor", "tribe29 GmbH"
+    yield "vendor", "Checkmk GmbH"
     yield "version", line[0]
     yield "code_name", None
 
@@ -175,7 +175,6 @@ _HANDLERS: Final = (
 
 
 def inventory_lnx_distro(section: Section) -> InventoryResult:
-
     for file_name, handler in _HANDLERS:
         if file_name in section:
             yield Attributes(

@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.utils.version import is_cloud_edition
+import pydantic
 
+from cmk.utils.version import Edition, is_cloud_edition, mark_edition_only
+
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import (
     RulespecGroupVMCloudContainer,
@@ -17,19 +20,42 @@ from cmk.gui.plugins.wato.utils import (
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
+from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
     FixedValue,
     Hostname,
-    HTTPUrl,
     Integer,
     ListChoice,
     ListOf,
     Migrate,
+    MigrateNotUpdated,
     RegExp,
     Tuple,
+    Url,
 )
+
+
+def _validate(url: str, varprefix: str) -> None:
+    try:
+        pydantic.parse_obj_as(pydantic.AnyHttpUrl, url)
+    except pydantic.ValidationError as e:
+        message = ", ".join(s["msg"] for s in e.errors())
+        raise MKUserError(varprefix, f"{url} has problem(s): {message}") from e
+
+
+def _url(title: str, _help: str, default_value: str) -> Url:
+    return Url(
+        allow_empty=False,
+        show_as_link=True,
+        default_scheme="http",
+        allowed_schemes=["http", "https"],
+        default_value=default_value,
+        validate=_validate,
+        size=80,
+        help=_help,
+    )
 
 
 def _tcp_timeouts():
@@ -62,10 +88,6 @@ def _tcp_timeouts():
     )
 
 
-def _cluster_collector_title() -> str:
-    return _("Use data from Checkmk Cluster Collector")
-
-
 def _usage_endpoint(cloud_edition: bool) -> tuple[str, CascadingDropdown] | tuple[str, Tuple]:
     if cloud_edition:
         return (
@@ -73,100 +95,146 @@ def _usage_endpoint(cloud_edition: bool) -> tuple[str, CascadingDropdown] | tupl
             CascadingDropdown(
                 title=("Enrich with usage data"),
                 choices=[
-                    (
-                        "cluster-collector",
-                        _cluster_collector_title(),
-                        _cluster_collector_endpoint(),
-                    ),
+                    _cluster_collector(),
                     _openshift(),
                 ],
             ),
         )
+
+    value, title, spec = _cluster_collector()
     return (
         "usage_endpoint",
         Tuple(
             elements=[
-                FixedValue(value="cluster-collector", totext=""),
-                _cluster_collector_endpoint(),
+                FixedValue(value=value, totext=""),
+                spec,
             ],
             show_titles=False,
-            title=_cluster_collector_title(),
+            title=title,
         ),
     )
 
 
-def _migrate_usage_endpoint(p: dict[str, object]) -> dict[str, object]:
-    cluster_collector = p.pop("cluster-collector", None)
-    if cluster_collector is not None:
-        p["usage_endpoint"] = ("cluster-collector", cluster_collector)
+def _is_cre_spec(k: str, vs: object) -> bool:
+    if k != "usage_endpoint":
+        return True
+    return isinstance(vs, tuple) and vs[0] == "cluster-collector"
+
+
+def _migrate_cce2cre(p: dict[str, object]) -> dict[str, object]:
+    return p if is_cloud_edition() else {k: v for k, v in p.items() if _is_cre_spec(k, v)}
+
+
+def _migrate_old_style_url(p: dict[str, object]) -> dict[str, object]:
+    if "endpoint" in p:
+        p["endpoint_v2"] = p.pop("endpoint") + "/"  # type: ignore[operator]
     return p
 
 
-def _openshift() -> tuple[str, str, Dictionary]:
+def _openshift() -> tuple[str, str, Migrate]:
     return (
         "prometheus",
-        _("Use data from OpenShift"),
-        Dictionary(
-            elements=[
-                (
-                    "endpoint",
-                    HTTPUrl(
-                        title=_("Prometheus API endpoint"),
-                        allow_empty=False,
-                        default_value="https://",
-                        help=_(
-                            "The full URL to the Prometheus API endpoint including the "
-                            "protocol (http or https). OpenShift exposes such "
-                            "endpoints via a route in the openshift-monitoring "
-                            "namespace called prometheus-k8s."
+        mark_edition_only(_("Use data from OpenShift"), Edition.CCE),
+        Migrate(
+            valuespec=Dictionary(
+                elements=[
+                    (
+                        "endpoint_v2",
+                        _url(
+                            title=_("Prometheus API endpoint"),
+                            default_value="https://",
+                            _help=_(
+                                "The full URL to the Prometheus API endpoint including the "
+                                "protocol (http or https). OpenShift exposes such "
+                                "endpoints via a route in the openshift-monitoring "
+                                "namespace called prometheus-k8s."
+                            ),
                         ),
-                        size=80,
                     ),
-                ),
-                ssl_verification(),
-                (
-                    "proxy",
-                    HTTPProxyReference(),
-                ),
-                _tcp_timeouts(),
-            ],
-            required_keys=["endpoint", "verify-cert"],
+                    ssl_verification(),
+                    (
+                        "proxy",
+                        HTTPProxyReference(),
+                    ),
+                    _tcp_timeouts(),
+                ],
+                required_keys=["endpoint_v2", "verify-cert"],
+            ),
+            migrate=_migrate_old_style_url,
         ),
     )
 
 
-def _cluster_collector_endpoint() -> Dictionary:
-    return Dictionary(  # TODO: adjust help texts depending on ingress inclusion
-        elements=[
-            (
-                "endpoint",
-                HTTPUrl(
-                    title=_("Collector NodePort / Ingress endpoint"),
-                    allow_empty=False,
-                    default_value="https://<service url>:30035",
-                    help=_(
-                        "The full URL to the Cluster Collector service including "
-                        "the protocol (http or https) and the port. Depending on "
-                        "the deployed configuration of the service this can "
-                        "either be the NodePort or the Ingress endpoint."
+def _cluster_collector() -> tuple[str, str, Migrate]:
+    return (
+        "cluster-collector",
+        _("Use data from Checkmk Cluster Collector"),
+        Migrate(
+            valuespec=Dictionary(  # TODO: adjust help texts depending on ingress inclusion
+                elements=[
+                    (
+                        "endpoint_v2",
+                        _url(
+                            title=_("Collector NodePort / Ingress endpoint"),
+                            default_value="https://<service url>:30035",
+                            _help=_(
+                                "The full URL to the Cluster Collector service including "
+                                "the protocol (http or https) and the port. Depending on "
+                                "the deployed configuration of the service this can "
+                                "either be the NodePort or the Ingress endpoint."
+                            ),
+                        ),
                     ),
-                    size=80,
-                ),
+                    ssl_verification(),
+                    (
+                        "proxy",
+                        HTTPProxyReference(),
+                    ),
+                    _tcp_timeouts(),
+                ],
+                required_keys=["endpoint_v2", "verify-cert"],
             ),
-            ssl_verification(),
-            (
-                "proxy",
-                HTTPProxyReference(),
+            migrate=_migrate_old_style_url,
+        ),
+    )
+
+
+def _api_endpoint() -> tuple[str, Migrate]:
+    return (
+        "kubernetes-api-server",
+        Migrate(
+            valuespec=Dictionary(
+                elements=[
+                    (
+                        "endpoint_v2",
+                        _url(
+                            title=_("Endpoint"),
+                            default_value="https://<control plane ip>:443",
+                            _help=_(
+                                "The full URL to the Kubernetes API server including the protocol "
+                                "(http or https) and the port. One trailing slash (if present) "
+                                "will be removed."
+                            ),
+                        ),
+                    ),
+                    ssl_verification(),
+                    (
+                        "proxy",
+                        HTTPProxyReference({"http", "https"}),  # Kubernetes client does not
+                        # support socks proxies.
+                    ),
+                    _tcp_timeouts(),
+                ],
+                required_keys=["endpoint_v2", "verify-cert"],
+                title=_("API server connection"),
             ),
-            _tcp_timeouts(),
-        ],
-        required_keys=["endpoint", "verify-cert"],
-        title=_cluster_collector_title(),
+            migrate=_migrate_old_style_url,
+        ),
     )
 
 
 def _valuespec_special_agents_kube():
-    return Migrate(
+    return MigrateNotUpdated(
         valuespec=Dictionary(
             elements=[
                 (
@@ -188,38 +256,7 @@ def _valuespec_special_agents_kube():
                         allow_empty=False,
                     ),
                 ),
-                (
-                    "kubernetes-api-server",
-                    Dictionary(
-                        elements=[
-                            (
-                                "endpoint",
-                                HTTPUrl(
-                                    title=_("Endpoint"),
-                                    allow_empty=False,
-                                    default_value="https://<control plane ip>:443",
-                                    help=_(
-                                        "The full URL to the Kubernetes API server "
-                                        "including the protocol (http or https) and "
-                                        "the port. Be aware that a trailing "
-                                        "slash at the end of the URL is likely to "
-                                        "result in an error."
-                                    ),
-                                    size=80,
-                                ),
-                            ),
-                            ssl_verification(),
-                            (
-                                "proxy",
-                                HTTPProxyReference({"http", "https"}),  # Kubernetes client does not
-                                # support socks proxies.
-                            ),
-                            _tcp_timeouts(),
-                        ],
-                        required_keys=["endpoint", "verify-cert"],
-                        title=_("API server connection"),
-                    ),
-                ),
+                _api_endpoint(),
                 _usage_endpoint(is_cloud_edition()),
                 (
                     "monitored-objects",
@@ -231,16 +268,19 @@ def _valuespec_special_agents_kube():
                             ("namespaces", _("Namespaces")),
                             ("nodes", _("Nodes")),
                             ("pods", _("Pods")),
+                            ("pvcs", _("Persistent Volume Claims")),
                             ("cronjobs", _("CronJobs")),
                             ("cronjobs_pods", _("Pods of CronJobs")),
                         ],
                         default_value=[
+                            "cronjobs",
                             "deployments",
                             "daemonsets",
                             "statefulsets",
                             "namespaces",
                             "nodes",
                             "pods",
+                            "pvcs",
                         ],
                         allow_empty=False,
                         title=_("Collect information about..."),
@@ -248,7 +288,9 @@ def _valuespec_special_agents_kube():
                             "Select the Kubernetes objects you would like to monitor. Pods "
                             "controlled by CronJobs are treated separately as they are usually "
                             "quite short lived. Those pods will be monitored in the same "
-                            "manner as regular pods. Your Dynamic host management rule should "
+                            "manner as regular pods. Persistent Volume Claims will only appear "
+                            "in the respective object piggyback host instead of having their own "
+                            "host. Your Dynamic host management rule should "
                             "be configured accordingly to avoid that the piggyback hosts for "
                             "terminated CronJob pods are kept for too long. This 'Pods of CronJobs' "
                             "option has no effect if Pods are not monitored"
@@ -385,7 +427,7 @@ def _valuespec_special_agents_kube():
             default_keys=["usage_endpoint"],
             title=_("Kubernetes"),
         ),
-        migrate=_migrate_usage_endpoint,
+        migrate=_migrate_cce2cre,
     )
 
 
@@ -394,5 +436,6 @@ rulespec_registry.register(
         group=RulespecGroupVMCloudContainer,
         name="special_agents:kube",
         valuespec=_valuespec_special_agents_kube,
+        doc_references={DocReference.KUBERNETES: _("Monitoring Kubernetes")},
     )
 )

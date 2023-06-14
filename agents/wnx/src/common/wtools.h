@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -115,6 +115,8 @@ std::pair<uint32_t, uint32_t> GetProcessExitCode(uint32_t pid);
 
 [[nodiscard]] int KillProcessesByDir(const std::filesystem::path &dir) noexcept;
 
+void KillProcessesByFullPath(const std::filesystem::path &path) noexcept;
+
 uint32_t GetParentPid(uint32_t pid);
 
 //
@@ -166,6 +168,8 @@ enum class StopMode {
     ignore,  // do nothing
 };
 
+class InternalUsersDb;
+
 // Abstract Interface template for SERVICE PROCESSOR:
 // WE ARE NOT GOING TO USE AT ALL.
 // One binary - one object of one class
@@ -183,23 +187,25 @@ public:
     virtual void cleanupOnStop() {
         // may  be but not should overridden
     }
+
+    virtual InternalUsersDb *getInternalUsers() = 0;
 };
 
 // keeps two handles
-class SimplePipe {
+class DirectPipe {
 public:
-    SimplePipe() noexcept {
+    DirectPipe() noexcept {
         sa_.lpSecurityDescriptor = &sd_;
         sa_.nLength = sizeof(SECURITY_ATTRIBUTES);
         sa_.bInheritHandle = TRUE;  // allow handle inherit for child process
     }
 
-    SimplePipe(const SimplePipe &) = delete;
-    SimplePipe &operator=(const SimplePipe &) = delete;
-    SimplePipe(SimplePipe &&Rhs) = delete;
-    SimplePipe &operator=(SimplePipe &&Rhs) = delete;
+    DirectPipe(const DirectPipe &) = delete;
+    DirectPipe &operator=(const DirectPipe &) = delete;
+    DirectPipe(DirectPipe &&rhs) = delete;
+    DirectPipe &operator=(DirectPipe &&rhs) = delete;
 
-    ~SimplePipe() { shutdown(); }
+    ~DirectPipe() { shutdown(); }
 
     bool create() {
         // protected by lock
@@ -274,7 +280,7 @@ private:
         // #TODO change access right to the owner of the process
         // below we have code from the winagent, which grants any access to
         // the object this is quite dangerous
-        // NOW THIS IS BY DESIGN of Check MK
+        // NOW THIS IS BY DESIGN of Checkmk
         // https://docs.microsoft.com/de-at/windows/desktop/SecAuthZ/creating-a-security-descriptor-for-a-new-object-in-c--
         // ******************************************************
         ret = ::SetSecurityDescriptorDacl(&sd_, 1, nullptr, 0);  // NOLINT
@@ -318,7 +324,7 @@ int FindProcess(std::wstring_view process_name) noexcept;
 constexpr bool kProcessTreeKillAllowed = false;
 
 // WIN32 described method of killing process tree
-void KillProcessTree(uint32_t ProcessId);
+void KillProcessTree(uint32_t process_id);
 
 class AppRunner {
 public:
@@ -412,8 +418,8 @@ private:
     std::atomic<uint32_t> process_id_{0};
     HANDLE job_handle_{nullptr};
     HANDLE process_handle_{nullptr};
-    SimplePipe stdio_;
-    SimplePipe stderr_;
+    DirectPipe stdio_;
+    DirectPipe stderr_;
 
     // output
     std::vector<char> data_;
@@ -437,7 +443,7 @@ public:
     ServiceController(ServiceController &&) = delete;
     ServiceController &operator=(ServiceController &&) = delete;
 
-    virtual ~ServiceController() {
+    ~ServiceController() {
         std::lock_guard lk(s_lock_);
         if (s_controller_ != nullptr && s_controller_ == this) {
             s_controller_ = nullptr;
@@ -453,37 +459,8 @@ public:
     }
 
 protected:
-    //
-    //   FUNCTION: ServiceController::setServiceStatus(DWORD, DWORD, DWORD)
-    //
-    //   PURPOSE: The function sets the service status and reports the
-    //   status to the SCM.
-    //
-    //   PARAMETERS:
-    //   * CurrentState - the state of the service
-    //   * Win32ExitCode - error code to report
-    //   * WaitHint - estimated time for pending operation, in milliseconds
-    //
     void setServiceStatus(DWORD current_state, DWORD win32_exit_code,
-                          DWORD wait_hint) {
-        static DWORD check_point = 1;
-
-        // Fill in the SERVICE_STATUS structure of the service.
-        status_.dwCurrentState = current_state;
-        status_.dwWin32ExitCode = win32_exit_code;
-        status_.dwWaitHint = wait_hint;
-
-        status_.dwCheckPoint =
-            current_state == SERVICE_RUNNING || current_state == SERVICE_STOPPED
-                ? 0
-                : check_point++;
-
-        // Report the status of the service to the SCM.
-        const auto ret = ::SetServiceStatus(status_handle_, &status_);
-        xlog::l("Setting state %d result %d", current_state,
-                ret != 0 ? 0 : GetLastError())
-            .print();
-    }
+                          DWORD wait_hint);
     void setServiceStatus(DWORD current_state) {
         return setServiceStatus(current_state, NO_ERROR, 0);
     }
@@ -558,14 +535,8 @@ inline std::string ToUtf8(const std::wstring_view src) noexcept {
     }
 
     std::string str;
-    try {
-        str.resize(out_len);
-    } catch (const std::exception &e) {
-        xlog::l(XLOG_FUNC + "memory lacks %s", e.what());
-        return {};
-    }
+    str.resize(out_len);
 
-    // convert
     ::WideCharToMultiByte(CP_UTF8, 0, src.data(), -1, str.data(), out_len,
                           nullptr, nullptr);
     return str;
@@ -583,17 +554,13 @@ inline std::string ToStr(const std::filesystem::path &src) noexcept {
 std::wstring ToCanonical(std::wstring_view raw_app_name);
 // standard Windows converter from Microsoft
 // WINDOWS ONLY
-inline std::wstring ConvertToUTF16(std::string_view src) noexcept {
+inline std::wstring ConvertToUtf16(std::string_view src) noexcept {
     const auto in_len = static_cast<int>(src.length());
     const auto *utf8_str = src.data();
     const auto out_len =
         MultiByteToWideChar(CP_UTF8, 0, utf8_str, in_len, nullptr, 0);
     std::wstring wstr;
-    try {
-        wstr.resize(out_len);
-    } catch (const std::exception & /*e*/) {
-        return {};
-    }
+    wstr.resize(out_len);
 
     if (MultiByteToWideChar(CP_UTF8, 0, utf8_str, in_len, wstr.data(),
                             out_len) == out_len) {
@@ -725,7 +692,7 @@ inline void AddSafetyEndingNull(std::string &data) {
 
 // generic to support uint8_t and int8_t and char and unsigned char
 template <typename T>
-std::string ConditionallyConvertFromUTF16(const std::vector<T> &original_data) {
+std::string ConditionallyConvertFromUtf16(const std::vector<T> &original_data) {
     static_assert(sizeof(T) == 1, "Invalid Data Type in template");
     if (original_data.empty()) {
         return {};
@@ -892,7 +859,7 @@ inline uint64_t WmiGetUint64(const VARIANT &var) noexcept {
 
 bool WmiObjectContains(IWbemClassObject *object, const std::wstring &name);
 
-std::wstring WmiGetWstring(const VARIANT &Var);
+std::wstring WmiGetWstring(const VARIANT &var);
 std::optional<std::wstring> WmiTryGetString(IWbemClassObject *object,
                                             const std::wstring &name);
 std::wstring WmiStringFromObject(IWbemClassObject *object,
@@ -931,7 +898,7 @@ public:
     WmiWrapper(WmiWrapper &&) = delete;
     WmiWrapper &operator=(WmiWrapper &&) = delete;
 
-    virtual ~WmiWrapper() { close(); }
+    ~WmiWrapper() { close(); }
     bool open() noexcept;
     bool connect(std::wstring_view name_space) noexcept;
     // This is OPTIONAL feature, LWA doesn't use it
@@ -1010,7 +977,7 @@ public:
     ACLInfo operator=(const ACLInfo &) = delete;
     ACLInfo(ACLInfo &&) = delete;
     ACLInfo operator=(ACLInfo &&) = delete;
-    virtual ~ACLInfo();
+    ~ACLInfo();
     /// \b Queries NTFS for ACL Info of the file/directory
     HRESULT query() noexcept;
     /// \b Outputs ACL info in Human-readable format
@@ -1029,10 +996,31 @@ bool PatchFileLineEnding(const std::filesystem::path &fname) noexcept;
 
 using InternalUser = std::pair<std::wstring, std::wstring>;  // name, password
 
+class InternalUsersDb {
+public:
+    InternalUsersDb() = default;
+    InternalUsersDb(const InternalUsersDb &) = delete;
+    InternalUsersDb(InternalUsersDb &&) = delete;
+    InternalUsersDb &operator=(const InternalUsersDb &) = delete;
+    InternalUsersDb &operator=(InternalUsersDb &&) = delete;
+    ~InternalUsersDb() { killAll(); }
+    InternalUser obtainUser(std::wstring_view group);
+    void killAll();
+    size_t size() const;
+
+private:
+    mutable std::mutex users_lock_;
+    std::unordered_map<std::wstring, wtools::InternalUser> users_;
+};
+
 InternalUser CreateCmaUserInGroup(const std::wstring &group_name) noexcept;
+InternalUser CreateCmaUserInGroup(const std::wstring &group_name,
+                                  std::wstring_view prefix) noexcept;
 bool RemoveCmaUser(const std::wstring &user_name) noexcept;
 std::wstring GenerateRandomString(size_t max_length) noexcept;
 std::wstring GenerateCmaUserNameInGroup(std::wstring_view group) noexcept;
+std::wstring GenerateCmaUserNameInGroup(std::wstring_view group,
+                                        std::wstring_view prefix) noexcept;
 
 class Bstr {
 public:
@@ -1045,42 +1033,38 @@ public:
         : data_{::SysAllocString(str.data())} {}
     ~Bstr() { ::SysFreeString(data_); }
     [[nodiscard]] BSTR bstr() const noexcept { return data_; }
+
+private:
     BSTR data_;
 };
 
-/// \brief Add command to set correct access rights for the path
+/// Add command to set correct access rights for the path
 void ProtectPathFromUserWrite(const std::filesystem::path &path,
                               std::vector<std::wstring> &commands);
 
-/// \brief Add command to remove user write to the path
+/// Add command to remove user write to the path
 void ProtectFileFromUserWrite(const std::filesystem::path &path,
                               std::vector<std::wstring> &commands);
 
-/// \brief Add command to remove user access to the path
+/// Add command to remove user access to the path
 void ProtectPathFromUserAccess(const std::filesystem::path &entry,
                                std::vector<std::wstring> &commands);
 
-/// \brief Create cmd file in %Temp% and run it.
+/// Create cmd file in %Temp% and run it.
 ///
 /// Returns script name path to be executed
 std::filesystem::path ExecuteCommandsAsync(
     std::wstring_view name, const std::vector<std::wstring> &commands);
 
-/// \brief Create cmd file in %Temp% and run it.
+/// Create cmd file in %Temp% and run it.
 ///
 /// Returns script name path to be executed
 std::filesystem::path ExecuteCommandsSync(
     std::wstring_view name, const std::vector<std::wstring> &commands);
 
-/// \brief Changes Access Rights in Windows crazy manner
+/// Changes Access Rights in Windows crazy manner
 ///
-/// Example of usage is
-#if 0
-ChangeAccessRights( L"c:\\txt", SE_FILE_OBJECT,        // what
-                    L"a1", TRUSTEE_IS_NAME,            // who
-                    STANDARD_RIGHTS_ALL | GENERIC_ALL, // how
-                    GRANT_ACCESS, OBJECT_INHERIT_ACE);
-#endif
+///
 bool ChangeAccessRights(
     const wchar_t *object_name,   // name of object
     SE_OBJECT_TYPE object_type,   // type of object
@@ -1091,6 +1075,18 @@ bool ChangeAccessRights(
     DWORD inheritance             // inheritance flags for new ACE ???
 );
 
+inline bool ChangeAccessRights(
+    std::filesystem::path file,      // name of file
+    std::wstring_view trustee_name,  // user for new ACE
+    DWORD access_rights,             // access mask for new ACE
+    ACCESS_MODE access_mode,         // type of ACE
+    DWORD inheritance                // inheritance flags for new ACE ???
+) {
+    return ChangeAccessRights(file.wstring().c_str(), SE_FILE_OBJECT,
+                              trustee_name.data(), TRUSTEE_IS_NAME,
+                              access_rights, access_mode, inheritance);
+}
+
 std::wstring ExpandStringWithEnvironment(std::wstring_view str);
 
 const wchar_t *GetMultiSzEntry(wchar_t *&pos, const wchar_t *end);
@@ -1099,7 +1095,7 @@ std::wstring SidToName(std::wstring_view sid, const SID_NAME_USE &sid_type);
 
 std::vector<char> ReadFromHandle(HANDLE handle);
 
-/// \brief Calls any command and return back output
+/// Calls any command and return back output
 ///
 /// Wraps AppRunner
 std::string RunCommand(std::wstring_view cmd);

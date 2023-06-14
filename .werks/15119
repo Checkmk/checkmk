@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In versions prior 2.1 the service custom notes matched für multiple hosts if
 the custom note file was places below the directory

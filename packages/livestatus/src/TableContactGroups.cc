@@ -1,4 +1,4 @@
-// Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -10,13 +10,13 @@
 #include <vector>
 
 #include "livestatus/Column.h"
+#include "livestatus/ICore.h"
 #include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/Query.h"
 #include "livestatus/StringColumn.h"
 
-TableContactGroups::TableContactGroups(MonitoringCore *mc) : Table(mc) {
+TableContactGroups::TableContactGroups(ICore *mc) : Table(mc) {
     const ColumnOffsets offsets{};
     addColumn(std::make_unique<StringColumn<IContactGroup>>(
         "name", "Name of the contact group", offsets,
@@ -41,6 +41,5 @@ void TableContactGroups::answerQuery(Query &query, const User & /*user*/) {
 
 Row TableContactGroups::get(const std::string &primary_key) const {
     // "name" is the primary key
-    auto cg = core()->find_contactgroup(primary_key);
-    return Row(cg ? cg->handle() : nullptr);
+    return Row{core()->find_contactgroup(primary_key)};
 }

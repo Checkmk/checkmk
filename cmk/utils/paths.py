@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module serves the path structure of the Check_MK environment
@@ -44,6 +44,7 @@ check_mk_config_dir = _omd_path_str("etc/check_mk/conf.d")
 modules_dir = _omd_path_str("share/check_mk/modules")
 var_dir = _omd_path_str("var/check_mk")
 log_dir = _omd_path_str("var/log")
+security_log_file = Path(log_dir, "security.log")
 precompiled_checks_dir = _omd_path_str("var/check_mk/precompiled_checks")
 base_autochecks_dir = _omd_path_str("var/check_mk/autochecks")
 core_helper_config_dir = _omd_path("var/check_mk/core/helper_config")
@@ -84,6 +85,15 @@ profile_dir = Path(var_dir, "web")
 crash_dir = Path(var_dir, "crashes")
 diagnostics_dir = Path(var_dir, "diagnostics")
 site_config_dir = Path(var_dir, "site_configs")
+visuals_cache_dir = Path(tmp_dir, "visuals_cache")
+
+# persisted secret files
+# avoid using these paths directly; use wrappers in cmk.util.crypto.secrets instead
+# note that many of these paths are duplicated in code relating to snapshots and Activate Changes
+#
+auth_secret_file = omd_root / "etc/auth.secret"
+# the path for password_store.secret is also duplicated in omd cmk_password_store.h!
+password_store_secret_file = omd_root / "etc/password_store.secret"
 
 share_dir = _omd_path_str("share/check_mk")
 checks_dir = _omd_path_str("share/check_mk/checks")
@@ -130,6 +140,9 @@ local_enabled_packages_dir = local_share_dir / "enabled_packages"
 
 local_agent_based_plugins_dir = _local_path(agent_based_plugins_dir)
 local_gui_plugins_dir = _local_path(gui_plugins_dir)
+local_dashboards_dir = local_gui_plugins_dir / "dashboard"
+local_views_dir = local_gui_plugins_dir / "views"
+local_reports_dir = local_gui_plugins_dir / "reports"
 
 licensing_dir = Path(var_dir, "licensing")
 
@@ -141,7 +154,6 @@ r4r_new_dir = _r4r_base_dir.joinpath("NEW")
 r4r_pending_dir = _r4r_base_dir.joinpath("PENDING")
 r4r_declined_dir = _r4r_base_dir.joinpath("DECLINED")
 r4r_declined_bundles_dir = _r4r_base_dir.joinpath("DECLINED-BUNDLES")
-r4r_ready_dir = _r4r_base_dir.joinpath("READY")
 r4r_discoverable_dir = _r4r_base_dir.joinpath("DISCOVERABLE")
 
 

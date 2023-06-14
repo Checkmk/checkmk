@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for displaying and modifying the rule based host and service
@@ -8,7 +8,7 @@ modified via rules."""
 
 from collections.abc import Collection, Iterator
 
-from cmk.utils.type_defs import Item
+from cmk.utils.type_defs import HostName, Item
 
 from cmk.automations.results import AnalyseServiceResult
 
@@ -29,7 +29,12 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.valuespec import Tuple, ValueSpecText
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.check_mk_automations import analyse_host, analyse_service
-from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, Folder, folder_preserving_link
+from cmk.gui.watolib.hosts_and_folders import (
+    CREFolder,
+    CREHost,
+    folder_from_request,
+    folder_preserving_link,
+)
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset
 from cmk.gui.watolib.rulespecs import (
     get_rulegroup,
@@ -58,8 +63,8 @@ class ModeObjectParameters(WatoMode):
         return ModeEditHost
 
     def _from_vars(self):
-        self._hostname = request.get_ascii_input_mandatory("host")
-        host = Folder.current().host(self._hostname)
+        self._hostname = HostName(request.get_ascii_input_mandatory("host"))
+        host = folder_from_request().host(self._hostname)
         if host is None:
             raise MKUserError("host", _("The given host does not exist."))
         self._host: CREHost = host
@@ -198,7 +203,7 @@ class ModeObjectParameters(WatoMode):
 
             # Logwatch needs a special handling, since it is not configured
             # via checkgroup_parameters but via "logwatch_rules" in a special
-            # WATO module.
+            # Setup module.
             elif checkgroup == "logwatch":
                 rulespec = rulespec_registry["logwatch_rules"]
                 self._output_analysed_ruleset(
@@ -394,7 +399,7 @@ class ModeObjectParameters(WatoMode):
         html.close_tr()
         html.close_table()
 
-    def _render_rule_reason(  # type:ignore[no-untyped-def]
+    def _render_rule_reason(  # type: ignore[no-untyped-def]
         self, title, title_url, reason, reason_url, is_default, setting: ValueSpecText | Item
     ) -> None:
         if title_url:
@@ -415,7 +420,7 @@ class ModeObjectParameters(WatoMode):
         html.close_tr()
         html.close_table()
 
-    def _output_analysed_ruleset(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
+    def _output_analysed_ruleset(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
         self,
         all_rulesets: AllRulesets,
         rulespec: Rulespec,

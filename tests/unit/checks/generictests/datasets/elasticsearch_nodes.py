@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 
 
 checkname = "elasticsearch_nodes"
@@ -50,7 +50,7 @@ checks = {
             "DGfRL2s",
             {"cpu_levels": (75.0, 90.0)},
             [
-                (0, "CPU used: 0%", [("cpu_percent", 0.0, None, None, None, None)]),
+                (0, "CPU used: 0%", [("cpu_percent", 0.0, 75.0, 90.0, None, None)]),
                 (
                     0,
                     "CPU total in ms: 157950",
@@ -77,7 +77,7 @@ checks = {
             "ZwGy2o7",
             {"cpu_levels": (75.0, 90.0)},
             [
-                (0, "CPU used: 0%", [("cpu_percent", 0.0, None, None, None, None)]),
+                (0, "CPU used: 0%", [("cpu_percent", 0.0, 75.0, 90.0, None, None)]),
                 (
                     0,
                     "CPU total in ms: 97700",
@@ -104,7 +104,7 @@ checks = {
             "fKw8YbK",
             {"cpu_levels": (75.0, 90.0)},
             [
-                (0, "CPU used: 0%", [("cpu_percent", 0.0, None, None, None, None)]),
+                (0, "CPU used: 0%", [("cpu_percent", 0.0, 75.0, 90.0, None, None)]),
                 (
                     0,
                     "CPU total in ms: 94820",
@@ -131,7 +131,7 @@ checks = {
             "g8YT0-P",
             {"cpu_levels": (75.0, 90.0)},
             [
-                (0, "CPU used: 0%", [("cpu_percent", 0.0, None, None, None, None)]),
+                (0, "CPU used: 0%", [("cpu_percent", 0.0, 75.0, 90.0, None, None)]),
                 (
                     0,
                     "CPU total in ms: 104530",
@@ -158,7 +158,7 @@ checks = {
             "huh3AiI",
             {"cpu_levels": (75.0, 90.0)},
             [
-                (0, "CPU used: 0%", [("cpu_percent", 0.0, None, None, None, None)]),
+                (0, "CPU used: 0%", [("cpu_percent", 0.0, 75.0, 90.0, None, None)]),
                 (
                     0,
                     "CPU total in ms: 96740",

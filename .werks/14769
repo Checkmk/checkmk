@@ -6,7 +6,7 @@ Date: 1664464379
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 It is possible to configure whether local extensions (MKPs) and Event Console
 rules should be synchronised between the central and the remote sites in a

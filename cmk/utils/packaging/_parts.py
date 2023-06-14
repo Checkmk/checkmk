@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
-
-from typing_extensions import assert_never
+from typing import assert_never, Final
 
 from cmk.utils.i18n import _
 
@@ -16,23 +15,28 @@ from ._mkp import PackagePart
 
 @dataclass(frozen=True)
 class PathConfig:
-    local_root: Path
-    mkp_rule_pack_dir: Path
     agent_based_plugins_dir: Path
-    checks_dir: Path
-    inventory_dir: Path
-    check_manpages_dir: Path
     agents_dir: Path
-    notifications_dir: Path
-    gui_plugins_dir: Path
-    web_dir: Path
-    pnp_templates_dir: Path
-    doc_dir: Path
-    locale_dir: Path
-    bin_dir: Path
-    lib_dir: Path
-    mib_dir: Path
     alert_handlers_dir: Path
+    bin_dir: Path
+    check_manpages_dir: Path
+    checks_dir: Path
+    doc_dir: Path
+    gui_plugins_dir: Path
+    installed_packages_dir: Path
+    inventory_dir: Path
+    lib_dir: Path
+    locale_dir: Path
+    local_root: Path
+    mib_dir: Path
+    mkp_rule_pack_dir: Path
+    notifications_dir: Path
+    packages_enabled_dir: Path
+    packages_local_dir: Path
+    packages_shipped_dir: Path
+    pnp_templates_dir: Path
+    tmp_dir: Path
+    web_dir: Path
 
     def get_path(self, part: PackagePart) -> Path:
         match part:
@@ -72,6 +76,7 @@ class PathConfig:
 
     def get_part(self, full_file_path: Path) -> PackagePart | None:
         """Determine the part for a given file (or return None if there is none)"""
+
         # deal with parts containing each other by checking more specific ones first!
         def _part_depth(part: PackagePart) -> int:
             return len(Path(self.get_path(part)).resolve().parts)
@@ -162,3 +167,14 @@ def permissions(part: PackagePart) -> int:
 
 
 CONFIG_PARTS: Final = (PackagePart.EC_RULE_PACKS,)
+
+
+PackageOperationCallback = Callable[[Sequence[Path]], None]
+
+
+@dataclass(frozen=True)
+class PackageOperationCallbacks:
+    # currently we don't need more. Add if needed.
+    install: PackageOperationCallback = lambda _files: None
+    uninstall: PackageOperationCallback = lambda _files: None
+    release: PackageOperationCallback = lambda _files: None

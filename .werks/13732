@@ -6,7 +6,7 @@ Date: 1659612543
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The agent plugin {{mk_oracle}} implements its own caching functionality because
 of long running SQL statements (and custom SQLs with own cache interalls). But

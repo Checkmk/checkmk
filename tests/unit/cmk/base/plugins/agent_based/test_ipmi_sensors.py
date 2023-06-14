@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -236,6 +236,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=None,
+            type_="Temperature",
         ),
         "CPU_Utilization": ipmi_utils.Sensor(
             status_txt="OK",
@@ -245,6 +246,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=None,
+            type_="Processor",
         ),
         "Fan_FAN1_F_Speed": ipmi_utils.Sensor(
             status_txt="OK",
@@ -254,6 +256,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=None,
+            type_=None,
         ),
         "Intrusion": ipmi_utils.Sensor(
             status_txt="OK",
@@ -263,6 +266,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=None,
+            type_="Physical Security",
         ),
         "M2_Temp0(PCIe1)_(Temperature)": ipmi_utils.Sensor(
             status_txt="OK",
@@ -281,6 +285,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=None,
+            type_="Battery",
         ),
         "Memory_Status": ipmi_utils.Sensor(
             status_txt="OK",
@@ -290,6 +295,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=None,
+            type_="Memory",
         ),
         "Power_Meter": ipmi_utils.Sensor(
             status_txt="OK",
@@ -299,6 +305,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=None,
+            type_="Other",
         ),
         "Power_Supply_PS_Status": ipmi_utils.Sensor(
             status_txt="Presence detected",
@@ -308,6 +315,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=None,
+            type_=None,
         ),
         "Power_Unit_PSU": ipmi_utils.Sensor(
             status_txt="Redundancy Lost",
@@ -317,6 +325,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=None,
+            type_=None,
         ),
         "SysHealth_Stat": ipmi_utils.Sensor(
             status_txt="OK",
@@ -326,6 +335,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=None,
+            type_="Chassis",
         ),
         "Temperature_Ambient": ipmi_utils.Sensor(
             status_txt="nc",
@@ -335,6 +345,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=42.0,
+            type_=None,
         ),
         "Temperature_Inlet_Temp": ipmi_utils.Sensor(
             status_txt="OK",
@@ -344,6 +355,7 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=48.0,
+            type_=None,
         ),
         "UID": ipmi_utils.Sensor(
             status_txt="no state reported",
@@ -353,17 +365,20 @@ _SECTIONS = [
             warn_low=None,
             warn_high=None,
             crit_high=None,
+            type_="UNKNOWN type 192",
         ),
     },
     {
         "Temp_1": ipmi_utils.Sensor(
             status_txt="OK",
             unit="C",
+            state=State.OK,
             value=23.0,
             crit_low=None,
             warn_low=None,
             warn_high=None,
             crit_high=None,
+            type_="Temperature",
         )
     },
 ]
@@ -488,7 +503,11 @@ def test_discover_ipmi_sensors(
             {},
             _SECTIONS[2],
             [
-                Result(state=State.OK, summary="Status: OK"),
+                Result(
+                    state=State.OK,
+                    summary="Status: OK",
+                    details="Status: OK (service state derived from sensor events)",
+                ),
                 Result(state=State.OK, summary="21.00 C"),
                 Metric("value", 21.0, levels=(None, 48.0)),
             ],
@@ -505,7 +524,7 @@ def test_discover_ipmi_sensors(
                 Result(
                     state=State.UNKNOWN,
                     summary="Status: Presence detected",
-                    details="Monitoring state of sensor status set by user-configured rules",
+                    details="Status: Presence detected (service state set by user-configured rules)",
                 ),
             ],
         ),
@@ -523,7 +542,11 @@ def test_discover_ipmi_sensors(
             },
             _SECTIONS[1],
             [
-                Result(state=State.OK, summary="Status: OK"),
+                Result(
+                    state=State.OK,
+                    summary="Status: OK",
+                    details="Status: OK (service state derived from sensor events)",
+                ),
                 Result(state=State.OK, summary="3.37 V"),
                 Result(
                     state=State.CRIT, summary="Voltage_AVCC: 3.37 V (warn/crit at 1.00 V/2.00 V)"
@@ -535,7 +558,11 @@ def test_discover_ipmi_sensors(
             {},
             _SECTIONS[2],
             [
-                Result(state=State.WARN, summary="Status: nc"),
+                Result(
+                    state=State.WARN,
+                    summary="Status: nc",
+                    details="Status: nc (service state derived from sensor events)",
+                ),
                 Result(state=State.OK, summary="20.00 C"),
                 Metric("value", 20.0, levels=(None, 42.0)),
             ],

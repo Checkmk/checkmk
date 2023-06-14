@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime
@@ -295,6 +295,7 @@ def test_discover_nvidia_smi_temperature(
     assert list(nvidia_smi.discover_nvidia_smi_temperature(section)) == expected_result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item, params, section, expected_result",
     [
@@ -304,7 +305,7 @@ def test_discover_nvidia_smi_temperature(
             SECTION,
             [
                 Metric("temp", 40.0),
-                Result(state=State.OK, summary="Temperature: 40.0°C"),
+                Result(state=State.OK, summary="Temperature: 40.0 °C"),
                 Result(
                     state=State.OK,
                     notice="Configuration: prefer user levels over device levels (no levels found)",

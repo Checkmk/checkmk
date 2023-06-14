@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
@@ -443,7 +443,7 @@ class JobRenderer:
         html.td(cmk.utils.render.date_and_time(job_status.started), css="job_started")
 
         # Owner
-        html.td(job_status.user or _("Unknown user"), css="job_owner")
+        html.td(job_status.user or _("Internal user"), css="job_owner")
 
         # PID
         html.td(job_status.pid or "", css="job_pid")

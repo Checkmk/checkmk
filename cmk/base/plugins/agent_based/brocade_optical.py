@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -13,11 +13,11 @@ from .agent_based_api.v1 import (
     Result,
     Service,
     SNMPTree,
-    startswith,
     State,
     type_defs,
 )
 from .utils import interfaces, temperature
+from .utils.brocade import DETECT_MLX
 
 # .1.3.6.1.4.1.1991.1.1.3.3.6.1.1.1  41.4960 C: Normal
 # .1.3.6.1.4.1.1991.1.1.3.3.6.1.1.2  50.9531 C: Normal
@@ -261,7 +261,7 @@ register.snmp_section(
             ],
         ),
     ],
-    detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1991.1."),
+    detect=DETECT_MLX,
 )
 
 

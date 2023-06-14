@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -233,7 +233,7 @@ def _pack_html_content(name: str, html_content: bytes) -> bytes:
 
 def _get_mandatory_request_vars() -> tuple[SiteId, HostName, str]:
     site_id: SiteId = SiteId(request.get_str_input_mandatory("site"))
-    host_name: HostName = request.get_str_input_mandatory("host")
+    host_name = HostName(request.get_str_input_mandatory("host"))
     service_description: str = request.get_str_input_mandatory("service")
 
     return site_id, host_name, service_description
@@ -257,7 +257,6 @@ def _get_html_from_livestatus(
     host_name: HostName,
     service_description: str,
 ) -> LivestatusRow:
-
     report_column: Literal["robotmk_last_log", "robotmk_last_error_log"] = (
         "robotmk_last_log" if report_type == "robotmk" else "robotmk_last_error_log"
     )

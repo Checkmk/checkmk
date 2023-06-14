@@ -1,54 +1,39 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+import collections
 import configparser
-
-# pylint: disable=protected-access,redefined-outer-name
 import os
 import sys
+from typing import Mapping, Optional, Sequence, Tuple
 
 import pytest
 
-import agents.plugins.mk_filestats as mk_filestats
-
-try:
-    from collections import namedtuple, OrderedDict
-except ImportError:  # Python2
-    from ordereddict import namedtuple, OrderedDict  # type: ignore
+if sys.version_info[0] == 2:
+    import agents.plugins.mk_filestats_2 as mk_filestats  # pylint: disable=syntax-error
+else:
+    import agents.plugins.mk_filestats as mk_filestats
 
 
-def configparser_library_name():
-    python_version = sys.version_info
-    if python_version[0] == 2 and python_version[1] < 7:
-        # the configparser library is named ConfigParser in Python 2.6 and below.
-        # its name is replaced by the 3to2 tool automatically in-code, but
-        # obviously the strings are not replaced
-        return "ConfigParser"
-    return "configparser"
-
-
-@pytest.fixture
-def lazyfile():
-    mylazyfile = mk_filestats.FileStat(__file__)
-
-    # Overwrite the path to be reproducable...
-    mylazyfile.path = "test_mk_filestats.py"
-    return mylazyfile
+MYLAZYFILE = mk_filestats.FileStat.from_path(__file__)
+# Overwrite the path to be reproducable...
+MYLAZYFILE.writeable_path = mk_filestats.ensure_str("test_mk_filestats.py")
+MYLAZYFILE.regex_matchable_path = mk_filestats.ensure_str("test_mk_filestats.py")
 
 
 def test_lazy_file() -> None:
-    lfile = mk_filestats.FileStat("/bla/no such file.txt")
-    assert lfile.path == "/bla/no such file.txt"
+    lfile = mk_filestats.FileStat.from_path("/bla/no such file.txt")
+    assert lfile.writeable_path == "/bla/no such file.txt"
     assert lfile.size is None
     assert lfile.age is None
     assert lfile.stat_status == "file vanished"
 
-    lfile = mk_filestats.FileStat(__file__)  # this should exist...
-    assert lfile.path == __file__
+    lfile = mk_filestats.FileStat.from_path(__file__)  # this should exist...
+    assert lfile.writeable_path == __file__
     assert lfile.size == os.stat(__file__).st_size
     assert lfile.stat_status == "ok"
     assert isinstance(lfile.age, int)
@@ -58,7 +43,7 @@ def test_lazy_file() -> None:
 @pytest.mark.parametrize(
     "config", [({}), ({"input_unknown": None}), ({"input_one": None, "input_two": None})]
 )
-def test_get_file_iterator_invalid(config) -> None:  # type:ignore[no-untyped-def]
+def test_get_file_iterator_invalid(config: Mapping[str, Optional[str]]) -> None:
     with pytest.raises(ValueError):
         mk_filestats.get_file_iterator(config)
 
@@ -70,7 +55,9 @@ def test_get_file_iterator_invalid(config) -> None:  # type:ignore[no-untyped-de
         ({"input_patterns": '"foo bar" gee*'}, ["foo bar", "gee*"]),
     ],
 )
-def test_get_file_iterator_pattern(config, pat_list) -> None:  # type:ignore[no-untyped-def]
+def test_get_file_iterator_pattern(
+    config: Mapping[str, Optional[str]], pat_list: Sequence[str]
+) -> None:
     iter_obj = mk_filestats.get_file_iterator(config)
     assert isinstance(iter_obj, mk_filestats.PatternIterator)
     assert iter_obj._patterns == [os.path.abspath(p) for p in pat_list]
@@ -86,14 +73,16 @@ def test_get_file_iterator_pattern(config, pat_list) -> None:  # type:ignore[no-
         ("==", (2000.0, 1024, "1000"), (False, True, False)),
     ],
 )
-def test_numeric_filter(operator, values, results) -> None:  # type:ignore[no-untyped-def]
+def test_numeric_filter(
+    operator: str, values: Tuple[float, int, str], results: Tuple[bool, bool, bool]
+) -> None:
     num_filter = mk_filestats.AbstractNumericFilter("%s1024" % operator)
     for value, result in zip(values, results):
         assert result == num_filter._matches_value(value)
 
 
 @pytest.mark.parametrize("invalid_arg", ["<>1024", "<NaN"])
-def test_numeric_filter_raises(invalid_arg) -> None:  # type:ignore[no-untyped-def]
+def test_numeric_filter_raises(invalid_arg: str) -> None:
     with pytest.raises(ValueError):
         mk_filestats.AbstractNumericFilter(invalid_arg)
 
@@ -109,10 +98,10 @@ def test_numeric_filter_raises(invalid_arg) -> None:  # type:ignore[no-untyped-d
         ("[^ð]*ð{2}[^ð]*", ("foðbar", "fððbar"), (False, True)),
     ],
 )
-def test_path_filter(reg_pat, paths, results) -> None:  # type:ignore[no-untyped-def]
+def test_path_filter(reg_pat: str, paths: Sequence[str], results: Sequence[bool]) -> None:
     path_filter = mk_filestats.RegexFilter(reg_pat)
     for path, result in zip(paths, results):
-        lazy_file = mk_filestats.FileStat(path)
+        lazy_file = mk_filestats.FileStat.from_path(path)
         assert result == path_filter.matches(lazy_file)
 
 
@@ -123,7 +112,7 @@ def test_path_filter(reg_pat, paths, results) -> None:  # type:ignore[no-untyped
         {"filter_size": "!=käse"},
     ],
 )
-def test_get_file_filters_invalid(config) -> None:  # type:ignore[no-untyped-def]
+def test_get_file_filters_invalid(config: Mapping[str, Optional[str]]) -> None:
     with pytest.raises(ValueError):
         mk_filestats.get_file_filters(config)
 
@@ -138,13 +127,13 @@ def test_get_file_filters() -> None:
 
 
 @pytest.mark.parametrize("config", [{}, {"output": "/dev/null"}])
-def test_get_ouput_aggregator_invalid(config) -> None:  # type:ignore[no-untyped-def]
+def test_get_ouput_aggregator_invalid(config: Mapping[str, str]) -> None:
     with pytest.raises(ValueError):
         mk_filestats.get_output_aggregator(config)
 
 
 @pytest.mark.parametrize("output_value", ["count_only", "file_stats", "single_file"])
-def test_get_ouput_aggregator(output_value) -> None:  # type:ignore[no-untyped-def]
+def test_get_ouput_aggregator(output_value: str) -> None:
     aggr = mk_filestats.get_output_aggregator({"output": output_value})
     assert aggr is getattr(mk_filestats, "output_aggregator_%s" % output_value)
 
@@ -163,16 +152,13 @@ def test_get_ouput_aggregator(output_value) -> None:  # type:ignore[no-untyped-d
         ("%s myService %s", "[[[single_file test_mk_filestats.py myService %s]]]"),
     ],
 )
-def test_output_aggregator_single_file_servicename(  # type:ignore[no-untyped-def]
-    lazyfile, group_name, expected
-) -> None:
-
-    actual = mk_filestats.output_aggregator_single_file(group_name, [lazyfile])
+def test_output_aggregator_single_file_servicename(group_name: str, expected: str) -> None:
+    actual = mk_filestats.output_aggregator_single_file(group_name, [MYLAZYFILE])
     assert expected == list(actual)[0]
 
 
 class MockConfigParser(configparser.RawConfigParser):
-    def read(self, cfg_file):  # pylint:disable=arguments-differ
+    def read(self, cfg_file):  # pylint: disable=arguments-differ
         pass
 
 
@@ -192,7 +178,11 @@ class TestConfigParsing:
 
     @pytest.fixture
     def mocked_configparser(self, config_options):
-        parser = MockConfigParser(mk_filestats.DEFAULT_CFG_SECTION, dict_type=OrderedDict)
+        # FIXME: Python 2.6 has no OrderedDict at all, it is only available in a separate ordereddict
+        # package, but we simply can't assume that this is installed on the client!
+        parser = MockConfigParser(
+            mk_filestats.DEFAULT_CFG_SECTION, dict_type=collections.OrderedDict
+        )
         for section, option, value in config_options:
             parser.add_section(section)
             parser.set(section, option, value)
@@ -205,7 +195,9 @@ class TestConfigParsing:
         mocker,
     ):
         mocker.patch(
-            configparser_library_name() + ".ConfigParser",
+            "ConfigParser.ConfigParser"
+            if sys.version_info[0] == 2
+            else "configparser.ConfigParser",
             return_value=mocked_configparser,
         )
         actual_results = list(mk_filestats.iter_config_section_dicts(config_file_name))
@@ -239,14 +231,6 @@ class TestConfigParsing:
             assert config_dict["subgroups_delimiter"] == "@"
 
 
-class MockedFileStatFile:
-    def __init__(self, path) -> None:  # type:ignore[no-untyped-def]
-        self.path = path
-
-    def __eq__(self, other):
-        return self.path == other.path
-
-
 @pytest.mark.parametrize(
     "section_name, files_iter, grouping_conditions, expected_result",
     [
@@ -254,10 +238,10 @@ class MockedFileStatFile:
             "banana",
             iter(
                 [
-                    MockedFileStatFile("/var/log/syslog"),
-                    MockedFileStatFile("/var/log/syslog1"),
-                    MockedFileStatFile("/var/log/syslog2"),
-                    MockedFileStatFile("/var/log/apport"),
+                    mk_filestats.FileStat("/var/log/syslog", "ok"),
+                    mk_filestats.FileStat("/var/log/syslog1", "ok"),
+                    mk_filestats.FileStat("/var/log/syslog2", "ok"),
+                    mk_filestats.FileStat("/var/log/apport", "ok"),
                 ]
             ),
             [
@@ -279,18 +263,18 @@ class MockedFileStatFile:
             [
                 (
                     "banana raccoon",
-                    [MockedFileStatFile("/var/log/syslog1")],
+                    [mk_filestats.FileStat("/var/log/syslog1", "ok")],
                 ),
                 (
                     "banana colibri",
                     [
-                        MockedFileStatFile("/var/log/syslog"),
-                        MockedFileStatFile("/var/log/syslog2"),
+                        mk_filestats.FileStat("/var/log/syslog", "ok"),
+                        mk_filestats.FileStat("/var/log/syslog2", "ok"),
                     ],
                 ),
                 (
                     "banana",
-                    [MockedFileStatFile("/var/log/apport")],
+                    [mk_filestats.FileStat("/var/log/apport", "ok")],
                 ),
             ],
         ),
@@ -341,15 +325,87 @@ def test_grouping_multiple_groups(
     ) in enumerate(results_list):
         assert section_name_arg == expected_results_list[results_idx][0]
         for files_idx, single_file in enumerate(files):
-            assert single_file == expected_results_list[results_idx][1][files_idx]
+            assert (
+                single_file.writeable_path
+                == expected_results_list[results_idx][1][files_idx].writeable_path
+            )
 
 
 @pytest.mark.parametrize("val", [None, "null"])
 def test_explicit_null_in_filestat(val):
-    FilestatFake = namedtuple(  # pylint: disable=collections-namedtuple-call
+    FilestatFake = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
         "FilestatFake", ["size", "age", "stat_status"]
     )
     filestat = FilestatFake(val, val, "file vanished")
 
     assert not mk_filestats.SizeFilter(">=1024").matches(filestat)
     assert not mk_filestats.AgeFilter(">=1024").matches(filestat)
+
+
+@pytest.mark.parametrize(
+    "files,expected_header,expected_dicts",
+    [
+        pytest.param(
+            [
+                mk_filestats.FileStat("/tmp/file1", "ok", 512, 600),
+                mk_filestats.FileStat("/tmp/file2", "file_vanished"),
+            ],
+            "[[[extremes_only MYGROUP]]]",
+            [
+                {
+                    "type": "file",
+                    "path": "/tmp/file1",
+                    "stat_status": "ok",
+                    "size": 512,
+                    "age": 600,
+                    "mtime": None,
+                },
+                {"type": "summary", "count": 2},
+            ],
+            id="file without metrics",
+        ),
+        pytest.param(
+            [
+                mk_filestats.FileStat("/tmp/file1", "file_vanished"),
+                mk_filestats.FileStat("/tmp/file2", "ok", 512, 600),
+            ],
+            "[[[extremes_only MYGROUP]]]",
+            [
+                {
+                    "type": "file",
+                    "path": "/tmp/file2",
+                    "stat_status": "ok",
+                    "size": 512,
+                    "age": 600,
+                    "mtime": None,
+                },
+                {"type": "summary", "count": 2},
+            ],
+            id="file without metrics is the first one",
+        ),
+        pytest.param(
+            [
+                mk_filestats.FileStat("/tmp/file1", "file_vanished"),
+            ],
+            "[[[extremes_only MYGROUP]]]",
+            [
+                {
+                    "type": "file",
+                    "path": "/tmp/file1",
+                    "stat_status": "file_vanished",
+                    "size": None,
+                    "age": None,
+                    "mtime": None,
+                },
+                {"type": "summary", "count": 1},
+            ],
+            id="only file without metrics",
+        ),
+    ],
+)
+def test_output_aggregator_extremes_only(files, expected_header, expected_dicts):
+    result = list(mk_filestats.output_aggregator_extremes_only("MYGROUP", files))
+
+    assert result[0] == expected_header
+    for result_dict_repr, expected_dict in zip(result[1:], expected_dicts):
+        assert ast.literal_eval(result_dict_repr) == expected_dict

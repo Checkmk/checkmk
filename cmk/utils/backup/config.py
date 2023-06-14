@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -17,10 +17,13 @@ from pathlib import Path
 
 from pydantic import BaseModel, PrivateAttr
 
-from cmk.utils.backup.type_defs import JobConfig, TargetConfig, TargetId
 from cmk.utils.paths import default_config_dir
 from cmk.utils.store import load_object_from_file, save_object_to_file
 from cmk.utils.version import is_cma
+
+from .job import JobConfig
+from .targets import TargetId
+from .targets.config import TargetConfig
 
 
 class SiteConfig(BaseModel, frozen=True):

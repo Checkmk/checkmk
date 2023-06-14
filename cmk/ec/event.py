@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -16,7 +16,7 @@ from dateutil.tz import tzlocal
 
 from livestatus import SiteId
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs import HostAddress, HostName
 
 
 # This is far from perfect, but at least we see all possible keys.
@@ -25,7 +25,7 @@ class Event(TypedDict, total=False):
     facility: int
     priority: int
     text: str
-    host: str
+    host: HostName
     ipaddress: str
     application: str
     pid: int
@@ -48,7 +48,7 @@ class Event(TypedDict, total=False):
     live_until_phases: Iterable[str]
     match_groups: Iterable[str]
     match_groups_syslog_application: Iterable[str]
-    orig_host: str
+    orig_host: HostName
     owner: str
     phase: str
     rule_id: str | None
@@ -62,7 +62,7 @@ def _make_event(text: str, ipaddress: str) -> Event:
         facility=1,
         priority=0,
         text=text,
-        host="",
+        host=HostName(""),
         ipaddress=ipaddress,
         application="",
         pid=0,
@@ -160,7 +160,8 @@ def parse_message(line: str, ipaddress: str) -> Event:  # pylint: disable=too-ma
 
     # Variant 7 and 7a
     if line[0] == "@" and line[11] in [" ", ";"] and line.split(" ", 1)[0].count(";") <= 1:
-        details, event["host"], line = line.split(" ", 2)
+        details, host, line = line.split(" ", 2)
+        event["host"] = HostName(host)
         detail_tokens = details.split(";")
         timestamp = detail_tokens[0]
         if len(detail_tokens) > 1:
@@ -174,7 +175,8 @@ def parse_message(line: str, ipaddress: str) -> Event:  # pylint: disable=too-ma
 
     # Variant 5
     elif len(line) > 24 and line[10] == "T":
-        timestamp, event["host"], rest = line.split(" ", 2)
+        timestamp, host, rest = line.split(" ", 2)
+        event["host"] = HostName(host)
         event["time"] = parse_iso_8601_timestamp(timestamp)
         event.update(parse_syslog_info(rest))
 
@@ -184,7 +186,8 @@ def parse_message(line: str, ipaddress: str) -> Event:  # pylint: disable=too-ma
 
     # Variant 8
     elif line[10] == "-" and line[19] == " ":
-        timestamp, event["host"], rest = line.split(" ", 2)
+        timestamp, host, rest = line.split(" ", 2)
+        event["host"] = HostName(host)
         timestamp = fix_broken_sophos_timestamp(timestamp)
         event["time"] = parse_iso_8601_timestamp(timestamp)
         event.update(parse_syslog_info(rest))
@@ -195,12 +198,13 @@ def parse_message(line: str, ipaddress: str) -> Event:  # pylint: disable=too-ma
         # There is no datetime information in the message, use current time
         event["time"] = _time()
         # There is no host information, use the provided address
-        event["host"] = ipaddress
+        event["host"] = HostAddress(ipaddress)
 
     # Variant 10
     elif line[4] == " " and line[:4].isdigit():
         time_part = line[:20]  # ignoring tz info
-        event["host"], application, line = line[25:].split(" ", 2)
+        host, application, line = line[25:].split(" ", 2)
+        event["host"] = HostName(host)
         event["application"] = application.rstrip(":")
         event["pid"] = 0
         event["text"] = line
@@ -220,7 +224,7 @@ def parse_message(line: str, ipaddress: str) -> Event:  # pylint: disable=too-ma
             # Use the extracted host and continue with the remaining message text
             rest = tmp_rest
 
-        event["host"] = host
+        event["host"] = HostName(host)
 
         # Variant 4
         if rest.startswith("@"):
@@ -250,7 +254,9 @@ def parse_message(line: str, ipaddress: str) -> Event:  # pylint: disable=too-ma
     # The event simulator ships the simulated original IP address in the
     # hostname field, separated with a pipe, e.g. "myhost|1.2.3.4"
     if isinstance(event["host"], str) and "|" in event["host"]:
-        event["host"], event["ipaddress"] = event["host"].split("|", 1)
+        host, ipaddress = event["host"].split("|", 1)
+        event["host"] = HostName(host)
+        event["ipaddress"] = str(ipaddress)
     return event
 
 
@@ -283,7 +289,10 @@ def parse_syslog_info(content: str) -> Event:
         text = content.strip()
     elif "[" in parts[0]:  # TAG followed by pid
         application, pid_str = parts[0].split("[", 1)
-        pid = int(pid_str.rstrip("]"))
+        try:
+            pid = int(pid_str.rstrip("]"))
+        except ValueError:
+            pid = 0
         text = parts[1].strip()
     else:  # TAG not followed by pid
         application = parts[0]
@@ -313,7 +322,7 @@ def parse_monitoring_info(line: str) -> Event:
     service, message = rest.split(": ", 1)
     event["application"] = service
     event["text"] = message.strip()
-    event["host"] = host
+    event["host"] = HostName(host)
     event["pid"] = 0
     return event
 
@@ -331,7 +340,7 @@ def parse_rfc5424_syslog_info(line: str) -> Event:
     ) = line.split(" ", 6)
     nil_value = "-"  # SyslogMessage.nilvalue()
     event["time"] = _time() if timestamp == nil_value else parse_iso_8601_timestamp(timestamp)
-    event["host"] = "" if hostname == nil_value else hostname
+    event["host"] = HostName("" if hostname == nil_value else hostname)
     event["application"] = "" if app_name == nil_value else app_name
     event["pid"] = 0 if procid == nil_value else int(procid)
 

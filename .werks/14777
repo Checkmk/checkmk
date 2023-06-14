@@ -6,7 +6,7 @@ Date: 1667979318
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Add 6 columns to the status table in livestatus: carbon_queue_usage,
 carbon_queue_usage_rate, influxdb_queue_usage, influxdb_queue_usage_rate,

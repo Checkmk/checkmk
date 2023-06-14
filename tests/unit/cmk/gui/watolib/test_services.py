@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Generator
@@ -7,6 +7,10 @@ from unittest.mock import call, MagicMock, patch
 
 import pytest
 from pytest_mock import MockerFixture
+
+from cmk.utils.labels import HostLabel
+from cmk.utils.type_defs import HostName, SectionName
+from cmk.utils.type_defs.user_id import UserId
 
 from cmk.automations.results import (
     CheckPreviewEntry,
@@ -16,9 +20,8 @@ from cmk.automations.results import (
 )
 
 from cmk.gui.utils import transaction_manager
-from cmk.gui.watolib import hosts_and_folders
 from cmk.gui.watolib.audit_log import AuditLogStore
-from cmk.gui.watolib.hosts_and_folders import CREHost
+from cmk.gui.watolib.hosts_and_folders import CREHost, folder_tree
 from cmk.gui.watolib.services import (
     checkbox_id,
     DiscoveryAction,
@@ -50,7 +53,7 @@ MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(
                 ("load15", 1.32, 40.0, 80.0, 0, 8),
             ],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
         CheckPreviewEntry(
             "active",
@@ -64,7 +67,7 @@ MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(
             "WAITING - Active check, cannot be done offline",
             [],
             {},
-            ["heute"],
+            [HostName("heute")],
         ),
     ],
     host_labels={"cmk/check_mk_server": {"plugin_name": "labels", "value": "yes"}},
@@ -72,6 +75,10 @@ MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(
     new_labels={},
     vanished_labels={},
     changed_labels={},
+    source_results={"agent": (0, "Success")},
+    labels_by_host={
+        HostName("heute"): [HostLabel("cmk/check_mk_server", "yes", SectionName("labels"))]
+    },
 )
 
 
@@ -102,24 +109,23 @@ def fixture_check_transaction():
 
 
 @pytest.fixture(name="sample_host_name")
-def fixture_sample_host_name() -> str:
-    return "heute"
+def fixture_sample_host_name() -> HostName:
+    return HostName("heute")
 
 
 @pytest.fixture(name="sample_host")
-def fixture_sample_host(  # type:ignore[no-untyped-def]
-    request_context,
-    with_admin_login,
-    sample_host_name: str,
+def fixture_sample_host(
+    request_context: None,
+    with_admin_login: UserId,
+    sample_host_name: HostName,
 ) -> Generator[CREHost, None, None]:
     hostname = sample_host_name
-    hosts_and_folders.CREFolder.root_folder().create_hosts([(hostname, {}, None)])
-    host = hosts_and_folders.CREFolder.root_folder().host(hostname)
+    root_folder = folder_tree().root_folder()
+    root_folder.create_hosts([(hostname, {}, None)])
+    host = root_folder.host(hostname)
     assert host is not None
     yield host
-    hosts_and_folders.CREFolder.root_folder().delete_hosts(
-        [hostname], automation=lambda *args, **kwargs: DeleteHostsResult()
-    )
+    root_folder.delete_hosts([hostname], automation=lambda *args, **kwargs: DeleteHostsResult())
 
 
 @pytest.mark.usefixtures("inline_background_jobs")
@@ -144,7 +150,7 @@ def test_perform_discovery_none_action(
 
 @pytest.mark.usefixtures("inline_background_jobs")
 def test_perform_discovery_tabula_rasa_action_with_no_previous_discovery_result(
-    sample_host_name: str,
+    sample_host_name: HostName,
     sample_host: CREHost,
     mock_discovery_preview: MagicMock,
 ) -> None:
@@ -174,22 +180,15 @@ def test_perform_discovery_tabula_rasa_action_with_no_previous_discovery_result(
 @pytest.mark.usefixtures("inline_background_jobs")
 def test_perform_discovery_fix_all_with_previous_discovery_result(
     mocker: MockerFixture,
-    sample_host_name: str,
+    sample_host_name: HostName,
     sample_host: CREHost,
     mock_set_autochecks: MagicMock,
 ) -> None:
     mocker.patch("cmk.gui.watolib.services.update_host_labels", return_value={})
     mock_discovery_preview = mocker.patch(
         "cmk.gui.watolib.services.discovery_preview",
-        return_value=DiscoveryResult(
-            job_status={
-                "state": "initialized",
-                "started": 1654006499.56774,
-                "pid": None,
-                "loginfo": {"JobProgressUpdate": [], "JobResult": [], "JobException": []},
-                "is_active": False,
-            },
-            check_table_created=1654006499,
+        return_value=ServiceDiscoveryPreviewResult(
+            output="",
             check_table=[
                 CheckPreviewEntry(
                     check_source="old",
@@ -206,7 +205,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                     output="Temperature: 43.0°C\nTemperature: 43.0°C\nConfiguration: prefer device levels over user levels (used device levels)",
                     metrics=[],
                     labels={},
-                    found_on_nodes=["TODAY"],
+                    found_on_nodes=[sample_host_name],
                 ),
                 CheckPreviewEntry(
                     check_source="active",
@@ -220,7 +219,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                     output="WAITING - Active check, cannot be done offline",
                     metrics=[],
                     labels={},
-                    found_on_nodes=["TODAY"],
+                    found_on_nodes=[sample_host_name],
                 ),
             ],
             host_labels={
@@ -230,6 +229,13 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
             new_labels={},
             vanished_labels={},
             changed_labels={},
+            source_results={"agent": (0, "Success")},
+            labels_by_host={
+                sample_host_name: [
+                    HostLabel("cmk/check_mk_server", "yes", SectionName("omd_info")),
+                    HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
+                ],
+            },
         ),
     )
     previous_discovery_result = DiscoveryResult(
@@ -257,7 +263,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                 output="Temperature: 42.0°C\nTemperature: 42.0°C\nConfiguration: prefer device levels over user levels (used device levels)",
                 metrics=[],
                 labels={},
-                found_on_nodes=["TODAY"],
+                found_on_nodes=[sample_host_name],
             ),
             CheckPreviewEntry(
                 check_source="active",
@@ -271,7 +277,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
                 output="WAITING - Active check, cannot be done offline",
                 metrics=[],
                 labels={},
-                found_on_nodes=["TODAY"],
+                found_on_nodes=[sample_host_name],
             ),
         ],
         host_labels={
@@ -284,6 +290,13 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
         },
         vanished_labels={},
         changed_labels={},
+        sources={"agent": (0, "Success")},
+        labels_by_host={
+            sample_host_name: [
+                HostLabel("cmk/check_mk_server", "yes", SectionName("omd_info")),
+                HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
+            ],
+        },
     )
 
     discovery_options = DiscoveryOptions(
@@ -308,7 +321,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
         "NO_SITE",
         sample_host_name,
         {
-            ("lnx_thermal", "Zone 1"): ("Temperature Zone 1", {}, {}, ["TODAY"]),
+            ("lnx_thermal", "Zone 1"): ("Temperature Zone 1", {}, {}, [sample_host_name]),
         },
     )
     mock_discovery_preview.assert_called_once()
@@ -318,7 +331,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
     ]
     assert discovery_result.new_labels == {}
 
-    store = AuditLogStore(AuditLogStore.make_path())
+    store = AuditLogStore()
     assert [
         log_entry.text for log_entry in store.read() if log_entry.action == "update-host-labels"
     ] == [f"Updated discovered host labels of '{sample_host_name}' with 2 labels"]
@@ -327,33 +340,14 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
 @pytest.mark.usefixtures("inline_background_jobs")
 def test_perform_discovery_single_update(
     mocker: MockerFixture,
-    sample_host_name: str,
+    sample_host_name: HostName,
     sample_host: CREHost,
     mock_set_autochecks: MagicMock,
 ) -> None:
     mock_discovery_preview = mocker.patch(
         "cmk.gui.watolib.services.discovery_preview",
-        return_value=DiscoveryResult(
-            job_status={
-                "duration": 2.351154088973999,
-                "estimated_duration": 2.37550950050354,
-                "host_name": "TODAY",
-                "logfile_path": "~/var/log/web.log",
-                "pid": 1363226,
-                "ppid": 1363225,
-                "started": 1654173769.3507118,
-                "state": "finished",
-                "stoppable": True,
-                "title": "Refresh",
-                "user": "cmkadmin",
-                "loginfo": {
-                    "JobProgressUpdate": ["Starting job...", "Completed."],
-                    "JobResult": [],
-                    "JobException": [],
-                },
-                "is_active": False,
-            },
-            check_table_created=1654237829,
+        return_value=ServiceDiscoveryPreviewResult(
+            output="",
             check_table=[
                 CheckPreviewEntry(
                     check_source="old",
@@ -385,7 +379,7 @@ def test_perform_discovery_single_update(
                     ),
                     metrics=[],
                     labels={},
-                    found_on_nodes=["TODAY"],
+                    found_on_nodes=[HostName("TODAY")],
                 ),
                 CheckPreviewEntry(
                     check_source="old",
@@ -420,7 +414,7 @@ def test_perform_discovery_single_update(
                     ),
                     metrics=[],
                     labels={},
-                    found_on_nodes=["TODAY"],
+                    found_on_nodes=[HostName("TODAY")],
                 ),
             ],
             host_labels={
@@ -430,13 +424,20 @@ def test_perform_discovery_single_update(
             new_labels={},
             vanished_labels={},
             changed_labels={},
+            source_results={"agent": (0, "Success")},
+            labels_by_host={
+                HostName("TODAY"): [
+                    HostLabel("cmk/check_mk_server", "yes", SectionName("omd_info")),
+                    HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
+                ],
+            },
         ),
     )
     previous_discovery_result = DiscoveryResult(
         job_status={
             "duration": 2.351154088973999,
             "estimated_duration": 2.37550950050354,
-            "host_name": "TODAY",
+            "host_name": HostName("TODAY"),
             "logfile_path": "~/var/log/web.log",
             "pid": 1363226,
             "ppid": 1363225,
@@ -484,7 +485,7 @@ def test_perform_discovery_single_update(
                 ),
                 metrics=[],
                 labels={},
-                found_on_nodes=["TODAY"],
+                found_on_nodes=[HostName("TODAY")],
             ),
             CheckPreviewEntry(
                 check_source="new",
@@ -519,7 +520,7 @@ def test_perform_discovery_single_update(
                 ),
                 metrics=[],
                 labels={},
-                found_on_nodes=["TODAY"],
+                found_on_nodes=[HostName("TODAY")],
             ),
         ],
         host_labels={
@@ -529,6 +530,13 @@ def test_perform_discovery_single_update(
         new_labels={},
         vanished_labels={},
         changed_labels={},
+        sources={"agent": (0, "Success")},
+        labels_by_host={
+            HostName("TODAY"): [
+                HostLabel("cmk/check_mk_server", "yes", SectionName("omd_info")),
+                HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
+            ],
+        },
     )
 
     discovery_options = DiscoveryOptions(
@@ -568,7 +576,7 @@ def test_perform_discovery_single_update(
         if entry.check_plugin_name == "mem_linux"
     ] == ["old"]
 
-    store = AuditLogStore(AuditLogStore.make_path())
+    store = AuditLogStore()
     assert [
         log_entry.text for log_entry in store.read() if log_entry.action == "set-autochecks"
     ] == [f"Saved check configuration of host '{sample_host_name}' with 2 services"]
@@ -576,33 +584,14 @@ def test_perform_discovery_single_update(
 
 def test_perform_discovery_action_update_services(
     mocker: MockerFixture,
-    sample_host_name: str,
+    sample_host_name: HostName,
     sample_host: CREHost,
     mock_set_autochecks: MagicMock,
 ) -> None:
     mock_discovery_preview = mocker.patch(
         "cmk.gui.watolib.services.discovery_preview",
-        return_value=DiscoveryResult(
-            job_status={
-                "duration": 2.351154088973999,
-                "estimated_duration": 2.37550950050354,
-                "host_name": "TODAY",
-                "logfile_path": "~/var/log/web.log",
-                "pid": 1363226,
-                "ppid": 1363225,
-                "started": 1654173769.3507118,
-                "state": "finished",
-                "stoppable": True,
-                "title": "Refresh",
-                "user": "cmkadmin",
-                "loginfo": {
-                    "JobProgressUpdate": ["Starting job...", "Completed."],
-                    "JobResult": [],
-                    "JobException": [],
-                },
-                "is_active": False,
-            },
-            check_table_created=1654237829,
+        return_value=ServiceDiscoveryPreviewResult(
+            output="",
             check_table=[
                 CheckPreviewEntry(
                     check_source="old",
@@ -631,7 +620,7 @@ def test_perform_discovery_action_update_services(
                     output="0.04% used (5.59 MB of 15.54 GB), trend: -89.23 kB / 24 hours\n0.04% used (5.59 MB of 15.54 GB)\ntrend: -89.23 kB / 24 hours",
                     metrics=[],
                     labels={},
-                    found_on_nodes=["TODAY"],
+                    found_on_nodes=[HostName("TODAY")],
                 ),
             ],
             host_labels={
@@ -641,6 +630,13 @@ def test_perform_discovery_action_update_services(
             new_labels={},
             vanished_labels={},
             changed_labels={},
+            source_results={"agent": (0, "Success")},
+            labels_by_host={
+                HostName("TODAY"): [
+                    HostLabel("cmk/check_mk_server", "yes", SectionName("omd_info")),
+                    HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
+                ],
+            },
         ),
     )
     previous_discovery_result = DiscoveryResult(
@@ -692,7 +688,7 @@ def test_perform_discovery_action_update_services(
                 output="0.04% used (5.78 MB of 15.54 GB), trend: +10.38 kB / 24 hours\n0.04% used (5.78 MB of 15.54 GB)\ntrend: +10.38 kB / 24 hours",
                 metrics=[],
                 labels={},
-                found_on_nodes=["TODAY"],
+                found_on_nodes=[HostName("TODAY")],
             ),
             CheckPreviewEntry(
                 check_source="vanished",
@@ -713,7 +709,7 @@ def test_perform_discovery_action_update_services(
                 output="[docker0], (down)(!!), MAC: 02:42:E3:80:F5:EE, Speed: 10 MBit/s (assumed)\n[docker0]\nOperational state: down(!!)\nMAC: 02:42:E3:80:F5:EE\nSpeed: 10 MBit/s (assumed)",
                 metrics=[],
                 labels={},
-                found_on_nodes=["TODAY"],
+                found_on_nodes=[HostName("TODAY")],
             ),
         ],
         host_labels={
@@ -723,6 +719,13 @@ def test_perform_discovery_action_update_services(
         new_labels={},
         vanished_labels={},
         changed_labels={},
+        sources={"agent": (0, "Success")},
+        labels_by_host={
+            HostName("TODAY"): [
+                HostLabel("cmk/check_mk_server", "yes", SectionName("omd_info")),
+                HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
+            ],
+        },
     )
 
     discovery_options = DiscoveryOptions(
@@ -762,7 +765,7 @@ def test_perform_discovery_action_update_services(
     )
     assert [entry.check_source for entry in discovery_result.check_table] == ["old"]
 
-    store = AuditLogStore(AuditLogStore.make_path())
+    store = AuditLogStore()
     assert [
         log_entry.text for log_entry in store.read() if log_entry.action == "set-autochecks"
     ] == [f"Saved check configuration of host '{sample_host_name}' with 1 services"]
@@ -770,7 +773,7 @@ def test_perform_discovery_action_update_services(
 
 def test_perform_discovery_action_update_host_labels(
     mocker: MockerFixture,
-    sample_host_name: str,
+    sample_host_name: HostName,
     sample_host: CREHost,
     mock_set_autochecks: MagicMock,
 ) -> None:
@@ -779,27 +782,8 @@ def test_perform_discovery_action_update_host_labels(
     )
     mock_discovery_preview = mocker.patch(
         "cmk.gui.watolib.services.discovery_preview",
-        return_value=DiscoveryResult(
-            job_status={
-                "duration": 2.351154088973999,
-                "estimated_duration": 2.37550950050354,
-                "host_name": "heute",
-                "logfile_path": "~/var/log/web.log",
-                "pid": 1363226,
-                "ppid": 1363225,
-                "started": 1654173769.3507118,
-                "state": "finished",
-                "stoppable": True,
-                "title": "Refresh",
-                "user": "cmkadmin",
-                "loginfo": {
-                    "JobProgressUpdate": ["Starting job...", "Completed."],
-                    "JobResult": [],
-                    "JobException": [],
-                },
-                "is_active": False,
-            },
-            check_table_created=1654250056,
+        return_value=ServiceDiscoveryPreviewResult(
+            output="",
             check_table=[],
             host_labels={
                 "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
@@ -807,6 +791,12 @@ def test_perform_discovery_action_update_host_labels(
             new_labels={},
             vanished_labels={},
             changed_labels={},
+            source_results={"agent": (0, "Success")},
+            labels_by_host={
+                HostName(sample_host_name): [
+                    HostLabel("cmk/os_family", "linux", SectionName("check_mk"))
+                ],
+            },
         ),
     )
     previous_discovery_result = DiscoveryResult(
@@ -832,12 +822,18 @@ def test_perform_discovery_action_update_host_labels(
         check_table_created=1654248127,
         check_table=[],
         host_labels={
-            "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
+            # "cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"},
             "cmk/os_family": {"value": "linux", "plugin_name": "check_mk"},
         },
         new_labels={},
         vanished_labels={"cmk/check_mk_server": {"value": "yes", "plugin_name": "omd_info"}},
         changed_labels={},
+        sources={"agent": (0, "Success")},
+        labels_by_host={
+            HostName(sample_host_name): [
+                HostLabel("cmk/os_family", "linux", SectionName("check_mk"))
+            ],
+        },
     )
 
     discovery_options = DiscoveryOptions(
@@ -861,10 +857,10 @@ def test_perform_discovery_action_update_host_labels(
     mock_update_host_labels.assert_called_once_with(
         "NO_SITE",
         sample_host_name,
-        {
-            "cmk/check_mk_server": {"plugin_name": "omd_info", "value": "yes"},
-            "cmk/os_family": {"plugin_name": "check_mk", "value": "linux"},
-        },
+        [
+            # HostLabel("cmk/check_mk_server", "yes", SectionName("omd_info")),
+            HostLabel("cmk/os_family", "linux", SectionName("check_mk")),
+        ],
     )
     mock_set_autochecks.assert_not_called()
     mock_discovery_preview.assert_called_with(
@@ -872,7 +868,7 @@ def test_perform_discovery_action_update_host_labels(
     )
     assert "cmk/check_mk_server" not in discovery_result.host_labels
 
-    store = AuditLogStore(AuditLogStore.make_path())
+    store = AuditLogStore()
     assert [
         log_entry.text for log_entry in store.read() if log_entry.action == "update-host-labels"
-    ] == [f"Updated discovered host labels of '{sample_host_name}' with 2 labels"]
+    ] == [f"Updated discovered host labels of '{sample_host_name}' with 1 labels"]

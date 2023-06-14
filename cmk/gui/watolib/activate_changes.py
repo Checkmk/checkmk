@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Managing configuration activation of Checkmk
@@ -28,13 +28,13 @@ import shutil
 import subprocess
 import time
 import traceback
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from dataclasses import asdict, dataclass
 from itertools import filterfalse
 from pathlib import Path
-from typing import Any, Iterator, NamedTuple, Sequence
+from typing import Any, NamedTuple
 
-import psutil  # type: ignore[import]
+import psutil
 from setproctitle import setthreadtitle
 
 from livestatus import SiteConfiguration, SiteId
@@ -47,9 +47,9 @@ import cmk.utils.render as render
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.licensing import save_extensions
 from cmk.utils.licensing.export import LicenseUsageExtensions
-from cmk.utils.licensing.state import is_expired_trial
+from cmk.utils.licensing.registry import get_licensing_user_effect, is_free
+from cmk.utils.licensing.usage import save_extensions
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
@@ -67,6 +67,7 @@ import cmk.gui.watolib.utils
 from cmk.gui import userdb
 from cmk.gui.background_job import (
     BackgroundJob,
+    BackgroundJobAlreadyRunning,
     BackgroundProcessInterface,
     InitialStatusArgs,
     job_registry,
@@ -78,23 +79,25 @@ from cmk.gui.http import request as _request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.watolib.utils import (
-    DomainRequest,
-    DomainRequests,
-    get_always_activate_domains,
-    get_config_domain,
-    SerializedSettings,
-)
+from cmk.gui.nodevis_lib import topology_dir
 from cmk.gui.site_config import enabled_sites, get_site_config, is_single_local_site, site_is_local
 from cmk.gui.sites import disconnect as sites_disconnect
 from cmk.gui.sites import SiteStatus
 from cmk.gui.sites import states as sites_states
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils.ntop import is_ntop_configured
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.watolib import backup_snapshots
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
-from cmk.gui.watolib.config_domain_name import ConfigDomainName
+from cmk.gui.watolib.config_domain_name import (
+    ConfigDomainName,
+    DomainRequest,
+    DomainRequests,
+    get_always_activate_domains,
+    get_config_domain,
+    SerializedSettings,
+)
 from cmk.gui.watolib.config_sync import (
     ABCSnapshotDataCollector,
     create_distributed_wato_files,
@@ -108,7 +111,10 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_preserving_link,
     validate_all_hosts,
 )
+from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.site_changes import SiteChanges
+
+from cmk.bi.type_defs import frozen_aggregations_dir
 
 # TODO: Make private
 Phase = str  # TODO: Make dedicated type
@@ -148,13 +154,21 @@ SiteActivationState = dict[str, Any]
 ActivationState = dict[str, SiteActivationState]
 
 
-def get_trial_expired_message() -> str:
-    return _(
-        "Sorry, but your unlimited 30-day trial of Checkmk has ended. "
-        "Your Checkmk installation does not allow distributed setups after the 30-day trial period. "
-        "In case you want to test distributed setups, please contact us at "
-        "https://checkmk.com/contact"
+class MKLicensingError(Exception):
+    pass
+
+
+def get_free_message(format_html: bool = False) -> str:
+    subject = _("Trial period ended: Distributed setup not allowed")
+    body = _(
+        "Your trial period has ended, and your license state is automatically converted to 'Free'. "
+        "In this license state, a distributed setup is not allowed. In case you want to test "
+        "distributed setups, please contact us at "
     )
+    contact_link = "<a href='https://checkmk.com/contact'>https://checkmk.com/contact</a>"
+    if format_html:
+        return "<b>%s</b><br>%s%s" % (subject, body, contact_link)
+    return "%s\n%s%s" % (subject, body, "https://checkmk.com/contact")
 
 
 # TODO: find a way to make this more obvious/transparent in code
@@ -196,19 +210,13 @@ def get_replication_paths() -> list[ReplicationPath]:
         ReplicationPath(
             "file",
             "auth.secret",
-            os.path.relpath(
-                "%s/auth.secret" % os.path.dirname(cmk.utils.paths.htpasswd_file),
-                cmk.utils.paths.omd_root,
-            ),
+            os.path.relpath(cmk.utils.paths.auth_secret_file, cmk.utils.paths.omd_root),
             [],
         ),
         ReplicationPath(
             "file",
             "password_store.secret",
-            os.path.relpath(
-                "%s/password_store.secret" % os.path.dirname(cmk.utils.paths.htpasswd_file),
-                cmk.utils.paths.omd_root,
-            ),
+            os.path.relpath(cmk.utils.paths.password_store_secret_file, cmk.utils.paths.omd_root),
             [],
         ),
         ReplicationPath(
@@ -259,7 +267,19 @@ def get_replication_paths() -> list[ReplicationPath]:
             ty="dir",
             ident="omd",
             site_path="etc/omd",
-            excludes=["allocated_ports", "site.conf"],
+            excludes=["site.conf"],
+        ),
+        ReplicationPath(
+            ty="dir",
+            ident="frozen_aggregations",
+            site_path=os.path.relpath(frozen_aggregations_dir, cmk.utils.paths.omd_root),
+            excludes=[],
+        ),
+        ReplicationPath(
+            ty="dir",
+            ident="topology",
+            site_path=os.path.relpath(topology_dir, cmk.utils.paths.omd_root),
+            excludes=[],
         ),
     ]
 
@@ -400,7 +420,7 @@ class ActivateChanges:
         # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
         # pylint: disable=not-an-iterable
         for site_id in activation_sites():
-            site_changes = SiteChanges(SiteChanges.make_path(site_id)).read()
+            site_changes = SiteChanges(site_id).read()
             self._changes_by_site[site_id] = site_changes
 
             if not site_changes:
@@ -419,7 +439,7 @@ class ActivateChanges:
         self._changes = sorted(changes.items(), key=lambda k_v: k_v[1]["time"])
 
     def confirm_site_changes(self, site_id):
-        SiteChanges(SiteChanges.make_path(site_id)).clear()
+        SiteChanges(site_id).clear()
         cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
     @staticmethod
@@ -428,7 +448,7 @@ class ActivateChanges:
         # Astroid 2.x bug prevents us from using NewType https://github.com/PyCQA/pylint/issues/2296
         # pylint: disable=not-an-iterable
         for site_id in activation_sites():
-            changes_counter += len(SiteChanges(SiteChanges.make_path(site_id)).read())
+            changes_counter += len(SiteChanges(site_id).read())
         return changes_counter
 
     @staticmethod
@@ -497,16 +517,16 @@ class ActivateChanges:
         changes = self._changes_of_site(site_id)
         return bool([c for c in changes if self._is_foreign(c)])
 
-    def is_sync_needed(self, site_id) -> bool:  # type:ignore[no-untyped-def]
+    def is_sync_needed(self, site_id) -> bool:  # type: ignore[no-untyped-def]
         if site_is_local(site_id):
             return False
 
         return any(c["need_sync"] for c in self._changes_of_site(site_id))
 
-    def _is_activate_needed(self, site_id) -> bool:  # type:ignore[no-untyped-def]
+    def _is_activate_needed(self, site_id) -> bool:  # type: ignore[no-untyped-def]
         return any(c["need_restart"] for c in self._changes_of_site(site_id))
 
-    def _last_activation_state(self, site_id: SiteId):  # type:ignore[no-untyped-def]
+    def _last_activation_state(self, site_id: SiteId):  # type: ignore[no-untyped-def]
         """This function returns the last known persisted activation state"""
         return store.load_object_from_file(
             ActivateChangesManager.persisted_site_state_path(site_id), default={}
@@ -528,7 +548,7 @@ class ActivateChanges:
             if self._is_foreign(change) and self._affects_all_sites(change)
         )
 
-    def _is_foreign(self, change) -> bool:  # type:ignore[no-untyped-def]
+    def _is_foreign(self, change) -> bool:  # type: ignore[no-untyped-def]
         return change["user_id"] and change["user_id"] != user.id
 
     def _affects_all_sites(self, change):
@@ -668,6 +688,8 @@ class ActivateChangesManager(ActivateChanges):
             The activation-id under which to track the progress of this particular run.
 
         """
+        _raise_for_license_block()
+
         self._activate_foreign = activate_foreign
 
         self._sites = self._get_sites(sites)
@@ -840,7 +862,6 @@ class ActivateChangesManager(ActivateChanges):
                 )
 
     def _save_activation(self) -> None:
-        MKUserError(None, _("activation ID is not set"))
         if self._activation_id is None:
             raise MKUserError(None, _("activation ID is not set"))
 
@@ -1087,7 +1108,6 @@ class CRESnapshotDataCollector(ABCSnapshotDataCollector):
         for site_id, snapshot_settings in sorted(
             self._site_snapshot_settings.items(), key=lambda x: x[0]
         ):
-
             site_globals = get_site_globals(site_id, snapshot_settings.site_config)
 
             save_site_global_settings(site_globals, custom_site_path=snapshot_settings.work_dir)
@@ -1339,7 +1359,10 @@ def execute_activation_cleanup_background_job(maximum_age: int | None = None) ->
         logger.debug("Another activation cleanup job is already running: Skipping this time")
         return
 
-    job.start(job.do_execute)
+    try:
+        job.start(job.do_execute)
+    except BackgroundJobAlreadyRunning:
+        logger.debug("Another activation cleanup job is already running: Skipping this time")
 
 
 @job_registry.register
@@ -1565,8 +1588,8 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
             log_audit("activate-changes", "Started activation of site %s" % self._site_id)
 
-            if is_expired_trial() and self._site_id != omd_site():
-                raise MKGeneralException(get_trial_expired_message())
+            if is_free() and self._site_id != omd_site():
+                raise MKGeneralException(get_free_message())
 
             if self.is_sync_needed(self._site_id):
                 self._synchronize_site()
@@ -1657,7 +1680,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             else:
                 store.release_lock(_site_replication_status_path(self._site_id))
 
-    def _is_currently_activating(self, site_rep_status) -> bool:  # type:ignore[no-untyped-def]
+    def _is_currently_activating(self, site_rep_status) -> bool:  # type: ignore[no-untyped-def]
         current_activation_id = site_rep_status.get("current_activation")
         if not current_activation_id:
             return False
@@ -1777,6 +1800,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             [("replication_paths", repr([tuple(r) for r in replication_paths]))],
         )
 
+        assert isinstance(response, tuple)
         return {k: ConfigSyncFileInfo(*v) for k, v in response[0].items()}, response[1]
 
     def _synchronize_files(
@@ -1800,7 +1824,6 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             "receive-config-sync",
             [
                 ("site_id", self._site_id),
-                ("sync_archive", sync_archive),
                 ("to_delete", repr(files_to_delete)),
                 ("config_generation", "%d" % remote_config_generation),
             ],
@@ -1848,6 +1871,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
             raise
 
         # If request.settings is empty no `omd-config-change` job is started
+        assert isinstance(response, dict)
         if any(request.name == omd_ident and request.settings for request in domain_requests):
             response.setdefault(omd_ident, []).extend(self._get_omd_domain_background_job_result())
 
@@ -1866,6 +1890,7 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
                     [("request", repr("omd-config-change"))],
                 )
 
+                assert isinstance(raw_omd_response, tuple)
                 omd_response = cmk.gui.watolib.automations.CheckmkAutomationGetStatusResponse(
                     JobStatusSpec.parse_obj(raw_omd_response[0]),
                     raw_omd_response[1],
@@ -1910,25 +1935,16 @@ class ActivateChangesSite(multiprocessing.Process, ActivateChanges):
 
         return domain_requests
 
-    def _confirm_activated_changes(self):
-        site_changes = SiteChanges(SiteChanges.make_path(self._site_id))
-        changes = site_changes.read(lock=True)
+    def _confirm_activated_changes(self) -> None:
+        with SiteChanges(self._site_id).mutable_view() as changes:
+            changes[: len(self._site_changes)] = []
 
-        try:
-            changes = changes[len(self._site_changes) :]
-        finally:
-            site_changes.write(changes)
-
-    def _confirm_synchronized_changes(self):
-        site_changes = SiteChanges(SiteChanges.make_path(self._site_id))
-        changes = site_changes.read(lock=True)
-        try:
+    def _confirm_synchronized_changes(self) -> None:
+        with SiteChanges(self._site_id).mutable_view() as changes:
             for change in changes:
                 change["need_sync"] = False
-        finally:
-            site_changes.write(changes)
 
-    def _set_result(  # type:ignore[no-untyped-def]
+    def _set_result(  # type: ignore[no-untyped-def]
         self,
         phase: Phase,
         status_text: str,
@@ -2093,10 +2109,31 @@ def get_number_of_pending_changes() -> int:
     return len(changes.grouped_changes())
 
 
-def _need_to_update_config_after_sync() -> bool:
+def get_pending_changes() -> dict[str, ActivationChange]:
+    changes = ActivateChanges()
+    changes.load()
+    return {
+        change_id: ActivationChange(
+            id=ac["id"],
+            user_id=ac["user_id"],
+            action_name=ac["action_name"],
+            text=ac["text"],
+            time=ac["time"],
+        )
+        for change_id, ac in changes.grouped_changes()
+    }
+
+
+def _need_to_update_mkps_after_sync() -> bool:
     if not (central_version := _request.headers.get("x-checkmk-version")):
         raise ValueError("Request header x-checkmk-version is missing")
     logger.debug("Local version: %s, Central version: %s", cmk_version.__version__, central_version)
+    return cmk_version.__version__ != central_version
+
+
+def _need_to_update_config_after_sync() -> bool:
+    if not (central_version := _request.headers.get("x-checkmk-version")):
+        raise ValueError("Request header x-checkmk-version is missing")
     return not cmk_version.is_same_major_version(
         cmk_version.__version__,
         central_version,
@@ -2105,7 +2142,7 @@ def _need_to_update_config_after_sync() -> bool:
 
 def _execute_cmk_update_config() -> None:
     completed_process = subprocess.run(
-        ["cmk-update-config", "-v"],
+        ["cmk-update-config"],
         stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -2115,7 +2152,7 @@ def _execute_cmk_update_config() -> None:
     )
     logger.log(
         logging.DEBUG if completed_process.returncode == 0 else logging.WARNING,
-        "'cmk-update-config -v' finished. Exit code: %s, Output: %s",
+        "'cmk-update-config' finished. Exit code: %s, Output: %s",
         completed_process.returncode,
         completed_process.stdout,
     )
@@ -2129,30 +2166,44 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
         # When receiving configuration from a central site that uses a previous major
         # version, the config migration logic has to be executed to make the local
         # configuration compatible with the local Checkmk version.
-        if _need_to_update_config_after_sync():
+        if _need_to_update_mkps_after_sync():
             logger.debug("Updating active packages")
             cmk.utils.packaging.update_active_packages(
                 cmk.utils.packaging.Installer(cmk.utils.paths.installed_packages_dir),
                 cmk.utils.packaging.PathConfig(
-                    local_root=cmk.utils.paths.local_root,
-                    mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
                     agent_based_plugins_dir=cmk.utils.paths.local_agent_based_plugins_dir,
-                    checks_dir=cmk.utils.paths.local_checks_dir,
-                    inventory_dir=cmk.utils.paths.local_inventory_dir,
-                    check_manpages_dir=cmk.utils.paths.local_check_manpages_dir,
                     agents_dir=cmk.utils.paths.local_agents_dir,
-                    notifications_dir=cmk.utils.paths.local_notifications_dir,
-                    gui_plugins_dir=cmk.utils.paths.local_gui_plugins_dir,
-                    web_dir=cmk.utils.paths.local_web_dir,
-                    pnp_templates_dir=cmk.utils.paths.local_pnp_templates_dir,
-                    doc_dir=cmk.utils.paths.local_doc_dir,
-                    locale_dir=cmk.utils.paths.local_locale_dir,
-                    bin_dir=cmk.utils.paths.local_bin_dir,
-                    lib_dir=cmk.utils.paths.local_lib_dir,
-                    mib_dir=cmk.utils.paths.local_mib_dir,
                     alert_handlers_dir=cmk.utils.paths.local_alert_handlers_dir,
+                    bin_dir=cmk.utils.paths.local_bin_dir,
+                    check_manpages_dir=cmk.utils.paths.local_check_manpages_dir,
+                    checks_dir=cmk.utils.paths.local_checks_dir,
+                    doc_dir=cmk.utils.paths.local_doc_dir,
+                    gui_plugins_dir=cmk.utils.paths.local_gui_plugins_dir,
+                    installed_packages_dir=cmk.utils.paths.installed_packages_dir,
+                    inventory_dir=cmk.utils.paths.local_inventory_dir,
+                    lib_dir=cmk.utils.paths.local_lib_dir,
+                    locale_dir=cmk.utils.paths.local_locale_dir,
+                    local_root=cmk.utils.paths.local_root,
+                    mib_dir=cmk.utils.paths.local_mib_dir,
+                    mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
+                    notifications_dir=cmk.utils.paths.local_notifications_dir,
+                    packages_enabled_dir=cmk.utils.paths.local_enabled_packages_dir,
+                    packages_local_dir=cmk.utils.paths.local_optional_packages_dir,
+                    packages_shipped_dir=cmk.utils.paths.optional_packages_dir,
+                    pnp_templates_dir=cmk.utils.paths.local_pnp_templates_dir,
+                    tmp_dir=cmk.utils.paths.tmp_dir,
+                    web_dir=cmk.utils.paths.local_web_dir,
                 ),
+                {
+                    cmk.utils.packaging.PackagePart.EC_RULE_PACKS: cmk.utils.packaging.PackageOperationCallbacks(
+                        install=ec.install_packaged_rule_packs,
+                        release=ec.release_packaged_rule_packs,
+                        uninstall=ec.uninstall_packaged_rule_packs,
+                    )
+                },
+                cmk_version.__version__,
             )
+        if _need_to_update_config_after_sync():
             logger.debug("Executing cmk-update-config")
             _execute_cmk_update_config()
 
@@ -2185,7 +2236,7 @@ def verify_remote_site_config(site_id: SiteId) -> None:
         raise MKGeneralException(
             _(
                 "Configuration error. You treat us as "
-                "a <b>remote</b>, but we have an own distributed WATO configuration!"
+                "a <b>remote</b>, but we have an own distributed Setup configuration!"
             )
         )
 
@@ -2407,7 +2458,7 @@ class AutomationGetConfigSyncState(AutomationCommand):
 
     The central site hands over the list of replication paths it will try to synchronize later.  The
     remote site computes the list of replication files and sends it back together with the current
-    configuration generation ID. The config generation ID is increased on every WATO modification
+    configuration generation ID. The config generation ID is increased on every Setup modification
     and ensures that nothing is changed between the two config sync steps.
     """
 
@@ -2508,7 +2559,7 @@ def _get_current_config_generation(lock: bool = False) -> int:
 
 
 def _config_generation_path() -> Path:
-    return Path(cmk.utils.paths.var_dir) / "wato" / "config-generation.mk"
+    return wato_var_dir() / "config-generation.mk"
 
 
 class ReceiveConfigSyncRequest(NamedTuple):
@@ -2663,6 +2714,15 @@ def get_restapi_response_for_activation_id(
     )
 
 
+def _raise_for_license_block() -> None:
+    if block_effect := get_licensing_user_effect(
+        licensing_settings_link=makeuri_contextless(
+            _request, [("mode", "licensing")], filename="wato.py"
+        ),
+    ).block:
+        raise MKLicensingError(block_effect.message_raw)
+
+
 def activate_changes_start(
     sites: list[SiteId],
     comment: str | None = None,
@@ -2687,8 +2747,11 @@ def activate_changes_start(
         An ActivationRestAPIResponseExtensions instance.
 
     """
+
     changes = ActivateChanges()
     changes.load()
+
+    _raise_for_license_block()
 
     if changes.has_foreign_changes():
         if not user.may("wato.activateforeign"):

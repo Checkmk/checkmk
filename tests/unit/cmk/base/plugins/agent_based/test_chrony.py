@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -150,16 +150,13 @@ def test_chrony_negative_sync_time() -> None:
 
 
 def test_chrony_section_is_none() -> None:
-    assert (
-        list(
-            chrony.check_chrony(
-                {
-                    "ntp_levels": (10, 200.0, 500.0),
-                    "alert_delay": (1800, 3600),
-                },
-                None,
-                None,
-            )
+    assert not list(
+        chrony.check_chrony(
+            {
+                "ntp_levels": (10, 200.0, 500.0),
+                "alert_delay": (1800, 3600),
+            },
+            None,
+            None,
         )
-        == []
     )

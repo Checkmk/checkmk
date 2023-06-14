@@ -6,7 +6,7 @@ Date: 1649755735
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The NetApp plugin now processes ports (and their associated link-status) of monitored interfaces and
 takes provided failover information into account.

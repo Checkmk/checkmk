@@ -1,0 +1,19 @@
+Title: Fix microcore crash caused invalid data in history files
+Class: fix
+Compatible: compat
+Component: core
+Date: 1678962774
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+If, for some reason, the history file data has been corrupted, 
+the corrupted data may cause the microcore to crash. Such a 
+malfunction initiates a potentially endless cycle of microcore's 
+restarts and crashes: this behavior is a regression.
+
+The problem has been fixed in this release.
+
+

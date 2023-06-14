@@ -6,7 +6,7 @@ Date: 1658317891
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This change adds support for the ETERNUS DX600 device to the following checks: <br>
 <li>fjdarye_ca_ports</li>

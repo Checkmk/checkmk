@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Host groups
@@ -30,6 +30,7 @@ from cmk.gui.plugins.openapi.endpoints.utils import (
     fetch_group,
     fetch_specific_groups,
     prepare_groups,
+    ProblemException,
     serialize_group,
     serialize_group_list,
     serve_group,
@@ -44,8 +45,9 @@ from cmk.gui.plugins.openapi.restful_objects import (
     request_schemas,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
+from cmk.gui.plugins.openapi.restful_objects.parameters import GROUP_NAME_FIELD
 from cmk.gui.plugins.openapi.utils import serve_json
+from cmk.gui.watolib.groups import GroupInUseException, UnknownGroupException
 
 PERMISSIONS = permissions.Perm("wato.groups")
 
@@ -72,7 +74,7 @@ def create(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.groups")
     body = params["body"]
     name = body["name"]
-    group_details = {"alias": body.get("alias")}
+    group_details = {"alias": body["alias"]}
     if version.is_managed_edition():
         group_details = update_customer_info(group_details, body["customer"])
     groups.add_group(name, "host", group_details)
@@ -85,7 +87,7 @@ def create(params: Mapping[str, Any]) -> Response:
     "cmk/bulk_create",
     method="post",
     request_schema=request_schemas.BulkInputHostGroup,
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=response_schemas.HostGroupCollection,
     permissions_required=RW_PERMISSIONS,
 )
 def bulk_create(params: Mapping[str, Any]) -> Response:
@@ -109,7 +111,7 @@ def bulk_create(params: Mapping[str, Any]) -> Response:
     constructors.collection_href("host_group_config"),
     ".../collection",
     method="get",
-    response_schema=response_schemas.LinkedValueDomainObjectCollection,
+    response_schema=response_schemas.HostGroupCollection,
     permissions_required=PERMISSIONS,
 )
 def list_groups(params: Mapping[str, Any]) -> Response:
@@ -123,16 +125,31 @@ def list_groups(params: Mapping[str, Any]) -> Response:
     constructors.object_href("host_group_config", "{name}"),
     ".../delete",
     method="delete",
-    path_params=[NAME_FIELD],
+    path_params=[GROUP_NAME_FIELD],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
+    additional_status_codes=[409],
 )
 def delete(params: Mapping[str, Any]) -> Response:
     """Delete a host group"""
     user.need_permission("wato.edit")
     user.need_permission("wato.groups")
     name = params["name"]
-    groups.delete_group(name, "host")
+    try:
+        groups.delete_group(name, "host")
+    except GroupInUseException as exc:
+        raise ProblemException(
+            status=409,
+            title="Group in use problem",
+            detail=str(exc),
+        )
+    except UnknownGroupException as exc:
+        raise ProblemException(
+            status=404,
+            title="Unknown group problem",
+            detail=str(exc),
+        )
+
     return Response(status=204)
 
 
@@ -143,24 +160,28 @@ def delete(params: Mapping[str, Any]) -> Response:
     request_schema=request_schemas.BulkDeleteHostGroup,
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
+    additional_status_codes=[404, 409],
 )
 def bulk_delete(params: Mapping[str, Any]) -> Response:
     """Bulk delete host groups"""
     user.need_permission("wato.edit")
     user.need_permission("wato.groups")
     body = params["body"]
-    entries = body["entries"]
-    for group_name in entries:
-        message = "host group %s was not found" % group_name
-        _group = fetch_group(
-            group_name,
-            "host",
-            status=400,
-            message=message,
-        )
-
-    for group_name in entries:
-        groups.delete_group(group_name, "host")
+    for group_name in body["entries"]:
+        try:
+            groups.delete_group(group_name, "host")
+        except GroupInUseException as exc:
+            raise ProblemException(
+                status=409,
+                title="Group in use problem",
+                detail=str(exc),
+            )
+        except UnknownGroupException as exc:
+            raise ProblemException(
+                status=404,
+                title="Unknown group problem",
+                detail=str(exc),
+            )
     return Response(status=204)
 
 
@@ -168,7 +189,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     constructors.object_href("host_group_config", "{name}"),
     ".../update",
     method="put",
-    path_params=[NAME_FIELD],
+    path_params=[GROUP_NAME_FIELD],
     etag="both",
     response_schema=response_schemas.HostGroup,
     request_schema=request_schemas.UpdateGroup,
@@ -180,7 +201,7 @@ def update(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.groups")
     name = params["name"]
     group = fetch_group(name, "host")
-    constructors.require_etag(constructors.etag_of_dict(group))
+    constructors.require_etag(constructors.hash_of_dict(group))
     groups.edit_group(name, "host", updated_group_details(name, "host", params["body"]))
     group = fetch_group(name, "host")
     return serve_group(group, serialize_group("host_group_config"))
@@ -191,7 +212,7 @@ def update(params: Mapping[str, Any]) -> Response:
     "cmk/bulk_update",
     method="put",
     request_schema=request_schemas.BulkUpdateHostGroup,
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=response_schemas.HostGroupCollection,
     permissions_required=RW_PERMISSIONS,
 )
 def bulk_update(params: Mapping[str, Any]) -> Response:
@@ -215,7 +236,7 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
     method="get",
     response_schema=response_schemas.HostGroup,
     etag="output",
-    path_params=[NAME_FIELD],
+    path_params=[GROUP_NAME_FIELD],
     permissions_required=PERMISSIONS,
 )
 def get(params: Mapping[str, Any]) -> Response:

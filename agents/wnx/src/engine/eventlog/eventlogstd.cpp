@@ -61,7 +61,7 @@ namespace vs = std::views;
 MessageResolver::~MessageResolver() {
     for (const auto h :
          _cache | vs::values |
-             vs::filter([](const auto &h) noexcept { return h != nullptr; })) {
+             vs::filter([](const auto &p) noexcept { return p != nullptr; })) {
         FreeLibrary(h);
     }
 }
@@ -134,30 +134,30 @@ std::wstring MessageResolver::resolve(DWORD event_id, LPCWSTR source,
 class EventLogRecord final : public EventLogRecordBase {
 public:
     EventLogRecord(EVENTLOGRECORD *record, const MessageResolver &resolver)
-        : _record(record), _resolver(resolver) {}
+        : record_(record), resolver_(resolver) {}
 
     [[nodiscard]] uint64_t recordId() const override {
-        return static_cast<uint64_t>(_record->RecordNumber);
+        return static_cast<uint64_t>(record_->RecordNumber);
     }
 
     [[nodiscard]] uint16_t eventId() const override {
-        return static_cast<uint16_t>(_record->EventID % 65536);
+        return static_cast<uint16_t>(record_->EventID % 65536);
     }
 
     [[nodiscard]] uint16_t eventQualifiers() const override {
-        return static_cast<uint16_t>(_record->EventID / 65536);
+        return static_cast<uint16_t>(record_->EventID / 65536);
     }
 
     [[nodiscard]] time_t timeGenerated() const override {
-        return _record->TimeGenerated;
+        return record_->TimeGenerated;
     }
 
     [[nodiscard]] std::wstring source() const override {
-        return {reinterpret_cast<LPCWSTR>(_record + 1)};
+        return {reinterpret_cast<LPCWSTR>(record_ + 1)};
     }
 
     [[nodiscard]] Level eventLevel() const override {
-        switch (_record->EventType) {
+        switch (record_->EventType) {
             case EVENTLOG_ERROR_TYPE:
                 return Level::error;
             case EVENTLOG_WARNING_TYPE:
@@ -179,8 +179,9 @@ public:
         // prepare array of zero terminated strings to be inserted
         // into message template.
         std::vector<LPCWSTR> strings;
-        LPCWSTR string = (WCHAR *)((char *)_record + _record->StringOffset);
-        for (int i = 0; i < _record->NumStrings; ++i) {
+        const auto *string = reinterpret_cast<WCHAR *>(
+            (reinterpret_cast<char *>(record_) + record_->StringOffset));
+        for (int i = 0; i < record_->NumStrings; ++i) {
             strings.push_back(string);
             string += wcslen(string) + 1;
         }
@@ -191,13 +192,13 @@ public:
         // end marker in array
         strings.push_back(nullptr);
 
-        return _resolver.resolve(_record->EventID, source().c_str(),
+        return resolver_.resolve(record_->EventID, source().c_str(),
                                  strings.data());
     }
 
 private:
-    EVENTLOGRECORD *_record;
-    const MessageResolver &_resolver;
+    EVENTLOGRECORD *record_;
+    const MessageResolver &resolver_;
 };
 
 EventLog::EventLog(const std::wstring &name)
@@ -215,21 +216,21 @@ EventLog::EventLog(const std::wstring &name)
 std::wstring EventLog::getName() const { return name_; }
 
 void EventLog::seek(uint64_t record_number) {
-    DWORD oldestRecord = 0;
-    DWORD recordCount = 0;
+    DWORD oldest_record = 0;
+    DWORD record_count = 0;
 
-    if (GetOldestEventLogRecord(handle_, &oldestRecord) &&
-        record_number < oldestRecord) {
+    if (GetOldestEventLogRecord(handle_, &oldest_record) &&
+        record_number < oldest_record) {
         // Beyond the oldest record:
-        record_offset_ = oldestRecord;
-    } else if (GetNumberOfEventLogRecords(handle_, &recordCount) &&
-               record_number >= oldestRecord + recordCount) {
+        record_offset_ = oldest_record;
+    } else if (GetNumberOfEventLogRecords(handle_, &record_count) &&
+               record_number >= oldest_record + record_count) {
         // Beyond the newest record. Note: set offset intentionally to the next
         // record after the currently last one!
-        record_offset_ = oldestRecord + recordCount;
+        record_offset_ = oldest_record + record_count;
     } else {
         // Within bounds, the offset for the next actual read:
-        record_offset_ = (DWORD)record_number;
+        record_offset_ = static_cast<DWORD>(record_number);
     }
     buffer_offset_ = buffer_used_;  // enforce that a new chunk is fetched
 }
@@ -302,7 +303,7 @@ bool EventLog::fillBuffer() {
     DWORD bytes_required = 0;
 
     if (::ReadEventLogW(handle_, flags, record_offset_, buffer_.data(),
-                        (DWORD)buffer_.size(), &buffer_used_,
+                        static_cast<DWORD>(buffer_.size()), &buffer_used_,
                         &bytes_required)) {
         return true;
     }

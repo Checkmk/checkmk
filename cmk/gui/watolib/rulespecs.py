@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""The rulespecs are the ruleset specifications registered to WATO."""
+"""The rulespecs are the ruleset specifications registered to Setup."""
 import abc
 import re
 from collections.abc import Callable
@@ -10,6 +10,7 @@ from typing import Any, Literal
 
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.version import Edition, mark_edition_only
 
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -287,10 +288,12 @@ class Rulespec(abc.ABC):
         item_help: Callable[[], str] | None,
         is_optional: bool,
         is_deprecated: bool,
+        is_cloud_edition_only: bool,
         is_for_services: bool,
         is_binary_ruleset: bool,
         factory_default: Any,
         help_func: Callable[[], str] | None,
+        doc_references: dict[DocReference, str] | None,
     ) -> None:
         super().__init__()
 
@@ -325,10 +328,12 @@ class Rulespec(abc.ABC):
         self._item_help = item_help
         self._is_optional = is_optional
         self._is_deprecated = is_deprecated
+        self._is_cloud_edition_only = is_cloud_edition_only
         self._is_binary_ruleset = is_binary_ruleset
         self._is_for_services = is_for_services
         self._factory_default = factory_default
         self._help = help_func
+        self._doc_references = doc_references
 
     @property
     def name(self) -> str:
@@ -344,10 +349,14 @@ class Rulespec(abc.ABC):
 
     @property
     def title(self) -> str | None:
-        if self._title:
-            return self._title()
-
-        return self.valuespec.title()
+        plain_title = self._title() if self._title else self.valuespec.title()
+        if plain_title is None:
+            return None
+        if self._is_deprecated:
+            return "{}: {}".format(_("Deprecated"), plain_title)
+        if self._is_cloud_edition_only:
+            return mark_edition_only(plain_title, Edition.CCE)
+        return plain_title
 
     @property
     def help(self) -> None | str | HTML:
@@ -437,6 +446,15 @@ class Rulespec(abc.ABC):
     def is_deprecated(self) -> bool:
         return self._is_deprecated
 
+    @property
+    def is_cloud_edition_only(self) -> bool:
+        return self._is_cloud_edition_only
+
+    @property
+    def doc_references(self) -> dict[DocReference, str]:
+        """Doc references of this rulespec and their titles"""
+        return self._doc_references or {}
+
 
 class HostRulespec(Rulespec):
     """Base class for all rulespecs managing host rule sets with values"""
@@ -452,8 +470,10 @@ class HostRulespec(Rulespec):
         is_optional: bool = False,
         is_deprecated: bool = False,
         is_binary_ruleset: bool = False,
+        is_cloud_edition_only: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         help_func: Callable[[], str] | None = None,
+        doc_references: dict[DocReference, str] | None = None,
     ) -> None:
         super().__init__(
             name=name,
@@ -463,9 +483,11 @@ class HostRulespec(Rulespec):
             match_type=match_type,
             is_optional=is_optional,
             is_deprecated=is_deprecated,
+            is_cloud_edition_only=is_cloud_edition_only,
             is_binary_ruleset=is_binary_ruleset,
             factory_default=factory_default,
             help_func=help_func,
+            doc_references=doc_references,
             # Excplicit set
             is_for_services=False,
             item_type=None,
@@ -493,9 +515,11 @@ class ServiceRulespec(Rulespec):
         item_help: Callable[[], str] | None = None,
         is_optional: bool = False,
         is_deprecated: bool = False,
+        is_cloud_edition_only: bool = False,
         is_binary_ruleset: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         help_func: Callable[[], str] | None = None,
+        doc_references: dict[DocReference, str] | None = None,
     ) -> None:
         super().__init__(
             name=name,
@@ -510,8 +534,10 @@ class ServiceRulespec(Rulespec):
             item_help=item_help,
             is_optional=is_optional,
             is_deprecated=is_deprecated,
+            is_cloud_edition_only=is_cloud_edition_only,
             factory_default=factory_default,
             help_func=help_func,
+            doc_references=doc_references,
             # Excplicit set
             is_for_services=True,
         )
@@ -529,6 +555,7 @@ class BinaryHostRulespec(HostRulespec):
         is_deprecated: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         help_func: Callable[[], str] | None = None,
+        doc_references: dict[DocReference, str] | None = None,
     ) -> None:
         super().__init__(
             name=name,
@@ -539,6 +566,7 @@ class BinaryHostRulespec(HostRulespec):
             is_deprecated=is_deprecated,
             factory_default=factory_default,
             help_func=help_func,
+            doc_references=doc_references,
             # Explicit set
             is_binary_ruleset=True,
             valuespec=self._binary_host_valuespec,
@@ -570,6 +598,7 @@ class BinaryServiceRulespec(ServiceRulespec):
         is_deprecated: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         help_func: Callable[[], str] | None = None,
+        doc_references: dict[DocReference, str] | None = None,
     ) -> None:
         super().__init__(
             name=name,
@@ -584,6 +613,7 @@ class BinaryServiceRulespec(ServiceRulespec):
             item_help=item_help,
             factory_default=factory_default,
             help_func=help_func,
+            doc_references=doc_references,
             # Explicit set
             is_binary_ruleset=True,
             valuespec=self._binary_service_valuespec,
@@ -655,6 +685,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
         item_type: Literal["item", "service"] = "item",
         is_optional: bool = False,
         is_deprecated: bool = False,
+        is_cloud_edition_only: bool = False,
         factory_default: Any = Rulespec.NO_FACTORY_DEFAULT,
         create_manual_check: bool = True,
     ) -> None:
@@ -678,6 +709,7 @@ class CheckParameterRulespecWithItem(ServiceRulespec):
             item_spec=item_spec,
             is_optional=is_optional,
             is_deprecated=is_deprecated,
+            is_cloud_edition_only=is_cloud_edition_only,
             # Excplicit set
             is_binary_ruleset=False,
             match_type=match_type or "first",
@@ -802,7 +834,6 @@ class ManualCheckParameterRulespec(HostRulespec):
         match_type="all",
         factory_default=Rulespec.NO_FACTORY_DEFAULT,
     ):
-
         # Mandatory keys
         self._check_group_name = check_group_name
         if name is None:
@@ -895,7 +926,6 @@ def register_rule(
     deprecated=False,
     **kwargs,
 ):
-
     base_class = _rulespec_class_for(varname, valuespec is not None, itemtype is not None)
     class_kwargs = {
         "name": varname,
@@ -946,7 +976,7 @@ def _rulespec_class_for(varname: str, has_valuespec: bool, has_itemtype: bool) -
 
 
 class RulespecRegistry(cmk.utils.plugin_registry.Registry[Rulespec]):
-    def __init__(self, group_registry) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, group_registry) -> None:  # type: ignore[no-untyped-def]
         super().__init__()
         self._group_registry = group_registry
 
@@ -979,7 +1009,6 @@ class RulespecRegistry(cmk.utils.plugin_registry.Registry[Rulespec]):
         if isinstance(
             instance, (CheckParameterRulespecWithItem, CheckParameterRulespecWithoutItem)
         ):
-
             manual_instance: Any = instance.manual_check_parameter_rulespec_instance
             if manual_instance:
                 subgroup_key = "static/" + manual_instance.group().sub_group_name
@@ -993,11 +1022,10 @@ class RulespecRegistry(cmk.utils.plugin_registry.Registry[Rulespec]):
     def register_without_manual_check_rulespec(self, instance: Rulespec) -> None:
         """Use this register method to prevent adding a manual check rulespec"""
         if not isinstance(instance, Rulespec):
-            MKGeneralException(
+            raise MKGeneralException(
                 _("!!! Error: Received class in RulespecRegistry:register_manual_check_rulespec %r")
                 % instance
             )
-            return
         super().register(instance)
 
 

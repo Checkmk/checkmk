@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -178,7 +178,7 @@ public:
 
             auto raw_data = tools::ReadFileInVector(path_.wstring());
             if (raw_data.has_value()) {
-                data_ = wtools::ConditionallyConvertFromUTF16(raw_data.value());
+                data_ = wtools::ConditionallyConvertFromUtf16(raw_data.value());
                 checkData();
             }
         }
@@ -247,17 +247,17 @@ public:
     void cleanConfig();
 
     // TODO (sk): move to tests
-    /// \brief Used in tests only( to prevent the tree from changing )
+    /// Used in tests only( to prevent the tree from changing )
     bool pushFolders(const std::filesystem::path &root,
                      const std::filesystem::path &data);
 
     // TODO (sk): move to tests
-    /// \brief Used in tests only( to prevent the tree from changing )
+    /// Used in tests only( to prevent the tree from changing )
     bool pushFoldersNoIo(const std::filesystem::path &root,
                          const std::filesystem::path &data);
 
     // TODO (sk): move to tests only( to prevent the tree from changing )
-    /// \brief Used in tests only to prevent context
+    /// Used in tests only to prevent context
     bool popFolders();
 
     // not so heavy operation, use free
@@ -425,7 +425,7 @@ public:
     bool loadDirect(const std::filesystem::path &file);
     bool loadDirect(std::string_view text);
 
-    static uint64_t uniqId() noexcept { return g_uniq_id; }
+    static uint64_t uniqId() noexcept { return uniq_id_; }
 
 private:
     void fillExePaths(const std::filesystem::path &root);
@@ -466,7 +466,7 @@ private:
     bool generated_ = false;
     bool ok_ = false;
 
-    static std::atomic<uint64_t> g_uniq_id;
+    static std::atomic<uint64_t> uniq_id_;
 
 #if defined(ENABLE_WHITE_BOX_TESTING)
     friend class CmaCfg;

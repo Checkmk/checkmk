@@ -1,15 +1,14 @@
 #!/bin/sh
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# shellcheck shell=ksh # Not really, but close enough, it's some funny IBM shell...
 
 #exec 2>&-
 #exit
 export _EDC_ADD_ERRNO2=1
 export PATH=/bin
-# We're suppressing this, so we can enable the shell check.
-# TODO: Find out which shell we're actually using, and enforce it!
-# shellcheck disable=SC2039 # In POSIX sh, set option pipecurrent is undefined.
 set -o pipecurrent
 cd "$(dirname "$0")/" || exit 1
 # shellcheck disable=1091,1094 # no point in following this one...

@@ -6,7 +6,7 @@ Date: 1668002962
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Add 6 columns to the status tables in livestatus: carbon_bytes_sent,
 carbon_bytes_sent_rate, influxdb_bytes_sent, influxdb_bytes_sent_rate,

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If you filtered for hosts on the "Setup" - "Hosts" page and used the alias as
 filter value, the option "Move to other folder" showed the error "Please select

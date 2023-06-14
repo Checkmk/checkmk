@@ -45,7 +45,6 @@ def backup_site_to_tarfile(
     options: CommandOptions,
     verbose: bool,
 ) -> None:
-
     if not os.path.isdir(site.dir):
         raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), site.dir)
 

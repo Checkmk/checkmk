@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,7 +10,7 @@ from itertools import chain
 from livestatus import LivestatusColumn, MultiSiteConnection
 
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import MetricName
+from cmk.utils.type_defs import HostName, MetricName
 
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
@@ -33,7 +33,7 @@ from cmk.gui.plugins.visuals.utils import (
 from cmk.gui.type_defs import Choices, Sequence
 from cmk.gui.utils.labels import encode_label_for_livestatus, Label, LABEL_REGEX
 from cmk.gui.valuespec import autocompleter_registry, Labels
-from cmk.gui.watolib.hosts_and_folders import CREHost, Folder, Host
+from cmk.gui.watolib.hosts_and_folders import CREHost, folder_tree, Host
 
 
 def __live_query_to_choices(
@@ -65,10 +65,15 @@ def _sorted_unique_lq(query: str, limit: int, value: str, params: dict) -> Choic
     return __live_query_to_choices(_query_callback, limit, value, params)
 
 
+def _matches_id_or_title(ident: str, choice: tuple[str | None, str]) -> bool:
+    return ident.lower() in (choice[0] or "").lower() or ident.lower() in choice[1].lower()
+
+
 @autocompleter_registry.register_expression("monitored_hostname")
 def monitored_hostname_autocompleter(value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
-    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+    Called by the webservice with the current input field value and the completions_params to get the list of choices
+    """
     context = params.get("context", {})
     context.pop("host", None)
     context["hostregex"] = {"host_regex": value or "."}
@@ -80,8 +85,9 @@ def monitored_hostname_autocompleter(value: str, params: dict) -> Choices:
 @autocompleter_registry.register_expression("config_hostname")
 def config_hostname_autocompleter(value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
-    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
-    all_hosts: dict[str, CREHost] = Host.all()
+    Called by the webservice with the current input field value and the completions_params to get the list of choices
+    """
+    all_hosts: dict[HostName, CREHost] = Host.all()
     match_pattern = re.compile(value, re.IGNORECASE)
     match_list: Choices = []
     for host_name, host_object in all_hosts.items():
@@ -98,10 +104,11 @@ def sites_autocompleter(
     value: str, params: dict, sites_options: Callable[[], list[tuple[str, str]]]
 ) -> Choices:
     """Return the matching list of dropdown choices
-    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+    Called by the webservice with the current input field value and the completions_params to get the list of choices
+    """
 
     choices: Choices = sorted(
-        (v for v in sites_options() if value.lower() in v[1].lower()),
+        (v for v in sites_options() if _matches_id_or_title(value, v)),
         key=lambda a: a[1].lower(),
     )
 
@@ -115,10 +122,11 @@ def sites_autocompleter(
 @autocompleter_registry.register_expression("allgroups")
 def hostgroup_autocompleter(value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
-    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+    Called by the webservice with the current input field value and the completions_params to get the list of choices
+    """
     group_type = params["group_type"]
     choices: Choices = sorted(
-        (v for v in sites.all_groups(group_type) if value.lower() in v[1].lower()),
+        (v for v in sites.all_groups(group_type) if _matches_id_or_title(value, v)),
         key=lambda a: a[1].lower(),
     )
     # This part should not exists as the optional(not enforce) would better be not having the filter at all
@@ -131,7 +139,8 @@ def hostgroup_autocompleter(value: str, params: dict) -> Choices:
 @autocompleter_registry.register_expression("check_cmd")
 def check_command_autocompleter(value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
-    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+    Called by the webservice with the current input field value and the completions_params to get the list of choices
+    """
     choices: Choices = [
         (x, x)
         for x in sites.live().query_column_unique("GET commands\nCache: reload\nColumns: name\n")
@@ -144,7 +153,8 @@ def check_command_autocompleter(value: str, params: dict) -> Choices:
 @autocompleter_registry.register_expression("monitored_service_description")
 def monitored_service_description_autocompleter(value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
-    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+    Called by the webservice with the current input field value and the completions_params to get the list of choices
+    """
     context = params.get("context", {})
     if not any((context.get("host", {}).get("host"), context.get("hostregex"))) and not params.get(
         "show_independent_of_context", True
@@ -161,8 +171,7 @@ def monitored_service_description_autocompleter(value: str, params: dict) -> Cho
 def wato_folder_choices_autocompleter(value: str, params: dict) -> Choices:
     match_pattern = re.compile(value, re.IGNORECASE)
     matching_folders: Choices = []
-    for path, name in Folder.folder_choices_fulltitle():  # str, HTML
-        name = str(name)
+    for path, name in folder_tree().folder_choices_fulltitle():
         if match_pattern.search(name) is not None:
             # select2 omits empty strings ("") as option therefore the path of the Main folder is
             # replaced by a placeholder
@@ -213,7 +222,7 @@ def metrics_autocompleter(value: str, params: dict) -> Choices:
         metrics = set(registered_metrics())
 
     return sorted(
-        (v for v in metrics if value.lower() in v[1].lower() or value == v[0]),
+        (v for v in metrics if _matches_id_or_title(value, v)),
         key=lambda a: a[1].lower(),
     )
 
@@ -221,7 +230,7 @@ def metrics_autocompleter(value: str, params: dict) -> Choices:
 @autocompleter_registry.register_expression("tag_groups")
 def tag_group_autocompleter(value: str, params: dict) -> Choices:
     return sorted(
-        (v for v in active_config.tags.get_tag_group_choices() if value.lower() in v[1].lower()),
+        (v for v in active_config.tags.get_tag_group_choices() if _matches_id_or_title(value, v)),
         key=lambda a: a[1].lower(),
     )
 
@@ -260,7 +269,7 @@ def label_autocompleter(value: str, params: dict) -> Choices:
     return [(value, value)] if regex(LABEL_REGEX).match(value) else []
 
 
-def _graph_choices_from_livestatus_row(  # type:ignore[no-untyped-def]
+def _graph_choices_from_livestatus_row(  # type: ignore[no-untyped-def]
     row,
 ) -> Iterable[tuple[str, str]]:
     def _metric_title_from_id(metric_or_graph_id: MetricName) -> str:
@@ -312,7 +321,9 @@ def graph_templates_autocompleter(value: str, params: dict) -> Choices:
             )
         )
 
-    return sorted((v for v in choices if value.lower() in v[1].lower()), key=lambda a: a[1].lower())
+    return sorted(
+        (v for v in choices if _matches_id_or_title(value, v)), key=lambda a: a[1].lower()
+    )
 
 
 def validate_autocompleter_data(api_request):

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -39,7 +39,7 @@ def parse_human_read_uptime(string: str) -> int:
     return 86400 * days + 3600 * hrs + 60 * mins
 
 
-def parse_solaris_uptime(info, from_boot_time) -> uptime.Section:  # type:ignore[no-untyped-def]
+def parse_solaris_uptime(info, from_boot_time) -> uptime.Section:  # type: ignore[no-untyped-def]
     """Solaris agent Version>= 1.5.0p15 delivers a lot of context information
 
         This was necesary because Solaris returns very inconsistent output for
@@ -83,7 +83,6 @@ def parse_solaris_uptime(info, from_boot_time) -> uptime.Section:  # type:ignore
     elif abs(uptime_struct["from_boot_time"] - uptime_struct["snaptime"]) < 600:
         uptime_struct["uptime_sec"] = uptime_struct["from_boot_time"]
     else:
-
         uptimes_summary = "Uptime command: %s; Kernel time since boot: %s; Snaptime: %s" % tuple(
             datetime.timedelta(seconds=x)
             for x in (

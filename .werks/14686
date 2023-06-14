@@ -6,7 +6,7 @@ Date: 1667223194
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 An unresponsive event console could eat up Livestatus connections and even
 cause a deadlock during the shutdown of the monitoring core.  Now there is

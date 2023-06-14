@@ -1,22 +1,26 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
 from typing import Any
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.juniper_trpz_aps import (
     check_juniper_trpz_aps,
     cluster_check_juniper_trpz_aps,
     parse_juniper_trpz_aps,
 )
+from cmk.base.plugins.agent_based.juniper_trpz_aps import Section as SectionAps
 from cmk.base.plugins.agent_based.juniper_trpz_aps_sessions import (
     _check_common_juniper_trpz_aps_sessions,
     discovery_juniper_trpz_aps_sessions,
     parse_juniper_trpz_aps_sessions,
+    Section,
 )
 
 NODE_SECTIONS = {
@@ -649,9 +653,11 @@ DISCOVERD_ITEMS = {
         ([[["1", "0"]]], (1, 0)),
     ],
 )
-def test_parse_juniper_trpz_aps(section, parsed_sections) -> None:  # type:ignore[no-untyped-def]
-    section = parse_juniper_trpz_aps(section)
-    assert section == parsed_sections
+def test_parse_juniper_trpz_aps(
+    section: list[StringTable], parsed_sections: SectionAps | None
+) -> None:
+    section_result = parse_juniper_trpz_aps(section)
+    assert section_result == parsed_sections
 
 
 @pytest.mark.parametrize(
@@ -667,7 +673,7 @@ def test_parse_juniper_trpz_aps(section, parsed_sections) -> None:  # type:ignor
         ),
     ],
 )
-def test_check_juniper_trpz_aps(section, expected_results) -> None:  # type:ignore[no-untyped-def]
+def test_check_juniper_trpz_aps(section: SectionAps, expected_results: CheckResult) -> None:
     results = list(check_juniper_trpz_aps(section))
     for r in results:
         print(r)
@@ -689,8 +695,8 @@ def test_check_juniper_trpz_aps(section, expected_results) -> None:  # type:igno
         ),
     ],
 )
-def test_cluster_check_juniper_trpz_aps(  # type:ignore[no-untyped-def]
-    node_sections, expected_results
+def test_cluster_check_juniper_trpz_aps(
+    node_sections: Mapping[str, SectionAps | None], expected_results: CheckResult
 ) -> None:
     results = list(cluster_check_juniper_trpz_aps(node_sections))
     for r in results:
@@ -704,8 +710,8 @@ def test_cluster_check_juniper_trpz_aps(  # type:ignore[no-untyped-def]
         (NODE_SECTIONS, PARSED_DATA),
     ],
 )
-def test_parse_juniper_trpz_aps_sessions(  # type:ignore[no-untyped-def]
-    node_sections, parsed_sections
+def test_parse_juniper_trpz_aps_sessions(
+    node_sections: Mapping[str, list[StringTable]], parsed_sections: Mapping[str, object]
 ) -> None:
     assert {
         node_name: parse_juniper_trpz_aps_sessions(string_list)
@@ -719,8 +725,8 @@ def test_parse_juniper_trpz_aps_sessions(  # type:ignore[no-untyped-def]
         (PARSED_DATA, DISCOVERD_ITEMS),
     ],
 )
-def test_discovery_juniper_trpz_aps_sessions(  # type:ignore[no-untyped-def]
-    node_sections, expected_items
+def test_discovery_juniper_trpz_aps_sessions(
+    node_sections: Mapping[str, Section], expected_items: CheckResult
 ) -> None:
     services = {
         node_name: [service.item for service in discovery_juniper_trpz_aps_sessions(section)]
@@ -759,8 +765,8 @@ def test_discovery_juniper_trpz_aps_sessions(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test__check_common_juniper_trpz_aps_sessions_single(  # type:ignore[no-untyped-def]
-    node_sections, expected_results
+def test__check_common_juniper_trpz_aps_sessions_single(
+    node_sections: Mapping[str, Section], expected_results: CheckResult
 ) -> None:
     now = 1600000000
     vs: dict[str, Any] = {}
@@ -799,8 +805,8 @@ def test__check_common_juniper_trpz_aps_sessions_single(  # type:ignore[no-untyp
         ),
     ],
 )
-def test__check_common_juniper_trpz_aps_sessions_cluster(  # type:ignore[no-untyped-def]
-    node_sections, expected_results
+def test__check_common_juniper_trpz_aps_sessions_cluster(
+    node_sections: Mapping[str, Section], expected_results: CheckResult
 ) -> None:
     now = 1600000000
     vs: dict[str, Any] = {}

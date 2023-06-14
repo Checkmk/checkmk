@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 
 
 checkname = "aws_wafv2_summary"
@@ -127,12 +127,12 @@ checks = {
             [
                 (0, "Total number of Web ACLs: 3"),
                 (0, "CloudFront: 1"),
-                (0, "EU (Frankfurt): 1"),
+                (0, "Europe (Frankfurt): 1"),
                 (0, "US East (N. Virginia): 1"),
                 (
                     0,
                     "\nCloudFront:\njoerg-herbel-acl-global -- Description: [no description], Number "
-                    "of rules and rule groups: 1\nEU (Frankfurt):\njoerg-herbel-acl -- Description: "
+                    "of rules and rule groups: 1\nEurope (Frankfurt):\njoerg-herbel-acl -- Description: "
                     "[no description], Number of rules and rule groups: 1\nUS East (N. Virginia):\n"
                     "us-acl -- Description: America, Number of rules and rule groups: 0",
                 ),

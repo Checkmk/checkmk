@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
-from unittest.mock import MagicMock
+from collections.abc import Iterator
+from unittest.mock import patch
+from urllib.parse import urljoin
 
 import pytest
 from pytest_mock import MockerFixture
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
-_BASE = "/NO_SITE/check_mk/api/1.0"
-_URL_ROOT_CERT = f"{_BASE}/root_cert"
-_URL_CSR = f"{_BASE}/csr"
+_BASE = "/NO_SITE/check_mk/api/1.0/"
+_URL_ROOT_CERT = urljoin(_BASE, "root_cert")
+_URL_CSR = urljoin(_BASE, "csr")
 
 _CSR = """-----BEGIN CERTIFICATE REQUEST-----
 MIIChTCCAW0CAQAwLzEtMCsGA1UEAwwkYWJjZDY3YzYtNjdhNi00N2Q2LWFiNzYt
@@ -88,25 +90,24 @@ Oaxu+XnWKm3p
 """
 
 
-@pytest.fixture(name="user_may_not")
-def fixture_user_may_not(mocker: MockerFixture) -> MagicMock:
-    return mocker.patch(
+@pytest.fixture
+def forbid_agent_pairing(aut_user_auth_wsgi_app: WebTestAppForCMK) -> Iterator[None]:
+    with patch(
         "cmk.gui.logged_in.LoggedInUser.may",
         return_value=False,
-    )
+    ) as user_may_not:
+        yield
+        user_may_not.assert_called_once_with("general.agent_pairing")
 
 
-def test_root_cert_403(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-    user_may_not: MagicMock,
-) -> None:
+@pytest.mark.usefixtures("forbid_agent_pairing")
+def test_root_cert_403(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     aut_user_auth_wsgi_app.call_method(
         "get",
         _URL_ROOT_CERT,
         status=403,
         headers={"Accept": "application/json"},
     )
-    user_may_not.assert_called_once_with("general.agent_pairing")
 
 
 def test_root_cert_200(
@@ -126,10 +127,8 @@ def test_root_cert_200(
     assert resp.json_body["cert"] == "fake_root_cert"
 
 
-def test_csr_403(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-    user_may_not: MagicMock,
-) -> None:
+@pytest.mark.usefixtures("forbid_agent_pairing")
+def test_csr_403(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
     aut_user_auth_wsgi_app.call_method(
         "post",
         _URL_CSR,
@@ -138,7 +137,6 @@ def test_csr_403(
         headers={"Accept": "application/json"},
         content_type="application/json; charset=utf-8",
     )
-    user_may_not.assert_called_once_with("general.agent_pairing")
 
 
 @pytest.mark.parametrize(
@@ -195,4 +193,29 @@ def test_csr_200(
         status=200,
         headers={"Accept": "application/json"},
         content_type="application/json; charset=utf-8",
+    )
+
+
+def test_agent_controller_certificates_settings_ok(
+    logged_in_admin_wsgi_app: WebTestAppForCMK,
+) -> None:
+    assert set(
+        logged_in_admin_wsgi_app.get(
+            urljoin(_BASE, "agent_controller_certificates_settings"),
+            status=200,
+            headers={"Accept": "application/json"},
+        ).json_body
+    ) == {"lifetime_in_months"}
+
+
+def test_agent_controller_certificates_settings_unauthorized(
+    logged_in_wsgi_app: WebTestAppForCMK,
+) -> None:
+    assert (
+        logged_in_wsgi_app.get(
+            urljoin(_BASE, "agent_controller_certificates_settings"),
+            status=403,
+            headers={"Accept": "application/json"},
+        ).json_body["title"]
+        == "Unauthorized"
     )

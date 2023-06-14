@@ -6,7 +6,7 @@ Date: 1664185832
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 cmk-update-config will now remove host attributes that are no longer in use
 according to an internally kept list.

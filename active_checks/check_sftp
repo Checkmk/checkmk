@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,7 +8,7 @@ import os
 import sys
 import time
 
-import paramiko  # type: ignore[import]
+import paramiko
 
 from cmk.utils.password_store import replace_passwords
 
@@ -65,31 +65,31 @@ def get_paths(
     if opt_put_local:
         put_filename = opt_put_local.split("/")[-1]
         paths["put_filename"] = put_filename
-        paths["local_put_path"] = "%s/%s" % (omd_root, opt_put_local)
+        paths["local_put_path"] = f"{omd_root}/{opt_put_local}"
         if len(opt_put_remote) > 0:
-            paths["remote_put_path"] = "%s/%s/%s" % (working_dir, opt_put_remote, put_filename)
+            paths["remote_put_path"] = f"{working_dir}/{opt_put_remote}/{put_filename}"
         else:
-            paths["remote_put_path"] = "%s/%s" % (working_dir, put_filename)
+            paths["remote_put_path"] = f"{working_dir}/{put_filename}"
 
     if opt_get_remote:
         get_filename = opt_get_remote.split("/")[-1]
         paths["get_filename"] = get_filename
-        paths["remote_get_path"] = "%s/%s" % (working_dir, opt_get_remote)
+        paths["remote_get_path"] = f"{working_dir}/{opt_get_remote}"
         if len(opt_get_local) > 0:
-            paths["local_get_path"] = "%s/%s/%s" % (omd_root, opt_get_local, get_filename)
+            paths["local_get_path"] = f"{omd_root}/{opt_get_local}/{get_filename}"
         else:
-            paths["local_get_path"] = "%s/%s" % (omd_root, get_filename)
+            paths["local_get_path"] = f"{omd_root}/{get_filename}"
 
     if opt_timestamp:
         paths["timestamp_filename"] = opt_timestamp.split("/")[-1]
-        paths["timestamp_path"] = "%s/%s" % (working_dir, opt_timestamp)
+        paths["timestamp_path"] = f"{working_dir}/{opt_timestamp}"
 
     return paths
 
 
 def file_available(opt_put_local, opt_put_remote, sftp, working_dir):
     filename = opt_put_local.split("/")[-1]
-    return filename in sftp.listdir("%s/%s" % (working_dir, opt_put_remote))
+    return filename in sftp.listdir(f"{working_dir}/{opt_put_remote}")
 
 
 def create_testfile(paths):

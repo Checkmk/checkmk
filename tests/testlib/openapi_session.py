@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,11 +7,13 @@ import logging
 import time
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
-from typing import Any, AnyStr, NamedTuple, NoReturn
+from typing import Any, AnyStr, NamedTuple, NoReturn, Optional
 
 import requests
 
 from tests.testlib.rest_api_client import RequestHandler, Response
+
+from cmk.utils.type_defs import HTTPMethod
 
 logger = logging.getLogger("rest-session")
 
@@ -22,7 +24,7 @@ class RequestSessionRequestHandler(RequestHandler):
 
     def request(
         self,
-        method: str,
+        method: HTTPMethod,
         url: str,
         query_params: Mapping[str, str] | None = None,
         body: AnyStr | None = None,
@@ -95,7 +97,7 @@ class CMKOpenApiSession(requests.Session):
     def set_authentication_header(self, user: str, password: str) -> None:
         self.headers["Authorization"] = f"Bearer {user} {password}"
 
-    def request(  # type:ignore[no-untyped-def]
+    def request(  # type: ignore[no-untyped-def]
         self, method: str | bytes, url: str | bytes, *args, **kwargs
     ) -> requests.Response:
         """
@@ -104,7 +106,9 @@ class CMKOpenApiSession(requests.Session):
         """
         assert isinstance(method, str)  # HACK
         assert isinstance(url, str)  # HACK
-        url = f"http://{self.host}:{self.port}/{self.site}/check_mk/api/{self.api_version}/{url.strip('/')}"
+
+        if not url.startswith("http://"):
+            url = f"http://{self.host}:{self.port}/{self.site}/check_mk/api/{self.api_version}/{url.strip('/')}"
 
         logger.debug("> [%s] %s (%s, %s)", method, url, args, kwargs)
         response = super().request(method, url, *args, **kwargs)
@@ -137,6 +141,7 @@ class CMKOpenApiSession(requests.Session):
                 "sites": sites or [],
                 "force_foreign_changes": force_foreign_changes,
             },
+            headers={"If-Match": "*"},
             # We want to get the redirect response and handle that below. So don't let requests
             # handle that for us.
             allow_redirects=False,
@@ -155,9 +160,8 @@ class CMKOpenApiSession(requests.Session):
         force_foreign_changes: bool = False,
         timeout: int = 60,
     ) -> bool:
-        with self._wait_for_completion(timeout):
+        with self._wait_for_completion(timeout, "get"):
             return self.activate_changes(sites, force_foreign_changes)
-        return True
 
     def create_user(
         self, username: str, fullname: str, password: str, email: str, contactgroups: list[str]
@@ -194,7 +198,6 @@ class CMKOpenApiSession(requests.Session):
         return response.json()["extensions"], response.headers["Etag"]
 
     def edit_user(self, username: str, user_spec: Mapping[str, Any], etag: str) -> None:
-        print(user_spec)
         response = self.put(
             f"objects/user_config/{username}",
             headers={
@@ -210,13 +213,42 @@ class CMKOpenApiSession(requests.Session):
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
 
+    def create_folder(
+        self,
+        folder: str,
+        title: Optional[str] = None,
+        attributes: Optional[Mapping[str, Any]] = None,
+    ) -> None:
+        if folder.count("/") > 1:
+            parent_folder, folder_name = folder.rsplit("/", 1)
+        else:
+            parent_folder = "/"
+            folder_name = folder.replace("/", "")
+        response = self.post(
+            "/domain-types/folder_config/collections/all",
+            json={
+                "name": folder_name,
+                "title": title if title else folder_name,
+                "parent": parent_folder,
+                "attributes": attributes if attributes else {},
+            },
+        )
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+
+    def get_folder(self, folder: str) -> list[dict[str, Any]]:
+        response = self.get(f"/objects/folder_config/{folder.replace('/', '~')}")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return response.json()
+
     def create_host(
         self,
         hostname: str,
         folder: str = "/",
         attributes: dict[str, Any] | None = None,
         bake_agent: bool = False,
-    ) -> None:
+    ) -> requests.Response:
         query_string = "?bake_agent=1" if bake_agent else ""
         response = self.post(
             f"/domain-types/host_config/collections/all{query_string}",
@@ -224,16 +256,56 @@ class CMKOpenApiSession(requests.Session):
         )
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
+        return response
+
+    def get_host(self, hostname: str) -> list[dict[str, Any]]:
+        response = self.get(f"/objects/host_config/{hostname}")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        return response.json()
+
+    def get_hosts(self) -> list[dict[str, Any]]:
+        response = self.get("/domain-types/host_config/collections/all")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        value: list[dict[str, Any]] = response.json()["value"]
+        return value
 
     def delete_host(self, hostname: str) -> None:
         response = self.delete(f"/objects/host_config/{hostname}")
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
 
-    def discover_services(self, hostname: str) -> NoReturn:
+    def rename_host(self, *, hostname_old: str, hostname_new: str, etag: str) -> None:
+        response = self.put(
+            f"/objects/host_config/{hostname_old}/actions/rename/invoke",
+            headers={
+                "If-Match": etag,
+                "Content-Type": "application/json",
+            },
+            json={"new_name": hostname_new},
+            allow_redirects=False,
+        )
+        if response.status_code == 302:
+            raise Redirect(redirect_url=response.headers["Location"])
+        if not response.ok:
+            raise UnexpectedResponse.from_response(response)
+
+    def rename_host_and_wait_for_completion(
+        self,
+        *,
+        hostname_old: str,
+        hostname_new: str,
+        etag: str,
+        timeout: int = 60,
+    ) -> None:
+        with self._wait_for_completion(timeout, "post"):
+            self.rename_host(hostname_old=hostname_old, hostname_new=hostname_new, etag=etag)
+
+    def discover_services(self, hostname: str, mode: str = "tabula_rasa") -> NoReturn:
         response = self.post(
             "/domain-types/service_discovery_run/actions/start/invoke",
-            json={"host_name": hostname, "mode": "tabula_rasa"},
+            json={"host_name": hostname, "mode": mode},
             # We want to get the redirect response and handle that below. So don't let requests
             # handle that for us.
             allow_redirects=False,
@@ -243,11 +315,16 @@ class CMKOpenApiSession(requests.Session):
         raise UnexpectedResponse.from_response(response)
 
     def discover_services_and_wait_for_completion(self, hostname: str) -> None:
-        with self._wait_for_completion(timeout=60):
+        timeout = 60
+        with self._wait_for_completion(timeout, "get"):
             self.discover_services(hostname)
 
     @contextmanager
-    def _wait_for_completion(self, timeout: int) -> Iterator[None]:
+    def _wait_for_completion(
+        self,
+        timeout: int,
+        http_method_for_redirection: HTTPMethod,
+    ) -> Iterator[None]:
         start = time.time()
         try:
             yield None
@@ -257,7 +334,11 @@ class CMKOpenApiSession(requests.Session):
                 if time.time() > (start + timeout):
                     raise TimeoutError("wait for completion timed out")
 
-                response = self.get(redirect_url, allow_redirects=False)
+                response = self.request(
+                    method=http_method_for_redirection,
+                    url=redirect_url,
+                    allow_redirects=False,
+                )
                 if response.status_code == 204:  # job has finished
                     break
 
@@ -265,6 +346,27 @@ class CMKOpenApiSession(requests.Session):
                     raise UnexpectedResponse.from_response(response)
 
                 time.sleep(0.5)
+
+    def get_host_services(
+        self, hostname: str, pending: Optional[bool] = None, columns: Optional[list[str]] = None
+    ) -> list[dict[str, Any]]:
+        if pending is not None:
+            if columns:
+                columns.append("has_been_checked")
+            else:
+                columns = ["has_been_checked"]
+        query_string = "?columns=" + "&columns=".join(columns) if columns else ""
+        response = self.get(f"/objects/host/{hostname}/collections/services{query_string}")
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
+        value: list[dict[str, Any]] = response.json()["value"]
+        if pending is not None:
+            value = [
+                _
+                for _ in value
+                if _.get("extensions", {}).get("has_been_checked") == int(not pending)
+            ]
+        return value
 
     def get_baking_status(self) -> BakingStatus:
         response = self.get("/domain-types/agent/actions/baking_status/invoke")

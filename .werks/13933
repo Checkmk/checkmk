@@ -6,7 +6,7 @@ Date: 1655823455
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Some Rulesets regarding themes and icons could crash in the REST API due
 to a missing reference to a default Theme. The theme was previously omitted

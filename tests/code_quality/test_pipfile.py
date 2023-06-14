@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,7 +9,7 @@ import logging
 import re
 import warnings
 from collections.abc import Iterable
-from functools import lru_cache
+from functools import cache
 from itertools import chain
 from pathlib import Path
 from typing import NewType
@@ -19,11 +19,11 @@ import pytest
 from pipfile import Pipfile  # type: ignore[import]
 
 from tests.testlib import repo_path
-from tests.testlib.utils import is_enterprise_repo
+from tests.testlib.utils import branch_from_env, current_base_branch_name, is_enterprise_repo
 
 IGNORED_LIBS = {"cmk", "livestatus", "mk_jolokia", "cmc_proto"}  # our stuff
 IGNORED_LIBS |= isort.stdlibs._all.stdlib  # builtin stuff
-IGNORED_LIBS |= {"__future__", "typing_extensions"}  # other builtin stuff
+IGNORED_LIBS |= {"__future__"}  # other builtin stuff
 
 BUILD_DIRS = {repo_path() / "agent-receiver/build"}
 
@@ -37,6 +37,10 @@ def load_pipfile() -> Pipfile:
     return Pipfile.load(filename=str(repo_path() / "Pipfile"))
 
 
+@pytest.mark.skipif(
+    branch_from_env(env_var="GERRIT_BRANCH", fallback=current_base_branch_name) == "master",
+    reason="pinning is only enforced in release branches",
+)
 def test_all_deployment_packages_pinned(loaded_pipfile: Pipfile) -> None:
     unpinned_packages = [f"'{n}'" for n, v in loaded_pipfile.data["default"].items() if v == "*"]
     assert not unpinned_packages, (
@@ -129,7 +133,7 @@ def prune_imports(imports: Iterable[ImportName]) -> set[ImportName]:
     }
 
 
-@lru_cache(maxsize=None)
+@cache
 def imports_for_file(path: Path) -> set[ImportName]:
     # We don't care about warnings from 3rd party packages
     with path.open("rb") as source_file, warnings.catch_warnings():
@@ -193,7 +197,7 @@ def packagenames_to_libnames(repopath: Path) -> dict[NormalizedPackageName, list
     }
 
 
-@lru_cache(maxsize=None)
+@cache
 def get_pipfile_libs(repopath: Path) -> dict[PackageName, list[ImportName]]:
     """Collect info from Pipfile with additions from site-packages
 
@@ -238,10 +242,6 @@ def get_undeclared_dependencies() -> Iterable[ImportName]:
 
 
 CEE_UNUSED_PACKAGES = [
-    "Cython",
-    "MarkupSafe",
-    "PyMySQL",
-    "PyNaCl",
     "attrs",
     "bcrypt",
     "cachetools",
@@ -249,14 +249,16 @@ CEE_UNUSED_PACKAGES = [
     "cffi",
     "chardet",
     "click",
+    "cython",
     "defusedxml",
     "docutils",
     "grpcio",
     "gunicorn",
     "idna",
-    "importlib_metadata",
+    "importlib-metadata",
     "itsdangerous",
     "jmespath",
+    "markupsafe",
     "more-itertools",
     "multidict",
     "openapi-spec-validator",
@@ -268,16 +270,18 @@ CEE_UNUSED_PACKAGES = [
     "pycparser",
     "pykerberos",
     "pymssql",
+    "pymysql",
+    "pynacl",
     "pyprof2calltree",
     "pyrsistent",
+    "pysaml2",
     "requests-kerberos",
     "requests-toolbelt",
     "s3transfer",
-    "setuptools_scm",
+    "setuptools-scm",
     "snmpsim",
     "tenacity",
-    "typing_extensions",
-    "websocket_client",
+    "websocket-client",
     "wrapt",
     "yarl",
     "zipp",
@@ -288,7 +292,7 @@ def test_dependencies_are_used() -> None:
     unused_packages = CEE_UNUSED_PACKAGES
     if not is_enterprise_repo():
         unused_packages += ["PyPDF3", "numpy", "roman"]
-    unused_packages += ["docstring_parser"]  # TODO: Bug in the test code, it *is* used!
+    unused_packages += ["docstring-parser"]  # TODO: Bug in the test code, it *is* used!
 
     assert sorted(get_unused_dependencies()) == sorted(unused_packages)
 
@@ -312,6 +316,8 @@ def test_dependencies_are_declared() -> None:
             "_typeshed",  # used by mypy within typing.TYPE_CHECKING
             "openapi_spec_validator",  # called "openapi-spec-validator" in the Pipfile
             "docstring_parser",  # TODO: Bug in the test code, it *is* used!
+            "saml2",
+            "jwt",
         }
     )
 

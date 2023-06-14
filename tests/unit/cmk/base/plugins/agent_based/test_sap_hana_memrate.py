@@ -1,13 +1,21 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from tests.unit.conftest import FixRegister
 
+from cmk.utils.type_defs import SectionName
+
+from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.utils.sap_hana import ParsedSection
 
 
 @pytest.mark.parametrize(
@@ -36,8 +44,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
         ),
     ],
 )
-def test_parse_sap_hana_memrate(  # type:ignore[no-untyped-def]
-    fix_register, info, expected_result
+def test_parse_sap_hana_memrate(
+    fix_register: FixRegister,
+    info: StringTable,
+    expected_result: ParsedSection,
 ) -> None:
     section_plugin = fix_register.agent_sections[SectionName("sap_hana_memrate")]
     assert section_plugin.parse_function(info) == expected_result
@@ -55,8 +65,8 @@ def test_parse_sap_hana_memrate(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_inventory_sap_hana_memrate(  # type:ignore[no-untyped-def]
-    fix_register, info, expected_result
+def test_inventory_sap_hana_memrate(
+    fix_register: FixRegister, info: StringTable, expected_result: DiscoveryResult
 ) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_memrate")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_memrate")]
@@ -79,8 +89,8 @@ def test_inventory_sap_hana_memrate(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_sap_hana_memrate(  # type:ignore[no-untyped-def]
-    fix_register, item, info, expected_result
+def test_check_sap_hana_memrate(
+    fix_register: FixRegister, item: str, info: StringTable, expected_result: CheckResult
 ) -> None:
     section = fix_register.agent_sections[SectionName("sap_hana_memrate")].parse_function(info)
     plugin = fix_register.check_plugins[CheckPluginName("sap_hana_memrate")]

@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
 from contextlib import suppress
 
-from cmk.base.plugins.agent_based.utils.scaleio import (  # pylint: disable=unused-import  # noqa: F401
-    convert_scaleio_space_into_mb,
-    parse_scaleio,
-)
+from cmk.base.plugins.agent_based.utils.scaleio import convert_scaleio_space_into_mb
 
 
 def convert_scaleio_space(unit: str, value: float) -> float | None:
@@ -22,7 +19,3 @@ def convert_scaleio_space(unit: str, value: float) -> float | None:
     with suppress(KeyError):
         return convert_scaleio_space_into_mb(unit, value)
     return None
-
-
-def get_scaleio_data(item, parsed):
-    return parsed.get(item)

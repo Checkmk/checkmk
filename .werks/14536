@@ -6,7 +6,7 @@ Date: 1656935922
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The Kubernetes node conditions check parameters allow the user to configure the monitoring state
 if a condition is either faulty or unavailable. However, the unavailability keyword is misleading

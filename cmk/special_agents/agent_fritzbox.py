@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -142,7 +142,6 @@ class FritzConnection:
 def _get_response(
     control: str, namespace: str, action: str, connection: FritzConnection
 ) -> requests.Response:
-
     data = _SOAP_TEMPLATE % (action, namespace)
     post_args = (f"/control/{control}", data, {"SoapAction": namespace + "#" + action})
 
@@ -165,7 +164,6 @@ def _get_response(
 def get_upnp_info(
     control: str, namespace: str, action: str, connection: FritzConnection
 ) -> UPNPInfo:
-
     response = _get_response(control, namespace, action, connection)
     device, version = response.headers["SERVER"].split("UPnP/1.0 ")[1].rsplit(" ", 1)
 

@@ -1,0 +1,14 @@
+Title: group_config: restrict name pattern for service-, contact-, host-group config
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1678805997
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, the user was allowed to specify any string for host group, service group
+and contact group names. This behaviour differs from the UI and also the delete and get
+endpoints. This werk unifies the restriction.
+

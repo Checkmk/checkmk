@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,44 +9,38 @@ from collections.abc import Container, Iterable, Iterator, Mapping, MutableMappi
 import cmk.utils.debug
 import cmk.utils.misc
 import cmk.utils.paths
-from cmk.utils.check_utils import unwrap_parameters
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console, section
-from cmk.utils.type_defs import CheckPluginName, HostName, ParsedSectionName, ServiceID
+from cmk.utils.type_defs import HostName, ParsedSectionName
 
-from cmk.fetchers import SourceType
+from cmk.checkengine import DiscoveryPlugin, HostKey, plugin_contexts, SourceType
+from cmk.checkengine.check_table import ServiceID
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.discovery import AutocheckEntry, AutochecksStore, QualifiedDiscovery
+from cmk.checkengine.sectionparser import Provider
+from cmk.checkengine.sectionparserutils import get_section_kwargs
 
-from cmk.checkers import HostKey, plugin_contexts
-from cmk.checkers.discovery import AutocheckEntry, AutochecksStore
-
-import cmk.base.config as config
-from cmk.base.agent_based.data_provider import ParsedSectionsBroker
-from cmk.base.agent_based.utils import get_section_kwargs
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.config import ConfigCache
-
-from .utils import QualifiedDiscovery
 
 
 def analyse_discovered_services(
     config_cache: ConfigCache,
     host_name: HostName,
     *,
-    parsed_sections_broker: ParsedSectionsBroker,
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    providers: Mapping[HostKey, Provider],
+    plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     run_plugin_names: Container[CheckPluginName],
     forget_existing: bool,
     keep_vanished: bool,
     on_error: OnError,
 ) -> QualifiedDiscovery[AutocheckEntry]:
-
     return _analyse_discovered_services(
         existing_services=AutochecksStore(host_name).read(),
         discovered_services=_discover_services(
             config_cache,
             host_name,
-            parsed_sections_broker=parsed_sections_broker,
-            check_plugins=check_plugins,
+            providers=providers,
+            plugins=plugins,
             run_plugin_names=run_plugin_names,
             on_error=on_error,
         ),
@@ -64,7 +58,6 @@ def _analyse_discovered_services(
     forget_existing: bool,
     keep_vanished: bool,
 ) -> QualifiedDiscovery[AutocheckEntry]:
-
     return QualifiedDiscovery(
         preexisting=_services_to_remember(
             choose_from=existing_services,
@@ -77,7 +70,6 @@ def _analyse_discovered_services(
             run_plugin_names=run_plugin_names,
             keep_vanished=keep_vanished,
         ),
-        key=lambda s: s.id(),
     )
 
 
@@ -125,16 +117,19 @@ def _discover_services(
     config_cache: ConfigCache,
     host_name: HostName,
     *,
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     run_plugin_names: Container[CheckPluginName],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     on_error: OnError,
 ) -> list[AutocheckEntry]:
     # find out which plugins we need to discover
     plugin_candidates = _find_candidates(
-        parsed_sections_broker,
-        run_plugin_names,
-        check_plugins,
+        providers,
+        [
+            (plugin_name, plugin.sections)
+            for plugin_name, plugin in plugins.items()
+            if plugin_name in run_plugin_names
+        ],
     )
     section.section_step("Executing discovery plugins (%d)" % len(plugin_candidates))
     console.vverbose("  Trying discovery with: %s\n" % ", ".join(str(n) for n in plugin_candidates))
@@ -152,7 +147,7 @@ def _discover_services(
                             for entry in _discover_plugins_services(
                                 config_cache,
                                 check_plugin_name=check_plugin_name,
-                                check_plugins=check_plugins,
+                                plugins=plugins,
                                 host_key=HostKey(
                                     host_name,
                                     (
@@ -161,7 +156,7 @@ def _discover_services(
                                         else SourceType.HOST
                                     ),
                                 ),
-                                parsed_sections_broker=parsed_sections_broker,
+                                providers=providers,
                                 on_error=on_error,
                             )
                         }
@@ -181,9 +176,8 @@ def _discover_services(
 
 
 def _find_candidates(
-    broker: ParsedSectionsBroker,
-    run_plugin_names: Container[CheckPluginName],
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    providers: Mapping[HostKey, Provider],
+    preliminary_candidates: Sequence[tuple[CheckPluginName, Sequence[ParsedSectionName]]],
 ) -> set[CheckPluginName]:
     """Return names of check plugins that this multi_host_section may
     contain data for.
@@ -200,33 +194,49 @@ def _find_candidates(
     plugins that are not already designed for management boards.
 
     """
-    preliminary_candidates: Sequence[tuple[CheckPluginName, Sequence[ParsedSectionName]]] = list(
-        (p.name, p.sections) for p in check_plugins.values() if p.name in run_plugin_names
-    )
 
-    # Flattened list of ParsedSectionName, optimization only.
+    def __iter(
+        section_names: Iterable[ParsedSectionName], providers: Mapping[HostKey, Provider]
+    ) -> Iterable[tuple[HostKey, ParsedSectionName]]:
+        for host_key, provider in providers.items():
+            # filter section names for sections that cannot be resolved
+            for section_name in (
+                section_name
+                for section_name in section_names
+                if provider.resolve(section_name) is not None
+            ):
+                yield host_key, section_name
+
     parsed_sections_of_interest: Sequence[ParsedSectionName] = list(
         frozenset(
             itertools.chain.from_iterable(sections for (_name, sections) in preliminary_candidates)
         )
     )
+    resolved: Sequence[tuple[HostKey, ParsedSectionName]] = tuple(
+        __iter(parsed_sections_of_interest, providers)
+    )
 
     return _find_host_candidates(
-        broker, preliminary_candidates, parsed_sections_of_interest
-    ) | _find_mgmt_candidates(broker, preliminary_candidates, parsed_sections_of_interest)
+        preliminary_candidates,
+        frozenset(
+            section_name
+            for host_key, section_name in resolved
+            if host_key.source_type is SourceType.HOST
+        ),
+    ) | _find_mgmt_candidates(
+        preliminary_candidates,
+        frozenset(
+            section_name
+            for host_key, section_name in resolved
+            if host_key.source_type is SourceType.MANAGEMENT
+        ),
+    )
 
 
 def _find_host_candidates(
-    broker: ParsedSectionsBroker,
     preliminary_candidates: Iterable[tuple[CheckPluginName, Iterable[ParsedSectionName]]],
-    parsed_sections_of_interest: Iterable[ParsedSectionName],
+    available_parsed_sections: Container[ParsedSectionName],
 ) -> set[CheckPluginName]:
-
-    available_parsed_sections = broker.filter_available(
-        parsed_sections_of_interest,
-        SourceType.HOST,
-    )
-
     return {
         name
         for (name, sections) in preliminary_candidates
@@ -237,16 +247,9 @@ def _find_host_candidates(
 
 
 def _find_mgmt_candidates(
-    broker: ParsedSectionsBroker,
     preliminary_candidates: Iterable[tuple[CheckPluginName, Iterable[ParsedSectionName]]],
-    parsed_sections_of_interest: Iterable[ParsedSectionName],
+    available_parsed_sections: Container[ParsedSectionName],
 ) -> set[CheckPluginName]:
-
-    available_parsed_sections = broker.filter_available(
-        parsed_sections_of_interest,
-        SourceType.MANAGEMENT,
-    )
-
     return {
         # *create* all management only names of the plugins
         name.create_management_name()
@@ -259,9 +262,9 @@ def _discover_plugins_services(
     config_cache: ConfigCache,
     *,
     check_plugin_name: CheckPluginName,
-    check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     host_key: HostKey,
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     on_error: OnError,
 ) -> Iterator[AutocheckEntry]:
     # Skip this check type if is ignored for that host
@@ -270,13 +273,13 @@ def _discover_plugins_services(
         return
 
     try:
-        check_plugin = check_plugins[check_plugin_name]
+        plugin = plugins[check_plugin_name]
     except KeyError:
         console.warning("  Missing check plugin: '%s'\n" % check_plugin_name)
         return
 
     try:
-        kwargs = get_section_kwargs(parsed_sections_broker, host_key, check_plugin.sections)
+        kwargs = get_section_kwargs(providers, host_key, plugin.sections)
     except Exception as exc:
         if cmk.utils.debug.enabled() or on_error is OnError.RAISE:
             raise
@@ -287,20 +290,13 @@ def _discover_plugins_services(
     if not kwargs:
         return
 
-    disco_params = config.get_discovery_parameters(host_key.hostname, check_plugin)
+    disco_params = plugin.parameters(host_key.hostname)
     if disco_params is not None:
         kwargs = {**kwargs, "params": disco_params}
 
     try:
         yield from (
-            AutocheckEntry(
-                check_plugin_name=check_plugin.name,
-                item=service.item,
-                parameters=unwrap_parameters(service.parameters),
-                # Convert from APIs ServiceLabel to internal ServiceLabel
-                service_labels={label.name: label.value for label in service.labels},
-            )
-            for service in check_plugin.discovery_function(**kwargs)
+            service.as_autocheck_entry(check_plugin_name) for service in plugin.function(**kwargs)
         )
     except Exception as e:
         if on_error is OnError.RAISE:
@@ -308,5 +304,5 @@ def _discover_plugins_services(
         if on_error is OnError.WARN:
             console.warning(
                 "  Exception in discovery function of check plugin '%s': %s"
-                % (check_plugin.name, e)
+                % (check_plugin_name, e)
             )

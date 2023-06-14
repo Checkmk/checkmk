@@ -1,15 +1,21 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
 import os
+import re
 import time
 from collections.abc import Callable
 from typing import Final
 
-from tests.testlib.utils import branch_from_env, edition_from_env, version_spec_from_env
+from tests.testlib.utils import (
+    branch_from_env,
+    current_base_branch_name,
+    edition_from_env,
+    version_spec_from_env,
+)
 
 from cmk.utils.version import Edition
 
@@ -61,6 +67,9 @@ class CMKVersion:
     def is_cloud_edition(self) -> bool:
         return self.edition is Edition.CCE
 
+    def is_saas_edition(self) -> bool:
+        return self.edition is Edition.CSE
+
     def version_directory(self) -> str:
         return self.omd_version()
 
@@ -81,7 +90,33 @@ def version_from_env(
     fallback_branch: str | Callable[[], str] | None = None,
 ) -> CMKVersion:
     return CMKVersion(
-        version_spec_from_env(fallback_version_spec),
-        edition_from_env(fallback_edition),
-        branch_from_env(fallback_branch),
+        version_spec_from_env(fallback_version_spec or CMKVersion.DAILY),
+        edition_from_env(fallback_edition or Edition.CEE),
+        branch_from_env(env_var="BRANCH", fallback=fallback_branch or current_base_branch_name),
     )
+
+
+def version_gte(version: str, min_version: str) -> bool:
+    """Check if the given version is greater than or equal to min_version."""
+    # first replace all non-numerical segments by a dot
+    # and make sure there are no empty segments
+    cmp_version = re.sub("[^0-9.]+", ".", version).replace("..", ".")
+    min_version = re.sub("[^0-9]+", ".", min_version).replace("..", ".")
+
+    # now split the segments
+    version_pattern = r"[0-9]*(\.[0-9]*)*"
+    cmp_version_match = re.match(version_pattern, cmp_version)
+    cmp_version_values = cmp_version_match.group().split(".") if cmp_version_match else []
+    logger.debug("cmp_version=%s; cmp_version_values=%s", cmp_version, cmp_version_values)
+    min_version_match = re.match(version_pattern, min_version)
+    min_version_values = min_version_match.group().split(".") if min_version_match else []
+    while len(cmp_version_values) < len(min_version_values):
+        cmp_version_values.append("0")
+    logger.debug("min_version=%s; min_version_values=%s", min_version, min_version_values)
+
+    # compare the version numbers segment by segment
+    # if any is lower, return False
+    for i, min_val in enumerate(min_version_values):
+        if int(cmp_version_values[i]) < int(min_val):
+            return False
+    return True

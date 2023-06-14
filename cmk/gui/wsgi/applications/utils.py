@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
@@ -77,7 +77,7 @@ def ensure_authentication(func: pages.PageHandlerFunc) -> Callable[[], Response]
             if (
                 not two_factor_ok
                 and userdb.is_two_factor_login_enabled(user_id)
-                and not cmk.gui.session.is_two_factor_completed()
+                and not session.session_info.two_factor_completed
             ):
                 raise HTTPRedirect(
                     "user_login_two_factor.py?_origtarget=%s" % urlencode(makeuri(request, []))
@@ -129,7 +129,7 @@ def _ensure_general_access() -> None:
 
     reason = [
         _(
-            "You are not authorized to use the Check_MK GUI. Sorry. "
+            "You are not authorized to use the Checkmk GUI. Sorry. "
             "You are logged in as <b>%s</b>."
         )
         % user.id
@@ -203,12 +203,12 @@ def handle_unhandled_exception() -> Response:
 
 
 def load_gui_log_levels() -> dict[str, int]:
-    """Load the GUI log-level global setting from the WATO GUI config"""
+    """Load the GUI log-level global setting from the Setup GUI config"""
     return load_single_global_wato_setting("log_levels", {"cmk.web": 30})
 
 
 def load_single_global_wato_setting(varname: str, deflt: Any = None) -> Any:
-    """Load a single config option from WATO globals (Only for special use)
+    """Load a single config option from Setup globals (Only for special use)
 
     This is a small hack to get access to the current configuration without
     the need to load the whole GUI config.
@@ -217,7 +217,7 @@ def load_single_global_wato_setting(varname: str, deflt: Any = None) -> Any:
     is loaded regularly. This is needed, because we want to be able to
     profile our whole WSGI app, including the config loading logic.
 
-    We only process the WATO written global settings file to get the WATO
+    We only process the Setup written global settings file to get the WATO
     settings, which should be enough for most cases.
     """
     settings = cmk.utils.store.load_mk_file(

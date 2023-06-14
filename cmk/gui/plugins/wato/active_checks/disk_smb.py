@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,7 +7,7 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupActiveChecks
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
-from cmk.gui.valuespec import Dictionary, Integer, Password, Percentage, TextInput, Tuple
+from cmk.gui.valuespec import Dictionary, NetworkPort, Password, Percentage, TextInput, Tuple
 
 
 def _valuespec_active_checks_disk_smb():
@@ -51,7 +51,7 @@ def _valuespec_active_checks_disk_smb():
             ),
             (
                 "port",
-                Integer(
+                NetworkPort(
                     title=_("TCP Port"),
                     help=_("TCP port number to connect to. Usually either 139 or 445."),
                     default_value=445,

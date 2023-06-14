@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
@@ -75,6 +75,10 @@ try:
 except ImportError:
     # 2.0 backwards compatibility
     import xml.etree.ElementTree as ET  # type: ignore[no-redef]
+
+__version__ = "2.3.0b1"
+
+USER_AGENT = f"checkmk-special-netapp-{__version__}"
 
 COUNTERS_CLUSTERMODE_MAX_RECORDS = 500
 QUERY_MAX_RECORDS = 500
@@ -271,7 +275,6 @@ class NetAppRootNode(NetAppNode):
 
 # NetApp Response Oject, holds the actual content in the NetAppNode member variable
 class NetAppResponse:
-
     # We have seen devices (NetApp Release 8.3.2P9) occasionally send
     # invalid XML characters, leading to an exception during parsing.
     # In that case replace them and try again.
@@ -355,6 +358,7 @@ class NetAppConnection:
 
         self.headers = {}
         self.headers["Content-type"] = 'text/xml; charset="UTF-8"'
+        self.headers["User-Agent"] = USER_AGENT
         self.session = requests.Session()
         self.debug = debug
         self.dump_xml = dump_xml
@@ -522,9 +526,6 @@ def format_config(  # pylint: disable=too-many-branches
         if node.element["content"]:
             values["{}{}".format(namespace, node.element["name"])] = node.element["content"]
 
-    if instances is None:
-        return ""
-
     for instance in instances.children_get():
         values = {}
         for node in instance.children_get():
@@ -644,13 +645,10 @@ def query(
     what: str,
     return_toplevel_node: bool = False,
 ) -> NetAppNode | None:
-    if isinstance(what, str):
-        if what.endswith("iter"):
-            response = server.get_response((what, [("max-records", str(QUERY_MAX_RECORDS))]))
-        else:
-            response = server.get_response((what, []))
+    if what.endswith("iter"):
+        response = server.get_response((what, [("max-records", str(QUERY_MAX_RECORDS))]))
     else:
-        response = server.get_response(what)
+        response = server.get_response((what, []))
 
     if response.results_status() != "passed":
         return None
@@ -806,7 +804,7 @@ def process_interfaces(
     # )
     broadcast_domains: MutableMapping[str, set[str]] = {}
     for port in port_dict.values():
-        if not "broadcast-domain" in port:
+        if "broadcast-domain" not in port:
             continue
         broadcast_domains.setdefault(port["broadcast-domain"], set()).add(
             f"{port['node']}|{port['port']}|{port['link-status']}"
@@ -901,7 +899,7 @@ def process_clustermode(  # pylint: disable=too-many-branches
 
     # Cluster info
     # TODO: check is missing
-    ha_partners = {}  # Used later on by environmental sensors
+    ha_partners: dict[str, str] = {}  # Used later on by environmental sensors
     if "cf" not in licenses["v1_disabled"]:
         cluster_status = query_nodes(server, nodes, "cf-status", node_attribute="node")
         if cluster_status:
@@ -973,6 +971,8 @@ def process_clustermode(  # pylint: disable=too-many-branches
                 config_report=[
                     "volume-space-attributes.size-available",
                     "volume-space-attributes.size-total",
+                    "volume-space-attributes.is-space-enforcement-logical",
+                    "volume-space-attributes.logical-used",
                     "volume-state-attributes.state",
                     "volume-id-attributes.owning-vserver-name",
                     "volume-id-attributes.name",
@@ -984,6 +984,8 @@ def process_clustermode(  # pylint: disable=too-many-branches
                 config_rename={
                     "volume-space-attributes.size-available": "size-available",
                     "volume-space-attributes.size-total": "size-total",
+                    "volume-space-attributes.is-space-enforcement-logical": "is-space-enforcement-logical",
+                    "volume-space-attributes.logical-used": "logical-used",
                     "volume-state-attributes.state": "state",
                     "volume-id-attributes.owning-vserver-name": "vserver_name",
                     "volume-id-attributes.name": "name",
@@ -1122,9 +1124,9 @@ def process_clustermode(  # pylint: disable=too-many-branches
                         ("temp-sensor-list", "netapp_api_temp"),
                     ]:
                         print("<<<%s:sep(9)>>>" % section)
-                        node = shelf.child_get(what)
-                        assert isinstance(node, NetAppNode)
-                        print(format_config(node, what, shelf_id))
+                        child_node = shelf.child_get(what)
+                        assert isinstance(child_node, NetAppNode)
+                        print(format_config(child_node, what, shelf_id))
 
     # Controller Status
     environment = query(server, "environment-sensors-get-iter")

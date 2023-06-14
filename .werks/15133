@@ -1,0 +1,15 @@
+Title: Fix saving of help text for auxiliary tags
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1678109335
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+If you entered a help text on creation or editing of an auxiliary tag, this
+text was not saved and the help input field was empty if you edited this
+auxiliary tag again.
+

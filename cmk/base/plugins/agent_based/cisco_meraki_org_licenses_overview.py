@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -42,8 +42,10 @@ Section = Mapping[str, LicensesOverview]
 
 
 def parse_licenses_overview(string_table: StringTable) -> Section:
+    # Not sure if 'organisation_name' is unique: Add 'organisation_id'
     return {
-        str(row["organizationId"]): LicensesOverview.parse(row) for row in load_json(string_table)
+        f"{row['organisation_name']}/{row['organisation_id']}": LicensesOverview.parse(row)
+        for row in load_json(string_table)
     }
 
 
@@ -54,8 +56,8 @@ register.agent_section(
 
 
 def discover_licenses_overview(section: Section) -> DiscoveryResult:
-    for organisation_id in section:
-        yield Service(item=organisation_id)
+    for organisation_name_id in section:
+        yield Service(item=organisation_name_id)
 
 
 def check_licenses_overview(
@@ -115,7 +117,7 @@ def _check_expiration_date(
 
 register.check_plugin(
     name="cisco_meraki_org_licenses_overview",
-    service_name="Cisco Meraki Organisation %s Licenses Overview",
+    service_name="Cisco Meraki Licenses %s",
     discovery_function=discover_licenses_overview,
     check_function=check_licenses_overview,
     check_ruleset_name="cisco_meraki_org_licenses_overview",

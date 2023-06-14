@@ -1,5 +1,5 @@
 @charset "UTF-8";
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -276,7 +276,7 @@
             padding-bottom: 4px;
             margin: 0;
             font-size: $font-size-large;
-            font-weight: bold;
+            font-weight: $font-weight-bold;
             color: $font-color;
 
             span.emblem {
@@ -363,7 +363,7 @@
               margin-top: 2px;
 
               a {
-                font-weight: 700;
+                font-weight: $font-weight-bold;
               }
             }
           }

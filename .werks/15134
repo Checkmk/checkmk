@@ -1,0 +1,14 @@
+Title: Fix "IP address family" only shown on "show more"
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1678184593
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+If you created or edited a host, the configuration option "IP address family"
+was only shown, if the "show more" button of the "Network address" section was
+used. This option will now always be shown.
+

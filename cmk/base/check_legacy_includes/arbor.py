@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -27,7 +27,7 @@ def inventory_arbor_memory(parsed):
     return []
 
 
-def check_arbor_memory(no_item, params, parsed):
+def check_arbor_memory(_no_item, params, parsed):
     ram_perc, swap_perc = map(int, parsed["memory"])
 
     yield check_levels(ram_perc, "mem_used_percent", params["levels_ram"][1], infoname="Used RAM")
@@ -53,7 +53,7 @@ def inventory_arbor_disk_usage(parsed):
     return []
 
 
-def check_arbor_disk_usage(no_item, params, parsed):
+def check_arbor_disk_usage(_no_item, params, parsed):
     usage = int(parsed["disk"])
     yield check_levels(usage, None, params["levels"], infoname="Disk usage")
     yield 0, "", [("disk_utilization", float(usage) / 100.0)]
@@ -76,7 +76,7 @@ def inventory_arbor_host_fault(parsed):
     return []
 
 
-def check_arbor_host_fault(no_item, no_params, parsed):
+def check_arbor_host_fault(_no_item, _no_params, parsed):
     status = 0
     if parsed["host_fault"] != "No Fault":
         status = 2
@@ -100,7 +100,7 @@ def inventory_arbor_drop_rate(parsed):
     return []
 
 
-def check_arbor_drop_rate(no_item, params, parsed):
+def check_arbor_drop_rate(_no_item, params, parsed):
     drop_rate = int(parsed["drop_rate"])
     lower_levels = params.get("levels_lower") or (None, None)
     upper_levels = params.get("levels") or (None, None)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -27,8 +27,8 @@ from cmk.gui.watolib.activate_changes import ActivateChangesManager
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import delete_hosts
-from cmk.gui.watolib.hosts_and_folders import CREHost, Host
-from cmk.gui.watolib.rulesets import SingleRulesetRecursively
+from cmk.gui.watolib.hosts_and_folders import CREHost, folder_tree, Host
+from cmk.gui.watolib.rulesets import SingleRulesetRecursively, UseHostFolder
 
 
 def execute_host_removal_background_job() -> None:
@@ -108,10 +108,12 @@ def _hosts_to_be_removed_for_site(
         hostnames = _hosts_to_be_removed_local()
     else:
         try:
-            hostnames_serialized = do_remote_automation(
-                get_site_config(site_id),
-                "hosts-for-auto-removal",
-                [],
+            hostnames_serialized = str(
+                do_remote_automation(
+                    get_site_config(site_id),
+                    "hosts-for-auto-removal",
+                    [],
+                )
             )
         except MKUserError:  # Site may be down
             job_interface.send_progress_update(f"Skipping remote site {site_id}, might be down")
@@ -147,7 +149,7 @@ def _hosts_to_be_removed_local() -> Iterator[HostName]:
 
 def _load_automatic_host_removal_ruleset() -> Sequence[RuleSpec]:
     return [
-        rule.to_config()
+        rule.to_config(use_host_folder=UseHostFolder.HOST_FOLDER_FOR_BASE)
         for _folder, _idx, rule in SingleRulesetRecursively.load_single_ruleset_recursively(
             "automatic_host_removal"
         )
@@ -184,6 +186,8 @@ def _should_delete_host(
 
 
 def _activate_changes(sites: Iterable[SiteId]) -> None:
+    # workaround until CMK-13093 is fixed
+    folder_tree().invalidate_caches()
     manager = ActivateChangesManager()
     manager.load()
     with SuperUserContext():

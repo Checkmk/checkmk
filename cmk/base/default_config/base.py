@@ -1,29 +1,31 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, Final, Literal
 
 from cmk.utils.labels import Labels
+from cmk.utils.notify_types import Contact, ContactName
 from cmk.utils.password_store import Password
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec, TagsOfHosts
-from cmk.utils.store.host_storage import FolderAttributes
+from cmk.utils.store.host_storage import FolderAttributesForBase
 from cmk.utils.tags import TagConfigSpec
+from cmk.utils.timeperiod import TimeperiodSpecs
+from cmk.utils.translations import TranslationOptionsSpec
 from cmk.utils.type_defs import (
     CheckPluginNameStr,
-    Contact,
     ContactgroupName,
-    ContactName,
     HostAddress,
     HostgroupName,
     HostName,
     ServicegroupName,
     ServiceName,
-    TimeperiodSpecs,
 )
 
 from cmk.snmplib.type_defs import SNMPCredentials
+
+from cmk.fetchers import IPMICredentials
 
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration
@@ -58,7 +60,7 @@ piggyback_max_cachefile_age = 3600  # secs
 # Ruleset for translating piggyback host names
 piggyback_translation: list[RuleSpec[object]] = []
 # Ruleset for translating service descriptions
-service_description_translation: list[RuleSpec[object]] = []
+service_description_translation: list[RuleSpec[TranslationOptionsSpec]] = []
 simulation_mode = False
 fake_dns: str | None = None
 agent_simulator = False
@@ -96,7 +98,7 @@ snmp_bulk_size: list[RuleSpec[object]] = []
 snmp_default_community = "public"
 snmp_communities: list[RuleSpec[object]] = []
 # override the rule based configuration
-explicit_snmp_communities: dict[HostName, SNMPCredentials] = {}
+explicit_snmp_communities: dict[HostName | HostAddress, SNMPCredentials] = {}
 snmp_timing: list[RuleSpec[object]] = []
 snmp_character_encodings: list[RuleSpec[object]] = []
 
@@ -111,7 +113,7 @@ management_protocol: dict[HostName, Literal["snmp", "ipmi"]] = {}
 # Mapping from hostname to SNMP credentials
 management_snmp_credentials: dict[HostName, SNMPCredentials] = {}
 # Mapping from hostname to IPMI credentials
-management_ipmi_credentials: dict[HostName, dict[str, str]] = {}
+management_ipmi_credentials: dict[HostName, IPMICredentials] = {}
 # Ruleset to specify whether or not to use bulkwalk
 management_bulkwalk_hosts: list[RuleSpec[object]] = []
 
@@ -156,7 +158,6 @@ tag_config: TagConfigSpec = {
     "aux_tags": [],
     "tag_groups": [],
 }
-checks: list[RuleSpec[object]] = []
 static_checks: dict[str, list[RuleSpec[object]]] = {}
 check_parameters: list[RuleSpec[object]] = []
 checkgroup_parameters: dict[str, list[RuleSpec[object]]] = {}
@@ -190,6 +191,9 @@ tcp_hosts: list = [
     # Match all those that don't have ping and don't have no-agent set
     (["!ping", "!no-agent"], _ALL_HOSTS),
 ]
+# cf. cmk.utils.type_defs.HostAgentConnectionMode, currently there seems to be no good way to
+# directly couple these two definitions
+# https://github.com/python/typing/issues/781
 cmk_agent_connection: dict[HostName, Literal["pull-agent", "push-agent"]] = {}
 bulkwalk_hosts: list[RuleSpec[object]] = []
 snmpv2c_hosts: list[RuleSpec[object]] = []
@@ -231,9 +235,9 @@ clustered_services_configuration: list[RuleSpec[object]] = []
 datasource_programs: list[RuleSpec[object]] = []
 service_dependencies: list = []
 # mapping from hostname to IPv4 address
-ipaddresses: dict[HostName, HostAddress] = {}
+ipaddresses: dict[HostName | HostAddress, HostAddress] = {}
 # mapping from hostname to IPv6 address
-ipv6addresses: dict[HostName, HostAddress] = {}
+ipv6addresses: dict[HostName | HostAddress, HostAddress] = {}
 # mapping from hostname to addtional IPv4 addresses
 additional_ipv4addresses: dict[HostName, list[HostAddress]] = {}
 # mapping from hostname to addtional IPv6 addresses
@@ -276,7 +280,7 @@ service_tag_rules: list[RuleSpec[object]] = []
 # Rulesets for agent bakery
 agent_config: dict[str, list[RuleSpec[object]]] = {}
 bake_agents_on_restart = False
-folder_attributes: dict[str, FolderAttributes] = {}
+folder_attributes: dict[str, FolderAttributesForBase] = {}
 
 # BEGIN Kept for compatibility, but are deprecated and not used anymore
 inv_exports: dict = {}  # Rulesets for inventory export hooks
@@ -294,7 +298,6 @@ non_aggregated_hosts: list = []
 aggregate_check_mk = False
 aggregation_output_format = "multiline"  # new in 1.1.6. Possible also: "multiline"
 aggr_summary_hostname = "%s-s"
-legacy_checks: list[RuleSpec[object]] = []
 # END Kept for compatibility
 
 status_data_inventory: list[RuleSpec[object]] = []

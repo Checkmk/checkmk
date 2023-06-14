@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Check plugin for W&T WebIO device
@@ -95,7 +95,6 @@ def _get_state_evaluation_from_state(state: str) -> Mapping[str, int]:
 
 
 def discover_wut_webio(section: Section) -> type_defs.DiscoveryResult:
-
     yield from [
         Service(item=item, parameters={STATES_DURING_DISC_KEY: input_.state})
         for item, input_ in section.items()

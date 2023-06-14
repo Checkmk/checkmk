@@ -1,0 +1,38 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
+from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_legacy_includes.aws import parse_aws
+from cmk.base.config import check_info
+
+
+def inventory_aws_ec2_security_groups(parsed):
+    if parsed:
+        return [(None, "%r" % [group["GroupId"] for group in parsed])]
+    return []
+
+
+def check_aws_ec2_security_groups(item, params, parsed):
+    for group in parsed:
+        state = 0
+        descr = group.get("Description")
+        if descr:
+            prefix = "[%s] " % descr
+        else:
+            prefix = ""
+        infotext = "%s%s: %s" % (prefix, group["GroupName"], group["GroupId"])
+        if group["GroupId"] not in params:
+            infotext += " (has changed)"
+            state = 2
+        yield state, infotext
+
+
+check_info["aws_ec2_security_groups"] = LegacyCheckDefinition(
+    parse_function=parse_aws,
+    discovery_function=inventory_aws_ec2_security_groups,
+    check_function=check_aws_ec2_security_groups,
+    service_name="AWS/EC2 Security Groups",
+)

@@ -1,21 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import argparse
-import logging
-from itertools import chain
 
 from livestatus import SiteId
 
 import cmk.utils.debug
-import cmk.utils.log as log
 import cmk.utils.plugin_registry
 import cmk.utils.site
 from cmk.utils.log import VERBOSE
-from cmk.utils.plugin_loader import load_plugins_with_exceptions
-from cmk.utils.version import is_raw_edition
+from cmk.utils.plugin_loader import load_plugins_with_exceptions, PluginFailures
+from cmk.utils.version import is_cloud_edition, is_raw_edition
 
 # This special script needs persistence and conversion code from different places of Checkmk. We may
 # centralize the conversion and move the persistence to a specific layer in the future, but for the
@@ -24,14 +21,13 @@ from cmk.gui import main_modules
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
 
+from .logger import logger, setup_logging
 from .registry import rename_action_registry
-
-logger = logging.getLogger("cmk.post_rename_site")
 
 
 def main(args: list[str]) -> int:
     arguments = parse_arguments(args)
-    setup_logging(arguments)
+    setup_logging(verbose=arguments.verbose)
 
     if arguments.debug:
         cmk.utils.debug.enable()
@@ -58,15 +54,18 @@ def main(args: list[str]) -> int:
 
 
 def load_plugins() -> None:
-    for plugin, exc in chain(
-        load_plugins_with_exceptions("cmk.post_rename_site.plugins.actions"),
-        load_plugins_with_exceptions("cmk.post_rename_site.cee.plugins.actions")
-        if not is_raw_edition()
-        else [],
-    ):
+    for plugin, exc in _load_plugins():
         logger.error("Error in action plugin %s: %s\n", plugin, exc)
         if cmk.utils.debug.enabled():
             raise exc
+
+
+def _load_plugins() -> PluginFailures:
+    yield from load_plugins_with_exceptions("cmk.post_rename_site.plugins.actions")
+    if not is_raw_edition():
+        yield from load_plugins_with_exceptions("cmk.post_rename_site.cee.plugins.actions")
+    if is_cloud_edition():
+        yield from load_plugins_with_exceptions("cmk.post_rename_site.cce.plugins.actions")
 
 
 def parse_arguments(args: list[str]) -> argparse.Namespace:
@@ -92,25 +91,6 @@ def parse_arguments(args: list[str]) -> argparse.Namespace:
     )
 
     return p.parse_args(args)
-
-
-def setup_logging(arguments: argparse.Namespace) -> None:
-    level = log.verbosity_to_log_level(arguments.verbose)
-
-    log.setup_console_logging()
-    log.logger.setLevel(level)
-
-    logger.setLevel(level)
-    logger.debug("parsed arguments: %s", arguments)
-
-    # TODO: Fix this cruel hack caused by our funny mix of GUI + console
-    # stuff. Currently, we just move the console handler to the top, so
-    # both worlds are happy. We really, really need to split business logic
-    # from presentation code... :-/
-    if log.logger.handlers:
-        console_handler = log.logger.handlers[0]
-        del log.logger.handlers[:]
-        logging.getLogger().addHandler(console_handler)
 
 
 def run(arguments: argparse.Namespace, old_site_id: SiteId, new_site_id: SiteId) -> bool:

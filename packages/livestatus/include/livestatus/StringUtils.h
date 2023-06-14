@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -86,6 +86,7 @@ bool is_none(const std::string &str);
 std::vector<std::string> split_list(const std::string &str);
 }  // namespace ec
 
+bool is_utf8(std::string_view s);
 }  // namespace mk
 
 template <size_t N>

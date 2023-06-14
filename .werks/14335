@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If you configured e.g. a view with Icon "empty" and an emblem, the GUI crashed,
 showing the error "TypeError: argument of type 'NoneType' is not iterable" in

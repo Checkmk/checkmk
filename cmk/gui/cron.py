@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -68,7 +68,6 @@ def _register_pre_21_plugin_api() -> None:
 # are written to the web log.
 @cmk.gui.pages.register("noauth:run_cron")
 def page_run_cron() -> None:
-
     lock_file = _lock_file()
 
     # Prevent cron jobs from being run too often, also we need

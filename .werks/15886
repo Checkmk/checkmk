@@ -1,0 +1,17 @@
+Title: etag: allow star tag on endpoints that enforce etag policy
+Class: feature
+Compatible: compat
+Component: rest-api
+Date: 1685955552
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+If-Match is most often used with state-changing methods (e.g., POST, PUT, DELETE)
+to prevent accidental overwrites when multiple user agents might be acting in
+parallel on the same resource.
+
+This werk introduces a mechanism to ignore or bypass this protection mechanism by
+passing the special * character to the If-Match header.
+

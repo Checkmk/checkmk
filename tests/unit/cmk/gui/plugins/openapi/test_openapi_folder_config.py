@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,8 +8,11 @@ import re
 import uuid
 from ast import literal_eval
 from collections.abc import Sequence
+from pathlib import Path
 
 import pytest
+
+from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
@@ -69,7 +72,9 @@ def test_folder_schema() -> None:
     assert schema.load({"folder": "~"})["folder"]
 
 
-def test_openapi_folder_validation(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+def test_openapi_folder_validation(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, clients: ClientRegistry
+) -> None:
     aut_user_auth_wsgi_app.call_method(
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
@@ -86,6 +91,12 @@ def test_openapi_folder_validation(aut_user_auth_wsgi_app: WebTestAppForCMK) -> 
         status=400,
         headers={"Accept": "application/json"},
         content_type="application/json",
+    )
+    clients.Folder.create(
+        folder_name="\\",
+        title="test",
+        parent="~",
+        expect_ok=False,
     )
 
 
@@ -373,12 +384,12 @@ def test_openapi_create_folder_with_network_scan(
         "post",
         "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
         params=json.dumps(
-            dict(
-                name="my_folder_name",
-                title="some title",
-                parent="~",
-                attributes=dict(
-                    network_scan={
+            {
+                "name": "my_folder_name",
+                "title": "some title",
+                "parent": "~",
+                "attributes": {
+                    "network_scan": {
                         "addresses": [
                             {"type": "network_range", "network": "172.10.9.0/24"},
                             {
@@ -401,8 +412,8 @@ def test_openapi_create_folder_with_network_scan(
                         "run_as": user,
                         "translate_names": {"drop_domain": True, "convert_case": "lower"},
                     }
-                ),
-            )
+                },
+            }
         ),
         status=200,
         headers={"Accept": "application/json"},
@@ -822,3 +833,50 @@ def test_bake_agent_package_attribute_regression(
         headers={"Accept": "application/json"},
         status=200,
     )
+
+
+def test_delete_root_folder(
+    base: str,
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+) -> None:
+    resp = aut_user_auth_wsgi_app.delete(
+        url=base + "/objects/folder_config/~",
+        headers={"Accept": "application/json"},
+        status=401,
+    )
+    assert resp.json["title"] == "Problem deleting folder."
+    assert resp.json["detail"] == "Deleting the root folder is not permitted."
+
+
+def test_create_folder_with_name_as_empty_string(clients: ClientRegistry) -> None:
+    r = clients.Folder.create(
+        folder_name="",
+        title="some_foldeer_title",
+        parent="~",
+        expect_ok=False,
+    )
+    assert r.json["detail"] == "These fields have problems: name"
+    assert r.json["fields"]["name"][0] == "string '' is too short. The minimum length is 1."
+
+
+def test_openapi_folder_config_folders_with_duplicate_names_allowed_regression(
+    clients: ClientRegistry,
+) -> None:
+    resp = clients.Folder.create(folder_name=None, title="a_duplicate", parent="~")
+    assert resp.json["id"] == "~a_duplicate"
+
+    resp = clients.Folder.create(folder_name=None, title="a_duplicate", parent="~")
+    assert resp.json["id"] == "~a_duplicate-2"
+
+    resp = clients.Folder.create(folder_name=None, title="a_duplicate", parent="~")
+    assert resp.json["id"] == "~a_duplicate-3"
+
+    wato_dir = Path(paths.omd_root, paths.check_mk_config_dir, "wato")
+    assert (wato_dir / "a_duplicate").exists()
+    assert (wato_dir / "a_duplicate-2").exists()
+    assert (wato_dir / "a_duplicate-3").exists()
+
+    folders = [folder["id"] for folder in clients.Folder.get_all().json["value"]]
+    assert "~a_duplicate" in folders
+    assert "~a_duplicate-2" in folders
+    assert "~a_duplicate-3" in folders

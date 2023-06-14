@@ -1,0 +1,20 @@
+Title: Single-metric dashlets: Fix crash when setting fixed data range in time units
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1682677567
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+When attempting to configure <i>Data range</i> > <i>Fixed range</i> in time units (<i>Timespan or
+Duration in seconds</i>) for single-metric dashlets such as gauges, the default value (100 s) lead
+to a crash when saving:
+
+C+:
+The parameter "type_p_display_range_0_3_0_days" is not an integer.
+C-:
+
+Users could still fill in integer values manually and successfully save the dashlet configuration.
+As of this werk, also the default value can be saved without an error message.

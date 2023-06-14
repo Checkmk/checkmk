@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Status sidebar rendering"""
@@ -489,7 +489,6 @@ class SidebarRenderer:
         may_configure = user.may("general.configure_sidebar")
 
         if show_more or may_configure:
-
             html.open_div(class_="snapin_buttons")
 
             if show_more:
@@ -598,12 +597,7 @@ def _render_header_icon() -> None:
     if theme.has_custom_logo("navbar_logo"):
         html.img(theme.detect_icon_path(icon_name="navbar_logo", prefix=""), class_="custom")
     else:
-        html.img(
-            theme.detect_icon_path(
-                icon_name="icon" + ("_min" if user.get_attribute("nav_hide_icons_title") else ""),
-                prefix="tribe29_",
-            )
-        )
+        html.icon("checkmk_logo" + ("_min" if user.get_attribute("nav_hide_icons_title") else ""))
 
 
 @cmk.gui.pages.register("side")
@@ -773,7 +767,7 @@ class CustomSnapins(pagetypes.Overridable[CustomSpaninsSpec, "CustomSnapins"]):
             "clone": _("Clone element"),
             "create": _("Create element"),
             "edit": _("Edit element"),
-            "new": _("New element"),
+            "new": _("Add element"),
         }.get(phrase, pagetypes.Base.phrase(phrase))
 
     @classmethod

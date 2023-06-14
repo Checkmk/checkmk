@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Pre 2.1.0, the check fileinfo_groups was able to receive all matching rules for a host
 and then discover the file groups accordingly.

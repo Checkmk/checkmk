@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
+
+from collections.abc import Mapping
 
 import pytest
 
@@ -543,7 +545,7 @@ latest_response_example = {
         latest_response_example,
     ],
 )
-def test_bi_legacy_webapi_data_parsing(webapi_data) -> None:  # type:ignore[no-untyped-def]
+def test_bi_legacy_webapi_data_parsing(webapi_data: Mapping[str, object]) -> None:
     assert "missing_aggr" in webapi_data
     assert "missing_sites" in webapi_data
 

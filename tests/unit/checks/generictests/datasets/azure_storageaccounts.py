@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 
 checkname = "azure_storageaccounts"
 
@@ -32,13 +32,13 @@ info = [
         '{"name": "Transactions", "timestamp": "1544595420", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 62.0, "unit": "count"}'
     ],
     [
-        '{"name": "SuccessServerLatency", "timestamp": "1544595420", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 5624.0, "unit": "milli_seconds"}'
+        '{"name": "SuccessServerLatency", "timestamp": "1544595420", "aggregation": "average", "interval_id": "PT1H", "filter": "None", "value": 5624.0, "unit": "milli_seconds"}'
     ],
     [
-        '{"name": "SuccessE2ELatency", "timestamp": "1544595420", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 9584.0, "unit": "milli_seconds"}'
+        '{"name": "SuccessE2ELatency", "timestamp": "1544595420", "aggregation": "average", "interval_id": "PT1H", "filter": "None", "value": 9584.0, "unit": "milli_seconds"}'
     ],
     [
-        '{"name": "Availability", "timestamp": "1544595420", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 6200.0, "unit": "percent"}'
+        '{"name": "Availability", "timestamp": "1544595420", "aggregation": "average", "interval_id": "PT1H", "filter": "None", "value": 6200.0, "unit": "percent"}'
     ],
     ["Resource"],
     [
@@ -63,13 +63,13 @@ info = [
         '{"name": "Transactions", "timestamp": "1544602380", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 1907.0, "unit": "count"}'
     ],
     [
-        '{"name": "SuccessServerLatency", "timestamp": "1544602380", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 20105.0, "unit": "milli_seconds"}'
+        '{"name": "SuccessServerLatency", "timestamp": "1544602380", "aggregation": "average", "interval_id": "PT1H", "filter": "None", "value": 20105.0, "unit": "milli_seconds"}'
     ],
     [
-        '{"name": "SuccessE2ELatency", "timestamp": "1544602380", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 37606.0, "unit": "milli_seconds"}'
+        '{"name": "SuccessE2ELatency", "timestamp": "1544602380", "aggregation": "average", "interval_id": "PT1H", "filter": "None", "value": 37606.0, "unit": "milli_seconds"}'
     ],
     [
-        '{"name": "Availability", "timestamp": "1544602380", "aggregation": "total", "interval_id": "PT1H", "filter": "None", "value": 190700.0, "unit": "percent"}'
+        '{"name": "Availability", "timestamp": "1544602380", "aggregation": "average", "interval_id": "PT1H", "filter": "None", "value": 190700.0, "unit": "percent"}'
     ],
 ]
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
@@ -161,7 +161,7 @@ def parse_cpu_cores(value: str) -> float:
     return math.ceil(1000 * _parse_quantity(value)) / 1000
 
 
-def parse_resource_value(value: str) -> float:
+def parse_resource_value(value: str) -> int:
     """Function which converts the reported resource value to its value in the appropriate
     base unit
 
@@ -172,6 +172,16 @@ def parse_resource_value(value: str) -> float:
     Targeted resources:
         * memory
         * storage
+    """
+    return math.ceil(_parse_quantity(value))
+
+
+def parse_pod_number(value: str) -> int:
+    """Yes, pod numbers are described with quantities...
+
+    Examples:
+       >>> parse_pod_number("1k")
+       1000
     """
     return math.ceil(_parse_quantity(value))
 
@@ -203,7 +213,7 @@ def _parse_quantity(value: str) -> float:
 def convert_to_timestamp(kube_date_time: str | datetime.datetime) -> Timestamp:
     if isinstance(kube_date_time, str):
         date_time = datetime.datetime.strptime(kube_date_time, "%Y-%m-%dT%H:%M:%SZ").replace(
-            tzinfo=datetime.timezone.utc
+            tzinfo=datetime.UTC
         )
     elif isinstance(kube_date_time, datetime.datetime):
         date_time = kube_date_time
@@ -422,18 +432,17 @@ class NodeCondition(ClientModel):
 
 class NodeResources(BaseModel):
     cpu: float = 0.0
-    memory: float = 0.0
+    memory: int = 0
     pods: int = 0
 
     _parse_cpu = validator("cpu", pre=True, allow_reuse=True)(parse_cpu_cores)
     _parse_memory = validator("memory", pre=True, allow_reuse=True)(parse_resource_value)
+    _parse_pods = validator("pods", pre=True, allow_reuse=True)(parse_pod_number)
 
 
 class HealthZ(BaseModel):
     status_code: int
     response: str
-    # only set if status_code != 200
-    verbose_response: str | None
 
 
 class APIHealth(BaseModel):
@@ -787,14 +796,30 @@ class ContainerStatus(BaseModel):
 
 
 class ConditionType(str, enum.Enum):
+    """
+    DISRUPTIONTARGET
+        * condition is only present if the pod is actually disrupted by one of listed
+        events (in most cases not):
+        https://kubernetes.io/docs/concepts/workloads/pods/disruptions/#pod-disruption-conditions
+        * simply terminating the pod will not produce this condition
+    """
+
     # https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#pod-conditions
+    PODHASNETWORK = "hasnetwork"
     PODSCHEDULED = "scheduled"
     CONTAINERSREADY = "containersready"
     INITIALIZED = "initialized"
     READY = "ready"
+    DISRUPTIONTARGET = "disruptiontarget"
 
 
 class PodCondition(BaseModel):
+    """
+    status:
+        * when True, reason & detail will be normally None
+        * for condition DisruptionTarget will include a reason & detail strings also for True
+    """
+
     status: bool
     type: ConditionType | None
     custom_type: str | None
@@ -940,7 +965,7 @@ class Job(BaseModel):
 
 
 class StorageRequirement(BaseModel):
-    storage: float
+    storage: int
 
     _parse_storage = validator("storage", pre=True, allow_reuse=True)(parse_resource_value)
 
@@ -1022,6 +1047,7 @@ class PersistentVolumeClaimSpec(ClientModel):
     resources: StorageResourceRequirements | None
     storage_class_name: str | None
     volume_mode: PersistentVolumeMode | None
+    volume_name: VolumeName | None = None
 
 
 class PersistentVolumeClaimPhase(enum.Enum):
@@ -1053,8 +1079,18 @@ class PersistentVolumeClaim(BaseModel):
     status: PersistentVolumeClaimStatus
 
 
-class ClusterDetails(BaseModel):
+class PersistentVolumeSpec(ClientModel):
+    access_modes: list[AccessMode]
+    storage_class_name: str | None = None
+    volume_mode: str
 
+
+class PersistentVolume(ClientModel):
+    metadata: MetaDataNoNamespace
+    spec: PersistentVolumeSpec
+
+
+class ClusterDetails(BaseModel):
     api_health: APIHealth
     version: GitVersion
 

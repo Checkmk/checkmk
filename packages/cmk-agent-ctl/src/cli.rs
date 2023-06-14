@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -147,17 +147,17 @@ pub struct RegisterNewOpts {
     #[clap(flatten)]
     pub connection_opts: RegistrationConnectionOpts,
 
-    /// User-defined agent labels in the form KEY=VALUE. These labels supersede the automatic labels.
-    #[arg(long = "agent-labels", name = "KEY=VALUE",  value_parser = parse_agent_labels, )]
+    /// User-defined agent labels in the form KEY:VALUE. These labels supersede the automatic labels.
+    #[arg(long = "agent-labels", name = "KEY:VALUE",  value_parser = parse_agent_labels, )]
     pub agent_labels_raw: Vec<(String, String)>,
 }
 
 //https://github.com/clap-rs/clap/blob/master/examples/tutorial_derive/04_02_validate.rs
 fn parse_agent_labels(s: &str) -> Result<(String, String), String> {
     // TODO(sk): better to use something more rust, splitn: split_once and collect_tuple
-    match s.splitn(2, '=').collect::<Vec<&str>>()[..] {
+    match s.splitn(2, ':').collect::<Vec<&str>>()[..] {
         [a, b] => Ok((a.to_owned(), b.to_owned())),
-        _ => Err(format!("invalid KEY=VALUE: no `=` found in `{s}`")),
+        _ => Err(format!("invalid <KEY:VALUE>: no `:` found in `{s}`")),
     }
 }
 
@@ -292,21 +292,21 @@ mod tests {
     #[test]
     fn test_parse_agent_labels_ok() {
         assert_eq!(
-            parse_agent_labels("a=b").unwrap(),
+            parse_agent_labels("a:b").unwrap(),
             (String::from("a"), String::from("b"))
         );
         assert_eq!(
-            parse_agent_labels("abc-123=456=def").unwrap(),
-            (String::from("abc-123"), String::from("456=def"))
+            parse_agent_labels("abc-123:456:def").unwrap(),
+            (String::from("abc-123"), String::from("456:def"))
         );
         assert_eq!(
             parse_agent_labels("abc-123456-def").unwrap_err(),
-            "invalid KEY=VALUE: no `=` found in `abc-123456-def`"
+            "invalid <KEY:VALUE>: no `:` found in `abc-123456-def`"
         );
     }
 
     #[test]
     fn test_parse_agent_labels_error() {
-        assert!(parse_agent_labels("missing-equal-sign").is_err(),);
+        assert!(parse_agent_labels("missing-colon").is_err(),);
     }
 }

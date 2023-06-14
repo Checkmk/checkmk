@@ -1,0 +1,12 @@
+Title: cifsmounts: Properly deal with spaces in CIFS mounts
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1684327866
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The plugin <i>"Health of CIFS Mounts Mounted on UNIX/ Linux"</i> did not properly deal with mount sources containing white spaces.
+

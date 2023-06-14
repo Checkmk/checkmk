@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -11,12 +11,14 @@
 #include <cerrno>
 #include <cstring>
 #include <ostream>
+#include <string_view>
 #include <utility>
 // IWYU pragma: no_include <type_traits>
 
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Logger.h"
 #include "livestatus/Poller.h"
+#include "livestatus/StringUtils.h"
 
 using namespace std::chrono_literals;
 
@@ -50,6 +52,8 @@ std::ostream &operator<<(std::ostream &os, const InputBuffer::Result &r) {
             return os << "empty request";
         case InputBuffer::Result::timeout:
             return os << "timeout";
+        case InputBuffer::Result::invalid_utf8:
+            return os << "invalid UTF-8";
     }
     return os;  // never reached
 }
@@ -195,8 +199,12 @@ InputBuffer::Result InputBuffer::readRequest() {
                 length--;
             }
             if (length > 0) {
-                _request_lines.emplace_back(&_readahead_buffer[_read_index],
-                                            length);
+                std::string_view s(&_readahead_buffer[_read_index], length);
+                if (!mk::is_utf8(s)) {
+                    return Result::invalid_utf8;
+                }
+                _request_lines.emplace_back(s);
+
             } else {
                 Informational(_logger)
                     << "Warning ignoring line containing only whitespace";

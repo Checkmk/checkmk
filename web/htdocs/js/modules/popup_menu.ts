@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -6,15 +6,24 @@
 //#   | Floating popup menus with content fetched via AJAX calls           |
 //#   '--------------------------------------------------------------------'
 
-import * as utils from "utils";
 import * as ajax from "ajax";
+import * as utils from "utils";
 import * as valuespecs from "valuespecs";
+
+interface PopUpSpec {
+    id: string;
+    trigger_obj: HTMLElement;
+    data: any;
+    onclose: string | null;
+    onopen: string | null;
+    remove_on_close: boolean;
+}
 
 class PopUp {
     id: string | null;
     container: null | HTMLElement;
     popup: null | HTMLElement | ChildNode;
-    data: JSON | null;
+    data: any;
     onclose: string | null;
     onopen: string | null;
     remove_on_close: boolean;
@@ -29,7 +38,7 @@ class PopUp {
         this.remove_on_close = false;
     }
 
-    register(spec) {
+    register(spec: PopUpSpec) {
         spec = spec || {};
         this.id = spec.id || null;
         this.data = spec.data || null;
@@ -43,7 +52,7 @@ class PopUp {
 
         if (spec.trigger_obj) {
             this.container = spec.trigger_obj
-                ? spec.trigger_obj.parentNode
+                ? (spec.trigger_obj.parentNode as HTMLElement)
                 : null;
             this.popup = this.container ? this.container.lastChild : null;
         }
@@ -84,7 +93,7 @@ class PopUp {
     }
 }
 
-var active_popup = new PopUp();
+const active_popup = new PopUp();
 
 export function close_popup() {
     active_popup.close();
@@ -106,6 +115,28 @@ function handle_popup_close(event: Event | undefined) {
 
     close_popup();
 }
+
+interface PopupMethod {
+    type: string;
+}
+
+interface MethodAjax extends PopupMethod {
+    type: "ajax";
+    endpoint: string | null;
+    url_vars: string | null;
+}
+
+interface MethodInline extends PopupMethod {
+    type: "inline";
+}
+
+interface MethodColorpicker extends PopupMethod {
+    type: "colorpicker";
+    varprefix: string | null;
+    value: string | null;
+}
+
+type JSPopopMethod = MethodColorpicker | MethodInline | MethodAjax;
 
 // event:       The browser event that triggered the action
 // trigger_obj: DOM object of the action
@@ -138,17 +169,15 @@ function handle_popup_close(event: Event | undefined) {
 //              popup is closed
 // resizable:   Allow the user to resize the popup by drag/drop (not persisted)
 export function toggle_popup(
-    event,
-    trigger_obj,
-    ident,
-    method,
-    data,
-    onclose,
-    onopen,
-    resizable
+    event: Event | undefined,
+    trigger_obj: HTMLElement,
+    ident: string,
+    method: JSPopopMethod,
+    data: any,
+    onclose: string | null,
+    onopen: string | null,
+    resizable: boolean
 ) {
-    if (!event) event = window.event;
-
     if (active_popup.id) {
         if (active_popup.id === ident) {
             close_popup();
@@ -160,14 +189,21 @@ export function toggle_popup(
 
     // Add the popup to the DOM if required by the method.
     if (method.type === "colorpicker") {
-        const rgb = trigger_obj.firstChild.style.backgroundColor;
+        const rgb = (trigger_obj.firstChild as HTMLElement).style
+            .backgroundColor;
         if (rgb !== "") {
             method.value = rgb2hex(rgb);
         }
-        const content = generate_menu(trigger_obj.parentNode, resizable);
-        generate_colorpicker_body(content, method.varprefix, method.value);
+        const content = generate_menu(
+            trigger_obj.parentNode as HTMLElement,
+            resizable
+        );
+        generate_colorpicker_body(content, method.varprefix!, method.value!);
     } else if (method.type === "ajax") {
-        const content = generate_menu(trigger_obj.parentNode, resizable);
+        const content = generate_menu(
+            trigger_obj.parentNode as HTMLElement,
+            resizable
+        );
         content.innerHTML =
             '<img src="themes/facelift/images/icon_reload.svg" class="icon reloading">';
         const url_vars = !method.url_vars ? "" : "?" + method.url_vars;
@@ -176,7 +212,7 @@ export function toggle_popup(
             handler_data: {
                 ident: ident,
                 content: content,
-                event: event,
+                event: event!,
             },
         });
     }
@@ -193,17 +229,21 @@ export function toggle_popup(
     open_popup();
 }
 
-var switch_popup_timeout: null | number = null;
+let switch_popup_timeout: null | number = null;
 
 // When one of the popups of a group is open, open other popups once hovering over another popups
 // trigger. This currently only works on PopupMethodInline based popups.
-export function switch_popup_menu_group(trigger, group_cls, delay) {
+export function switch_popup_menu_group(
+    trigger: HTMLElement,
+    group_cls: string,
+    delay: number | null
+) {
     const popup = trigger.nextSibling;
 
-    utils.remove_class(popup.parentNode, "delayed");
+    utils.remove_class(popup!.parentNode as HTMLElement, "delayed");
 
     // When the new focucssed dropdown is already open, leave it open
-    if (utils.has_class(popup.parentNode, "active")) {
+    if (utils.has_class(popup!.parentNode as HTMLElement, "active")) {
         return;
     }
 
@@ -222,23 +262,23 @@ export function switch_popup_menu_group(trigger, group_cls, delay) {
 
     stop_popup_menu_group_switch(trigger);
 
-    utils.add_class(popup.parentNode, "delayed");
+    utils.add_class(popup!.parentNode as HTMLElement, "delayed");
     switch_popup_timeout = window.setTimeout(
         () => switch_popup_menu_group(trigger, group_cls, null),
         delay
     );
 }
 
-export function stop_popup_menu_group_switch(trigger) {
+export function stop_popup_menu_group_switch(trigger: HTMLElement) {
     if (switch_popup_timeout !== null) {
         const popup = trigger.nextSibling;
-        utils.remove_class(popup.parentNode, "delayed");
+        utils.remove_class(popup!.parentNode as HTMLElement, "delayed");
 
         clearTimeout(switch_popup_timeout);
     }
 }
 
-function generate_menu(container, resizable) {
+function generate_menu(container: HTMLElement, resizable: boolean) {
     // Generate the popup menu structure and return the content div
     const menu = document.createElement("div");
     menu.setAttribute("id", "popup_menu");
@@ -262,18 +302,22 @@ function generate_menu(container, resizable) {
     return content;
 }
 
-function generate_colorpicker_body(content, varprefix, value) {
-    var picker = document.createElement("div");
+function generate_colorpicker_body(
+    content: HTMLElement,
+    varprefix: string,
+    value: string
+) {
+    const picker = document.createElement("div");
     picker.className = "cp-small";
     picker.setAttribute("id", varprefix + "_picker");
     content.appendChild(picker);
 
-    var cp_input = document.createElement("div");
+    const cp_input = document.createElement("div");
     cp_input.className = "cp-input";
     cp_input.innerHTML = "Hex color:";
     content.appendChild(cp_input);
 
-    var input_field = document.createElement("input");
+    const input_field = document.createElement("input");
     input_field.setAttribute("id", varprefix + "_input");
     input_field.setAttribute("type", "text");
     cp_input.appendChild(input_field);
@@ -281,10 +325,10 @@ function generate_colorpicker_body(content, varprefix, value) {
     valuespecs.add_color_picker(varprefix, value);
 }
 
-function rgb2hex(rgb) {
+function rgb2hex(rgb: string) {
     if (/^#[0-9A-F]{6}$/i.test(rgb)) return rgb;
 
-    const matches = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/);
+    const matches = rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/)!;
 
     let hex_string = "#";
     for (let i = 1; i < matches.length; i++) {
@@ -293,16 +337,23 @@ function rgb2hex(rgb) {
     return hex_string;
 }
 
-function handle_render_popup_contents(data, response_text) {
+function handle_render_popup_contents(
+    data: {
+        ident: string;
+        content: HTMLElement;
+        event: Event;
+    },
+    response_text: string
+) {
     if (data.content) {
         data.content.innerHTML = response_text;
-        const menu = data.content.closest("div#popup_menu");
+        const menu = data.content.closest("div#popup_menu") as HTMLElement;
         fix_popup_menu_position(data.event, menu);
     }
 }
 
-function fix_popup_menu_position(event, menu) {
-    var rect = menu.getBoundingClientRect();
+function fix_popup_menu_position(_event: Event | undefined, menu: HTMLElement) {
+    const rect = menu.getBoundingClientRect();
 
     // Check whether or not the menu is out of the bottom border
     // -> if so, move the menu up
@@ -310,7 +361,7 @@ function fix_popup_menu_position(event, menu) {
         rect.bottom >
         (window.innerHeight || document.documentElement.clientHeight)
     ) {
-        var height = rect.bottom - rect.top;
+        const height = rect.bottom - rect.top;
         if (rect.top - height < 0) {
             // would hit the top border too, then put the menu to the top border
             // and hope that it fits within the screen
@@ -328,7 +379,7 @@ function fix_popup_menu_position(event, menu) {
     if (
         rect.right > (window.innerWidth || document.documentElement.clientWidth)
     ) {
-        var width = rect.right - rect.left;
+        const width = rect.right - rect.left;
         if (rect.left - width < 0) {
             // would hit the left border too, then put the menu to the left border
             // and hope that it fits within the screen
@@ -343,17 +394,17 @@ function fix_popup_menu_position(event, menu) {
 
 // TODO: Remove this function as soon as all visuals have been
 // converted to pagetypes.py
-export function add_to_visual(visual_type, visual_name) {
-    var element_type = active_popup.data![0];
-    var create_info = {
+export function add_to_visual(visual_type: string, visual_name: string) {
+    const element_type = active_popup.data![0];
+    const create_info = {
         context: active_popup.data![1],
         params: active_popup.data![2],
     };
-    var create_info_json = JSON.stringify(create_info);
+    const create_info_json = JSON.stringify(create_info);
 
     close_popup();
 
-    var url =
+    const url =
         "ajax_add_visual.py" +
         "?visual_type=" +
         visual_type +
@@ -366,7 +417,7 @@ export function add_to_visual(visual_type, visual_name) {
         method: "POST",
         post_data: "create_info=" + encodeURIComponent(create_info_json),
         plain_error: true,
-        response_handler: function (handler_data, response_body) {
+        response_handler: function (_handler_data: any, response_body: string) {
             // After adding a dashlet, go to the choosen dashboard
             if (response_body.substr(0, 2) == "OK") {
                 window.location.href = response_body.substr(3);
@@ -378,18 +429,21 @@ export function add_to_visual(visual_type, visual_name) {
 }
 
 // FIXME: Adapt error handling which has been addded to add_to_visual() in the meantime
-export function pagetype_add_to_container(page_type, page_name) {
-    var element_type = active_popup.data![0]; // e.g. "pnpgraph"
+export function pagetype_add_to_container(
+    page_type: string,
+    page_name: string
+) {
+    const element_type = active_popup.data![0]; // e.g. "pnpgraph"
     // complex JSON struct describing the thing
-    var create_info = {
+    const create_info = {
         context: active_popup.data![1],
         parameters: active_popup.data![2],
     };
-    var create_info_json = JSON.stringify(create_info);
+    const create_info_json = JSON.stringify(create_info);
 
     close_popup();
 
-    var url =
+    const url =
         "ajax_pagetype_add_element.py" +
         "?page_type=" +
         page_type +
@@ -401,12 +455,12 @@ export function pagetype_add_to_container(page_type, page_name) {
     ajax.call_ajax(url, {
         method: "POST",
         post_data: "create_info=" + encodeURIComponent(create_info_json),
-        response_handler: function (handler_data, response_body) {
+        response_handler: function (_handler_data: any, response_body: string) {
             // We get to lines of response. The first is an URL we should be
             // redirected to. The second is "true" if we should reload the
             // sidebar.
             if (response_body) {
-                var parts = response_body.split("\n");
+                const parts = response_body.split("\n");
                 if (parts[1] == "true") {
                     if (parts[0]) utils.reload_whole_page(parts[0]);
                     else utils.reload_whole_page();
@@ -417,8 +471,8 @@ export function pagetype_add_to_container(page_type, page_name) {
     });
 }
 
-export function graph_export(page) {
-    var request = {
+export function graph_export(page: string) {
+    const request = {
         specification: active_popup.data![2]["definition"]["specification"],
         data_range: active_popup.data![2]["data_range"],
     };
@@ -549,37 +603,37 @@ function maximum_popup_width() {
     );
 }
 
-export function mega_menu_show_all_items(current_topic_id) {
-    let current_topic = document.getElementById(current_topic_id);
+export function mega_menu_show_all_items(current_topic_id: string) {
+    const current_topic = document.getElementById(current_topic_id);
     utils.remove_class(current_topic, "extendable");
     utils.add_class(current_topic, "extended");
     utils.add_class(current_topic!.closest(".main_menu"), "extended_topic");
     resize_mega_menu_popup(current_topic!.closest(".main_menu_popup")!);
 }
 
-export function mega_menu_show_all_topics(current_topic_id) {
-    let current_topic = document.getElementById(current_topic_id);
+export function mega_menu_show_all_topics(current_topic_id: string) {
+    const current_topic = document.getElementById(current_topic_id);
     utils.remove_class(current_topic, "extended");
     utils.remove_class(current_topic!.closest(".main_menu"), "extended_topic");
-    mega_menu_hide_entries(current_topic!.closest(".main_menu")?.id);
+    mega_menu_hide_entries(current_topic!.closest(".main_menu")!.id);
     current_topic?.getElementsByTagName("ul")[0].removeAttribute("style");
-    resize_mega_menu_popup(current_topic?.closest(".main_menu_popup")!);
+    resize_mega_menu_popup(current_topic!.closest(".main_menu_popup")!);
 }
 
-export function mega_menu_hide_entries(menu_id) {
-    let menu = document.getElementById(menu_id);
-    let more_is_active = menu?.classList.contains("more");
-    let topics = menu?.getElementsByClassName(
+export function mega_menu_hide_entries(menu_id: string) {
+    const menu = document.getElementById(menu_id);
+    const more_is_active = menu?.classList.contains("more");
+    const topics = menu?.getElementsByClassName(
         "topic"
     ) as HTMLCollectionOf<HTMLElement>;
-    Array.from(topics).forEach(topic => {
+    Array.from(topics!).forEach(topic => {
         if (topic.classList.contains("extended")) return;
-        let max_entry_number = Number(topic.getAttribute("data-max-entries"));
+        const max_entry_number = Number(topic.getAttribute("data-max-entries"));
         if (!max_entry_number) {
             return;
         }
-        let entries = topic.getElementsByTagName("li");
-        let show_all_items_entry = entries[entries.length - 1];
+        const entries = topic.getElementsByTagName("li");
+        const show_all_items_entry = entries[entries.length - 1];
         if (entries.length > max_entry_number + 1) {
             // + 1 is needed for the show_all_items entry
             let counter = 0;
@@ -600,9 +654,9 @@ export function mega_menu_hide_entries(menu_id) {
             else utils.remove_class(topic, "extendable");
         }
     });
-    resize_mega_menu_popup(menu?.parentElement!);
+    resize_mega_menu_popup(menu!.parentElement!);
 }
 
-export function focus_search_field(input_id) {
+export function focus_search_field(input_id: string) {
     document.getElementById(input_id)?.focus();
 }

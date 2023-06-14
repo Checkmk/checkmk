@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -30,6 +30,7 @@ def test_registered_pages() -> None:
         "ajax_inv_render_tree",
         "ajax_nagvis_maps_snapin",
         "ajax_popup_action_menu",
+        "ajax_popup_host_action_menu",
         "ajax_popup_add_visual",
         "ajax_popup_icon_selector",
         "ajax_popup_move_to_folder",
@@ -223,6 +224,8 @@ def test_registered_pages() -> None:
             "noauth:saml_acs",
             "noauth:saml_metadata",
             "noauth:saml_sso",
+            "noauth:cognito_sso",
+            "noauth:cognito_callback",
         ]
 
     # TODO: Depending on how we call the test (single test or whole package) we

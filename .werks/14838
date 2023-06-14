@@ -6,7 +6,7 @@ Date: 1666354244
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 With the endpoint {{domain-types/license_usage/actions/download/invoke}} the
 license usage report can be downloaded.

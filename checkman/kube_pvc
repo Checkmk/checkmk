@@ -7,9 +7,14 @@ description:
 
  This check monitors the Persistent Volume Claim (PVC) and its attached volume.
 
- The check displays the reported status of the PVC. If available, the check measures the
- volume usage of the attached volume storage. The usage is checked against a warning and
- critical level which can be configured in the respective rule.
+ The check displays the reported status of the PVC. For a reported status of "Pending",
+ the service will go {WARN}/{CRIT} if the PVC has been in this state for more than 5/10 minutes
+ respectively. For a "Lost" status, the service state will immediately go to {CRIT}. Both default
+ behaviours can be configured in the respective PVC check rule.
+
+ If available, the check measures the volume usage of the attached volume storage.
+ The usage is checked against a warning and critical level which can also be configured
+ in the same rule.
 
  The current volume usage is only available under the specific condition that kubelet endpoints
  report the necessary volume metrics. In the case where these metrics are unavailable,

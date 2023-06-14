@@ -6,7 +6,7 @@ Date: 1648118638
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The agent rule "Count, size and age of files" is now also applied to
 Solaris and AIX, making it possible to roll out the <tt>fileinfo.cfg</tt>

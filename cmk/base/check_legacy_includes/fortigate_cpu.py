@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,8 +7,8 @@
 from .cpu_util import check_cpu_util
 
 
-def inventory_fortigate_cpu(info, default_levels):
-    return [(None, default_levels)]
+def inventory_fortigate_cpu(info):
+    yield None, {}
 
 
 def check_fortigate_cpu(item, params, info):

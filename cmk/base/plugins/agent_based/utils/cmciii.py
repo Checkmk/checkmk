@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, Dict, List, Mapping, Optional
 
-from ..agent_based_api.v1 import Service, type_defs
+from ..agent_based_api.v1 import all_of, Service, startswith, type_defs
 
 Variable = List[str]
 DiscoveryParams = Mapping[str, bool]
@@ -16,6 +16,12 @@ SensorType = str
 Sensor = Dict[str, Any]
 Sensors = Dict[str, Sensor]
 Section = Dict[SensorType, Sensors]
+
+
+DETECT_CMCIII_LCP = all_of(
+    startswith(".1.3.6.1.2.1.1.1.0", "Rittal LCP"),
+    startswith(".1.3.6.1.4.1.2606.7.4.2.2.1.3.2.6", "Air.Temperature.DescName"),
+)
 
 
 def discovery_default_parameters() -> DiscoveryParams:

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.forms as forms
 import cmk.gui.visuals as visuals
+from cmk.gui.data_source import data_source_registry
 from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -14,8 +15,6 @@ from cmk.gui.page_menu import make_simple_form_page_menu
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri
 from cmk.gui.valuespec import DropdownChoice
-
-from .data_source import data_source_registry
 
 
 def DatasourceSelection() -> DropdownChoice[str]:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Dict, Iterable, Optional, Sequence, Tuple
@@ -27,7 +27,6 @@ STATUS_MAP = {
 
 
 def parse_physical_volumes(volume_data: Iterable) -> Tuple[Dict, Dict]:
-
     map_label = {}
     parsed_volumes = {}
 
@@ -52,7 +51,7 @@ def parse_virtual_volumes(map_label: Dict, virtual_volumes: Iterable, quotas: It
     # Besides quotas for virtual volumes the quota table also contains
     # user and group quotas.
 
-    def quota_oid_end(phys_volume_id, virtual_volume_oid_end) -> str:  # type:ignore[no-untyped-def]
+    def quota_oid_end(phys_volume_id, virtual_volume_oid_end) -> str:  # type: ignore[no-untyped-def]
         """A QuotasEntry is indexed by a concatenation of the physical
         volume_id the virtual volume belongs to and the oid_end without
         the first element of the virtual volume."""

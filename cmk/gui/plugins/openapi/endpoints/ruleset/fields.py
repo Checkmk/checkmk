@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
@@ -58,7 +58,6 @@ class RulesetSearchOptions(base.BaseSchema):
         "fulltext": None,
         "ruleset_deprecated": False,
         "ruleset_used": False,
-        "ruleset_group": False,
         "ruleset_name": False,
         "ruleset_title": False,
         "ruleset_help": False,
@@ -70,23 +69,21 @@ class RulesetSearchOptions(base.BaseSchema):
 
     fulltext = fields.String(
         description=(
-            "Search all keys (like `name`, `title`, `help`, etc.) for this text. " "Regex allowed."
+            "Search all keys (like `name`, `title`, `help`, etc.) for this text. Regex allowed."
         ),
     )
     folder = gui_fields.FolderField(
         description="The folder in which to search for rules.",
     )
-    deprecated = fields.String(
+    deprecated = fields.Boolean(
         attribute="ruleset_deprecated",
-        description="Also show deprecated rulesets. Defaults to False.",
+        description="Only show deprecated rulesets. Defaults to False.",
+        load_default=False,
     )
-    used = fields.String(
+    used = fields.Boolean(
         attribute="ruleset_used",
         description="Only show used rulesets. Defaults to True.",
-    )
-    group = fields.String(
-        attribute="ruleset_group",
-        description="The specific group to search for rules in.",
+        load_default=True,
     )
     name = fields.String(
         attribute="ruleset_name",

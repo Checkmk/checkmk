@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,12 +11,12 @@ from cmk.gui.display_options import display_options
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
+from cmk.gui.painter.v0.base import Cell, CellSpec, Painter
+from cmk.gui.painter.v1.helpers import is_stale
 from cmk.gui.type_defs import ColumnName, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.views.graph import cmk_graph_url
 
-from ..painter.v0.base import Cell, CellSpec, Painter
-from ..painter.v1.helpers import is_stale
 from .base import Perfometer
 
 

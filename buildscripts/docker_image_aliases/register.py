@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -15,7 +15,7 @@ to create an (internally used) Dockerfile inside `IMAGE_DEBIAN_DEFAULT/`:
 
 which can be used like this (Dockerfile example):
 
-  docker build --build-arg "IMAGE_DEBIAN_DEFAULT=$(./resolve.sh IMAGE_DEBIAN_DEFAULT)" -t debian_example example
+  docker build --build-arg "IMAGE_DEBIAN_DEFAULT=$(./resolve.py IMAGE_DEBIAN_DEFAULT)" -t debian_example example
 """
 
 import json
@@ -67,7 +67,7 @@ def commit_id(directory) -> str:
 
 def cmk_branch(directory) -> str:
     return min(
-        ("master", "2.0.0", "1.6.0", "1.5.0"),
+        ("master", "2.2.0", "2.1.0", "2.0.0", "1.6.0", "1.5.0"),
         key=lambda b: int(
             cmd_result(f" git rev-list --max-count=1000 --count HEAD...origin/{b}", cwd=directory)[
                 0

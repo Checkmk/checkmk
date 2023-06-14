@@ -274,7 +274,7 @@ std::wstring BuildCommandLine(const fs::path &controller) {
     auto agent_channel = GetConfiguredAgentChannel(GetModus());
 
     return controller.wstring() +
-           wtools::ConvertToUTF16(fmt::format(" -vv {} {} {}",   //
+           wtools::ConvertToUtf16(fmt::format(" -vv {} {} {}",   //
                                               kCmdLineAsDaemon,  // daemon
                                               kCmdLineChannel, agent_channel));
 }
@@ -304,7 +304,7 @@ std::optional<uint32_t> StartAgentController() {
 
     wtools::AppRunner ar;
     if (GetModus() == Modus::integration) {
-        if (auto env_value = tools::win::GetEnv(L"DEBUG_HOME_DIR"s);
+        if (const auto env_value = tools::win::GetEnv(L"DEBUG_HOME_DIR"s);
             env_value.empty()) {
             XLOG::d.i("Set DEBUG_HOME_DIR to '{}'",
                       wtools::ToUtf8(cfg::GetUserDir()));
@@ -340,7 +340,7 @@ std::string RunAgentControllerWithParam(std::string_view param) {
         return {};
     }
     auto result = wtools::RunCommand(work_controller.wstring() + L" " +
-                                     wtools::ConvertToUTF16(param));
+                                     wtools::ConvertToUtf16(param));
     TrimRight(result, "\n\r");
     return result;
 }

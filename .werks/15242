@@ -1,0 +1,20 @@
+Title: Discovery now fails if no data is available
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1678177732
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The bulk discovery and periodic service discovery now fails if one (or more) of the configured data sources fail to fetch data.
+
+If a data source fails, it will not produce any data.
+This resulted in vanished (or missing) services.
+If no data is fetched at all, the bulk discovery and periodic service discovery of a host would "successfully" discover zero services.
+They now report a failure (for the affected host) in all of those cases.
+
+Such a failure to fetch data can either be a temporary or a permanent problem.
+If it is temporary we should retry later; if it is permanent user must fix their configuration.
+Either way, there is no point in proceeding with the discovery, potentially removing services that should not be removed.

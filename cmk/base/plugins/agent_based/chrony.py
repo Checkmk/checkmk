@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -63,7 +63,7 @@ def parse_chrony(string_table):
     return parsed or None
 
 
-def is_error_message(info) -> bool:  # type:ignore[no-untyped-def]
+def is_error_message(info) -> bool:  # type: ignore[no-untyped-def]
     return len(info) == 1 and isinstance(info[0], list) and ":" not in info[0][0]
 
 

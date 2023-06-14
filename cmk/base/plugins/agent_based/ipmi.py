@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -129,88 +129,37 @@ def parse_ipmi(string_table: type_defs.StringTable) -> ipmi.Section:
     >>> pprint(parse_ipmi([
     ... ['Ambient', '18.500', 'degrees_C', 'ok', 'na', '1.000', '6.000', '37.000', '42.000', 'na'],
     ... ['CPU', '33.000', 'degrees_C', 'ok', 'na', 'na', 'na', '95.000', '99.000', 'na'],
-    ... ['PCH_1.05V', '1.040', 'Volts', 'ok', 'na', '0.970', 'na', 'na', '1.130', 'na'],
-    ... ['Total_Power', '48.000', 'Watts', 'ok', 'na', 'na', 'na', 'na', '498.000', 'na'],
-    ... ['I2C4_error_ratio', '0.000', 'percent', 'ok', 'na', 'na', 'na', '10.000', '20.000', 'na'],
     ... ]))
     {'Ambient': Sensor(status_txt='ok',
                        unit='degrees_C',
+                       state=None,
                        value=18.5,
                        crit_low=1.0,
                        warn_low=6.0,
                        warn_high=37.0,
-                       crit_high=42.0),
+                       crit_high=42.0,
+                       type_=None),
      'CPU': Sensor(status_txt='ok',
                    unit='degrees_C',
+                   state=None,
                    value=33.0,
                    crit_low=None,
                    warn_low=None,
                    warn_high=95.0,
-                   crit_high=99.0),
-     'I2C4_error_ratio': Sensor(status_txt='ok',
-                                unit='percent',
-                                value=0.0,
-                                crit_low=None,
-                                warn_low=None,
-                                warn_high=10.0,
-                                crit_high=20.0),
-     'PCH_1.05V': Sensor(status_txt='ok',
-                         unit='Volts',
-                         value=1.04,
-                         crit_low=0.97,
-                         warn_low=None,
-                         warn_high=None,
-                         crit_high=1.13),
-     'Total_Power': Sensor(status_txt='ok',
-                           unit='Watts',
-                           value=48.0,
-                           crit_low=None,
-                           warn_low=None,
-                           warn_high=None,
-                           crit_high=498.0)}
+                   crit_high=99.0,
+                   type_=None)}
     >>> pprint(parse_ipmi([
     ... ['CMOS Battery     ', ' 10h ', ' ok  ', '  7.1 ', ''],
-    ... ['VCORE            ', ' 12h ', ' ok  ', '  3.1 ', ' State Deasserted'],
-    ... ['MSR Info Log     ', ' 28h ', ' ns  ', ' 34.1 ', ' No Reading'],
-    ... ['Power Redundancy ', ' 02h ', ' ok ', ' 21.1 ', ' Fully Redundant'],
-    ... ['PS1 Status       ', ' C8h ', ' ok ', ' 10.1 ', ' Presence detected, Failure detected     <= NOT OK !!'],
     ... ]))
     {'CMOS_Battery': Sensor(status_txt='ok',
                             unit='',
+                            state=None,
                             value=None,
                             crit_low=None,
                             warn_low=None,
                             warn_high=None,
-                            crit_high=None),
-     'MSR_Info_Log': Sensor(status_txt='ns (No Reading)',
-                            unit='',
-                            value=None,
-                            crit_low=None,
-                            warn_low=None,
-                            warn_high=None,
-                            crit_high=None),
-     'PS1_Status': Sensor(status_txt='ok (Presence detected, Failure detected     '
-                                     '<= NOT OK !!)',
-                          unit='',
-                          value=None,
-                          crit_low=None,
-                          warn_low=None,
-                          warn_high=None,
-                          crit_high=None),
-     'Power_Redundancy': Sensor(status_txt='ok (Fully Redundant)',
-                                unit='',
-                                value=None,
-                                crit_low=None,
-                                warn_low=None,
-                                warn_high=None,
-                                crit_high=None),
-     'VCORE': Sensor(status_txt='ok (State Deasserted)',
-                     unit='',
-                     value=None,
-                     crit_low=None,
-                     warn_low=None,
-                     warn_high=None,
-                     crit_high=None)}
+                            crit_high=None,
+                            type_=None)}
     """
     parsed: ipmi.Section = {}
     for line in string_table:
@@ -292,20 +241,19 @@ def discover_ipmi(
     section_ipmi: Optional[ipmi.Section],
     section_ipmi_discrete: Optional[ipmi.Section],
 ) -> type_defs.DiscoveryResult:
-    section_merged = _merge_sections(section_ipmi, section_ipmi_discrete)
-
     mode, ignore_params = params["discovery_mode"]
+
     if mode == "summarize":
         yield Service(item="Summary")
         return
 
-    ignore_params = {
-        "ignored_sensorstates": ["ns", "nr", "na"],
-        **ignore_params,
-    }
-    for sensor_name, sensor in section_merged.items():
-        if not ipmi.ignore_sensor(sensor_name, sensor.status_txt, ignore_params):
-            yield Service(item=sensor_name)
+    yield from ipmi.discover_individual_sensors(
+        {
+            "ignored_sensorstates": ["ns", "nr", "na"],
+            **ignore_params,
+        },
+        _merge_sections(section_ipmi, section_ipmi_discrete),
+    )
 
 
 def ipmi_status_txt_mapping(status_txt: str) -> State:

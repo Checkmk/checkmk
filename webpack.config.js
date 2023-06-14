@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -6,6 +6,24 @@ const path = require("path");
 const RemoveEmptyScriptsPlugin = require("webpack-remove-empty-scripts");
 const TerserPlugin = require("terser-webpack-plugin");
 const webpack = require("webpack");
+
+class WarningsToErrors {
+    apply(compiler) {
+        compiler.hooks.shouldEmit.tap("WarningsToErrors", compilation => {
+            if (compilation.warnings.length > 0) {
+                compilation.errors = compilation.errors.concat(compilation.warnings);
+                compilation.warnings = [];
+            }
+
+            compilation.children.forEach(child => {
+                if (child.warnings.length > 0) {
+                    child.errors = child.errors.concat(child.warnings);
+                    child.warnings = [];
+                }
+            });
+        });
+    }
+}
 
 module.exports = {
     mode: "production",
@@ -116,6 +134,7 @@ module.exports = {
     plugins: [
         new RemoveEmptyScriptsPlugin(),
         new webpack.EnvironmentPlugin(["ENTERPRISE", "MANAGED"]),
+        new WarningsToErrors(),
     ],
 };
 
@@ -161,4 +180,5 @@ if (process.env.WEBPACK_MODE === "quick") {
         },
     ]);
 }
+
 module.exports.module.rules.unshift(babel_loader);

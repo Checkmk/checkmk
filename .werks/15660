@@ -1,0 +1,23 @@
+Title: Temperature unit in graphs and perfometers is now user-configurable
+Class: feature
+Compatible: compat
+Component: metrics
+Date: 1681480271
+Edition: cre
+Knowledge: undoc
+Level: 2
+Version: 2.3.0b1
+
+The temperature unit used to render graphs and perfometers is now configurable on a per-user basis
+via the user profile. Users can either explicitly choose between degree Celsius and degree
+Fahrenheit or they can use the default temperature unit, which in turn is configurable via a global
+setting (linked in the user profile).
+
+Note that this new setting does not affect the temperature unit used in service outputs (summary and
+details). Use the ruleset <i>Temperature</i> to configure this.
+
+Finally, with this new feature, the option to configure
+<a href="https://checkmk.com/werk/14534">unit conversions in graphs tunings</a> is deprecated. This
+option was specifically introduced to make the temperature unit in graphs user-configurable, which
+is now possible via the setting introduced in this werk. Hence, unit conversions are no
+longer configurable via graph tunings and any already exisiting settings will be ignored.

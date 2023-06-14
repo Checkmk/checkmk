@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When using service labels to match rulesets the web UI and checking engine disagreed if a ruleset should be applied.
 The UI did not correctly show rule matches for services with discovered labels.

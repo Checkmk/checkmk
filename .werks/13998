@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The filestat check should output the relevant files in case the count threshold is exceeded.
 This did not work and is fixed now.

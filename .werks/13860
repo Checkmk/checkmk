@@ -7,10 +7,10 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The change is intended to avoid the situation when the internal 
 agent port is randomly 'stolen' breaking the monitoring. 
-The former port 500001 is located  in the range 32768-65535 
+The former port 50001 is located  in the range 32768-65535 
 and ports from the range  may be used(randomly) by TCP clients 
 or even blocked by Windows(depends from version and service pack).

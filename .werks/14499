@@ -6,7 +6,7 @@ Date: 1657695024
 Edition: cme
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The activate changes process could be slow when activating changes for multiple
 sites in a distributed monitoring set-up. The activation would eventually run

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When using the cmk_site_statistics (core PIDs) filter with no monitoring data present the
 view would crash.

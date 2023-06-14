@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
 import pytest
 
-from cmk.utils.type_defs import InventoryPluginName, ParsedSectionName
+from cmk.utils.type_defs import ParsedSectionName
+
+from cmk.checkengine.inventory import InventoryPluginName
 
 import cmk.base.api.agent_based.register.inventory_plugins as inventory_plugins
 from cmk.base.api.agent_based.inventory_classes import InventoryPlugin

@@ -1,0 +1,10 @@
+---
+- name: "Start Apache"
+  ansible.builtin.service:
+    name: apache2
+    state: started
+
+- name: "Start httpd"
+  ansible.builtin.service:
+    name: httpd
+    state: started

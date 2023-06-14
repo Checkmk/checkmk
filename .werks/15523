@@ -1,0 +1,17 @@
+Title: ps: HTML escaping for discouraged configuration
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1681245517
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This fixes some display glitches for a very specific setup:
+Users can configure the plugin "<i>State and Count of Processes</i>" to produce an HTML table in the service details, and additionally configure Checkmk to <i>not</i> escape it (such that it will actually be rendered as a table).
+
+For these setups we now escape the values inside the table cells, in particular (but not exclusively) to fix rendering of strings containing a literal <tt>\n</tt>, such as <tt>F:\nginx</tt>.
+
+While this makes these scenarios a little safer along the way, in general plugin output must not be trusted.
+This is why we normally escape all plugin output, and discourage these configurations.

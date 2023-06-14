@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,10 +12,8 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import Age, Dictionary, ListOf, MonitoringState, RegExp
 
-from .systemd_services import SERVICE, SOCKET, UnitNames
 
-
-def _parameter_valuespec_systemd_units_summary(unit: UnitNames) -> Dictionary:
+def _parameter_valuespec_systemd_units_summary() -> Dictionary:
     return Dictionary(
         elements=[
             (
@@ -26,21 +24,21 @@ def _parameter_valuespec_systemd_units_summary(unit: UnitNames) -> Dictionary:
                         (
                             "active",
                             MonitoringState(
-                                title=_("Monitoring state if %s is active") % unit.singular,
+                                title=_("Monitoring state if unit is active"),
                                 default_value=0,
                             ),
                         ),
                         (
                             "inactive",
                             MonitoringState(
-                                title=_("Monitoring state if %s is inactive") % unit.singular,
+                                title=_("Monitoring state if unit is inactive"),
                                 default_value=0,
                             ),
                         ),
                         (
                             "failed",
                             MonitoringState(
-                                title=_("Monitoring state if %s is failed") % unit.singular,
+                                title=_("Monitoring state if unit is failed"),
                                 default_value=2,
                             ),
                         ),
@@ -50,7 +48,7 @@ def _parameter_valuespec_systemd_units_summary(unit: UnitNames) -> Dictionary:
             (
                 "states_default",
                 MonitoringState(
-                    title=_("Monitoring state for any other %s state") % unit.singular,
+                    title=_("Monitoring state for any other unit state"),
                     default_value=2,
                 ),
             ),
@@ -62,13 +60,12 @@ def _parameter_valuespec_systemd_units_summary(unit: UnitNames) -> Dictionary:
                         size=40,
                         mode=RegExp.infix,
                     ),
-                    title=_("Exclude %s matching provided regex patterns") % unit.plural,
+                    title=_("Exclude units matching provided regex patterns"),
                     help=_(
-                        "<p>You can optionally define one or multiple regular expressions "
-                        "where a matching case will result in the exclusion of the concerning %s(s). "
-                        "This allows to ignore services which are known to fail beforehand. </p>"
-                    )
-                    % unit.singular,
+                        "You can optionally define one or multiple regular expressions."
+                        " Matching units are excluded."
+                        " This allows to ignore services which are known to fail beforehand."
+                    ),
                     add_label=_("Add pattern"),
                 ),
             ),
@@ -76,11 +73,10 @@ def _parameter_valuespec_systemd_units_summary(unit: UnitNames) -> Dictionary:
                 "activating_levels",
                 SimpleLevels(
                     Age,
-                    title=_("Define a tolerating time period for activating %s") % unit.plural,
+                    title=_("Tolerance period for 'activating' state"),
                     help=_(
-                        "Choose time levels for which a %s is allowed to be in an 'activating' state"
-                    )
-                    % unit.plural,
+                        "Choose time levels for which a unit is allowed to be in an 'activating' state"
+                    ),
                     default_levels=(30, 60),
                 ),
             ),
@@ -88,11 +84,10 @@ def _parameter_valuespec_systemd_units_summary(unit: UnitNames) -> Dictionary:
                 "deactivating_levels",
                 SimpleLevels(
                     Age,
-                    title=_("Define a tolerating time period for deactivating %s") % unit.plural,
+                    title=_("Tolerance period for 'deactivating' state"),
                     help=_(
-                        "Choose time levels (in seconds) for which a %s is allowed to be in an 'deactivating' state"
-                    )
-                    % unit.singular,
+                        "Choose time levels (in seconds) for which a unti is allowed to be in an 'deactivating' state"
+                    ),
                     default_value=(30, 60),
                 ),
             ),
@@ -100,20 +95,17 @@ def _parameter_valuespec_systemd_units_summary(unit: UnitNames) -> Dictionary:
                 "reloading_levels",
                 SimpleLevels(
                     Age,
-                    title=_("Define a tolerating time period for reloading %s") % unit.plural,
+                    title=_("Tolderance period for 'reloading' state"),
                     help=_(
-                        "Choose time levels (in seconds) for which a %s is allowed to be in a 'reloading' state"
-                    )
-                    % unit.singular,
+                        "Choose time levels (in seconds) for which a unit is allowed to be in a 'reloading' state"
+                    ),
                     default_value=(30, 60),
                 ),
             ),
         ],
         help=_(
-            "This ruleset only applies to the Summary Systemd %s and not the individual "
-            "Systemd %s."
-        )
-        % (unit.singular, unit.plural),
+            "This ruleset only applies to the summary Systemd service and not the individual one."
+        ),
     )
 
 
@@ -122,8 +114,8 @@ rulespec_registry.register(
         check_group_name="systemd_services_summary",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        parameter_valuespec=lambda: _parameter_valuespec_systemd_units_summary(SERVICE),
-        title=lambda: _("Systemd Services Summary"),
+        parameter_valuespec=_parameter_valuespec_systemd_units_summary,
+        title=lambda: _("Systemd services summary"),
     )
 )
 
@@ -132,7 +124,7 @@ rulespec_registry.register(
         check_group_name="systemd_sockets_summary",
         group=RulespecGroupCheckParametersApplications,
         match_type="dict",
-        parameter_valuespec=lambda: _parameter_valuespec_systemd_units_summary(SOCKET),
-        title=lambda: _("Systemd Sockets Summary"),
+        parameter_valuespec=_parameter_valuespec_systemd_units_summary,
+        title=lambda: _("Systemd sockets summary"),
     )
 )

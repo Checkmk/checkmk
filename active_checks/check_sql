@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # DB2 support requires installation of the IBM Data Server Client:
 #  http://www-01.ibm.com/support/docview.wss?uid=swg27016878
 # as well as the ibm_db2 Python DBI driver for DB2:
-#  https://pypi.python.org/pypi/ibm_db
+#  https://pypi.org/pypi/ibm_db
 
 # SQLAnywhere support requires installation of the SAP SQL Anywhere binaries:
 # https://help.sap.com/docs/SAP_SQL_Anywhere/a3e900ad39b94d689987e838835f39fe/8157f2236ce21014a9f387041b1c1047.html?locale=en-US&version=17.0
@@ -288,7 +288,7 @@ def oracle_execute(cursor, cmd, inpt, procedure):
         # In an earlier version, this code-branch
         # had been executed regardles of the dbms.
         # clearly this is oracle specific.
-        outvar = cursor.var(cx_Oracle.STRING)  # pylint:disable=undefined-variable
+        outvar = cursor.var(cx_Oracle.STRING)  # pylint: disable=undefined-variable
         # However, I have not been able to test it.
         inpt.append(outvar)
 

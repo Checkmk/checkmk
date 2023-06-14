@@ -1,4 +1,4 @@
-// Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -10,11 +10,11 @@
 
 #include "livestatus/Column.h"
 #include "livestatus/DynamicColumn.h"
+#include "livestatus/ICore.h"
 #include "livestatus/Logger.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/StringUtils.h"
 
-Table::Table(MonitoringCore *mc) : _mc(mc) {}
+Table::Table(ICore *mc) : _mc(mc) {}
 
 Table::~Table() = default;
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -30,7 +30,7 @@ class WaterflowReading(NamedTuple):
         pytest.param(
             [
                 [
-                    "Waterflow",
+                    "LCP_B5_Waterflow",
                     "0.0 l/min",
                     "130.0 l/min",
                     "0.0 l/min",
@@ -46,7 +46,12 @@ class WaterflowReading(NamedTuple):
                 ],
             ],
             WaterflowReading(
-                name="Waterflow", flow=0.0, unit="l/min", maxflow=130.0, minflow=0.0, status="OK"
+                name="LCP_B5_Waterflow",
+                flow=0.0,
+                unit="l/min",
+                maxflow=130.0,
+                minflow=0.0,
+                status="OK",
             ),
             id="Waterflow measurements are parsed correctly",
         ),

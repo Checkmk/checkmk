@@ -6,7 +6,7 @@ Date: 1663855572
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When using the query string variable "_profile=1" to dynamically enable profiling,
 the REST API complained about "_profile" being an unknown paramter. This is no longer

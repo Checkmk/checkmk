@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module collects code which helps with testing Checkmk.
@@ -20,7 +20,7 @@ import re
 import socket
 import statistics
 import time
-from collections.abc import Callable, Iterable, Iterator, Mapping
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
 from contextlib import contextmanager
 from typing import Any, Literal
 from unittest import mock
@@ -203,11 +203,11 @@ class MockLiveStatusConnection:
             ...     response = live.result_of_next_query(
             ...         'GET status\\n'
             ...         'Columns: livestatus_version program_version program_start '
-            ...         'num_hosts num_services core_pid'
+            ...         'num_hosts num_services core_pid edition'
             ...     )[0]
-            ...     # Response looks like [['2020-07-03', 'Check_MK 2020-07-03', 1593762478, 1, 36]]
+            ...     # Response looks like [['2020-07-03', 'Check_MK 2020-07-03', 1593762478, 1, 36, 'raw']]
             ...     assert len(response) == 1
-            ...     assert len(response[0]) == 6
+            ...     assert len(response[0]) == 7
 
         Some Stats calls are supported as well:
 
@@ -231,7 +231,10 @@ class MockLiveStatusConnection:
             ...
             livestatus.LivestatusTestingError: Expected queries were not queried on site 'NO_SITE':
              * 'GET status\\nColumns: livestatus_version program_version \
-program_start num_hosts num_services core_pid'
+program_start num_hosts num_services core_pid edition'
+            <BLANKLINE>
+            No queries were sent to site NO_SITE.
+
 
         This example will fail due to a wrong query being issued:
 
@@ -244,6 +247,10 @@ program_start num_hosts num_services core_pid'
              * 'Hello world!'
             Got query:
              * 'Foo bar!'
+            <BLANKLINE>
+            The following queries were sent to site NO_SITE:
+             * 'Foo bar!'
+
 
         This example will fail due to a superfluous query being issued:
 
@@ -254,6 +261,10 @@ program_start num_hosts num_services core_pid'
             ...
             livestatus.LivestatusTestingError: Got unexpected query on site 'NO_SITE':
              * 'Spanish inquisition!'
+            <BLANKLINE>
+            The following queries were sent to site NO_SITE:
+             * 'Spanish inquisition!'
+
 
         Using the new site parameter, we can add data to specific sites.
 
@@ -349,7 +360,7 @@ program_start num_hosts num_services core_pid'
             # We expect this query and give the expected result.
             query = [
                 "GET status",
-                "Columns: livestatus_version program_version program_start num_hosts num_services core_pid",
+                "Columns: livestatus_version program_version program_start num_hosts num_services core_pid edition",
             ]
             self.expect_query(query, force_pos=0)  # first query to be expected
 
@@ -419,6 +430,7 @@ program_start num_hosts num_services core_pid'
         query: str | list[str],
         match_type: MatchType = "strict",
         force_pos: int | None = None,
+        sites: Collection[SiteName] | None = None,
     ) -> MockLiveStatusConnection:
         """Add a LiveStatus query to be expected by this class.
 
@@ -438,6 +450,11 @@ program_start num_hosts num_services core_pid'
             force_pos:
                 Only used internally. Ignore.
 
+            site:
+                Optionally the sites where the query should be expected. NOTE: When this is not
+                given, we default to all configured sites, unless the query stats with `COMMAND`. In
+                this case, we default to the FIRST SITE configured.
+
         Returns:
             The object itself, so you can chain.
 
@@ -448,12 +465,19 @@ program_start num_hosts num_services core_pid'
             query = "\n".join(query)
         query = query.rstrip()
 
-        if query.startswith("COMMAND"):
-            first_conn = list(self.connections.values())[0]
-            first_conn.expect_query(query, match_type, force_pos)
+        if sites is not None:
+            if unknown_sites := set(sites) - set(self.connections):
+                raise ValueError(f"Unknown site(s): {','.join(unknown_sites)}")
+            connections: Iterable[MockSingleSiteConnection] = (
+                self.connections[site] for site in sites
+            )
+        elif query.startswith("COMMAND"):
+            connections = list(self.connections.values())[:1]
         else:
-            for single_conn in self.connections.values():
-                single_conn.expect_query(query, match_type, force_pos)
+            connections = self.connections.values()
+
+        for single_conn in connections:
+            single_conn.expect_query(query, match_type, force_pos)
         return self
 
 
@@ -596,12 +620,22 @@ def remove_headers(query: str, headers: list[str]) -> str:
 
 class MockSingleSiteConnection:
     def __init__(self, site_name: SiteName, multisite_connection: MockLiveStatusConnection) -> None:
+        self._sent_queries: list[bytes] = []
         self._site_name = site_name
         self._multisite = multisite_connection
         self._last_response: io.StringIO | None = None
         self._expected_queries: list[tuple[str, MatchType]] = []
 
         self.socket = FakeSocket(self)
+
+    def _format_sent_queries(self):
+        if not self._sent_queries:
+            return f"\n\nNo queries were sent to site {self._site_name}."
+        formatted_queries = "\n".join(["* " + repr(query.decode()) for query in self._sent_queries])
+        return (
+            f"\n\nThe following queries were sent to site {self._site_name}:\n "
+            f"{formatted_queries}"
+        )
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} id={id(self)} site={self._site_name}>"
@@ -625,9 +659,13 @@ class MockSingleSiteConnection:
         return self
 
     def result_of_next_query(self, query: str) -> tuple[Response, str]:
+        self._sent_queries.append(query.encode())
         if not self._expected_queries:
             raise LivestatusTestingError(
-                f"Got unexpected query on site {self._site_name!r}:" "\n" f" * {repr(query)}"
+                f"Got unexpected query on site {self._site_name!r}:"
+                "\n"
+                f" * {repr(query)}"
+                f"{self._format_sent_queries()}"
             )
 
         expected_query, match_type = self._expected_queries.pop(0)
@@ -652,6 +690,7 @@ class MockSingleSiteConnection:
                 f" * {repr(expected_query)}\n"
                 f"Got query:\n"
                 f" * {repr(query)}"
+                f"{self._format_sent_queries()}"
             )
 
         def _generate_output() -> Iterable[list[ColumnName]]:
@@ -672,6 +711,7 @@ class MockSingleSiteConnection:
         return self._last_response.read(length).encode("utf-8")
 
     def socket_send(self, data: bytes) -> None:
+        self._sent_queries.append(data)
         if data[-2:] == b"\n\n":
             data = data[:-2]
         response, output_format = self.result_of_next_query(data.decode("utf-8"))
@@ -687,6 +727,7 @@ class MockSingleSiteConnection:
                 remaining_queries += f"\n * {repr(query[0])}"
             raise LivestatusTestingError(
                 f"Expected queries were not queried on site {self._site_name!r}:{remaining_queries}"
+                f"{self._format_sent_queries()}"
             )
 
 
@@ -707,14 +748,14 @@ def _default_tables() -> dict[TableName, ResultList]:
                 "program_start": _program_start_timestamp,
                 "num_hosts": 1,
                 "num_services": 36,
-                "helper_usage_cmk": 0.00151953,
                 "helper_usage_fetcher": 0.00151953,
                 "helper_usage_checker": 0.00151953,
                 "helper_usage_generic": 0.00151953,
-                "average_latency_cmk": 0.0846039,
+                "average_latency_checker": 0.0846039,
                 "average_latency_fetcher": 0.0846039,
                 "average_latency_generic": 0.0846039,
                 "core_pid": 12345,
+                "edition": "raw",
             }
         ],
         "downtimes": [

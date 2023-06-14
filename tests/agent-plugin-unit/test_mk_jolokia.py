@@ -1,9 +1,20 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
 # pylint: disable=protected-access,redefined-outer-name
+
+import sys
+from typing import Mapping
+
+import pytest
+
+if sys.version_info[0] == 2:
+    import agents.plugins.mk_jolokia_2 as mk_jolokia  # pylint: disable=syntax-error
+else:
+    import agents.plugins.mk_jolokia as mk_jolokia
 
 # Continue if typing cannot be imported, e.g. for running unit tests
 try:
@@ -11,13 +22,9 @@ try:
 except ImportError:
     pass
 
-import pytest
-
-import agents.plugins.mk_jolokia as mk_jolokia
-
 
 @pytest.mark.parametrize("removed", ["protocol", "server", "port", "suburi", "timeout"])
-def test_missing_config_basic(removed) -> None:  # type:ignore[no-untyped-def]
+def test_missing_config_basic(removed: str) -> None:
     config = mk_jolokia.get_default_config_dict()
     config.pop(removed)
     with pytest.raises(ValueError):
@@ -97,8 +104,8 @@ def test_config_legacy_cert_path_to_verify() -> None:
         )
     ],
 )
-def test_jolokia_instance_base_url(config, base_url) -> None:  # type:ignore[no-untyped-def]
-    joloi = mk_jolokia.JolokiaInstance(config)
+def test_jolokia_instance_base_url(config: Mapping[str, object], base_url: str) -> None:
+    joloi = mk_jolokia.JolokiaInstance(config, mk_jolokia.USER_AGENT)
     assert joloi._get_base_url() == base_url
 
 
@@ -115,7 +122,7 @@ def test_jolokia_yield_configured_instances() -> None:
 
 
 class _MockHttpResponse(object):  # pylint: disable=useless-object-inheritance
-    def __init__(self, http_status, **kwargs) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, http_status: int, **kwargs: object) -> None:
         self.status_code = http_status
         self.headers = {}  # type: Dict
         self.content = b"\x00"
@@ -154,5 +161,5 @@ def test_jolokia_validate_response_skip_instance() -> None:
         },
     ],
 )
-def test_jolokia_validate_response_ok(data) -> None:  # type:ignore[no-untyped-def]
+def test_jolokia_validate_response_ok(data: Mapping[str, int]) -> None:
     assert data == mk_jolokia.validate_response(_MockHttpResponse(200, **data))

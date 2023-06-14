@@ -1,0 +1,18 @@
+Title: mk_filestats: Improve Handling of non-UTF-8 file paths
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1681804207
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, the agent plugin <tt>mk_filestats.py</tt> would show an error such as
+C+:
+UnicodeDecodeError: 'utf8' codec can't decode byte 0xc4 in position 42: invalid continuation byte
+C-:
+if it encountered any file, whose file path cannot be encoded to UTF-8.
+With this werk, the plugin no longer crashes.
+Any non-UTF-8 sequence of bytes is replaced with U+FFFD.
+In particular, this affects the filters and grouping.

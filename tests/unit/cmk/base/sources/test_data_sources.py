@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,9 +7,12 @@ import pytest
 
 from tests.testlib.base import Scenario
 
+from cmk.utils.type_defs import HostAddress
+
 from cmk.fetchers import PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
+from cmk.base.ip_lookup import AddressFamily
 from cmk.base.sources import make_sources
 
 
@@ -60,12 +63,12 @@ def make_scenario(hostname, tags):
         (
             "snmp-host",
             {"agent": "no-agent", "snmp_ds": "snmp-v2"},
-            [SNMPFetcher, PiggybackFetcher],
+            [SNMPFetcher],
         ),
         (
             "snmp-host",
             {"agent": "no-agent", "snmp_ds": "snmp-v1"},
-            [SNMPFetcher, PiggybackFetcher],
+            [SNMPFetcher],
         ),
         (
             "dual-host",
@@ -94,10 +97,11 @@ def test_host_config_creates_passing_source_sources(
     config_cache = ts.apply(monkeypatch)
 
     assert [
-        type(fetcher)
-        for _meta, _file_cache, fetcher in make_sources(
+        type(source.fetcher())
+        for source in make_sources(
             hostname,
-            "127.0.0.1",
+            HostAddress("127.0.0.1"),
+            AddressFamily.IPv4,
             config_cache=config_cache,
             simulation_mode=True,
             file_cache_options=FileCacheOptions(),

@@ -6,7 +6,7 @@ Date: 1645193883
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 'Include process arguments in long-output' parameter in ps monitoring
 rule previously falsely stated that first N arguments will be shown.

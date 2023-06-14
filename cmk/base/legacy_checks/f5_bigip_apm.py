@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
+from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_legacy_includes.f5_bigip import DETECT
+from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+
+
+def inventory_f5_bigip_apm(info):
+    discovered = []
+    if info[0][0]:
+        discovered.append((None, None))
+    return discovered
+
+
+def check_f5_bigip_apm(item, _no_params, info):
+    count = info[0][0]
+    perfdata = [("connections_ssl_vpn", int(count), None, None, 0, None)]
+    return 0, "Connections: %s" % count, perfdata
+
+
+check_info["f5_bigip_apm"] = LegacyCheckDefinition(
+    detect=DETECT,
+    discovery_function=inventory_f5_bigip_apm,
+    check_function=check_f5_bigip_apm,
+    service_name="SSL/VPN Connections",
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.3375.2.6.1.5.3",
+        oids=["0"],
+    ),
+)

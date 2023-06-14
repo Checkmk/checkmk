@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -23,7 +23,6 @@ FjdaryePoolsSection = Mapping[str, PoolEntry]
 
 
 def _to_float(value: str) -> float | None:
-
     with suppress(ValueError):
         return float(value)
     return None
@@ -36,7 +35,6 @@ def parse_fjdarye_pools(string_table: List[StringTable]) -> FjdaryePoolsSection:
         return pools
 
     for pool_id, capacity, usage in string_table[0]:
-
         pool_capacity = _to_float(capacity)
         pool_usage = _to_float(usage)
 
@@ -75,7 +73,6 @@ def discover_fjdarye_pools(section: FjdaryePoolsSection) -> DiscoveryResult:
 def check_fjdarye_pools(
     item: str, params: Mapping[str, Any], section: FjdaryePoolsSection
 ) -> CheckResult:
-
     if (pool := section.get(item)) is None:
         return
 

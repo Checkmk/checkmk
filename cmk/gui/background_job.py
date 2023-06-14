@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -20,7 +20,7 @@ from pathlib import Path
 from types import FrameType
 from typing import Any, NoReturn, TypedDict
 
-import psutil  # type: ignore[import]
+import psutil
 from pydantic import BaseModel
 from setproctitle import setthreadtitle
 
@@ -189,7 +189,8 @@ class BackgroundProcessInterface:
 
     def send_exception(self, info: str) -> None:
         """Exceptions are written to stdout because of log output clarity
-        as well as into a distinct file, to separate this info from the rest of the context information"""
+        as well as into a distinct file, to separate this info from the rest of the context information
+        """
         # Exceptions also get an extra newline, since some error messages tend not output a \n at the end..
         encoded_info = "%s\n" % info
         sys.stdout.write(encoded_info)
@@ -644,11 +645,8 @@ class BackgroundJob:
         return status
 
     def start(self, target: Callable[[BackgroundProcessInterface], None]) -> None:
-        try:
-            store.acquire_lock(self._job_initializiation_lock)
+        with store.locked(self._job_initializiation_lock):
             self._start(target)
-        finally:
-            store.release_lock(self._job_initializiation_lock)
 
     def _start(self, target: Callable[[BackgroundProcessInterface], None]) -> None:
         if self.is_active():
@@ -793,21 +791,37 @@ class JobStatusStore:
         self._exceptions_path = Path(work_dir) / BackgroundJobDefines.exceptions_filename
 
     def read(self) -> JobStatusSpec:
+        initialized = JobStatusSpec(
+            state=JobStatusStates.INITIALIZED,
+            started=time.time(),
+            pid=None,
+            is_active=False,
+            loginfo={
+                "JobProgressUpdate": [
+                    _(
+                        "Waiting for first status update from the job. In case "
+                        "this message is shown for a longer time, the startup "
+                        "got interrupted."
+                    )
+                ],
+                "JobResult": [],
+                "JobException": [],
+            },
+        )
+
         if not self._jobstatus_path.exists():
-            return JobStatusSpec(
-                state=JobStatusStates.INITIALIZED,
-                started=time.time(),
-                pid=None,
-                is_active=False,
-                loginfo={
-                    "JobProgressUpdate": [],
-                    "JobResult": [],
-                    "JobException": [],
-                },
-            )
+            return initialized
+
+        initialized.started = self._jobstatus_path.stat().st_mtime
+
+        if not (raw_status_spec := self.read_raw()):
+            # Job status file might have just been created during locking. In this
+            # case the file does not have any content yet and falls back to the default
+            # value, which is an empty dict.
+            return initialized
 
         try:
-            data: JobStatusSpec = JobStatusSpec.parse_obj(self.read_raw())
+            data: JobStatusSpec = JobStatusSpec.parse_obj(raw_status_spec)
         finally:
             store.release_lock(str(self._jobstatus_path))
 
@@ -825,11 +839,9 @@ class JobStatusStore:
         return data
 
     def read_raw(self) -> dict[str, Any]:
-        status: dict[str, Any] | None = store.load_object_from_file(
-            self._jobstatus_path, default=None, lock=True
+        status: dict[str, Any] = store.load_object_from_file(
+            self._jobstatus_path, default={}, lock=True
         )
-        if not status:
-            raise ValueError(f"Invalid job status {status!r} found in {self._jobstatus_path}")
         return status
 
     def exists(self) -> bool:

@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Union
+
+from cmk.utils.site import omd_site
 
 import cmk.gui.utils
 import cmk.gui.utils.escaping as escaping
 import cmk.gui.view_utils
 import cmk.gui.visuals as visuals
 from cmk.gui.config import active_config
+from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -20,14 +23,17 @@ from cmk.gui.logged_in import user
 from cmk.gui.page_menu import PageMenuEntry, PageMenuLink
 from cmk.gui.page_menu_utils import collect_context_links
 from cmk.gui.pagetypes import PagetypeTopics
+from cmk.gui.painter_options import PainterOptions
+from cmk.gui.plugins.userdb.utils import active_connections_by_type
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.login import show_saml2_login, show_user_errors
 from cmk.gui.utils.urls import makeuri, requested_file_name
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.view import View
 from cmk.gui.views.command import command_registry, CommandSpec, core_command
-from cmk.gui.views.data_source import ABCDataSource, data_source_registry
 from cmk.gui.views.page_show_view import (
     ABCViewRenderer,
     get_limit,
@@ -36,7 +42,6 @@ from cmk.gui.views.page_show_view import (
     get_want_checkboxes,
     process_view,
 )
-from cmk.gui.views.painter_options import PainterOptions
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.visuals import view_title
 
@@ -189,6 +194,12 @@ def page_login() -> None:
     origtarget = request.get_url_input("_origtarget", default_origtarget)
     html.hidden_field("_origtarget", escaping.escape_attribute(origtarget))
 
+    saml2_user_error: str | None = None
+    if saml_connections := [
+        c for c in active_connections_by_type("saml2") if c["owned_by_site"] == omd_site()
+    ]:
+        saml2_user_error = show_saml2_login(saml_connections, saml2_user_error, origtarget)
+
     html.text_input("_username", label=_("Username:"), autocomplete="username", id_="input_user")
     html.password_input(
         "_password",
@@ -199,12 +210,16 @@ def page_login() -> None:
     )
     html.br()
     html.button("_login", _("Login"))
+
+    if user_errors and not saml2_user_error:
+        show_user_errors("login_error")
+
     html.set_focus("_username")
     html.end_form()
     html.open_div(id_="loginfoot")
     html.img("themes/facelift/images/logo_cmk_small.png", class_="logomk")
     html.div(
-        HTML(_('&copy; <a target="_blank" href="https://checkmk.com">tribe29 GmbH</a>')),
+        HTML(_('&copy; <a target="_blank" href="https://checkmk.com">Checkmk GmbH</a>')),
         class_="copyright",
     )
     html.close_div()  # close content-div
@@ -224,7 +239,6 @@ def page_index() -> None:
     items = []
     for view_name, view_spec in get_permitted_views().items():
         if view_spec.get("mobile") and not view_spec.get("hidden"):
-
             datasource = data_source_registry[view_spec["datasource"]]()
             context = visuals.active_context_from_request(datasource.infos, view_spec["context"])
 

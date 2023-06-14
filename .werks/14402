@@ -6,7 +6,7 @@ Date: 1656492450
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When a mount is named "server:/foo/042" the ops/s values used to be parsed as 42.
 This has been fixed now. No user interaction required

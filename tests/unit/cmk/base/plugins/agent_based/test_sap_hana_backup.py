@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,6 +7,8 @@ from datetime import datetime, timezone
 
 import pytest
 from freezegun import freeze_time
+
+from tests.testlib import set_timezone
 
 import cmk.base.plugins.agent_based.sap_hana_backup as sap_hana_backup
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -73,7 +75,6 @@ def test_parse(
 
 
 def test_discovery_sap_hana_backup() -> None:
-
     section = {
         "SAP INSTANCE - Backup": sap_hana_backup.Backup(),
         "SAP INSTANCE - Log": sap_hana_backup.Backup(),
@@ -86,9 +87,9 @@ def test_discovery_sap_hana_backup() -> None:
 
 @freeze_time(NOW_SIMULATED)
 def test_check_sap_hana_backup_OK() -> None:
-
     params = {"backup_age": (24 * 60 * 60, 2 * 24 * 60 * 60)}
-    yielded_results = list(sap_hana_backup.check_sap_hana_backup(ITEM, params, SECTION))
+    with set_timezone("UTC"):  # needed for local summary time string below
+        yielded_results = list(sap_hana_backup.check_sap_hana_backup(ITEM, params, SECTION))
 
     assert yielded_results[0] == Result(state=State.OK, summary="Status: successful")
 
@@ -109,8 +110,8 @@ def test_check_sap_hana_backup_OK() -> None:
 @freeze_time(NOW_SIMULATED)
 def test_check_sap_hana_backup_CRIT() -> None:
     params = {"backup_age": (1 * 60 * 60, 2 * 60 * 60)}
-
-    yielded_results = list(sap_hana_backup.check_sap_hana_backup(ITEM, params, SECTION))
+    with set_timezone("UTC"):  # needed for local summary time string below
+        yielded_results = list(sap_hana_backup.check_sap_hana_backup(ITEM, params, SECTION))
 
     assert yielded_results[0] == Result(state=State.OK, summary="Status: successful")
 
@@ -133,10 +134,9 @@ def test_check_sap_hana_backup_CRIT() -> None:
 @freeze_time(NOW_SIMULATED)
 def test_cluster_check_sap_hana_backup_CRIT() -> None:
     params = {"backup_age": (1 * 60 * 60, 2 * 60 * 60)}
-
     section = {"node0": SECTION, "node1": SECTION}
-
-    yielded_results = list(sap_hana_backup.cluster_check_sap_hana_backup(ITEM, params, section))
+    with set_timezone("UTC"):  # needed for local summary time string below
+        yielded_results = list(sap_hana_backup.cluster_check_sap_hana_backup(ITEM, params, section))
 
     assert yielded_results[:2] == [
         Result(state=State.OK, summary="Nodes: node0, node1"),

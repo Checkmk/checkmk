@@ -7,9 +7,9 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
-Previously we only added the <i>Check_MK</i> service if the host had no passive services.
+Previously we only added the <i>Check_MK</i> service if the host had passive services.
 We now add it always, unless the host is a ping-only host.
 
 Originally the main job of the <i>Check_MK</i> service was to trigger the passive services, so it was not needed for hosts without them.

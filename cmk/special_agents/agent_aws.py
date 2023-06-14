@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
 Special agent for monitoring Amazon web services (AWS) with Check_MK.
 """
+
+# TODO: Using BaseClient all over the place is wrong and leads to the tons of ignore[attr-defined]
+# suppressions below. The code and types have to be restructured to use the right subclass of
+# BaseClient for the client in question.
 
 import abc
 import argparse
@@ -14,18 +18,17 @@ import json
 import logging
 import sys
 from collections import Counter, defaultdict
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum, StrEnum
 from time import sleep
-from typing import Any, assert_never, Literal, NamedTuple, Type, TypedDict, TypeVar
+from typing import Any, assert_never, Literal, NamedTuple, NotRequired, TypedDict, TypeVar
 
-import boto3  # type: ignore[import]
-import botocore  # type: ignore[import]
-from botocore.client import BaseClient  # type: ignore[import]
+import boto3
+import botocore
+from botocore.client import BaseClient
 from pydantic import BaseModel, Field
-from typing_extensions import NotRequired
 
 import cmk.utils.password_store
 import cmk.utils.store as store
@@ -416,7 +419,7 @@ def _describe_dynamodb_tables(
     for table_name in table_names:
         try:
             tables.append(
-                get_response_content(client.describe_table(TableName=table_name), "Table")
+                get_response_content(client.describe_table(TableName=table_name), "Table")  # type: ignore[attr-defined]
             )
         except client.exceptions.ResourceNotFoundException:
             # we raise the exception if we fetched the table names from the API, since in that case
@@ -476,7 +479,7 @@ def _get_wafv2_web_acls(
 ) -> Sequence[dict[str, object]]:
     if web_acls_info is None:
         web_acls_info = _iterate_through_wafv2_list_operations(
-            client.list_web_acls, scope, "WebACLs", get_response_content
+            client.list_web_acls, scope, "WebACLs", get_response_content  # type: ignore[attr-defined]
         )
 
     if web_acls_names is not None:
@@ -486,7 +489,7 @@ def _get_wafv2_web_acls(
 
     web_acls = [
         get_response_content(
-            client.get_web_acl(Name=web_acl_info["Name"], Scope=scope, Id=web_acl_info["Id"]),
+            client.get_web_acl(Name=web_acl_info["Name"], Scope=scope, Id=web_acl_info["Id"]),  # type: ignore[attr-defined]
             "WebACL",
         )
         for web_acl_info in web_acls_info
@@ -711,9 +714,11 @@ class AWSSection(DataCache):
         """
         What this is all about:
         https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_MetricStat.html
-        >>> import pytest
-        >>> with pytest.raises(AssertionError):
-        ...     [AWSSection.validate_period(p, r) for p, r in [(34, "low"), (45, "high"), (120.0, "low")]]
+        >>> [AWSSection.validate_period(p, r) for p, r in [(34, "low"), (45, "high"), (120.0, "low")]]
+        Traceback (most recent call last):
+        ...
+        AssertionError: Period must be a multiple of 60 or equal to 1, 5, 10, 30, 60 in case of high resolution.
+
         >>> AWSSection.validate_period(1234, resolution_type="foo bar")
         Traceback (most recent call last):
             ...
@@ -822,7 +827,7 @@ class AWSSection(DataCache):
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
         pass
 
-    def _get_response_content(self, response, key: str, dflt=None):  # type:ignore[no-untyped-def]
+    def _get_response_content(self, response, key: str, dflt=None):  # type: ignore[no-untyped-def]
         if dflt is None:
             dflt = []
         try:
@@ -890,6 +895,15 @@ class AWSSectionLimits(AWSSection):
             for piggyback_hostname, limits in self._limits.items()
         ]
 
+    def _iter_service_quotas(self, service_code: str) -> Iterator[Quota]:
+        if self._quota_client is None:
+            return
+
+        paginator = self._quota_client.get_paginator("list_service_quotas")
+        for page in paginator.paginate(ServiceCode=service_code):
+            for quota in self._get_response_content(page, "Quotas"):
+                yield Quota(**quota)
+
 
 class AWSSectionLabels(AWSSection):
     def _create_results(self, computed_content: AWSComputedContent) -> list[AWSSectionResult]:
@@ -897,7 +911,7 @@ class AWSSectionLabels(AWSSection):
             "%s: Computed result of Labels section must be of type 'dict'" % self.name
         )
         for pb in computed_content.content:
-            assert bool(pb), "%s: Piggyback hostname is not allowed to be empty" % self.name
+            assert pb, "%s: Piggyback hostname is not allowed to be empty" % self.name
         return [
             AWSSectionResult(piggyback_hostname, rows)
             for piggyback_hostname, rows in computed_content.content.items()
@@ -923,7 +937,7 @@ class AWSSectionCloudwatch(AWSSection):
         for chunk in _chunks(metric_specs):
             if not chunk:
                 continue
-            response = self._client.get_metric_data(
+            response = self._client.get_metric_data(  # type: ignore[attr-defined]
                 MetricDataQueries=chunk,
                 StartTime=start_time,
                 EndTime=end_time,
@@ -1011,7 +1025,7 @@ class CostsAndUsage(AWSSection):
     def get_live_data(self, *args):
         granularity_name, granularity_interval = "DAILY", self.granularity
         fmt = "%Y-%m-%d"
-        response = self._client.get_cost_and_usage(
+        response = self._client.get_cost_and_usage(  # type: ignore[attr-defined]
             TimePeriod={
                 "Start": datetime.strftime(NOW - timedelta(seconds=granularity_interval), fmt),
                 "End": datetime.strftime(NOW, fmt),
@@ -1062,33 +1076,28 @@ class EC2Limits(AWSSectionLimits):
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
-        quotas = (
-            self._get_response_content(
-                self._quota_client.list_service_quotas(ServiceCode="ec2"), "Quotas"
-            )
-            if self._quota_client is not None
-            else None
-        )
+        quota_list = list(self._iter_service_quotas("ec2"))
+        quota_dicts = [q.dict() for q in quota_list]
 
-        response = self._client.describe_instances()
+        response = self._client.describe_instances()  # type: ignore[attr-defined]
         reservations = self._get_response_content(response, "Reservations")
 
-        response = self._client.describe_reserved_instances()
+        response = self._client.describe_reserved_instances()  # type: ignore[attr-defined]
         reserved_instances = self._get_response_content(response, "ReservedInstances")
 
-        response = self._client.describe_addresses()
+        response = self._client.describe_addresses()  # type: ignore[attr-defined]
         addresses = self._get_response_content(response, "Addresses")
 
-        response = self._client.describe_security_groups()
+        response = self._client.describe_security_groups()  # type: ignore[attr-defined]
         security_groups = self._get_response_content(response, "SecurityGroups")
 
-        response = self._client.describe_network_interfaces()
+        response = self._client.describe_network_interfaces()  # type: ignore[attr-defined]
         interfaces = self._get_response_content(response, "NetworkInterfaces")
 
-        response = self._client.describe_spot_instance_requests()
+        response = self._client.describe_spot_instance_requests()  # type: ignore[attr-defined]
         spot_inst_requests = self._get_response_content(response, "SpotInstanceRequests")
 
-        response = self._client.describe_spot_fleet_requests()
+        response = self._client.describe_spot_fleet_requests()  # type: ignore[attr-defined]
         spot_fleet_requests = self._get_response_content(response, "SpotFleetRequestConfigs")
 
         return (
@@ -1099,7 +1108,7 @@ class EC2Limits(AWSSectionLimits):
             interfaces,
             spot_inst_requests,
             spot_fleet_requests,
-            quotas,
+            quota_dicts,
         )
 
     def _compute_content(
@@ -1280,8 +1289,7 @@ class EC2Limits(AWSSectionLimits):
             ),
         )
 
-    def _add_security_group_limits(self, security_groups) -> None:  # type:ignore[no-untyped-def]
-
+    def _add_security_group_limits(self, security_groups) -> None:  # type: ignore[no-untyped-def]
         self._add_limit(
             "",
             AWSLimit(
@@ -1306,7 +1314,7 @@ class EC2Limits(AWSSectionLimits):
                 ),
             )
 
-    def _add_interface_limits(self, interfaces) -> None:  # type:ignore[no-untyped-def]
+    def _add_interface_limits(self, interfaces) -> None:  # type: ignore[no-untyped-def]
         # since there can also be interfaces which are not attached to an instance, we add these
         # limits to the host running the agent instead of to individual instances
         for iface in interfaces:
@@ -1336,7 +1344,7 @@ class EC2Limits(AWSSectionLimits):
             ),
         )
 
-    def _add_spot_fleet_limits(self, spot_fleet_requests) -> None:  # type:ignore[no-untyped-def]
+    def _add_spot_fleet_limits(self, spot_fleet_requests) -> None:  # type: ignore[no-untyped-def]
         active_spot_fleet_requests = 0
         total_target_cap = 0
         for spot_fleet_req in spot_fleet_requests:
@@ -1405,7 +1413,7 @@ class EC2Summary(AWSSection):
 
         return self._fetch_instances_without_filter()
 
-    def _fetch_instances_filtered_by_names(  # type:ignore[no-untyped-def]
+    def _fetch_instances_filtered_by_names(  # type: ignore[no-untyped-def]
         self, col_reservations
     ) -> Sequence[Mapping[str, object]]:
         if col_reservations:
@@ -1416,7 +1424,7 @@ class EC2Summary(AWSSection):
                 if inst["InstanceId"] in self._names
             ]
         else:
-            response = self._client.describe_instances(InstanceIds=self._names)
+            response = self._client.describe_instances(InstanceIds=self._names)  # type: ignore[attr-defined]
             instances = [
                 inst
                 for res in self._get_response_content(response, "Reservations")
@@ -1445,7 +1453,7 @@ class EC2Summary(AWSSection):
         for chunk in _chunks(self._tags, length=200):
             # EC2 FilterLimitExceeded: The maximum number of filter values
             # specified on a single call is 200
-            response = self._client.describe_instances(Filters=chunk)
+            response = self._client.describe_instances(Filters=chunk)  # type: ignore[attr-defined]
             instances.extend(
                 [
                     inst
@@ -1456,7 +1464,7 @@ class EC2Summary(AWSSection):
         return instances
 
     def _fetch_instances_without_filter(self) -> Sequence[Mapping[str, object]]:
-        response = self._client.describe_instances()
+        response = self._client.describe_instances()  # type: ignore[attr-defined]
         return [
             inst
             for res in self._get_response_content(response, "Reservations")
@@ -1515,7 +1523,7 @@ class EC2Labels(AWSSectionLabels):
         for chunk in _chunks(tags_to_filter, length=200):
             # EC2 FilterLimitExceeded: The maximum number of filter values
             # specified on a single call is 200
-            response = self._client.describe_tags(Filters=chunk)
+            response = self._client.describe_tags(Filters=chunk)  # type: ignore[attr-defined]
             tags.extend(self._get_response_content(response, "Tags"))
         return tags
 
@@ -1575,7 +1583,7 @@ class EC2SecurityGroups(AWSSection):
 
     def _describe_security_groups(self):
         if self._names is not None:
-            response = self._client.describe_security_groups(InstanceIds=self._names)
+            response = self._client.describe_security_groups(InstanceIds=self._names)  # type: ignore[attr-defined]
             return self._get_response_content(response, "SecurityGroups")
 
         if self._tags is not None:
@@ -1583,11 +1591,11 @@ class EC2SecurityGroups(AWSSection):
             for chunk in _chunks(self._tags, length=200):
                 # EC2 FilterLimitExceeded: The maximum number of filter values
                 # specified on a single call is 200
-                response = self._client.describe_security_groups(Filters=chunk)
+                response = self._client.describe_security_groups(Filters=chunk)  # type: ignore[attr-defined]
                 sec_groups.extend(self._get_response_content(response, "SecurityGroups"))
             return sec_groups
 
-        response = self._client.describe_security_groups()
+        response = self._client.describe_security_groups()  # type: ignore[attr-defined]
         return self._get_response_content(response, "SecurityGroups")
 
     def _compute_content(
@@ -1718,10 +1726,10 @@ class EBSLimits(AWSSectionLimits):
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
-        response = self._client.describe_volumes()
+        response = self._client.describe_volumes()  # type: ignore[attr-defined]
         volumes = self._get_response_content(response, "Volumes")
 
-        response = self._client.describe_snapshots(OwnerIds=["self"])
+        response = self._client.describe_snapshots(OwnerIds=["self"])  # type: ignore[attr-defined]
         snapshots = self._get_response_content(response, "Snapshots")
         return volumes, snapshots
 
@@ -1909,7 +1917,7 @@ class EBSSummary(AWSSection):
 
         formatted_volumes = {v["VolumeId"]: v for v in volumes}
         for vol_id, vol in formatted_volumes.items():
-            response = self._client.describe_volume_status(VolumeIds=[vol_id])
+            response = self._client.describe_volume_status(VolumeIds=[vol_id])  # type: ignore[attr-defined]
             for state in self._get_response_content(response, "VolumeStatuses"):
                 if state["VolumeId"] == vol_id:
                     vol.setdefault("VolumeStatus", state["VolumeStatus"])
@@ -1918,7 +1926,7 @@ class EBSSummary(AWSSection):
     def _fetch_volumes_filtered_by_names(self, col_volumes):
         if col_volumes:
             return [v for v in col_volumes if v["VolumeId"] in self._names]
-        response = self._client.describe_volumes(VolumeIds=self._names)
+        response = self._client.describe_volumes(VolumeIds=self._names)  # type: ignore[attr-defined]
         return self._get_response_content(response, "Volumes")
 
     def _fetch_volumes_filtered_by_tags(self, col_volumes):
@@ -1931,14 +1939,14 @@ class EBSSummary(AWSSection):
         for chunk in _chunks(self._tags, length=200):
             # EC2 FilterLimitExceeded: The maximum number of filter values
             # specified on a single call is 200
-            response = self._client.describe_volumes(Filters=chunk)
+            response = self._client.describe_volumes(Filters=chunk)  # type: ignore[attr-defined]
             volumes.extend(self._get_response_content(response, "Volumes"))
         return volumes
 
     def _fetch_volumes_without_filter(self, col_volumes):
         if col_volumes:
             return col_volumes
-        response = self._client.describe_volumes()
+        response = self._client.describe_volumes()  # type: ignore[attr-defined]
         return self._get_response_content(response, "Volumes")
 
     def _compute_content(
@@ -2078,13 +2086,13 @@ class S3BucketHelper:
         """
         Get all buckets with LocationConstraint
         """
-        bucket_list = client.list_buckets()
+        bucket_list = client.list_buckets()  # type: ignore[attr-defined]
         for bucket in bucket_list["Buckets"]:
             bucket_name = bucket["Name"]
 
             # request additional LocationConstraint information
             try:
-                response = client.get_bucket_location(Bucket=bucket_name)
+                response = client.get_bucket_location(Bucket=bucket_name)  # type: ignore[attr-defined]
             except client.exceptions.ClientError as e:
                 # An error occurred (AccessDenied) when calling the GetBucketLocation operation:
                 # Access Denied
@@ -2183,7 +2191,7 @@ class S3Summary(AWSSection):
             bucket_name = bucket["Name"]
 
             try:
-                response = self._client.get_bucket_tagging(Bucket=bucket_name)
+                response = self._client.get_bucket_tagging(Bucket=bucket_name)  # type: ignore[attr-defined]
             except self._client.exceptions.ClientError as e:
                 # If there are no tags attached to a bucket we receive a 'ClientError'
                 logging.info("%s/%s: No tags set, %s", self.name, bucket_name, e)
@@ -2438,7 +2446,7 @@ class GlacierLimits(AWSSectionLimits):
         There's no API method for getting account limits thus we have to
         fetch all vaults.
         """
-        response = self._client.list_vaults()
+        response = self._client.list_vaults()  # type: ignore[attr-defined]
         return self._get_response_content(response, "VaultList")
 
     def _compute_content(
@@ -2506,7 +2514,7 @@ class GlacierSummary(AWSSection):
             vault_name = vault["VaultName"]
 
             try:
-                response = self._client.list_tags_for_vault(vaultName=vault_name)
+                response = self._client.list_tags_for_vault(vaultName=vault_name)  # type: ignore[attr-defined]
             except botocore.exceptions.ClientError as e:
                 # If there are no tags attached to a bucket we receive a 'ClientError'
                 logging.warning("%s/%s: Exception, %s", self.name, vault_name, e)
@@ -2538,7 +2546,7 @@ class GlacierSummary(AWSSection):
         """
         if colleague_contents and colleague_contents.content:
             return colleague_contents.content
-        return self._get_response_content(self._client.list_vaults(), "VaultList")
+        return self._get_response_content(self._client.list_vaults(), "VaultList")  # type: ignore[attr-defined]
 
     def _matches_tag_conditions(self, tagging: Mapping[str, str]) -> bool:
         if self._names is not None:
@@ -2616,8 +2624,7 @@ class ELBLimits(AWSSectionLimits):
 
     @property
     def cache_interval(self) -> int:
-        # If you change this, you might have to adjust factory_settings['levels_spillover'] in
-        # checks/aws_elb
+        # If you change this, you might have to adjust the defaults for 'levels_spillover' in checks/aws_elb
         return 300
 
     @property
@@ -2639,7 +2646,7 @@ class ELBLimits(AWSSectionLimits):
             for load_balancer in self._get_response_content(page, "LoadBalancerDescriptions")
         ]
 
-        response = self._client.describe_account_limits()
+        response = self._client.describe_account_limits()  # type: ignore[attr-defined]
         limits = self._get_response_content(response, "Limits")
         return load_balancers, limits
 
@@ -2691,7 +2698,6 @@ class ELBSummaryGeneric(AWSSection):
         distributor: ResultDistributor | None = None,
         resource: str = "",
     ) -> None:
-
         self._resource = resource
         if self._resource == "elb":
             self._describe_load_balancers_karg = "LoadBalancerNames"
@@ -2745,8 +2751,8 @@ class ELBSummaryGeneric(AWSSection):
 
     def _get_load_balancer_tags(self, load_balancer):
         if self._resource == "elb":
-            return self._client.describe_tags(LoadBalancerNames=[load_balancer["LoadBalancerName"]])
-        return self._client.describe_tags(ResourceArns=[load_balancer["LoadBalancerArn"]])
+            return self._client.describe_tags(LoadBalancerNames=[load_balancer["LoadBalancerName"]])  # type: ignore[attr-defined]
+        return self._client.describe_tags(ResourceArns=[load_balancer["LoadBalancerArn"]])  # type: ignore[attr-defined]
 
     def _describe_load_balancers(
         self, colleague_contents: AWSColleagueContents
@@ -2863,7 +2869,7 @@ class ELBHealth(AWSSection):
         load_balancers: dict[str, list[str]] = {}
         for load_balancer_dns_name, load_balancer in colleague_contents.content.items():
             load_balancer_name = load_balancer["LoadBalancerName"]
-            response = self._client.describe_instance_health(LoadBalancerName=load_balancer_name)
+            response = self._client.describe_instance_health(LoadBalancerName=load_balancer_name)  # type: ignore[attr-defined]
             states = self._get_response_content(response, "InstanceStates")
             if states:
                 load_balancers.setdefault(load_balancer_dns_name, states)
@@ -3000,17 +3006,17 @@ class ELBv2Limits(AWSSectionLimits):
         for load_balancer in load_balancers:
             lb_arn = load_balancer["LoadBalancerArn"]
 
-            response = self._client.describe_target_groups(LoadBalancerArn=lb_arn)
+            response = self._client.describe_target_groups(LoadBalancerArn=lb_arn)  # type: ignore[attr-defined]
             load_balancer["TargetGroups"] = self._get_response_content(response, "TargetGroups")
 
-            response = self._client.describe_listeners(LoadBalancerArn=lb_arn)
+            response = self._client.describe_listeners(LoadBalancerArn=lb_arn)  # type: ignore[attr-defined]
             listeners = self._get_response_content(response, "Listeners")
             load_balancer["Listeners"] = listeners
 
             if load_balancer["Type"] == "application":
                 rules = []
                 for listener in listeners:
-                    response = self._client.describe_rules(ListenerArn=listener["ListenerArn"])
+                    response = self._client.describe_rules(ListenerArn=listener["ListenerArn"])  # type: ignore[attr-defined]
                     rules.extend(self._get_response_content(response, "Rules"))
 
                 # Limit 100 holds for rules which are not default, see AWS docs:
@@ -3018,7 +3024,7 @@ class ELBv2Limits(AWSSectionLimits):
                 # > Limits für Elastic Load Balancing
                 load_balancer["Rules"] = [rule for rule in rules if not rule["IsDefault"]]
 
-        response = self._client.describe_account_limits()
+        response = self._client.describe_account_limits()  # type: ignore[attr-defined]
         limits = self._get_response_content(response, "Limits")
         return load_balancers, limits
 
@@ -3158,14 +3164,14 @@ class ELBv2TargetGroups(AWSSection):
                 continue
 
             if "TargetGroups" not in load_balancer:
-                response = self._client.describe_target_groups(
+                response = self._client.describe_target_groups(  # type: ignore[attr-defined]
                     LoadBalancerArn=load_balancer["LoadBalancerArn"]
                 )
                 load_balancer["TargetGroups"] = self._get_response_content(response, "TargetGroups")
 
             target_groups = load_balancer.get("TargetGroups", [])
             for target_group in target_groups:
-                response = self._client.describe_target_health(
+                response = self._client.describe_target_health(  # type: ignore[attr-defined]
                     TargetGroupArn=target_group["TargetGroupArn"]
                 )
                 target_group_health_descrs = self._get_response_content(
@@ -3326,13 +3332,11 @@ class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
         target_types: Sequence[str],
         metrics_to_get: Sequence[str],
     ) -> Metrics:
-
         metrics: Metrics = []
 
         for idx, (load_balancer_dns_name, load_balancer) in enumerate(
             colleague_contents.content.items()
         ):
-
             # these metrics only apply to application load balancers
             load_balancer_type = load_balancer.get("Type")
             if load_balancer_type != "application":
@@ -3341,7 +3345,6 @@ class ELBv2ApplicationTargetGroupsResponses(AWSSectionCloudwatch):
             load_balancer_dim = _elbv2_load_balancer_arn_to_dim(load_balancer["LoadBalancerArn"])
 
             for target_group in load_balancer["TargetGroups"]:
-
                 # only add metrics if the target group is of the right type, for example, we do not
                 # want to discover the service aws_elbv2_target_groups_http for target groups of
                 # type 'lambda' or the service aws_elbv2_target_groups_lambda for target groups of
@@ -3576,7 +3579,7 @@ class RDSLimits(AWSSectionLimits):
         AWS/RDS API method 'describe_account_attributes' already sends
         limit and usage values.
         """
-        response = self._client.describe_account_attributes()
+        response = self._client.describe_account_attributes()  # type: ignore[attr-defined]
         return self._get_response_content(response, "AccountQuotas")
 
     def _compute_content(
@@ -3628,7 +3631,6 @@ class RDSSummary(AWSSection):
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
-
         db_instances = []
 
         for instance in self._describe_db_instances():
@@ -3661,7 +3663,7 @@ class RDSSummary(AWSSection):
     def _get_instance_tags(self, instance_arn: str) -> Tags:
         # list_tags_for_resource cannot be paginated
         return self._get_response_content(
-            self._client.list_tags_for_resource(ResourceName=instance_arn), "TagList"
+            self._client.list_tags_for_resource(ResourceName=instance_arn), "TagList"  # type: ignore[attr-defined]
         )
 
     def _matches_tag_conditions(self, tagging: Tags) -> bool:
@@ -3925,7 +3927,7 @@ class CloudFront(AWSSectionCloudwatch):
                 metrics.append(metric)
         return metrics
 
-    def _get_piggyback_host_by_distribution(  # type:ignore[no-untyped-def]
+    def _get_piggyback_host_by_distribution(  # type: ignore[no-untyped-def]
         self, cloudfront_summary
     ) -> Mapping[str, str]:
         if not cloudfront_summary:
@@ -3991,7 +3993,7 @@ class CloudwatchAlarmsLimits(AWSSectionLimits):
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
-        response = self._client.describe_alarms()
+        response = self._client.describe_alarms()  # type: ignore[attr-defined]
         return self._get_response_content(response, "MetricAlarms")
 
     def _compute_content(
@@ -4047,9 +4049,9 @@ class CloudwatchAlarms(AWSSection):
                     for alarm in colleague_contents.content
                     if alarm["AlarmName"] in self._names
                 ]
-            response = self._client.describe_alarms(AlarmNames=self._names)
+            response = self._client.describe_alarms(AlarmNames=self._names)  # type: ignore[attr-defined]
         else:
-            response = self._client.describe_alarms()
+            response = self._client.describe_alarms()  # type: ignore[attr-defined]
         return self._get_response_content(response, "MetricAlarms")
 
     def _compute_content(
@@ -4098,7 +4100,7 @@ class DynamoDBLimits(AWSSectionLimits):
         table via 'describe_table'. See also
         https://docs.aws.amazon.com/amazondynamodb/latest/APIReference/API_DescribeLimits.html.
         """
-        limits = self._client.describe_limits()
+        limits = self._client.describe_limits()  # type: ignore[attr-defined]
         tables = _describe_dynamodb_tables(self._client, self._get_response_content)
         return tables, limits
 
@@ -4110,7 +4112,6 @@ class DynamoDBLimits(AWSSectionLimits):
         read_limit: int,
         write_limit: int,
     ) -> None:
-
         self._add_limit(
             piggyback_hostname,
             AWSLimit(
@@ -4134,13 +4135,11 @@ class DynamoDBLimits(AWSSectionLimits):
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
-
         tables, limits = raw_content.content
         account_read_usage = 0
         account_write_usage = 0
 
         for table in tables:
-
             key_usage = "ProvisionedThroughput"
             table_usage_read = table[key_usage]["ReadCapacityUnits"]
             table_usage_write = table[key_usage]["WriteCapacityUnits"]
@@ -4239,10 +4238,9 @@ class DynamoDBSummary(AWSSection):
             tags.extend(self._get_response_content(page, "Tags"))
         return tags
 
-    def _describe_tables(  # type:ignore[no-untyped-def]
+    def _describe_tables(  # type: ignore[no-untyped-def]
         self, colleague_contents: AWSColleagueContents
     ):
-
         if self._names is None:
             if colleague_contents.content:
                 return colleague_contents.content
@@ -4300,11 +4298,9 @@ class DynamoDBTable(AWSSectionCloudwatch):
         return AWSColleagueContents({}, 0.0)
 
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
-
         metrics: Metrics = []
 
         for idx, (piggyback_hostname, table) in enumerate(colleague_contents.content.items()):
-
             for metric_name, stat, operation_dim, unit in [
                 ("ConsumedReadCapacityUnits", "Minimum", "", "Count"),
                 ("ConsumedReadCapacityUnits", "Maximum", "", "Count"),
@@ -4319,7 +4315,6 @@ class DynamoDBTable(AWSSectionCloudwatch):
                 ("SuccessfulRequestLatency", "Maximum", "PutItem", "Milliseconds"),
                 ("SuccessfulRequestLatency", "Average", "PutItem", "Milliseconds"),
             ]:
-
                 dimensions: list[Dimension] = [{"Name": "TableName", "Value": table["TableName"]}]
 
                 if operation_dim:
@@ -4352,7 +4347,6 @@ class DynamoDBTable(AWSSectionCloudwatch):
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
     ) -> AWSComputedContent:
-
         content_by_piggyback_hosts: dict[str, list[dict[str, object]]] = {}
         for row in raw_content.content:
             content_by_piggyback_hosts.setdefault(row["Label"], []).append(row)
@@ -4433,12 +4427,11 @@ class WAFV2Limits(AWSSectionLimits):
         resources: dict = {}
 
         for list_operation, key in [
-            (self._client.list_web_acls, "WebACLs"),
-            (self._client.list_rule_groups, "RuleGroups"),
-            (self._client.list_ip_sets, "IPSets"),
-            (self._client.list_regex_pattern_sets, "RegexPatternSets"),
+            (self._client.list_web_acls, "WebACLs"),  # type: ignore[attr-defined]
+            (self._client.list_rule_groups, "RuleGroups"),  # type: ignore[attr-defined]
+            (self._client.list_ip_sets, "IPSets"),  # type: ignore[attr-defined]
+            (self._client.list_regex_pattern_sets, "RegexPatternSets"),  # type: ignore[attr-defined]
         ]:
-
             resources[key] = _iterate_through_wafv2_list_operations(
                 list_operation, self._scope, key, self._get_response_content
             )
@@ -4526,14 +4519,13 @@ class WAFV2Summary(AWSSection):
         return AWSColleagueContents([], 0.0)
 
     def get_live_data(self, *args: AWSColleagueContents) -> Sequence[object]:
-
         (colleague_contents,) = args
         found_web_acls = []
 
         for web_acl in self._describe_web_acls(colleague_contents):
             # list_tags_for_resource does not support pagination
             tag_info = self._get_response_content(
-                self._client.list_tags_for_resource(ResourceARN=web_acl["ARN"]),
+                self._client.list_tags_for_resource(ResourceARN=web_acl["ARN"]),  # type: ignore[attr-defined]
                 "TagInfoForResource",
                 dflt={},
             )
@@ -4548,7 +4540,6 @@ class WAFV2Summary(AWSSection):
     def _describe_web_acls(
         self, colleague_contents: AWSColleagueContents
     ) -> Sequence[dict[str, object]]:
-
         if self._names is None:
             if colleague_contents.content:
                 return colleague_contents.content
@@ -4629,11 +4620,9 @@ class WAFV2WebACL(AWSSectionCloudwatch):
         return AWSColleagueContents({}, 0.0)
 
     def _get_metrics(self, colleague_contents: AWSColleagueContents) -> Metrics:
-
         metrics: Metrics = []
 
         for idx, (piggyback_hostname, web_acl) in enumerate(colleague_contents.content.items()):
-
             self._metric_dimensions[0]["Value"] = web_acl["Name"]
 
             for metric_name in ["AllowedRequests", "BlockedRequests"]:
@@ -4699,7 +4688,7 @@ class LambdaRegionLimits(AWSSectionLimits):
         return AWSColleagueContents(None, 0.0)
 
     def get_live_data(self, *args):
-        return self._client.get_account_settings()
+        return self._client.get_account_settings()  # type: ignore[attr-defined]
 
     def _compute_content(
         self, raw_content: AWSRawContent, colleague_contents: AWSColleagueContents
@@ -4783,7 +4772,7 @@ class LambdaSummary(AWSSection):
         return functions
 
     def _get_tagging_for(self, function_arn: str) -> Tags:
-        tagging = self._get_response_content(self._client.list_tags(Resource=function_arn), "Tags")
+        tagging = self._get_response_content(self._client.list_tags(Resource=function_arn), "Tags")  # type: ignore[attr-defined]
         # adapt to format of _prepare_tags_for_api_response
         return [{"Key": key, "Value": value} for key, value in tagging.items()]
 
@@ -5025,9 +5014,9 @@ class LambdaCloudwatchInsights(AWSSection):
         response_results: dict = {"status": "Scheduled"}
         query_start = datetime.now().timestamp()
         while response_results["status"] != "Complete":
-            response_results = client.get_query_results(queryId=query_id)
+            response_results = client.get_query_results(queryId=query_id)  # type: ignore[attr-defined]
             if datetime.now().timestamp() - query_start >= timeout_seconds:
-                client.stop_query(queryId=query_id)
+                client.stop_query(queryId=query_id)  # type: ignore[attr-defined]
                 logging.error(
                     "LambdaCloudwatchInsights: query_results failed"
                     " or timed out with the following results: %s ",
@@ -5058,7 +5047,7 @@ class LambdaCloudwatchInsights(AWSSection):
     def _start_logwatch_query(self, *, log_group_names: list[str], query_string: str) -> str:
         end_time_seconds = int(NOW.timestamp())
         start_time_seconds = int(end_time_seconds - self.period)
-        response_query_id = self._client.start_query(
+        response_query_id = self._client.start_query(  # type: ignore[attr-defined]
             logGroupNames=log_group_names,
             startTime=start_time_seconds,
             endTime=end_time_seconds,
@@ -5335,7 +5324,7 @@ class SNSTopic:
     topic_name: str
 
     @classmethod
-    def from_arn(cls: Type["SNSTopic"], arn_str: str) -> "SNSTopic":
+    def from_arn(cls: type["SNSTopic"], arn_str: str) -> "SNSTopic":
         """Example topic ARN: 'arn:aws:sns:eu-central-1:710145618630:TestTopicGiordano'"""
         splitted_arn = arn_str.split(":")
         return cls(region=splitted_arn[3], account_id=splitted_arn[4], topic_name=splitted_arn[5])
@@ -5352,7 +5341,7 @@ class SNSTopic:
         # SNS Topic name is unique per region so we need to include the region name in the service
         # name to avoid considering 2 topics with the same name in different regions as the same
         # topic
-        return f"{self.region} {self.topic_name}"
+        return f"{self.topic_name} [{self.region}]"
 
 
 class SNSTopicsFetcher:
@@ -5655,7 +5644,7 @@ def get_ecs_cluster_arns(ecs_client: BaseClient) -> Iterable[str]:
 def get_ecs_clusters(ecs_client: BaseClient, cluster_ids: Sequence[str]) -> Iterable[Cluster]:
     # the ECS.Client API allows fetching up to 100 clusters at once
     for chunk in _chunks(cluster_ids, length=100):
-        clusters = ecs_client.describe_clusters(clusters=chunk, include=["TAGS"])
+        clusters = ecs_client.describe_clusters(clusters=chunk, include=["TAGS"])  # type: ignore[attr-defined]
         yield from [Cluster(**cluster_data) for cluster_data in clusters["clusters"]]
 
 
@@ -5678,14 +5667,8 @@ class ECSLimits(AWSSectionLimits):
     def get_live_data(
         self, *args: AWSColleagueContents
     ) -> tuple[Sequence[object], Sequence[object]]:
-        quota_list = (
-            self._get_response_content(
-                self._quota_client.list_service_quotas(ServiceCode="ecs"), "Quotas"
-            )
-            if self._quota_client is not None
-            else []
-        )
-        quota_dicts = [Quota(**q).dict() for q in quota_list]
+        quota_list = list(self._iter_service_quotas("ecs"))
+        quota_dicts = [q.dict() for q in quota_list]
 
         cluster_ids = list(get_ecs_cluster_arns(self._client))
         cluster_dicts = [c.dict() for c in get_ecs_clusters(self._client, cluster_ids)]
@@ -5903,6 +5886,7 @@ class ECS(AWSSectionCloudwatch):
 #   '----------------------------------------------------------------------'
 # .
 
+
 # AWS has different nomenclature for ElastiCache resources in the UI and in
 # the API (cluster in the UI is a resource group in The API, node in the UI
 # is a cache cluster in the API)
@@ -5970,14 +5954,8 @@ class ElastiCacheLimits(AWSSectionLimits):
         int,
         int,
     ]:
-        quota_list = (
-            self._get_response_content(
-                self._quota_client.list_service_quotas(ServiceCode="elasticache"), "Quotas"
-            )
-            if self._quota_client is not None
-            else []
-        )
-        quota_dicts = [Quota(**q).dict() for q in quota_list]
+        quota_list = list(self._iter_service_quotas("elasticache"))
+        quota_dicts = [q.dict() for q in quota_list]
 
         cluster_dicts = [
             c.dict()
@@ -6083,11 +6061,13 @@ class ElastiCacheSummary(AWSSection):
     def __init__(
         self,
         client: BaseClient,
+        tagging_client: BaseClient,
         region: str,
         config: AWSConfig,
         distributor: ResultDistributor | None = None,
     ) -> None:
         super().__init__(client, region, config, distributor=distributor)
+        self._tagging_client = tagging_client
         self._names = self._config.service_config["elasticache_names"]
         self._tags = self.prepare_tags_for_api_response(
             self._config.service_config["elasticache_tags"]
@@ -6141,12 +6121,13 @@ class ElastiCacheSummary(AWSSection):
             return
 
         if self._tags is not None:
-            for cluster in clusters:
-                cluster_tags = self._client.list_tags_for_resource(ResourceName=cluster.ARN)
+            matching_arns = fetch_resources_matching_tags(
+                self._tagging_client, self._tags, ["elasticache:replicationgroup"]
+            )
 
-                for cluster_tag in cluster_tags["TagList"]:
-                    if cluster_tag in self._tags:
-                        yield cluster
+            for cluster in clusters:
+                if cluster.ARN in matching_arns:
+                    yield cluster
             return
 
         yield from clusters
@@ -6273,7 +6254,7 @@ class AWSSections(abc.ABC):
         session: boto3.session.Session,
         account_id: str,
         debug: bool = False,
-        config: botocore.config.Config = None,
+        config: botocore.config.Config | None = None,
     ) -> None:
         self._hostname = hostname
         self._session = session
@@ -6294,7 +6275,9 @@ class AWSSections(abc.ABC):
 
     def _init_client(self, client_key: str) -> BaseClient:
         try:
-            return self._session.client(client_key, config=self.config)
+            # TODO: The signature of the client() method depends on the literal(!) value of its
+            # first argument, so using a plain str here is wrong.
+            return self._session.client(client_key, config=self.config)  # type: ignore[call-overload]
         except (
             ValueError,
             botocore.exceptions.ClientError,
@@ -6811,7 +6794,7 @@ class AWSSectionsGeneric(AWSSections):
                 )
 
             elasticache_summary = ElastiCacheSummary(
-                elasticache_client, region, config, distributor
+                elasticache_client, tagging_client, region, config, distributor
             )
             distributor.add("elasticache_limits", elasticache_summary)
             self._sections.append(elasticache_summary)
@@ -7398,3 +7381,7 @@ def main(sys_argv: Sequence[str] | None = None) -> int:  # pylint: disable=too-m
 
 class AwsAccessError(MKException):
     pass
+
+
+if __name__ == "__main__":
+    sys.exit(main())

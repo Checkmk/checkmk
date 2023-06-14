@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.plugins.userdb.utils import show_mode_choices, UserAttribute, validate_start_url
+from cmk.gui.utils.temperate_unit import temperature_unit_choices
 from cmk.gui.utils.theme import theme_choices
+from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
     AbsoluteDate,
     Alternative,
@@ -18,6 +21,56 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+
+
+class TemperatureUnitUserAttribute(UserAttribute):
+    @classmethod
+    def name(cls) -> str:
+        return "temperature_unit"
+
+    def topic(self) -> str:
+        return "personal"
+
+    def valuespec(self) -> Alternative:
+        return Alternative(
+            title=_("Temperature unit"),
+            orientation="horizontal",
+            help=_(
+                "Set the temperature unit used for graphs and perfometers. The default unit can be "
+                "configured <a href='%s'>here</a>. Note that this setting does not affect the "
+                "temperature unit used in service outputs, which can however be configured in "
+                "<a href='%s'>this ruleset</a>."
+            )
+            % (
+                makeuri_contextless(
+                    request,
+                    [
+                        ("mode", "edit_configvar"),
+                        ("varname", "default_temperature_unit"),
+                    ],
+                    filename="wato.py",
+                ),
+                makeuri_contextless(
+                    request,
+                    [
+                        ("mode", "edit_ruleset"),
+                        ("varname", "checkgroup_parameters:temperature"),
+                    ],
+                    filename="wato.py",
+                ),
+            ),
+            elements=[
+                FixedValue(
+                    value=None,
+                    title=_("Use the default temperature unit"),
+                    totext="",
+                ),
+                DropdownChoice(
+                    title=_("Set custom temperature unit"),
+                    choices=temperature_unit_choices(),
+                ),
+            ],
+        )
 
 
 class ForceAuthUserUserAttribute(UserAttribute):
@@ -115,7 +168,7 @@ class StartURLUserAttribute(UserAttribute):
                     TextInput(
                         title=_("Use this custom start URL"),
                         help=_(
-                            "When you point your browser to the Check_MK GUI, usually the dashboard "
+                            "When you point your browser to the Checkmk GUI, usually the dashboard "
                             "is shown in the main (right) frame. You can replace this with any other "
                             "URL you like here."
                         ),

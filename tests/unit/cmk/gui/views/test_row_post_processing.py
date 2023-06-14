@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.version as cmk_version
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.structured_data import StructuredDataNode
+from cmk.utils.structured_data import ImmutableTree
 
 from cmk.gui.type_defs import Rows
 from cmk.gui.view import View
@@ -27,7 +27,7 @@ def test_post_processor_registrations() -> None:
 def test_post_process_rows_not_failing_on_empty_rows(view: View) -> None:
     rows: Rows = []
     post_process_rows(view, [], rows)
-    assert rows == []
+    assert not rows
 
 
 def test_post_process_rows_adds_inventory_data(mock_livestatus: MockLiveStatusConnection) -> None:
@@ -43,7 +43,7 @@ def test_post_process_rows_adds_inventory_data(mock_livestatus: MockLiveStatusCo
     with mock_livestatus():
         post_process_rows(inv_view, [], rows)
     assert rows == [host_row]
-    assert isinstance(host_row["host_inventory"], StructuredDataNode)
+    assert isinstance(host_row["host_inventory"], ImmutableTree)
 
 
 def inventory_view() -> View:

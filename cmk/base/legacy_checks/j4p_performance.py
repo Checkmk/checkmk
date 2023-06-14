@@ -1,0 +1,299 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# WARNING: These checks are deprecated and will be removed soon.
+# Please use jolokia_* instead
+
+# MB warn, crit
+
+
+# mypy: disable-error-code="var-annotated,arg-type"
+
+import time
+
+from cmk.base.check_api import get_rate, LegacyCheckDefinition, saveint
+from cmk.base.config import check_info
+
+j4p_performance_mem_default_levels = (1000, 2000)
+# Number of threads warn, crit
+j4p_performance_threads_default_levels = (80, 100)
+# Number of sessions low crit, low warn, high warn, high crit
+j4p_performance_app_sess_default_levels = (-1, -1, 800, 1000)
+# Number of requests low crit, low warn, high warn, high crit
+j4p_performance_serv_req_default_levels = (-1, -1, 5000, 6000)
+
+
+def j4p_performance_parse(info):
+    parsed = {}
+    for inst, var, value in info:
+        app, servlet = None, None
+        if "," in inst:
+            parts = inst.split(",")
+            if len(parts) == 3:
+                inst, app, servlet = parts
+            else:
+                inst, app = parts
+
+        parsed.setdefault(inst, {})
+        if servlet:
+            parsed[inst].setdefault("apps", {})
+            parsed[inst]["apps"][app].setdefault("servlets", {})
+            parsed[inst]["apps"][app]["servlets"].setdefault(servlet, {})
+            parsed[inst]["apps"][app]["servlets"][servlet][var] = value
+        elif app:
+            parsed[inst].setdefault("apps", {})
+            parsed[inst]["apps"].setdefault(app, {})
+            parsed[inst]["apps"][app][var] = value
+        else:
+            parsed[inst][var] = value
+    return parsed
+
+
+def j4p_performance_app(info, split_item):
+    inst, app = split_item
+    parsed = j4p_performance_parse(info)
+    if not inst in parsed or not app in parsed[inst].get("apps", {}):
+        return None
+    return parsed[inst]["apps"][app]
+
+
+def j4p_performance_serv(info, split_item):
+    inst, app, serv = split_item
+    app = j4p_performance_app(info, (inst, app))
+    if not app or not serv in app.get("servlets", {}):
+        return None
+    return app["servlets"][serv]
+
+
+def inventory_j4p_performance(info, what):
+    parsed = j4p_performance_parse(info)
+    levels = None
+    if what == "mem":
+        levels = j4p_performance_mem_default_levels
+    elif what == "threads":
+        levels = j4p_performance_threads_default_levels
+    return [(k, levels) for k in parsed]
+
+
+def inventory_j4p_performance_apps(info, what):
+    inv = []
+    parsed = j4p_performance_parse(info)
+    levels = None
+    if what == "app_sess":
+        levels = j4p_performance_app_sess_default_levels
+    for inst, vals in parsed.items():
+        for app in vals.get("apps", {}):
+            inv.append(("%s %s" % (inst, app), levels))
+    return inv
+
+
+def inventory_j4p_performance_serv(info, what):
+    inv = []
+    parsed = j4p_performance_parse(info)
+    levels = None
+    if what == "serv_req":
+        levels = j4p_performance_serv_req_default_levels
+    for inst, vals in parsed.items():
+        for app, val in vals.get("apps", {}).items():
+            for serv in val.get("servlets", {}):
+                inv.append(("%s %s %s" % (inst, app, serv), levels))
+    return inv
+
+
+def check_j4p_performance_mem(item, params, info):
+    warn, crit = params
+    parsed = j4p_performance_parse(info)
+    if item not in parsed:
+        return 3, "data not found in agent output"
+    d = parsed[item]
+    mb = 1024 * 1024.0
+    heap = saveint(d["HeapMemoryUsage"]) / mb  # fixed: true-division
+    non_heap = saveint(d["NonHeapMemoryUsage"]) / mb  # fixed: true-division
+    total = heap + non_heap
+    perfdata = [
+        ("heap", heap, warn, crit),
+        ("nonheap", non_heap, warn, crit),
+    ]
+    infotext = "%.0f MB total (%.0f MB heap, %.0f MB non-heap) (warn/crit at %.0f/%.0f)" % (
+        total,
+        heap,
+        non_heap,
+        warn,
+        crit,
+    )
+    if total >= crit:
+        return 2, infotext, perfdata
+    if total >= warn:
+        return 1, infotext, perfdata
+    return 0, infotext, perfdata
+
+
+check_info["j4p_performance.mem"] = LegacyCheckDefinition(
+    check_function=check_j4p_performance_mem,
+    check_ruleset_name="j4p_performance.mem",
+    discovery_function=lambda i: inventory_j4p_performance(i, "mem"),
+    service_name="JMX %s Memory",
+)
+
+
+def check_j4p_performance_threads(item, params, info):
+    warn, crit = params
+    parsed = j4p_performance_parse(info)
+    if item not in parsed:
+        return (3, "data not found in agent output")
+    d = parsed[item]
+
+    this_time = time.time()
+    perfdata = []
+    output = []
+    status = 0
+    for key in ["ThreadCount", "DeamonThreadCount", "PeakThreadCount", "TotalStartedThreadCount"]:
+        val = saveint(d[key])
+        if key == "ThreadCount":
+            # Thread count might lead to a warn/crit state
+            if val >= crit:
+                status = 2
+            elif val >= warn:
+                status = 1
+
+            # Calculate the thread increase rate
+            rate = get_rate("j4p_performance.threads.%s" % item, this_time, val)
+            output.append("ThreadRate: %0.2f" % rate)
+            perfdata.append(("ThreadRate", rate))
+
+        perfdata.append((key, val))
+        output.append("%s: %d" % (key, val))
+
+    return (status, ", ".join(output), perfdata)
+
+
+check_info["j4p_performance.threads"] = LegacyCheckDefinition(
+    check_function=check_j4p_performance_threads,
+    check_ruleset_name="j4p_performance.threads",
+    discovery_function=lambda i: inventory_j4p_performance(i, "threads"),
+    service_name="JMX %s Threads",
+)
+
+
+def check_j4p_performance_uptime(item, _unused, info):
+    parsed = j4p_performance_parse(info)
+    if item not in parsed:
+        return (3, "data not found in agent output")
+    uptime = int(saveint(parsed[item]["Uptime"]) / 1000.0)
+
+    seconds = uptime % 60
+    rem = int(uptime / 60.0)
+    minutes = rem % 60
+    hours = int((rem % 1440) / 60.0)
+    days = int(rem / 1440)
+    now = int(time.time())
+    since = time.strftime("%c", time.localtime(now - uptime))
+    return (
+        0,
+        "up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds),
+        [("uptime", uptime)],
+    )
+
+
+check_info["j4p_performance.uptime"] = LegacyCheckDefinition(
+    check_function=check_j4p_performance_uptime,
+    check_ruleset_name="j4p_performance.uptime",
+    discovery_function=lambda i: inventory_j4p_performance(i, "uptime"),
+    service_name="JMX %s Uptime",
+)
+
+
+def check_j4p_performance_app_state(item, _unused, info):
+    app = j4p_performance_app(info, item.split())
+    if not app or not "Running" in app:
+        return (3, "data not found in agent output")
+
+    if app["Running"] == "1":
+        return (0, "application is running")
+    return (2, "application is not running (Running: %s)")
+
+
+check_info["j4p_performance.app_state"] = LegacyCheckDefinition(
+    check_function=check_j4p_performance_app_state,
+    check_ruleset_name="j4p_performance.app_state",
+    discovery_function=lambda i: inventory_j4p_performance_apps(i, "app_state"),
+    service_name="JMX %s State",
+)
+
+
+def check_j4p_performance_app_sess(item, params, info):
+    lo_crit, lo_warn, hi_warn, hi_crit = params
+    app = j4p_performance_app(info, item.split())
+    if not app or not "Sessions" in app:
+        return (3, "data not found in agent output")
+    sess = saveint(app["Sessions"])
+
+    status = 0
+    status_txt = ""
+    if lo_crit is not None and sess <= lo_crit:
+        status = 2
+        status_txt = " (Below or equal %d)" % lo_crit
+    elif lo_warn is not None and sess <= lo_warn:
+        status = 1
+        status_txt = " (Below or equal %d)" % lo_warn
+    elif hi_crit is not None and sess >= hi_crit:
+        status = 2
+        status_txt = " (Above or equal %d)" % lo_warn
+    elif hi_warn is not None and sess >= hi_warn:
+        status = 1
+        status_txt = " (Above or equal %d)" % lo_crit
+
+    return (
+        status,
+        "%d Sessions%s" % (sess, status_txt),
+        [("sessions", sess, hi_warn, hi_crit)],
+    )
+
+
+check_info["j4p_performance.app_sess"] = LegacyCheckDefinition(
+    check_function=check_j4p_performance_app_sess,
+    check_ruleset_name="j4p_performance.app_sess",
+    discovery_function=lambda i: inventory_j4p_performance_apps(i, "app_sess"),
+    service_name="JMX %s Sessions",
+)
+
+
+def check_j4p_performance_serv_req(item, params, info):
+    lo_crit, lo_warn, hi_warn, hi_crit = params
+    serv = j4p_performance_serv(info, item.split())
+    if not serv or not "Requests" in serv:
+        return (3, "data not found in agent output")
+    req = saveint(serv["Requests"])
+
+    status = 0
+    status_txt = ""
+    if lo_crit is not None and req <= lo_crit:
+        status = 2
+        status_txt = " (Below or equal %d)" % lo_crit
+    elif lo_warn is not None and req <= lo_warn:
+        status = 1
+        status_txt = " (Below or equal %d)" % lo_warn
+    elif hi_crit is not None and req >= hi_crit:
+        status = 2
+        status_txt = " (Above or equal %d)" % lo_warn
+    elif hi_warn is not None and req >= hi_warn:
+        status = 1
+        status_txt = " (Above or equal %d)" % lo_crit
+
+    output = ["Requests: %d%s" % (req, status_txt)]
+    perfdata = [("Requests", req, hi_warn, hi_crit)]
+    this_time = time.time()
+    rate = get_rate("j4p_performance.serv_req.%s" % item, this_time, req)
+    output.append("RequestRate: %0.2f" % rate)
+    perfdata.append(("RequestRate", rate))
+    return (status, ", ".join(output), perfdata)
+
+
+check_info["j4p_performance.serv_req"] = LegacyCheckDefinition(
+    check_function=check_j4p_performance_serv_req,
+    check_ruleset_name="j4p_performance.serv_req",
+    discovery_function=lambda i: inventory_j4p_performance_serv(i, "serv_req"),
+    service_name="JMX %s Requests",
+)

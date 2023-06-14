@@ -6,7 +6,7 @@ Date: 1638802404
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Now EWS (Exchange Web Services) can be selected next to IMAP and POP3 as protocol for mailbox access
 for the check_mailboxes active check. The credentials to provide are similar to those of IMAP and POP3.

@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-# pylint: disable=protected-access
 
 import pytest
 
@@ -13,11 +11,7 @@ import cmk.base.api.agent_based.register.section_plugins as section_plugins
 import cmk.base.api.agent_based.register.section_plugins_legacy as section_plugins_legacy
 from cmk.base.api.agent_based.section_classes import SNMPTree
 from cmk.base.api.agent_based.type_defs import StringTable
-from cmk.base.check_api import Service
-
-
-def old_school_scan_function(oid):
-    return oid(".1.2.3.4.5").startswith("norris")
+from cmk.base.api.agent_based.utils import startswith
 
 
 def old_school_parse_function(_info):
@@ -27,10 +21,6 @@ def old_school_parse_function(_info):
 def old_school_discover_function(parsed_extra):
     _parsed, _extra_section = parsed_extra
     yield "item1", {"discoverd_param": 42}
-    yield Service(
-        "item2",
-        {},
-    )
     yield "item3", "{'how_bad_is_this': 100}"
 
 
@@ -68,7 +58,6 @@ def test_create_agent_parse_function() -> None:
 def test_create_snmp_parse_function() -> None:
     compliant_parse_function = section_plugins_legacy._create_snmp_parse_function(
         original_parse_function=old_school_parse_function,
-        recover_layout_function=lambda x: x,
         handle_empty_info=False,
     )
 
@@ -94,7 +83,6 @@ def test_create_snmp_parse_function() -> None:
 def test_create_snmp_parse_function_handle_empty() -> None:
     compliant_parse_function = section_plugins_legacy._create_snmp_parse_function(
         original_parse_function=old_school_parse_function,
-        recover_layout_function=lambda x: x,
         handle_empty_info=True,
     )
 
@@ -102,15 +90,14 @@ def test_create_snmp_parse_function_handle_empty() -> None:
 
 
 def test_create_snmp_section_plugin_from_legacy() -> None:
-
     plugin = section_plugins_legacy.create_snmp_section_plugin_from_legacy(
         "norris",
         {
             "parse_function": old_school_parse_function,
-            "inventory_function": old_school_discover_function,
+            "discovery_function": old_school_discover_function,
+            "detect": startswith(".1.2.3.4.5", "norris"),
+            "fetch": SNMPTree(base=".1.2.3.4.5", oids=["2", "3"]),
         },
-        old_school_scan_function,
-        (".1.2.3.4.5", ["2", 3]),
         validate_creation_kwargs=True,
     )
 

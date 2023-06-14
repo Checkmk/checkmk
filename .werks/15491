@@ -1,0 +1,20 @@
+Title: Fix possible crash on editing pagetypes
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1683622699
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+If you edited pagetypes like topics, custom graphs, etc. and tried to save an
+unallowed value, e.g. float instead of integer for "Sort order", the error
+"UnboundLocalError: cannot access local variable 'new_page_dict' where it is
+not associated with a value" occurred.
+
+You will now get a message which value is wrong to correct it before saving the
+pagetype.
+
+

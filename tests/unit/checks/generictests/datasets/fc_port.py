@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 
 checkname = "fc_port"
 
@@ -5029,15 +5029,15 @@ info = [
 
 discovery = {
     "": [
-        ("01", "fc_port_default_levels"),
-        ("02", "fc_port_default_levels"),
-        ("03", "fc_port_default_levels"),
-        ("04", "fc_port_default_levels"),
-        ("05", "fc_port_default_levels"),
-        ("06", "fc_port_default_levels"),
-        ("07", "fc_port_default_levels"),
-        ("17", "fc_port_default_levels"),
-        ("18", "fc_port_default_levels"),
+        ("01", {}),
+        ("02", {}),
+        ("03", {}),
+        ("04", {}),
+        ("05", {}),
+        ("06", {}),
+        ("07", {}),
+        ("17", {}),
+        ("18", {}),
     ],
 }
 
@@ -5056,7 +5056,7 @@ checks = {
             [
                 (
                     0,
-                    "16.0 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s, online, ready, active, f-port",
+                    "16.0 Gbit/s, In: 0.00 B/s, Out: 0.00 B/s",
                     [
                         ("in", 0.0, None, None, 0, 2000000000.0),
                         ("out", 0.0, None, None, 0, 2000000000.0),
@@ -5068,6 +5068,10 @@ checks = {
                         ("notxcredits", 0.0),
                     ],
                 ),
+                (0, "online", []),
+                (0, "ready", []),
+                (0, "active", []),
+                (0, "f-port", []),
             ],
         ),
     ],

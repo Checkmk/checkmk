@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,13 +8,15 @@ import pickle
 
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import SectionName
+
+from cmk.checkengine.checking import CheckPluginName
 
 
 @pytest.mark.parametrize(
     "str_name", ["", 23] + list("\"'^°!²³§$½¬%&/{([])}=?ß\\'`*+~#-.:,;ÜÖÄüöä<>|")
 )
-def test_invalid_plugin_name(str_name) -> None:  # type:ignore[no-untyped-def]
+def test_invalid_plugin_name(str_name) -> None:  # type: ignore[no-untyped-def]
     with pytest.raises((TypeError, ValueError)):
         CheckPluginName(str_name)
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -46,7 +46,6 @@ class Connector:
         alias: str | None,
         owner: str | None,
     ) -> int:
-
         body = CreateAlertPayload(
             note=note_created,
             actions=actions_list,
@@ -77,7 +76,6 @@ class Connector:
         alias: str | None,
         alert_source: str | None,
     ) -> int:
-
         body = CloseAlertPayload(
             source=alert_source,
             user=owner,
@@ -98,7 +96,6 @@ class Connector:
     def handle_alert_ack(
         self, ack_author: str, ack_comment: str, alias: str | None, alert_source: str | None
     ) -> int:
-
         body = AcknowledgeAlertPayload(
             source=alert_source,
             user=ack_author,

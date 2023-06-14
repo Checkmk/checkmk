@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -14,6 +14,7 @@ MK_ORACLE_PLUGIN_PATH="${UNIT_SH_PLUGINS_DIR}/mk_oracle"
 #   |                                |_|                                   |
 #   '----------------------------------------------------------------------'
 
+# shellcheck disable=SC2317 # overwritten function called indirectly
 oneTimeSetUp() {
     export MK_CONFDIR=${SHUNIT_TMPDIR}
     export MK_VARDIR=${SHUNIT_TMPDIR}

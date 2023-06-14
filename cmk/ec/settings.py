@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Settings handling for the Check_MK event console."""
@@ -65,7 +65,7 @@ def _default_paths(omd_root: Path, default_config_dir: Path) -> Paths:
         log_file=AnnotatedPath("log file", omd_root / "var/log/mkeventd.log"),
         history_dir=AnnotatedPath("history directory", state_dir / "history"),
         messages_dir=AnnotatedPath("messages directory", state_dir / "messages"),
-        master_config_file=AnnotatedPath("master configuraion", state_dir / "master_config"),
+        master_config_file=AnnotatedPath("master configuration", state_dir / "master_config"),
         slave_status_file=AnnotatedPath("slave status", state_dir / "slave_status"),
         spool_dir=AnnotatedPath("spool directory", state_dir / "spool"),
         status_file=AnnotatedPath("status file", state_dir / "status"),

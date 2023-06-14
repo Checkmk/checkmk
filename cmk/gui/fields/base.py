@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import collections
@@ -113,7 +113,7 @@ class ValueTypedDictSchema(BaseSchema):
             result[key] = schema_func(value)
         return result
 
-    def _serialize_field(self, data, field: fields.Field):  # type:ignore[no-untyped-def]
+    def _serialize_field(self, data, field: fields.Field):  # type: ignore[no-untyped-def]
         result = {}
         for key, value in data.items():
             try:
@@ -126,7 +126,7 @@ class ValueTypedDictSchema(BaseSchema):
                 raise ValidationError(str(exc), field_name=key)
         return result
 
-    def _deserialize_field(self, data, field: fields.Field):  # type:ignore[no-untyped-def]
+    def _deserialize_field(self, data, field: fields.Field):  # type: ignore[no-untyped-def]
         result = {}
         for key, value in data.items():
             try:
@@ -168,7 +168,7 @@ class ValueTypedDictSchema(BaseSchema):
 
         return result
 
-    def dump(self, obj: typing.Any, *, many=None):  # type:ignore[no-untyped-def]
+    def dump(self, obj: typing.Any, *, many=None):  # type: ignore[no-untyped-def]
         if self._has_processors(PRE_DUMP):
             obj = self._invoke_dump_processors(PRE_DUMP, obj, many=many, original_data=obj)
 
@@ -407,13 +407,17 @@ Keys 'optional1', 'required1' occur more than once.
 
     """
 
+    default_error_messages = {
+        "type": "Incompatible data type. Received a(n) '{type}', but an associative value is required. Maybe you quoted a value that is meant to be an object?"
+    }
+
     class ValidateOnDump(BaseSchema):
         cast_to_dict = True
         validate_on_dump = True
 
     Result = dict[str, typing.Any]
 
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
         self,
         nested: typing.Sequence[type[Schema] | Schema],
         mode: typing.Literal["anyOf", "allOf"] = "anyOf",
@@ -552,7 +556,7 @@ Keys 'optional1', 'required1' occur more than once.
 
         return rv
 
-    def _serialize(  # type:ignore[no-untyped-def]
+    def _serialize(  # type: ignore[no-untyped-def]
         self,
         value: typing.Any,
         attr: str | None,
@@ -586,17 +590,23 @@ Keys 'optional1', 'required1' occur more than once.
 
         return result
 
-    def _make_type_error(self, value) -> ValidationError:  # type:ignore[no-untyped-def]
+    def _make_type_error(self, value) -> ValidationError:  # type: ignore[no-untyped-def]
         return self.make_error(
             "type",
             input=value,
             type=value.__class__.__name__,
         )
 
-    def _load_schemas(self, scalar: Result, partial=None) -> Result:  # type:ignore[no-untyped-def]
+    def _load_schemas(  # pylint: disable=too-many-branches
+        self, scalar: Result, partial: bool | typing.Sequence[str] | set[str] | None = None
+    ) -> Result:
         rv = {}
         error_store = ErrorStore()
-        value = dict(scalar)
+
+        try:
+            value = dict(scalar)
+        except ValueError:
+            raise self.make_error("type", type=type(scalar).__name__)
         value_initially_empty = not value
 
         for schema in self._nested_schemas():
@@ -660,7 +670,7 @@ Keys 'optional1', 'required1' occur more than once.
                 del error_store.errors[key]
         return result
 
-    def _deserialize(  # type:ignore[no-untyped-def]
+    def _deserialize(  # type: ignore[no-untyped-def]
         self,
         value: Result | list[Result],
         attr: str | None,

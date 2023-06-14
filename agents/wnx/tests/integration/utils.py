@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -14,7 +14,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Final, NamedTuple
 
-import telnetlib3  # type: ignore
+import telnetlib3  # type: ignore[import]
 import yaml
 
 YamlDict = dict[str, dict[str, Any]]
@@ -111,7 +111,7 @@ def check_os() -> None:
 def _write_config(work_config: YamlDict, data_dir: Path) -> Iterator[None]:
     yaml_file = data_dir / USER_YAML_CONFIG
     try:
-        with open(yaml_file, "wt") as f:
+        with open(yaml_file, "w") as f:
             ret = yaml.dump(work_config)
             f.write(ret)
         yield
@@ -198,8 +198,10 @@ def unpack_modules(root_dir: Path, *, module_dir: Path) -> int:
 def _change_dir(to_dir: Path) -> Iterator[None]:
     p = os.getcwd()
     os.chdir(to_dir)
-    yield
-    os.chdir(p)
+    try:
+        yield
+    finally:
+        os.chdir(p)
 
 
 def postinstall_module(module_dir: Path) -> int:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,16 +7,16 @@ import copy
 import dataclasses
 import logging
 import time
-from collections.abc import Collection, Iterable, Mapping, MutableMapping, Sequence
+from collections.abc import Collection, Iterable, Mapping, Sequence
 from pathlib import Path
 from typing import Any, Final
 
-from cmk.utils.exceptions import OnError
+from cmk.utils.exceptions import MKFetcherError, OnError
 from cmk.utils.type_defs import SectionName
 
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.snmp_scan import gather_available_raw_section_names
-from cmk.snmplib.type_defs import SNMPHostConfig, SNMPRawData, SNMPRawDataSection
+from cmk.snmplib.type_defs import SNMPBackend, SNMPHostConfig, SNMPRawData, SNMPRawDataSection
 
 from cmk.fetchers import Fetcher, Mode
 
@@ -84,7 +84,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             section_store_path,
             logger=self._logger,
         )
-        self._backend = make_backend(self.snmp_config, self._logger)
+        self._backend: SNMPBackend | None = None
 
     @property
     def disabled_sections(self) -> frozenset[SectionName]:
@@ -153,23 +153,21 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         }
 
     def open(self) -> None:
-        pass
+        self._backend = make_backend(self.snmp_config, self._logger)
 
     def close(self) -> None:
-        pass
+        self._backend = None
 
-    def _detect(self, *, select_from: Collection[SectionName]) -> frozenset[SectionName]:
+    def _detect(
+        self, *, select_from: Collection[SectionName], backend: SNMPBackend
+    ) -> frozenset[SectionName]:
         """Detect the applicable sections for the device in question"""
         return gather_available_raw_section_names(
             sections=[(name, self.plugin_store[name].detect_spec) for name in select_from],
             on_error=self.on_error,
             missing_sys_description=self.missing_sys_description,
-            backend=self._backend,
+            backend=backend,
         )
-
-    def _update_snmpwalk_cache(self, mode: Mode) -> bool:
-        """Decide whether to load data from the SNMP walk cache"""
-        return mode is not Mode.CHECKING
 
     def _get_selection(self, mode: Mode) -> frozenset[SectionName]:
         """Determine the sections fetched unconditionally (without detection)"""
@@ -225,6 +223,9 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
            which are fetched for checking anyway.
 
         """
+        if self._backend is None:
+            raise MKFetcherError("missing backend")
+
         now = int(time.time())
         persisted_sections = (
             self._section_store.load()
@@ -232,13 +233,15 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             else PersistedSections[SNMPRawDataSection]({})
         )
         section_names = self._get_selection(mode)
-        section_names |= self._detect(select_from=self._get_detected_sections(mode) - section_names)
+        section_names |= self._detect(
+            select_from=self._get_detected_sections(mode) - section_names, backend=self._backend
+        )
+        if mode is Mode.DISCOVERY and not section_names:
+            # Nothing to discover? That can't be right.
+            raise MKFetcherError("Got no data")
 
         walk_cache = snmp_table.WalkCache(self._backend.hostname)
-        if self._update_snmpwalk_cache(mode):
-            walk_cache.clear()
-            walk_cache_msg = "SNMP walk cache cleared"
-        else:
+        if mode is Mode.CHECKING:
             walk_cache_msg = "SNMP walk cache is enabled: Use any locally cached information"
             walk_cache.load(
                 trees=(
@@ -247,8 +250,11 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
                     for tree in self.plugin_store[section_name].trees
                 ),
             )
+        else:
+            walk_cache.clear()
+            walk_cache_msg = "SNMP walk cache cleared"
 
-        fetched_data: MutableMapping[SectionName, Sequence[SNMPRawDataSection]] = {}
+        fetched_data: dict[SectionName, Sequence[SNMPRawDataSection]] = {}
         for section_name in self._sort_section_names(section_names):
             try:
                 _from, until, _section = persisted_sections[section_name]
@@ -275,7 +281,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
     def _sort_section_names(
         cls,
         section_names: Iterable[SectionName],
-    ) -> Iterable[SectionName]:
+    ) -> Sequence[SectionName]:
         # In former Checkmk versions (<=1.4.0) CPU check plugins were
         # checked before other check plugins like interface checks.
         # In Checkmk 1.5 the order was random and

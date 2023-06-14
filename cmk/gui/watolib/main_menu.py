@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from typing import NamedTuple
 
 import cmk.utils.plugin_registry
@@ -18,7 +18,7 @@ from cmk.gui.utils.urls import makeuri_contextless
 
 
 class MenuItem:
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
         self, mode_or_url, title, icon, permission, description, sort_index=20
     ) -> None:
         self._mode_or_url = mode_or_url
@@ -164,6 +164,11 @@ class ABCMainModule(MenuItem, abc.ABC):
         """This class method allows for adding additional items to the breadcrumb navigation"""
         return
         yield  # pylint: disable=unreachable
+
+    @classmethod
+    def additional_matches_setup_search(cls) -> Sequence[str]:
+        """This class method allows adding additional match texts for the search"""
+        return []
 
 
 class MainModuleRegistry(cmk.utils.plugin_registry.Registry[type[ABCMainModule]]):

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -57,7 +57,6 @@ def _cluster_check_diskstat_io(
     value_store: MutableMapping[str, Any],
     now: float,
 ) -> type_defs.CheckResult:
-
     present_sections = [section for section in section.values() if section is not None]
     if item == "SUMMARY":
         disk = diskstat.summarize_disks(

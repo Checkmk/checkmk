@@ -1,4 +1,4 @@
-' Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+' Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 ' This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 ' conditions defined in the file COPYING, which is part of this source code package.
 
@@ -6,7 +6,7 @@
 ' is running one or multiple MySQL server instances locally.
 
 Option Explicit
-Const CMK_VERSION = "2.2.0i1"
+Const CMK_VERSION = "2.3.0b1"
 
 Dim SHO, FSO, WMI, PROC
 Dim cfg_dir, cfg_file, service_list, service, instances, instance, cmd

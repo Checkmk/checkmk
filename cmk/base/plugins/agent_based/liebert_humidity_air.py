@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -15,7 +15,7 @@ from typing import Any, List, Mapping, Optional, Tuple
 
 from .agent_based_api.v1 import check_levels, register, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.liebert import DETECT_LIEBERT, parse_liebert, SystemSection
+from .utils import liebert
 
 LIEBERT_HUMIDITY_AIR_DEFAULT_PARAMETERS = {
     "levels": (50, 55),
@@ -40,14 +40,13 @@ def _get_item_data(
 
 
 def parse_liebert_humidity_air(string_table: List[StringTable]) -> ParsedSection:
-    return parse_liebert(string_table, str)
+    return liebert.parse_liebert(string_table, str)
 
 
 def discover_liebert_humidity_air(
     section_liebert_humidity_air: Optional[ParsedSection],
-    section_liebert_system: Optional[SystemSection],
+    section_liebert_system: Optional[liebert.SystemSection],
 ) -> DiscoveryResult:
-
     if section_liebert_humidity_air is None:
         return
 
@@ -60,9 +59,8 @@ def check_liebert_humidity_air(
     item: str,
     params: Mapping[str, Any],
     section_liebert_humidity_air: Optional[ParsedSection],
-    section_liebert_system: Optional[SystemSection],
+    section_liebert_system: Optional[liebert.SystemSection],
 ) -> CheckResult:
-
     if section_liebert_humidity_air is None or section_liebert_system is None:
         return
 
@@ -92,7 +90,7 @@ def check_liebert_humidity_air(
 
 register.snmp_section(
     name="liebert_humidity_air",
-    detect=DETECT_LIEBERT,
+    detect=liebert.DETECT_LIEBERT,
     parse_function=parse_liebert_humidity_air,
     fetch=[
         SNMPTree(

@@ -1,18 +1,23 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Final
+from typing import Final, TypedDict
 
-import boto3  # type: ignore[import]
+import boto3
 
 from cmk.utils.backup.targets.remote_interface import ProgressStepLogger, RemoteTarget
-from cmk.utils.backup.type_defs import S3Params
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.password_store import extract
+from cmk.utils.password_store import extract, PasswordId
+
+
+class S3Params(TypedDict):
+    access_key: str
+    secret: PasswordId
+    bucket: str
 
 
 class S3Bucket:

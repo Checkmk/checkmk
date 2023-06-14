@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -9,12 +9,12 @@
 #include <vector>
 
 #include "livestatus/Column.h"
-#include "livestatus/MonitoringCore.h"
+#include "livestatus/ICore.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 
-TableCommands::TableCommands(MonitoringCore *mc) : Table(mc) {
+TableCommands::TableCommands(ICore *mc) : Table(mc) {
     addColumns(this, "", ColumnOffsets{});
 }
 

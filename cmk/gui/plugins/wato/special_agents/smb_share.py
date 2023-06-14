@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,7 +10,7 @@ from cmk.gui.plugins.wato.utils import (
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
-from cmk.gui.valuespec import Dictionary, HostAddress, ListOfStrings, TextInput, Tuple
+from cmk.gui.valuespec import Checkbox, Dictionary, HostAddress, ListOfStrings, TextInput, Tuple
 
 
 def _valuespec_special_agents_smb_share():
@@ -69,8 +69,19 @@ def _valuespec_special_agents_smb_share():
                     valuespec=TextInput(size=80),
                 ),
             ),
+            (
+                "recursive",
+                Checkbox(
+                    title=_("Recursive pattern search"),
+                    label=_("Match multiple directories with **"),
+                    help=_(
+                        "If ** is used in the pattern, the agent will recursively look into all the subfolders, "
+                        "so use this carefully on a deeply nested filesystems."
+                    ),
+                ),
+            ),
         ],
-        optional_keys=["hostname", "ip_address", "authentication"],
+        optional_keys=["hostname", "ip_address", "authentication", "recursive"],
         title=_("SMB Share fileinfo"),
     )
 

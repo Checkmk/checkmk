@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import annotations
 
 import dataclasses
+import itertools
 import os
 import pprint
 import re
-from collections.abc import Callable, Container, Mapping
+from collections.abc import Callable, Container, Generator, Iterable, Iterator, Mapping, Sequence
 from enum import auto, Enum
-from typing import Any, cast, Final
+from pathlib import Path
+from typing import Any, assert_never, cast, Final
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 import cmk.utils.store as store
@@ -24,11 +26,10 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RuleOptionsSpec,
     RulesetName,
     RuleSpec,
+    TagCondition,
     TagConditionNE,
-    TaggroupIDToTagCondition,
-    TagIDToTaggroupID,
 )
-from cmk.utils.tags import TagID
+from cmk.utils.tags import TagGroupID, TagID
 from cmk.utils.type_defs import HostOrServiceConditionRegex, HostOrServiceConditions
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
@@ -37,6 +38,7 @@ import cmk.base.export  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui import hooks, utils
 from cmk.gui.config import active_config, register_post_config_load_hook
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
@@ -46,7 +48,8 @@ from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.hosts_and_folders import (
     CREFolder,
     CREHost,
-    Folder,
+    folder_from_request,
+    folder_tree,
     get_wato_redis_client,
     Host,
     may_use_redis,
@@ -107,21 +110,28 @@ class RuleOptions:
 class UseHostFolder(Enum):
     NONE = auto()
     MACRO = auto()
-    HOST = auto()
+    # cmk.gui uses folders like this:
+    # subfolder/subsubfolder/...
+    # cf. CREFolder.folder, CREFolder.folder_choices etc.
+    HOST_FOLDER_FOR_UI = auto()
+    # cmk.base sets folders this way when loading the configuration:
+    # /wato/subfolder/subsubfolder/...
+    # cf. FOLDER_PATH in cmk.base.config
+    HOST_FOLDER_FOR_BASE = auto()
 
 
 class RuleConditions:
     def __init__(
         self,
         host_folder: str,
-        host_tags: TaggroupIDToTagCondition | None = None,
+        host_tags: Mapping[TagGroupID, TagCondition] | None = None,
         host_labels: Labels | None = None,
         host_name: HostOrServiceConditions | None = None,
         service_description: HostOrServiceConditions | None = None,
         service_labels: Labels | None = None,
     ) -> None:
         self.host_folder: Final = host_folder
-        self.host_tags: Final[TaggroupIDToTagCondition] = host_tags or {}
+        self.host_tags: Final[Mapping[TagGroupID, TagCondition]] = host_tags or {}
         self.host_labels: Final = host_labels or {}
         self.host_name: Final = host_name
         self.service_description: Final = service_description
@@ -141,7 +151,7 @@ class RuleConditions:
     def to_config(self, use_host_folder: UseHostFolder) -> RuleConditionsSpec:
         """Create serializable data structure for the conditions
 
-        In the WATO folder hierarchy each folder may have a rules.mk which
+        In the Setup folder hierarchy each folder may have a rules.mk which
         contains the rules of that folder.
 
         It is an important feature that there is no path stored in the .mk
@@ -178,8 +188,12 @@ class RuleConditions:
                 pass
             case UseHostFolder.MACRO:
                 cfg["host_folder"] = _FOLDER_PATH_MACRO
-            case UseHostFolder.HOST:
+            case UseHostFolder.HOST_FOLDER_FOR_UI:
                 cfg["host_folder"] = self.host_folder
+            case UseHostFolder.HOST_FOLDER_FOR_BASE:
+                cfg["host_folder"] = str(Path("/wato") / self.host_folder)
+            case _:
+                assert_never(use_host_folder)
 
         return cfg
 
@@ -197,7 +211,7 @@ class RuleConditions:
             not isinstance(i, dict) or i["$regex"].endswith("$") for i in service_name_conditions
         )
 
-    # Compatibility code for pre 1.6 WATO code
+    # Compatibility code for pre 1.6 Setup code
     @property
     def tag_list(self) -> Container[TagID | None]:
         tag_list = []
@@ -208,15 +222,15 @@ class RuleConditions:
             else:
                 tag_id = cast(TagID | None, tag_spec)
 
-            tag_list.append(("!%s" % tag_id) if is_not else tag_id)
+            tag_list.append(TagID("!%s" % tag_id) if is_not else tag_id)
         return tag_list
 
-    # Compatibility code for pre 1.6 WATO code
+    # Compatibility code for pre 1.6 Setup code
     @property
     def host_list(self):
         return self._condition_list(self.host_name, is_service=False)
 
-    # Compatibility code for pre 1.6 WATO code
+    # Compatibility code for pre 1.6 Setup code
     @property
     def item_list(self):
         return self._condition_list(self.service_description, is_service=True)
@@ -270,20 +284,19 @@ class RuleConditions:
 
 
 class RulesetCollection:
-    """Abstract class for holding a collection of rulesets. The most basic
-    specific class is the FolderRulesets class which cares about all rulesets
-    configured in a folder."""
+    """A collection of rulesets."""
 
-    def __init__(self, rulesets: dict[RulesetName, Ruleset]) -> None:
+    def __init__(self, rulesets: Mapping[RulesetName, Ruleset]) -> None:
         super().__init__()
         # A dictionary containing all ruleset objects of the collection.
         # The name of the ruleset is used as key in the dict.
-        self._rulesets = rulesets
+        self._rulesets = dict(rulesets)
+        self._unknown_rulesets: dict[str, dict[str, Sequence[RuleSpec[object]]]] = {}
 
     @staticmethod
     def _initialize_rulesets(
         only_varname: RulesetName | None = None,
-    ) -> dict[RulesetName, Ruleset]:
+    ) -> Mapping[RulesetName, Ruleset]:
         tag_to_group_map = ruleset_matcher.get_tag_to_group_map(active_config.tags)
         varnames = [only_varname] if only_varname else rulespec_registry.keys()
         return {varname: Ruleset(varname, tag_to_group_map) for varname in varnames}
@@ -296,83 +309,123 @@ class RulesetCollection:
         if not os.path.exists(path):
             return  # Do not initialize rulesets when no rule at all exists
 
-        config_dict = {
+        self.replace_folder_config(
+            folder,
+            store.load_mk_file(
+                path,
+                {
+                    **RulesetCollection._context_helpers(folder),
+                    **RulesetCollection._prepare_empty_rulesets(),
+                },
+            ),
+            only_varname,
+        )
+
+    @staticmethod
+    def _context_helpers(folder: CREFolder) -> Mapping[str, object]:
+        return {
             "ALL_HOSTS": ALL_HOSTS,
             "ALL_SERVICES": ALL_SERVICES,
             "NEGATE": NEGATE,
             "FOLDER_PATH": folder.path(),
         }
 
-        # Prepare empty rulesets so that rules.mk has something to
-        # append to. We need to initialize all variables here, even
-        # when only loading with only_varname.
-        for varname in rulespec_registry.keys():
-            if ":" in varname:
-                dictname, _subkey = varname.split(":")
-                config_dict[dictname] = {}
-            else:
-                config_dict[varname] = []
+    @staticmethod
+    def _prepare_empty_rulesets() -> Mapping[str, Sequence[object] | Mapping[str, object]]:
+        """Prepare empty rulesets so that rules.mk has something to append to
 
-        self.from_config(folder, store.load_mk_file(path, config_dict), only_varname)
+        We need to initialize all variables here, even when only loading with only_varname.
+        """
+        default: Callable[[], Sequence[object] | Mapping[str, object]] = dict
+        return dict(
+            ((name.split(":")[0], default()) if ":" in name else (name, []))
+            for name in rulespec_registry.keys()
+        )
 
-    def from_config(  # type:ignore[no-untyped-def]
-        self, folder: CREFolder, rulesets_config, only_varname: RulesetName | None = None
+    def replace_folder_config(
+        # The Any below should most likely be RuleSpec[object] but I am not sure.
+        self,
+        folder: CREFolder,
+        loaded_file_config: Mapping[str, Any],
+        only_varname: RulesetName | None = None,
     ) -> None:
-        varnames = [only_varname] if only_varname else rulespec_registry.keys()
-        config_varname: str
-        subkey: str | None
-        for varname in varnames:
+        if only_varname:
+            variable_names_to_load = [only_varname]
+        else:
+
+            def varnames_from_item(name: str, value: object) -> Sequence[str]:
+                if isinstance(value, dict):
+                    return [f"{name}:{key}" for key in value]
+                if isinstance(value, list):
+                    return [name]
+                return []
+
+            helpers = RulesetCollection._context_helpers(folder)
+            variable_names_to_load = [
+                name
+                for config_varname, value in loaded_file_config.items()
+                for name in varnames_from_item(config_varname, value)
+                if name not in helpers
+            ]
+
+        for varname in variable_names_to_load:
             if ":" in varname:
                 config_varname, subkey = varname.split(":", 1)
-                rulegroup_config = rulesets_config.get(config_varname, {})
+                rulegroup_config = loaded_file_config.get(config_varname, {})
                 if subkey not in rulegroup_config:
                     continue  # Nothing configured: nothing left to do
 
                 ruleset_config = rulegroup_config[subkey]
             else:
                 config_varname, subkey = varname, None
-                ruleset_config = rulesets_config.get(config_varname, [])
+                ruleset_config = loaded_file_config.get(config_varname, [])
 
             if not ruleset_config:
                 continue  # Nothing configured: nothing left to do
 
-            self._rulesets[varname].from_config(folder, ruleset_config)
+            if varname in self._rulesets:
+                self._rulesets[varname].replace_folder_config(folder, ruleset_config)
+            else:
+                self._unknown_rulesets.setdefault(folder.path(), {})[varname] = ruleset_config
 
-    def save(self) -> None:
-        raise NotImplementedError()
-
-    def save_folder(self, folder: CREFolder) -> None:
-        raise NotImplementedError()
-
-    def _save_folder(self, folder: CREFolder) -> None:
+    @staticmethod
+    def _save_folder(
+        folder: CREFolder,
+        rulesets: Mapping[RulesetName, Ruleset],
+        unknown: Mapping[str, Mapping[str, Sequence[RuleSpec[object]]]],
+    ) -> None:
         store.mkdir(folder.get_root_dir())
 
-        has_content = False
-        content = ""
-        for varname, ruleset in sorted(self._rulesets.items(), key=lambda x: x[0]):
-            if varname not in rulespec_registry:
-                continue  # don't save unknown rulesets
-
-            if ruleset.is_empty_in_folder(folder):
-                continue  # don't save empty rule sets
-
-            has_content = True
-            content += ruleset.to_config(folder)
+        content = [
+            *(
+                ruleset.to_config(folder)
+                for _name, ruleset in sorted(rulesets.items())
+                if not ruleset.is_empty_in_folder(folder)
+            ),
+            *(
+                Ruleset.format_raw_value(varname, raw_value, False)
+                for varname, raw_value in sorted(unknown.get(folder.path(), {}).items())
+            ),
+        ]
 
         rules_file_path = folder.rules_file_path()
         try:
-            # Remove rules files if it has no content. This prevents needless reads
-            if not has_content:
-                if os.path.exists(rules_file_path):
-                    os.unlink(rules_file_path)  # Do not keep empty rules.mk files
+            # Remove empty rules files. This prevents needless reads
+            if not content:
+                try:
+                    os.unlink(rules_file_path)
+                except FileNotFoundError:
+                    pass
                 return
 
-            # Adding this instead of the full path makes it easy to move config
-            # files around. The real FOLDER_PATH will be added dynamically while
-            # loading the file in cmk.base.config
-            content = content.replace("'%s'" % _FOLDER_PATH_MACRO, "'/%s/' % FOLDER_PATH")
-
-            store.save_mk_file(rules_file_path, content, add_header=not active_config.wato_use_git)
+            store.save_mk_file(
+                rules_file_path,
+                # Adding this instead of the full path makes it easy to move config
+                # files around. The real FOLDER_PATH will be added dynamically while
+                # loading the file in cmk.base.config
+                "".join(content).replace("'%s'" % _FOLDER_PATH_MACRO, "'/%s/' % FOLDER_PATH"),
+                add_header=not active_config.wato_use_git,
+            )
         finally:
             if may_use_redis():
                 get_wato_redis_client().folder_updated(folder.filesystem_path())
@@ -380,13 +433,13 @@ class RulesetCollection:
     def exists(self, name: RulesetName) -> bool:
         return name in self._rulesets
 
-    def get(self, name: RulesetName, deflt=None) -> Ruleset:  # type:ignore[no-untyped-def]
+    def get(self, name: RulesetName) -> Ruleset:
         return self._rulesets[name]
 
     def set(self, name: RulesetName, ruleset: Ruleset) -> None:
         self._rulesets[name] = ruleset
 
-    def delete(self, name: RulesetName):  # type:ignore[no-untyped-def]
+    def delete(self, name: RulesetName) -> None:
         del self._rulesets[name]
 
     def get_rulesets(self) -> Mapping[RulesetName, Ruleset]:
@@ -394,22 +447,17 @@ class RulesetCollection:
 
 
 class AllRulesets(RulesetCollection):
-    def _load_rulesets_recursively(
-        self, folder: CREFolder, only_varname: RulesetName | None = None
-    ) -> None:
-
+    def _load_rulesets_recursively(self, folder: CREFolder) -> None:
         if may_use_redis():
-            self._load_rulesets_via_redis(folder, only_varname)
+            self._load_rulesets_via_redis(folder)
             return
 
         for subfolder in folder.subfolders():
-            self._load_rulesets_recursively(subfolder, only_varname)
+            self._load_rulesets_recursively(subfolder)
 
-        self._load_folder_rulesets(folder, only_varname)
+        self._load_folder_rulesets(folder)
 
-    def _load_rulesets_via_redis(
-        self, folder: CREFolder, only_varname: RulesetName | None = None
-    ) -> None:
+    def _load_rulesets_via_redis(self, folder: CREFolder) -> None:
         # Search relevant folders with rules.mk files
         # Note: The sort order of the folders does not matter here
         #       self._load_folder_rulesets ultimately puts each folder into a dict
@@ -426,47 +474,77 @@ class AllRulesets(RulesetCollection):
 
         for folder_path_with_slash in relevant_folders:
             stripped_folder = folder_path_with_slash.strip("/")
-            self._load_folder_rulesets(Folder.folder(stripped_folder), only_varname)
+            self._load_folder_rulesets(folder_tree().folder(stripped_folder))
 
     @staticmethod
     def load_all_rulesets() -> AllRulesets:
         """Load all rules of all folders"""
         rulesets = RulesetCollection._initialize_rulesets()
         self = AllRulesets(rulesets)
-        self._load_rulesets_recursively(Folder.root_folder())
+        self._load_rulesets_recursively(folder_tree().root_folder())
         return self
-
-    def save_folder(self, folder: CREFolder) -> None:
-        self._save_folder(folder)
 
     def save(self) -> None:
         """Save all rulesets of all folders recursively"""
-        self._save_rulesets_recursively(Folder.root_folder())
+        self._save_rulesets_recursively(folder_tree().root_folder())
+
+    def save_folder(self, folder: CREFolder) -> None:
+        self._save_folder(folder, self._rulesets, self._unknown_rulesets)
 
     def _save_rulesets_recursively(self, folder: CREFolder) -> None:
         for subfolder in folder.subfolders():
             self._save_rulesets_recursively(subfolder)
 
-        self._save_folder(folder)
+        self._save_folder(folder, self._rulesets, self._unknown_rulesets)
 
 
-class SingleRulesetRecursively(AllRulesets):
+class SingleRulesetRecursively(RulesetCollection):
     # Load single ruleset from all folders
+    def _load_rulesets_recursively(self, folder: CREFolder, only_varname: RulesetName) -> None:
+        # Copy/paste from AllRulesets
+
+        if may_use_redis():
+            self._load_rulesets_via_redis(folder, only_varname)
+            return
+
+        for subfolder in folder.subfolders():
+            self._load_rulesets_recursively(subfolder, only_varname)
+
+        self._load_folder_rulesets(folder, only_varname)
+
+    def _load_rulesets_via_redis(self, folder: CREFolder, only_varname: RulesetName) -> None:
+        # Copy/paste from AllRulesets
+
+        # Search relevant folders with rules.mk files
+        # Note: The sort order of the folders does not matter here
+        #       self._load_folder_rulesets ultimately puts each folder into a dict
+        #       and groups/sorts them later on with a different mechanism
+        all_folders = get_wato_redis_client().recursive_subfolders_for_path(
+            f"{folder.path()}/".lstrip("/")
+        )
+
+        root_dir = wato_root_dir()[:-1]
+        relevant_folders = []
+        for folder_path in all_folders:
+            if os.path.exists(f"{root_dir}/{folder_path}rules.mk"):
+                relevant_folders.append(folder_path)
+
+        for folder_path_with_slash in relevant_folders:
+            stripped_folder = folder_path_with_slash.strip("/")
+            self._load_folder_rulesets(folder_tree().folder(stripped_folder), only_varname)
+
     @staticmethod
     def load_single_ruleset_recursively(name: RulesetName) -> SingleRulesetRecursively:
         rulesets = RulesetCollection._initialize_rulesets(only_varname=name)
         self = SingleRulesetRecursively(rulesets)
-        self._load_rulesets_recursively(Folder.root_folder(), only_varname=name)
+        self._load_rulesets_recursively(folder_tree().root_folder(), only_varname=name)
         return self
-
-    def save_folder(self, folder: CREFolder) -> None:
-        raise NotImplementedError()
 
 
 class FolderRulesets(RulesetCollection):
     def __init__(
         self,
-        rulesets: dict[RulesetName, Ruleset],
+        rulesets: Mapping[RulesetName, Ruleset],
         *,
         folder: CREFolder,
     ) -> None:
@@ -480,26 +558,8 @@ class FolderRulesets(RulesetCollection):
         self._load_folder_rulesets(folder)
         return self
 
-    def save(self) -> None:
-        self._save_folder(self._folder)
-
-
-class FilteredRulesetCollection:
-    def __init__(self, rulesets: Mapping[RulesetName, Ruleset]) -> None:
-        super().__init__()
-        self._rulesets: Final = rulesets
-
-    def get_rulesets(self) -> Mapping[RulesetName, Ruleset]:
-        return self._rulesets
-
-    @classmethod
-    def filter(
-        cls,
-        origin: Mapping[RulesetName, Ruleset],
-        *,
-        key: Callable[[Ruleset], bool],
-    ) -> FilteredRulesetCollection:
-        return cls({name: ruleset for name, ruleset in origin.items() if key(ruleset)})
+    def save_folder(self) -> None:
+        RulesetCollection._save_folder(self._folder, self._rulesets, self._unknown_rulesets)
 
 
 class Ruleset:
@@ -511,7 +571,7 @@ class Ruleset:
     def __init__(
         self,
         name: RulesetName,
-        tag_to_group_map: TagIDToTaggroupID,
+        tag_to_group_map: Mapping[TagID, TagGroupID],
         rulespec: Rulespec | None = None,
     ) -> None:
         super().__init__()
@@ -544,7 +604,7 @@ class Ruleset:
         return self.num_rules() == 0
 
     def is_empty_in_folder(self, folder: CREFolder) -> bool:
-        return not bool(self.get_folder_rules(folder))
+        return not self.get_folder_rules(folder)
 
     def num_rules(self) -> int:
         return len(self._rules_by_id)
@@ -622,7 +682,11 @@ class Ruleset:
         self._rules_by_id[rule.id] = rule
         self._on_change()
 
-    def from_config(self, folder: CREFolder, rules_config) -> None:  # type:ignore[no-untyped-def]
+    def replace_folder_config(  # type: ignore[no-untyped-def]
+        self,
+        folder: CREFolder,
+        rules_config,
+    ) -> None:
         if not rules_config:
             return
 
@@ -645,29 +709,37 @@ class Ruleset:
             self._rules_by_id[rule.id] = rule
 
     def to_config(self, folder: CREFolder) -> str:
+        return self.format_raw_value(
+            self.name,
+            (r.to_config() for r in self._rules[folder.path()]),
+            self.is_optional(),
+        )
+
+    @staticmethod
+    def format_raw_value(name: str, rule_specs: Iterable[RuleSpec], is_optional: bool) -> str:
         content = ""
 
-        if ":" in self.name:
-            dictname, subkey = self.name.split(":")
+        if ":" in name:
+            dictname, subkey = name.split(":")
             varname = f"{dictname}[{subkey!r}]"
 
             content += f"\n{dictname}.setdefault({subkey!r}, [])\n"
         else:
-            varname = self.name
+            varname = name
 
             content += "\nglobals().setdefault(%r, [])\n" % (varname)
 
-            if self.is_optional():
+            if is_optional:
                 content += f"\nif {varname} is None:\n    {varname} = []\n"
 
         content += "\n%s = [\n" % varname
-        for rule in self._rules[folder.path()]:
+        for rule_spec in rule_specs:
             # When using pprint we get a deterministic representation of the
             # data structures because it cares about sorting of the dict keys
             if active_config.wato_use_git:
-                text = pprint.pformat(rule.to_config())
+                text = pprint.pformat(rule_spec)
             else:
-                text = repr(rule.to_config())
+                text = repr(rule_spec)
 
             content += "%s,\n" % text
         content += "] + %s\n\n" % varname
@@ -814,7 +886,14 @@ class Ruleset:
         return self.rulespec.valuespec
 
     def help(self) -> None | str | HTML:
-        return self.rulespec.help
+        try:
+            return self.rulespec.help
+        except NameError:
+            # This prevents the Ruleset page (e.g. 'Service monitoring rules')
+            # from crashing if the module cannot be loaded due to missing
+            # imports. This can be the case with external packages such as MKPs
+            # from the exchange.
+            return None
 
     def title(self) -> str | None:
         return self.rulespec.title
@@ -845,7 +924,7 @@ class Ruleset:
 
     # Returns the outcoming value or None and a list of matching rules. These are pairs
     # of rule_folder and rule_number
-    def analyse_ruleset(  # type:ignore[no-untyped-def]
+    def analyse_ruleset(  # type: ignore[no-untyped-def]
         self,
         hostname,
         svc_desc_or_item,
@@ -860,7 +939,7 @@ class Ruleset:
                 continue
 
             if not rule.matches_host_and_item(
-                Folder.current(),
+                folder_from_request(),
                 hostname,
                 svc_desc_or_item,
                 svc_desc,
@@ -1036,11 +1115,14 @@ class Rule:
 
         return make_diff_text(self.to_log(), other.to_log())
 
-    def to_config(self) -> RuleSpec:
+    def to_config(
+        self,
+        use_host_folder: UseHostFolder = UseHostFolder.MACRO,
+    ) -> RuleSpec:
         # Special case: The main folder must not have a host_folder condition, because
-        # these rules should also affect non WATO hosts.
+        # these rules should also affect non Setup hosts.
         return self._to_config(
-            use_host_folder=UseHostFolder.NONE if self.folder.is_root() else UseHostFolder.MACRO
+            use_host_folder=UseHostFolder.NONE if self.folder.is_root() else use_host_folder
         )
 
     def to_web_api(self) -> RuleSpec:
@@ -1105,7 +1187,7 @@ class Rule:
             )
         )
 
-    def matches_host_and_item(  # type:ignore[no-untyped-def]
+    def matches_host_and_item(  # type: ignore[no-untyped-def]
         self,
         host_folder,
         hostname,
@@ -1126,7 +1208,7 @@ class Rule:
             )
         )
 
-    def get_mismatch_reasons(  # type:ignore[no-untyped-def]
+    def get_mismatch_reasons(  # type: ignore[no-untyped-def]
         self,
         host_folder,
         hostname,
@@ -1211,7 +1293,7 @@ class Rule:
         self,
         search_options: SearchOptions,
     ) -> bool:
-        if "rule_folder" in search_options and self.folder.name() not in self._get_search_folders(
+        if "rule_folder" in search_options and self.folder.path() not in self._get_search_folders(
             search_options
         ):
             return False
@@ -1290,12 +1372,10 @@ class Rule:
 
     def _get_search_folders(self, search_options: SearchOptions) -> list[str]:
         current_folder, do_recursion = search_options["rule_folder"]
-        current_folder = Folder.folder(current_folder)
-        search_in_folders = [current_folder.name()]
+        current_folder = folder_tree().folder(current_folder)
+        search_in_folders = [current_folder.path()]
         if do_recursion:
-            search_in_folders = [
-                x.split("/")[-1] for x, _y in current_folder.recursive_subfolder_choices()
-            ]
+            search_in_folders = [x for x, _y in current_folder.recursive_subfolder_choices()]
         return search_in_folders
 
     def index(self) -> int:
@@ -1314,8 +1394,8 @@ class Rule:
     def predefined_condition_id(self) -> str | None:
         """When a rule refers to a predefined condition return the ID
 
-        The predefined conditions are a pure WATO feature. These are resolved when writing
-        the configuration down for Check_MK base. The configured condition ID is preserved
+        The predefined conditions are a pure Setup feature. These are resolved when writing
+        the configuration down for Checkmk base. The configured condition ID is preserved
         in the rule options for the moment.
         """
         # TODO: Once we switched the rule format to be dict base, we can move this key to the conditions dict
@@ -1375,7 +1455,11 @@ def _match_search_expression(search_options: SearchOptions, attr_name: str, sear
 
     if search_in and search_in.startswith("~"):
         return re.search(search_in.lstrip("~"), search_options[attr_name], re.I) is not None
-    return bool(search_in and re.search(search_options[attr_name], search_in, re.I) is not None)
+
+    try:
+        return bool(search_in and re.search(search_options[attr_name], search_in, re.I) is not None)
+    except re.error as e:
+        raise MKUserError("", e.msg) from e
 
 
 def _match_one_of_search_expression(
@@ -1396,3 +1480,22 @@ def service_description_to_condition(service_description: str) -> HostOrServiceC
     {'$regex': 'a / b / c \\\\ d \\\\ e$'}
     """
     return {"$regex": "%s$" % escape_regex_chars(service_description)}
+
+
+def rules_grouped_by_folder(
+    rules: list[tuple[CREFolder, int, Rule]],
+    current_folder: CREFolder,
+) -> Generator[tuple[CREFolder, Iterator[tuple[CREFolder, int, Rule]]], None, None]:
+    """Get ruleset groups in correct sort order. Sort by title_path() to honor
+    renamed folders"""
+    sorted_rules: list[tuple[CREFolder, int, Rule]] = sorted(
+        rules,
+        key=lambda x: (x[0].title_path(), len(rules) - x[1]),
+        reverse=True,
+    )
+    return (
+        (folder, folder_rules)  #
+        for folder, folder_rules in itertools.groupby(sorted_rules, key=lambda rule: rule[0])
+        if folder.is_transitive_parent_of(current_folder)
+        or current_folder.is_transitive_parent_of(folder)
+    )

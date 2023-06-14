@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName
 
 REPLACED_CHECK_PLUGINS = {
     CheckPluginName("aix_diskiod"): CheckPluginName("diskstat_io"),
-    CheckPluginName("apc_power"): CheckPluginName("epower"),
+    CheckPluginName("apc_symmetra_power"): CheckPluginName("epower"),
     CheckPluginName("cisco_mem_asa"): CheckPluginName("cisco_mem"),
     CheckPluginName("cisco_mem_asa64"): CheckPluginName("cisco_mem"),
     CheckPluginName("df_netapp32"): CheckPluginName("df_netapp"),
@@ -71,4 +71,5 @@ REPLACED_CHECK_PLUGINS = {
     CheckPluginName("jolokia_metrics_gc"): CheckPluginName("jolokia_jvm_garbagecollectors"),
     CheckPluginName("ups_power"): CheckPluginName("epower"),
     CheckPluginName("esx_vsphere_counters"): CheckPluginName("esx_vsphere_datastore_io"),
+    CheckPluginName("arista_bgp"): CheckPluginName("bgp_peer"),
 }

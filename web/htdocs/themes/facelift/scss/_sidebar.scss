@@ -1,5 +1,5 @@
 @charset "UTF-8";
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -148,10 +148,12 @@ iframe#robotmk_error {
   img {
     width: 48px;
     height: auto;
+    padding: 0;
   }
 
   .min & img {
     width: 45px;
+    padding: 0 12px;
 
     &.custom {
       width: 35px;
@@ -352,7 +354,7 @@ div.snapin {
 
   /* Normal link in snapins */
   a {
-    font-weight: normal;
+    font-weight: $font-weight-default;
     color: $font-color;
     text-decoration: none;
 

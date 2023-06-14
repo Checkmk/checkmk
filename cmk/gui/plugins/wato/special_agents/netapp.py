@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -47,7 +47,7 @@ def _valuespec_special_agents_netapp() -> Dictionary:
         ],
         title=_("NetApp via WebAPI"),
         help=_(
-            "This rule set selects the NetApp special agent instead of the normal Check_MK Agent "
+            "This rule set selects the NetApp special agent instead of the normal Checkmk Agent "
             "and allows monitoring via the NetApp Web API. To access the data the "
             "user requires permissions to several API classes. They are shown when you call the agent with "
             "<tt>agent_netapp --help</tt>. The agent itself is located in the site directory under "

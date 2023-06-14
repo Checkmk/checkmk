@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Passwords
@@ -24,7 +24,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     request_schemas,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
+from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_ID_FIELD
 from cmk.gui.plugins.openapi.utils import problem, serve_json
 from cmk.gui.watolib.passwords import (
     load_password,
@@ -90,7 +90,7 @@ def create_password(params: Mapping[str, Any]) -> Response:
     constructors.object_href("password", "{name}"),
     ".../update",
     method="put",
-    path_params=[NAME_FIELD],
+    path_params=[NAME_ID_FIELD],
     request_schema=request_schemas.UpdatePassword,
     etag="both",
     response_schema=response_schemas.PasswordObject,
@@ -119,7 +119,7 @@ def update_password(params: Mapping[str, Any]) -> Response:
     constructors.object_href("password", "{name}"),
     ".../delete",
     method="delete",
-    path_params=[NAME_FIELD],
+    path_params=[NAME_ID_FIELD],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
 )
@@ -142,7 +142,7 @@ def delete_password(params: Mapping[str, Any]) -> Response:
     constructors.object_href("password", "{name}"),
     "cmk/show",
     method="get",
-    path_params=[NAME_FIELD],
+    path_params=[NAME_ID_FIELD],
     response_schema=response_schemas.PasswordObject,
     permissions_required=PERMISSIONS,
 )
@@ -165,35 +165,30 @@ def show_password(params: Mapping[str, Any]) -> Response:
     constructors.collection_href("password"),
     ".../collection",
     method="get",
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=response_schemas.PasswordCollection,
     permissions_required=PERMISSIONS,
 )
 def list_passwords(params: Mapping[str, Any]) -> Response:
     """Show all passwords"""
     user.need_permission("wato.passwords")
-    password_collection = {
-        "id": "password",
-        "domainType": "password",
-        "value": [
-            constructors.collection_item(
-                domain_type="password",
-                title=details["title"],
-                identifier=password_id,
-            )
-            for password_id, details in load_passwords().items()
-        ],
-        "links": [constructors.link_rel("self", constructors.collection_href("password"))],
-    }
-    return serve_json(password_collection)
+    return serve_json(
+        constructors.collection_object(
+            domain_type="password",
+            value=[
+                serialize_password(ident, details) for ident, details in load_passwords().items()
+            ],
+        )
+    )
 
 
 def _serve_password(ident, password_details):
     response = serve_json(serialize_password(ident, complement_customer(password_details)))
-    response.headers.add("ETag", constructors.etag_of_dict(password_details).to_header())
-    return response
+    return constructors.response_with_etag_created_from_dict(response, password_details)
 
 
 def serialize_password(ident, details):
+    if details["owned_by"] is None:
+        details["owned_by"] = "admin"
     return constructors.domain_object(
         domain_type="password",
         identifier=ident,
@@ -218,4 +213,6 @@ def serialize_password(ident, details):
                 "customer",
             )
         },
+        editable=True,
+        deletable=True,
     )

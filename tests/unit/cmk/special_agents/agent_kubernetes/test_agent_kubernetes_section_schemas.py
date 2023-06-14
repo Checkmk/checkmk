@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -49,7 +49,6 @@ def get_kube_agent_sections(fix_register: FixRegister) -> Mapping[SectionName, A
 def get_kube_parse_functions(
     kube_agent_sections: Mapping[SectionName, AgentSectionPlugin],
 ) -> Mapping[SectionName, AgentParseFunction]:
-
     return {name: section.parse_function for name, section in kube_agent_sections.items()}
 
 

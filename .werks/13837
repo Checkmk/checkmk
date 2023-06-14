@@ -6,7 +6,7 @@ Date: 1648072161
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 For bonded interfaces a wrong MAC address has been reported in the interface
 services and the hardware/software inventory. This has been fixed.

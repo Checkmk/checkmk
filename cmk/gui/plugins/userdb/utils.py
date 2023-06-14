@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -18,6 +18,7 @@ import cmk.utils.store as store
 from cmk.utils.crypto.password import Password
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
+from cmk.utils.urls import is_allowed_url
 
 from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.exceptions import MKUserError
@@ -26,7 +27,6 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser, save_user_file
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
 from cmk.gui.type_defs import Users, UserSpec
-from cmk.gui.utils import is_allowed_url
 from cmk.gui.valuespec import ValueSpec
 
 # count this up, if new user attributes are used or old are marked as
@@ -36,7 +36,7 @@ USER_SCHEME_SERIAL = 1
 
 RoleSpec = dict[str, Any]  # TODO: Improve this type
 Roles = dict[str, RoleSpec]  # TODO: Improve this type
-UserConnectionSpec = dict[str, Any]  # TODO: Improve this type
+UserConnectionSpec = dict[str, Any]  # TODO: Minimum should be a TypedDict
 UserSyncConfig = Union[Literal["all", "master"], tuple[Literal["list"], list[str]], None]
 CheckCredentialsResult = UserId | None | Literal[False]
 
@@ -63,7 +63,7 @@ def release_users_lock() -> None:
 
 def user_sync_config() -> UserSyncConfig:
     # use global option as default for reading legacy options and on remote site
-    # for reading the value set by the WATO master site
+    # for reading the value set by the Setup master site
     default_cfg = user_sync_default_config(omd_site())
     return get_site_config(omd_site()).get("user_sync", default_cfg)
 
@@ -196,7 +196,7 @@ def connection_choices() -> list[tuple[str, str]]:
         [
             (connection_id, f"{connection_id} ({connection.type()})")
             for connection_id, connection in _all_connections()
-            if connection.type() == "ldap"
+            if connection.type() == ConnectorType.LDAP
         ],
         key=lambda id_and_description: id_and_description[1],
     )
@@ -327,8 +327,16 @@ def _get_builtin_roles() -> Roles:
 #   '----------------------------------------------------------------------'
 
 
+class ConnectorType:
+    # TODO: should be improved to be an enum
+    SAML2 = "saml2"
+    LDAP = "ldap"
+    HTPASSWD = "htpasswd"
+    OAUTH2 = "oauth2"
+
+
 class UserConnector(abc.ABC):
-    def __init__(self, cfg) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, cfg) -> None:  # type: ignore[no-untyped-def]
         self._config = cfg
 
     @classmethod
@@ -377,7 +385,7 @@ class UserConnector(abc.ABC):
 
     # Optional: Hook function can be registered here to be executed
     # to synchronize all users.
-    def do_sync(  # type:ignore[no-untyped-def]
+    def do_sync(
         self,
         *,
         add_to_changelog: bool,
@@ -398,7 +406,7 @@ class UserConnector(abc.ABC):
         pass
 
     # List of user attributes locked for all users attached to this
-    # connection. Those locked attributes are read-only in WATO.
+    # connection. Those locked attributes are read-only in Setup.
     def locked_attributes(self) -> Sequence[str]:
         return []
 

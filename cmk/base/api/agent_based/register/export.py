@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """All objects defined here are intended to be exposed in the API
 """
-from typing import Callable, List, Optional, overload, Union
+from collections.abc import Callable
+from typing import overload
 
 from cmk.base.api.agent_based.checking_classes import CheckFunction, DiscoveryFunction
 from cmk.base.api.agent_based.inventory_classes import InventoryFunction
 from cmk.base.api.agent_based.register import (
     add_check_plugin,
     add_discovery_ruleset,
+    add_host_label_ruleset,
     add_inventory_plugin,
     add_section_plugin,
     is_registered_check_plugin,
@@ -45,13 +47,13 @@ __all__ = [
 def agent_section(
     *,
     name: str,
-    parse_function: Optional[AgentParseFunction] = None,
-    parsed_section_name: Optional[str] = None,
-    host_label_function: Optional[HostLabelFunction] = None,
-    host_label_default_parameters: Optional[ParametersTypeAlias] = None,
-    host_label_ruleset_name: Optional[str] = None,
+    parse_function: AgentParseFunction | None = None,
+    parsed_section_name: str | None = None,
+    host_label_function: HostLabelFunction | None = None,
+    host_label_default_parameters: ParametersTypeAlias | None = None,
+    host_label_ruleset_name: str | None = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
-    supersedes: Optional[List[str]] = None,
+    supersedes: list[str] | None = None,
 ) -> None:
     """Register an agent section to checkmk
 
@@ -66,7 +68,7 @@ def agent_section(
       parse_function:      The function responsible for parsing the raw agent data.
                            It must accept exactly one argument by the name 'string_table'.
                            It may return an arbitrary object. Note that if the return value is
-                           `None`, no forther processing will take place (just as if the agent had
+                           `None`, no further processing will take place (just as if the agent had
                            not sent any data).
                            This function may raise arbitrary exceptions, which will be dealt with
                            by the checking engine. You should expect well formatted data.
@@ -87,10 +89,10 @@ def agent_section(
 
       host_label_ruleset_type: The ruleset type is either :class:`RuleSetType.ALL` or
                            :class:`RuleSetType.MERGED`.
-                           It describes whether this plugins needs the merged result of the
+                           It describes whether this plugin needs the merged result of the
                            effective rules, or every individual rule matching for the current host.
 
-      supersedes:          A list of section names which are superseded by this sections. If this
+      supersedes:          A list of section names which are superseded by this section. If this
                            section will be parsed to something that is not `None` (see above) all
                            superseded section will not be considered at all.
 
@@ -111,6 +113,8 @@ def agent_section(
         raise ValueError("duplicate section definition: %s" % section_plugin.name)
 
     add_section_plugin(section_plugin)
+    if section_plugin.host_label_ruleset_name is not None:
+        add_host_label_ruleset(section_plugin.host_label_ruleset_name)
 
 
 @overload  # no List of trees -> SimpleSNMPParseFunction
@@ -119,13 +123,13 @@ def snmp_section(
     name: str,
     detect: SNMPDetectSpecification,
     fetch: SNMPTree,
-    parse_function: Optional[SimpleSNMPParseFunction] = None,
-    parsed_section_name: Optional[str] = None,
-    host_label_function: Optional[HostLabelFunction] = None,
-    host_label_default_parameters: Optional[ParametersTypeAlias] = None,
-    host_label_ruleset_name: Optional[str] = None,
+    parse_function: SimpleSNMPParseFunction | None = None,
+    parsed_section_name: str | None = None,
+    host_label_function: HostLabelFunction | None = None,
+    host_label_default_parameters: ParametersTypeAlias | None = None,
+    host_label_ruleset_name: str | None = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
-    supersedes: Optional[List[str]] = None,
+    supersedes: list[str] | None = None,
 ) -> None:
     pass
 
@@ -135,14 +139,14 @@ def snmp_section(
     *,
     name: str,
     detect: SNMPDetectSpecification,
-    fetch: List[SNMPTree],
-    parse_function: Optional[SNMPParseFunction] = None,
-    parsed_section_name: Optional[str] = None,
-    host_label_function: Optional[HostLabelFunction] = None,
-    host_label_default_parameters: Optional[ParametersTypeAlias] = None,
-    host_label_ruleset_name: Optional[str] = None,
+    fetch: list[SNMPTree],
+    parse_function: SNMPParseFunction | None = None,
+    parsed_section_name: str | None = None,
+    host_label_function: HostLabelFunction | None = None,
+    host_label_default_parameters: ParametersTypeAlias | None = None,
+    host_label_ruleset_name: str | None = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
-    supersedes: Optional[List[str]] = None,
+    supersedes: list[str] | None = None,
 ) -> None:
     pass
 
@@ -151,14 +155,14 @@ def snmp_section(
     *,
     name: str,
     detect: SNMPDetectSpecification,
-    fetch: Union[SNMPTree, List[SNMPTree]],
-    parse_function: Union[SimpleSNMPParseFunction, SNMPParseFunction, None] = None,
-    parsed_section_name: Optional[str] = None,
-    host_label_function: Optional[HostLabelFunction] = None,
-    host_label_default_parameters: Optional[ParametersTypeAlias] = None,
-    host_label_ruleset_name: Optional[str] = None,
+    fetch: SNMPTree | list[SNMPTree],
+    parse_function: SimpleSNMPParseFunction | SNMPParseFunction | None = None,
+    parsed_section_name: str | None = None,
+    host_label_function: HostLabelFunction | None = None,
+    host_label_default_parameters: ParametersTypeAlias | None = None,
+    host_label_ruleset_name: str | None = None,
     host_label_ruleset_type: RuleSetType = RuleSetType.MERGED,
-    supersedes: Optional[List[str]] = None,
+    supersedes: list[str] | None = None,
 ) -> None:
     """Register an snmp section to checkmk
 
@@ -172,7 +176,7 @@ def snmp_section(
       detect:              The conditions on single OIDs that will result in the attempt to
                            fetch snmp data and discover services.
                            This should only match devices to which the section is applicable.
-                           It is higly recomended to check the system description OID at the very
+                           It is highly recommended to check the system description OID at the very
                            first, as this will make the discovery much more responsive and consume
                            less resources.
 
@@ -186,7 +190,7 @@ def snmp_section(
                            It will be passed either a single :class:`StringTable`, or a list
                            of them, depending on the value type of the `fetch` argument.
                            It may return an arbitrary object. Note that if the return value is
-                           `None`, no forther processing will take place (just as if the agent had
+                           `None`, no further processing will take place (just as if the agent had
                            not sent any data).
                            This function may raise arbitrary exceptions, which will be dealt with
                            by the checking engine. You should expect well formatted data.
@@ -207,10 +211,10 @@ def snmp_section(
 
       host_label_ruleset_type: The ruleset type is either :class:`RuleSetType.ALL` or
                            :class:`RuleSetType.MERGED`.
-                           It describes whether this plugins needs the merged result of the
+                           It describes whether this plugin needs the merged result of the
                            effective rules, or every individual rule matching for the current host.
 
-      supersedes:          A list of section names which are superseded by this sections. If this
+      supersedes:          A list of section names which are superseded by this section. If this
                            section will be parsed to something that is not `None` (see above) all
                            superseded section will not be considered at all.
 
@@ -233,21 +237,23 @@ def snmp_section(
         raise ValueError("duplicate section definition: %s" % section_plugin.name)
 
     add_section_plugin(section_plugin)
+    if section_plugin.host_label_ruleset_name is not None:
+        add_host_label_ruleset(section_plugin.host_label_ruleset_name)
 
 
 def check_plugin(
     *,
     name: str,
-    sections: Optional[List[str]] = None,
+    sections: list[str] | None = None,
     service_name: str,
     discovery_function: DiscoveryFunction,
-    discovery_default_parameters: Optional[ParametersTypeAlias] = None,
-    discovery_ruleset_name: Optional[str] = None,
+    discovery_default_parameters: ParametersTypeAlias | None = None,
+    discovery_ruleset_name: str | None = None,
     discovery_ruleset_type: RuleSetType = RuleSetType.MERGED,
     check_function: CheckFunction,
-    check_default_parameters: Optional[ParametersTypeAlias] = None,
-    check_ruleset_name: Optional[str] = None,
-    cluster_check_function: Optional[Callable] = None,
+    check_default_parameters: ParametersTypeAlias | None = None,
+    check_ruleset_name: str | None = None,
+    cluster_check_function: Callable | None = None,
 ) -> None:
     """Register a check plugin to checkmk.
 
@@ -281,8 +287,9 @@ def check_plugin(
 
       discovery_ruleset_type:   The ruleset type is either :class:`RuleSetType.ALL` or
                                 :class:`RuleSetType.MERGED`.
-                                It describes whether this plugins needs the merged result of the effective rules,
-                                or every individual rule matching for the current host.
+                                It describes whether this plugin needs the merged result of the
+                                effective rules, or every individual rule matching for the current
+                                host.
 
       check_function:           The check_function. Arguments must be 'item' (if the service has an
                                 item), 'params' (if check default parameters are defined) and
@@ -328,10 +335,10 @@ def check_plugin(
 def inventory_plugin(
     *,
     name: str,
-    sections: Optional[List[str]] = None,
+    sections: list[str] | None = None,
     inventory_function: InventoryFunction,
-    inventory_default_parameters: Optional[ParametersTypeAlias] = None,
-    inventory_ruleset_name: Optional[str] = None,
+    inventory_default_parameters: ParametersTypeAlias | None = None,
+    inventory_ruleset_name: str | None = None,
 ) -> None:
     """Register an inventory plugin to checkmk.
 

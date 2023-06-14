@@ -1,0 +1,20 @@
+Title: agent: GET non existent agent hash now returns a 404 response
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1677772269
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk is to fix an issue when requesting an agent that doesn't
+exist via the following endpoints
+
+GET /objects/agent/non-existing-hash
+GET /domain-types/agent/actions/download_by_hash/invoke
+
+Previously, both of these endpoints would respond with a 500
+internal server error, but now we conform to our other endpoints
+and we return a problem response with an appropriate message.
+

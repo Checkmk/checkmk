@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Preparing the site configuration in distributed setups for synchronization"""
@@ -30,7 +30,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.userdb.utils import user_sync_default_config
-from cmk.gui.plugins.watolib.utils import wato_fileheader
+from cmk.gui.watolib.config_domain_name import wato_fileheader
 
 Command = list[str]
 
@@ -47,7 +47,6 @@ class ReplicationPath(
     )
 ):
     def __new__(cls, ty: str, ident: str, site_path: str, excludes: list[str]) -> "ReplicationPath":
-
         if site_path.startswith("/"):
             raise Exception("ReplicationPath.path must be a path relative to the site root")
         cleaned_path = site_path.rstrip("/")
@@ -490,7 +489,6 @@ def _extract(tar: tarfile.TarFile, base_dir: Path, components: list[ReplicationP
 
             # Extract without use of temporary files
             with tarfile.open(fileobj=subtarstream) as subtar:
-
                 # Remove old stuff
                 if os.path.exists(component_path):
                     if component.ident == "usersettings":
@@ -506,7 +504,7 @@ def _extract(tar: tarfile.TarFile, base_dir: Path, components: list[ReplicationP
                 elif component.ty == "dir":
                     os.makedirs(component_path)
 
-                subtar.extractall(target_dir)
+                subtar.extractall(target_dir)  # nosec B202
         except Exception:
             raise MKGeneralException(
                 f"Failed to extract subtar {component.ident}: {traceback.format_exc()}"
@@ -525,7 +523,7 @@ def _wipe_directory(path: str) -> None:
                 pass
 
 
-def _get_local_users(tar_file) -> dict[str, str | None]:  # type:ignore[no-untyped-def]
+def _get_local_users(tar_file) -> dict[str, str | None]:  # type: ignore[no-untyped-def]
     """The tar_file should contain var/check_mk/web/
 
     From there on inspect every user's cached_profile.mk to recognize if they are a users
@@ -591,10 +589,11 @@ def _update_settings_of_user(
     if is_customer_user:
         user_tars = [m for m in user_tars if not is_user_file(m.name)]
 
-    tar_file.extractall(os.path.dirname(path), members=user_tars)
+    d = os.path.dirname(path)
+    tar_file.extractall(d, members=user_tars)  # nosec B202
 
 
-def _cleanup_user_dir(path, is_customer_user) -> None:  # type:ignore[no-untyped-def]
+def _cleanup_user_dir(path, is_customer_user) -> None:  # type: ignore[no-untyped-def]
     for entry in os.listdir(path):
         p = path + "/" + entry
         if os.path.isdir(p):
@@ -605,7 +604,7 @@ def _cleanup_user_dir(path, is_customer_user) -> None:  # type:ignore[no-untyped
             os.remove(p)
 
 
-def is_user_file(filepath) -> bool:  # type:ignore[no-untyped-def]
+def is_user_file(filepath) -> bool:  # type: ignore[no-untyped-def]
     entry = os.path.basename(filepath)
     return entry.startswith("user_") or entry in ["tableoptions.mk", "treestates.mk", "sidebar.mk"]
 
@@ -618,7 +617,7 @@ def _update_check_mk(target_dir, tar_file):
         exec(f.read(), {}, site_vars)
 
     _wipe_directory(target_dir)
-    tar_file.extractall(target_dir)
+    tar_file.extractall(target_dir)  # nosec B202
 
     master_vars: dict[str, Any] = {"contacts": {}}
     exec(tar_file.extractfile("./contacts.mk").read(), {}, master_vars)
@@ -628,7 +627,6 @@ def _update_check_mk(target_dir, tar_file):
 
 
 def _update_contacts_dict(master: dict, site: dict) -> dict:
-
     site_contacts = {}
 
     for user_id, settings in master.items():

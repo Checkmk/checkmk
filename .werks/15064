@@ -6,7 +6,7 @@ Date: 1671460038
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 
 The agent updater now reports about the status of the trusted certificates for agent signatures.

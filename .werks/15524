@@ -1,0 +1,23 @@
+Title: Avoid confusion with MKPs 'Minimum required Checkmk version'
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1680006601
+Edition: cee
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+This only affects users that create MKPs and make use of the field 'Minimum required Checkmk version'.
+
+This field is usually prepopulated with the version number of the site (e.g. "2.1.0p17").
+We found users frequently removed the patch release number (turning it into "2.1.0"), thinking that this tranlates as "any 2.1 version".
+
+However, it does not. "2.1.0" is the specific version released after "2.1.0b9" and before "2.1.0p1".
+Consequently, an MKP that requires version 2.2.0, for instance, will not be available in verison 2.1.0b1.
+
+This is most likely not what users wanted, so we now prompt a warning if such a version number is specified.
+You can still configure it, though.
+
+

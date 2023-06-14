@@ -1,4 +1,4 @@
-// Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -23,7 +23,7 @@
 #include "livestatus/DoubleColumn.h"
 #include "livestatus/EventConsoleConnection.h"
 #include "livestatus/Filter.h"
-#include "livestatus/MonitoringCore.h"
+#include "livestatus/ICore.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
@@ -45,10 +45,10 @@ const std::vector<std::string> grepping_filters = {
 
 class ECTableConnection : public EventConsoleConnection {
 public:
-    ECTableConnection(MonitoringCore *mc, const Table &table, Query &query,
+    ECTableConnection(ICore *mc, const Table &table, Query &query,
                       std::function<bool(const ECRow &)> is_authorized)
         : EventConsoleConnection(mc->loggerLivestatus(),
-                                 mc->mkeventdSocketPath())
+                                 mc->paths()->event_console_status_socket())
         , mc_{mc}
         , table_{table}
         , query_{query}
@@ -183,14 +183,14 @@ private:
         } while (true);
     }
 
-    MonitoringCore *mc_;
+    ICore *mc_;
     const Table &table_;
     Query &query_;
     const std::function<bool(const ECRow &)> is_authorized_;
 };
 }  // namespace
 
-ECRow::ECRow(MonitoringCore *mc, const std::vector<std::string> &headers,
+ECRow::ECRow(ICore *mc, const std::vector<std::string> &headers,
              const std::vector<std::string> &columns) {
     auto column_it = columns.cbegin();
     for (const auto &header : headers) {
@@ -270,7 +270,7 @@ std::string ECRow::get(const std::string &column_name,
 
 const IHost *ECRow::host() const { return host_ ? host_.get() : nullptr; }
 
-TableEventConsole::TableEventConsole(MonitoringCore *mc) : Table{mc} {}
+TableEventConsole::TableEventConsole(ICore *mc) : Table{mc} {}
 
 namespace {
 std::function<bool(const ECRow &)> get_authorizer(const Table &table,

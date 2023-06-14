@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
+from collections.abc import Iterable, Mapping
+from typing import Literal, TypedDict
+
+from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_legacy_includes.elphase import check_elphase
+from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.utils.ups import DETECT_UPS_CPS
+
+
+class Phase(TypedDict):
+    voltage: float
+    frequency: float
+    output_load: float
+    current: float
+
+
+Section = Mapping[Literal["1"], Phase]
+
+
+def parse_ups_cps_outphase(string_table: list[str]) -> Section:
+    return {
+        "1": Phase(
+            voltage=float(string_table[0][0]) / 10,
+            frequency=float(string_table[0][1]) / 10,
+            output_load=float(string_table[0][2]),
+            current=float(string_table[0][3]) / 10,
+        )
+    }
+
+
+def inventory_ups_cps_outphase(section: Section) -> Iterable[tuple[str, dict]]:
+    yield "1", {}
+
+
+check_info["ups_cps_outphase"] = LegacyCheckDefinition(
+    detect=DETECT_UPS_CPS,
+    parse_function=parse_ups_cps_outphase,
+    discovery_function=inventory_ups_cps_outphase,
+    check_function=check_elphase,
+    service_name="UPS Output Phase %s",
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.3808.1.1.1.4.2",
+        oids=["1", "2", "3", "4"],
+    ),
+    check_ruleset_name="ups_outphase",
+)

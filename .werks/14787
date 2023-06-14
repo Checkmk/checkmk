@@ -6,7 +6,7 @@ Date: 1668765550
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 You're affected by this werk if you're monitoring MariaDBs with mk_mysql.vbs and you've given a customized service name.
 Perviously, the Windows Service was only detected, if it contained the "MariaDB" suffix.

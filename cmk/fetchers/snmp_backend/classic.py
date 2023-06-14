@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -323,8 +323,6 @@ def _auth_proto_for(proto_name: str) -> str:
 
 
 def _priv_proto_for(proto_name: str) -> str:
-    if proto_name == "DES":
-        return "DES"
-    if proto_name == "AES":
-        return "AES"
+    if proto_name in ("DES", "AES", "AES-256", "AES-192"):
+        return proto_name
     raise MKGeneralException("Invalid SNMP priv protocol: %s" % proto_name)

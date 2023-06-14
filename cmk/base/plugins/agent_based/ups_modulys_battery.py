@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,7 +11,6 @@ from cmk.base.plugins.agent_based.utils.temperature import check_temperature, Te
 
 from .agent_based_api.v1 import (
     check_levels,
-    equals,
     get_value_store,
     register,
     render,
@@ -21,6 +20,7 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.ups_modulys import DETECT_UPS_MODULYS
 
 
 class UPSBattery(NamedTuple):
@@ -84,7 +84,7 @@ register.snmp_section(
             ],
         )
     ],
-    detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2254.2.4"),
+    detect=DETECT_UPS_MODULYS,
 )
 
 
@@ -169,7 +169,6 @@ def check_ups_modulys_battery_temp(
     params: TempParamType,
     section: UPSBatterySection,
 ) -> CheckResult:
-
     if section and section.temperature is not None:
         yield from check_temperature(
             reading=section.temperature,

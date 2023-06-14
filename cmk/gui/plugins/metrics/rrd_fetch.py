@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Core for getting the actual raw data points via Livestatus from RRD"""
 
 import collections
 import time
-from collections.abc import Callable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from typing import Any
 
 import livestatus
-from livestatus import LivestatusRow, SiteId
+from livestatus import SiteId
 
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
@@ -21,17 +21,19 @@ import cmk.gui.plugins.metrics.timeseries as ts
 import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import (
-    check_metrics,
+    CheckMetricEntry,
     CombinedGraphMetricSpec,
+    find_matching_translation,
     GraphConsoldiationFunction,
     GraphDataRange,
-    GraphMetric,
     GraphRecipe,
-    reverse_translate_metric_name,
+    metric_info,
+    reverse_translate_into_all_potentially_relevant_metrics_cached,
     RRDData,
-    UnitConverter,
+    RRDDataKey,
+    unit_info,
 )
-from cmk.gui.type_defs import ColumnName, CombinedGraphSpec
+from cmk.gui.type_defs import ColumnName, CombinedGraphSpec, GraphMetric, MetricName, RPNExpression
 
 
 def fetch_rrd_data_for_graph(
@@ -44,8 +46,24 @@ def fetch_rrd_data_for_graph(
     needed_rrd_data = get_needed_sources(
         graph_recipe["metrics"], resolve_combined_single_metric_spec
     )
+    unit_conversion = unit_info[graph_recipe["unit"]].get(
+        "conversion",
+        lambda v: v,
+    )
 
-    by_service = group_needed_rrd_data_by_service(needed_rrd_data)
+    by_service = group_needed_rrd_data_by_service(
+        (
+            (
+                entry[0],
+                entry[1],
+                entry[2],
+                entry[3],
+                entry[4],
+                entry[5],
+            )
+            for entry in needed_rrd_data
+        )
+    )
     rrd_data: RRDData = {}
     for (site, host_name, service_description), metrics in by_service.items():
         try:
@@ -53,7 +71,8 @@ def fetch_rrd_data_for_graph(
                 site, host_name, service_description, metrics, graph_recipe, graph_data_range
             ):
                 rrd_data[(site, host_name, service_description, perfvar, cf, scale)] = TimeSeries(
-                    data
+                    data,
+                    conversion=unit_conversion,
                 )
         except livestatus.MKLivestatusNotFoundError:
             pass
@@ -64,7 +83,7 @@ def fetch_rrd_data_for_graph(
     return rrd_data
 
 
-def align_and_resample_rrds(rrd_data: RRDData, cf: GraphConsoldiationFunction) -> None:
+def align_and_resample_rrds(rrd_data: RRDData, cf: GraphConsoldiationFunction | None) -> None:
     """RRDTool aligns start/end/step to its internal precision.
 
     This is returned as first 3 values in each RRD data row. Using that
@@ -118,12 +137,12 @@ def chop_last_empty_step(graph_data_range: GraphDataRange, rrd_data: RRDData) ->
         data.end -= step
 
 
-def needed_elements_of_expression(  # type:ignore[no-untyped-def]
-    expression,
+def needed_elements_of_expression(
+    expression: RPNExpression,
     resolve_combined_single_metric_spec: Callable[
         [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
     ],
-):
+) -> Iterator[tuple[Any, ...]]:
     if expression[0] in ["rrd", "scalar"]:
         yield tuple(expression[1:])
     elif expression[0] in ["operator", "transformation"]:
@@ -140,13 +159,13 @@ def needed_elements_of_expression(  # type:ignore[no-untyped-def]
 
 
 def get_needed_sources(
-    metrics: list[GraphMetric],
+    metrics: Sequence[GraphMetric] | Sequence[CombinedGraphMetricSpec],
     resolve_combined_single_metric_spec: Callable[
         [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
     ],
     *,
     condition: Callable[[Any], bool] = lambda x: True,
-) -> set:
+) -> set[tuple[Any, ...]]:
     """Extract all metric data sources definitions
 
     metrics: List
@@ -164,14 +183,11 @@ def get_needed_sources(
     }
 
 
-NeededRRDData = set[
-    tuple[SiteId, HostName, ServiceName, str, GraphConsoldiationFunction | None, float]
-]
 MetricProperties = tuple[str, GraphConsoldiationFunction | None, float]
 
 
 def group_needed_rrd_data_by_service(
-    needed_rrd_data: NeededRRDData,
+    needed_rrd_data: Iterable[RRDDataKey],
 ) -> dict[tuple[SiteId, HostName, ServiceName], set[MetricProperties],]:
     by_service: dict[
         tuple[SiteId, HostName, ServiceName],
@@ -202,33 +218,11 @@ def fetch_rrd_data(
     query = livestatus_lql([host_name], lql_columns, service_description)
 
     with sites.only_sites(site):
-        query_results = sites.live().query_row(query)
-
-    converted_query_results = _convert_query_results(query_results, graph_recipe)
-    return list(zip(metrics, converted_query_results))
-
-
-def _convert_query_results(
-    query_results: LivestatusRow, graph_recipe: GraphRecipe
-) -> LivestatusRow:
-    source_unit = graph_recipe.get("source_unit")
-    target_unit = graph_recipe.get("unit")
-    if source_unit is None or target_unit is None or source_unit == target_unit:
-        return query_results
-    converter = UnitConverter(source_unit, target_unit)
-    if not converter.is_conversion_available():
-        return query_results
-
-    converted_results = LivestatusRow([])
-    for result in query_results:
-        start_time, end_time, step, *original_data = result
-        converted_data = converter.convert_iterable(original_data)
-        converted_results.append([start_time, end_time, step, *converted_data])
-    return converted_results
+        return list(zip(metrics, sites.live().query_row(query)))
 
 
 def rrd_columns(
-    metrics: set[MetricProperties],
+    metrics: Iterable[MetricProperties],
     rrd_consolidation: GraphConsoldiationFunction | None,
     data_range: str,
 ) -> Iterator[ColumnName]:
@@ -244,61 +238,70 @@ def rrd_columns(
         yield f"rrddata:{perfvar}:{rpn}:{data_range}"
 
 
-def metric_in_all_rrd_columns(
-    metric: str,
+def all_rrd_columns_potentially_relevant_for_metric(
+    metric_name: MetricName,
     rrd_consolidation: GraphConsoldiationFunction,
     from_time: int,
     until_time: int,
-) -> list[ColumnName]:
-    """Translate metric name to all perf_data names and construct RRD data columns for each"""
+) -> Iterator[ColumnName]:
+    yield from rrd_columns(
+        (
+            (
+                metric_name,
+                None,
+                # at this point, we do not yet know if there any potential scalings due to metric
+                # translations
+                1,
+            )
+            for metric_name in reverse_translate_into_all_potentially_relevant_metrics_cached(
+                metric_name
+            )
+        ),
+        rrd_consolidation,
+        f"{from_time}:{until_time}:{60}",
+    )
 
-    data_range = f"{from_time}:{until_time}:{60}"
-    metrics: set[MetricProperties] = {
-        (name, None, scale) for name, scale in reverse_translate_metric_name(metric)
-    }
-    return list(rrd_columns(metrics, rrd_consolidation, data_range))
 
-
-def merge_multicol(
-    row: dict[str, Any], rrdcols: list[ColumnName], params: dict[str, Any]
+def translate_and_merge_rrd_columns(
+    target_metric: MetricName,
+    rrd_columms: Iterable[tuple[str, TimeSeriesValues]],
+    translations: Mapping[MetricName, CheckMetricEntry],
 ) -> TimeSeries:
-    """Establish single timeseries for desired metric
-
-    If Livestatus query is performed in bulk, over all possible named
-    metrics that translate to desired one, it results in many empty columns
-    per row. Yet, non-empty values have 3 options:
-
-    1. Correspond to desired metric
-    2. Correspond to old metric that translates into desired metric
-    3. Name collision: Metric of different service translates to desired
-    metric, yet same metric exist too in current service
-
-    Thus filter first case 3, then pick both cases 1 & 2.  Finalize by merging
-    the at most remaining 2 timeseries into a single one.
-    """
+    def scaler(scale: float) -> Callable[[float], float]:
+        return lambda v: v * scale
 
     relevant_ts = []
-    desired_metric = params["metric"]
-    check_command = row["service_check_command"]
-    translations = check_metrics.get(check_command, {})
 
-    for rrdcol in rrdcols:
-        if not rrdcol.startswith("rrddata"):
+    for column_name, data in rrd_columms:
+        if data is None:
+            raise MKGeneralException(_("Cannot retrieve historic data with Nagios core"))
+        if len(data) <= 3:
             continue
 
-        if row[rrdcol] is None:
-            raise MKGeneralException(_("Cannot retrieve historic data with Nagios core"))
+        metric_name = MetricName(column_name.split(":")[1])
+        metric_translation = find_matching_translation(metric_name, translations)
 
-        current_metric = rrdcol.split(":")[1]
-
-        if translations.get(current_metric, {}).get("name", desired_metric) == desired_metric:
-            if len(row[rrdcol]) > 3:
-                relevant_ts.append(row[rrdcol])
+        if metric_translation.get("name", metric_name) == target_metric:
+            relevant_ts.append(
+                TimeSeries(data, conversion=scaler(metric_translation.get("scale", 1)))
+            )
 
     if not relevant_ts:
         return TimeSeries([0, 0, 0])
 
     _op_title, op_func = ts.time_series_operators()["MERGE"]
-    single_value_series = [ts.op_func_wrapper(op_func, tsp) for tsp in zip(*relevant_ts)]
+    single_value_series = [ts.op_func_wrapper(op_func, list(tsp)) for tsp in zip(*relevant_ts)]
 
-    return TimeSeries(single_value_series)
+    return TimeSeries(
+        single_value_series,
+        timewindow=relevant_ts[0].twindow,
+        conversion=_retrieve_unit_conversion_function(target_metric),
+    )
+
+
+def _retrieve_unit_conversion_function(metric_name: MetricName) -> Callable[[float], float]:
+    if not (metric_spec := metric_info.get(metric_name)):
+        return lambda v: v
+    if (unit := metric_spec.get("unit")) is None:
+        return lambda v: v
+    return unit_info[unit].get("conversion", lambda v: v)

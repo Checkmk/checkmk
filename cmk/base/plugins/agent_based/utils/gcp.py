@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
@@ -125,7 +125,6 @@ Section = Mapping[Item, SectionItem]
 
 @dataclass(frozen=True)
 class AssetSection:
-    project: Project
     config: Config
     _assets: Mapping[AssetType, AssetTypeSection]
 
@@ -210,7 +209,7 @@ class MetricSpec:
 
 def validate_asset_section(section_gcp_assets: AssetSection | None, service: str) -> AssetSection:
     if section_gcp_assets is None or not section_gcp_assets.config.is_enabled(service):
-        return AssetSection(Project(""), Config(services=[]), _assets={})
+        return AssetSection(Config(services=[]), _assets={})
     return section_gcp_assets
 
 

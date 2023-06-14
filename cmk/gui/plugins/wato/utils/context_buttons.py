@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,7 +7,7 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_link, PageMenuEntry
 from cmk.gui.utils.urls import makeuri_contextless
-from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder
+from cmk.gui.watolib.hosts_and_folders import CREFolder, folder_from_request
 
 
 def make_host_status_link(host_name: str, view_name: str) -> PageMenuEntry:
@@ -19,7 +19,7 @@ def make_host_status_link(host_name: str, view_name: str) -> PageMenuEntry:
                 request,
                 [
                     ("view_name", view_name),
-                    ("filename", Folder.current().path() + "/hosts.mk"),
+                    ("filename", folder_from_request().path() + "/hosts.mk"),
                     ("host", host_name),
                     ("site", ""),
                 ],

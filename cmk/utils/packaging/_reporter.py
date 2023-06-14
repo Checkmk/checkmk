@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
-from collections import defaultdict
 from collections.abc import Mapping, Sequence
 from contextlib import suppress
 from itertools import chain
@@ -36,17 +35,17 @@ def all_local_files(path_config: PathConfig) -> Mapping[PackagePart | None, set[
         resolved for p in local_files_including_symlinks if (resolved := p.resolve()) != p
     }
 
-    categorized_files: dict[PackagePart | None, set[Path]] = defaultdict(set)
+    categorized_files: dict[PackagePart | None, set[Path]] = {}
     for full_path in sorted(local_files_including_symlinks - resolved_symlinks):
         if (package_part := path_config.get_part(full_path)) is not None:
-            categorized_files[package_part].add(
+            categorized_files.setdefault(package_part, set()).add(
                 _relative_path(package_part, full_path, path_config)
             )
         else:
             # These are rogue files that do not belong to a PackagePart.
             # Worth reporting nevertheless:
             # They *are* being used, and relevant for diagnostics.
-            categorized_files[None].add(full_path)
+            categorized_files.setdefault(None, set()).add(full_path)
     return categorized_files
 
 
@@ -71,16 +70,11 @@ class FileMetaInfo(TypedDict):
 
 def files_inventory(installer: Installer, path_config: PathConfig) -> Sequence[FileMetaInfo]:
     """return an overview of all relevant files found on disk"""
-    package_map = {
-        (part / file): manifest.id
-        for manifest in installer.get_installed_manifests()
-        for part, files in manifest.files.items()
-        for file in files
-    }
+    package_map = installer.get_packaged_files()
 
     files_and_packages = sorted(
         (
-            (part, file, package_map.get((part / file) if part else file))
+            (part, file, package_map[part].get(file) if part else None)
             for part, files in chain(
                 all_local_files(path_config).items(),
                 (

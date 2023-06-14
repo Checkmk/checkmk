@@ -1,6 +1,6 @@
 # Contributing to Checkmk
 
-Thanks for your interest to contribute to [Checkmk on Github](https://github.com/tribe29/checkmk)!
+Thanks for your interest to contribute to [Checkmk on Github](https://github.com/Checkmk/checkmk)!
 
 Here are some ways you can help out:
 
@@ -33,6 +33,7 @@ In general, we follow the standard GitHub workflow which roughly works like this
  3. **Commit** changes to your own feature branch
  4. **Push** your work back up to your forked repository
  5. Submit a **Pull request** (PR) so that we can review your changes
+ 6. Sign the necessary [CLA](./doc/cla/cla.md) either directly in the PR via the bot, or sent the signed document to cla@checkmk.com ([further information](./doc/cla/cla_readme.md)).
 
  ⚠ Please reply when asked for more information or to update your PR in case in didn't meet the requirements (e.g. failed checks).
 If there's no response from the author for a longer period of time, we will close the PR (after giving you a heads up).
@@ -172,7 +173,7 @@ To avoid that, it is recommended to rebase your own changes often on top of the 
 To be able to do this, you need to prepare your project directory once with this command:
 
 ```console
-$ git remote add upstream https://github.com/tribe29/checkmk.git
+$ git remote add upstream https://github.com/Checkmk/checkmk.git
 ```
 
 From now, you can always update your feature branches with this command:
@@ -195,7 +196,7 @@ This article on [how to amend a commit](https://www.burntfen.com/2015-10-30/how-
 
 ## How to execute tests
 
-The public repository of [Checkmk](https://github.com/tribe29/checkmk) is integrated with Travis CI.
+The public repository of [Checkmk](https://github.com/Checkmk/checkmk) is integrated with Travis CI.
 Each time a Pull request is submitted, Travis will have a look at the changes.
 
 **⚠ Important:** We only review PRs that are confirmed to be OK by Travis.
@@ -261,7 +262,7 @@ Best is to only rely on vanilla Python without 3rd party modules.
 
 Use `#!/usr/bin/env python3` as shebang.
 
-Besides the Python 3 variant, the agent plugins are also available for Python 2.
+Besides the Python 3 variant, the agent plugins are also available for Python 2.7.
 These Python 2 variants (`_2.py` ending in `agents/plugins`) are generated automatically from the Python 3 scripts while packaging Checkmk.
 So no Python 2 script needs to be programmed.
 The Python 2 files are named `[plugin]_2.py`.
@@ -368,6 +369,37 @@ They make it hard to understand which names are really available and needed in t
 
 * Document the non-obvious. Don't document the how, do document the why.
 * Use doc-strings for classes and methods.
+
+### Doctests
+
+Doctests are documentation. They aren't tests. They are executed with our python
+unit test job by pytest to make sure that the documentation doesn't drift away
+from the code.
+
+In other words: Use doctests when you want to explain your function with the
+help of code examples. Don't use them to test the behavior of your function.
+
+Some indicators for *not* using doctests:
+
+* You need to import something
+* Without reformatting or using `pprint` either your function call or your output looks ugly
+* You need to write more than 5 doctests for a single function
+* Your docstring is 2 times longer than the body of the function
+
+Here it is fine to use doctests:
+
+```
+def worst_service_state(*states: int, default: int) -> int:
+    """Return the 'worst' aggregation of all states
+
+    Examples:
+
+    >>> worst_service_state(0, 0, default=0)
+    0
+    >>> worst_service_state(0, 1, 2, 3, default=0)
+    2
+    """
+```
 
 ### Code structuring
 
@@ -949,7 +981,7 @@ To ensure that, please always add our current licensing information to any new f
 The licensing information can be found at the beginning of already existing files and looks something like
 
 ```python
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 ```

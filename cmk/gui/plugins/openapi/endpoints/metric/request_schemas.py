@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from marshmallow_oneofschema import OneOfSchema
@@ -16,7 +16,6 @@ from cmk.fields import String
 
 
 class _BaseGetSchema(BaseRequestSchema):
-    type = TYPE_FIELD
     site = SiteField(
         description="The name of the site. Even though this is optional, specifying a site will greatly improve performance in large distributed systems.",
         example="heute",
@@ -32,11 +31,15 @@ class _BaseGetSchema(BaseRequestSchema):
     )
 
 
-class GetGraphSchema(_BaseGetSchema):
+class _GetOneOfBaseSchema(_BaseGetSchema):
+    type = TYPE_FIELD
+
+
+class GetGraphSchema(_GetOneOfBaseSchema):
     graph_id = GraphIdField()
 
 
-class GetMetricSchema(_BaseGetSchema):
+class GetMetricSchema(_GetOneOfBaseSchema):
     metric_id = MetricIdField()
 
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -21,14 +21,6 @@ def parse_kaspersky_av_client(string_table: StringTable) -> Section:
 
 
 def _parse_kaspersky_av_client(string_table: StringTable, now: float) -> Section:
-    """
-    # Set up timezone to make doctests reproducable.
-    >>> import os
-    >>> os.environ["TZ"] = "0"
-
-    >>> _parse_kaspersky_av_client([["Fullscan", "01.01.1970", "00:00:00"]], now=1)
-    {'fullscan_age': 1.0}
-    """
     parsed: Section = {}
 
     for line in string_table:

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 r"""Check_MK Agent Plugin: mk_docker.py
@@ -19,13 +19,9 @@ This plugin it will be called by the agent without any arguments.
 
 from __future__ import with_statement
 
-__version__ = "2.2.0i1"
+__version__ = "2.3.0b1"
 
-# this file has to work with both Python 2 and 3
-# pylint: disable=super-with-arguments
-
-# N O T E:
-# docker is available for python versions from 2.6 / 3.3
+# NOTE: docker is available for python versions from 2.6 / 3.3
 
 import argparse
 import configparser
@@ -40,7 +36,7 @@ import sys
 import time
 
 try:
-    from typing import Dict, Tuple, Union
+    from typing import Dict, Tuple, Union  # noqa: F401 # pylint: disable=unused-import
 except ImportError:
     pass
 
@@ -53,13 +49,24 @@ def which(prg):
 
 
 # The "import docker" checks below result in agent sections being created. This
-# is a way to end the plugin in case it is being executed on a non docker host
-if (
-    not os.path.isfile("/var/lib/docker")
-    and not os.path.isfile("/var/run/docker")
-    and not which("docker")
-):
-    sys.stderr.write("mk_docker.py: Does not seem to be a docker host. Terminating.\n")
+# is a way to end the plugin in case it is being executed on a non docker or podman host
+if os.path.isdir("/var/lib/docker") and os.path.isdir("/var/run/docker") and which("docker"):
+    DEFAULT_CFG_SECTION = {
+        "base_url": "unix://var/run/docker.sock",
+        "skip_sections": "",
+        "container_id": "short",
+    }
+
+# Use podman CFG_SECTION
+elif os.path.isfile("/usr/bin/runc") and which("podman"):
+    DEFAULT_CFG_SECTION = {
+        "base_url": "unix://run/podman/podman.sock",
+        "skip_sections": "",
+        "container_id": "short",
+    }
+
+else:
+    sys.stderr.write("mk_docker.py: Does not seem to be a docker or podman host. Terminating.\n")
     sys.exit(1)
 
 try:
@@ -89,12 +96,6 @@ DEBUG = "--debug" in sys.argv[1:]
 VERSION = "0.1"
 
 DEFAULT_CFG_FILE = os.path.join(os.getenv("MK_CONFDIR", ""), "docker.cfg")
-
-DEFAULT_CFG_SECTION = {
-    "base_url": "unix://var/run/docker.sock",
-    "skip_sections": "",
-    "container_id": "short",
-}
 
 LOGGER = logging.getLogger(__name__)
 
@@ -166,7 +167,7 @@ class Section(list):
     # Should we need to parallelize one day, change this to be
     # more like the Section class in agent_azure, for instance
     def __init__(self, name=None, piggytarget=None):
-        super(Section, self).__init__()
+        super().__init__()
         if piggytarget is not None:
             self.append("<<<<%s>>>>" % piggytarget)
         if name is not None:
@@ -255,7 +256,12 @@ class ParallelDfCall:
     def _write_df_result(self, data):
         with self._my_tmp_file.open("wb") as file_:
             file_.write(json.dumps(data).encode("utf-8"))
-        self._my_tmp_file.rename(self._spool_file)
+        try:
+            self._my_tmp_file.rename(self._spool_file)
+        except OSError:
+            # CMK-12642: It can happen that two df calls succeed almost at the same time. Then, one
+            # process attempts to move while the other one already deleted all temp files.
+            pass
 
     def _read_df_result(self):
         """read from the spool file
@@ -273,7 +279,7 @@ class MKDockerClient(docker.DockerClient):
     _DEVICE_MAP_LOCK = multiprocessing.Lock()
 
     def __init__(self, config):
-        super(MKDockerClient, self).__init__(config["base_url"], version=MKDockerClient.API_VERSION)
+        super().__init__(config["base_url"], version=MKDockerClient.API_VERSION)
         all_containers = _robust_inspect(self, "containers")
         if config["container_id"] == "name":
             self.all_containers = {c.attrs["Name"].lstrip("/"): c for c in all_containers}
@@ -286,7 +292,7 @@ class MKDockerClient(docker.DockerClient):
         self._device_map = None
         self.node_info = self.info()
 
-        self._df_caller = ParallelDfCall(call=super(MKDockerClient, self).df)
+        self._df_caller = ParallelDfCall(call=super().df)
 
     def df(self):
         return self._df_caller()
@@ -723,7 +729,6 @@ def _call_single_containers_sections(client, config, container_id):
 
 
 def main():
-
     args = parse_arguments()
     config = get_config(args.config_file)
 

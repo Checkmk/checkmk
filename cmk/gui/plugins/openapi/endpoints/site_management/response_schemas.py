@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -170,6 +170,7 @@ class BasicSettingsAttributes(BaseSchema):
         description="The alias of the site.",
         example="Site Alias",
     )
+    customer = gui_fields.customer_field()
 
 
 class StatusConnectionAttributes(BaseSchema):
@@ -232,13 +233,13 @@ class ConfigurationConnectionAttributes(BaseSchema):
     )
     url_of_remote_site = fields.String(
         required=False,
-        description="URL of the remote Check_MK including /check_mk/. This URL is in many cases the same as the URL-Prefix but with check_mk/ appended, but it must always be an absolute URL.",
+        description="URL of the remote Checkmk including /check_mk/. This URL is in many cases the same as the URL-Prefix but with check_mk/ appended, but it must always be an absolute URL.",
         example="http://remote_site_1/check_mk/",
     )
 
     disable_remote_configuration = fields.Boolean(
         required=False,
-        description="It is a good idea to disable access to WATO completely on the remote site. Otherwise a user who does not now about the replication could make local changes that are overridden at the next configuration activation.",
+        description="It is a good idea to disable access to Setup completely on the remote site. Otherwise a user who does not now about the replication could make local changes that are overridden at the next configuration activation.",
         example=True,
     )
 
@@ -298,7 +299,7 @@ class SiteConnectionResponse(DomainObject):
     extensions = fields.Nested(
         SiteConfigAttributes,
         description="The configuration attributes of a site.",
-        example=default_config_example()["site_config"],
+        example=default_config_example(),
     )
 
 
@@ -317,7 +318,7 @@ class SiteConnectionResponseCollection(DomainObjectCollection):
                 "id": "prod",
                 "title": "Site Alias",
                 "members": {},
-                "extensions": default_config_example()["site_config"],
+                "extensions": default_config_example(),
             }
         ],
     )

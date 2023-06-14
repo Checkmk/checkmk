@@ -1,0 +1,13 @@
+Title: folder_config: adapt folder name pattern of get, put, delete endpoints to post endpoint
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1676637359
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, the folder name pattern for the get, update and delete endpoints was too restrictive
+with respect to the create endpoint. This werk fixes this.
+

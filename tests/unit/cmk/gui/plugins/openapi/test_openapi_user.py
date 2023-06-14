@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime
@@ -9,12 +9,14 @@ import string
 from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
 from typing import Any, ContextManager
+from unittest.mock import MagicMock
 
 import pytest
 from freezegun import freeze_time
 from pytest import MonkeyPatch
+from pytest_mock import MockerFixture
 
-from tests.testlib.rest_api_client import RestApiClient
+from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import SetConfig, WebTestAppForCMK
 
@@ -30,6 +32,7 @@ from cmk.gui.plugins.openapi.endpoints.user_config import (
     _load_user,
 )
 from cmk.gui.plugins.openapi.endpoints.utils import complement_customer
+from cmk.gui.plugins.userdb.utils import ConnectorType
 from cmk.gui.type_defs import UserObject, UserRole
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file, update_user_custom_attrs
 from cmk.gui.watolib.userroles import clone_role, RoleID
@@ -37,10 +40,11 @@ from cmk.gui.watolib.users import edit_users
 
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
+MOCK_SAML_CONNECTOR_NAME = "saml_connector"
+
 
 @managedtest
 def test_idle_timeout(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch) -> None:
-
     user_detail = {
         "username": "user",
         "fullname": "User Name",
@@ -86,7 +90,6 @@ def test_idle_timeout(aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: Mon
 def test_openapi_customer(
     aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
-
     user_detail = {
         "username": "user",
         "fullname": "User Name",
@@ -114,7 +117,10 @@ def test_openapi_customer(
         "disable_login": False,
         "pager_address": "",
         "roles": [],
-        "auth_option": {"enforce_password_change": False, "auth_type": "password"},
+        # TODO: auth_option being an empty dict is a bug and should not
+        # happen: there should not be a user without connection type (this is
+        # what it's called in the GUI) see CMK-12723
+        "auth_option": {},
         "interface_options": {
             "interface_theme": "default",
             "mega_menu_icons": "topic",
@@ -139,7 +145,6 @@ def test_openapi_customer(
 def test_openapi_user_minimal_settings(
     monkeypatch: MonkeyPatch, run_as_superuser: Callable[[], ContextManager[None]]
 ) -> None:
-
     with freeze_time("2021-09-24 12:36:00"), run_as_superuser():
         user_object: UserObject = {
             UserId("user"): {
@@ -191,14 +196,13 @@ def test_openapi_user_minimal_password_settings(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     monkeypatch: MonkeyPatch,
 ) -> None:
-
     user_detail = {
         "username": "user",
         "fullname": "User Name",
         "customer": "provider",
         "auth_option": {
             "auth_type": "password",
-            "password": "password",
+            "password": "password1234",
             "enforce_password_change": True,
         },
     }
@@ -242,7 +246,7 @@ def test_openapi_user_minimal_password_settings(
         )
 
     extensions = resp.json_body["extensions"]
-    assert extensions["auth_option"]["enforce_password_change"] is True
+    assert extensions["auth_option"] == {"auth_type": "automation"}
     assert extensions["idle_timeout"]["option"] == "disable"
     assert extensions["roles"] == ["user"]
 
@@ -274,7 +278,6 @@ def test_openapi_user_config(
     with_automation_user: tuple[UserId, str],
     monkeypatch: MonkeyPatch,
 ) -> None:
-
     name = _random_string(10)
     alias = "KPECYCq79E"
 
@@ -348,7 +351,6 @@ def test_openapi_user_config(
 def test_openapi_user_internal_with_notifications(
     monkeypatch: MonkeyPatch, run_as_superuser: Callable[[], ContextManager[None]]
 ) -> None:
-
     name = UserId(_random_string(10))
 
     user_object: UserObject = {
@@ -402,7 +404,7 @@ def test_openapi_user_internal_with_notifications(
 
 
 test_data_update_auth_options = (
-    ({"auth_option": {"auth_type": "password", "password": "newpassword"}}, 1),
+    ({"auth_option": {"auth_type": "password", "password": "newpassword1"}}, 1),
     ({"auth_option": {"auth_type": "automation", "secret": "DEYQEQQPYCFFBYH@AVMC"}}, 1),
     ({"auth_option": {"auth_type": "remove"}}, 1),
     (None, 0),
@@ -418,7 +420,6 @@ def test_update_user_auth_options(
     test_data: Mapping[str, str],
     expected_serial_count: int,
 ) -> None:
-
     name = _random_string(10)
     resp = aut_user_auth_wsgi_app.call_method(
         "post",
@@ -452,7 +453,6 @@ def test_update_user_auth_options(
 def test_openapi_user_edit_auth(
     aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
-
     name = "foo"
     alias = "Foo Bar"
 
@@ -461,7 +461,7 @@ def test_openapi_user_edit_auth(
         "fullname": alias,
         "customer": "provider",
         "roles": ["user"],
-        "auth_option": {"auth_type": "password", "password": "password"},
+        "auth_option": {"auth_type": "password", "password": "password1234"},
     }
 
     base = "/NO_SITE/check_mk/api/1.0"
@@ -515,28 +515,95 @@ def fixture_password_policy(set_config: SetConfig) -> Iterator[None]:
         yield
 
 
-@managedtest
-def test_openapi_create_user_password_policy(
-    aut_user_auth_wsgi_app: WebTestAppForCMK, with_password_policy: None
+@pytest.mark.parametrize(
+    "password,reason",
+    [
+        # Fail due to policy (fixture expects 20 chars).
+        ("short", "too short"),
+        # Fail because the AUTH_PASSWORD schema requires minLength=1. (It also doesn't comply with
+        # the policy but we never get to checking that.)
+        ("", "These fields have problems: auth_option"),
+        # Fail when trying to instantiate the Password object (null bytes not allowed).
+        ("\0" * 21, "Password must not contain null bytes"),
+    ],
+)
+def test_openapi_create_user_password_failures(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, with_password_policy: None, password: str, reason: str
 ) -> None:
-    user_detail = {
-        "username": "shortpw",
-        "fullname": "Short Password",
-        "customer": "provider",
-        "roles": ["user"],
-        "auth_option": {"auth_type": "password", "password": "short"},  # fixture expects 20 chars
-    }
+    """Test that invalid passwords are denied and handled gracefully"""
+
+    user_detail = complement_customer(
+        {
+            "username": "shortpw",
+            "fullname": "Short Password",
+            "roles": ["user"],
+            "auth_option": {"auth_type": "password", "password": password},
+        }
+    )
 
     base = "/NO_SITE/check_mk/api/1.0"
-    with freeze_time("2010-02-01 08:00:00"):
-        aut_user_auth_wsgi_app.call_method(
-            "post",
-            base + "/domain-types/user_config/collections/all",
-            params=json.dumps(user_detail),
-            headers={"Accept": "application/json"},
-            status=400,
-            content_type="application/json",
-        )
+    response = aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/user_config/collections/all",
+        params=json.dumps(user_detail),
+        headers={"Accept": "application/json"},
+        status=400,
+        content_type="application/json",
+    )
+    assert reason in response.json["detail"]
+
+
+def test_openapi_automation_enforce_pw_change(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
+    """
+    Test that password change cannot be force for automation users.
+    This should be caught by the schema.
+    """
+
+    user_detail = complement_customer(
+        {
+            "username": "automation_enforce_pw_change",
+            "fullname": "But I can't!",
+            "roles": ["user"],
+            "auth_option": {"auth_type": "automation", "enforce_password_change": True},
+        }
+    )
+
+    base = "/NO_SITE/check_mk/api/1.0"
+    response = aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/user_config/collections/all",
+        params=json.dumps(user_detail),
+        headers={"Accept": "application/json"},
+        status=400,
+        content_type="application/json",
+    )
+    assert '"enforce_password_change": ["Unknown field."]' in response
+
+
+@pytest.mark.parametrize("auth_type", ["password", "automation"])
+def test_openapi_incomplete_auth_options(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, auth_type: str
+) -> None:
+    """Test that new users cannot be created without a password / secret"""
+
+    user_detail = complement_customer(
+        {
+            "username": f"incomplete_auth_options_{auth_type}",
+            "fullname": "a new user",
+            "roles": ["user"],
+            "auth_option": {"auth_type": auth_type},
+        }
+    )
+
+    base = "/NO_SITE/check_mk/api/1.0"
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + "/domain-types/user_config/collections/all",
+        params=json.dumps(user_detail),
+        headers={"Accept": "application/json"},
+        status=400,
+        content_type="application/json",
+    )
 
 
 @managedtest
@@ -743,7 +810,7 @@ def test_global_full_configuration(
         "username": "cmkuser",
         "fullname": "Mathias Kettner",
         "customer": "global",
-        "auth_option": {"auth_type": "password", "password": "password"},
+        "auth_option": {"auth_type": "password", "password": "password1234"},
         "disable_login": False,
         "contact_options": {"email": "user@example.com"},
         "pager_address": "",
@@ -751,6 +818,7 @@ def test_global_full_configuration(
         "roles": ["user"],
         "disable_notifications": {"disable": False},
         "language": "en",
+        "temperature_unit": "fahrenheit",
     }
 
     base = "/NO_SITE/check_mk/api/1.0"
@@ -790,6 +858,7 @@ def test_global_full_configuration(
             "show_mode": "default",
             "sidebar_position": "right",
         },
+        "temperature_unit": "fahrenheit",
     }
 
 
@@ -844,7 +913,7 @@ def test_openapi_user_update_contact_options(
         "username": "cmkuser",
         "fullname": "Mathias Kettner",
         "customer": "global",
-        "auth_option": {"auth_type": "password", "password": "password"},
+        "auth_option": {"auth_type": "password", "password": "password1234"},
         "disable_login": False,
         "pager_address": "",
         "idle_timeout": {"option": "global"},
@@ -995,7 +1064,7 @@ def test_user_enforce_password_change_option(
         "customer": "global",
         "auth_option": {
             "auth_type": "password",
-            "password": "password",
+            "password": "password1234",
             "enforce_password_change": True,
         },
     }
@@ -1032,14 +1101,13 @@ def test_user_enforce_password_change_option(
 def test_response_schema_compatible_with_request_schema(
     aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
-
     user_detail = {
         "username": "cmkuser",
         "fullname": "Mathias Kettner",
         "customer": "global",
         "auth_option": {
             "auth_type": "password",
-            "password": "password",
+            "password": "password1234",
             "enforce_password_change": True,
         },
     }
@@ -1138,7 +1206,6 @@ def _internal_attributes(user_attributes):
 def test_openapi_new_user_with_cloned_role(
     base: str, aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
-
     cloned_role: UserRole = clone_role(RoleID("admin"))
 
     user_detail = {
@@ -1213,7 +1280,6 @@ def test_openapi_custom_attributes_of_user(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     monkeypatch: MonkeyPatch,
 ) -> None:
-
     attr: Mapping[str, str | bool] = {
         "name": "judas",
         "title": "judas",
@@ -1260,7 +1326,6 @@ def test_openapi_custom_attributes_of_user(
 def test_create_user_with_non_existing_custom_attribute(
     base: str, aut_user_auth_wsgi_app: WebTestAppForCMK, monkeypatch: MonkeyPatch
 ) -> None:
-
     params = {
         "username": "cmkuser",
         "fullname": "Mathias Kettner",
@@ -1285,13 +1350,75 @@ def test_create_user_with_non_existing_custom_attribute(
     )
 
 
-def test_user_with_invalid_id(api_client: RestApiClient) -> None:
-    api_client.create_user(
-        username="!@#@%)@!#&)!@*#$", fullname="Sym Bols", expect_ok=False
+@pytest.mark.parametrize(
+    "username",
+    [
+        "!@#@%)@!#&)!@*#$",  # disallowed characters
+        64 * "𐌈",  # too long
+    ],
+)
+def test_user_with_invalid_id(clients: ClientRegistry, username: str) -> None:
+    clients.User.create(
+        username=username, fullname="Invalid name", expect_ok=False
     ).assert_status_code(400)
 
 
-def test_openapi_edit_non_existing_user_regression(api_client: RestApiClient) -> None:
-    api_client.edit_user(
+def test_openapi_edit_non_existing_user_regression(clients: ClientRegistry) -> None:
+    clients.User.edit(
         "i_do_not_exists", fullname="I hopefully won't crash the site!", expect_ok=False
     ).assert_status_code(404)
+
+
+def test_openapi_all_authorized_sites(clients: ClientRegistry) -> None:
+    clients.User.create(
+        username="user1", fullname="User 1", authorized_sites=["all"], expect_ok=True
+    )
+    clients.User.create(
+        username="user2", fullname="User 2", authorized_sites=["NO_SITE"], expect_ok=True
+    )
+    clients.User.edit(username="user2", fullname="User 2", authorized_sites=["all"], expect_ok=True)
+
+
+@pytest.fixture(name="mock_users_config")
+def fixture_mock_users_config(mocker: MockerFixture) -> MagicMock:
+    return mocker.patch(
+        "cmk.gui.userdb.load_users",
+        return_value={
+            "saml.user@example.com": {
+                "alias": "Samler",
+                "force_authuser": False,
+                "roles": ["admin"],
+                "connector": MOCK_SAML_CONNECTOR_NAME,
+                "locked": False,
+                "nav_hide_icons_title": None,
+                "icons_per_item": None,
+                "show_mode": None,
+            },
+        },
+    )
+
+
+@pytest.fixture(name="mock_user_connections_config")
+def fixture_mock_user_connections_config(mocker: MockerFixture) -> MagicMock:
+    """Mock the user connections config
+
+    The type of a SAML user is determined by the users.mk file as well as the user_connections.mk
+    file.
+
+    """
+    return mocker.patch(
+        "cmk.gui.plugins.userdb.utils.load_connection_config",
+        # not reflective of actual SAML connector
+        return_value=[{"id": MOCK_SAML_CONNECTOR_NAME, "name": "bla", "type": "saml2"}],
+    )
+
+
+@pytest.mark.usefixtures("mock_users_config", "mock_user_connections_config")
+def test_openapi_auth_type_of_saml_user(clients: ClientRegistry) -> None:
+    """
+    Notes:
+         - A SAML user (currently) cannot be created via the REST API
+         - Assume that the user is already created
+    """
+    resp = clients.User.get("saml.user@example.com")
+    assert resp.json["extensions"]["auth_option"] == {"auth_type": ConnectorType.SAML2}

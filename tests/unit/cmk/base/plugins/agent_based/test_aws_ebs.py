@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -117,6 +117,7 @@ def test_aws_ebs_discovery(
     assert list(discover_aws_ebs_burst_balance(parse_aws_ebs(string_table))) == discovery_result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_aws_ebs_raise_get_rate_error() -> None:
     with pytest.raises(GetRateError):
         list(
@@ -128,6 +129,7 @@ def test_check_aws_ebs_raise_get_rate_error() -> None:
         )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_aws_ebs() -> None:
     for metric in [
         "aws_ebs_disk_io_read_ios",
@@ -173,7 +175,6 @@ def test_check_aws_ebs_burst_balance(
     string_table: StringTable,
     expected_check_result: Sequence[Result | Metric],
 ) -> None:
-
     check_result = list(
         check_aws_ebs_burst_balance(
             item=item,

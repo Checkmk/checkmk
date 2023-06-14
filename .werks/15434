@@ -1,0 +1,41 @@
+Title: agent: return better respones for GET collection
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1678258667
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously when calling the agent GET collection endpoint, the
+value attribute would only contain the following information for
+each agent
+
+C+:
+{
+    "domainType": "dict",
+    "title": "e660531752c87c6c"
+}
+C-:
+
+It now contains the following
+
+C+:
+{
+    'domainType': 'agent',
+    'extensions': {},
+    'id': 'a3e050556d2455c2',
+    'links': [
+        {
+            'domainType': 'link',
+            'href': 'http://localhost/heute/check_mk/api/1.0/objects/agent/a3e050556d2455c2',
+            'method': 'GET',
+            'rel': 'self',
+            'type': 'application/json'
+        }
+    ],
+    'members': {},
+    'title': 'Agent a3e050556d2455c2'
+}
+C-:

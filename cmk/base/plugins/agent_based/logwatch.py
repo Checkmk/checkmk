@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -37,12 +37,7 @@ from typing import (
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
 
-# from cmk.base.config import logwatch_rule will NOT work!
-import cmk.base.config  # pylint: disable=cmk-module-layer-violation
-from cmk.base.check_api import (  # pylint: disable=cmk-module-layer-violation
-    host_name,
-    service_extra_conf,
-)
+from cmk.checkengine.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
 
 from .agent_based_api.v1 import get_value_store, regex, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
@@ -65,7 +60,7 @@ def _get_discovery_groups(params: AllParams) -> Sequence[List[Tuple[str, Groupin
 def _compile_params(item: str) -> Dict[str, Any]:
     compiled_params: Dict[str, Any] = {"reclassify_patterns": []}
 
-    for rule in service_extra_conf(host_name(), item, cmk.base.config.logwatch_rules):
+    for rule in logwatch.service_extra_conf(item):
         if isinstance(rule, dict):
             compiled_params["reclassify_patterns"].extend(rule["reclassify_patterns"])
             if "reclassify_states" in rule:
@@ -150,6 +145,9 @@ def check_logwatch(
     section: ClusterSection,
 ) -> CheckResult:
     yield from logwatch.check_errors(section)
+    yield from logwatch.check_unreadable_files(
+        logwatch.get_unreadable_logfiles(item, section), State.CRIT
+    )
 
     value_store = get_value_store()
 
@@ -261,7 +259,6 @@ def _match_group_patterns(
     inclusion: str,
     exclusion: str,
 ) -> bool:
-
     # NOTE: in the grouped sap and fileinfo checks, the *exclusion* pattern wins.
     inclusion_is_regex = inclusion.startswith("~")
     if inclusion_is_regex:
@@ -346,11 +343,10 @@ def truncate_by_line(file_path: pathlib.Path, offset: int) -> None:
 
 
 class LogwatchBlock:
-
     CHAR_TO_STATE = {"O": 0, "W": 1, "u": 1, "C": 2}
     STATE_TO_STR = {0: "OK", 1: "WARN"}
 
-    def __init__(self, header, patterns) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, header, patterns) -> None:  # type: ignore[no-untyped-def]
         self._timestamp = header.strip("<>").rsplit(None, 1)[0]
         self.worst = -1
         self.lines: list = []
@@ -441,7 +437,7 @@ def _logmsg_file_path(item: str) -> pathlib.Path:
     return logmsg_dir / item.replace("/", "\\")
 
 
-def check_logwatch_generic(  # type:ignore[no-untyped-def] # pylint: disable=too-many-branches
+def check_logwatch_generic(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
     *,
     item: str,
     patterns,
@@ -559,7 +555,7 @@ def _truncate_way_too_large_result(
     return True
 
 
-def _extract_blocks(  # type:ignore[no-untyped-def]
+def _extract_blocks(  # type: ignore[no-untyped-def]
     lines: Iterable[str],
     patterns,
     reclassify: bool,

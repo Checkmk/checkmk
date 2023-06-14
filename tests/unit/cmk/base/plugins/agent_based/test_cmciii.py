@@ -1,17 +1,23 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import SectionName
+
+from cmk.checkengine.checking import CheckPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.plugins.agent_based.cmciii as cmciii
 import cmk.base.plugins.agent_based.cmciii_phase as cmciii_phase
 import cmk.base.plugins.agent_based.cmciii_status as cmciii_status
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from cmk.base.plugins.agent_based.utils.cmciii import SensorType, Variable
 
 
 @pytest.mark.parametrize(
@@ -23,7 +29,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Serv
         ("one.two.three", ["one", "two", "three"]),
     ],
 )
-def test_sanitize_variable(variable, expected) -> None:  # type:ignore[no-untyped-def]
+def test_sanitize_variable(variable: str, expected: Variable) -> None:
     assert cmciii.sanitize_variable(variable) == expected
 
 
@@ -39,7 +45,7 @@ def test_sanitize_variable(variable, expected) -> None:  # type:ignore[no-untype
         ("phase", "not 2", ["ONE", "TWO", "THREE", "FOUR", "END"], "THREE FOUR"),
     ],
 )
-def test_sensor_key(table, var_type, variable, expected) -> None:  # type:ignore[no-untyped-def]
+def test_sensor_key(table: SensorType, var_type: str, variable: Variable, expected: str) -> None:
     assert cmciii.sensor_key(table, var_type, variable) == expected
 
 
@@ -59,7 +65,7 @@ def test_sensor_key(table, var_type, variable, expected) -> None:  # type:ignore
         ("other_sensors", ["one", "two"], "device one"),
     ],
 )
-def test_sensor_id(sensor_type, variable, expected) -> None:  # type:ignore[no-untyped-def]
+def test_sensor_id(sensor_type: SensorType, variable: Variable, expected: str) -> None:
     assert cmciii.sensor_id(sensor_type, variable, "device") == expected
 
 
@@ -133,7 +139,7 @@ def _leakage_info(status, position):
         ),
     ],
 )
-def test_cmciii_leakage_sensors(status, position, expected) -> None:  # type:ignore[no-untyped-def]
+def test_cmciii_leakage_sensors(status: str, position: str, expected: CheckResult) -> None:
     assert (
         run_check(
             "cmciii",
@@ -156,30 +162,30 @@ def _lcp_sensor():
             ["2.4", "Air.Device.Status", "7", "", "0", "OK", "4"],
             ["2.5", "Air.Device.Category", "14", "", "0", "2", "2"],
             ["2.6", "Air.Temperature.DescName", "1", "", "0", "Air-Temperatures", "0"],
-            ["2.7", "Air.Temperature.In-Top", "2", "°C", "-10", "19.8 °C", "198"],
-            ["2.8", "Air.Temperature.In-Mid", "2", "°C", "-10", "19.0 °C", "190"],
-            ["2.9", "Air.Temperature.In-Bot", "2", "°C", "-10", "18.2 °C", "182"],
-            ["2.10", "Air.Temperature.Out-Top", "2", "°C", "-10", "19.9 °C", "199"],
-            ["2.11", "Air.Temperature.Out-Mid", "2", "°C", "-10", "18.9 °C", "189"],
-            ["2.12", "Air.Temperature.Out-Bot", "2", "°C", "-10", "18.0 °C", "180"],
+            ["2.7", "Air.Temperature.In-Top", "2", " °C", "-10", "19.8  °C", "198"],
+            ["2.8", "Air.Temperature.In-Mid", "2", " °C", "-10", "19.0  °C", "190"],
+            ["2.9", "Air.Temperature.In-Bot", "2", " °C", "-10", "18.2  °C", "182"],
+            ["2.10", "Air.Temperature.Out-Top", "2", " °C", "-10", "19.9  °C", "199"],
+            ["2.11", "Air.Temperature.Out-Mid", "2", " °C", "-10", "18.9  °C", "189"],
+            ["2.12", "Air.Temperature.Out-Bot", "2", " °C", "-10", "18.0  °C", "180"],
             ["2.13", "Air.Temperature.Status", "7", "", "0", "OK", "4"],
             ["2.14", "Air.Temperature.Category", "14", "", "0", "2", "2"],
             ["2.15", "Air.Server-In.DescName", "1", "", "0", "Server-In", "0"],
-            ["2.16", "Air.Server-In.Setpoint", "17", "°C", "-10", "23.0 °C", "230"],
-            ["2.17", "Air.Server-In.Average", "2", "°C", "-10", "19.0 °C", "190"],
-            ["2.18", "Air.Server-In.SetPtHighAlarm", "3", "°C", "-10", "35.0 °C", "350"],
-            ["2.19", "Air.Server-In.SetPtHighWarning", "4", "°C", "-10", "30.0 °C", "300"],
-            ["2.20", "Air.Server-In.SetPtLowWarning", "9", "°C", "-10", "15.0 °C", "150"],
-            ["2.21", "Air.Server-In.SetPtLowAlarm", "5", "°C", "-10", "10.0 °C", "100"],
+            ["2.16", "Air.Server-In.Setpoint", "17", " °C", "-10", "23.0  °C", "230"],
+            ["2.17", "Air.Server-In.Average", "2", " °C", "-10", "19.0  °C", "190"],
+            ["2.18", "Air.Server-In.SetPtHighAlarm", "3", " °C", "-10", "35.0  °C", "350"],
+            ["2.19", "Air.Server-In.SetPtHighWarning", "4", " °C", "-10", "30.0  °C", "300"],
+            ["2.20", "Air.Server-In.SetPtLowWarning", "9", " °C", "-10", "15.0  °C", "150"],
+            ["2.21", "Air.Server-In.SetPtLowAlarm", "5", " °C", "-10", "10.0  °C", "100"],
             ["2.22", "Air.Server-In.Hysteresis", "6", "%", "1", "5 %", "5"],
             ["2.23", "Air.Server-In.Status", "7", "", "0", "OK", "4"],
             ["2.24", "Air.Server-In.Category", "14", "", "0", "2", "2"],
             ["2.25", "Air.Server-Out.DescName", "1", "", "0", "Server-Out", "0"],
-            ["2.26", "Air.Server-Out.Average", "2", "°C", "-10", "18.9 °C", "189"],
-            ["2.27", "Air.Server-Out.SetPtHighAlarm", "3", "°C", "-10", "35.0 °C", "350"],
-            ["2.28", "Air.Server-Out.SetPtHighWarning", "4", "°C", "-10", "30.0 °C", "300"],
-            ["2.29", "Air.Server-Out.SetPtLowWarning", "9", "°C", "-10", "15.0 °C", "150"],
-            ["2.30", "Air.Server-Out.SetPtLowAlarm", "5", "°C", "-10", "10.0 °C", "100"],
+            ["2.26", "Air.Server-Out.Average", "2", " °C", "-10", "18.9  °C", "189"],
+            ["2.27", "Air.Server-Out.SetPtHighAlarm", "3", " °C", "-10", "35.0  °C", "350"],
+            ["2.28", "Air.Server-Out.SetPtHighWarning", "4", " °C", "-10", "30.0  °C", "300"],
+            ["2.29", "Air.Server-Out.SetPtLowWarning", "9", " °C", "-10", "15.0  °C", "150"],
+            ["2.30", "Air.Server-Out.SetPtLowAlarm", "5", " °C", "-10", "10.0  °C", "100"],
             ["2.31", "Air.Server-Out.Hysteresis", "6", "%", "1", "5 %", "5"],
             ["2.32", "Air.Server-Out.Status", "7", "", "0", "OK", "4"],
             ["2.33", "Air.Server-Out.Category", "14", "", "0", "2", "2"],
@@ -225,10 +231,11 @@ def _lcp_sensor():
         ),
     ],
 )
-def test_cmciii_lcp_discovery(plugin, expected) -> None:  # type:ignore[no-untyped-def]
+def test_cmciii_lcp_discovery(plugin: str, expected: DiscoveryResult) -> None:
     assert run_discovery("cmciii", plugin, _lcp_sensor(), params={}) == expected
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "item, expected",
@@ -237,7 +244,7 @@ def test_cmciii_lcp_discovery(plugin, expected) -> None:  # type:ignore[no-untyp
             "Air LCP In Bottom",
             [
                 Metric("temp", 18.2),
-                Result(state=State.OK, summary="Temperature: 18.2°C"),
+                Result(state=State.OK, summary="Temperature: 18.2 °C"),
                 Result(
                     state=State.OK,
                     notice="Configuration: prefer user levels over device levels (no levels found)",
@@ -248,7 +255,7 @@ def test_cmciii_lcp_discovery(plugin, expected) -> None:  # type:ignore[no-untyp
             "Air LCP In Middle",
             [
                 Metric("temp", 19.0),
-                Result(state=State.OK, summary="Temperature: 19.0°C"),
+                Result(state=State.OK, summary="Temperature: 19.0 °C"),
                 Result(
                     state=State.OK,
                     notice="Configuration: prefer user levels over device levels (no levels found)",
@@ -259,7 +266,7 @@ def test_cmciii_lcp_discovery(plugin, expected) -> None:  # type:ignore[no-untyp
             "Air LCP In Top",
             [
                 Metric("temp", 19.8),
-                Result(state=State.OK, summary="Temperature: 19.8°C"),
+                Result(state=State.OK, summary="Temperature: 19.8 °C"),
                 Result(
                     state=State.OK,
                     notice="Configuration: prefer user levels over device levels (no levels found)",
@@ -268,7 +275,7 @@ def test_cmciii_lcp_discovery(plugin, expected) -> None:  # type:ignore[no-untyp
         ),
     ],
 )
-def test_cmciii_lcp_check(item, expected) -> None:  # type:ignore[no-untyped-def]
+def test_cmciii_lcp_check(item: str, expected: CheckResult) -> None:
     assert run_check("cmciii", "cmciii_temp_in_out", item, _lcp_sensor(), params={}) == expected
 
 
@@ -472,7 +479,7 @@ def test_phase_sensors() -> None:
         ),
     ],
 )
-def test_cmciii_phase_check(item, expected) -> None:  # type:ignore[no-untyped-def]
+def test_cmciii_phase_check(item: str, expected: CheckResult) -> None:
     assert run_check("cmciii", "cmciii_phase", item, _phase_sensor(), params={}) == expected
 
 
@@ -509,7 +516,7 @@ def _status_info(variable, status):
         "Ignition",
     ],
 )
-def test_cmciii_status_discovery(variable) -> None:  # type:ignore[no-untyped-def]
+def test_cmciii_status_discovery(variable: str) -> None:
     service_description = "DET-AC_III_Master %s" % variable
     params = {"use_sensor_description": False}
     section = cmciii.parse_cmciii(_status_info(variable, "OK"))
@@ -527,7 +534,7 @@ def test_cmciii_status_discovery(variable) -> None:  # type:ignore[no-untyped-de
         ("Battery change", "Service", [Result(state=State.CRIT, summary="Status: Service")]),
     ],
 )
-def test_cmciii_status_sensors(variable, status, expected) -> None:  # type:ignore[no-untyped-def]
+def test_cmciii_status_sensors(variable: str, status: str, expected: CheckResult) -> None:
     assert (
         run_check(
             "cmciii",
@@ -984,12 +991,13 @@ def _generictest_cmciii():
         ("cmciii_phase", {}, []),
     ],
 )
-def test_genericdataset_cmciii_discovery(  # type:ignore[no-untyped-def]
-    plugin, params, expected
+def test_genericdataset_cmciii_discovery(
+    plugin: str, params: Mapping[object, object] | None, expected: DiscoveryResult
 ) -> None:
     assert run_discovery("cmciii", plugin, _generictest_cmciii(), params) == expected
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.usefixtures("fix_register")
 @pytest.mark.parametrize(
     "plugin, params, items",
@@ -1152,7 +1160,7 @@ def test_genericdataset_cmciii_discovery(  # type:ignore[no-untyped-def]
                     "Ambient CMC-PU",
                     [
                         Metric("temp", 30.5, levels=(40.0, 45.0)),
-                        Result(state=State.OK, summary="Temperature: 30.5°C"),
+                        Result(state=State.OK, summary="Temperature: 30.5 °C"),
                         Result(
                             state=State.OK,
                             notice="Configuration: prefer user levels over device levels (used device levels)",
@@ -1163,7 +1171,7 @@ def test_genericdataset_cmciii_discovery(  # type:ignore[no-untyped-def]
                     "Ambient CMC-Temperatur",
                     [
                         Metric("temp", 27.0, levels=(35.0, 40.0)),
-                        Result(state=State.OK, summary="Temperature: 27.0°C"),
+                        Result(state=State.OK, summary="Temperature: 27.0 °C"),
                         Result(
                             state=State.OK,
                             notice="Configuration: prefer user levels over device levels (used device levels)",
@@ -1174,7 +1182,7 @@ def test_genericdataset_cmciii_discovery(  # type:ignore[no-untyped-def]
                     "Dew Point CMC-Temperatur",
                     [
                         Metric("temp", -7.8),
-                        Result(state=State.OK, summary="Temperature: -7.8°C"),
+                        Result(state=State.OK, summary="Temperature: -7.8 °C"),
                         Result(
                             state=State.OK,
                             notice="Configuration: prefer user levels over device levels (no levels found)",
@@ -1186,7 +1194,7 @@ def test_genericdataset_cmciii_discovery(  # type:ignore[no-untyped-def]
                     [
                         Result(state=State.OK, summary="[Sys Temp]"),
                         Metric("temp", 32.3, levels=(70.0, 80.0)),
-                        Result(state=State.OK, summary="Temperature: 32.3°C"),
+                        Result(state=State.OK, summary="Temperature: 32.3 °C"),
                         Result(
                             state=State.OK,
                             notice="Configuration: prefer user levels over device levels (used device levels)",
@@ -1237,9 +1245,20 @@ def test_genericdataset_cmciii_discovery(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_genericdataset_cmciii_check(plugin, params, items) -> None:  # type:ignore[no-untyped-def]
+def test_genericdataset_cmciii_check(
+    plugin: str, params: Mapping[str, object], items: Sequence[tuple[str, CheckResult]]
+) -> None:
     for item, expected in items:
-        assert run_check("cmciii", plugin, item, _generictest_cmciii(), params,) == expected, (
+        assert (
+            run_check(
+                "cmciii",
+                plugin,
+                item,
+                _generictest_cmciii(),
+                params,
+            )
+            == expected
+        ), (
             "Item %s does not match" % item
         )
 
@@ -1347,8 +1366,8 @@ def _generictest_cmciii_input_regression():
         ("cmciii_phase", {}, []),
     ],
 )
-def test_genericdataset_cmciii_input_regression_discovery(  # type:ignore[no-untyped-def]
-    plugin, params, expected
+def test_genericdataset_cmciii_input_regression_discovery(
+    plugin: str, params: Mapping[object, object] | None, expected: DiscoveryResult
 ) -> None:
     assert (
         run_discovery(
@@ -1449,8 +1468,8 @@ def test_genericdataset_cmciii_input_regression_discovery(  # type:ignore[no-unt
         ),
     ],
 )
-def test_genericdataset_cmciii_input_regression_check(  # type:ignore[no-untyped-def]
-    plugin, params, items
+def test_genericdataset_cmciii_input_regression_check(
+    plugin: str, params: Mapping[object, object] | None, items: Sequence[tuple[str, CheckResult]]
 ) -> None:
     for item, expected in items:
         assert (

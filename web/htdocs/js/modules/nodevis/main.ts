@@ -1,29 +1,39 @@
-// Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
 import * as d3 from "d3";
 import {
-    BackendChunkResponse,
-    d3SelectionDiv,
-    NodevisWorld,
-} from "nodevis/type_defs";
-import {InfoBox} from "nodevis/infobox";
-import {
     AggregationsDatasource,
     DatasourceManager,
     TopologyDatasource,
 } from "nodevis/datasources";
-import {Toolbar} from "nodevis/toolbar";
-import {LayeredViewport} from "nodevis/viewport";
-import {ForceSimulation} from "nodevis/force_simulation";
-import {layout_style_class_registry} from "nodevis/layout_utils";
-import {node_type_class_registry} from "nodevis/node_utils";
+import {LayoutStyleExampleGenerator} from "nodevis/example_generator";
+import {
+    BIForceConfig,
+    ForceConfig,
+    ForceOptions,
+    ForceSimulation,
+} from "nodevis/force_simulation";
+import {InfoBox} from "nodevis/infobox";
 import {layer_class_registry, OverlayConfig} from "nodevis/layer_utils";
 import {LayeredNodesLayer} from "nodevis/layers";
 import {LayoutManagerLayer} from "nodevis/layout";
+import {
+    layout_style_class_registry,
+    LineConfig,
+    StyleConfig,
+} from "nodevis/layout_utils";
+import {node_type_class_registry} from "nodevis/node_utils";
+import {Toolbar} from "nodevis/toolbar";
+import {
+    BackendChunkResponse,
+    d3SelectionDiv,
+    NodevisWorld,
+    Rectangle,
+} from "nodevis/type_defs";
 import {LiveSearch, SearchFilters} from "nodevis/utils";
-import {LayoutStyleExampleGenerator} from "nodevis/example_generator";
+import {LayeredViewport} from "nodevis/viewport";
 
 //
 //  .--MainInstance--------------------------------------------------------.
@@ -35,10 +45,11 @@ import {LayoutStyleExampleGenerator} from "nodevis/example_generator";
 //  |                                                                      |
 //  +----------------------------------------------------------------------+
 
-class NodeVisualization {
+export class NodeVisualization {
     _div_id: string;
     _div_selection: d3SelectionDiv;
     _world: NodevisWorld;
+    static _nodevis_type = "nodevis";
 
     constructor(div_id: string) {
         this._div_id = div_id;
@@ -51,8 +62,14 @@ class NodeVisualization {
         // The browser url can be used as bookmark
     }
 
+    _get_force_config(): typeof ForceConfig {
+        return ForceConfig;
+    }
+
     _create_world(): NodevisWorld {
-        // Horrible startup.. Needs tons of further refactoring to get it right
+        // Horrible startup..
+        // This block is the biggest challenge in the upcoming refactoring
+        // At least, once we through this block everything is initialized correctly..
         this._div_selection
             .attr("id", "node_visualization_root_div")
             .attr("div_id", this._div_id)
@@ -66,21 +83,30 @@ class NodeVisualization {
         // TODO: super ugly, couldn't find a better solution
         const fake_world = this._create_fake_world();
 
+        // @ts-ignore
+        fake_world.current_datasource = this.constructor._nodevis_type;
         const datasource_manager = new DatasourceManager();
         const toolbar = new Toolbar(fake_world, toolbar_selection);
         const viewport = new LayeredViewport(fake_world, viewport_selection);
         const infobox = new InfoBox(fake_world, infobox_selection);
-        const force_simulation = new ForceSimulation(fake_world);
+        const force_simulation = new ForceSimulation(
+            fake_world,
+            this._get_force_config()
+        );
 
         // Setup components which require a real world
         toolbar.setup_world_components();
+        fake_world.root_div = this._div_selection;
         fake_world.datasource_manager = datasource_manager;
         fake_world.toolbar = toolbar;
         fake_world.viewport = viewport;
         fake_world.infobox = infobox;
         fake_world.force_simulation = force_simulation;
-        fake_world.update_data = this.update_data;
-        fake_world.update_browser_url = this.update_browser_url;
+        fake_world.main_instance = this; // TODO: get rid of this
+        fake_world.update_data = () => this.update_data();
+        fake_world.update_browser_url = () => this.update_browser_url();
+        fake_world.save_layout = () => this.save_layout();
+        fake_world.delete_layout = () => this.delete_layout();
 
         viewport.setup_world_components();
         fake_world.nodes_layer = viewport.get_layer(
@@ -100,10 +126,6 @@ class NodeVisualization {
         return {} as NodevisWorld;
     }
 
-    _get_world(): NodevisWorld {
-        return this._world;
-    }
-
     get_div_selection(): d3SelectionDiv {
         return this._div_selection;
     }
@@ -111,12 +133,20 @@ class NodeVisualization {
     update_data(): void {
         return;
     }
+
+    save_layout() {
+        return;
+    }
+
+    delete_layout() {
+        return;
+    }
 }
 
 export class BIVisualization extends NodeVisualization {
+    static _nodevis_type = "bi_aggregations";
     constructor(div_id) {
         super(div_id);
-        this._world.current_datasource = "bi_aggregations";
     }
 
     show_aggregations(list_of_aggregations, use_layout_id) {
@@ -128,6 +158,10 @@ export class BIVisualization extends NodeVisualization {
             this._show_aggregations(list_of_aggregations)
         );
         aggr_ds.fetch_aggregations(list_of_aggregations, use_layout_id);
+    }
+
+    _get_force_config(): typeof ForceConfig {
+        return BIForceConfig;
     }
 
     _show_aggregations(list_of_aggregations): void {
@@ -192,23 +226,33 @@ function _parse_topology_settings(data): TopologySettings {
     );
 }
 
-interface FrontendConfig {
+interface TopologyFrontendConfig {
     overlays_config: {[name: string]: OverlayConfig};
     growth_root_nodes: string[];
     growth_forbidden_nodes: string[];
     growth_continue_nodes: string[];
     custom_node_settings: {[name: string]: any};
-    node_style_config: {[name: string]: any};
+    datasource_configuration: {
+        available_datasources: string[];
+        reference: string;
+        compare_to: string;
+    };
+    reference_size: Rectangle;
+    style_configs: StyleConfig[];
+    line_config: LineConfig;
+    force_options: ForceOptions;
 }
 
 export class TopologyVisualization extends NodeVisualization {
+    static _nodevis_type = "topology";
     _custom_topology_fetch_parameters: {[name: string]: any} = {};
     _custom_node_settings_memory = {};
     _last_update_request: number;
     _update_request_timer_active = false;
     _topology_datasource: TopologyDatasource;
     _topology_type: string;
-    _livesearch: LiveSearch | null = null;
+    _frontend_configuration: TopologyFrontendConfig | null = null;
+    _livesearch: LiveSearch;
 
     constructor(div_id, topology_type) {
         super(div_id);
@@ -218,69 +262,64 @@ export class TopologyVisualization extends NodeVisualization {
                 TopologyDatasource.id()
             ) as TopologyDatasource;
 
-        //        this._livesearch = new LiveSearch("form#form_filter", () =>
-        //            this.update_data()
-        //        );
-        //this._add_save_topology_layout_to_filter_form();
+        this._livesearch = new LiveSearch("form#form_filter", () =>
+            this.update_data()
+        );
         this._custom_node_settings_memory = {};
 
         // Parameters used for throttling the GUI update
         this._last_update_request = 0;
     }
 
-    _add_save_topology_layout_to_filter_form(): void {
-        const popup_filters = d3.select("div#popup_filters");
-        const action_div = popup_filters.append("div");
+    frontend_configuration(): TopologyFrontendConfig {
+        if (this._frontend_configuration == null)
+            throw "Missing frontend confiuguration";
+        return this._frontend_configuration;
+    }
 
-        action_div.append("label").text("Layout").style("padding", "6px");
-        action_div
-            .append("input")
-            .attr("type", "submit")
-            .classed("button", true)
-            .property("value", "Save")
-            .on("click", () => {
-                const fetch_params = new SearchFilters().get_filter_params();
-                fetch_params["topology_frontend_configuration"] =
-                    JSON.stringify(this._compute_frontend_config());
-                fetch_params["save_topology_configuration"] = "1";
-                this._update_data(fetch_params);
-            });
-        action_div
-            .append("input")
-            .attr("type", "submit")
-            .classed("button", true)
-            .property("value", "Delete")
-            .on("click", () => {
-                const fetch_params = new SearchFilters().get_filter_params();
-                fetch_params["topology_frontend_configuration"] =
-                    JSON.stringify(this._compute_frontend_config());
-                fetch_params["delete_topology_configuration"] = "1";
-                this._update_data(fetch_params);
-            });
-        action_div
-            .style("position", "absolute")
-            .style("right", "380px")
-            .style("top", "152px")
-            .style("width", "258px");
+    save_layout() {
+        // TODO: move to layout.ts
+        const fetch_params = new SearchFilters().get_filter_params();
+        fetch_params["topology_frontend_configuration"] = JSON.stringify(
+            this._compute_frontend_config()
+        );
+        fetch_params["save_topology_configuration"] = "1";
+        this._update_data(fetch_params);
+    }
+
+    delete_layout() {
+        // TODO: move to layout.ts
+        const fetch_params = new SearchFilters().get_filter_params();
+        fetch_params["topology_frontend_configuration"] = JSON.stringify(
+            this._compute_frontend_config()
+        );
+        fetch_params["delete_topology_configuration"] = "1";
+        this._update_data(fetch_params);
     }
 
     update_filters(settings) {
         // Update filter form
-        const growth_root_nodes = settings.growth_root_nodes;
-        let host_regex = "";
-        if (growth_root_nodes.length == 1) host_regex = growth_root_nodes[0];
-        else host_regex = "(" + growth_root_nodes.join("|") + ")";
-        new SearchFilters().set_host_regex_filter(host_regex);
+        new SearchFilters().add_hosts_to_host_regex(
+            new Set(settings.growth_root_nodes)
+        );
     }
 
     _compute_frontend_config() {
-        const frontend_config: FrontendConfig = {
+        const current_layout =
+            this._world.layout_manager.layout_applier.get_current_layout();
+
+        const frontend_config: TopologyFrontendConfig = {
             overlays_config: this._world.viewport.get_overlay_configs(),
             growth_root_nodes: [],
             growth_forbidden_nodes: [],
             growth_continue_nodes: [],
             custom_node_settings: {},
-            node_style_config: {},
+            datasource_configuration:
+                this.frontend_configuration().datasource_configuration,
+            reference_size: current_layout.reference_size,
+            style_configs: current_layout.style_configs,
+            line_config: current_layout.line_config,
+            force_options: current_layout.force_options,
         };
 
         this._world.viewport.get_all_nodes().forEach(node => {
@@ -296,12 +335,7 @@ export class TopologyVisualization extends NodeVisualization {
                 this._custom_node_settings_memory[node.data.id] =
                     node.data.custom_node_settings;
             }
-            if (node.data.use_style) {
-                frontend_config.node_style_config[node.data.id] =
-                    node.data.use_style.style_config;
-            }
         });
-
         return frontend_config;
     }
 
@@ -316,7 +350,6 @@ export class TopologyVisualization extends NodeVisualization {
         this._topology_datasource.subscribe_new_data(() =>
             this._show_topology()
         );
-        //        this._update_overlay_config(frontend_configuration.overlays_config)
         this._world.layout_manager.layout_applier._align_layouts = false;
 
         const fetch_params = new SearchFilters().get_filter_params();
@@ -329,23 +362,22 @@ export class TopologyVisualization extends NodeVisualization {
     }
 
     _show_topology() {
-        // Needed later on
-        //        if (this._page_reload_on_data)  {
-        //            let current_url = new URL(window.location);
-        //            current_url.searchParams.delete("topology_frontend_configuration");
-        //            window.history.replaceState({}, "", current_url.toString());
-        //            window.location.reload();
-        //        }
         const ds_data = this._topology_datasource.get_data();
         if (ds_data["headline"])
-            d3.select("tbody tr td.heading a").text(ds_data["headline"]);
+            d3.select("div.titlebar a.title").text(ds_data["headline"]);
 
         const topology_data: {[name: string]: any} = ds_data["topology_chunks"];
         this._show_topology_errors(ds_data["errors"]);
         this._update_overlay_config(
             ds_data.frontend_configuration.overlays_config
         );
+        if (ds_data["query_hash"])
+            d3.select("input[name=topology_query_hash_hint]").property(
+                "value",
+                ds_data["query_hash"]
+            );
 
+        this._frontend_configuration = ds_data.frontend_configuration;
         const data_to_show: BackendChunkResponse = {chunks: []};
         for (const idx in topology_data) {
             data_to_show.chunks.push(topology_data[idx]);
@@ -356,10 +388,8 @@ export class TopologyVisualization extends NodeVisualization {
         );
         this._world.viewport.feed_data(data_to_show);
         this._apply_styles_to_previously_known_nodes();
-        //        this._world.layout_manager.enforce_node_drag();
-
-        //        this._livesearch.update_finished();
-        //        this._livesearch.enable();
+        //this._livesearch.update_finished();
+        //this._livesearch.enable();
     }
 
     _apply_styles_to_previously_known_nodes() {
@@ -388,10 +418,12 @@ export class TopologyVisualization extends NodeVisualization {
         // Update browser url in case someone wants to bookmark the current settings
         this.update_browser_url();
 
+        const frontend_config = this._compute_frontend_config();
+        this.update_filters(frontend_config);
+
         const fetch_params = new SearchFilters().get_filter_params();
-        fetch_params["topology_frontend_configuration"] = JSON.stringify(
-            this._compute_frontend_config()
-        );
+        fetch_params["topology_frontend_configuration"] =
+            JSON.stringify(frontend_config);
         this._update_data(fetch_params);
     }
 

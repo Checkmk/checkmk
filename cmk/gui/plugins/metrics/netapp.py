@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -27,7 +27,6 @@ def _fix_title(title):
 
 
 def register_netapp_api_vs_traffic_metrics():
-
     metric_info["read_data"] = {
         "title": _("Data read"),
         "unit": "bytes",
@@ -38,6 +37,14 @@ def register_netapp_api_vs_traffic_metrics():
         "title": _("Data written"),
         "unit": "bytes",
         "color": "44/a",
+    }
+
+    metric_info["space_savings"] = {"title": _("Saved space"), "unit": "bytes", "color": "45/a"}
+
+    metric_info["logical_used"] = {
+        "title": _("Used logical space"),
+        "unit": "bytes",
+        "color": "41/b",
     }
 
     for volume_info in ["NFS", "NFSv4", "NFSv4.1", "CIFS", "SAN", "FCP", "ISCSI"]:
@@ -86,13 +93,28 @@ register_netapp_api_vs_traffic_metrics()
 
 
 def register_netapp_api_vs_traffic_graphs():
-
     graph_info["read_write_data"] = {
         "title": _("Traffic"),
         "metrics": [
             ("read_data", "-area"),
             ("write_data", "area"),
         ],
+    }
+
+    graph_info["savings"] = {
+        "title": _("Space savings"),
+        "metrics": [
+            ("fs_used", "area"),
+            ("fs_free", "stack"),
+            ("fs_used,fs_free,+#006040", "line", "Filesystem size"),
+            ("logical_used", "line"),
+            ("space_savings", "line"),
+        ],
+        "scalars": [
+            "fs_used:warn",
+            "fs_used:crit",
+        ],
+        "range": (0, "logical_used:max"),
     }
 
     for what, text in [

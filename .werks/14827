@@ -6,7 +6,7 @@ Date: 1669803726
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This change only affects you in case you use the agent plugin <tt>mk_sshd_config</tt> for monitoring
 the SSH daemon configuration of your Linux systems.

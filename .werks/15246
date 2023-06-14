@@ -1,0 +1,20 @@
+Title: Stale services on cluster nodes when the cluster is excluded from monitoring
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1679064028
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+If a cluster is excluded from the active monitoring, stale services would appear on its nodes under certain conditions.
+
+A cluster (just as any other host) can be excluded from the active monitoring be either configuring a new rule <i>"Hosts to be monitored"</i>, or by making the shipped default rule match the host by setting its tag <i>"Criticality"</i> to <i>"Do not monitor this host"</i>.
+
+If this is done in conjunction with the services being clustered using the ruleset <i>"Clustered services for overlapping clusters"</i>, the <i>Check_MK</i> service and some of the passive services would go stale.
+This affected all services after the clustered services, sorted alphabetically according to their description.
+
+
+

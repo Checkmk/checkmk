@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -35,20 +35,6 @@ def cmp_string_list(column: ColumnName, r1: Row, r2: Row) -> int:
     v1 = "".join(r1.get(column, []))
     v2 = "".join(r2.get(column, []))
     return cmp_insensitive_string(v1, v2)
-
-
-def cmp_service_name_equiv(r: str) -> int:
-    if r == "Check_MK":
-        return -6
-    if r == "Check_MK Agent":
-        return -5
-    if r == "Check_MK Discovery":
-        return -4
-    if r == "Check_MK inventory":
-        return -3  # FIXME: Remove old name one day
-    if r == "Check_MK HW/SW Inventory":
-        return -2
-    return 0
 
 
 def cmp_custom_variable(r1: Row, r2: Row, key: str, cmp_func: SorterFunction) -> int:

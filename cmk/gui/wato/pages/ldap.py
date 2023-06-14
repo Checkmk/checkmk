@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """LDAP configuration and diagnose page"""
@@ -88,7 +88,7 @@ if cmk_version.is_managed_edition():
 
 
 class LDAPConnectionValuespec(MigrateNotUpdated):
-    def __init__(self, new, connection_id) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, new, connection_id) -> None:  # type: ignore[no-untyped-def]
         self._new = new
         self._connection_id = connection_id
         self._connection = get_connection(self._connection_id)
@@ -247,7 +247,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                     help=_(
                         "Connect to the LDAP server with a SSL encrypted connection. The "
                         '<a href="wato.py?mode=edit_configvar&site=&varname=trusted_certificate_authorities">trusted '
-                        "certificates authorities</a> configured in Check_MK will be used to validate the "
+                        "certificates authorities</a> configured in Checkmk will be used to validate the "
                         "certificate provided by the LDAP server."
                     ),
                     value=True,
@@ -378,7 +378,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                                 TextInput(
                                     title=_("DNS domain name to discover LDAP servers of"),
                                     help=_(
-                                        "Configure the DNS domain name of your Active directory domain here, Check_MK "
+                                        "Configure the DNS domain name of your Active directory domain here, Checkmk "
                                         "will then query this domain for it's closest domain controller to communicate "
                                         "with."
                                     ),
@@ -603,7 +603,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                         "from the LDAP directory. This is done by plugins which can individually enabled "
                         "or disabled. When enabling a plugin, it is used upon the next synchonisation of "
                         "user accounts for gathering their attributes. The user options which get imported "
-                        "into Check_MK from LDAP will be locked in WATO."
+                        "into Checkmk from LDAP will be locked in Setup."
                     ),
                     elements=lambda: ldap_attribute_plugins_elements(self._connection),
                     default_keys=["email", "alias", "auth_expire"],
@@ -618,7 +618,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
                         "used by sites which have the "
                         '<a href="wato.py?mode=sites">Automatic User '
                         "Synchronization</a> enabled.<br><br>"
-                        "Please note: Passwords of the users are never stored in WATO and therefor never cached!"
+                        "Please note: Passwords of the users are never stored in Setup and therefor never cached!"
                     ),
                     minvalue=60,
                     default_value=300,

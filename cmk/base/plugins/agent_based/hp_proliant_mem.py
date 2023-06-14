@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Dict, Final, NamedTuple
@@ -133,7 +133,7 @@ def discovery_hp_proliant_mem(section: Section) -> DiscoveryResult:
             yield Service(item=module.number)
 
 
-def check_hp_proliant_mem(item, section) -> CheckResult:  # type:ignore[no-untyped-def]
+def check_hp_proliant_mem(item, section) -> CheckResult:  # type: ignore[no-untyped-def]
     module = section.get(item)
     if module is None:
         return

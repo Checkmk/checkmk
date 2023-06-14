@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -6,7 +6,7 @@ import * as utils from "utils";
 
 // Stores the reload pause timer object once the regular reload has
 // been paused e.g. by modifying a graphs timerange or vertical axis.
-var g_reload_pause_timer: number | null = null;
+let g_reload_pause_timer: number | null = null;
 
 // Sets the reload timer in pause mode for X seconds. This is shown to
 // the user with a pause overlay icon. The icon also shows the time when
@@ -30,7 +30,7 @@ export function stop() {
     clearTimeout(g_reload_pause_timer);
     g_reload_pause_timer = null;
 
-    var counter = document.getElementById("reload_pause_counter");
+    const counter = document.getElementById("reload_pause_counter");
     if (counter) counter.style.display = "none";
 }
 
@@ -47,7 +47,7 @@ function update_timer(seconds_left: number) {
         window.location.reload();
     } else {
         // update the pause counter
-        var counter = document.getElementById("reload_pause_counter");
+        const counter = document.getElementById("reload_pause_counter");
         if (counter) {
             counter.innerHTML = seconds_left.toString();
         }
@@ -59,10 +59,12 @@ function update_timer(seconds_left: number) {
 }
 
 function draw_overlay(seconds: number) {
-    var container = <HTMLAnchorElement>document.getElementById("reload_pause");
+    let container = <HTMLAnchorElement>document.getElementById("reload_pause");
     if (container) {
         // only render once. Just update the counter.
-        let existingCounter = document.getElementById("reload_pause_counter")!;
+        const existingCounter = document.getElementById(
+            "reload_pause_counter"
+        )!;
         existingCounter.innerHTML = seconds.toString();
         return;
     }
@@ -73,17 +75,17 @@ function draw_overlay(seconds: number) {
     // FIXME: Localize
     container.title = "Page update paused. Click for reload.";
 
-    var p1 = document.createElement("div");
+    const p1 = document.createElement("div");
     p1.className = "pause_bar p1";
     container.appendChild(p1);
 
-    var p2 = document.createElement("div");
+    const p2 = document.createElement("div");
     p2.className = "pause_bar p2";
     container.appendChild(p2);
 
     container.appendChild(document.createElement("br"));
 
-    let counter = document.createElement("a");
+    const counter = document.createElement("a");
     counter.setAttribute("id", "reload_pause_counter");
     // FIXME: Localize
     counter.title = "Click to stop the countdown.";

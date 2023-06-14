@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
@@ -32,7 +32,6 @@ def discover(
         data = bucket.resource_data
         labels = [ServiceLabel(f"cmk/gcp/labels/{k}", v) for k, v in data.get("labels", {}).items()]
         labels.append(ServiceLabel("cmk/gcp/location", bucket.location))
-        labels.append(ServiceLabel("cmk/gcp/projectId", assets.project))
         yield Service(item=item, labels=labels)
 
 

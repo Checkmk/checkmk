@@ -1,28 +1,27 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 
 import pytest
 
 from tests.unit.cmk.gui.conftest import SetConfig
 
-import cmk.utils.version
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.metrics as metrics
+from cmk.gui.config import active_config
 from cmk.gui.plugins.metrics import utils
 from cmk.gui.plugins.metrics.utils import (
-    Atom,
     hex_color_to_rgb_color,
     HorizontalRule,
     NormalizedPerfData,
-    StackElement,
     TranslationInfo,
-    UnitConversionError,
 )
-from cmk.gui.type_defs import Perfdata
+from cmk.gui.type_defs import MetricName, Perfdata
+from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 
 @pytest.mark.parametrize(
@@ -115,6 +114,44 @@ def test_perfvar_translation(perf_name: str, check_command: str, result: Transla
 
 
 @pytest.mark.parametrize(
+    ["translations", "expected_result"],
+    [
+        pytest.param(
+            {},
+            {},
+            id="no translations",
+        ),
+        pytest.param(
+            {MetricName("old_name"): {"name": MetricName("new_name")}},
+            {},
+            id="no applicable translations",
+        ),
+        pytest.param(
+            {
+                MetricName("my_metric"): {"name": MetricName("new_name")},
+                MetricName("other_metric"): {"name": MetricName("other_new_name"), "scale": 0.1},
+            },
+            {"name": MetricName("new_name")},
+            id="1-to-1 translations",
+        ),
+        pytest.param(
+            {
+                MetricName("~.*my_metric"): {"scale": 5},
+                MetricName("other_metric"): {"name": MetricName("other_new_name"), "scale": 0.1},
+            },
+            {"scale": 5},
+            id="regex translations",
+        ),
+    ],
+)
+def test_find_matching_translation(
+    translations: Mapping[MetricName, utils.CheckMetricEntry],
+    expected_result: utils.CheckMetricEntry,
+) -> None:
+    assert utils.find_matching_translation(MetricName("my_metric"), translations) == expected_result
+
+
+@pytest.mark.parametrize(
     "perf_data, check_command, result",
     [
         (
@@ -154,36 +191,96 @@ def test_normalize_perf_data(
 
 
 @pytest.mark.parametrize(
-    "canonical_name, perf_data_names, on_cmk_version",
+    ["canonical_name", "current_version", "all_translations", "expected_result"],
     [
-        ("user", [("user", 1)], "2.0.0"),
-        ("io_wait", [("io_wait", 1), ("wait", 1)], "1.6.0p18"),
-        (
-            "mem_used",
+        pytest.param(
+            MetricName("my_metric"),
+            123,
             [
-                ("mem_used", 1),
-                ("memory", 1048576),
-                ("memory_used", 1),
-                ("memused", 1),
-                ("ramused", 1048576),
-                ("usage", 1),
+                {
+                    MetricName("some_metric_1"): {"scale": 10},
+                    MetricName("some_metric_2"): {
+                        "scale": 10,
+                        "name": MetricName("new_metric_name"),
+                    },
+                }
             ],
-            "2.0.0",
+            {MetricName("my_metric")},
+            id="no applicable translations",
         ),
-        ("mem_used", [("mem_used", 1)], "2.1.0b2"),
-        ("mem_lnx_shmem", [("mem_lnx_shmem", 1), ("shared", 1048576), ("shmem", 1)], "2.0.0i1"),
-        ("mem_lnx_shmem", [("mem_lnx_shmem", 1), ("shmem", 1)], "2.1.0b2"),
+        pytest.param(
+            MetricName("my_metric"),
+            2030020100,
+            [
+                {
+                    MetricName("some_metric_1"): {"scale": 10},
+                    MetricName("old_name_1"): {
+                        "scale": 10,
+                        "name": MetricName("my_metric"),
+                    },
+                },
+                {
+                    MetricName("old_name_1"): {
+                        "name": MetricName("my_metric"),
+                    },
+                },
+                {
+                    MetricName("old_name_2"): {
+                        "name": MetricName("my_metric"),
+                    },
+                    MetricName("irrelevant"): {"name": MetricName("still_irrelevant")},
+                },
+                {
+                    MetricName("old_name_deprecated"): {
+                        "name": MetricName("my_metric"),
+                        "deprecated": "2.0.0i1",
+                    },
+                },
+            ],
+            {
+                MetricName("my_metric"),
+                MetricName("old_name_1"),
+                MetricName("old_name_2"),
+            },
+            id="some applicable and one deprecated translation",
+        ),
+        pytest.param(
+            MetricName("my_metric"),
+            2030020100,
+            [
+                {
+                    MetricName("old_name_1"): {
+                        "name": MetricName("my_metric"),
+                    },
+                },
+                {
+                    "~.*expr": {
+                        "name": MetricName("my_metric"),
+                    },
+                },
+            ],
+            {
+                MetricName("my_metric"),
+                MetricName("old_name_1"),
+            },
+            id="regex translation",
+        ),
     ],
 )
-def test_reverse_translation_metric_name(
-    monkeypatch: pytest.MonkeyPatch,
-    canonical_name: str,
-    perf_data_names: Sequence[tuple[str, int]],
-    on_cmk_version: str,
+def test_reverse_translate_into_all_potentially_relevant_metrics(
+    canonical_name: MetricName,
+    current_version: int,
+    all_translations: Iterable[Mapping[MetricName, utils.CheckMetricEntry]],
+    expected_result: frozenset[MetricName],
 ) -> None:
-    utils.reverse_translate_metric_name.clear()  # clear memoized cache, to incorporate version
-    monkeypatch.setattr(cmk.utils.version, "__version__", on_cmk_version)
-    assert utils.reverse_translate_metric_name(canonical_name) == perf_data_names
+    assert (
+        utils.reverse_translate_into_all_potentially_relevant_metrics(
+            canonical_name,
+            current_version,
+            all_translations,
+        )
+        == expected_result
+    )
 
 
 @pytest.mark.parametrize(
@@ -299,26 +396,86 @@ def test_evaluate() -> None:
 
 
 @pytest.mark.parametrize(
+    "perf_data, expression, check_command, expected_result",
+    [
+        pytest.param(
+            "util=605;;;0;100",
+            "util,100,MAX",
+            "check_mk-bintec_cpu",
+            605.0,
+        ),
+        pytest.param(
+            "user=4.600208;;;; system=1.570093;;;; io_wait=0.149533;;;;",
+            "user,system,io_wait,+,+,100,MAX",
+            "check_mk-kernel_util",
+            100.0,
+        ),
+        pytest.param(
+            "user=101.000000;;;; system=0.100000;;;; io_wait=0.010000;;;;",
+            "user,system,io_wait,+,+,100,MAX",
+            "check_mk-kernel_util",
+            101.11,
+        ),
+    ],
+)
+def test_evaluate_cpu_utilization(
+    perf_data: str, expression: str, check_command: str, expected_result: float
+) -> None:
+    """Clamping to upper value.
+
+    Technically, the percent values for CPU Utilization should always be between 0 and 100. In
+    practice, these values can be above 100. This was observed for docker (SUP-13161). In this
+    case, it is sensible to extend the graph. This behaviour would be a sensible default, but
+    currently using our `stack_resolver` is the only.
+
+    This test provides a sanity check that the stack_resolver clamps the values in the way it
+    should.
+    """
+    # Assemble
+    assert utils.metric_info, "Global variable is empty/has not been initialized."
+    assert utils.graph_info, "Global variable is empty/has not been initialized."
+    perf_data_parsed, check_command = utils.parse_perf_data(perf_data, check_command)
+    translated_metrics = utils.translate_metrics(perf_data_parsed, check_command)
+    # Act
+    result = utils.evaluate(expression, translated_metrics)
+    # Assert
+    assert result[0] == expected_result
+
+
+def test_stack_resolver_str_to_nested() -> None:
+    def apply_operator(op: str, f: Sequence[object], s: Sequence[object]) -> Sequence[object]:
+        return (op, [f, s])
+
+    assert utils.stack_resolver(
+        ["1", "2", "+"],
+        lambda x: x == "+",
+        apply_operator,
+        lambda x: x,
+    ) == ("+", ["1", "2"])
+
+
+def test_stack_resolver_str_to_str() -> None:
+    assert (
+        utils.stack_resolver(
+            ["1", "2", "+"],
+            lambda x: x == "+",
+            lambda op, f, s: " ".join((op, f, s)),
+            lambda x: x,
+        )
+        == "+ 1 2"
+    )
+
+
+@pytest.mark.parametrize(
     "elements, is_operator, apply_operator, apply_element, result",
     [
         pytest.param(
             ["1", "2", "+"],
             lambda x: x == "+",
-            lambda op, f, s: (op, [f, s]),
-            lambda x: x,
-            ("+", ["1", "2"]),
-            id="Nest expression",
-        ),
-        pytest.param(
-            ["1", "2", "+"],
-            lambda x: x == "+",
-            lambda op, f, s: " ".join((op, f, s)),
-            lambda x: x,
-            "+ 1 2",
-            id="Contanate elements",
-        ),
-        pytest.param(
-            ["1", "2", "+"], lambda x: x == "+", lambda op, f, s: f + s, int, 3, id="Reduce"
+            lambda op, f, s: f + s,
+            int,
+            3,
+            id="Reduce",
         ),
         pytest.param(
             ["1", "2", "+", "3", "+"],
@@ -330,26 +487,42 @@ def test_evaluate() -> None:
         ),
     ],
 )
-def test_stack_resolver(
-    elements: list[Atom],
-    is_operator: Callable[[Atom], bool],
-    apply_operator: Callable[[Atom, StackElement, StackElement], StackElement],
-    apply_element: Callable[[Atom], StackElement],
-    result: StackElement,
+def test_stack_resolver_str_to_int(
+    elements: list[str],
+    is_operator: Callable[[str], bool],
+    apply_operator: Callable[[str, int, int], int],
+    apply_element: Callable[[str], int],
+    result: int,
 ) -> None:
     assert utils.stack_resolver(elements, is_operator, apply_operator, apply_element) == result
 
 
 def test_stack_resolver_exception() -> None:
+    def apply_operator(op: str, f: int, s: int) -> int:
+        return f + s
+
     with pytest.raises(utils.MKGeneralException, match="too many operands left"):
-        utils.stack_resolver("1 2 3 +".split(), lambda x: x == "+", lambda op, f, s: f + s, int)
+        utils.stack_resolver(
+            "1 2 3 +".split(),
+            lambda x: x == "+",
+            apply_operator,
+            int,
+        )
 
 
 def test_stack_resolver_exception_missing_operator_arguments() -> None:
+    def apply_operator(op: str, f: int, s: int) -> int:
+        return f + s
+
     with pytest.raises(
         utils.MKGeneralException, match="Syntax error in expression '3, T': too few operands"
     ):
-        utils.stack_resolver("3 T".split(), lambda x: x == "T", lambda op, f, s: f + s, int)
+        utils.stack_resolver(
+            "3 T".split(),
+            lambda x: x == "T",
+            apply_operator,
+            int,
+        )
 
 
 def test_graph_titles() -> None:
@@ -397,46 +570,6 @@ def test_horizontal_rules_from_thresholds(
 
 
 @pytest.mark.parametrize(
-    "source_value, source_unit, target_unit, expected_value",
-    [
-        (10, "c", "f", 50),
-        (10, "c", "k", 283.15),
-    ],
-)
-def test_unit_conversion_single(
-    source_value: float, source_unit: str, target_unit: str, expected_value: float
-) -> None:
-    converter = utils.UnitConverter(source_unit, target_unit)
-    assert converter.convert(source_value) == expected_value
-
-
-@pytest.mark.parametrize(
-    "source_values, source_unit, target_unit, expected_values",
-    [
-        ([10, 20], "c", "f", [50, 68]),
-        ([10, 20], "c", "k", [283.15, 293.15]),
-    ],
-)
-def test_unit_conversion_iterable(
-    source_values: list[float], source_unit: str, target_unit: str, expected_values: list[float]
-) -> None:
-    converter = utils.UnitConverter(source_unit, target_unit)
-    assert list(converter.convert_iterable(source_values)) == expected_values
-
-
-def test_unit_conversion_error() -> None:
-    converter = utils.UnitConverter("c", "not_existing_unit")
-    with pytest.raises(UnitConversionError):
-        converter.convert(10)
-
-
-def test_unit_conversion_target_units_exist() -> None:
-    # This test may be useful to avoid that modifications in the unit_info dict will result in an
-    # empty result or an error when calling `get_all_target_units`
-    assert utils.UnitConverter.get_all_target_units()
-
-
-@pytest.mark.parametrize(
     "hex_color, expected_rgb",
     [
         ("#112233", (17, 34, 51)),
@@ -445,3 +578,78 @@ def test_unit_conversion_target_units_exist() -> None:
 )
 def test_hex_color_to_rgb_color(hex_color: str, expected_rgb: tuple[int, int, int]) -> None:
     assert hex_color_to_rgb_color(hex_color) == expected_rgb
+
+
+@pytest.mark.parametrize(
+    ["idx", "total"],
+    [
+        (-1, -1),
+        (-1, 0),
+        (0, 0),
+        (1, 0),
+    ],
+)
+def test_indexed_color_raises(idx: int, total: int) -> None:
+    with pytest.raises(MKGeneralException):
+        utils.indexed_color(idx, total)
+
+
+@pytest.mark.parametrize(
+    "idx",
+    range(0, utils._COLOR_WHEEL_SIZE),
+)
+def test_indexed_color_uses_color_wheel_first(idx: int) -> None:
+    assert "/" in utils.indexed_color(idx, utils._COLOR_WHEEL_SIZE)
+
+
+@pytest.mark.parametrize(
+    ["idx", "total"],
+    [
+        (89, 143),
+        (55, 55),
+        (355, 552),
+        (90, 100),
+        (67, 89),
+        (95, 452),
+        (111, 222),
+    ],
+)
+def test_indexed_color_sanity(idx: int, total: int) -> None:
+    color = utils.indexed_color(idx, total)
+    assert "/" not in color
+    r, g, b = utils.hex_color_to_rgb_color(color)
+    if r == g == b:
+        assert all(100 <= component <= 200 for component in (r, g, b))
+    else:
+        assert all(60 <= component <= 230 for component in (r, g, b) if component)
+
+
+@pytest.mark.parametrize(
+    ["default_temperature_unit", "expected_value", "expected_scalars"],
+    [
+        pytest.param(
+            TemperatureUnit.CELSIUS,
+            59.05,
+            {"warn": 85.05, "crit": 85.05},
+            id="no unit conversion",
+        ),
+        pytest.param(
+            TemperatureUnit.FAHRENHEIT,
+            138.29,
+            {"warn": 185.09, "crit": 185.09},
+            id="with unit conversion",
+        ),
+    ],
+)
+def test_translate_metrics(
+    default_temperature_unit: TemperatureUnit,
+    expected_value: float,
+    expected_scalars: Mapping[str, float],
+) -> None:
+    active_config.default_temperature_unit = default_temperature_unit.value
+    translated_metric = utils.translate_metrics(
+        [("temp", 59.05, "", 85.05, 85.05, None, None)],
+        "check_mk-lnx_thermal",
+    )["temp"]
+    assert translated_metric["value"] == expected_value
+    assert translated_metric["scalar"] == expected_scalars

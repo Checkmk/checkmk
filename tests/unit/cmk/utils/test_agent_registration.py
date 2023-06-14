@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,14 +9,18 @@ from uuid import UUID
 
 import pytest
 
-from cmk.utils.agent_registration import get_r4r_filepath, UUIDLink, UUIDLinkManager
+from cmk.utils.agent_registration import (
+    get_r4r_filepath,
+    HostAgentConnectionMode,
+    UUIDLink,
+    UUIDLinkManager,
+)
 from cmk.utils.paths import (
     data_source_push_agent_dir,
     r4r_declined_dir,
     r4r_discoverable_dir,
     r4r_new_dir,
     r4r_pending_dir,
-    r4r_ready_dir,
     received_outputs_dir,
 )
 from cmk.utils.type_defs import HostName
@@ -30,16 +34,13 @@ class TestUUIDLink:
     def test_uuid(self, link: UUIDLink) -> None:
         assert isinstance(link.uuid, UUID)
 
-    def test_hostname(self, link: UUIDLink) -> None:
-        assert isinstance(link.hostname, HostName)
-
     def test_unlink_nonexisiting(self, link: UUIDLink) -> None:
         assert not link.source.exists()
         link.unlink()
 
 
 def test_uuid_link_manager_create_pull_link() -> None:
-    hostname = "my-hostname"
+    hostname = HostName("my-hostname")
     raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
 
     uuid_link_manager = UUIDLinkManager(
@@ -59,7 +60,7 @@ def test_uuid_link_manager_create_pull_link() -> None:
 
 
 def test_uuid_link_manager_create_push_link() -> None:
-    hostname = "my-hostname"
+    hostname = HostName("my-hostname")
     raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
 
     uuid_link_manager = UUIDLinkManager(
@@ -79,7 +80,7 @@ def test_uuid_link_manager_create_push_link() -> None:
 
 
 def test_uuid_link_manager_create_existing_link() -> None:
-    hostname = "my-hostname"
+    hostname = HostName("my-hostname")
     raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
 
     uuid_link_manager = UUIDLinkManager(
@@ -92,7 +93,7 @@ def test_uuid_link_manager_create_existing_link() -> None:
 
 
 def test_uuid_link_manager_create_link_to_different_uuid() -> None:
-    hostname = "my-hostname"
+    hostname = HostName("my-hostname")
     raw_uuid_old = "59e631e9-de89-40d6-9662-ba54569a24fb"
     raw_uuid_new = "db1ea77f-330e-4fb5-b59e-925f55290533"
 
@@ -116,7 +117,7 @@ def test_uuid_link_manager_create_link_to_different_uuid() -> None:
 
 @pytest.mark.parametrize("push_configured", [True, False])
 def test_uuid_link_manager_update_links_host_push(push_configured: bool) -> None:
-    hostname = "my-hostname"
+    hostname = HostName("my-hostname")
     raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
 
     uuid_link_manager = UUIDLinkManager(
@@ -126,7 +127,9 @@ def test_uuid_link_manager_update_links_host_push(push_configured: bool) -> None
     # During link creation the cmk_agent_connection could possibly not be calculated yet,
     # ie. push-agent or other.
     uuid_link_manager.create_link(hostname, UUID(raw_uuid), push_configured=push_configured)
-    uuid_link_manager.update_links({hostname: {"cmk_agent_connection": "push-agent"}})
+    uuid_link_manager.update_links(
+        {hostname: {"cmk_agent_connection": HostAgentConnectionMode.PUSH.value}}
+    )
 
     assert len(list(received_outputs_dir.iterdir())) == 1
 
@@ -150,7 +153,7 @@ def test_uuid_link_manager_update_links_no_links_yet() -> None:
 
 
 def test_uuid_link_manager_update_links_no_host() -> None:
-    hostname = "my-hostname"
+    hostname = HostName("my-hostname")
     raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
 
     uuid_link_manager = UUIDLinkManager(
@@ -164,7 +167,7 @@ def test_uuid_link_manager_update_links_no_host() -> None:
 
 
 def test_uuid_link_manager_update_links_host_no_push() -> None:
-    hostname = "my-hostname"
+    hostname = HostName("my-hostname")
     raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
 
     uuid_link_manager = UUIDLinkManager(
@@ -190,7 +193,6 @@ def test_uuid_link_manager_update_links_host_no_push() -> None:
         (r4r_new_dir, False),
         (r4r_pending_dir, False),
         (r4r_declined_dir, False),
-        (r4r_ready_dir, True),
         (r4r_discoverable_dir, True),
     ],
 )
@@ -198,7 +200,7 @@ def test_uuid_link_manager_update_links_no_host_but_ready_or_discoverable(
     folder: Path,
     has_link: bool,
 ) -> None:
-    hostname = "my-hostname"
+    hostname = HostName("my-hostname")
     raw_uuid = "59e631e9-de89-40d6-9662-ba54569a24fb"
 
     folder.mkdir(parents=True, exist_ok=True)
@@ -215,13 +217,13 @@ def test_uuid_link_manager_update_links_no_host_but_ready_or_discoverable(
     if has_link:
         assert len(list(received_outputs_dir.iterdir())) == 1
     else:
-        assert list(received_outputs_dir.iterdir()) == []
+        assert not list(received_outputs_dir.iterdir())
 
 
 def test_uuid_link_manager_unlink_sources() -> None:
-    hostname_1 = "my-hostname-1"
+    hostname_1 = HostName("my-hostname-1")
     raw_uuid_1 = "59e631e9-de89-40d6-9662-ba54569a24fb"
-    hostname_2 = "my-hostname-2"
+    hostname_2 = HostName("my-hostname-2")
     raw_uuid_2 = "db1ea77f-330e-4fb5-b59e-925f55290533"
 
     uuid_link_manager = UUIDLinkManager(

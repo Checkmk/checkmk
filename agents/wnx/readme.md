@@ -19,18 +19,16 @@ Run *windows_setup.cmd*. This is **Simplest** method to install some required Wi
 Alternatively you can **choco install make** and use Makefile
 
 ## Build Scripts
-1. build_release.cmd - to build MSI in artefacts
-2. build_watest.cmd- to build 32-bit watest to be used later
+1. run.cmd - to build/unit test agent
+2. Dev tool: build_watest.cmd- to build 32-bit watest to be used later
 
 
 ## Test Scripts
-1. Unit Testss Full: call_unit_tests.cmd
-2. Unit Tests Part: call_unit_tests.cmd EventLog*
-3. Integration Tests: call_integration_tests.cmd
+1. All Other Tests: run_tests.cmd
 
 ## Assorted
 To build and measure time use ptime
-To run arbitrary powershell script use x
+To run arbitrary powershell script use x.cmd
 
 ## Build of frozen binaries
 *make frozen_binaries* to build exe and put it into  the artefacts directory

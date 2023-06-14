@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,10 +10,11 @@ from livestatus import SiteId
 
 from cmk.utils.diagnostics import DiagnosticsCLParameters
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.labels import HostLabel
 from cmk.utils.type_defs import HostName, ServiceName
 
 from cmk.automations import results
-from cmk.automations.results import DiscoveredHostLabelsDict, SetAutochecksTable
+from cmk.automations.results import SetAutochecksTable
 
 from cmk.gui.i18n import _
 from cmk.gui.site_config import site_is_local
@@ -163,6 +164,13 @@ def discovery_preview(
     )
 
 
+def autodiscovery(site_id: SiteId) -> results.AutodiscoveryResult:
+    return _deserialize(
+        _automation_serialized("autodiscovery", siteid=site_id),
+        results.AutodiscoveryResult,
+    )
+
+
 def set_autochecks(
     site_id: SiteId,
     host_name: HostName,
@@ -182,14 +190,14 @@ def set_autochecks(
 def update_host_labels(
     site_id: SiteId,
     host_name: HostName,
-    host_labels: DiscoveredHostLabelsDict,
+    host_labels: Sequence[HostLabel],
 ) -> results.UpdateHostLabelsResult:
     return _deserialize(
         _automation_serialized(
             "update-host-labels",
             siteid=site_id,
             args=[host_name],
-            indata=host_labels,
+            indata={label.name: label.to_dict() for label in host_labels},
         ),
         results.UpdateHostLabelsResult,
     )

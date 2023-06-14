@@ -1,11 +1,7 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-
-def perle_scan_function(oid):
-    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1966.20")
 
 
 def perle_check_alarms(alarms_str):
@@ -113,7 +109,6 @@ def check_perle_cm_modules(item, _no_params, info):
                 ("Fiber", fiber_lprf, fiber_link, fiber_speed, fiber_connector),
                 ("Copper", cooper_lprf, copper_link, copper_speed, copper_connector),
             ]:
-
                 yield 0, "{} Speed: {}".format(what, mappings["speed"][speed])  # type: ignore[index]
 
                 for what_state, what_key in [(lprf, "LPRF"), (link, "Link")]:

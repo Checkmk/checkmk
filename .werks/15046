@@ -6,7 +6,7 @@ Date: 1669125896
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 elasticsearch_cluster_health check plugin for tasks and shards used to crash if there were no information available for the two.
 This has now been fixed.

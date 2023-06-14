@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -24,7 +24,7 @@ def test_root_context() -> None:
     assert not site.is_site_context()
 
 
-def test_site_context(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_site_context(monkeypatch: pytest.MonkeyPatch) -> None:
     site = omdlib.main.SiteContext("dingeling")
     assert site.name == "dingeling"
     assert site.dir == "/omd/sites/dingeling"
@@ -34,20 +34,22 @@ def test_site_context(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     assert site.is_site_context()
 
 
-def test_site_context_version(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_site_context_version(monkeypatch: pytest.MonkeyPatch) -> None:
     site = omdlib.main.SiteContext("dingeling")
     monkeypatch.setattr(os, "readlink", lambda x: "../2018.08.11.cee")
     assert site.version == "2018.08.11.cee"
 
 
-def test_site_context_replacements(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_site_context_replacements() -> None:
     site = omdlib.main.SiteContext("dingeling")
+
     assert site.replacements["###SITE###"] == "dingeling"
     assert site.replacements["###ROOT###"] == "/omd/sites/dingeling"
-    assert len(site.replacements) == 2
+    assert site.replacements["###EDITION###"] in ("raw", "enterprise", "cloud", "managed")
+    assert len(site.replacements) == 3
 
 
-def test_site_context_exists(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_site_context_exists(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(os.path, "exists", lambda p: p == "/omd/sites/dingeling")
 
     site = omdlib.main.SiteContext("dingeling")
@@ -57,7 +59,7 @@ def test_site_context_exists(monkeypatch) -> None:  # type:ignore[no-untyped-def
     assert not site.exists()
 
 
-def test_site_context_is_empty(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_site_context_is_empty(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
         os, "listdir", lambda p: [] if p == "/omd/sites/dingeling" else ["abc", "version"]
     )
@@ -69,7 +71,7 @@ def test_site_context_is_empty(monkeypatch) -> None:  # type:ignore[no-untyped-d
     assert not site.is_empty()
 
 
-def test_site_context_is_autostart(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_site_context_is_autostart(monkeypatch: pytest.MonkeyPatch) -> None:
     site = omdlib.main.SiteContext("dingeling")
 
     with pytest.raises(Exception) as e:
@@ -87,7 +89,7 @@ def test_site_context_is_autostart(monkeypatch) -> None:  # type:ignore[no-untyp
     assert not site.is_autostart()
 
 
-def test_site_context_is_disabled(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_site_context_is_disabled(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(os.path, "exists", lambda p: p == "/omd/apache/dingeling.conf")
     site = omdlib.main.SiteContext("dingeling")
     assert not site.is_disabled()

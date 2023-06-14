@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This hook can be used by custom plugins to further modify the snapshot content for the remote site.
 The registered function gets the site_snapshot_settings as argument.

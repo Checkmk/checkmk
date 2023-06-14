@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The rules on ruleset pages were always sorted by folder ID.
 If the folder was renamed this could lead to a wrong sorting order.

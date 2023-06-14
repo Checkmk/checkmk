@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,7 +7,9 @@ import pytest
 
 import cmk.utils.version as cmk_version
 
-from cmk.gui.plugins.watolib.utils import (
+from cmk.gui.valuespec import ValueSpec
+from cmk.gui.watolib.automation_commands import automation_command_registry
+from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_domain_registry,
     config_variable_group_registry,
@@ -15,8 +17,6 @@ from cmk.gui.plugins.watolib.utils import (
     configvar_order,
     ConfigVariableGroup,
 )
-from cmk.gui.valuespec import ValueSpec
-from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.utils import format_php
 
 
@@ -44,7 +44,6 @@ def test_registered_config_domains() -> None:
 
 
 def test_registered_automation_commands() -> None:
-
     expected_automation_commands = [
         "activate-changes",
         "push-profiles",
@@ -62,8 +61,10 @@ def test_registered_automation_commands() -> None:
         "checkmk-remote-automation-get-status",
         "discovered-host-label-sync",
         "remove-tls-registration",
-        "get-audit-logs",
+        "sync-remote-site",
+        "clear-site-changes",
         "hosts-for-auto-removal",
+        "rename-hosts-uuid-link",
     ]
 
     if not cmk_version.is_raw_edition():
@@ -201,6 +202,7 @@ def test_registered_configvars() -> None:
         "enable_login_via_get",
         "enable_community_translations",
         "default_language",
+        "default_temperature_unit",
     ]
 
     if not cmk_version.is_raw_edition():

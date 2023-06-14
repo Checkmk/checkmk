@@ -1,0 +1,278 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
+# mypy: disable-error-code="list-item"
+
+from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_legacy_includes.temperature import check_temperature
+from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
+
+#   .--Parse function------------------------------------------------------.
+#   |  ____                        __                  _   _               |
+#   | |  _ \ __ _ _ __ ___  ___   / _|_   _ _ __   ___| |_(_) ___  _ __    |
+#   | | |_) / _` | '__/ __|/ _ \ | |_| | | | '_ \ / __| __| |/ _ \| '_ \   |
+#   | |  __/ (_| | |  \__ \  __/ |  _| |_| | | | | (__| |_| | (_) | | | |  |
+#   | |_|   \__,_|_|  |___/\___| |_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|  |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def parse_icom_repeater(info):  # pylint: disable=too-many-branches
+    parsed: dict[str, int | dict | float] = {}
+    for line in info:
+        if line[1] == "Temperature":
+            parsed["temp"] = float(line[2][:-1])
+            parsed["temp_devunit"] = line[2][-1].lower()
+
+        elif line[1] == "ESN number":
+            parsed["esnno"] = line[2]
+
+        elif line[1] == "Repeater operation":
+            parsed["repop"] = line[2].lower()
+
+        elif line[1] == "Abnormal temperature detection":
+            if line[2] == "Not detected":
+                parsed["temp_devstatus"] = 0
+            else:
+                parsed["temp_devstatus"] = 2
+
+        elif line[1] == "Power-supply voltage":
+            parsed["ps_voltage"] = float(line[2][:-1])
+
+        elif line[1] == "Abnormal power-supply voltage detection":
+            if line[2] == "Not detected":
+                parsed["ps_volt_devstatus"] = 0
+            else:
+                parsed["ps_volt_devstatus"] = 2
+
+        elif line[1] == "TX PLL lock voltage":
+            try:
+                parsed["tx_pll_lock_voltage"] = float(line[2][:-1])
+            except Exception:
+                pass
+
+        elif line[1] == "RX PLL lock voltage":
+            try:
+                parsed["rx_pll_lock_voltage"] = float(line[2][:-1])
+            except Exception:
+                pass
+
+        elif line[1] == "Repeater frequency":
+            parsed["repeater_frequency"] = {
+                b.split(":")[0].lower(): int(b.split(":")[1])
+                for b in [a.lstrip() for a in line[2].split(",")]
+            }
+
+    return parsed
+
+
+# .
+#   .--Power Supply Voltage------------------------------------------------.
+#   |    ____                          ____                    _           |
+#   |   |  _ \ _____      _____ _ __  / ___| _   _ _ __  _ __ | |_   _     |
+#   |   | |_) / _ \ \ /\ / / _ \ '__| \___ \| | | | '_ \| '_ \| | | | |    |
+#   |   |  __/ (_) \ V  V /  __/ |     ___) | |_| | |_) | |_) | | |_| |    |
+#   |   |_|   \___/ \_/\_/ \___|_|    |____/ \__,_| .__/| .__/|_|\__, |    |
+#   |                                             |_|   |_|      |___/     |
+#   |                 __     __    _ _                                     |
+#   |                 \ \   / /__ | | |_ __ _  __ _  ___                   |
+#   |                  \ \ / / _ \| | __/ _` |/ _` |/ _ \                  |
+#   |                   \ V / (_) | | || (_| | (_| |  __/                  |
+#   |                    \_/ \___/|_|\__\__,_|\__, |\___|                  |
+#   |                                         |___/                        |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+icom_ps_volt_default_levels = (13.5, 13.2, 14.1, 14.4)
+
+
+def inventory_icom_repeater_ps_volt(parsed):
+    if "ps_voltage" in parsed:
+        return [(None, icom_ps_volt_default_levels)]
+    return []
+
+
+def check_icom_repeater_ps_volt(_no_item, params, parsed):
+    volt = parsed["ps_voltage"]
+    warn_lower, crit_lower, warn, crit = params
+
+    perfdata = [("voltage", volt, warn, crit, warn_lower, crit_lower)]
+    levelstext = " (warn/crit below %.1f/%.1f V and at or above %.1f/%.1f V)" % (
+        warn_lower,
+        crit_lower,
+        warn,
+        crit,
+    )
+    infotext = "%.1f V" % volt
+
+    if volt < crit_lower or volt >= crit:
+        status = 2
+    elif volt < warn_lower or volt >= warn:
+        status = 1
+    else:
+        status = 0
+
+    if status:
+        infotext += levelstext
+
+    return status, infotext, perfdata
+
+
+check_info["icom_repeater.ps_volt"] = LegacyCheckDefinition(
+    discovery_function=inventory_icom_repeater_ps_volt,
+    check_function=check_icom_repeater_ps_volt,
+    service_name="Power Supply Voltage",
+    check_ruleset_name="ps_voltage",
+)
+
+# .
+#   .--PLL Voltage---------------------------------------------------------.
+#   |        ____  _     _      __     __    _ _                           |
+#   |       |  _ \| |   | |     \ \   / /__ | | |_ __ _  __ _  ___         |
+#   |       | |_) | |   | |      \ \ / / _ \| | __/ _` |/ _` |/ _ \        |
+#   |       |  __/| |___| |___    \ V / (_) | | || (_| | (_| |  __/        |
+#   |       |_|   |_____|_____|    \_/ \___/|_|\__\__,_|\__, |\___|        |
+#   |                                                   |___/              |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def inventory_icom_repeater_pll_volt(parsed):
+    if "rx_pll_lock_voltage" in parsed:
+        yield "RX", {}
+    if "tx_pll_lock_voltage" in parsed:
+        yield "TX", {}
+
+
+def check_icom_repeater_pll_volt(item, params, parsed):
+    voltage = parsed[item.lower() + "_pll_lock_voltage"]
+    freq = parsed["repeater_frequency"][item.lower()]
+    paramlist = params.get(item.lower(), None)
+
+    if not paramlist:
+        perfdata = [("voltage", voltage)]
+        return 1, "Please specify parameters for PLL voltage", perfdata
+
+    i = 0
+    while i < len(paramlist):
+        if paramlist[i][0] >= freq:
+            warn_lower, crit_lower, warn, crit = paramlist[i - 1][1:]
+
+    infotext = "%.1f V" % voltage
+    levelstext = " (warn/crit below %.1f/%.1f V and at or above %.1f/%.1f V)" % (
+        warn_lower,
+        crit_lower,
+        warn,
+        crit,
+    )
+    if voltage < crit_lower or voltage >= crit:
+        status = 2
+    elif voltage < warn_lower or voltage >= warn:
+        status = 1
+    else:
+        status = 0
+    if status:
+        infotext += levelstext
+
+    perfdata = [("voltage", voltage, warn, crit, warn_lower, crit_lower)]
+
+    return status, infotext, perfdata
+
+
+check_info["icom_repeater.pll_volt"] = LegacyCheckDefinition(
+    discovery_function=inventory_icom_repeater_pll_volt,
+    check_function=check_icom_repeater_pll_volt,
+    service_name="%s PLL Lock Voltage",
+    check_ruleset_name="pll_lock_voltage",
+)
+
+# .
+#   .--Temperature---------------------------------------------------------.
+#   |     _____                                   _                        |
+#   |    |_   _|__ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
+#   |      | |/ _ \ '_ ` _ \| '_ \ / _ \ '__/ _` | __| | | | '__/ _ \      |
+#   |      | |  __/ | | | | | |_) |  __/ | | (_| | |_| |_| | | |  __/      |
+#   |      |_|\___|_| |_| |_| .__/ \___|_|  \__,_|\__|\__,_|_|  \___|      |
+#   |                       |_|                                            |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def inventory_icom_repeater_temp(parsed):
+    if "temp" in parsed:
+        return [("System", {})]
+    return []
+
+
+def check_icom_repeater_temp(_no_item, params, parsed):
+    return check_temperature(
+        parsed["temp"],
+        params,
+        "icom_repeater_temp",
+        dev_unit=parsed["temp_devunit"],
+        dev_status=parsed["temp_devstatus"],
+    )
+
+
+check_info["icom_repeater.temp"] = LegacyCheckDefinition(
+    discovery_function=inventory_icom_repeater_temp,
+    check_function=check_icom_repeater_temp,
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+    check_default_parameters={
+        "levels": (50.0, 55.0),
+        "levels_lower": (-20.0, -25.0),
+    },
+)
+
+# .
+#   .--Repeater Info-------------------------------------------------------.
+#   |    ____                       _              ___        __           |
+#   |   |  _ \ ___ _ __   ___  __ _| |_ ___ _ __  |_ _|_ __  / _| ___      |
+#   |   | |_) / _ \ '_ \ / _ \/ _` | __/ _ \ '__|  | || '_ \| |_ / _ \     |
+#   |   |  _ <  __/ |_) |  __/ (_| | ||  __/ |     | || | | |  _| (_) |    |
+#   |   |_| \_\___| .__/ \___|\__,_|\__\___|_|    |___|_| |_|_|  \___/     |
+#   |             |_|                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+
+def inventory_icom_repeater(parsed):
+    if parsed:
+        return [(None, None)]
+    return []
+
+
+def check_icom_repeater(_no_item, _no_params, parsed):
+    yield 0, "ESN Number: %s" % parsed["esnno"]
+
+    infotext = "Repeater operation status: %s" % parsed["repop"]
+    if parsed["repop"] == "off":
+        yield 2, infotext
+    elif parsed["repop"] == "on":
+        yield 0, infotext
+    else:
+        yield 3, "Repeater operation status unknown"
+
+
+check_info["icom_repeater"] = LegacyCheckDefinition(
+    detect=contains(".1.3.6.1.2.1.1.1.0", "fr5000"),
+    parse_function=parse_icom_repeater,
+    discovery_function=inventory_icom_repeater,
+    check_function=check_icom_repeater,
+    service_name="Repeater Info",
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.2021.8.1",
+        oids=["1", "2", "101"],
+    ),
+)

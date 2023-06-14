@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
 import os
 import re
+from pathlib import Path
 
 import pytest
 
@@ -62,7 +63,7 @@ def test_find_debugs_false(changed_files: ChangedFiles, line: str) -> None:
         if os.path.exists(p)
     ],
 )
-def test_find_debug_code(changed_files: ChangedFiles, path) -> None:  # type:ignore[no-untyped-def]
+def test_find_debug_code(changed_files: ChangedFiles, path: str) -> None:
     scanned = 0
 
     for dirpath, _, filenames in os.walk(path):
@@ -70,7 +71,7 @@ def test_find_debug_code(changed_files: ChangedFiles, path) -> None:  # type:ign
         for filename in filenames:
             file_path = f"{dirpath}/{filename}"
 
-            if not changed_files.is_changed(file_path):
+            if not changed_files.is_changed(Path(file_path)):
                 continue
 
             if [folder for folder in exclude_folders if folder in file_path]:
@@ -82,7 +83,6 @@ def test_find_debug_code(changed_files: ChangedFiles, path) -> None:  # type:ign
             if os.path.relpath(file_path, cmk_path()) in exclude_files:
                 continue
 
-            LOGGER.info("Checking file %s", file_path)
             try:
                 with open(file_path) as file:
                     for nr, line in enumerate(file.readlines()):

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -36,7 +36,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.html import HTML
 from cmk.gui.views.store import get_permitted_views
 from cmk.gui.watolib.activate_changes import ActivateChanges
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
     match_item_generator_registry,
@@ -45,7 +45,7 @@ from cmk.gui.watolib.search import (
 )
 
 
-def render_wato(mini) -> None | bool:  # type:ignore[no-untyped-def]
+def render_wato(mini) -> None | bool:  # type: ignore[no-untyped-def]
     if not active_config.wato_enabled:
         html.write_text(_("Setup is disabled."))
         return False
@@ -101,6 +101,7 @@ def get_wato_menu_items() -> list[TopicMenuTopic]:
                 sort_index=module.sort_index,
                 is_show_more=module.is_show_more,
                 icon=module.icon,
+                additional_matches_setup_search=module.additional_matches_setup_search(),
             )
         )
 
@@ -144,7 +145,10 @@ class MatchItemGeneratorSetupMenu(ABCMatchItemGenerator):
                 title=topic_menu_item.title,
                 topic=_("Setup"),
                 url=topic_menu_item.url,
-                match_texts=[topic_menu_item.title],
+                match_texts=[
+                    topic_menu_item.title,
+                    *topic_menu_item.additional_matches_setup_search,
+                ],
             )
             for topic_menu_topic in self._topic_generator()
             for topic_menu_item in topic_menu_topic.items
@@ -204,8 +208,8 @@ def compute_foldertree():
     hosts = sites.live().query(query)
     sites.live().set_prepend_site(False)
 
-    def get_folder(path, num=0):
-        folder = Folder.folder(path)
+    def get_folder(tree, path, num=0):
+        folder = tree.folder(path)
         return {
             "title": folder.title() or path.split("/")[-1],
             ".path": path,
@@ -219,6 +223,7 @@ def compute_foldertree():
     # Now get number of hosts by folder
     # Count all children for each folder
     user_folders = {}
+    tree = folder_tree()
     for _site, filename, num in sorted(hosts):
         # Remove leading /wato/
         wato_folder_path = filename[6:]
@@ -229,9 +234,9 @@ def compute_foldertree():
         for num_parts in range(0, len(path_parts)):
             this_folder_path = "/".join(path_parts[:num_parts])
 
-            if Folder.folder_exists(this_folder_path):
+            if tree.folder_exists(this_folder_path):
                 if this_folder_path not in user_folders:
-                    user_folders[this_folder_path] = get_folder(this_folder_path, num)
+                    user_folders[this_folder_path] = get_folder(tree, this_folder_path, num)
                 else:
                     user_folders[this_folder_path][".num_hosts"] += num
 
@@ -269,9 +274,9 @@ def compute_foldertree():
 
 
 # Note: the dictionary that represents the folder here is *not*
-# the datastructure from WATO but a result of compute_foldertree(). The reason:
-# We fetch the information via livestatus - not from WATO.
-def render_tree_folder(tree_id, folder, js_func) -> None:  # type:ignore[no-untyped-def]
+# the datastructure from Setup but a result of compute_foldertree(). The reason:
+# We fetch the information via livestatus - not from Setup.
+def render_tree_folder(tree_id, folder, js_func) -> None:  # type: ignore[no-untyped-def]
     subfolders = folder.get(".folders", {}).values()
     is_leaf = len(subfolders) == 0
 
@@ -300,7 +305,7 @@ def render_tree_folder(tree_id, folder, js_func) -> None:  # type:ignore[no-unty
             for subfolder in sorted(subfolders, key=lambda x: x["title"].lower()):
                 render_tree_folder(tree_id, subfolder, js_func)
     else:
-        html.li(title)
+        html.li(title, class_="single")
 
     html.close_ul()
 
@@ -318,8 +323,8 @@ class SidebarSnapinWATOFoldertree(SidebarSnapin):
     @classmethod
     def description(cls):
         return _(
-            "This snapin shows the folders defined in WATO. It can be used to "
-            "open views filtered by the WATO folder. It works standalone, without "
+            "This snapin shows the folders defined in Setup. It can be used to "
+            "open views filtered by the Setup folder. It works standalone, without "
             "interaction with any other snapin."
         )
 

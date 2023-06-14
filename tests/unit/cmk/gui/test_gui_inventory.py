@@ -1,20 +1,27 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
+from typing import NamedTuple
 
 import pytest
 from pytest import MonkeyPatch
 
 import cmk.utils
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.structured_data import StructuredDataNode
+from cmk.utils.structured_data import ImmutableTree, SDPath
 
 import cmk.gui.inventory
-from cmk.gui.inventory import InventoryPath, TreeSource
-from cmk.gui.type_defs import Row
+from cmk.gui.inventory import (
+    _make_filters_from_api_request_paths,
+    _make_filters_from_permitted_paths,
+    InventoryPath,
+    PermittedPath,
+    TreeSource,
+)
+from cmk.gui.type_defs import HostName, Row
 
 
 @pytest.mark.parametrize(
@@ -123,71 +130,258 @@ def test_parse_tree_path(
     assert inventory_path.node_name == expected_node_name
 
 
+class ExpectedFilterResults(NamedTuple):
+    nodes: bool
+    restricted_nodes: bool
+    attributes: bool
+    restricted_attributes: bool
+    columns: bool
+    restricted_columns: bool
+
+
+@pytest.mark.parametrize(
+    "entry, expected_path, expected_filter_results",
+    [
+        (
+            {
+                "visible_raw_path": "path.to.node",
+            },
+            ("path", "to", "node"),
+            ExpectedFilterResults(
+                nodes=True,
+                restricted_nodes=True,
+                attributes=True,
+                restricted_attributes=True,
+                columns=True,
+                restricted_columns=True,
+            ),
+        ),
+        (
+            {
+                "visible_raw_path": "path.to.node",
+                "nodes": ("choices", ["node"]),
+            },
+            ("path", "to", "node"),
+            ExpectedFilterResults(
+                nodes=True,
+                restricted_nodes=False,
+                attributes=True,
+                restricted_attributes=True,
+                columns=True,
+                restricted_columns=True,
+            ),
+        ),
+        (
+            {
+                "visible_raw_path": "path.to.node",
+                "attributes": ("choices", ["key"]),
+            },
+            ("path", "to", "node"),
+            ExpectedFilterResults(
+                nodes=True,
+                restricted_nodes=True,
+                attributes=True,
+                restricted_attributes=False,
+                columns=True,
+                restricted_columns=True,
+            ),
+        ),
+        (
+            {
+                "visible_raw_path": "path.to.node",
+                "columns": ("choices", ["key"]),
+            },
+            ("path", "to", "node"),
+            ExpectedFilterResults(
+                nodes=True,
+                restricted_nodes=True,
+                attributes=True,
+                restricted_attributes=True,
+                columns=True,
+                restricted_columns=False,
+            ),
+        ),
+        (
+            {"visible_raw_path": "path.to.node", "nodes": "nothing"},
+            ("path", "to", "node"),
+            ExpectedFilterResults(
+                nodes=False,
+                restricted_nodes=False,
+                attributes=True,
+                restricted_attributes=True,
+                columns=True,
+                restricted_columns=True,
+            ),
+        ),
+        (
+            {
+                "visible_raw_path": "path.to.node",
+                "attributes": "nothing",
+            },
+            ("path", "to", "node"),
+            ExpectedFilterResults(
+                nodes=True,
+                restricted_nodes=True,
+                attributes=False,
+                restricted_attributes=False,
+                columns=True,
+                restricted_columns=True,
+            ),
+        ),
+        (
+            {
+                "visible_raw_path": "path.to.node",
+                "columns": "nothing",
+            },
+            ("path", "to", "node"),
+            ExpectedFilterResults(
+                nodes=True,
+                restricted_nodes=True,
+                attributes=True,
+                restricted_attributes=True,
+                columns=False,
+                restricted_columns=False,
+            ),
+        ),
+    ],
+)
+def test__make_filters_from_permitted_paths(
+    entry: PermittedPath,
+    expected_path: SDPath,
+    expected_filter_results: ExpectedFilterResults,
+) -> None:
+    f = _make_filters_from_permitted_paths([entry])[0]
+
+    assert f.path == expected_path
+
+    assert f.filter_pairs("key") is expected_filter_results.attributes
+    assert f.filter_pairs("other") is expected_filter_results.restricted_attributes
+
+    assert f.filter_columns("key") is expected_filter_results.columns
+    assert f.filter_columns("other") is expected_filter_results.restricted_columns
+
+    assert f.filter_nodes("node") is expected_filter_results.nodes
+    assert f.filter_nodes("other") is expected_filter_results.restricted_nodes
+
+
+@pytest.mark.parametrize(
+    "entry, expected_path, expected_filter_results",
+    [
+        # Tuple format
+        (
+            ".path.to.node.",
+            ("path", "to", "node"),
+            ExpectedFilterResults(
+                nodes=True,
+                restricted_nodes=True,
+                attributes=True,
+                restricted_attributes=True,
+                columns=True,
+                restricted_columns=True,
+            ),
+        ),
+        (
+            ".path.to.node:",
+            ("path", "to", "node"),
+            ExpectedFilterResults(
+                nodes=True,
+                restricted_nodes=True,
+                attributes=True,
+                restricted_attributes=True,
+                columns=True,
+                restricted_columns=True,
+            ),
+        ),
+        (
+            ".path.to.node:*.key",
+            ("path", "to", "node"),
+            ExpectedFilterResults(
+                nodes=False,
+                restricted_nodes=False,
+                attributes=True,
+                restricted_attributes=False,
+                columns=True,
+                restricted_columns=False,
+            ),
+        ),
+        (
+            ".path.to.node.key",
+            ("path", "to", "node"),
+            ExpectedFilterResults(
+                nodes=False,
+                restricted_nodes=False,
+                attributes=True,
+                restricted_attributes=False,
+                columns=True,
+                restricted_columns=False,
+            ),
+        ),
+    ],
+)
+def test__make_filters_from_api_request_paths(
+    entry: str,
+    expected_path: SDPath,
+    expected_filter_results: ExpectedFilterResults,
+) -> None:
+    f = _make_filters_from_api_request_paths([entry])[0]
+
+    assert f.path == expected_path
+
+    assert f.filter_pairs("key") is expected_filter_results.attributes
+    assert f.filter_pairs("other") is expected_filter_results.restricted_attributes
+
+    assert f.filter_columns("key") is expected_filter_results.columns
+    assert f.filter_columns("other") is expected_filter_results.restricted_columns
+
+    assert f.filter_nodes("node") is expected_filter_results.nodes
+    assert f.filter_nodes("other") is expected_filter_results.restricted_nodes
+
+
 @pytest.mark.parametrize(
     "hostname, row, expected_tree",
     [
-        (None, {}, StructuredDataNode.deserialize({"loaded": "tree"})),
-        ("hostname", {}, StructuredDataNode.deserialize({"loaded": "tree"})),
         (
-            "hostname",
-            {"host_structured_status": b""},
-            StructuredDataNode.deserialize({"loaded": "tree"}),
+            None,
+            {},
+            ImmutableTree.deserialize({"loaded": "tree"}),
         ),
         (
-            "hostname",
+            HostName("hostname"),
+            {},
+            ImmutableTree.deserialize({"loaded": "tree"}),
+        ),
+        (
+            HostName("hostname"),
+            {"host_structured_status": b""},
+            ImmutableTree.deserialize({"loaded": "tree"}),
+        ),
+        (
+            HostName("hostname"),
             {"host_structured_status": b"{'deserialized': 'tree'}"},
-            StructuredDataNode.deserialize({"deserialized": "tree"}),
+            ImmutableTree.deserialize({"deserialized": "tree"}),
         ),
     ],
 )
-def test__load_status_data_tree(
-    monkeypatch: MonkeyPatch, hostname: str | None, row: Row, expected_tree: StructuredDataNode
+def test_load_filtered_and_merged_tree(
+    monkeypatch: MonkeyPatch, hostname: HostName | None, row: Row, expected_tree: ImmutableTree
 ) -> None:
     monkeypatch.setattr(
         cmk.gui.inventory,
-        "_load_structured_data_tree",
-        lambda t, hostname: StructuredDataNode.deserialize({"loaded": "tree"}),
+        "_load_tree_from_file",
+        (
+            lambda *args, **kw: ImmutableTree.deserialize({"loaded": "tree"})
+            if kw["tree_type"] == "status_data"
+            else ImmutableTree()
+        ),
     )
-    status_data_tree = cmk.gui.inventory._load_status_data_tree(hostname, row)
-    assert status_data_tree is not None
-    assert status_data_tree.is_equal(expected_tree)
-
-
-_InvTree = StructuredDataNode.deserialize({"inv": "node"})
-_StatusDataTree = StructuredDataNode.deserialize({"status": "node"})
-_MergedTree = StructuredDataNode.deserialize({"inv": "node", "status": "node"})
-
-
-@pytest.mark.parametrize(
-    "inventory_tree, status_data_tree, expected_tree",
-    [
-        (_InvTree, None, _InvTree),
-        (None, _StatusDataTree, _StatusDataTree),
-        (_InvTree, _StatusDataTree, _MergedTree),
-    ],
-)
-def test__merge_inventory_and_status_data_tree(
-    inventory_tree: StructuredDataNode | None,
-    status_data_tree: StructuredDataNode | None,
-    expected_tree: StructuredDataNode | None,
-) -> None:
-    merged_tree = cmk.gui.inventory._merge_inventory_and_status_data_tree(
-        inventory_tree,
-        status_data_tree,
-    )
-    assert merged_tree is not None
-    assert merged_tree.is_equal(expected_tree)
-
-
-def test__merge_inventory_and_status_data_tree_both_None() -> None:
-    merged_tree = cmk.gui.inventory._merge_inventory_and_status_data_tree(None, None)
-    assert merged_tree is None
+    row.update({"host_name": hostname})
+    assert cmk.gui.inventory.load_filtered_and_merged_tree(row) == expected_tree
 
 
 def test_get_history_empty() -> None:
     for hostname in [
-        "inv-host",
-        "/inv-host",
+        HostName("inv-host"),
+        HostName("/inv-host"),
     ]:
         history, corrupted_history_files = cmk.gui.inventory.get_history(hostname)
 
@@ -196,12 +390,12 @@ def test_get_history_empty() -> None:
 
 
 def test_get_history_archive_but_no_inv_tree() -> None:
-    hostname = "inv-host"
+    hostname = HostName("inv-host")
 
     # history
     cmk.utils.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "0"),
-        StructuredDataNode.deserialize({"inv": "attr-0"}).serialize(),
+        ImmutableTree.deserialize({"inv": "attr-0"}).serialize(),
     )
 
     history, corrupted_history_files = cmk.gui.inventory.get_history(hostname)
@@ -212,35 +406,35 @@ def test_get_history_archive_but_no_inv_tree() -> None:
 
 @pytest.fixture(name="create_inventory_history")
 def _create_inventory_history() -> None:
-    hostname = "inv-host"
+    hostname = HostName("inv-host")
 
     # history
     cmk.utils.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "0"),
-        StructuredDataNode.deserialize({"inv": "attr-0"}).serialize(),
+        ImmutableTree.deserialize({"inv": "attr-0"}).serialize(),
     )
     cmk.utils.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "1"),
-        StructuredDataNode.deserialize({"inv": "attr-1"}).serialize(),
+        ImmutableTree.deserialize({"inv": "attr-1"}).serialize(),
     )
     cmk.utils.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "2"),
-        StructuredDataNode.deserialize({"inv-2": "attr"}).serialize(),
+        ImmutableTree.deserialize({"inv-2": "attr"}).serialize(),
     )
     cmk.utils.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "3"),
-        StructuredDataNode.deserialize({"inv": "attr-3"}).serialize(),
+        ImmutableTree.deserialize({"inv": "attr-3"}).serialize(),
     )
     # current tree
     cmk.utils.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_output_dir, hostname),
-        StructuredDataNode.deserialize({"inv": "attr"}).serialize(),
+        ImmutableTree.deserialize({"inv": "attr"}).serialize(),
     )
 
 
 @pytest.mark.usefixtures("create_inventory_history")
 def test_get_history() -> None:
-    hostname = "inv-host"
+    hostname = HostName("inv-host")
     expected_results = [
         (1, 0, 0),
         (0, 1, 0),
@@ -300,7 +494,7 @@ def test_load_delta_tree(
     search_timestamp: int,
     expected_raw_delta_tree: dict,
 ) -> None:
-    hostname = "inv-host"
+    hostname = HostName("inv-host")
 
     delta_tree, corrupted_history_files = cmk.gui.inventory.load_delta_tree(
         hostname,
@@ -313,7 +507,7 @@ def test_load_delta_tree(
 
 @pytest.mark.usefixtures("create_inventory_history")
 def test_load_delta_tree_no_such_timestamp() -> None:
-    hostname = "inv-host"
+    hostname = HostName("inv-host")
     with pytest.raises(MKGeneralException) as e:
         cmk.gui.inventory.load_delta_tree(hostname, -1)
     assert "Found no history entry at the time of '-1' for the host 'inv-host'" == str(e.value)
@@ -321,7 +515,7 @@ def test_load_delta_tree_no_such_timestamp() -> None:
 
 @pytest.mark.usefixtures("create_inventory_history")
 def test_load_latest_delta_tree() -> None:
-    hostname = "inv-host"
+    hostname = HostName("inv-host")
     search_timestamp = int(Path(cmk.utils.paths.inventory_output_dir, hostname).stat().st_mtime)
 
     delta_tree, corrupted_history_files = cmk.gui.inventory.load_delta_tree(
@@ -338,32 +532,30 @@ def test_load_latest_delta_tree() -> None:
 
 
 def test_load_latest_delta_tree_no_archive_and_inv_tree() -> None:
-    hostname = "inv-host"
+    hostname = HostName("inv-host")
 
     # current tree
     cmk.utils.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_output_dir, hostname),
-        StructuredDataNode.deserialize({"inv": "attr"}).serialize(),
+        ImmutableTree.deserialize({"inv": "attr"}).serialize(),
     )
 
-    delta_tree = cmk.gui.inventory.load_latest_delta_tree(hostname)
-
-    assert delta_tree is None
+    assert not cmk.gui.inventory.load_latest_delta_tree(hostname)
 
 
 def test_load_latest_delta_tree_one_archive_and_inv_tree() -> None:
-    hostname = "inv-host"
+    hostname = HostName("inv-host")
 
     # history
     cmk.utils.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "0"),
-        StructuredDataNode.deserialize({"inv": "attr-0"}).serialize(),
+        ImmutableTree.deserialize({"inv": "attr-0"}).serialize(),
     )
 
     # current tree
     cmk.utils.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_output_dir, hostname),
-        StructuredDataNode.deserialize({"inv": "attr"}).serialize(),
+        ImmutableTree.deserialize({"inv": "attr"}).serialize(),
     )
 
     delta_tree = cmk.gui.inventory.load_latest_delta_tree(hostname)
@@ -372,12 +564,12 @@ def test_load_latest_delta_tree_one_archive_and_inv_tree() -> None:
 
 
 def test_load_latest_delta_tree_one_archive_and_no_inv_tree() -> None:
-    hostname = "inv-host"
+    hostname = HostName("inv-host")
 
     # history
     cmk.utils.store.save_object_to_file(
         Path(cmk.utils.paths.inventory_archive_dir, hostname, "0"),
-        StructuredDataNode.deserialize({"inv": "attr-0"}).serialize(),
+        ImmutableTree.deserialize({"inv": "attr-0"}).serialize(),
     )
 
     delta_tree = cmk.gui.inventory.load_latest_delta_tree(hostname)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Is executed in container from git top level as working directory to install
@@ -68,7 +68,7 @@ def get_omd_distro_name() -> str:
 
     rh = Path("/etc/redhat-release")
     if rh.exists():
-        content = rh.open().read()
+        content = rh.read_text()
         if content.startswith("CentOS release 6"):
             return "el6"
         if content.startswith("CentOS Linux release 7"):

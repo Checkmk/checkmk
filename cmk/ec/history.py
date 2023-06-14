@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,9 +12,7 @@ import time
 from collections.abc import Callable, Iterable, Sequence
 from logging import Logger
 from pathlib import Path
-from typing import Any, Literal
-
-from typing_extensions import assert_never
+from typing import Any, assert_never, Literal
 
 from cmk.utils.log import VERBOSE
 from cmk.utils.render import date_and_time
@@ -56,7 +54,6 @@ class History:
         event_columns: Columns,
         history_columns: Columns,
     ) -> None:
-        super().__init__()
         self._settings = settings
         self._config = config
         self._logger = logger
@@ -123,7 +120,6 @@ except ImportError:
 
 class MongoDB:
     def __init__(self) -> None:
-        super().__init__()
         self.connection: Connection = None
         self.db: Any = None
 
@@ -248,7 +244,6 @@ def _get_mongodb(  # pylint: disable=too-many-branches
     # and do filtering on this data, but this would be way too inefficient.
     mongo_query = {}
     for column_name, operator_name, _predicate, argument in filters:
-
         if operator_name == "=":
             mongo_filter: str | dict[str, str] = argument
         elif operator_name == ">":
@@ -380,7 +375,6 @@ def quote_tab(col: Any) -> bytes:
 
 class ActiveHistoryPeriod:
     def __init__(self) -> None:
-        super().__init__()
         self.value: int | None = None
 
 
@@ -396,7 +390,6 @@ def get_logfile(config: Config, log_dir: Path, active_history_period: ActiveHist
     # Log period has changed or we have not computed a filename yet ->
     # compute currently active period
     if active_history_period.value is None or timestamp > active_history_period.value:
-
         # Look if newer files exist
         timestamps = sorted(int(str(path.name)[:-4]) for path in log_dir.glob("*.log"))
         if len(timestamps) > 0:
@@ -479,17 +472,24 @@ def _grep_pipeline(
     Optimization: use grep in order to reduce amount of read lines based on some frequently used
     filters. It's OK if the filters don't match 100% accurately on the right lines. If in doubt, you
     can output more lines than necessary. This is only a kind of prefiltering.
+
+    >>> _grep_pipeline([])
+    []
+
+    >>> _grep_pipeline([("event_core_host", '=', lambda x: True, '|| ping')])
+    ["grep -F -e '|| ping'"]
+
     """
     return [
         command
         for column_name, operator_name, _predicate, argument in filters
         if column_name in _GREPABLE_COLUMNS
-        for command in [_grep_command(operator_name, argument)]
+        for command in [_grep_command(operator_name, str(argument))]
         if command is not None
     ]
 
 
-def _grep_command(operator_name: OperatorName, argument: Any) -> str | None:
+def _grep_command(operator_name: OperatorName, argument: str) -> str | None:
     if operator_name == "=":
         return f"grep -F {_grep_pattern(argument)}"
     if operator_name == "=~":
@@ -501,8 +501,8 @@ def _grep_command(operator_name: OperatorName, argument: Any) -> str | None:
     return None
 
 
-def _grep_pattern(argument: Any) -> str:
-    return f"-e {shlex.quote(str(argument))}"
+def _grep_pattern(argument: str) -> str:
+    return f"-e {shlex.quote(argument)}"
 
 
 def _get_files(history: History, logger: Logger, query: QueryGET) -> Iterable[Any]:
@@ -620,7 +620,7 @@ def parse_history_file(
     entries: list[Any] = []
     with subprocess.Popen(
         cmd,
-        shell=True,  # nosec
+        shell=True,  # nosec B602 # BNS:67522a
         close_fds=True,
         stdout=subprocess.PIPE,
     ) as grep:

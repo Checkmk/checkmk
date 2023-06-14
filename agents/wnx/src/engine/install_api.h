@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -58,7 +58,8 @@ private:
 
 constexpr std::wstring_view kDefaultMsiFileName{L"check_mk_agent.msi"};
 constexpr std::string_view kMsiLogFileName{"agent_msi.log"};
-constexpr std::wstring_view kAgentProductName{L"Check MK Agent 2.1"};
+// string below is patched by Makefile
+constexpr std::wstring_view kAgentProductName{L"Checkmk Agent 2.3"};
 namespace api_err {
 constexpr std::string_view kLogFileName{"install_api.log"};
 constexpr std::string_view kFailMarker{"fail: "};

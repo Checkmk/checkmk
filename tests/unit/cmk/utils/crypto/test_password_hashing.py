@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,7 +9,7 @@ from cmk.utils.crypto import password_hashing as ph
 from cmk.utils.crypto.password import Password, PasswordHash
 
 
-@pytest.mark.parametrize("password", ["", "blä", "😀", "😀" * 18, "a" * 72])
+@pytest.mark.parametrize("password", ["blä", "😀", "😀" * 18, "a" * 72])
 def test_hash_verify_roundtrip(password: str) -> None:
     pw_hash = ph.hash_password(Password(password))
     assert pw_hash.startswith("$2y$04$")  # bcrypt 4 rounds
@@ -48,7 +48,6 @@ def test_verify(valid_hash: str) -> None:
     "password,password_hash",
     [
         ("raboof", "$2b$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa"),
-        ("", "$2b$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa"),
         # password too long for bcrypt, but fail with regular "wrong password" error
         (75 * "a", "$2b$04$5LiM0CX3wUoO55cGCwrkDeZIU5zyBqPDZfV9zU4Q2WH/Lkkn2lypa"),
     ],

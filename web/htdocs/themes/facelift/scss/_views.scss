@@ -1,5 +1,5 @@
 @charset "UTF-8";
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -38,7 +38,7 @@ div.floatfilter {
     height: 17px;
     padding: 5px 8px;
     padding-left: 0;
-    font-weight: bold;
+    font-weight: $font-weight-bold;
     color: $font-color;
     background-color: $floatfilter-bg-color;
 
@@ -317,7 +317,7 @@ div.floatfilter {
     }
   }
 
-  table.valuespec_listof.filter &[class$="_label_groups"] {
+  table.valuespec_listof.filter &[class$="_labels"] {
     &,
     div#page_menu_popups div.side_popup form & {
       width: 348px;
@@ -356,11 +356,7 @@ div.floatfilter {
       }
     }
 
-    tr[id*="_groups_entry"] {
-      &:first-child > td.vlof_buttons a.delete_button {
-        display: none;
-      }
-
+    tr[id*="_labels_entry"] {
       > td.vlof_buttons a.delete_button img {
         opacity: 0.5;
 
@@ -369,16 +365,27 @@ div.floatfilter {
         }
       }
 
-      > td.vlof_content > div.bool span.select2-container--default {
-        width: 6.3 * $spacing !important;
+      > td.vlof_content > div.bool {
+        display: flex;
+        width: 6 * $spacing;
         margin-top: 8px;
-      }
-    }
 
-    div.line {
-      width: $spacing;
-      margin-top: 18px;
-      border-top: 1px solid $line-color;
+        span.vs_label {
+          margin-right: 4px;
+          margin: 4px 7px 0;
+        }
+
+        span.select2-container--default {
+          width: 5 * $spacing !important;
+          height: max-content;
+        }
+
+        div.line {
+          width: 100%;
+          margin-top: $spacing;
+          border-top: 1px solid $line-color;
+        }
+      }
     }
 
     div.label_group {
@@ -392,17 +399,6 @@ div.floatfilter {
         margin-right: $spacing;
       }
 
-      // Hide first boolean operator dropdown
-      tr:first-child td.vlof_content {
-        div.bool > span.select2-container--default {
-          display: none !important;
-        }
-
-        > span.select2-container--default {
-          margin-left: 5.6 * $spacing;
-        }
-      }
-
       tr:last-child {
         td.vlof_buttons a.delete_button {
           display: none;
@@ -410,6 +406,17 @@ div.floatfilter {
 
         td.vlof_content {
           padding-bottom: 0;
+        }
+
+        span.select2-container--default {
+          opacity: $label-filter-last-row-opacity;
+        }
+
+        &.active,
+        &:hover {
+          span.select2-container--default {
+            opacity: 1;
+          }
         }
       }
 
@@ -427,7 +434,7 @@ div.floatfilter {
       // Boolean operator dropdowns
       select[id$="_bool"] {
         & + span.select2-container--default {
-          width: 5.2 * $spacing !important;
+          width: 6 * $spacing !important;
         }
       }
 
@@ -837,7 +844,7 @@ table.data.availability {
   }
 
   tr.summary td {
-    font-weight: bold;
+    font-weight: $font-weight-bold;
   }
 
   tr.odd0 td.number.stats {

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -25,7 +25,7 @@ class WatoIcon(Icon):
     def host_columns(self):
         return ["filename"]
 
-    def render(self, what, row, tags, custom_vars) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what, row, tags, custom_vars) -> None:  # type: ignore[no-untyped-def]
         def may_see_hosts():
             return user.may("wato.use") and (user.may("wato.seeall") or user.may("wato.hosts"))
 
@@ -78,7 +78,7 @@ class DownloadAgentOutputIcon(Icon):
     def host_columns(self):
         return ["filename", "check_type"]
 
-    def render(self, what, row, tags, custom_vars) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what, row, tags, custom_vars) -> None:  # type: ignore[no-untyped-def]
         return _paint_download_host_info(
             what, row, tags, custom_vars, ty="agent"
         )  # pylint: disable=no-value-for-parameter
@@ -101,7 +101,7 @@ class DownloadSnmpWalkIcon(Icon):
     def default_sort_index(self):
         return 50
 
-    def render(self, what, row, tags, custom_vars) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what, row, tags, custom_vars) -> None:  # type: ignore[no-untyped-def]
         return _paint_download_host_info(
             what, row, tags, custom_vars, ty="walk"
         )  # pylint: disable=no-value-for-parameter
@@ -113,7 +113,6 @@ def _paint_download_host_info(what, row, tags, host_custom_vars, ty):
         and user.may("wato.download_agent_output")
         and not row["host_check_type"] == 2
     ):  # Not for shadow hosts
-
         # Not 100% acurate to use the tags here, but this is the best we can do
         # with the available information.
         # Render "download agent output" for non agent hosts, because there might

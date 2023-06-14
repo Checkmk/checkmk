@@ -287,7 +287,7 @@ void MrpeProvider::parseConfig() {
     checks_.clear();
     includes_.clear();
 
-    auto strings =
+    const auto strings =
         cfg::GetArray<std::string>(cfg::groups::kMrpe, cfg::vars::kMrpeConfig);
 
     if (strings.empty()) {
@@ -301,8 +301,8 @@ void MrpeProvider::parseConfig() {
 }
 
 void MrpeProvider::loadTimeout() {
-    auto mrpe_timeout = cfg::GetVal(cfg::groups::kMrpe, cfg::vars::kTimeout,
-                                    cfg::defaults::kMrpeTimeout);
+    const auto mrpe_timeout = cfg::GetVal(
+        cfg::groups::kMrpe, cfg::vars::kTimeout, cfg::defaults::kMrpeTimeout);
     setTimeout(std::min(1U, mrpe_timeout));
 }
 
@@ -349,7 +349,7 @@ std::string ExecMrpeEntry(const MrpeEntry &entry,
     minibox.processResults([&result](const std::wstring &cmd_line, uint32_t pid,
                                      uint32_t error_code,
                                      const std::vector<char> &data_block) {
-        auto data = wtools::ConditionallyConvertFromUTF16(data_block);
+        auto data = wtools::ConditionallyConvertFromUtf16(data_block);
         tools::AllTrim(data);
 
         // mrpe output must be patched in a bit strange way

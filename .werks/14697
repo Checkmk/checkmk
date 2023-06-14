@@ -6,7 +6,7 @@ Date: 1665572100
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Filtering AWS Glacier by tags didn't work correctly. In case tags were
 configured for Glacier service in 'Amazon Web Services (AWS)' rule, no

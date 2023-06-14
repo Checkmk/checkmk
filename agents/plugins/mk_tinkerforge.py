@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.2.0i1"
+__version__ = "2.3.0b1"
 
 ###################################################
 # plugin to retrieve data from tinkerforge devices.
@@ -47,9 +47,10 @@ import os
 import sys
 import time
 from optparse import OptionParser  # pylint: disable=deprecated-module
+from urllib.request import urlopen
 
 try:
-    from typing import List
+    from typing import List  # noqa: F401 # pylint: disable=unused-import
 except ImportError:
     pass
 
@@ -69,9 +70,7 @@ def install():
 
     if sys.version_info[0] >= 3:
         from io import BytesIO
-        from urllib.request import urlopen  # pylint: disable=no-name-in-module
     else:
-        from urllib2 import urlopen
         from cStringIO import StringIO as BytesIO
     import shutil
     from zipfile import ZipFile
@@ -81,12 +80,11 @@ def install():
     #   `curl -s "https://download.tinkerforge.com/[new-version].zip | sha256sum`
     download_digest = "e735e0e53ad56e2c2919cf412f3ec28ec0997919eb556b20c27519a57fb7bad0"
 
-    response = urlopen(url)  # nosec B310 # BNS:28af27
+    response = urlopen(url)  # nosec B310 # BNS:28af27 # pylint: disable=consider-using-with
     buf = BytesIO(response.read())
     check_digest(buf, download_digest)
 
     with ZipFile(buf) as z:
-
         extract_files = [f for f in z.namelist() if f.startswith("source/tinkerforge")]
         z.extractall(dest, extract_files)
 
@@ -292,7 +290,6 @@ def read_config(env):
 
 
 def main():
-
     # host = "localhost"
     # port = 4223
     # segment_display_uid = "abc"         # uid of the sensor to display on the 7-segment display

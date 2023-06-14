@@ -1,0 +1,13 @@
+title: Nutanix Prism: Host IO
+agents: nutanix
+catalog: virtual/nutanix
+license: GPLv2
+distribution: check_mk
+description:
+ This check shows the actual IO usage for the Nutanix cluster.
+ The levels can be configured through the corresponding rule.
+
+ This check requires the special agent configurable through "Nutanix Prism".
+
+discovery:
+ One service is created.

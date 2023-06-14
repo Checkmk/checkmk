@@ -1,0 +1,18 @@
+Title: Reduce occurences of Missing data
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1682577170
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.3.0b1
+
+The Check_MK service often showed the message
+C+:
+[piggyback] Missing data WARN
+C-:
+before a piggyback host was deleted.  This lead to many false alarms in dynamic environments such as
+Kubernetes.  The root cause of this was that the <tt>delete-hosts</tt> automation would delete
+piggyback files, which where still in use.  With this Werk, the piggyback files are cleaned up by
+Check_MK's dedicated housekeeping job (see Werk 5538).

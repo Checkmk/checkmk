@@ -10,6 +10,7 @@
 #include <string_view>
 
 #include "common/wtools.h"
+#include "common/wtools_user_control.h"
 #include "test_tools.h"
 #include "tools/_process.h"
 #include "tools/_raii.h"
@@ -145,6 +146,19 @@ TEST_F(WtoolsKillProcFixture, KillProcsByDir) {
     EXPECT_EQ(KillProcessesByDir("k:"), -1);
 }
 
+TEST_F(WtoolsKillProcFixture, KillProcsByFullPath) {
+    ASSERT_EQ(RunProcesses(1), 1);  // additional process
+    auto test_dir = test_dir_.wstring();
+    cma::tools::WideUpper(test_dir);
+
+    KillProcessesByFullPath(test_exe_);
+    cma::tools::sleep(500ms);
+
+    auto [path, pid] = FindExpectedProcess();
+    EXPECT_TRUE(path.empty());
+    EXPECT_EQ(pid, 0);
+}
+
 class WtoolsKillProcessTreeFixture : public ::testing::Test {
 protected:
     void SetUp() override {
@@ -234,7 +248,7 @@ protected:
     }
 };
 
-TEST_F(WtoolsKillProcessTreeFixture, Integration) {
+TEST_F(WtoolsKillProcessTreeFixture, Component) {
     using namespace std::chrono_literals;
 
     // we start process tree
@@ -281,10 +295,10 @@ TEST(Wtools, ConditionallyConvertLowLevel) {
 TEST(Wtools, ConditionallyConvert) {
     std::vector<uint8_t> a;
 
-    auto ret = ConditionallyConvertFromUTF16(a);
+    auto ret = ConditionallyConvertFromUtf16(a);
     EXPECT_TRUE(ret.empty());
     a.push_back('a');
-    ret = ConditionallyConvertFromUTF16(a);
+    ret = ConditionallyConvertFromUtf16(a);
     EXPECT_EQ(1, ret.size());
     EXPECT_EQ(1, strlen(ret.c_str()));
 }
@@ -292,14 +306,14 @@ TEST(Wtools, ConditionallyConvert) {
 TEST(Wtools, ConditionallyConvertBom) {
     std::vector<uint8_t> a;
 
-    auto ret = ConditionallyConvertFromUTF16(a);
+    auto ret = ConditionallyConvertFromUtf16(a);
     EXPECT_TRUE(ret.empty());
     a.push_back('\xFF');
-    ret = ConditionallyConvertFromUTF16(a);
+    ret = ConditionallyConvertFromUtf16(a);
     EXPECT_EQ(1, ret.size());
 
     a.push_back('\xFE');
-    ret = ConditionallyConvertFromUTF16(a);
+    ret = ConditionallyConvertFromUtf16(a);
     EXPECT_EQ(0, ret.size());
 
     constexpr auto text = L"abcde";
@@ -307,7 +321,7 @@ TEST(Wtools, ConditionallyConvertBom) {
     for (int i = 0; i < 10; ++i) {
         a.push_back(data[i]);
     }
-    ret = ConditionallyConvertFromUTF16(a);
+    ret = ConditionallyConvertFromUtf16(a);
     EXPECT_EQ(5, ret.size());
     EXPECT_EQ(5, strlen(ret.c_str()));
 }
@@ -462,7 +476,7 @@ TEST(Wtools, AppRunnerRunAndSTop) {
 #endif
 
 TEST(Wtools, SimplePipeBase) {
-    SimplePipe pipe;
+    DirectPipe pipe;
     EXPECT_EQ(pipe.getRead(), nullptr);
     EXPECT_EQ(pipe.getWrite(), nullptr);
 
@@ -638,7 +652,7 @@ TEST(Wtools, ToCanonical) {
         L"c:\\windows\\TrustedInstaller.exe"));
 
     // Non existing environment variable must  not change
-    const auto no_variable{L"%temroot%\\servicing\\TrustedInstaller.exe"sv};
+    constexpr auto no_variable{L"%temroot%\\servicing\\TrustedInstaller.exe"sv};
     EXPECT_EQ(ToCanonical(no_variable), no_variable);
 
     // Border value
@@ -646,7 +660,7 @@ TEST(Wtools, ToCanonical) {
 }
 
 TEST(PlayerTest, Pipe) {
-    const auto p = std::make_unique<SimplePipe>();
+    const auto p = std::make_unique<DirectPipe>();
     EXPECT_EQ(p->getRead(), nullptr);
     EXPECT_EQ(p->getWrite(), nullptr);
     p->create();
@@ -711,8 +725,8 @@ TEST(Wtools, ExecuteCommandsAsync) {
     EXPECT_EQ(table[1], ToUtf8(commands[1]));
 
     tst::WaitForSuccessSilent(5000ms, [output_file] {
-        std::error_code ec;
-        return fs::exists(output_file, ec) && fs::file_size(output_file) >= 1;
+        std::error_code code;
+        return fs::exists(output_file, code) && fs::file_size(output_file) >= 1;
     });
     const auto output = tst::ReadFileAsTable(output_file);
     EXPECT_EQ(output[0], "x");
@@ -727,6 +741,25 @@ TEST(Wtools, GetServiceStatus) {
     EXPECT_EQ(GetServiceStatus(L"snmptrap"), SERVICE_STOPPED);
     EXPECT_EQ(GetServiceStatus(L"vds-bad-service"), 0U);
     EXPECT_EQ(GetServiceStatus(L"SamSS"), SERVICE_RUNNING);
+}
+
+TEST(Wtools, InternalUsersDbIntegration) {
+    const auto group_name = SidToName(L"S-1-5-32-545", SidTypeGroup);
+    auto iu = std::make_unique<InternalUsersDb>();
+    auto [name, pwd] = iu->obtainUser(group_name);
+    if (!name.empty()) {
+        EXPECT_EQ(name, L"cmk_TST_"s + group_name);
+        EXPECT_EQ(iu->size(), 1U);
+
+        auto [name_2, pwd_2] = iu->obtainUser(group_name);
+        EXPECT_TRUE(!name_2.empty());
+        EXPECT_EQ(name_2, L"cmk_TST_"s + group_name);
+        EXPECT_EQ(name, name_2);
+        EXPECT_EQ(iu->size(), 1U);
+        iu.reset();
+        const uc::LdapControl lc;
+        ASSERT_EQ(lc.userDel(name), uc::Status::absent);
+    }
 }
 
 }  // namespace wtools

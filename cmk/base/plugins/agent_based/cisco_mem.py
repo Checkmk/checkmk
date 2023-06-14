@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """F5-BIGIP Commons
@@ -39,6 +39,7 @@ from .agent_based_api.v1 import (
     SNMPTree,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+from .utils.cisco import DETECT_CISCO
 from .utils.cisco_mem import check_cisco_mem_sub
 
 Section = Dict[str, Sequence[str]]
@@ -84,7 +85,7 @@ def parse_cisco_mem(string_table: List[StringTable]) -> Optional[Section]:
 register.snmp_section(
     name="cisco_mem_legacy",
     parsed_section_name="cisco_mem",
-    detect=contains(OID_SysDesc, "cisco"),
+    detect=DETECT_CISCO,
     parse_function=parse_cisco_mem,
     fetch=[
         SNMPTree(

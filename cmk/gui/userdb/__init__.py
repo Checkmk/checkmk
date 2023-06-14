@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -41,6 +41,7 @@ from cmk.gui.log import logger as gui_logger
 from cmk.gui.logged_in import LoggedInUser
 from cmk.gui.plugins.userdb.utils import (
     active_connections,
+    ConnectorType,
     get_connection,
     get_user_attributes,
     new_user_template,
@@ -128,7 +129,10 @@ def _fix_user_connections() -> None:
 
 # When at least one LDAP connection is defined and active a sync is possible
 def sync_possible() -> bool:
-    return any(connection.type() == "ldap" for _connection_id, connection in active_connections())
+    return any(
+        connection.type() == ConnectorType.LDAP
+        for _connection_id, connection in active_connections()
+    )
 
 
 def locked_attributes(connection_id: str | None) -> Sequence[str]:
@@ -203,7 +207,7 @@ def is_customer_user_allowed_to_login(user_id: UserId) -> bool:
 # This function is called very often during regular page loads so it has to be efficient
 # even when having a lot of users.
 #
-# When using the multisite authentication with just by WATO created users it would be
+# When using the multisite authentication with just by Setup created users it would be
 # easy, but we also need to deal with users which are only existant in the htpasswd
 # file and don't have a profile directory yet.
 def user_exists(username: UserId) -> bool:
@@ -868,6 +872,7 @@ def cleanup_abandoned_profiles(logger: Logger, now: datetime, max_age: timedelta
 
 
 def _register_user_attributes() -> None:
+    user_attribute_registry.register(user_attributes.TemperatureUnitUserAttribute)
     user_attribute_registry.register(user_attributes.ForceAuthUserUserAttribute)
     user_attribute_registry.register(user_attributes.DisableNotificationsUserAttribute)
     user_attribute_registry.register(user_attributes.StartURLUserAttribute)

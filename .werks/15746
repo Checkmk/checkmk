@@ -1,0 +1,13 @@
+Title: 'mk_inventory' column can now be returned from 'host' endpoints
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1683786779
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Asking the REST API for the 'mk_inventory' column resulted in an empty response.
+This is no longer the case.
+

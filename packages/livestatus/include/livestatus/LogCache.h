@@ -1,4 +1,4 @@
-// Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -21,7 +21,7 @@
 
 class LogEntry;
 class Logger;
-class MonitoringCore;
+class ICore;
 
 // We keep this on top level to make forward declarations possible.
 class LogFiles {
@@ -54,18 +54,17 @@ public:
 // class, otherwise strange things can happen. Rarely, but nevertheless...
 class LogCache {
 public:
-    // TODO(sp) The constructor is not allowed to call any method of the
-    // MonitoringCore it gets, because there is a knot between the Store and the
-    // NagiosCore classes, so the MonitoringCore is not yet fully constructed.
-    // :-P
+    // TODO(sp) The constructor is not allowed to call any method of the ICore
+    // it gets, because there is a knot between the Store and the NebCore
+    // classes, so the ICore is not yet fully constructed. :-P
 
     // Used by Store::Store(), which owns the single instance of it in
     // Store::_log_cached. It passes this instance to TableLog::TableLog() and
     // TableStateHistory::TableStateHistory(). StateHistoryThread::run()
     // constructs its own instance.
-    explicit LogCache(MonitoringCore *mc);
+    explicit LogCache(ICore *mc);
 
-    // Used for a confusing fragile protocol betwwen LogCache and Logfile to
+    // Used for a confusing fragile protocol between LogCache and Logfile to
     // keep the number of cached log entries under control. Used by
     // Logfile::loadRange()
     void logLineHasBeenAdded(Logfile *logfile, unsigned logclasses);
@@ -99,7 +98,7 @@ public:
     size_t numCachedLogMessages();
 
 private:
-    MonitoringCore *const _mc;
+    ICore *const _mc;
     std::mutex _lock;
     size_t _num_cached_log_messages;
     size_t _num_at_last_check;

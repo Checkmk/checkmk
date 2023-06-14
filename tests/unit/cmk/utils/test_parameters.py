@@ -1,16 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
 
-from cmk.utils.parameters import (
-    boil_down_parameters,
-    TimespecificParameters,
-    TimespecificParameterSet,
-)
+from cmk.utils.parameters import boil_down_parameters
 from cmk.utils.type_defs import LegacyCheckParameters
+
+from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 
 
 def _default() -> LegacyCheckParameters:
@@ -23,7 +21,6 @@ def _tp_values() -> list[tuple[str, LegacyCheckParameters]]:
 
 class TestTimespecificParameterSet:
     def test_from_parameters_ts_dict(self) -> None:
-
         tsp = TimespecificParameterSet.from_parameters(
             {
                 "tp_default_value": _default(),

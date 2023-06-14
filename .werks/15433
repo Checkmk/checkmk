@@ -1,0 +1,17 @@
+Title: service_discovery: response for non-existing jobs now include detail
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1678095803
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk fixes an issue with the problem response in the service discovery GET
+endpoint.
+
+Previously, it would return a 404 with a title attribute only. It now conforms to
+our other endpoints and returns a problem response with status code, title and detail
+attribute.
+

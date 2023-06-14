@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Literal
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 import cmk.utils.version as cmk_version
 from cmk.utils.type_defs import UserId
@@ -140,6 +140,7 @@ TEST_DASHBOARD = DashboardConfig(
         "link_from": {},
         "add_context_to_title": True,
         "is_show_more": False,
+        "packaged": False,
     }
 )
 
@@ -181,7 +182,7 @@ def test_dashlet_refresh_intervals(
 
 @pytest.mark.usefixtures("request_context")
 def test_dashlet_type_defaults() -> None:
-    assert Dashlet.single_infos() == []
+    assert not Dashlet.single_infos()
     assert Dashlet.is_selectable() is True
     assert Dashlet.is_resizable() is True
     assert Dashlet.is_iframe_dashlet() is False
@@ -202,7 +203,7 @@ def test_dashlet_defaults(dummy_config: DummyDashletConfig) -> None:
     dashlet = DummyDashlet(
         dashboard_name="main", dashboard=TEST_DASHBOARD, dashlet_id=1, dashlet=dummy_config
     )
-    assert dashlet.infos() == []
+    assert not dashlet.infos()
     assert dashlet.dashlet_id == 1
     assert dashlet.dashlet_spec == {"type": "dummy"}
     assert dashlet.dashboard_name == "main"

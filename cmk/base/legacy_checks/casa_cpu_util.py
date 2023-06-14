@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
+from collections.abc import Iterable
+
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
+from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils.casa import DETECT_CASA
+
+
+def parse_casa_info_util(info):
+    entity_names = {int(k): v for k, v in (x for x in info[0])}
+    data = {}
+    for entry in info[1]:
+        entry_nr = int(entry[0])
+        name = entity_names[entry_nr]  # e.g. "Module 1 QEM".
+        # Drop "QEM" in order to be consistent with other DTCS checks...
+        if name.startswith("Module "):
+            name = name.rsplit(None, 1)[0]
+        data[name] = {
+            "cpu_util": entry[1],
+        }
+    return data
+
+
+def inventory_casa_cpu_util(string_table: StringTable) -> Iterable[tuple[str, dict]]:
+    for key, value in parse_casa_info_util(string_table).items():
+        if value.get("cpu_util"):
+            yield key, {}
+
+
+def check_casa_cpu_util(item, params, info):
+    data = parse_casa_info_util(info)
+    if (values := data.get(item)) is None:
+        return
+
+    value = int(values["cpu_util"])
+
+    yield check_levels(
+        value,
+        "util",
+        params.get("levels"),
+        human_readable_func=lambda x: f"{x}",
+        boundaries=(0, 100),
+    )
+
+
+check_info["casa_cpu_util"] = LegacyCheckDefinition(
+    detect=DETECT_CASA,
+    check_function=check_casa_cpu_util,
+    discovery_function=inventory_casa_cpu_util,
+    service_name="CPU utilization %s",
+    check_ruleset_name="cpu_utilization_multiitem",
+    fetch=[
+        SNMPTree(
+            base=".1.3.6.1.2.1.47.1.1.1.1",
+            oids=[OIDEnd(), "2"],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.20858.10.13.1.1.1",
+            oids=[OIDEnd(), "4"],
+        ),
+    ],
+)

@@ -6,7 +6,7 @@ Date: 1668679716
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 OpenSSL uses the openssldir option at compile-time for the default config paths.
 Since every site has its own configuration the openssldir cannot be set to the correct location.

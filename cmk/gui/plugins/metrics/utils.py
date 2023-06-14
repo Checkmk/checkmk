@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for main module internals and the plugins"""
@@ -12,14 +12,13 @@ from collections import OrderedDict
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from functools import lru_cache
 from itertools import chain
-from typing import Any, overload, TypedDict, TypeVar, Union
+from typing import Any, Final, Literal, NotRequired, overload, TypedDict, TypeVar, Union
 
 from livestatus import SiteId
 
 import cmk.utils.regex
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.memoize import MemoizeCache
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.prediction import livestatus_lql, TimeSeries, TimeSeriesValue
 from cmk.utils.type_defs import HostName
@@ -30,6 +29,7 @@ from cmk.utils.version import parse_check_mk_version
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
+from cmk.gui.exceptions import http, MKHTTPException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -37,16 +37,28 @@ from cmk.gui.plugins.visuals.utils import livestatus_query_bare
 from cmk.gui.type_defs import (
     Choice,
     Choices,
+    CombinedGraphIdentifier,
+    CustomGraphIdentifier,
+    ExplicitGraphIdentifier,
+    ForecastGraphIdentifier,
     GraphConsoldiationFunction,
+    GraphMetric,
     GraphPresentation,
+    HorizontalRule,
     LineType,
     MetricDefinition,
     MetricExpression,
+)
+from cmk.gui.type_defs import MetricName as MetricNameType
+from cmk.gui.type_defs import (
     Perfdata,
     PerfometerSpec,
     RenderableRecipe,
     RGBColor,
     Row,
+    RPNExpression,
+    SingleTimeseriesGraphIdentifier,
+    TemplateGraphIdentifier,
     TranslatedMetric,
     TranslatedMetrics,
     UnitInfo,
@@ -55,15 +67,15 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
-from cmk.gui.valuespec import DropdownChoiceWithHostAndServiceHints
+from cmk.gui.valuespec import DropdownChoiceWithHostAndServiceHints, ValueSpecText
 
 LegacyPerfometer = tuple[str, Any]
-Atom = TypeVar("Atom")
-TransformedAtom = TypeVar("TransformedAtom")
-StackElement = Union[Atom, TransformedAtom]
 
 ScalarDefinition = Union[str, tuple[str, str | LazyString]]
-HorizontalRule = tuple[float, str, str, str | LazyString]
+
+
+class MKCombinedGraphLimitExceededError(MKHTTPException):
+    status = http.HTTPStatus.BAD_REQUEST
 
 
 class _CurveMandatory(TypedDict):
@@ -119,25 +131,10 @@ class GraphTemplate(_GraphTemplateMandatory, total=False):
     consolidation_function: GraphConsoldiationFunction
     range: GraphRangeSpec
     omit_zero_metrics: bool
-    convert_unit_to: str
 
 
-GraphRecipe = dict[str, Any]
-
-
-class _GraphMetricMandatory(TypedDict):
-    title: str
-    line_type: LineType
-    expression: StackElement
-
-
-class GraphMetric(_GraphMetricMandatory, total=False):
-    unit: str
-    color: str
-
-
-RRDDataKey = tuple[SiteId, HostName, ServiceName, str, GraphConsoldiationFunction | None, float]
-RRDData = dict[RRDDataKey, TimeSeries]
+class CombinedMetric(GraphMetric):
+    original_metrics: NotRequired[Sequence["GraphMetric"]]
 
 
 class CombinedGraphMetricSpec(TypedDict):
@@ -145,8 +142,69 @@ class CombinedGraphMetricSpec(TypedDict):
     color: str
     title: str
     line_type: LineType
-    expression: StackElement
+    expression: RPNExpression
     metric_definition: MetricDefinition
+
+
+class GraphRecipeIncomplete(TypedDict):
+    title: str
+    unit: str
+    explicit_vertical_range: GraphRange
+    horizontal_rules: Sequence[HorizontalRule]
+    omit_zero_metrics: bool
+    consolidation_function: GraphConsoldiationFunction | None
+
+
+class GraphRecipeBase(GraphRecipeIncomplete):
+    metrics: Sequence[GraphMetric]
+
+
+class TemplateGraphRecipe(GraphRecipeBase):
+    specification: TemplateGraphIdentifier
+
+
+class ExplicitGraphRecipe(GraphRecipeBase):
+    specification: ExplicitGraphIdentifier
+    context: VisualContext
+    add_context_to_title: bool
+
+
+class SingleTimeseriesGraphRecipe(GraphRecipeBase):
+    specification: SingleTimeseriesGraphIdentifier
+
+
+class CombinedGraphRecipe(GraphRecipeIncomplete):
+    metrics: Sequence[CombinedGraphMetricSpec]
+    specification: CombinedGraphIdentifier
+
+
+class ForecastGraphRecipeBase(GraphRecipeBase):
+    is_forecast: Literal[True]
+    model_params: dict[str, Any]
+
+
+class ForecastGraphRecipe(ForecastGraphRecipeBase):
+    specification: ForecastGraphIdentifier
+    model_params_repr: ValueSpecText
+    metric_id: NotRequired[tuple[HostName, ServiceName, _MetricName, str]]
+
+
+class CustomGraphRecipe(GraphRecipeBase):
+    specification: CustomGraphIdentifier
+
+
+GraphRecipe = (
+    TemplateGraphRecipe
+    | ExplicitGraphRecipe
+    | SingleTimeseriesGraphRecipe
+    | CombinedGraphRecipe
+    | ForecastGraphRecipe
+    | CustomGraphRecipe
+)
+
+
+RRDDataKey = tuple[SiteId, HostName, ServiceName, str, GraphConsoldiationFunction | None, float]
+RRDData = dict[RRDDataKey, TimeSeries]
 
 
 class MetricUnitColor(TypedDict):
@@ -156,7 +214,7 @@ class MetricUnitColor(TypedDict):
 
 class CheckMetricEntry(TypedDict, total=False):
     scale: float
-    name: str
+    name: MetricNameType
     auto_graph: bool
     deprecated: str
 
@@ -209,10 +267,32 @@ class AutomaticDict(OrderedDict[str, GraphTemplate]):
         self._item_index += 1
 
 
+class UnitRegistry:
+    def __init__(self) -> None:
+        self.units: Final[dict[str, UnitInfo | Callable[[], UnitInfo]]] = {}
+
+    def __getitem__(self, unit_id: str) -> UnitInfo:
+        item = unit() if callable(unit := self.units[unit_id]) else unit
+        item["id"] = unit_id
+        item.setdefault("description", item["title"])
+        return item
+
+    def __setitem__(self, unit_id: str, unit: UnitInfo | Callable[[], UnitInfo]) -> None:
+        self.units[unit_id] = unit
+
+    def keys(self) -> Iterator[str]:
+        yield from self.units
+
+    def items(self) -> Iterator[tuple[str, UnitInfo]]:
+        yield from ((key, self[key]) for key in self.keys())
+
+
 # TODO: Refactor to plugin_registry structures
-unit_info: dict[str, UnitInfo] = {}
+# Note: we cannot simply use dict[str, Callable[[], UnitInfo]] and refactor all unit registrations
+# in our codebase because we need to stay compatible with custom extensions
+unit_info = UnitRegistry()
 metric_info: dict[_MetricName, MetricInfo] = {}
-check_metrics: dict[str, dict[str, CheckMetricEntry]] = {}
+check_metrics: dict[str, dict[MetricNameType, CheckMetricEntry]] = {}
 perfometer_info: list[LegacyPerfometer | PerfometerSpec] = []
 # _AutomaticDict is used here to provide some list methods.
 # This is needed to maintain backwards-compatibility.
@@ -300,6 +380,11 @@ _COLOR_WHEEL_SIZE = 48
 
 
 def indexed_color(idx: int, total: int) -> str:
+    if total < 1:
+        raise MKGeneralException(f"{total=} must be larger than zero")
+    if not 0 <= idx <= total:
+        raise MKGeneralException(f"{idx=} must be in the range 0 <= idx <= {total=}.")
+
     if idx < _COLOR_WHEEL_SIZE:
         # use colors from the color wheel if possible
         base_col = (idx % 4) + 1
@@ -309,16 +394,29 @@ def indexed_color(idx: int, total: int) -> str:
 
     # generate distinct rgb values. these may be ugly ; also, they
     # may overlap with the colors from the wheel
-    idx = idx - _COLOR_WHEEL_SIZE
-    base_color = idx % 7  # red, green, blue, red+green, red+blue,
-    # green+blue, red+green+blue
-    delta = int(255.0 / ((total - _COLOR_WHEEL_SIZE) / 7))
-    offset = int(255 - (delta * ((idx / 7.0) + 1)))
+    idx_shifted = idx - _COLOR_WHEEL_SIZE
+    total_shifted = total - _COLOR_WHEEL_SIZE
 
-    red = int(base_color in [0, 3, 4, 6])
-    green = int(base_color in [1, 3, 5, 6])
-    blue = int(base_color in [2, 4, 5, 6])
-    return rgb_color_to_hex_color(red * offset, green * offset, blue * offset)
+    # 7 possible rgb combinations: # red, green, blue, red+green, red+blue, green+blue, red+green+blue
+    rgb_combination = idx_shifted % 7
+    red = int(rgb_combination in [0, 3, 4, 6])
+    green = int(rgb_combination in [1, 3, 5, 6])
+    blue = int(rgb_combination in [2, 4, 5, 6])
+
+    # avoid too dark and too light greys
+    if red and green and blue:
+        rgb_value_min = 100
+        rgb_value_max = 200
+    # avoid too dark colors (cannot be distinguished)
+    else:
+        rgb_value_min = 60
+        rgb_value_max = 230
+
+    rgb_value = rgb_value_min + int(
+        (rgb_value_max - rgb_value_min) * (1 - idx_shifted / total_shifted)
+    )
+
+    return rgb_color_to_hex_color(red * rgb_value, green * rgb_value, blue * rgb_value)
 
 
 def parse_perf_values(
@@ -436,17 +534,10 @@ def _split_perf_data(perf_data_string: str) -> list[str]:
 
 def perfvar_translation(perfvar_name: str, check_command: str) -> TranslationInfo:
     """Get translation info for one performance var."""
-    cm = check_metrics.get(check_command, {})
-    translation_entry = cm.get(perfvar_name, {})  # Default: no translation necessary
-
-    if not translation_entry:
-        for orig_varname, te in cm.items():
-            if orig_varname[0] == "~" and cmk.utils.regex.regex(orig_varname[1:]).match(
-                perfvar_name
-            ):  # Regex entry
-                translation_entry = te
-                break
-
+    translation_entry = find_matching_translation(
+        MetricNameType(perfvar_name),
+        check_metrics.get(check_command, {}),
+    )
     return {
         "name": translation_entry.get("name", perfvar_name),
         "scale": translation_entry.get("scale", 1.0),
@@ -454,7 +545,21 @@ def perfvar_translation(perfvar_name: str, check_command: str) -> TranslationInf
     }
 
 
-def scalar_bounds(perfvar_bounds, scale) -> dict[str, float]:  # type:ignore[no-untyped-def]
+def find_matching_translation(
+    metric_name: MetricNameType,
+    translations: Mapping[MetricNameType, CheckMetricEntry],
+) -> CheckMetricEntry:
+    if translation := translations.get(metric_name):
+        return translation
+    for orig_metric_name, translation in translations.items():
+        if orig_metric_name.startswith("~") and cmk.utils.regex.regex(orig_metric_name[1:]).match(
+            metric_name
+        ):  # Regex entry
+            return translation
+    return {}
+
+
+def scalar_bounds(perfvar_bounds, scale) -> dict[str, float]:  # type: ignore[no-untyped-def]
     """rescale "warn, crit, min, max" PERFVAR_BOUNDS values
 
     Return "None" entries if no performance data and hence no scalars are available
@@ -467,7 +572,7 @@ def scalar_bounds(perfvar_bounds, scale) -> dict[str, float]:  # type:ignore[no-
     return scalars
 
 
-def normalize_perf_data(  # type:ignore[no-untyped-def]
+def normalize_perf_data(  # type: ignore[no-untyped-def]
     perf_data, check_command
 ) -> tuple[str, NormalizedPerfData]:
     translation_entry = perfvar_translation(perf_data[0], check_command)
@@ -485,7 +590,6 @@ def normalize_perf_data(  # type:ignore[no-untyped-def]
 
 
 def get_metric_info(metric_name: str, color_index: int) -> tuple[MetricInfoExtended, int]:
-
     if metric_name in metric_info:
         mi = metric_info[metric_name]
     else:
@@ -524,12 +628,14 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> TranslatedMetr
 
         metric_name, normalized = normalize_perf_data(entry, check_command)
         mi, color_index = get_metric_info(metric_name, color_index)
+        unit_conversion = mi["unit"].get("conversion", lambda v: v)
+
         # https://github.com/python/mypy/issues/6462
         # new_entry = normalized
         new_entry: TranslatedMetric = {
             "orig_name": normalized["orig_name"],
-            "value": normalized["value"],
-            "scalar": normalized["scalar"],
+            "value": unit_conversion(normalized["value"]),
+            "scalar": {k: unit_conversion(v) for k, v in normalized["scalar"].items()},
             "scale": normalized["scale"],
             "auto_graph": normalized["auto_graph"],
             "title": str(mi["title"]),
@@ -596,61 +702,6 @@ def translated_metrics_from_row(row: Row) -> TranslatedMetrics:
     rrd_metrics = row[what + "_metrics"]
     check_command = row[what + "_check_command"]
     return available_metrics_translated(perf_data_string, rrd_metrics, check_command)
-
-
-class UnitConversionError(MKGeneralException):
-    pass
-
-
-class UnitConverter:
-    @staticmethod
-    @lru_cache
-    def get_all_target_units(from_unit: str | None = None) -> set[str]:
-        """
-        Return all units that are available as a target of a conversion
-
-        If `from_unit` is None, it returns all the possible targets for all source units.
-        If `from_unit` is a unit, it returns all possible targets for the specified source unit.
-        """
-        if from_unit is None:
-            return {
-                conversion
-                for unit_data in unit_info.values()
-                for conversion in unit_data.get("conversions", {})
-            }
-        return set(unit_info[from_unit].get("conversions", {}))
-
-    def __init__(self, from_unit: str, to_unit: str) -> None:
-        self.from_unit = from_unit
-        self.to_unit = to_unit
-
-    def is_conversion_available(self) -> bool:
-        if self.from_unit not in unit_info:
-            return False
-        return self.to_unit in UnitConverter.get_all_target_units(self.from_unit)
-
-    def convert_iterable(
-        self, values: Iterable[float | int | None]
-    ) -> Iterable[float | int | None]:
-        """
-        Convert all `values` from `self.from_unit` to `self.to_unit`.
-
-        All `None` values are kept as they are.
-        """
-        conversion_fn = self._get_conversion_fn()
-        return ((e if e is None else conversion_fn(e)) for e in values)
-
-    def convert(self, value: float | int) -> float | int:
-        """Convert a `value` from `self.from_unit` to `self.to_unit`."""
-        conversion_fn = self._get_conversion_fn()
-        return conversion_fn(value)
-
-    def _get_conversion_fn(self) -> Callable[[float | int], float | int]:
-        if not self.is_conversion_available():
-            raise UnitConversionError(
-                f"Cannot find conversion from unit '{self.from_unit}' to unit '{self.to_unit}'"
-            )
-        return unit_info[self.from_unit]["conversions"][self.to_unit]
 
 
 # .
@@ -738,13 +789,17 @@ def _evaluate_rpn(
     )
 
 
+_TAtom = TypeVar("_TAtom")
+_TStackElement = TypeVar("_TStackElement")
+
+
 def stack_resolver(
-    elements: list[Atom],
-    is_operator: Callable[[Atom], bool],
-    apply_operator: Callable[[Atom, StackElement, StackElement], StackElement],
-    apply_element: Callable[[Atom], StackElement],
-) -> StackElement:
-    stack: list[StackElement] = []
+    elements: Sequence[_TAtom],
+    is_operator: Callable[[_TAtom], bool],
+    apply_operator: Callable[[_TAtom, _TStackElement, _TStackElement], _TStackElement],
+    apply_element: Callable[[_TAtom], _TStackElement],
+) -> _TStackElement:
+    stack: list[_TStackElement] = []
     for element in elements:
         if is_operator(element):
             if len(stack) < 2:
@@ -924,7 +979,7 @@ def get_graph_range(
 def replace_expressions(text: str, translated_metrics: TranslatedMetrics) -> str:
     """Replace expressions in strings like CPU Load - %(load1:max@count) CPU Cores"""
 
-    def eval_to_string(match) -> str:  # type:ignore[no-untyped-def]
+    def eval_to_string(match) -> str:  # type: ignore[no-untyped-def]
         expression = match.group()[2:-1]
         value, unit, _color = evaluate(expression, translated_metrics)
         if value is not None:
@@ -1079,7 +1134,7 @@ def metric_title(metric_name: _MetricName) -> str:
 
 
 def metric_recipe_and_unit(
-    host_name: HostName,
+    host_name: HostName | str,
     service_description: ServiceName,
     metric_name: _MetricName,
     consolidation_function: str,
@@ -1236,7 +1291,7 @@ scalar_colors = {
 }
 
 
-def get_palette_color_by_index(i: int, shading="a") -> str:  # type:ignore[no-untyped-def]
+def get_palette_color_by_index(i: int, shading="a") -> str:  # type: ignore[no-untyped-def]
     color_key = sorted(_cmk_color_palette.keys())[i % len(_cmk_color_palette)]
     return f"{color_key}/{shading}"
 
@@ -1369,28 +1424,46 @@ def render_color_icon(color: str) -> HTML:
     )
 
 
-@MemoizeCache
-def reverse_translate_metric_name(canonical_name: str) -> list[tuple[str, float]]:
-    "Return all known perf data names that are translated into canonical_name with corresponding scaling"
-    current_version = parse_check_mk_version(cmk_version.__version__)
-    possible_translations = []
+def reverse_translate_into_all_potentially_relevant_metrics(
+    canonical_name: MetricNameType,
+    current_version: int,
+    all_translations: Iterable[Mapping[MetricNameType, CheckMetricEntry]],
+) -> set[MetricNameType]:
+    return {
+        canonical_name,
+        *(
+            metric_name
+            for trans in all_translations
+            for metric_name, options in trans.items()
+            if canonical_name == options.get("name")
+            and (
+                # From version check used unified metric, and thus deprecates old translation
+                # added a complete stable release, that gives the customer about a year of data
+                # under the appropriate metric name.
+                # We should however get all metrics unified before Cmk 2.1
+                parse_check_mk_version(deprecated) + 10000000
+                if (deprecated := options.get("deprecated"))
+                else current_version
+            )
+            >= current_version
+            # Note: Reverse translations only work for 1-to-1-mappings, entries such as
+            # "~.*rta": {"name": "rta", "scale": m},
+            # cannot be reverse-translated, since multiple metric names are apparently mapped to a
+            # single new name. This is a design flaw we currently have to live with.
+            and not metric_name.startswith("~")
+        ),
+    }
 
-    for trans in check_metrics.values():
-        for metric, options in trans.items():
-            if options.get("name", "") == canonical_name:
-                if "deprecated" in options:
-                    # From version check used unified metric, and thus deprecates old translation
-                    # added a complete stable release, that gives the customer about a year of data
-                    # under the appropriate metric name.
-                    # We should however get all metrics unified before Cmk 2.1
-                    migration_end = parse_check_mk_version(options["deprecated"]) + 10000000
-                else:
-                    migration_end = current_version
 
-                if migration_end >= current_version:
-                    possible_translations.append((metric, options.get("scale", 1.0)))
-
-    return [(canonical_name, 1.0)] + sorted(set(possible_translations))
+@lru_cache
+def reverse_translate_into_all_potentially_relevant_metrics_cached(
+    canonical_name: MetricNameType,
+) -> set[MetricNameType]:
+    return reverse_translate_into_all_potentially_relevant_metrics(
+        canonical_name,
+        parse_check_mk_version(cmk_version.__version__),
+        check_metrics.values(),
+    )
 
 
 def metric_choices(check_command: str, perfvars: tuple[_MetricName, ...]) -> Iterator[Choice]:
@@ -1461,6 +1534,12 @@ class MetricName(DropdownChoiceWithHostAndServiceHints):
             **kwargs,
         }
         super().__init__(**kwargs_with_defaults)
+
+    def _validate_value(self, value: str | None, varprefix: str) -> None:
+        if value == "":
+            raise MKUserError(varprefix, self._regex_error)
+        # dropdown allows empty values by default
+        super()._validate_value(value, varprefix)
 
     def _choices_from_value(self, value: str | None) -> Choices:
         if value is None:

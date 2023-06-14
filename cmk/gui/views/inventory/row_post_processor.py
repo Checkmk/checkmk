@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
-from typing import Iterator, NamedTuple
+from collections.abc import Iterator, Mapping, Sequence
+from typing import NamedTuple
 
-from cmk.utils.structured_data import SDPath, SDRow, StructuredDataNode
+from cmk.utils.structured_data import ImmutableTree, SDKey, SDPath, SDValue
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -17,12 +17,12 @@ from cmk.gui.inventory import (
     load_filtered_and_merged_tree,
     LoadStructuredDataError,
 )
+from cmk.gui.painter.v0.base import Cell, JoinCell
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import Row, Rows, ViewSpec
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.view import View
 
-from ..painter.v0.base import Cell, JoinCell
 from ..sorter import SorterEntry
 
 
@@ -33,7 +33,12 @@ def inventory_row_post_processor(
     # inventory, then we load it and attach it as column "host_inventory"
     if _is_inventory_data_needed(view, all_active_filters):
         _add_inventory_data(rows)
-        _join_inventory_rows(view, rows)
+        _join_inventory_rows(
+            view_macros=_get_view_macros(view.spec),
+            view_join_cells=view.join_cells,
+            view_datasource_ident=view.datasource.ident,
+            rows=rows,
+        )
 
 
 def _is_inventory_data_needed(view: View, all_active_filters: Sequence[Filter]) -> bool:
@@ -64,7 +69,7 @@ def _is_inventory_data_needed(view: View, all_active_filters: Sequence[Filter]) 
     return False
 
 
-def _get_view_macros(view_spec: ViewSpec) -> list[tuple[str, str]] | None:
+def _get_view_macros(view_spec: ViewSpec) -> Sequence[tuple[str, str]] | None:
     return view_spec.get("inventory_join_macros", {}).get("macros")
 
 
@@ -75,12 +80,14 @@ def _add_inventory_data(rows: Rows) -> None:
             continue
 
         try:
-            row["host_inventory"] = load_filtered_and_merged_tree(row)
+            row["host_inventory"] = (
+                ImmutableTree() if (tree := load_filtered_and_merged_tree(row)) is None else tree
+            )
         except LoadStructuredDataError:
             # The inventory row may be joined with other rows (perf-o-meter, ...).
             # Therefore we initialize the corrupt inventory tree with an empty tree
             # in order to display all other rows.
-            row["host_inventory"] = StructuredDataNode()
+            row["host_inventory"] = ImmutableTree()
             corrupted_inventory_files.append(str(get_short_inventory_filepath(row["host_name"])))
 
             if corrupted_inventory_files:
@@ -95,14 +102,20 @@ def _add_inventory_data(rows: Rows) -> None:
                 )
 
 
-def _join_inventory_rows(view: View, rows: Rows) -> None:
-    if (view_macros := _get_view_macros(view.spec)) is None:
+def _join_inventory_rows(
+    *,
+    view_macros: Sequence[tuple[str, str]] | None,
+    view_join_cells: Sequence[JoinCell],
+    view_datasource_ident: str,
+    rows: Rows,
+) -> None:
+    if not view_macros:
         return
 
     # First we extract the table rows for all known join inv painters.
     # With this the extraction of the relevant nodes (and their table rows)
     # is done once per path.
-    if not (table_rows_by_master_key := _extract_table_rows(view.join_cells, rows)):
+    if not (table_rows_by_master_key := _extract_table_rows(view_join_cells, rows)):
         return
 
     # Then we evaluate these rows and try to find matching row entries.
@@ -110,20 +123,24 @@ def _join_inventory_rows(view: View, rows: Rows) -> None:
         row_values_by_macro = {
             macro: row_value
             for column_name, macro in view_macros
-            if (row_value := row.get(f"{view.datasource.ident}_{column_name}")) is not None
+            if (row_value := row.get(f"{view_datasource_ident}_{column_name}")) is not None
         }
 
-        if join_inv_row := {
-            found_table_row.ident: {found_table_row.ident: found_table_row.column_value}
-            for found_table_row in table_rows_by_master_key[_MasterKey.make(row)]
-            if found_table_row.matches(row_values_by_macro)
-        }:
-            row.setdefault("JOIN", {}).update(join_inv_row)
+        found_values_by_ident: dict[str, list[str | int | float]] = {}
+        for found_table_row in table_rows_by_master_key[_MasterKey.make(row)]:
+            if found_table_row.matches(row_values_by_macro):
+                found_values_by_ident.setdefault(found_table_row.ident, []).append(
+                    found_table_row.column_value
+                )
+
+        for ident, values in found_values_by_ident.items():
+            if len(values) == 1:
+                row.setdefault("JOIN", {}).update({ident: {ident: values[0]}})
 
 
 def _extract_table_rows(
-    join_cells: list[JoinCell], rows: Rows
-) -> dict[_MasterKey, list[_FoundTableRow]]:
+    join_cells: Sequence[JoinCell], rows: Rows
+) -> Mapping[_MasterKey, Sequence[_FoundTableRow]]:
     painter_macros_by_path_and_ident: dict[tuple[SDPath, str], list[tuple[str, str]]] = {}
     for join_cell in join_cells:
         if (
@@ -144,12 +161,10 @@ def _extract_table_rows(
             continue
 
         for (path, ident), painter_macros in painter_macros_by_path_and_ident.items():
-            if not (node := row["host_inventory"].get_node(path)):
-                continue
-
-            table_rows_by_master_key.setdefault(master_key, []).extend(
-                list(_find_table_rows(ident, painter_macros, node.table.rows))
-            )
+            if tree := row["host_inventory"].get_tree(path):
+                table_rows_by_master_key.setdefault(master_key, []).extend(
+                    list(_find_table_rows(ident, painter_macros, tree.tree.table.rows))
+                )
 
     return table_rows_by_master_key
 
@@ -166,20 +181,22 @@ class _MasterKey(NamedTuple):
 class _FoundTableRow(NamedTuple):
     ident: str
     column_value: str | int | float
-    macros: dict[str, str | int | float]
+    macros: Mapping[str, str | int | float]
 
-    def matches(self, row_values_by_macro: dict[str, str | int | float]) -> bool:
-        return all(
+    def matches(self, row_values_by_macro: Mapping[str, str | int | float]) -> bool:
+        return any(
             self.macros.get(macro) == row_value for macro, row_value in row_values_by_macro.items()
         )
 
 
 def _find_table_rows(
     ident: str,
-    painter_macros: list[tuple[str, str]],
-    table_rows: list[SDRow],
+    painter_macros: Sequence[tuple[str, str]],
+    table_rows: Sequence[Mapping[SDKey, SDValue]],
 ) -> Iterator[_FoundTableRow]:
-    def _find_column_value_of_ident(ident: str, table_row: SDRow) -> str | int | float | None:
+    def _find_column_value_of_ident(
+        ident: str, table_row: Mapping[SDKey, SDValue]
+    ) -> str | int | float | None:
         for key, value in table_row.items():
             if ident.endswith(key):
                 return value

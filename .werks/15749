@@ -1,0 +1,14 @@
+Title: apache_status: Add "httpd-worker" to the list of processes to detect
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1683790679
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Agent plugin apache_status detects apache processes based on their name.
+Process named "httpd-worker" wasn't detected until now which lead to
+process not being discovered on SLES12 and SLES15.
+

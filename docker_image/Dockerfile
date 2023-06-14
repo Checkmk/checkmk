@@ -4,11 +4,9 @@ FROM ${IMAGE_CMK_BASE}
 LABEL maintainer="feedback@checkmk.com"
 
 # Pure build time variable declarations (docker build --build-arg KEY=val)
-ARG CMK_VERSION="2.2.0i1"
+ARG CMK_VERSION="2.3.0b1"
 # Choose one of: raw, enterprise, managed
 ARG CMK_EDITION="raw"
-
-ARG CMK_DL_URL="https://download.checkmk.com/checkmk"
 
 # The following variables can be set during container init (docker run -e KEY=val)
 ARG CMK_SITE_ID
@@ -29,11 +27,6 @@ ARG DISTRO_CODENAME="jammy"
 # Add helper variable to better detect when running inside container.
 # Used e.g. for omd update
 ENV CMK_CONTAINERIZED="TRUE"
-
-# The credentials for the download are provided by a sidecar container. For
-# local builds it is convenient to change this (e.g. to the docker host and
-# running `python -m http.simple`)
-ARG CREDENTIALS_URL="http://127.0.0.1:8000/secret"
 
 # Make the list of required packages available to the following command
 COPY needed-packages /needed-packages
@@ -84,11 +77,8 @@ RUN set -e \
     && PKG_NAME="check-mk-${CMK_EDITION}-${CMK_VERSION}" \
     && PKG_FILE="${PKG_NAME}_0.${DISTRO_CODENAME}_$(dpkg --print-architecture).deb" \
     && if [ ! -e "/${PKG_FILE}" ]; then \
-        echo "Receive download credentials from ${CREDENTIALS_URL}..." && \
-        CMK_DL_CREDENTIALS=$(curl -fsS "${CREDENTIALS_URL}") && \
-        echo "Downloading ${PKG_FILE}..." && \
-        echo "--user \"${CMK_DL_CREDENTIALS}\"" \
-            | curl -f -o "${PKG_FILE}" -K - "${CMK_DL_URL}/${CMK_VERSION}/${PKG_FILE}" ; \
+        echo "ERROR: Please provide ${PKG_FILE} by downloading it from https://download.checkmk.com/checkmk" \
+        && return 1 ; \
        fi \
     && gpg -q --import "/Check_MK-pubkey.gpg" \
     && gpg --verify "${PKG_FILE}" \
@@ -103,8 +93,8 @@ LABEL \
     org.opencontainers.image.title="Checkmk" \
     org.opencontainers.image.version="${CMK_VERSION}" \
     org.opencontainers.image.description="Checkmk is a leading tool for Infrastructure & Application Monitoring" \
-    org.opencontainers.image.vendor="tribe29 GmbH" \
-    org.opencontainers.image.source="https://github.com/tribe29/checkmk" \
+    org.opencontainers.image.vendor="Checkmk GmbH" \
+    org.opencontainers.image.source="https://github.com/checkmk/checkmk" \
     org.opencontainers.image.url="https://checkmk.com/"
 
 # Ports:

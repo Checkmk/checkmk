@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module contains the "Endpoint Registry".
@@ -118,7 +118,7 @@ class EndpointRegistry:
         entry["href"] = fill_out_path_template(entry["href"], examples)
         return entry
 
-    def add_endpoint(  # type:ignore[no-untyped-def]
+    def add_endpoint(  # type: ignore[no-untyped-def]
         self,
         endpoint,  # not typed due to cyclical imports. need to refactor modules first.
         parameters: Sequence[OpenAPIParameter],
@@ -167,7 +167,7 @@ class EndpointRegistry:
             "parameters": parameters,
         }
 
-    def remove_endpoint(  # type:ignore[no-untyped-def]
+    def remove_endpoint(  # type: ignore[no-untyped-def]
         self,
         endpoint,  # not typed due to cyclical imports. need to refactor modules first.
     ) -> None:
@@ -226,10 +226,11 @@ def _make_url(
         ...
         ValueError: Parameter 'host' (required path-parameter), not found in path '/foo'
 
-        >>> import pytest
         >>> # This exceptions gets thrown by another function, so we don't care about the wording.
-        >>> with pytest.raises(ValueError):
-        ...     _make_url('/foo/{host}', [], {'host': 'example.com'})
+        >>> _make_url('/foo/{host}', [], {'host': 'example.com'})  # doctest: +ELLIPSIS
+        Traceback (most recent call last):
+        ...
+        ValueError: ...
 
     Args:
         path:

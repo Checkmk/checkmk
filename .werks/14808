@@ -6,7 +6,7 @@ Date: 1664978743
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 
 The mk_filestats check plugin would crash with a TypeError when scanning files that are short lived.

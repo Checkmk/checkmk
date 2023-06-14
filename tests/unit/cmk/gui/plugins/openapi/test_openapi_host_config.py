@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import contextlib
 import json
-from collections.abc import Sequence
-from typing import Iterator
+from collections.abc import Iterator, Sequence
+from typing import Tuple
 from unittest.mock import MagicMock
 
 import pytest
+from freezegun import freeze_time
 from pytest_mock import MockerFixture
 
-from tests.testlib.rest_api_client import RestApiClient
+from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
@@ -23,13 +24,13 @@ import cmk.gui.watolib.bakery as bakery
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.type_defs import CustomAttr
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file
-from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, Folder, Host
+from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, folder_tree, Host
 
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
 
-def test_openapi_missing_host(api_client: RestApiClient) -> None:
-    resp = api_client.get_host("foobar", expect_ok=False)
+def test_openapi_missing_host(clients: ClientRegistry) -> None:
+    resp = clients.HostConfig.get("foobar", expect_ok=False)
     resp.assert_status_code(404)
     assert resp.json == {
         "detail": "These fields have problems: host_name",
@@ -40,28 +41,28 @@ def test_openapi_missing_host(api_client: RestApiClient) -> None:
 
 
 @pytest.mark.usefixtures("with_host")
-def test_openapi_cluster_host(api_client: RestApiClient) -> None:
-    api_client.create_host(host_name="foobar")
-    api_client.create_cluster(host_name="bazfoo", nodes=["foobar"])
-    api_client.create_host(
+def test_openapi_cluster_host(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(host_name="foobar")
+    clients.HostConfig.create_cluster(host_name="bazfoo", nodes=["foobar"])
+    clients.HostConfig.create(
         host_name="foobaz", attributes={"ipv6address": "xxx.myfritz.net"}
     ).assert_status_code(200)
 
-    api_client.get_host("bazfoozle", expect_ok=False).assert_status_code(404)
-    api_client.get_host("bazfoo")
+    clients.HostConfig.get("bazfoozle", expect_ok=False).assert_status_code(404)
+    clients.HostConfig.get("bazfoo")
 
-    api_client.edit_host_property(
+    clients.HostConfig.edit_property(
         "bazfoo", "nodes", {"nodes": ["not_existing"]}, expect_ok=False
     ).assert_status_code(400)
-    api_client.edit_host_property(
+    clients.HostConfig.edit_property(
         "bazfoo", "nodes", {"nodes": ["example.com", "bazfoo"]}, expect_ok=False
     ).assert_status_code(400)
 
-    api_client.edit_host_property("bazfoo", "nodes", {"nodes": ["example.com"]}).assert_status_code(
-        200
-    )
+    clients.HostConfig.edit_property(
+        "bazfoo", "nodes", {"nodes": ["example.com"]}
+    ).assert_status_code(200)
 
-    resp = api_client.get_host("bazfoo")
+    resp = clients.HostConfig.get("bazfoo")
     assert resp.json["extensions"]["cluster_nodes"] == ["example.com"]
 
 
@@ -86,9 +87,9 @@ def test_openapi_add_host_bake_agent_parameter(
     bake_agent: bool | None,
     called: bool,
     try_bake_agents_for_hosts: MagicMock,
-    api_client: RestApiClient,
+    clients: ClientRegistry,
 ) -> None:
-    api_client.create_host(host_name="foobar", bake_agent=bake_agent)
+    clients.HostConfig.create(host_name="foobar", bake_agent=bake_agent)
 
     if called:
         try_bake_agents_for_hosts.assert_called_once_with(["foobar"])
@@ -96,8 +97,8 @@ def test_openapi_add_host_bake_agent_parameter(
         try_bake_agents_for_hosts.assert_not_called()
 
 
-def test_openapi_add_host_with_attributes(api_client: RestApiClient) -> None:
-    response = api_client.create_host(
+def test_openapi_add_host_with_attributes(clients: ClientRegistry) -> None:
+    response = clients.HostConfig.create(
         host_name="foobar",
         attributes={
             "alias": "ALIAS",
@@ -120,7 +121,7 @@ def test_openapi_add_host_with_attributes(api_client: RestApiClient) -> None:
     assert api_attributes["locked_attributes"] == ["alias"]
 
     # Ensure that the attributes were stored as expected
-    hosts_config = Folder.root_folder()._load_hosts_file()
+    hosts_config = folder_tree().root_folder()._load_hosts_file()
     assert hosts_config is not None
     assert hosts_config["host_attributes"]["foobar"]["locked_attributes"] == ["alias"]
     assert hosts_config["host_attributes"]["foobar"]["locked_by"] == (
@@ -131,9 +132,9 @@ def test_openapi_add_host_with_attributes(api_client: RestApiClient) -> None:
 
 
 def test_openapi_bulk_add_hosts_with_attributes(
-    api_client: RestApiClient,
+    clients: ClientRegistry,
 ) -> None:
-    response = api_client.bulk_create_hosts(
+    response = clients.HostConfig.bulk_create(
         {
             "host_name": "ding",
             "folder": "/",
@@ -150,7 +151,7 @@ def test_openapi_bulk_add_hosts_with_attributes(
     ).assert_status_code(200)
     assert len(response.json["value"]) == 2
 
-    api_client.bulk_edit_hosts(
+    clients.HostConfig.bulk_edit(
         {
             "host_name": "ding",
             "update_attributes": {
@@ -165,7 +166,7 @@ def test_openapi_bulk_add_hosts_with_attributes(
     ).assert_status_code(200)
 
     # verify attribute ipaddress is set corretly
-    response = api_client.get_host(host_name="ding")
+    response = clients.HostConfig.get(host_name="ding")
 
     api_attributes = response.json["extensions"]["attributes"]
     assert api_attributes["locked_by"] == {
@@ -185,9 +186,12 @@ def test_openapi_bulk_add_hosts_with_attributes(
     ],
 )
 def test_openapi_add_cluster_bake_agent_parameter(
-    bake_agent: bool, called: bool, try_bake_agents_for_hosts: MagicMock, api_client: RestApiClient
+    bake_agent: bool,
+    called: bool,
+    try_bake_agents_for_hosts: MagicMock,
+    clients: ClientRegistry,
 ) -> None:
-    api_client.create_host(host_name="foobar", bake_agent=bake_agent).assert_status_code(200)
+    clients.HostConfig.create(host_name="foobar", bake_agent=bake_agent).assert_status_code(200)
 
     if called:
         try_bake_agents_for_hosts.assert_called_once_with(["foobar"])
@@ -195,7 +199,7 @@ def test_openapi_add_cluster_bake_agent_parameter(
         try_bake_agents_for_hosts.assert_not_called()
     try_bake_agents_for_hosts.reset_mock()
 
-    api_client.create_cluster(
+    clients.HostConfig.create_cluster(
         host_name="bazfoo", nodes=["foobar"], bake_agent=bake_agent
     ).assert_status_code(200)
 
@@ -256,14 +260,14 @@ def test_openapi_bulk_add_hosts_bake_agent_parameter(
 
 def test_openapi_hosts(
     monkeypatch: pytest.MonkeyPatch,
-    api_client: RestApiClient,
+    clients: ClientRegistry,
 ) -> None:
-    resp = api_client.create_host(host_name="foobar").assert_status_code(200)
+    resp = clients.HostConfig.create(host_name="foobar").assert_status_code(200)
 
     assert isinstance(resp.json["extensions"]["attributes"]["meta_data"]["created_at"], str)
     assert isinstance(resp.json["extensions"]["attributes"]["meta_data"]["updated_at"], str)
 
-    resp = api_client.follow_link(resp.json, "self")
+    resp = clients.HostConfig.follow_link(resp.json, "self")
     resp.assert_status_code(200)
 
     attributes = {
@@ -273,7 +277,7 @@ def test_openapi_hosts(
             "community": "blah",
         },
     }
-    resp = api_client.follow_link(
+    resp = clients.HostConfig.follow_link(
         resp.json,
         ".../update",
         extra_params={"attributes": attributes},
@@ -283,7 +287,7 @@ def test_openapi_hosts(
     got_attributes = resp.json["extensions"]["attributes"]
     assert list(attributes.items()) <= list(got_attributes.items())
 
-    resp = api_client.follow_link(
+    resp = clients.HostConfig.follow_link(
         resp.json,
         ".../update",
         extra_params={"update_attributes": {"alias": "bar"}},
@@ -292,7 +296,7 @@ def test_openapi_hosts(
     resp.assert_status_code(200)
     assert resp.json["extensions"]["attributes"]["alias"] == "bar"
 
-    resp = api_client.follow_link(
+    resp = clients.HostConfig.follow_link(
         resp.json,
         ".../update",
         extra_params={"remove_attributes": ["alias"]},
@@ -305,13 +309,13 @@ def test_openapi_hosts(
     assert "alias" not in resp.json["extensions"]["attributes"]
 
     # make sure changes are written to disk:
-    api_client.follow_link(resp.json, "self").assert_status_code(200)
+    clients.HostConfig.follow_link(resp.json, "self").assert_status_code(200)
     assert list(resp.json["extensions"]["attributes"].items()) >= list(
         {"ipaddress": "127.0.0.1"}.items()
     )
 
     # also try to update with wrong attribute
-    api_client.follow_link(
+    clients.HostConfig.follow_link(
         resp.json,
         ".../update",
         extra_params={"attributes": {"foobaz": "bar"}},
@@ -323,85 +327,39 @@ def test_openapi_hosts(
         "cmk.gui.plugins.openapi.endpoints.host_config.delete_hosts",
         lambda *args, **kwargs: DeleteHostsResult(),
     )
-    api_client.follow_link(resp.json, ".../delete").assert_status_code(204)
+    clients.HostConfig.follow_link(resp.json, ".../delete").assert_status_code(204)
 
 
-@pytest.mark.usefixtures("with_host")
 def test_openapi_host_update_after_move(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    clients: ClientRegistry,
 ) -> None:
-    aut_user_auth_wsgi_app.post(
-        "/NO_SITE/check_mk/api/1.0/domain-types/folder_config/collections/all",
-        params='{"name": "new_folder", "title": "bar", "parent": "/"}',
-        status=200,
-        content_type="application/json",
-        headers={
-            "Accept": "application/json",
-        },
+    clients.ContactGroup.create(
+        name="all",
+        alias="all_alias",
     )
-
-    heute = aut_user_auth_wsgi_app.call_method(
-        "get",
-        "/NO_SITE/check_mk/api/1.0/objects/host_config/heute",
-        headers={
-            "Accept": "application/json",
-        },
+    clients.Folder.create(
+        folder_name="source_folder",
+        title="source_folder",
+        parent="/",
+        attributes={"contactgroups": {"groups": ["all"]}},
     )
-
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        "/NO_SITE/check_mk/api/1.0/objects/host_config/heute/actions/move/invoke",
-        params='{"target_folder": "/new_folder"}',
-        headers={
-            "If-Match": heute.headers["ETag"],
-            "Accept": "application/json",
-        },
-        content_type="application/json",
-        status=200,
+    clients.Folder.create(
+        folder_name="target_folder",
+        title="target_folder",
+        parent="/",
+        attributes={"contactgroups": {"groups": ["all"]}},
     )
-
-    example = aut_user_auth_wsgi_app.call_method(
-        "get",
-        "/NO_SITE/check_mk/api/1.0/objects/host_config/example.com",
-        headers={
-            "Accept": "application/json",
-        },
+    clients.HostConfig.create(
+        host_name="TestHost1",
+        folder="/source_folder",
     )
-
-    moved_example = aut_user_auth_wsgi_app.call_method(
-        "post",
-        "/NO_SITE/check_mk/api/1.0/objects/host_config/example.com/actions/move/invoke",
-        params='{"target_folder": "/new_folder"}',
-        headers={
-            "If-Match": example.headers["ETag"],
-            "Accept": "application/json",
-        },
-        content_type="application/json",
-        status=200,
+    clients.HostConfig.move(
+        host_name="TestHost1",
+        target_folder="/target_folder",
     )
-
-    moved_example_updated = aut_user_auth_wsgi_app.follow_link(
-        moved_example,
-        ".../update",
-        status=200,
-        params=json.dumps({"attributes": {"alias": "foo"}}),
-        headers={
-            "If-Match": moved_example.headers["ETag"],
-            "Accept": "application/json",
-        },
-        content_type="application/json",
-    )
-
-    aut_user_auth_wsgi_app.follow_link(
-        moved_example_updated,
-        ".../update",
-        status=200,
-        params=json.dumps({"attributes": {"alias": "foo"}}),
-        headers={
-            "If-Match": moved_example_updated.headers["ETag"],
-            "Accept": "application/json",
-        },
-        content_type="application/json",
+    clients.HostConfig.edit(
+        host_name="TestHost1",
+        attributes={"alias": "foo"},
     )
 
 
@@ -805,7 +763,7 @@ def test_openapi_host_collection_effective_attributes(
 
 
 def test_openapi_host_rename(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    clients: ClientRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
@@ -816,113 +774,65 @@ def test_openapi_host_rename(
         lambda *args, **kwargs: RenameHostsResult({}),
     )
 
-    base = "/NO_SITE/check_mk/api/1.0"
-
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/collections/all",
-        params='{"host_name": "foobar", "folder": "/"}',
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+    clients.HostConfig.create(
+        host_name="foobar",
+        folder="/",
     )
-
-    resp = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/objects/host_config/foobar",
-        status=200,
-        headers={"Accept": "application/json"},
+    clients.HostConfig.get("foobar")
+    resp = clients.HostConfig.rename(
+        host_name="foobar",
+        new_name="foobaz",
+        follow_redirects=False,
     )
-
-    _resp = aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/objects/host_config/foobar/actions/rename/invoke",
-        params='{"new_name": "foobaz"}',
-        content_type="application/json",
-        status=200,
-        headers={"Accept": "application/json", "If-Match": resp.headers["ETag"]},
-    )
-
-    _resp = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/objects/host_config/foobaz",
-        status=200,
-        headers={"Accept": "application/json"},
+    assert (
+        resp.headers["Location"]
+        == "http://localhost/NO_SITE/check_mk/api/1.0/domain-types/host_config/actions/wait-for-completion/invoke"
     )
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_rename_error_on_not_existing_host(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    clients: ClientRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.plugins.openapi.endpoints.host_config.has_pending_changes", lambda: False
     )
 
-    base = "/NO_SITE/check_mk/api/1.0"
-
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/collections/all",
-        params='{"host_name": "foobar", "folder": "/"}',
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+    clients.HostConfig.create(
+        host_name="foobar",
+        folder="/",
     )
-
-    resp = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/objects/host_config/foobar",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
-
-    _resp = aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/objects/host_config/fooba/actions/rename/invoke",
-        params='{"new_name": "foobaz"}',
-        content_type="application/json",
-        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
-        status=404,
+    resp = clients.HostConfig.get("foobar")
+    clients.HostConfig.rename(
+        host_name="fooba",
+        new_name="foobaz",
+        etag=resp.headers["ETag"],
+        follow_redirects=False,
+        expect_ok=False,
     )
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_host_rename_on_invalid_hostname(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    clients: ClientRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
         "cmk.gui.plugins.openapi.endpoints.host_config.has_pending_changes", lambda: False
     )
 
-    base = "/NO_SITE/check_mk/api/1.0"
-
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/collections/all",
-        params='{"host_name": "foobar", "folder": "/"}',
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+    clients.HostConfig.create(
+        host_name="foobar",
+        folder="/",
     )
-
-    resp = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/objects/host_config/foobar",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
-
-    _resp = aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/objects/host_config/foobar/actions/rename/invoke",
-        params='{"new_name": "foobar"}',
-        content_type="application/json",
-        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
-        status=400,
-    )
+    clients.HostConfig.get("foobar")
+    clients.HostConfig.rename(
+        host_name="foobar",
+        new_name="foobar",
+        follow_redirects=False,
+        expect_ok=False,
+    ).assert_status_code(400)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -1003,67 +913,42 @@ def test_openapi_host_rename_with_pending_activate_changes(
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_move(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    base = "/NO_SITE/check_mk/api/1.0"
-
-    resp = aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/collections/all",
-        params='{"host_name": "foobar", "folder": "/"}',
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+def test_openapi_host_move(clients: ClientRegistry) -> None:
+    clients.ContactGroup.create(
+        name="all",
+        alias="all_alias",
     )
-
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/folder_config/collections/all",
-        params='{"name": "new_folder", "title": "foo", "parent": "/"}',
-        content_type="application/json",
-        status=200,
-        headers={"Accept": "application/json"},
+    clients.Folder.create(
+        folder_name="source_folder",
+        title="source_folder",
+        parent="/",
+        attributes={"contactgroups": {"groups": ["all"]}},
     )
-
-    _resp = aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/objects/host_config/foobar/actions/move/invoke",
-        params='{"target_folder": "/new_folder/"}',
-        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
-        content_type="application/json",
-        status=200,
+    clients.Folder.create(
+        folder_name="target_folder",
+        title="target_folder",
+        parent="/",
+        attributes={"contactgroups": {"groups": ["all"]}},
+    )
+    clients.HostConfig.create(
+        host_name="TestHost1",
+        folder="/source_folder",
+    )
+    clients.HostConfig.move(
+        host_name="TestHost1",
+        target_folder="/target_folder",
     )
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
-def test_openapi_host_move_to_non_valid_folder(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    base = "/NO_SITE/check_mk/api/1.0"
-
-    resp = aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/collections/all",
-        params='{"host_name": "foobar", "folder": "/"}',
-        status=200,
-        headers={"Accept": "application/json"},
-        content_type="application/json",
+def test_openapi_host_move_to_non_valid_folder(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(
+        host_name="TestHost1",
+        folder="/",
     )
-
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/folder_config/collections/all",
-        params='{"name": "new_folder", "title": "foo", "parent": "/"}',
-        content_type="application/json",
-        status=200,
-        headers={"Accept": "application/json"},
-    )
-
-    aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/objects/host_config/foobar/actions/move/invoke",
-        params='{"target_folder": "/"}',
-        headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
-        content_type="application/json",
-        status=400,
-    )
+    clients.HostConfig.move(
+        host_name="TestHost1", target_folder="/folder-that-does-not-exist", expect_ok=False
+    ).assert_status_code(400)
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
@@ -1147,12 +1032,11 @@ def test_openapi_create_host_with_contact_group(aut_user_auth_wsgi_app: WebTestA
 
 
 @managedtest
-def test_openapi_host_with_custom_attributes(  # type:ignore[no-untyped-def]
-    api_client: RestApiClient,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-    custom_host_attribute_basic_topic,
-):
-    resp = api_client.create_host(
+def test_openapi_host_with_custom_attributes(
+    clients: ClientRegistry,
+    custom_host_attribute_basic_topic: None,
+) -> None:
+    resp = clients.HostConfig.create(
         host_name="example.com",
         attributes={
             "ipaddress": "192.168.0.123",
@@ -1163,7 +1047,7 @@ def test_openapi_host_with_custom_attributes(  # type:ignore[no-untyped-def]
     assert "foo" in resp.json["extensions"]["attributes"]
 
     # remove custom attribute
-    resp = api_client.edit_host(
+    resp = clients.HostConfig.edit(
         host_name="example.com",
         remove_attributes=["foo"],
     )
@@ -1263,7 +1147,7 @@ def test_openapi_all_hosts_with_non_existing_site(
     def mock_all_hosts_recursively(_cls):
         return {
             "foo": CREHost(
-                folder=CREFolder.root_folder(),
+                folder=folder_tree().root_folder(),
                 host_name="foo",
                 attributes={"site": "a_non_existing_site"},
                 cluster_nodes=None,
@@ -1286,7 +1170,7 @@ def test_openapi_host_with_non_existing_site(
 ) -> None:
     def mock_host(_hostname):
         return CREHost(
-            folder=CREFolder.root_folder(),
+            folder=folder_tree().root_folder(),
             host_name="foo",
             attributes={"site": "a_non_existing_site"},
             cluster_nodes=None,
@@ -1301,3 +1185,420 @@ def test_openapi_host_with_non_existing_site(
     )
 
     assert resp.json["extensions"]["attributes"]["site"] == "Unknown Site: a_non_existing_site"
+
+
+def test_openapi_bulk_create_permission_missmatch_regression(clients: ClientRegistry) -> None:
+    clients.HostConfig.bulk_create()
+
+
+def test_openapi_host_config_attributes_as_string_crash_regression(
+    aut_user_auth_wsgi_app: WebTestAppForCMK, base: str
+) -> None:
+    resp = aut_user_auth_wsgi_app.post(
+        f"{base}/domain-types/host_config/collections/all",
+        content_type="application/json",
+        headers={"Accept": "application/json"},
+        params=json.dumps(
+            {
+                "folder": "/",
+                "host_name": "example.com",
+                "attributes": "{'ipaddress':'192.168.0.123'}",  # note that this is a str
+            }
+        ),
+        status=400,
+    )
+    assert resp.json["fields"]["attributes"] == [
+        "Incompatible data type. Received a(n) 'str', but an associative value is required. Maybe you quoted a value that is meant to be an object?"
+    ]
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_host_config_effective_attributes_schema_regression(
+    clients: ClientRegistry,
+) -> None:
+    resp = clients.HostConfig.get("heute", effective_attributes=True)
+    assert isinstance(
+        resp.json["extensions"]["effective_attributes"]["meta_data"]["created_at"], str
+    )
+    assert isinstance(
+        resp.json["extensions"]["effective_attributes"]["meta_data"]["updated_at"], str
+    )
+
+
+@pytest.mark.usefixtures("with_host")
+def test_openapi_host_config_show_host_disregards_contact_groups(clients: ClientRegistry) -> None:
+    """This test makes sure a user cannot see the config of a host that is not assigned to their contact groups."""
+    clients.ContactGroup.create("no_hosts_in_here", alias="no_hosts_in_here")
+    clients.ContactGroup.create("all_hosts_in_here", alias="all_hosts_in_here")
+
+    clients.User.create(
+        username="unable_to_see_host",
+        fullname="unable_to_see_host",
+        contactgroups=["no_hosts_in_here"],
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+    )
+
+    clients.Rule.create(
+        "host_contactgroups",
+        value_raw="'all_hosts_in_here'",
+        folder="/",
+        conditions={},
+    )
+
+    clients.Host.set_credentials("unable_to_see_host", "supersecretish")
+
+    resp = clients.HostConfig.get("heute", expect_ok=False).assert_status_code(403)
+    assert resp.json["title"] == "Forbidden"
+    assert "heute" in resp.json["detail"]
+
+
+def test_openapi_list_hosts_does_not_show_inaccessible_hosts(clients: ClientRegistry) -> None:
+    clients.ContactGroup.create(name="does_not_see_everything", alias="does_not_see_everything")
+    clients.User.create(
+        username="unable_to_see_all_host",
+        fullname="unable_to_see_all_host",
+        contactgroups=["does_not_see_everything"],
+        auth_option={"auth_type": "password", "password": "supersecretish"},
+    )
+
+    clients.HostConfig.create(
+        host_name="should_be_visible",
+        attributes={"contactgroups": {"groups": ["does_not_see_everything"], "use": True}},
+    )
+    clients.HostConfig.create(
+        host_name="should_not_be_invisible",
+    )
+
+    clients.Host.set_credentials("unable_to_see_all_host", "supersecretish")
+    resp = clients.HostConfig.get_all()
+    host_names = [entry["id"] for entry in resp.json["value"]]
+    assert "should_be_visible" in host_names
+    assert "should_not_be_invisible" not in host_names
+
+
+@freeze_time("1998-02-09")
+def test_openapi_effective_attributes_are_transformed_on_their_way_out_regression(
+    clients: ClientRegistry, with_admin: Tuple[str, str]
+) -> None:
+    """We take 'meta_data' as the example attributes, it's a CheckmkTuple type that is stored as a
+    tuple in the .mk files, but read and written as a dict in the REST API."""
+
+    username, password = with_admin
+    # We can't use the 'with_host' fixture, because time won't be frozen when it's created.
+    clients.HostConfig.set_credentials(username, password)
+
+    clients.HostConfig.create("test_host")
+
+    resp_with_effective_attributes = clients.HostConfig.get(
+        host_name="test_host", effective_attributes=True
+    )
+    resp_without_effective_attributes = clients.HostConfig.get(host_name="test_host")
+    assert resp_with_effective_attributes.json["extensions"]["effective_attributes"][
+        "meta_data"
+    ] == {
+        "created_at": "1998-02-09T00:00:00+00:00",
+        "updated_at": "1998-02-09T00:00:00+00:00",
+        "created_by": username,
+    }  # should not be the tuple stored in the .mk files, but a nice, readable dict
+    assert (
+        resp_with_effective_attributes.json["extensions"]["effective_attributes"]["meta_data"]
+        == resp_without_effective_attributes.json["extensions"]["attributes"]["meta_data"]
+    )
+
+    resp_with_effective_attributes = clients.HostConfig.get_all(effective_attributes=True)
+    resp_without_effective_attributes = clients.HostConfig.get_all()
+    assert resp_with_effective_attributes.json["value"][0]["extensions"]["effective_attributes"][
+        "meta_data"
+    ] == {
+        "created_at": "1998-02-09T00:00:00+00:00",
+        "updated_at": "1998-02-09T00:00:00+00:00",
+        "created_by": username,
+    }  # should not be the tuple stored in the .mk files, but a nice, readable dict
+    assert (
+        resp_with_effective_attributes.json["value"][0]["extensions"]["effective_attributes"][
+            "meta_data"
+        ]
+        == resp_without_effective_attributes.json["value"][0]["extensions"]["attributes"][
+            "meta_data"
+        ]
+    )
+
+
+def test_move_to_folder_with_different_contact_group(clients: ClientRegistry) -> None:
+    clients.ContactGroup.create(
+        name="test_contact_group",
+        alias="cg_alias",
+    )
+
+    clients.User.create(
+        username="user1",
+        fullname="user1_fullname",
+        contactgroups=["test_contact_group"],
+        auth_option={"auth_type": "password", "password": "asflkjas^asf@adf%5Ah!@%^sfadf"},
+        roles=["admin"],
+    )
+
+    clients.Folder.create(
+        folder_name="Folder1",
+        title="Folder1",
+        parent="/",
+        attributes={"contactgroups": {"groups": ["test_contact_group"]}},
+    )
+
+    clients.Folder.create(
+        folder_name="Folder2",
+        title="Folder2",
+        parent="/",
+    )  # no contact group set
+
+    clients.HostConfig.create(
+        host_name="TestHost1",
+        folder="/Folder1",
+    )
+
+    clients.HostConfig.set_credentials(
+        username="user1",
+        password="asflkjas^asf@adf%5Ah!@%^sfadf",
+    )
+
+    resp = clients.HostConfig.move(
+        host_name="TestHost1",
+        target_folder="/Folder2",
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(403)
+    assert resp.json["title"] == "Permission denied"
+    assert (
+        resp.json["detail"]
+        == "The user doesn't belong to the required contact groups of the following objects to perform this action: Folder('Folder2', 'Folder2')"
+    )
+
+
+def test_move_from_folder_with_different_contact_group(clients: ClientRegistry) -> None:
+    clients.ContactGroup.create(
+        name="test_contact_group",
+        alias="cg_alias",
+    )
+
+    clients.User.create(
+        username="user1",
+        fullname="user1_fullname",
+        contactgroups=["test_contact_group"],
+        auth_option={"auth_type": "password", "password": "asflkjas^asf@adf%5Ah!@%^sfadf"},
+        roles=["admin"],
+    )
+
+    clients.Folder.create(
+        folder_name="Folder1",
+        title="Folder1",
+        parent="/",
+    )  # no contact group set
+
+    clients.Folder.create(
+        folder_name="Folder2",
+        title="Folder2",
+        parent="/",
+        attributes={"contactgroups": {"groups": ["test_contact_group"]}},
+    )
+
+    clients.HostConfig.create(
+        host_name="TestHost1",
+        folder="/Folder1",
+    )
+
+    clients.HostConfig.set_credentials(
+        username="user1",
+        password="asflkjas^asf@adf%5Ah!@%^sfadf",
+    )
+
+    resp = clients.HostConfig.move(
+        host_name="TestHost1",
+        target_folder="/Folder2",
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(403)
+    assert resp.json["title"] == "Permission denied"
+    assert (
+        resp.json["detail"]
+        == "The user doesn't belong to the required contact groups of the following objects to perform this action: Folder('Folder1', 'Folder1'), Host('TestHost1')"
+    )
+
+
+def test_move_host_different_contact_group(clients: ClientRegistry) -> None:
+    clients.ContactGroup.create(
+        name="test_contact_group_1",
+        alias="cg_alias1",
+    )
+    clients.ContactGroup.create(
+        name="test_contact_group2",
+        alias="cg_alias2",
+    )
+    clients.Folder.create(
+        folder_name="Folder1",
+        title="Folder1",
+        parent="/",
+        attributes={"contactgroups": {"groups": ["test_contact_group_1"]}},
+    )
+
+    clients.Folder.create(
+        folder_name="Folder2",
+        title="Folder2",
+        parent="/",
+        attributes={"contactgroups": {"groups": ["test_contact_group_1"]}},
+    )
+    # User has access to both folders (same contact group)
+    clients.User.create(
+        username="user1",
+        fullname="user1_fullname",
+        contactgroups=["test_contact_group_1"],
+        auth_option={"auth_type": "password", "password": "asflkjas^asf@adf%5Ah!@%^sfadf"},
+        roles=["admin"],
+    )
+
+    # As admin api user, create a host in test_contact_group2
+    clients.HostConfig.create(
+        host_name="TestHost1",
+        folder="/Folder1",
+        attributes={"contactgroups": {"groups": ["test_contact_group2"]}},
+    )
+
+    # Switch to the test user created above who only has access to test_contact_group1
+    clients.HostConfig.set_credentials(
+        username="user1",
+        password="asflkjas^asf@adf%5Ah!@%^sfadf",
+    )
+
+    # Try to move the Host
+    resp = clients.HostConfig.move(
+        host_name="TestHost1",
+        target_folder="/Folder2",
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(403)
+    assert resp.json["title"] == "Permission denied"
+    assert (
+        resp.json["detail"]
+        == "The user doesn't belong to the required contact groups of the following objects to perform this action: Host('TestHost1')"
+    )
+
+
+@pytest.mark.usefixtures("custom_host_attribute")
+def test_openapi_host_config_effective_attributes_includes_custom_attributes_regression(
+    clients: ClientRegistry,
+) -> None:
+    clients.HostConfig.create(host_name="test_host", attributes={"foo": "blub"})
+
+    resp = clients.HostConfig.get("test_host", effective_attributes=True)
+    assert resp.json["extensions"]["effective_attributes"]["foo"] == "blub"
+
+
+def test_openapi_host_config_effective_attributes_includes_tags_regression(
+    clients: ClientRegistry,
+) -> None:
+    clients.HostTagGroup.create(ident="foo", title="foo", tags=[{"ident": "bar", "title": "bar"}])
+    clients.HostConfig.create(host_name="test_host", attributes={"tag_foo": "bar"})
+
+    resp = clients.HostConfig.get("test_host", effective_attributes=True)
+    assert resp.json["extensions"]["effective_attributes"]["tag_foo"] == "bar"
+
+
+@managedtest
+@freeze_time("2022-11-05")
+def test_openapi_host_config_effective_attributes_includes_all_host_attributes_regression(
+    clients: ClientRegistry, with_admin: Tuple[str, str]
+) -> None:
+    username, password = with_admin
+    clients.HostConfig.set_credentials(username, password)
+
+    clients.HostConfig.create(host_name="heute")
+    resp = clients.HostConfig.get(host_name="heute", effective_attributes=True)
+
+    # all keys in 'attributes' have to be present in 'effective_attributes' as well
+    assert set(resp.json["extensions"]["attributes"]) <= set(
+        resp.json["extensions"]["effective_attributes"]
+    )
+
+    assert (
+        resp.json["extensions"]["effective_attributes"]
+        == {
+            "additional_ipv4addresses": [],
+            "additional_ipv6addresses": [],
+            "alias": "",
+            "bake_agent_package": False,
+            "cmk_agent_connection": "pull-agent",
+            "contactgroups": {},
+            "inventory_failed": False,
+            "ipaddress": "",
+            "ipv6address": "",
+            "labels": {},
+            "locked_attributes": [],
+            "locked_by": {"instance_id": "", "program_id": "", "site_id": "NO_SITE"},
+            "management_address": "",
+            "management_ipmi_credentials": None,
+            "management_protocol": "none",
+            "management_snmp_community": None,
+            "meta_data": {
+                "created_at": "2022-11-05T00:00:00+00:00",
+                "created_by": username,
+                "updated_at": "2022-11-05T00:00:00+00:00",
+            },
+            "network_scan": {
+                "addresses": [],
+                "exclude_addresses": [],
+                "run_as": username,
+                "scan_interval": 86400,
+                "set_ip_address": True,
+                "time_allowed": [{"end": "23:59:59", "start": "00:00:00"}],
+            },
+            "network_scan_result": {"end": None, "output": "", "start": None, "state": "running"},
+            "parents": [],
+            "site": "NO_SITE",
+            "snmp_community": None,
+            "tag_address_family": "ip-v4-only",
+            "tag_agent": "cmk-agent",
+            "tag_piggyback": "auto-piggyback",
+            "tag_snmp_ds": "no-snmp",
+        }
+        != {
+            "additional_ipv4addresses": [],
+            "additional_ipv6addresses": [],
+            "alias": "",
+            "bake_agent_package": False,
+            "cmk_agent_connection": "pull-agent",
+            "contactgroups": {},
+            "inventory_failed": False,
+            "ipaddress": "",
+            "ipv6address": "",
+            "labels": {},
+            "locked_attributes": [],
+            "locked_by": {"instance_id": "", "program_id": "", "site_id": "NO_SITE"},
+            "management_address": "",
+            "management_ipmi_credentials": None,
+            "management_protocol": "none",
+            "management_snmp_community": None,
+            "meta_data": {
+                "created_at": "2022-11-05T10:01:41.212124+00:00",
+                "created_by": username,
+                "updated_at": "2023-06-09T10:01:41.259554+00:00",
+            },
+            "network_scan": {
+                "addresses": [],
+                "exclude_addresses": [],
+                "run_as": username,
+                "scan_interval": 86400,
+                "set_ip_address": True,
+                "time_allowed": [{"end": "23:59:59", "start": "00:00:00"}],
+            },
+            "network_scan_result": {"end": None, "output": "", "start": None, "state": "running"},
+            "parents": [],
+            "site": "NO_SITE",
+            "snmp_community": None,
+            "tag_address_family": "ip-v4-only",
+            "tag_agent": "cmk-agent",
+            "tag_piggyback": "auto-piggyback",
+            "tag_snmp_ds": "no-snmp",
+        }
+    )

@@ -1,0 +1,13 @@
+Title: Automatic host removal: Remove agent TLS registration when deleting hosts in subfolders
+Class: fix
+Compatible: compat
+Component: setup
+Date: 1682429331
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+When removing hosts in subfolders, the <a href="https://checkmk.com/werk/15407">automatic removal of hosts</a>
+did not remove the agent TLS registrations of these hosts. This unintended behavior interferred with
+the auto-re-registration introduced in <a href="https://checkmk.com/werk/15658">werk 15658</a>.

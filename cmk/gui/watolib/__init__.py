@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -22,15 +22,19 @@ from cmk.gui.cron import register_job as _register_job
 from cmk.gui.inventory import (
     execute_inventory_housekeeping_job as _execute_inventory_housekeeping_job,
 )
-from cmk.gui.plugins.watolib.utils import config_domain_registry as _config_domain_registry
 from cmk.gui.utils import load_web_plugins as _load_web_plugins
+from cmk.gui.watolib import autodiscovery as _autodiscovery
 from cmk.gui.watolib import automatic_host_removal as _automatic_host_removal
 from cmk.gui.watolib._host_attributes import register as _register_host_attributes
 from cmk.gui.watolib.activate_changes import (
     execute_activation_cleanup_background_job as _execute_activation_cleanup_background_job,
 )
+from cmk.gui.watolib.config_domain_name import config_domain_registry as _config_domain_registry
 from cmk.gui.watolib.host_attributes import ABCHostAttribute
 from cmk.gui.watolib.host_attributes import host_attribute_registry as _host_attributes_registry
+from cmk.gui.watolib.host_rename import (
+    AutomationRenameHostsUUIDLink as _AutomationRenameHostsUUIDLink,
+)
 from cmk.gui.watolib.hosts_and_folders import (
     rebuild_folder_lookup_cache as _rebuild_folder_lookup_cache,
 )
@@ -45,6 +49,7 @@ def _register_automation_commands() -> None:
     clss: Sequence[type[_automation_commands.AutomationCommand]] = (
         _automation_commands.AutomationPing,
         _automatic_host_removal.AutomationHostsForAutoRemoval,
+        _AutomationRenameHostsUUIDLink,
     )
     for cls in clss:
         _automation_commands.automation_command_registry.register(cls)
@@ -54,6 +59,7 @@ def _register_gui_background_jobs() -> None:
     clss: Sequence[type[_background_job.BackgroundJob]] = (
         _config_domains.OMDConfigChangeBackgroundJob,
         _automatic_host_removal.HostRemovalBackgroundJob,
+        _autodiscovery.AutodiscoveryBackgroundJob,
     )
     for cls in clss:
         _background_job.job_registry.register(cls)
@@ -136,6 +142,7 @@ def _register_cronjobs() -> None:
     _register_job(_userdb.execute_user_profile_cleanup_job)
     _register_job(_rebuild_folder_lookup_cache)
     _register_job(_automatic_host_removal.execute_host_removal_background_job)
+    _register_job(_autodiscovery.execute_autodiscovery)
 
 
 def load_watolib_plugins():

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
@@ -23,8 +23,17 @@ def parse_gce_uptime(string_table: StringTable) -> uptime.Section | None:
 
 register.agent_section(
     name="gcp_service_gce_uptime_total",
-    parsed_section_name="uptime",
+    parsed_section_name="gcp_gce_uptime",
     parse_function=parse_gce_uptime,
+)
+
+register.check_plugin(
+    name="gcp_gce_uptime",
+    service_name="GCP/GCE Uptime",
+    discovery_function=uptime.discover,
+    check_function=uptime.check,
+    check_ruleset_name="uptime",
+    check_default_parameters={},
 )
 
 
@@ -65,7 +74,7 @@ def check_cpu(params: Mapping[str, Any], section: gcp.PiggyBackSection) -> Check
 
 register.check_plugin(
     name="gcp_gce_cpu",
-    service_name="CPU",
+    service_name="GCP/GCE CPU utilization",
     discovery_function=discover_default,
     check_function=check_cpu,
     check_ruleset_name="gcp_gce_cpu",
@@ -126,7 +135,7 @@ def check_network(
 
 register.check_plugin(
     name="gcp_gce_network",
-    service_name="Network IO %s",
+    service_name="GCP/GCE Network IO %s",
     discovery_function=discover_network,
     check_ruleset_name="if",
     check_default_parameters=interfaces.CHECK_DEFAULT_PARAMETERS,
@@ -173,7 +182,7 @@ def check_disk_summary(params: Mapping[str, Any], section: gcp.PiggyBackSection)
 register.check_plugin(
     name="gcp_gce_disk_summary",
     sections=["gcp_gce_disk"],
-    service_name="Instance disk IO",
+    service_name="GCP/GCE Disk IO Summary",
     discovery_function=discover_default,
     check_ruleset_name="gcp_gce_disk",
     check_default_parameters={

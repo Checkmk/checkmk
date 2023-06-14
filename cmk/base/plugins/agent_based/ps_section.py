@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import time
 from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 
 from .agent_based_api.v1 import register
@@ -48,7 +48,7 @@ Section = Tuple[int, List]  # don't ask what kind of list.
 # This function is only concerned with deprecated output from psperf.bat,
 # in case of all other output it just returns info unmodified. But if it is
 # a windows output it will extract the number of cpu cores
-def _merge_wmic_info(info) -> Tuple[int, List]:  # type:ignore[no-untyped-def]
+def _merge_wmic_info(info) -> Tuple[int, List]:  # type: ignore[no-untyped-def]
     # Agent output version cmk>1.2.5
     # Assumes line = [CLUSTER, PS_INFO, COMMAND]
     has_wmic = False
@@ -67,7 +67,7 @@ def _merge_wmic_info(info) -> Tuple[int, List]:  # type:ignore[no-untyped-def]
     return _extract_wmic_info(info)
 
 
-def _extract_wmic_info(info) -> Tuple[int, List]:  # type:ignore[no-untyped-def]
+def _extract_wmic_info(info) -> Tuple[int, List]:  # type: ignore[no-untyped-def]
     ps_result = []
     lines = iter(info)
     wmic_info: Dict[str, List] = {}
@@ -102,7 +102,7 @@ def _extract_wmic_info(info) -> Tuple[int, List]:  # type:ignore[no-untyped-def]
     return _merge_wmic(ps_result, wmic_info, wmic_headers)
 
 
-def _merge_wmic(  # type:ignore[no-untyped-def]
+def _merge_wmic(  # type: ignore[no-untyped-def]
     ps_result, wmic_info, wmic_headers
 ) -> Tuple[int, List]:
     info = []
@@ -135,7 +135,7 @@ def _merge_wmic(  # type:ignore[no-untyped-def]
 
 
 # This mainly formats the line[1] element which contains the process info (user,...)
-def parse_process_entries(  # type:ignore[no-untyped-def]
+def parse_process_entries(  # type: ignore[no-untyped-def]
     pre_parsed,
 ) -> List[Tuple[ps.PsInfo, List[str]]]:
     parsed = []
@@ -181,18 +181,22 @@ def _consolidate_lines(string_table: StringTable) -> StringTable:
     return consolidated_lines
 
 
-def parse_ps(
-    string_table: StringTable,
-) -> ps.Section:
+def parse_ps(string_table: StringTable) -> ps.Section:
+    now = int(time.time())
+    return _parse_ps(now, string_table)
+
+
+def _parse_ps(now: int, string_table: StringTable) -> ps.Section:
+    ps_time, ps_string_table = _separate_sub_string_table(now, string_table)
     # Produces a list of Tuples where each sub list is built as follows:
     # [
     #     [(u'root', u'35156', u'4372', u'00:00:05/2-14:14:49', u'1'), u'/sbin/init'],
     # ]
     # First element: The process info tuple (see ps.include: check_ps_common() for details on the elements)
     # second element:  The process command line
-    cpu_cores, info = _merge_wmic_info(_consolidate_lines(string_table))
+    cpu_cores, info = _merge_wmic_info(_consolidate_lines(ps_string_table))
     parsed = parse_process_entries(info)
-    return cpu_cores, parsed
+    return cpu_cores, parsed, ps_time
 
 
 register.agent_section(
@@ -228,21 +232,31 @@ def _handle_deleted_cgroup(attrs: Iterable[str], line: Sequence[str]) -> Sequenc
     return line
 
 
-def parse_ps_lnx(
-    string_table: StringTable,
-) -> Optional[ps.Section]:
+def parse_ps_lnx(string_table: StringTable) -> Optional[ps.Section]:
+    now = int(time.time())
+    return _parse_ps_lnx(now, string_table)
+
+
+def _separate_sub_string_table(now: int, string_table: StringTable) -> tuple[int, StringTable]:
+    if string_table[0][0].startswith("[time]") and string_table[2][0].startswith("[processes]"):
+        return int(string_table[1][0]), string_table[3:]
+    return now, string_table
+
+
+def _parse_ps_lnx(now: int, string_table: StringTable) -> Optional[ps.Section]:
+    ps_time, ps_string_table = _separate_sub_string_table(now, string_table)
     data = []
     # info[0]: $Node [header] user ... pid command
     # we rely on the command being the last one!
-    attrs = tuple(word.lower() for word in string_table[0][1:-1])
 
+    attrs = tuple(word.lower() for word in ps_string_table[0][1:-1])
     # busybox' ps seems to not provide the columns we need so we abort
     if not all(att in attrs for att in ("user", "vsz", "rss", "time", "elapsed", "pid")):
         return None
 
     cmd_idx = len(attrs)
 
-    for line in (_handle_deleted_cgroup(attrs, l) for l in string_table[1:]):
+    for line in (_handle_deleted_cgroup(attrs, l) for l in ps_string_table[1:]):
         # read all but 'command' into dict
         ps_raw = dict(zip(attrs, line))
         ps_info_obj = ps.PsInfo(
@@ -257,7 +271,7 @@ def parse_ps_lnx(
         data.append((ps_info_obj, line[cmd_idx:]))
 
     # cpu_cores for compatibility!
-    return 1, data
+    return 1, data, ps_time
 
 
 register.agent_section(

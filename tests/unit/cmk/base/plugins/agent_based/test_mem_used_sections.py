@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -82,6 +82,6 @@ def test_parse_openbsd_mem(
     "string_table",
     [([["MemTotal:", "23", "B"], ["MemFree:", "744076", "kB"], ["SwapFree:", "186505", "kB"]])],
 )
-def test_parse_openbsd_mem_error(string_table) -> None:  # type:ignore[no-untyped-def]
+def test_parse_openbsd_mem_error(string_table: StringTable) -> None:
     with pytest.raises(KeyError):
         parse_openbsd_mem(string_table)

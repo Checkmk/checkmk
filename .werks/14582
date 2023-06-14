@@ -1,0 +1,18 @@
+Title: aws_status: Monitor AWS Status
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1676620801
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.2.0b1
+
+With this werk, it is possible to monitor the AWS Health Dashboard,
+available at https://health.aws.amazon.com/health/status. Since this
+site is publicly available, no authentication is required for this
+monitoring.
+
+This feature consists of a special agent, agent_aws_status, and a new
+check, aws_status. The special agent can be configured via the rule
+Amazon Web Service (AWS) Health.

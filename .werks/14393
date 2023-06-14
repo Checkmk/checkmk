@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Beginning with Checkmk version 2.2.0, the use of certain special characters in user IDs will no longer be allowed.
 As a result, some user IDs that were previously valid in Checkmk version 2.1.0 will become invalid in version 2.2.0.

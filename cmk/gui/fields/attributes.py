@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime
@@ -9,6 +9,8 @@ import typing
 from marshmallow import ValidationError
 from marshmallow.decorators import post_load, pre_dump, validates_schema
 from marshmallow_oneofschema import OneOfSchema
+
+from cmk.utils.tags import TagGroupID
 
 from cmk.gui import userdb
 from cmk.gui.fields.base import BaseSchema
@@ -341,10 +343,16 @@ class TimeAllowedRange(BaseSchema, CheckmkTuple):
     start = Time(
         description=(
             "The start time of day. Inclusive. " "Use ISO8601 format. Seconds are stripped."
-        )
+        ),
+        required=True,
+        pattern=r"^\d\d\:\d\d\(:\d\d)?$",
     )
     end = Time(
-        description=("The end time of day. Inclusive. " "Use ISO8601 format. Seconds are stripped.")
+        description=(
+            "The end time of day. Inclusive. " "Use ISO8601 format. Seconds are stripped."
+        ),
+        required=True,
+        pattern=r"^\d\d\:\d\d\(:\d\d)?$",
     )
 
 
@@ -523,7 +531,7 @@ class NetworkScan(BaseSchema):
 
     @validates_schema
     def validate_tag_criticality(self, data: dict[str, typing.Any], **kwargs: typing.Any) -> None:
-        tag_criticality = load_tag_group("criticality")
+        tag_criticality = load_tag_group(TagGroupID("criticality"))
         if tag_criticality is None:
             if "tag_criticality" in data:
                 raise ValidationError(
@@ -641,7 +649,7 @@ class MappingConverter(Converter):
 
     """
 
-    def __init__(self, mapping) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, mapping) -> None:  # type: ignore[no-untyped-def]
         self.mapping = mapping
 
     def to_checkmk(self, data):
@@ -898,7 +906,7 @@ class HostAttributeManagementBoardField(String):
             enum=["none", "snmp", "ipmi"],
         )
 
-    def _deserialize(  # type:ignore[no-untyped-def]
+    def _deserialize(  # type: ignore[no-untyped-def]
         self, value, attr, data, **kwargs
     ) -> typing.Any:
         # get value from api, convert it to cmk/python
@@ -907,9 +915,7 @@ class HostAttributeManagementBoardField(String):
             return None
         return deserialized
 
-    def _serialize(  # type:ignore[no-untyped-def]
-        self, value, attr, obj, **kwargs
-    ) -> str | None:
+    def _serialize(self, value, attr, obj, **kwargs) -> str | None:  # type: ignore[no-untyped-def]
         # get value from cmk/python, convert it to api side
         serialized = super()._serialize(value, attr, obj, **kwargs)
         if serialized is None:

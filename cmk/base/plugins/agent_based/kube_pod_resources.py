@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
@@ -219,7 +219,6 @@ def _check_kube_pod_resources(
     section_kube_pod_resources: Optional[PodResources],
     section_kube_allocatable_pods: Optional[AllocatablePods],
 ) -> CheckResult:
-
     assert section_kube_pod_resources is not None, "Missing Api data"
     yield from check_kube_pods(params, section_kube_pod_resources, now, value_store)
 

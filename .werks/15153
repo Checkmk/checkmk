@@ -1,0 +1,21 @@
+Title: azure_virtual_machine: Redesign service rule
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1677762969
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, if a mapping for power or provisioning states was configured for some,
+but not for all states, the unconfigured states would always be mapped to WARN.
+This behavior was confusing and forced the users to configure mapping for all
+the states even when they wanted to change the behavior of only one. Moreover,
+since the parameters of the rule used to be groups of states, the rule matching
+could not take place at the state level.
+
+With this werk, if you configure the state mapping for a single state the state
+mapping of all other states will be unaffected.
+
+Previously existing rules are updated to keep the same functionality as before.

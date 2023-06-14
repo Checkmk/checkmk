@@ -29,7 +29,7 @@ import shlex
 import subprocess
 from typing import TYPE_CHECKING
 
-import psutil  # type: ignore[import]
+import psutil
 
 if TYPE_CHECKING:
     from omdlib.contexts import SiteContext

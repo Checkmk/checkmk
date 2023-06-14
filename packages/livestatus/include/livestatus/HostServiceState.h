@@ -1,4 +1,4 @@
-// Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -8,12 +8,11 @@
 
 #include <chrono>
 #include <cstddef>
-#include <memory>
 #include <string>
 #include <vector>
+class IHost;
+class IService;
 class HostServiceState;
-
-#include <livestatus/Interface.h>
 
 using HostServices = std::vector<HostServiceState *>;
 
@@ -70,8 +69,8 @@ public:
     std::string _notification_period;
     // maybe "": -> no period known, we assume "always"
     std::string _service_period;
-    std::unique_ptr<const IHost> _host;
-    std::unique_ptr<const IService> _service;
+    const IHost *_host;
+    const IService *_service;
     std::string _host_name;            // Fallback if host no longer exists
     std::string _service_description;  // Fallback if service no longer exists
 

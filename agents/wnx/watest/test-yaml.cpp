@@ -432,9 +432,8 @@ TEST(AgentConfig, Aggregate) {
 }
 
 TEST(AgentConfig, ReloadWithTimestamp) {
-    cma::OnStartTest();
-
-    ON_OUT_OF_SCOPE(cma::OnStartTest());
+    auto temp_fs = tst::TempCfgFs::Create();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
     {
         // prepare file
         auto path = CreateYamlnInTemp("test.yml", "global:\n    ena: yes\n");
@@ -857,7 +856,7 @@ TEST(AgentConfig, UTF16LE) {
     // #TODO make separate
     auto name_utf8 = GetVal(groups::kGlobal, vars::kName, std::string(""));
     EXPECT_TRUE(!name_utf8.empty());
-    auto name_utf16 = wtools::ConvertToUTF16(name_utf8);
+    auto name_utf16 = wtools::ConvertToUtf16(name_utf8);
     EXPECT_TRUE(!name_utf16.empty());
     auto utf8_from_utf16 = wtools::ToUtf8(name_utf16);
     EXPECT_TRUE(!utf8_from_utf16.empty());
@@ -867,7 +866,7 @@ TEST(AgentConfig, UTF16LE) {
     cma::OnStart(cma::AppType::test);
 }
 
-TEST(AgentConfig, FailScenario_Long) {
+TEST(AgentConfig, FailScenario_Simulation) {
     auto loader = [](auto &...str) -> bool {
         auto cfg_files = cma::tools::ConstructVectorWstring(str...);
 
@@ -959,14 +958,14 @@ TEST(AgentConfig, LoadingCheck) {
     EXPECT_TRUE(XLOG::l.isFileDbg());
     EXPECT_TRUE(XLOG::l.isWinDbg());
 
-    EXPECT_TRUE(!groups::global.enabledSections().empty());
-    EXPECT_TRUE(groups::global.disabledSections().empty());
+    EXPECT_TRUE(!groups::g_global.enabledSections().empty());
+    EXPECT_TRUE(groups::g_global.disabledSections().empty());
 
-    EXPECT_TRUE(groups::global.realtimePort() == cfg::kDefaultRealtimePort);
-    EXPECT_TRUE(groups::global.realtimeTimeout() ==
+    EXPECT_TRUE(groups::g_global.realtimePort() == cfg::kDefaultRealtimePort);
+    EXPECT_TRUE(groups::g_global.realtimeTimeout() ==
                 cfg::kDefaultRealtimeTimeout);
-    EXPECT_FALSE(groups::global.realtimeEncrypt());
-    EXPECT_FALSE(groups::global.realtimeEnabled());
+    EXPECT_FALSE(groups::g_global.realtimeEncrypt());
+    EXPECT_FALSE(groups::g_global.realtimeEnabled());
 }
 
 TEST(AgentConfig, FactoryConfigBase) {
@@ -1046,18 +1045,18 @@ TEST(AgentConfig, GlobalTest) {
     EXPECT_TRUE(
         tools::IsEqual(fname, wtools::ToStr(dir / cfg::kDefaultLogFileName)));
 
-    EXPECT_TRUE(groups::global.allowedSection("check_mk"));
-    EXPECT_TRUE(groups::global.allowedSection("winperf"));
-    EXPECT_TRUE(groups::global.allowedSection("uptime"));
-    EXPECT_TRUE(groups::global.allowedSection("systemtime"));
-    EXPECT_TRUE(groups::global.allowedSection("df"));
-    EXPECT_TRUE(groups::global.allowedSection("mem"));
-    EXPECT_TRUE(groups::global.allowedSection("services"));
+    EXPECT_TRUE(groups::g_global.allowedSection("check_mk"));
+    EXPECT_TRUE(groups::g_global.allowedSection("winperf"));
+    EXPECT_TRUE(groups::g_global.allowedSection("uptime"));
+    EXPECT_TRUE(groups::g_global.allowedSection("systemtime"));
+    EXPECT_TRUE(groups::g_global.allowedSection("df"));
+    EXPECT_TRUE(groups::g_global.allowedSection("mem"));
+    EXPECT_TRUE(groups::g_global.allowedSection("services"));
 
-    EXPECT_TRUE(!groups::global.isSectionDisabled("winperf_any"));
-    EXPECT_TRUE(!groups::global.allowedSection("_logfiles"));
+    EXPECT_TRUE(!groups::g_global.isSectionDisabled("winperf_any"));
+    EXPECT_TRUE(!groups::g_global.allowedSection("_logfiles"));
 
-    auto val = groups::global.getWmiTimeout();
+    auto val = groups::g_global.getWmiTimeout();
     EXPECT_TRUE(val >= 1 && val < 100);
 }
 
@@ -1197,24 +1196,19 @@ static YAML::Node generateTestNode(const std::string &node_text) {
 }
 
 TEST(AgentConfig, NodeCleanup) {
-    ON_OUT_OF_SCOPE(cma::OnStart(AppType::test));
-    ON_OUT_OF_SCOPE(tst::SafeCleanTempDir());
-    {
-        const auto node_base = generateTestNode(node_text);
-        YAML::Node node = YAML::Clone(node_base);
-        ASSERT_TRUE(node.IsMap());
-        auto expected_count = RemoveInvalidNodes(node);
-        EXPECT_EQ(expected_count, 3);
-        YAML::Emitter emit;
-        emit << node;
-        std::string value = emit.c_str();
-        EXPECT_TRUE(!value.empty());
-
-        EXPECT_EQ(value, node_ok);
-
-        expected_count = RemoveInvalidNodes(node);
-        EXPECT_EQ(expected_count, 0);
-    }
+    const auto temp_fs = tst::TempCfgFs::Create();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
+    const auto node_base = generateTestNode(node_text);
+    const YAML::Node node = YAML::Clone(node_base);
+    ASSERT_TRUE(node.IsMap());
+    auto expected_count = RemoveInvalidNodes(node);
+    EXPECT_EQ(expected_count, 3);
+    YAML::Emitter emit;
+    emit << node;
+    const std::string value = emit.c_str();
+    EXPECT_EQ(value, node_ok);
+    expected_count = RemoveInvalidNodes(node);
+    EXPECT_EQ(expected_count, 0);
 }
 
 static std::string node_plugins_execution =

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -25,7 +25,7 @@ import time
 import traceback
 import uuid
 from collections.abc import Mapping, Sequence
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 from typing import Any, cast, Literal, overload, Union
 
@@ -47,15 +47,14 @@ from cmk.utils.notify import (
     NotificationResultCode,
     NotificationViaPlugin,
 )
-from cmk.utils.regex import regex
-from cmk.utils.timeout import MKTimeout, Timeout
-from cmk.utils.type_defs import (
+from cmk.utils.notify_types import (
     Contact,
-    ContactgroupName,
     ContactName,
     EventContext,
     EventRule,
+    HostEventType,
     NotificationContext,
+    NotificationPluginNameStr,
     NotifyAnalysisInfo,
     NotifyBulkParameters,
     NotifyBulks,
@@ -65,8 +64,13 @@ from cmk.utils.type_defs import (
     NotifyPluginParamsList,
     NotifyRuleInfo,
     PluginNotificationContext,
+    ServiceEventType,
     UUIDs,
 )
+from cmk.utils.regex import regex
+from cmk.utils.timeout import MKTimeout, Timeout
+from cmk.utils.timeperiod import timeperiod_active
+from cmk.utils.type_defs import ContactgroupName
 
 import cmk.base.config as config
 import cmk.base.core
@@ -85,8 +89,6 @@ logger = logging.getLogger("cmk.base.notify")
 
 _log_to_stdout = False
 notify_mode = "notify"
-
-NotificationPluginNameStr = str
 
 NotificationTableEntry = dict[str, Union[NotificationPluginNameStr, list]]
 NotificationTable = list[NotificationTableEntry]
@@ -323,7 +325,11 @@ def notify_notify(raw_context: EventContext, analyse: bool = False) -> NotifyAna
     logger.debug(events.render_context_dump(raw_context))
 
     raw_context["LOGDIR"] = notification_logdir
-    events.complete_raw_context(raw_context, with_dump=config.notification_logging <= 10)
+    events.complete_raw_context(
+        raw_context,
+        with_dump=config.notification_logging <= 10,
+        contacts_needed=True,
+    )
 
     # Spool notification to remote host, if this is enabled
     if config.notification_spooling in ("remote", "both"):
@@ -342,10 +348,6 @@ def locally_deliver_raw_context(
     raw_context: EventContext, analyse: bool = False
 ) -> NotifyAnalysisInfo | None:
     try:
-
-        if analyse:
-            return None
-
         logger.debug("Preparing rule based notifications")
         return notify_rulebased(raw_context, analyse=analyse)
 
@@ -664,7 +666,7 @@ def rbn_finalize_plugin_parameters(
         return rule_parameters
 
     config_cache = config.get_config_cache()
-    parameters = config_cache.notification_plugin_parameters(hostname, plugin_name).copy()
+    parameters = dict(config_cache.notification_plugin_parameters(hostname, plugin_name)).copy()
     parameters.update(rule_parameters)
 
     # Added in 2.0.0b8. Applies if no value is set either in the notification rule
@@ -783,7 +785,7 @@ def rbn_get_bulk_params(rule: EventRule) -> NotifyBulkParameters | None:
 
     if method == "timeperiod":
         try:
-            active = cmk.base.core.timeperiod_active(params["timeperiod"])
+            active = timeperiod_active(params["timeperiod"])
         except Exception:
             if cmk.utils.debug.enabled():
                 raise
@@ -900,7 +902,7 @@ def rbn_match_event(
     state: str,
     last_state: str,
     event_map: dict[str, str],
-    allowed_events: list[str],
+    allowed_events: Sequence[ServiceEventType] | Sequence[HostEventType],
 ) -> str | None:
     notification_type = context["NOTIFICATIONTYPE"]
 
@@ -1101,7 +1103,6 @@ def rbn_match_event_console(rule: EventRule, context: EventContext) -> str | Non
             return "Notification has not been created by the Event Console."
 
         if match_ec is not False:
-
             # Match Event Console rule ID
             if (
                 "match_rule_id" in match_ec
@@ -1168,7 +1169,7 @@ def rbn_all_contacts(with_email: bool = False) -> list[ContactName]:
     return [contact_id for (contact_id, contact) in config.contacts.items() if contact.get("email")]
 
 
-@lru_cache
+@cache
 def _contactgroup_members() -> Mapping[ContactgroupName, set[ContactName]]:
     """Get the members of all contact groups
 
@@ -1686,7 +1687,7 @@ def find_bulks(only_ripe: bool) -> NotifyBulks:  # pylint: disable=too-many-bran
                     bulks.append((bulk_dir, age, interval, "n.a.", count, uuids))
                 else:
                     try:
-                        active = cmk.base.core.timeperiod_active(str(timeperiod))
+                        active = timeperiod_active(str(timeperiod))
                     except Exception:
                         # This prevents sending bulk notifications if a
                         # livestatus connection error appears. It also implies
@@ -1744,7 +1745,7 @@ def send_ripe_bulks() -> None:
 def notify_bulk(dirname: str, uuids: UUIDs) -> None:  # pylint: disable=too-many-branches
     parts = dirname.split("/")
     contact = parts[-3]
-    plugin_name = parts[-2]
+    plugin_name = cast(NotificationPluginNameStr, parts[-2])
     logger.info("   -> %s/%s %s", contact, plugin_name, dirname)
     # If new entries are created in this directory while we are working
     # on it, nothing bad happens. It's just that we cannot remove

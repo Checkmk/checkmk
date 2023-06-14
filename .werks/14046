@@ -6,7 +6,7 @@ Date: 1652080826
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Discovery would crash if there was no package version. It would
 result with packages not being shown in the Inventory tree.

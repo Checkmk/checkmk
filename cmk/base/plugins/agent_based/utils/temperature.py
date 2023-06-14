@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -17,28 +17,24 @@ LevelModes = str
 TwoLevelsType = Tuple[Optional[float], Optional[float]]
 FourLevelsType = Tuple[Optional[float], Optional[float], Optional[float], Optional[float]]
 LevelsType = Union[TwoLevelsType, FourLevelsType]
-TrendComputeDict = TypedDict(
-    "TrendComputeDict",
-    {
-        "period": int,
-        "trend_levels": TwoLevelsType,
-        "trend_levels_lower": TwoLevelsType,
-        "trend_timeleft": TwoLevelsType,
-    },
-    total=False,
-)
-TempParamDict = TypedDict(
-    "TempParamDict",
-    {
-        "input_unit": TempUnitType,
-        "output_unit": TempUnitType,
-        "levels": TwoLevelsType,
-        "levels_lower": TwoLevelsType,
-        "device_levels_handling": LevelModes,
-        "trend_compute": TrendComputeDict,
-    },
-    total=False,
-)
+
+
+class TrendComputeDict(TypedDict, total=False):
+    period: int
+    trend_levels: TwoLevelsType
+    trend_levels_lower: TwoLevelsType
+    trend_timeleft: TwoLevelsType
+
+
+class TempParamDict(TypedDict, total=False):
+    input_unit: TempUnitType
+    output_unit: TempUnitType
+    levels: TwoLevelsType
+    levels_lower: TwoLevelsType
+    device_levels_handling: LevelModes
+    trend_compute: TrendComputeDict
+
+
 TempParamType = Union[None, TwoLevelsType, FourLevelsType, TempParamDict]
 
 
@@ -101,7 +97,7 @@ def render_temp(n: float, output_unit: str, relative: bool = False, *, sign: boo
 
 
 def _render_temp_with_unit(temp: float, unit: str) -> str:
-    return render_temp(temp, unit) + temp_unitsym[unit]
+    return f"{render_temp(temp, unit)} {temp_unitsym[unit]}"
 
 
 temp_unitsym = {
@@ -213,6 +209,7 @@ def _check_trend(
             relative=True,
             sign=True,
         )
+        + " "
         + temp_unitsym[output_unit]
         + " per "
         + str(trend_range_min)

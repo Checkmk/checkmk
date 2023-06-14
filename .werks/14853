@@ -6,7 +6,7 @@ Date: 1668433030
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If the number of events reached a limit (global/per rule/per host),
 the oldest event was deleted, but a history entry for that deletion

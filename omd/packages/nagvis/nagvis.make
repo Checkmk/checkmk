@@ -1,5 +1,5 @@
 NAGVIS := nagvis
-NAGVIS_VERS := 1.9.34
+NAGVIS_VERS := 1.9.35
 NAGVIS_DIR := $(NAGVIS)-$(NAGVIS_VERS)
 
 NAGVIS_PATCHING := $(BUILD_HELPER_DIR)/$(NAGVIS_DIR)-patching
@@ -27,7 +27,7 @@ $(NAGVIS_INSTALL): $(NAGVIS_BUILD)
 	  $(MV) $(DESTDIR)$(OMD_ROOT)/share/nagvis/share $(DESTDIR)$(OMD_ROOT)/share/nagvis/htdocs
 	
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/var/nagvis/profiles
-	
+
 	# Move package documentations to have these files in the binary packages
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/share/doc/$(NAGVIS)
 	for file in COPYING README ; do \
@@ -46,6 +46,13 @@ $(NAGVIS_INSTALL): $(NAGVIS_BUILD)
 	$(RM) $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc/maps/*.cfg
 	$(MV) $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc/conf.d/*.ini.php $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/conf.d
 	$(MV) $(DESTDIR)$(OMD_ROOT)/share/nagvis/etc/geomap/demo-*.csv $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/geomap
+	chmod 640 $(DESTDIR)$(OMD_ROOT)/skel/etc/nagvis/geomap/demo-locations.csv
+	chmod 755 $(DESTDIR)$(OMD_ROOT)/share/nagvis/htdocs/userfiles/images/maps
+	chmod 755 $(DESTDIR)$(OMD_ROOT)/share/nagvis/htdocs/userfiles/images/maps
+	chmod 644 $(DESTDIR)$(OMD_ROOT)/share/nagvis/htdocs/userfiles/images/maps/*.png
+	chmod 755 $(DESTDIR)$(OMD_ROOT)/share/nagvis/htdocs/userfiles/images/shapes
+	chmod 644 $(DESTDIR)$(OMD_ROOT)/share/nagvis/htdocs/userfiles/images/shapes/*.png
+	chmod 755 $(DESTDIR)$(OMD_ROOT)/share/nagvis/htdocs/var
 	
 	# Delete files/directories we do not want to pack
 	$(RM) -rf $(DESTDIR)$(OMD_ROOT)/share/nagvis/var

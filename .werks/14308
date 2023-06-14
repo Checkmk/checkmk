@@ -1,0 +1,16 @@
+Title: Fix "Invalid job status None found" message for background jobs
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1682423560
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+In case a job has just started and did not report any status update or was
+interrupted during startup the `jobstatus.mk` state file could be empty,
+resulting in the message Invalid job status None found in [PATH]".
+
+The handling of this situation has been improved by showing the initialized
+state in this situation.

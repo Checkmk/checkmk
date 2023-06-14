@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
@@ -64,7 +64,7 @@ def log(msg, *args):
 class ConsoleFormatter:
     __slots__ = ["out"]
 
-    def __init__(self, args) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, args) -> None:  # type: ignore[no-untyped-def]
         self.out = sys.stdout
 
     def push(self, importer, imported):
@@ -98,7 +98,7 @@ class JSONFormatter:
 
     __slots__ = ("metric", "stack", "open")
 
-    def __init__(self, args) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, args) -> None:  # type: ignore[no-untyped-def]
         self.open = args.open
         self.metric = {"name": "root"}
         # TODO: The stack is an almost untypeable mess...
@@ -157,7 +157,7 @@ class JSONFormatter:
 class GraphVizFormatter:
     __slots__ = ("from_", "to", "out", "open")
 
-    def __init__(self, args) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, args) -> None:  # type: ignore[no-untyped-def]
         self.open = args.open
         self.from_: list = []
         self.to: list = []
@@ -227,7 +227,8 @@ class GraphVizFormatter:
         #       _spawn("eog", neato_image)
 
         dot_image = f"dot-{filename}.png"
-        os.system(f"dot -Tpng -o{dot_image} {filename}")  # nosec
+        with subprocess.Popen(["dot", "-Tpng", "-o" + dot_image, filename]):
+            pass
         log("Wrote %s", os.path.abspath(dot_image))
         _spawn("eog", dot_image)
 
@@ -240,7 +241,7 @@ FORMATTERS = {
 
 
 class Formatter:
-    def __init__(self, *formatters) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, *formatters) -> None:  # type: ignore[no-untyped-def]
         self.formatters = formatters
 
     def __enter__(self):
@@ -472,7 +473,10 @@ def basedir():
     root = subprocess.check_output(["git", "rev-parse", "--show-toplevel"])
     # So cmk will actually be found...
     sys.path.insert(0, root.decode("utf-8").strip())
-    yield
+    try:
+        yield
+    finally:
+        sys.path.pop(0)
 
 
 def _spawn(*args):

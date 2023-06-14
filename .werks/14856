@@ -1,0 +1,16 @@
+Title: Make EC IPv6 compatible
+Class: feature
+Compatible: compat
+Component: ec
+Date: 1680684545
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Make all components of EC accept IPv6.
+This includes sockets and GUI fields.
+This change does not require any special
+setup or changes from the user because
+the IPv4 addresses are accepted as before.
+

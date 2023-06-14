@@ -6,7 +6,7 @@ Date: 1655820017
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In some error cases, a non-JSON result page was returned by the REST
 API. This led to problems with script execution as the page was not

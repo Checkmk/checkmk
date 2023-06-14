@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module for generic testing of a 'dataset' derived from various sources.
@@ -45,12 +45,6 @@ Some more advanced ones are
                        If present its value is passed to `freezegun.freeze_time`.
                        If you specify the empty string it will be replaced by the
                        current time if processed by generictests.regression.
-  * `extra_sections` : [sc-dict] Extra sections that are appended to the info
-                       / parsed variable.
-                       If present, its values are extra sections (the actual
-                       content, not their names!) appended to the info/parsed
-                       argument before passed to the discovery or check
-                       function.
   * `mock_host_conf` : [sc-dict] If present, its values are passed to
                            `MockHostExtraConf`
                        as defined in checktestlib module.

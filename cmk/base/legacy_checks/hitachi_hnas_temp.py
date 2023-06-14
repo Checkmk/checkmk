@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
+from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_legacy_includes.temperature import check_temperature
+from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.utils.hitachi_hnas import DETECT
+
+
+def format_hitachi_hnas_name(nodeid, sensorid, new_format):
+    # net item format is used in 1.2.7i? and newer
+    if new_format:
+        return "Node %s Sensor %s" % (nodeid, sensorid)
+    return "%s.%s" % (nodeid, sensorid)
+
+
+def inventory_hitachi_hnas_temp(info):
+    for clusternode, id_, _status, _temp in info:
+        yield format_hitachi_hnas_name(clusternode, id_, True), None
+
+
+def check_hitachi_hnas_temp(item, params, info):
+    temp_status_map = (
+        ("", 3),  # 0
+        ("ok", 0),  # 1
+        ("tempWarning", 1),  # 2
+        ("tempSevere", 2),  # 3
+        ("tempSensorFailed", 2),  # 4
+        ("tempSensorWarning", 1),  # 5
+        ("unknown", 3),  # 6
+    )
+
+    for clusternode, id_, status, temp in info:
+        new_format = item.startswith("Node")
+        if format_hitachi_hnas_name(clusternode, id_, new_format) == item:
+            status = int(status)
+            temp = int(temp)
+
+            if status == 0 or status >= len(temp_status_map):
+                return 3, "unidentified status %s" % status, []
+
+            return check_temperature(
+                temp,
+                params,
+                "hitachi_hnas_temp_%s" % item,
+                dev_status=temp_status_map[status][1],
+                dev_status_name="Unit: %s" % temp_status_map[status][0],
+            )
+    return 3, "No sensor found", []
+
+
+check_info["hitachi_hnas_temp"] = LegacyCheckDefinition(
+    detect=DETECT,
+    check_function=check_hitachi_hnas_temp,
+    discovery_function=inventory_hitachi_hnas_temp,
+    service_name="Temperature %s",
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.11096.6.1.1.1.2.1.9.1",
+        oids=["1", "2", "3", "4"],
+    ),
+    check_ruleset_name="temperature",
+)

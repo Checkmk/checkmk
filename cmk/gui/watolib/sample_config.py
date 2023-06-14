@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Create an initial Checkmk configuration for new sites"""
@@ -7,22 +7,26 @@
 import os
 from datetime import datetime
 from typing import Any
+from uuid import uuid4
 
 from cmk.utils import store
 from cmk.utils.encryption import raw_certificates_from_file
 from cmk.utils.log import VERBOSE
+from cmk.utils.notify_types import EventRule, NotificationRuleID
 from cmk.utils.paths import site_cert_file
 from cmk.utils.tags import sample_tag_config, TagConfig
-from cmk.utils.type_defs import EventRule
 
 from cmk.gui.groups import AllGroupSpecs, GroupName
 from cmk.gui.log import logger
-from cmk.gui.plugins.watolib.utils import sample_config_generator_registry, SampleConfigGenerator
 from cmk.gui.userdb import create_cmk_automation_user
+from cmk.gui.watolib.config_domain_name import (
+    sample_config_generator_registry,
+    SampleConfigGenerator,
+)
 from cmk.gui.watolib.config_domains import ConfigDomainCACertificates
 from cmk.gui.watolib.global_settings import save_global_settings
 from cmk.gui.watolib.group_writer import save_group_information
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 from cmk.gui.watolib.notifications import save_notification_rules
 from cmk.gui.watolib.rulesets import FolderRulesets
 from cmk.gui.watolib.tags import TagConfigFile
@@ -84,6 +88,23 @@ def _create_sample_config() -> None:
             logger.exception("Exception in sample config generator [%s]", generator.ident())
 
     logger.log(VERBOSE, "Finished creating the sample config")
+
+
+def new_notification_rule_id() -> NotificationRuleID:
+    return NotificationRuleID(str(uuid4()))
+
+
+def get_default_notification_rule() -> EventRule:
+    return EventRule(
+        rule_id=new_notification_rule_id(),
+        allow_disable=True,
+        contact_all=False,
+        contact_all_with_email=False,
+        contact_object=True,
+        description="Notify all contacts of a host/service via HTML email",
+        disabled=False,
+        notify_plugin=("mail", {}),
+    )
 
 
 @sample_config_generator_registry.register
@@ -271,21 +292,12 @@ class ConfigGeneratorBasicWATOConfig(SampleConfigGenerator):
             ],
         }
 
-        rulesets = FolderRulesets.load_folder_rulesets(Folder.root_folder())
-        rulesets.from_config(Folder.root_folder(), ruleset_config)
-        rulesets.save()
+        root_folder = folder_tree().root_folder()
+        rulesets = FolderRulesets.load_folder_rulesets(root_folder)
+        rulesets.replace_folder_config(root_folder, ruleset_config)
+        rulesets.save_folder()
 
-        notification_rules = [
-            EventRule(
-                allow_disable=True,
-                contact_all=False,
-                contact_all_with_email=False,
-                contact_object=True,
-                description="Notify all contacts of a host/service via HTML email",
-                disabled=False,
-                notify_plugin=("mail", {}),
-            ),
-        ]
+        notification_rules = [get_default_notification_rule()]
         save_notification_rules(notification_rules)
 
     def _initial_global_settings(self) -> dict[str, Any]:

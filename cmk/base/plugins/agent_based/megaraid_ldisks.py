@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -46,7 +46,6 @@ def parse_megaraid_ldisks(string_table: StringTable) -> megaraid.SectionLDisks:
             parsed[legacy_item] = parsed[item]
 
         elif item is not None and item in parsed:
-
             if line[0].startswith("State"):
                 parsed[item]["state"] = l.split(":")[1].strip()
             elif line[0].startswith("Default"):

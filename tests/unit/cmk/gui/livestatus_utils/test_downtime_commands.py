@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import datetime as dt
@@ -42,13 +42,13 @@ def test_host_downtime(
             start_time,
             end_time,
             recur="weekday_start",
-            duration=120,
+            duration=2,
             comment="Going down",
         )
 
 
 @pytest.mark.usefixtures("request_context")
-def test_host_downtime_with_services(  # type:ignore[no-untyped-def]
+def test_host_downtime_with_services(  # type: ignore[no-untyped-def]
     mock_livestatus, dates
 ) -> None:
     start_time, end_time = dates
@@ -78,7 +78,7 @@ def test_host_downtime_with_services(  # type:ignore[no-untyped-def]
             end_time,
             include_all_services=True,
             recur="weekday_start",
-            duration=120,
+            duration=2,
             comment="Going down",
         )
 
@@ -116,7 +116,7 @@ def test_hostgroup_host_downtime(
             start_time,
             end_time,
             recur="day_of_month",
-            duration=120,
+            duration=2,
             comment="Boom",
         )
 
@@ -170,7 +170,7 @@ def test_hostgroup_host_downtime_with_services(
             end_time,
             include_all_services=True,
             recur="day_of_month",
-            duration=120,
+            duration=2,
             comment="Boom",
         )
 
@@ -208,7 +208,7 @@ def test_servicegroup_service_downtime(
             start_time,
             end_time,
             recur="day_of_month",
-            duration=120,
+            duration=2,
             comment="Boom",
         )
 
@@ -259,6 +259,6 @@ def test_servicegroup_service_downtime_and_hosts(
             end_time,
             include_hosts=True,
             recur="day_of_month",
-            duration=120,
+            duration=2,
             comment="Boom",
         )

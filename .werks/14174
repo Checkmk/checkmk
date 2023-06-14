@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The SLA painter had a rounding error in the summary line, hereby showing <tt>0.00% OP</tt> when at least one SLA period was broken.
 Furthermore, fixed an exception in the SLA painter when service in question had no SLA assigned.

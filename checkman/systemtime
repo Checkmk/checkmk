@@ -1,5 +1,5 @@
 title: Synchronization of Operating System Time
-agents: windows
+agents: windows, vsphere
 catalog: os/misc
 license: GPLv2
 distribution: check_mk
@@ -11,13 +11,11 @@ description:
  the systematic time delay between the output of the time by the agent
  and the actual processing of that data by Checkmk.
 
- Its advantage - however - is that it works on any Windows host (with
- an agent of version of 1.1.10 or later) - regardless of the method used
- to synchronize the time.
+ Its advantage however, is that it works on any Windows or ESX host
+ - regardless of the method used to synchronize the time.
 
  Levels can be set for making the check warn/crit if the time difference
  exceeds the configured limits.
 
 discovery:
  One service is created for each host supporting this check.
- Currently this is the windows agent in version 1.1.10 or later.

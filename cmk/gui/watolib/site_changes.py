@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from pathlib import Path
+import json
+from collections.abc import Sequence
 from typing import Any
+
+from livestatus import SiteId
 
 from cmk.gui.watolib.appendstore import ABCAppendStore
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
@@ -16,9 +19,8 @@ ChangeSpec = dict[str, Any]
 class SiteChanges(ABCAppendStore[ChangeSpec]):
     """Manage persisted changes of a single site"""
 
-    @staticmethod
-    def make_path(*args: str) -> Path:
-        return wato_var_dir() / ("replication_changes_%s.mk" % args[0])
+    def __init__(self, site_id: SiteId) -> None:
+        super().__init__(wato_var_dir() / (f"replication_changes_{site_id}.mk"))
 
     @staticmethod
     def _serialize(entry: ChangeSpec) -> object:
@@ -42,3 +44,14 @@ class SiteChanges(ABCAppendStore[ChangeSpec]):
         else:
             raw["object"] = ObjectRef.deserialize(raw["object"]) if raw["object"] else None
         return raw
+
+    def clear(self) -> None:
+        self._path.unlink(missing_ok=True)
+
+    @staticmethod
+    def to_json(entries: Sequence[ChangeSpec]) -> str:
+        return json.dumps([SiteChanges._serialize(entry) for entry in entries])
+
+    @staticmethod
+    def from_json(raw: str) -> Sequence[ChangeSpec]:
+        return [SiteChanges._deserialize(entry) for entry in json.loads(raw)]

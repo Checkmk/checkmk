@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.2.0i1"
+__version__ = "2.3.0b1"
 
 # Monitors FTP backup spaces of plesk domains.
 # Data format
@@ -18,7 +18,7 @@ import time
 from ftplib import FTP  # nosec B402 # BNS:97f639
 
 try:
-    from typing import Any, List
+    from typing import Any, List  # noqa: F401 # pylint: disable=unused-import
 except ImportError:
     pass
 

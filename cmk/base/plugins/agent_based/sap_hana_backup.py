@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -109,7 +109,6 @@ def discovery_sap_hana_backup(section: Section) -> DiscoveryResult:
 
 
 def check_sap_hana_backup(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
-
     data = section.get(item)
     if not data or data.is_empty():
         raise IgnoreResultsError("Login into database failed.")
@@ -147,7 +146,7 @@ def check_sap_hana_backup(item: str, params: Mapping[str, Any], section: Section
         yield Result(state=State.OK, summary="Message: %s" % data.message)
 
 
-def cluster_check_sap_hana_backup(  # type:ignore[no-untyped-def]
+def cluster_check_sap_hana_backup(  # type: ignore[no-untyped-def]
     item: str,
     params: Mapping[str, Any],
     section: Mapping[str, Optional[Section]],

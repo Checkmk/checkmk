@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from itertools import count
@@ -8,6 +8,7 @@ import pytest
 
 from cmk.base.plugins.agent_based import kube_pod_status
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.kube_pod_status import (
     _check_kube_pod_status,
     check_kube_pod_status,
@@ -28,9 +29,9 @@ from cmk.base.plugins.agent_based.utils.kube import (
 from cmk.gui.plugins.wato.check_parameters import kube_pod_status as wato_kube_pod_status
 
 
-def _mocked_container_info_from_state(  # type:ignore[no-untyped-def]
+def _mocked_container_info_from_state(
     state: ContainerRunningState | ContainerTerminatedState | ContainerWaitingState,
-):
+) -> ContainerStatus:
     # The check only requires the state field to be populated, therefore all the other fields are
     # filled with some arbitrary values.
     return ContainerStatus(
@@ -44,6 +45,7 @@ def _mocked_container_info_from_state(  # type:ignore[no-untyped-def]
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section_kube_pod_containers, section_kube_pod_lifecycle, expected_result",
     [
@@ -98,10 +100,10 @@ def _mocked_container_info_from_state(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_kube_pod_status_no_issues_in_containers(  # type:ignore[no-untyped-def]
+def test_check_kube_pod_status_no_issues_in_containers(
     section_kube_pod_containers: PodContainers | None,
     section_kube_pod_lifecycle: PodLifeCycle | None,
-    expected_result,
+    expected_result: CheckResult,
 ) -> None:
     """
     Tested Pods have a single container which is configured correctly and in a good state.
@@ -116,6 +118,7 @@ def test_check_kube_pod_status_no_issues_in_containers(  # type:ignore[no-untype
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section_kube_pod_containers, section_kube_pod_lifecycle, expected_result",
     [
@@ -164,10 +167,10 @@ def test_check_kube_pod_status_no_issues_in_containers(  # type:ignore[no-untype
         ),
     ],
 )
-def test_check_kube_pod_status_failing_container(  # type:ignore[no-untyped-def]
+def test_check_kube_pod_status_failing_container(
     section_kube_pod_containers: PodContainers | None,
     section_kube_pod_lifecycle: PodLifeCycle | None,
-    expected_result,
+    expected_result: CheckResult,
 ) -> None:
     """
     Tested Pods with a single failing or misconfigured container.
@@ -182,6 +185,7 @@ def test_check_kube_pod_status_failing_container(  # type:ignore[no-untyped-def]
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section_kube_pod_containers, section_kube_pod_lifecycle, expected_result",
     [
@@ -256,10 +260,10 @@ def test_check_kube_pod_status_failing_container(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_kube_pod_status_multiple_issues(  # type:ignore[no-untyped-def]
+def test_check_kube_pod_status_multiple_issues(
     section_kube_pod_containers: PodContainers | None,
     section_kube_pod_lifecycle: PodLifeCycle | None,
-    expected_result,
+    expected_result: CheckResult,
 ) -> None:
     """
     Tested Pods have two containers with different issues, which are then summarized into a
@@ -301,6 +305,7 @@ def test_check_alert_if_pending_too_long() -> None:
         assert summary_result.summary.endswith(expected_message)
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section_kube_pod_init_containers, section_kube_pod_containers, section_kube_pod_lifecycle, expected_result",
     [
@@ -332,11 +337,11 @@ def test_check_alert_if_pending_too_long() -> None:
         ),
     ],
 )
-def test_check_kube_pod_status_init_container_broken(  # type:ignore[no-untyped-def]
+def test_check_kube_pod_status_init_container_broken(
     section_kube_pod_init_containers: PodContainers,
     section_kube_pod_containers: PodContainers,
     section_kube_pod_lifecycle: PodLifeCycle | None,
-    expected_result,
+    expected_result: str,
 ) -> None:
     """
     Tested Pods has a failing init-container.
@@ -466,8 +471,8 @@ def test_check_group_timer() -> None:
             assert expected_notice == notice[0].details
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_group_order_matters() -> None:
-
     params = kube_pod_status.Params(
         groups=[
             ("no_levels", [".*"]),

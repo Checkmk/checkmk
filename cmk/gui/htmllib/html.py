@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,7 +10,7 @@ import pprint
 import re
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, overload, Union
+from typing import Any, overload
 
 from flask import current_app, session
 
@@ -232,7 +232,7 @@ class HTMLGenerator(HTMLWriter):
         self.set_js_csrf_token()
 
         if self.browser_reload != 0.0:
-            self.javascript("cmk.utils.set_reload(%s)" % (self.browser_reload,))
+            self.javascript(f"cmk.utils.set_reload({self.browser_reload})")
 
         self.close_head()
 
@@ -270,26 +270,14 @@ class HTMLGenerator(HTMLWriter):
     # Make the browser load specified javascript files. We have some special handling here:
     # a) files which can not be found shall not be loaded
     # b) in OMD environments, add the Checkmk version to the version (prevents update problems)
-    # c) load the minified javascript when not in debug mode
     def javascript_filename_for_browser(self, jsname: str) -> str | None:
-        filename_for_browser = None
-        if active_config.debug:
-            min_parts = ["", "_min"]
-        else:
-            min_parts = ["_min", ""]
-
-        for min_part in min_parts:
-            fname = f"htdocs/js/{jsname}{min_part}.js"
-            try:
-                HTMLGenerator._exists_in_web_dirs(fname)
-            except FileNotFoundError:
-                continue
-
-            filename_for_browser = f"js/{jsname}{min_part}-{cmk_version.__version__}.js"
-            break
-
-        if filename_for_browser is None and current_app.debug:
-            raise RuntimeError(f"{jsname} could not be found.")
+        filename_for_browser = f"js/{jsname}_min-{cmk_version.__version__}.js"
+        try:
+            HTMLGenerator._exists_in_web_dirs(filename_for_browser)
+        except FileNotFoundError:
+            if current_app.debug:
+                raise RuntimeError(f"{jsname} could not be found.")
+            return None
 
         return filename_for_browser
 
@@ -600,7 +588,7 @@ class HTMLGenerator(HTMLWriter):
             disabled_arg = None
 
         # autocomplete="off": Is needed for firefox not to set "disabled="disabled" during page reload
-        # when it has been set on a page via javascript before. Needed for WATO activate changes page.
+        # when it has been set on a page via javascript before. Needed for Setup activate changes page.
         self.input(
             name=varname,
             type_="button",
@@ -652,7 +640,6 @@ class HTMLGenerator(HTMLWriter):
         required: bool = False,
         title: str | None = None,
     ) -> None:
-
         # Model
         error = user_errors.get(varname)
         value = self.request.get_str_input(varname, default_value)
@@ -720,7 +707,7 @@ class HTMLGenerator(HTMLWriter):
     def status_label(
         self, content: HTMLContent, status: str, title: str, **attrs: HTMLTagAttributeValue
     ) -> None:
-        """Shows a colored badge with text (used on WATO activation page for the site status)"""
+        """Shows a colored badge with text (used on Setup activation page for the site status)"""
         self.status_label_button(content, status, title, onclick=None, **attrs)
 
     def status_label_button(
@@ -827,7 +814,6 @@ class HTMLGenerator(HTMLWriter):
         try_max_width: bool = False,
         **attrs: HTMLTagAttributeValue,
     ) -> None:
-
         value = self.request.get_str_input(varname, deflt)
         error = user_errors.get(varname)
 
@@ -1284,7 +1270,6 @@ class HTMLGenerator(HTMLWriter):
         popup_group: str | None = None,
         hover_switch_delay: int | None = None,
     ) -> HTML:
-
         onclick = "cmk.popup_menu.toggle_popup(event, this, {}, {}, {}, {}, {},  {});".format(
             json.dumps(ident),
             json.dumps(method.asdict()),
@@ -1371,7 +1356,7 @@ def _path(path_or_str: str) -> Path:
     ...
 
 
-def _path(path_or_str: Union[Path, str]) -> Path:
+def _path(path_or_str: Path | str) -> Path:
     if isinstance(path_or_str, str):  # pylint: disable=no-else-return
         return Path(path_or_str)
     else:

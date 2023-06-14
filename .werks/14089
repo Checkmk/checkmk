@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 2
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In Checkmk version 2.1 the monitoring data sent from the monitored host to the monitoring server is TLS encrypted and compressed by default.
 

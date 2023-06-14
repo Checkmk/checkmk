@@ -1,11 +1,123 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from tests.unit.conftest import FixRegister
 
 from cmk.base.api.agent_based.register import get_relevant_raw_sections
+
+
+def test_detect_spec_dedup(
+    fix_register: FixRegister,
+) -> None:
+    """Test which snmp sections share a detect spec, but do not share the code for it
+
+    This means that they currently are detecting the same devices, but they might get out
+    of sync.
+
+    If this test turns red, the set of plugins that share the same detection spec has changed.
+    This means that
+     a) You have deduplicated code, such that plugins now share the same (not only "equal"!)
+        detection spec. That is good, remove them from the list below!
+     b) You accidently changed a detect specification where you should have changed all of them,
+        or you can share a spec with another plugin. -> please turn this situation into a)!
+    """
+    plugins_by_detect_spec: dict[tuple[tuple[str, ...], ...], dict[int, list[str]]] = {}
+    for snmp_section in fix_register.snmp_sections.values():
+        plugins_by_detect_spec.setdefault(
+            tuple(tuple(e) for e in snmp_section.detect_spec), {}
+        ).setdefault(id(snmp_section.detect_spec), []).append(str(snmp_section.name))
+
+    offenders: set[tuple[str, ...]] = {
+        tuple(sorted([s for sections in values.values() for s in sections]))
+        for _spec, values in plugins_by_detect_spec.items()
+        if len(values) > 1
+    }
+    assert offenders == {
+        ("alcatel_timetra_chassis", "alcatel_timetra_cpu"),
+        ("apc_netbotz_fluid", "apc_netbotz_smoke"),
+        ("apc_netbotz_other_sensors", "apc_netbotz_sensors"),
+        ("apc_sts_inputs", "apc_sts_source"),
+        ("arbor_peakflow_sp", "arbor_peakflow_sp_cpu_load"),
+        ("arbor_peakflow_tms", "arbor_peakflow_tms_cpu_load"),
+        ("arbor_pravail", "arbor_pravail_cpu_load"),
+        ("artec_documents", "artec_temp"),
+        ("bdt_tape_info", "bdt_tape_status"),
+        ("bintec_brrp_status", "bintec_sensors"),
+        ("blade_powerfan", "blade_powermod"),
+        ("bluecoat_diskcpu", "bluecoat_sensors"),
+        ("bluenet_meter", "bluenet_sensor"),
+        ("cisco_asa_conn", "cisco_asa_connections"),
+        ("dell_powerconnect_fans", "dell_powerconnect_psu"),
+        ("docsis_channels_downstream", "docsis_channels_upstream"),
+        ("emerson_stat", "emerson_temp"),
+        ("fjdarye_pcie_flash_modules", "fjdarye_pools"),
+        ("gude_humidity", "gude_temp"),
+        ("h3c_lanswitch_cpu", "h3c_lanswitch_sensors"),
+        ("hitachi_hus_dkc", "hitachi_hus_dku"),
+        ("hp_fan", "hp_psu"),
+        ("hp_hh3c_fan", "hp_hh3c_power"),
+        ("hp_mcs_sensors", "hp_mcs_system"),
+        ("hp_proliant_systeminfo", "hp_sts_drvbox"),
+        ("huawei_wlc_aps", "huawei_wlc_devs"),
+        ("hwg_humidity", "hwg_temp"),
+        ("ibm_tl_changer_devices", "ibm_tl_media_access_devices"),
+        ("if", "inv_if"),
+        ("innovaphone_priports_l1", "innovaphone_priports_l2"),
+        ("ipr400_in_voltage", "ipr400_temp"),
+        ("juniper_trpz_aps", "juniper_trpz_aps_sessions"),
+        ("netapp_cluster", "netapp_vfiler"),
+        ("nimble_latency", "nimble_volumes"),
+        ("packeteer_fan_status", "packeteer_ps_status"),
+        ("poseidon_inputs", "poseidon_temp"),
+        ("qlogic_sanbox", "qlogic_sanbox_fabric_element"),
+        ("quantum_libsmall_door", "quantum_libsmall_status"),
+        ("raritan_emx", "raritan_emx_sensors"),
+        ("raritan_pdu_outletcount", "raritan_pdu_plugs"),
+        ("raritan_px_outlets", "raritan_px_sensors"),
+        ("safenet_hsm", "safenet_ntls"),
+        ("sentry_pdu_outlets_v4", "sentry_pdu_v4"),
+        ("sophos", "sophos_messages"),
+        ("stormshield_cluster", "stormshield_cluster_node"),
+        ("teracom_tcw241_analog", "teracom_tcw241_digital"),
+        ("zebra_model", "zebra_printer_status"),
+        ("adva_fsp_current", "adva_fsp_if", "adva_fsp_temp"),
+        ("akcp_sensor_drycontact", "akcp_sensor_humidity", "akcp_sensor_temp"),
+        ("arris_cmts_cpu", "arris_cmts_mem", "arris_cmts_temp"),
+        ("aruba_aps", "aruba_clients", "aruba_cpu_util"),
+        ("atto_fibrebridge_chassis", "atto_fibrebridge_fcport", "atto_fibrebridge_sas"),
+        ("avaya_45xx_cpu", "avaya_45xx_fan", "avaya_45xx_temp"),
+        ("bdtms_tape_info", "bdtms_tape_module", "bdtms_tape_status"),
+        ("cisco_srst_call_legs", "cisco_srst_phones", "cisco_srst_state"),
+        ("climaveneta_alarm", "climaveneta_fan", "climaveneta_temp"),
+        ("dell_idrac_fans", "dell_idrac_power", "dell_idrac_raid"),
+        ("f5_bigip_cluster_status_v11_2", "f5_bigip_vcmpfailover", "f5_bigip_vcmpguests"),
+        ("hp_procurve_cpu", "hp_procurve_mem", "hp_procurve_sensors"),
+        ("mcafee_webgateway", "mcafee_webgateway_info", "mcafee_webgateway_misc"),
+        ("orion_backup", "orion_batterytest", "orion_system"),
+        ("pfsense_counter", "pfsense_if", "pfsense_status"),
+        ("sentry_pdu", "sentry_pdu_outlets", "sentry_pdu_systempower"),
+        (  # these are the same "by chance"
+            "fjdarye_channel_adapters",
+            "fjdarye_channel_modules",
+            "fjdarye_controller_enclosures",
+            "fjdarye_controller_modules_memory",
+            "fjdarye_disks",
+            "fjdarye_summary_status",
+            "fjdarye_system_capacitors",
+        ),
+        (  # these probably are the same due to rebranding? Only two different implementations.
+            "fortiauthenticator_auth_fail",
+            "fortiauthenticator_system",
+            "primekey",
+            "primekey_cpu_temperature",
+            "primekey_data",
+            "primekey_db_usage",
+            "primekey_fan",
+            "primekey_hsm_battery_voltage",
+        ),
+    }
 
 
 def test_all_sections_are_subscribed_by_some_plugin(
@@ -243,6 +355,7 @@ def test_section_parse_function_does_something(fix_register: FixRegister) -> Non
         "msexch_dag",
         "netctr",
         "netif",
+        "netscaler_health",
         "nvidia",
         "siemens_plc",
         "vms_system",

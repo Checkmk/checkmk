@@ -1,0 +1,15 @@
+Title: Fix error if only auxiliary tag help is updated via REST API
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1678707769
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+If you tried to update only the "help" field of auxiliary tags via REST API, an
+error like "At least one of the following parameters should be provided:
+{'topic', 'title'}" occurred.
+

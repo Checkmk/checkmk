@@ -1,0 +1,15 @@
+Title: Crash timesyncd NTPMessage
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1682409778
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+When receiving no timezone from the linux agent the timesyncd check plugin
+would crash.
+
+

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -27,12 +27,11 @@ from cmk.gui.plugins.metrics.utils import (
     GraphDataRange,
     GraphRecipe,
     GraphRenderOptions,
-    HorizontalRule,
     SizeEx,
     unit_info,
     UnitInfo,
 )
-from cmk.gui.type_defs import CombinedGraphSpec, UnitRenderFunc
+from cmk.gui.type_defs import CombinedGraphSpec, HorizontalRule, UnitRenderFunc
 from cmk.gui.utils.theme import theme
 
 Label = tuple[float, str | None, int]
@@ -88,7 +87,7 @@ class GraphArtwork(TypedDict):
     mirrored: bool
     # Actual data and axes
     curves: list[LayoutedCurve]
-    horizontal_rules: list[HorizontalRule]
+    horizontal_rules: Sequence[HorizontalRule]
     vertical_axis: VerticalAxis
     time_axis: TimeAxis
     # Displayed range
@@ -498,7 +497,7 @@ def _compute_curve_values_at_timestamp(
     return curve_values
 
 
-def _render_scalar_value(value, unit) -> tuple[TimeSeriesValue, str]:  # type:ignore[no-untyped-def]
+def _render_scalar_value(value, unit) -> tuple[TimeSeriesValue, str]:  # type: ignore[no-untyped-def]
     if value is None:
         return None, _("n/a")
     return value, unit["render"](value)
@@ -744,7 +743,6 @@ def _get_min_max_from_curves(
     # Enlarge a given range if necessary.
     for curve in layouted_curves:
         for point in curve["points"]:
-
             # Line points
             if isinstance(point, (float, int)):
                 if max_value is None:
@@ -953,6 +951,7 @@ def compute_graph_t_axis(  # pylint: disable=too-many-branches
         label_distance_at_least = 86400
 
     elif start_time_local.tm_year == end_time_local.tm_year:
+        # xgettext: no-python-format
         labelling = _("%m-%d")
         label_size = 5
     else:

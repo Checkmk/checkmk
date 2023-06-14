@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -15,8 +15,10 @@ use std::time::Duration;
 use tokio::sync::mpsc::{
     unbounded_channel as channel, UnboundedReceiver as Receiver, UnboundedSender as Sender,
 };
+use winapi;
 
 pub const SERVER_CREATION_TIMEOUT: Duration = Duration::from_secs(5);
+pub const MAX_SIMULTANEOUS_CONNECTION_PER_THREAD: i32 = 12;
 
 // data must be in sync with windows agent
 const PROVIDER_NAME_LENGTH: usize = 32;
@@ -88,39 +90,49 @@ pub fn send_to_mailslot(mailslot_name: &str, data_type: DataType, data: &[u8]) {
     }
 }
 
+#[inline]
+fn get_thread_id() -> usize {
+    unsafe { winapi::um::processthreadsapi::GetCurrentThreadId() as usize }
+}
+
 pub fn build_own_mailslot_name() -> String {
     format!(
-        "{}WinAgentCtl_{}",
+        "{}WinAgentCtl_{}_{}",
         if is_elevated() {
             "Global\\"
         } else {
             "user_mode_"
         },
-        std::process::id()
+        std::process::id(),
+        get_thread_id()
     )
 }
 
 pub struct MailSlotBackend {
     srv: Option<JoinHandle<()>>, // option is need to call join(self) in drop
     stop_flag: Arc<AtomicBool>,
-    pub tx: Receiver<String>,
+    pub tx: Receiver<Vec<u8>>,
+    name: String,
 }
 
 impl MailSlotBackend {
     pub fn new(name: &str) -> AnyhowResult<Self> {
-        let (rx, tx) = channel::<String>();
+        let (rx, tx) = channel::<Vec<u8>>();
         let stop = Arc::new(AtomicBool::new(false));
-        let result = Self::start_mailslot_server(name, rx, Arc::clone(&stop));
-        let Ok(srv) = result else { bail!(result.unwrap_err()); };
+        let result = Self::start_mailslot_server_thread(name, rx, Arc::clone(&stop));
+        let Ok((handle, mailslot_name)) = result else { bail!(result.unwrap_err()); };
         Ok(MailSlotBackend {
-            srv: Some(srv),
+            srv: Some(handle),
             stop_flag: Arc::clone(&stop),
             tx,
+            name: mailslot_name,
         })
     }
 
     /// Always returns correct string even if input is not valid utf8 sequence
     /// This is done to prevent crash/panic for the case if peer sends malformed data
+    /// DEPRECATED, will be cleaned upon fix confirmed
+    #[allow(dead_code)]
     fn try_as_utf8(msg: Vec<u8>) -> String {
         let decoded = String::from_utf8_lossy(&msg).into_owned();
         if decoded.contains(std::char::REPLACEMENT_CHARACTER) {
@@ -129,64 +141,85 @@ impl MailSlotBackend {
         decoded
     }
 
-    fn send_notify(cv_pair: &(Mutex<bool>, Condvar)) {
-        let (lock, cond_var) = &*cv_pair;
-        *lock.lock().unwrap() = true;
+    fn send_notify(cv_pair: &(Mutex<Option<String>>, Condvar), name: &str) {
+        let (lock, cond_var) = cv_pair;
+        *lock.lock().unwrap() = Some(name.to_owned());
         cond_var.notify_one();
+    }
+
+    pub fn used_name(&self) -> &str {
+        &self.name
+    }
+
+    fn make_mailslot_server(name: &str) -> Result<MailslotServer, mail_slot::Error> {
+        let full_name = MailslotName::local(name);
+        MailslotServer::new(&full_name)
     }
 
     fn mailslot_server_thread(
         base_name: String,
-        rx: Sender<String>,
-        cv_pair: &Arc<(Mutex<bool>, Condvar)>,
+        rx: Sender<Vec<u8>>,
+        cv_pair: &Arc<(Mutex<Option<String>>, Condvar)>,
         stop: &AtomicBool,
     ) {
-        let full_name = MailslotName::local(&base_name);
-        let result = MailslotServer::new(&full_name);
-
-        Self::send_notify(cv_pair); // caller waits(must!) for signal
-
-        match result {
-            Ok(mut server) => loop {
-                match server.get_next_unread() {
-                    Ok(None) | Err(_) => sleep(Duration::from_millis(20)),
-                    Ok(Some(msg)) => rx.send(Self::try_as_utf8(msg)).unwrap_or_default(),
+        for attempt in 0..MAX_SIMULTANEOUS_CONNECTION_PER_THREAD {
+            let name = base_name.clone() + "_" + &attempt.to_string();
+            match Self::make_mailslot_server(&name) {
+                Ok(mut server) => {
+                    Self::send_notify(cv_pair, &name); // caller waits(must!) for signal
+                    loop {
+                        match server.get_next_unread() {
+                            Ok(None) | Err(_) => sleep(Duration::from_millis(20)),
+                            Ok(Some(msg)) => rx.send(msg).unwrap_or_default(),
+                        }
+                        if stop.load(Ordering::Relaxed) {
+                            break;
+                        }
+                    }
+                    return;
                 }
-                if stop.load(Ordering::Relaxed) {
+                Err(mail_slot::Error::Io(ref e))
+                    if e.kind() == std::io::ErrorKind::AlreadyExists =>
+                {
+                    warn!("Error server mailslot name {} is in use, retry...", name,);
+                    continue;
+                }
+                Err(e) => {
+                    warn!("Error '{}' creating mailslot server with name:{}", e, name,);
                     break;
                 }
-            },
-            Err(e) => warn!("Mailslot server fails to create thread '{}'", e),
-        }
-    }
-
-    fn start_mailslot_server(
-        base_name: &str,
-        rx: Sender<String>,
-        stop: Arc<AtomicBool>,
-    ) -> AnyhowResult<JoinHandle<()>> {
-        let cv_pair = Arc::new((Mutex::new(false), Condvar::new()));
-        let cv_pair_for_thread = Arc::clone(&cv_pair);
-        let n = base_name.to_string();
-        let srv = std::thread::spawn(move || {
-            Self::mailslot_server_thread(n, rx, &cv_pair_for_thread, &stop);
-        });
-
-        {
-            let (lock, cond_var) = &*cv_pair;
-            let wait_result = cond_var
-                .wait_timeout_while(
-                    lock.lock().unwrap(), // mutex guard
-                    SERVER_CREATION_TIMEOUT,
-                    |&mut started| !started, // predicate: for wait(opposite to C++)
-                )
-                .unwrap();
-            if wait_result.1.timed_out() {
-                bail!("server creation timeout");
             }
         }
+        Self::send_notify(cv_pair, ""); // caller waits(must!) for signal
+    }
 
-        Ok(srv)
+    fn start_mailslot_server_thread(
+        base_name: &str,
+        rx: Sender<Vec<u8>>,
+        stop: Arc<AtomicBool>,
+    ) -> AnyhowResult<(JoinHandle<()>, String)> {
+        let cv_pair = Arc::new((Mutex::new(None), Condvar::new()));
+        let cv_pair_for_thread = Arc::clone(&cv_pair);
+        let n = base_name.to_string();
+        let server_thread = std::thread::spawn(move || {
+            Self::mailslot_server_thread(n, rx, &cv_pair_for_thread, &stop)
+        });
+
+        let (lock, cond_var) = &*cv_pair;
+        let (mailslot_name, result) = cond_var
+            .wait_timeout_while(
+                lock.lock().unwrap(), // mutex guard
+                SERVER_CREATION_TIMEOUT,
+                |name| name.is_none(), // predicate: for wait(opposite to C++)
+            )
+            .unwrap();
+        if result.timed_out() {
+            bail!("server creation timeout");
+        }
+        Ok((
+            server_thread,
+            mailslot_name.to_owned().unwrap_or_else(|| "".to_owned()),
+        ))
     }
 }
 
@@ -211,7 +244,7 @@ mod tests {
     const MESSAGE_COUNT: i32 = 100;
 
     fn send_messages_to_mailslot(base_name: &str, count: i32) {
-        match MailslotClient::new(&MailslotName::local(&base_name)) {
+        match MailslotClient::new(&MailslotName::local(base_name)) {
             Ok(mut client) => {
                 for i in 0..count {
                     client
@@ -224,7 +257,7 @@ mod tests {
     }
 
     async fn receive_expected_messages_from_mailslot(
-        tx: &mut Receiver<String>,
+        tx: &mut Receiver<Vec<u8>>,
         count: i32,
     ) -> bool {
         for i in 0..count {
@@ -232,7 +265,7 @@ mod tests {
                 .await
                 .unwrap_or_default() // in tests we ignore elapsed
                 .unwrap_or_default(); // in tests we ignore errors
-            if i.to_string() != value {
+            if i.to_string().as_bytes() != value {
                 return false;
             }
         }
@@ -249,23 +282,35 @@ mod tests {
         assert_eq!(MailSlotBackend::try_as_utf8(GOOD_UTF8.to_vec()), "💖");
     }
 
+    #[test]
+    fn test_mailslot_names() {
+        {
+            let m1 = MailSlotBackend::new("x").expect("FAILURE!");
+            let m2 = MailSlotBackend::new("x").expect("FAILURE!");
+            assert_eq!(m1.used_name(), "x_0");
+            assert_eq!(m2.used_name(), "x_1");
+        }
+        let m = MailSlotBackend::new("x").expect("FAILURE!");
+        assert_eq!(m.used_name(), "x_0");
+    }
+
     #[tokio::test(flavor = "multi_thread")]
     async fn test_mailslot_backend() {
         let base_name = build_own_mailslot_name() + "_test";
         let mut backend = MailSlotBackend::new(&base_name).expect("Server is failed");
-        send_messages_to_mailslot(&base_name, MESSAGE_COUNT);
+        send_messages_to_mailslot(backend.used_name(), MESSAGE_COUNT);
         assert!(receive_expected_messages_from_mailslot(&mut backend.tx, MESSAGE_COUNT).await);
     }
 
     async fn async_collect_from_mailslot(duration: Duration) -> IoResult<Vec<u8>> {
         let base_name = build_own_mailslot_name() + "_test_async";
         let mut backend = MailSlotBackend::new(&base_name).expect("Server is failed");
-        send_messages_to_mailslot(&base_name, 1);
+        send_messages_to_mailslot(backend.used_name(), 1);
         let value = tokio::time::timeout(duration, backend.tx.recv())
             .await
             .unwrap_or_default() // in tests we ignore elapsed
             .unwrap_or_default(); // in tests we ignore errors
-        Ok(value.as_bytes().to_owned())
+        Ok(value)
     }
 
     #[tokio::test(flavor = "multi_thread")]

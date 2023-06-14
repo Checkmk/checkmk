@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -258,6 +258,14 @@ def test_api_endpoint_url(monkeypatch: MonkeyPatch, value: str, result: str) -> 
                 "PARAMETER_FROM_ADDRESS": "Harri Hirsch <harri.hirsch@test.de>",
                 "PARAMETER_REPLY_TO": "Harri Hirsch <harri.hirsch@test.de>",
                 "PARAMETER_REPLY_TO_ADDRESS": "d&d&+$@example.com",
+            },
+        ),
+        (
+            {
+                "PARAMETER_INSERT_HTML_SECTION": "<h1>Important</h1><script>alert(1)</script>",
+            },
+            {
+                "PARAMETER_INSERT_HTML_SECTION": "<h1>Important</h1>&lt;script&gt;alert(1)&lt;/script&gt;",
             },
         ),
         # ... all variables will be escaped

@@ -6,7 +6,7 @@ Date: 1652366920
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When registering at a site, the agent controller (<tt>cmk-agent-ctl</tt>) needs to
 know the port at which the site is reachable. If not explicitly passed via the

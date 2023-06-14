@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
 
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.mem import parse_proc_meminfo_bytes
+from cmk.base.plugins.agent_based.utils.memory import SectionMem
 
 
 @pytest.mark.parametrize(
@@ -105,5 +107,5 @@ from cmk.base.plugins.agent_based.mem import parse_proc_meminfo_bytes
         ),
     ],
 )
-def test_cpu_threads_regression(section, parsed) -> None:  # type:ignore[no-untyped-def]
+def test_cpu_threads_regression(section: StringTable, parsed: SectionMem | None) -> None:
     assert parsed == parse_proc_meminfo_bytes(section)

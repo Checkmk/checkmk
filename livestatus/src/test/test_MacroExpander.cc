@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -10,14 +10,14 @@
 #include <memory>
 #include <string>
 
-#include "Comment.h"  // IWYU pragma: keep
-#include "MacroExpander.h"
-#include "Store.h"
 #include "gtest/gtest.h"
 #include "livestatus/Column.h"
 #include "livestatus/Row.h"
+#include "livestatus/Store.h"
 #include "livestatus/StringColumn.h"
-#include "nagios.h"
+#include "neb/Comment.h"  // IWYU pragma: keep
+#include "neb/MacroExpander.h"
+#include "neb/nagios.h"
 #include "test_utilities.h"
 
 // TODO(sp) Move this to a better place.
@@ -28,12 +28,12 @@ TEST(Store, TheCoreIsNotAccessedDuringConstructionOfTheStore) {
     // There are circular dependencies in the code and this test avoids
     // shooting oneself in the foot.
     //
-    // Make sure that the MonitoringCore abstraction is not accessed during the
+    // Make sure that the ICore abstraction is not accessed during the
     // construction of Store. This is a bit fragile, but it is needed to tie the
-    // knot between NagiosCore and Store.
+    // knot between NebCore and Store.
     ASSERT_EXIT(  // NOLINT
         {
-            Store{nullptr};
+            Store(nullptr);
             exit(0);
         },
         ::testing::ExitedWithCode(0), "");

@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import enum
 import json
 import time
-from typing import Any, Iterable, Mapping, Sequence, Tuple
-
-from typing_extensions import assert_never
+from typing import Any, assert_never, Iterable, Mapping, Sequence
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -26,8 +24,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 )
 from cmk.base.plugins.agent_based.utils.kube import (
     ConditionStatus,
+    ContainerStateType,
     CronJobLatestJob,
     CronJobStatus,
+    get_age_levels_for,
     JobCondition,
     JobConditionType,
     JobPod,
@@ -35,6 +35,10 @@ from cmk.base.plugins.agent_based.utils.kube import (
     pod_status_message,
     Timestamp,
 )
+
+CRONJOB_DEFAULT_PARAMS: Mapping[str, Any] = {
+    "pending": ("levels", (300, 600)),
+}
 
 
 class JobStatusType(enum.Enum):
@@ -99,12 +103,13 @@ def _check_cron_job_status(
     if latest_job is None:
         raise IgnoreResultsError("No Job has been scheduled")
 
-    job_pod = latest_job.pods[0]
+    job_pod = latest_job.pods[0] if latest_job.pods else None
     job_status = _determine_job_status(latest_job.status.conditions, job_pod)
 
     yield from _cron_job_status(
         current_time=current_time,
-        pending_levels=params.get("status_pending"),
+        pending_levels=get_age_levels_for(params, "pending"),
+        running_levels=get_age_levels_for(params, "running"),
         job_status=job_status,
         job_pod=job_pod,
         job_start_time=latest_job.status.start_time,
@@ -122,6 +127,13 @@ def _check_cron_job_status(
             value=current_time - latest_job.status.start_time,
         )
 
+    if job_status is JobStatusType.RUNNING and job_pod is not None:
+        if (pod_running_start_time := _pod_running_start_time(job_pod)) is not None:
+            yield Metric(
+                name="kube_cron_job_status_execution_duration",
+                value=current_time - pod_running_start_time,
+            )
+
     if status.last_duration:
         yield Metric(name="kube_cron_job_status_last_duration", value=status.last_duration)
 
@@ -129,8 +141,27 @@ def _check_cron_job_status(
         yield Metric(name="kube_cron_job_status_active", value=status.active_jobs_count)
 
 
-def _determine_job_status(job_conditions: Sequence[JobCondition], job_pod: JobPod) -> JobStatusType:
+def _pod_running_start_time(pod: JobPod) -> int | None:
+    """Determine the run start time of the pod
 
+    Assumptions made:
+        * we consider it to be running if all containers of the pod are running (this should be
+        reflected in the pod phase)
+        * the pod run start time is the start time of the last container to start running
+    """
+    latest_start_container_time = 0
+    for container_status in pod.containers.values():
+        if container_status.state.type is not ContainerStateType.running:
+            return None
+        latest_start_container_time = max(
+            latest_start_container_time, container_status.state.start_time
+        )
+    return latest_start_container_time
+
+
+def _determine_job_status(
+    job_conditions: Sequence[JobCondition], job_pod: JobPod | None
+) -> JobStatusType:
     if job_conditions:
         for condition in job_conditions:
             if (
@@ -144,6 +175,9 @@ def _determine_job_status(job_conditions: Sequence[JobCondition], job_pod: JobPo
             ):
                 return JobStatusType.FAILED
 
+    if job_pod is None:
+        raise IgnoreResultsError("No Pod was scheduled, however the Job did not report failure.")
+
     if job_pod.lifecycle.phase is Phase.RUNNING:
         return JobStatusType.RUNNING
 
@@ -155,13 +189,15 @@ def _determine_job_status(job_conditions: Sequence[JobCondition], job_pod: JobPo
 
 def _cron_job_status(
     current_time: Timestamp,
-    pending_levels: Tuple[int, int] | None,
+    pending_levels: tuple[int, int] | None,
+    running_levels: tuple[int, int] | None,
     job_status: JobStatusType,
-    job_pod: JobPod,
+    job_pod: JobPod | None,
     job_start_time: Timestamp | None,
 ) -> Iterable[Result]:
     if job_start_time is None:
-        return Result(state=State.UNKNOWN, summary="Latest job: Suspended")
+        yield Result(state=State.UNKNOWN, summary="Latest job: Suspended")
+        return
 
     match job_status:
         case JobStatusType.COMPLETED:
@@ -169,7 +205,10 @@ def _cron_job_status(
             status_message = "Completed"
         case JobStatusType.FAILED:
             state = State.CRIT
-            status_message = f"Failed ({pod_status_message(pod_containers=list(job_pod.containers.values()), pod_init_containers=list(job_pod.init_containers.values()), section_kube_pod_lifecycle=job_pod.lifecycle)})"
+            if job_pod is None:
+                status_message = "Failed with no pod"
+            else:
+                status_message = f"Failed ({pod_status_message(pod_containers=list(job_pod.containers.values()), pod_init_containers=list(job_pod.init_containers.values()), section_kube_pod_lifecycle=job_pod.lifecycle)})"
         case JobStatusType.PENDING:
             non_running_time = current_time - job_start_time
             result = list(
@@ -182,8 +221,15 @@ def _cron_job_status(
             state = result.state
             status_message = f"Pending since {result.summary}"
         case JobStatusType.RUNNING:
-            state = State.OK
-            status_message = f"Running since {render.timespan(time.time() - job_start_time)}"
+            result = list(
+                check_levels(
+                    current_time - job_start_time,
+                    render_func=render.timespan,
+                    levels_upper=running_levels,
+                )
+            )[0]
+            state = result.state
+            status_message = f"Running since {result.summary}"
         case JobStatusType.UNKNOWN:
             raise ValueError("Unknown status type for latest job")
         case _:
@@ -227,5 +273,5 @@ register.check_plugin(
     discovery_function=discovery_cron_job_status,
     check_function=check_cron_job_status,
     check_ruleset_name="kube_cronjob_status",
-    check_default_parameters={},
+    check_default_parameters=CRONJOB_DEFAULT_PARAMS,
 )

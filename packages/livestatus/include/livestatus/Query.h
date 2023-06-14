@@ -1,4 +1,4 @@
-// Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -78,7 +78,7 @@ private:
     bool _keepalive;
     using FilterStack = Filters;
     std::unique_ptr<Filter> _filter;
-    std::unique_ptr<User> user_;
+    std::unique_ptr<const User> user_;
     std::unique_ptr<Filter> _wait_condition;
     std::chrono::milliseconds _wait_timeout;
     Triggers::Kind _wait_trigger;

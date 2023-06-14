@@ -73,7 +73,7 @@ public:
     static constexpr std::string_view name_delayed_ = "DelayedAutoStart";
 
     const std::wstring reg_path_ =
-        ConvertToUTF16(WinService::pathToRegistry(cma::srv::kServiceName));
+        ConvertToUtf16(WinService::pathToRegistry(cma::srv::kServiceName));
 
     void SetUp() override {
         save_ec_ = WinService::readUint32(cma::srv::kServiceName, name_ec_);
@@ -95,13 +95,13 @@ public:
         }
         if (save_start_ !=
             WinService::readUint32(cma::srv::kServiceName, name_start_)) {
-            SetRegistryValue(reg_path_, ConvertToUTF16(name_start_),
+            SetRegistryValue(reg_path_, ConvertToUtf16(name_start_),
                              save_start_);
         }
 
         if (save_delayed_ !=
             WinService::readUint32(cma::srv::kServiceName, name_delayed_)) {
-            SetRegistryValue(reg_path_, ConvertToUTF16(name_delayed_),
+            SetRegistryValue(reg_path_, ConvertToUtf16(name_delayed_),
                              save_delayed_);
         }
     }

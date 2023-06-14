@@ -1,0 +1,12 @@
+Title: Add missing perl-lib to almalinux9
+Class: fix
+Compatible: compat
+Component: omd
+Date: 1684321962
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+

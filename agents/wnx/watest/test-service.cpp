@@ -15,7 +15,7 @@
 using namespace std::chrono_literals;
 
 namespace wtools {
-class TestProcessor : public wtools::BaseServiceProcessor {
+class TestProcessor final : public wtools::BaseServiceProcessor {
 public:
     TestProcessor() { s_counter++; }
     ~TestProcessor() override { s_counter--; }
@@ -33,6 +33,8 @@ public:
     [[nodiscard]] const wchar_t *getMainLogName() const override {
         return L"log.log";
     }
+
+    wtools::InternalUsersDb *getInternalUsers() override { return nullptr; }
 
     bool stopped_ = false;
     bool started_ = false;
@@ -305,7 +307,7 @@ std::wstring getPortValue(std::wstring_view name, std::wstring_view app_name) {
 }
 }  // namespace
 
-TEST(CmaSrv, FirewallIntegration) {
+TEST(CmaSrv, FirewallComponent) {
     auto test_fs = tst::TempCfgFs::CreateNoIo();
     ASSERT_TRUE(test_fs->loadFactoryConfig());
     auto cfg = cma::cfg::GetLoadedConfig();

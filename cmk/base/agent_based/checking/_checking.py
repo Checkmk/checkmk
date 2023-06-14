@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Performing the actual checks."""
 
 import itertools
 from collections import defaultdict
-from collections.abc import Container, Iterable, Mapping, Sequence
+from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from contextlib import suppress
-from typing import Callable, DefaultDict, NamedTuple
+from typing import DefaultDict, NamedTuple
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -16,64 +16,75 @@ from cmk.utils.check_utils import wrap_parameters
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout
 from cmk.utils.log import console
-from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.regex import regex
 from cmk.utils.structured_data import TreeStore
+from cmk.utils.timeperiod import check_timeperiod, timeperiod_active, TimeperiodName
 from cmk.utils.type_defs import (
     AgentRawData,
-    CheckPluginName,
     EVERYTHING,
     ExitSpec,
     HostName,
-    HWSWInventoryParameters,
-    InventoryPluginName,
     MetricTuple,
     ParsedSectionName,
     SectionName,
     ServiceName,
     state_markers,
-    TimeperiodName,
 )
 from cmk.utils.type_defs.result import Result
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.fetchers import FetcherType, SourceInfo, SourceType
+from cmk.fetchers import FetcherType
 
-from cmk.checkers import (
+from cmk.checkengine import (
+    CheckPlugin,
     crash_reporting,
     HostKey,
+    Parameters,
     ParserFunction,
     plugin_contexts,
+    SectionPlugin,
+    SourceInfo,
+    SourceType,
     SummarizerFunction,
 )
-from cmk.checkers.check_table import ConfiguredService, LegacyCheckParameters
-from cmk.checkers.checkresults import ActiveCheckResult, ServiceCheckResult
-from cmk.checkers.submitters import Submittee, Submitter
-
-import cmk.base.core
-import cmk.base.utils
-from cmk.base.agent_based.data_provider import (
+from cmk.checkengine.check_table import ConfiguredService, LegacyCheckParameters
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checkresults import ActiveCheckResult, ServiceCheckResult
+from cmk.checkengine.inventory import (
+    HWSWInventoryParameters,
+    inventorize_status_data_of_real_host,
+    InventoryPlugin,
+    InventoryPluginName,
+)
+from cmk.checkengine.parameters import TimespecificParameters
+from cmk.checkengine.sectionparser import (
     filter_out_errors,
-    make_broker,
-    ParsedSectionsBroker,
+    make_providers,
+    Provider,
+    ResolvedResult,
     store_piggybacked_sections,
 )
-from cmk.base.agent_based.inventory import inventorize_status_data_of_real_host
-from cmk.base.agent_based.utils import (
+from cmk.checkengine.sectionparserutils import (
     check_parsing_errors,
+    get_cache_info,
     get_section_cluster_kwargs,
     get_section_kwargs,
 )
-from cmk.base.api.agent_based import checking_classes, value_store
-from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
-from cmk.base.api.agent_based.type_defs import Parameters, SectionPlugin
+from cmk.checkengine.submitters import Submittee, Submitter
+
+from cmk.base.api.agent_based import cluster_mode, value_store
+from cmk.base.api.agent_based.checking_classes import consume_check_results, IgnoreResultsError
+from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionResult
+from cmk.base.api.agent_based.checking_classes import State
 from cmk.base.config import ConfigCache
 
-from . import _cluster_modes
-
-__all__ = ["execute_checkmk_checks", "check_host_services"]
+__all__ = [
+    "execute_checkmk_checks",
+    "check_host_services",
+    "get_monitoring_data_kwargs",
+    "get_aggregated_result",
+]
 
 
 class _AggregatedResult(NamedTuple):
@@ -103,12 +114,12 @@ def execute_checkmk_checks(
     host_sections = parser((f[0], f[1]) for f in fetched)
     host_sections_no_error = filter_out_errors(host_sections)
     store_piggybacked_sections(host_sections_no_error)
-    broker = make_broker(host_sections_no_error, section_plugins)
+    providers = make_providers(host_sections_no_error, section_plugins)
     with CPUTracker() as tracker:
         service_results = check_host_services(
             hostname,
             config_cache=config_cache,
-            parsed_sections_broker=broker,
+            providers=providers,
             services=services,
             check_plugins=check_plugins,
             run_plugin_names=run_plugin_names,
@@ -121,12 +132,14 @@ def execute_checkmk_checks(
                 inventory_parameters=config_cache.inventory_parameters,
                 inventory_plugins=inventory_plugins,
                 params=config_cache.hwsw_inventory_parameters(hostname),
-                parsed_sections_broker=broker,
+                providers=providers,
             )
         timed_results = itertools.chain(
             summarizer(host_sections),
             check_parsing_errors(
-                errors=broker.parsing_errors(),
+                itertools.chain.from_iterable(
+                    resolver.parsing_errors for resolver in providers.values()
+                )
             ),
             _check_plugins_missing_data(
                 service_results,
@@ -146,10 +159,10 @@ def execute_checkmk_checks(
 def _do_inventory_actions_during_checking_for(
     host_name: HostName,
     *,
-    inventory_parameters: Callable[[HostName, InventoryPlugin], dict[str, object]],
+    inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     params: HWSWInventoryParameters,
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
 ) -> None:
     tree_store = TreeStore(cmk.utils.paths.status_data_dir)
 
@@ -161,12 +174,12 @@ def _do_inventory_actions_during_checking_for(
     status_data_tree = inventorize_status_data_of_real_host(
         host_name,
         inventory_parameters=inventory_parameters,
-        parsed_sections_broker=parsed_sections_broker,
+        providers=providers,
         inventory_plugins=inventory_plugins,
         run_plugin_names=EVERYTHING,
     )
 
-    if status_data_tree and not status_data_tree.is_empty():
+    if status_data_tree:
         tree_store.save(host_name=host_name, tree=status_data_tree)
 
 
@@ -262,7 +275,7 @@ def check_host_services(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     services: Sequence[ConfiguredService],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     run_plugin_names: Container[CheckPluginName],
@@ -279,33 +292,32 @@ def check_host_services(
         with value_store.load_host_value_store(
             host_name, store_changes=not submitter.dry_run
         ) as value_store_manager:
-            submittables = [
-                (
-                    _AggregatedResult(
+            submittables: list[_AggregatedResult] = []
+            for service in _filter_services_to_check(
+                services=services,
+                run_plugin_names=run_plugin_names,
+                config_cache=config_cache,
+                host_name=host_name,
+            ):
+                if service.check_plugin_name not in check_plugins:
+                    submittable = _AggregatedResult(
                         service=service,
                         submit=True,
                         data_received=True,
                         result=ServiceCheckResult.check_not_implemented(),
                         cache_info=None,
                     )
-                    if service.check_plugin_name not in check_plugins
-                    else get_aggregated_result(
+                else:
+                    submittable = get_aggregated_result(
                         host_name,
                         config_cache,
-                        parsed_sections_broker,
+                        providers,
                         service,
                         check_plugins[service.check_plugin_name],
                         value_store_manager=value_store_manager,
                         rtc_package=rtc_package,
                     )
-                )
-                for service in _filter_services_to_check(
-                    services=services,
-                    run_plugin_names=run_plugin_names,
-                    config_cache=config_cache,
-                    host_name=host_name,
-                )
-            ]
+                submittables.append(submittable)
 
     if submittables:
         submitter.submit(
@@ -343,19 +355,38 @@ def _filter_services_to_check(
 def service_outside_check_period(description: ServiceName, period: TimeperiodName | None) -> bool:
     if period is None:
         return False
-    if cmk.base.core.check_timeperiod(period):
+    if check_timeperiod(period):
         console.vverbose("Service %s: time period %s is currently active.\n", description, period)
         return False
     console.verbose("Skipping service %s: currently not in time period %s.\n", description, period)
     return True
 
 
+def get_check_function(
+    config_cache: ConfigCache,
+    host_name: HostName,
+    plugin: CheckPlugin,
+    service: ConfiguredService,
+    value_store_manager: value_store.ValueStoreManager,
+) -> Callable[..., Iterable[object]]:
+    return (
+        cluster_mode.get_cluster_check_function(
+            *config_cache.get_clustered_service_configuration(host_name, service.description),
+            plugin=plugin,
+            service_id=service.id(),
+            value_store_manager=value_store_manager,
+        )
+        if config_cache.is_cluster(host_name)
+        else plugin.function
+    )
+
+
 def get_aggregated_result(
     host_name: HostName,
     config_cache: ConfigCache,
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     service: ConfiguredService,
-    plugin: checking_classes.CheckPlugin,
+    plugin: CheckPlugin,
     *,
     rtc_package: AgentRawData | None,
     value_store_manager: value_store.ValueStoreManager,
@@ -364,19 +395,16 @@ def get_aggregated_result(
 
     This function is also called during discovery.
     """
-    check_function = (
-        _cluster_modes.get_cluster_check_function(
-            *config_cache.get_clustered_service_configuration(host_name, service.description),
-            plugin=plugin,
-            service_id=service.id(),
-            value_store_manager=value_store_manager,
-        )
-        if config_cache.is_cluster(host_name)
-        else plugin.check_function
+    check_function = get_check_function(
+        config_cache,
+        host_name,
+        plugin=plugin,
+        service=service,
+        value_store_manager=value_store_manager,
     )
 
-    section_kws, error_result = _get_monitoring_data_kwargs(
-        host_name, parsed_sections_broker, config_cache, service, plugin.sections
+    section_kws, error_result = get_monitoring_data_kwargs(
+        host_name, providers, config_cache, service, plugin.sections
     )
     if not section_kws:  # no data found
         return _AggregatedResult(
@@ -390,7 +418,7 @@ def get_aggregated_result(
     item_kw = {} if service.item is None else {"item": service.item}
     params_kw = (
         {}
-        if plugin.check_default_parameters is None
+        if plugin.default_parameters is None
         else {"params": _final_read_only_check_parameters(service.parameters)}
     )
 
@@ -399,14 +427,16 @@ def get_aggregated_result(
             service.check_plugin_name, service.description
         ), value_store_manager.namespace(service.id()):
             result = _aggregate_results(
-                check_function(
-                    **item_kw,
-                    **params_kw,
-                    **section_kws,
+                consume_check_results(
+                    check_function(
+                        **item_kw,
+                        **params_kw,
+                        **section_kws,
+                    )
                 )
             )
 
-    except checking_classes.IgnoreResultsError as e:
+    except IgnoreResultsError as e:
         msg = str(e) or "No service summary available"
         return _AggregatedResult(
             service=service,
@@ -420,7 +450,6 @@ def get_aggregated_result(
     except Exception:
         if cmk.utils.debug.enabled():
             raise
-        table = config_cache.check_table(host_name, skip_autochecks=True)
         result = ServiceCheckResult(
             3,
             crash_reporting.create_check_crash_dump(
@@ -429,50 +458,69 @@ def get_aggregated_result(
                 plugin_name=service.check_plugin_name,
                 plugin_kwargs={**item_kw, **params_kw, **section_kws},
                 is_cluster=config_cache.is_cluster(host_name),
-                is_enforced=service.id() in table,
+                is_enforced=service.is_enforced,
                 snmp_backend=config_cache.get_snmp_backend(host_name),
                 rtc_package=rtc_package,
             ),
         )
+
+    def __iter(
+        section_names: Iterable[ParsedSectionName], providers: Mapping[HostKey, Provider]
+    ) -> Iterable[ResolvedResult]:
+        for provider in providers.values():
+            yield from (
+                resolved
+                for section_name in section_names
+                if (resolved := provider.resolve(section_name)) is not None
+            )
 
     return _AggregatedResult(
         service=service,
         submit=True,
         data_received=True,
         result=result,
-        cache_info=parsed_sections_broker.get_cache_info(plugin.sections),
+        cache_info=get_cache_info(
+            tuple(
+                cache_info
+                for resolved in __iter(plugin.sections, providers)
+                if (cache_info := resolved.cache_info) is not None
+            )
+        ),
     )
 
 
 def _get_clustered_service_node_keys(
     config_cache: ConfigCache,
-    host_name: HostName,
+    cluster_name: HostName,
     source_type: SourceType,
     service_descr: ServiceName,
 ) -> Sequence[HostKey]:
     """Returns the node keys if a service is clustered, otherwise an empty sequence"""
-    nodes = config_cache.nodes_of(host_name)
+    nodes = config_cache.nodes_of(cluster_name)
     used_nodes = (
         [
             nn
             for nn in (nodes or ())
-            if host_name == config_cache.host_of_clustered_service(nn, service_descr)
+            if cluster_name == config_cache.effective_host(nn, service_descr)
         ]
-        or nodes
+        or nodes  # IMHO: this can never happen, but if it does, using nodes is wrong.
         or ()
     )
 
     return [HostKey(nodename, source_type) for nodename in used_nodes]
 
 
-def _get_monitoring_data_kwargs(
+def get_monitoring_data_kwargs(
     host_name: HostName,
-    parsed_sections_broker: ParsedSectionsBroker,
+    providers: Mapping[HostKey, Provider],
     config_cache: ConfigCache,
     service: ConfiguredService,
     sections: Sequence[ParsedSectionName],
     source_type: SourceType | None = None,
 ) -> tuple[Mapping[str, object], ServiceCheckResult]:
+    # Mapping[str, object] stands for either
+    #  * Mapping[HostName, Mapping[str, ParsedSectionContent | None]] for clusters, or
+    #  * Mapping[str, ParsedSectionContent | None] otherwise.
     if source_type is None:
         source_type = (
             SourceType.MANAGEMENT
@@ -489,16 +537,16 @@ def _get_monitoring_data_kwargs(
         )
         return (
             get_section_cluster_kwargs(
-                parsed_sections_broker,
+                providers,
                 nodes,
                 sections,
             ),
-            ServiceCheckResult.cluster_received_no_data(nodes),
+            ServiceCheckResult.cluster_received_no_data([nk.hostname for nk in nodes]),
         )
 
     return (
         get_section_kwargs(
-            parsed_sections_broker,
+            providers,
             HostKey(host_name, source_type),
             sections,
         ),
@@ -510,7 +558,7 @@ def _final_read_only_check_parameters(
     entries: TimespecificParameters | LegacyCheckParameters,
 ) -> Parameters:
     raw_parameters = (
-        entries.evaluate(cmk.base.core.timeperiod_active)
+        entries.evaluate(timeperiod_active)
         if isinstance(entries, TimespecificParameters)
         else entries
     )
@@ -529,14 +577,18 @@ def _add_state_marker(
     return result_str if state_marker in result_str else result_str + state_marker
 
 
-def _aggregate_results(subresults: checking_classes.CheckResult) -> ServiceCheckResult:
-    perfdata, results = _consume_and_dispatch_result_types(subresults)
+def _aggregate_results(
+    subresults: tuple[Sequence[MetricTuple], Sequence[CheckFunctionResult]]
+) -> ServiceCheckResult:
+    # This is more impedance matching.  The CheckFunction should
+    # probably just return a CheckResult.
+    perfdata, results = subresults
     needs_marker = len(results) > 1
     summaries: list[str] = []
     details: list[str] = []
-    status = checking_classes.State.OK
+    status = State.OK
     for result in results:
-        status = checking_classes.State.worst(status, result.state)
+        status = State.worst(status, result.state)
         state_marker = state_markers[int(result.state)] if needs_marker else ""
         if result.summary:
             summaries.append(
@@ -563,26 +615,3 @@ def _aggregate_results(subresults: checking_classes.CheckResult) -> ServiceCheck
         )
     all_text = [", ".join(summaries)] + details
     return ServiceCheckResult(int(status), "\n".join(all_text).strip(), perfdata)
-
-
-def _consume_and_dispatch_result_types(
-    subresults: checking_classes.CheckResult,
-) -> tuple[list[MetricTuple], list[checking_classes.Result]]:
-    """Consume *all* check results, and *then* raise, if we encountered
-    an IgnoreResults instance.
-    """
-    ignore_results: list[checking_classes.IgnoreResults] = []
-    results: list[checking_classes.Result] = []
-    perfdata: list[MetricTuple] = []
-    for subr in subresults:
-        if isinstance(subr, checking_classes.IgnoreResults):
-            ignore_results.append(subr)
-        elif isinstance(subr, checking_classes.Metric):
-            perfdata.append((subr.name, subr.value) + subr.levels + subr.boundaries)
-        else:
-            results.append(subr)
-
-    if ignore_results:
-        raise checking_classes.IgnoreResultsError(str(ignore_results[-1]))
-
-    return perfdata, results

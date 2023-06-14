@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
@@ -8,8 +8,11 @@ from typing import Final
 import pytest
 from pytest_mock.plugin import MockerFixture
 
-from cmk.utils.type_defs import CheckPluginName
+from tests.unit.conftest import FixRegister
 
+from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.api.agent_based.checking_classes import CheckFunction
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.windows_updates import parse_windows_updates, Section
 
@@ -63,7 +66,7 @@ def test_parse_windows_updates_failed() -> None:
     )
 
 
-def test_discover_windows_updates(fix_register) -> None:  # type:ignore[no-untyped-def]
+def test_discover_windows_updates(fix_register: FixRegister) -> None:
     discover_windows_updates = fix_register.check_plugins[
         CheckPluginName("windows_updates")
     ].discovery_function
@@ -71,18 +74,20 @@ def test_discover_windows_updates(fix_register) -> None:  # type:ignore[no-untyp
 
 
 @pytest.fixture(name="check_windows_updates")
-def check_windows_updates_fixture(fix_register):
+def check_windows_updates_fixture(fix_register: FixRegister) -> CheckFunction:
     return fix_register.check_plugins[CheckPluginName("windows_updates")].check_function
 
 
-def test_check_windows_updates_ok(check_windows_updates) -> None:  # type:ignore[no-untyped-def]
+def test_check_windows_updates_ok(
+    check_windows_updates: CheckFunction,
+) -> None:
     assert list(
         check_windows_updates(
-            params=dict(
-                levels_important=(1, 2),
-                levels_optional=(1, 2),
-                levels_lower_forced_reboot=(604800, 172800),
-            ),
+            params={
+                "levels_important": (1, 2),
+                "levels_optional": (1, 2),
+                "levels_lower_forced_reboot": (604800, 172800),
+            },
             section=SECTION_OK,
         )
     ) == [
@@ -97,14 +102,14 @@ def test_check_windows_updates_ok(check_windows_updates) -> None:  # type:ignore
     ]
 
 
-def test_check_windows_updates_failed(check_windows_updates) -> None:  # type:ignore[no-untyped-def]
+def test_check_windows_updates_failed(check_windows_updates: CheckFunction) -> None:
     assert list(
         check_windows_updates(
-            params=dict(
-                levels_important=(1, 2),
-                levels_optional=(1, 2),
-                levels_lower_forced_reboot=(604800, 172800),
-            ),
+            params={
+                "levels_important": (1, 2),
+                "levels_optional": (1, 2),
+                "levels_lower_forced_reboot": (604800, 172800),
+            },
             section=SECTION_FAILED,
         )
     ) == [
@@ -116,7 +121,7 @@ def test_check_windows_updates_failed(check_windows_updates) -> None:  # type:ig
     ]
 
 
-def test_reboot_required(check_windows_updates) -> None:  # type:ignore[no-untyped-def]
+def test_reboot_required(check_windows_updates: CheckFunction) -> None:
     section = Section(
         reboot_required=True,
         important_updates=[],
@@ -126,11 +131,11 @@ def test_reboot_required(check_windows_updates) -> None:  # type:ignore[no-untyp
     )
     assert list(
         check_windows_updates(
-            params=dict(
-                levels_important=None,
-                levels_optional=None,
-                levels_lower_forced_reboot=(604800, 172800),
-            ),
+            params={
+                "levels_important": None,
+                "levels_optional": None,
+                "levels_lower_forced_reboot": (604800, 172800),
+            },
             section=section,
         )
     ) == [
@@ -175,8 +180,8 @@ def test_reboot_required(check_windows_updates) -> None:  # type:ignore[no-untyp
         ),
     ],
 )
-def test_time_until_force_reboot(  # type:ignore[no-untyped-def]
-    check_windows_updates,
+def test_time_until_force_reboot(
+    check_windows_updates: CheckFunction,
     mocker: MockerFixture,
     reboot_time: float,
     now: float,
@@ -193,11 +198,11 @@ def test_time_until_force_reboot(  # type:ignore[no-untyped-def]
     assert (
         list(
             check_windows_updates(
-                params=dict(
-                    levels_important=None,
-                    levels_optional=None,
-                    levels_lower_forced_reboot=(604800, 172800),
-                ),
+                params={
+                    "levels_important": None,
+                    "levels_optional": None,
+                    "levels_lower_forced_reboot": (604800, 172800),
+                },
                 section=section,
             )
         )

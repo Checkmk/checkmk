@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,14 +8,6 @@
 # operating system. We trigger on all Windows and Linux systems.
 # This is not optimal but still enough for excluding network
 # devices and similar stuff
-
-
-def scan_dell_om(oid):
-    return (
-        "Open Manage" in oid(".1.3.6.1.2.1.1.1.0")
-        or "Linux" in oid(".1.3.6.1.2.1.1.1.0")
-        or "Software: Windows" in oid(".1.3.6.1.2.1.1.1.0")
-    )
 
 
 def parse_omreport(info):

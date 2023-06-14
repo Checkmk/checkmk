@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -45,10 +45,9 @@ def test_write_statefulsets_api_sections_registers_sections_to_be_written(
     agent_kube.common.write_sections(sections)
 
     assert write_writeable_sections_mock.call_count == 1
-    assert (
-        set(entry.section_name for entry in write_writeable_sections_mock.call_args[0][0])
-        == statefulsets_api_sections()
-    )
+    assert {
+        entry.section_name for entry in write_writeable_sections_mock.call_args[0][0]
+    } == statefulsets_api_sections()
 
 
 @pytest.mark.parametrize(

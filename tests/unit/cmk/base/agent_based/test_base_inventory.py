@@ -1,43 +1,49 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
-import logging
-from collections.abc import Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Literal
 
 import pytest
 
-from tests.testlib.base import Scenario
-
-import cmk.utils.debug
 from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.structured_data import RetentionIntervals, StructuredDataNode
+from cmk.utils.structured_data import (
+    ImmutableTree,
+    MutableTree,
+    RetentionInterval,
+    StructuredDataNode,
+    UpdateResult,
+)
 from cmk.utils.type_defs import (
     AgentRawData,
     EVERYTHING,
     HostAddress,
     HostName,
-    HWSWInventoryParameters,
+    ParsedSectionName,
     result,
+    SectionName,
 )
 
-from cmk.fetchers import FetcherType, SourceInfo, SourceType
+from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.checkers.checkresults import ActiveCheckResult
-from cmk.checkers.type_defs import NO_SELECTION
+from cmk.fetchers import FetcherType
 
-import cmk.base.agent_based.inventory._inventory as _inventory
-from cmk.base.agent_based.confcheckers import ConfiguredParser, SectionPluginMapper
-from cmk.base.agent_based.inventory._inventory import (
+from cmk.checkengine import SectionPlugin, SourceInfo, SourceType
+from cmk.checkengine.checkresults import ActiveCheckResult
+from cmk.checkengine.host_sections import HostSections
+from cmk.checkengine.inventory import (
+    _check_fetched_data_or_trees,
     _inventorize_real_host,
     _parse_inventory_plugin_item,
+    HWSWInventoryParameters,
+    inventorize_host,
     ItemsOfInventoryPlugin,
 )
+
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
+from cmk.base.modes.check_mk import _get_save_tree_actions, _SaveTreeActions
 
 
 @pytest.mark.parametrize(
@@ -48,47 +54,12 @@ from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
     ],
 )
 def test_item_collisions(item: Attributes | TableRow, known_class_name: str) -> None:
-    # For some reason, the callee raises instead of returning the exception if
-    # it runs in debug mode.  So let us explicitly disable that here.
-    cmk.utils.debug.disable()
-
     with pytest.raises(TypeError) as e:
         _parse_inventory_plugin_item(item, known_class_name)
 
         assert str(e) == (
             "Cannot create TableRow at path ['a', 'b', 'c']: this is a Attributes node."
         )
-
-
-_TREE_WITH_OTHER = StructuredDataNode()
-_TREE_WITH_OTHER.setdefault_node(("other",))
-_TREE_WITH_EDGE = StructuredDataNode()
-_TREE_WITH_EDGE.setdefault_node(("edge",))
-
-
-@pytest.mark.parametrize(
-    "old_tree, inv_tree",
-    [
-        (_TREE_WITH_EDGE, _TREE_WITH_OTHER),
-        (_TREE_WITH_OTHER, _TREE_WITH_EDGE),
-    ],
-)
-def test__tree_nodes_are_not_equal(
-    old_tree: StructuredDataNode,
-    inv_tree: StructuredDataNode,
-) -> None:
-    assert _inventory._tree_nodes_are_equal(old_tree, inv_tree, "edge") is False
-
-
-@pytest.mark.parametrize(
-    "old_tree, inv_tree",
-    [
-        (_TREE_WITH_OTHER, _TREE_WITH_OTHER),
-        (_TREE_WITH_EDGE, _TREE_WITH_EDGE),
-    ],
-)
-def test__tree_nodes_are_equal(old_tree: StructuredDataNode, inv_tree: StructuredDataNode) -> None:
-    assert _inventory._tree_nodes_are_equal(old_tree, inv_tree, "edge") is True
 
 
 # TODO test cases:
@@ -167,10 +138,10 @@ def test__inventorize_real_host_only_items() -> None:
             )
         ],
         raw_intervals_from_config=[],
-        old_tree=StructuredDataNode(),
+        previous_tree=ImmutableTree(),
     )
 
-    assert trees.inventory.serialize() == {
+    assert trees.inventory.tree.serialize() == {
         "Attributes": {},
         "Nodes": {
             "path-to": {
@@ -236,7 +207,7 @@ def test__inventorize_real_host_only_items() -> None:
         "Table": {},
     }
     assert not update_result.save_tree
-    assert update_result.reason == "No retention intervals found."
+    assert not update_result.reasons_by_path
 
 
 @pytest.mark.parametrize(
@@ -254,8 +225,8 @@ def test__inventorize_real_host_only_items() -> None:
         (
             "all",
             {
-                ("bar0",): {"col0": (10, 0, 5), "col1": (10, 0, 5)},
-                ("bar1",): {"col0": (10, 0, 5), "col1": (10, 0, 5)},
+                ("bar0",): {"foo": (10, 0, 5), "col0": (10, 0, 5), "col1": (10, 0, 5)},
+                ("bar1",): {"foo": (10, 0, 5), "col0": (10, 0, 5), "col1": (10, 0, 5)},
             },
         ),
         ("nothing", {}),
@@ -327,7 +298,7 @@ def test__inventorize_real_host_only_intervals(
                 "columns": table_choices,
             },
         ],
-        old_tree=StructuredDataNode(),
+        previous_tree=ImmutableTree(),
     )
 
     if attrs_expected_retentions:
@@ -353,7 +324,7 @@ def test__inventorize_real_host_only_intervals(
     else:
         table_retentions = {}
 
-    assert trees.inventory.serialize() == {
+    assert trees.inventory.tree.serialize() == {
         "Attributes": {},
         "Nodes": {
             "path-to": {
@@ -416,10 +387,10 @@ def test__inventorize_real_host_only_intervals(
 
     if attrs_expected_retentions or table_expected_retentions:
         assert update_result.save_tree
-        assert update_result.reason.startswith("retention intervals ")
+        assert update_result.reasons_by_path
     else:
         assert not update_result.save_tree
-        assert not update_result.reason
+        assert not update_result.reasons_by_path
 
 
 @pytest.mark.parametrize(
@@ -437,8 +408,8 @@ def test__inventorize_real_host_only_intervals(
         (
             "all",
             {
-                ("bar0",): {"col0": (1, 2, 5), "col1": (1, 2, 5)},
-                ("bar1",): {"col0": (1, 2, 5), "col1": (1, 2, 5)},
+                ("bar0",): {"foo": (1, 2, 5), "col0": (1, 2, 5), "col1": (1, 2, 5)},
+                ("bar1",): {"foo": (1, 2, 5), "col0": (1, 2, 5), "col1": (1, 2, 5)},
             },
         ),
         ("nothing", {}),
@@ -510,7 +481,7 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
                 "columns": table_choices,
             },
         ],
-        old_tree=StructuredDataNode(),
+        previous_tree=ImmutableTree(),
     )
 
     if attrs_expected_retentions:
@@ -536,7 +507,7 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
     else:
         table_retentions = {}
 
-    assert trees.inventory.serialize() == {
+    assert trees.inventory.tree.serialize() == {
         "Attributes": {},
         "Nodes": {
             "path-to": {
@@ -599,10 +570,10 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
 
     if attrs_expected_retentions or table_expected_retentions:
         assert update_result.save_tree
-        assert update_result.reason.startswith("retention intervals ")
+        assert update_result.reasons_by_path
     else:
         assert not update_result.save_tree
-        assert not update_result.reason
+        assert not update_result.reasons_by_path
 
 
 def _make_tree_or_items(
@@ -610,8 +581,8 @@ def _make_tree_or_items(
     previous_attributes_retentions: dict,
     previous_table_retentions: dict,
     raw_cache_info: tuple[int, int] | None,
-) -> tuple[StructuredDataNode, list[ItemsOfInventoryPlugin]]:
-    previous_tree = StructuredDataNode.deserialize(
+) -> tuple[ImmutableTree, list[ItemsOfInventoryPlugin]]:
+    previous_tree = ImmutableTree.deserialize(
         {
             "Attributes": {},
             "Table": {},
@@ -634,8 +605,16 @@ def _make_tree_or_items(
                             "Table": {
                                 "KeyColumns": ["ident"],
                                 "Rows": [
-                                    {"ident": "Ident 1", "old": "Key 1", "keys": "Previous Keys 1"},
-                                    {"ident": "Ident 2", "old": "Key 2", "keys": "Previous Keys 2"},
+                                    {
+                                        "ident": "Ident 1",
+                                        "old": "Key 1",
+                                        "keys": "Previous Keys 1",
+                                    },
+                                    {
+                                        "ident": "Ident 2",
+                                        "old": "Key 2",
+                                        "keys": "Previous Keys 2",
+                                    },
                                 ],
                                 "Retentions": previous_table_retentions,
                             },
@@ -706,7 +685,7 @@ def _make_tree_or_items(
 @pytest.mark.parametrize(
     "previous_node, expected_inv_tree",
     [
-        (StructuredDataNode(), StructuredDataNode()),
+        (ImmutableTree(), StructuredDataNode()),
         (
             _make_tree_or_items(
                 previous_attributes_retentions={},
@@ -727,25 +706,21 @@ def _make_tree_or_items(
 )
 def test__inventorize_real_host_no_items(
     raw_intervals: list,
-    previous_node: StructuredDataNode,
+    previous_node: ImmutableTree,
     expected_inv_tree: StructuredDataNode,
 ) -> None:
     trees, update_result = _inventorize_real_host(
         now=10,
         items_of_inventory_plugins=[],
         raw_intervals_from_config=raw_intervals,
-        old_tree=previous_node,
+        previous_tree=previous_node,
     )
 
-    assert trees.inventory.is_empty()
-    assert trees.status_data.is_empty()
+    assert not trees.inventory
+    assert not trees.status_data
 
     assert not update_result.save_tree
-
-    if raw_intervals:
-        assert not update_result.reason
-    else:
-        assert update_result.reason == "No retention intervals found."
+    assert not update_result.reasons_by_path
 
 
 #   ---previous node--------------------------------------------------------
@@ -755,13 +730,13 @@ def test__inventorize_real_host_no_items(
     "choices, expected_retentions",
     [
         (("choices", ["unknown", "keyz"]), {}),
-        (("choices", ["old", "keyz"]), {"old": RetentionIntervals(1, 2, 3)}),
+        (("choices", ["old", "keyz"]), {"old": RetentionInterval(1, 2, 3)}),
     ],
 )
-def test_updater_merge_previous_attributes(  # type:ignore[no-untyped-def]
+def test_updater_merge_previous_attributes(
     choices: tuple[str, list[str]],
     expected_retentions: dict,
-):
+) -> None:
     previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
         previous_attributes_retentions={"old": (1, 2, 3)},
         previous_table_retentions={},
@@ -777,26 +752,21 @@ def test_updater_merge_previous_attributes(  # type:ignore[no-untyped-def]
                 "attributes": choices,
             }
         ],
-        old_tree=previous_tree,
+        previous_tree=previous_tree,
     )
-    inv_tree = trees.inventory
-
-    previous_node = previous_tree.get_node(("path-to", "node-with-attrs"))
-    assert previous_node is not None
 
     if expected_retentions:
         assert update_result.save_tree
-        assert update_result.reason
+        assert update_result.reasons_by_path
     else:
         assert not update_result.save_tree
-        assert not update_result.reason
+        assert not update_result.reasons_by_path
 
-    inv_node = inv_tree.get_node(("path-to", "node-with-attrs"))
-    assert inv_node is not None
-    assert inv_node.attributes.retentions == expected_retentions
+    inv_node = trees.inventory.get_tree(("path-to", "node-with-attrs"))
+    assert inv_node.tree.attributes.retentions == expected_retentions
 
     if expected_retentions:
-        assert "old" in inv_node.attributes.pairs
+        assert "old" in inv_node.tree.attributes.pairs
 
 
 @pytest.mark.parametrize(
@@ -822,21 +792,15 @@ def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str
                 "attributes": choices,
             }
         ],
-        old_tree=previous_tree,
+        previous_tree=previous_tree,
     )
-    inv_tree = trees.inventory
-
-    assert inv_tree.is_empty()
-
-    previous_node = previous_tree.get_node(("path-to", "node-with-attrs"))
-    assert isinstance(previous_node, StructuredDataNode)
+    assert not trees.inventory
 
     assert not update_result.save_tree
-    assert not update_result.reason
+    assert not update_result.reasons_by_path
 
-    inv_node = inv_tree.get_node(("path-to", "node-with-attrs"))
-    assert inv_node is not None
-    assert inv_node.attributes.retentions == {}
+    inv_node = trees.inventory.get_tree(("path-to", "node-with-attrs"))
+    assert inv_node.tree.attributes.retentions == {}
 
 
 @pytest.mark.parametrize(
@@ -846,8 +810,8 @@ def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str
         (
             ("choices", ["old", "keyz"]),
             {
-                ("Ident 1",): {"old": RetentionIntervals(1, 2, 3)},
-                ("Ident 2",): {"old": RetentionIntervals(1, 2, 3)},
+                ("Ident 1",): {"old": RetentionInterval(1, 2, 3)},
+                ("Ident 2",): {"old": RetentionInterval(1, 2, 3)},
             },
         ),
     ],
@@ -874,26 +838,21 @@ def test_updater_merge_previous_tables(
                 "columns": choices,
             }
         ],
-        old_tree=previous_tree,
+        previous_tree=previous_tree,
     )
-    inv_tree = trees.inventory
-
-    previous_node = previous_tree.get_node(("path-to", "node-with-table"))
-    assert isinstance(previous_node, StructuredDataNode)
 
     if expected_retentions:
         assert update_result.save_tree
-        assert update_result.reason
+        assert update_result.reasons_by_path
     else:
         assert not update_result.save_tree
-        assert not update_result.reason
+        assert not update_result.reasons_by_path
 
-    inv_node = inv_tree.get_node(("path-to", "node-with-table"))
-    assert inv_node is not None
-    assert inv_node.table.retentions == expected_retentions
+    inv_node = trees.inventory.get_tree(("path-to", "node-with-table"))
+    assert inv_node.tree.table.retentions == expected_retentions
 
     if expected_retentions:
-        for row in inv_node.table.rows:
+        for row in inv_node.tree.table.rows:
             assert "old" in row
 
 
@@ -923,21 +882,15 @@ def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]]) 
                 "columns": choices,
             }
         ],
-        old_tree=previous_tree,
+        previous_tree=previous_tree,
     )
-    inv_tree = trees.inventory
 
-    assert inv_tree.is_empty()
-
-    previous_node = previous_tree.get_node(("path-to", "node-with-table"))
-    assert isinstance(previous_node, StructuredDataNode)
-
+    assert not trees.inventory
     assert not update_result.save_tree
-    assert not update_result.reason
+    assert not update_result.reasons_by_path
 
-    inv_node = inv_tree.get_node(("path-to", "node-with-table"))
-    assert inv_node is not None
-    assert inv_node.table.retentions == {}
+    inv_node = trees.inventory.get_tree(("path-to", "node-with-table"))
+    assert inv_node.tree.table.retentions == {}
 
 
 @pytest.mark.parametrize(
@@ -947,9 +900,9 @@ def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]]) 
         (
             ("choices", ["old", "and", "new", "keys"]),
             {
-                "old": RetentionIntervals(1, 2, 3),
-                "new": RetentionIntervals(4, 5, 6),
-                "keys": RetentionIntervals(4, 5, 6),
+                "old": RetentionInterval(1, 2, 3),
+                "new": RetentionInterval(4, 5, 6),
+                "keys": RetentionInterval(4, 5, 6),
             },
         ),
     ],
@@ -976,28 +929,23 @@ def test_updater_merge_attributes(
                 "attributes": choices,
             }
         ],
-        old_tree=previous_tree,
+        previous_tree=previous_tree,
     )
-    inv_tree = trees.inventory
 
-    previous_node = previous_tree.get_node(("path-to", "node-with-attrs"))
-    assert previous_node is not None
-
-    inv_node = inv_tree.get_node(("path-to", "node-with-attrs"))
-    assert inv_node is not None
+    inv_node = trees.inventory.get_tree(("path-to", "node-with-attrs"))
 
     if expected_retentions:
         assert update_result.save_tree
-        assert update_result.reason
+        assert update_result.reasons_by_path
     else:
         assert not update_result.save_tree
-        assert not update_result.reason
+        assert not update_result.reasons_by_path
 
-    assert inv_node.attributes.retentions == expected_retentions
+    assert inv_node.tree.attributes.retentions == expected_retentions
 
     if expected_retentions:
-        assert "old" in inv_node.attributes.pairs
-        assert inv_node.attributes.pairs.get("keys") == "New Keys"
+        assert "old" in inv_node.tree.attributes.pairs
+        assert inv_node.tree.attributes.pairs.get("keys") == "New Keys"
 
 
 @pytest.mark.parametrize(
@@ -1007,8 +955,8 @@ def test_updater_merge_attributes(
         (
             ("choices", ["old", "and", "new", "keys"]),
             {
-                "new": RetentionIntervals(4, 5, 6),
-                "keys": RetentionIntervals(4, 5, 6),
+                "new": RetentionInterval(4, 5, 6),
+                "keys": RetentionInterval(4, 5, 6),
             },
         ),
     ],
@@ -1035,24 +983,19 @@ def test_updater_merge_attributes_outdated(
                 "attributes": choices,
             }
         ],
-        old_tree=previous_tree,
+        previous_tree=previous_tree,
     )
-    inv_tree = trees.inventory
 
-    previous_node = previous_tree.get_node(("path-to", "node-with-attrs"))
-    assert previous_node is not None
-
-    inv_node = inv_tree.get_node(("path-to", "node-with-attrs"))
-    assert inv_node is not None
+    inv_node = trees.inventory.get_tree(("path-to", "node-with-attrs"))
 
     if expected_retentions:
         assert update_result.save_tree
-        assert update_result.reason
+        assert update_result.reasons_by_path
     else:
         assert not update_result.save_tree
-        assert not update_result.reason
+        assert not update_result.reasons_by_path
 
-    assert inv_node.attributes.retentions == expected_retentions
+    assert inv_node.tree.attributes.retentions == expected_retentions
 
 
 @pytest.mark.parametrize(
@@ -1066,14 +1009,14 @@ def test_updater_merge_attributes_outdated(
             ("choices", ["old", "and", "new", "keys"]),
             {
                 ("Ident 1",): {
-                    "old": RetentionIntervals(1, 2, 3),
-                    "new": RetentionIntervals(4, 5, 6),
-                    "keys": RetentionIntervals(4, 5, 6),
+                    "old": RetentionInterval(1, 2, 3),
+                    "new": RetentionInterval(4, 5, 6),
+                    "keys": RetentionInterval(4, 5, 6),
                 },
                 ("Ident 2",): {
-                    "old": RetentionIntervals(1, 2, 3),
-                    "new": RetentionIntervals(4, 5, 6),
-                    "keys": RetentionIntervals(4, 5, 6),
+                    "old": RetentionInterval(1, 2, 3),
+                    "new": RetentionInterval(4, 5, 6),
+                    "keys": RetentionInterval(4, 5, 6),
                 },
             },
         ),
@@ -1107,27 +1050,22 @@ def test_updater_merge_tables(
                 "columns": choices,
             }
         ],
-        old_tree=previous_tree,
+        previous_tree=previous_tree,
     )
-    inv_tree = trees.inventory
 
-    previous_node = previous_tree.get_node(("path-to", "node-with-table"))
-    assert previous_node is not None
-
-    inv_node = inv_tree.get_node(("path-to", "node-with-table"))
-    assert inv_node is not None
+    inv_node = trees.inventory.get_tree(("path-to", "node-with-table"))
 
     if expected_retentions:
         assert update_result.save_tree
-        assert update_result.reason
+        assert update_result.reasons_by_path
     else:
         assert not update_result.save_tree
-        assert not update_result.reason
+        assert not update_result.reasons_by_path
 
-    assert inv_node.table.retentions == expected_retentions
+    assert inv_node.tree.table.retentions == expected_retentions
 
     if expected_retentions:
-        for row in inv_node.table.rows:
+        for row in inv_node.tree.table.rows:
             assert "old" in row
             assert row["keys"].startswith("New Keys")
 
@@ -1143,12 +1081,12 @@ def test_updater_merge_tables(
             ("choices", ["old", "and", "new", "keys"]),
             {
                 ("Ident 1",): {
-                    "new": RetentionIntervals(4, 5, 6),
-                    "keys": RetentionIntervals(4, 5, 6),
+                    "new": RetentionInterval(4, 5, 6),
+                    "keys": RetentionInterval(4, 5, 6),
                 },
                 ("Ident 2",): {
-                    "new": RetentionIntervals(4, 5, 6),
-                    "keys": RetentionIntervals(4, 5, 6),
+                    "new": RetentionInterval(4, 5, 6),
+                    "keys": RetentionInterval(4, 5, 6),
                 },
             },
         ),
@@ -1176,24 +1114,19 @@ def test_updater_merge_tables_outdated(
                 "columns": choices,
             }
         ],
-        old_tree=previous_tree,
+        previous_tree=previous_tree,
     )
-    inv_tree = trees.inventory
 
-    previous_node = previous_tree.get_node(("path-to", "node-with-table"))
-    assert previous_node is not None
-
-    inv_node = inv_tree.get_node(("path-to", "node-with-table"))
-    assert inv_node is not None
+    inv_node = trees.inventory.get_tree(("path-to", "node-with-table"))
 
     if expected_retentions:
         assert update_result.save_tree
-        assert update_result.reason
+        assert update_result.reasons_by_path
     else:
         assert not update_result.save_tree
-        assert not update_result.reason
+        assert not update_result.reasons_by_path
 
-    assert inv_node.table.retentions == expected_retentions
+    assert inv_node.tree.table.retentions == expected_retentions
 
 
 @pytest.mark.parametrize(
@@ -1206,11 +1139,7 @@ def test_updater_merge_tables_outdated(
         (3, 3),
     ],
 )
-def test_check_inventory_tree(
-    monkeypatch: pytest.MonkeyPatch,
-    failed_state: int | None,
-    expected: int,
-) -> None:
+def test_inventorize_host(failed_state: int | None, expected: int) -> None:
     def fetcher(
         host_name: HostName, *, ip_address: HostAddress | None
     ) -> Sequence[tuple[SourceInfo, result.Result[AgentRawData, Exception], Snapshot]]:
@@ -1227,70 +1156,84 @@ def test_check_inventory_tree(
             ),
         ]
 
+    def parser(
+        fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
+    ) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]:
+        def parse(header: AgentRawData | SNMPRawData) -> Mapping[SectionName, str]:
+            assert isinstance(header, bytes)
+            txt = header.decode()
+            return {SectionName(txt[3:-3]): txt}
+
+        return [
+            (
+                source_info,
+                result.Error(res.error)
+                if res.is_error()
+                else res.map(lambda ok: HostSections(parse(ok))),
+            )
+            for source_info, res in fetched
+        ]
+
     hostname = HostName("my-host")
-    config_cache = Scenario().apply(monkeypatch)
-    parser = ConfiguredParser(
-        config_cache,
-        selected_sections=NO_SELECTION,
-        keep_outdated=True,
-        logger=logging.getLogger("tests"),
-    )
-    check_result = _inventory.check_inventory_tree(
+
+    check_result = inventorize_host(
         hostname,
-        config_cache=config_cache,
         fetcher=fetcher,
         parser=parser,
         summarizer=lambda *args, **kwargs: [],
-        inventory_parameters=config_cache.inventory_parameters,
-        section_plugins=SectionPluginMapper(),
+        inventory_parameters=lambda *args, **kw: {},
+        section_plugins={
+            SectionName("data"): SectionPlugin(
+                supersedes=set(),
+                parse_function=lambda *args, **kw: object,
+                parsed_section_name=ParsedSectionName("data"),
+            )
+        },
         inventory_plugins={},
         run_plugin_names=EVERYTHING,
         parameters=HWSWInventoryParameters.from_raw(
             {} if failed_state is None else {"inv-fail-status": failed_state}
         ),
-        old_tree=StructuredDataNode(),
+        raw_intervals_from_config=(),
+        previous_tree=ImmutableTree(),
     ).check_result
 
     assert expected == check_result.state
     assert "Did not update the tree due to at least one error" in check_result.summary
 
 
-def test_check_inventory_tree_no_data_or_files(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
+def test_inventorize_host_with_no_data_nor_files() -> None:
     hostname = HostName("my-host")
-    config_cache = Scenario().apply(monkeypatch)
-
-    check_result = _inventory.check_inventory_tree(
+    check_result = inventorize_host(
         hostname,
-        config_cache=config_cache,
         # no data!
         fetcher=lambda *args, **kwargs: [],
         parser=lambda *args, **kwargs: [],
         summarizer=lambda *args, **kwargs: [],
-        inventory_parameters=config_cache.inventory_parameters,
+        inventory_parameters=lambda *args, **kw: {},
         section_plugins={},
         inventory_plugins={},
         run_plugin_names=EVERYTHING,
         parameters=HWSWInventoryParameters.from_raw({}),
-        old_tree=StructuredDataNode(),
+        raw_intervals_from_config=(),
+        previous_tree=ImmutableTree(),
     ).check_result
 
     assert check_result.state == 0
     assert check_result.summary == "No data yet, please be patient"
 
 
+def _create_cluster_tree(pairs: Mapping[str, int | float | str | None]) -> MutableTree:
+    tree = MutableTree()
+    tree.add_pairs(path=("software", "applications", "check_mk", "cluster"), pairs=pairs)
+    return tree
+
+
 @pytest.mark.parametrize(
     "inventory_tree, active_check_results",
     [
         (
-            StructuredDataNode.deserialize(
-                {
-                    "Attributes": {},
-                    "Table": {},
-                    "Nodes": {},
-                }
-            ),
+            MutableTree(),
             [
                 ActiveCheckResult(
                     state=1,
@@ -1302,39 +1245,7 @@ def test_check_inventory_tree_no_data_or_files(
             ],
         ),
         (
-            StructuredDataNode.deserialize(
-                {
-                    "Attributes": {},
-                    "Table": {},
-                    "Nodes": {
-                        "software": {
-                            "Attributes": {},
-                            "Table": {},
-                            "Nodes": {
-                                "applications": {
-                                    "Attributes": {},
-                                    "Table": {},
-                                    "Nodes": {
-                                        "check_mk": {
-                                            "Attributes": {},
-                                            "Table": {},
-                                            "Nodes": {
-                                                "cluster": {
-                                                    "Attributes": {
-                                                        "Pairs": {"is_cluster": True, "foo": "bar"}
-                                                    },
-                                                    "Table": {},
-                                                    "Nodes": {},
-                                                },
-                                            },
-                                        },
-                                    },
-                                },
-                            },
-                        }
-                    },
-                }
-            ),
+            _create_cluster_tree({"is_cluster": True, "foo": "bar"}),
             [
                 ActiveCheckResult(
                     state=1,
@@ -1349,37 +1260,7 @@ def test_check_inventory_tree_no_data_or_files(
             ],
         ),
         (
-            StructuredDataNode.deserialize(
-                {
-                    "Attributes": {},
-                    "Table": {},
-                    "Nodes": {
-                        "software": {
-                            "Attributes": {},
-                            "Table": {},
-                            "Nodes": {
-                                "applications": {
-                                    "Attributes": {},
-                                    "Table": {},
-                                    "Nodes": {
-                                        "check_mk": {
-                                            "Attributes": {},
-                                            "Table": {},
-                                            "Nodes": {
-                                                "cluster": {
-                                                    "Attributes": {"Pairs": {"is_cluster": True}},
-                                                    "Table": {},
-                                                    "Nodes": {},
-                                                },
-                                            },
-                                        },
-                                    },
-                                },
-                            },
-                        }
-                    },
-                }
-            ),
+            _create_cluster_tree({"is_cluster": True}),
             [
                 ActiveCheckResult(
                     state=0, summary="No further data for tree update", details=(), metrics=()
@@ -1391,37 +1272,7 @@ def test_check_inventory_tree_no_data_or_files(
             ],
         ),
         (
-            StructuredDataNode.deserialize(
-                {
-                    "Attributes": {},
-                    "Table": {},
-                    "Nodes": {
-                        "software": {
-                            "Attributes": {},
-                            "Table": {},
-                            "Nodes": {
-                                "applications": {
-                                    "Attributes": {},
-                                    "Table": {},
-                                    "Nodes": {
-                                        "check_mk": {
-                                            "Attributes": {},
-                                            "Table": {},
-                                            "Nodes": {
-                                                "cluster": {
-                                                    "Attributes": {"Pairs": {"is_cluster": False}},
-                                                    "Table": {},
-                                                    "Nodes": {},
-                                                },
-                                            },
-                                        },
-                                    },
-                                },
-                            },
-                        }
-                    },
-                }
-            ),
+            _create_cluster_tree({"is_cluster": False}),
             [
                 ActiveCheckResult(
                     state=0, summary="No further data for tree update", details=(), metrics=()
@@ -1435,18 +1286,96 @@ def test_check_inventory_tree_no_data_or_files(
     ],
 )
 def test__check_fetched_data_or_trees_only_cluster_property(
-    inventory_tree: StructuredDataNode, active_check_results: Sequence[ActiveCheckResult]
+    inventory_tree: MutableTree, active_check_results: Sequence[ActiveCheckResult]
 ) -> None:
     assert (
         list(
-            _inventory._check_fetched_data_or_trees(
+            _check_fetched_data_or_trees(
                 parameters=HWSWInventoryParameters.from_raw({}),
                 inventory_tree=inventory_tree,
-                status_data_tree=StructuredDataNode.deserialize({}),
-                old_tree=StructuredDataNode.deserialize({}),
+                status_data_tree=MutableTree(),
+                previous_tree=ImmutableTree(),
                 no_data_or_files=False,
                 processing_failed=True,
             )
         )
         == active_check_results
+    )
+
+
+def _create_root_tree(pairs: Mapping[str, int | float | str | None]) -> MutableTree:
+    tree = MutableTree()
+    tree.add_pairs(path=(), pairs=pairs)
+    return tree
+
+
+@pytest.mark.parametrize(
+    "previous_tree, inventory_tree, update_result, expected_save_tree_actions",
+    [
+        (
+            ImmutableTree.deserialize(
+                {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
+            ),
+            # No further impact, may not be realistic here
+            MutableTree(),
+            # Content of path does not matter here
+            UpdateResult(reasons_by_path={("path-to", "node"): []}),
+            _SaveTreeActions(do_archive=True, do_save=False),
+        ),
+        (
+            ImmutableTree(),
+            _create_root_tree({"key": "new value"}),
+            # Content of path does not matter here
+            UpdateResult(reasons_by_path={("path-to", "node"): []}),
+            _SaveTreeActions(do_archive=False, do_save=True),
+        ),
+        (
+            ImmutableTree.deserialize(
+                {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
+            ),
+            _create_root_tree({"key": "new value"}),
+            # Content of path does not matter here
+            UpdateResult(reasons_by_path={("path-to", "node"): []}),
+            _SaveTreeActions(do_archive=True, do_save=True),
+        ),
+        (
+            ImmutableTree.deserialize(
+                {"Attributes": {"Pairs": {"key": "old value"}}, "Table": {}, "Nodes": {}}
+            ),
+            _create_root_tree({"key": "new value"}),
+            UpdateResult(),
+            _SaveTreeActions(do_archive=True, do_save=True),
+        ),
+        (
+            ImmutableTree.deserialize(
+                {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
+            ),
+            _create_root_tree({"key": "value"}),
+            UpdateResult(),
+            _SaveTreeActions(do_archive=False, do_save=False),
+        ),
+        (
+            ImmutableTree.deserialize(
+                {"Attributes": {"Pairs": {"key": "value"}}, "Table": {}, "Nodes": {}}
+            ),
+            _create_root_tree({"key": "value"}),
+            # Content of path does not matter here
+            UpdateResult(reasons_by_path={("path-to", "node"): []}),
+            _SaveTreeActions(do_archive=False, do_save=True),
+        ),
+    ],
+)
+def test_save_tree_actions(
+    previous_tree: ImmutableTree,
+    inventory_tree: MutableTree,
+    update_result: UpdateResult,
+    expected_save_tree_actions: _SaveTreeActions,
+) -> None:
+    assert (
+        _get_save_tree_actions(
+            previous_tree=previous_tree,
+            inventory_tree=inventory_tree,
+            update_result=update_result,
+        )
+        == expected_save_tree_actions
     )

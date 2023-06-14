@@ -6,7 +6,7 @@ Date: 1671176412
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Prior to this werk, the Prism special agent added a newline to the auth
 header value depending on the length of the password. This werk removes

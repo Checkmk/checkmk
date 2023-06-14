@@ -1,0 +1,12 @@
+Title: Enable SAML login for the mobile version
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1678879208
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+The recently introduced SAML login is now also available in the Checkmk mobile version.
+

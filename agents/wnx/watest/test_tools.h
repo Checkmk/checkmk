@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -182,7 +182,7 @@ constexpr std::string_view cab_to_test = "uncab_test.cab";
 class TempFolder {
 public:
     explicit TempFolder(std::string_view folder_name)
-        : TempFolder(wtools::ConvertToUTF16(folder_name)) {}
+        : TempFolder(wtools::ConvertToUtf16(folder_name)) {}
     explicit TempFolder(std::wstring_view folder_name);
     TempFolder(const TempFolder &) = delete;
     TempFolder &operator=(const TempFolder &) = delete;
@@ -199,7 +199,7 @@ private:
 std::filesystem::path MakeTempFolderInTempPath(std::wstring_view folder_name);
 std::wstring GenerateRandomFileName() noexcept;
 
-/// \brief RAII class to change folder structure in the config
+/// RAII class to change folder structure in the config
 class TempCfgFs {
 public:
     using ptr = std::unique_ptr<TempCfgFs>;

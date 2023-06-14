@@ -6,7 +6,7 @@ Date: 1665482880
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 There were cases when the "Scheduled Taks State" was not available in the agent output.
 This caused the check to crash.

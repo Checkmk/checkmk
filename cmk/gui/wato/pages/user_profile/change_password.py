@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -136,6 +136,8 @@ class UserChangePasswordPage(ABCUserProfilePage):
 
         forms.section(_("New Password Confirmation"))
         html.password_input("password2", autocomplete="new-password")
+
+        html.hidden_field("_origtarget", request.get_str_input("_origtarget"))
 
         forms.end()
         html.close_div()

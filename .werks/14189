@@ -1,0 +1,14 @@
+Title: Fixed incorrect assignment of customer sensitive host data to other customers
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1679487891
+Edition: cme
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+
+
+

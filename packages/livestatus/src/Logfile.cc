@@ -1,4 +1,4 @@
-// Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -8,6 +8,7 @@
 #include <fcntl.h>
 
 #include <algorithm>
+#include <cerrno>
 #include <sstream>
 #include <stdexcept>
 #include <vector>
@@ -20,11 +21,15 @@ std::chrono::system_clock::time_point firstTimestampOf(
     const std::filesystem::path &path, Logger *logger) {
     std::string line;
     if (std::ifstream is{path}; is && std::getline(is, line)) {
-        return LogEntry{{}, line}.time();
+        try {
+            return LogEntry{{}, line}.time();
+        } catch (const std::invalid_argument &) {
+            errno = EINVAL;
+        }
     }
     const generic_error ge{"cannot determine first timestamp of " +
                            path.string()};
-    Informational(logger) << ge;
+    Warning(logger) << ge;
     return {};
 }
 }  // namespace

@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In addition to the werk #14285 we released with 2.1.0p8, this werk fixes
 another situation which could block the reload of the Microcore.

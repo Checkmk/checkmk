@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helper functions for dealing with Checkmk labels of all kind"""
 
 from __future__ import annotations
 
-import os
 from ast import literal_eval
-from collections.abc import Mapping
-from typing import Any, Final, TypedDict
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Any, Final, Self, TypedDict
 
 import cmk.utils.paths
 import cmk.utils.store as store
@@ -18,7 +17,6 @@ from cmk.utils.site import omd_site
 from cmk.utils.type_defs import HostName, SectionName
 
 Labels = Mapping[str, str]
-UpdatedHostLabelsEntry = tuple[str, float, str]
 
 
 class HostLabelValueDict(TypedDict):
@@ -32,7 +30,6 @@ class _Label:
     __slots__ = "name", "value"
 
     def __init__(self, name: str, value: str) -> None:
-
         if not isinstance(name, str):
             raise MKGeneralException("Invalid label name given: Only unicode strings are allowed")
         self.name: Final = str(name)
@@ -48,7 +45,7 @@ class _Label:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name!r}, {self.value!r})"
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, self.__class__):
             raise TypeError(f"cannot compare {type(self)} to {type(other)}")
         return self.name == other.name and self.value == other.value
@@ -67,7 +64,18 @@ class HostLabel(_Label):
     __slots__ = ("plugin_name",)
 
     @classmethod
-    def from_dict(cls, name: str, dict_label: HostLabelValueDict) -> "HostLabel":
+    def deserialize(cls, raw: Mapping[str, str]) -> Self:
+        return cls(
+            name=str(raw["name"]),
+            value=str(raw["value"]),
+            plugin_name=None
+            if (raw_plugin_name := raw.get("plugin_name")) is None
+            else SectionName(raw_plugin_name),
+        )
+
+    # rather use (de)serialize
+    @classmethod
+    def from_dict(cls, name: str, dict_label: HostLabelValueDict) -> Self:
         value = dict_label["value"]
         assert isinstance(value, str)
 
@@ -85,6 +93,29 @@ class HostLabel(_Label):
         super().__init__(name, value)
         self.plugin_name: Final = plugin_name
 
+    def serialize(self) -> Mapping[str, str]:
+        return (
+            {
+                "name": self.name,
+                "value": self.value,
+            }
+            if self.plugin_name is None
+            else {
+                "name": self.name,
+                "value": self.value,
+                "plugin_name": str(self.plugin_name),
+            }
+        )
+
+    def id(self) -> str:
+        """The identity of the label.
+
+        This is important for discovery.
+        As long as this does not change, we're talking about "the same" label (but it might have changed).
+        """
+        return self.label  # Fairly certain this is wrong. Shouldn't this be 'name'?
+
+    # rather use (de)serialize
     def to_dict(self) -> HostLabelValueDict:
         return {
             "value": self.value,
@@ -136,12 +167,19 @@ class DiscoveredHostLabelsStore:
         )
         self.file_path: Final = self._store.path
 
-    def load(self) -> Mapping[str, HostLabelValueDict]:
-        return self._store.read_obj(default={})
+    def load(self) -> Sequence[HostLabel]:
+        return [
+            HostLabel(
+                name,
+                raw["value"],
+                None if (raw_name := raw["plugin_name"]) is None else SectionName(raw_name),
+            )
+            for name, raw in self._store.read_obj(default={}).items()
+        ]
 
-    def save(self, labels: Mapping[str, HostLabelValueDict]) -> None:
+    def save(self, labels: Iterable[HostLabel]) -> None:
         self.file_path.parent.mkdir(parents=True, exist_ok=True)
-        self._store.write_obj(labels)
+        self._store.write_obj({l.name: l.to_dict() for l in labels})
 
 
 class BuiltinHostLabelsStore:
@@ -149,31 +187,3 @@ class BuiltinHostLabelsStore:
         return {
             "cmk/site": {"value": omd_site(), "plugin_name": "builtin"},
         }
-
-
-def get_host_labels_entry_of_host(host_name: HostName) -> UpdatedHostLabelsEntry:
-    """Returns the host labels entry of the given host"""
-    path = DiscoveredHostLabelsStore(host_name).file_path
-    with path.open() as f:
-        return (path.name, path.stat().st_mtime, f.read())
-
-
-def get_updated_host_label_files(newer_than: float) -> list[UpdatedHostLabelsEntry]:
-    """Returns the host label file content + meta data which are newer than the given timestamp"""
-    updated_host_labels = []
-    for path in sorted(cmk.utils.paths.discovered_host_labels_dir.glob("*.mk")):
-        mtime = path.stat().st_mtime
-        if path.stat().st_mtime <= newer_than:
-            continue  # Already known to central site
-
-        with path.open() as f:
-            updated_host_labels.append((path.name, mtime, f.read()))
-    return updated_host_labels
-
-
-def save_updated_host_label_files(updated_host_labels: list[UpdatedHostLabelsEntry]) -> None:
-    """Persists the data previously read by get_updated_host_label_files()"""
-    for file_name, mtime, content in updated_host_labels:
-        file_path = cmk.utils.paths.discovered_host_labels_dir / file_name
-        store.save_text_to_file(file_path, content)
-        os.utime(file_path, (mtime, mtime))

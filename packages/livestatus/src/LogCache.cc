@@ -1,4 +1,4 @@
-// Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -10,16 +10,16 @@
 #include <string>
 #include <system_error>
 
-#include "livestatus/Logfile.h"
+#include "livestatus/ICore.h"
+#include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
-#include "livestatus/MonitoringCore.h"
 
 namespace {
 // Check memory every N'th new message
 constexpr unsigned long check_mem_cycle = 1000;
 }  // namespace
 
-LogCache::LogCache(MonitoringCore *mc)
+LogCache::LogCache(ICore *mc)
     : _mc(mc), _num_cached_log_messages(0), _num_at_last_check(0) {}
 
 void LogCache::update() {
@@ -36,10 +36,11 @@ void LogCache::update() {
     _last_index_update = std::chrono::system_clock::now();
     // We need to find all relevant logfiles. This includes directory, the
     // current nagios.log and all files in the archive.
-    addToIndex(std::make_unique<Logfile>(logger(), this, _mc->historyFilePath(),
-                                         true));
+    const auto paths = _mc->paths();
+    addToIndex(
+        std::make_unique<Logfile>(logger(), this, paths->history_file(), true));
 
-    const std::filesystem::path dirpath = _mc->logArchivePath();
+    const std::filesystem::path dirpath = paths->history_archive_directory();
     try {
         for (const auto &entry : std::filesystem::directory_iterator(dirpath)) {
             addToIndex(
@@ -53,7 +54,7 @@ void LogCache::update() {
 
     if (_logfiles.empty()) {
         Notice(logger()) << "no log file found, not even "
-                         << _mc->historyFilePath();
+                         << paths->history_file();
     }
 }
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -228,90 +228,87 @@ def _check_netapp_api_if(  # pylint: disable=too-many-branches
         value_store=value_store,
     )
 
-    for iface in nics:
-        descr_cln = interfaces.cleanup_if_strings(iface.attributes.descr)
-        alias_cln = interfaces.cleanup_if_strings(iface.attributes.alias)
+    for iface in interfaces.matching_interfaces_for_item(item, nics):
         first_member = True
-        if interfaces.item_matches(item, iface.attributes.index, alias_cln, descr_cln):
-            vif = extra_info.get(iface.attributes.descr)
-            if vif is None:
-                continue
+        vif = extra_info.get(iface.attributes.descr)
+        if vif is None:
+            continue
 
-            speed_state, speed_info_included = 1, True
-            home_state, home_info_included = 0, True
+        speed_state, speed_info_included = 1, True
+        home_state, home_info_included = 0, True
 
-            if "match_same_speed" in params:
-                speed_behaviour = params["match_same_speed"]
-                speed_info_included = INFO_INCLUDED_MAP.get(
-                    speed_behaviour,
-                    speed_info_included,
-                )
-                speed_state = STATUS_MAP.get(speed_behaviour, speed_state)
+        if "match_same_speed" in params:
+            speed_behaviour = params["match_same_speed"]
+            speed_info_included = INFO_INCLUDED_MAP.get(
+                speed_behaviour,
+                speed_info_included,
+            )
+            speed_state = STATUS_MAP.get(speed_behaviour, speed_state)
 
-            if "home_port" in params:
-                home_behaviour = params["home_port"]
-                home_info_included = INFO_INCLUDED_MAP.get(home_behaviour, home_info_included)
-                home_state = STATUS_MAP.get(home_behaviour, home_state)
+        if "home_port" in params:
+            home_behaviour = params["home_port"]
+            home_info_included = INFO_INCLUDED_MAP.get(home_behaviour, home_info_included)
+            home_state = STATUS_MAP.get(home_behaviour, home_state)
 
-            if "home_port" in vif and home_info_included:
-                is_home_port = vif["is_home"]
-                mon_state = 0 if is_home_port else home_state
-                home_attribute = "is %shome port" % ("" if is_home_port else "not ")
-                yield Result(
-                    state=State(mon_state),
-                    summary="Current Port: %s (%s)" % (vif["home_port"], home_attribute),
-                )
+        if "home_port" in vif and home_info_included:
+            is_home_port = vif["is_home"]
+            mon_state = 0 if is_home_port else home_state
+            home_attribute = "is %shome port" % ("" if is_home_port else "not ")
+            yield Result(
+                state=State(mon_state),
+                summary="Current Port: %s (%s)" % (vif["home_port"], home_attribute),
+            )
 
-            if "failover_ports" in vif:
-                failover_group_str = ", ".join(
-                    f"{fop['node']}:{fop['port']}={fop['link-status']}"
-                    for fop in sorted(vif["failover_ports"], key=lambda x: (x["node"], x["port"]))
-                )
-                yield Result(
-                    state=(
-                        State.CRIT
-                        if any(
-                            fop["link-status"] != "up" and fop["node"] == vif["home_node"]
-                            for fop in vif["failover_ports"]
-                        )
-                        else State.WARN
-                        if any(fop["link-status"] != "up" for fop in vif["failover_ports"])
-                        else State.OK
-                    ),
-                    notice=f"Failover Group: [{failover_group_str}]",
-                )
+        if "failover_ports" in vif:
+            failover_group_str = ", ".join(
+                f"{fop['node']}:{fop['port']}={fop['link-status']}"
+                for fop in sorted(vif["failover_ports"], key=lambda x: (x["node"], x["port"]))
+            )
+            yield Result(
+                state=(
+                    State.CRIT
+                    if any(
+                        fop["link-status"] != "up" and fop["node"] == vif["home_node"]
+                        for fop in vif["failover_ports"]
+                    )
+                    else State.WARN
+                    if any(fop["link-status"] != "up" for fop in vif["failover_ports"])
+                    else State.OK
+                ),
+                notice=f"Failover Group: [{failover_group_str}]",
+            )
 
-            if "grouped_if" in vif:
-                for member_name, member_state in sorted(vif.get("grouped_if", [])):
-                    if member_state is None or member_name == iface.attributes.descr:
-                        continue  # Not a real member or the grouped interface itself
+        if "grouped_if" in vif:
+            for member_name, member_state in sorted(vif.get("grouped_if", [])):
+                if member_state is None or member_name == iface.attributes.descr:
+                    continue  # Not a real member or the grouped interface itself
 
-                    if member_state == "2":
-                        mon_state = 1
-                    else:
-                        mon_state = 0
+                if member_state == "2":
+                    mon_state = 1
+                else:
+                    mon_state = 0
 
-                    if first_member:
-                        yield Result(
-                            state=State(mon_state),
-                            summary="Physical interfaces: %s(%s)"
-                            % (
-                                member_name,
-                                interfaces.statename(member_state),
-                            ),
-                        )
-                        first_member = False
-                    else:
-                        yield Result(
-                            state=State(mon_state),
-                            summary="%s(%s)" % (member_name, interfaces.statename(member_state)),
-                        )
+                if first_member:
+                    yield Result(
+                        state=State(mon_state),
+                        summary="Physical interfaces: %s(%s)"
+                        % (
+                            member_name,
+                            interfaces.statename(member_state),
+                        ),
+                    )
+                    first_member = False
+                else:
+                    yield Result(
+                        state=State(mon_state),
+                        summary="%s(%s)" % (member_name, interfaces.statename(member_state)),
+                    )
 
-            if "speed_differs" in vif and speed_info_included:
-                yield Result(
-                    state=State(speed_state),
-                    summary="Interfaces do not have the same speed",
-                )
+        if "speed_differs" in vif and speed_info_included:
+            yield Result(
+                state=State(speed_state),
+                summary="Interfaces do not have the same speed",
+            )
 
 
 register.check_plugin(

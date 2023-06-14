@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -73,13 +73,17 @@ def page_handler() -> None:
             )
         )
 
+    current_mode = request.get_str_input_mandatory("mode")
+    # Backup has to be accessible for remote sites, otherwise the user has no
+    # chance to configure a backup for remote sites.
     # config.current_customer can not be checked with CRE repos
-    if cmk_version.is_managed_edition() and not managed.is_provider(
-        active_config.current_customer
+    if (
+        cmk_version.is_managed_edition()
+        and not managed.is_provider(active_config.current_customer)
+        and not current_mode.startswith(("backup", "edit_backup"))
     ):  # type: ignore[attr-defined]
-        raise MKGeneralException(_("Check_MK can only be configured on the managers central site."))
+        raise MKGeneralException(_("Checkmk can only be configured on the managers central site."))
 
-    current_mode = request.var("mode") or "main"
     mode_instance = mode_registry.get(current_mode, ModeNotImplemented)()
     mode_instance.ensure_permissions()
 
@@ -88,7 +92,7 @@ def page_handler() -> None:
     if display_options.disabled(display_options.N):
         html.add_body_css_class("inline")
 
-    # If we do an action, we acquire an exclusive lock on the complete WATO.
+    # If we do an action, we acquire an exclusive lock on the complete Setup.
     if transactions.is_transaction():
         with store.lock_checkmk_configuration():
             _wato_page_handler(current_mode, mode_instance)
@@ -145,8 +149,8 @@ def _wato_page_handler(current_mode: str, mode: WatoMode) -> None:
     html.show_user_errors()
 
     # Show outcome of previous page (that redirected to this one)
-    for message in get_flashed_messages():
-        html.show_message(message)
+    for message in get_flashed_messages(with_categories=True):
+        html.show_message_by_msg_type(message.msg, message.msg_type)
 
     # Show content
     mode.handle_page()

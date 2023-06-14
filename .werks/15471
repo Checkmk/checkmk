@@ -1,0 +1,15 @@
+Title: check_bi_aggr: Fix downtime tracking
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1683214332
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Until now, downtime tracking was possible only for BI aggregations
+named "Aggr Host {HOSTNAME}"
+With this werk downtime tracking is possible for all BI aggregations.
+
+

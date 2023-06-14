@@ -6,7 +6,7 @@ Date: 1675668036
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Hosts representing Azure Virtual Machines/AWS EC2 instances will now be labelled as such, specifically:
 LI: AWS EC2s: "cmk/aws/ec2:instance"

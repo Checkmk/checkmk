@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import annotations
 
+import abc
 import argparse
 import logging
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from enum import auto, Enum
 from pathlib import Path
-from typing import Final
+from typing import Final, TypedDict
 
 import meraki  # type: ignore[import]
 
@@ -29,9 +30,10 @@ _LOGGER = logging.getLogger("agent_cisco_meraki")
 
 _BASE_CACHE_FILE_DIR = Path(tmp_dir) / "agents" / "agent_cisco_meraki"
 
-_API_NAME_ORGANISATION_ID: Final = "organizationId"
+_API_NAME_ORGANISATION_ID: Final = "id"
+_API_NAME_ORGANISATION_NAME: Final = "name"
 _API_NAME_DEVICE_SERIAL: Final = "serial"
-_API_NAME_DEVICE_LAN_IP: Final = "lanIp"
+_API_NAME_DEVICE_NAME: Final = "name"
 
 _SEC_NAME_LICENSES_OVERVIEW: Final = "licenses-overview"
 _SEC_NAME_DEVICE_INFO: Final = "_device_info"  # Not configurable, needed for piggyback
@@ -108,7 +110,14 @@ class Section:
 #   '----------------------------------------------------------------------'
 
 
-class GetOrganisationIDsCache(DataCache):
+class _Organisation(TypedDict):
+    # See https://developer.cisco.com/meraki/api-v1/#!get-organizations
+    # if you want to extend this
+    id_: str
+    name: str
+
+
+class _ABCGetOrganisationsCache(DataCache):
     def __init__(self, config: MerakiConfig) -> None:
         super().__init__(_BASE_CACHE_FILE_DIR / config.hostname / "organisations", "organisations")
         self._dashboard = config.dashboard
@@ -121,10 +130,39 @@ class GetOrganisationIDsCache(DataCache):
     def get_validity_from_args(self, *args: object) -> bool:
         return True
 
-    def get_live_data(self, *args: object) -> Sequence[str]:
+    @abc.abstractmethod
+    def get_live_data(self, *args: object) -> Sequence[_Organisation]:
+        raise NotImplementedError()
+
+
+class GetOrganisationsByIDCache(_ABCGetOrganisationsCache):
+    def __init__(self, config: MerakiConfig, org_ids: Sequence[str]) -> None:
+        super().__init__(config)
+        self._org_ids = org_ids
+
+    def get_live_data(self, *args: object) -> Sequence[_Organisation]:
+        def _get_organisation(org_id: str) -> _Organisation:
+            try:
+                org = self._dashboard.organizations.getOrganization(org_id)
+            except meraki.exceptions.APIError as e:
+                _LOGGER.debug("Get organisation by ID %r: %r", org_id, e)
+                return _Organisation(id_=org_id, name="")
+            return _Organisation(
+                id_=org[_API_NAME_ORGANISATION_ID],
+                name=org[_API_NAME_ORGANISATION_NAME],
+            )
+
+        return [_get_organisation(org_id) for org_id in self._org_ids]
+
+
+class GetOrganisationsCache(_ABCGetOrganisationsCache):
+    def get_live_data(self, *args: object) -> Sequence[_Organisation]:
         try:
             return [
-                organisation[_API_NAME_ORGANISATION_ID]
+                _Organisation(
+                    id_=organisation[_API_NAME_ORGANISATION_ID],
+                    name=organisation[_API_NAME_ORGANISATION_NAME],
+                )
                 for organisation in self._dashboard.organizations.getOrganizations()
             ]
         except meraki.exceptions.APIError as e:
@@ -146,7 +184,11 @@ class GetOrganisationIDsCache(DataCache):
 @dataclass(frozen=True)
 class MerakiOrganisation:
     config: MerakiConfig
-    organisation_id: str
+    organisation: _Organisation
+
+    @property
+    def organisation_id(self) -> str:
+        return self.organisation["id_"]
 
     def query(self) -> Iterator[Section]:
         if _SEC_NAME_LICENSES_OVERVIEW in self.config.section_names:
@@ -162,10 +204,18 @@ class MerakiOrganisation:
             devices_by_serial = {}
 
         for device in devices_by_serial.values():
+            try:
+                device_piggyback = str(device[_API_NAME_DEVICE_NAME])
+            except KeyError as e:
+                _LOGGER.debug(
+                    "Organisation ID: %r: Get device piggyback: %r", self.organisation_id, e
+                )
+                continue
+
             yield self._make_section(
                 name=_SEC_NAME_DEVICE_INFO,
                 data=device,
-                piggyback=str(device[_API_NAME_DEVICE_LAN_IP]),
+                piggyback=device_piggyback,
             )
 
         if _SEC_NAME_DEVICE_STATUSES in self.config.section_names:
@@ -187,18 +237,42 @@ class MerakiOrganisation:
                     )
 
     def _get_licenses_overview(self) -> MerakiAPIData | None:
+        def _update_licenses_overview(
+            licenses_overview: dict[str, object] | None
+        ) -> MerakiAPIData | None:
+            if not licenses_overview:
+                return None
+            licenses_overview.update(
+                {
+                    "organisation_id": self.organisation["id_"],
+                    "organisation_name": self.organisation["name"],
+                }
+            )
+            return licenses_overview
+
         try:
-            return self.config.dashboard.organizations.getOrganizationLicensesOverview(
-                self.organisation_id,
+            return _update_licenses_overview(
+                self.config.dashboard.organizations.getOrganizationLicensesOverview(
+                    self.organisation_id,
+                )
             )
         except meraki.exceptions.APIError as e:
             _LOGGER.debug("Organisation ID: %r: Get license overview: %r", self.organisation_id, e)
             return None
 
     def _get_devices_by_serial(self) -> Mapping[str, MerakiAPIData]:
+        def _update_device(device: dict[str, object]) -> MerakiAPIData:
+            device.update(
+                {
+                    "organisation_id": self.organisation["id_"],
+                    "organisation_name": self.organisation["name"],
+                }
+            )
+            return device
+
         try:
             return {
-                str(device[_API_NAME_DEVICE_SERIAL]): device
+                str(device[_API_NAME_DEVICE_SERIAL]): _update_device(device)
                 for device in self.config.dashboard.organizations.getOrganizationDevices(
                     self.organisation_id, total_pages="all"
                 )
@@ -230,7 +304,7 @@ class MerakiOrganisation:
     ) -> str | None:
         try:
             serial = str(device[_API_NAME_DEVICE_SERIAL])
-            return str(devices_by_serial[serial][_API_NAME_DEVICE_LAN_IP])
+            return str(devices_by_serial[serial][_API_NAME_DEVICE_NAME])
         except KeyError as e:
             _LOGGER.debug("Organisation ID: %r: Get device piggyback: %r", self.organisation_id, e)
             return None
@@ -291,7 +365,7 @@ def parse_arguments(argv: Sequence[str] | None) -> argparse.Namespace:
         "--sections",
         nargs="+",
         choices=list(_SECTION_NAME_MAP),
-        default=[],
+        default=list(_SECTION_NAME_MAP),
         help="Explicit sections that are collected.",
     )
 
@@ -312,10 +386,12 @@ class MerakiConfig:
     section_names: Sequence[str]
 
 
-def _get_organisation_ids(config: MerakiConfig, orgs: Sequence[str]) -> Sequence[str]:
+def _get_organisations(config: MerakiConfig, org_ids: Sequence[str]) -> Sequence[_Organisation]:
     if not _need_organisations(config.section_names):
         return []
-    return orgs if orgs else GetOrganisationIDsCache(config).get_live_data()
+    return (
+        GetOrganisationsByIDCache(config, org_ids) if org_ids else GetOrganisationsCache(config)
+    ).get_live_data()
 
 
 def _need_organisations(section_names: Sequence[str]) -> bool:
@@ -352,8 +428,8 @@ def agent_cisco_meraki_main(args: Args) -> int:
 
     sections = _query_meraki_objects(
         organisations=[
-            MerakiOrganisation(config, organisation_id)
-            for organisation_id in _get_organisation_ids(config, args.orgs)
+            MerakiOrganisation(config, organisation)
+            for organisation in _get_organisations(config, args.orgs)
         ]
     )
 

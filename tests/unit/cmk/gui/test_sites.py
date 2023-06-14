@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,6 +7,8 @@ import pytest
 from pytest_mock.plugin import MockerFixture
 
 from livestatus import SiteConfiguration, SiteId
+
+import cmk.utils.paths
 
 import cmk.gui.sites as sites
 import cmk.gui.user_sites as user_sites
@@ -16,13 +18,16 @@ from cmk.gui.logged_in import user
 @pytest.mark.parametrize(
     "site_spec,result",
     [
-        ({"socket": ("local", None), "proxy": None}, "unix:tmp/run/live"),
+        (
+            {"socket": ("local", None), "proxy": None},
+            f"unix:{cmk.utils.paths.omd_root}/tmp/run/live",
+        ),
         (
             {
                 "socket": ("local", None),
                 "proxy": {"params": None},
             },
-            "unix:tmp/run/liveproxy/mysite",
+            f"unix:{cmk.utils.paths.omd_root}/tmp/run/liveproxy/mysite",
         ),
         ({"socket": ("unix", {"path": "/a/b/c"}), "proxy": None}, "unix:/a/b/c"),
         (
@@ -41,7 +46,7 @@ from cmk.gui.logged_in import user
         ),
         (
             {"socket": ("unix", {"path": "/a/b/c"}), "proxy": {"params": None}},
-            "unix:tmp/run/liveproxy/mysite",
+            f"unix:{cmk.utils.paths.omd_root}/tmp/run/liveproxy/mysite",
         ),
     ],
 )

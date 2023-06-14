@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,12 +9,17 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Literal
 
-from OpenSSL import crypto
-
 from livestatus import SiteId
 
 import cmk.utils.render
 import cmk.utils.store as store
+from cmk.utils.crypto import HashAlgorithm
+from cmk.utils.crypto.certificate import (
+    CertificateWithPrivateKey,
+    InvalidPEMError,
+    WrongPasswordError,
+)
+from cmk.utils.crypto.password import Password as PasswordType
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
@@ -63,9 +68,10 @@ class KeypairStore:
 
     def save(self, keys: Mapping[int, Key]) -> None:
         store.makedirs(self._path.parent)
-        store.save_mk_file(
-            self._path, f"{self._attr}.update({pprint.pformat(self._unparse(keys))})"
-        )
+        with store.locked(self._path):
+            store.save_mk_file(
+                self._path, f"{self._attr}.update({pprint.pformat(self._unparse(keys))})"
+            )
 
     def _parse(self, raw_keys: Mapping[int, dict[str, Any]]) -> dict[int, Key]:
         return {key_id: Key.parse_obj(raw_key) for key_id, raw_key in raw_keys.items()}
@@ -76,21 +82,30 @@ class KeypairStore:
     def choices(self) -> list[tuple[str, str]]:
         choices = []
         for key in self.load().values():
-            cert = crypto.load_certificate(crypto.FILETYPE_PEM, key.certificate.encode("ascii"))
-            digest = cert.digest("md5").decode("ascii")
-            choices.append((digest, key.alias))
-
+            choices.append((key.fingerprint(HashAlgorithm.MD5), key.alias))
         return sorted(choices, key=lambda x: x[1])
 
     def get_key_by_digest(self, digest: str) -> tuple[int, Key]:
         for key_id, key in self.load().items():
-            other_cert = crypto.load_certificate(
-                crypto.FILETYPE_PEM, key.certificate.encode("ascii")
-            )
-            other_digest = other_cert.digest("md5").decode("ascii")
-            if other_digest == digest:
+            if key.fingerprint(HashAlgorithm.MD5) == digest:
                 return key_id, key
         raise KeyError()
+
+    def add(self, key: Key) -> None:
+        keys = self.load()
+        new_id = max(keys, default=0) + 1
+
+        this_digest = key.fingerprint(HashAlgorithm.MD5)
+        for key_id, stored_key in keys.items():
+            if stored_key.fingerprint(HashAlgorithm.MD5) == this_digest:
+                raise MKUserError(
+                    None,
+                    _("The key / certificate already exists (Key: %d, Description: %s)")
+                    % (key_id, stored_key.alias),
+                )
+
+        keys[new_id] = key
+        self.save(keys)
 
 
 class PageKeyManagement:
@@ -184,10 +199,7 @@ class PageKeyManagement:
 
     def page(self) -> None:
         with table_element(title=self._table_title(), searchable=False, sortable=False) as table:
-
             for nr, (key_id, key) in enumerate(sorted(self.key_store.load().items())):
-                cert = crypto.load_certificate(crypto.FILETYPE_PEM, key.certificate.encode("ascii"))
-
                 table.row()
                 table.cell("#", css=["narrow nowrap"])
                 html.write_text(nr)
@@ -216,7 +228,7 @@ class PageKeyManagement:
                 table.cell(_("Description"), key.alias)
                 table.cell(_("Created"), cmk.utils.render.date(key.date))
                 table.cell(_("By"), key.owner)
-                table.cell(_("Digest (MD5)"), cert.digest("md5").decode("ascii"))
+                table.cell(_("Digest (MD5)"), key.fingerprint(HashAlgorithm.MD5))
 
 
 class PageEditKey:
@@ -239,7 +251,7 @@ class PageEditKey:
             # leak the secret information
             request.del_var("key_p_passphrase")
             self._vs_key().validate_value(value, "key")
-            self._create_key(value["alias"], value["passphrase"])
+            self._create_key(value["alias"], PasswordType(value["passphrase"]))
             # FIXME: This leads to a circular import otherwise. This module (cmk.gui.key_mgmt) is
             #  clearly outside of either cmk.gui.plugins.wato and cmk.gui.cee.plugins.wato so this
             #  is obviously a very simple module-layer violation. This whole module should either
@@ -251,7 +263,7 @@ class PageEditKey:
             return HTTPRedirect(mode_url(self.back_mode))
         return None
 
-    def _create_key(self, alias: str, passphrase: str) -> None:
+    def _create_key(self, alias: str, passphrase: PasswordType) -> None:
         keys = self.key_store.load()
 
         new_id = 1
@@ -325,15 +337,11 @@ class PageUploadKey:
             if not key_file:
                 raise MKUserError(None, _("You need to provide a key file."))
 
-            if (
-                not key_file.startswith("-----BEGIN ENCRYPTED PRIVATE KEY-----\n")
-                or "-----END ENCRYPTED PRIVATE KEY-----\n" not in key_file
-                or "-----BEGIN CERTIFICATE-----\n" not in key_file
-                or not key_file.endswith("-----END CERTIFICATE-----\n")
-            ):
+            try:
+                self._upload_key(key_file, value["alias"], PasswordType(value["passphrase"]))
+            except InvalidPEMError:
                 raise MKUserError(None, _("The file does not look like a valid key file."))
 
-            self._upload_key(key_file, value["alias"], value["passphrase"])
             # FIXME: This leads to a circular import otherwise. This module (cmk.gui.key_mgmt) is
             #  clearly outside of either cmk.gui.plugins.wato and cmk.gui.cee.plugins.wato so this
             #  is obviously a very simple module-layer violation. This whole module should either
@@ -350,58 +358,28 @@ class PageUploadKey:
         cert_spec: (tuple[Literal["upload"], tuple[str, str, bytes]] | tuple[Literal["text"], str]),
     ) -> str:
         if cert_spec[0] == "upload":
-            return cert_spec[1][2].decode("ascii")
+            try:
+                return cert_spec[1][2].decode("ascii")
+            except UnicodeDecodeError:
+                raise MKUserError(None, _("Could not decode key file"))
         return cert_spec[1]
 
-    def _upload_key(self, key_file: str, alias: str, passphrase: str) -> None:
-        keys = self.key_store.load()
-
-        new_id = 1
-        for key_id in keys:
-            new_id = max(new_id, key_id + 1)
-
-        certificate = crypto.load_certificate(crypto.FILETYPE_PEM, key_file.encode("ascii"))
-
-        this_digest = certificate.digest("md5").decode("ascii")
-        for key_id, key in keys.items():
-            other_cert = crypto.load_certificate(
-                crypto.FILETYPE_PEM, key.certificate.encode("ascii")
-            )
-            other_digest = other_cert.digest("md5").decode("ascii")
-            if other_digest == this_digest:
-                raise MKUserError(
-                    None,
-                    _("The key / certificate already exists (Key: %d, Description: %s)")
-                    % (key_id, key.alias),
-                )
-
-        # Use time from certificate
-        def parse_asn1_generalized_time(timestr: str) -> time.struct_time:
-            return time.strptime(timestr, "%Y%m%d%H%M%SZ")
-
-        not_before = certificate.get_notBefore()
-        assert not_before is not None  # TODO: Why is this true?
-        created = time.mktime(parse_asn1_generalized_time(not_before.decode("ascii")))
-
-        # Check for valid passphrase
-        decrypt_private_key(key_file, passphrase)
-
-        # Split PEM for storing separated
-        parts = key_file.split("-----END ENCRYPTED PRIVATE KEY-----\n", 1)
-        key_pem = parts[0] + "-----END ENCRYPTED PRIVATE KEY-----\n"
-        cert_pem = parts[1]
+    def _upload_key(self, key_file: str, alias: str, passphrase: PasswordType) -> None:
+        # This will raise various ValueErrors, if the cert is not valid, if the passphrase is wrong, etc.
+        try:
+            key_pair = CertificateWithPrivateKey.load_combined_file_content(key_file, passphrase)
+        except WrongPasswordError:
+            raise MKUserError("key_p_passphrase", "Invalid pass phrase")
 
         key = Key(
-            certificate=cert_pem,
-            private_key=key_pem,
+            certificate=key_pair.certificate.dump_pem().str,
+            private_key=key_pair.private_key.dump_pem(passphrase).str,
             alias=alias,
             owner=user.ident,
-            date=created,
+            date=key_pair.certificate.not_valid_before.timestamp(),
             not_downloaded=False,
         )
-
-        keys[new_id] = key
-        self.key_store.save(keys)
+        self.key_store.add(key)
 
     def page(self) -> None:
         html.begin_form("key", method="POST")
@@ -438,8 +416,19 @@ class PageUploadKey:
                     CascadingDropdown(
                         title=_("Key"),
                         choices=[
-                            ("upload", _("Upload CRT/PEM File"), FileUpload()),
-                            ("text", _("Paste PEM Content"), TextAreaUnicode()),
+                            (
+                                "upload",
+                                _("Upload CRT/PEM File"),
+                                FileUpload(
+                                    allowed_extensions=[".pem", ".crt"],
+                                    mime_types=[
+                                        "application/x-x509-user-cert",
+                                        "application/x-x509-ca-cert",
+                                        "application/pkix-cert",
+                                    ],
+                                ),
+                            ),
+                            ("text", _("Paste CRT/PEM Contents"), TextAreaUnicode()),
                         ],
                     ),
                 ),
@@ -479,11 +468,13 @@ class PageDownloadKey:
             if key_id not in keys:
                 raise MKUserError(None, _("You need to provide a valid key id."))
 
-            private_key = keys[key_id].private_key
-
             value = self._vs_key().from_html_vars("key")
             self._vs_key().validate_value(value, "key")
-            decrypt_private_key(private_key, value["passphrase"])
+
+            try:
+                keys[key_id].to_certificate_with_private_key(PasswordType(value["passphrase"]))
+            except ValueError:
+                raise MKUserError("key_p_passphrase", _("Invalid pass phrase"))
 
             self._send_download(keys, key_id)
             return FinalizeRequest(code=200)
@@ -533,41 +524,16 @@ class PageDownloadKey:
         )
 
 
-def generate_key(alias: str, passphrase: str, user_id: UserId, site_id: SiteId) -> Key:
-    pkey = crypto.PKey()
-    pkey.generate_key(crypto.TYPE_RSA, 2048)
-
-    cert = create_self_signed_cert(pkey, user_id, site_id)
+def generate_key(alias: str, passphrase: PasswordType, user_id: UserId, site_id: SiteId) -> Key:
+    key_pair = CertificateWithPrivateKey.generate_self_signed(
+        common_name=alias,
+        organizational_unit_name=user_id,
+    )
     return Key(
-        certificate=crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("ascii"),
-        private_key=crypto.dump_privatekey(
-            crypto.FILETYPE_PEM, pkey, "AES256", passphrase.encode("utf-8")
-        ).decode("ascii"),
+        certificate=key_pair.certificate.dump_pem().str,
+        private_key=key_pair.private_key.dump_pem(password=passphrase).str,
         alias=alias,
         owner=user_id,
         date=time.time(),
         not_downloaded=True,
     )
-
-
-def create_self_signed_cert(pkey: crypto.PKey, user_id: UserId, site_id: SiteId) -> crypto.X509:
-    cert = crypto.X509()
-    cert.get_subject().O = f"Check_MK Site {site_id}"
-    cert.get_subject().CN = user_id
-    cert.set_serial_number(1)
-    cert.gmtime_adj_notBefore(0)
-    cert.gmtime_adj_notAfter(30 * 365 * 24 * 60 * 60)  # valid for 30 years.
-    cert.set_issuer(cert.get_subject())
-    cert.set_pubkey(pkey)
-    cert.sign(pkey, "sha1")
-
-    return cert
-
-
-def decrypt_private_key(encrypted_private_key: str, passphrase: str) -> crypto.PKey:
-    try:
-        return crypto.load_privatekey(
-            crypto.FILETYPE_PEM, encrypted_private_key, passphrase.encode("utf-8")
-        )
-    except crypto.Error:
-        raise MKUserError("key_p_passphrase", _("Invalid pass phrase"))

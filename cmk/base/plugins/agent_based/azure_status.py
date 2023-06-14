@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,6 +9,10 @@ from pydantic import BaseModel
 
 from .agent_based_api.v1 import register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
+
+_NO_ISSUES = Result(
+    state=State.OK, summary="No known issues. Details: https://azure.status.microsoft/en-us/status"
+)
 
 
 class AzureIssue(BaseModel, frozen=True):
@@ -54,7 +58,7 @@ def check_azure_status(item: str, section: AzureStatusesPerRegion) -> CheckResul
         return
 
     if not issues:
-        yield Result(state=State.OK, summary=f"No issues: {section.link}")
+        yield _NO_ISSUES
         return
 
     issue_string = "issue" if len(issues) == 1 else "issues"

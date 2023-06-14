@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -17,6 +17,7 @@ ignored_files = [
     "cmk/notification_plugins/signl4.py",
     "notifications/signl4",
     "omd/packages/maintenance/merge-crontabs",
+    "omd/packages/Python/pip",
 ]
 
 # Similar logic to our partial GitHub sync approach. Both select enterprise files or directories
@@ -26,9 +27,11 @@ enterprise_names = [
     "cloud",
     "enterprise",
     "managed",
+    "saas",
     "cee",
     "cme",
     "cce",
+    "cse",
     "cee.py",
     "cme.py",
     "cce.py",

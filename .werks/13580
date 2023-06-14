@@ -6,7 +6,7 @@ Date: 1647254774
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The agent plugin mk_postgres.py always first queried a default
 user by using a sys call.

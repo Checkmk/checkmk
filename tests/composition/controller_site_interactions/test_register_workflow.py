@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
-import time
 from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 
+from tests.testlib.agent import (
+    register_controller,
+    wait_until_host_has_services,
+    wait_until_host_receives_data,
+)
 from tests.testlib.site import Site
 
-from tests.composition.controller_site_interactions.common import query_hosts_service_count
-from tests.composition.utils import execute
-
+from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.type_defs import HostName
 
-LOGGER = logging.getLogger(__name__)
-LOGGER.setLevel(logging.INFO)
+from ..utils import LOGGER
 
 
 def _test_register_workflow(
@@ -31,37 +31,20 @@ def _test_register_workflow(
     site.openapi.create_host(hostname=hostname, attributes=dict(host_attributes))
     site.openapi.activate_changes_and_wait_for_completion()
 
-    execute(
-        [
-            "sudo",
-            agent_ctl.as_posix(),
-            "register",
-            "--server",
-            site.http_address,
-            "--site",
-            site.id,
-            "--hostname",
-            hostname,
-            "--user",
-            "cmkadmin",
-            "--password",
-            site.admin_password,
-            "--trust-cert",
-        ]
-    )
+    register_controller(agent_ctl, site, hostname)
 
-    LOGGER.info("Sleeping 60s to give controller time to open TCP socket or push data")
-    time.sleep(60)
-
-    # TODO (jh): Remove once we figured out how to handle live data fetching during discovery
-    assert not site.execute(["cmk", "-d", hostname]).wait()
+    LOGGER.info("Waiting for controller to open TCP socket or push data")
+    wait_until_host_receives_data(site, hostname)
 
     site.openapi.discover_services_and_wait_for_completion(hostname)
     site.openapi.activate_changes_and_wait_for_completion()
 
-    # Without this sleep, the test is flaky. Should probably be investigated.
-    time.sleep(1)
-    assert query_hosts_service_count(site, hostname) > 5
+    wait_until_host_has_services(
+        site,
+        hostname,
+        timeout=30,
+        interval=10,
+    )
 
 
 def test_register_workflow_pull(
@@ -86,14 +69,7 @@ def test_register_workflow_push(
         agent_ctl=agent_ctl,
         hostname=HostName("push-host"),
         host_attributes={
-            "cmk_agent_connection": "push-agent",
+            "cmk_agent_connection": HostAgentConnectionMode.PUSH.value,
             "tag_address_family": "no-ip",
         },
-    )
-
-
-@pytest.fixture(scope="module", autouse=True)
-def _deactivate() -> None:
-    pytest.skip(
-        "Controller / receiver architecture is being reworked, will be re-activated afterwards"
     )

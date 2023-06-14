@@ -20,7 +20,7 @@ def main(job_definition_file) {
             cmd_output("git gc");
         }
     }
-    
+
     docker_registry_no_http = DOCKER_REGISTRY.split('://')[1];
 
     /// in order to spoiler spooky effects encountered just
@@ -36,7 +36,6 @@ def main(job_definition_file) {
     try {
         load("${checkout_dir}/${job_definition_file}").main();
     } catch(Exception e) {
-        // sh("figlet ERROR");
         dir("${checkout_dir}") {
             notify.notify_error(e);
         }

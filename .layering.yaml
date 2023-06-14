@@ -133,7 +133,6 @@ package-definitions:
   starlette: [starlette]
   stdlib2: [ConfigParser, cStringIO, urllib2]  # Python 2 packages/modules not in Python 3
   tinkerforge: [tinkerforge]
-  typing-extensions: [typing_extensions]
   urllib3: [urllib3]
   uvicorn: [uvicorn]
   vcrpy: [vcr]
@@ -151,6 +150,7 @@ package-definitions:
   checkmk-agents-wnx-tests: [agents.wnx.tests]
   checkmk-bin: [bin]
   checkmk-cma: [cma, cma_net]
+  checkmk-cmk-active_checks: [cmk.active_checks]
   checkmk-cmk-base: [cmk.base]
   checkmk-cmk-bi: [cmk.bi]
   checkmk-cmk-ec-export: [cmk.ec.export]
@@ -210,6 +210,7 @@ allowed-package-relationships:
     requests_kerberos,
     sqlanydb,
     urllib3,
+    checkmk-cmk-active_checks,
     checkmk-cmk-utils,
     checkmk-livestatus
   ]
@@ -267,7 +268,6 @@ allowed-package-relationships:
     python-dateutil,
     requests,
     six,
-    typing-extensions,
     checkmk-cmk,
     checkmk-cmk-ec-export,
     checkmk-cmk-utils,
@@ -286,7 +286,6 @@ allowed-package-relationships:
     pysnmp,
     python-dateutil,
     setproctitle,
-    typing-extensions,
     checkmk-cmk-utils,
     checkmk-livestatus
   ]
@@ -328,7 +327,6 @@ allowed-package-relationships:
     requests,
     setproctitle,
     six,
-    typing-extensions,
     urllib3,
     Werkzeug,
     checkmk-cmk,  # TODO: For cmk.automations and cmk.snmplib. New packages?
@@ -356,7 +354,6 @@ allowed-package-relationships:
     pyyaml,
     redis,
     six,
-    typing-extensions,
     urllib3,
     checkmk-cmk-ec-export,  # TODO: cmk.utils.packaging causes this cycle!
     checkmk-livestatus
@@ -387,7 +384,6 @@ allowed-package-relationships:
     rrdtool,
     setproctitle,
     six,
-    typing-extensions,
     urllib3,
     Werkzeug,
     checkmk-cmk,
@@ -483,7 +479,6 @@ allowed-package-relationships:
     requests,
     requests_oauthlib,
     tinkerforge,
-    typing-extensions,
     urllib3,
     vcrpy,
     checkmk-agents-plugins,  # HACK needed because of sys.path fiddling for mk_jolokia
@@ -544,6 +539,7 @@ allowed-package-relationships:
     checkmk-agent-receiver,
     checkmk-agents-plugins,
     checkmk-cmk,
+    checkmk-cmk-active_checks,
     checkmk-cmk-base,
     checkmk-cmk-bi,
     checkmk-cmk-ec,

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Custom sidebar snapins could be created with IDs like "tactical_overview",
 leading to multiple problems while rendering the snapins in the sidebar.

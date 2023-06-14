@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
@@ -14,7 +14,6 @@ from .utils.gcp import AssetSection, AssetType, AssetTypeSection, Config, GCPAss
 
 def parse_assets(string_table: StringTable) -> AssetSection:
     info = json.loads(string_table[0][0])
-    project = info["project"]
     config = Config(info["config"])
 
     assets = [GCPAsset.deserialize(row[0]) for row in string_table[1:]]
@@ -43,7 +42,7 @@ def parse_assets(string_table: StringTable) -> AssetSection:
         extract = extractors[asset_type]
         typed_assets[asset_type] = {extract(a): a for a in assets}
 
-    return AssetSection(project, config, typed_assets)
+    return AssetSection(config, typed_assets)
 
 
 register.agent_section(name="gcp_assets", parse_function=parse_assets)

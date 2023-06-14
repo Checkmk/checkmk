@@ -18,7 +18,7 @@ includes/
 libs/
 livecheck
 rrdtool-*
-test_detail.xml
+test_detail_livestatus.xml
 test_neb
 unixcat
 

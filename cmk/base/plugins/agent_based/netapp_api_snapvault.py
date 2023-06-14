@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -29,7 +29,7 @@ def _cleanse_item_name(name: str) -> str:
 def parse_netapp_api_snapvault(string_table: StringTable) -> SectionSingleInstance:
     section = {}
     for line in string_table:
-        parsed_line = dict(tuple(i.split(" ", 1)) for i in line)  # type: ignore
+        parsed_line: dict[str, str] = dict(tuple(i.split(" ", 1)) for i in line)  # type: ignore[misc]
         # Whether the item will be named after the snapvault or destination-location
         # values depends on the user's configuration (discovery parameters). For simplicity,
         # the same line is referenced to both in the parsed dictionary, so that the items

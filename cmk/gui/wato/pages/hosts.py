@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for creating and editing hosts"""
@@ -10,6 +10,7 @@ from typing import overload
 
 import cmk.utils.tags
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.type_defs import HostName
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib
@@ -48,7 +49,7 @@ from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.host_attributes import collect_attributes
 from cmk.gui.watolib.hosts_and_folders import (
     CREHost,
-    Folder,
+    folder_from_request,
     folder_preserving_link,
     Host,
     validate_all_hosts,
@@ -90,7 +91,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         )
 
     def _page_menu_save_entries(self) -> Iterator[PageMenuEntry]:
-        if Folder.current().locked_hosts():
+        if folder_from_request().locked_hosts():
             return
 
         yield PageMenuEntry(
@@ -104,7 +105,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         )
 
         yield PageMenuEntry(
-            title=_("Save & go to folder"),
+            title=_("Save & view folder"),
             icon_name="save_to_folder",
             item=make_form_submit_link(form_name="edit_host", button_name="go_to_folder"),
             is_shortcut=True,
@@ -113,7 +114,7 @@ class ABCHostMode(WatoMode, abc.ABC):
 
         if not self._is_cluster():
             yield PageMenuEntry(
-                title=_("Save & go to connection tests"),
+                title=_("Save & run connection tests"),
                 icon_name="connection_tests",
                 item=make_form_submit_link(form_name="edit_host", button_name="diag_host"),
                 is_shortcut=True,
@@ -135,7 +136,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         # Fake a cluster host in order to get calculated tag groups via effective attributes...
         cluster_computed_datasources = cmk.utils.tags.compute_datasources(
             Host(
-                Folder.current(),
+                folder_from_request(),
                 self._host.name(),
                 collect_attributes("cluster", new=False),
                 [],
@@ -233,7 +234,7 @@ class ABCHostMode(WatoMode, abc.ABC):
             html.close_div()
 
         lock_message = ""
-        locked_hosts = Folder.current().locked_hosts()
+        locked_hosts = folder_from_request().locked_hosts()
         if locked_hosts:
             if locked_hosts is True:
                 lock_message = _("Host attributes locked (You cannot edit this host)")
@@ -264,7 +265,7 @@ class ABCHostMode(WatoMode, abc.ABC):
             new=self._mode != "edit",
             hosts={self._host.name(): self._host} if self._mode != "new" else {},
             for_what="host" if not self._is_cluster() else "cluster",
-            parent=Folder.current(),
+            parent=folder_from_request(),
             basic_attributes=basic_attributes,
         )
 
@@ -281,7 +282,7 @@ class ABCHostMode(WatoMode, abc.ABC):
             valuespec=ConfigHostname(),  # type: ignore[arg-type]  # should be Valuespec[str]
             orientation="horizontal",
             help=_(
-                "Enter the host names of the cluster nodes. These hosts must be present in WATO."
+                "Enter the host names of the cluster nodes. These hosts must be present in Setup."
             ),
         )
 
@@ -328,7 +329,7 @@ class ModeEditHost(ABCHostMode):
 
     def _init_host(self) -> CREHost:
         hostname = request.get_ascii_input_mandatory("host")
-        folder = Folder.current()
+        folder = folder_from_request()
         if not folder.has_host(hostname):
             raise MKUserError("host", _("You called this page with an invalid host name."))
         host = folder.load_host(hostname)
@@ -360,7 +361,7 @@ class ModeEditHost(ABCHostMode):
         )
 
     def action(self) -> ActionResult:
-        folder = Folder.current()
+        folder = folder_from_request()
         if not transactions.check_transaction():
             return redirect(mode_url("folder", folder=folder.path()))
 
@@ -551,7 +552,7 @@ def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEn
         if user.may("wato.manage_hosts"):
             yield PageMenuEntry(
                 title=_("Remove TLS registration"),
-                icon_name="delete",
+                icon_name={"icon": "tls", "emblem": "remove"},
                 item=make_simple_link(
                     make_confirm_delete_link(
                         url=makeactionuri(
@@ -601,9 +602,10 @@ class CreateHostMode(ABCHostMode):
         clonename = request.get_ascii_input("clone")
         if not clonename:
             return self._init_new_host_object()
-        if not Folder.current().has_host(clonename):
+        folder = folder_from_request()
+        if not folder.has_host(clonename):
             raise MKUserError("host", _("You called this page with an invalid host name."))
-        host = Folder.current().load_host(clonename)
+        host = folder.load_host(clonename)
         self._verify_host_type(host)
         return host
 
@@ -614,10 +616,10 @@ class CreateHostMode(ABCHostMode):
         attributes = collect_attributes(self._host_type_name(), new=True)
         cluster_nodes = self._get_cluster_nodes()
 
-        hostname = request.get_ascii_input_mandatory("host")
+        hostname = HostName(request.get_ascii_input_mandatory("host"))
         Hostname().validate_value(hostname, "host")
 
-        folder = Folder.current()
+        folder = folder_from_request()
         if transactions.check_transaction():
             folder.create_hosts([(hostname, attributes, cluster_nodes)])
 
@@ -677,9 +679,13 @@ class ModeCreateHost(CreateHostMode):
 
     @classmethod
     def _init_new_host_object(cls):
+        host_name = request.var("host")
+        if host_name is not None:
+            host_name = HostName(host_name)
+
         return Host(
-            folder=Folder.current(),
-            host_name=request.var("host"),
+            folder=folder_from_request(),
+            host_name=host_name,
             attributes={},
             cluster_nodes=None,
         )
@@ -710,9 +716,13 @@ class ModeCreateCluster(CreateHostMode):
 
     @classmethod
     def _init_new_host_object(cls):
+        host_name = request.var("host")
+        if host_name is not None:
+            host_name = HostName(host_name)
+
         return Host(
-            folder=Folder.current(),
-            host_name=request.var("host"),
+            folder=folder_from_request(),
+            host_name=host_name,
             attributes={},
             cluster_nodes=[],
         )

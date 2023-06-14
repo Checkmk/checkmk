@@ -1,4 +1,4 @@
-// Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -15,8 +15,9 @@
 
 #include "livestatus/BlobColumn.h"
 #include "livestatus/EventConsoleConnection.h"
+#include "livestatus/ICore.h"
+#include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
-#include "livestatus/MonitoringCore.h"
 
 class TableEventConsoleReplication;
 
@@ -39,7 +40,7 @@ private:
 }  // namespace
 
 DynamicEventConsoleReplicationColumn::DynamicEventConsoleReplicationColumn(
-    const std::string &name, const std::string &description, MonitoringCore *mc,
+    const std::string &name, const std::string &description, ICore *mc,
     const ColumnOffsets &offsets)
     : DynamicColumn(name, description, offsets), _mc(mc) {}
 
@@ -50,7 +51,8 @@ std::unique_ptr<Column> DynamicEventConsoleReplicationColumn::createColumn(
         auto command = "REPLICATE " + arguments;
         try {
             ECTableConnection ec(_mc->loggerLivestatus(),
-                                 _mc->mkeventdSocketPath(), command);
+                                 _mc->paths()->event_console_status_socket(),
+                                 command);
             ec.run();
             result = ec.getResult();
         } catch (const std::runtime_error &err) {

@@ -6,7 +6,7 @@ Date: 1663308105
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, using the command <tt>omd config set LIVESTATUS_TCP_ONLY_FROM</tt> with any IPv6 address
 would fail. For example, the command

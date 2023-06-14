@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -166,18 +166,59 @@ def test_diagnostics_deserialize(
     assert diagnostics.deserialize_modes_parameters(modes_parameters) == expected_parameters
 
 
-# 'sensitivity_value == 3' means not found
+# 'sensitivity.value == diagnostics.CheckmkFileSensitivity.unknown' means not found
 @pytest.mark.parametrize(
     "component, sensitivity_values",
     [
-        (diagnostics.OPT_COMP_GLOBAL_SETTINGS, [0, 1, 3, 3, 3, 3]),
-        (diagnostics.OPT_COMP_HOSTS_AND_FOLDERS, [3, 3, 2, 2, 1, 0]),
-        (diagnostics.OPT_COMP_NOTIFICATIONS, [3, 3, 2, 2, 1, 0]),
-        (diagnostics.OPT_COMP_BUSINESS_INTELLIGENCE, [3, 3, 3, 3, 3, 3, 1]),
+        (
+            diagnostics.OPT_COMP_GLOBAL_SETTINGS,
+            [
+                diagnostics.CheckmkFileSensitivity.insensitive,
+                diagnostics.CheckmkFileSensitivity.sensitive,
+                diagnostics.CheckmkFileSensitivity.unknown,
+                diagnostics.CheckmkFileSensitivity.unknown,
+                diagnostics.CheckmkFileSensitivity.unknown,
+                diagnostics.CheckmkFileSensitivity.unknown,
+            ],
+        ),
+        (
+            diagnostics.OPT_COMP_HOSTS_AND_FOLDERS,
+            [
+                diagnostics.CheckmkFileSensitivity.unknown,
+                diagnostics.CheckmkFileSensitivity.unknown,
+                diagnostics.CheckmkFileSensitivity.high_sensitive,
+                diagnostics.CheckmkFileSensitivity.high_sensitive,
+                diagnostics.CheckmkFileSensitivity.sensitive,
+                diagnostics.CheckmkFileSensitivity.insensitive,
+            ],
+        ),
+        (
+            diagnostics.OPT_COMP_NOTIFICATIONS,
+            [
+                diagnostics.CheckmkFileSensitivity.unknown,
+                diagnostics.CheckmkFileSensitivity.unknown,
+                diagnostics.CheckmkFileSensitivity.high_sensitive,
+                diagnostics.CheckmkFileSensitivity.high_sensitive,
+                diagnostics.CheckmkFileSensitivity.sensitive,
+                diagnostics.CheckmkFileSensitivity.insensitive,
+            ],
+        ),
+        (
+            diagnostics.OPT_COMP_BUSINESS_INTELLIGENCE,
+            [
+                diagnostics.CheckmkFileSensitivity.unknown,
+                diagnostics.CheckmkFileSensitivity.unknown,
+                diagnostics.CheckmkFileSensitivity.unknown,
+                diagnostics.CheckmkFileSensitivity.unknown,
+                diagnostics.CheckmkFileSensitivity.unknown,
+                diagnostics.CheckmkFileSensitivity.unknown,
+                diagnostics.CheckmkFileSensitivity.sensitive,
+            ],
+        ),
     ],
 )
 def test_diagnostics_get_checkmk_file_info_by_name(
-    component: str, sensitivity_values: list[int]
+    component: str, sensitivity_values: list[diagnostics.CheckmkFileSensitivity]
 ) -> None:
     rel_filepaths = [
         "path/to/sites.mk",
@@ -190,69 +231,70 @@ def test_diagnostics_get_checkmk_file_info_by_name(
     ]
     for rel_filepath, result in zip(rel_filepaths, sensitivity_values):
         assert (
-            diagnostics.get_checkmk_file_info(rel_filepath, component).sensitivity.value == result
+            diagnostics.get_checkmk_file_info(rel_filepath, component).sensitivity.value
+            == result.value
         )
 
 
 # This list of files comes from an empty Checkmk site setup
 # and may be incomplete.
-# 'sensitivity_value == 3' means not found
+# 'sensitivity_value == diagnostics.CheckmkFileSensitivity.unknown' means not found
 @pytest.mark.parametrize(
-    "rel_filepath, sensitivity_value",
+    "rel_filepath, sensitivity",
     [
-        ("apache.conf", 3),
-        ("apache.d/wato/global.mk", 3),
-        ("conf.d/microcore.mk", 3),
-        ("conf.d/mkeventd.mk", 3),
-        ("conf.d/pnp4nagios.mk", 3),
-        ("conf.d/wato/.wato", 0),
-        ("conf.d/wato/alert_handlers.mk", 2),
-        ("conf.d/wato/contacts.mk", 2),
-        ("conf.d/wato/global.mk", 1),
-        ("conf.d/wato/groups.mk", 0),
-        ("conf.d/wato/hosts.mk", 2),
-        ("conf.d/wato/notifications.mk", 2),
-        ("conf.d/wato/rules.mk", 2),
-        ("conf.d/wato/tags.mk", 1),
-        ("dcd.d/wato/global.mk", 3),
-        ("liveproxyd.d/wato/global.mk", 3),
-        ("main.mk", 0),
-        ("mkeventd.d/wato/rules.mk", 2),
-        ("mkeventd.d/wato/global.mk", 3),
-        ("mkeventd.mk", 3),
-        ("mknotifyd.d/wato/global.mk", 1),
-        ("multisite.d/liveproxyd.mk", 3),
-        ("multisite.d/mkeventd.mk", 3),
-        ("multisite.d/sites.mk", 3),
-        ("multisite.d/wato/global.mk", 1),
-        ("multisite.d/wato/groups.mk", 0),
-        ("multisite.d/wato/tags.mk", 1),
-        ("multisite.d/wato/users.mk", 2),
-        ("multisite.mk", 3),
-        ("rrdcached.d/wato/global.mk", 3),
-        ("alerts.log", 3),
-        ("apache/access_log", 3),
-        ("apache/error_log", 3),
-        ("apache/stats", 3),
-        ("cmc.log", 1),
-        ("dcd.log", 3),
-        ("diskspace.log", 3),
-        ("liveproxyd.log", 3),
-        ("liveproxyd.state", 3),
-        ("mkeventd.log", 3),
-        ("mknotifyd.log", 1),
-        ("mknotifyd.state", 1),
-        ("notify.log", 1),
-        ("rrdcached.log", 3),
-        ("web.log", 1),
+        ("apache.conf", diagnostics.CheckmkFileSensitivity.unknown),
+        ("apache.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.unknown),
+        ("conf.d/microcore.mk", diagnostics.CheckmkFileSensitivity.unknown),
+        ("conf.d/mkeventd.mk", diagnostics.CheckmkFileSensitivity.unknown),
+        ("conf.d/pnp4nagios.mk", diagnostics.CheckmkFileSensitivity.unknown),
+        ("conf.d/wato/.wato", diagnostics.CheckmkFileSensitivity.insensitive),
+        ("conf.d/wato/alert_handlers.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
+        ("conf.d/wato/contacts.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
+        ("conf.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
+        ("conf.d/wato/groups.mk", diagnostics.CheckmkFileSensitivity.insensitive),
+        ("conf.d/wato/hosts.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
+        ("conf.d/wato/notifications.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
+        ("conf.d/wato/rules.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
+        ("conf.d/wato/tags.mk", diagnostics.CheckmkFileSensitivity.sensitive),
+        ("dcd.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.unknown),
+        ("liveproxyd.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.unknown),
+        ("main.mk", diagnostics.CheckmkFileSensitivity.insensitive),
+        ("mkeventd.d/wato/rules.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
+        ("mkeventd.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.unknown),
+        ("mkeventd.mk", diagnostics.CheckmkFileSensitivity.unknown),
+        ("mknotifyd.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
+        ("multisite.d/liveproxyd.mk", diagnostics.CheckmkFileSensitivity.unknown),
+        ("multisite.d/mkeventd.mk", diagnostics.CheckmkFileSensitivity.unknown),
+        ("multisite.d/sites.mk", diagnostics.CheckmkFileSensitivity.unknown),
+        ("multisite.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.sensitive),
+        ("multisite.d/wato/groups.mk", diagnostics.CheckmkFileSensitivity.insensitive),
+        ("multisite.d/wato/tags.mk", diagnostics.CheckmkFileSensitivity.sensitive),
+        ("multisite.d/wato/users.mk", diagnostics.CheckmkFileSensitivity.high_sensitive),
+        ("multisite.mk", diagnostics.CheckmkFileSensitivity.unknown),
+        ("rrdcached.d/wato/global.mk", diagnostics.CheckmkFileSensitivity.unknown),
+        ("alerts.log", diagnostics.CheckmkFileSensitivity.unknown),
+        ("apache/access_log", diagnostics.CheckmkFileSensitivity.unknown),
+        ("apache/error_log", diagnostics.CheckmkFileSensitivity.unknown),
+        ("apache/stats", diagnostics.CheckmkFileSensitivity.unknown),
+        ("cmc.log", diagnostics.CheckmkFileSensitivity.sensitive),
+        ("dcd.log", diagnostics.CheckmkFileSensitivity.unknown),
+        ("diskspace.log", diagnostics.CheckmkFileSensitivity.unknown),
+        ("liveproxyd.log", diagnostics.CheckmkFileSensitivity.unknown),
+        ("liveproxyd.state", diagnostics.CheckmkFileSensitivity.unknown),
+        ("mkeventd.log", diagnostics.CheckmkFileSensitivity.unknown),
+        ("mknotifyd.log", diagnostics.CheckmkFileSensitivity.sensitive),
+        ("mknotifyd.state", diagnostics.CheckmkFileSensitivity.sensitive),
+        ("notify.log", diagnostics.CheckmkFileSensitivity.sensitive),
+        ("rrdcached.log", diagnostics.CheckmkFileSensitivity.unknown),
+        ("web.log", diagnostics.CheckmkFileSensitivity.sensitive),
     ],
 )
 def test_diagnostics_file_info_of_comp_notifications(
-    rel_filepath: str, sensitivity_value: int
+    rel_filepath: str, sensitivity: diagnostics.CheckmkFileSensitivity
 ) -> None:
     assert (
         diagnostics.get_checkmk_file_info(
             rel_filepath, diagnostics.OPT_COMP_NOTIFICATIONS
         ).sensitivity.value
-        == sensitivity_value
+        == sensitivity.value
     )

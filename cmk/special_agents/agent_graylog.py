@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -106,7 +106,6 @@ def handle_request(args, sections):  # pylint: disable=too-many-branches
 
             new_value = {}
             for metric in value["metrics"]:
-
                 metric_value = metric.get("metric", {}).get("value")
                 metric_name = metric.get("full_name")
                 if metric_value is None or metric_name is None:
@@ -222,7 +221,7 @@ def handle_request(args, sections):  # pylint: disable=too-many-branches
 def handle_response(url, args, method="GET", events_since=86400):
     if method == "POST":
         try:
-            response = requests.post(
+            response = requests.post(  # nosec B113
                 url,
                 auth=(args.user, args.password),
                 headers={
@@ -238,7 +237,7 @@ def handle_response(url, args, method="GET", events_since=86400):
 
     else:
         try:
-            response = requests.get(url, auth=(args.user, args.password))
+            response = requests.get(url, auth=(args.user, args.password))  # nosec B113
         except requests.exceptions.RequestException as e:
             sys.stderr.write("Error: %s\n" % e)
             if args.debug:

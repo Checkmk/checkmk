@@ -6,7 +6,7 @@ Date: 1675345315
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When creating a time_period via the REST-API, the exception time_ranges
 field is not required, however if it's not provided, it will raise a

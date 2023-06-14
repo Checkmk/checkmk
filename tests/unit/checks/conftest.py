@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+import typing
+from collections import abc
+from unittest import mock
 
 import pytest
 
 from tests.testlib.base import Scenario
+
+from cmk.utils.type_defs import HostName
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -34,10 +40,19 @@ def clear_config_caches(monkeypatch):
     _runtime_cache.clear()
 
     ts = Scenario()
-    ts.add_host("non-existent-testhost")
+    ts.add_host(HostName("non-existent-testhost"))
     ts.apply(monkeypatch)
 
 
-@pytest.fixture(autouse=True)
-def _autouse_initialised_item_state(initialised_item_state):
-    pass
+class _MockVSManager(typing.NamedTuple):
+    active_service_interface: abc.Mapping[str, object]
+
+
+@pytest.fixture()
+def initialised_item_state():
+    mock_vs = _MockVSManager({})
+    with mock.patch(
+        "cmk.base.api.agent_based.value_store._global_state._active_host_value_store",
+        mock_vs,
+    ):
+        yield

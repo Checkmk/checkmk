@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -51,8 +51,20 @@ class AuxTagTitleField(fields.String):
         )
 
 
+class AuxTagHelpField(fields.String):
+    def __init__(self, **kwargs):
+        super().__init__(
+            description="The help of the Auxiliary tag",
+            example="AuxTagExampleHelp",
+            **kwargs,
+        )
+
+
 class AuxTagAttrsResponse(BaseSchema):
     topic = AuxTagTopicField(
+        required=True,
+    )
+    help = AuxTagHelpField(
         required=True,
     )
 
@@ -68,6 +80,10 @@ class AuxTagAttrsCreate(BaseSchema):
     title = AuxTagTitleField(
         required=True,
     )
+    help = AuxTagHelpField(
+        required=False,
+        load_default="",
+    )
 
 
 class AuxTagAttrsUpdate(BaseSchema):
@@ -77,10 +93,13 @@ class AuxTagAttrsUpdate(BaseSchema):
     title = AuxTagTitleField(
         required=False,
     )
+    help = AuxTagHelpField(
+        required=False,
+    )
 
     @post_load
     def verify_at_least_one(self, *args, **kwargs):
-        at_least_one_of = {"topic", "title"}
+        at_least_one_of = {"topic", "title", "help"}
         if not at_least_one_of & set(args[0]):
             raise ValidationError(
                 f"At least one of the following parameters should be provided: {at_least_one_of}"
@@ -92,6 +111,7 @@ EXAMPLE_AUX_TAG = {
     "id": "snmp",
     "title": "Monitoring via SNMP",
     "topic": "Monitoring agents",
+    "help": "Your help text",
 }
 
 

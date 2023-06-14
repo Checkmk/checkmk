@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,7 +11,7 @@ from cmk.gui.plugins.wato.utils import (
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
-from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, Integer, TextInput
+from cmk.gui.valuespec import Alternative, Dictionary, FixedValue, NetworkPort, TextInput
 
 
 def _valuespec_special_agents_ruckus_spot():
@@ -37,7 +37,7 @@ def _valuespec_special_agents_ruckus_spot():
             ),
             (
                 "port",
-                Integer(
+                NetworkPort(
                     title=_("Port"),
                     default_value=8443,
                 ),
@@ -68,7 +68,7 @@ def _valuespec_special_agents_ruckus_spot():
                     elements=[
                         (
                             "port",
-                            Integer(
+                            NetworkPort(
                                 title=_("Port"),
                                 default_value=6556,
                             ),
@@ -80,7 +80,7 @@ def _valuespec_special_agents_ruckus_spot():
         ],
         title=_("Ruckus Spot"),
         help=_(
-            "This rule selects the Agent Ruckus Spot agent instead of the normal Check_MK Agent "
+            "This rule selects the Agent Ruckus Spot agent instead of the normal Checkmk Agent "
             "which collects the data through the Ruckus Spot web interface"
         ),
         optional_keys=["cmk_agent"],

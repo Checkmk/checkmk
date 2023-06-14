@@ -1,55 +1,67 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any
+
+from cmk.utils import version
+from cmk.utils.type_defs.rest_api_types.site_connection import SiteConfig
 
 
-def default_config_example() -> dict[str, Any]:
-    return {
-        "site_config": {
-            "basic_settings": {"alias": "Die remote site 1", "site_id": "site_id_1"},
-            "status_connection": {
-                "connection": {
-                    "socket_type": "tcp",
-                    "host": "123.124.1.3",
-                    "port": 1253,
-                    "encrypted": True,
-                    "verify": False,
-                },
-                "proxy": {
-                    "use_livestatus_daemon": "with_proxy",
-                    "global_settings": False,
-                    "params": {
-                        "channels": 15,
-                        "heartbeat": {"interval": 12, "timeout": 3.0},
-                        "channel_timeout": 3.5,
-                        "query_timeout": 120.2,
-                        "connect_retry": 4.6,
-                        "cache": True,
-                    },
-                    "tcp": {"port": 6560, "only_from": ["192.168.1.1"], "tls": False},
-                },
-                "connect_timeout": 2,
-                "persistent_connection": False,
-                "url_prefix": "/heute_remote_1/",
-                "status_host": {
-                    "status_host_set": "disabled",
-                },
-                "disable_in_status_gui": False,
+def default_config_example() -> SiteConfig:
+    r: SiteConfig = {
+        "basic_settings": {
+            "alias": "Die remote site 1",
+            "site_id": "site_id_1",
+        },
+        "status_connection": {
+            "connection": {
+                "socket_type": "tcp",
+                "host": "123.124.1.3",
+                "port": 1253,
+                "encrypted": True,
+                "verify": False,
             },
-            "configuration_connection": {
-                "enable_replication": True,
-                "url_of_remote_site": "http://localhost/heute_remote_site_id_1/check_mk/",
-                "disable_remote_configuration": True,
-                "ignore_tls_errors": False,
-                "direct_login_to_web_gui_allowed": True,
-                "user_sync": {
-                    "sync_with_ldap_connections": "all",
+            "proxy": {
+                "use_livestatus_daemon": "with_proxy",
+                "global_settings": False,
+                "params": {
+                    "channels": 15,
+                    "heartbeat": {"interval": 12, "timeout": 3.0},
+                    "channel_timeout": 3.5,
+                    "query_timeout": 120.2,
+                    "connect_retry": 4.6,
+                    "cache": True,
                 },
-                "replicate_event_console": True,
-                "replicate_extensions": True,
+                "tcp": {"port": 6560, "only_from": ["192.168.1.1"], "tls": False},
             },
+            "connect_timeout": 2,
+            "persistent_connection": False,
+            "url_prefix": "/heute_remote_1/",
+            "status_host": {
+                "status_host_set": "disabled",
+            },
+            "disable_in_status_gui": False,
+        },
+        "configuration_connection": {
+            "enable_replication": True,
+            "url_of_remote_site": "http://localhost/heute_remote_site_id_1/check_mk/",
+            "disable_remote_configuration": True,
+            "ignore_tls_errors": False,
+            "direct_login_to_web_gui_allowed": True,
+            "user_sync": {
+                "sync_with_ldap_connections": "all",
+            },
+            "replicate_event_console": True,
+            "replicate_extensions": True,
         },
     }
+
+    if version.is_managed_edition():
+        r["basic_settings"] = {
+            "alias": "Die remote site 1",
+            "site_id": "site_id_1",
+            "customer": "provider",
+        }
+
+    return r

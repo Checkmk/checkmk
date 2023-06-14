@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -21,10 +21,12 @@ from cmk.base.api.agent_based.register._config import (
     get_section_plugin,
     get_section_producers,
     get_snmp_section_plugin,
+    is_registered_agent_section_plugin,
     is_registered_check_plugin,
     is_registered_inventory_plugin,
     is_registered_section_plugin,
     is_registered_snmp_section_plugin,
+    is_stored_ruleset,
     iter_all_agent_sections,
     iter_all_check_plugins,
     iter_all_discovery_rulesets,
@@ -64,7 +66,9 @@ __all__ = [
     "is_registered_check_plugin",
     "is_registered_inventory_plugin",
     "is_registered_section_plugin",
+    "is_registered_agent_section_plugin",
     "is_registered_snmp_section_plugin",
+    "is_stored_ruleset",
     "iter_all_agent_sections",
     "iter_all_check_plugins",
     "iter_all_discovery_rulesets",

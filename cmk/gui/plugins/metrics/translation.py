@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -30,6 +30,10 @@ check_metrics["check_icmp"] = {
     "~.*rta": {"scale": m},
     "~.*rtmax": {"scale": m},
     "~.*rtmin": {"scale": m},
+}
+# May be provided by an check_ping check configured as mrpe
+check_metrics["check_ping"] = {
+    "~.*rta": {"scale": m},
 }
 check_metrics["check_tcp"] = {
     "time": {"name": "response_time"},
@@ -98,16 +102,6 @@ check_metrics["check_mk-postfix_mailq"] = {
     "size": {"name": "mail_queue_deferred_size"},
     "~mail_queue_.*_size": {"name": "mail_queue_active_size"},
     "~mail_queue_.*_length": {"name": "mail_queue_active_length"},
-}
-check_metrics["check_mk-jolokia_metrics_gc"] = {
-    "CollectionCount": {
-        "name": "jvm_garbage_collection_count",
-        "scale": 1 / 60.0,
-    },
-    "CollectionTime": {
-        "name": "jvm_garbage_collection_time",
-        "scale": 1 / 600.0,  # ms/min -> %
-    },
 }
 check_metrics["check_mk-rmon_stats"] = {
     "bcast": {"name": "broadcast_packets"},
@@ -473,7 +467,12 @@ check_metrics["check_mk-fjdarye200_pools"] = df_translation
 check_metrics["check_mk-dell_compellent_folder"] = df_translation
 check_metrics["check_mk-nimble_volumes"] = df_translation
 check_metrics["check_mk-ceph_df"] = df_translation
+check_metrics["check_mk-kube_pvc"] = df_translation
 check_metrics["check_mk-lvm_vgs"] = df_translation
+check_metrics["check_mk-df_netscaler"] = df_translation
+check_metrics["check_mk-prism_host_usage"] = df_translation
+check_metrics["check_mk-prism_containers"] = df_translation
+check_metrics["check_mk-prism_storage_pools"] = df_translation
 check_metrics["check_mk-sansymphony_pool"] = {
     **df_translation,
     "percent_allocated": {"name": "fs_used_percent"},
@@ -569,6 +568,7 @@ check_metrics["check_mk-mcdata_fcport"] = if_translation
 check_metrics["check_mk-netapp_api_if"] = if_translation
 check_metrics["check_mk-winperf_if"] = if_translation
 check_metrics["check_mk-gcp_gce_network"] = if_translation
+check_metrics["check_mk-azure_vm_network_io"] = if_translation
 check_metrics["check_mk-brocade_fcport"] = {
     "in": {
         "name": "fc_rx_bytes",
@@ -1086,22 +1086,18 @@ ps_translation: dict[str, CheckMetricEntry] = {
 }
 check_metrics["check_mk-smart_stats"] = {
     "Power_On_Hours": {"name": "uptime", "scale": 3600},
-    "Power_Cycle_Count": {"name": "harddrive_power_cycles"},
-    "Reallocated_Sector_Ct": {"name": "harddrive_reallocated_sectors"},
-    "Reallocated_Event_Count": {"name": "harddrive_reallocated_events"},
-    "Spin_Retry_Count": {"name": "harddrive_spin_retries"},
-    "Current_Pending_Sector": {"name": "harddrive_pending_sectors"},
-    "Command_Timeout": {"name": "harddrive_cmd_timeouts"},
-    "End-to-End_Error": {"name": "harddrive_end_to_end_errors"},
-    "Reported_Uncorrect": {"name": "harddrive_uncorrectable_errors"},
-    "UDMA_CRC_Error_Count": {"name": "harddrive_udma_crc_errors"},
+    "Power_Cycles": {"name": "harddrive_power_cycles"},
+    "Reallocated_Sectors": {"name": "harddrive_reallocated_sectors"},
+    "Reallocated_Events": {"name": "harddrive_reallocated_events"},
+    "Spin_Retries": {"name": "harddrive_spin_retries"},
+    "Pending_Sectors": {"name": "harddrive_pending_sectors"},
+    "Command_Timeout_Counter": {"name": "harddrive_cmd_timeouts"},
+    "End-to-End_Errors": {"name": "harddrive_end_to_end_errors"},
+    "Uncorrectable_Errors": {"name": "harddrive_uncorrectable_errors"},
+    "UDMA_CRC_Errors": {"name": "harddrive_udma_crc_errors"},
     "CRC_Error_Count": {
         "name": "harddrive_crc_errors",
     },
-    "Uncorrectable_Error_Cnt": {
-        "name": "harddrive_uncorrectable_errors",
-    },
-    "Power_Cycles": {"name": "harddrive_power_cycles"},
     "Media_and_Data_Integrity_Errors": {"name": "nvme_media_and_data_integrity_errors"},
     "Error_Information_Log_Entries": {"name": "nvme_error_information_log_entries"},
     "Critical_Warning": {"name": "nvme_critical_warning"},

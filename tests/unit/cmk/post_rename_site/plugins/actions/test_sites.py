@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Iterable
 from pathlib import Path
+
+import pytest
 
 from livestatus import (
     NetworkSocketDetails,
@@ -13,22 +16,28 @@ from livestatus import (
     SiteId,
 )
 
-import cmk.utils.paths
-
 from cmk.gui.watolib.sites import SiteManagementFactory
 
+from cmk.post_rename_site.logger import logger
 from cmk.post_rename_site.plugins.actions.sites import update_site_config
 
 
-def _write_site_config(config: SiteConfigurations) -> None:
-    sites_mk = Path(cmk.utils.paths.default_config_dir, "multisite.d/sites.mk")
-    sites_mk.parent.mkdir(parents=True, exist_ok=True)
+@pytest.fixture(name="site_config_file")
+def fixture_site_config_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterable[Path]:
+    monkeypatch.setattr("cmk.utils.paths.default_config_dir", str(tmp_path))
+    sites_mk = tmp_path / "multisite.d" / "sites.mk"
+    sites_mk.parent.mkdir(parents=True)
+    yield sites_mk
+
+
+def _write_site_config(sites_mk: Path, config: SiteConfigurations) -> None:
     with sites_mk.open("w") as f:
         f.write(f"sites.update({config!r})")
 
 
-def test_update_basic_site_config() -> None:
+def test_update_basic_site_config(site_config_file: Path) -> None:
     _write_site_config(
+        site_config_file,
         SiteConfigurations(
             {
                 SiteId("heute"): SiteConfiguration(
@@ -47,10 +56,10 @@ def test_update_basic_site_config() -> None:
                     socket=("local", None),
                 ),
             }
-        )
+        ),
     )
 
-    update_site_config(SiteId("heute"), SiteId("haha"))
+    update_site_config(SiteId("heute"), SiteId("haha"), logger)
 
     site_mgmt = SiteManagementFactory().factory()
     all_sites = site_mgmt.load_sites()
@@ -63,8 +72,9 @@ def test_update_basic_site_config() -> None:
     assert all_sites[SiteId("haha")]["url_prefix"] == "/haha/"
 
 
-def test_update_remote_site_status_host_config() -> None:
+def test_update_remote_site_status_host_config(site_config_file: Path) -> None:
     _write_site_config(
+        site_config_file,
         SiteConfigurations(
             {
                 SiteId("stable"): SiteConfiguration(
@@ -110,10 +120,10 @@ def test_update_remote_site_status_host_config() -> None:
                     secret="watosecret",
                 ),
             }
-        )
+        ),
     )
 
-    update_site_config(SiteId("stable"), SiteId("dingdong"))
+    update_site_config(SiteId("stable"), SiteId("dingdong"), logger)
 
     site_mgmt = SiteManagementFactory().factory()
     all_sites = site_mgmt.load_sites()

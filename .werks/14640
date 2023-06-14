@@ -6,7 +6,7 @@ Date: 1659088203
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 
 When clustering lecagy plugins using the builtin cluster modes, sometimes services would go stale unexpectedly.

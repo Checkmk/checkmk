@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Certificates
 
 WARNING: Use at your own risk, not supported.
 
-Checkmk uses SSL certificates to verify push hosts.
+Checkmk uses TLS certificates to secure agent communication.
 """
 from collections.abc import Mapping
 from pathlib import Path
@@ -41,10 +41,11 @@ permission_registry.register(
         name="agent_pairing",
         title=_l("Agent pairing"),
         description=_l(
-            "Pairing of Checkmk agents with the monitoring site. This step establishes trust "
-            "between the agent and the monitoring site."
+            "Only relevant for the agent controller shipped with Checkmk 2.1."
+            " Pairing of Checkmk agents with the monitoring site."
+            " This step establishes trust between the agent and the monitoring site."
         ),
-        defaults=["admin", "agent_registration"],
+        defaults=["admin"],
     )
 )
 
@@ -130,3 +131,31 @@ def make_certificate(param: Mapping[str, Any]) -> Response:
             "cert": _serialized_signed_cert(param["body"]["csr"]),
         }
     )
+
+
+@Endpoint(
+    "/agent_controller_certificates_settings",
+    "cmk/global_config",
+    method="get",
+    tag_group="Checkmk Internal",
+    additional_status_codes=[403],
+    status_descriptions={
+        403: "Unauthorized to read the global settings",
+    },
+    response_schema=response_schemas.AgentControllerCertificateSettings,
+    permissions_required=permissions.AnyPerm(
+        [
+            permissions.Perm("wato.seeall"),
+            permissions.Perm("wato.global"),
+        ],
+    ),
+)
+def agent_controller_certificates_settings(param: object) -> Response:
+    """Show agent controller certificate settings"""
+    if not (user.may("wato.seeall") or user.may("wato.global")):
+        raise ProblemException(
+            status=403,
+            title="Unauthorized",
+            detail="Unauthorized to read the global settings",
+        )
+    return serve_json(config.active_config.agent_controller_certificates)

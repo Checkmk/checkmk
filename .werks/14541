@@ -6,7 +6,7 @@ Date: 1657095023
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In certain multi-site setups, the host and service problems graphs in the main dashboard ("Total
 host problems", "Total service problems", "Percentage of total service problems") are not rendered.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,14 +11,18 @@ from collections.abc import Callable, Collection, Iterable, Iterator, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from itertools import chain
-from time import sleep
 from typing import Final
 
 import redis
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.redis import get_redis_client
+from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable
+from cmk.utils.setup_search_index import (
+    read_and_remove_update_requests,
+    UpdateRequests,
+    updates_requested,
+)
 
 from cmk.gui.background_job import (
     BackgroundJob,
@@ -29,6 +33,7 @@ from cmk.gui.background_job import (
 )
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKAuthException
+from cmk.gui.hooks import register_builtin
 from cmk.gui.http import request
 from cmk.gui.i18n import _, get_current_language, get_languages, localize
 from cmk.gui.logged_in import user
@@ -63,11 +68,10 @@ MatchItemsByTopic = dict[str, MatchItems]
 
 class ABCMatchItemGenerator(ABC):
     def __init__(self, name: str) -> None:
-        self._name: Final[str] = name
+        self.name: Final[str] = name
 
-    @property
-    def name(self) -> str:
-        return self._name
+    def __hash__(self) -> int:
+        return hash(self.name)
 
     @abstractmethod
     def generate_match_items(self) -> MatchItems:
@@ -89,14 +93,21 @@ class MatchItemGeneratorRegistry(Registry[ABCMatchItemGenerator]):
         return instance.name
 
 
+match_item_generator_registry = MatchItemGeneratorRegistry()
+
+
 class IndexBuilder:
     _KEY_INDEX_BUILT = "si:index_built"
     PREFIX_LOCALIZATION_INDEPENDENT = "si:li"
     PREFIX_LOCALIZATION_DEPENDENT = "si:ld"
 
-    def __init__(self, registry: MatchItemGeneratorRegistry) -> None:
+    def __init__(
+        self,
+        registry: MatchItemGeneratorRegistry,
+        redis_client: redis.Redis[str],
+    ) -> None:
         self._registry = registry
-        self._redis_client = get_redis_client()
+        self._redis_client = redis_client
 
     @staticmethod
     def add_to_prefix(prefix: str, to_add: object) -> str:
@@ -233,16 +244,19 @@ class IndexBuilder:
         self._build_index(self._registry.values())
         self._mark_index_as_built()
 
-    def build_changed_sub_indices(self, change_action_name: str) -> None:
+    def build_changed_sub_indices(self, change_action_names: Collection[str]) -> None:
         self._build_index(
-            match_item_generator
-            for match_item_generator in self._registry.values()
-            if match_item_generator.is_affected_by_change(change_action_name)
+            {
+                match_item_generator
+                for change_action_name in change_action_names
+                for match_item_generator in self._registry.values()
+                if match_item_generator.is_affected_by_change(change_action_name)
+            }
         )
 
     @classmethod
-    def index_is_built(cls, client: redis.Redis[str] | None = None) -> bool:
-        return (client or get_redis_client()).exists(cls._KEY_INDEX_BUILT) == 1
+    def index_is_built(cls, client: redis.Redis[str]) -> bool:
+        return client.exists(cls._KEY_INDEX_BUILT) == 1
 
 
 def _set_query_vars(query_vars: QueryVars) -> None:
@@ -316,11 +330,17 @@ class PermissionsHandler:
 
 
 class IndexSearcher:
-    def __init__(self, permissions_handler: PermissionsHandler) -> None:
+    def __init__(
+        self,
+        redis_client: redis.Redis[str],
+        permissions_handler: PermissionsHandler,
+    ) -> None:
+        self._redis_client = redis_client
+        if not redis_server_reachable(self._redis_client):
+            raise RuntimeError("Redis server is not reachable")
         self._may_see_category = permissions_handler.may_see_category
         self._may_see_item_func = permissions_handler.permissions_for_items()
         self._user_id = user.ident
-        self._redis_client = get_redis_client()
 
     def search(self, query: SearchQuery) -> SearchResultsByTopic:
         """
@@ -340,7 +360,7 @@ class IndexSearcher:
         self, query: SearchQuery
     ) -> dict[str, list[_SearchResultWithPermissionsCheck]]:
         if not IndexBuilder.index_is_built(self._redis_client):
-            build_index_background()
+            self._launch_index_building_in_background_job()
             raise IndexNotFoundException
 
         query_preprocessed = f"*{query.lower().replace(' ', '*')}*"
@@ -368,6 +388,16 @@ class IndexSearcher:
             ]
             for topic in chain(results_localization_independent, results_localization_dependent)
         }
+
+    def _launch_index_building_in_background_job(self) -> None:
+        build_job = SearchIndexBackgroundJob()
+        with suppress(BackgroundJobAlreadyRunning):
+            build_job.start(
+                lambda job_interface: _index_building_in_background_job(
+                    job_interface,
+                    self._redis_client,
+                )
+            )
 
     def _search_redis_categories(
         self,
@@ -487,72 +517,66 @@ class _SearchResultWithPermissionsCheck:
     permissions_check: Callable[[str], bool]
 
 
-def _build_index_background(
+def _index_building_in_background_job(
     job_interface: BackgroundProcessInterface,
-    n_attempts_redis_connection: int = 1,
-    sleep_time: int = 5,
+    redis_client: redis.Redis[str],
 ) -> None:
-    n_attempts = 0
     job_interface.send_progress_update(_("Building of search index started"))
-    while True:
-        try:
-            n_attempts += 1
-            IndexBuilder(match_item_generator_registry).build_full_index()
-            break
-        except redis.ConnectionError:
-            job_interface.send_progress_update(
-                _("Connection attempt %d / %d to Redis failed")
-                % (
-                    n_attempts,
-                    n_attempts_redis_connection,
-                )
-            )
-            if n_attempts == n_attempts_redis_connection:
-                job_interface.send_result_message(
-                    _("Maximum number of allowed connection attempts reached, terminating")
-                )
-                raise
-            job_interface.send_progress_update(_("Will wait for %d seconds and retry") % sleep_time)
-            sleep(sleep_time)
+    IndexBuilder(match_item_generator_registry, redis_client).build_full_index()
     job_interface.send_result_message(_("Search index successfully built"))
 
 
-def build_index_background(
-    n_attempts_redis_connection: int = 1,
-    sleep_time: int = 5,
-) -> None:
-    build_job = SearchIndexBackgroundJob()
+def _launch_requests_processing_background() -> None:
+    if not updates_requested() or not redis_enabled():
+        return
+    job = SearchIndexBackgroundJob()
     with suppress(BackgroundJobAlreadyRunning):
-        build_job.start(
-            lambda job_interface: _build_index_background(
-                job_interface=job_interface,
-                n_attempts_redis_connection=n_attempts_redis_connection,
-                sleep_time=sleep_time,
+        job.start(
+            lambda job_interface: _process_update_requests_background(
+                job_interface,
+                get_redis_client(),
             )
         )
 
 
-def _update_index_background(
-    change_action_name: str,
-    job_interface: BackgroundProcessInterface,
-) -> None:
-    job_interface.send_progress_update(_("Updating of search index started"))
+register_builtin("request-start", _launch_requests_processing_background)
 
-    if not IndexBuilder.index_is_built():
-        job_interface.send_progress_update(_("Search index not found, re-building from scratch"))
-        _build_index_background(job_interface)
+
+def _process_update_requests_background(
+    job_interface: BackgroundProcessInterface,
+    redis_client: redis.Redis[str],
+) -> None:
+    if not redis_server_reachable(redis_client):
+        job_interface.send_progress_update(_("Redis is not reachable, terminating"))
         return
 
-    IndexBuilder(match_item_generator_registry).build_changed_sub_indices(change_action_name)
-    job_interface.send_result_message(_("Search index successfully updated"))
-
-
-def update_index_background(change_action_name: str) -> None:
-    update_job = SearchIndexBackgroundJob()
-    with suppress(BackgroundJobAlreadyRunning):
-        update_job.start(
-            lambda job_interface: _update_index_background(change_action_name, job_interface)
+    while updates_requested():
+        _process_update_requests(
+            read_and_remove_update_requests(),
+            job_interface,
+            redis_client,
         )
+
+
+def _process_update_requests(
+    requests: UpdateRequests,
+    job_interface: BackgroundProcessInterface,
+    redis_client: redis.Redis[str],
+) -> None:
+    if requests["rebuild"]:
+        _index_building_in_background_job(job_interface, redis_client)
+        return
+
+    if not IndexBuilder.index_is_built(redis_client):
+        job_interface.send_progress_update(_("Search index not found, re-building from scratch"))
+        _index_building_in_background_job(job_interface, redis_client)
+        return
+
+    job_interface.send_progress_update(_("Updating of search index started"))
+    IndexBuilder(match_item_generator_registry, redis_client).build_changed_sub_indices(
+        requests["change_actions"]
+    )
+    job_interface.send_result_message(_("Search index successfully updated"))
 
 
 @job_registry.register
@@ -566,12 +590,11 @@ class SearchIndexBackgroundJob(BackgroundJob):
     def __init__(self) -> None:
         super().__init__(
             self.job_prefix,
+            # We deliberately do not provide an estimated duration here, since that involves I/O.
+            # We need to be as fast as possible here, since this is done at the end of HTTP
+            # requests.
             InitialStatusArgs(
                 title=_("Search index"),
                 stoppable=False,
-                estimated_duration=BackgroundJob(self.job_prefix).get_status().duration,
             ),
         )
-
-
-match_item_generator_registry = MatchItemGeneratorRegistry()

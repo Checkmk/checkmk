@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -50,7 +50,7 @@ struct CarrierDataHeader {
     using ptr = std::unique_ptr<CarrierDataHeader,
                                 std::function<void(CarrierDataHeader *)>>;
 
-    /// \brief returns unique ptr with custom deleter
+    /// returns unique ptr with custom deleter
     static ptr createPtr(const char *provider_name,  // unique name of provider
                          uint64_t answer_id,  // timestamp of the answer to fill
                          DataType data_type,  // DataType::
@@ -99,7 +99,7 @@ struct CarrierDataHeader {
     }
 
 private:
-    /// \brief - requires ON_OUT_OF SCOPE
+    /// - requires ON_OUT_OF SCOPE
     static CarrierDataHeader *createRaw(
         const char *provider_name,  // unique name of provider
         uint64_t answer_id,         // timestamp of the answer
@@ -183,12 +183,12 @@ public:
                          const std::wstring &port_name,  // standard format
                          const std::wstring &answer_id,  // identifies Answer
                          const void *data, size_t length) {
-        if (auto id = tools::ConvertToUint64(answer_id); id.has_value()) {
-            auto port = wtools::ToUtf8(port_name);
+        if (const auto id = tools::ConvertToUint64(answer_id); id.has_value()) {
+            const auto port = wtools::ToUtf8(port_name);
             CoreCarrier cc;
             cc.establishCommunication(port);
-            auto ret = cc.sendData(wtools::ToUtf8(peer_name), id.value(), data,
-                                   length);
+            const auto ret = cc.sendData(wtools::ToUtf8(peer_name), id.value(),
+                                         data, length);
             cc.shutdownCommunication();
             return ret;
         }

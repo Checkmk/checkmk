@@ -1,0 +1,15 @@
+Title: When creating a folder, it is no longer necessary to specify a name
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1683190474
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The folder creation endpoint no longer requires a name, only a title. If no name
+is given, the title will be used as a basis to generate one. Note that you can create
+as many folders with the same title in the same directory as you want.
+This matches the behaviour of the GUI.
+

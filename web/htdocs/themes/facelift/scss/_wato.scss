@@ -1,5 +1,5 @@
 @charset "UTF-8";
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -72,7 +72,7 @@
   }
 
   b {
-    font-weight: normal;
+    font-weight: $font-weight-default;
     color: $font-color;
   }
 }
@@ -167,6 +167,76 @@ div#service_container {
   }
 }
 
+@mixin message-container-mixin {
+  display: grid;
+  position: relative;
+  margin-bottom: $spacing;
+  padding: 12px 16px;
+  background-color: $headline-color;
+
+  div.state_bar {
+    position: absolute;
+    width: 25px;
+    height: 100%;
+
+    span {
+      display: flex;
+      height: 100%;
+      border-radius: $border-radius-left;
+      justify-content: center;
+      align-items: center;
+
+      img {
+        width: 14px;
+      }
+    }
+  }
+
+  div.message_container > h2 {
+    margin: 0 25px 0px;
+  }
+}
+
+div#datasources_container {
+  @include message-container-mixin;
+
+  div.message_container {
+    &:first-child h2 {
+      margin: 0;
+    }
+
+    table {
+      margin: 5px 25px 0px;
+
+      td {
+        padding-right: 5px;
+        padding-bottom: 2px;
+
+        b {
+          margin: 0;
+        }
+      }
+    }
+  }
+}
+
+div#activation_state_message_container {
+  @include message-container-mixin;
+
+  div.message_container div {
+    margin: 5px 25px;
+
+    span {
+      display: block;
+      margin-bottom: $spacing;
+
+      &:last-child {
+        margin-bottom: 0px;
+      }
+    }
+  }
+}
+
 div#fixall_container {
   background-color: $headline-color;
   border-radius: 2px;
@@ -216,8 +286,12 @@ table.data tr.data > td.bulkactions {
   border: none;
 }
 
-a.service_button.disabled {
-  pointer-events: none;
+a.service_button.disabled,
+span > img.service_button.disabled {
+  &:not(.tooltip) {
+    pointer-events: none;
+  }
+
   cursor: default;
   filter: grayscale(100%);
   -webkit-filter: grayscale(100%);
@@ -388,7 +462,7 @@ body.main .popup_menu table.data tr.data > td.bulksearch div.togglebutton.checkb
 .wato div.floatfolder div.title body.main .popup_menu span,
 body.main .popup_menu .wato div.floatfolder div.title span,
 .wato div.floatfolder.locked div.title {
-  font-weight: 500;
+  font-weight: $font-weight-default;
   color: $font-color;
 }
 
@@ -591,7 +665,7 @@ div.filter_buttons {
       top: 14px;
       left: 72px;
       padding: 0;
-      font-weight: bold;
+      font-weight: $font-weight-bold;
     }
 
     &.subtitle {
@@ -602,7 +676,7 @@ div.filter_buttons {
       padding: 16px 0 0;
       overflow: hidden;
       font-size: $font-size-small;
-      font-weight: 500;
+      font-weight: $font-weight-default;
       line-height: 1.5;
       letter-spacing: $letter-spacing-table;
       color: $font-color-dimmed;
@@ -861,7 +935,7 @@ table.logwatch span.match {
 /* BI Editor */
 table.data td.bi_rule_tree {
   b.treeangle {
-    font-weight: normal;
+    font-weight: $font-weight-default;
     color: $font-color-black;
   }
 

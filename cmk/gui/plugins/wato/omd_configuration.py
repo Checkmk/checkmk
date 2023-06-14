@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -17,15 +17,6 @@ from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.wato.utils import ConfigVariableGroupSiteManagement, ReplicationPath
-from cmk.gui.plugins.watolib.utils import (
-    ABCConfigDomain,
-    config_domain_registry,
-    config_variable_registry,
-    ConfigVariable,
-    ConfigVariableGroup,
-    SerializedSettings,
-    wato_fileheader,
-)
 from cmk.gui.valuespec import (
     Age,
     Checkbox,
@@ -39,7 +30,16 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.watolib.activate_changes import add_replication_paths
-from cmk.gui.watolib.config_domain_name import ConfigDomainName
+from cmk.gui.watolib.config_domain_name import (
+    ABCConfigDomain,
+    config_domain_registry,
+    config_variable_registry,
+    ConfigDomainName,
+    ConfigVariable,
+    ConfigVariableGroup,
+    SerializedSettings,
+    wato_fileheader,
+)
 from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.sites import LivestatusViaTCP
 
@@ -72,7 +72,7 @@ class ConfigVariableSiteAutostart(ConfigVariable):
             title=_("Start during system boot"),
             help=_(
                 "Whether or not this site should be started during startup of "
-                "the Check_MK server."
+                "the Checkmk server."
             ),
         )
 
@@ -163,9 +163,9 @@ class ConfigVariableSiteEventConsole(ConfigVariable):
             title=_("Event Console"),
             help=_(
                 "This option enables the Event Console - The event processing and "
-                "classification daemon of Check_MK. You can also configure whether "
+                "classification daemon of Checkmk. You can also configure whether "
                 "or not the Event Console shal listen for incoming SNMP traps or "
-                "syslog messages. Please note that only a single Check_MK site per "
+                "syslog messages. Please note that only a single Checkmk site per "
                 "Check_MK server can listen for such messages."
             ),
             label=_("Event Console enabled"),
@@ -208,7 +208,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
         return self.load()
 
     def load(self, site_specific=False, custom_site_path=None):
-        cleanup_settings = store.load_mk_file(self.diskspace_config, default={})
+        cleanup_settings = {**store.load_mk_file(self.diskspace_config, default={})}
         if not cleanup_settings:
             return {}
 

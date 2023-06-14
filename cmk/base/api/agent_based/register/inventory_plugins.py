@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Background tools required to register a check plugin
 """
 import functools
-from typing import Any, Callable, Iterable, List, Mapping, Optional
+from collections.abc import Callable, Iterable, Mapping
+from typing import Any
 
-from cmk.utils.type_defs import InventoryPluginName, RuleSetName
+from cmk.utils.type_defs import RuleSetName
+
+from cmk.checkengine.inventory import InventoryPluginName
 
 from cmk.base.api.agent_based.inventory_classes import (
     Attributes,
@@ -43,10 +46,10 @@ def _filter_inventory(
 def create_inventory_plugin(
     *,
     name: str,
-    sections: Optional[List[str]] = None,
+    sections: list[str] | None = None,
     inventory_function: Callable,
-    inventory_default_parameters: Optional[Mapping[str, Any]] = None,
-    inventory_ruleset_name: Optional[str] = None,
+    inventory_default_parameters: Mapping[str, Any] | None = None,
+    inventory_ruleset_name: str | None = None,
     module: str,
 ) -> InventoryPlugin:
     """Return an InventoryPlugin object after validating and converting the arguments one by one

@@ -1,0 +1,17 @@
+Title: filestats: Fix crash when monitoring a symlink with a non-existing target
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1679928210
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Until now, the check plugin would crash if a monitored file didn't have age and
+size information. This case is possible for symlinks with a non-existing target,
+files that vanished during agent plugin run and in case of errors.
+
+Now, the affected files will be ignored when calculating age and size extremes and
+the status of the file will be shown in case of 'Single file' aggregation.
+

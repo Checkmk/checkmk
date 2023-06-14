@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.pages import PageRegistry
+from cmk.gui.painter.v0.base import PainterRegistry
+from cmk.gui.painter_options import PainterOptionRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
-from cmk.gui.views.data_source import DataSourceRegistry
-from cmk.gui.views.painter.v0.base import PainterRegistry
-from cmk.gui.views.painter_options import PainterOptionRegistry
 
 from .ajax_endpoints import ajax_render_tree, ajax_save_treestate, ajax_set_assumption
 from .permissions import PermissionBISeeAll, PermissionSectionBI
@@ -30,6 +30,7 @@ from .view import (
     PainterAggrStateNum,
     PainterAggrTreestate,
     PainterAggrTreestateBoxed,
+    PainterAggrTreestateFrozenDiff,
     PainterOptionAggrExpand,
     PainterOptionAggrOnlyProblems,
     PainterOptionAggrTreeType,
@@ -63,6 +64,7 @@ def register(
     painter_registry.register(PainterAggrHosts)
     painter_registry.register(PainterAggrHostsServices)
     painter_registry.register(PainterAggrTreestate)
+    painter_registry.register(PainterAggrTreestateFrozenDiff)
     painter_registry.register(PainterAggrTreestateBoxed)
 
     painter_option_registry.register(PainterOptionAggrExpand)

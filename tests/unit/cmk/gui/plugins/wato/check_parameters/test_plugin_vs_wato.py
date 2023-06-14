@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -65,10 +65,10 @@ class Base(t.Generic[T], abc.ABC):
         return human readable unique identifier for this element
         """
 
-    def __lt__(self, other: object) -> bool:
+    def __gt__(self, other: object) -> bool:
         if other is None or not isinstance(other, Base):
             raise ValueError()
-        return self.get_merge_key() < other.get_merge_key()
+        return self.get_merge_key() > other.get_merge_key()
 
     def __eq__(self, other: object) -> bool:
         if other is None or not isinstance(other, Base):
@@ -94,7 +94,7 @@ class BaseProtocol(t.Protocol):
     def __eq__(self, other: object) -> bool:
         ...
 
-    def __lt__(self, other: object) -> bool:
+    def __gt__(self, other: object) -> bool:
         ...
 
 
@@ -253,7 +253,6 @@ class ErrorReporter:
         ("check", "checkgroup_parameters:entersekt_soaprrors"),
         ("check", "checkgroup_parameters:hw_single_temperature"),
         ("check", "checkgroup_parameters:hw_temperature"),
-        ("check", "checkgroup_parameters:hw_temperature_single"),
         ("check", "checkgroup_parameters:mailqueue_length"),
         ("check", "checkgroup_parameters:mssql_blocked_sessions"),
         ("check", "checkgroup_parameters:postgres_sessions"),
@@ -262,11 +261,13 @@ class ErrorReporter:
         ("check", "checkgroup_parameters:statgrab_mem"),
         ("check", "checkgroup_parameters:systemd_services"),
         ("check", "checkgroup_parameters:temperature_trends"),
+        ("check", "checkgroup_parameters:prism_container"),
         ("discovery", "discovery_systemd_units_services_rules"),
         ("inventory", "active_checks:cmk_inv"),
         ("inventory", "inv_parameters:inv_if"),
         ("inventory", "inv_parameters:lnx_sysctl"),
         ("inventory", "inv_retention_intervals"),
+        ("inventory", "inv_exports:software_csv"),  # deprecated since 2.2
     }
     KNOWN_ITEM_REQUIREMENTS = {
         # type # plugin # wato
@@ -300,9 +301,6 @@ class ErrorReporter:
         ("check", "drbd_net", "drbd.net"),
         ("check", "drbd_stats", "drbd.stats"),
         ("check", "entersekt_soaperrors", "entersekt_soaperrors"),
-        ("check", "h3c_lanswitch_cpu", "h3c_lanswitch_cpu"),
-        ("check", "h3c_lanswitch_sensors", "h3c_lanswitch_sensors"),
-        ("check", "hpux_snmp_cs_cpu", "hpux_snmp_cs.cpu"),
         ("check", "innovaphone_channels", "hw_single_channelserature"),
         ("check", "ironport_misc", "obsolete"),
         ("check", "j4p_performance_app_sess", "j4p_performance.app_sess"),
@@ -311,7 +309,6 @@ class ErrorReporter:
         ("check", "j4p_performance_serv_req", "j4p_performance.serv_req"),
         ("check", "j4p_performance_threads", "j4p_performance.threads"),
         ("check", "j4p_performance_uptime", "j4p_performance.uptime"),
-        ("check", "lgp_pdu_aux", "lgp_pdu_aux"),
         ("check", "lsi_array", "raid"),
         ("check", "md", "raid"),
         ("check", "mongodb_replication_info", "mongodb_replication_info"),
@@ -342,7 +339,6 @@ class ErrorReporter:
     }
     KNOWN_ERROR_LOADING_DEFAULTS = {
         # type # plugin # wato
-        ("check", "3par_remotecopy", "checkgroup_parameters:threepar_remotecopy"),
         ("check", "ad_replication", "checkgroup_parameters:ad_replication"),
         ("check", "apc_ats_output", "checkgroup_parameters:apc_ats_output"),
         ("check", "apc_humidity", "checkgroup_parameters:humidity"),
@@ -350,7 +346,6 @@ class ErrorReporter:
         ("check", "apc_symmetra_temp", "checkgroup_parameters:temperature"),
         ("check", "appdynamics_sessions", "checkgroup_parameters:jvm_sessions"),
         ("check", "appdynamics_web_container", "checkgroup_parameters:jvm_threads"),
-        ("check", "avaya_88xx_cpu", "checkgroup_parameters:cpu_utilization"),
         (
             "check",
             "aws_dynamodb_table_read_capacity",
@@ -386,7 +381,6 @@ class ErrorReporter:
         ("check", "citrix_licenses", "checkgroup_parameters:citrix_licenses"),
         ("check", "citrix_serverload", "checkgroup_parameters:citrix_load"),
         ("check", "couchbase_buckets_mem", "checkgroup_parameters:memory_multiitem"),
-        ("check", "datapower_cpu", "checkgroup_parameters:cpu_utilization"),
         ("check", "db2_backup", "checkgroup_parameters:db2_backup"),
         ("check", "db2_mem", "checkgroup_parameters:db2_mem"),
         ("check", "ddn_s2a_faultsbasic_disks", "checkgroup_parameters:disk_failures"),
@@ -399,7 +393,6 @@ class ErrorReporter:
         ("check", "domino_transactions", "checkgroup_parameters:domino_transactions"),
         ("check", "domino_users", "checkgroup_parameters:domino_users"),
         ("check", "eltek_fans", "checkgroup_parameters:hw_fans_perc"),
-        ("check", "emc_isilon_power", "checkgroup_parameters:evolt"),
         ("check", "emcvnx_sp_util", "checkgroup_parameters:sp_util"),
         ("check", "enterasys_lsnat", "checkgroup_parameters:lsnat"),
         ("check", "epson_beamer_lamp", "checkgroup_parameters:lamp_operation_time"),
@@ -422,8 +415,6 @@ class ErrorReporter:
         ("check", "genua_pfstate", "checkgroup_parameters:pf_used_states"),
         ("check", "hitachi_hnas_bossock", "checkgroup_parameters:bossock_fibers"),
         ("check", "hivemanager_devices", "checkgroup_parameters:hivemanager_devices"),
-        ("check", "hp_proliant_power", "checkgroup_parameters:epower_single"),
-        ("check", "hp_proliant_psu", "checkgroup_parameters:hw_psu"),
         ("check", "hpux_multipath", "checkgroup_parameters:hpux_multipath"),
         ("check", "huawei_osn_laser", "checkgroup_parameters:huawei_osn_laser"),
         ("check", "ibm_imm_fan", "checkgroup_parameters:hw_fans_perc"),
@@ -431,8 +422,6 @@ class ErrorReporter:
         ("check", "icom_repeater_ps_volt", "checkgroup_parameters:ps_voltage"),
         ("check", "innovaphone_mem", "checkgroup_parameters:innovaphone_mem"),
         ("check", "inotify", "checkgroup_parameters:inotify"),
-        ("check", "ipr400_in_voltage", "checkgroup_parameters:evolt"),
-        ("check", "janitza_umg_freq", "checkgroup_parameters:efreq"),
         ("check", "jolokia_metrics_app_sess", "checkgroup_parameters:jvm_sessions"),
         ("check", "jolokia_metrics_bea_queue", "checkgroup_parameters:jvm_queue"),
         ("check", "jolokia_metrics_bea_requests", "checkgroup_parameters:jvm_requests"),
@@ -453,7 +442,6 @@ class ErrorReporter:
         ("check", "liebert_fans_condenser", "checkgroup_parameters:hw_fans_perc"),
         ("check", "liebert_humidity_air", "checkgroup_parameters:humidity"),
         ("check", "logins", "checkgroup_parameters:logins"),
-        ("check", "logwatch_ec", "checkgroup_parameters:logwatch_ec"),
         ("check", "lvm_vgs", "checkgroup_parameters:volume_groups"),
         ("check", "mikrotik_signal", "checkgroup_parameters:signal_quality"),
         ("check", "mongodb_collections", "checkgroup_parameters:mongodb_collections"),
@@ -465,7 +453,6 @@ class ErrorReporter:
         ("check", "mssql_connections", "checkgroup_parameters:mssql_connections"),
         ("check", "mysql_slave", "checkgroup_parameters:mysql_slave"),
         ("check", "netapp_api_connection", "checkgroup_parameters:netapp_instance"),
-        ("check", "netapp_api_cpu_utilization", "checkgroup_parameters:cpu_utilization"),
         ("check", "netapp_api_environment_fan_faults", "checkgroup_parameters:hw_fans"),
         ("check", "netapp_api_environment_fans", "checkgroup_parameters:hw_fans"),
         ("check", "netscaler_health_fan", "checkgroup_parameters:hw_fans"),
@@ -497,12 +484,6 @@ class ErrorReporter:
         ("check", "tinkerforge_ambient", "checkgroup_parameters:brightness"),
         ("check", "tplink_mem", "checkgroup_parameters:memory_percentage_used"),
         ("check", "tplink_poe_summary", "checkgroup_parameters:epower_single"),
-        ("check", "ucs_c_rack_server_util_cpu", "checkgroup_parameters:cpu_utilization_multiitem"),
-        ("check", "ups_in_freq", "checkgroup_parameters:efreq"),
-        ("check", "ups_in_voltage", "checkgroup_parameters:evolt"),
-        ("check", "ups_out_voltage", "checkgroup_parameters:evolt"),
-        ("check", "ups_socomec_in_voltage", "checkgroup_parameters:evolt"),
-        ("check", "ups_socomec_out_voltage", "checkgroup_parameters:evolt"),
         ("check", "veeam_tapejobs", "checkgroup_parameters:veeam_tapejobs"),
         ("check", "vms_system_procs", "checkgroup_parameters:vms_procs"),
         (
@@ -635,18 +616,17 @@ class ErrorReporter:
 # implementation details
 ################################################################################
 
-A = t.TypeVar("A", bound="ComparableA")
-B = t.TypeVar("B", bound="ComparableB")
+
+T_contra = t.TypeVar("T_contra", contravariant=True)
 
 
-class ComparableA(t.Protocol):
-    def __lt__(self, other: "ComparableB") -> bool:
+class SupportsGreaterThan(t.Protocol, t.Generic[T_contra]):
+    def __gt__(self, other: T_contra) -> bool:
         ...
 
 
-class ComparableB(t.Protocol):
-    def __lt__(self, other: ComparableA) -> bool:
-        ...
+A = t.TypeVar("A", bound=SupportsGreaterThan)
+B = t.TypeVar("B")
 
 
 def merge(a: t.Iterable[A], b: t.Iterable[B]) -> t.Iterator[t.Tuple[t.Optional[A], t.Optional[B]]]:
@@ -705,15 +685,15 @@ def merge(a: t.Iterable[A], b: t.Iterable[B]) -> t.Iterator[t.Tuple[t.Optional[A
 
 
 def test_merge() -> None:
-    result = merge([1, 3, 5], [2, 3, 4])  # type: ignore  # TODO: XXX: how to type?!
+    result = merge([1, 3, 5], [2, 3, 4])
     assert list(result) == [(1, None), (None, 2), (3, 3), (None, 4), (5, None)]
-    result = merge([1, 1, 5], [2, 3, 4])  # type: ignore
+    result = merge([1, 1, 5], [2, 3, 4])
     assert list(result) == [(1, None), (1, None), (None, 2), (None, 3), (None, 4), (5, None)]
-    result = merge([1], [2, 3, 4])  # type: ignore
+    result = merge([1], [2, 3, 4])
     assert list(result) == [(1, None), (None, 2), (None, 3), (None, 4)]
-    result = merge([1, 1, 1, 4], [1, 2, 3, 4])  # type: ignore
+    result = merge([1, 1, 1, 4], [1, 2, 3, 4])
     assert list(result) == [(1, 1), (1, 1), (1, 1), (None, 2), (None, 3), (4, 4)]
-    result = merge([1, 1, 1], [1, 1, 1])  # type: ignore
+    result = merge([1, 1, 1], [1, 1, 1])
     assert list(result) == [(1, 1), (1, 1), (1, 1)]
 
 

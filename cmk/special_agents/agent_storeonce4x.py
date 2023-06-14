@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Check_MK HP StoreOnce Special Agent for REST API Version 4.2.3"""
@@ -14,7 +14,7 @@ from collections.abc import Callable, Generator, Sequence
 from typing import Any
 
 import urllib3
-from oauthlib.oauth2 import LegacyApplicationClient  # type: ignore[import]
+from oauthlib.oauth2 import LegacyApplicationClient
 from requests_oauthlib import OAuth2Session  # type: ignore[import]
 
 import cmk.utils.paths
@@ -30,7 +30,6 @@ LOGGER = logging.getLogger("agent_storeonce4x")
 
 
 class StoreOnceOauth2Session(Requester):
-
     _token_dir = cmk.utils.paths.tmp_dir / "special_agents/agent_storeonce4x"
     _token_file_suffix = "%s_oAuthToken.json"
     _refresh_endpoint = "/pml/login/refresh"

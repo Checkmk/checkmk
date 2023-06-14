@@ -6,7 +6,7 @@ Date: 1659542108
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This werk improves the performances and reduces the number of API calls
 of the AWS special agent when fetching data for lambda functions.

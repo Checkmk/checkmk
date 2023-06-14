@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import annotations
 
 import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import EventRule, NotifyPluginParamsDict
+from cmk.utils.notify_types import EventRule, NotificationPluginNameStr, NotifyPluginParamsDict
 
 # Log level of notifications
 # 0, 1, 2 -> deprecated (transformed to 20, 20, and 10)
@@ -19,7 +19,10 @@ notification_backlog = 10  # keep the last 10 notification contexts for referenc
 # Settings for new rule based notifications
 enable_rulebased_notifications = True
 notification_fallback_email = ""
-notification_fallback_format: tuple[str, NotifyPluginParamsDict] = ("asciimail", {})
+notification_fallback_format: tuple[NotificationPluginNameStr, NotifyPluginParamsDict] = (
+    "asciimail",
+    {},
+)
 notification_rules: list[EventRule] = []
 # Check every 10 seconds for ripe bulks
 notification_bulk_interval = 10

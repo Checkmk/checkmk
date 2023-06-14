@@ -1,28 +1,29 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
-# pylint: disable=redefined-outer-name
 
 import importlib
 import io
 import itertools
 import os
 import subprocess
+from collections import Counter
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
 import cmk.utils.exceptions as exceptions
 import cmk.utils.version as cmk_version
 from cmk.utils.config_path import VersionedConfigPath
-from cmk.utils.type_defs import CheckPluginName, HostName
+from cmk.utils.type_defs import HostName
+
+from cmk.checkengine.checking import CheckPluginName
 
 import cmk.base.config as config
 import cmk.base.core_nagios as core_nagios
@@ -222,7 +223,6 @@ def test_format_nagios_object() -> None:
         ),
     ],
 )
-@pytest.mark.usefixtures("fixup_ip_lookup")
 def test_create_nagios_host_spec(
     hostname_str: str, result: dict[str, str], monkeypatch: MonkeyPatch
 ) -> None:
@@ -235,7 +235,7 @@ def test_create_nagios_host_spec(
     ts.add_host(HostName("host2"))
     ts.add_cluster(HostName("cluster1"))
 
-    ts.add_cluster(HostName("cluster2"), nodes=["node1", "node2"])
+    ts.add_cluster(HostName("cluster2"), nodes=[HostName("node1"), HostName("node2")])
     ts.add_host(HostName("node1"))
     ts.add_host(HostName("node2"))
     ts.add_host(HostName("switch"))
@@ -474,7 +474,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
-            "  use                           check_mk_default\n"
+            "  use                           check_mk_perf,check_mk_default\n"
             "}\n"
             "\n",
             id="active_check",
@@ -506,7 +506,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
-            "  use                           check_mk_default\n"
+            "  use                           check_mk_perf,check_mk_default\n"
             "}\n"
             "\n",
             id="offline_active_check",
@@ -543,7 +543,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
-            "  use                           check_mk_default\n"
+            "  use                           check_mk_perf,check_mk_default\n"
             "}\n"
             "\n",
             id="arguments_list",
@@ -576,7 +576,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
-            "  use                           check_mk_default\n"
+            "  use                           check_mk_perf,check_mk_default\n"
             "}\n"
             "\n",
             id="duplicate_active_checks",
@@ -617,7 +617,7 @@ def mock_service_description(params: Mapping[str, str]) -> str:
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           HTTP my special HTTP\n"
-            "  use                           check_mk_default\n"
+            "  use                           check_mk_perf,check_mk_default\n"
             "}\n"
             "\n",
             id="old_service_description",
@@ -640,9 +640,13 @@ def test_create_nagios_servicedefs_active_check(
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
+    license_counter = Counter("services")
+    core_nagios._create_nagios_servicedefs(
+        cfg, config_cache, hostname, host_attrs, {}, license_counter
+    )
 
     assert outfile.getvalue() == expected_result
+    assert license_counter["services"] == 1
 
 
 @pytest.mark.parametrize(
@@ -681,7 +685,7 @@ def test_create_nagios_servicedefs_active_check(
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           My description\n"
-            "  use                           check_mk_default\n"
+            "  use                           check_mk_perf,check_mk_default\n"
             "}\n"
             "\n",
             "\n"
@@ -734,7 +738,10 @@ def test_create_nagios_servicedefs_with_warnings(
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
+    license_counter = Counter("services")
+    core_nagios._create_nagios_servicedefs(
+        cfg, config_cache, HostName("my_host"), host_attrs, {}, license_counter
+    )
 
     assert outfile.getvalue() == expected_result
 
@@ -785,9 +792,13 @@ def test_create_nagios_servicedefs_omit_service(
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
+    license_counter = Counter("services")
+    core_nagios._create_nagios_servicedefs(
+        cfg, config_cache, hostname, host_attrs, {}, license_counter
+    )
 
     assert outfile.getvalue() == expected_result
+    assert license_counter["services"] == 0
 
 
 @pytest.mark.parametrize(
@@ -832,9 +843,12 @@ def test_create_nagios_servicedefs_invalid_args(
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
+    license_counter = Counter("services")
 
     with pytest.raises(exceptions.MKGeneralException, match=error_message):
-        core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
+        core_nagios._create_nagios_servicedefs(
+            cfg, config_cache, hostname, host_attrs, {}, license_counter
+        )
 
 
 @pytest.mark.parametrize(
@@ -867,7 +881,7 @@ def test_create_nagios_servicedefs_invalid_args(
             "  check_interval                1.0\n"
             "  host_name                     my_host\n"
             "  service_description           Active check of my_host\n"
-            "  use                           check_mk_default\n"
+            "  use                           check_mk_perf,check_mk_default\n"
             "}\n"
             "\n"
             "\n"
@@ -900,7 +914,11 @@ def test_create_nagios_config_commands(
     hostname = HostName("my_host")
     outfile = io.StringIO()
     cfg = core_nagios.NagiosConfig(outfile, [hostname])
-    core_nagios._create_nagios_servicedefs(cfg, config_cache, "my_host", host_attrs, {})
+    license_counter = Counter("services")
+    core_nagios._create_nagios_servicedefs(
+        cfg, config_cache, hostname, host_attrs, {}, license_counter
+    )
     core_nagios._create_nagios_config_commands(cfg)
 
+    assert license_counter["services"] == 1
     assert outfile.getvalue() == expected_result

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -68,7 +68,7 @@ def _parameter_valuespec_checkmk_agent():
                     valuespec=CascadingDropdown(
                         title=_("Check version of Checkmk agent"),
                         help=_(
-                            "Here you can make sure that all of your Check_MK agents are running"
+                            "Here you can make sure that all of your Checkmk agents are running"
                             " one specific version. Agents running "
                             " a different version return a non-OK state."
                         ),

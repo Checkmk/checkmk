@@ -1,12 +1,15 @@
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
-OPENSSL_VERSION = "1.1.1q"
-
-def openssl():
+def openssl(version_str, sha256):
+    filename = "openssl-" + version_str + ".tar.gz"
     http_archive(
         name = "openssl",
-        urls = ["https://www.openssl.org/source/openssl-" + OPENSSL_VERSION + ".tar.gz"],
-        sha256 = "d7939ce614029cdff0b6c20f0e2e5703158a489a72b2507b8bd51bf8c8fd10ca",
+        urls = [
+            "https://www.openssl.org/source/" + filename,
+            UPSTREAM_MIRROR_URL + filename,
+        ],
+        sha256 = sha256,
         build_file = "@omd_packages//packages/openssl:BUILD.openssl",
-        strip_prefix = "openssl-" + OPENSSL_VERSION,
+        strip_prefix = "openssl-" + version_str,
     )

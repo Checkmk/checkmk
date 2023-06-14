@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -46,7 +46,7 @@ from cmk.gui.plugins.metrics.utils import (
     TranslatedMetrics,
     unit_info,
 )
-from cmk.gui.type_defs import CombinedGraphSpec, PerfometerSpec
+from cmk.gui.type_defs import CombinedGraphSpec, MetricExpression, PerfometerSpec, UnitInfo
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 PerfometerExpression = str | int | float
@@ -70,7 +70,6 @@ def load_plugins() -> None:
     utils.load_web_plugins("metrics", globals())
 
     fixup_graph_info()
-    fixup_unit_info()
     fixup_perfometer_info()
 
 
@@ -130,6 +129,7 @@ def _register_pre_21_plugin_api() -> None:
         {
             "indexed_color": plugin_utils.indexed_color,
             "metric_info": plugin_utils.metric_info,
+            "check_metrics": plugin_utils.check_metrics,
         }
     )
 
@@ -138,13 +138,6 @@ def fixup_graph_info() -> None:
     # create back link from each graph to its id.
     for graph_id, graph in graph_info.items():
         graph["id"] = graph_id
-
-
-def fixup_unit_info() -> None:
-    # create back link from each unit to its id.
-    for unit_id, unit in unit_info.items():
-        unit["id"] = unit_id
-        unit.setdefault("description", unit["title"])
 
 
 def fixup_perfometer_info() -> None:
@@ -167,7 +160,6 @@ def _convert_legacy_tuple_perfometers(perfometers: list[LegacyPerfometer | Perfo
         # Convert legacy tuple based perfometer
         perfometer_type, perfometer_args = perfometer[0], perfometer[1]
         if perfometer_type in ("dual", "stacked"):
-
             sub_performeters = perfometer_args[:]
             _convert_legacy_tuple_perfometers(sub_performeters)
 
@@ -196,7 +188,6 @@ def _convert_legacy_tuple_perfometers(perfometers: list[LegacyPerfometer | Perfo
 def _lookup_required_expressions(
     perfometer: LegacyPerfometer | PerfometerSpec,
 ) -> list[PerfometerExpression]:
-
     if not isinstance(perfometer, dict):
         raise MKGeneralException(_("Legacy performeter encountered: %r") % perfometer)
 
@@ -212,7 +203,6 @@ def _lookup_required_expressions(
 def _lookup_required_names(
     perfometer: LegacyPerfometer | PerfometerSpec,
 ) -> RequiredMetricNames | None:
-
     if not isinstance(perfometer, dict):
         raise MKGeneralException(_("Legacy performeter encountered: %r") % perfometer)
 
@@ -458,9 +448,12 @@ class MetricometerRenderer(abc.ABC):
 
             expr, unit_name = self._perfometer["label"]
             value, unit, _color = evaluate(expr, self._translated_metrics)
-            if unit_name:
-                unit = unit_info[unit_name]
-            return unit["render"](value)
+            unit = unit_info[unit_name] if unit_name else unit
+
+            if isinstance(expr, int | float):
+                value = unit.get("conversion", lambda v: v)(expr)
+
+            return self._render_value(unit, value)
 
         return self._get_type_label()
 
@@ -474,6 +467,10 @@ class MetricometerRenderer(abc.ABC):
         """Returns the number to sort this perfometer with compared to the other
         performeters in the current performeter sort group"""
         raise NotImplementedError()
+
+    @staticmethod
+    def _render_value(unit: UnitInfo, value: float) -> str:
+        return unit.get("perfometer_render", unit["render"])(value)
 
 
 class MetricometerRendererRegistry(cmk.utils.plugin_registry.Registry[type[MetricometerRenderer]]):
@@ -505,16 +502,23 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
             )
 
     def get_stack(self) -> MetricRendererStack:
-        value, _unit, color = evaluate(self._perfometer["metric"], self._translated_metrics)
+        value, unit, color = evaluate(self._perfometer["metric"], self._translated_metrics)
         return [
             self.get_stack_from_values(
-                value, self._perfometer["half_value"], self._perfometer["exponent"], color
+                value,
+                *self.estimate_parameters_for_converted_units(
+                    unit.get(
+                        "conversion",
+                        lambda v: v,
+                    )
+                ),
+                color,
             )
         ]
 
     def _get_type_label(self) -> str:
         value, unit, _color = evaluate(self._perfometer["metric"], self._translated_metrics)
-        return unit["render"](value)
+        return self._render_value(unit, value)
 
     def get_sort_value(self) -> float:
         """Returns the number to sort this perfometer with compared to the other
@@ -529,6 +533,11 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
         base: int | float,
         color: str,
     ) -> list[tuple[int | float, str]]:
+        """
+        half_value: if value == half_value, the perfometer is filled by 50%
+        base: if we multiply value by base, the perfometer is filled by another 10%, unless we hit
+        the min/max cutoffs
+        """
         # Negative values are printed like positive ones (e.g. time offset)
         value = abs(float(value))
         if value == 0.0:
@@ -540,6 +549,38 @@ class MetricometerRendererLogarithmic(MetricometerRenderer):
             pos = min(max(2, pos), 98)
 
         return [(pos, color), (100 - pos, get_themed_perfometer_bg_color())]
+
+    def estimate_parameters_for_converted_units(
+        self, conversion: Callable[[float], float]
+    ) -> tuple[float, float]:
+        """
+        Estimate a new half_value (50%-value) and a new exponent (10%-factor) for converted units.
+
+        Regarding the 50%-value, we can simply apply the conversion. However, regarding the 10%-
+        factor, it's certainly wrong to simply directly apply the conversion. For example, doing
+        that for the conversion degree celsius -> degree fahrenheit would yield a 10%-factor of 28.5
+        for degree fahrenheit (compared to 1.2 for degree celsius).
+
+        Instead, we estimate a new factor as follows:
+        h_50: 50%-value for original units
+        f_10: 10%-factor for original units
+        c: conversion function
+        h_50_c = c(h_50): 50%-value for converted units aka. converted 50%-value
+        f_10_c: 10%-factor for converted units
+
+        f_10_c = c(h_50 * f_10) / h_50_c
+                 --------------
+                 converted 60%-value
+                 -----------------------
+                 ratio of converted 60%- to converted 50%-value
+        """
+        h_50 = self._perfometer["half_value"]
+        f_10 = self._perfometer["exponent"]
+        h_50_c = conversion(self._perfometer["half_value"])
+        return (
+            h_50_c,
+            conversion(h_50 * f_10) / h_50_c,
+        )
 
 
 @renderer_registry.register
@@ -553,12 +594,13 @@ class MetricometerRendererLinear(MetricometerRenderer):
 
         summed = self._get_summed_values()
 
-        if "total" in self._perfometer:
-            total, _unit, _color = evaluate(self._perfometer["total"], self._translated_metrics)
-        else:
-            total = summed
-
-        if total == 0:
+        if (
+            total := (
+                summed
+                if (total_expression := self._perfometer.get("total")) is None
+                else self._evaluate_total(total_expression)
+            )
+        ) == 0:
             entry.append((100.0, get_themed_perfometer_bg_color()))
 
         else:
@@ -572,11 +614,19 @@ class MetricometerRendererLinear(MetricometerRenderer):
 
         return [entry]
 
-    def _get_type_label(self) -> str:
-        # Use unit of first metrics for output of sum. We assume that all
-        # stackes metrics have the same unit anyway
+    def _evaluate_total(self, total_expression: MetricExpression | int | float) -> float:
+        if isinstance(total_expression, float | int):
+            return self._unit().get("conversion", lambda v: v)(total_expression)
+        total, _unit, _color = evaluate(total_expression, self._translated_metrics)
+        return total
+
+    def _unit(self) -> UnitInfo:
+        # We assume that all expressions across all segments have the same unit
         _value, unit, _color = evaluate(self._perfometer["segments"][0], self._translated_metrics)
-        return unit["render"](self._get_summed_values())
+        return unit
+
+    def _get_type_label(self) -> str:
+        return self._render_value(self._unit(), self._get_summed_values())
 
     def get_sort_value(self) -> float:
         """Use the first segment value for sorting"""
@@ -634,7 +684,7 @@ class MetricometerRendererDual(MetricometerRenderer):
     def type_name(cls) -> str:
         return "dual"
 
-    def __init__(self, perfometer, translated_metrics) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, perfometer, translated_metrics) -> None:  # type: ignore[no-untyped-def]
         super().__init__(perfometer, translated_metrics)
 
         if len(perfometer["perfometers"]) != 2:

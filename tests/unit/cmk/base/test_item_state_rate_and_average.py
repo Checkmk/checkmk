@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+from collections.abc import Sequence
+
 import pytest
 
 from cmk.base import item_state
@@ -18,7 +19,9 @@ from cmk.base import item_state
     ],
 )
 @pytest.mark.usefixtures("initialised_item_state")
-def test_get_rate_raises(pre_state, time, value, errmsg) -> None:  # type:ignore[no-untyped-def]
+def test_get_rate_raises(
+    pre_state: tuple[int, int] | None, time: int, value: int, errmsg: str
+) -> None:
     item_state.set_item_state("foo", pre_state)
     with pytest.raises(item_state.GetRateError, match=errmsg):
         item_state.get_rate("foo", time, value, onwrap=item_state.RAISE)
@@ -35,7 +38,13 @@ def test_get_rate_raises(pre_state, time, value, errmsg) -> None:  # type:ignore
     ],
 )
 @pytest.mark.usefixtures("initialised_item_state")
-def test_get_rate(pre_state, time, value, onwrap, expected) -> None:  # type:ignore[no-untyped-def]
+def test_get_rate(
+    pre_state: tuple[int, int] | None,
+    time: int,
+    value: int,
+    onwrap: item_state._OnWrap,
+    expected: float,
+) -> None:
     item_state.set_item_state("foo", pre_state)
     result = item_state.get_rate("foo", time, value, onwrap=onwrap, allow_negative=True)
     assert result == expected
@@ -80,7 +89,9 @@ def test_get_rate(pre_state, time, value, onwrap, expected) -> None:  # type:ign
     ],
 )
 @pytest.mark.usefixtures("initialised_item_state")
-def test_get_average(ini_zero, backlog_min, timeseries) -> None:  # type:ignore[no-untyped-def]
+def test_get_average(
+    ini_zero: bool, backlog_min: float, timeseries: Sequence[tuple[float, float, float]]
+) -> None:
     for _idx, (this_time, this_value, expected_average) in enumerate(timeseries):
         avg = item_state.get_average(
             "foo",

@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections import defaultdict
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Mapping, Optional
+from typing import Any, Optional
 
-from .agent_based_api.v1 import IgnoreResultsError, register, Result, Service, State
+from .agent_based_api.v1 import check_levels, IgnoreResultsError, register, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 
 # <<<oracle_crs_res:sep(124)>>>
@@ -42,7 +43,7 @@ class Section:
     resources: Mapping[str, Mapping[Optional[str], Resource]]
 
 
-def parse(string_table: StringTable) -> Section:
+def parse_oracle_crs_res(string_table: StringTable) -> Section:
     crs_nodename = None
     raw_ressources: dict[str, Any] = defaultdict(dict)
     entry: dict[str, str] = {}
@@ -77,15 +78,20 @@ def parse(string_table: StringTable) -> Section:
     return Section(crs_nodename, resources)
 
 
-register.agent_section(name="oracle_crs_res", parse_function=parse)
+register.agent_section(
+    name="oracle_crs_res",
+    parse_function=parse_oracle_crs_res,
+)
 
 
-def discover(section: Section) -> DiscoveryResult:
+def discover_oracle_crs_res(section: Section) -> DiscoveryResult:
     for item in section.resources:
         yield Service(item=item)
 
 
-def check(item: str, section: Section) -> CheckResult:
+def check_oracle_crs_res(
+    item: str, params: Mapping[str, tuple[int, int]], section: Section
+) -> CheckResult:
     if item not in section.resources:
         if item == "ora.cssd":
             yield Result(state=State.CRIT, summary="Clusterware not running")
@@ -96,7 +102,13 @@ def check(item: str, section: Section) -> CheckResult:
                 f"No resource details found for {item}, Maybe cssd/crsd is not running"
             )
         return
-    for nodename, entry in section.resources[item].items():
+
+    if (nodes_info := section.resources.get(item)) is None:
+        return
+
+    number_of_nodes_not_in_target_state = 0
+    summary = ""
+    for nodename, entry in nodes_info.items():
         resstate = entry.state.split(" ", 1)[0]
         restarget = entry.target
 
@@ -109,16 +121,30 @@ def check(item: str, section: Section) -> CheckResult:
         infotext += resstate.lower()
 
         if resstate != restarget:
-            state = State.CRIT
-            infotext += ", target state %s" % restarget.lower()
-        else:
-            state = State.OK
-        yield Result(state=state, summary=infotext)
+            number_of_nodes_not_in_target_state += 1
+            infotext += f", target state {restarget.lower()}"
+
+        summary += f"; {infotext}" if summary else infotext
+
+    yield from check_levels(
+        value=number_of_nodes_not_in_target_state,
+        levels_upper=params["number_of_nodes_not_in_target_state"],
+        metric_name="oracle_number_of_nodes_not_in_target_state",
+        label="Number of nodes not in target state",
+        render_func=lambda x: str(int(x)),
+    )
+
+    yield Result(
+        state=State.OK,
+        summary=summary,
+    )
 
 
 register.check_plugin(
     name="oracle_crs_res",
     service_name="ORA-GI %s Resource",
-    discovery_function=discover,
-    check_function=check,
+    discovery_function=discover_oracle_crs_res,
+    check_function=check_oracle_crs_res,
+    check_ruleset_name="oracle_crs_res",
+    check_default_parameters={"number_of_nodes_not_in_target_state": (1, 2)},
 )

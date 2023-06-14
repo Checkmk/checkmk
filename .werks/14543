@@ -6,7 +6,7 @@ Date: 1657815560
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 On SUSE Linux Enterprise Server 15 SP3 systems, the <tt>ssh</tt> command crashed with
 C+:

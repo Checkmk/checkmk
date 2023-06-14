@@ -1,20 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import ast
 import math
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
+from unittest.mock import Mock
 
 import pytest
 
-from tests.testlib.base import Scenario
-
-from cmk.utils.type_defs import CheckPluginName
-
-from cmk.checkers import plugin_contexts
+from cmk.utils.type_defs import ServiceDetails, ServiceState
 
 import cmk.base.config as config
 from cmk.base import check_api
@@ -62,23 +58,6 @@ def test_validate_filter() -> None:
         check_api.validate_filter("nothing")
 
     assert check_api.validate_filter(None)(1, 4) == 1
-
-
-@pytest.mark.parametrize(
-    "parsed, result",
-    [
-        (None, None),
-        ([], None),
-        ({}, None),
-        ([["enabled"]], [(None, {})]),
-        ({"first": "enabled"}, [(None, {})]),
-    ],
-)
-def test_discover_single(
-    parsed: list[object] | dict[object, object] | None,
-    result: list[tuple[None, Mapping[object, object]]] | None,
-) -> None:
-    assert check_api.discover_single(parsed) == result
 
 
 @pytest.mark.parametrize(
@@ -176,17 +155,17 @@ def test_discover_single(
         ),
     ],
 )
-def test_discover_inputs_and_filters(  # type:ignore[no-untyped-def]
-    parsed, selector, result
+def test_discover_inputs_and_filters(
+    parsed: Mapping[str, object], selector: Callable | None, result: Sequence[object] | None
 ) -> None:
     items = list(check_api.discover(selector)(parsed))
     for item in items:
-        assert item in result
+        assert result is not None and item in result
 
     if result is not None:
         assert len(items) == len(result)
     else:
-        assert items == []
+        assert not items
 
 
 def test_discover_decorator_key_match() -> None:
@@ -196,7 +175,7 @@ def test_discover_decorator_key_match() -> None:
 
     # Pylint does not understand our decorator magic here. Investigate
     assert list(
-        selector({"hola": "es", "hello": "en"})  # pylint:disable=no-value-for-parameter
+        selector({"hola": "es", "hello": "en"})  # pylint: disable=no-value-for-parameter
     ) == [("hello", {})]
 
 
@@ -264,7 +243,7 @@ def test_discover_decorator_with_nested_entries() -> None:
         (list(range(5)), lambda k, v: v == k, (TypeError, r"missing 1 required positional")),
     ],
 )
-def test_discover_exceptions(parsed, selector, error) -> None:  # type:ignore[no-untyped-def]
+def test_discover_exceptions(parsed, selector, error) -> None:  # type: ignore[no-untyped-def]
     with pytest.raises(error[0], match=error[1]):
         next(check_api.discover(selector)(parsed))
 
@@ -281,8 +260,12 @@ def test_discover_exceptions(parsed, selector, error) -> None:  # type:ignore[no
         (-1, (3, 6, 1, 0), int, "", (2, " (warn/crit below 1/0)")),
     ],
 )
-def test_boundaries(  # type:ignore[no-untyped-def]
-    value, levels, representation, unit, result
+def test_boundaries(
+    value: float,
+    levels: check_api.Levels,
+    representation: Callable,
+    unit: str,
+    result: tuple[ServiceState, ServiceDetails],
 ) -> None:
     assert check_api._do_check_levels(value, levels, representation, unit) == result
 
@@ -335,60 +318,17 @@ def test_boundaries(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_levels(value, dsname, params, kwargs, result) -> None:  # type:ignore[no-untyped-def]
+def test_check_levels(  # type: ignore[no-untyped-def]
+    value: float,
+    dsname: check_api.MetricName | None,
+    params: None | tuple[float, ...],
+    kwargs,
+    result: check_api.ServiceCheckResult,
+) -> None:
     assert check_api.check_levels(value, dsname, params, **kwargs) == result
 
 
-def test_http_proxy(mocker) -> None:  # type:ignore[no-untyped-def]
+def test_http_proxy(mocker: Mock) -> None:
     proxy_patch = mocker.patch.object(config, "get_http_proxy")
     check_api.get_http_proxy(("url", "http://xy:123"))
     assert proxy_patch.called_once()
-
-
-def test_get_effective_service_level(monkeypatch) -> None:  # type:ignore[no-untyped-def]
-    ts = Scenario()
-    ts.add_host("testhost1")
-    ts.add_host("testhost2")
-    ts.add_host("testhost3")
-    ts.set_ruleset(
-        "host_service_levels",
-        [
-            {"condition": {"host_name": ["testhost2"]}, "options": {}, "value": 10},
-            {"condition": {"host_name": ["testhost2"]}, "options": {}, "value": 2},
-        ],
-    )
-    ts.set_ruleset(
-        "service_service_levels",
-        [
-            {
-                "condition": {
-                    "service_description": [{"$regex": "CPU load$"}],
-                    "host_name": ["testhost1"],
-                },
-                "options": {},
-                "value": 33,
-            }
-        ],
-    )
-    ts.apply(monkeypatch)
-
-    with plugin_contexts.current_service(CheckPluginName("cpu_loads"), "CPU load"):
-
-        with plugin_contexts.current_host("testhost1"):
-            assert check_api.get_effective_service_level() == 33
-
-        with plugin_contexts.current_host("testhost2"):
-            assert check_api.get_effective_service_level() == 10
-
-        with plugin_contexts.current_host("testhost3"):
-            assert check_api.get_effective_service_level() == 0
-
-
-def test_as_float() -> None:
-    assert check_api.as_float("8.00") == 8.0
-    assert str(check_api.as_float("inf")) == "inf"
-
-    strrep = str(list(map(check_api.as_float, ("8", "-inf", "1e-351"))))
-    assert strrep == "[8.0, -1e309, 0.0]"
-
-    assert ast.literal_eval(strrep) == [8.0, float("-inf"), 0.0]

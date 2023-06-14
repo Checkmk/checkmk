@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
-
 import pytest
 
+from tests.testlib import set_timezone
+
+from cmk.checkengine import Parameters
+
 import cmk.base.plugins.agent_based.livestatus_status as livestatus_status
-from cmk.base.api.agent_based.type_defs import Parameters
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
@@ -18,7 +18,7 @@ STRING_TABLE_STATUS = [
     [
         "accept_passive_host_checks",
         "accept_passive_service_checks",
-        "average_latency_cmk",
+        "average_latency_checker",
         "average_latency_fetcher",
         "average_latency_generic",
         "average_latency_real_time",
@@ -42,7 +42,6 @@ STRING_TABLE_STATUS = [
         "forks",
         "forks_rate",
         "has_event_handlers",
-        "helper_usage_cmk",
         "helper_usage_fetcher",
         "helper_usage_checker",
         "helper_usage_generic",
@@ -112,7 +111,6 @@ STRING_TABLE_STATUS = [
         "0",
         "0.000438272",
         "0.000438272",
-        "0.000438272",
         "0.0142967",
         "0",
         "44310",
@@ -155,7 +153,7 @@ STRING_TABLE_STATUS = [
     [
         "accept_passive_host_checks",
         "accept_passive_service_checks",
-        "average_latency_cmk",
+        "average_latency_checker",
         "average_latency_fetcher",
         "average_latency_generic",
         "average_latency_real_time",
@@ -179,7 +177,6 @@ STRING_TABLE_STATUS = [
         "forks",
         "forks_rate",
         "has_event_handlers",
-        "helper_usage_cmk",
         "helper_usage_generic",
         "helper_usage_real_time",
         "host_checks",
@@ -247,7 +244,6 @@ STRING_TABLE_STATUS = [
         "0",
         "0",
         "0",
-        "0",
         "60",
         "0",
         "1559562137",
@@ -284,7 +280,7 @@ STRING_TABLE_STATUS = [
     [
         "accept_passive_host_checks",
         "accept_passive_service_checks",
-        "average_latency_cmk",
+        "average_latency_checker",
         "average_latency_fetcher",
         "average_latency_generic",
         "average_latency_real_time",
@@ -308,7 +304,6 @@ STRING_TABLE_STATUS = [
         "forks",
         "forks_rate",
         "has_event_handlers",
-        "helper_usage_cmk",
         "helper_usage_fetcher",
         "helper_usage_checker",
         "helper_usage_generic",
@@ -378,7 +373,6 @@ STRING_TABLE_STATUS = [
         "0",
         "2.51355e-07",
         "2.51355e-07",
-        "2.51355e-07",
         "0",
         "0",
         "5792",
@@ -422,7 +416,7 @@ PARSED_STATUS = {
     "heute": {
         "accept_passive_host_checks": "1",
         "accept_passive_service_checks": "1",
-        "average_latency_cmk": "2.01088e-05",
+        "average_latency_checker": "2.01088e-05",
         "average_latency_fetcher": "2.01088e-05",
         "average_latency_generic": "2.23711e-06",
         "average_latency_real_time": "0",
@@ -446,7 +440,6 @@ PARSED_STATUS = {
         "forks": "0",
         "forks_rate": "0",
         "has_event_handlers": "0",
-        "helper_usage_cmk": "0.000438272",
         "helper_usage_fetcher": "0.000438272",
         "helper_usage_checker": "0.000438272",
         "helper_usage_generic": "0.0142967",
@@ -490,7 +483,7 @@ PARSED_STATUS = {
     "oldstable": {
         "accept_passive_host_checks": "1",
         "accept_passive_service_checks": "1",
-        "average_latency_cmk": "0",
+        "average_latency_checker": "0",
         "average_latency_fetcher": "0",
         "average_latency_generic": "0",
         "average_latency_real_time": "0",
@@ -514,7 +507,6 @@ PARSED_STATUS = {
         "forks": "0",
         "forks_rate": "0",
         "has_event_handlers": "0",
-        "helper_usage_cmk": "0",
         # Simulate the host without those counters:
         #'helper_usage_fetcher': '0',
         #'helper_usage_checker': '0',
@@ -557,7 +549,7 @@ PARSED_STATUS = {
     "stable": {
         "accept_passive_host_checks": "1",
         "accept_passive_service_checks": "1",
-        "average_latency_cmk": "1.16922e-05",
+        "average_latency_checker": "1.16922e-05",
         "average_latency_fetcher": "1.16922e-05",
         "average_latency_generic": "0",
         "average_latency_real_time": "0",
@@ -581,7 +573,6 @@ PARSED_STATUS = {
         "forks": "0",
         "forks_rate": "0",
         "has_event_handlers": "0",
-        "helper_usage_cmk": "2.51355e-07",
         "helper_usage_fetcher": "2.51355e-07",
         "helper_usage_checker": "2.51355e-07",
         "helper_usage_generic": "0",
@@ -694,28 +685,26 @@ def test_check_new_counters_in_oldstabe(
 
 _RESULTS = [
     Result(state=State.OK, summary="Livestatus version: 2019.05.31"),
-    Result(state=State.OK, summary="Host checks: 0.0/s"),
-    Metric("host_checks", 7.615869237677187e-05, boundaries=(0.0, None)),
-    Result(state=State.OK, summary="Service checks: 0.0/s"),
-    Metric("service_checks", 0.0002685888198403617, boundaries=(0.0, None)),
-    Result(state=State.OK, notice="Process creations: -0.0/s"),
-    Metric("forks", -3.4376948802370615e-09, boundaries=(0.0, None)),
+    Result(state=State.OK, summary="Host checks: 11.2/s"),
+    Metric("host_checks", 11.1626, boundaries=(0.0, None)),
+    Result(state=State.OK, summary="Service checks: 5.9/s"),
+    Metric("service_checks", 5.85075, boundaries=(0.0, None)),
+    Result(state=State.OK, notice="Process creations: 0.0/s"),
+    Metric("forks", 0.0, boundaries=(0.0, None)),
     Result(state=State.OK, notice="Livestatus connects: 0.0/s"),
-    Metric("connections", 6.261761224351807e-06, boundaries=(0.0, None)),
+    Metric("connections", 0.0319528, boundaries=(0.0, None)),
     Result(state=State.OK, notice="Livestatus requests: 0.0/s"),
-    Metric("requests", 8.090614900637924e-06, boundaries=(0.0, None)),
+    Metric("requests", 0.0319528, boundaries=(0.0, None)),
     Result(state=State.OK, notice="Log messages: 0.0/s"),
-    Metric("log_messages", 1.5985281193102335e-06, boundaries=(0.0, None)),
-    Result(state=State.OK, notice="Average check latency: 0.000s"),
+    Metric("log_messages", 1.84655e-07, boundaries=(0.0, None)),
+    Result(state=State.OK, notice="Average active check latency: 0.000s"),
     Metric("average_latency_generic", 2.23711e-06, levels=(30.0, 60.0), boundaries=(0.0, None)),
-    Result(state=State.OK, notice="Average Checkmk latency: 0.000s"),
+    Result(state=State.OK, notice="Average checker latency: 0.000s"),
     Metric("average_latency_cmk", 2.01088e-05, levels=(30.0, 60.0), boundaries=(0.0, None)),
     Result(state=State.OK, notice="Average fetcher latency: 0.000s"),
     Metric("average_latency_fetcher", 2.01088e-05, levels=(30.0, 60.0), boundaries=(0.0, None)),
-    Result(state=State.OK, notice="Check helper usage: 1.43%"),
+    Result(state=State.OK, notice="Active check helper usage: 1.43%"),
     Metric("helper_usage_generic", 1.42967, levels=(80.0, 90.0), boundaries=(0.0, None)),
-    Result(state=State.OK, notice="Checkmk helper usage: 0.04%"),
-    Metric("helper_usage_cmk", 0.043827200000000004, levels=(80.0, 90.0), boundaries=(0.0, None)),
     Result(state=State.OK, notice="Fetcher helper usage: 0.04%"),
     Metric(
         "helper_usage_fetcher", 0.043827200000000004, levels=(80.0, 90.0), boundaries=(0.0, None)
@@ -774,23 +763,23 @@ _RESULTS = [
 
 
 def test_check() -> None:
-
-    yielded_results = list(
-        livestatus_status._generate_livestatus_results(
-            "heute",
-            Parameters(livestatus_status.livestatus_status_default_levels),
-            PARSED_STATUS,
-            PARSED_SSL,
-            {
-                "host_checks": [1, 2],
-                "service_checks": [1, 2],
-                "forks": [1, 2],
-                "connections": [1, 2],
-                "requests": [1, 2],
-                "log_messages": [1, 2],
-            },
-            581785200,
+    with set_timezone("UTC"):  # needed for certificate validity string
+        yielded_results = list(
+            livestatus_status._generate_livestatus_results(
+                "heute",
+                Parameters(livestatus_status.livestatus_status_default_levels),
+                PARSED_STATUS,
+                PARSED_SSL,
+                {
+                    "host_checks": [1, 2],
+                    "service_checks": [1, 2],
+                    "forks": [1, 2],
+                    "connections": [1, 2],
+                    "requests": [1, 2],
+                    "log_messages": [1, 2],
+                },
+                581785200,
+            )
         )
-    )
 
-    assert yielded_results == _RESULTS
+        assert yielded_results == _RESULTS

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
@@ -7,6 +7,7 @@ from collections.abc import Callable, Sequence
 from typing import Any, Literal
 
 import cmk.utils.tags
+from cmk.utils.tags import TagGroupID
 from cmk.utils.type_defs import HostName, UserId
 
 import cmk.gui.hooks as hooks
@@ -101,7 +102,7 @@ class HostAttributeAlias(ABCHostAttributeNagiosText):
         return _("Alias")
 
     def help(self):
-        return _("A comment or description of this host")
+        return _("Add a comment or describe this host")
 
     def show_in_folder(self):
         return False
@@ -131,18 +132,18 @@ class HostAttributeIPv4Address(ABCHostAttributeValueSpec):
         return HostAddress(
             title=_("IPv4 address"),
             help=_(
-                "In case the name of the host is not resolvable via <tt>/etc/hosts</tt> "
-                "or DNS by your monitoring server, you can specify an explicit IP "
-                "address or a resolvable DNS name of the host here.<br> <b>Notes</b>:<br> "
-                "1. If you do not set this attribute, hostname resolution will be done when "
-                "you activate the configuration. "
-                "Check_MKs builtin DNS cache is activated per default in the global "
-                "configuration to speed up the activation process. The cache is normally "
-                "updated daily with a cron job. You can manually update the cache with the "
-                "command <tt>cmk -v --update-dns-cache</tt>.<br>"
-                "2. If you enter a DNS name here, the DNS resolution will be carried out "
-                "each time the host is checked. Check_MKs DNS cache will NOT be queried. "
-                "Use this only for hosts with dynamic IP addresses."
+                "Specify an explicit IP address or resolvable DNS name here, if "
+                "the hostname is not resolvable via <tt>/etc/hots</tt> or DNS. "
+                "If you do not set this attribute, host name resolution will be "
+                "performed when the configuration is enabled. Checkmk's "
+                "built-in DNS cache is enabled by default in the global "
+                "configuration to speed up the activation process. The cache is "
+                "normally updated daily by a cron job. You can manually update "
+                "the cache with the <tt>cmk -v --update-dns-cache</tt> "
+                "command.<br><br><b>Dynamic IP addresses only:</b><br>If you "
+                "enter a DNS name here, the DNS resolution will be performed "
+                "each time the host is checked. Checkmk's DNS cache is "
+                "<b>NOT</b> queried."
             ),
             allow_empty=False,
             allow_ipv6_address=False,
@@ -181,18 +182,18 @@ class HostAttributeIPv6Address(ABCHostAttributeValueSpec):
         return HostAddress(
             title=_("IPv6 Address"),
             help=_(
-                "In case the name of the host is not resolvable via <tt>/etc/hosts</tt> "
-                "or DNS by your monitoring server, you can specify an explicit IPv6 "
-                "address or a resolvable DNS name of the host here.<br> <b>Notes</b>:<br> "
-                "1. If you do not set this attribute, hostname resolution will be done when "
-                "you activate the configuration. "
-                "Check_MKs builtin DNS cache is activated per default in the global "
-                "configuration to speed up the activation process. The cache is normally "
-                "updated daily with a cron job. You can manually update the cache with the "
-                "command <tt>cmk -v --update-dns-cache</tt>.<br>"
-                "2. If you enter a DNS name here, the DNS resolution will be carried out "
-                "each time the host is checked. Check_MKs DNS cache will NOT be queried. "
-                "Use this only for hosts with dynamic IP addresses."
+                "Specify an explicit IPv6 address or resolvable DNS name here, if "
+                "the hostname is not resolvable via <tt>/etc/hots</tt> or DNS. "
+                "If you do not set this attribute, host name resolution will be "
+                "performed when the configuration is enabled. Checkmk's "
+                "built-in DNS cache is enabled by default in the global "
+                "configuration to speed up the activation process. The cache is "
+                "normally updated daily by a cron job. You can manually update "
+                "the cache with the <tt>cmk -v --update-dns-cache</tt> "
+                "command.<br><br><b>Dynamic IP addresses only:</b><br>If you "
+                "enter a DNS name here, the DNS resolution will be performed "
+                "each time the host is checked. Checkmk's DNS cache is "
+                "<b>NOT</b> queried."
             ),
             allow_empty=False,
             allow_ipv4_address=False,
@@ -238,8 +239,8 @@ class HostAttributeAdditionalIPv4Addresses(ABCHostAttributeValueSpec):
             ),
             title=_("Additional IPv4 addresses"),
             help=_(
-                "Here you can specify additional IPv4 addresses. "
-                "These can be used in some active checks like ICMP."
+                "Specify additional IPv4 addresses here. These can be used in "
+                "active checks such as ICMP."
             ),
         )
 
@@ -285,8 +286,8 @@ class HostAttributeAdditionalIPv6Addresses(ABCHostAttributeValueSpec):
             ),
             title=_("Additional IPv6 addresses"),
             help=_(
-                "Here you can specify additional IPv6 addresses. "
-                "These can be used in some active checks like ICMP."
+                "Specify additional IPv6 addresses here. These can be used in "
+                "active checks such as ICMP."
             ),
         )
 
@@ -327,10 +328,11 @@ class HostAttributeSNMPCommunity(ABCHostAttributeValueSpec):
     def valuespec(self) -> ValueSpec:
         return SNMPCredentials(
             help=_(
-                "Using this option you can configure the community which should be used when "
-                "contacting this host via SNMP v1/v2 or v3. It is possible to configure the SNMP community by "
-                'using the <a href="%s">SNMP Communities</a> ruleset, but when you configure '
-                "a community here, this will override the community defined by the rules."
+                "Configure the community to be used when contacting this host "
+                "via SNMP v1/v2 or v3. You can also configure the SNMP community "
+                'using the <a href="%s">SNMP Communities</a> ruleset. '
+                "Configuring a community when creating a host overrides the "
+                "community defined by the rules."
             )
             % "wato.py?mode=edit_ruleset&varname=snmp_communities",
             default_value=None,
@@ -373,13 +375,14 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
             valuespec=ConfigHostname(),  # type: ignore[arg-type]  # should be Valuespec[str]
             title=_("Parents"),
             help=_(
-                "Parents are used to configure the reachability of hosts by the "
-                "monitoring server. A host is considered to be <b>unreachable</b> if all "
-                "of its parents are unreachable or down. Unreachable hosts will not be "
-                "actively monitored.<br><br><b>Clusters</b> automatically configure all "
-                "of their nodes as parents, but only if you do not configure parents "
-                "manually.<br><br>In a distributed setup make sure that the host and all "
-                "of its parents are monitored by the same site."
+                "Parents are used to configure the reachability of hosts to the "
+                "monitoring server. A host is considered unreachable if all of "
+                "its parents are unreachable or down. Unreachable hosts are not "
+                "actively monitored.<br><br><b>Clusters</b> automatically "
+                "configure all their nodes as Parents, but only if you do not "
+                "manually configure Parents.<br><br><b>Distributed "
+                "setup:</b><br>Make sure that the host and all its parents are "
+                "monitored by the same site."
             ),
             orientation="horizontal",
         )
@@ -390,7 +393,7 @@ class HostAttributeParents(ABCHostAttributeValueSpec):
             description="A list of parents of this host.",
         )
 
-    def is_visible(self, for_what, new) -> bool:  # type:ignore[no-untyped-def]
+    def is_visible(self, for_what, new) -> bool:  # type: ignore[no-untyped-def]
         return for_what != "cluster"
 
     def to_nagios(self, value):
@@ -449,7 +452,7 @@ hooks.register_builtin("validate-host", validate_host_parents)
 def _get_criticality_choices():
     """Returns the current configuration of the tag_group criticality"""
     tags = cmk.utils.tags.TagConfig.from_config(TagConfigFile().load_for_reading())
-    criticality_group = tags.get_tag_group("criticality")
+    criticality_group = tags.get_tag_group(TagGroupID("criticality"))
     if not criticality_group:
         return []
 
@@ -592,7 +595,7 @@ class HostAttributeNetworkScan(ABCHostAttributeValueSpec):
                 DropdownChoice[UserId](
                     title=_("Run as"),
                     help=_(
-                        "Execute the network scan in the Check_MK user context of the "
+                        "Execute the network scan in the Checkmk user context of the "
                         "chosen user. This user needs the permission to add new hosts "
                         "to this folder."
                     ),
@@ -1331,11 +1334,10 @@ class HostAttributeLabels(ABCHostAttributeValueSpec):
 
     def help(self):
         return _(
-            "With the help of labels you can flexibly group your hosts in "
-            "order to refer to them later at other places in Check_MK, e.g. in rule chains. "
-            "A label always consists of a combination of key and value in the format "
-            '"key:value". A host can only have one value per key. Check_MK will not perform '
-            "any validation on the labels you use."
+            "Labels allow you to flexibly group your hosts in order to "
+            "refer to them later at other places in Checkmk, e.g. in rule "
+            "chains.<br><b>Label format:</b>  key:value<br><br>Checkmk does not "
+            "perform any validation on the labels you use."
         )
 
     def show_in_table(self):

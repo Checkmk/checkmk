@@ -69,13 +69,13 @@ BEGIN
     BEGIN
         BLOCK "040904b0"
         BEGIN
-            VALUE "CompanyName", "tribe29 GmbH"
-            VALUE "FileDescription", "Check MK Agent Service Executable"
+            VALUE "CompanyName", "Checkmk GmbH"
+            VALUE "FileDescription", "Checkmk Agent Service Executable"
             VALUE "FileVersion", VER_FILE_VERSION_STR
             VALUE "InternalName", "check_mk_agent.exe"
-            VALUE "LegalCopyright", "Copyright (C) 2019 tribe29 GmbH"
+            VALUE "LegalCopyright", "Copyright (C) 2019 Checkmk GmbH"
             VALUE "OriginalFilename", "check_mk_agent.exe"
-            VALUE "ProductName", "Check MK Windows Agent"
+            VALUE "ProductName", "Checkmk Windows Agent"
             VALUE "ProductVersion", VER_PRODUCT_VERSION_STR
         END
     END

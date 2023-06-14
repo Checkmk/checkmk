@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,14 +10,14 @@ from cmk.utils.log import VERBOSE
 
 from cmk.gui.i18n import is_community_translation
 from cmk.gui.plugins.wato.check_mk_configuration import ConfigVariableEnableCommunityTranslations
-from cmk.gui.plugins.watolib.utils import (
+from cmk.gui.site_config import is_wato_slave_site
+from cmk.gui.type_defs import GlobalSettings
+from cmk.gui.userdb import load_users
+from cmk.gui.watolib.config_domain_name import (
     config_variable_registry,
     filter_unknown_settings,
     UNREGISTERED_SETTINGS,
 )
-from cmk.gui.site_config import is_wato_slave_site
-from cmk.gui.type_defs import GlobalSettings
-from cmk.gui.userdb import load_users
 from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
     load_site_global_settings,
@@ -54,7 +54,7 @@ def _update_installation_wide_global_settings(logger: Logger) -> None:
     save_global_settings(
         _handle_community_translations(
             logger,
-            _update_global_config(
+            update_global_config(
                 logger,
                 # Load full config (with undefined settings)
                 load_configuration_settings(full_config=True),
@@ -68,7 +68,7 @@ def _update_site_specific_global_settings(logger: Logger) -> None:
     if not is_wato_slave_site():
         return
     save_site_global_settings(
-        _update_global_config(
+        update_global_config(
             logger,
             load_site_global_settings(),
         )
@@ -82,7 +82,7 @@ def _update_remote_site_specific_global_settings(logger: Logger) -> None:
     for site_id, site_spec in configured_sites.items():
         if site_globals_editable(site_id, site_spec):
             site_spec["globals"] = dict(
-                _update_global_config(
+                update_global_config(
                     logger,
                     site_spec.setdefault("globals", {}),
                 )
@@ -90,7 +90,7 @@ def _update_remote_site_specific_global_settings(logger: Logger) -> None:
     site_mgmt.save_sites(configured_sites, activate=False)
 
 
-def _update_global_config(
+def update_global_config(
     logger: Logger,
     global_config: GlobalSettings,
 ) -> GlobalSettings:
@@ -121,11 +121,12 @@ def _update_removed_global_config_vars(
     return filter_unknown_settings(global_config_updated)
 
 
-def _transform_global_config_value(
-    config_var: str,
-    config_val: object,
-) -> object:
-    return config_variable_registry[config_var]().valuespec().transform_value(config_val)
+def _transform_global_config_value(config_var: str, config_val: object) -> object:
+    try:
+        config_variable_cls = config_variable_registry[config_var]
+    except KeyError:
+        return config_val
+    return config_variable_cls().valuespec().transform_value(config_val)
 
 
 def _transform_global_config_values(global_config: GlobalSettings) -> GlobalSettings:

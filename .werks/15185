@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, changing an automation user's authentication secret did not update the recorded timestamp of the last password change for the automation user.
 As a result, the automation user could have been prevented from logging in by the password policy for local users, because the secret appeared to be too old.

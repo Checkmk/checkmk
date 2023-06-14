@@ -1,0 +1,13 @@
+Title: time_periods: etag now defined in the openapi schema for GET and PUT endpoints
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1680261710
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk fixes an issue with the openapi schema.  Previously the etag
+wasn't defined for the GET or the PUT endpoints. Now it is.
+

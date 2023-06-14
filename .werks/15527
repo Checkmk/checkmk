@@ -1,0 +1,13 @@
+Title: Check ping via MRPE: fix unit in graphing
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1680685247
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+The annotation of the <i>round trip average</i> metric of the ping check via MRPE was off by a factor of 1000 in the service graphs.
+

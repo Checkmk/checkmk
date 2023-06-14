@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -13,9 +13,7 @@ API data, see CMK-10826.
 """
 
 from collections.abc import Iterable, Mapping, Sequence
-from typing import cast, Literal, TypedDict
-
-from typing_extensions import NotRequired
+from typing import cast, Literal, NotRequired, TypedDict
 
 from .schemata import api
 from .transform_any import parse_match_labels

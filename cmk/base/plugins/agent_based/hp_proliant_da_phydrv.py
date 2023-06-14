@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -132,7 +132,7 @@ def discover_hp_proliant_da_phydrv(section: Section) -> DiscoveryResult:
         yield Service(item=physical_drive_name)
 
 
-def check_hp_proliant_da_phydrv(  # type:ignore[no-untyped-def]
+def check_hp_proliant_da_phydrv(  # type: ignore[no-untyped-def]
     item, section: Section
 ) -> CheckResult:
     if (physical_drive := section.get(item)) is None:
@@ -181,10 +181,7 @@ def inventory_hp_proliant_da_phydrv(section: Section) -> InventoryResult:
             path=["hardware", "storage", "disks"],
             key_columns={
                 "controller": physical_drive.controller_index,
-                # TODO In the legacy inventory plugin the 'drive_index' is not used
-                # but in the related check, the item consists of 'controller_index/drive_index'.
-                # Fix this one day.
-                # "index": physical_drive.drive_index,
+                "drive_index": physical_drive.drive_index,
             },
             inventory_columns={
                 "bus": physical_drive.bus_number,

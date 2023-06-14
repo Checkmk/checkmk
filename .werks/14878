@@ -6,7 +6,7 @@ Date: 1664879275
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, the Collector Info service reported an OK State even if the machine sections
 were missing. This werk changes this default to a CRIT State if those sections are missing.

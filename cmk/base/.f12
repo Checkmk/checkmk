@@ -12,10 +12,12 @@ echo "Updating compiled protobuf files..."
 make -C ../.. protobuf-files
 sudo rsync -rlpgoD --delete-after ../../enterprise/cmc_proto "$ROOT/lib/python3/"
 
-echo "TARGET: $ROOT/share/check_mk/checks"
+TARGET="${ROOT}/share/check_mk/checks/"
+echo "TARGET: ${TARGET}"
 # NOTE: The -a flag is equivalent to -rlptgoD, but we do *not* want -t, as it
 # would screw up our include caching mechanism!
-sudo rsync -rlpgoD --delete-after ../../checks/ "$ROOT/share/check_mk/checks/"
+sudo rsync -rlpgoD --exclude="__pycache__" --delete-after legacy_checks/ "${TARGET}"
+sudo find "${TARGET}" -type f | sed -e 'p;s/.py$//' | xargs -n2 mv
 
 (
     cd ..

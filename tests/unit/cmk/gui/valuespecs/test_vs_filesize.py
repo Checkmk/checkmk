@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -27,7 +27,7 @@ class TestFilesize:
         assert vs.Filesize().value_to_html(2 * 1024 * 1024) == "2 MiB"
         assert vs.Filesize().value_to_html(0) == "0 Byte"
         with pytest.raises(ValueError, match="Invalid value: "):
-            vs.Filesize().value_to_html(0.1)  # type: ignore
+            vs.Filesize().value_to_html(0.1)  # type: ignore[arg-type]
 
     def test_to_json(self):
         assert vs.Filesize().value_to_json(20) == 20

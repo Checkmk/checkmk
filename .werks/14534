@@ -6,7 +6,12 @@ Date: 1663756126
 Edition: cee
 Knowledge: undoc
 Level: 2
-Version: 2.2.0i1
+Version: 2.2.0b1
+
+<b>Note:</b> This werk is deprecated in favor of
+<a href="https://checkmk.com/werk/15660">werk 15660</a>. As of werk 15660, unit conversions are no
+longer configurable via graph tunings. Any already exisiting settings will be ignored (all
+configurable conversions were anyway conversions between temperature units).
 
 This werk adds the support for converting the displayed unit of a metric
 in a graph.

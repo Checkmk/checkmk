@@ -1,7 +1,9 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+import * as d3 from "d3";
+import {StyleMatcherConditions} from "nodevis/layout_utils";
 import {
     BoundingRect,
     Coords,
@@ -9,8 +11,6 @@ import {
     NodeChunk,
     NodevisNode,
 } from "nodevis/type_defs";
-import {StyleMatcherConditions} from "nodevis/layout_utils";
-import * as d3 from "d3";
 
 // TODO: remove or fix logging
 export function log(level, ...args) {
@@ -57,18 +57,28 @@ export class NodeMatcher {
     }
 
     find_node(matcher: StyleMatcherConditions): NodevisNode | null {
-        let nodes_to_check: NodevisNode[] = [];
+        const nodes_to_check: NodevisNode[] = this._get_all_nodes();
 
-        if (matcher.rule_id) nodes_to_check = this._get_aggregator_nodes();
-        else if (matcher.hostname || matcher.service)
-            nodes_to_check = this._get_leaf_nodes();
-        else nodes_to_check = this._get_all_nodes();
+        if (this._is_bi_rule_matcher(matcher)) {
+            for (const idx in nodes_to_check) {
+                const node = nodes_to_check[idx];
+                if (node.data.node_type != "bi_aggregator") continue;
+                if (this._match_by_bi_rule(matcher, node)) return node;
+            }
+        }
 
         for (const idx in nodes_to_check) {
             const node = nodes_to_check[idx];
-            if (this._match_node(matcher, node)) return node;
+            if (node.data.node_type == "bi_aggregator") continue;
+            if (this._match_by_generic_attr(matcher, node)) return node;
         }
         return null;
+    }
+
+    _is_bi_rule_matcher(matcher): boolean {
+        if (matcher.rule_name) return true;
+        if (matcher.rule_id) return true;
+        return false;
     }
 
     // Duplicate to viewport.ts:get_all_nodes
@@ -80,47 +90,13 @@ export class NodeMatcher {
         return all_nodes;
     }
 
-    _get_aggregator_nodes(): NodevisNode[] {
-        const aggregator_nodes: NodevisNode[] = [];
-        this._chunk_list.forEach(partition => {
-            partition.nodes.forEach(node => {
-                if (node.children) aggregator_nodes.push(node);
-            });
-        });
-        return aggregator_nodes;
-    }
-
-    _get_leaf_nodes(): NodevisNode[] {
-        const leaf_nodes: NodevisNode[] = [];
-        this._chunk_list.forEach(partition => {
-            partition.nodes.forEach(node => {
-                if (!node._children) leaf_nodes.push(node);
-            });
-        });
-        return leaf_nodes;
-    }
-
-    _match_node(matcher, node: NodevisNode): boolean {
-        // Basic matches
-        let elements = ["hostname", "service"];
-        for (const idx in elements) {
-            const match_type = elements[idx];
-            if (
-                matcher[match_type] &&
-                !matcher[match_type].disabled &&
-                node.data[match_type] != matcher[match_type].value
-            )
-                return false;
-        }
-
+    _match_by_bi_rule(matcher, node: NodevisNode): boolean {
         // List matches
-        elements = ["aggr_path_name", "aggr_path_id"];
-        for (const idx in elements) {
-            const match_type = elements[idx];
+        const list_elements = ["aggr_path_name", "aggr_path_id"];
+        for (const idx in list_elements) {
+            const match_type = list_elements[idx];
             if (!matcher[match_type]) continue;
-
             if (matcher[match_type].disabled) continue;
-
             if (
                 JSON.stringify(matcher[match_type].value) !=
                 JSON.stringify(node.data[match_type])
@@ -128,7 +104,7 @@ export class NodeMatcher {
                 return false;
         }
 
-        // Complex matches
+        // Complex matches for bi aggregators
         if (
             matcher.rule_id &&
             !matcher.rule_id.disabled &&
@@ -136,7 +112,6 @@ export class NodeMatcher {
         )
             return false;
 
-        // Complex matches
         if (
             matcher.rule_name &&
             !matcher.rule_name.disabled &&
@@ -144,6 +119,18 @@ export class NodeMatcher {
         )
             return false;
 
+        return true;
+    }
+
+    _match_by_generic_attr(matcher, node: NodevisNode): boolean {
+        const match_types = ["hostname", "service", "id"];
+        for (const idx in match_types) {
+            const match_type = match_types[idx];
+            if (matcher[match_type] && !matcher[match_type].disabled) {
+                if (node.data[match_type] != matcher[match_type].value)
+                    return false;
+            }
+        }
         return true;
     }
 }
@@ -212,6 +199,47 @@ export class SearchFilters {
         if (root_node_selector == null) root_node_selector = "#form_filter";
         this._root_node = d3.select(root_node_selector);
     }
+
+    add_hosts_to_host_regex(add_hosts: Set<string>) {
+        this._get_current_host_regex_hosts().forEach(hostname => {
+            add_hosts.add(hostname);
+        });
+        this.set_host_regex_filter(this._build_regex_from_set(add_hosts));
+    }
+
+    remove_hosts_from_host_regex(remove_hosts: Set<string>) {
+        const current_hosts = this._get_current_host_regex_hosts();
+        remove_hosts.forEach(hostname => {
+            current_hosts.delete(hostname);
+        });
+        this.set_host_regex_filter(this._build_regex_from_set(current_hosts));
+    }
+
+    _build_regex_from_set(entries: Set<string>): string {
+        const list_entries: string[] = [];
+        entries.forEach(hostname => {
+            list_entries.push(hostname);
+        });
+
+        if (list_entries.length > 1) return "(" + list_entries.join("|") + ")";
+        else if (list_entries.length == 1) return list_entries[0];
+        else return "";
+    }
+
+    _get_current_host_regex_hosts(): Set<string> {
+        const params = this.get_filter_params();
+        const current_hosts: Set<string> = new Set();
+        const filter_host_regex = params["host_regex"];
+        filter_host_regex
+            .replace(/^\(+/, "")
+            .replace(/\)+$/, "")
+            .split("|")
+            .forEach(hostname => {
+                if (hostname) current_hosts.add(hostname);
+            });
+        return current_hosts;
+    }
+
     set_host_regex_filter(host_regex) {
         const host_regex_filter =
             this._root_node.select<HTMLSelectElement>("#host_regex");
@@ -228,9 +256,9 @@ export class SearchFilters {
         update_browser_url({host_regex: host_regex});
     }
     get_filter_params() {
-        const inputs = this._root_node
-            .select("div.simplebar-content")
-            .selectAll<HTMLInputElement, null>("input,select");
+        const inputs = this._root_node.selectAll<HTMLInputElement, null>(
+            "input,select"
+        );
         const params = {};
         inputs.each((d, idx, nodes) => {
             const input = nodes[idx];
@@ -250,34 +278,45 @@ export class LiveSearch {
     _last_body = "";
     _sent_last_body = "";
     _check_interval = 300; // Check every 300ms
-    _stabilize_duration = 300; // Trigger update if there no changes since 500ms
+    _stabilize_duration = 300; // Trigger update if there are no additional changes for duration
     _start_update_at = 0;
     _update_active = false;
     _enabled = false;
+    _interval_id = 0;
     constructor(root_node, update_handler) {
         this._root_node = d3.select(root_node);
-        this._search_button = this._root_node
-            .select<HTMLInputElement>("input#_apply")
-            .property("value", "Live search");
-        this._search_button.style("pointer-events", "none");
+        this._search_button =
+            this._root_node.select<HTMLInputElement>("input#_apply");
         this._update_handler = update_handler;
-        setInterval(() => this._check_update(), this._check_interval);
     }
 
     enable(): void {
-        this._initialize_last_body();
         this._enabled = true;
+        clearInterval(this._interval_id);
+        this._search_button.property("value", "Live search");
+        this._search_button.style("pointer-events", "none");
+        this._initialize_last_body();
+        // @ts-ignore
+        this._interval_id = setInterval(
+            () => this._check_update(),
+            this._check_interval
+        );
     }
 
     disable(): void {
         this._enabled = false;
+        clearInterval(this._interval_id);
+        this._search_button.property("value", "Apply");
+        this._search_button.style("pointer-events", "all");
     }
 
-    _update_pending(eta) {
-        this._search_button.property(
-            "value",
-            "Live search starts in" + eta.toPrecision(2) + "s"
-        );
+    _update_pending(_eta): void {
+        // May show an indicator for an upcoming update
+        return;
+        //this._search_button.property(
+        //    "value",
+        //    "Live search starts in" + eta.toPrecision(2) + "s"
+        //);
     }
 
     _update_started(): void {
@@ -296,6 +335,7 @@ export class LiveSearch {
     }
 
     _check_update(): void {
+        if (this._enabled == false) return;
         this._trigger_update_if_required(this.get_filter_params());
     }
 
@@ -309,11 +349,10 @@ export class LiveSearch {
         }
 
         if (Date.now() < this._start_update_at) {
-            //            this._update_pending((this._start_update_at - Date.now()) / 1000);
+            this._update_pending((this._start_update_at - Date.now()) / 1000);
             return;
         }
 
-        if (this._enabled == false) return;
         if (this._update_active) return;
         this._sent_last_body = body;
         this._update_started();

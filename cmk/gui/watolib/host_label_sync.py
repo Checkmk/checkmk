@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Synchronize discovered host labels from remote site to central site"""
@@ -7,29 +7,21 @@
 from __future__ import annotations
 
 import ast
+import os
 from dataclasses import asdict, dataclass
 from multiprocessing.pool import ThreadPool
 from pathlib import Path
 from typing import Any
-
-from flask import current_app
-from flask.ctx import RequestContext
 
 from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.labels import (
-    get_host_labels_entry_of_host,
-    get_updated_host_label_files,
-    save_updated_host_label_files,
-    UpdatedHostLabelsEntry,
-)
+from cmk.utils.labels import DiscoveredHostLabelsStore
 from cmk.utils.type_defs import HostName
 
 import cmk.gui.log as log
-import cmk.gui.pages
 from cmk.gui.background_job import (
     BackgroundJob,
     BackgroundJobAlreadyRunning,
@@ -37,16 +29,18 @@ from cmk.gui.background_job import (
     InitialStatusArgs,
     job_registry,
 )
-from cmk.gui.config import load_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.site_config import get_site_config, has_wato_slave_sites, wato_slave_sites
-from cmk.gui.utils.script_helpers import make_request_context
+from cmk.gui.utils.request_context import copy_request_context
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation, MKAutomationException
 from cmk.gui.watolib.hosts_and_folders import Host
+from cmk.gui.watolib.paths import wato_var_dir
+
+UpdatedHostLabelsEntry = tuple[str, float, str]
 
 
 @dataclass
@@ -167,17 +161,11 @@ class DiscoveredHostLabelSyncJob(BackgroundJob):
     def _execute_sync(self) -> None:
         newest_host_labels = self._load_newest_host_labels_per_site()
 
-        with (
-            request_context := make_request_context(current_app)
-        ):  # pylint: disable=superfluous-parens
-            load_config()
-
         with ThreadPool(20) as pool:
             results = pool.map(
-                self._execute_site_sync_bg,
+                copy_request_context(self._execute_site_sync_bg),
                 [
                     (
-                        request_context,
                         site_id,
                         site_spec,
                         SiteRequest(newest_host_labels.get(site_id, 0.0), None),
@@ -191,15 +179,13 @@ class DiscoveredHostLabelSyncJob(BackgroundJob):
     def _execute_site_sync_bg(
         self,
         args: tuple[
-            RequestContext,
             SiteId,
             SiteConfiguration,
             SiteRequest,
         ],
     ) -> SiteResult:
         log.init_logging()  # NOTE: We run in a subprocess!
-        with args[0]:
-            return _execute_site_sync(*args[1:])
+        return _execute_site_sync(*args)
 
     def _process_site_sync_results(
         self, newest_host_labels: dict[SiteId, float], results: list[SiteResult]
@@ -219,7 +205,7 @@ class DiscoveredHostLabelSyncJob(BackgroundJob):
 
     @staticmethod
     def newest_host_labels_per_site_path() -> Path:
-        return Path(cmk.utils.paths.var_dir) / "wato" / "newest_host_labels_per_site.mk"
+        return wato_var_dir() / "newest_host_labels_per_site.mk"
 
     def _load_newest_host_labels_per_site(self) -> dict[SiteId, float]:
         return store.load_object_from_file(
@@ -240,16 +226,16 @@ def _execute_site_sync(
         logger.debug(_("[%s] Starting sync for site"), site_id)
 
         # timeout=100: Use a value smaller than the default apache request timeout
-        result = DiscoveredHostLabelSyncResponse(
-            **do_remote_automation(
-                site_spec,
-                "discovered-host-label-sync",
-                [
-                    ("request", repr(site_request.serialize())),
-                ],
-                timeout=100,
-            )
+        raw_result = do_remote_automation(
+            site_spec,
+            "discovered-host-label-sync",
+            [
+                ("request", repr(site_request.serialize())),
+            ],
+            timeout=100,
         )
+        assert isinstance(raw_result, dict)
+        result = DiscoveredHostLabelSyncResponse(**raw_result)
 
         logger.debug(_("[%s] Finished sync for site"), site_id)
         return SiteResult(
@@ -275,6 +261,34 @@ def _execute_site_sync(
             error=str(e),
             updated_host_labels=[],
         )
+
+
+def get_host_labels_entry_of_host(host_name: HostName) -> UpdatedHostLabelsEntry:
+    """Returns the host labels entry of the given host"""
+    path = DiscoveredHostLabelsStore(host_name).file_path
+    with path.open() as f:
+        return (path.name, path.stat().st_mtime, f.read())
+
+
+def save_updated_host_label_files(updated_host_labels: list[UpdatedHostLabelsEntry]) -> None:
+    """Persists the data previously read by get_updated_host_label_files()"""
+    for file_name, mtime, content in updated_host_labels:
+        file_path = cmk.utils.paths.discovered_host_labels_dir / file_name
+        store.save_text_to_file(file_path, content)
+        os.utime(file_path, (mtime, mtime))
+
+
+def get_updated_host_label_files(newer_than: float) -> list[UpdatedHostLabelsEntry]:
+    """Returns the host label file content + meta data which are newer than the given timestamp"""
+    updated_host_labels = []
+    for path in sorted(cmk.utils.paths.discovered_host_labels_dir.glob("*.mk")):
+        mtime = path.stat().st_mtime
+        if path.stat().st_mtime <= newer_than:
+            continue  # Already known to central site
+
+        with path.open() as f:
+            updated_host_labels.append((path.name, mtime, f.read()))
+    return updated_host_labels
 
 
 @automation_command_registry.register

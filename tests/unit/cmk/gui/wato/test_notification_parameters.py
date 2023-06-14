@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from pytest import MonkeyPatch
 
 import cmk.gui.plugins.wato.utils as utils
 
@@ -35,8 +37,8 @@ def test_registered_notification_parameters() -> None:
     assert registered_plugins == sorted(expected_plugins)
 
 
-def test_register_legacy_notification_parameters(  # type:ignore[no-untyped-def]
-    monkeypatch,
+def test_register_legacy_notification_parameters(
+    monkeypatch: MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
         utils, "notification_parameter_registry", utils.NotificationParameterRegistry()

@@ -1,35 +1,74 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
 import re
-from collections.abc import Mapping
+import socket
+from collections.abc import Callable, Iterator, Mapping
+from dataclasses import dataclass
 from enum import Enum
-from typing import NamedTuple
-from uuid import UUID
+from typing import Literal, Self
 
+from cryptography.x509 import CertificateSigningRequest, load_pem_x509_csr
 from fastapi import HTTPException
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, UUID4, validator
+
+from .certs import extract_cn_from_csr
 
 
-class CsrBody(BaseModel):
+@dataclass(frozen=True)
+class CsrField:
+    csr: CertificateSigningRequest
+
+    @classmethod
+    def __get_validators__(cls) -> Iterator[Callable[[object], Self]]:
+        yield cls.validate
+
+    @classmethod
+    def validate(cls, v: object) -> Self:
+        if isinstance(v, CertificateSigningRequest):
+            csr = v
+        else:
+            if not isinstance(v, str):
+                raise TypeError("CertificateSigningRequest or string required")
+            csr = load_pem_x509_csr(v.encode())
+        if not csr.is_signature_valid:
+            raise ValueError("Invalid CSR (signature and public key do not match)")
+        try:
+            cn = extract_cn_from_csr(csr)
+        except IndexError:
+            raise ValueError("CSR contains no CN")
+        try:
+            UUID4(cn)
+        except ValueError:
+            raise ValueError(f"CN {cn} is not a valid version-4 UUID")
+        return cls(csr)
+
+
+class CertificateRenewalBody(BaseModel, frozen=True):
+    csr: CsrField
+
+
+class PairingBody(BaseModel, frozen=True):
     csr: str
 
 
-class PairingResponse(BaseModel):
+class PairingResponse(BaseModel, frozen=True):
     root_cert: str
     client_cert: str
 
 
-class CertResponse(BaseModel):
-    client_cert: str
+class RenewCertResponse(BaseModel, frozen=True):
+    agent_cert: str
 
 
-# duplicated from cmk.gui.valuespec
 def _is_valid_host_name(hostname: str) -> bool:
+    # duplicated from cmk.gui.valuespec
     # http://stackoverflow.com/questions/2532053/validate-a-hostname-string/2532344#2532344
-    if len(hostname) > 255:
+    if not hostname or len(hostname) > 255:
         return False
 
     if hostname[-1] == ".":
@@ -45,14 +84,62 @@ def _is_valid_host_name(hostname: str) -> bool:
     return all(allowed.match(x) for x in hostname.split("."))
 
 
-class RegistrationWithHNBody(BaseModel):
-    uuid: UUID
+def _is_valid_ipv4_address(address: str) -> bool:
+    # duplicated from cmk.gui.valuespec
+    # http://stackoverflow.com/questions/319279/how-to-validate-ip-address-in-python/4017219#4017219
+    try:
+        socket.inet_pton(socket.AF_INET, address)
+    except AttributeError:  # no inet_pton here, sorry
+        try:
+            socket.inet_aton(address)
+        except socket.error:
+            return False
+
+        return address.count(".") == 3
+
+    except socket.error:  # not a valid address
+        return False
+
+    return True
+
+
+def _is_valid_ipv6_address(address: str) -> bool:
+    # duplicated from cmk.gui.valuespec
+    # http://stackoverflow.com/questions/319279/how-to-validate-ip-address-in-python/4017219#4017219
+    try:
+        address = address.split("%")[0]
+        socket.inet_pton(socket.AF_INET6, address)
+    except socket.error:  # not a valid address
+        return False
+    return True
+
+
+def _is_valid_hostname_or_ip(uri: str) -> bool:
+    """Check if the given URI is a valid hostname or IP address
+
+    Some examples (see unit tests for more):
+    >>> _is_valid_hostname_or_ip("test.checkmk.com")
+    True
+    >>> _is_valid_hostname_or_ip("127.0.0.1")
+    True
+    >>> _is_valid_hostname_or_ip("2606:2800:220:1:248:1893:25c8:1946")
+    True
+    >>> _is_valid_hostname_or_ip("::1")
+    True
+    >>> _is_valid_hostname_or_ip("my/../host")
+    False
+    """
+    return _is_valid_host_name(uri) or _is_valid_ipv4_address(uri) or _is_valid_ipv6_address(uri)
+
+
+class RegistrationWithHNBody(BaseModel, frozen=True):
+    uuid: UUID4
     host_name: str
 
     @validator("host_name")
     @classmethod
     def valid_hostname(cls, v):
-        if not _is_valid_host_name(v):
+        if not _is_valid_hostname_or_ip(v):
             raise HTTPException(
                 status_code=400,
                 detail=f"Invalid hostname: '{v}'",
@@ -60,31 +147,92 @@ class RegistrationWithHNBody(BaseModel):
         return v
 
 
-class RegistrationWithLabelsBody(BaseModel):
-    uuid: UUID
-    agent_labels: Mapping[str, str]
+class RegisterExistingBody(RegistrationWithHNBody):
+    uuid: UUID4
+    csr: CsrField
+    host_name: str
+
+    @validator("host_name")
+    @classmethod
+    def valid_hostname(cls, v):
+        if not _is_valid_hostname_or_ip(v):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid hostname: '{v}'",
+            )
+        return v
 
 
-class RegistrationStatusEnum(Enum):
-    NEW = "new"
-    PENDING = "pending"
-    DECLINED = "declined"
-    READY = "ready"
-    DISCOVERABLE = "discoverable"
-
-
-class RegistrationData(NamedTuple):
-    status: RegistrationStatusEnum
-    message: str | None
-
-
-class HostTypeEnum(Enum):
+class ConnectionMode(Enum):
     PULL = "pull-agent"
     PUSH = "push-agent"
 
 
-class RegistrationStatus(BaseModel):
+class RegisterExistingResponse(BaseModel, frozen=True):
+    root_cert: str
+    agent_cert: str
+    connection_mode: ConnectionMode
+
+
+class RegisterNewBody(BaseModel, frozen=True):
+    uuid: UUID4
+    csr: CsrField
+    agent_labels: Mapping[str, str]
+
+
+class RegisterNewResponse(BaseModel, frozen=True):
+    root_cert: str
+
+
+class RegisterNewOngoingResponseInProgress(BaseModel, frozen=True):
+    # the agent controller uses the status field for distinguishing the different variants when
+    # deserializing the response from the receiver
+    status: Literal["InProgress"] = "InProgress"
+
+
+class RegisterNewOngoingResponseDeclined(BaseModel, frozen=True):
+    status: Literal["Declined"] = "Declined"
+    reason: str
+
+
+class RegisterNewOngoingResponseSuccess(BaseModel, frozen=True):
+    status: Literal["Success"] = "Success"
+    agent_cert: str
+    connection_mode: ConnectionMode
+
+
+class RequestForRegistration(BaseModel, frozen=True):
+    uuid: UUID4
+    username: str
+    agent_labels: Mapping[str, str]
+    agent_cert: str
+    state: Mapping[str, str] | None = None
+
+    def rejection_notice(self) -> str | None:
+        return (self.state or {}).get("readable")
+
+
+class R4RStatus(Enum):
+    NEW = "new"
+    PENDING = "pending"
+    DECLINED = "declined"
+    DISCOVERABLE = "discoverable"
+
+
+class RegistrationStatus(BaseModel, frozen=True):
     hostname: str | None = None
-    status: RegistrationStatusEnum | None = None
-    type: HostTypeEnum | None = None
+    status: R4RStatus | None = None
+    connection_mode: ConnectionMode | None = None
     message: str | None = None
+    # Kept for backwards compatibility
+    type: ConnectionMode | None = None
+
+
+class RegistrationStatusV2ResponseNotRegistered(BaseModel, frozen=True):
+    status: Literal["NotRegistered"] = "NotRegistered"
+
+
+class RegistrationStatusV2ResponseRegistered(BaseModel, frozen=True):
+    status: Literal["Registered"] = "Registered"
+    hostname: str
+    connection_mode: ConnectionMode

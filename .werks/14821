@@ -6,10 +6,10 @@ Date: 1662455455
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
-This werk only affects users of non-tribe29 custom extensions (single files and MKPs from non-
-tribe29 sources such as the Checkmk exchange).
+This werk only affects users of non-Checkmk custom extensions (single files and MKPs from non-
+Checkmk sources such as the Checkmk exchange).
 
 Before this werk, the Checkmk codebase offered the <tt>ValueSpec</tt> subclass <tt>Transform</tt>,
 which was used for two things:

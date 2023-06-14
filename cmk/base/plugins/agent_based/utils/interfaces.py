@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,17 +12,16 @@ from collections.abc import (
     Collection,
     Container,
     Iterable,
+    Iterator,
     Mapping,
     MutableMapping,
     Sequence,
 )
 from dataclasses import asdict, dataclass, fields, replace
 from functools import partial
-from typing import Any, Literal
+from typing import Any, assert_never, Literal
 from typing import Mapping as TypingMapping
-from typing import TypedDict, TypeVar
-
-from typing_extensions import assert_never
+from typing import ParamSpec, TypedDict, TypeVar
 
 from ..agent_based_api.v1 import (
     check_levels,
@@ -123,8 +122,8 @@ class Attributes:
         if self.speed > 9 * 1000 * 1000 * 1000 * 1000:
             self.speed /= 10000
 
-        self.descr = cleanup_if_strings(self.descr)
-        self.alias = cleanup_if_strings(self.alias)
+        self.descr = _cleanup_if_strings(self.descr)
+        self.alias = _cleanup_if_strings(self.alias)
 
     @property
     def oper_status_up(self) -> str:
@@ -137,6 +136,9 @@ class Attributes:
     @property
     def id_for_value_store(self) -> str:
         return f"{self.index}.{self.descr}.{self.alias}.{self.node}"
+
+
+Interface = Attributes  # CMK-12228
 
 
 @dataclass
@@ -470,7 +472,7 @@ def mac_address_from_hexstring(hexstr: str) -> str:
 # 0 byte. When this string is part of the data which is sent to
 # the nagios pipe all chars after the 0 byte are stripped of.
 # Stupid fix: Remove all 0 bytes. Hope this causes no problems.
-def cleanup_if_strings(s: str) -> str:
+def _cleanup_if_strings(s: str) -> str:
     if s and s != "":
         s = "".join([c for c in s if c != chr(0)]).strip()
     return s.replace("\n", " ")
@@ -509,19 +511,81 @@ def render_mac_address(phys_address: Iterable[int] | str) -> str:
     return (":".join(["%02s" % hex(m)[2:] for m in mac_bytes]).replace(" ", "0")).upper()
 
 
-def item_matches(
+def matching_interfaces_for_item(
     item: str,
-    ifIndex: str,
-    ifAlias: str,
-    ifDescr: str,
-) -> bool:
+    section: Section[TInterfaceType],
+) -> Iterator[TInterfaceType]:
+    if not section:
+        return
+
+    if section[0].attributes.node:
+        yield from _matching_clustered_interfaces_for_item(item, section)
+        return
+
+    if match := _matching_unclustered_interface_for_item(item, section):
+        yield match
+
+
+def _matching_clustered_interfaces_for_item(
+    item: str,
+    section: Section[TInterfaceType],
+) -> Iterator[TInterfaceType]:
+    for _node, node_interfaces in itertools.groupby(
+        # itertools.groupby needs the input to be sorted accordingly. This is most likely already
+        # the case, at least if we reach this point via cluster_check, but I don't want to rely on
+        # it.
+        sorted(
+            section,
+            key=lambda iface: str(iface.attributes.node),
+        ),
+        key=lambda iface: iface.attributes.node,
+    ):
+        if match := _matching_unclustered_interface_for_item(item, list(node_interfaces)):
+            yield match
+
+
+def _matching_unclustered_interface_for_item(
+    item: str,
+    section: Section[TInterfaceType],
+) -> TInterfaceType | None:
     return (
-        item.lstrip("0") == ifIndex
-        or (item == "0" * len(item) and saveint(ifIndex) == 0)
-        or item == ifAlias
-        or item == ifDescr
-        or item == "%s %s" % (ifAlias, ifIndex)
-        or item == "%s %s" % (ifDescr, ifIndex)
+        simple_match
+        if (simple_match := _matching_interface_for_simple_item(item, section))
+        else _matching_interface_for_compound_item(item, section)
+    )
+
+
+def _matching_interface_for_simple_item(
+    item: str,
+    ifaces: Iterable[TInterfaceType],
+) -> TInterfaceType | None:
+    return next(
+        (
+            interface
+            for interface in ifaces
+            if item.lstrip("0") == interface.attributes.index
+            or (item == "0" * len(item) and saveint(interface.attributes.index) == 0)
+            or item in (interface.attributes.alias, interface.attributes.descr)
+        ),
+        None,
+    )
+
+
+def _matching_interface_for_compound_item(
+    item: str,
+    ifaces: Iterable[TInterfaceType],
+) -> TInterfaceType | None:
+    return next(
+        (
+            interface
+            for interface in ifaces
+            if item
+            in (
+                f"{interface.attributes.alias} {interface.attributes.index}",
+                f"{interface.attributes.descr} {interface.attributes.index}",
+            )
+        ),
+        None,
     )
 
 
@@ -587,7 +651,6 @@ def bandwidth_levels(
 
     for direction_spec, (levels_type, levels_spec) in raw_levels:
         for direction in ["in", "out"] if direction_spec == "both" else [direction_spec]:
-
             if levels_type == "predictive":
                 merged_levels[direction] = PredictiveLevels(levels_spec)
 
@@ -634,7 +697,7 @@ def _scaled_bandwidth_thresholds(
             return scale(thresholds, 1 / unit)
         case "perc":
             return scale(thresholds, speed / 100) if speed else None
-    assert_never()
+    assert_never(thresholds_type)
 
 
 def _finalize_bandwidth_levels(
@@ -657,7 +720,7 @@ def _get_packet_levels(
     params: Mapping[str, Any]
 ) -> tuple[GeneralPacketLevels, GeneralPacketLevels]:
     DIRECTIONS = ("in", "out")
-    PACKET_TYPES = ("errors", "multicast", "broadcast", "unicast")
+    PACKET_TYPES = ("errors", "multicast", "broadcast", "unicast", "discards")
 
     def none_levels() -> dict[str, dict[str, Any | None]]:
         return {name: {direction: None for direction in DIRECTIONS} for name in PACKET_TYPES}
@@ -718,7 +781,6 @@ def _check_single_matching_conditions(
     attributes: Attributes,
     matching_conditions: MatchingConditions,
 ) -> bool:
-
     match_index = matching_conditions.get("match_index")
     match_alias = matching_conditions.get("match_alias")
     match_desc = matching_conditions.get("match_desc")
@@ -755,7 +817,6 @@ def _check_group_matching_conditions(
     group_name: str,
     group_configuration: GroupConfiguration,
 ) -> bool:
-
     # group defined in agent output
     if "inclusion_condition" not in group_configuration:
         return group_name == attributes.group
@@ -983,34 +1044,31 @@ def _check_ungrouped_ifs(
     results_from_fastest_interface = None
     max_out_traffic = -1.0
 
-    for interface in section:
-        if item_matches(
-            item, interface.attributes.index, interface.attributes.alias, interface.attributes.descr
-        ):
-            last_results = list(
-                check_single_interface(
-                    item,
-                    params,
-                    InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
-                        interface,
-                        timestamp=timestamp,
-                        value_store=value_store,
-                        params=params,
-                    ),
-                    use_discovered_state_and_speed=interface.attributes.node is None,
-                )
+    for interface in matching_interfaces_for_item(item, section):
+        last_results = list(
+            check_single_interface(
+                item,
+                params,
+                InterfaceWithRatesAndAverages.from_interface_with_counters_or_rates(
+                    interface,
+                    timestamp=timestamp,
+                    value_store=value_store,
+                    params=params,
+                ),
+                use_discovered_state_and_speed=interface.attributes.node is None,
             )
-            for result in last_results:
-                if (
-                    isinstance(
-                        result,
-                        Metric,
-                    )
-                    and result.name == "out"
-                    and result.value > max_out_traffic
-                ):
-                    max_out_traffic = result.value
-                    results_from_fastest_interface = last_results
+        )
+        for result in last_results:
+            if (
+                isinstance(
+                    result,
+                    Metric,
+                )
+                and result.name == "out"
+                and result.value > max_out_traffic
+            ):
+                max_out_traffic = result.value
+                results_from_fastest_interface = last_results
 
     if results_from_fastest_interface:
         yield from results_from_fastest_interface
@@ -1219,7 +1277,6 @@ def check_multiple_interfaces(
     timestamp: float | None = None,
     value_store: MutableMapping[str, Any] | None = None,
 ) -> type_defs.CheckResult:
-
     if timestamp is None:
         timestamp = time.time()
     if value_store is None:
@@ -1299,6 +1356,57 @@ def _check_speed(attributes: Attributes, targetspeed: int | None) -> Result:
     return Result(state=State.OK, summary="Speed: %s" % (attributes.speed_as_text or "unknown"))
 
 
+_TCheckInterfaceParams = ParamSpec("_TCheckInterfaceParams")
+
+
+_METRICS_TO_LEGACY_MAP = {
+    "if_in_discards": "indisc",
+    "if_in_errors": "inerr",
+    "if_out_discards": "outdisc",
+    "if_out_errors": "outerr",
+    "if_in_mcast": "inmcast",
+    "if_in_bcast": "inbcast",
+    "if_out_mcast": "outmcast",
+    "if_out_bcast": "outbcast",
+    "if_in_unicast": "inucast",
+    "if_in_non_unicast": "innucast",
+    "if_out_unicast": "outucast",
+    "if_out_non_unicast": "outnucast",
+}
+
+
+# This is a workaround for the following problem: livestatus in combination with the Nagios core
+# only reports those metrics which are currently still updated. Metrics which were once produced but
+# are not updated anylonger are currently not reported in the livestatus metrics column. Hence,
+# renaming metrics currently leads to a loss of historic data in the CRE, even if there is a
+# corresponding translation. This issue will hopefully be eliminated in the 2.3. Once this is the
+# case, we can remove _rename_metrics_to_legacy.
+def _rename_metrics_to_legacy(
+    check_interfaces: Callable[_TCheckInterfaceParams, type_defs.CheckResult]
+) -> Callable[_TCheckInterfaceParams, type_defs.CheckResult]:
+    def rename_metrics_to_legacy(
+        *args: _TCheckInterfaceParams.args,
+        **kwargs: _TCheckInterfaceParams.kwargs,
+    ) -> type_defs.CheckResult:
+        yield from (
+            Metric(
+                name=_METRICS_TO_LEGACY_MAP.get(
+                    output.name,
+                    output.name,
+                ),
+                value=output.value,
+                levels=output.levels,
+                boundaries=output.boundaries,
+            )
+            if isinstance(output, Metric)
+            else output
+            for output in check_interfaces(*args, **kwargs)
+        )
+
+    return rename_metrics_to_legacy
+
+
+@_rename_metrics_to_legacy
 def check_single_interface(
     item: str,
     params: Mapping[str, Any],
@@ -1397,7 +1505,6 @@ def check_single_interface(
         abs_packet_levels=abs_packet_levels,
         perc_packet_levels=perc_packet_levels,
         nucast_levels=params.get("nucasts"),
-        disc_levels=params.get("discards"),
         rates=interface.rates_with_averages,
     )
 
@@ -1490,7 +1597,6 @@ def _interface_status(
     attributes: Attributes,
     use_discovered_states: bool,
 ) -> Iterable[Result]:
-
     if use_discovered_states:
         target_oper_states = params.get("state", params.get("discovered_oper_status"))
         target_admin_states = params.get("admin_state", params.get("discovered_admin_status"))
@@ -1598,7 +1704,10 @@ def _check_oper_and_admin_state_combined(
     assert not isinstance(state_mappings, Mapping)
     if (
         combined_mon_state := {
-            (oper_state, admin_state,): State(
+            (
+                oper_state,
+                admin_state,
+            ): State(
                 mon_state
             )  #
             for oper_state, admin_state, mon_state in state_mappings
@@ -1816,7 +1925,6 @@ def _output_packet_rates(
     abs_packet_levels: GeneralPacketLevels,
     perc_packet_levels: GeneralPacketLevels,
     nucast_levels: tuple[float, float] | None,
-    disc_levels: tuple[float, float] | None,
     rates: RatesWithAverages,
 ) -> type_defs.CheckResult:
     for direction, mrate, brate, urate, nurate, discrate, errorrate in [
@@ -1858,6 +1966,18 @@ def _output_packet_rates(
                 all_pacrate,
             ),
             (
+                discrate,
+                abs_packet_levels["discards"][direction],
+                perc_packet_levels["discards"][direction],
+                "discards",
+                "discards",
+                _sum_optional_floats(
+                    urate.rate if urate else None,
+                    nurate.rate if nurate else None,
+                    discrate.rate if discrate else None,
+                ),
+            ),
+            (
                 mrate,
                 abs_packet_levels["multicast"][direction],
                 perc_packet_levels["multicast"][direction],
@@ -1897,7 +2017,6 @@ def _output_packet_rates(
 
         for display_name, metric_name, packets, levels in [
             ("Non-unicast", "non_unicast", nurate, nucast_levels),
-            ("Discards", "discards", discrate, disc_levels),
         ]:
             if packets is None:
                 continue

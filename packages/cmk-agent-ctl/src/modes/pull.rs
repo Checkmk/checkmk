@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -22,7 +22,7 @@ use tokio_rustls::TlsAcceptor;
 const TLS_ID: &[u8] = b"16";
 const HEADER_VERSION: &[u8] = b"\x00\x00";
 const ONE_MINUTE: u64 = 60;
-const FIVE_MINUTES: u64 = 300;
+const PULL_ACTIVITY_TIMEOUT: u64 = 330; // Avoid exactly 5 minutes, as this is a common check interval
 
 struct ListeningConfig {
     pub addr_v4: Ipv4Addr,
@@ -51,7 +51,7 @@ impl std::convert::TryFrom<config::PullConfig> for PullStateImpl {
     fn try_from(config: config::PullConfig) -> AnyhowResult<Self> {
         Ok(Self {
             allow_legacy_pull: config.allow_legacy_pull(),
-            tls_acceptor: tls_server::tls_acceptor(config.connections())
+            tls_acceptor: tls_server::tls_acceptor(config.get_pull_connections())
                 .context("Could not initialize TLS.")?,
             config,
         })
@@ -61,7 +61,7 @@ impl std::convert::TryFrom<config::PullConfig> for PullStateImpl {
 impl PullState for PullStateImpl {
     fn refresh(&mut self) -> AnyhowResult<()> {
         if self.config.refresh()? {
-            self.tls_acceptor = tls_server::tls_acceptor(self.config.connections())
+            self.tls_acceptor = tls_server::tls_acceptor(self.config.get_pull_connections())
                 .context("Could not initialize TLS.")?;
         };
         self.allow_legacy_pull = self.config.allow_legacy_pull();
@@ -170,15 +170,19 @@ impl MaxConnectionsGuard {
             .active_connections
             .entry(ip_addr)
             .or_insert_with(|| Arc::new(Semaphore::new(self.max_connections)));
-        if let Ok(permit) = sem.clone().try_acquire_owned() {
+        if let Ok(permit) = Arc::clone(sem).try_acquire_owned() {
+            let task_num = self.max_connections - sem.available_permits();
             Ok(async move {
                 let res = fut.await;
                 drop(permit);
-                debug!("processed task!");
+                debug!(
+                    "processed task {} from ip {:?} result {:?}",
+                    task_num, ip_addr, res
+                );
                 res
             })
         } else {
-            debug!("Too many active connections");
+            debug!("Too many active connections at ip_addr {}", ip_addr);
             bail!("Too many active connections")
         }
     }
@@ -214,30 +218,76 @@ async fn _pull(
             continue;
         }
         info!("Start listening for incoming pull requests");
-        _pull_cycle(&mut pull_state, &mut guard, agent_output_collector.clone()).await?;
+        _pull_loop(&mut pull_state, &mut guard, agent_output_collector.clone()).await?;
     }
 }
 
-fn configure_socket(socket: Socket) -> AnyhowResult<Socket> {
+#[cfg(windows)]
+/// In windows REUSE is forbidden due to security reasons
+fn set_socket_for_exclusive_use(socket: &Socket, on: bool) -> std::io::Result<()> {
+    use std::os::windows::prelude::AsRawSocket;
+    use winapi::{ctypes, um::winsock2};
+    let on = u32::from(on);
+    let ret = unsafe {
+        let sock = socket.as_raw_socket() as winsock2::SOCKET;
+        let ptr = &on as *const ctypes::c_ulong as *const ctypes::c_void as *const ctypes::c_char;
+        winsock2::setsockopt(
+            sock,
+            winsock2::SOL_SOCKET,
+            winsock2::SO_EXCLUSIVEADDRUSE,
+            ptr,
+            4,
+        )
+    };
+    match ret {
+        0 => Ok(()),
+        code => Err(std::io::Error::from_raw_os_error(code)),
+    }
+}
+
+pub enum SocketMode {
+    Reuse,
+    Exclusive,
+}
+
+fn configure_socket(socket: Socket, mode: SocketMode) -> AnyhowResult<Socket> {
     socket.set_nonblocking(true)?;
     // https://stackoverflow.com/questions/3229860/what-is-the-meaning-of-so-reuseaddr-setsockopt-option-linux
     // Allow re-using the address, even if there are still connections. After sending the agent
     // data, we end up with a waiting connection which will be dropped at some point, but not
     // immediately (this is OK, standard TCP protocol). However, this will block the re-creation
     // of the socket if the agent controller is restarted (agent update or manual restart).
-    socket.set_reuse_address(true)?;
+    match mode {
+        #[cfg(windows)]
+        SocketMode::Exclusive => set_socket_for_exclusive_use(&socket, true)?,
+        #[cfg(unix)]
+        SocketMode::Exclusive => panic!("Not supported in Linux"),
+        SocketMode::Reuse => socket.set_reuse_address(true)?,
+    }
+
     Ok(socket)
 }
 
+#[cfg(windows)]
+const DEFAULT_SOCKET_MODE: SocketMode = SocketMode::Exclusive;
+#[cfg(unix)]
+const DEFAULT_SOCKET_MODE: SocketMode = SocketMode::Reuse;
+
 fn tcp_listener_v4(address: Ipv4Addr, port: u16) -> AnyhowResult<TcpListenerStd> {
-    let socket = configure_socket(Socket::new(Domain::IPV4, Type::STREAM, None)?)?;
+    let socket = configure_socket(
+        Socket::new(Domain::IPV4, Type::STREAM, None)?,
+        DEFAULT_SOCKET_MODE,
+    )?;
     socket.bind(&SockAddr::from(SocketAddr::new(IpAddr::V4(address), port)))?;
     socket.listen(4096)?;
     Ok(socket.into())
 }
 
 fn tcp_listener_v6(address: Ipv6Addr, port: u16) -> AnyhowResult<TcpListenerStd> {
-    let socket = configure_socket(Socket::new(Domain::IPV6, Type::STREAM, None)?)?;
+    let socket = configure_socket(
+        Socket::new(Domain::IPV6, Type::STREAM, None)?,
+        DEFAULT_SOCKET_MODE,
+    )?;
     socket.set_only_v6(false)?;
     socket.bind(&SockAddr::from(SocketAddr::new(IpAddr::V6(address), port)))?;
     socket.listen(4096)?;
@@ -273,7 +323,7 @@ fn tcp_listener(listening_config: ListeningConfig) -> AnyhowResult<TcpListenerSt
     );
 }
 
-async fn _pull_cycle(
+async fn _pull_loop(
     pull_state: &mut impl PullState,
     guard: &mut MaxConnectionsGuard,
     agent_output_collector: impl AgentOutputCollector,
@@ -281,20 +331,24 @@ async fn _pull_cycle(
     let listener = TcpListener::from_std(tcp_listener(pull_state.listening_config())?)?;
 
     loop {
-        let (stream, remote) = match match timeout(
-            Duration::from_secs(FIVE_MINUTES),
+        let Ok(connection_attempt) = timeout(
+            Duration::from_secs(PULL_ACTIVITY_TIMEOUT),
             listener.accept(),
-        )
-        .await
-        {
-            Ok(accepted_result) => accepted_result,
-            Err(_) => {
-                debug!(
-                        "Got no pull request within five minutes. Registration may have changed, thus restarting pull handling."
+        ).await else {
+                // No connection within timeout. Refresh config and check if we're still active.
+                pull_state.refresh()?;
+                if !pull_state.is_active() {
+                    info!(
+                        "No pull connection registered, stop listening on {}.",
+                        listener.local_addr()?
                     );
-                return Ok(());
-            }
-        } {
+                    return Ok(());
+                }
+                // If still active, don't return as this would close the socket - Just continue listening.
+                continue;
+            };
+
+        let (stream, remote) = match connection_attempt {
             Ok(accepted) => accepted,
             Err(error) => {
                 warn!("Failed accepting pull connection. ({})", error);
@@ -315,7 +369,7 @@ async fn _pull_cycle(
 
         // Check if pull was deactivated meanwhile before actually handling the request.
         if !pull_state.is_active() {
-            info!("Detected empty registry, closing current connection and stop listening.");
+            info!("No pull connection registered, closing current connection and stop listening.");
             return Ok(());
         }
 
@@ -396,6 +450,7 @@ async fn handle_request(
     connection_timeout: u64,
 ) -> AnyhowResult<()> {
     if is_legacy_pull {
+        debug!("handle_request: starts in legacy mode from {:?}", remote_ip);
         return handle_legacy_pull_request(
             stream,
             agent_output_collector.plain_output(remote_ip),
@@ -403,7 +458,7 @@ async fn handle_request(
         )
         .await;
     }
-    debug!("handle_request starts");
+    debug!("handle_request: starts from {:?}", remote_ip);
 
     let handshake = with_timeout(
         async move {
@@ -419,9 +474,11 @@ async fn handle_request(
     let (mon_data, tls_stream) = tokio::join!(encoded_mondata, handshake);
     let mon_data = mon_data?;
     let mut tls_stream = tls_stream?;
+    debug!("handle_request: ready to be send {:?}", remote_ip);
     with_timeout(
         async move {
             tls_stream.write_all(&mon_data).await?;
+            debug!("handle_request: had been send {:?}", remote_ip);
             tls_stream.flush().await
         },
         connection_timeout,
@@ -464,6 +521,65 @@ mod tests {
     use super::*;
     use crate::types::AgentChannel;
 
+    #[cfg(windows)]
+    mod win {
+        use socket2::{Domain, SockAddr, Socket, Type};
+        use std::net::{IpAddr, Ipv4Addr, SocketAddr};
+
+        use crate::modes::pull::{configure_socket, SocketMode};
+
+        fn make_socket_std() -> Socket {
+            let socket_a = Socket::new(Domain::IPV4, Type::STREAM, None).unwrap();
+            configure_socket(socket_a, SocketMode::Reuse).unwrap()
+        }
+
+        fn make_socket_exclusive() -> Socket {
+            let socket_exclusive = Socket::new(Domain::IPV4, Type::STREAM, None).unwrap();
+            configure_socket(socket_exclusive, SocketMode::Exclusive).unwrap()
+        }
+
+        #[test]
+        fn test_socket_reuse_exclusive() {
+            let socket_a = make_socket_std();
+            let socket_b = make_socket_std();
+            let socket_exclusive = make_socket_exclusive();
+            let addr = SockAddr::from(SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 19900));
+            let a = socket_a.bind(&addr);
+            let b = socket_b.bind(&addr);
+            let exclusive = socket_exclusive.bind(&addr);
+
+            assert!(a.is_ok());
+            assert!(b.is_ok());
+            assert!(exclusive.is_err());
+        }
+        #[test]
+        fn test_socket_exclusive_reuse() {
+            let socket_std = make_socket_std();
+            let socket_exclusive = make_socket_exclusive();
+            let addr = SockAddr::from(SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 19900));
+
+            let exclusive = socket_exclusive.bind(&addr);
+            let a = socket_std.bind(&addr);
+
+            assert!(a.is_err());
+            assert!(exclusive.is_ok());
+        }
+        #[test]
+        fn test_socket_exclusive_exclusive() {
+            {
+                let socket_exclusive = make_socket_exclusive();
+                let addr =
+                    SockAddr::from(SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 19900));
+                let exclusive = socket_exclusive.bind(&addr);
+                assert!(exclusive.is_ok());
+            }
+            let socket_exclusive = make_socket_exclusive();
+            let addr = SockAddr::from(SocketAddr::new(IpAddr::V4(Ipv4Addr::UNSPECIFIED), 19900));
+            let exclusive = socket_exclusive.bind(&addr);
+            assert!(exclusive.is_ok());
+        }
+    }
+
     #[test]
     fn test_encode_data_for_transport() {
         let mut expected_result = b"\x00\x00\x01".to_vec();
@@ -471,7 +587,6 @@ mod tests {
         let agout = AgentOutputCollectorImpl::from(AgentChannel::from("dummy"));
         assert_eq!(agout.encode(b"abc").unwrap(), expected_result);
     }
-
     fn listening_config(port: u16) -> ListeningConfig {
         ListeningConfig {
             addr_v4: Ipv4Addr::UNSPECIFIED,

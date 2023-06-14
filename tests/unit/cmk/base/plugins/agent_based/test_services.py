@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Mapping, Sequence
 
 import pytest
 
 import cmk.base.plugins.agent_based.services as services
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 
 STRING_TABLE = [
     ["wscsvc", "running/auto", "Security", "Center"],
@@ -85,8 +88,8 @@ def test_parse() -> None:
         ),
     ],
 )
-def test_discovery_windows_services(  # type:ignore[no-untyped-def]
-    params, discovered_services
+def test_discovery_windows_services(
+    params: Sequence[Mapping[str, object]], discovered_services: DiscoveryResult
 ) -> None:
     assert discovered_services == list(services.discovery_windows_services(params, PARSED))
 
@@ -163,8 +166,8 @@ def test_discovery_windows_services(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_windows_services(  # type:ignore[no-untyped-def]
-    item, params, yielded_results
+def test_check_windows_services(
+    item: str, params: Mapping[str, object], yielded_results: CheckResult
 ) -> None:
     assert yielded_results == list(services.check_windows_services(item, params, PARSED))
 
@@ -200,8 +203,8 @@ def test_check_windows_services(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_cluster_windows_services(  # type:ignore[no-untyped-def]
-    item, params, yielded_results
+def test_cluster_windows_services(
+    item: str, params: Mapping[str, object], yielded_results: CheckResult
 ) -> None:
     assert yielded_results == list(
         services.cluster_check_windows_services(
@@ -268,5 +271,5 @@ def test_discovery_services_summary() -> None:
         ),
     ],
 )
-def test_check_services_summary(params, yielded_results) -> None:  # type:ignore[no-untyped-def]
+def test_check_services_summary(params: Mapping[str, object], yielded_results: CheckResult) -> None:
     assert yielded_results == list(services.check_services_summary(params, PARSED_AUTO))

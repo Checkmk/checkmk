@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Iterable
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, HostLabel, TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult, StringTable
 from cmk.base.plugins.agent_based.inventory_snmp_extended_info import (
     get_device_type_label,
     inventory_snmp_extended_info,
@@ -39,8 +42,8 @@ from .utils_inventory import sort_inventory_result
         ),
     ],
 )
-def test_inventory_snmp_extended_info_host_labels(  # type:ignore[no-untyped-def]
-    string_table, expected_result
+def test_inventory_snmp_extended_info_host_labels(
+    string_table: StringTable, expected_result: Iterable[HostLabel]
 ) -> None:
     section = parse_snmp_extended_info(string_table)
     assert list(get_device_type_label(section)) == expected_result
@@ -156,8 +159,8 @@ def test_inventory_snmp_extended_info_host_labels(  # type:ignore[no-untyped-def
         ),
     ],
 )
-def test_inventory_snmp_extended_info(  # type:ignore[no-untyped-def]
-    string_table, expected_result
+def test_inventory_snmp_extended_info(
+    string_table: StringTable, expected_result: InventoryResult
 ) -> None:
     assert sort_inventory_result(
         inventory_snmp_extended_info(parse_snmp_extended_info(string_table))

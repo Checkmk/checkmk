@@ -6,7 +6,7 @@ Date: 1671717877
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 With this change the OID will be correctly translated
 if the system has MIBs installed.

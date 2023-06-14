@@ -1,0 +1,11 @@
+Title: omd_diskusage: Monitor more Locations
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1683710439
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+More information can found in the manpage of <tt>omd_diskusage</tt>.

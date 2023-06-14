@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,7 +9,7 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.2.0i1"
+CMK_VERSION="2.3.0b1"
 
 # Checkmk agent plugin for monitoring ORACLE databases
 # This plugin is a result of the common work of Thorsten Bruhns
@@ -534,7 +534,7 @@ logging() {
                     ;;
 
                 *)
-                    args[$i]="$1"
+                    args[i]="$1"
                     i=$((i + 1))
                     shift
                     ;;
@@ -607,7 +607,7 @@ set_ora_env() {
             test -f /etc/oratab && ORATAB=/etc/oratab
             # /var/opt/oracle/oratab is needed for Oracle Solaris
             test -f /var/opt/oracle/oratab && ORATAB=/var/opt/oracle/oratab
-            if ! test -f ${ORATAB:-""}; then
+            if ! test -f "${ORATAB:-""}"; then
                 logging -c -e "[${sid}] [set_ora_env]" "ORA-99999 oratab not found in local mode"
                 exit 1
             fi
@@ -1731,6 +1731,7 @@ sql_instance() {
                      || '|' || 'ASM'
                      || '|' || 'NO'
                      || '|' || i.instance_name
+                     || '|' || i.host_name
                 from v\$instance i;"
 
     # The next query is special: recovery_status is only available from 12.1.0.2 on, that's why we need
@@ -1759,8 +1760,9 @@ sql_instance() {
                          || '|' || precovery_status
                          || '|' || round(nvl(popen_time, -1))
                          || '|' || pblock_size
+                         || '|' || host_name
                   from(
-                      select i.instance_name, i.${version_column} version, i.status, i.logins, i.archiver
+                      select i.instance_name, i.host_name, i.${version_column} version, i.status, i.logins, i.archiver
                             ,i.startup_time, d.dbid, d.log_mode, d.database_role, d.force_logging
                             ,d.name, d.created, p.value, vp.con_id, vp.name pname
                             ,vp.dbid pdbid, vp.open_mode popen_mode, vp.restricted prestricted, vp.total_size ptotal_time
@@ -1773,7 +1775,7 @@ sql_instance() {
                         where p.name = 'enable_pluggable_database'
                       union all
                       select
-                             i.instance_name, i.${version_column} version, i.status, i.logins, i.archiver
+                             i.instance_name, i.host_name, i.${version_column} version, i.status, i.logins, i.archiver
                             ,i.startup_time, d.dbid, d.log_mode, d.database_role, d.force_logging
                             ,d.name, d.created, p.value, 0 con_id, null pname
                             ,0 pdbis, null popen_mode, null prestricted, null ptotal_time
@@ -1799,6 +1801,7 @@ sql_instance() {
                      || '|' || FORCE_LOGGING
                      || '|' || d.name
                      || '|' || to_char(d.created, 'ddmmyyyyhh24mi')
+                     || '|' || i.host_name
                 from v\$instance i, v\$database d;"
     fi
 }
@@ -2497,8 +2500,6 @@ mk_ora_db_connect() {
 
     else
         # working with locally running instances
-        # mk_oracle_dbusers.conf is for compatibility. Do not use it anymore
-        ORACLE_USERCONF=${MK_CONFDIR}/mk_oracle_dbuser.conf
         TNSALIAS=${ORACLE_SID}
 
         # ASM use '+' as 1st character in SID!
@@ -2528,13 +2529,6 @@ mk_ora_db_connect() {
             else
                 ORACFGLINE=${!dummy_upper}
             fi
-        fi
-
-        if [ -f "${ORACLE_USERCONF}" ] && [ "${ORACFGLINE}" = '' ]; then
-            # mk_oracle_dbuser.conf
-            ORACFGLINE=$("${GREP}" "^${ORACLE_SID}:" <"${ORACLE_USERCONF}")
-            # mk_oracle_dbuser has ORACLE_SID as 1. parameter. we need an offset for all values
-            offset=1
         fi
 
         CFGTNSALIAS=$(echo "${ORACFGLINE}" | cut -d":" -f$((6 + offset)))
@@ -2571,7 +2565,6 @@ mk_ora_db_connect() {
         logging "[${sid}] [mk_ora_db_connect]" "TNS CFGTNSALIAS: $CFGTNSALIAS"
     fi
 
-    TNSPINGOK=no
     if [ -f "${TNS_ADMIN}/tnsnames.ora" ]; then
         if [ "${ORADBUSER:0:2}" = '/@' ]; then
             P_TNSALIAS_P=$(eval echo "${ORADBUSER:2}")
@@ -2601,14 +2594,6 @@ mk_ora_db_connect() {
         fi
 
         TNSALIAS=${SQLS_TNSALIAS:-${P_TNSALIAS_P}}
-
-        logging "[${sid}] [mk_ora_db_connect]" "TNS Alias PING: $TNSALIAS"
-
-        if "${ORACLE_HOME}"/bin/tnsping "$TNSALIAS" >/dev/null 2>&1; then
-            TNSPINGOK=yes
-        else
-            unset TNSALIAS
-        fi
     else
         if [ -z "$CFGTNSALIAS" ]; then
             unset TNSALIAS
@@ -2622,8 +2607,7 @@ mk_ora_db_connect() {
         "DB sys connect : $DBSYSCONNECT" \
         "DB host        : $DBHOST" \
         "DB port        : $DBPORT" \
-        "TNS alias      : $TNSALIAS" \
-        "TNS PING       : ${TNSPINGOK}"
+        "TNS alias      : $TNSALIAS"
 
     if [ ! "${ORACFGLINE}" ]; then
         # no configuration found
@@ -2641,7 +2625,7 @@ mk_ora_db_connect() {
             # connect with / and wallet
             ORADBUSER=""
             DBPASSWORD=""
-            if [ -z "$CFGTNSALIAS" ] && [ "$TNSPINGOK" = 'no' ]; then
+            if [ -z "$CFGTNSALIAS" ]; then
                 # create an EZCONNECT string when no tnsnames.ora is usable
                 # or no alias is configured in CFGTNSALIAS
                 # defaults to localhost:1521/<ORACLE_SID>
@@ -2992,23 +2976,19 @@ main_queries() {
         "SKIP_SIDS           : ${SKIP_SIDS}" \
         "Custom SQLs sections: $custom_sqls_sections"
 
-    if [ "$PIGGYBACK_HOSTS" ]; then
-        if [ ! -e "$MK_VARDIR/mk_oracle.found" ]; then
-            touch "$MK_VARDIR/mk_oracle.found"
-        fi
+    # From now on we expect databases on this system (for ever)
+    if [ -n "$SIDS" ]; then
+        touch "$MK_VARDIR/mk_oracle.found"
     fi
 
     # If we do not have found any running database instance, then either
     # no ORACLE is present on this system or it's just currently not running.
     # In the later case we ouput empty agent sections so that Checkmk will be
     # happy and execute the actual check functions.
-    if [ -z "$SIDS" ] && [ ! -e "$MK_VARDIR/mk_oracle.found" ]; then
-        logging -c -e "[preliminaries]" "No SIDs and \$MK_VARDIR/mk_oracle.found not found"
+    if [ ! -e "$MK_VARDIR/mk_oracle.found" ] && [ -z "$REMOTE_INSTANCES" ]; then
+        logging -c -e "[preliminaries]" "\$MK_VARDIR/mk_oracle.found not found and no remote instances configured"
         exit 1
     fi
-
-    # From now on we expect databases on this system (for ever)
-    touch "$MK_VARDIR/mk_oracle.found"
 
     # Make sure that always all sections are present, even
     # in case of an error. Note: the section <<<oracle_instance>>>
@@ -3082,7 +3062,11 @@ main_queries() {
 main() {
     # See werk 13732 for more details about this main function
 
-    parent_dir=$(basename "$(pwd)")
+    if [ "$0" = "./mk_oracle" ]; then
+        parent_dir=$(basename "$(pwd)")
+    else
+        parent_dir=$(basename "$(dirname "$0")")
+    fi
 
     if $MK_ORA_ON_CL || [ "$parent_dir" = plugins ]; then
         # Does not work properly (async sections) on distros

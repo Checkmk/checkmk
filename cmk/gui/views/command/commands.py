@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,7 +8,6 @@ from collections.abc import Sequence
 from typing import Any, Literal
 
 import livestatus
-from livestatus import SiteId
 
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.type_defs import HostName, ServiceName
@@ -45,7 +44,6 @@ def register_command_groups(registry: CommandGroupRegistry) -> None:
 
 
 def register_commands(registry: CommandRegistry) -> None:
-
     registry.register(CommandReschedule)
     registry.register(CommandNotifications)
     registry.register(CommandToggleActiveChecks)
@@ -58,7 +56,6 @@ def register_commands(registry: CommandRegistry) -> None:
     registry.register(CommandScheduleDowntimes)
     registry.register(CommandRemoveDowntime)
     registry.register(CommandRemoveComments)
-    registry.register(CommandFavorites)
 
 
 class CommandGroupVarious(CommandGroup):
@@ -131,7 +128,7 @@ class CommandReschedule(Command):
     def tables(self):
         return ["host", "service"]
 
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.open_div(class_="group")
         html.write_text(_("Spread over") + " ")
         html.text_input("_resched_spread", default_value="0", size=3, cssclass="number")
@@ -206,7 +203,7 @@ class CommandNotifications(Command):
     def tables(self):
         return ["host", "service"]
 
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.button("_enable_notifications", _("Enable"))
         html.button("_disable_notifications", _("Disable"))
 
@@ -270,7 +267,7 @@ class CommandToggleActiveChecks(Command):
     def tables(self):
         return ["host", "service"]
 
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.button("_enable_checks", _("Enable"))
         html.button("_disable_checks", _("Disable"))
 
@@ -318,7 +315,7 @@ class CommandTogglePassiveChecks(Command):
     def tables(self):
         return ["host", "service"]
 
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.button("_enable_passive_checks", _("Enable"))
         html.button("_disable_passive_checks", _("Disable"))
 
@@ -385,7 +382,7 @@ class CommandClearModifiedAttributes(Command):
     def tables(self):
         return ["host", "service"]
 
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.button("_clear_modattr", _("Clear modified attributes"))
 
     def _action(
@@ -462,7 +459,7 @@ class CommandFakeCheckResult(Command):
     def is_show_more(self) -> bool:
         return True
 
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.open_table()
 
         html.open_tr()
@@ -584,7 +581,7 @@ class CommandCustomNotification(Command):
     def is_show_more(self) -> bool:
         return True
 
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.open_div(class_="group")
         html.text_input(
             "_cusnot_comment",
@@ -692,7 +689,7 @@ class CommandAcknowledge(Command):
     def tables(self):
         return ["host", "service", "aggr"]
 
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.open_div(class_="group")
         html.text_input(
             "_ack_comment",
@@ -853,7 +850,7 @@ class CommandAddComment(Command):
     def tables(self):
         return ["host", "service"]
 
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.open_div(class_="group")
         html.text_input(
             "_comment",
@@ -990,7 +987,7 @@ class CommandScheduleDowntimes(Command):
             ]
         return super().user_confirm_options(len_rows, cmdtag)
 
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.open_div(class_="group")
         html.text_input(
             "_down_comment",
@@ -1096,7 +1093,7 @@ class CommandScheduleDowntimes(Command):
         else:  # one of the default time buttons
             button_value = self.button_interval_value()
             if button_value is None:
-                # the remove button in the Show Downtimes WATO view returns None here
+                # the remove button in the Show Downtimes Setup view returns None here
                 # TODO: separate the remove mechanism from the create downtime procedure in the views call
                 return None
             varprefix = "_downrange__%s" % button_value
@@ -1346,7 +1343,7 @@ def _bi_commands(downtime: DowntimeSchedule, node: Any) -> Sequence[CommandSpec]
     return commands_aggr
 
 
-def _find_all_leaves(  # type:ignore[no-untyped-def]
+def _find_all_leaves(  # type: ignore[no-untyped-def]
     node,
 ) -> list[tuple[str | None, HostName, ServiceName | None]]:
     # leaf node
@@ -1452,7 +1449,7 @@ class CommandRemoveDowntime(Command):
     def is_suggested(self) -> bool:
         return True
 
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.button("_remove_downtimes", _("Remove"))
 
     def _action(
@@ -1496,7 +1493,7 @@ class CommandRemoveComments(Command):
             ungettext("comment", "comments", len_action_rows),
         )
 
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.button("_remove_comments", _("Remove"))
 
     def _action(
@@ -1504,86 +1501,19 @@ class CommandRemoveComments(Command):
     ) -> CommandActionResult:
         if not request.has_var("_remove_comments"):
             return None
-        if row.get("comment_entry_type") == 4:  # acknowledgement
-            spec = (
-                row["host_name"]
-                if cmdtag == "HOST"
-                else ("{};{}".format(row["host_name"], row["service_description"]))
-            )
-            return (f"REMOVE_{cmdtag}_ACKNOWLEDGEMENT;{spec}"), ""
-        return (f"DEL_{cmdtag}_COMMENT;{spec}"), ""
-
-
-# .
-#   .--Stars * (Favorites)-------------------------------------------------.
-#   |                   ____  _                                            |
-#   |                  / ___|| |_ __ _ _ __ ___  __/\__                    |
-#   |                  \___ \| __/ _` | '__/ __| \    /                    |
-#   |                   ___) | || (_| | |  \__ \ /_  _\                    |
-#   |                  |____/ \__\__,_|_|  |___/   \/                      |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-PermissionActionStar = permission_registry.register(
-    Permission(
-        section=PermissionSectionAction,
-        name="star",
-        title=_l("Use favorites"),
-        description=_l(
-            "This permission allows a user to make certain host and services "
-            "his personal favorites. Favorites can be used for a having a fast "
-            "access to items that are needed on a regular base."
-        ),
-        defaults=["user", "admin"],
-    )
-)
-
-
-class CommandFavorites(Command):
-    @property
-    def ident(self) -> str:
-        return "favorites"
-
-    @property
-    def title(self) -> str:
-        return _("Favorites")
-
-    @property
-    def icon_name(self):
-        return "favorite"
-
-    @property
-    def permission(self) -> Permission:
-        return PermissionActionStar
-
-    @property
-    def tables(self):
-        return ["host", "service"]
-
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
-        html.button("_star", _("Add to Favorites"), cssclass="hot")
-        html.button("_unstar", _("Remove from Favorites"))
-
-    def _action(
-        self, cmdtag: Literal["HOST", "SVC"], spec: str, row: Row, row_index: int, action_rows: Rows
-    ) -> CommandActionResult:
-        if request.var("_star") or request.var("_unstar"):
-            star = 1 if request.var("_star") else 0
-            if star:
-                title = _("<b>add to your favorites</b>")
-            else:
-                title = _("<b>remove from your favorites</b>")
-            return f"STAR;{star};{spec}", title
-        return None
-
-    def executor(self, command: CommandSpec, site: SiteId | None) -> None:
-        # We only get CommandSpecWithoutSite here. Can be cleaned up once we have a dedicated
-        # object type for the command
-        assert isinstance(command, str)
-        _unused, star, spec = command.split(";", 2)
-        stars = user.stars
-        if star == "0" and spec in stars:
-            stars.remove(spec)
-        elif star == "1":
-            stars.add(spec)
-        user.save_stars()
+        # NOTE: To remove an acknowledgement, we have to use the specialized command, not only the
+        # general one. The latter one only removes the comment itself, not the "acknowledged" state.
+        # NOTE: We get the commend ID (an int) as a str via the spec parameter (why???), but we need
+        # the specification of the host or service for REMOVE_FOO_ACKNOWLEDGEMENT.
+        if row.get("comment_entry_type") != 4:  # not an acknowledgement
+            rm_ack = []
+        elif cmdtag == "HOST":
+            rm_ack = [f"REMOVE_HOST_ACKNOWLEDGEMENT;{row['host_name']}"]
+        else:
+            rm_ack = [f"REMOVE_SVC_ACKNOWLEDGEMENT;{row['host_name']};{row['service_description']}"]
+        # Nevertheless, we need the general command, too, even for acknowledgements: The
+        # acknowledgement might be persistent, so REMOVE_FOO_ACKNOWLEDGEMENT leaves the comment
+        # itself, that's the whole point of being persistent. The only way to get rid of such a
+        # comment is via DEL_FOO_COMMENT.
+        del_cmt = [f"DEL_HOST_COMMENT;{spec}" if cmdtag == "HOST" else f"DEL_SVC_COMMENT;{spec}"]
+        return (rm_ack + del_cmt), ""

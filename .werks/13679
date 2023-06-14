@@ -6,7 +6,7 @@ Date: 1649164711
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The hardware/software-inventory plugin now uses some <tt>psrinfo</tt>
 commands to determine information about physical CPUs,

@@ -8,15 +8,20 @@
 
 #include "agent_controller.h"
 #include "asio.h"
+#include "carrier.h"
+#include "common/mailslot_transport.h"
 #include "external_port.h"
+#include "realtime.h"
 #include "test_tools.h"
 
 using namespace std::chrono_literals;
 using namespace std::string_literals;
+namespace views = std::views;
+namespace rs = std::ranges;
 using asio::ip::tcp;
 
 namespace wtools {
-class TestProcessor2 : public wtools::BaseServiceProcessor {
+class TestProcessor2 final : public wtools::BaseServiceProcessor {
 public:
     TestProcessor2() { s_counter++; }
     ~TestProcessor2() override { s_counter--; }
@@ -34,6 +39,8 @@ public:
     [[nodiscard]] const wchar_t *getMainLogName() const override {
         return L"log.log";
     }
+
+    wtools::InternalUsersDb *getInternalUsers() override { return nullptr; }
 
     bool stopped_ = false;
     bool started_ = false;
@@ -54,9 +61,9 @@ TEST(ExternalPortTest, StartStop) {
     world::ExternalPort test_port(&tp);  //
 
     ExternalPort::IoParam io_param{
-        .port{tst::TestPort()},
-        .local_only{LocalOnly::yes},
-        .pid{},
+        .port = tst::TestPort(),
+        .local_only = LocalOnly::yes,
+        .pid = 0U,
     };
     EXPECT_TRUE(test_port.startIo(reply, io_param));
     EXPECT_TRUE(test_port.isIoStarted());
@@ -121,7 +128,7 @@ ExternalPort::IoParam makeIoParam(std::optional<uint32_t> pid) {
 }
 }  // namespace
 
-TEST_F(ExternalPortCheckProcessFixture, AnyProcessIntegration) {
+TEST_F(ExternalPortCheckProcessFixture, AnyProcessComponent) {
     disableElevatedAllowed();
     EXPECT_TRUE(test_port.startIo(reply, makeIoParam({})));
 
@@ -131,7 +138,7 @@ TEST_F(ExternalPortCheckProcessFixture, AnyProcessIntegration) {
     EXPECT_EQ(remote_ip, text);
 }
 
-TEST_F(ExternalPortCheckProcessFixture, InvalidProcessIntegration) {
+TEST_F(ExternalPortCheckProcessFixture, InvalidProcessComponent) {
     disableElevatedAllowed();
     EXPECT_TRUE(test_port.startIo(reply, makeIoParam(1)));
 
@@ -141,7 +148,7 @@ TEST_F(ExternalPortCheckProcessFixture, InvalidProcessIntegration) {
     EXPECT_TRUE(remote_ip.empty());
 }
 
-TEST_F(ExternalPortCheckProcessFixture, InvalidProcessDefaultIntegration) {
+TEST_F(ExternalPortCheckProcessFixture, InvalidProcessDefaultComponent) {
     EXPECT_TRUE(test_port.startIo(reply, makeIoParam(1)));
 
     EXPECT_EQ(writeToSocket(tst::TestPort()), 6U);
@@ -150,7 +157,7 @@ TEST_F(ExternalPortCheckProcessFixture, InvalidProcessDefaultIntegration) {
     EXPECT_EQ(remote_ip, text);
 }
 
-TEST_F(ExternalPortCheckProcessFixture, ValidProcessIntegration) {
+TEST_F(ExternalPortCheckProcessFixture, ValidProcessComponent) {
     disableElevatedAllowed();
     EXPECT_TRUE(test_port.startIo(reply, makeIoParam(::GetCurrentProcessId())));
 
@@ -174,7 +181,7 @@ public:
     void SetUp() override {
         test_port_.startIo(
             reply,
-            {.port{tst::TestPort()}, .local_only{LocalOnly::no}, .pid{}});
+            {.port = tst::TestPort(), .local_only = LocalOnly::no, .pid = 0U});
     }
 
     void TearDown() override {
@@ -200,7 +207,7 @@ public:
     bool delay_{false};
 };
 
-TEST_F(ExternalPortTestFixture, ReadIntegration) {
+TEST_F(ExternalPortTestFixture, ReadComponent) {
     tst::FirewallOpener fwo;
     ASSERT_TRUE(tst::WaitForSuccessSilent(1000ms, [this] {
         std::error_code ec;
@@ -267,9 +274,9 @@ TEST_F(ExternalPortQueueFixture, FillAndConsumeMailSlotRequests) {
             return std::vector<uint8_t>{};
         },
         ExternalPort::IoParam{
-            .port{0},
-            .local_only{LocalOnly::no},
-            .pid{::GetCurrentProcessId()},
+            .port = 0U,
+            .local_only = LocalOnly::no,
+            .pid = ::GetCurrentProcessId(),
         });
     EXPECT_TRUE(tst::WaitForSuccessSilent(
         1000ms, [this] { return test_port_.entriesInQueue() == 0; }));
@@ -298,7 +305,7 @@ void runThread(uint16_t port) {
 }
 }  // namespace
 
-TEST_F(ExternalPortTestFixture, MultiConnectIntegration) {
+TEST_F(ExternalPortTestFixture, MultiConnectComponent) {
     tst::FirewallOpener fwo;
     constexpr int thread_count{8};
     delay_ = true;
@@ -332,8 +339,8 @@ TEST(ExternalPortTest, IsIpAllowedAsExceptionYes) {
     auto test_fs = tst::TempCfgFs::CreateNoIo();
     cfg::GetLoadedConfig()[cfg::groups::kSystem] =
         YAML::Load(fmt::format(fmt::runtime(base), "yes"));
-    for (const auto &t : ip_allowed) {
-        EXPECT_EQ(IsIpAllowedAsException(t.first), t.second);
+    for (const auto &[ip, allowed] : ip_allowed) {
+        EXPECT_EQ(IsIpAllowedAsException(ip), allowed);
     }
 }
 
@@ -341,9 +348,66 @@ TEST(ExternalPortTest, IsIpAllowedAsExceptionNo) {
     auto test_fs = tst::TempCfgFs::CreateNoIo();
     cfg::GetLoadedConfig()[cfg::groups::kSystem] =
         YAML::Load(fmt::format(fmt::runtime(base), "no"));
-    for (const auto &t : ip_allowed) {
-        EXPECT_FALSE(IsIpAllowedAsException(t.first));
+    for (const auto &ip : ip_allowed | std::views::keys) {
+        EXPECT_FALSE(IsIpAllowedAsException(ip));
     }
+}
+
+class ExternalPortMailSlotFixture : public ::testing::Test {
+public:
+    static bool MailboxCallback(const mailslot::Slot * /*slot*/,
+                                const void *data, int len, void *context) {
+        auto storage = static_cast<std::vector<uint8_t> *>(context);
+
+        const auto *d = static_cast<const uint8_t *>(data);
+        storage->assign(d, d + len);
+
+        return true;
+    }
+    void SetUp() override {
+        temp_fs = tst::TempCfgFs::CreateNoIo();
+        ASSERT_TRUE(temp_fs->loadFactoryConfig());
+        mailbox_.ConstructThread(&ExternalPortMailSlotFixture::MailboxCallback,
+                                 20, &result_, wtools::SecurityLevel::admin);
+        std::this_thread::sleep_for(100ms);  // wait for thread start
+    }
+
+    void TearDown() override { mailbox_.DismantleThread(); }
+
+    tst::TempCfgFs::ptr temp_fs;
+    mailslot::Slot mailbox_{"WinAgentExternalPortTest",
+                            ::GetCurrentProcessId()};
+    std::vector<uint8_t> result_;
+    std::vector<uint8_t> data_ = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    void wait_for_effect() {
+        std::this_thread::sleep_for(100ms);  // wait for thread
+        tst::WaitForSuccessSilent(2000ms, [this] { return !result_.empty(); });
+    }
+
+    std::tuple<std::vector<uint8_t>, std::vector<uint8_t>> split_result()
+        const {
+        std::vector h(result_.begin(), result_.begin() + 2);
+        std::vector r(result_.begin() + 2, result_.end());
+        return {h, r};
+    }
+};
+
+TEST_F(ExternalPortMailSlotFixture, NonEncryptedComponent) {
+    EXPECT_TRUE(SendDataToMailSlot(mailbox_.GetName(), data_, nullptr));
+    wait_for_effect();
+    EXPECT_EQ(data_, result_);
+}
+
+TEST_F(ExternalPortMailSlotFixture, EncryptedComponent) {
+    const auto commander = std::make_unique<encrypt::Commander>("aa");
+    ASSERT_TRUE(SendDataToMailSlot(mailbox_.GetName(), data_, commander.get()));
+    wait_for_effect();
+    auto [h, r] = split_result();
+    ASSERT_EQ(h[0], rt::kEncryptedHeader[0]);
+    ASSERT_EQ(h[1], rt::kEncryptedHeader[1]);
+    const auto [success, sz] = commander->decode(r.data(), r.size());
+    EXPECT_TRUE(success);
+    EXPECT_TRUE(rs::equal(views::take(r, sz), views::all(data_)));
 }
 
 }  // namespace cma::world

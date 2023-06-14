@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
 import socket
+import sys
 from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from datetime import datetime, timezone
@@ -19,9 +20,22 @@ from cmk.special_agents.utils.agent_common import SectionWriter, special_agent_m
 from cmk.special_agents.utils.argument_parsing import Args, create_default_argument_parser
 
 
+class SMBShareAgentError(Exception):
+    ...
+
+
 class File(NamedTuple):
     path: str
     file: SharedFile
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, File):
+            return NotImplemented
+
+        return self.path == other.path
+
+    def __hash__(self) -> int:
+        return hash(self.path)
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:
@@ -66,12 +80,41 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         ),
         default=[],
     )
+
+    parser.add_argument(
+        "--recursive",
+        action="store_true",
+        help=("Use recursive pattern search"),
+    )
     return parser.parse_args(argv)
 
 
-def iter_shared_files(
-    conn: SMBConnection, hostname: str, share_name: str, pattern: list[str], subdir: str = ""
-) -> Generator[File, None, None]:
+def get_child_dirs(conn, share_name, subdir):
+    yield subdir
+
+    for shared_file in conn.listPath(share_name, subdir):
+        if shared_file.filename in (".", ".."):
+            continue
+
+        relative_path = f"{subdir}{shared_file.filename}"
+        if shared_file.isDirectory:
+            yield from get_child_dirs(conn, share_name, f"{relative_path}\\")
+
+
+def iter_shared_files(conn, hostname, share_name, pattern, subdir="", recursive=False):
+    if pattern[0] == "**" and recursive:
+        child_dirs = get_child_dirs(conn, share_name, subdir)
+        for child_dir in child_dirs:
+            if len(pattern) > 1:
+                yield from iter_shared_files(
+                    conn, hostname, share_name, pattern[1:], subdir=child_dir, recursive=recursive
+                )
+                continue
+
+            yield from iter_shared_files(
+                conn, hostname, share_name, ["*"], subdir=child_dir, recursive=False
+            )
+        return
 
     for shared_file in conn.listPath(share_name, subdir):
         if shared_file.filename in (".", ".."):
@@ -80,12 +123,17 @@ def iter_shared_files(
         relative_path = f"{subdir}{shared_file.filename}"
         absolute_path = f"\\\\{hostname}\\{share_name}\\{relative_path}"
 
-        if not fnmatch(shared_file.filename, pattern[0]):
+        if not fnmatch(shared_file.filename.lower(), pattern[0].lower()):
             continue
 
         if shared_file.isDirectory and len(pattern) > 1:
             yield from iter_shared_files(
-                conn, hostname, share_name, pattern[1:], subdir=f"{relative_path}\\"
+                conn,
+                hostname,
+                share_name,
+                pattern[1:],
+                subdir=f"{relative_path}\\",
+                recursive=recursive,
             )
             continue
 
@@ -94,27 +142,29 @@ def iter_shared_files(
 
 
 def get_all_shared_files(
-    conn: SMBConnection, hostname: str, patterns: list[str]
-) -> Generator[tuple[str, list[File]], None, None]:
-    share_names = [s.name for s in conn.listShares()]
+    conn: SMBConnection, hostname: str, patterns: list[str], recursive: bool
+) -> Generator[tuple[str, set[File]], None, None]:
+    share_names = [s.name.lower() for s in conn.listShares()]
     for pattern_string in patterns:
         pattern = pattern_string.strip("\\").split("\\")
         if len(pattern) < 3:
-            raise RuntimeError(
+            raise SMBShareAgentError(
                 f"Invalid pattern {pattern_string}. Pattern has to consist of hostname, share and file matching pattern"
             )
 
         if pattern[0] != hostname:
-            raise RuntimeError(f"Pattern {pattern_string} doesn't match {hostname} hostname")
+            raise SMBShareAgentError(f"Pattern {pattern_string} doesn't match {hostname} hostname")
 
         share_name = pattern[1]
-        if share_name not in share_names:
-            raise RuntimeError(f"Share {share_name} doesn't exist on host {hostname}")
+        if share_name.lower() not in share_names:
+            raise SMBShareAgentError(f"Share {share_name} doesn't exist on host {hostname}")
 
-        yield pattern_string, list(iter_shared_files(conn, hostname, share_name, pattern[2:]))
+        yield pattern_string, set(
+            iter_shared_files(conn, hostname, share_name, pattern[2:], recursive=recursive)
+        )
 
 
-def write_section(all_files: Generator[tuple[str, list[File]], None, None]) -> None:
+def write_section(all_files: Generator[tuple[str, set[File]], None, None]) -> None:
     with SectionWriter("fileinfo", separator="|") as writer:
         now = datetime.utcnow().replace(tzinfo=timezone.utc)
         writer.append(int(datetime.timestamp(now)))
@@ -126,7 +176,7 @@ def write_section(all_files: Generator[tuple[str, list[File]], None, None]) -> N
                 writer.append(f"{pattern}|missing")
                 continue
 
-            for shared_file in shared_files:
+            for shared_file in sorted(shared_files):
                 file_obj = shared_file.file
                 age = int(file_obj.last_write_time)
                 file_info = f"{shared_file.path}|ok|{file_obj.file_size}|{age}"
@@ -144,12 +194,14 @@ def connect(
         logging.debug("Connecting to %s on port 445", ip_address)
         success = conn.connect(ip_address, 445)
     except (OSError, NotConnectedError):
-        raise RuntimeError(
+        raise SMBShareAgentError(
             "Could not connect to the remote host. Check your ip address and remote name."
         )
 
     if not success:
-        raise RuntimeError("Connection to the remote host was declined. Check your credentials.")
+        raise SMBShareAgentError(
+            "Connection to the remote host was declined. Check your credentials."
+        )
 
     logging.debug("Connection successfully established")
 
@@ -160,14 +212,17 @@ def connect(
 
 
 def smb_share_agent(args: Args) -> int:
-    with connect(args.username, args.password, args.hostname, args.ip_address) as conn:
-        all_files = get_all_shared_files(conn, args.hostname, args.patterns)
-        try:
+    try:
+        with connect(args.username, args.password, args.hostname, args.ip_address) as conn:
+            all_files = get_all_shared_files(conn, args.hostname, args.patterns, args.recursive)
             logging.debug("Querying share files and writing fileinfo section")
             write_section(all_files)
-        except OperationFailure as err:
-            raise RuntimeError(err.args[0])
-
+    except SMBShareAgentError as err:
+        sys.stderr.write(str(err))
+        return 1
+    except OperationFailure as err:
+        sys.stderr.write(str(err.args[0]))
+        return 1
     logging.debug("Agent finished successfully")
     return 0
 

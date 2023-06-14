@@ -49,6 +49,7 @@ RUN apt-get update \
     gettext \
     git-buildpackage \
     gtk-doc-tools \
+    golang-go \
     iputils-ping \
     joe \
     libcurl4-openssl-dev \
@@ -112,10 +113,6 @@ RUN /opt/install-protobuf-cpp.sh
 RUN /opt/install-openssl.sh
 RUN /opt/install-python.sh
 RUN /opt/install-freetds.sh
-
-# Exclusively for this distro at the moment, because it is used by several CI
-# jobs for special tasks (checking out git, "make dist", orchestrating other
-# containers, ...). Scripts should be usable with other Ubuntu versions.
 RUN /opt/install-rust-cargo.sh
 
 # Now shrink all the binaries and libraries we produced to build a small image
@@ -159,6 +156,8 @@ RUN /opt/install-pipenv.sh
 RUN /opt/install-cmk-dependencies.sh
 RUN /opt/install-patchelf.sh
 RUN /opt/install-packer.sh
+RUN /opt/install-aws-cli.sh
+RUN /opt/install-buildifier.sh
 
 # Ensure all our build containers have the jenkins user (with same uid/gid). The non privileged
 # jobs will be executed as this user in the container
@@ -171,5 +170,6 @@ RUN mkdir -p /home/jenkins/.cache/ \
 ARG VERS_TAG
 RUN echo $VERS_TAG > /version.txt
 
+ENV RUSTUP_HOME=/opt/rust/rustup
 LABEL \
     com.tribe29.image_type="build-image"

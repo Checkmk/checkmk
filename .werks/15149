@@ -1,0 +1,12 @@
+Title: agent_azure: Fix crash if the metric isn't found
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1677506312
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The Azure agent would crash if the metric wasn't available for a resource.
+Now, the agent doesn't crash and retries to fetch available metrics.

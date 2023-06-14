@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -82,7 +82,7 @@ def check_app_registration(
 
 register.check_plugin(
     name="azure_app_registration",
-    service_name="App Registration Secret %s",
+    service_name="Azure/App Registration Secret %s",
     discovery_function=discover_app_registration,
     check_function=check_app_registration,
     check_ruleset_name="credentials_expiration",

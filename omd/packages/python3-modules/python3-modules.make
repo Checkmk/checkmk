@@ -62,7 +62,9 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 	    export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
 	    export CFLAGS="-I$(PACKAGE_PYTHON_INCLUDE_PATH) $$CFLAGS" ; \
 	    `: Reduce GRPC build load peaks - See src/python/grpcio/_parallel_compile_patch.py in grpcio package` \
+	    `: Keep in sync with scripts/run-pipenv` \
 	    export GRPC_PYTHON_BUILD_EXT_COMPILER_JOBS=4 ; \
+	    export NPY_NUM_BUILD_JOBS=4 ; \
 	    $(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
 		`: dont use precompiled things, build with our build env ` \
 		--no-binary=":all:" \

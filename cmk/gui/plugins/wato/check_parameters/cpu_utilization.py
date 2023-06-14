@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -14,7 +14,7 @@ from cmk.gui.plugins.wato.utils import (
     TextInput,
 )
 from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
-from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, Integer, Percentage, Tuple
+from cmk.gui.valuespec import Age, Dictionary, DropdownChoice, Integer, Migrate, Percentage, Tuple
 
 
 def cpu_util_elements():
@@ -239,25 +239,45 @@ rulespec_registry.register(
 )
 
 
-def _parameter_valuespec_cpu_utilization() -> Dictionary:
-    return Dictionary(
-        elements=[
-            (
-                "util",
-                Tuple(
-                    elements=[
-                        Percentage(title=_("Warning at a utilization of"), default_value=90.0),
-                        Percentage(title=_("Critical at a utilization of"), default_value=95.0),
-                    ],
-                    title=_("Alert on excessive CPU utilization"),
-                    help=_(
-                        "The CPU utilization sums up the percentages of CPU time that is used "
-                        "for user processes and kernel routines over all available cores within "
-                        "the last check interval. The possible range is from 0% to 100%"
+def _cpu_utilization_to_dict(
+    param: tuple[float, float] | dict[str, tuple[float, float]]
+) -> dict[str, tuple[float, float]]:
+    if not param:
+        return {}
+    if isinstance(param, dict):
+        if "util" in param:
+            return param
+        if "levels" in param:
+            param["util"] = param.pop("levels")
+            return param
+    if isinstance(param, tuple):
+        return {"util": param}
+    return {}
+
+
+def _parameter_valuespec_cpu_utilization() -> Migrate:
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "util",
+                    Tuple(
+                        elements=[
+                            Percentage(title=_("Warning at a utilization of"), default_value=90.0),
+                            Percentage(title=_("Critical at a utilization of"), default_value=95.0),
+                        ],
+                        title=_("Alert on excessive CPU utilization"),
+                        help=_(
+                            # xgettext: no-python-format
+                            "The CPU utilization sums up the percentages of CPU time that is used "
+                            "for user processes and kernel routines over all available cores within "
+                            "the last check interval. The possible range is from 0% to 100%"
+                        ),
                     ),
                 ),
-            ),
-        ]
+            ]
+        ),
+        migrate=_cpu_utilization_to_dict,
     )
 
 

@@ -1,0 +1,13 @@
+Title: Switch agent-receiver certificate
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1684832505
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Previous to this Werk the <tt>agent-receiver</tt> used its own certificate for TLS.
+Since the CN was identical to the general site certificate the agent-receiver now uses this general certificate.
+CN and signing CA stay the same, therefore all supported clients continue to work.

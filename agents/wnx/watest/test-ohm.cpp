@@ -62,7 +62,7 @@ TEST(SectionProviderOhm, Construction) {
     EXPECT_EQ(ohm.getUniqName(), cma::section::kOhm);
 }
 
-TEST(SectionProviderOhm, ReadDataIntegration) {
+TEST(SectionProviderOhm, ReadDataComponent) {
     XLOG::setup::DuplicateOnStdio(true);
     ON_OUT_OF_SCOPE(XLOG::setup::DuplicateOnStdio(false));
     if (SkipTest()) {
@@ -126,7 +126,7 @@ TEST(SectionProviderOhm, ReadDataIntegration) {
 }
 
 // TODO(sk,au): Check why the test doesn't work on CI
-TEST(SectionProviderOhm, ErrorReportingIntegrationExt) {
+TEST(SectionProviderOhm, ErrorReportingComponentExt) {
     if (SkipTest()) {
         GTEST_SKIP();
     }
@@ -144,7 +144,7 @@ TEST(SectionProviderOhm, ErrorReportingIntegrationExt) {
 
 namespace cma::srv {
 // TODO(sk,au): Check why the test doesn't work on CI
-TEST(SectionProviderOhm, DoubleStartIntegrationExt) {
+TEST(SectionProviderOhm, DoubleStartComponentExt) {
     if (SkipTest()) {
         GTEST_SKIP();
     }
@@ -164,7 +164,7 @@ TEST(SectionProviderOhm, DoubleStartIntegrationExt) {
 }
 
 // TODO(sk,au): Check why the test doesn't work on CI
-TEST(SectionProviderOhm, StartStopIntegrationExt) {
+TEST(SectionProviderOhm, StartStopComponentExt) {
     if (SkipTest()) {
         GTEST_SKIP();
     }
@@ -184,7 +184,7 @@ TEST(SectionProviderOhm, StartStopIntegrationExt) {
 }
 
 // TODO(sk,au): Check why the test doesn't work on CI
-TEST(SectionProviderOhm, ConditionallyStartOhmIntegrationExt) {
+TEST(SectionProviderOhm, ConditionallyStartOhmComponentExt) {
     if (SkipTest()) {
         GTEST_SKIP();
     }

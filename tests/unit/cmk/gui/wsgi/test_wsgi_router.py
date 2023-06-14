@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import os
 
+import flask
 import pytest
 import webtest  # type: ignore[import]
+from flask import request
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
@@ -13,6 +15,19 @@ import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
+
+
+def test_request_url(flask_app: flask.Flask) -> None:
+    url = "/NO_SITE/check_mk/api/1.0/objects/activation_run/123/actions/wait-for-completion/invoke"
+    with flask_app.test_request_context(
+        environ_overrides={
+            "apache.version": "foo",
+            "PATH_INFO": url,
+            "SCRIPT_NAME": url,
+        },
+    ):
+        flask_app.preprocess_request()
+        assert request.url == f"http://localhost{url}"
 
 
 @pytest.mark.parametrize(
@@ -116,22 +131,21 @@ def test_webserver_auth(wsgi_app: WebTestAppForCMK, with_user: tuple[UserId, str
     )
 
 
-def test_normal_auth(wsgi_app: WebTestAppForCMK, with_user: tuple[UserId, str]) -> None:
+def test_normal_auth(base: str, wsgi_app: WebTestAppForCMK, with_user: tuple[UserId, str]) -> None:
     username, password = with_user
-    wsgi_app.get(
-        "/NO_SITE/check_mk/api/1.0/version", headers={"Accept": "application/json"}, status=401
-    )
+    wsgi_app.get(f"{base}/version", headers={"Accept": "application/json"}, status=401)
 
     # Add a failing Basic Auth to check if the other types will succeed.
     wsgi_app.set_authorization(("Basic", ("foobazbar", "foobazbar")))
 
-    login: webtest.TestResponse = wsgi_app.get("/NO_SITE/check_mk/login.py")
+    login: webtest.TestResponse = wsgi_app.get("/NO_SITE/check_mk/login.py", status=200)
     login.form["_username"] = username
     login.form["_password"] = password
     resp = login.form.submit("_login", index=1)
 
     assert "Invalid credentials." not in resp.text
 
+    wsgi_app.set_authorization(None)
     wsgi_app.get(
         "/NO_SITE/check_mk/api/1.0/version", headers={"Accept": "application/json"}, status=200
     )
@@ -161,9 +175,9 @@ def test_openapi_app_exception(
     )
     assert "detail" in resp.json
     assert "title" in resp.json
-    assert "crash_report" in resp.json["ext"]
-    assert "check_mk" in resp.json["ext"]["crash_report"]["href"]
-    assert "crash_id" in resp.json["ext"]
+    assert "crash_report_url" in resp.json["ext"]["details"]
+    assert "check_mk" in resp.json["ext"]["details"]["crash_report_url"]["href"]
+    assert "id" in resp.json["ext"]
 
 
 def test_cmk_run_cron(wsgi_app: WebTestAppForCMK) -> None:
@@ -192,6 +206,7 @@ def test_options_disabled(wsgi_app: WebTestAppForCMK) -> None:
     wsgi_app.options("/", status=404)
 
 
+@pytest.mark.usefixtures("suppress_license_expiry_header")
 def test_pnp_template(wsgi_app: WebTestAppForCMK) -> None:
     # This got removed some time ago and "Not found" pages are 404 now.
     resp = wsgi_app.get("/NO_SITE/check_mk/pnp_template.py", status=404)

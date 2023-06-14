@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,6 +10,7 @@ from .config import (
     ConfigFromWATO,
     ECRulePack,
     ECRulePackSpec,
+    MatchGroups,
     MkpRulePackProxy,
     Rule,
     TextMatchResult,
@@ -18,12 +19,18 @@ from .config import (
 from .defaults import default_config, default_rule_pack
 from .event import Event
 from .forward import SyslogForwarderUnixSocket, SyslogMessage
-from .main import SyslogFacility, SyslogPriority
+from .main import SyslogFacility, SyslogPriority, TimePeriods
 
 # TODO remove match_ipv4_network when the GUI uses the EC logic.
-from .rule_matcher import match_ipv4_network, MatchFailure, MatchResult, MatchSuccess, RuleMatcher
+from .rule_matcher import (
+    compile_rule,
+    match_ip_network,
+    MatchFailure,
+    MatchResult,
+    MatchSuccess,
+    RuleMatcher,
+)
 from .rule_packs import (
-    ECRuleSpec,
     export_rule_pack,
     install_packaged_rule_packs,
     load_config,

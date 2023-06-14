@@ -1,5 +1,5 @@
 #!/usr/bin/ksh93
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -54,8 +54,7 @@ set_up_process_commandline_arguments() {
         case "${1}" in
             -d | --debug)
                 set -xv
-                # restore stderr
-                exec 2>&9
+                DISABLE_STDERR=false
                 shift
                 ;;
 
@@ -118,7 +117,7 @@ set_variable_defaults() {
 preamble_1() { # TODO: split these up more meaningful
     # force load of environment
 
-    # shellcheck disable=SC1090
+    # shellcheck disable=SC1090,SC1091
     . "${HOME}/.profile" >/dev/null 2>&1
 
     export MK_LIBDIR
@@ -301,7 +300,7 @@ waitmax() {
 
 section_checkmk() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.2.0i1"
+    echo "Version: 2.3.0b1"
     echo "AgentOS: aix"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: ${MK_CONFDIR}"
@@ -404,6 +403,9 @@ section_nfs_mounts() {
 
 section_ps() {
     echo '<<<ps>>>'
+    echo "[time]"
+    get_epoch
+    echo "[processes]"
     ps -ef -F user,vszsize,rssize,pcpu,etime,pid,args | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4\/\5,\6) /'
 }
 
@@ -680,7 +682,7 @@ run_cached() {
         # prefix or insert cache info, unless already present.
         # WATCH OUT: AIX does not allow us to pass this as a single '-e' option!
         if [ "${NAME%%_*}" = "local" ] || [ "${NAME%%_*}" = "mrpe" ]; then
-            sed -e '/^<<<.*>>>/{p;d;}' -e "/^cached([0-9]*,[0-9]*) /{p;d;}; s/^/${CACHE_INFO} /" "${CACHEFILE}"
+            sed -e '/^<<<.*>>>/{p;d;}' -e '/^cached([0-9]*,[0-9]*) /{p;d;}' -e "s/^/${CACHE_INFO} /" "${CACHEFILE}"
         else
             sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}' -e 's/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
         fi
@@ -781,7 +783,7 @@ get_plugin_interpreter() {
         return 0
     fi
 
-    if [ "${filename#${filename%??}}" != "_2" ]; then
+    if [ "${filename#"${filename%??}"}" != "_2" ]; then
         if [ -n "${NO_PYTHON}" ] || [ -n "${WRONG_PYTHON_COMMAND}" ]; then
             section_checkmk_failed_plugin "${agent_plugin}"
             return 1
@@ -846,7 +848,14 @@ _non_comment_lines() {
 }
 
 _mrpe_get_interval() {
-    echo "${1}" | grep -Eo '^\([^)]*\)' | grep -Eo 'interval=[^:)]*' | cut -d= -f2
+    echo "${1}" | grep -E '^\([^)]*\)' | sed -n 's/^.*interval=\([^:)]*\).*$/\1/p'
+}
+
+_mrpe_normalize_spaces() {
+    # watch out:
+    # * [:blank:] does not include \t on AIX
+    # * [:space:] does include \n on Linux
+    tr -s '\t' ' '
 }
 
 run_remote_plugins() {
@@ -854,9 +863,9 @@ run_remote_plugins() {
     prefix="${2}"
     [ -f "${configfile}" ] || return
 
-    _non_comment_lines "${configfile}" | while read -r descr rest; do
+    _non_comment_lines "${configfile}" | _mrpe_normalize_spaces | while read -r descr rest; do
         interval="$(_mrpe_get_interval "${rest}")"
-        cmdline="${rest#(*) }"
+        cmdline="${rest#\(*\) }"
 
         if [ -n "${prefix}" ]; then
             cmdline="${prefix} '${cmdline}'"
@@ -865,7 +874,8 @@ run_remote_plugins() {
         if [ -z "${interval}" ]; then
             ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
         else
-            run_cached "mrpe_${descr}" "${interval}" "${interval}" "run_mrpe '${descr}' '${cmdline}'"
+            # Sourcing the agent here is not very performant, but we need 'run_mrpe', and not all shells support exporting of functions.
+            run_cached "mrpe_${descr}" "${interval}" "${interval}" "MK_SOURCE_AGENT=yes . '${0}'; run_mrpe '${descr}' '${cmdline}'"
         fi
 
     done
@@ -946,8 +956,11 @@ run_partially_asynchronous_sections() {
 }
 
 main_setup() {
-    exec </dev/null 9>&2 2>/dev/null
+    exec </dev/null
     set_up_process_commandline_arguments "$@"
+    if "${DISABLE_STDERR:-true}"; then
+        exec 2>/dev/null
+    fi
     set_up_get_epoch
     set_up_current_shell
     set_variable_defaults

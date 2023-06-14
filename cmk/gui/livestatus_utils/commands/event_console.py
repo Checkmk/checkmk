@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from time import time
-from typing import get_args, Iterator, Literal, Mapping
+from typing import get_args, Literal
 
 from livestatus import MultiSiteConnection, SiteId
 
@@ -15,7 +16,7 @@ from cmk.utils.livestatus_helpers.expressions import Or, QueryExpression
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables.eventconsoleevents import Eventconsoleevents
 
-from cmk.ec.export import (  # pylint:disable=cmk-module-layer-violation
+from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
     SyslogFacility,
     SyslogPriority,
 )
@@ -130,7 +131,6 @@ def filter_event_table(
     phase: str | None = None,
     query: QueryExpression | None = None,
 ) -> Query:
-
     q = query_event_console().filter(query) if query else query_event_console()
 
     if event_id is not None:

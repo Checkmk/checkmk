@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any, Literal
 
 import pytest
-from pytest_mock import MockerFixture
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
@@ -18,9 +17,13 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 import cmk.gui.plugins.views
 import cmk.gui.views
 from cmk.gui.config import active_config
+from cmk.gui.data_source import ABCDataSource, data_source_registry, RowTable
 from cmk.gui.exporter import exporter_registry
 from cmk.gui.http import request
 from cmk.gui.logged_in import user
+from cmk.gui.painter.v0 import base as painter_base
+from cmk.gui.painter.v0.base import Cell, Painter, painter_registry, PainterRegistry
+from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.type_defs import ColumnSpec, SorterSpec
 from cmk.gui.valuespec import ValueSpec
 from cmk.gui.view import View
@@ -28,13 +31,9 @@ from cmk.gui.views import command
 from cmk.gui.views.command import command_group_registry, command_registry
 from cmk.gui.views.command import group as group_module
 from cmk.gui.views.command import registry as registry_module
-from cmk.gui.views.data_source import ABCDataSource, data_source_registry, RowTable
 from cmk.gui.views.inventory import inventory_displayhints
 from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.page_show_view import get_limit
-from cmk.gui.views.painter.v0 import base as painter_base
-from cmk.gui.views.painter.v0.base import Cell, Painter, painter_registry, PainterRegistry
-from cmk.gui.views.painter_options import painter_option_registry
 from cmk.gui.views.sorter import sorter_registry
 from cmk.gui.views.store import multisite_builtin_views
 
@@ -141,6 +140,7 @@ def test_registered_exporters() -> None:
 def test_registered_command_groups() -> None:
     expected = [
         "acknowledge",
+        "aggregations",
         "downtimes",
         "fake_check",
         "various",
@@ -170,6 +170,12 @@ def test_registered_commands() -> None:
             "permission": "action.acknowledge",
             "tables": ["host", "service", "aggr"],
             "title": "Acknowledge problems",
+        },
+        "freeze_aggregation": {
+            "group": "aggregations",
+            "permission": "action.aggregation_freeze",
+            "tables": ["aggr"],
+            "title": "Freeze aggregations",
         },
         "ec_custom_actions": {
             "permission": "mkeventd.actions",
@@ -247,11 +253,6 @@ def test_registered_commands() -> None:
             "row_stats": True,
             "tables": ["host", "service"],
             "title": "Reschedule active checks",
-        },
-        "favorites": {
-            "permission": "action.star",
-            "tables": ["host", "service"],
-            "title": "Favorites",
         },
         "ec_update_event": {
             "permission": "mkeventd.update",
@@ -1008,6 +1009,11 @@ def test_registered_sorters() -> None:
             "columns": ["host_inventory", "host_structured_status"],
             "load_inv": True,
             "title": "Inventory: Controller \u27a4 Version",
+        },
+        "inv_hardware_system_device_number": {
+            "columns": ["host_inventory", "host_structured_status"],
+            "load_inv": True,
+            "title": "Inventory: System \u27a4 Device Number",
         },
         "inv_hardware_system_expresscode": {
             "columns": ["host_inventory", "host_structured_status"],
@@ -1901,17 +1907,16 @@ def test_view_row_limit(view: View) -> None:
 @pytest.mark.usefixtures("request_context")
 def test_gui_view_row_limit(
     monkeypatch: pytest.MonkeyPatch,
-    mocker: MockerFixture,
     limit: Literal["soft", "hard", "none"] | None,
     permissions: dict[str, bool],
     result: int | None,
 ) -> None:
-    if limit is not None:
-        monkeypatch.setitem(request._vars, "limit", limit)
-
-    mocker.patch.object(active_config, "roles", {"nobody": {"permissions": permissions}})
-    mocker.patch.object(user, "role_ids", ["nobody"])
-    assert get_limit() == result
+    with monkeypatch.context() as m:
+        if limit is not None:
+            monkeypatch.setitem(request._vars, "limit", limit)
+        m.setattr(active_config, "roles", {"nobody": {"permissions": permissions}})
+        m.setattr(user, "role_ids", ["nobody"])
+        assert get_limit() == result
 
 
 def test_view_only_sites(view: View) -> None:
@@ -2086,6 +2091,7 @@ def test_registered_display_hints() -> None:
         ".hardware.storage.disks:*.",
         ".hardware.storage.disks:*.bus",
         ".hardware.storage.disks:*.controller",
+        ".hardware.storage.disks:*.drive_index",
         ".hardware.storage.disks:*.fsnode",
         ".hardware.storage.disks:*.local",
         ".hardware.storage.disks:*.product",
@@ -2095,7 +2101,10 @@ def test_registered_display_hints() -> None:
         ".hardware.storage.disks:*.type",
         ".hardware.storage.disks:*.vendor",
         ".hardware.system.",
+        ".hardware.system.device_number",
+        ".hardware.system.description",
         ".hardware.system.expresscode",
+        ".hardware.system.mac_address",
         ".hardware.system.manufacturer",
         ".hardware.system.model",
         ".hardware.system.model_name",
@@ -2281,6 +2290,13 @@ def test_registered_display_hints() -> None:
         ".software.applications.check_mk.versions:*.number",
         ".software.applications.check_mk.versions:*.version",
         ".software.applications.checkmk-agent.",
+        ".software.applications.checkmk-agent.version",
+        ".software.applications.checkmk-agent.agentdirectory",
+        ".software.applications.checkmk-agent.datadirectory",
+        ".software.applications.checkmk-agent.spooldirectory",
+        ".software.applications.checkmk-agent.pluginsdirectory",
+        ".software.applications.checkmk-agent.localdirectory",
+        ".software.applications.checkmk-agent.agentcontroller",
         ".software.applications.checkmk-agent.local_checks:",
         ".software.applications.checkmk-agent.local_checks:*.cache_interval",
         ".software.applications.checkmk-agent.local_checks:*.name",
@@ -2435,10 +2451,6 @@ def test_registered_display_hints() -> None:
         ".software.applications.kube.statefulset.match_expressions",
         ".software.applications.kube.statefulset.match_labels",
         ".software.applications.kube.statefulset.strategy",
-        ".software.applications.kubernetes.",
-        ".software.applications.kubernetes.service_info.",
-        ".software.applications.kubernetes.service_info.cluster_ip",
-        ".software.applications.kubernetes.service_info.load_balancer_ip",
         ".software.applications.mobileiron.",
         ".software.applications.mobileiron.partition_name",
         ".software.applications.mobileiron.registration_state",
@@ -2527,6 +2539,11 @@ def test_registered_display_hints() -> None:
         ".software.bios.vendor",
         ".software.bios.version",
         ".software.configuration.",
+        ".software.configuration.organisation.",
+        ".software.configuration.organisation.address",
+        ".software.configuration.organisation.network_id",
+        ".software.configuration.organisation.organisation_id",
+        ".software.configuration.organisation.organisation_name",
         ".software.configuration.snmp_info.",
         ".software.configuration.snmp_info.contact",
         ".software.configuration.snmp_info.location",
@@ -2570,6 +2587,7 @@ def test_get_inventory_display_hint() -> None:
     assert isinstance(hint, dict)
 
 
+@pytest.mark.usefixtures("suppress_license_expiry_header")
 def test_view_page(
     logged_in_admin_wsgi_app: WebTestAppForCMK, mock_livestatus: MockLiveStatusConnection
 ) -> None:

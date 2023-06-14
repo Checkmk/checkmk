@@ -6,7 +6,7 @@ Date: 1669019701
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 As stated in the inline help $HOSTADDRESS and $HOSTNAME can now be used in aggregation names.
 

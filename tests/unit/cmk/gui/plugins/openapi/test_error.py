@@ -1,45 +1,47 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
 
 from cmk.gui.plugins.openapi.restful_objects.api_error import ApiError
-from cmk.gui.plugins.openapi.utils import problem
+from cmk.gui.plugins.openapi.utils import EXT, FIELDS, problem
 
 
 def test_openapi_error_response():
-    fields = {
-        "entries": {
-            "0": {
-                "attributes": {
-                    "_schema": {
-                        "locked_by": {
-                            "instance_id": ["Missing data for required field."],
-                            "connection_id": ["Unknown field."],
+    fields = FIELDS(
+        {
+            "entries": {
+                "0": {
+                    "attributes": {
+                        "_schema": {
+                            "locked_by": {
+                                "instance_id": ["Missing data for required field."],
+                                "connection_id": ["Unknown field."],
+                            }
                         }
                     }
-                }
-            },
-            "1": {
-                "attributes": {
-                    "_schema": {
-                        "locked_by": {
-                            "instance_id": ["Missing data for required field."],
-                            "connection_id": ["Unknown field."],
+                },
+                "1": {
+                    "attributes": {
+                        "_schema": {
+                            "locked_by": {
+                                "instance_id": ["Missing data for required field."],
+                                "connection_id": ["Unknown field."],
+                            }
                         }
                     }
-                }
-            },
+                },
+            }
         }
-    }
+    )
 
     problem_response = problem(
         detail="Experienced an error",
         status=500,
         title="Internal Server Error",
         fields=fields,
-        ext={"error_type": "internal_error"},
+        ext=EXT({"error_type": "internal_error"}),
     )
 
     json_dict = json.loads(problem_response.data)

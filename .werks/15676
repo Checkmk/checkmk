@@ -1,0 +1,15 @@
+Title: group_config: delete endpoints now return a 409 when is use.
+Class: fix
+Compatible: compat
+Component: core
+Date: 1681481301
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk introduces a fix to the contact_group_config,
+host_group_config and service_group_config delete endpoints.
+When the groups were in use, they were incorrectly returning
+a 400 response.  We now return a 409 Conflict response.
+

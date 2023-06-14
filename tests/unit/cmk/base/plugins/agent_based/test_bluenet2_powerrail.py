@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
-from typing import List
 
 import pytest
 
@@ -122,7 +121,7 @@ _STRING_TABLE = [
     ],
 )
 def test_discover_bluenet2_powerrail_phases(
-    string_table: List[StringTable],
+    string_table: list[StringTable],
     discovery_result: Sequence[Service],
 ) -> None:
     assert (
@@ -248,7 +247,7 @@ def test_discover_bluenet2_powerrail_phases(
     ],
 )
 def test_check_bluenet2_powerrail_phases(
-    string_table: List[StringTable],
+    string_table: list[StringTable],
     item: str,
     check_result: Sequence[Result | Metric],
 ) -> None:

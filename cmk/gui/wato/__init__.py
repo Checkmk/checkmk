@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # WATO
 #
-# This file contain actual page handlers and WATO modes. It does HTML creation
+# This file contain actual page handlers and Setup modes. It does HTML creation
 # and implement AJAX handlers. It uses classes, functions and globals
 # from watolib.py.
 
@@ -17,20 +17,20 @@
 #   |              |_| \_\___|\__,_|\__,_| |_| |_| |_|\___|                |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | A few words about the implementation details of WATO.                |
+#   | A few words about the implementation details of Setup.                |
 #   `----------------------------------------------------------------------'
 
 # [1] Files and Folders
-# WATO organizes hosts in folders. A wato folder is represented by a
+# Setup organizes hosts in folders. A wato folder is represented by a
 # OS directory. If the folder contains host definitions, then in that
 # directory a file name "hosts{.mk|.cfg}" is kept.
-# The directory hierarchy of WATO is rooted at etc/check_mk/conf.d/wato.
-# All files in and below that directory are kept by WATO. WATO does not
+# The directory hierarchy of Setup is rooted at etc/check_mk/conf.d/wato.
+# All files in and below that directory are kept by Setup. Setup does not
 # touch any other files or directories in conf.d.
-# A *path* in WATO means a relative folder path to that directory. The
+# A *path* in Setup means a relative folder path to that directory. The
 # root folder has the empty path (""). Folders are separated by slashes.
 # Each directory contains a file ".wato" which keeps information needed
-# by WATO but not by Checkmk itself.
+# by Setup but not by Checkmk itself.
 
 # [3] Convention for variable names:
 # site_id     --> The id of a site, None for the local site in non-distributed setup
@@ -68,7 +68,6 @@ import cmk.gui.forms as forms
 import cmk.gui.gui_background_job as gui_background_job
 import cmk.gui.plugins.wato.utils
 import cmk.gui.plugins.wato.utils.base_modes
-import cmk.gui.plugins.watolib.utils
 import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
@@ -80,6 +79,7 @@ import cmk.gui.wato.permissions
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.attributes
 import cmk.gui.watolib.changes
+import cmk.gui.watolib.config_domain_name
 import cmk.gui.watolib.config_hostname
 import cmk.gui.watolib.host_attributes
 import cmk.gui.watolib.hosts_and_folders
@@ -184,6 +184,7 @@ from cmk.gui.wato.pages.timeperiods import (
     ModeTimeperiodImportICal,
     ModeTimeperiods,
 )
+from cmk.gui.wato.pages.user_migrate import ModeUserMigrate
 from cmk.gui.wato.pages.users import ModeEditUser, ModeUsers
 from cmk.gui.watolib.activate_changes import update_config_generation
 
@@ -218,7 +219,7 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.watolib.translation import HostnameTranslation
 
 # Has to be kept for compatibility with pre 1.6 register_rule() and register_check_parameters()
-# calls in the WATO plugin context
+# calls in the Setup plugin context
 subgroup_networking = RulespecGroupCheckParametersNetworking().sub_group_name
 subgroup_storage = RulespecGroupCheckParametersStorage().sub_group_name
 subgroup_os = RulespecGroupCheckParametersOperatingSystem().sub_group_name
@@ -231,7 +232,7 @@ subgroup_inventory = RulespecGroupCheckParametersDiscovery().sub_group_name
 
 import cmk.gui.watolib.config_domains
 
-# Make some functions of watolib available to WATO plugins without using the
+# Make some functions of watolib available to Setup plugins without using the
 # watolib module name. This is mainly done for compatibility reasons to keep
 # the current plugin API functions working
 import cmk.gui.watolib.network_scan
@@ -242,6 +243,7 @@ modes: dict[Any, Any] = {}
 
 # Import the module to register page handler
 import cmk.gui.wato.page_handler
+from cmk.gui.painter.v0.base import PainterRegistry
 from cmk.gui.plugins.wato.utils.html_elements import (
     initialize_wato_html_head,
     search_form,
@@ -255,8 +257,8 @@ from cmk.gui.plugins.wato.utils.main_menu import (  # Kept for compatibility wit
     WatoModule,
 )
 from cmk.gui.views.icon import IconRegistry
-from cmk.gui.views.painter.v0.base import PainterRegistry
 from cmk.gui.views.sorter import SorterRegistry
+from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
 
 from .icons import DownloadAgentOutputIcon, DownloadSnmpWalkIcon, WatoIcon
 from .views import (
@@ -285,6 +287,8 @@ def register(
     icon_registry.register(DownloadSnmpWalkIcon)
     icon_registry.register(WatoIcon)
 
+    page_registry.register_page_handler("ajax_popup_host_action_menu", ajax_popup_host_action_menu)
+
 
 # .
 #   .--Plugins-------------------------------------------------------------.
@@ -295,7 +299,7 @@ def register(
 #   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
 #   |                                 |___/                                |
 #   +----------------------------------------------------------------------+
-#   | Prepare plugin-datastructures and load WATO plugins                  |
+#   | Prepare plugin-datastructures and load Setup plugins                  |
 #   '----------------------------------------------------------------------'
 
 modes = {}
@@ -304,7 +308,7 @@ modes = {}
 def load_plugins() -> None:
     """Plugin initialization hook (Called by cmk.gui.main_modules.load_plugins())"""
     _register_pre_21_plugin_api()
-    # Initialize watolib things which are needed before loading the WATO plugins.
+    # Initialize watolib things which are needed before loading the Setup plugins.
     # This also loads the watolib plugins.
     watolib.load_watolib_plugins()
 
@@ -312,7 +316,7 @@ def load_plugins() -> None:
 
     if modes:
         raise MKGeneralException(
-            _("Deprecated WATO modes found: %r. They need to be refactored to new API.")
+            _("Deprecated Setup modes found: %r. They need to be refactored to new API.")
             % list(modes.keys())
         )
 
@@ -332,6 +336,7 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
     """
     # Needs to be a local import to not influence the regular plugin loading order
     import cmk.gui.plugins.wato as api_module
+    import cmk.gui.plugins.wato.datasource_programs as datasource_programs
 
     for name in (
         "ABCEventsMode",
@@ -489,7 +494,7 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "SampleConfigGenerator",
         "wato_fileheader",
     ):
-        api_module.__dict__[name] = cmk.gui.plugins.watolib.utils.__dict__[name]
+        api_module.__dict__[name] = cmk.gui.watolib.config_domain_name.__dict__[name]
     for name in ("rule_option_elements",):
         api_module.__dict__[name] = cmk.gui.valuespec.__dict__[name]
 
@@ -503,7 +508,10 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
             "Filesize": cmk.gui.valuespec.Filesize,
             "ListOfStrings": cmk.gui.valuespec.ListOfStrings,
             "MonitoredHostname": cmk.gui.valuespec.MonitoredHostname,
+            "MonitoringState": cmk.gui.valuespec.MonitoringState,
             "Password": cmk.gui.valuespec.Password,
+            "Percentage": cmk.gui.valuespec.Percentage,
+            "RegExpUnicode": cmk.gui.valuespec.RegExpUnicode,
             "TextAscii": cmk.gui.valuespec.TextAscii,
             "TextUnicode": cmk.gui.valuespec.TextUnicode,
             "Transform": cmk.gui.valuespec.Transform,
@@ -516,3 +524,17 @@ def _register_pre_21_plugin_api() -> None:  # pylint: disable=too-many-branches
         "wato_root_dir",
     ):
         api_module.__dict__[name] = cmk.gui.watolib.utils.__dict__[name]
+
+    for name in (
+        "RulespecGroupDatasourcePrograms",
+        "RulespecGroupDatasourceProgramsOS",
+        "RulespecGroupDatasourceProgramsApps",
+        "RulespecGroupDatasourceProgramsCloud",
+        "RulespecGroupDatasourceProgramsContainer",
+        "RulespecGroupDatasourceProgramsCustom",
+        "RulespecGroupDatasourceProgramsHardware",
+        "RulespecGroupDatasourceProgramsTesting",
+    ):
+        datasource_programs.__dict__[name] = cmk.gui.plugins.wato.special_agents.common.__dict__[
+            name
+        ]

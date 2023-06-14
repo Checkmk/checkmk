@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password
@@ -38,7 +38,7 @@ def htpasswd_file_fixture(tmp_path: Path, monkeypatch: MonkeyPatch) -> Path:
     return htpasswd_file_path
 
 
-@pytest.mark.parametrize("password", ["blä", "😀", "😀" * 18, "a" * 71, ""])
+@pytest.mark.parametrize("password", ["blä", "😀", "😀" * 18, "a" * 71])
 def test_hash_password(password: str) -> None:
     hashed_pw = htpasswd.hash_password(Password(password))
     password_hashing.verify(Password(password), hashed_pw)
@@ -63,9 +63,6 @@ def test_truncation_error() -> None:
         (UserId("bärnd"), Password("cmk"), UserId("bärnd")),
         # wrong password
         (UserId("bärnd"), Password("foo"), False),
-        # password correct but user locked
-        (UserId("locked_bärnd"), Password("cmk"), False),
-        (UserId("locked_legacy_hash"), Password("cmk"), False),
         # unsupported hash
         (UserId("legacy_hash"), Password("cmk"), False),
         # user not in htpasswd (potentially other connector)
@@ -78,3 +75,18 @@ def test_user_connector_verify_password(
     uid: UserId, password: Password, expect: CheckCredentialsResult
 ) -> None:
     assert htpasswd.HtpasswdUserConnector({}).check_credentials(uid, password) == expect
+
+
+@pytest.mark.parametrize(
+    "uid,password",
+    [
+        (UserId("locked_bärnd"), Password("cmk")),
+        (UserId("locked_legacy_hash"), Password("cmk")),
+    ],
+)
+def test_user_connector_verify_password_locked_users(
+    uid: UserId,
+    password: Password,
+) -> None:
+    with pytest.raises(MKUserError, match="User is locked"):
+        htpasswd.HtpasswdUserConnector({}).check_credentials(uid, password)

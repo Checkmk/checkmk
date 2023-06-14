@@ -1,18 +1,27 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # coding=utf-8
 # fmt: off
 import datetime as dt
-from collections.abc import Mapping
+from collections.abc import Iterable
 from typing import Any, NamedTuple
 
 import freezegun
 import pytest
 
-from tests.testlib import Check
+from cmk.base.check_legacy_includes.temperature import (
+    check_temperature,
+    check_temperature_trend,
+    Number,
+)
+from cmk.base.plugins.agent_based.utils.temperature import (
+    TempParamDict,
+    TempParamType,
+    TrendComputeDict,
+)
 
 from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state
 
@@ -164,9 +173,7 @@ from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state
          (2, '5 \xb0C (device warn/crit below 6/6 \xb0C)', [('temp', 5, None, None)])),
     ],
 )
-def test_check_temperature(params, kwargs, expected) -> None:   # type:ignore[no-untyped-def]
-    check = Check('acme_temp')
-    check_temperature = check.context['check_temperature']
+def test_check_temperature(params:tuple[Number,TempParamType,str|None], kwargs, expected:Iterable[object] |CheckResult |None) -> None: # type: ignore[no-untyped-def]
     result = check_temperature(*params, **kwargs)
     assertCheckResultsEqual(CheckResult(result), CheckResult(expected))
 
@@ -179,10 +186,10 @@ class Entry(NamedTuple):
     reading:float
     growth:float
     seconds_elapsed:float
-    wato_dict: Mapping[str,Any]
+    wato_dict: TrendComputeDict
     expected:Any
 
-_WATO_DICT = {
+_WATO_DICT:TrendComputeDict = {
     'period': 5,
     'trend_levels': (5, 10),
     'trend_levels_lower': (5, 10),
@@ -238,9 +245,7 @@ _WATO_DICT = {
         # Are the effects of last two test cases related somehow?
     ]
 )
-def test_check_temperature_trend(test_case) -> None:    # type:ignore[no-untyped-def]
-    check = Check('acme_temp')
-    check_trend = check.context['check_temperature_trend']
+def test_check_temperature_trend(test_case:Entry) -> None:
 
     time = dt.datetime(2014, 1, 1, 0, 0, 0)
 
@@ -251,7 +256,7 @@ def test_check_temperature_trend(test_case) -> None:    # type:ignore[no-untyped
 
     with mock_item_state(state):
         with freezegun.freeze_time(time + dt.timedelta(seconds=test_case.seconds_elapsed)):
-            result = check_trend(test_case.reading + test_case.growth,
+            result = check_temperature_trend(test_case.reading + test_case.growth,
                                  test_case.wato_dict, 'c',
                                  100,  # crit, don't boil
                                  0,  # crit_lower, don't freeze over
@@ -271,9 +276,7 @@ def test_check_temperature_trend(test_case) -> None:    # type:ignore[no-untyped
         ),
     ]
 )
-def test_check_temperature_called(test_case) -> None:   # type:ignore[no-untyped-def]
-    check = Check('acme_temp')
-    check_temperature = check.context['check_temperature']
+def test_check_temperature_called(test_case:Entry) -> None:
     time = dt.datetime(2014, 1, 1, 0, 0, 0)
 
     state = {
@@ -286,10 +289,10 @@ def test_check_temperature_called(test_case) -> None:   # type:ignore[no-untyped
             # Assuming atmospheric pressure...
             result = check_temperature(
                 test_case.reading + test_case.growth,
-                {
-                    'device_level_handling': 'dev',
-                    'trend_compute': test_case.wato_dict,
-                },
+                TempParamDict(
+                    device_levels_handling='dev',
+                    trend_compute= test_case.wato_dict,
+                ),
                 'foo',
                 dev_unit='c',
                 dev_levels=(100, 100),  # don't boil

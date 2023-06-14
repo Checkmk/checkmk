@@ -1,0 +1,14 @@
+Title: Fixed enabling/disabling the in-memory availability cache
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1685621280
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Enabling/disabling the in-memory availability cache did not have any effect,
+contrary to what the CMC log claims: Only a CMC restart had an effect, not a
+simple reload.  Furthermore, every such change added more columns to the
+"columns" table.  Both bugs have been fixed.

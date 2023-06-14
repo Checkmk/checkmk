@@ -9,13 +9,14 @@
 ::set DEBUG_HOME_DIR=c:\Users\sk\git\check_mk\agents\wnx\build\integration\test\data
 ::pytest -v -s tests/integration/test_check_mk_run.py
 
-set cur_dir=%cd%
+if "%cur_dir%" == "" powershell Write-Host "cur_dir not defined" -Foreground Red & exit /b 1
+if "%arte%" == "" powershell Write-Host "arte not defined" -Foreground Red & exit /b 1
+if "%CHECKMK_GIT_DIR%" == "" powershell Write-Host "CHECKMK_GIT_DIR not defined" -Foreground Red & exit /b 1
+
 set WNX_REGRESSION_BASE_DIR=
 set WNX_INTEGRATION_BASE_DIR=%temp%\test_wnx_%random%
 set DEBUG_HOME_DIR=%WNX_INTEGRATION_BASE_DIR%\test\data
 set WNX_TEST_ROOT=%WNX_INTEGRATION_BASE_DIR%\test\root
-set arte=%cur_dir%\..\..\artefacts
-set CHECKMK_GIT_DIR=%cur_dir%\..\..\
 set results=integration_tests_results.zip
 
 powershell Write-Host "Windows agent Integration Tests are starting in %WNX_INTEGRATION_BASE_DIR%" -Foreground Cyan

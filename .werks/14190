@@ -1,0 +1,14 @@
+Title: BI availability: Fixed missing host downtimes if the host status is not part of the aggregation
+Class: feature
+Compatible: compat
+Component: bi
+Date: 1679565835
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+
+
+

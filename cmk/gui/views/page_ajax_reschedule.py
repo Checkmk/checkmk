@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -122,7 +122,7 @@ class PageRescheduleCheck(AjaxPage):
             }
 
         if service == "Check_MK":
-            # Passive services triggered by Check_MK often are updated
+            # Passive services triggered by Checkmk often are updated
             # a few ms later. We introduce a small wait time in order
             # to increase the chance for the passive services already
             # updated also when we return.

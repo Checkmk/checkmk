@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Sequence
 
 # pylint: disable=protected-access
 from types import ModuleType
@@ -163,8 +165,13 @@ def test_ac_check_mail_main_loop_failed_to_send_mail(check_mail_loop: ModuleType
         ),
     ],
 )
-def test_ac_check_mail_loop(  # type:ignore[no-untyped-def]
-    check_mail_loop: ModuleType, warning, critical, expected_mails, fetched_mails, expected_result
+def test_ac_check_mail_loop(
+    check_mail_loop: ModuleType,
+    warning: object,
+    critical: int,
+    expected_mails: dict[str, object],
+    fetched_mails: dict[str, object],
+    expected_result: tuple[int, str, Sequence[object]],
 ) -> None:
     state, info, perf = check_mail_loop.check_mails(
         warning, critical, expected_mails.copy(), fetched_mails.copy()

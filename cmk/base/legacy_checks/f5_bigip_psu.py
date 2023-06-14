@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
+from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_legacy_includes.f5_bigip import DETECT
+from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+
+# Agent / MIB output
+# SysChassisPowerSupplyEntry ::=
+#        SEQUENCE {
+#                sysChassisPowerSupplyIndex                   INTEGER,
+#                sysChassisPowerSupplyStatus                  INTEGER
+#        }
+
+# sysChassisPowerSupplyStatus
+#   bad(0),
+#   good(1),
+#   notpresent(2)
+
+
+def inventory_f5_bigip_psu(info):
+    inventory = []
+    for line in info:
+        psu = line[0]
+        state = line[1]
+        # inventorize the PSU unless it's in state 2 (notpresent)
+        if state != "2":
+            inventory.append((psu, None))
+    return inventory
+
+
+def check_f5_bigip_psu(item, _no_params, info):
+    for line in info:
+        psu = line[0]
+        state = int(line[1])
+        if psu == item:
+            if state == 1:
+                return (0, "PSU state: good")
+            if state == 0:
+                return (2, "PSU state: bad!!")
+            if state == 2:
+                return (1, "PSU state: notpresent!")
+            return (3, "PSU state is unknown")
+
+    return (3, "item not found in SNMP output")
+
+
+check_info["f5_bigip_psu"] = LegacyCheckDefinition(
+    detect=DETECT,
+    check_function=check_f5_bigip_psu,
+    discovery_function=inventory_f5_bigip_psu,
+    service_name="PSU %s",
+    # Get ID and status from the SysChassisPowerSupplyTable
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.3375.2.1.3.2.2.2.1",
+        oids=["1", "2"],
+    ),
+)

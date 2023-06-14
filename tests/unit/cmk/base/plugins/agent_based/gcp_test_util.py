@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
@@ -66,10 +66,6 @@ class DiscoverTester(ABC):
     def test_found_some_assets(self, asset_section: gcp.AssetSection) -> None:
         assert len(asset_section._assets) != 0
 
-    def test_discover_project_label(self, services: Sequence[Service]) -> None:
-        for asset in services:
-            assert ServiceLabel("cmk/gcp/projectId", "backup-255820") in asset.labels
-
     def test_discover_all_items(self, services: Sequence[Service]) -> None:
         assert {a.item for a in services} == self.expected_items
 
@@ -77,9 +73,7 @@ class DiscoverTester(ABC):
         assert set(services[0].labels) == self.expected_labels
 
     def test_discover_nothing_without_service_configured(self) -> None:
-        string_table = [
-            ['{"project":"backup-255820", "config":["none"]}'],
-        ]
+        string_table = [['{"config":["none"]}']]
         assert len(list(self.discover(parse_assets(string_table)))) == 0
 
     def test_discover_nothing_without_asset(self) -> None:
@@ -105,7 +99,6 @@ def generate_stringtable(
     service_desc: agent_gcp.Service,
     overriding_values: Mapping[str, float] | None = None,
 ) -> StringTable:
-
     if overriding_values is None:
         overriding_values = {}
 

@@ -6,7 +6,7 @@ Date: 1672748980
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The maxUnavailable field for RollingUpdate in Statefulsets is introduced with Kubernetes v1.24.
 This werk handles this field and displays the set value in the kube_replicas check. Further

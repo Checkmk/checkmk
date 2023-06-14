@@ -6,7 +6,7 @@ Date: 1670591699
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, the Prometheus integration incorrectly reported <tt>Anonymous pages</tt> instead of
 reporting <tt>Mapped data</tt> and <tt>Active (anonymous)</tt>. Moreover, <tt>Active</tt> was

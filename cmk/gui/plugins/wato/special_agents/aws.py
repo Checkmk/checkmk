@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Container
+from collections.abc import Container, Iterable
+from typing import TypeVar
 
-from cmk.utils import aws_constants
 from cmk.utils.version import is_cloud_edition
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import (
+    aws_region_to_monitor,
     RulespecGroupVMCloudContainer,
     validate_aws_tags,
 )
@@ -18,16 +19,18 @@ from cmk.gui.plugins.wato.utils import (
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
+from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
     DictionaryEntry,
     FixedValue,
-    Integer,
     ListChoice,
     ListOf,
     ListOfStrings,
     Migrate,
+    MigrateNotUpdated,
+    NetworkPort,
     TextInput,
     Tuple,
     ValueSpec,
@@ -40,7 +43,7 @@ def _vs_aws_tags(title):
     return ListOf(
         valuespec=Tuple(
             help=_(
-                "How to configure AWS tags please see "
+                "For information on AWS tag configuration, visit "
                 "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html"
             ),
             orientation="horizontal",
@@ -62,14 +65,15 @@ def _vs_element_aws_service_selection():
         CascadingDropdown(
             title=_("Selection of service instances"),
             help=_(
-                "<i>Gather all service instances and restrict by overall tags</i> means that "
-                "if overall tags are stated above then all service instances are filtered "
-                "by these tags. Otherwise all instances are gathered.<br>"
-                "With <i>Use explicit service tags and overwrite overall tags</i> you can "
-                "specify explicit tags for these services. The overall tags are ignored for "
-                "these services.<br>"
-                "<i>Use explicit service names and ignore overall tags</i>: With this selection "
-                "you can state explicit names. The overall tags are ignored for these service."
+                "<b>Gather all service instances and restrict by overall "
+                "tags:</b><br>If overall tags are specified above, then all "
+                "service instances will be filtered by those tags. Otherwise, "
+                "all instances will be collected.<br><br><b>Explicit service "
+                "tags and overwrite overall tags:</b><br>Specify explicit "
+                "tags for these services. The overall tags will be ignored for "
+                "these services.<br><br><b>Explicit service names and ignore "
+                "overall tags:</b><br>Use this option to specify explicit names. "
+                "The overall tags will be ignored for these services."
             ),
             choices=[
                 ("all", _("Gather all service instances and restrict by overall AWS tags")),
@@ -94,8 +98,9 @@ def _vs_element_aws_limits():
         FixedValue(
             value=True,
             help=_(
-                "If limits are enabled all instances are fetched regardless of "
-                "possibly configured restriction to names or tags"
+                "If limits are enabled, all instances will be fetched "
+                "regardless of any name or tag restrictions that may have been "
+                "configured."
             ),
             title=_("Service limits"),
             totext=_("Monitor service limits"),
@@ -119,17 +124,18 @@ def _vs_element_aws_piggyback_naming_convention() -> DictionaryEntry:
                 ),
             ],
             help=_(
-                "For each running EC2 instance a piggyback host is created. We offer different "
-                "ways of naming these hosts. Note, that not every host name is pingable. Moreover, "
-                "changes in the piggyback name will cause the piggyback host to be reset. "
-                "If you choose `IP - region - instance ID`, then the name includes the private IP "
-                "address, the region and the instance ID: {Private IPv4 address}-{region}-{Instance ID}. "
-                "This uniquely identifies the EC2 instance. This format was "
-                "included with the 1.6.0 release of Checkmk and has been the only format "
-                "until 2.2.0. This host name can not be pinged."
+                "Each EC2 instance creates a piggyback host.<br><b>Note:</b> "
+                "Not every hostname is pingable and changing the piggyback name "
+                "will reset the piggyback host.<br><br><b>IP - Region - Instance "
+                'ID:</b><br>The name consists of "{Private IPv4 '
+                'address}-{Region}-{Instance ID}". This uniquely identifies the '
+                "EC2 instance. It is not possible to ping this host name."
             ),
         ),
     )
+
+
+T = TypeVar("T")
 
 
 class AWSSpecialAgentValuespecBuilder:
@@ -142,20 +148,20 @@ class AWSSpecialAgentValuespecBuilder:
         self.is_cloud_edition = cloud_edition
 
     def get_global_services(self) -> ServicesValueSpec:
-        return self._get_edition_filtered_services(
+        return self.filter_for_edition(
             self._get_all_global_services(), self.CCE_ONLY_GLOBAL_SERVICES
         )
 
     def get_regional_services(self) -> ServicesValueSpec:
-        return self._get_edition_filtered_services(
+        return self.filter_for_edition(
             self._get_all_regional_services(), self.CCE_ONLY_REGIONAL_SERVICES
         )
 
-    def _get_edition_filtered_services(
-        self, all_services: ServicesValueSpec, cce_only_services: Container[str]
-    ) -> ServicesValueSpec:
+    def filter_for_edition(
+        self, all_services: Iterable[tuple[str, T]], cce_only_services: Container[str]
+    ) -> list[tuple[str, T]]:
         if self.is_cloud_edition:
-            return all_services
+            return list(all_services)
         return [s for s in all_services if s[0] not in cce_only_services]
 
     def _get_all_global_services(self) -> ServicesValueSpec:
@@ -248,12 +254,19 @@ class AWSSpecialAgentValuespecBuilder:
                             "requests",
                             FixedValue(
                                 value=None,
-                                totext=_("Monitor request metrics"),
+                                totext=_(
+                                    "Monitor request metrics using the filter <tt>EntireBucket</tt>"
+                                ),
                                 title=_("Request metrics"),
                                 help=_(
-                                    "In order to monitor S3 request metrics you have to "
-                                    "enable request metric monitoring in the AWS/S3 console. "
-                                    "This is a paid feature"
+                                    "In order to monitor S3 request metrics, you have to enable "
+                                    "request metrics in the AWS/S3 console, see the "
+                                    "<a href='https://docs.aws.amazon.com/AmazonS3/latest/userguide/metrics-configurations.html'>AWS/S3 documentation</a>. "
+                                    "This is a paid feature. Note that the filter name has to be "
+                                    "set to <tt>EntireBucket</tt>, as is recommended in the "
+                                    "<a href='https://docs.aws.amazon.com/AmazonS3/latest/userguide/configure-request-metrics-bucket.html'>documentation for a filter that applies to all objects</a>. "
+                                    "The special agent will use this filter name to query S3 request "
+                                    "metrics from the AWS API."
                                 ),
                             ),
                         ),
@@ -361,8 +374,8 @@ class AWSSpecialAgentValuespecBuilder:
                                 totext=_("Monitor CloudFront WAFs"),
                                 title=_("CloudFront WAFs"),
                                 help=_(
-                                    "Include WAFs in front of CloudFront resources in the "
-                                    "monitoring"
+                                    "Include WAFs in front of CloudFront "
+                                    "resources in the monitoring."
                                 ),
                             ),
                         ),
@@ -453,7 +466,7 @@ def _valuespec_special_agents_aws() -> Migrate:
                         title=_("Proxy server details"),
                         elements=[
                             ("proxy_host", TextInput(title=_("Proxy host"), allow_empty=False)),
-                            ("proxy_port", Integer(title=_("Port"))),
+                            ("proxy_port", NetworkPort(title=_("Port"))),
                             (
                                 "proxy_user",
                                 TextInput(
@@ -503,24 +516,38 @@ def _valuespec_special_agents_aws() -> Migrate:
                 ),
                 (
                     "global_services",
-                    Dictionary(
-                        title=_("Global services to monitor"),
-                        elements=global_services,
+                    MigrateNotUpdated(
+                        valuespec=Dictionary(
+                            title=_("Global services to monitor"),
+                            elements=global_services,
+                        ),
+                        migrate=lambda p: dict(
+                            valuespec_builder.filter_for_edition(
+                                p.items(), valuespec_builder.CCE_ONLY_GLOBAL_SERVICES
+                            )
+                        ),
                     ),
                 ),
                 (
                     "regions",
                     ListChoice(
-                        title=_("Regions to use"),
-                        choices=sorted(aws_constants.AWSRegions, key=lambda x: x[1]),
+                        title=_("Regions to monitor"),
+                        choices=aws_region_to_monitor(),
                     ),
                 ),
                 (
                     "services",
-                    Dictionary(
-                        title=_("Services per region to monitor"),
-                        elements=regional_services,
-                        default_keys=regional_services_default_keys,
+                    MigrateNotUpdated(
+                        valuespec=Dictionary(
+                            title=_("Services per region to monitor"),
+                            elements=regional_services,
+                            default_keys=regional_services_default_keys,
+                        ),
+                        migrate=lambda p: dict(
+                            valuespec_builder.filter_for_edition(
+                                p.items(), valuespec_builder.CCE_ONLY_REGIONAL_SERVICES
+                            )
+                        ),
                     ),
                 ),
                 _vs_element_aws_piggyback_naming_convention(),
@@ -541,5 +568,6 @@ rulespec_registry.register(
         name="special_agents:aws",
         title=lambda: _("Amazon Web Services (AWS)"),
         valuespec=_valuespec_special_agents_aws,
+        doc_references={DocReference.AWS: _("Monitoring Amazon Web Services (AWS)")},
     )
 )

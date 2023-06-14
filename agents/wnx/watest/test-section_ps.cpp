@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -9,6 +9,7 @@
 #include "common/wtools.h"
 #include "providers/ps.h"
 #include "service_processor.h"
+#include "test_tools.h"
 #include "tools/_misc.h"
 #include "tools/_process.h"
 
@@ -36,12 +37,15 @@ const std::vector<std::string_view> g_special_processes{
     {"fish"sv},
     {"wininit.exe"sv},
     {"LsaIso.exe"sv},
-    {"bash"sv}};
+    {"bash"sv},
+    {"git.exe"sv},
+};
 
 }  // namespace
 
-TEST(PsTest, Integration) {
-    OnStart(AppType::test);
+TEST(PsTest, Component) {
+    auto temp_fs = tst::TempCfgFs::CreateNoIo();
+    ASSERT_TRUE(temp_fs->loadFactoryConfig());
     for (auto use_full_path : {false, true}) {
         SCOPED_TRACE(
             fmt::format("'{}'", use_full_path ? "Full path" : "Short path"));

@@ -1,0 +1,14 @@
+Title: Cluster configuration: Fixed risk of missing services if a cluster resources switches between nodes
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1683718872
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+
+
+

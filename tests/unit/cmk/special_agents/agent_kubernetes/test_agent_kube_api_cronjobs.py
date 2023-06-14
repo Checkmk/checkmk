@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -24,7 +24,7 @@ class TestAPICronJob:
             "namespace": "default",
             "creation_timestamp": datetime.datetime.strptime(
                 "2021-05-04T09:01:13Z", "%Y-%m-%dT%H:%M:%SZ"
-            ).replace(tzinfo=datetime.timezone.utc),
+            ).replace(tzinfo=datetime.UTC),
             "uid": "uid",
         }
         metadata_obj = client.V1ObjectMeta(**node_raw_metadata)

@@ -1,9 +1,20 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+import "nodevis/layout";
+
 import * as d3 from "d3";
 import {ZoomTransform} from "d3";
+import {
+    AbstractLayer,
+    FixLayer,
+    layer_class_registry,
+    LayerSelections,
+    OverlayConfig,
+    ToggleableLayer,
+} from "nodevis/layer_utils";
+import {LayeredNodesLayer} from "nodevis/layers";
 import {
     BackendChunkResponse,
     Coords,
@@ -18,17 +29,7 @@ import {
     RectangleWithCoords,
     SerializedNodeChunk,
 } from "nodevis/type_defs";
-import {
-    AbstractLayer,
-    FixLayer,
-    layer_class_registry,
-    LayerSelections,
-    OverlayConfig,
-    ToggleableLayer,
-} from "nodevis/layer_utils";
 import {DefaultTransition} from "nodevis/utils";
-import "nodevis/layout";
-import {LayeredNodesLayer} from "nodevis/layers";
 
 //#.
 //#   .-Layered Viewport---------------------------------------------------.
@@ -279,6 +280,8 @@ export class LayeredViewport {
             .join(enter =>
                 enter
                     .append("div")
+                    .classed("togglebox_wrap", true)
+                    .append("div")
                     .text(d => d.layer.name())
                     .attr("layer_id", d => d.layer.id())
                     .classed("noselect", true)
@@ -313,7 +316,7 @@ export class LayeredViewport {
         // Applying layouts needlessly
         // - cost performance
         // - may cause the gui to flicker/move with certain layouts
-        this._chunks_changed = false;
+        this._chunks_changed = this._node_chunk_list.length == 0;
 
         this.data_to_show.chunks.forEach(serialized_node_chunk => {
             this._consume_chunk_rawdata(serialized_node_chunk);
@@ -321,12 +324,14 @@ export class LayeredViewport {
 
         this._remove_obsolete_chunks();
         this._arrange_multiple_node_chunks();
-        this.update_layers();
+
+        this.update_data_of_layers();
         this._world.layout_manager.layout_applier.apply_multiple_layouts(
             this.get_hierarchy_list(),
             this._chunks_changed || this.always_update_layout
         );
         this._world.layout_manager.compute_node_positions();
+        this.update_gui_of_layers(true);
 
         this.update_active_overlays();
     }
@@ -438,7 +443,7 @@ export class LayeredViewport {
                     // This node already has some coordinates
                     return;
 
-                const spawn_coords = this._compute_spawn_coords(
+                const spawn_coords = this.compute_spawn_coords(
                     node_chunk,
                     node
                 );
@@ -449,7 +454,7 @@ export class LayeredViewport {
         }
     }
 
-    _compute_spawn_coords(
+    compute_spawn_coords(
         node_chunk: NodeChunk,
         node: NodevisNode
     ): {x: number; y: number} {
@@ -543,7 +548,6 @@ export class LayeredViewport {
             }
         }
 
-        this._chunks_changed = true;
         this._node_chunk_list.push(new_chunk);
     }
 
@@ -592,20 +596,19 @@ export class LayeredViewport {
 
     recompute_node_chunk_descendants_and_links(node_chunk) {
         this.update_node_chunk_descendants_and_links(node_chunk);
-        this._world.force_simulation.restart_with_alpha(0.5);
         const all_nodes = this.get_all_nodes();
         const all_links = this.get_all_links();
         this.update_layers();
-
         this._world.force_simulation.update_nodes_and_links(
             all_nodes,
             all_links
         );
+        this._world.force_simulation.restart_with_alpha(0.5);
     }
 
-    update_layers() {
+    update_layers(force_gui_update = false) {
         this.update_data_of_layers();
-        this.update_gui_of_layers();
+        this.update_gui_of_layers(force_gui_update);
     }
 
     update_data_of_layers() {
@@ -615,10 +618,10 @@ export class LayeredViewport {
         }
     }
 
-    update_gui_of_layers() {
+    update_gui_of_layers(force_gui_update = false) {
         for (const layer_id in this._layers) {
             if (!this._layers[layer_id].is_enabled()) continue;
-            this._layers[layer_id].update_gui();
+            this._layers[layer_id].update_gui(force_gui_update);
         }
     }
 

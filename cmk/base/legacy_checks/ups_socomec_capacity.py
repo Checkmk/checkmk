@@ -1,0 +1,85 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# upsBatteryStatus              1.3.6.1.4.1.4555.1.1.1.1.2.1
+# upsSecondsOnBattery           1.3.6.1.4.1.4555.1.1.1.1.2.2
+# upsEstimatedMinutesRemaining  1.3.6.1.4.1.4555.1.1.1.1.2.3
+# upsEstimatedChargeRemaining   1.3.6.1.4.1.4555.1.1.1.1.2.4
+# upsBatteryVoltage             1.3.6.1.4.1.4555.1.1.1.1.2.5
+# upsBatteryTemperature         1.3.6.1.4.1.4555.1.1.1.1.2.6
+
+from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.utils.ups_socomec import DETECT_SOCOMEC
+
+
+def inventory_ups_socomec_capacity(info):
+    if len(info) > 0:
+        return [(None, {})]
+    return []
+
+
+def check_ups_socomec_capacity(item, params, info):
+    # To support inventories with the old version
+    # TODO This needs to be reworked. Defaults should not be coded into a check in such a fashion.
+    if isinstance(params, tuple):  # old format with 2 params in tuple
+        warn, crit = params
+        cap_warn, cap_crit = (95, 90)
+    elif isinstance(params, dict):  # new dict format
+        warn, crit = params.get("battime", (0, 0))
+        cap_warn, cap_crit = params.get("capacity", (95, 90))
+    else:
+        warn, crit = (0, 0)
+        cap_warn, cap_crit = (95, 90)
+
+    time_on_bat, minutes_left, percent_fuel = map(int, info[0])
+
+    # Check time left on battery
+    if minutes_left != -1:
+        levelsinfo = ""
+        if minutes_left <= crit:
+            state = 2
+            levelsinfo = " (crit at %d min)" % cap_crit
+        elif minutes_left < warn:
+            state = 1
+            levelsinfo = " (warn at %d min)" % cap_warn
+        else:
+            state = 0
+        yield state, "%d min left on battery" % minutes_left + levelsinfo, [
+            ("capacity", minutes_left, warn, crit)
+        ]
+
+    # Check percentual capacity
+    levelsinfo = ""
+    if percent_fuel <= cap_crit:
+        state = 2
+        levelsinfo = " (crit at %d%%)" % cap_crit
+    elif percent_fuel < cap_warn:
+        state = 1
+        levelsinfo = " (warn at %d%%)" % cap_warn
+    else:
+        state = 0
+    yield state, "capacity: %d%%" % percent_fuel + levelsinfo, [
+        ("percent", percent_fuel, cap_warn, cap_crit)
+    ]
+
+    # Output time on battery
+    if time_on_bat > 0:
+        yield 0, "On battery for %d min" % time_on_bat
+
+
+check_info["ups_socomec_capacity"] = LegacyCheckDefinition(
+    detect=DETECT_SOCOMEC,
+    check_function=check_ups_socomec_capacity,
+    discovery_function=inventory_ups_socomec_capacity,
+    service_name="Battery capacity",
+    check_ruleset_name="ups_capacity",
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.4555.1.1.1.1.2",
+        oids=["2", "3", "4"],
+    ),
+    check_default_parameters={"battime": (0, 0), "capacity": (95, 90)},
+)

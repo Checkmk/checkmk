@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -300,6 +300,7 @@ class Mailbox:
                                 ),
                                 auth_type=OAUTH2,
                             ),
+                            default_timezone=EWSTimeZone("Europe/Berlin"),
                         )
                     )
                 )
@@ -317,6 +318,7 @@ class Mailbox:
                                     self._args.fetch_password,
                                 ),
                             ),
+                            default_timezone=EWSTimeZone("Europe/Berlin"),
                         )
                     )
                 )
@@ -541,7 +543,8 @@ class Mailbox:
             self._connection.close()
 
 
-def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Args:
+def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str], allow_ews: bool) -> Args:
+    protocols = {"IMAP", "POP3", "EWS"} if allow_ews else {"IMAP", "POP3"}
     parser.formatter_class = argparse.RawTextHelpFormatter
     parser.add_argument(
         "--debug",
@@ -560,13 +563,13 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Arg
         "--fetch-server",
         required=True,
         metavar="ADDRESS",
-        help="Host address of the IMAP/POP3/EWS server hosting your mailbox",
+        help=f"Host address of the {'/'.join(protocols)} server hosting your mailbox",
     )
     parser.add_argument(
         "--fetch-username",
         required=False,
         metavar="USER",
-        help="Username to use for IMAP/POP3/EWS",
+        help=f"Username to use for {'/'.join(protocols)}",
     )
     parser.add_argument(
         "--fetch-email-address",
@@ -578,31 +581,31 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str]) -> Arg
         "--fetch-password",
         required=False,
         metavar="PASSWORD",
-        help="Password to use for IMAP/POP3/EWS",
+        help="Password to use for {'/'.join(protocols)}",
     )
     parser.add_argument(
         "--fetch-client-id",
         required=False,
         metavar="CLIENT_ID",
-        help="OAuth2 ClientID for EWS",
+        help="OAuth2 ClientID for EWS" if allow_ews else "Ignored, only for compatibility",
     )
     parser.add_argument(
         "--fetch-client-secret",
         required=False,
         metavar="CLIENT_SECRET",
-        help="OAuth2 ClientSecret for EWS",
+        help="OAuth2 ClientSecret for EWS" if allow_ews else "Ignored, only for compatibility",
     )
     parser.add_argument(
         "--fetch-tenant-id",
         required=False,
         metavar="TENANT_ID",
-        help="OAuth2 TenantID for EWS",
+        help="OAuth2 TenantID for EWS" if allow_ews else "Ignored, only for compatibility",
     )
     parser.add_argument(
         "--fetch-protocol",
         type=str.upper,
-        choices={"IMAP", "POP3", "EWS"},
-        help="Set to 'IMAP', 'POP3' or 'EWS', depending on your mailserver (default=IMAP)",
+        choices=protocols,
+        help="Protocol used for fetching mail (default=IMAP)",
     )
     parser.add_argument(
         "--fetch-port",
@@ -668,10 +671,11 @@ def _active_check_main_core(
     argument_parser: argparse.ArgumentParser,
     check_fn: Callable[[Args], CheckResult],
     argv: Sequence[str],
+    allow_ews: bool = True,
 ) -> CheckResult:
     """Main logic for active checks"""
     # todo argparse - exceptions?
-    args = parse_arguments(argument_parser, argv)
+    args = parse_arguments(argument_parser, argv, allow_ews)
     logging.basicConfig(
         level=logging.CRITICAL
         if not (args.debug or args.verbose > 0)
@@ -731,6 +735,7 @@ def _output_check_result(text: str, perfdata: PerfData) -> None:
 def active_check_main(
     argument_parser: argparse.ArgumentParser,
     check_fn: Callable[[Args], CheckResult],
+    allow_ews: bool = True,
 ) -> None:
     """Evaluate the check, write output according to Checkmk active checks and terminate the
     program in respect to the check result:
@@ -744,6 +749,8 @@ def active_check_main(
     Therefore _active_check_main_core and _output_check_result should be used for unit tests since
     they are not meant to modify the system environment or terminate the process."""
     cmk.utils.password_store.replace_passwords()
-    exitcode, status, perfdata = _active_check_main_core(argument_parser, check_fn, sys.argv[1:])
+    exitcode, status, perfdata = _active_check_main_core(
+        argument_parser, check_fn, sys.argv[1:], allow_ews
+    )
     _output_check_result(status, perfdata)
     raise SystemExit(exitcode)

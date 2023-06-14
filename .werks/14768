@@ -6,7 +6,7 @@ Date: 1664352279
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If you require this fix, you must reinstall the agent plugin "mssql.vbs" on the
 relevant hosts.

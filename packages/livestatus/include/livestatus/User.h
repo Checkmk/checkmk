@@ -1,4 +1,4 @@
-// Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -7,11 +7,14 @@
 #define auth_h
 
 #include <functional>
-#include <memory>
 #include <string>
 
-// Different versions of the system headers differ in their requirements. :-/
-#include "livestatus/Interface.h"  // IWYU pragma: keep
+class IContact;
+class IContactGroup;
+class IHost;
+class IHostGroup;
+class IService;
+class IServiceGroup;
 
 enum class ServiceAuthorization {
     loose = 0,   // contacts for hosts see all services
@@ -47,8 +50,8 @@ class AuthUser : public User {
 public:
     AuthUser(const IContact &auth_user, ServiceAuthorization service_auth,
              GroupAuthorization group_auth,
-             std::function<std::unique_ptr<IContactGroup>(const std::string &)>
-                 make_contact_group);
+             std::function<const IContactGroup *(const std::string &)>
+                 find_contact_group);
 
     [[nodiscard]] bool is_authorized_for_object(
         const IHost *hst, const IService *svc,
@@ -68,8 +71,8 @@ private:
     const IContact &auth_user_;
     ServiceAuthorization service_auth_;
     GroupAuthorization group_auth_;
-    std::function<std::unique_ptr<IContactGroup>(const std::string &)>
-        make_contact_group_;
+    std::function<const IContactGroup *(const std::string &)>
+        find_contact_group_;
 };
 
 class NoAuthUser : public User {

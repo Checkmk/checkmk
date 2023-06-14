@@ -5,6 +5,7 @@ etc/check_mk/multisite.d 0770
 etc/check_mk/multisite.d/wato 0770
 etc/cron.d/cmk_inventory 0640
 etc/cron.d/cmk_update_license_usage 0640
+etc/cron.d/cmk_cleanup_pdf_tmp_files 0640
 etc/init.d/agent-receiver 0770
 etc/init.d/mkeventd 0770
 etc/logrotate.d/license-usage 0640
@@ -18,3 +19,7 @@ var/check_mk/wato/auth/auth.php 0660
 var/check_mk/wato/log 0770
 var/check_mk/wato/snapshots 0770
 var/check_mk/web 0770
+local/lib/python3/cmk/gui 0750
+local/lib/python3/cmk/gui/plugins 0750
+local/lib/python3/cmk/gui/plugins/dashboard 0750
+local/lib/python3/cmk/gui/plugins/views 0750

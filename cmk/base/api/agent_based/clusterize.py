@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from cmk.utils.type_defs import state_markers
 
@@ -33,7 +33,7 @@ def make_node_notice_results(
     Usage example:
         >>> def cluster_check_myplugin(item, section):
         ...     '''A cluster check function that just passes along all node results'''
-        ...     for node_name, node_section in sections.values():
+        ...     for node_name, node_section in section.items():
         ...         yield from make_node_notice_results(
         ...             node_name,
         ...             check_myplugin(item, node_section),
@@ -67,10 +67,10 @@ def make_node_notice_results(
 
     def _nodify(text: str, state: State) -> str:
         """Prepend node name and, if state is forced to OK, append state marker"""
-        node_text = "\n".join("[%s]: %s" % (node_name, line) for line in text.split("\n"))
+        node_text = "\n".join(f"[{node_name}]: {line}" for line in text.split("\n"))
         if not force_ok:
             return node_text
-        return "%s%s" % (node_text.rstrip(), state_markers[int(state)])
+        return f"{node_text.rstrip()}{state_markers[int(state)]}"
 
     for result in results:
         yield Result(

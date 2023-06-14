@@ -6,7 +6,7 @@ Date: 1656594450
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The check plugins <tt>ipmi</tt> and <tt>ipmi_sensors</tt> both monitor IPMI sensors. They are user-
 configurable via the ruleset "IPMI sensors". There, users can define custom monitoring states based

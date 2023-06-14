@@ -1,0 +1,16 @@
+Title: solaris: Add timeout to statgrab command
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1682515289
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+When the executable "timeout" is available on the system the Checkmk agent is
+executed, the statgrab command is executed with a 20 second timeout. It is
+known that on certain systems, the "statgrab mem." command takes up to two
+minutes.
+

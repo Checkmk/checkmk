@@ -1,0 +1,13 @@
+Title: Handling overly long usernames
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1684756776
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this Werk, attempting to create a user with a very long name would partially create the user and then fail, leaving the user management GUI in an unusable state.
+
+Attempting to create such a user now fails gracefully with an error message.

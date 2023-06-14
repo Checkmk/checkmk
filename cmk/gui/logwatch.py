@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -264,7 +264,6 @@ def _host_log_list_page_menu(
 # Displays a table of logfiles
 def list_logs(site, host_name, logfile_names):
     with table_element(empty_text=_("No logs found for this host.")) as table:
-
         for file_name in logfile_names:
             table.row()
             file_display = form_file_to_ext(file_name)
@@ -372,7 +371,6 @@ def _show_file_breadcrumb(host_name: HostName, title: str) -> Breadcrumb:
 def _show_file_page_menu(
     breadcrumb: Breadcrumb, site_id: SiteId, host_name: HostName, int_filename: str
 ) -> PageMenu:
-
     menu = PageMenu(
         dropdowns=[
             PageMenuDropdown(
@@ -446,7 +444,7 @@ def _extend_display_dropdown(menu: PageMenu) -> None:
             title=_("Context"),
             entries=[
                 PageMenuEntry(
-                    title=_("Show context") if context_hidden else _("Hide context"),
+                    title=_("Show context"),
                     icon_name="toggle_off" if context_hidden else "toggle_on",
                     item=make_simple_link(
                         makeactionuri(
@@ -569,7 +567,7 @@ def do_log_ack(site, host_name, file_name):  # pylint: disable=too-many-branches
     html.footer()
 
 
-def _get_ack_msg(host_name, file_name) -> str:  # type:ignore[no-untyped-def]
+def _get_ack_msg(host_name, file_name) -> str:  # type: ignore[no-untyped-def]
     if not host_name and not file_name:  # all logs on all hosts
         return _("all logfiles on all hosts")
 
@@ -716,10 +714,19 @@ def get_last_chunk(log_chunks):
 #   |             \____\___/|_| |_|___/\__\__,_|_| |_|\__|___/             |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | Definition of various constants - also used by WATO                  |
+#   | Definition of various constants - also used by Setup                  |
 #   '----------------------------------------------------------------------'
 
 nagios_illegal_chars = "`;~!$%^&*|'\"<>?,()="
+
+
+def logwatch_level_name(level):
+    return {
+        "O": "OK",
+        "W": "WARN",
+        "C": "CRIT",
+        "I": "IGNORE",
+    }[level]
 
 
 def level_name(level):

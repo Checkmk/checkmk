@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
@@ -7,16 +7,16 @@ from __future__ import annotations
 import abc
 import enum
 import io
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
-from functools import lru_cache
+from functools import cache, lru_cache
 from pathlib import Path
 from typing import Any, Generic, TypedDict, TypeVar
 
 from cmk.utils import store
 from cmk.utils.labels import Labels
-from cmk.utils.rulesets.ruleset_matcher import TaggroupIDToTagID
 from cmk.utils.rulesets.tuple_rulesets import ALL_HOSTS, ALL_SERVICES
+from cmk.utils.tags import TagGroupID, TagID
 from cmk.utils.type_defs import ContactgroupName, HostName
 
 HostAttributeMapping = tuple[
@@ -64,7 +64,7 @@ def get_hosts_file_variables() -> HostsData:
     }
 
 
-class FolderAttributes(TypedDict):
+class FolderAttributesForBase(TypedDict):
     bake_agent_package: bool
 
 
@@ -79,15 +79,15 @@ class ContactGroupsField(TypedDict):
 class HostsStorageData:
     locked_hosts: bool
     all_hosts: list[HostName]
-    clusters: dict[HostName, Any]
+    clusters: dict[HostName, list[str]]
     attributes: dict[str, Any]
     custom_macros: dict[str, Any]
-    host_tags: dict[HostName, TaggroupIDToTagID]
+    host_tags: dict[HostName, Mapping[TagGroupID, TagID]]
     host_labels: dict[HostName, Labels]
     contact_groups: ContactGroupsField
-    explicit_host_conf: dict[str, dict[HostName, Any]]
+    explicit_host_conf: dict[str, dict[HostName, str]]
     host_attributes: dict[HostName, Any]
-    folder_attributes: dict[str, FolderAttributes]
+    folder_attributes: dict[str, FolderAttributesForBase]
 
 
 class HostsStorageFieldsGenerator:
@@ -98,7 +98,6 @@ class HostsStorageFieldsGenerator:
         folder_host_service_group_rules: tuple[set[str], set[ContactgroupName], bool],
         folder_path: str,
     ) -> ContactGroupsField:
-
         contact_group_fields = ContactGroupsField(
             hosts=[], services=[], folder_hosts=[], folder_services=[]
         )
@@ -136,11 +135,11 @@ class HostsStorageFieldsGenerator:
 
     @classmethod
     def custom_macros(
-        cls, custom_macros: dict[str, dict[str, str]]
+        cls, custom_macros: dict[str, dict[HostName, str]]
     ) -> dict[str, list[tuple[str, list[HostName]]]]:
         macros: dict[str, list[tuple[str, list[HostName]]]] = {}
         for custom_varname, entries in custom_macros.items():
-            if len(entries) == 0:
+            if not entries:
                 continue
             macros[custom_varname] = []
             for hostname, nagstring in entries.items():
@@ -275,7 +274,7 @@ class RawHostsStorage(ABCHostsStorage[HostsData]):
         return store.load_object_from_file(str(file_path), default={})
 
 
-@lru_cache
+@cache
 def make_experimental_hosts_storage(storage_format: StorageFormat) -> ABCHostsStorage | None:
     if storage_format == StorageFormat.RAW:
         return RawHostsStorage()

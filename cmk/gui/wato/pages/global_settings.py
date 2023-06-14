@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Editor for global settings in main.mk and modes for these global
@@ -37,13 +37,6 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.plugins.wato.utils import get_search_expression, mode_registry
 from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
-from cmk.gui.plugins.watolib.utils import (
-    ABCConfigDomain,
-    config_variable_group_registry,
-    config_variable_registry,
-    ConfigVariable,
-    ConfigVariableGroup,
-)
 from cmk.gui.type_defs import ActionResult, GlobalSettings, PermissionName
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash
@@ -51,6 +44,13 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri, makeuri_contextless
 from cmk.gui.valuespec import Checkbox, Transform
+from cmk.gui.watolib.config_domain_name import (
+    ABCConfigDomain,
+    config_variable_group_registry,
+    config_variable_registry,
+    ConfigVariable,
+    ConfigVariableGroup,
+)
 from cmk.gui.watolib.config_domains import ConfigDomainCore
 from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link
@@ -119,7 +119,7 @@ class ABCGlobalSettingsMode(WatoMode):
             if active_config.debug:
                 raise MKGeneralException(
                     "The configuration variable <tt>%s</tt> is unknown to "
-                    "your local Check_MK installation" % varname
+                    "your local Checkmk installation" % varname
                 )
             return False
 
@@ -555,7 +555,7 @@ class ModeEditGlobalSetting(ABCEditGlobalSettingMode):
         return ModeEditGlobals.mode_url()
 
 
-def is_a_checkbox(vs) -> bool:  # type:ignore[no-untyped-def]
+def is_a_checkbox(vs) -> bool:  # type: ignore[no-untyped-def]
     """Checks if a valuespec is a Checkbox"""
     if isinstance(vs, Checkbox):
         return True

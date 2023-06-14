@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from dataclasses import dataclass
+
 import pytest
 
-from cmk.base.agent_based.discovery.utils import DiscoveryMode, QualifiedDiscovery
+from cmk.utils.labels import HostLabel
+
+from cmk.checkengine.discovery import DiscoveryMode, QualifiedDiscovery
 
 
 class TestDiscoveryMode:
@@ -35,59 +39,55 @@ class TestDiscoveryMode:
         assert DiscoveryMode.from_str("only-host-labels") == DiscoveryMode.ONLY_HOST_LABELS
 
 
-def test_qualified_discovery() -> None:
+@dataclass(frozen=True)
+class _Discoverable:
+    name: str
+    value: str = ""
 
+    def id(self) -> str:
+        return self.name
+
+
+def test_qualified_discovery() -> None:
     result = QualifiedDiscovery(
-        preexisting=(1, 2),
-        current=(2, 3),
-        key=lambda x: x,
+        preexisting=(_Discoverable("one"), _Discoverable("two")),
+        current=(_Discoverable("two"), _Discoverable("three")),
     )
 
-    assert result.vanished == [1]
-    assert result.old == [2]
-    assert result.new == [3]
-    assert result.present == [2, 3]
+    assert result.vanished == [_Discoverable("one")]
+    assert result.old == [_Discoverable("two")]
+    assert result.new == [_Discoverable("three")]
+    assert result.present == [_Discoverable("two"), _Discoverable("three")]
 
     assert list(result.chain_with_qualifier()) == [
-        ("vanished", 1),
-        ("old", 2),
-        ("new", 3),
+        ("vanished", _Discoverable("one")),
+        ("old", _Discoverable("two")),
+        ("new", _Discoverable("three")),
     ]
 
 
 def test_qualified_discovery_keeps_old() -> None:
-
-    # e.g.: same service, different parameters
+    # This behaviour is debatable; but this is the way it is, so test it.
+    # e.g.: same service, changed parameters
     result = QualifiedDiscovery(
-        preexisting=["this is old"],
-        current=["this is new"],
-        key=lambda x: x[:6],
+        preexisting=[_Discoverable("name", "old value")],
+        current=[_Discoverable("name", "new value")],
     )
 
     assert not result.vanished
-    assert result.old == ["this is old"]
+    assert result.old == [_Discoverable("name", "old value")]
     assert not result.new
-    assert result.present == ["this is old"]
+    assert result.present == [_Discoverable("name", "old value")]
 
 
 def test_qualified_discovery_replaced() -> None:
+    # Note: this does not keep the old value, but the new one.
     result = QualifiedDiscovery(
-        preexisting=(
-            [
-                {"key": "a", "value": "1"},
-                {"key": "b", "value": "1"},
-            ]
-        ),
-        current=(
-            [
-                {"key": "a", "value": "1"},
-                {"key": "b", "value": "2"},
-            ]
-        ),
-        key=lambda item: item["key"] + ":" + item["value"],
+        preexisting=[HostLabel("a", "1"), HostLabel("b", "1")],
+        current=[HostLabel("a", "1"), HostLabel("b", "2")],
     )
 
-    assert result.vanished == [{"key": "b", "value": "1"}]
-    assert result.old == [{"key": "a", "value": "1"}]
-    assert result.new == [{"key": "b", "value": "2"}]
-    assert result.present == [{"key": "a", "value": "1"}, {"key": "b", "value": "2"}]
+    assert result.vanished == [HostLabel("b", "1")]
+    assert result.old == [HostLabel("a", "1")]
+    assert result.new == [HostLabel("b", "2")]
+    assert result.present == [HostLabel("a", "1"), HostLabel("b", "2")]

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -16,37 +16,23 @@ Once a user logs out or the "last activity" is older than the configured session
 session is invalidated. The user can then login again from the same client or another one.
 """
 
-import hmac
-import secrets
+from collections.abc import Mapping
 from dataclasses import asdict
 from datetime import datetime
-from hashlib import sha256
-from typing import Mapping
 
-import cmk.utils.paths
+from cmk.utils.crypto.secrets import AuthenticationSecret
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.utils as utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.type_defs import SessionInfo
 from cmk.gui.userdb.store import convert_session_info, load_custom_attr, save_custom_attr
 
 auth_logger = gui_logger.getChild("auth")
-
-
-def create_auth_session(username: UserId, session_id: str) -> None:
-    set_auth_cookie(username, session_id)
-
-
-def set_auth_cookie(username: UserId, session_id: str) -> None:
-    response.set_http_cookie(
-        auth_cookie_name(), auth_cookie_value(username, session_id), secure=request.is_secure
-    )
 
 
 def auth_cookie_name() -> str:
@@ -59,32 +45,7 @@ def auth_cookie_value(username: UserId, session_id: str) -> str:
 
 def generate_auth_hash(username: UserId, session_id: str) -> str:
     """Generates a hash to be added into the cookie value"""
-    secret = _load_secret()
-    serial = _load_serial(username)
-    return hmac.new(
-        key=secret, msg=(username + session_id + str(serial)).encode("utf-8"), digestmod=sha256
-    ).hexdigest()
-
-
-def _load_secret() -> bytes:
-    """Reads the sites auth secret from a file
-
-    Creates the files if it does not exist. Having access to the secret means that one can issue
-    valid cookies for the cookie auth.
-    """
-    secret_path = cmk.utils.paths.omd_root / "etc" / "auth.secret"
-    secret = secret_path.read_bytes() if secret_path.exists() else None
-
-    # Create new secret when this installation has no secret
-    #
-    # In past versions we used another bad approach to generate a secret. This
-    # checks for such secrets and creates a new one. This will invalidate all
-    # current auth cookies which means that all logged in users will need to
-    # renew their login after update.
-    if secret is None or len(secret) == 32:
-        secret = secrets.token_bytes(256)
-        secret_path.write_bytes(secret)
-    return secret
+    return AuthenticationSecret().hmac(f"{username}{session_id}{_load_serial(username)}")
 
 
 def _load_serial(username: UserId) -> int:
@@ -127,29 +88,6 @@ def load_session_infos(username: UserId, lock: bool = False) -> dict[str, Sessio
         )
         or {}
     )
-
-
-def _initialize_session(username: UserId, now: datetime) -> str:
-    """Creates a new user login session (if single user session mode is enabled) and
-    returns the session_id of the new session."""
-    session_infos = active_sessions(load_session_infos(username, lock=True), now)
-
-    session_id = create_session_id()
-    now_ts = int(now.timestamp())
-    session_info = SessionInfo(
-        session_id=session_id,
-        started_at=now_ts,
-        last_activity=now_ts,
-        flashes=[],
-    )
-
-    session_infos[session_id] = session_info
-
-    # Save once right after initialization. It may be saved another time later, in case something
-    # was modified during the request (e.g. flashes were added)
-    save_session_infos(username, session_infos)
-
-    return session_id
 
 
 def active_sessions(

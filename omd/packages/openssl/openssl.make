@@ -1,5 +1,5 @@
 OPENSSL := openssl
-OPENSSL_VERS := 1.1.1q
+OPENSSL_VERS := 1.1.1t
 OPENSSL_DIR := $(OPENSSL)-$(OPENSSL_VERS)
 
 OPENSSL_BUILD := $(BUILD_HELPER_DIR)/$(OPENSSL_DIR)-build
@@ -45,7 +45,7 @@ $(OPENSSL_INTERMEDIATE_INSTALL):  $(OPENSSL_BUILD)
 	mkdir -p "$(INTERMEDIATE_INSTALL_BASE)/$(OPENSSL_DIR)"
 	# This will leave us with some strange file permissions, but works for now, see
 	# https://stackoverflow.com/questions/75208034
-	rsync -r --chmod=u+w "bazel-bin/external/openssl/openssl/" "$(OPENSSL_INSTALL_DIR)/"
+	rsync -r --chmod=u+w "$(BAZEL_BIN)/openssl/openssl/" "$(OPENSSL_INSTALL_DIR)/"
 	$(TOUCH) $@
 endif
 

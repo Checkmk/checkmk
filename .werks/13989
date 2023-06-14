@@ -6,7 +6,7 @@ Date: 1654674514
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The timesyncd check plugin was unable to handle offsets that were displayed
 with units other than seconds, milliseconds, or microseconds.

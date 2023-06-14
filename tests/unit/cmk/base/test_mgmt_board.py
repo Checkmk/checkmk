@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # TODO: This should be realized as unit tests
 
 from collections.abc import Mapping
+from typing import Literal
 
 import pytest
 from pytest import MonkeyPatch
@@ -32,7 +33,7 @@ from cmk.utils.type_defs import HostName
 )
 def test_mgmt_explicit_settings(
     monkeypatch: MonkeyPatch,
-    protocol: str,
+    protocol: Literal["snmp", "ipmi"],
     cred_attribute: str,
     credentials: str | Mapping[str, str],
 ) -> None:
@@ -48,7 +49,7 @@ def test_mgmt_explicit_settings(
     assert config_cache.has_management_board(host)
     assert config_cache.management_protocol(host) == protocol
     assert config_cache.management_address(host) == "127.0.0.1"
-    assert config_cache.management_credentials(host) == credentials
+    assert config_cache.management_credentials(host, protocol) == credentials
 
 
 def test_mgmt_explicit_address(monkeypatch: MonkeyPatch) -> None:
@@ -64,7 +65,7 @@ def test_mgmt_explicit_address(monkeypatch: MonkeyPatch) -> None:
     assert config_cache.has_management_board(host)
     assert config_cache.management_protocol(host) == "snmp"
     assert config_cache.management_address(host) == "127.0.0.2"
-    assert config_cache.management_credentials(host) == "public"
+    assert config_cache.management_credentials(host, "snmp") == "public"
 
 
 def test_mgmt_disabled(monkeypatch: MonkeyPatch) -> None:
@@ -81,7 +82,6 @@ def test_mgmt_disabled(monkeypatch: MonkeyPatch) -> None:
     assert config_cache.has_management_board(host) is False
     assert config_cache.management_protocol(host) is None
     assert config_cache.management_address(host) == "127.0.0.1"
-    assert config_cache.management_credentials(host) is None
 
 
 @pytest.mark.parametrize(
@@ -126,7 +126,7 @@ def test_mgmt_config_ruleset(
     assert config_cache.has_management_board(host)
     assert config_cache.management_protocol(host) == protocol
     assert config_cache.management_address(host) == "127.0.0.1"
-    assert config_cache.management_credentials(host) == ruleset_credentials
+    assert config_cache.management_credentials(host, protocol) == ruleset_credentials
 
 
 @pytest.mark.parametrize(
@@ -176,7 +176,7 @@ def test_mgmt_config_ruleset_order(
     assert config_cache.has_management_board(host)
     assert config_cache.management_protocol(host) == "snmp"
     assert config_cache.management_address(host) == "127.0.0.1"
-    assert config_cache.management_credentials(host) == "RULESET1"
+    assert config_cache.management_credentials(host, "snmp") == "RULESET1"
 
 
 @pytest.mark.parametrize(
@@ -222,7 +222,7 @@ def test_mgmt_config_ruleset_overidden_by_explicit_setting(
     assert config_cache.has_management_board(host)
     assert config_cache.management_protocol(host) == protocol
     assert config_cache.management_address(host) == "127.0.0.1"
-    assert config_cache.management_credentials(host) == host_credentials
+    assert config_cache.management_credentials(host, protocol) == host_credentials
 
 
 @pytest.mark.parametrize(
@@ -441,4 +441,4 @@ def test_mgmt_board_ip_addresses(
     assert config_cache.has_management_board(hostname)
     assert config_cache.management_protocol(hostname) == protocol
     assert config_cache.management_address(hostname) == ip_address_result
-    assert config_cache.management_credentials(hostname) == credentials
+    assert config_cache.management_credentials(hostname, protocol) == credentials

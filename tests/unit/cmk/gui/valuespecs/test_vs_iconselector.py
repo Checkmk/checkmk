@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -14,13 +14,13 @@ from cmk.gui.exceptions import MKUserError
 from .utils import expect_validate_failure, expect_validate_success
 
 ICON: vs.IconSelectorModel = {"icon": "crash", "emblem": None}
-ICON_WRONG_TYPE: vs.IconSelectorModel = {"icon": 123, "emblem": None}  # type: ignore
+ICON_WRONG_TYPE: vs.IconSelectorModel = {"icon": 123, "emblem": None}  # type: ignore[typeddict-item]
 ICON_NOT_EXISTANT: vs.IconSelectorModel = {"icon": "asd", "emblem": None}
 ICON_EMBLEM: vs.IconSelectorModel = {"icon": "graph", "emblem": "add"}
 ICON_EMBLEM_NOT_EXISTANT: vs.IconSelectorModel = {"icon": "graph", "emblem": "xxx123xxx"}
-ICON_EMBLEM_WRONG_TYPE: vs.IconSelectorModel = {"icon": "graph", "emblem": 123}  # type: ignore
+ICON_EMBLEM_WRONG_TYPE: vs.IconSelectorModel = {"icon": "graph", "emblem": 123}  # type: ignore[typeddict-item]
 # TODO: by type icon may not be None, but code explicitly tests for this...
-ICON_NONE: vs.IconSelectorModel = {"icon": None, "emblem": None}  # type: ignore
+ICON_NONE: vs.IconSelectorModel = {"icon": None, "emblem": None}  # type: ignore[typeddict-item]
 
 
 class TestValueSpecFloat:

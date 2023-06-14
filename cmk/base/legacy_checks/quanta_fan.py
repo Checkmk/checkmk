@@ -1,0 +1,67 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+from cmk.base.check_api import discover, get_parsed_item_data, LegacyCheckDefinition
+from cmk.base.check_legacy_includes.fan import check_fan
+from cmk.base.check_legacy_includes.quanta import parse_quanta
+from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.utils.quanta import DETECT_QUANTA
+
+# .1.3.6.1.4.1.7244.1.2.1.3.3.1.1.1 1
+# .1.3.6.1.4.1.7244.1.2.1.3.3.1.1.2 2
+# ...
+# .1.3.6.1.4.1.7244.1.2.1.3.3.1.2.1 3
+# .1.3.6.1.4.1.7244.1.2.1.3.3.1.2.2 3
+# ...
+# .1.3.6.1.4.1.7244.1.2.1.3.3.1.3.1 Fan_SYS0_1
+# .1.3.6.1.4.1.7244.1.2.1.3.3.1.3.2 Fan_SYS0_2
+# ...
+# .1.3.6.1.4.1.7244.1.2.1.3.3.1.4.1 100
+# .1.3.6.1.4.1.7244.1.2.1.3.3.1.4.2 9400
+# ...
+# .1.3.6.1.4.1.7244.1.2.1.3.3.1.6.1 -99
+# .1.3.6.1.4.1.7244.1.2.1.3.3.1.6.2 -99
+# ...
+# .1.3.6.1.4.1.7244.1.2.1.3.3.1.7.1 -99
+# .1.3.6.1.4.1.7244.1.2.1.3.3.1.7.2 -99
+# ...
+# .1.3.6.1.4.1.7244.1.2.1.3.3.1.8.1 -99
+# .1.3.6.1.4.1.7244.1.2.1.3.3.1.8.2 -99
+# ...
+# .1.3.6.1.4.1.7244.1.2.1.3.3.1.9.1 500
+# .1.3.6.1.4.1.7244.1.2.1.3.3.1.9.2 500
+
+
+@get_parsed_item_data
+def check_quanta_fan(item, params, entry):
+    yield entry.status[0], "Status: %s" % entry.status[1]
+
+    if entry.value in (-99, None):
+        return
+
+    levels = {
+        "upper": params.get("upper", entry.upper_levels),
+        "lower": params.get("lower", entry.lower_levels),
+    }
+
+    yield check_fan(entry.value, levels)
+
+
+check_info["quanta_fan"] = LegacyCheckDefinition(
+    detect=DETECT_QUANTA,
+    discovery_function=discover(),
+    parse_function=parse_quanta,
+    check_function=check_quanta_fan,
+    service_name="Fan %s",
+    check_ruleset_name="hw_fans",
+    # these is no good oid identifier for quanta devices, thats why the first oid is used here
+    fetch=[
+        SNMPTree(
+            base=".1.3.6.1.4.1.7244.1.2.1.3.3.1",
+            oids=["1", "2", "3", "4", "6", "7", "8", "9"],
+        )
+    ],
+)

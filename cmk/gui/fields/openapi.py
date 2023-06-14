@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import typing
@@ -11,7 +11,7 @@ from marshmallow import fields, Schema
 from cmk.gui.fields.base import FieldWrapper, MultiNested, ValueTypedDictSchema
 
 
-def is_value_typed_dict(schema) -> bool:  # type:ignore[no-untyped-def]
+def is_value_typed_dict(schema) -> bool:  # type: ignore[no-untyped-def]
     is_class = isinstance(schema, type) and issubclass(schema, ValueTypedDictSchema)
     is_instance = isinstance(schema, ValueTypedDictSchema)
     return is_class or is_instance
@@ -123,7 +123,7 @@ class CheckmkOpenAPIConverter(marshmallow.OpenAPIConverter):
             "additionalProperties": properties,
         }
 
-    def nested2properties(self, field: fields.Field, ret):  # type:ignore[no-untyped-def]
+    def nested2properties(self, field: fields.Field, ret):  # type: ignore[no-untyped-def]
         """Return a dictionary of properties from :class:`Nested <marshmallow.fields.Nested` fields.
 
         Typically provides a reference object and will add the schema to the spec

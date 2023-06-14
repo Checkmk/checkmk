@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,7 +7,9 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import SectionName
+
+from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import GetRateError, Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
@@ -175,6 +177,7 @@ LXC_CONTAINER_CPU_CGROUPV2_10 = [
 ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.usefixtures("num_cpu")
 @pytest.mark.usefixtures("mocker")
 @pytest.mark.parametrize(

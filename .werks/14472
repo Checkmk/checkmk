@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If a scheduled report was executed at the configured time, the execution failed
 with "TypeError: join() argument must be str, bytes, or os.PathLike object, not

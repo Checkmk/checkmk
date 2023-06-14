@@ -1,0 +1,12 @@
+Title: Catalog of check plugins: show default parameters
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1679610287
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+In the <i>Catalog of check plugins</i> the default check parameters of each check plugin are now included.
+

@@ -1,0 +1,11 @@
+Title: win_printers: Do not discover offline printers
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1683722059
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Due to a regression in Checkmk 2.0 the plugin <i>"Windows Printers: Queue and Printer States"</i> discovered offline printers.

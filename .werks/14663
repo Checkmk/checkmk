@@ -6,7 +6,7 @@ Date: 1659639467
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Checks for a voltage sensor and information if no sensor is detected on a port have been added.
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -18,7 +18,7 @@ from .agent_based_api.v1 import (
     State,
 )
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
-from .utils.azure import check_azure_metrics, MetricData, parse_resources
+from .utils.azure import create_check_metrics_function, MetricData, parse_resources
 from .utils.azure_load_balancer import LoadBalancer, Section
 
 
@@ -166,7 +166,7 @@ def check_health(item: str, params: Mapping[str, Any], section: Section) -> Chec
     if (load_balancer := section.get(item)) is None:
         raise IgnoreResultsError("Data not present at the moment")
 
-    yield from check_azure_metrics(
+    yield from create_check_metrics_function(
         [
             MetricData(
                 "average_VipAvailability",

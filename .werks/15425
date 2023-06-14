@@ -1,0 +1,42 @@
+Title: agent bakery: Change internal .deb format
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1682057549
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This Werk fixes a little detail that will be irrelevant for most users.<br>
+It's best explained with an example.
+
+Before:
+C+:
+$ ar x check_mk_agent.deb
+$ tar tf control.tar.gz
+postinst
+preinst
+prerm
+control
+conffiles
+md5sums
+C-:
+
+Now:
+C+:
+$ ar x check_mk_agent.deb
+$ tar tf control.tar.gz
+.
+./postinst
+./preinst
+./prerm
+./control
+./conffiles
+./md5sums
+C-:
+
+While there's no advantage in packaging relative to "<tt>.</tt>",
+it seems to be the expected format for <tt>control.tar.gz</tt> and <tt>data.tar.gz</tt>,
+as we received some feedback about the <i>SUSE manager</i> not recognizing the .deb package otherwise.
+

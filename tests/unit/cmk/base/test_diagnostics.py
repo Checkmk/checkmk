@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,7 +7,7 @@ import csv
 import json
 import shutil
 from pathlib import Path, PurePath
-from typing import NamedTuple, Type
+from typing import NamedTuple
 
 import pytest
 import requests
@@ -164,6 +164,7 @@ def test_diagnostics_element_hw_info_content(
         "cpuinfo",
         "loadavg",
         "meminfo",
+        "vendorinfo",
     ]
     content = json.loads(filepath.open().read())
 
@@ -180,7 +181,6 @@ def test_diagnostics_element_environment() -> None:
 def test_diagnostics_element_environment_content(
     monkeypatch: pytest.MonkeyPatch, tmp_path: PurePath
 ) -> None:
-
     environment_vars = {"France": "Paris", "Italy": "Rome", "Germany": "Berlin"}
 
     with monkeypatch.context() as m:
@@ -212,7 +212,6 @@ def test_diagnostics_element_filesize() -> None:
 
 @pytest.mark.usefixtures("monkeypatch")
 def test_diagnostics_element_filesize_content(tmp_path: PurePath) -> None:
-
     diagnostics_element = diagnostics.FilesSizeCSVDiagnosticsElement()
 
     test_dir = cmk.utils.paths.local_checks_dir
@@ -284,7 +283,6 @@ CONFIG_MKEVENTD_SYSLOG='on'
 CONFIG_MKEVENTD_SYSLOG_TCP='off'
 CONFIG_MULTISITE_AUTHORISATION='on'
 CONFIG_MULTISITE_COOKIE_AUTH='on'
-CONFIG_NAGIOS_THEME='classicui'
 CONFIG_NSCA='off'
 CONFIG_NSCA_TCP_PORT='5667'
 CONFIG_PNP4NAGIOS='on'
@@ -315,7 +313,6 @@ CONFIG_TMPFS='on'"""
         "CONFIG_MKEVENTD_SYSLOG_TCP",
         "CONFIG_MULTISITE_AUTHORISATION",
         "CONFIG_MULTISITE_COOKIE_AUTH",
-        "CONFIG_NAGIOS_THEME",
         "CONFIG_NSCA",
         "CONFIG_NSCA_TCP_PORT",
         "CONFIG_PNP4NAGIOS",
@@ -344,7 +341,6 @@ CONFIG_TMPFS='on'"""
             "off",
             "on",
             "on",
-            "classicui",
             "off",
             "5667",
             "on",
@@ -459,7 +455,6 @@ def test_diagnostics_element_checkmk_overview_error(
 def test_diagnostics_element_checkmk_overview_content(
     monkeypatch, tmp_path, _fake_local_connection, host_list, host_tree
 ):
-
     diagnostics_element = diagnostics.CheckmkOverviewDiagnosticsElement()
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
@@ -491,7 +486,9 @@ def test_diagnostics_element_checkmk_overview_content(
         },
     ]
 
-    assert content["Nodes"]["versions"]["Table"]["Rows"] == [
+    rows = content["Nodes"]["versions"]["Table"]["Rows"]
+    assert len(rows) == 2
+    for row in [
         {
             "demo": False,
             "edition": "cee",
@@ -506,7 +503,8 @@ def test_diagnostics_element_checkmk_overview_content(
             "number": "2020.06.09",
             "version": "2020.06.09.cee",
         },
-    ]
+    ]:
+        assert row in rows
 
     shutil.rmtree(str(inventory_dir))
 
@@ -529,7 +527,7 @@ def test_diagnostics_element_checkmk_overview_content(
     ],
 )
 def test_diagnostics_element_checkmk_files(
-    diag_elem: Type[diagnostics.CheckmkConfigFilesDiagnosticsElement],
+    diag_elem: type[diagnostics.CheckmkConfigFilesDiagnosticsElement],
     ident: str,
     title: str,
     description: str,
@@ -550,8 +548,8 @@ def test_diagnostics_element_checkmk_files(
 )
 def test_diagnostics_element_checkmk_files_error(
     tmp_path: PurePath,
-    diag_elem: Type[diagnostics.CheckmkConfigFilesDiagnosticsElement]
-    | Type[diagnostics.CheckmkLogFilesDiagnosticsElement],
+    diag_elem: type[diagnostics.CheckmkConfigFilesDiagnosticsElement]
+    | type[diagnostics.CheckmkLogFilesDiagnosticsElement],
 ) -> None:
     short_test_conf_filepath = "/no/such/file"
     diagnostics_element = diag_elem([short_test_conf_filepath])
@@ -636,7 +634,6 @@ def test_diagnostics_element_performance_graphs_error(
     content,
     error,
 ):
-
     diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement()
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))
@@ -689,7 +686,6 @@ def test_diagnostics_element_performance_graphs_content(
     text,
     content,
 ):
-
     diagnostics_element = diagnostics.PerformanceGraphsDiagnosticsElement()
 
     monkeypatch.setattr(livestatus, "LocalConnection", _fake_local_connection(host_list))

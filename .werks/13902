@@ -6,7 +6,7 @@ Date: 1652079530
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 OMD executes several hooks to determine configuration options (e.g. which port
 to use for the site apache). These hooks are version dependent, so OMD executed

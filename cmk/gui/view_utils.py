@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import re
 from collections.abc import Mapping
 from typing import Any
@@ -12,8 +11,8 @@ from livestatus import SiteId
 
 from cmk.utils.html import replace_state_markers
 from cmk.utils.labels import Labels
-from cmk.utils.rulesets.ruleset_matcher import LabelSources, TaggroupIDToTagID
-from cmk.utils.tags import TaggroupID, TagID
+from cmk.utils.rulesets.ruleset_matcher import LabelSources
+from cmk.utils.tags import TagGroupID, TagID
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -21,10 +20,15 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import LoggedInUser
-from cmk.gui.type_defs import HTTPVariables, Row
+from cmk.gui.type_defs import FilterHTTPVariables, HTTPVariables, Row
 from cmk.gui.utils.html import HTML
+from cmk.gui.utils.labels import filter_http_vars_for_simple_label_group
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
+
+
+class PythonExportError(Exception):
+    pass
 
 
 class CSVExportError(Exception):
@@ -54,10 +58,10 @@ _URL_PATTERN = (
     r")"
 )
 # fmt: on
+_STATE_MARKER_PATTERN = r"(.*)(\((?:!|!!|.)\))$"
 
 
 def format_plugin_output(output: str, row: Row | None = None, shall_escape: bool = True) -> HTML:
-
     shall_escape = _consolidate_escaping_options(row, shall_escape)
 
     if shall_escape and _render_url_icons(row):
@@ -113,7 +117,15 @@ def _render_icon_button(output: str) -> str:
             case 0:
                 buffer.append(escaping.escape_attribute(token))
             case 2:
-                buffer.append(str(html.render_icon_button(token, token, "link", target="_blank")))
+                # if a url is directly followed by a state marker, separate them
+                if match := re.match(_STATE_MARKER_PATTERN, token):
+                    url, state_marker = match.group(1), match.group(2)
+                    buffer.append(str(html.render_icon_button(url, url, "link", target="_blank")))
+                    buffer.append(escaping.escape_attribute(state_marker))
+                else:
+                    buffer.append(
+                        str(html.render_icon_button(token, token, "link", target="_blank"))
+                    )
     return "".join(buffer)
 
 
@@ -182,14 +194,16 @@ def render_labels(
     )
 
 
-def render_tag_groups(tag_groups: TaggroupIDToTagID, object_type: str, with_links: bool) -> HTML:
+def render_tag_groups(
+    tag_groups: Mapping[TagGroupID, TagID], object_type: str, with_links: bool
+) -> HTML:
     return _render_tag_groups_or_labels(
         tag_groups, object_type, with_links, label_type="tag_group", label_sources={}
     )
 
 
 def _render_tag_groups_or_labels(
-    entries: TaggroupIDToTagID | Labels,
+    entries: Mapping[TagGroupID, TagID] | Labels,
     object_type: str,
     with_links: bool,
     label_type: str,
@@ -212,7 +226,7 @@ def _render_tag_groups_or_labels(
 
 
 def _render_tag_group(
-    tag_group_id_or_label_key: TaggroupID | str,
+    tag_group_id_or_label_key: TagGroupID | str,
     tag_id_or_label_value: TagID | str,
     object_type: str,
     with_link: bool,
@@ -242,12 +256,11 @@ def _render_tag_group(
             ("%s_tag_0_val" % object_type, tag_id_or_label_value),
         ]
     elif label_type == "label":
-        type_filter_vars = [
-            (
-                "%s_label" % object_type,
-                json.dumps([{"value": f"{tag_group_id_or_label_key}:{tag_id_or_label_value}"}]),
-            ),
-        ]
+        filter_vars_dict: FilterHTTPVariables = filter_http_vars_for_simple_label_group(
+            [f"{tag_group_id_or_label_key}:{tag_id_or_label_value}"],
+            object_type,  # type: ignore[arg-type]
+        )
+        type_filter_vars = list(filter_vars_dict.items())
 
     else:
         raise NotImplementedError()

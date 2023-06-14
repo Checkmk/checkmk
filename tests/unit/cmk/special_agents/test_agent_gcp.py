@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
 import datetime
 import json
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from typing import Any
 
 import pytest
@@ -104,9 +104,9 @@ class FakeAssetClient:
     def __init__(self, assets: Iterable[str] | None = None) -> None:
         if assets is None:
             self._assets: Iterable[str] = [
-                '{"name": "//compute.googleapis.com/projects/tribe29-check-development/zones/us-central1-a/instances/instance-1", "asset_type": "compute.googleapis.com/Instance", "resource": {"version": "v1", "discovery_document_uri": "https://www.googleapis.com/discovery/v1/apis/compute/v1/rest", "discovery_name": "Instance", "parent": "//cloudresourcemanager.googleapis.com/projects/1074106860578", "data": {}, "location": "us-central1-a", "resource_url": ""}, "ancestors": ["projects/1074106860578", "folders/1022571519427", "organizations/668598212003"], "update_time": "2022-04-05T08:23:00.662291Z", "org_policy": []}',
-                '{"name": "//compute.googleapis.com/projects/tribe29-check-development/zones/us-central1-a/instances/instance-1", "asset_type": "foo", "resource": {"version": "v1", "discovery_document_uri": "https://www.googleapis.com/discovery/v1/apis/compute/v1/rest", "discovery_name": "Instance", "parent": "//cloudresourcemanager.googleapis.com/projects/1074106860578", "data": {"id":"a", "labels": {"judas": "priest", "iron": "maiden", "van":"halen"}}, "location": "us-central1-a", "resource_url": ""}, "ancestors": ["projects/1074106860578", "folders/1022571519427", "organizations/668598212003"], "update_time": "2022-04-05T08:23:00.662291Z", "org_policy": []}',
-                '{"name": "//compute.googleapis.com/projects/tribe29-check-development/zones/us-central1-a/instances/instance-1", "asset_type": "foo", "resource": {"version": "v1", "discovery_document_uri": "https://www.googleapis.com/discovery/v1/apis/compute/v1/rest", "discovery_name": "Instance", "parent": "//cloudresourcemanager.googleapis.com/projects/1074106860578", "data": {"id":"b", "labels": {"judas": "priest", "iron": "maiden", "van":"halen"}}, "location": "us-central1-a", "resource_url": ""}, "ancestors": ["projects/1074106860578", "folders/1022571519427", "organizations/668598212003"], "update_time": "2022-04-05T08:23:00.662291Z", "org_policy": []}',
+                '{"name": "//compute.googleapis.com/projects/checkmk-check-development/zones/us-central1-a/instances/instance-1", "asset_type": "compute.googleapis.com/Instance", "resource": {"version": "v1", "discovery_document_uri": "https://www.googleapis.com/discovery/v1/apis/compute/v1/rest", "discovery_name": "Instance", "parent": "//cloudresourcemanager.googleapis.com/projects/1074106860578", "data": {}, "location": "us-central1-a", "resource_url": ""}, "ancestors": ["projects/1074106860578", "folders/1022571519427", "organizations/668598212003"], "update_time": "2022-04-05T08:23:00.662291Z", "org_policy": []}',
+                '{"name": "//compute.googleapis.com/projects/checkmk-check-development/zones/us-central1-a/instances/instance-1", "asset_type": "foo", "resource": {"version": "v1", "discovery_document_uri": "https://www.googleapis.com/discovery/v1/apis/compute/v1/rest", "discovery_name": "Instance", "parent": "//cloudresourcemanager.googleapis.com/projects/1074106860578", "data": {"id":"a", "labels": {"judas": "priest", "iron": "maiden", "van":"halen"}}, "location": "us-central1-a", "resource_url": ""}, "ancestors": ["projects/1074106860578", "folders/1022571519427", "organizations/668598212003"], "update_time": "2022-04-05T08:23:00.662291Z", "org_policy": []}',
+                '{"name": "//compute.googleapis.com/projects/checkmk-check-development/zones/us-central1-a/instances/instance-1", "asset_type": "foo", "resource": {"version": "v1", "discovery_document_uri": "https://www.googleapis.com/discovery/v1/apis/compute/v1/rest", "discovery_name": "Instance", "parent": "//cloudresourcemanager.googleapis.com/projects/1074106860578", "data": {"id":"b", "labels": {"judas": "priest", "iron": "maiden", "van":"halen"}}, "location": "us-central1-a", "resource_url": ""}, "ancestors": ["projects/1074106860578", "folders/1022571519427", "organizations/668598212003"], "update_time": "2022-04-05T08:23:00.662291Z", "org_policy": []}',
             ]
         else:
             self._assets = assets
@@ -138,24 +138,54 @@ class FakeClient:
     def list_costs(self, tableid: str) -> tuple[agent_gcp.Schema, agent_gcp.Pages]:
         schema = [
             {"name": "name", "type": "STRING", "mode": "NULLABLE"},
+            {"name": "id", "type": "STRING", "mode": "NULLABLE"},
             {"name": "cost", "type": "FLOAT", "mode": "NULLABLE"},
             {"name": "currency", "type": "STRING", "mode": "NULLABLE"},
             {"name": "month", "type": "STRING", "mode": "NULLABLE"},
         ]
         rows = [
             [
-                {"f": [{"v": "test"}, {"v": "42.21"}, {"v": "EUR"}, {"v": "202207"}]},
-                {"f": [{"v": "checkmk"}, {"v": "3.1415"}, {"v": "EUR"}, {"v": "202207"}]},
+                {
+                    "f": [
+                        {"v": "test"},
+                        {"v": "testid"},
+                        {"v": "42.21"},
+                        {"v": "EUR"},
+                        {"v": "202207"},
+                    ]
+                },
+                {
+                    "f": [
+                        {"v": "checkmk"},
+                        {"v": "checkmkid"},
+                        {"v": "3.1415"},
+                        {"v": "EUR"},
+                        {"v": "202207"},
+                    ]
+                },
             ],
             [
-                {"f": [{"v": "test"}, {"v": "1337.0"}, {"v": "EUR"}, {"v": "202206"}]},
-                {"f": [{"v": "checkmk"}, {"v": "2.71"}, {"v": "EUR"}, {"v": "202206"}]},
+                {
+                    "f": [
+                        {"v": "test"},
+                        {"v": "testid"},
+                        {"v": "1337.0"},
+                        {"v": "EUR"},
+                        {"v": "202206"},
+                    ]
+                },
+                {
+                    "f": [
+                        {"v": "checkmk"},
+                        {"v": "checkmkid"},
+                        {"v": "2.71"},
+                        {"v": "EUR"},
+                        {"v": "202206"},
+                    ]
+                },
             ],
         ]
         return schema, rows
-
-    def health_info(self) -> Mapping[str, Any]:
-        return {"fake": "test"}
 
 
 def collector_factory(
@@ -178,10 +208,14 @@ def fixture_agent_output() -> Sequence[agent_gcp.Section]:
         [],
         cost=None,
         serializer=collector,
-        monitor_health=True,
         piggy_back_prefix="custom-prefix",
     )
     return list(sections)
+
+
+def test_host_labels(agent_output: Sequence[agent_gcp.Section]) -> None:
+    label_section = list(s for s in agent_output if isinstance(s, agent_gcp.HostLabelSection))
+    assert label_section[0] == agent_gcp.HostLabelSection(labels={"cmk/gcp/projectId": "test"})
 
 
 def test_output_contains_defined_metric_sections(agent_output: Sequence[agent_gcp.Section]) -> None:
@@ -189,18 +223,10 @@ def test_output_contains_defined_metric_sections(agent_output: Sequence[agent_gc
     assert names.issuperset({s.name for s in agent_gcp.SERVICES.values()})
 
 
-def test_output_contains_one_health_section(agent_output: Sequence[agent_gcp.Section]) -> None:
-    assert "health" in {s.name for s in agent_output}
-    health_sections = list(s for s in agent_output if isinstance(s, agent_gcp.HealthSection))
-    assert len(health_sections) == 1
-    assert health_sections[0].date == datetime.date(year=2022, month=7, day=16)
-
-
 def test_output_contains_one_asset_section(agent_output: Sequence[agent_gcp.Section]) -> None:
     assert "asset" in {s.name for s in agent_output}
     asset_sections = list(s for s in agent_output if isinstance(s, agent_gcp.AssetSection))
     assert len(asset_sections) == 1
-    assert asset_sections[0].project == "test"
 
 
 def test_metric_serialization(
@@ -219,7 +245,7 @@ def test_metric_serialization(
 
 def test_metric_retrieval() -> None:
     timeseries = [
-        '{"ts": {"metric": {"type": "compute.googleapis.com/instance/cpu/utilization", "labels": {}}, "resource": {"type": "gce_instance", "labels": {"project_id": "tribe29-check-development", "instance_id": "4916403162284897775"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-04-13T11:19:37.193318Z", "end_time": "2022-04-13T11:19:37.193318Z"}, "value": {"double_value": 0.0033734199011726433}}], "unit": ""}, "aggregation": {"alignment_period": {"seconds": 60}, "group_by_fields": ["resource.function_name"], "per_series_aligner": 2, "cross_series_reducer": 4}}'
+        '{"ts": {"metric": {"type": "compute.googleapis.com/instance/cpu/utilization", "labels": {}}, "resource": {"type": "gce_instance", "labels": {"project_id": "checkmk-check-development", "instance_id": "4916403162284897775"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-04-13T11:19:37.193318Z", "end_time": "2022-04-13T11:19:37.193318Z"}, "value": {"double_value": 0.0033734199011726433}}], "unit": ""}, "aggregation": {"alignment_period": {"seconds": 60}, "group_by_fields": ["resource.function_name"], "per_series_aligner": 2, "cross_series_reducer": 4}}'
     ]
     client = FakeClient("test", FakeMonitoringClient(timeseries), FakeAssetClient())
     sections: list[agent_gcp.Section] = []
@@ -230,7 +256,6 @@ def test_metric_retrieval() -> None:
         [],
         cost=None,
         serializer=collector,
-        monitor_health=True,
         piggy_back_prefix="custom-prefix",
     )
     result_section = next(
@@ -248,34 +273,25 @@ def test_asset_serialization(
     captured = capsys.readouterr()
     lines = captured.out.rstrip().split("\n")
     assert lines[0] == "<<<gcp_assets:sep(0)>>>"
-    assert json.loads(lines[1]) == {"project": "test", "config": list(agent_gcp.SERVICES)}
+    assert json.loads(lines[1]) == {"config": list(agent_gcp.SERVICES)}
     for line in lines[2:]:
         agent_gcp.Asset.deserialize(line)
 
 
-def test_health_serialization(
-    agent_output: Sequence[agent_gcp.Section], capsys: pytest.CaptureFixture[str]
-) -> None:
-    health_section = next(s for s in agent_output if isinstance(s, agent_gcp.HealthSection))
-    agent_gcp.gcp_serializer([health_section])
-    captured = capsys.readouterr()
-    lines = captured.out.rstrip().split("\n")
-    assert lines[0] == "<<<gcp_health:sep(0)>>>"
-    assert json.loads(lines[1]) == {"date": "2022-07-16"}
-    assert json.loads(lines[2]) == {"fake": "test"}
-    assert len(lines) == 3
-
-
 @pytest.fixture(name="asset_and_piggy_back_sections")
-def asset_and_piggy_back_sections_fixture() -> Sequence[
-    agent_gcp.PiggyBackSection | agent_gcp.AssetSection
-]:
+def asset_and_piggy_back_sections_fixture() -> (
+    Sequence[agent_gcp.PiggyBackSection | agent_gcp.AssetSection]
+):
     client = FakeClient("test", FakeMonitoringClient(), FakeAssetClient())
     sections: list[agent_gcp.Section] = []
     collector = collector_factory(sections)
 
-    def test_labeler(asset: agent_gcp.Asset) -> agent_gcp.Labels:
-        return {f"cmk/gcp/labels/{k}": v for k, v in asset.asset.resource.data["labels"].items()}
+    def test_labeler(asset: agent_gcp.Asset) -> agent_gcp.HostLabelSection:
+        return agent_gcp.HostLabelSection(
+            labels={
+                f"cmk/gcp/labels/{k}": v for k, v in asset.asset.resource.data["labels"].items()
+            }
+        )
 
     piggy_back_section = agent_gcp.PiggyBackService(
         name="testing",
@@ -305,7 +321,6 @@ def asset_and_piggy_back_sections_fixture() -> Sequence[
         [piggy_back_section],
         cost=None,
         serializer=collector,
-        monitor_health=True,
         piggy_back_prefix="custom-prefix",
     )
     return list(
@@ -378,12 +393,14 @@ def test_piggy_back_sort_values_to_host(
 
 
 def test_piggy_back_host_labels(piggy_back_sections: Sequence[agent_gcp.PiggyBackSection]) -> None:
-    assert piggy_back_sections[0].labels == {
-        "cmk/gcp/labels/van": "halen",
-        "cmk/gcp/labels/iron": "maiden",
-        "cmk/gcp/labels/judas": "priest",
-        "cmk/gcp/projectId": "test",
-    }
+    assert piggy_back_sections[0].labels == agent_gcp.HostLabelSection(
+        labels={
+            "cmk/gcp/labels/van": "halen",
+            "cmk/gcp/labels/iron": "maiden",
+            "cmk/gcp/labels/judas": "priest",
+            "cmk/gcp/projectId": "test",
+        }
+    )
 
 
 # GCE Piggyback host tests.
@@ -392,10 +409,10 @@ def test_piggy_back_host_labels(piggy_back_sections: Sequence[agent_gcp.PiggyBac
 @pytest.fixture(name="gce_sections")
 def fixture_gce_sections() -> Sequence[agent_gcp.PiggyBackSection]:
     timeseries = [
-        '{"ts": {"metric": {"type": "compute.googleapis.com/instance/cpu/utilization", "labels": {}}, "resource": {"type": "gce_instance", "labels": {"project_id": "tribe29-check-development", "instance_id": "4916403162284897775"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-04-13T11:36:37.193318Z", "end_time": "2022-04-13T11:36:37.193318Z"}, "value": {"double_value": 0.0035302032187011587}}, {"interval": {"start_time": "2022-04-13T11:35:37.193318Z", "end_time": "2022-04-13T11:35:37.193318Z"}, "value": {"double_value": 0.003718815888075729}}, {"interval": {"start_time": "2022-04-13T11:34:37.193318Z", "end_time": "2022-04-13T11:34:37.193318Z"}, "value": {"double_value": 0.003641066445975986}}, {"interval": {"start_time": "2022-04-13T11:33:37.193318Z", "end_time": "2022-04-13T11:33:37.193318Z"}, "value": {"double_value":0.006292206559268394}}, {"interval": {"start_time": "2022-04-13T11:32:37.193318Z", "end_time": "2022-04-13T11:32:37.193318Z"}, "value": {"double_value": 0.006182711671318082}}, {"interval": {"start_time": "2022-04-13T11:31:37.193318Z", "end_time": "2022-04-13T11:31:37.193318Z"}, "value": {"double_value": 0.004284212986899849}}, {"interval": {"start_time": "2022-04-13T11:30:37.193318Z", "end_time": "2022-04-13T11:30:37.193318Z"}, "value": {"double_value": 0.004311434884408142}}, {"interval": {"start_time": "2022-04-13T11:29:37.193318Z", "end_time": "2022-04-13T11:29:37.193318Z"}, "value": {"double_value": 0.0035632611313867932}}, {"interval": {"start_time": "2022-04-13T11:28:37.193318Z", "end_time": "2022-04-13T11:28:37.193318Z"}, "value": {"double_value": 0.003491919276933745}}, {"interval": {"start_time": "2022-04-13T11:27:37.193318Z", "end_time": "2022-04-13T11:27:37.193318Z"}, "value": {"double_value": 0.0032100898760082743}}, {"interval": {"start_time": "2022-04-13T11:26:37.193318Z", "end_time": "2022-04-13T11:26:37.193318Z"}, "value": {"double_value": 0.003219789863135425}}, {"interval": {"start_time": "2022-04-13T11:25:37.193318Z", "end_time": "2022-04-13T11:25:37.193318Z"}, "value": {"double_value": 0.0029431110570352632}}, {"interval": {"start_time": "2022-04-13T11:24:37.193318Z", "end_time": "2022-04-13T11:24:37.193318Z"}, "value": {"double_value": 0.0029444862618781538}}, {"interval": {"start_time": "2022-04-13T11:23:37.193318Z", "end_time": "2022-04-13T11:23:37.193318Z"}, "value": {"double_value": 0.0032960633851242998}}, {"interval": {"start_time": "2022-04-13T11:22:37.193318Z", "end_time": "2022-04-13T11:22:37.193318Z"}, "value": {"double_value": 0.003308212633207426}}, {"interval": {"start_time": "2022-04-13T11:21:37.193318Z", "end_time": "2022-04-13T11:21:37.193318Z"}, "value": {"double_value": 0.0030290040189213663}}, {"interval": {"start_time": "2022-04-13T11:20:37.193318Z", "end_time": "2022-04-13T11:20:37.193318Z"}, "value": {"double_value": 0.0029890867332067472}}, {"interval": {"start_time": "2022-04-13T11:19:37.193318Z", "end_time": "2022-04-13T11:19:37.193318Z"}, "value": {"double_value": 0.0033734199011726433}}], "unit": ""}, "aggregation": {"alignment_period": {"seconds": 60}, "group_by_fields": ["resource.function_name"], "per_series_aligner": 2, "cross_series_reducer": 4}}'
+        '{"ts": {"metric": {"type": "compute.googleapis.com/instance/cpu/utilization", "labels": {}}, "resource": {"type": "gce_instance", "labels": {"project_id": "checkmk-check-development", "instance_id": "4916403162284897775"}}, "metric_kind": 1, "value_type": 3, "points": [{"interval": {"start_time": "2022-04-13T11:36:37.193318Z", "end_time": "2022-04-13T11:36:37.193318Z"}, "value": {"double_value": 0.0035302032187011587}}, {"interval": {"start_time": "2022-04-13T11:35:37.193318Z", "end_time": "2022-04-13T11:35:37.193318Z"}, "value": {"double_value": 0.003718815888075729}}, {"interval": {"start_time": "2022-04-13T11:34:37.193318Z", "end_time": "2022-04-13T11:34:37.193318Z"}, "value": {"double_value": 0.003641066445975986}}, {"interval": {"start_time": "2022-04-13T11:33:37.193318Z", "end_time": "2022-04-13T11:33:37.193318Z"}, "value": {"double_value":0.006292206559268394}}, {"interval": {"start_time": "2022-04-13T11:32:37.193318Z", "end_time": "2022-04-13T11:32:37.193318Z"}, "value": {"double_value": 0.006182711671318082}}, {"interval": {"start_time": "2022-04-13T11:31:37.193318Z", "end_time": "2022-04-13T11:31:37.193318Z"}, "value": {"double_value": 0.004284212986899849}}, {"interval": {"start_time": "2022-04-13T11:30:37.193318Z", "end_time": "2022-04-13T11:30:37.193318Z"}, "value": {"double_value": 0.004311434884408142}}, {"interval": {"start_time": "2022-04-13T11:29:37.193318Z", "end_time": "2022-04-13T11:29:37.193318Z"}, "value": {"double_value": 0.0035632611313867932}}, {"interval": {"start_time": "2022-04-13T11:28:37.193318Z", "end_time": "2022-04-13T11:28:37.193318Z"}, "value": {"double_value": 0.003491919276933745}}, {"interval": {"start_time": "2022-04-13T11:27:37.193318Z", "end_time": "2022-04-13T11:27:37.193318Z"}, "value": {"double_value": 0.0032100898760082743}}, {"interval": {"start_time": "2022-04-13T11:26:37.193318Z", "end_time": "2022-04-13T11:26:37.193318Z"}, "value": {"double_value": 0.003219789863135425}}, {"interval": {"start_time": "2022-04-13T11:25:37.193318Z", "end_time": "2022-04-13T11:25:37.193318Z"}, "value": {"double_value": 0.0029431110570352632}}, {"interval": {"start_time": "2022-04-13T11:24:37.193318Z", "end_time": "2022-04-13T11:24:37.193318Z"}, "value": {"double_value": 0.0029444862618781538}}, {"interval": {"start_time": "2022-04-13T11:23:37.193318Z", "end_time": "2022-04-13T11:23:37.193318Z"}, "value": {"double_value": 0.0032960633851242998}}, {"interval": {"start_time": "2022-04-13T11:22:37.193318Z", "end_time": "2022-04-13T11:22:37.193318Z"}, "value": {"double_value": 0.003308212633207426}}, {"interval": {"start_time": "2022-04-13T11:21:37.193318Z", "end_time": "2022-04-13T11:21:37.193318Z"}, "value": {"double_value": 0.0030290040189213663}}, {"interval": {"start_time": "2022-04-13T11:20:37.193318Z", "end_time": "2022-04-13T11:20:37.193318Z"}, "value": {"double_value": 0.0029890867332067472}}, {"interval": {"start_time": "2022-04-13T11:19:37.193318Z", "end_time": "2022-04-13T11:19:37.193318Z"}, "value": {"double_value": 0.0033734199011726433}}], "unit": ""}, "aggregation": {"alignment_period": {"seconds": 60}, "group_by_fields": ["resource.function_name"], "per_series_aligner": 2, "cross_series_reducer": 4}}'
     ]
     assets = [
-        '{"name": "//compute.googleapis.com/projects/tribe29-check-development/zones/us-central1-a/instances/instance-1", "asset_type": "compute.googleapis.com/Instance", "resource": {"version": "v1", "discovery_document_uri": "https://www.googleapis.com/discovery/v1/apis/compute/v1/rest", "discovery_name": "Instance", "parent": "//cloudresourcemanager.googleapis.com/projects/1074106860578", "data": {"deletionProtection": false, "displayDevice": {"enableDisplay": false}, "lastStartTimestamp": "2022-03-28T02:37:10.106-07:00", "creationTimestamp": "2022-03-18T06:37:06.655-07:00", "id": "4916403162284897775", "name": "instance-1", "lastStopTimestamp": "2022-04-05T01:23:00.444-07:00", "machineType": "https://www.googleapis.com/compute/v1/projects/tribe29-check-development/zones/us-central1-a/machineTypes/f1-micro", "selfLink": "https://www.googleapis.com/compute/v1/projects/tribe29-check-development/zones/us-central1-a/instances/instance-1", "tags": {"fingerprint": "42WmSpB8rSM="}, "fingerprint": "im05qPmW++Q=", "status": "TERMINATED", "shieldedInstanceIntegrityPolicy": {"updateAutoLearnPolicy": true}, "shieldedInstanceConfig": {"enableIntegrityMonitoring": true, "enableSecureBoot": false, "enableVtpm": true}, "startRestricted": false, "description": "", "confidentialInstanceConfig": {"enableConfidentialCompute": false}, "zone": "https://www.googleapis.com/compute/v1/projects/tribe29-check-development/zones/us-central1-a", "canIpForward": false, "disks": [{"type": "PERSISTENT", "boot": true, "licenses": ["https://www.googleapis.com/compute/v1/projects/debian-cloud/global/licenses/debian-10-buster"], "mode": "READ_WRITE", "index": 0.0, "source": "https://www.googleapis.com/compute/v1/projects/tribe29-check-development/zones/us-central1-a/disks/instance-1", "deviceName": "instance-1", "diskSizeGb": "10", "guestOsFeatures": [{"type": "UEFI_COMPATIBLE"}, {"type": "VIRTIO_SCSI_MULTIQUEUE"}], "interface": "SCSI", "autoDelete": true}], "cpuPlatform": "Unknown CPU Platform", "labelFingerprint": "6Ok5Ta5mo84=", "allocationAffinity": {"consumeAllocationType": "ANY_ALLOCATION"}, "networkInterfaces": [{"network": "https://www.googleapis.com/compute/v1/projects/tribe29-check-development/global/networks/default", "name": "nic0", "subnetwork": "https://www.googleapis.com/compute/v1/projects/tribe29-check-development/regions/us-central1/subnetworks/default", "networkIP": "10.128.0.2", "stackType": "IPV4_ONLY", "accessConfigs": [{"name": "External NAT", "networkTier": "PREMIUM", "type": "ONE_TO_ONE_NAT"}], "fingerprint": "h7uoBU+ZS74="}], "serviceAccounts": [{"email": "1074106860578-compute@developer.gserviceaccount.com", "scopes": ["https://www.googleapis.com/auth/devstorage.read_only", "https://www.googleapis.com/auth/logging.write", "https://www.googleapis.com/auth/monitoring.write", "https://www.googleapis.com/auth/servicecontrol", "https://www.googleapis.com/auth/service.management.readonly", "https://www.googleapis.com/auth/trace.append"]}], "scheduling": {"preemptible": false, "automaticRestart": true, "onHostMaintenance": "MIGRATE"}, "labels": {"t": "tt"}}, "location": "us-central1-a", "resource_url": ""}, "ancestors": ["projects/1074106860578", "folders/1022571519427", "organizations/668598212003"], "update_time": "2022-04-05T08:23:00.662291Z", "org_policy": []}'
+        '{"name": "//compute.googleapis.com/projects/checkmk-check-development/zones/us-central1-a/instances/instance-1", "asset_type": "compute.googleapis.com/Instance", "resource": {"version": "v1", "discovery_document_uri": "https://www.googleapis.com/discovery/v1/apis/compute/v1/rest", "discovery_name": "Instance", "parent": "//cloudresourcemanager.googleapis.com/projects/1074106860578", "data": {"deletionProtection": false, "displayDevice": {"enableDisplay": false}, "lastStartTimestamp": "2022-03-28T02:37:10.106-07:00", "creationTimestamp": "2022-03-18T06:37:06.655-07:00", "id": "4916403162284897775", "name": "instance-1", "lastStopTimestamp": "2022-04-05T01:23:00.444-07:00", "machineType": "https://www.googleapis.com/compute/v1/projects/checkmk-check-development/zones/us-central1-a/machineTypes/f1-micro", "selfLink": "https://www.googleapis.com/compute/v1/projects/checkmk-check-development/zones/us-central1-a/instances/instance-1", "tags": {"fingerprint": "42WmSpB8rSM="}, "fingerprint": "im05qPmW++Q=", "status": "TERMINATED", "shieldedInstanceIntegrityPolicy": {"updateAutoLearnPolicy": true}, "shieldedInstanceConfig": {"enableIntegrityMonitoring": true, "enableSecureBoot": false, "enableVtpm": true}, "startRestricted": false, "description": "", "confidentialInstanceConfig": {"enableConfidentialCompute": false}, "zone": "https://www.googleapis.com/compute/v1/projects/checkmk-check-development/zones/us-central1-a", "canIpForward": false, "disks": [{"type": "PERSISTENT", "boot": true, "licenses": ["https://www.googleapis.com/compute/v1/projects/debian-cloud/global/licenses/debian-10-buster"], "mode": "READ_WRITE", "index": 0.0, "source": "https://www.googleapis.com/compute/v1/projects/checkmk-check-development/zones/us-central1-a/disks/instance-1", "deviceName": "instance-1", "diskSizeGb": "10", "guestOsFeatures": [{"type": "UEFI_COMPATIBLE"}, {"type": "VIRTIO_SCSI_MULTIQUEUE"}], "interface": "SCSI", "autoDelete": true}], "cpuPlatform": "Unknown CPU Platform", "labelFingerprint": "6Ok5Ta5mo84=", "allocationAffinity": {"consumeAllocationType": "ANY_ALLOCATION"}, "networkInterfaces": [{"network": "https://www.googleapis.com/compute/v1/projects/checkmk-check-development/global/networks/default", "name": "nic0", "subnetwork": "https://www.googleapis.com/compute/v1/projects/checkmk-check-development/regions/us-central1/subnetworks/default", "networkIP": "10.128.0.2", "stackType": "IPV4_ONLY", "accessConfigs": [{"name": "External NAT", "networkTier": "PREMIUM", "type": "ONE_TO_ONE_NAT"}], "fingerprint": "h7uoBU+ZS74="}], "serviceAccounts": [{"email": "1074106860578-compute@developer.gserviceaccount.com", "scopes": ["https://www.googleapis.com/auth/devstorage.read_only", "https://www.googleapis.com/auth/logging.write", "https://www.googleapis.com/auth/monitoring.write", "https://www.googleapis.com/auth/servicecontrol", "https://www.googleapis.com/auth/service.management.readonly", "https://www.googleapis.com/auth/trace.append"]}], "scheduling": {"preemptible": false, "automaticRestart": true, "onHostMaintenance": "MIGRATE"}, "labels": {"t": "tt"}}, "location": "us-central1-a", "resource_url": ""}, "ancestors": ["projects/1074106860578", "folders/1022571519427", "organizations/668598212003"], "update_time": "2022-04-05T08:23:00.662291Z", "org_policy": []}'
     ]
     client = FakeClient("test", FakeMonitoringClient(timeseries), FakeAssetClient(assets))
     sections: list[agent_gcp.Section] = []
@@ -407,18 +424,19 @@ def fixture_gce_sections() -> Sequence[agent_gcp.PiggyBackSection]:
         [agent_gcp.GCE],
         cost=None,
         serializer=collector,
-        monitor_health=True,
         piggy_back_prefix="custom-prefix",
     )
     return list(s for s in sections if isinstance(s, agent_gcp.PiggyBackSection))
 
 
 def test_gce_host_labels(gce_sections: Sequence[agent_gcp.PiggyBackSection]) -> None:
-    assert gce_sections[0].labels == {
-        "cmk/gcp/gce": "instance",
-        "cmk/gcp/labels/t": "tt",
-        "cmk/gcp/projectId": "test",
-    }
+    assert gce_sections[0].labels == agent_gcp.HostLabelSection(
+        labels={
+            "cmk/gcp/gce": "instance",
+            "cmk/gcp/labels/t": "tt",
+            "cmk/gcp/projectId": "test",
+        }
+    )
 
 
 def test_gce_host_name_mangling(gce_sections: Sequence[agent_gcp.PiggyBackSection]) -> None:
@@ -506,7 +524,6 @@ def fixture_cost_output() -> Sequence[agent_gcp.Section]:
         [],
         cost=cost,
         serializer=collector,
-        monitor_health=True,
         piggy_back_prefix="custom-prefix",
     )
     return list(sections)
@@ -518,7 +535,7 @@ def test_output_contains_cost_section(cost_output: Sequence[agent_gcp.Section]) 
     assert len(asset_sections) == 1
 
 
-def test_output_cost_sectoin(
+def test_output_cost_section(
     cost_output: Sequence[agent_gcp.Section], capsys: pytest.CaptureFixture[str]
 ) -> None:
     assert "cost" in {s.name for s in cost_output}
@@ -529,8 +546,8 @@ def test_output_cost_sectoin(
     assert lines == [
         "<<<gcp_cost:sep(0)>>>",
         '{"query_month": "202207"}',
-        '{"project": "test", "month": "202207", "amount": 42.21, "currency": "EUR"}',
-        '{"project": "checkmk", "month": "202207", "amount": 3.1415, "currency": "EUR"}',
-        '{"project": "test", "month": "202206", "amount": 1337.0, "currency": "EUR"}',
-        '{"project": "checkmk", "month": "202206", "amount": 2.71, "currency": "EUR"}',
+        '{"project": "test", "id": "testid", "month": "202207", "amount": 42.21, "currency": "EUR"}',
+        '{"project": "checkmk", "id": "checkmkid", "month": "202207", "amount": 3.1415, "currency": "EUR"}',
+        '{"project": "test", "id": "testid", "month": "202206", "amount": 1337.0, "currency": "EUR"}',
+        '{"project": "checkmk", "id": "checkmkid", "month": "202206", "amount": 2.71, "currency": "EUR"}',
     ]

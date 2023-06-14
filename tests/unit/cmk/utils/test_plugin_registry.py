@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -27,12 +27,12 @@ def basic_registry():
 
 def test_initialization() -> None:
     registry = PluginRegistry()
-    assert list(registry.items()) == []
+    assert not list(registry.items())
 
 
 def test_decorator_registration() -> None:
     registry = PluginRegistry()
-    assert list(registry.items()) == []
+    assert not list(registry.items())
 
     @registry.register
     class DecoratedPlugin(Plugin):
@@ -43,7 +43,7 @@ def test_decorator_registration() -> None:
 
 def test_method_registration() -> None:
     registry = PluginRegistry()
-    assert list(registry.items()) == []
+    assert not list(registry.items())
 
     class MethodRegisteredPlugin(Plugin):
         pass

@@ -1,119 +1,22 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
 import * as d3 from "d3";
 import * as d3_flextree from "d3-flextree";
-import {Coords, NodevisNode, RectangleWithCoords} from "nodevis/type_defs";
-import {
-    AbstractLayoutStyle,
-    layout_style_class_registry,
-    NodeForce,
-    StyleOptionDefinition,
-} from "nodevis/layout_utils";
-import {get_bounding_rect_of_rotated_vertices, log} from "nodevis/utils";
 import {
     compute_node_position,
     compute_node_positions_from_list_of_nodes,
 } from "nodevis/layout";
-
-//#.
-//#   .-Force--------------------------------------------------------------.
-//#   |                       _____                                        |
-//#   |                      |  ___|__  _ __ ___ ___                       |
-//#   |                      | |_ / _ \| '__/ __/ _ \                      |
-//#   |                      |  _| (_) | | | (_|  __/                      |
-//#   |                      |_|  \___/|_|  \___\___|                      |
-//#   |                                                                    |
-//#   +--------------------------------------------------------------------+
-
-export class LayoutStyleForce extends AbstractLayoutStyle {
-    static class_name = "force";
-    static description = "Free-Floating style";
-
-    type() {
-        return "force";
-    }
-
-    style_color(): string {
-        return "#9c9c9c";
-    }
-
-    compute_id(node): string {
-        return this.type() + "_" + node.data.id;
-    }
-
-    id(): string {
-        return this.compute_id(this.style_root_node);
-    }
-
-    force_style_translation(): void {
-        this._world.force_simulation.setup_forces();
-    }
-
-    get_style_options(): StyleOptionDefinition[] {
-        return [
-            {
-                id: "center_force",
-                values: {default: 5, min: -20, max: 100},
-                option_type: "range",
-                text: "Center force strength",
-                value: this.style_config.options.center_force,
-            },
-            //                {id: "maxdistance", values: {default: 800, min: 10, max: 2000}, option_type:"range",
-            //                 text: "Max force distance", value: this.style_config.options.maxdistance},
-            {
-                id: "force_node",
-                values: {default: -300, min: -1000, max: 50},
-                option_type: "range",
-                text: "Repulsion force leaf",
-                value: this.style_config.options.force_node,
-            },
-            {
-                id: "force_aggregator",
-                values: {default: -300, min: -1000, max: 50},
-                option_type: "range",
-                text: "Repulsion force branch",
-                value: this.style_config.options.force_aggregator,
-            },
-            {
-                id: "link_force_node",
-                values: {default: 30, min: -10, max: 300},
-                option_type: "range",
-                text: "Link distance leaf",
-                value: this.style_config.options.link_force_node,
-            },
-            {
-                id: "link_force_aggregator",
-                values: {default: 30, min: -10, max: 300},
-                option_type: "range",
-                text: "Link distance branches",
-                value: this.style_config.options.link_force_aggregator,
-            },
-            {
-                id: "link_strength",
-                values: {default: 30, min: 0, max: 200},
-                option_type: "range",
-                text: "Link strength",
-                value: this.style_config.options.link_strength,
-            },
-            {
-                id: "collision_force_node",
-                values: {default: 15, min: 0, max: 150},
-                option_type: "range",
-                text: "Collision box leaf",
-                value: this.style_config.options.collision_force_node,
-            },
-            {
-                id: "collision_force_aggregator",
-                values: {default: 15, min: 0, max: 150},
-                option_type: "range",
-                text: "Collision box branch",
-                value: this.style_config.options.collision_force_aggregator,
-            },
-        ];
-    }
-}
+import {
+    AbstractLayoutStyle,
+    layout_style_class_registry,
+    NodeForce,
+    StyleOptionSpec,
+    StyleOptionSpecCheckbox,
+} from "nodevis/layout_utils";
+import {Coords, NodevisNode, RectangleWithCoords} from "nodevis/type_defs";
+import {get_bounding_rect_of_rotated_vertices, log} from "nodevis/utils";
 
 //#.
 //#   .-Hierarchy----------------------------------------------------------.
@@ -259,9 +162,7 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
         this.drag_start_info.options = JSON.parse(
             JSON.stringify(this.style_config.options)
         );
-        this._world.layout_manager.toolbar_plugin
-            .layout_style_configuration()
-            .show_style_configuration(this);
+        this.show_style_configuration();
         this._world.layout_manager.dragging = true;
     }
 
@@ -269,7 +170,7 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
         this.drag_start_info.delta.x += event.dx;
         this.drag_start_info.delta.y += event.dy;
         drag_function(event);
-        this.changed_options();
+        this.changed_options(event, this.style_config.options);
     }
 
     _drag_end(): void {
@@ -277,7 +178,7 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
         this._world.layout_manager.create_undo_step();
     }
 
-    change_rotation(): void {
+    change_rotation(_event): void {
         let rotation =
             (this.drag_start_info.options.rotation -
                 this.drag_start_info.delta.y) %
@@ -285,6 +186,7 @@ export class LayoutStyleHierarchyBase extends AbstractLayoutStyle {
         if (rotation < 0) rotation += 360;
         this.style_config.options.rotation = rotation;
         this.force_style_translation();
+        this.show_style_configuration();
     }
 }
 
@@ -300,27 +202,24 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
         return "#ffa042";
     }
 
-    get_style_options(): StyleOptionDefinition[] {
+    get_style_options(): StyleOptionSpec[] {
         return [
             {
                 id: "layer_height",
                 values: {default: 80, min: 20, max: 500},
                 text: "Layer height",
-                value: this.style_config.options.layer_height,
                 option_type: "range",
             },
             {
                 id: "node_size",
                 values: {default: 25, min: 15, max: 100},
                 text: "Node size",
-                value: this.style_config.options.node_size,
                 option_type: "range",
             },
             {
                 id: "rotation",
                 values: {default: 270, min: 0, max: 359},
                 text: "Rotation",
-                value: this.style_config.options.rotation,
                 option_type: "range",
             },
             {
@@ -328,21 +227,18 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
                 option_type: "checkbox",
                 values: {default: false},
                 text: "Include parent rotation",
-                value: this.style_config.options.include_parent_rotation,
             },
             {
                 id: "detach_from_parent",
                 option_type: "checkbox",
                 values: {default: false},
                 text: "Detach from parent style",
-                value: this.style_config.options.detach_from_parent,
             },
             {
                 id: "box_leaf_nodes",
                 option_type: "checkbox",
                 values: {default: false},
                 text: "Arrange leaf nodes in block",
-                value: this.style_config.options.box_leaf_nodes,
             },
         ];
     }
@@ -469,6 +365,7 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
                 const force = this.get_default_node_force(
                     node
                 ) as unknown as NodeForce;
+
                 force.fx = this.style_root_node.x + x;
                 force.fy = this.style_root_node.y + y;
                 force.text_positioning = text_positioning;
@@ -531,7 +428,9 @@ export class LayoutStyleHierarchy extends LayoutStyleHierarchyBase {
                 node: this.style_root_node,
                 type: "rotation",
                 image: "themes/facelift/images/icon_rotate_left.png",
-                call: this.get_drag_callback(() => this.change_rotation()),
+                call: this.get_drag_callback(event =>
+                    this.change_rotation(event)
+                ),
             },
         ];
         const coords = this._world.viewport.translate_to_zoom({
@@ -663,42 +562,37 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
         return "#13d389";
     }
 
-    get_style_options(): StyleOptionDefinition[] {
+    get_style_options(): StyleOptionSpec[] {
         return [
             {
                 id: "radius",
                 option_type: "range",
                 values: {default: 120, min: 30, max: 300},
                 text: "Radius",
-                value: this.style_config.options.radius,
             },
             {
                 id: "degree",
                 option_type: "range",
                 values: {default: 360, min: 10, max: 360},
                 text: "Degree",
-                value: this.style_config.options.degree,
             },
             {
                 id: "rotation",
                 option_type: "range",
                 values: {default: 0, min: 0, max: 359},
                 text: "Rotation",
-                value: this.style_config.options.rotation,
             },
             {
                 id: "include_parent_rotation",
                 option_type: "checkbox",
                 values: {default: false},
                 text: "Include parent rotation",
-                value: this.style_config.options.include_parent_rotation,
             },
             {
                 id: "detach_from_parent",
                 option_type: "checkbox",
                 values: {default: false},
                 text: "Detach from parent style",
-                value: this.style_config.options.detach_from_parent,
             },
         ];
     }
@@ -903,19 +797,25 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
                 node: this.style_root_node,
                 type: "radius",
                 image: "themes/facelift/images/icon_resize.png",
-                call: this.get_drag_callback(() => this.change_radius()),
+                call: this.get_drag_callback(event =>
+                    this.change_radius(event)
+                ),
             },
             {
                 node: this.style_root_node,
                 type: "rotation",
                 image: "themes/facelift/images/icon_rotate_left.png",
-                call: this.get_drag_callback(() => this.change_rotation()),
+                call: this.get_drag_callback(event =>
+                    this.change_rotation(event)
+                ),
             },
             {
                 node: this.style_root_node,
                 type: "degree",
                 image: "themes/facelift/images/icon_pie_chart.png",
-                call: this.get_drag_callback(() => this.change_degree()),
+                call: this.get_drag_callback(event =>
+                    this.change_degree(event)
+                ),
             },
         ];
         const coords = this._world.viewport.translate_to_zoom({
@@ -925,7 +825,7 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
         this.add_option_icons(coords, elements);
     }
 
-    change_radius(): void {
+    change_radius(event): void {
         this._world.layout_manager.toolbar_plugin
             .layout_style_configuration()
             .show_style_configuration(this);
@@ -939,10 +839,10 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
                 )
             )
         );
-        this.changed_options();
+        this.changed_options(event, this.style_config.options);
     }
 
-    change_degree(): void {
+    change_degree(event): void {
         this._world.layout_manager.toolbar_plugin
             .layout_style_configuration()
             .show_style_configuration(this);
@@ -957,7 +857,7 @@ export class LayoutStyleRadial extends LayoutStyleHierarchyBase {
             )
         );
         this.style_config.options.degree = degree;
-        this.changed_options();
+        this.changed_options(event, this.style_config.options);
     }
 }
 
@@ -997,14 +897,13 @@ export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
         return "#3cc2ff";
     }
 
-    get_style_options(): StyleOptionDefinition[] {
+    get_style_options(): StyleOptionSpecCheckbox[] {
         return [
             {
                 id: "detach_from_parent",
                 option_type: "checkbox",
                 values: {default: false},
                 text: "Detach from parent style",
-                value: this.style_config.options.detach_from_parent,
             },
         ];
     }
@@ -1169,7 +1068,6 @@ export class LayoutStyleBlock extends LayoutStyleHierarchyBase {
     }
 }
 
-layout_style_class_registry.register(LayoutStyleForce);
 layout_style_class_registry.register(LayoutStyleHierarchy);
 layout_style_class_registry.register(LayoutStyleRadial);
 layout_style_class_registry.register(LayoutStyleBlock);

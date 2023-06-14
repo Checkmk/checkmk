@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -13,7 +13,6 @@ from .utils.cpu_utilization_os import SectionCpuUtilizationOs
 def parse_docker_container_cpu_cgroupv1(
     string_table: StringTable,
 ) -> Optional[SectionCpuUtilizationOs]:
-
     parsed = {}
     for line in string_table:
         key = line[0]

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -13,11 +13,10 @@ except the python standard library or pydantic.
 import enum
 import json
 from collections.abc import Mapping, Sequence
-from typing import Literal, NewType
+from typing import assert_never, Literal, NewType
 
 import requests
 from pydantic import BaseModel, Field, ValidationError
-from typing_extensions import assert_never
 
 from cmk.special_agents.utils_kubernetes import prometheus_api, query
 from cmk.special_agents.utils_kubernetes.schemata import api
@@ -279,9 +278,11 @@ class PodConditions(Section):
     """section: kube_pod_conditions_v1"""
 
     initialized: PodCondition | None
+    hasnetwork: PodCondition | None = None
     scheduled: PodCondition
     containersready: PodCondition | None
     ready: PodCondition | None
+    disruptiontarget: PodCondition | None
 
 
 class PodContainers(Section):
@@ -471,10 +472,12 @@ class Cpu(BaseModel):
 
 
 class AttachedVolume(BaseModel):
+    """The PV from a kubelet metrics representation"""
+
     capacity: float
     free: float
     persistent_volume_claim: str
-    namespace: str
+    namespace: api.NamespaceName
 
 
 class PerformanceUsage(Section):
@@ -687,7 +690,7 @@ class OpenShiftEndpoint(Section):
 
 
 class StorageRequirement(BaseModel):
-    storage: float
+    storage: int
 
 
 class PersistentVolumeClaimStatus(BaseModel):
@@ -703,6 +706,7 @@ class PersistentVolumeClaimMetaData(BaseModel):
 class PersistentVolumeClaim(BaseModel):
     metadata: PersistentVolumeClaimMetaData
     status: PersistentVolumeClaimStatus
+    volume_name: str | None
 
 
 class PersistentVolumeClaims(Section):
@@ -715,3 +719,14 @@ class PersistentVolumeClaimAttachedVolumes(Section):
     """section: kube_pvc_volumes_v1"""
 
     volumes: Mapping[str, AttachedVolume]
+
+
+class PersistentVolume(BaseModel):
+    name: str
+    spec: api.PersistentVolumeSpec
+
+
+class AttachedPersistentVolumes(Section):
+    """section: kube_pvc_pvs_v1"""
+
+    volumes: Mapping[str, PersistentVolume]

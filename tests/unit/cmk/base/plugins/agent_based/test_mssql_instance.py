@@ -1,13 +1,23 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName
+from tests.unit.conftest import FixRegister
 
+from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State, TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    InventoryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.mssql_instance import (
     inventory_mssql_instance,
     parse_mssql_instance,
@@ -101,6 +111,9 @@ _AGENT_OUTPUT_2 = [
     ["MSSQL_SQL2000MT02", "config", "8.0.2000.5", "Standard Edition", ""],
     ["MSSQL_SQL2000MT02", "state", "1", ""],
     ["MSSQL_SQL2000MT02", "details", "8.0.4053.23", "RTM", "Standard Edition (64-bit)"],
+    ["MSSQL_SQL2022MT02", "config", "16.0.1000.6", "Standard Edition", ""],
+    ["MSSQL_SQL2022MT02", "state", "1", "Connecting using provider msoledbsql."],
+    ["MSSQL_SQL2022MT02", "details", "16.0.4003.1", "RTM", "Standard Edition (64-bit)"],
 ]
 
 
@@ -127,12 +140,13 @@ _AGENT_OUTPUT_2 = [
                 Service(item="SQL2016MT02"),
                 Service(item="SQL2017MT02"),
                 Service(item="SQL2019MT02"),
+                Service(item="SQL2022MT02"),
             ],
         ),
     ],
 )
-def test_discover_mssql_instance(  # type:ignore[no-untyped-def]
-    fix_register, string_table, expected_result
+def test_discover_mssql_instance(
+    fix_register: FixRegister, string_table: StringTable, expected_result: DiscoveryResult
 ) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("mssql_instance")]
     section = parse_mssql_instance(string_table)
@@ -253,12 +267,22 @@ def test_discover_mssql_instance(  # type:ignore[no-untyped-def]
                 )
             ],
         ),
+        (
+            _AGENT_OUTPUT_2,
+            "SQL2022MT02",
+            [
+                Result(
+                    state=State.OK,
+                    summary="Version: Microsoft SQL Server 2022 (RTM) (16.0.4003.1) - Standard Edition (64-bit)",
+                )
+            ],
+        ),
     ],
 )
-def test_check_mssql_instance(  # type:ignore[no-untyped-def]
-    fix_register, string_table, item, expected_result
+def test_check_mssql_instance(
+    fix_register: FixRegister, string_table: StringTable, item: str, expected_result: CheckResult
 ) -> None:
-    check_plugin = fix_register.check_plugins[CheckPluginName("mssql_instance")]
+    check_plugin: CheckPlugin = fix_register.check_plugins[CheckPluginName("mssql_instance")]
     section = parse_mssql_instance(string_table)
     assert (
         list(check_plugin.check_function(item=item, params={}, section=section)) == expected_result
@@ -335,8 +359,8 @@ def test_check_mssql_instance(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_inventory_mssql_instance(  # type:ignore[no-untyped-def]
-    string_table, expected_result
+def test_inventory_mssql_instance(
+    string_table: StringTable, expected_result: InventoryResult
 ) -> None:
     assert sort_inventory_result(
         inventory_mssql_instance(parse_mssql_instance(string_table))

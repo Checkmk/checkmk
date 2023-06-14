@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In previous versions when a tag-group with only one choice (a checkbox) was
 set to a folder and subsequently removed on a host in that folder, the "show hosts"

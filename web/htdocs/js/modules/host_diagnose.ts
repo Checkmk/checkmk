@@ -1,21 +1,22 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-import * as utils from "utils";
 import * as ajax from "ajax";
+import * as utils from "utils";
 
 export function getFirstElementByNameAsInput(name: string): HTMLInputElement {
     return document.getElementsByName(name)[0] as HTMLInputElement;
 }
-export function start_test(ident, hostname, transid) {
-    var log = document.getElementById(ident + "_log") as HTMLImageElement;
-    var img = document.getElementById(ident + "_img") as HTMLImageElement;
-    var retry = document.getElementById(ident + "_retry") as HTMLImageElement;
+
+export function start_test(ident: string, hostname: string, transid: string) {
+    const log = document.getElementById(ident + "_log") as HTMLImageElement;
+    const img = document.getElementById(ident + "_img") as HTMLImageElement;
+    const retry = document.getElementById(ident + "_retry") as HTMLImageElement;
 
     retry!.style.display = "none";
 
-    var vars = "";
+    let vars = "";
     vars = "&_transid=" + encodeURIComponent(transid);
     vars +=
         "&ipaddress=" +
@@ -30,7 +31,7 @@ export function start_test(ident, hostname, transid) {
                 getFirstElementByNameAsInput("vs_host_p_snmp_community").value
             );
 
-    var v3_use;
+    let v3_use;
     if (
         getFirstElementByNameAsInput("vs_host_p_snmp_v3_credentials_USE")
             .checked
@@ -135,7 +136,7 @@ export function start_test(ident, hostname, transid) {
 
     log.innerHTML = "...";
 
-    var data =
+    const data =
         "host=" +
         encodeURIComponent(hostname) +
         "&_test=" +
@@ -150,18 +151,25 @@ export function start_test(ident, hostname, transid) {
     });
 }
 
-function handle_host_diag_result(data, response_json) {
-    var response = JSON.parse(response_json);
+function handle_host_diag_result(
+    data: {hostname: string; ident: string},
+    response_json: string
+) {
+    const response = JSON.parse(response_json);
 
-    var img = document.getElementById(data.ident + "_img") as HTMLImageElement;
-    var log = document.getElementById(data.ident + "_log") as HTMLImageElement;
-    var retry = document.getElementById(
+    const img = document.getElementById(
+        data.ident + "_img"
+    ) as HTMLImageElement;
+    const log = document.getElementById(
+        data.ident + "_log"
+    ) as HTMLImageElement;
+    const retry = document.getElementById(
         data.ident + "_retry"
     ) as HTMLImageElement;
     utils.remove_class(img, "reloading");
 
-    var text = "";
-    var new_icon = "";
+    let text = "";
+    let new_icon = "";
     if (response.result_code == 1) {
         new_icon = "cancel";
         log.className = "log diag_failed";
@@ -182,12 +190,7 @@ function handle_host_diag_result(data, response_json) {
 
     retry.src = retry.src.replace(/(.*\/icon_).*(\.svg$)/i, "$1reload$2");
     retry.style.display = "inline";
-    (retry.parentNode as HTMLAnchorElement).href =
-        "javascript:cmk.host_diagnose.start_test('" +
-        data.ident +
-        "', '" +
-        data.hostname +
-        "', '" +
-        response.result.next_transid +
-        "');";
+    (
+        retry.parentNode as HTMLAnchorElement
+    ).href = `javascript:cmk.host_diagnose.start_test(${data.ident}, ${data.hostname}, ${response.result.next_transid});`;
 }

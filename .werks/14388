@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Due to user ID sanitization in Livestatus (see Werk #14384), user IDs were not allowed to contain dollar signs (`$`).
 While such user IDs cannot be configured in Wato, they can be present as LDAP users.

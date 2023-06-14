@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -19,24 +19,29 @@ import * as utils from "utils";
 interface element_dragging {
     dragging: any;
     moved: boolean;
-    drop_handler: any;
+    drop_handler: (index: number) => void;
 }
-var g_element_dragging: null | element_dragging = null;
 
-export function start(event, dragger, dragging_tag, drop_handler) {
-    if (!event) event = window.event;
+let g_element_dragging: null | element_dragging = null;
 
-    var button = utils.get_button(event);
+export function start(
+    event: Event,
+    dragger: HTMLAnchorElement,
+    dragging_tag: string,
+    drop_handler: (index: number) => void
+) {
+    const button = utils.get_button(event as MouseEvent);
 
     // Skip calls when already dragging or other button than left mouse
     if (g_element_dragging !== null || button != "LEFT") return true;
 
     // Find the first parent of the given tag type
-    var dragging = dragger;
-    while (dragging && dragging.tagName != dragging_tag)
+    let dragging: HTMLAnchorElement | null | ParentNode = dragger;
+
+    while (dragging instanceof HTMLElement && dragging.tagName != dragging_tag)
         dragging = dragging.parentNode;
 
-    if (dragging.tagName != dragging_tag)
+    if ((dragging as HTMLElement).tagName != dragging_tag)
         throw (
             "Failed to find the parent node of " +
             dragger +
@@ -44,7 +49,7 @@ export function start(event, dragger, dragging_tag, drop_handler) {
             dragging_tag
         );
 
-    utils.add_class(dragging, "dragging");
+    utils.add_class(dragging as HTMLElement, "dragging");
 
     g_element_dragging = {
         dragging: dragging,
@@ -55,20 +60,18 @@ export function start(event, dragger, dragging_tag, drop_handler) {
     return utils.prevent_default_events(event);
 }
 
-function element_dragging(event) {
-    if (!event) event = window.event;
-
+function element_dragging(event: MouseEvent) {
     if (g_element_dragging === null) return true;
 
     position_dragging_object(event);
 }
 
-function position_dragging_object(event) {
-    var dragging = g_element_dragging?.dragging,
-        container = g_element_dragging?.dragging.parentNode;
+function position_dragging_object(event: MouseEvent) {
+    const dragging = g_element_dragging?.dragging;
+    const container = g_element_dragging?.dragging.parentNode;
 
-    var get_previous = function (node) {
-        var previous = node.previousElementSibling;
+    const get_previous = function (node: Element) {
+        const previous = node.previousElementSibling;
 
         // In case this is a header TR, don't move it above this!
         // TODO: Does not work with all tables! See comment in finalize_dragging()
@@ -79,17 +82,18 @@ function position_dragging_object(event) {
         )
             return null;
         // Do not move above the action rows of tables rendered with "table.py"
-        if (previous && utils.has_class(previous, "actions")) return null;
+        if (previous && utils.has_class(previous as HTMLElement, "actions"))
+            return null;
 
         return previous;
     };
 
-    var get_next = function (node) {
+    const get_next = function (node: Element) {
         return node.nextElementSibling;
     };
 
     // Move it up?
-    var previous = get_previous(dragging);
+    let previous = get_previous(dragging);
     while (previous && mouse_offset_to_middle(previous, event).y < 0) {
         g_element_dragging!.moved = true;
         container.insertBefore(dragging, previous);
@@ -97,7 +101,7 @@ function position_dragging_object(event) {
     }
 
     // Move it down?
-    var next = get_next(dragging);
+    let next = get_next(dragging);
     while (next && mouse_offset_to_middle(next, event).y > 0) {
         g_element_dragging!.moved = true;
         container.insertBefore(dragging, next.nextElementSibling);
@@ -106,18 +110,16 @@ function position_dragging_object(event) {
 }
 
 // mouse offset to the middle coordinates of an object
-function mouse_offset_to_middle(obj, event) {
-    var obj_pos = obj.getBoundingClientRect();
-    var mouse_pos = utils.mouse_position(event);
+function mouse_offset_to_middle(obj: Element, event: MouseEvent) {
+    const obj_pos = obj.getBoundingClientRect();
+    const mouse_pos = utils.mouse_position(event);
     return {
         x: mouse_pos.x - (obj_pos.left + obj_pos.width / 2),
         y: mouse_pos.y - (obj_pos.top + obj_pos.height / 2),
     };
 }
 
-function element_drag_stop(event) {
-    if (!event) event = window.event;
-
+function element_drag_stop(event: Event) {
     if (g_element_dragging === null) return true;
 
     finalize_dragging();
@@ -127,40 +129,40 @@ function element_drag_stop(event) {
 }
 
 function finalize_dragging() {
-    var dragging = g_element_dragging?.dragging;
+    const dragging = g_element_dragging?.dragging;
     utils.remove_class(dragging, "dragging");
 
     if (!g_element_dragging?.moved) return; // Nothing changed. Fine.
 
-    var elements = dragging.parentNode.children;
+    const elements = dragging.parentNode.children;
 
-    var index = Array.prototype.slice.call(elements).indexOf(dragging);
+    let index = Array.prototype.slice.call(elements).indexOf(dragging);
 
     // This currently makes the draggig work with tables having:
     // - no header
     // - one header line
-    var has_header = elements[0].children[0].tagName == "TH";
+    const has_header = elements[0].children[0].tagName == "TH";
     if (has_header) index -= 1;
 
     // - possible existing "table.py" second header (actions in tables)
-    var has_action_row =
+    const has_action_row =
         elements.length > 1 && utils.has_class(elements[1], "actions");
     if (has_action_row) index -= 1;
 
     g_element_dragging.drop_handler(index);
 }
 
-export function url_drop_handler(base_url, index) {
-    var url = base_url + "&_index=" + encodeURIComponent(index);
+export function url_drop_handler(base_url: string, index: number) {
+    const url = base_url + "&_index=" + encodeURIComponent(index);
     location.href = url;
 }
 
 export function register_event_handlers() {
-    utils.add_event_handler("mousemove", function (event) {
-        return element_dragging(event);
+    utils.add_event_handler("mousemove", function (event: Event) {
+        return element_dragging(event as MouseEvent);
     });
 
-    utils.add_event_handler("mouseup", function (event) {
+    utils.add_event_handler("mouseup", function (event: Event) {
         return element_drag_stop(event);
     });
 }

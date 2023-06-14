@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,6 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 import cmk.utils.prediction as prediction
+from cmk.utils.type_defs import HostName
 
 
 @pytest.mark.parametrize(
@@ -60,7 +61,7 @@ Filter: service_description = invent\n""",
         ),
     ],
 )
-def test_livestatus_lql(args: tuple[list[str], list[str], str], result: str) -> None:
+def test_livestatus_lql(args: tuple[list[HostName], list[str], str], result: str) -> None:
     assert prediction.livestatus_lql(*args) == result
 
 
@@ -236,3 +237,27 @@ def test_estimate_levels(
         )
         == result
     )
+
+
+class TestTimeseries:
+    def test_conversion(self) -> None:
+        assert prediction.TimeSeries(
+            [1, 2, 3, 4, None, 5],
+            conversion=lambda v: 2 * v - 3,
+        ).values == [
+            2 * 4 - 3,
+            None,
+            2 * 5 - 3,
+        ]
+
+    def test_conversion_noop_default(self) -> None:
+        assert prediction.TimeSeries([1, 2, 3, 4, None, 5]).values == [4, None, 5]
+
+    def test_count(self) -> None:
+        assert (
+            prediction.TimeSeries(
+                [1, 2, None, 4, None, 5],
+                timewindow=(7, 8, 9),
+            ).count(None)
+            == 2
+        )

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Werk <a href="https://checkmk.com/werk/13474">13474</a> introduced the monitoring of agent plugins
 and local checks via a dedicated check plugin (<tt>checkkmk_agent_plugins</tt>). This has been

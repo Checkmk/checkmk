@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Due to a regression, our shipped python active directory modules was unable to support netlogon.
 The relevant patch is now active again.

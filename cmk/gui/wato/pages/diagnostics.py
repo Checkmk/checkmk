@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -21,6 +21,7 @@ from cmk.utils.diagnostics import (
     get_checkmk_file_description,
     get_checkmk_file_info,
     get_checkmk_file_sensitivity_for_humans,
+    get_checkmk_licensing_files_map,
     get_checkmk_log_files_map,
     OPT_CHECKMK_CONFIG_FILES,
     OPT_CHECKMK_LOG_FILES,
@@ -29,6 +30,7 @@ from cmk.utils.diagnostics import (
     OPT_COMP_CMC,
     OPT_COMP_GLOBAL_SETTINGS,
     OPT_COMP_HOSTS_AND_FOLDERS,
+    OPT_COMP_LICENSING,
     OPT_COMP_NOTIFICATIONS,
     OPT_LOCAL_FILES,
     OPT_OMD_CONFIG,
@@ -97,6 +99,7 @@ class ModeDiagnostics(WatoMode):
     def _from_vars(self) -> None:
         self._checkmk_config_files_map = get_checkmk_config_files_map()
         self._checkmk_core_files_map = get_checkmk_core_files_map()
+        self._checkmk_licensing_files_map = get_checkmk_licensing_files_map()
         self._checkmk_log_files_map = get_checkmk_log_files_map()
         self._collect_dump = bool(request.get_ascii_input("_collect_dump"))
         self._diagnostics_parameters = self._get_diagnostics_parameters()
@@ -116,7 +119,7 @@ class ModeDiagnostics(WatoMode):
     def title(self) -> str:
         return _("Support diagnostics")
 
-    def page_menu(self, breadcrumb) -> PageMenu:  # type:ignore[no-untyped-def]
+    def page_menu(self, breadcrumb) -> PageMenu:  # type: ignore[no-untyped-def]
         menu = make_simple_form_page_menu(
             _("Diagnostics"),
             breadcrumb,
@@ -401,9 +404,26 @@ class ModeDiagnostics(WatoMode):
                     ),
                 )
             )
+            elements.append(
+                (
+                    OPT_COMP_LICENSING,
+                    Dictionary(
+                        title=_("Licensing Information"),
+                        help=_(
+                            "Licensing files from var/check_mk/licensing, etc/check_mk,"
+                            " var/check_mk/core and var/log/licensing.log.%s"
+                        )
+                        % _CHECKMK_FILES_NOTE,
+                        elements=self._get_component_specific_checkmk_files_elements(
+                            OPT_COMP_LICENSING,
+                        ),
+                        default_keys=["licensing_files", "log_files", "config_files"],
+                    ),
+                )
+            )
         return elements
 
-    def _get_component_specific_checkmk_files_elements(  # type:ignore[no-untyped-def]
+    def _get_component_specific_checkmk_files_elements(  # type: ignore[no-untyped-def]
         self,
         component,
     ) -> list[tuple[str, ValueSpec]]:
@@ -435,6 +455,22 @@ class ModeDiagnostics(WatoMode):
                 (
                     "core_files",
                     self._get_component_specific_checkmk_files_choices(_("Core files"), core_files),
+                )
+            )
+
+        licensing_files = [
+            (f, fi)
+            for f in self._checkmk_licensing_files_map
+            for fi in [get_checkmk_file_info(f, component)]
+            if component in fi.components
+        ]
+        if licensing_files:
+            elements.append(
+                (
+                    "licensing_files",
+                    self._get_component_specific_checkmk_files_choices(
+                        _("Licensing files"), licensing_files
+                    ),
                 )
             )
 
@@ -616,7 +652,7 @@ class DiagnosticsDumpBackgroundJob(BackgroundJob):
             job_interface.send_result_message(_("Creating dump file failed"))
 
 
-def _merge_results(results) -> CreateDiagnosticsDumpResult:  # type:ignore[no-untyped-def]
+def _merge_results(results) -> CreateDiagnosticsDumpResult:  # type: ignore[no-untyped-def]
     output: str = ""
     tarfile_created: bool = False
     tarfile_paths: list[str] = []
@@ -668,13 +704,15 @@ class PageDownloadDiagnosticsDump(Page):
         if site_is_local(site):
             return _get_diagnostics_dump_file(tarfile_name)
 
-        return do_remote_automation(
+        raw_response = do_remote_automation(
             get_site_config(site),
             "diagnostics-dump-get-file",
             [
                 ("tarfile_name", tarfile_name),
             ],
         )
+        assert isinstance(raw_response, bytes)
+        return raw_response
 
 
 @automation_command_registry.register

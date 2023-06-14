@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -89,13 +89,7 @@ from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import is_ntop_configured
 from cmk.gui.utils.roles import is_user_with_publish_permissions, user_may
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.utils.urls import (
-    make_confirm_delete_link,
-    makeactionuri,
-    makeuri,
-    makeuri_contextless,
-    urlencode,
-)
+from cmk.gui.utils.urls import make_confirm_delete_link, makeactionuri, makeuri, makeuri_contextless
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.validate import validate_id
 from cmk.gui.valuespec import (
@@ -516,6 +510,9 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
 
     def is_published_to_me(self) -> bool:
         """Whether the page is published to the currently active user"""
+        if not user.may("general.see_user_%s" % self.type_name()):
+            return False
+
         if self._["public"] is True:
             return self.publish_is_allowed()
 
@@ -545,9 +542,6 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
 
     def _can_be_linked(self, instances: OverridableInstances[_Self]) -> bool:
         """Whether or not the thing can be linked to"""
-        if self.is_hidden():
-            return False  # don't link to hidden things
-
         if self.is_mine():
             return True
 
@@ -619,14 +613,13 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         return makeuri_contextless(request, http_vars, filename="edit_%s.py" % self.type_name())
 
     def clone_url(self) -> str:
-        backurl = urlencode(makeuri(request, []))
         return makeuri_contextless(
             request,
             [
                 ("owner", self.owner()),
                 ("load_name", self.name()),
                 ("mode", "clone"),
-                ("back", backurl),
+                ("back", makeuri_contextless(request, [])),
             ],
             filename="edit_%s.py" % self.type_name(),
         )
@@ -817,7 +810,12 @@ class Overridable(Base[_T_OverridableSpec], Generic[_T_OverridableSpec, _Self]):
         # Now scan users subdirs for files "user_$type_name.mk"
         with suppress(FileNotFoundError):
             for profile_path in cmk.utils.paths.profile_dir.iterdir():
-                user_id = UserId(profile_path.name)
+                try:
+                    user_id = UserId(profile_path.name)
+                except ValueError:
+                    # skip paths that aren't valid UserIds
+                    continue
+
                 try:
                     path = profile_path.joinpath("user_%ss.mk" % cls.type_name())
                     if not path.exists():
@@ -963,7 +961,7 @@ class ListPage(Page, Generic[_Self]):
         make_header(html, title_plural, breadcrumb, page_menu)
 
         for message in get_flashed_messages():
-            html.show_message(message)
+            html.show_message(message.msg)
 
         # Deletion
         delname = request.var("_delete")
@@ -1081,9 +1079,7 @@ class ListPage(Page, Generic[_Self]):
                     html.icon_button(instance.page_url(), _("View"), self._type.type_name())
 
                 # Clone / Customize
-                html.icon_button(
-                    instance.clone_url(), _("Create a customized copy of this"), "clone"
-                )
+                html.icon_button(instance.clone_url(), _("Create a private copy of this"), "clone")
 
                 # Delete
                 if instance.may_delete():
@@ -1213,6 +1209,7 @@ class EditPage(Page, Generic[_T_OverridableSpec, _Self]):
                 vs.validate_value(new_page_dict, varprefix)
             except MKUserError as e:
                 user_errors.add(e)
+                new_page_dict = {}
 
             # Take over keys from previous value that are specific to the page type
             # and not edited here.
@@ -1232,12 +1229,15 @@ class EditPage(Page, Generic[_T_OverridableSpec, _Self]):
             if not user_errors:
                 instances.add_page(new_page)
                 self._type.save_user_instances(instances, owner_id)
-                if mode == "create":
-                    redirect_url = new_page.after_create_url() or back_url
+                if request.var("save_and_view"):
+                    redirect_url = new_page.after_create_url() or makeuri_contextless(
+                        request,
+                        [("name", new_page.name())],
+                        filename="%s.py" % self._type.type_name(),
+                    )
                 else:
                     redirect_url = back_url
-
-                flash(_("Your changes haven been saved."))
+                    flash(_("Your changes have been saved."))
 
                 # Reload sidebar.TODO: This code logically belongs to PageRenderer. How
                 # can we simply move it there?
@@ -1245,10 +1245,7 @@ class EditPage(Page, Generic[_T_OverridableSpec, _Self]):
                 # of type PageRenderer but has a dedicated sidebar snapin. Maybe
                 # the best option would be to make a dedicated method to decide whether
                 # or not to reload the sidebar.
-                if not page_dict.get("hidden") or new_page_dict.get("hidden") != page_dict.get(
-                    "hidden"
-                ):
-                    html.reload_whole_page(redirect_url)
+                html.reload_whole_page(redirect_url)
 
         else:
             html.show_localization_hint()
@@ -1473,10 +1470,6 @@ _save_pagetype_icons: dict[str, Icon] = {
         "emblem": "time",
     },
     "graph_collection": "save_graph",
-    "graph_tuning": {
-        "icon": "save_graph",
-        "emblem": "settings",
-    },
     "view": "save_view",
 }
 
@@ -1515,8 +1508,8 @@ def _page_menu_entries_save(
     parent_item = breadcrumb[-2]
 
     yield PageMenuEntry(
-        title=_("Abort"),
-        icon_name="abort",
+        title=_("Cancel"),
+        icon_name="cancel",
         item=make_simple_link(parent_item.url),
         is_list_entry=False,
         is_shortcut=True,
@@ -1760,6 +1753,8 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec, _SelfPageRenderer])
                         Integer(
                             title=_("Sort index"),
                             default_value=99,
+                            minvalue=1,
+                            maxvalue=65535,
                             help=_(
                                 "You can customize the order of the %s by changing "
                                 "this number. Lower numbers will be sorted first. "
@@ -1789,7 +1784,9 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec, _SelfPageRenderer])
                         "hidden",
                         Checkbox(
                             title=_("Sidebar integration"),
-                            label=_("Do not add a link to this page in sidebar"),
+                            label=_(
+                                "Do not add a link to this page in sidebar and in monitor menu."
+                            ),
                         ),
                     ),
                 ],
@@ -1947,7 +1944,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
             "clone": _("Clone topic"),
             "create": _("Create topic"),
             "edit": _("Edit topic"),
-            "new": _("New topic"),
+            "new": _("Add topic"),
         }.get(phrase, Base.phrase(phrase))
 
     @classmethod
@@ -2063,6 +2060,15 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "sort_index": 70,
                 "owner": UserId.builtin(),
             },
+            "cloud": {
+                "name": "cloud",
+                "title": _("Cloud"),
+                "icon_name": "plugins_cloud",
+                "description": "",
+                "public": True,
+                "sort_index": 75,
+                "owner": UserId.builtin(),
+            },
             "bi": {
                 "name": "bi",
                 "title": _("Business Intelligence"),
@@ -2101,13 +2107,22 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "hide": not is_ntop_configured(),
                 "owner": UserId.builtin(),
             },
+            "it_efficiency": {
+                "name": "it_efficiency",
+                "title": _("IT infrastructure efficiency"),
+                "icon_name": "topic_analyze",
+                "description": _("Analyze the utilization of your IT infrastructure data center."),
+                "public": True,
+                "sort_index": 100,
+                "owner": UserId.builtin(),
+            },
             "my_workplace": {
                 "name": "my_workplace",
                 "title": _("Workplace"),
                 "icon_name": "topic_my_workplace",
                 "description": "",
                 "public": True,
-                "sort_index": 100,
+                "sort_index": 105,
                 "owner": UserId.builtin(),
             },
             # Only fallback for items without topic
@@ -2117,7 +2132,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec, "PagetypeTopics"]):
                 "icon_name": "topic_other",
                 "description": "",
                 "public": True,
-                "sort_index": 105,
+                "sort_index": 110,
                 "owner": UserId.builtin(),
             },
         }

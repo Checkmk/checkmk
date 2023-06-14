@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from __future__ import annotations
 
 import logging
 import os
@@ -9,6 +11,7 @@ import subprocess
 import sys
 import tarfile
 import time
+from collections.abc import Iterable, Mapping, Sequence
 from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
@@ -38,7 +41,7 @@ def execute_tests_in_container(
     command: list[str],
     interactive: bool,
 ) -> int:
-    client = _docker_client()
+    client: docker.DockerClient = _docker_client()
     info = client.info()
     logger.info("Docker version: %s", info["ServerVersion"])
 
@@ -86,25 +89,31 @@ def execute_tests_in_container(
             logger.info("| ")
             logger.info("| ... start whatever test you want, for example:")
             logger.info("| ")
-            logger.info("| make -C tests test-integration")
+            logger.info("| VERSION=git make -C tests test-integration")
             logger.info("| ")
             logger.info("|   Execute all integration tests")
             logger.info("| ")
             logger.info(
-                "| tests/scripts/run-integration-test.py "
+                "| VERSION=git pytest -T integration "
                 "tests/integration/livestatus/test_livestatus.py"
             )
             logger.info("| ")
             logger.info("|   Execute some integration tests")
             logger.info("| ")
             logger.info(
-                "| tests/scripts/run-integration-test.py "
+                "| VERSION=git pytest -T integration "
                 "tests/integration/livestatus/test_livestatus.py "
                 "-k test_service_custom_variables "
             )
             logger.info("| ")
             logger.info("|   Execute a single test")
             logger.info("| ")
+            logger.info("| !!!WARNING!!!")
+            logger.info("| The version of Checkmk you test against is set using the")
+            logger.info(
+                "| VERSION variable as seen above. Only 'git' tests against the code in your repo."
+            )
+            logger.info("| VERSION defaults to the current daily build of you branch.")
             logger.info("+-------------------------------------------------")
             dockerpty.start(client.api, container.id)
             return 0
@@ -116,6 +125,7 @@ def execute_tests_in_container(
             environment=_container_env(version),
             workdir="/git",
             stream=True,
+            tty=True,  # NOTE: Some tests require a tty (e.g. test-update)!
         )
 
         # Collect the test results located in /results of the container. The
@@ -125,7 +135,7 @@ def execute_tests_in_container(
         return exit_code
 
 
-def _docker_client():
+def _docker_client() -> docker.DockerClient:
     return docker.from_env(timeout=1200)
 
 
@@ -459,7 +469,7 @@ def _start(client, **kwargs):
     # after initialization
     container_id = client.api.create_container(**kwargs)["Id"]
     client.api.start(container_id)
-    c = client.containers.get(container_id)
+    c: docker.Container = client.containers.get(container_id)
 
     logger.info("Container ID: %s", c.short_id)
 
@@ -499,20 +509,20 @@ def _exec_run(c, cmd, **kwargs):
 
 
 def container_exec(
-    container,
-    cmd,
-    stdout=True,
-    stderr=True,
-    stdin=False,
-    tty=False,
-    privileged=False,
-    user="",
-    detach=False,
-    stream=False,
-    socket=False,
-    environment=None,
-    workdir=None,
-):
+    container: docker.Container,
+    cmd: str | list[object],
+    stdout: bool = True,
+    stderr: bool = True,
+    stdin: bool = False,
+    tty: bool = False,
+    privileged: bool = False,
+    user: str = "",
+    detach: bool = False,
+    stream: bool = False,
+    socket: bool = False,
+    environment: Mapping[str, str] | Sequence[str] | None = None,
+    workdir: str | None = None,
+) -> ContainerExec:
     """
     An enhanced version of #docker.Container.exec_run() which returns an object
     that can be properly inspected for the status of the executed commands.
@@ -520,7 +530,7 @@ def container_exec(
     Taken from https://github.com/docker/docker-py/issues/1989. Thanks!
     """
 
-    exec_id = container.client.api.exec_create(
+    exec_id: str = container.client.api.exec_create(
         container.id,
         cmd,
         stdout=stdout,
@@ -533,7 +543,7 @@ def container_exec(
         workdir=workdir,
     )["Id"]
 
-    output = container.client.api.exec_start(
+    output: Iterable[bytes] = container.client.api.exec_start(
         exec_id, detach=detach, tty=tty, stream=stream, socket=socket
     )
 
@@ -541,7 +551,9 @@ def container_exec(
 
 
 class ContainerExec:
-    def __init__(self, client, container_id, output) -> None:  # type:ignore[no-untyped-def]
+    def __init__(
+        self, client: docker.DockerClient, container_id: str, output: Iterable[bytes]
+    ) -> None:
         self.client = client
         self.id = container_id
         self.output = output

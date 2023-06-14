@@ -1,17 +1,20 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import OrderedDict
+from collections.abc import Mapping
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_mem_usage import (
     check_esx_vsphere_hostsystem_mem_usage,
     cluster_check_esx_vsphere_hostsystem_mem_usage,
     discover_esx_vsphere_hostsystem_mem_usage,
+    Section,
 )
 
 
@@ -37,8 +40,8 @@ from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_mem_usage import (
         ),
     ],
 )
-def test_discover_esx_vsphere_hostsystem_mem_usage(  # type:ignore[no-untyped-def]
-    section, discovered_service
+def test_discover_esx_vsphere_hostsystem_mem_usage(
+    section: Section, discovered_service: DiscoveryResult
 ) -> None:
     assert list(discover_esx_vsphere_hostsystem_mem_usage(section)) == discovered_service
 
@@ -92,8 +95,8 @@ def test_discover_esx_vsphere_hostsystem_mem_usage(  # type:ignore[no-untyped-de
         ),
     ],
 )
-def test_check_esx_vsphere_hostsystem_mem_usage(  # type:ignore[no-untyped-def]
-    section, check_results
+def test_check_esx_vsphere_hostsystem_mem_usage(
+    section: Section, check_results: CheckResult
 ) -> None:
     assert (
         list(
@@ -326,8 +329,8 @@ def test_check_esx_vsphere_hostsystem_mem_usage(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_cluster_check_esx_vsphere_hostsystem_mem_usage(  # type:ignore[no-untyped-def]
-    section, params, check_results
+def test_cluster_check_esx_vsphere_hostsystem_mem_usage(
+    section: Mapping[str, Section | None], params: Mapping[str, object], check_results: CheckResult
 ) -> None:
     assert (
         list(

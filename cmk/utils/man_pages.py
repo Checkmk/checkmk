@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module handles the manual pages of Checkmk checks
@@ -118,7 +118,7 @@ CATALOG_TITLES: Final = {
     "bluecoat": "Blue Coat Systems",
     "casa": "Casa",
     "cbl": "Communication by light (CBL)",
-    "checkpoint": "Checkpoint",
+    "checkpoint": "Check Point",
     "cisco": "Cisco Systems (also IronPort)",
     "ciena": "Ciena Corporation",
     "decru": "Decru",
@@ -295,6 +295,9 @@ CATALOG_TITLES: Final = {
     "gcp": "Google Cloud Platform",
     "mobileiron": "Mobileiron",
     "azure_status": "Microsoft Azure Status",
+    "aws_status": "Amazon Web Service (AWS) Status",
+    "gcp_status": "Google Cloud Platform (GCP) Status",
+    "virtual": "Virtualization",
 }
 
 # TODO: Do we need a more generic place for this?
@@ -551,12 +554,10 @@ def load_man_page(name: str, man_page_dirs: Iterable[Path] | None = None) -> Man
 
 
 def _parse_to_raw(path: Path, content: str) -> Mapping[str, str]:
-
     parsed: dict[str, list[str]] = defaultdict(list)
     current: list[str] = []
 
     for no, line in enumerate(content.splitlines(), start=1):
-
         if not line.strip() or line.startswith(" "):  # continuation line
             current.append(line.strip())
             continue

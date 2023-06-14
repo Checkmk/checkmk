@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -29,7 +29,6 @@ from cmk.gui.config import (
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site, site_is_local
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri
@@ -49,6 +48,7 @@ from cmk.gui.valuespec import (
     TextInput,
     Tuple,
 )
+from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import (
     ConfigDomainCACertificates,
     ConfigDomainGUI,
@@ -183,8 +183,8 @@ class SiteManagement:
                 ),
             ],
             help=_(
-                "When connecting to Check_MK versions older than 1.6 you can only use plain text "
-                "transport. Starting with Check_MK 1.6 it is possible to use encrypted Livestatus "
+                "When connecting to Checkmk versions older than 1.6 you can only use plain text "
+                "transport. Starting with Checkmk 1.6 it is possible to use encrypted Livestatus "
                 "communication. Sites created with 1.6 will automatically use encrypted communication "
                 "by default. Sites created with previous versions need to be configured manually to "
                 'enable the encryption. Have a look at <a href="werk.py?werk=7017">werk #7017</a> '
@@ -323,7 +323,7 @@ class SiteManagement:
     @classmethod
     def save_sites(cls, sites: SiteConfigurations, activate: bool = True) -> None:
         # TODO: Clean this up
-        from cmk.gui.watolib.hosts_and_folders import Folder
+        from cmk.gui.watolib.hosts_and_folders import folder_tree
 
         store.mkdir(multisite_dir())
         store.save_to_mk_file(cls._sites_mk(), "sites", sites)
@@ -333,7 +333,7 @@ class SiteManagement:
         if activate:
             load_config()  # make new site configuration active
             _update_distributed_wato_file(sites)
-            Folder.invalidate_caches()
+            folder_tree().invalidate_caches()
             cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
             _create_nagvis_backends(sites)
@@ -348,14 +348,14 @@ class SiteManagement:
     @classmethod
     def delete_site(cls, site_id):
         # TODO: Clean this up
-        from cmk.gui.watolib.hosts_and_folders import Folder
+        from cmk.gui.watolib.hosts_and_folders import folder_tree
 
         all_sites = cls.load_sites()
         if site_id not in all_sites:
             raise MKUserError(None, _("Unable to delete unknown site id: %s") % site_id)
 
         # Make sure that site is not being used by hosts and folders
-        if site_id in Folder.root_folder().all_site_ids():
+        if site_id in folder_tree().root_folder().all_site_ids():
             search_url = makeactionuri(
                 request,
                 transactions,
@@ -633,7 +633,7 @@ class CEESiteManagement(SiteManagement):
 
 # TODO: Change to factory
 class LivestatusViaTCP(Dictionary):
-    def __init__(self, **kwargs) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
         kwargs["elements"] = [
             (
                 "port",
@@ -666,7 +666,7 @@ class LivestatusViaTCP(Dictionary):
                     title=_("Encrypt communication"),
                     totext=_("Encrypt TCP Livestatus connections"),
                     help=_(
-                        "Since Check_MK 1.6 it is possible to encrypt the TCP Livestatus "
+                        "Since Checkmk 1.6 it is possible to encrypt the TCP Livestatus "
                         "connections using SSL. This is enabled by default for sites that "
                         "enable Livestatus via TCP with 1.6 or newer. Sites that already "
                         "have this option enabled keep the communication unencrypted for "
@@ -682,7 +682,7 @@ class LivestatusViaTCP(Dictionary):
 
 def _create_nagvis_backends(sites_config):
     cfg = [
-        "; MANAGED BY CHECK_MK WATO - Last Update: %s" % time.strftime("%Y-%m-%d %H:%M:%S"),
+        "; MANAGED BY CHECK_MK Setup - Last Update: %s" % time.strftime("%Y-%m-%d %H:%M:%S"),
     ]
     for site_id, site in sites_config.items():
         if site_id == omd_site():
@@ -737,7 +737,7 @@ def _update_distributed_wato_file(sites):
             )
 
     # Remove the distributed wato file
-    # a) If there is no distributed WATO setup
+    # a) If there is no distributed Setup setup
     # b) If the local site could not be gathered
     if not distributed:  # or not found_local:
         _delete_distributed_wato_file()
@@ -753,9 +753,9 @@ def is_livestatus_encrypted(site: SiteConfiguration) -> bool:
     )
 
 
-def site_globals_editable(site_id, site) -> bool:  # type:ignore[no-untyped-def]
+def site_globals_editable(site_id, site) -> bool:  # type: ignore[no-untyped-def]
     # Site is a remote site of another site. Allow to edit probably pushed site
-    # specific globals when remote WATO is enabled
+    # specific globals when remote Setup is enabled
     if is_wato_slave_site():
         return True
 

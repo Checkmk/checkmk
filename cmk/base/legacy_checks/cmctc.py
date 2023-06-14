@@ -1,0 +1,135 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Iterable, Mapping
+from typing import List, NamedTuple
+
+from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_legacy_includes.cmctc import cmctc_translate_status, cmctc_translate_status_text
+from cmk.base.check_legacy_includes.temperature import check_temperature
+from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils.cmctc import DETECT_CMCTC
+
+# Table columns:
+# 0: index
+# 1: sensor type (10 = temperature)
+# 2: sensor state (4 = ok)
+# 3: current value (temperature)
+# 4: critical level
+# 5: warn low level
+# 6: warn level
+# 7: description
+
+
+class Sensor(NamedTuple):
+    status: int
+    reading: int
+    levels: tuple[float, float]
+    levels_lower: tuple[float, float]
+
+
+Section = Mapping[str, Sensor]
+
+
+_TABLES = ["3", "4", "5", "6"]
+
+
+def parse_cmctc_temp(string_table: List[StringTable]) -> Section:
+    return {
+        f"{table}.{item}": Sensor(
+            status=int(status),
+            reading=int(reading),
+            levels=(float(warn), float(crit)),
+            levels_lower=(float(low), float("-inf")),
+        )
+        for table, block in zip(_TABLES, string_table)
+        for item, type_, status, reading, crit, low, warn in block
+        if type_ and int(type_) == 10
+    }
+
+
+def inventory_cmctc_temp(section: Section) -> Iterable[tuple[str, dict]]:
+    yield from ((item, {}) for item in section)
+
+
+def check_cmctc_temp(item, params, section):
+    if (sensor := section.get(item)) is None:
+        return
+
+    yield check_temperature(
+        sensor.reading,
+        params,
+        "cmctc_temp_%s" % item,
+        dev_levels=sensor.levels,
+        dev_levels_lower=sensor.level_lower,
+        dev_status=cmctc_translate_status(sensor.status),
+        dev_status_name="Unit: %s" % cmctc_translate_status_text(sensor.status),
+    )
+
+
+check_info["cmctc.temp"] = LegacyCheckDefinition(
+    detect=DETECT_CMCTC,
+    parse_function=parse_cmctc_temp,
+    discovery_function=inventory_cmctc_temp,
+    check_function=check_cmctc_temp,
+    service_name="Temperature %s",
+    check_ruleset_name="temperature",
+    fetch=[
+        SNMPTree(
+            base=".1.3.6.1.4.1.2606.4.2.3",
+            oids=[
+                "5.2.1.1",
+                "5.2.1.2",
+                "5.2.1.4",
+                "5.2.1.5",
+                "5.2.1.6",
+                "5.2.1.7",
+                "5.2.1.8",
+                "7.2.1.2",
+            ],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.2606.4.2.4",
+            oids=[
+                "5.2.1.1",
+                "5.2.1.2",
+                "5.2.1.4",
+                "5.2.1.5",
+                "5.2.1.6",
+                "5.2.1.7",
+                "5.2.1.8",
+                "7.2.1.2",
+            ],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.2606.4.2.5",
+            oids=[
+                "5.2.1.1",
+                "5.2.1.2",
+                "5.2.1.4",
+                "5.2.1.5",
+                "5.2.1.6",
+                "5.2.1.7",
+                "5.2.1.8",
+                "7.2.1.2",
+            ],
+        ),
+        SNMPTree(
+            base=".1.3.6.1.4.1.2606.4.2.6",
+            oids=[
+                "5.2.1.1",
+                "5.2.1.2",
+                "5.2.1.4",
+                "5.2.1.5",
+                "5.2.1.6",
+                "5.2.1.7",
+                "5.2.1.8",
+                "7.2.1.2",
+            ],
+        ),
+    ],
+)

@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -782,7 +782,7 @@ public:
     }
     auto exeWide() const {
         std::lock_guard lk(lock_);
-        return wtools::ConvertToUTF16(exe_name_);
+        return wtools::ConvertToUtf16(exe_name_);
     }
 
     auto prefix() const {
@@ -792,7 +792,7 @@ public:
 
     auto prefixWide() const {
         std::lock_guard lk(lock_);
-        return wtools::ConvertToUTF16(prefix_);
+        return wtools::ConvertToUtf16(prefix_);
     }
 
     auto counters() const {
@@ -1002,7 +1002,7 @@ public:
     }
     auto exeWide() const {
         std::lock_guard lk(lock_);
-        return wtools::ConvertToUTF16(exe_name_);
+        return wtools::ConvertToUtf16(exe_name_);
     }
 
     auto asyncStart() const {
@@ -1043,10 +1043,10 @@ void ProcessPluginEnvironment(
 void SetupRemoteHostEnvironment(const std::string &ip_address);
 
 namespace groups {
-extern Global global;
-extern WinPerf winperf;
-extern Plugins plugins;
-extern Plugins localGroup;
+extern Global g_global;
+extern WinPerf g_winperf;
+extern Plugins g_plugins;
+extern Plugins g_local_group;
 }  // namespace groups
 
 inline bool LogPluginOutput() noexcept { return false; }
@@ -1060,7 +1060,7 @@ constexpr std::string_view kIniFromInstallMarker =
 
 enum class InstallationType { packaged, wato, unknown };
 
-/// \brief returns the type of installation
+/// returns the type of installation
 ///
 /// possible values wato or packaged, where packaged returned only if the
 /// check_mk.install.yml exists and ["global"]["install"] == "no"

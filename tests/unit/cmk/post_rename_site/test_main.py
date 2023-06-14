@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,12 +10,10 @@ import sys
 import pytest
 from pytest_mock import MockerFixture
 
-from tests.testlib import is_enterprise_repo
-
 from livestatus import SiteId
 
 from cmk.post_rename_site import main
-from cmk.post_rename_site.registry import rename_action_registry, RenameAction, RenameActionRegistry
+from cmk.post_rename_site.registry import RenameAction, RenameActionRegistry
 
 
 @pytest.fixture(autouse=True)
@@ -85,27 +83,3 @@ def test_run_executes_plugins(
     assert output.out.endswith("Done\n")
 
     assert handler_mock.called_once_with(SiteId("old"), SiteId("NO_SITE"))
-
-
-def test_load_plugins() -> None:
-    main.load_plugins()
-    expected = [
-        "sites",
-        "hosts_and_folders",
-        "update_core_config",
-        "warn_remote_site",
-        "warn_about_network_ports",
-        "warn_about_configs_to_review",
-    ]
-
-    if is_enterprise_repo():
-        # The below line is confusing and incorrect. The reason we need it is
-        # because our test environments do not reflect our Checkmk editions properly.
-        # We cannot fix that in the short (or even mid) term because the
-        # precondition is a more cleanly separated structure.
-
-        # The CEE plugins are loaded when the CEE plugins are available, i.e.
-        # when the "enterprise/" path is present.
-        expected.append("dcd_connections")
-
-    assert sorted(rename_action_registry.keys()) == sorted(expected)

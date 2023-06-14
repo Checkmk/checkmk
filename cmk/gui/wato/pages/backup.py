@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Pages for managing backup and restore of WATO"""
@@ -7,6 +7,7 @@
 from collections.abc import Collection
 
 import cmk.utils.paths
+from cmk.utils.crypto.password import Password
 
 import cmk.gui.backup as backup
 from cmk.gui.http import request
@@ -172,7 +173,7 @@ class ModeBackupUploadKey(backup.PageBackupUploadKey, WatoMode):
     def __init__(self) -> None:
         super().__init__(key_store=make_site_backup_keypair_store())
 
-    def _upload_key(self, key_file: str, alias: str, passphrase: str) -> None:
+    def _upload_key(self, key_file: str, alias: str, passphrase: Password) -> None:
         log_audit("upload-backup-key", "Uploaded backup key '%s'" % alias)
         super()._upload_key(key_file, alias, passphrase)
 

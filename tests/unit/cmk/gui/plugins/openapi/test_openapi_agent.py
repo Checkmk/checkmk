@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 from pytest_mock import MockerFixture
 
-from tests.testlib.rest_api_client import RestApiClient
+from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
@@ -18,10 +18,10 @@ import cmk.utils.version as cmk_version
 @pytest.mark.skipif(cmk_version.is_raw_edition(), reason="No agent deployment in raw edition")
 def test_deploy_agent(wsgi_app: WebTestAppForCMK) -> None:
     response = wsgi_app.get("/NO_SITE/check_mk/deploy_agent.py")
-    assert response.text.startswith("ERROR: Missing or invalid")
+    assert response.json["result"].startswith("Missing or invalid")
 
     response = wsgi_app.get("/NO_SITE/check_mk/deploy_agent.py?mode=agent")
-    assert response.text.startswith("ERROR: Missing host")
+    assert response.json["result"].startswith("Missing host")
 
 
 def test_download_agent_shipped_with_checkmk(
@@ -51,8 +51,7 @@ def test_download_agent_shipped_with_checkmk(
     packed_agent_path_patched.assert_called_once()
 
 
-def test_openapi_agent_key_id_above_zero_regression(
-    base: str, aut_user_auth_wsgi_app: WebTestAppForCMK, api_client: RestApiClient
-) -> None:
+@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="endpoint not available in raw edition")
+def test_openapi_agent_key_id_above_zero_regression(clients: ClientRegistry) -> None:
     # make sure this doesn't crash
-    api_client.bake_and_sign_agent(key_id=0, passphrase="", expect_ok=False).assert_status_code(400)
+    clients.Agent.bake_and_sign(key_id=0, passphrase="", expect_ok=False).assert_status_code(400)

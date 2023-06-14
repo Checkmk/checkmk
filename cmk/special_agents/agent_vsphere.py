@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Check_MK vSphere Special Agent"""
@@ -15,6 +15,9 @@ from collections import Counter
 from collections.abc import Sequence
 from typing import Any
 from xml.dom import minidom
+
+# TODO: minicompat include internal impl details. But NodeList is only defined there for <3.11
+from xml.dom.minicompat import NodeList
 
 import dateutil.parser
 import requests
@@ -34,6 +37,10 @@ import cmk.special_agents.utils as utils
 #   |                  \__,_|\___|_| |_|_| |_|\___||___/                   |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+__version__ = "2.3.0b1"
+
+USER_AGENT = f"checkmk-special-vsphere-{__version__}"
 
 AGENT_TMP_PATH = cmk.utils.paths.tmp_dir / "agents/agent_vsphere"
 
@@ -869,7 +876,7 @@ class SoapTemplates:
     )
     # fmt: on
 
-    def __init__(self, system_fields) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, system_fields) -> None:  # type: ignore[no-untyped-def]
         super().__init__()
         self.login = SoapTemplates.LOGIN % system_fields
         self.systemtime = SoapTemplates.SYSTEMTIME % system_fields
@@ -1064,7 +1071,10 @@ class ESXSession(requests.Session):
     def __init__(self, address: str, port: str, *, cert_check: bool | str = True) -> None:
         super().__init__()
 
-        service = f"https://{address}:{port}"
+        if address.count(":") == 0:
+            service = f"https://{address}:{port}"
+        else:
+            service = f"https://[{address}]:{port}"
         if cert_check is False:
             # Watch out: we must provide the verify keyword to every individual request call!
             # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable
@@ -1078,7 +1088,7 @@ class ESXSession(requests.Session):
             {
                 "Content-Type": 'text/xml; charset="utf-8"',
                 "SOAPAction": "urn:vim25/5.0",
-                "User-Agent": "Checkmk special agent vsphere",
+                "User-Agent": USER_AGENT,
             }
         )
 
@@ -1110,7 +1120,7 @@ class ESXConnection:
         if "NotAuthenticatedFault" in text:
             raise ESXCookieInvalid("No longer authenticated")
 
-    def __init__(self, address, port, opt) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, address, port, opt) -> None:  # type: ignore[no-untyped-def]
         super().__init__()
 
         AGENT_TMP_PATH.mkdir(parents=True, exist_ok=True)
@@ -1209,7 +1219,6 @@ class ESXConnection:
         server_cookie = response.headers.get("set-cookie")
 
         if response.status_code != 200:
-
             raise SystemExit(
                 "Cannot login to vSphere Server (reason: [%s] %s). Please check the "
                 "credentials." % (response.status_code, response.reason)
@@ -1242,7 +1251,7 @@ class ESXConnection:
 #   '----------------------------------------------------------------------'
 
 
-def fetch_available_counters(  # type:ignore[no-untyped-def]
+def fetch_available_counters(  # type: ignore[no-untyped-def]
     connection, hostsystems
 ) -> dict[str, dict[str, list[str]]]:
     counters_available_by_host: dict[str, dict[str, list[str]]] = {}
@@ -1260,7 +1269,6 @@ def fetch_available_counters(  # type:ignore[no-untyped-def]
 
 
 def fetch_counters_syntax(connection, counter_ids):
-
     counters_list = ["<ns1:counterId>%s</ns1:counterId>" % id_ for id_ in counter_ids]
 
     response_text = connection.query_server("perfcountersyntax", counters="".join(counters_list))
@@ -1646,17 +1654,23 @@ def get_pattern(pattern, line):
 
 # snapshot.rootSnapshotList.summary 871 1605626114 poweredOn SnapshotName| 834 1605632160 poweredOff Snapshotname2
 def get_section_snapshot_summary(vms):
-    snapshots = [
-        vm.get("snapshot.rootSnapshotList").split(" ")
-        for vm in vms.values()
-        if vm.get("snapshot.rootSnapshotList")
-    ]
+    snapshots = []
+    for vm in vms.values():
+        if raw_snapshots := vm.get("snapshot.rootSnapshotList"):
+            snapshots.extend(
+                [
+                    raw_snapshot.split(" ", 3) + vm["name"].split()
+                    for raw_snapshot in raw_snapshots.split("|")
+                ]
+            )
+
     return ["<<<esx_vsphere_snapshots_summary:sep(0)>>>"] + [
         json.dumps(
             {
                 "time": int(snapshot[1]),
                 "state": snapshot[2],
                 "name": snapshot[3],
+                "vm": snapshot[4],
             }
         )
         for snapshot in snapshots
@@ -1676,7 +1690,7 @@ def get_section_systemtime(connection: ESXConnection, debug: bool) -> Sequence[s
     return ["<<<systemtime>>>", f"{systime} {time.time()}"]
 
 
-def is_placeholder_vm(devices) -> bool:  # type:ignore[no-untyped-def]
+def is_placeholder_vm(devices) -> bool:  # type: ignore[no-untyped-def]
     elements = get_pattern('<VirtualDevice xsi:type="([^"]+)', devices)
     if "VirtualDisk" not in elements:
         return True
@@ -1786,17 +1800,27 @@ def get_section_datastores(datastores):
     return section_lines
 
 
+def _get_text(node: NodeList[minidom.Element]) -> str:
+    first = node.item(0)
+    if first is None:
+        raise ValueError("Node has no item")
+    child = first.firstChild
+    if child is None or not isinstance(child, minidom.Text):
+        raise ValueError("Node has no text")
+    return child.data
+
+
 def get_section_licenses(connection):
     section_lines = ["<<<esx_vsphere_licenses:sep(9)>>>"]
     licenses_response = connection.query_server("licensesused")
     root_node = minidom.parseString(licenses_response)
     licenses_node = root_node.getElementsByTagName("LicenseManagerLicenseInfo")
     for license_node in licenses_node:
-        total = license_node.getElementsByTagName("total")[0].firstChild.data
+        total = _get_text(license_node.getElementsByTagName("total"))
         if total == "0":
             continue
-        name = license_node.getElementsByTagName("name")[0].firstChild.data
-        used = license_node.getElementsByTagName("used")[0].firstChild.data
+        name = _get_text(license_node.getElementsByTagName("name"))
+        used = _get_text(license_node.getElementsByTagName("used"))
         section_lines.append(f"{name}\t{used} {total}")
     return section_lines
 

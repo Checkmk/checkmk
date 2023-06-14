@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import enum
 import time
 from typing import (
+    assert_never,
     Callable,
     Literal,
     Mapping,
@@ -19,7 +20,6 @@ from typing import (
 )
 
 from pydantic import BaseModel, Field
-from typing_extensions import assert_never
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import HostLabel
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -235,6 +235,40 @@ class CollectorState(enum.Enum):
     ERROR = "error"
 
 
+class AccessMode(enum.Enum):
+    """
+
+    Context:
+        providers will have different capabilities and each PV's access modes are set to the
+        specific modes supported by the particular volume.
+        Each PV gets its own set of access modes describing that specific PV's capabilities
+
+    Modes:
+        ReadWriteOnce (RWO):
+            * volume can be mounted as read-write by a single node
+            * can still allow multiple pods to access the volume when the pods are running on same
+            node
+
+        ReadOnlyMany (ROX):
+            * volume can be mounted as read-only by many nodes
+
+        ReadWriteMany (RWX):
+            * volume can be mounted as read-write by many nodes
+
+        ReadWriteOncePod (RWOP):
+            * volume can be mounted as read-write by a single pod
+            * use of this mode ensures that only one pod across the whole cluster can read that PVC
+            or write to it
+            * only supported for CSI volumes and Kubernetes version 1.22+
+
+    """
+
+    READ_WRITE_ONCE = "ReadWriteOnce"
+    READ_ONLY_MANY = "ReadOnlyMany"
+    READ_WRITE_MANY = "ReadWriteMany"
+    READ_WRITE_ONCE_POD = "ReadWriteOncePod"
+
+
 class CollectorHandlerLog(BaseModel):
     status: CollectorState
     title: str
@@ -410,6 +444,30 @@ class ClusterInfo(Section):
 VSResultAge = Union[Tuple[Literal["levels"], Tuple[int, int]], Literal["no_levels"]]
 
 
+def get_age_levels_for(params: Mapping[str, VSResultAge], key: str) -> Optional[Tuple[int, int]]:
+    """Get the levels for the given key from the params
+
+    Examples:
+        >>> params = dict(
+        ...     initialized="no_levels",
+        ...     scheduled=("levels", (89, 179)),
+        ...     containersready="no_levels",
+        ...     ready=("levels", (359, 719)),
+        ... )
+        >>> get_age_levels_for(params, "initialized")
+        >>> get_age_levels_for(params, "scheduled")
+        (89, 179)
+        >>> get_age_levels_for(params, "containersready")
+        >>> get_age_levels_for(params, "ready")
+        (359, 719)
+        >>> get_age_levels_for({}, "ready")
+    """
+    levels = params.get(key, "no_levels")
+    if levels == "no_levels":
+        return None
+    return levels[1]
+
+
 class NodeAddress(BaseModel):
     address: IpAddress
     # according to the docs type_ is "Hostname", "ExternalIP", "InternalIP", but we also saw
@@ -443,8 +501,6 @@ class NodeInfo(Section):
 class HealthZ(BaseModel):
     status_code: int
     response: str
-    # only set if status_code != 200
-    verbose_response: Optional[str]
 
 
 class KubeletInfo(Section):
@@ -547,9 +603,11 @@ class PodConditions(Section):
     """section: kube_pod_conditions_v1"""
 
     initialized: Optional[PodCondition]
+    hasnetwork: PodCondition | None = None
     scheduled: PodCondition
     containersready: Optional[PodCondition]
     ready: Optional[PodCondition]
+    disruptiontarget: PodCondition | None = None
 
 
 @enum.unique
@@ -925,7 +983,7 @@ class PersistentVolumeClaimPhase(enum.Enum):
 
 
 class StorageRequirement(BaseModel):
-    storage: float
+    storage: int
 
 
 class PersistentVolumeClaimStatus(BaseModel):
@@ -941,6 +999,7 @@ class PersistentVolumeClaimMetaData(BaseModel):
 class PersistentVolumeClaim(BaseModel):
     metadata: PersistentVolumeClaimMetaData
     status: PersistentVolumeClaimStatus
+    volume_name: str | None = None
 
 
 class PersistentVolumeClaims(Section):
@@ -949,7 +1008,26 @@ class PersistentVolumeClaims(Section):
     claims: Mapping[str, PersistentVolumeClaim]
 
 
+class PersistentVolumeSpec(BaseModel):
+    access_modes: list[AccessMode]
+    storage_class_name: str | None = None
+    volume_mode: str
+
+
+class PersistentVolume(BaseModel):
+    name: str
+    spec: PersistentVolumeSpec
+
+
+class AttachedPersistentVolumes(Section):
+    """section: kube_pvc_pvs_v1"""
+
+    volumes: Mapping[str, PersistentVolume]
+
+
 class AttachedVolume(BaseModel):
+    """The PV from a kubelet metrics representation"""
+
     capacity: float
     free: float
     persistent_volume_claim: str
@@ -1081,7 +1159,7 @@ class PrometheusResult(BaseModel):
                     "Incompatible data received: data did not match format expected from OpenShift"
                 )
             case ResultType.success:
-                return "Success"
+                return "Successfully queried usage data from Prometheus"
         assert_never(self.type_)
 
 

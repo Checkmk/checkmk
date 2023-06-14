@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,7 +12,7 @@ from pydantic_factories import ModelFactory, Use
 
 from cmk.base.plugins.agent_based import kube_node_conditions
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.utils import kube
 
 
@@ -44,13 +44,13 @@ class NodeCustomConditionsFactory(ModelFactory):
     )
 
 
-PARAMS = dict(
-    ready=int(State.CRIT),
-    memorypressure=int(State.CRIT),
-    diskpressure=int(State.CRIT),
-    pidpressure=int(State.CRIT),
-    networkunavailable=int(State.CRIT),
-)
+PARAMS = {
+    "ready": int(State.CRIT),
+    "memorypressure": int(State.CRIT),
+    "diskpressure": int(State.CRIT),
+    "pidpressure": int(State.CRIT),
+    "networkunavailable": int(State.CRIT),
+}
 
 
 @pytest.fixture
@@ -64,36 +64,38 @@ def custom_string_table():
 
 
 @pytest.fixture
-def section(string_table) -> kube_node_conditions.NodeConditions:  # type:ignore[no-untyped-def]
+def section(string_table: StringTable) -> kube_node_conditions.NodeConditions:
     return kube_node_conditions.parse_node_conditions(string_table)
 
 
 @pytest.fixture
-def custom_section(  # type:ignore[no-untyped-def]
-    custom_string_table,
+def custom_section(
+    custom_string_table: StringTable,
 ) -> kube_node_conditions.NodeCustomConditions:
     return kube_node_conditions.parse_node_custom_conditions(custom_string_table)
 
 
 @pytest.fixture
-def check_result(section, custom_section) -> CheckResult:  # type:ignore[no-untyped-def]
+def check_result(
+    section: kube.NodeConditions | None, custom_section: kube.NodeCustomConditions | None
+) -> CheckResult:
     return kube_node_conditions.check(PARAMS, section, custom_section)
 
 
 @pytest.mark.parametrize("section", [None])
-def test_check_raises_when_section_is_none(check_result) -> None:  # type:ignore[no-untyped-def]
+def test_check_raises_when_section_is_none(check_result: CheckResult) -> None:
     with pytest.raises(IgnoreResultsError):
         list(check_result)
 
 
-def test_check_yields_single_result_when_all_conditions_pass(  # type:ignore[no-untyped-def]
-    check_result,
+def test_check_yields_single_result_when_all_conditions_pass(
+    check_result: CheckResult,
 ) -> None:
     results = list(check_result)
     assert len(results) == 1
 
 
-def test_check_all_results_state_ok(check_result) -> None:  # type:ignore[no-untyped-def]
+def test_check_all_results_state_ok(check_result: CheckResult) -> None:
     results = list(check_result)
     assert isinstance(results[0], Result)
     assert results[0].state == State.OK

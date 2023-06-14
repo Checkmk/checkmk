@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -32,6 +32,15 @@ if [ -z "$LANG" ]; then
             break
         fi
     done
+fi
+
+# Some native modules want to compile stuff. Limit concurrency to prevent too
+# high load spikes on the CI servers.
+# Keep in sync with omd/packages/python3-modules/python3-modules.make
+if [ "$CI" == "true" ]; then
+    export \
+        GRPC_PYTHON_BUILD_EXT_COMPILER_JOBS=4 \
+        NPY_NUM_BUILD_JOBS=4
 fi
 
 PIPENV_VENV_IN_PROJECT=true \

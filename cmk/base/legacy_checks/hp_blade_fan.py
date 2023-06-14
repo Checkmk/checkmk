@@ -1,0 +1,64 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# Author: Lars Michelsen <lm@mathias-kettner.de>
+
+# FAN:
+# '.1.3.6.1.4.1.232.22.2.3.1.3.1.3'  => 'cpqRackCommonEnclosureFanIndex',
+# '.1.3.6.1.4.1.232.22.2.3.1.3.1.6'  => 'cpqRackCommonEnclosureFanPartNumber',
+# '.1.3.6.1.4.1.232.22.2.3.1.3.1.7'  => 'cpqRackCommonEnclosureFanSparePartNumber',
+# '.1.3.6.1.4.1.232.22.2.3.1.3.1.8'  => 'cpqRackCommonEnclosureFanPresent',
+# '.1.3.6.1.4.1.232.22.2.3.1.3.1.11' => 'cpqRackCommonEnclosureFanCondition',
+
+
+from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.utils.hp import DETECT_HP_BLADE
+
+# GENERAL MAPS:
+
+hp_blade_present_map = {1: "other", 2: "absent", 3: "present"}
+hp_blade_status_map = {1: "Other", 2: "Ok", 3: "Degraded", 4: "Failed"}
+
+hp_blade_status2nagios_map = {
+    "Other": 2,
+    "Ok": 0,
+    "Degraded": 1,
+    "Failed": 2,
+}
+
+
+def inventory_hp_blade_fan(info):
+    return [(line[0], None) for line in info if hp_blade_present_map[int(line[1])] == "present"]
+
+
+def check_hp_blade_fan(item, params, info):
+    for line in info:
+        if line[0] == item:
+            present_state = hp_blade_present_map[int(line[1])]
+            if present_state != "present":
+                return (
+                    2,
+                    "FAN was present but is not available anymore"
+                    " (Present state: %s)" % present_state,
+                )
+
+            snmp_state = hp_blade_status_map[int(line[2])]
+            status = hp_blade_status2nagios_map[snmp_state]
+            return (status, "FAN condition is %s" % (snmp_state))
+    return (3, "item not found in snmp data")
+
+
+check_info["hp_blade_fan"] = LegacyCheckDefinition(
+    detect=DETECT_HP_BLADE,
+    check_function=check_hp_blade_fan,
+    discovery_function=inventory_hp_blade_fan,
+    service_name="FAN %s",
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.232.22.2.3.1.3.1",
+        oids=["3", "8", "11"],
+    ),
+)

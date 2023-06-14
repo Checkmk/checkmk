@@ -146,8 +146,8 @@ TEST(OnlyFromTest, ConfigCheck) {
 
     yaml[groups::kGlobal][vars::kIpv6] = YAML::Load("on\n");
 
-    groups::global.loadFromMainConfig();
-    auto only_froms = groups::global.getOnlyFrom();
+    groups::g_global.loadFromMainConfig();
+    auto only_froms = groups::g_global.getOnlyFrom();
     EXPECT_TRUE(only_froms.size() == 5);
     EXPECT_TRUE(of::IsNetworkV4(only_froms[0]));
     EXPECT_TRUE(of::IsNetworkV6(only_froms[1]));
@@ -155,13 +155,13 @@ TEST(OnlyFromTest, ConfigCheck) {
     EXPECT_TRUE(of::IsAddressV4(only_froms[3]));
     EXPECT_TRUE(of::IsAddressV6(only_froms[4]));
 
-    EXPECT_TRUE(groups::global.isIpAddressAllowed("192.168.1.13"));
-    EXPECT_TRUE(groups::global.isIpAddressAllowed("::FFFF:192.168.1.2"));
-    EXPECT_FALSE(groups::global.isIpAddressAllowed("192.168.2.13"));
-    EXPECT_FALSE(groups::global.isIpAddressAllowed("::FFFF:192.168.2.2"));
-    EXPECT_TRUE(groups::global.isIpAddressAllowed("::1"));
-    EXPECT_TRUE(groups::global.isIpAddressAllowed("127.0.0.1"));
-    EXPECT_TRUE(groups::global.isIpAddressAllowed("::FFFF:127.0.0.1"));
+    EXPECT_TRUE(groups::g_global.isIpAddressAllowed("192.168.1.13"));
+    EXPECT_TRUE(groups::g_global.isIpAddressAllowed("::FFFF:192.168.1.2"));
+    EXPECT_FALSE(groups::g_global.isIpAddressAllowed("192.168.2.13"));
+    EXPECT_FALSE(groups::g_global.isIpAddressAllowed("::FFFF:192.168.2.2"));
+    EXPECT_TRUE(groups::g_global.isIpAddressAllowed("::1"));
+    EXPECT_TRUE(groups::g_global.isIpAddressAllowed("127.0.0.1"));
+    EXPECT_TRUE(groups::g_global.isIpAddressAllowed("::FFFF:127.0.0.1"));
 }
 
 namespace {
@@ -182,7 +182,7 @@ void WriteToSocket(const std::string &ip) {
 }
 
 auto RegisterIp(const std::string &ip) -> std::vector<uint8_t> {
-    if (groups::global.isIpAddressAllowed(ip)) {
+    if (groups::g_global.isIpAddressAllowed(ip)) {
         ip_received = ip;
     } else {
         XLOG::d("Invalid IP {}", ip);
@@ -200,13 +200,15 @@ TEST(OnlyFromTest, LocalAllowedIpv6) {
     yaml[groups::kGlobal][vars::kOnlyFrom] =
         YAML::Load("192.168.1.14/24 ::1 127.0.0.1");
     yaml[groups::kGlobal][vars::kIpv6] = YAML::Load("on\n");
-    groups::global.loadFromMainConfig();
+    groups::g_global.loadFromMainConfig();
 
     ip_received.clear();
     world::ExternalPort test_port(nullptr);
-    ASSERT_TRUE(test_port.startIo(
-        RegisterIp,
-        {.port{tst::TestPort()}, .local_only{world::LocalOnly::no}, .pid{}}));
+
+    ASSERT_TRUE(
+        test_port.startIo(RegisterIp, {.port = tst::TestPort(),
+                                       .local_only = world::LocalOnly::no,
+                                       .pid = std::nullopt}));
     WriteToSocket("::1");
     EXPECT_EQ(ip_received, "::1");
     test_port.shutdownIo();
@@ -218,7 +220,7 @@ TEST(OnlyFromTest, LocalAllowed) {
     auto yaml = GetLoadedConfig();
     yaml[groups::kGlobal][vars::kOnlyFrom] =
         YAML::Load("192.168.1.14/24 ::1 127.0.0.1");
-    groups::global.loadFromMainConfig();
+    groups::g_global.loadFromMainConfig();
 
     ip_received.clear();
     world::ExternalPort test_port(nullptr);
@@ -234,8 +236,8 @@ TEST(OnlyFromTest, LocalForbidden) {
     auto yaml = GetLoadedConfig();
     yaml[groups::kGlobal][vars::kIpv6] = YAML::Load("on\n");
     yaml[groups::kGlobal][vars::kOnlyFrom] = YAML::Load("192.168.1.14/24");
-    groups::global.loadFromMainConfig();
-    auto only_froms = groups::global.getOnlyFrom();
+    groups::g_global.loadFromMainConfig();
+    auto only_froms = groups::g_global.getOnlyFrom();
     EXPECT_TRUE(only_froms.size() == 2);
 
     ip_received.clear();
@@ -254,8 +256,8 @@ TEST(OnlyFromTest, AllowedIpv6) {
         YAML::Load("127.0.0.1/32 0:0:0:0:0:0:0:1/128");
     yaml[groups::kGlobal][vars::kIpv6] = YAML::Load("on\n");
 
-    groups::global.loadFromMainConfig();
-    auto only_froms = groups::global.getOnlyFrom();
+    groups::g_global.loadFromMainConfig();
+    auto only_froms = groups::g_global.getOnlyFrom();
 
     ip_received.clear();
     cma::world::ExternalPort test_port(nullptr);
@@ -268,7 +270,7 @@ TEST(OnlyFromTest, AllowedIpv6) {
 
 namespace {
 auto ReplyFunc(const std::string &ip) -> std::vector<uint8_t> {
-    if (!groups::global.isIpAddressAllowed(ip)) {
+    if (!groups::g_global.isIpAddressAllowed(ip)) {
         XLOG::d("Invalid IP {}", ip);
         return {};
     }
@@ -287,10 +289,10 @@ TEST(OnlyFromTest, Config) {
     yaml[groups::kGlobal][vars::kOnlyFrom] = YAML::Load("::1 127.0.0.1");
     yaml[groups::kGlobal][vars::kIpv6] = YAML::Load("on\n");
 
-    groups::global.loadFromMainConfig();
-    auto only_froms = groups::global.getOnlyFrom();
+    groups::g_global.loadFromMainConfig();
+    auto only_froms = groups::g_global.getOnlyFrom();
 }
-TEST(OnlyFromTest, Ipv6AndIpv4Integration) {
+TEST(OnlyFromTest, Ipv6AndIpv4Component) {
     tst::FirewallOpener fwo;
 
     auto temp_fs{tst::TempCfgFs::CreateNoIo()};
@@ -299,8 +301,8 @@ TEST(OnlyFromTest, Ipv6AndIpv4Integration) {
     auto yaml = GetLoadedConfig();
     yaml[groups::kGlobal][vars::kOnlyFrom] = YAML::Load("::1 127.0.0.1");
     yaml[groups::kGlobal][vars::kIpv6] = YAML::Load("on\n");
-    groups::global.loadFromMainConfig();
-    auto only_froms = groups::global.getOnlyFrom();
+    groups::g_global.loadFromMainConfig();
+    auto only_froms = groups::g_global.getOnlyFrom();
     EXPECT_TRUE(only_froms.size() == 3);
     EXPECT_TRUE(of::IsAddressV6(only_froms[0]));
     EXPECT_TRUE(of::IsAddressV4(only_froms[1]));
@@ -351,7 +353,7 @@ TEST(OnlyFromTest, Ipv6AndIpv4Integration) {
     }
 }
 
-TEST(OnlyFromTest, Ipv4OnlyIntegration) {
+TEST(OnlyFromTest, Ipv4OnlyComponent) {
     tst::FirewallOpener fwo;
     auto temp_fs{tst::TempCfgFs::CreateNoIo()};
     ASSERT_TRUE(temp_fs->loadConfig(tst::GetFabricYml()));
@@ -359,8 +361,8 @@ TEST(OnlyFromTest, Ipv4OnlyIntegration) {
     auto yaml = GetLoadedConfig();
     yaml[groups::kGlobal][vars::kOnlyFrom] = YAML::Load("::1 127.0.0.1");
     yaml[groups::kGlobal][vars::kIpv6] = YAML::Load("off\n");
-    groups::global.loadFromMainConfig();
-    auto only_froms = groups::global.getOnlyFrom();
+    groups::g_global.loadFromMainConfig();
+    auto only_froms = groups::g_global.getOnlyFrom();
     EXPECT_TRUE(only_froms.size() == 1);
     EXPECT_TRUE(of::IsAddressV4(only_froms[0]));
 

@@ -1,0 +1,15 @@
+Title: aux_tags: aux_tag_id must exist in order to update
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1677691165
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk fixes a bug in the aux_tag put endpoint.  Previously
+when sending a put request with a non-existing aux_tag_id, it
+would result in a 500 internal server error.  Now we conform to
+our other endpoints and return a 404 problem response.
+

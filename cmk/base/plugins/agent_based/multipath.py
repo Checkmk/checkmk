@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -147,7 +147,6 @@ register.agent_section(
 # Get list of UUIDs of all multipath devices
 # Length of UUID is 360a9800043346937686f456f59386741
 def discover_multipath(params: Mapping[str, Any], section: multipath.Section) -> DiscoveryResult:
-
     for uuid, group in section.items():
         # take current number of paths as target value
         yield Service(

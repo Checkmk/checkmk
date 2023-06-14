@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module contains functions that transform Python values into
@@ -72,7 +72,13 @@ class SecondsRenderer(Renderer):
 
 # NOTE: strftime's format *must* be of type str, both in Python 2 and 3.
 def date(timestamp: float | None) -> str:
-    return time.strftime(str(_("%Y-%m-%d")), time.localtime(timestamp))
+    return time.strftime(
+        str(
+            # xgettext: no-python-format
+            _("%Y-%m-%d")
+        ),
+        time.localtime(timestamp),
+    )
 
 
 def date_and_time(timestamp: float | None) -> str:
@@ -253,7 +259,7 @@ def fmt_number_with_precision(
 
 
 def fmt_bytes(
-    b: int,
+    b: float,
     *,
     unit_prefix_type: type[_ABCUnitPrefixes] = IECUnitPrefixes,
     precision: int = 2,

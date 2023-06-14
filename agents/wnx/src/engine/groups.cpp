@@ -355,7 +355,7 @@ void Plugins::loadFromMainConfig(std::string_view group_name) {
                 GetArray<std::string>(group_name, vars::kPluginsFolders);
             for (const auto &folder : folders) {
                 auto f = ReplacePredefinedMarkers(folder);
-                folders_.push_back(wtools::ConvertToUTF16(f));
+                folders_.push_back(wtools::ConvertToUtf16(f));
             }
         }
     } catch (const std::exception &e) {
@@ -400,7 +400,7 @@ Plugins::CmdLineInfo Plugins::buildCmdLine() const {
 
     // case when there is NO folder in array
     const auto default_folder_mark =
-        wtools::ConvertToUTF16(vars::kPluginsDefaultFolderMark);
+        wtools::ConvertToUtf16(vars::kPluginsDefaultFolderMark);
     auto default_plugins_folder = GetCfg().getSystemPluginsDir();
     if (folders.empty()) {
         folders.emplace_back(default_folder_mark);

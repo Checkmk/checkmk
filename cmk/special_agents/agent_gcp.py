@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
@@ -11,11 +11,9 @@ from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import cache
 from types import TracebackType
-from typing import Any, Protocol
+from typing import Any, assert_never, Protocol
 
-import requests
-import typing_extensions
-from google.api_core.exceptions import PermissionDenied
+from google.api_core.exceptions import PermissionDenied, Unauthenticated
 from google.cloud import asset_v1, monitoring_v3
 from google.cloud.monitoring_v3 import Aggregation as gAggregation
 from google.cloud.monitoring_v3.types import TimeSeries
@@ -74,9 +72,6 @@ class ClientProtocol(Protocol):
     def list_costs(self, tableid: str) -> tuple[Schema, Pages]:
         ...
 
-    def health_info(self) -> Mapping[str, Any]:
-        ...
-
 
 @dataclass(unsafe_hash=True)
 class Client:
@@ -108,7 +103,7 @@ class Client:
 
     def list_costs(self, tableid: str) -> tuple[Schema, Pages]:
         prev_month = self.date.replace(day=1) - datetime.timedelta(days=1)
-        query = f'SELECT PROJECT.name, PROJECT.id, SUM(cost) AS cost, currency, invoice.month FROM `{tableid}`, UNNEST(credits) as c WHERE DATE(_PARTITIONTIME) >= "{prev_month.strftime("%Y-%m-01")}" AND c.type != "SUSTAINED_USAGE_DISCOUNT" GROUP BY PROJECT.name, currency, invoice.month'
+        query = f'SELECT PROJECT.name, PROJECT.id, SUM(cost) AS cost, currency, invoice.month FROM `{tableid}`, UNNEST(credits) as c WHERE DATE(_PARTITIONTIME) >= "{prev_month.strftime("%Y-%m-01")}" AND c.type != "SUSTAINED_USAGE_DISCOUNT" GROUP BY PROJECT.name, PROJECT.id, currency, invoice.month'
         body = {"query": query, "useLegacySql": False}
         request: HttpRequest = self.bigquery().query(projectId=self.project, body=body)
         response = request.execute()
@@ -133,12 +128,6 @@ class Client:
                 pages.append(response["rows"])
 
         return schema, pages
-
-    def health_info(self) -> Mapping[str, Any]:
-        resp = requests.get("https://status.cloud.google.com/incidents.json")
-        if resp.status_code == 200:
-            return resp.json()
-        return {}
 
 
 @dataclass(frozen=True)
@@ -190,6 +179,12 @@ class Service:
 Labels = Mapping[str, str]
 
 
+@dataclass(frozen=True)
+class HostLabelSection:
+    labels: Labels
+    name: str = "labels"
+
+
 class PiggyBackService:
     """
     How are piggy back hosts determined?
@@ -214,7 +209,7 @@ class PiggyBackService:
         metric_label: str,
         # used to determine host name from asset information. Does not need to equal asset_label
         name_label: str,
-        labeler: Callable[[Asset], Labels],
+        labeler: Callable[[Asset], HostLabelSection],
         services: Sequence[Service],
     ):
         self.name = name
@@ -253,7 +248,6 @@ class Result:
 class AssetSection:
     name: str
     assets: Sequence[Asset]
-    project: str
     config: Sequence[str]
 
 
@@ -267,13 +261,14 @@ class ResultSection:
 class PiggyBackSection:
     name: str
     service_name: str
-    labels: Labels
+    labels: HostLabelSection
     sections: Iterator[ResultSection]
 
 
 @dataclass(frozen=True)
 class CostRow:
     project: str
+    id: str
     month: str
     amount: float
     currency: str
@@ -283,6 +278,7 @@ class CostRow:
         return json.dumps(
             {
                 "project": row.project,
+                "id": row.id,
                 "month": row.month,
                 "amount": row.amount,
                 "currency": row.currency,
@@ -295,18 +291,6 @@ class CostSection:
     rows: Sequence[CostRow]
     query_date: datetime.date
     name: str = "cost"
-
-
-@dataclass(frozen=True)
-class HealthSection:
-    date: datetime.date
-    # I do not want to make an explicit type for the incident schema
-    # https://status.cloud.google.com/incidents.schema.json
-    health_info: Mapping[str, Any]
-    name: str = "health"
-
-    def serialize(self) -> str:
-        return json.dumps(self.health_info)
 
 
 @dataclass(frozen=True)
@@ -324,7 +308,12 @@ class ExceptionSection:
 
 
 Section = (
-    AssetSection | ResultSection | PiggyBackSection | CostSection | HealthSection | ExceptionSection
+    AssetSection
+    | ResultSection
+    | PiggyBackSection
+    | CostSection
+    | ExceptionSection
+    | HostLabelSection
 )
 
 #################
@@ -334,7 +323,7 @@ Section = (
 
 def _asset_serializer(section: AssetSection) -> None:
     with SectionWriter("gcp_assets") as w:
-        w.append(json.dumps(dict(project=section.project, config=section.config)))
+        w.append(json.dumps({"config": section.config}))
         for a in section.assets:
             w.append(Asset.serialize(a))
 
@@ -347,8 +336,7 @@ def _result_serializer(section: ResultSection) -> None:
 
 def _piggyback_serializer(section: PiggyBackSection) -> None:
     with ConditionalPiggybackSection(section.name):
-        with SectionWriter("labels") as w:
-            w.append(json.dumps(section.labels))
+        _label_serializer(section.labels)
         for s in section.sections:
             new_s = ResultSection(f"{section.service_name}_{s.name}", s.results)
             _result_serializer(new_s)
@@ -361,16 +349,15 @@ def _cost_serializer(section: CostSection) -> None:
             w.append(CostRow.serialize(row))
 
 
-def _health_serializer(section: HealthSection) -> None:
-    with SectionWriter("gcp_health") as w:
-        w.append(json.dumps({"date": section.date.isoformat()}))
-        w.append(section.serialize())
-
-
 def _exception_serializer(section: ExceptionSection) -> None:
     with SectionWriter("gcp_exceptions") as w:
         if section.exc_type is not None:
             w.append(section.serialize())
+
+
+def _label_serializer(section: HostLabelSection) -> None:
+    with SectionWriter("labels") as w:
+        w.append(json.dumps(section.labels))
 
 
 def gcp_serializer(sections: Iterable[Section]) -> None:
@@ -383,12 +370,12 @@ def gcp_serializer(sections: Iterable[Section]) -> None:
             _piggyback_serializer(section)
         elif isinstance(section, CostSection):
             _cost_serializer(section)
-        elif isinstance(section, HealthSection):
-            _health_serializer(section)
         elif isinstance(section, ExceptionSection):
             _exception_serializer(section)
+        elif isinstance(section, HostLabelSection):
+            _label_serializer(section)
         else:
-            typing_extensions.assert_never(section)
+            assert_never(section)
 
 
 ###########
@@ -460,7 +447,7 @@ def gather_assets(client: ClientProtocol) -> Sequence[Asset]:
 
 
 def run_assets(client: ClientProtocol, config: Sequence[str]) -> AssetSection:
-    return AssetSection("asset", gather_assets(client), client.project, config)
+    return AssetSection("asset", gather_assets(client), config)
 
 
 ##############
@@ -479,7 +466,9 @@ def piggy_back(
         yield PiggyBackSection(
             name=name,
             service_name=service.name,
-            labels=service.labeler(host) | {"cmk/gcp/projectId": client.project},
+            labels=HostLabelSection(
+                labels=service.labeler(host).labels | {"cmk/gcp/projectId": client.project}
+            ),
             sections=sections,
         )
 
@@ -505,7 +494,7 @@ class CostArgument:
 def gather_costs(client: ClientProtocol, cost: CostArgument) -> Sequence[CostRow]:
     schema, pages = client.list_costs(tableid=cost.tableid)
     columns = {el["name"]: i for i, el in enumerate(schema)}
-    assert set(columns.keys()) == {"name", "cost", "currency", "month"}
+    assert set(columns.keys()) == {"name", "id", "cost", "currency", "month"}
     cost_rows: list[CostRow] = []
     for page in pages:
         for row in page:
@@ -513,6 +502,7 @@ def gather_costs(client: ClientProtocol, cost: CostArgument) -> Sequence[CostRow
             cost_rows.append(
                 CostRow(
                     project=data[columns["name"]]["v"],
+                    id=data[columns["id"]]["v"],
                     month=data[columns["month"]]["v"],
                     amount=float(data[columns["cost"]]["v"]),
                     currency=data[columns["currency"]]["v"],
@@ -527,15 +517,6 @@ def run_cost(client: ClientProtocol, cost: CostArgument | None) -> Iterable[Cost
     yield CostSection(rows=gather_costs(client, cost), query_date=client.date)
 
 
-##################
-# Service Health #
-##################
-
-
-def run_health(client: ClientProtocol) -> Iterable[HealthSection]:
-    yield HealthSection(date=client.date, health_info=client.health_info())
-
-
 #################
 # Orchestration #
 #################
@@ -547,15 +528,15 @@ def run(
     piggy_back_services: Sequence[PiggyBackService],
     serializer: Callable[[Iterable[Section] | Iterable[PiggyBackSection]], None],
     cost: CostArgument | None,
-    monitor_health: bool,
     piggy_back_prefix: str,
 ) -> None:
+    serializer([HostLabelSection(labels={"cmk/gcp/projectId": client.project})])
     try:
         assets = run_assets(
             client, [s.name for s in services] + [s.name for s in piggy_back_services]
         )
         serializer([assets])
-    except PermissionDenied:
+    except (PermissionDenied, Unauthenticated):
         exc_type, exception, traceback = sys.exc_info()
         serializer([ExceptionSection(exc_type, exception, traceback, source="Cloud Asset")])
         return
@@ -563,7 +544,7 @@ def run(
     try:
         serializer(run_metrics(client, services))
         serializer(run_piggy_back(client, piggy_back_services, assets.assets, piggy_back_prefix))
-    except PermissionDenied:
+    except (PermissionDenied, Unauthenticated):
         exc_type, exception, traceback = sys.exc_info()
         serializer([ExceptionSection(exc_type, exception, traceback, source="Monitoring")])
         return
@@ -574,9 +555,6 @@ def run(
         exc_type, exception, traceback = sys.exc_info()
         serializer([ExceptionSection(exc_type, exception, traceback, source="BigQuery")])
         return
-
-    if monitor_health:
-        serializer(run_health(client))
 
     serializer([ExceptionSection(None, None, None)])
 
@@ -1065,14 +1043,18 @@ HTTP_LOADBALANCER = Service(
 )
 
 
-def default_labeler(asset: Asset) -> Labels:
+def default_labeler(asset: Asset) -> HostLabelSection:
     if "labels" in asset.asset.resource.data:
-        return {f"cmk/gcp/labels/{k}": v for k, v in asset.asset.resource.data["labels"].items()}
-    return {}
+        return HostLabelSection(
+            labels={
+                f"cmk/gcp/labels/{k}": v for k, v in asset.asset.resource.data["labels"].items()
+            }
+        )
+    return HostLabelSection(labels={})
 
 
-def gce_labeler(asset: Asset) -> Labels:
-    return {**default_labeler(asset), "cmk/gcp/gce": "instance"}
+def gce_labeler(asset: Asset) -> HostLabelSection:
+    return HostLabelSection(labels={**default_labeler(asset).labels, "cmk/gcp/gce": "instance"})
 
 
 GCE = PiggyBackService(
@@ -1188,13 +1170,8 @@ def parse_arguments(argv: Sequence[str] | None) -> Args:
         help=f"implemented services: {','.join(list(SERVICES))}",
         choices=list(SERVICES) + list(PIGGY_BACK_SERVICES),
         required=False,
+        default=[],
     )
-    parser.add_argument(
-        "--monitor_health",
-        action="store_true",
-        help="Monitor GCP Health",
-    )
-
     parser.add_argument(
         "--piggy-back-prefix",
         type=str,
@@ -1209,7 +1186,6 @@ def agent_gcp_main(args: Args) -> int:
     services = [SERVICES[s] for s in args.services if s in SERVICES]
     piggies = [PIGGY_BACK_SERVICES[s] for s in args.services if s in PIGGY_BACK_SERVICES]
     cost = CostArgument(args.cost_table) if args.cost_table else None
-    monitor_health = args.monitor_health
     piggy_back_prefix = args.piggy_back_prefix
     run(
         client,
@@ -1217,7 +1193,6 @@ def agent_gcp_main(args: Args) -> int:
         piggies,
         serializer=gcp_serializer,
         cost=cost,
-        monitor_health=monitor_health,
         piggy_back_prefix=piggy_back_prefix,
     )
     return 0

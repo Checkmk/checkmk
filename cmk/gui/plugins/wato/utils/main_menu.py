@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -17,7 +17,7 @@ from cmk.gui.watolib.main_menu import (
 
 
 class MainMenu:
-    def __init__(self, items=None, columns=2) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, items=None, columns=2) -> None:  # type: ignore[no-untyped-def]
         self._items = items or []
         self._columns = columns
 
@@ -44,8 +44,8 @@ class WatoModule(MenuItem):
 
 
 def register_modules(*args):
-    """Register one or more top level modules to Check_MK WATO.
-    The registered modules are displayed in the navigation of WATO."""
+    """Register one or more top level modules to Checkmk Setup.
+    The registered modules are displayed in the navigation of Setup."""
     for wato_module in args:
         assert isinstance(wato_module, WatoModule)
 
@@ -83,7 +83,7 @@ def get_modules() -> list[ABCMainModule]:
 #   |                              |_|                                     |
 #   +----------------------------------------------------------------------+
 #   | Register the builtin topics. These are the ones that may be          |
-#   | referenced by different WATO plugins. Additional individual plugins  |
+#   | referenced by different Setup plugins. Additional individual plugins  |
 #   | are allowed to create their own topics.                              |
 #   '----------------------------------------------------------------------'
 # .

@@ -1,28 +1,22 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 # No stub file
 from tests.testlib.base import Scenario
 
-from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    HostName,
-    LegacyCheckParameters,
-    RuleSetName,
-    ServiceID,
-)
+from cmk.utils.tags import TagGroupID, TagID
+from cmk.utils.type_defs import HostName, LegacyCheckParameters, RuleSetName
 
-from cmk.checkers.check_table import ConfiguredService, FilterMode, HostCheckTable
-from cmk.checkers.discovery import AutocheckEntry
+from cmk.checkengine.check_table import ConfiguredService, FilterMode, HostCheckTable, ServiceID
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.discovery import AutocheckEntry
+from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 
 import cmk.base.api.agent_based.register as agent_based_register
 from cmk.base import config
@@ -35,35 +29,34 @@ def _use_fix_register(fix_register):
 
 
 def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
-
     node = HostName("node")
     cluster = HostName("cluster")
 
     service_id = ServiceID(CheckPluginName("smart_temp"), "auto-clustered")
 
     ts = Scenario()
-    ts.add_host("node")
-    ts.add_cluster("cluster", nodes=["node"])
+    ts.add_host(node)
+    ts.add_cluster(cluster, nodes=[node])
     ts.set_ruleset(
         "clustered_services",
         [
             {
                 "condition": {
                     "service_description": [{"$regex": "Temperature SMART auto-clustered$"}],
-                    "host_name": ["node"],
+                    "host_name": [node],
                 },
                 "value": True,
             }
         ],
     )
-    ts.set_autochecks("node", [AutocheckEntry(*service_id, {}, {})])
+    ts.set_autochecks(node, [AutocheckEntry(*service_id, {}, {})])
     config_cache = ts.apply(monkeypatch)
 
     # a rule for the node:
     monkeypatch.setattr(
         config,
         "_get_configured_parameters",
-        lambda host, plugin, item: (
+        lambda host, *args, **kw: (
             TimespecificParameters(
                 (TimespecificParameterSet.from_parameters({"levels_for_node": (1, 2)}),)
             )
@@ -76,6 +69,77 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
     assert clustered_service.parameters.entries == (
         TimespecificParameterSet.from_parameters({"levels": (35, 40)}),
     )
+
+
+def test_check_table_enforced_vs_discovered_precedence(monkeypatch):
+    smart = CheckPluginName("smart_temp")
+    node = HostName("node")
+    cluster = HostName("cluster")
+
+    ts = Scenario()
+    ts.add_host(node)
+    ts.add_cluster(cluster, nodes=[node])
+    ts.set_autochecks(
+        node,
+        [
+            AutocheckEntry(smart, "cluster-item", {"source": "autochecks"}, {}),
+            AutocheckEntry(smart, "cluster-item-overridden", {"source": "autochecks"}, {}),
+            AutocheckEntry(smart, "node-item", {"source": "autochecks"}, {}),
+        ],
+    )
+    ts.set_option(
+        "static_checks",
+        {
+            "temperature": [
+                {
+                    "value": ("smart_temp", "cluster-item", {"source": "enforced-on-node"}),
+                    "condition": {"host_name": [node]},
+                },
+                {
+                    "value": ("smart_temp", "node-item", {"source": "enforced-on-node"}),
+                    "condition": {"host_name": [node]},
+                },
+                {
+                    "value": (
+                        "smart_temp",
+                        "cluster-item-overridden",
+                        {"source": "enforced-on-cluster"},
+                    ),
+                    "condition": {"host_name": [cluster]},
+                },
+            ]
+        },
+    )
+    ts.set_ruleset(
+        "clustered_services",
+        [
+            {
+                "condition": {
+                    "service_description": [{"$regex": "Temperature SMART cluster"}],
+                    "host_name": [node],
+                },
+                "value": True,
+            }
+        ],
+    )
+    config_cache = ts.apply(monkeypatch)
+
+    node_services = config_cache.check_table(node)
+    cluster_services = config_cache.check_table(cluster)
+
+    assert len(node_services) == 1
+    assert len(cluster_services) == 2
+
+    def _source_of_item(table: HostCheckTable, item: str) -> str:
+        timespecific_params = table[ServiceID(smart, item)].parameters
+        p = timespecific_params.evaluate(lambda _: True)
+        assert p is not None
+        assert not isinstance(p, (tuple, list, str, int))
+        return p["source"]
+
+    assert _source_of_item(node_services, "node-item") == "enforced-on-node"
+    assert _source_of_item(cluster_services, "cluster-item") == "enforced-on-node"
+    assert _source_of_item(cluster_services, "cluster-item-overridden") == "enforced-on-cluster"
 
 
 # TODO: This misses a lot of cases
@@ -102,44 +166,7 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
                     ),
                     discovered_parameters={},
                     service_labels={},
-                ),
-            },
-        ),
-        # Static checks overwrite the autocheck definitions
-        (
-            "autocheck-overwrite",
-            FilterMode.NONE,
-            {
-                (CheckPluginName("smart_temp"), "/dev/sda"): ConfiguredService(
-                    check_plugin_name=CheckPluginName("smart_temp"),
-                    item="/dev/sda",
-                    description="Temperature SMART /dev/sda",
-                    parameters=TimespecificParameters(
-                        (
-                            TimespecificParameterSet({}, ()),
-                            TimespecificParameterSet({"levels": (35, 40)}, ()),
-                        )
-                    ),
-                    discovered_parameters={},
-                    service_labels={},
-                ),
-                (CheckPluginName("smart_temp"), "/dev/sdb"): ConfiguredService(
-                    check_plugin_name=CheckPluginName("smart_temp"),
-                    item="/dev/sdb",
-                    description="Temperature SMART /dev/sdb",
-                    parameters=TimespecificParameters(
-                        (
-                            TimespecificParameterSet(
-                                {
-                                    "levels": (35, 40),
-                                    "is_autocheck": True,
-                                },
-                                (),
-                            ),
-                        )
-                    ),
-                    discovered_parameters={"is_autocheck": True},
-                    service_labels={},
+                    is_enforced=True,
                 ),
             },
         ),
@@ -154,6 +181,7 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
                     parameters=TimespecificParameters(()),
                     discovered_parameters={},
                     service_labels={},
+                    is_enforced=False,
                 ),
                 (CheckPluginName("blub_bla"), "ITEM"): ConfiguredService(
                     check_plugin_name=CheckPluginName("blub_bla"),
@@ -162,6 +190,7 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
                     parameters=TimespecificParameters(),
                     discovered_parameters={},
                     service_labels={},
+                    is_enforced=True,
                 ),
             },
         ),
@@ -181,26 +210,8 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
                     ),
                     discovered_parameters={},
                     service_labels={},
+                    is_enforced=True,
                 ),
-            },
-        ),
-        (
-            "static-check-overwrite",
-            FilterMode.NONE,
-            {
-                (CheckPluginName("smart_temp"), "/dev/sda"): ConfiguredService(
-                    check_plugin_name=CheckPluginName("smart_temp"),
-                    item="/dev/sda",
-                    description="Temperature SMART /dev/sda",
-                    parameters=TimespecificParameters(
-                        (
-                            TimespecificParameterSet({"rule": 1}, ()),
-                            TimespecificParameterSet({"levels": (35, 40)}, ()),
-                        )
-                    ),
-                    discovered_parameters={},
-                    service_labels={},
-                )
             },
         ),
         (
@@ -216,6 +227,7 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
                     ),
                     discovered_parameters={},
                     service_labels={},
+                    is_enforced=False,
                 ),
                 (CheckPluginName("smart_temp"), "static-node1"): ConfiguredService(
                     check_plugin_name=CheckPluginName("smart_temp"),
@@ -229,6 +241,7 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
                     ),
                     discovered_parameters={},
                     service_labels={},
+                    is_enforced=True,
                 ),
             },
         ),
@@ -248,6 +261,7 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
                     ),
                     discovered_parameters={},
                     service_labels={},
+                    is_enforced=True,
                 ),
                 (CheckPluginName("smart_temp"), "auto-clustered"): ConfiguredService(
                     check_plugin_name=CheckPluginName("smart_temp"),
@@ -258,6 +272,7 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
                     ),
                     discovered_parameters={},
                     service_labels={},
+                    is_enforced=False,
                 ),
             },
         ),
@@ -274,6 +289,7 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
                     ),
                     discovered_parameters={},
                     service_labels={},
+                    is_enforced=False,
                 )
             },
         ),
@@ -290,6 +306,7 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
                     ),
                     discovered_parameters={},
                     service_labels={},
+                    is_enforced=False,
                 )
             },
         ),
@@ -306,8 +323,14 @@ def test_cluster_ignores_nodes_parameters(monkeypatch: MonkeyPatch) -> None:
                     ),
                     discovered_parameters={},
                     service_labels={},
+                    is_enforced=False,
                 )
             },
+        ),
+        (
+            "node4",
+            FilterMode.INCLUDE_CLUSTERED,
+            {},
         ),
     ],
 )
@@ -320,13 +343,16 @@ def test_check_table(
     hostname = HostName(hostname_str)
 
     ts = Scenario()
-    ts.add_host(hostname, tags={"criticality": "test"})
-    ts.add_host("ping-host", tags={"agent": "no-agent"})
-    ts.add_host("node1")
-    ts.add_cluster("cluster1", nodes=["node1"])
-    ts.add_host("node2")
-    ts.add_host("node3")
-    ts.add_cluster("cluster2", nodes=["node2", "node3"])
+    ts.add_host(hostname, tags={TagGroupID("criticality"): TagID("test")})
+    ts.add_host(HostName("ping-host"), tags={TagGroupID("agent"): TagID("no-agent")})
+    ts.add_host(HostName("node1"))
+    ts.add_cluster(HostName("cluster1"), nodes=[HostName("node1")])
+    ts.add_host(HostName("node2"))
+    ts.add_host(HostName("node3"))
+    ts.add_host(HostName("node4"))
+    ts.add_cluster(
+        HostName("cluster2"), nodes=[HostName("node2"), HostName("node3"), HostName("node4")]
+    )
     ts.set_option(
         "static_checks",
         {
@@ -373,40 +399,44 @@ def test_check_table(
             {
                 "condition": {
                     "service_description": [{"$regex": "Temperature SMART auto-clustered$"}],
-                    "host_name": ["node1", "node2", "node3"],
+                    "host_name": [
+                        HostName("node1"),
+                        HostName("node2"),
+                        HostName("node3"),
+                    ],  # no node4 here!
                 },
                 "value": True,
             }
         ],
     )
     ts.set_autochecks(
-        "ping-host",
+        HostName("ping-host"),
         [
             AutocheckEntry(CheckPluginName("smart_temp"), "bla", {}, {}),
         ],
     )
     ts.set_autochecks(
-        "autocheck-overwrite",
+        HostName("autocheck-overwrite"),
         [
             AutocheckEntry(CheckPluginName("smart_temp"), "/dev/sda", {"is_autocheck": True}, {}),
             AutocheckEntry(CheckPluginName("smart_temp"), "/dev/sdb", {"is_autocheck": True}, {}),
         ],
     )
     ts.set_autochecks(
-        "ignore-not-existing-checks",
+        HostName("ignore-not-existing-checks"),
         [
             AutocheckEntry(CheckPluginName("bla_blub"), "ITEM", {}, {}),
         ],
     )
     ts.set_autochecks(
-        "node1",
+        HostName("node1"),
         [
             AutocheckEntry(CheckPluginName("smart_temp"), "auto-clustered", {}, {}),
             AutocheckEntry(CheckPluginName("smart_temp"), "auto-not-clustered", {}, {}),
         ],
     )
     ts.set_autochecks(
-        "node2",
+        HostName("node2"),
         [
             AutocheckEntry(CheckPluginName("smart_temp"), "auto-clustered", {}, {}),
         ],
@@ -434,37 +464,37 @@ def test_check_table_of_mgmt_boards(
 
     ts = Scenario()
     ts.add_host(
-        "mgmt-board-ipmi",
+        HostName("mgmt-board-ipmi"),
         tags={
-            "piggyback": "auto-piggyback",
-            "networking": "lan",
-            "address_family": "no-ip",
-            "criticality": "prod",
-            "snmp_ds": "no-snmp",
-            "site": "heute",
-            "agent": "no-agent",
+            TagGroupID("piggyback"): TagID("auto-piggyback"),
+            TagGroupID("networking"): TagID("lan"),
+            TagGroupID("address_family"): TagID("no-ip"),
+            TagGroupID("criticality"): TagID("prod"),
+            TagGroupID("snmp_ds"): TagID("no-snmp"),
+            TagGroupID("site"): TagID("heute"),
+            TagGroupID("agent"): TagID("no-agent"),
         },
     )
     ts.add_host(
-        "ipmi-host",
+        HostName("ipmi-host"),
         tags={
-            "piggyback": "auto-piggyback",
-            "networking": "lan",
-            "agent": "cmk-agent",
-            "criticality": "prod",
-            "snmp_ds": "no-snmp",
-            "site": "heute",
-            "address_family": "ip-v4-only",
+            TagGroupID("piggyback"): TagID("auto-piggyback"),
+            TagGroupID("networking"): TagID("lan"),
+            TagGroupID("agent"): TagID("cmk-agent"),
+            TagGroupID("criticality"): TagID("prod"),
+            TagGroupID("snmp_ds"): TagID("no-snmp"),
+            TagGroupID("site"): TagID("heute"),
+            TagGroupID("address_family"): TagID("ip-v4-only"),
         },
     )
     ts.set_option("management_protocol", {"mgmt-board-ipmi": "ipmi"})
 
     ts.set_autochecks(
-        "mgmt-board-ipmi",
+        HostName("mgmt-board-ipmi"),
         [AutocheckEntry(CheckPluginName("mgmt_ipmi_sensors"), "TEMP X", {}, {})],
     )
     ts.set_autochecks(
-        "ipmi-host",
+        HostName("ipmi-host"),
         [AutocheckEntry(CheckPluginName("ipmi_sensors"), "TEMP Y", {}, {})],
     )
 
@@ -492,7 +522,7 @@ def test_check_table__static_checks_win(monkeypatch: MonkeyPatch) -> None:
             ],
         },
     )
-    ts.set_autochecks(hostname_str, [AutocheckEntry(plugin_name, item, {"source": "auto"}, {})])
+    ts.set_autochecks(hostname, [AutocheckEntry(plugin_name, item, {"source": "auto"}, {})])
 
     chk_table = ts.apply(monkeypatch).check_table(hostname)
 

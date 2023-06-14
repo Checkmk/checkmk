@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,13 +12,14 @@ import pytest
 import cmk.utils.paths
 
 import cmk.ec.export as ec
-from cmk.ec.config import Config, ConfigFromWATO
+from cmk.ec.config import Config
 from cmk.ec.history import History
 from cmk.ec.main import (
     default_slave_status_master,
     ECLock,
     EventServer,
     EventStatus,
+    make_config,
     Perfcounters,
     SlaveStatus,
     StatusServer,
@@ -49,8 +50,8 @@ def fixture_slave_status() -> SlaveStatus:
 
 
 @pytest.fixture(name="config")
-def fixture_config() -> ConfigFromWATO:
-    return ec.default_config()
+def fixture_config() -> Config:
+    return make_config(ec.default_config())
 
 
 @pytest.fixture(name="history")

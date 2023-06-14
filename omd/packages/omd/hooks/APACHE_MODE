@@ -23,12 +23,4 @@ case "$1" in
             echo "own: Run an own webserver process for this instance"
             echo "none: Do not run or configure a webserver"
     ;;
-    set)
-        # Since werk #14281 these files are not used anymore. Better remove them to
-        # not confuse users. Can be removed with 2.3.
-        if [ -L "$OMD_ROOT/etc/apache/mode.conf" ]; then
-            rm "$OMD_ROOT/etc/apache/mode.conf"
-        fi
-    ;;
 esac
-

@@ -6,7 +6,7 @@ Date: 1658254373
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The plugin "NetApp Filer: Used Space of LUNs" (<tt>netapp_api_luns</tt>) now supports the configuration of the magic factor in its ruleset <i>"NetApp LUNs"</i>.
 

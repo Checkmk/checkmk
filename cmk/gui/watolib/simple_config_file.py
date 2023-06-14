@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -38,9 +38,11 @@ class WatoConfigFile(abc.ABC, Generic[_G]):
             lock=lock,
         )
 
-    def save(self, cfg: _G) -> None:
+    def save(self, cfg: _G, pretty: bool) -> None:
         self._config_file_path.parent.mkdir(mode=0o770, exist_ok=True, parents=True)
-        store.save_to_mk_file(str(self._config_file_path), self._config_variable, cfg)
+        store.save_to_mk_file(
+            str(self._config_file_path), self._config_variable, cfg, pprint_value=pretty
+        )
 
 
 class WatoSingleConfigFile(WatoConfigFile[_T], Generic[_T]):

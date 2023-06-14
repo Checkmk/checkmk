@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -110,7 +110,6 @@ def check_oracle_performance(  # pylint: disable=too-many-branches
     # PDB is <SID>.<PDB>
     # ignore more perf-data for PDBs except CDBROOT!
     if "." in item and ".CDB$ROOT" not in item:
-
         # PDB does not support more performance data at the moment...
         infotexts.append("limited performance data for PDBSEED and non CDBROOT")
         yield Result(state=State.OK, summary=", ".join(infotexts))
@@ -284,7 +283,7 @@ register.check_plugin(
 #
 
 
-def _check_oracle_memory_info(  # type:ignore[no-untyped-def]
+def _check_oracle_memory_info(  # type: ignore[no-untyped-def]
     data, params, sticky_fields: Sequence[str], fields
 ) -> CheckResult:
     for ga_field in fields:
@@ -338,7 +337,7 @@ register.check_plugin(
 #
 
 
-def _check_oracle_performance_iostat_file(  # type:ignore[no-untyped-def]
+def _check_oracle_performance_iostat_file(  # type: ignore[no-untyped-def]
     value_store: MutableMapping[str, Any],
     now: float,
     item: str,

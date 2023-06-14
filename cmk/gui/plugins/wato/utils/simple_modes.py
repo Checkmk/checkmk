@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """These modes implement a complete set of modes for managing a set of standard objects
@@ -21,6 +21,7 @@ from livestatus import SiteId
 import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.breadcrumb import Breadcrumb
+from cmk.gui.config import active_config
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -36,7 +37,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
-from cmk.gui.plugins.watolib.utils import ABCConfigDomain
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.flashed_messages import flash
@@ -54,6 +54,7 @@ from cmk.gui.valuespec import (
     SetupSiteChoice,
     TextInput,
 )
+from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.hosts_and_folders import make_action_link
 from cmk.gui.watolib.simple_config_file import WatoSimpleConfigFile
 
@@ -95,15 +96,15 @@ class SimpleModeType(Generic[_T], abc.ABC):
         raise NotImplementedError()
 
     def mode_ident(self) -> str:
-        """A GUI wide unique identifier which is used to create the WATO mode identifiers"""
+        """A GUI wide unique identifier which is used to create the Setup mode identifiers"""
         return self.type_name()
 
     def list_mode_name(self) -> str:
-        """The mode name of the WATO list mode of this object type"""
+        """The mode name of the Setup list mode of this object type"""
         return "%ss" % self.mode_ident()
 
     def edit_mode_name(self) -> str:
-        """The mode name of the WATO edit mode of this object type"""
+        """The mode name of the Setup edit mode of this object type"""
         return "edit_%s" % self.mode_ident()
 
     def affected_sites(self, entry: _T) -> list[SiteId] | None:
@@ -122,7 +123,7 @@ class SimpleModeType(Generic[_T], abc.ABC):
 
 
 class _SimpleWatoModeBase(Generic[_T], WatoMode, abc.ABC):
-    """Base for specific WATO modes of different types
+    """Base for specific Setup modes of different types
 
     This is essentially a base class for the SimpleListMode/SimpleEditMode
     classes. It should not be used directly by specific mode classes.
@@ -145,7 +146,7 @@ class _SimpleWatoModeBase(Generic[_T], WatoMode, abc.ABC):
         text: str,
         affected_sites: list[SiteId] | None,
     ) -> None:
-        """Add a WATO change entry for this object type modifications"""
+        """Add a Setup change entry for this object type modifications"""
         _changes.add_change(
             f"{action}-{self._mode_type.type_name()}",
             text,
@@ -249,7 +250,7 @@ class SimpleListMode(_SimpleWatoModeBase[_T]):
             text=_("Removed the %s '%s'") % (self._mode_type.name_singular(), ident),
             affected_sites=self._mode_type.affected_sites(entry),
         )
-        self._store.save(entries)
+        self._store.save(entries, pretty=active_config.wato_pprint_config)
 
         flash(_("The %s has been deleted.") % self._mode_type.name_singular())
         return redirect(mode_url(self._mode_type.list_mode_name()))
@@ -364,7 +365,7 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
 
     def title(self) -> str:
         if self._new:
-            return _("New %s") % self._mode_type.name_singular()
+            return _("Add %s") % self._mode_type.name_singular()
         return _("Edit %s: %s") % (self._mode_type.name_singular(), self._entry["title"])
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -400,8 +401,8 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
                     ID(
                         title=_("Unique ID"),
                         help=_(
-                            "The ID must be a unique text. It will be used as an internal key "
-                            "when objects refer to this object."
+                            "The ID must be unique. It acts as internal key "
+                            "when objects reference it."
                         ),
                         default_value=self._default_id,
                         allow_empty=False,
@@ -433,7 +434,10 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
                     "disabled",
                     Checkbox(
                         title=_("Activation"),
-                        help=_("Disabled %s are kept in the configuration but are not active.")
+                        help=_(
+                            "Selecting this option will disable the %s, but "
+                            "it will remain in the configuration."
+                        )
                         % self._mode_type.name_singular(),
                         label=_("do not activate this %s") % self._mode_type.name_singular(),
                     ),
@@ -449,7 +453,7 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
                     "title",
                     TextInput(
                         title=_("Title"),
-                        help=_("The title of the %s. It will be used as display name.")
+                        help=_("Name your %s for easy recognition.")
                         % (self._mode_type.name_singular()),
                         allow_empty=False,
                         size=80,
@@ -527,7 +531,7 @@ class SimpleEditMode(_SimpleWatoModeBase, abc.ABC):
         return redirect(mode_url(self._mode_type.list_mode_name()))
 
     def _save(self, entries: dict[str, _T]) -> None:
-        self._store.save(entries)
+        self._store.save(entries, active_config.wato_pprint_config)
 
     def page(self) -> None:
         html.begin_form("edit", method="POST")

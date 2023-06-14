@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,8 +11,9 @@ import pytest
 from pytest_mock import MockerFixture
 
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
-from cmk.utils.type_defs import CheckPluginName
 from cmk.utils.version import is_raw_edition
+
+from cmk.checkengine.checking import CheckPluginName
 
 import cmk.gui.watolib.timeperiods as timeperiods
 from cmk.gui.valuespec import Dictionary, Float, Migrate
@@ -56,10 +57,12 @@ def fixture_rulespec_with_migration() -> Rulespec:
         item_help=None,
         is_optional=False,
         is_deprecated=False,
+        is_cloud_edition_only=False,
         is_for_services=False,
         is_binary_ruleset=False,
         factory_default={"key": 0},
         help_func=None,
+        doc_references=None,
     )
 
 
@@ -85,10 +88,12 @@ def fixture_replaced_rulespec() -> Rulespec:
         item_help=None,
         is_optional=False,
         is_deprecated=False,
+        is_cloud_edition_only=False,
         is_for_services=False,
         is_binary_ruleset=False,
         factory_default={"key": 0},
         help_func=None,
+        doc_references=None,
     )
 
 
@@ -98,9 +103,9 @@ def _instantiate_ruleset(
     rulespec: Rulespec | None = None,
 ) -> Ruleset:
     ruleset = Ruleset(ruleset_name, {}, rulespec=rulespec)
-    rule = Rule.from_ruleset_defaults(Folder(""), ruleset)
+    rule = Rule.from_ruleset_defaults(Folder(name=""), ruleset)
     rule.value = param_value
-    ruleset.append_rule(Folder(""), rule)
+    ruleset.append_rule(Folder(name=""), rule)
     assert ruleset.get_rules()
     return ruleset
 
@@ -187,8 +192,8 @@ def test_transform_replaced_wato_rulesets_and_params(
 @pytest.mark.usefixtures("request_context")
 def test_remove_removed_check_plugins_from_ignored_checks() -> None:
     ruleset = Ruleset("ignored_checks", {})
-    ruleset.from_config(
-        Folder(""),
+    ruleset.replace_folder_config(
+        Folder(name=""),
         [
             {
                 "id": "1",

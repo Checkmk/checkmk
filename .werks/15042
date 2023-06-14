@@ -6,7 +6,7 @@ Date: 1671518376
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When running in the Checkmk Appliance, the command line tool for administrating site backups also
 listed system backups (<tt>mkbackup</tt> executed as a site user). This is no longer the case, since

@@ -1,24 +1,25 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import io
-import json
-import logging
 import stat
 from collections.abc import Mapping
 from pathlib import Path
-from unittest import mock
-from uuid import UUID
+from uuid import uuid4
 from zlib import compress
 
+import httpx
 import pytest
 from agent_receiver import site_context
-from agent_receiver.checkmk_rest_api import CMKEdition, HostConfiguration
-from agent_receiver.models import HostTypeEnum
+from agent_receiver.certs import serialize_to_pem
+from agent_receiver.checkmk_rest_api import CMKEdition, HostConfiguration, RegisterResponse
+from agent_receiver.models import ConnectionMode, R4RStatus, RequestForRegistration
+from agent_receiver.utils import R4R
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
+from pydantic import UUID4
 from pytest_mock import MockerFixture
 
 from tests.testlib.certs import generate_csr_pair
@@ -29,17 +30,94 @@ from cmk.utils.misc import typeshed_issue_7724
 @pytest.fixture(name="symlink_push_host")
 def fixture_symlink_push_host(
     tmp_path: Path,
-    uuid: UUID,
+    uuid: UUID4,
+) -> None:
+    _symlink_push_host(tmp_path, uuid)
+
+
+def _symlink_push_host(
+    tmp_path: Path,
+    uuid: UUID4,
 ) -> None:
     source = site_context.agent_output_dir() / str(uuid)
     (target_dir := tmp_path / "push-agent" / "hostname").mkdir(parents=True)
     source.symlink_to(target_dir)
 
 
+@pytest.fixture(name="serialized_csr")
+def fixture_serialized_csr(uuid: UUID4) -> str:
+    _key, csr = generate_csr_pair(str(uuid), 512)
+    return serialize_to_pem(csr)
+
+
+def test_register_existing_ok(
+    tmp_path: Path,
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID4,
+    serialized_csr: str,
+) -> None:
+    def rest_api_register_mock(*args: object, **kwargs: object) -> RegisterResponse:
+        _symlink_push_host(tmp_path, uuid)
+        return RegisterResponse(connection_mode=ConnectionMode.PULL)
+
+    mocker.patch(
+        "agent_receiver.endpoints.register",
+        rest_api_register_mock,
+    )
+    response = client.post(
+        "/register_existing",
+        auth=("herbert", "joergl"),
+        json={
+            "uuid": str(uuid),
+            "host_name": "myhost",
+            "csr": serialized_csr,
+        },
+    )
+    assert response.status_code == 200
+    assert set(response.json()) == {"root_cert", "agent_cert", "connection_mode"}
+
+
+def test_register_existing_uuid_csr_mismatch(
+    client: TestClient,
+    serialized_csr: str,
+) -> None:
+    response = client.post(
+        "/register_existing",
+        auth=("herbert", "joergl"),
+        json={
+            "uuid": str(uuid4()),
+            "host_name": "myhost",
+            "csr": serialized_csr,
+        },
+    )
+    assert response.status_code == 400
+    assert "does not match" in response.json()["detail"]
+
+
+# this is a regression test for CMK-11202
+def test_register_existing_hostname_invalid(
+    client: TestClient,
+    uuid: UUID4,
+    serialized_csr: str,
+) -> None:
+    response = client.post(
+        "/register_existing",
+        auth=("herbert", "joergl"),
+        json={
+            "uuid": str(uuid),
+            "host_name": "my/../host",
+            "csr": serialized_csr,
+        },
+    )
+    assert response.status_code == 400
+    assert response.json() == {"detail": "Invalid hostname: 'my/../host'"}
+
+
 def test_register_register_with_hostname_host_missing(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
 ) -> None:
     mocker.patch(
         "agent_receiver.endpoints.host_configuration",
@@ -63,7 +141,7 @@ def test_register_register_with_hostname_host_missing(
 def test_register_register_with_hostname_wrong_site(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
 ) -> None:
     mocker.patch(
         "agent_receiver.endpoints.host_configuration",
@@ -89,7 +167,7 @@ def test_register_register_with_hostname_wrong_site(
 def test_register_register_with_hostname_cluster_host(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
 ) -> None:
     mocker.patch(
         "agent_receiver.endpoints.host_configuration",
@@ -113,7 +191,7 @@ def test_register_register_with_hostname_cluster_host(
 def test_register_register_with_hostname_unauthorized(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
 ) -> None:
     mocker.patch(
         "agent_receiver.endpoints.host_configuration",
@@ -141,10 +219,28 @@ def test_register_register_with_hostname_unauthorized(
     assert response.json() == {"detail": "You do not have the permission for agent pairing."}
 
 
-def test_register_register_with_hostname_ok(
+@pytest.mark.parametrize(
+    "hostname,valid",
+    [
+        ("myhost", True),
+        ("test.checkmk.com", True),
+        ("127.0.0.1", True),
+        ("93.184.216.34", True),
+        ("0:0:0:0:0:0:0:1", True),
+        ("2606:2800:220:1:248:1893:25c8:1946", True),
+        ("::", True),
+        ("::1", True),
+        ("", False),
+        ("...", False),
+        ("my/../host", False),  # this is a regression test for CMK-11202
+    ],
+)
+def test_register_register_with_hostname_hostname_validity(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
+    hostname: str,
+    valid: bool,
 ) -> None:
     mocker.patch(
         "agent_receiver.endpoints.host_configuration",
@@ -153,45 +249,30 @@ def test_register_register_with_hostname_ok(
             is_cluster=False,
         ),
     )
-    mocker.patch(
-        "agent_receiver.endpoints.link_host_with_uuid",
-        return_value=None,
-    )
+    mocker.patch("agent_receiver.endpoints.link_host_with_uuid", return_value=None)
+
     response = client.post(
         "/register_with_hostname",
         auth=("herbert", "joergl"),
         json={
             "uuid": str(uuid),
-            "host_name": "myhost",
-        },
-    )
-    assert response.status_code == 204
-    assert not response.text
-
-
-# this is a regression test for CMK-11202
-def test_register_register_with_hostname_invalid(
-    mocker: MockerFixture,
-    client: TestClient,
-    uuid: UUID,
-) -> None:
-    response = client.post(
-        "/register_with_hostname",
-        auth=("herbert", "joergl"),
-        json={
-            "uuid": str(uuid),
-            "host_name": "my/../host",
+            "host_name": hostname,
         },
     )
 
-    assert response.status_code == 400
-    assert response.json() == {"detail": "Invalid hostname: 'my/../host'"}
+    if valid:
+        assert response.status_code == 204
+        assert not response.text
+    else:
+        assert response.status_code == 400
+        assert response.json() == {"detail": f"Invalid hostname: '{hostname}'"}
 
 
-def test_register_with_labels_unauthenticated(
+def test_register_new_unauthenticated(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
+    serialized_csr: str,
 ) -> None:
     mocker.patch(
         "agent_receiver.endpoints.cmk_edition",
@@ -201,51 +282,77 @@ def test_register_with_labels_unauthenticated(
         ),
     )
     response = client.post(
-        "/register_with_labels",
+        "/register_new",
         auth=("herbert", "joergl"),
         json={
             "uuid": str(uuid),
             "agent_labels": {},
+            "csr": serialized_csr,
         },
     )
     assert response.status_code == 401
     assert response.json() == {"detail": "User authentication failed"}
 
 
-def test_register_with_labels_cre(
+def test_register_new_cre(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
+    serialized_csr: str,
 ) -> None:
     mocker.patch(
         "agent_receiver.endpoints.cmk_edition",
         return_value=CMKEdition.cre,
     )
     response = client.post(
-        "/register_with_labels",
+        "/register_new",
         auth=("herbert", "joergl"),
         json={
             "uuid": str(uuid),
             "agent_labels": {"a": "b"},
+            "csr": serialized_csr,
         },
     )
     assert response.status_code == 501
     assert response.json() == {
-        "detail": "The Checkmk Raw edition does not support registration with agent labels"
+        "detail": "The Checkmk Raw edition does not support registration of new hosts"
     }
 
 
-def _test_register_with_labels(
+def test_register_new_uuid_csr_mismatch(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    serialized_csr: str,
 ) -> None:
     mocker.patch(
         "agent_receiver.endpoints.cmk_edition",
         return_value=CMKEdition.cce,
     )
     response = client.post(
-        "/register_with_labels",
+        "/register_new",
+        auth=("herbert", "joergl"),
+        json={
+            "uuid": str(uuid4()),
+            "agent_labels": {},
+            "csr": serialized_csr,
+        },
+    )
+    assert response.status_code == 400
+    assert "does not match" in response.json()["detail"]
+
+
+def _test_register_new(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID4,
+    serialized_csr: str,
+) -> None:
+    mocker.patch(
+        "agent_receiver.endpoints.cmk_edition",
+        return_value=CMKEdition.cce,
+    )
+    response = client.post(
+        "/register_new",
         auth=("monitoring", "supersafe"),
         json={
             "uuid": str(uuid),
@@ -253,52 +360,203 @@ def _test_register_with_labels(
                 "a": "b",
                 "c": "d",
             },
+            "csr": serialized_csr,
         },
     )
-    assert response.status_code == 204
-    assert json.loads((site_context.r4r_dir() / "NEW" / f"{uuid}.json").read_text()) == {
-        "uuid": str(uuid),
-        "username": "monitoring",
-        "agent_labels": {
-            "a": "b",
-            "c": "d",
-        },
+    assert response.status_code == 200
+    assert set(response.json()) == {"root_cert"}
+
+    triggered_r4r = R4R.read(uuid)
+    assert triggered_r4r
+    assert triggered_r4r.status is R4RStatus.NEW
+    assert triggered_r4r.request.uuid == uuid
+    assert triggered_r4r.request.username == "monitoring"
+    assert triggered_r4r.request.agent_labels == {
+        "a": "b",
+        "c": "d",
     }
-    assert (
-        oct(stat.S_IMODE((site_context.r4r_dir() / "NEW" / f"{uuid}.json").stat().st_mode))
-        == "0o660"
-    )
+    assert triggered_r4r.request.agent_cert.startswith("-----BEGIN CERTIFICATE-----")
 
 
-def test_register_with_labels_folder_missing(
+def test_register_new_folder_missing(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
+    serialized_csr: str,
 ) -> None:
     assert not (site_context.r4r_dir() / "NEW").exists()
-    _test_register_with_labels(
+    _test_register_new(
         mocker,
         client,
         uuid,
+        serialized_csr,
     )
     assert oct(stat.S_IMODE((site_context.r4r_dir() / "NEW").stat().st_mode)) == "0o770"
 
 
-def test_register_with_labels_folder_exists(
+def test_register_new_folder_exists(
     mocker: MockerFixture,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
+    serialized_csr: str,
 ) -> None:
     (site_context.r4r_dir() / "NEW").mkdir(parents=True)
-    _test_register_with_labels(
+    _test_register_new(
         mocker,
         client,
         uuid,
+        serialized_csr,
     )
 
 
+def test_register_new_ongoing_cre(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID4,
+) -> None:
+    mocker.patch(
+        "agent_receiver.endpoints.cmk_edition",
+        return_value=CMKEdition.cre,
+    )
+    response = client.post(
+        f"/register_new_ongoing/{uuid}",
+        auth=("herbert", "joergl"),
+    )
+    assert response.status_code == 501
+    assert response.json() == {
+        "detail": "The Checkmk Raw edition does not support registration of new hosts"
+    }
+
+
+def _call_register_new_ongoing_cce(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID4,
+) -> httpx.Response:
+    mocker.patch(
+        "agent_receiver.endpoints.cmk_edition",
+        return_value=CMKEdition.cce,
+    )
+    return client.post(
+        f"/register_new_ongoing/{uuid}",
+        auth=("user", "password"),
+    )
+
+
+def test_register_new_ongoing_not_found(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID4,
+) -> None:
+    R4R(
+        status=R4RStatus.DECLINED,
+        request=RequestForRegistration(
+            uuid=uuid4(),
+            username="user",
+            agent_labels={},
+            agent_cert="cert",
+        ),
+    ).write()
+    response = _call_register_new_ongoing_cce(mocker, client, uuid)
+    assert response.status_code == 404
+    assert response.json() == {"detail": "No registration with this UUID in progress"}
+
+
+def test_register_new_ongoing_username_mismatch(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID4,
+) -> None:
+    R4R(
+        status=R4RStatus.DECLINED,
+        request=RequestForRegistration(
+            uuid=uuid,
+            username="user2",
+            agent_labels={},
+            agent_cert="cert",
+        ),
+    ).write()
+    response = _call_register_new_ongoing_cce(mocker, client, uuid)
+    assert response.status_code == 403
+    assert response.json() == {
+        "detail": "A registration is in progress, but it was triggered by a different user"
+    }
+
+
+@pytest.mark.parametrize(
+    "status",
+    (R4RStatus.NEW, R4RStatus.PENDING),
+)
+def test_register_new_ongoing_in_progress(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID4,
+    status: R4RStatus,
+) -> None:
+    R4R(
+        status=status,
+        request=RequestForRegistration(
+            uuid=uuid,
+            username="user",
+            agent_labels={},
+            agent_cert="cert",
+        ),
+    ).write()
+    response = _call_register_new_ongoing_cce(mocker, client, uuid)
+    assert response.status_code == 200
+    assert response.json() == {"status": "InProgress"}
+
+
+def test_register_new_ongoing_in_declined(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID4,
+) -> None:
+    R4R(
+        status=R4RStatus.DECLINED,
+        request=RequestForRegistration(
+            uuid=uuid,
+            username="user",
+            agent_labels={},
+            agent_cert="cert",
+            state={
+                "type": "FOO",
+                "value": "BAR",
+                "readable": "Registration request declined",
+            },
+        ),
+    ).write()
+    response = _call_register_new_ongoing_cce(mocker, client, uuid)
+    assert response.status_code == 200
+    assert response.json() == {"status": "Declined", "reason": "Registration request declined"}
+
+
+@pytest.mark.usefixtures("symlink_push_host")
+def test_register_new_ongoing_success(
+    mocker: MockerFixture,
+    client: TestClient,
+    uuid: UUID4,
+) -> None:
+    R4R(
+        status=R4RStatus.DISCOVERABLE,
+        request=RequestForRegistration(
+            uuid=uuid,
+            username="user",
+            agent_labels={},
+            agent_cert="cert",
+        ),
+    ).write()
+    response = _call_register_new_ongoing_cce(mocker, client, uuid)
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "Success",
+        "agent_cert": "cert",
+        "connection_mode": "push-agent",
+    }
+
+
 @pytest.fixture(name="agent_data_headers")
-def fixture_agent_data_headers(uuid: UUID) -> Mapping[str, str]:
+def fixture_agent_data_headers(uuid: UUID4) -> Mapping[str, str]:
     return {
         "compression": "zlib",
         "verified-uuid": str(uuid),
@@ -312,7 +570,7 @@ def fixture_compressed_agent_data() -> io.BytesIO:
 
 def test_agent_data_uuid_mismatch(
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     agent_data_headers: Mapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
@@ -329,7 +587,7 @@ def test_agent_data_uuid_mismatch(
 
 def test_agent_data_no_host(
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     agent_data_headers: Mapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
@@ -345,7 +603,7 @@ def test_agent_data_no_host(
 def test_agent_data_pull_host(
     tmp_path: Path,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     agent_data_headers: Mapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
@@ -369,7 +627,7 @@ def test_agent_data_pull_host(
 @pytest.mark.usefixtures("symlink_push_host")
 def test_agent_data_invalid_compression(
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     agent_data_headers: Mapping[str, str],
 ) -> None:
     response = client.post(
@@ -387,7 +645,7 @@ def test_agent_data_invalid_compression(
 @pytest.mark.usefixtures("symlink_push_host")
 def test_agent_data_invalid_data(
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     agent_data_headers: Mapping[str, str],
 ) -> None:
     response = client.post(
@@ -403,7 +661,7 @@ def test_agent_data_invalid_data(
 def test_agent_data_success(
     tmp_path: Path,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     agent_data_headers: Mapping[str, str],
     compressed_agent_data: io.BytesIO,
 ) -> None:
@@ -419,48 +677,8 @@ def test_agent_data_success(
     assert response.status_code == 204
 
 
-@pytest.mark.usefixtures("symlink_push_host")
-def test_agent_data_move_error(
-    caplog: pytest.LogCaptureFixture,
-    client: TestClient,
-    uuid: UUID,
-    agent_data_headers: Mapping[str, str],
-    compressed_agent_data: io.BytesIO,
-) -> None:
-    caplog.set_level(logging.INFO)
-    with mock.patch("agent_receiver.endpoints.Path.rename") as move_mock:
-        move_mock.side_effect = FileNotFoundError()
-        response = client.post(
-            f"/agent_data/{uuid}",
-            headers=typeshed_issue_7724(agent_data_headers),
-            files={"monitoring_data": ("filename", compressed_agent_data)},
-        )
-
-    assert response.status_code == 204
-    assert caplog.records[0].message == f"uuid={uuid} Agent data saved"
-
-
-@pytest.mark.usefixtures("symlink_push_host")
-def test_agent_data_move_ready(
-    client: TestClient,
-    uuid: UUID,
-    agent_data_headers: Mapping[str, str],
-    compressed_agent_data: io.BytesIO,
-) -> None:
-    (path_ready := site_context.r4r_dir() / "READY").mkdir()
-    (path_ready / f"{uuid}.json").touch()
-
-    client.post(
-        f"/agent_data/{uuid}",
-        headers=typeshed_issue_7724(agent_data_headers),
-        files={"monitoring_data": ("filename", compressed_agent_data)},
-    )
-
-    assert (site_context.r4r_dir() / "DISCOVERABLE" / f"{uuid}.json").exists()
-
-
 @pytest.fixture(name="registration_status_headers")
-def fixture_registration_status_headers(uuid: UUID) -> Mapping[str, str]:
+def fixture_registration_status_headers(uuid: UUID4) -> Mapping[str, str]:
     return {
         "verified-uuid": str(uuid),
     }
@@ -468,7 +686,7 @@ def fixture_registration_status_headers(uuid: UUID) -> Mapping[str, str]:
 
 def test_registration_status_uuid_mismtach(
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     registration_status_headers: Mapping[str, str],
 ) -> None:
     response = client.get(
@@ -484,21 +702,23 @@ def test_registration_status_uuid_mismtach(
 
 def test_registration_status_declined(
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     registration_status_headers: Mapping[str, str],
 ) -> None:
-    (path_declined := site_context.r4r_dir() / "DECLINED").mkdir()
-    (path_declined / f"{uuid}.json").write_text(
-        json.dumps(
-            {
-                "state": {
-                    "type": "FOO",
-                    "value": "BAR",
-                    "readable": "Registration request declined",
-                }
-            }
-        )
-    )
+    R4R(
+        status=R4RStatus.DECLINED,
+        request=RequestForRegistration(
+            uuid=uuid,
+            username="harry",
+            agent_labels={},
+            state={
+                "type": "FOO",
+                "value": "BAR",
+                "readable": "Registration request declined",
+            },
+            agent_cert="cert",
+        ),
+    ).write()
 
     response = client.get(
         f"/registration_status/{uuid}",
@@ -509,14 +729,15 @@ def test_registration_status_declined(
     assert response.json() == {
         "hostname": None,
         "status": "declined",
-        "type": None,
+        "connection_mode": None,
         "message": "Registration request declined",
+        "type": None,
     }
 
 
 def test_registration_status_host_not_registered(
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     registration_status_headers: Mapping[str, str],
 ) -> None:
     response = client.get(
@@ -531,11 +752,18 @@ def test_registration_status_host_not_registered(
 @pytest.mark.usefixtures("symlink_push_host")
 def test_registration_status_push_host(
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     registration_status_headers: Mapping[str, str],
 ) -> None:
-    (path_discoverable := site_context.r4r_dir() / "DISCOVERABLE").mkdir()
-    (path_discoverable / f"{uuid}.json").touch()
+    R4R(
+        status=R4RStatus.DISCOVERABLE,
+        request=RequestForRegistration(
+            uuid=uuid,
+            username="harry",
+            agent_labels={},
+            agent_cert="cert",
+        ),
+    ).write()
 
     response = client.get(
         f"/registration_status/{uuid}",
@@ -546,15 +774,16 @@ def test_registration_status_push_host(
     assert response.json() == {
         "hostname": "hostname",
         "status": "discoverable",
-        "type": HostTypeEnum.PUSH.value,
+        "connection_mode": ConnectionMode.PUSH.value,
         "message": "Host registered",
+        "type": ConnectionMode.PUSH.value,
     }
 
 
 def test_registration_status_pull_host(
     tmp_path: Path,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     registration_status_headers: Mapping[str, str],
 ) -> None:
     source = site_context.agent_output_dir() / str(uuid)
@@ -570,38 +799,110 @@ def test_registration_status_pull_host(
     assert response.json() == {
         "hostname": "hostname",
         "status": None,
-        "type": HostTypeEnum.PULL.value,
+        "connection_mode": ConnectionMode.PULL.value,
         "message": "Host registered",
+        "type": ConnectionMode.PULL.value,
     }
 
 
-def test_renew_certificate_wrong_csr(
+def test_registration_status_v2_uuid_mismtach(
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
     registration_status_headers: Mapping[str, str],
 ) -> None:
-    _key, wrong_csr = generate_csr_pair("abc123", 512)
+    response = client.get(
+        "/registration_status_v2/123",
+        headers=typeshed_issue_7724(registration_status_headers),
+    )
+
+    assert response.status_code == 400
+    assert response.json() == {
+        "detail": f"Verified client UUID ({uuid}) does not match UUID in URL (123)"
+    }
+
+
+def test_registration_status_v2_host_not_registered(
+    client: TestClient,
+    uuid: UUID4,
+    registration_status_headers: Mapping[str, str],
+) -> None:
+    response = client.get(
+        f"/registration_status_v2/{uuid}",
+        headers=typeshed_issue_7724(registration_status_headers),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "NotRegistered"}
+
+
+@pytest.mark.usefixtures("symlink_push_host")
+def test_registration_status_v2_push_host(
+    client: TestClient,
+    uuid: UUID4,
+    registration_status_headers: Mapping[str, str],
+) -> None:
+    response = client.get(
+        f"/registration_status_v2/{uuid}",
+        headers=typeshed_issue_7724(registration_status_headers),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "Registered",
+        "hostname": "hostname",
+        "connection_mode": ConnectionMode.PUSH.value,
+    }
+
+
+def test_registration_status_v2_pull_host(
+    tmp_path: Path,
+    client: TestClient,
+    uuid: UUID4,
+    registration_status_headers: Mapping[str, str],
+) -> None:
+    source = site_context.agent_output_dir() / str(uuid)
+    target_dir = tmp_path / "hostname"
+    source.symlink_to(target_dir)
+
+    response = client.get(
+        f"/registration_status_v2/{uuid}",
+        headers=typeshed_issue_7724(registration_status_headers),
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "Registered",
+        "hostname": "hostname",
+        "connection_mode": ConnectionMode.PULL.value,
+    }
+
+
+def test_renew_certificate_uuid_csr_mismatch(
+    client: TestClient,
+    uuid: UUID4,
+    registration_status_headers: Mapping[str, str],
+) -> None:
+    _key, wrong_csr = generate_csr_pair(str(uuid4()), 512)
     response = client.post(
         f"/renew_certificate/{uuid}",
         headers=typeshed_issue_7724(registration_status_headers),
-        json={"csr": wrong_csr},
+        json={"csr": serialize_to_pem(wrong_csr)},
     )
 
-    assert response.status_code == 403
-    assert "CSR doesn't match" in response.json()["detail"]
+    assert response.status_code == 400
+    assert "does not match" in response.json()["detail"]
 
 
 def test_renew_certificate_not_registered(
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
+    serialized_csr: str,
     registration_status_headers: Mapping[str, str],
 ) -> None:
-    _key, csr = generate_csr_pair(str(uuid), 512)
-
     response = client.post(
         f"/renew_certificate/{uuid}",
         headers=typeshed_issue_7724(registration_status_headers),
-        json={"csr": csr},
+        json={"csr": serialized_csr},
     )
 
     assert response.status_code == 403
@@ -609,18 +910,12 @@ def test_renew_certificate_not_registered(
 
 
 def test_renew_certificate_ok(
-    mocker: MockerFixture,
     tmp_path: Path,
     client: TestClient,
-    uuid: UUID,
+    uuid: UUID4,
+    serialized_csr: str,
     registration_status_headers: Mapping[str, str],
 ) -> None:
-    _key, csr = generate_csr_pair(str(uuid), 512)
-    mocker.patch("agent_receiver.endpoints.internal_credentials")
-    mocker.patch(
-        "agent_receiver.endpoints.post_csr",
-        return_value="new_cert",
-    )
     source = site_context.agent_output_dir() / str(uuid)
     target_dir = tmp_path / "hostname"
     source.symlink_to(target_dir)
@@ -628,8 +923,8 @@ def test_renew_certificate_ok(
     response = client.post(
         f"/renew_certificate/{uuid}",
         headers=typeshed_issue_7724(registration_status_headers),
-        json={"csr": csr},
+        json={"csr": serialized_csr},
     )
 
     assert response.status_code == 200
-    assert response.json() == {"client_cert": "new_cert"}
+    assert response.json()["agent_cert"].startswith("-----BEGIN CERTIFICATE-----")

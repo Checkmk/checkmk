@@ -6,7 +6,7 @@ Date: 1674662772
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The extension packages manager has been callable from the command line in three ways:
 LI: <tt>cmk -P [arguments]</tt>

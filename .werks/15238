@@ -1,0 +1,13 @@
+Title: Too restrictive permission checking in service discovery
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1676965893
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+On the service discovery page some permissions where checked to restrictive.
+For instance: A user that was not allowed to add "ignored" services, would also
+be prevented from adding services to the monitoring.

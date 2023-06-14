@@ -6,7 +6,7 @@ Date: 1645453906
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 To protect against very long fields coming e.g. from notification plugins
 and other external sources, the CMC will put limit to various fields which

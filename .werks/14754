@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If the inpage search on the page "Setup" - "Hosts" was used and the display
 options "Show host tags" and/or "Show explicit host labels" were enabled, the

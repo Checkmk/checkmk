@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
@@ -42,6 +42,14 @@ def test_host_labels_to_dict() -> None:
     }
 
 
+def test_discovered_host_labels_serialization() -> None:
+    for hl in (
+        HostLabel("äbc", "123", SectionName("sectionname")),
+        HostLabel("äbc", "123", None),
+    ):
+        assert hl == HostLabel.deserialize(hl.serialize())
+
+
 def test_host_labels_from_dict() -> None:
     label_dict: HostLabelValueDict = {
         "value": "123",
@@ -67,15 +75,13 @@ def discovered_host_labels_dir_fixture(tmp_path: Path, monkeypatch: MonkeyPatch)
 def test_discovered_host_labels_store_save(discovered_host_labels_dir: Path) -> None:
     store = DiscoveredHostLabelsStore(HostName("host"))
 
-    label_dict: dict[str, HostLabelValueDict] = {  # save below expects Dict[Any, Any] :-|
-        "xyz": {"value": "äbc", "plugin_name": "sectionname"}
-    }
+    labels = [HostLabel("xyz", "äbc", SectionName("sectionname"))]
 
     assert not store.file_path.exists()
 
-    store.save(label_dict)
+    store.save(labels)
     assert store.file_path.exists()
-    assert store.load() == label_dict
+    assert store.load() == labels
 
 
 def test_label() -> None:
@@ -99,11 +105,6 @@ def test_discovered_host_labels_path(discovered_host_labels_dir: Path) -> None:
     config.get_config_cache().initialize()
     assert not (discovered_host_labels_dir / hostname).exists()
     DiscoveredHostLabelsStore(HostName(hostname)).save(
-        {
-            "something": {
-                "value": "wonderful",
-                "plugin_name": "norris",
-            }
-        }
+        [HostLabel("something", "wonderful", SectionName("norris"))]
     )
     assert (discovered_host_labels_dir / (hostname + ".mk")).exists()

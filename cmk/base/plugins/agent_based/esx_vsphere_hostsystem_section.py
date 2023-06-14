@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -43,8 +43,7 @@ def host_label_function(section: Section) -> HostLabelGenerator:
     Labels:
 
         cmk/vsphere_object:
-            This label is set to "vcenter" if the corresponding host is a
-            VMware vCenter, to "server" if the host is an ESXi hostsystem
+            This label is set to "server" if the host is an ESXi hostsystem
             and to "vm" if the host is a virtual machine.
 
     """

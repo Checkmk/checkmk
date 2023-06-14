@@ -1,0 +1,14 @@
+Title: host_tag_group: introducing minLength validation to create and edit endpoints
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1678709000
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, the user was allowed to call the create and edit host tag group
+endpoints with an empty list for the tags. This caused a 500 error. This werk restricts
+this and raises a 400 error instead.
+

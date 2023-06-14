@@ -6,7 +6,7 @@ Date: 1657012097
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The Kemp LoadMaster may provide multiple server states for the same Real Server, each state
 corresponding to a virtual service. Previously, the check kemp_loadmaster_realserver would

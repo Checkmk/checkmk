@@ -6,7 +6,7 @@ Date: 1646387188
 Edition: cee
 Knowledge: doc
 Level: 2
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When editing a report the permissions were not checked properly. A user could
 guess the report name and owner and view the editing page of the report and

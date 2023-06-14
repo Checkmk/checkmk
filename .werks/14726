@@ -1,0 +1,14 @@
+Title: Average scatterplot tooltip now renders across dashlet boundaries
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1677062038
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The tooltip of the average scatterplot dashlet can now render across
+the dashlet boundary.
+Before the tooltip was cut off and therefore only partially visible.
+

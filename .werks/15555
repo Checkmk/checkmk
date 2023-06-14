@@ -1,0 +1,14 @@
+Title: host_tag: improve error message for delete endpoint
+Class: feature
+Compatible: compat
+Component: rest-api
+Date: 1679990702
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+This werk improves the error message when deleting a host tag group with
+the repair option. It now lists the dependencies of the host tag group
+which are preventing the deletion.
+

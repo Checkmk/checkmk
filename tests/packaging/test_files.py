@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -36,6 +36,8 @@ def _edition_short_from_pkg_path(package_path: str) -> str:
         return "cfe"
     if file_name.startswith("check-mk-cloud-"):
         return "cce"
+    if file_name.startswith("check-mk-saas-"):
+        return "cse"
     raise NotImplementedError("Could not get edition from package path: %s" % package_path)
 
 
@@ -141,15 +143,15 @@ def test_files_not_in_version_path(package_path: str, cmk_version: str) -> None:
             "/usr/share/man/$",
             "/usr/share/man/man8/$",
             "/usr/share/doc/$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud)-.*/$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud)-.*/changelog.gz$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud)-.*/COPYING.gz$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud)-.*/TEAM$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud)-.*/copyright$",
-            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud)-.*/README.md$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*/$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*/changelog.gz$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*/COPYING.gz$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*/TEAM$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*/copyright$",
+            "/usr/share/doc/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*/README.md$",
             "/etc/$",
             "/etc/init.d/$",
-            "/etc/init.d/check-mk-(raw|free|enterprise|managed|cloud)-.*$",
+            "/etc/init.d/check-mk-(raw|free|enterprise|managed|cloud|saas)-.*$",
         ] + version_allowed_patterns
 
         paths = []
@@ -251,6 +253,7 @@ def test_src_not_contains_enterprise_sources(package_path: str) -> None:
     enterprise_files = []
     managed_files = []
     cloud_files = []
+    saas_files = []
 
     for line in subprocess.check_output(
         ["tar", "tvf", package_path], encoding="utf-8"
@@ -262,10 +265,13 @@ def test_src_not_contains_enterprise_sources(package_path: str) -> None:
             managed_files.append(path)
         if path != "%s/cloud/" % prefix and path.startswith("%s/cloud/" % prefix):
             cloud_files.append(path)
+        if path != "%s/saas/" % prefix and path.startswith("%s/saas/" % prefix):
+            saas_files.append(path)
 
-    assert enterprise_files == []
-    assert managed_files == []
-    assert cloud_files == []
+    assert not enterprise_files
+    assert not managed_files
+    assert not cloud_files
+    assert not saas_files
 
 
 def test_demo_modifications(package_path: str, cmk_version: str) -> None:

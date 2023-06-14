@@ -1,16 +1,11 @@
 import * as d3 from "d3";
 import {
-    ContextMenuElement,
-    NodevisNode,
-    NodevisWorld,
-    SimulationForce,
-} from "nodevis/type_defs";
-import {
     AbstractGUINode,
     BasicQuickinfo,
     node_type_class_registry,
 } from "nodevis/node_utils";
-import {TypeWithName} from "nodevis/utils";
+import {ContextMenuElement, NodevisNode, NodevisWorld} from "nodevis/type_defs";
+import {SearchFilters, TypeWithName} from "nodevis/utils";
 
 export class TopologyNode extends AbstractGUINode {
     static class_name = "topology";
@@ -31,56 +26,95 @@ export class TopologyNode extends AbstractGUINode {
         if (this.node.data.has_no_parents)
             this.selection().select("circle").classed("has_no_parents", true);
 
-        this.selection().on("dblclick", () => this._toggle_growth_continue());
+        if (
+            this.node.data.growth_possible ||
+            this.node.data.growth_forbidden ||
+            this.node.data.growth_continue
+        )
+            this.selection().on("dblclick", () => {
+                const nodevis_node =
+                    this._world.nodes_layer.get_nodevis_node_by_id(
+                        this.node.data.id
+                    );
+                if (!nodevis_node) return;
+                _toggle_growth_continue(nodevis_node);
+                this._world.update_data();
+            });
+
+        this.update_growth_indicators();
     }
 
-    update_position() {
-        AbstractGUINode.prototype.update_position.call(this);
+    update_node_data(node, selection) {
+        AbstractGUINode.prototype.update_node_data.call(this, node, selection);
+        this.update_growth_indicators();
+    }
 
+    update_growth_indicators() {
         // Growth root
-        const growth_root_selection = this.selection()
+        this.selection()
             .selectAll("circle.growth_root")
-            .data([this.node]);
-        if (this.node.data.growth_root) {
-            growth_root_selection
-                .enter()
-                .append("circle")
-                .classed("growth_root", true)
-                .attr("r", this.radius + 4)
-                .attr("fill", "none");
-        } else growth_root_selection.remove();
+            .data(this.node.data.growth_root ? [this.node.data.id] : [])
+            .join(enter =>
+                enter
+                    .append("circle")
+                    .classed("growth_root", true)
+                    .attr("r", this.radius + 4)
+                    .attr("fill", "none")
+            );
 
         // Growth possible
-        const growth_possible_selection = this.selection()
+        this.selection()
             .selectAll("image.growth_possible")
-            .data([this.node]);
-        if (this.node.data.growth_possible) {
-            growth_possible_selection
-                .enter()
-                .append("svg:image")
-                .classed("growth_possible", true)
-                .attr("xlink:href", "themes/facelift/images/icon_hierarchy.svg")
-                .attr("width", 16)
-                .attr("height", 16)
-                .attr("x", -8)
-                .attr("y", 0);
-        } else growth_possible_selection.remove();
+            .data(this.node.data.growth_possible ? [this.node.data.id] : [])
+            .join(enter =>
+                enter
+                    .append("svg:image")
+                    .classed("growth_possible", true)
+                    .attr(
+                        "xlink:href",
+                        "themes/facelift/images/icon_hierarchy.svg"
+                    )
+                    .attr("width", 16)
+                    .attr("height", 16)
+                    .attr("x", -8)
+                    .attr("y", 0)
+            );
 
         // Growth forbidden
-        const growth_forbidden_selection = this.selection()
+        this.selection()
             .selectAll("image.growth_forbidden")
-            .data([this.node]);
-        if (this.node.data.growth_forbidden) {
-            growth_forbidden_selection
-                .enter()
-                .append("svg:image")
-                .classed("growth_forbidden", true)
-                .attr("xlink:href", "themes/facelift/images/icon_no_entry.svg")
-                .attr("width", 16)
-                .attr("height", 16)
-                .attr("x", -28)
-                .attr("y", 0);
-        } else growth_forbidden_selection.remove();
+            .data(this.node.data.growth_forbidden ? [this.node.data.id] : [])
+            .join(enter =>
+                enter
+                    .append("svg:image")
+                    .classed("growth_forbidden", true)
+                    .attr(
+                        "xlink:href",
+                        "themes/facelift/images/icon_no_entry.svg"
+                    )
+                    .attr("width", 16)
+                    .attr("height", 16)
+                    .attr("x", -28)
+                    .attr("y", 0)
+            );
+
+        // Growth continue
+        this.selection()
+            .selectAll("image.growth_continue")
+            .data(this.node.data.growth_continue ? [this.node.data.id] : [])
+            .join(enter =>
+                enter
+                    .append("svg:image")
+                    .classed("growth_continue", true)
+                    .attr(
+                        "xlink:href",
+                        "themes/facelift/images/icon_perm_yes.png"
+                    )
+                    .attr("width", 16)
+                    .attr("height", 16)
+                    .attr("x", -28)
+                    .attr("y", 0)
+            );
     }
 
     _fetch_external_quickinfo() {
@@ -104,14 +138,30 @@ export class TopologyNode extends AbstractGUINode {
         // Toggle root node
         const elements: ContextMenuElement[] = [];
         let root_node_text = "Add root node";
+        const node_id = this.node.data.id;
         if (this.node.data.growth_root) root_node_text = "Remove root node";
         elements.push({
             text: root_node_text,
-            on: () => this._toggle_root_node(),
+            on: () => {
+                const nodevis_node =
+                    this._world.nodes_layer.get_nodevis_node_by_id(node_id);
+                if (!nodevis_node) return;
+                _toggle_root_node(nodevis_node);
+                this._world.update_data();
+            },
         });
 
         // Use this node as exclusive root node
-        elements.push({text: "Set root node", on: () => this._set_root_node()});
+        elements.push({
+            text: "Set root node",
+            on: () => {
+                const nodevis_node =
+                    this._world.nodes_layer.get_nodevis_node_by_id(node_id);
+                if (!nodevis_node) return;
+                _set_root_node(nodevis_node, this._world);
+                this._world.update_data();
+            },
+        });
 
         // Forbid further growth
         let growth_forbidden_text = "Forbid further hops";
@@ -119,50 +169,43 @@ export class TopologyNode extends AbstractGUINode {
             growth_forbidden_text = "Allow further hops";
         elements.push({
             text: growth_forbidden_text,
-            on: () => this._toggle_stop_growth(),
+            on: () => {
+                const nodevis_node =
+                    this._world.nodes_layer.get_nodevis_node_by_id(node_id);
+                if (!nodevis_node) return;
+                _toggle_stop_growth(nodevis_node);
+                this._world.update_data();
+            },
         });
         return elements;
     }
+}
 
-    _toggle_stop_growth() {
-        this.node.data.growth_forbidden = !this.node.data.growth_forbidden;
-        this._world.update_data();
-    }
+function _toggle_root_node(nodevis_node: NodevisNode) {
+    nodevis_node.data.growth_root = !nodevis_node.data.growth_root;
+    if (!nodevis_node.data.growth_root)
+        new SearchFilters().remove_hosts_from_host_regex(
+            new Set([nodevis_node.data.name])
+        );
+}
 
-    _toggle_root_node() {
-        this.node.data.growth_root = !this.node.data.growth_root;
-        this._world.update_data();
-    }
+function _set_root_node(nodevis_node: NodevisNode, world: NodevisWorld) {
+    world.viewport.get_all_nodes().forEach(node => {
+        node.data.growth_root = false;
+    });
+    nodevis_node.data.growth_root = true;
+}
 
-    _set_root_node() {
-        this._world.viewport.get_all_nodes().forEach(node => {
-            node.data.growth_root = false;
-        });
-        this.node.data.growth_root = true;
-        this._world.update_data();
-    }
+function _toggle_growth_continue(nodevis_node: NodevisNode) {
+    nodevis_node.data.growth_continue = !nodevis_node.data.growth_continue;
+    if (nodevis_node.data.growth_continue)
+        nodevis_node.data.growth_forbidden = false;
+}
 
-    _toggle_growth_continue() {
-        this.node.data.growth_continue = !this.node.data.growth_continue;
-        this._world.update_data();
-    }
-
-    _get_node_type_specific_force(force_name: SimulationForce): number {
-        switch (force_name) {
-            case "charge_force":
-                return this.node.data.force_options.force_node;
-            case "collide":
-                return this.node.data.force_options.collision_force_node;
-            case "center":
-                return this.node.data.force_options.center_force / 300;
-            case "link_distance":
-                return this.node.data.force_options.link_force_node;
-            case "link_strength":
-                return this.node.data.force_options.link_strength / 100;
-            default:
-                return 0;
-        }
-    }
+function _toggle_stop_growth(nodevis_node: NodevisNode) {
+    nodevis_node.data.growth_forbidden = !nodevis_node.data.growth_forbidden;
+    if (nodevis_node.data.growth_forbidden)
+        nodevis_node.data.growth_continue = false;
 }
 
 export class TopologyCentralNode extends TopologyNode {
@@ -178,12 +221,23 @@ export class TopologyCentralNode extends TopologyNode {
         return "topology_center";
     }
 
+    render_text(): void {
+        return;
+    }
+
     render_object() {
         this.selection()
+            .selectAll("circle")
+            .data([this.id()])
+            .enter()
             .append("circle")
             .attr("r", this.radius)
             .classed("topology_center", true);
+
         this.selection()
+            .selectAll("image")
+            .data([this.id()])
+            .enter()
             .append("svg:image")
             .attr("xlink:href", "themes/facelift/images/logo_cmk_small.png")
             .attr("x", -25)
@@ -208,10 +262,17 @@ export class TopologySiteNode extends TopologyNode {
 
     render_object() {
         this.selection()
+            .selectAll("circle")
+            .data([this.id()])
+            .enter()
             .append("circle")
             .attr("r", this.radius)
             .classed("topology_remote", true);
+
         this.selection()
+            .selectAll("image")
+            .data([this.id()])
+            .enter()
             .append("svg:image")
             .attr("xlink:href", "themes/facelift/images/icon_sites.svg")
             .attr("x", -15)
@@ -279,23 +340,6 @@ export class BILeafNode extends AbstractGUINode implements TypeWithName {
                 "view.py?view_name=host&host=" +
                 encodeURIComponent(this.node.data.hostname)
             );
-        }
-    }
-
-    _get_node_type_specific_force(force_name: SimulationForce): number {
-        switch (force_name) {
-            case "charge_force":
-                return this.node.data.force_options.force_node;
-            case "collide":
-                return this.node.data.force_options.collision_force_node;
-            case "center":
-                return this.node.data.force_options.center_force / 300;
-            case "link_distance":
-                return this.node.data.force_options.link_force_node;
-            case "link_strength":
-                return this.node.data.force_options.link_strength / 100;
-            default:
-                return 0;
         }
     }
 }
@@ -402,23 +446,6 @@ export class BIAggregatorNode extends AbstractGUINode {
             img: "themes/facelift/images/icon_error.png",
         });
         return elements;
-    }
-
-    _get_node_type_specific_force(force_name: SimulationForce): number {
-        switch (force_name) {
-            case "charge_force":
-                return this.node.data.force_options.force_aggregator;
-            case "collide":
-                return this.node.data.force_options.collision_force_aggregator;
-            case "center":
-                return this.node.data.force_options.center_force / 100;
-            case "link_distance":
-                return this.node.data.force_options.link_force_aggregator;
-            case "link_strength":
-                return this.node.data.force_options.link_strength / 100;
-            default:
-                return 0;
-        }
     }
 }
 

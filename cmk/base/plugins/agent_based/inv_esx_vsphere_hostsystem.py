@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -88,7 +88,6 @@ def _try_convert_to_epoch(release_date: str) -> Optional[str]:
 
 
 def inv_esx_vsphere_hostsystem(section: Section) -> type_defs.InventoryResult:
-
     for name, sub_section in SECTION_TO_INVENTORY.items():
         data: Dict[str, Union[None, str, float]] = {}
         for section_key, (inv_key, transform) in sub_section["translation"].items():

@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -41,7 +41,7 @@ struct CNNoUUIDVerifier {
 impl CNNoUUIDVerifier {
     pub fn from_roots(roots: RootCertStore) -> Arc<dyn ClientCertVerifier> {
         Arc::new(Self {
-            verifier: AllowAnyAuthenticatedClient::new(roots),
+            verifier: AllowAnyAuthenticatedClient::new(roots).boxed(),
         })
     }
 }
@@ -49,7 +49,7 @@ impl CNNoUUIDVerifier {
 impl ClientCertVerifier for CNNoUUIDVerifier {
     fn client_auth_root_subjects(
         &self,
-    ) -> Option<tokio_rustls::rustls::internal::msgs::handshake::DistinguishedNames> {
+    ) -> &[tokio_rustls::rustls::internal::msgs::handshake::DistinguishedName] {
         self.verifier.client_auth_root_subjects()
     }
 

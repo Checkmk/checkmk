@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,20 +11,22 @@ import livestatus
 from livestatus import MKLivestatusNotFoundError, OnlySites, SiteId
 
 import cmk.gui.sites as sites
+from cmk.gui.data_source import ABCDataSource, DataSourceLivestatus, RowTable
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
+from cmk.gui.painter.v0.base import Cell, Painter
+from cmk.gui.painter_options import paint_age
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.command import Command, CommandActionResult, PermissionSectionAction
-from cmk.gui.views.data_source import ABCDataSource, DataSourceLivestatus, RowTable
-from cmk.gui.views.painter.v0.base import Cell, Painter
-from cmk.gui.views.painter_options import paint_age
 from cmk.gui.views.sorter import cmp_simple_number, Sorter
+
+from .helpers import local_files_involved_in_crash
 
 
 class DataSourceCrashReports(DataSourceLivestatus):
@@ -92,9 +94,8 @@ class CrashReportsRowTable(RowTable):
         return sorted(rows, key=lambda r: r["crash_time"])
 
     def get_crash_report_rows(
-        self, only_sites: list[SiteId] | None, filter_headers: str
+        self, only_sites: OnlySites, filter_headers: str
     ) -> list[dict[str, str]]:
-
         # First fetch the information that is needed to query for the dynamic columns (crash_info,
         # ...)
         crash_infos = self._get_crash_report_info(only_sites, filter_headers)
@@ -137,7 +138,7 @@ class CrashReportsRowTable(RowTable):
         return rows
 
     def _get_crash_report_info(
-        self, only_sites: list[SiteId] | None, filter_headers: str | None = None
+        self, only_sites: OnlySites, filter_headers: str | None = None
     ) -> list[dict[str, str]]:
         try:
             sites.live().set_prepend_site(True)
@@ -177,7 +178,7 @@ class PainterCrashIdent(Painter):
             ],
             filename="crash.py",
         )
-        return (None, HTMLWriter.render_a(row["crash_id"], href=url))
+        return None, HTMLWriter.render_a(row["crash_id"], href=url)
 
 
 class PainterCrashType(Painter):
@@ -186,7 +187,7 @@ class PainterCrashType(Painter):
         return "crash_type"
 
     def title(self, cell):
-        return _("Crash Type")
+        return _("Crash type")
 
     def short_title(self, cell):
         return _("Type")
@@ -196,7 +197,31 @@ class PainterCrashType(Painter):
         return ["crash_type"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, row["crash_type"])
+        return None, row["crash_type"]
+
+
+class PainterCrashSource(Painter):
+    @property
+    def ident(self) -> str:
+        return "crash_source"
+
+    def title(self, cell):
+        return _("Crash source")
+
+    def short_title(self, cell):
+        return _("Source")
+
+    @property
+    def columns(self) -> Sequence[ColumnName]:
+        return ["crash_exc_traceback"]
+
+    def render(self, row: Row, cell: Cell) -> CellSpec:
+        return (
+            None,
+            _("Extension")
+            if local_files_involved_in_crash(row["crash_exc_traceback"])
+            else _("Builtin"),
+        )
 
 
 class PainterCrashTime(Painter):
@@ -238,7 +263,7 @@ class PainterCrashVersion(Painter):
         return ["crash_version"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, row["crash_version"])
+        return None, row["crash_version"]
 
 
 class PainterCrashException(Painter):
@@ -257,7 +282,7 @@ class PainterCrashException(Painter):
         return ["crash_exc_type", "crash_exc_value"]
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return (None, "{}: {}".format(row["crash_exc_type"], row["crash_exc_value"]))
+        return None, "{}: {}".format(row["crash_exc_type"], row["crash_exc_value"])
 
 
 class SorterCrashTime(Sorter):
@@ -313,7 +338,7 @@ class CommandDeleteCrashReports(Command):
             ungettext("report", "reports", len_action_rows),
         )
 
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.button("_delete_crash_reports", _("Delete"))
 
     def _action(

@@ -40,7 +40,6 @@ class CertificateAuthority:
         super().__init__()
         self.root_ca: Final = root_ca
         self._ca_path = ca_path
-        self._agent_receiver_cert_path = ca_path / "agent_receiver_cert.pem"
 
     def _site_certificate_path(self, site_id: str) -> Path:
         return (self._ca_path / "sites" / site_id).with_suffix(".pem")
@@ -48,14 +47,6 @@ class CertificateAuthority:
     def site_certificate_exists(self, site_id: str) -> bool:
         return self._site_certificate_path(site_id).exists()
 
-    @property
-    def agent_receiver_certificate_exists(self) -> bool:
-        return self._agent_receiver_cert_path.exists()
-
     def create_site_certificate(self, site_id: str) -> None:
         """Creates the key / certificate for the given Check_MK site"""
         self.root_ca.save_new_signed_cert(self._site_certificate_path(site_id), site_id)
-
-    def create_agent_receiver_certificate(self, site_id: str) -> None:
-        """Creates the key / certificate for agent-receiver server"""
-        self.root_ca.save_new_signed_cert(self._agent_receiver_cert_path, site_id)

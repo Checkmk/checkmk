@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Rules"""
@@ -24,7 +24,12 @@ from cmk.gui.plugins.openapi.endpoints.rule.fields import (
 )
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
-from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
+from cmk.gui.plugins.openapi.utils import (
+    problem,
+    ProblemException,
+    RestAPIRequestDataValidationException,
+    serve_json,
+)
 from cmk.gui.utils import gen_id
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib.changes import add_change
@@ -64,6 +69,17 @@ class RuleEntry:
     folder: CREFolder
 
 
+def _validate_rule_move(lhs: RuleEntry, rhs: RuleEntry) -> None:
+    if lhs.ruleset.name != rhs.ruleset.name:
+        raise RestAPIRequestDataValidationException(
+            title="Invalid rule move.", detail="The two rules are not in the same ruleset."
+        )
+    if lhs.rule.id == rhs.rule.id:
+        raise RestAPIRequestDataValidationException(
+            title="Invalid rule move", detail="You cannot move a rule before/after itself."
+        )
+
+
 @Endpoint(
     constructors.object_action_href("rule", "{rule_id}", "move"),
     "cmk/move",
@@ -98,10 +114,12 @@ def move_rule_to(param: typing.Mapping[str, typing.Any]) -> http.Response:
             index = Ruleset.BOTTOM
         case "before_specific_rule":
             dest_entry = _get_rule_by_id(body["rule_id"], all_rulesets=all_rulesets)
+            _validate_rule_move(source_entry, dest_entry)
             index = dest_entry.index_nr
             dest_folder = dest_entry.folder
         case "after_specific_rule":
             dest_entry = _get_rule_by_id(body["rule_id"], all_rulesets=all_rulesets)
+            _validate_rule_move(source_entry, dest_entry)
             dest_folder = dest_entry.folder
             index = dest_entry.index_nr + 1
         case _:
@@ -191,7 +209,7 @@ def create_rule(param):
         value,
     )
     index = ruleset.append_rule(folder, rule)
-    rulesets.save()
+    rulesets.save_folder()
     # TODO Duplicated code is in pages/rulesets.py:2670-
     # TODO Move to
     add_change(
@@ -269,7 +287,7 @@ def show_rule(param):
     return serve_json(_serialize_rule(rule_entry))
 
 
-def _get_rule_by_id(rule_uuid: str, all_rulesets=None) -> RuleEntry:  # type:ignore[no-untyped-def]
+def _get_rule_by_id(rule_uuid: str, all_rulesets=None) -> RuleEntry:  # type: ignore[no-untyped-def]
     if all_rulesets is None:
         all_rulesets = AllRulesets.load_all_rulesets()
 
@@ -288,9 +306,9 @@ def _get_rule_by_id(rule_uuid: str, all_rulesets=None) -> RuleEntry:  # type:ign
                 )
 
     raise ProblemException(
-        status=400,
+        status=404,
         title="Unknown rule.",
-        detail=f"Rule with UUID {rule_uuid} was not found.",
+        detail=f"Rule with UUID '{rule_uuid}' was not found.",
     )
 
 

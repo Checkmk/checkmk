@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -16,7 +16,7 @@ from .agent_based_api.v1 import Attributes, register, TableRow
 from .agent_based_api.v1.type_defs import InventoryResult
 
 
-def _service_status(  # type:ignore[no-untyped-def]
+def _service_status(  # type: ignore[no-untyped-def]
     status: Mapping[str, Sequence[str]], service_name: str
 ):
     """
@@ -44,7 +44,6 @@ def merge_sections(
     section_omd_status: Mapping[str, Mapping],
     section_omd_info: Mapping[str, Mapping[str, Mapping]],
 ) -> Dict[str, Dict]:
-
     merged_section: Dict[str, Dict] = {"check_mk": {}, "sites": {}, "versions": {}}
 
     # SECTION: livestatus_status
@@ -52,9 +51,6 @@ def merge_sections(
         if status is None:
             continue
 
-        # Quick workaround for enabled checker/fetcher mode. Will soon be replaced once the
-        # livestatus status table has been updated.
-        helper_usage_cmk = float(status["helper_usage_cmk"] or "0") * 100
         try:
             helper_usage_fetcher = float(status["helper_usage_fetcher"] or "0") * 100
             helper_usage_checker = float(status["helper_usage_checker"] or "0") * 100
@@ -73,7 +69,6 @@ def merge_sections(
             "num_hosts": status["num_hosts"],
             "num_services": status["num_services"],
             "check_helper_usage": helper_usage_generic,
-            "check_mk_helper_usage": helper_usage_cmk,
             "fetcher_helper_usage": helper_usage_fetcher,
             "checker_helper_usage": helper_usage_checker,
             "livestatus_usage": livestatus_usage,
@@ -157,7 +152,6 @@ def merge_sections(
 
 
 def generate_inventory(merged_sections: Dict[str, Any]) -> InventoryResult:
-
     for key, elem in merged_sections["sites"].items():
         yield TableRow(
             path=["software", "applications", "check_mk", "sites"],
@@ -187,7 +181,6 @@ def inventory_checkmk(
     section_omd_status: Optional[Dict[str, Dict]],
     section_omd_info: Optional[Dict[str, Dict[str, Dict]]],
 ) -> InventoryResult:
-
     merged_sections = merge_sections(
         section_livestatus_status or {},
         section_omd_status or {},

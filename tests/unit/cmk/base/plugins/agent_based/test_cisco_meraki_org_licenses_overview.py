@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -19,11 +19,11 @@ _STRING_TABLE = [
             '[{"status": "FOO", "expirationDate": "Feb 1, 2000 UTC", "licensedDeviceCounts":'
             '{"wireless": 10, "MV": 20, "Z1": 30, "MS120-48LP": 40, "MS120-48FP": 50, "MX250": 60,'
             '"MX64": 70, "MG21": 80, "MS120-8FP": 90, "MS225-48LP": 100, "MS225-48FP": 110},'
-            '"organizationId": "456"},'
+            '"organisation_id": "456", "organisation_name": "Name2"},'
             '{"status": "OK", "expirationDate": "Feb 1, 2000 UTC", "licensedDeviceCounts":'
             '{"wireless": 1, "MV": 2, "Z1": 3, "MS120-48LP": 4, "MS120-48FP": 5, "MX250": 6,'
             '"MX64": 7, "MG21": 8, "MS120-8FP": 9, "MS225-48LP": 10, "MS225-48FP": 11},'
-            '"organizationId": "123"}]'
+            '"organisation_id": "123", "organisation_name": "Name1"}]'
         ),
     ],
 ]
@@ -38,8 +38,8 @@ _STRING_TABLE = [
         (
             _STRING_TABLE,
             [
-                Service(item="123"),
-                Service(item="456"),
+                Service(item="Name1/123"),
+                Service(item="Name2/456"),
             ],
         ),
     ],
@@ -57,18 +57,18 @@ def test_discover_licenses_overview(
     "string_table, item, expected_results",
     [
         # without params
-        ([], "123", []),
-        ([], "456", []),
-        ([], "789", []),
-        ([[]], "123", []),
-        ([[]], "456", []),
-        ([[]], "789", []),
-        ([[""]], "123", []),
-        ([[""]], "456", []),
-        ([[""]], "789", []),
+        ([], "Name1/123", []),
+        ([], "Name2/456", []),
+        ([], "Name3/789", []),
+        ([[]], "Name1/123", []),
+        ([[]], "Name2/456", []),
+        ([[]], "Name3/789", []),
+        ([[""]], "Name1/123", []),
+        ([[""]], "Name2/456", []),
+        ([[""]], "Name3/789", []),
         (
             _STRING_TABLE,
-            "123",
+            "Name1/123",
             [
                 Result(state=State.OK, summary="Status: OK"),
                 Result(state=State.OK, summary="Expiration date: Feb 01, 2000"),
@@ -89,7 +89,7 @@ def test_discover_licenses_overview(
         ),
         (
             _STRING_TABLE,
-            "456",
+            "Name2/456",
             [
                 Result(state=State.WARN, summary="Status: FOO"),
                 Result(state=State.OK, summary="Expiration date: Feb 01, 2000"),
@@ -108,7 +108,7 @@ def test_discover_licenses_overview(
                 Result(state=State.OK, notice="wireless: 10 licensed devices"),
             ],
         ),
-        (_STRING_TABLE, "789", []),
+        (_STRING_TABLE, "Name3/789", []),
     ],
 )
 def test_check_licenses_overview(
@@ -127,7 +127,7 @@ def test_check_licenses_overview(
     [
         (
             _STRING_TABLE,
-            "123",
+            "Name1/123",
             [
                 Result(state=State.OK, summary="Status: OK"),
                 Result(state=State.OK, summary="Expiration date: Feb 01, 2000"),
@@ -164,7 +164,7 @@ def test_check_licenses_overview_already_expired(
     [
         (
             _STRING_TABLE,
-            "123",
+            "Name1/123",
             {"remaining_expiration_time": (3600 * 24 * 4, 3600 * 24 * 2)},
             [
                 Result(state=State.OK, summary="Status: OK"),
@@ -192,7 +192,7 @@ def test_check_licenses_overview_already_expired(
         ),
         (
             _STRING_TABLE,
-            "123",
+            "Name1/123",
             {"remaining_expiration_time": (3600 * 24 * 5, 3600 * 24 * 4)},
             [
                 Result(state=State.OK, summary="Status: OK"),

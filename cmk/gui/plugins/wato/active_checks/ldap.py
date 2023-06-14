@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -17,6 +17,7 @@ from cmk.gui.valuespec import (
     FixedValue,
     Float,
     Integer,
+    NetworkPort,
     TextInput,
     Tuple,
 )
@@ -41,7 +42,7 @@ def _valuespec_active_checks_ldap():
             ),
             TextInput(
                 title=_("Base DN"),
-                help=_("LDAP base, e.g. ou=Development, o=tribe29 GmbH, c=de"),
+                help=_("LDAP base, e.g. ou=Development, o=Checkmk GmbH, c=de"),
                 allow_empty=False,
                 size=60,
             ),
@@ -85,7 +86,7 @@ def _valuespec_active_checks_ldap():
                     ),
                     (
                         "port",
-                        Integer(
+                        NetworkPort(
                             title=_("TCP Port"),
                             help=_(
                                 "Default is 389 for normal connections and 636 for SSL connections."

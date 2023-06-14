@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -16,7 +16,7 @@ from cmk.gui.i18n import _l
 from cmk.gui.plugins.visuals.utils import Filter, filter_registry
 from cmk.gui.type_defs import Choices, FilterHeader, FilterHTTPVariables
 from cmk.gui.valuespec import DualListChoice, ValueSpec
-from cmk.gui.watolib.hosts_and_folders import Folder
+from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 
 def _wato_folders_to_lq_regex(path: str) -> str:
@@ -35,7 +35,7 @@ def _wato_folders_to_lq_regex(path: str) -> str:
 
 
 class FilterWatoFolder(Filter):
-    def __init__(self, **kwargs) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
         super().__init__(**kwargs)
         self.last_wato_data_update: None | float = None
 
@@ -46,7 +46,7 @@ class FilterWatoFolder(Filter):
         return active_config.wato_enabled or site_config.is_wato_slave_site()
 
     def load_wato_data(self):
-        self.tree = Folder.root_folder()
+        self.tree = folder_tree().root_folder()
         self.path_to_tree: dict[str, str] = {}  # will be filled by self.folder_selection
         self.selection = list(self.folder_selection(self.tree))
         self.last_wato_data_update = time.time()
@@ -61,7 +61,7 @@ class FilterWatoFolder(Filter):
         return [entry for entry in self.selection if entry[0] in allowed_folders]
 
     def _fetch_folders(self) -> set[str]:
-        # Note: WATO Folders that the user has not permissions to must not be visible.
+        # Note: Setup Folders that the user has not permissions to must not be visible.
         # Permissions in this case means, that the user has view permissions for at
         # least one host in that folder.
         result = sites.live().query(
@@ -94,7 +94,7 @@ class FilterWatoFolder(Filter):
     # by the HTML selection box. This also updates self.path_to_tree,
     # a dictionary from the path to the title, by recursively scanning the
     # folders
-    def folder_selection(  # type:ignore[no-untyped-def]
+    def folder_selection(  # type: ignore[no-untyped-def]
         self, folder, depth=0
     ) -> Iterator[tuple[str, str]]:
         my_path: str = folder.path()
@@ -108,7 +108,7 @@ class FilterWatoFolder(Filter):
             yield from self.folder_selection(subfolder, depth + 1)
 
     def heading_info(self, value: FilterHTTPVariables) -> str | None:
-        # FIXME: There is a problem with caching data and changing titles of WATO files
+        # FIXME: There is a problem with caching data and changing titles of Setup files
         # Everything is changed correctly but the filter object is stored in the
         # global multisite_filters var and self.path_to_tree is not refreshed when
         # rendering this title. Thus the threads might have old information about the
@@ -149,7 +149,7 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
             return folders.split("|")
         return []
 
-    def display(self, value: FilterHTTPVariables):  # type:ignore[no-untyped-def]
+    def display(self, value: FilterHTTPVariables):  # type: ignore[no-untyped-def]
         self.valuespec().render_input(self.ident, self._to_list(value))
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
@@ -179,7 +179,7 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
 filter_registry.register(
     FilterMultipleWatoFolder(
         ident="wato_folders",
-        title=_l("Multiple WATO Folders"),
+        title=_l("Multiple Setup Folders"),
         sort_index=20,
         info="host",
         htmlvars=["wato_folders"],

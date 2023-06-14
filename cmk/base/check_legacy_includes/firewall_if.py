@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,7 +11,6 @@ from cmk.base.check_api import check_levels, get_average, get_parsed_item_data, 
 
 @get_parsed_item_data
 def check_firewall_if(item, params, data):
-
     infotext_names = {
         "ip4_in_blocked": "Incoming IPv4 packets blocked: ",
     }

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.2.0i1"
+__version__ = "2.3.0b1"
 
 # This plugin was sponsored by BenV. Thanks!
 # https://notes.benv.junerules.com/mtr/
@@ -20,7 +20,7 @@ __version__ = "2.2.0i1"
 try:
     import configparser
 except ImportError:  # Python 2
-    import ConfigParser as configparser  # type: ignore
+    import ConfigParser as configparser  # type: ignore[import,no-redef]
 
 import glob
 import os
@@ -30,7 +30,7 @@ import sys
 import time
 
 try:
-    from typing import Any, Dict
+    from typing import Any, Dict  # noqa: F401 # pylint: disable=unused-import
 except ImportError:
     pass
 
@@ -168,21 +168,20 @@ def check_mtr_pid(pid):
         os.kill(pid, 0)
     except OSError:
         return False  # process does no longer exist
-    else:
-        pid_cmdline = "/proc/%d/cmdline" % pid
-        try:
-            return (
-                os.path.exists(pid_cmdline)
-                and "mtr\x00--report\x00--report-wide" in open(pid_cmdline).read()
-            )
-        except Exception:
-            return False  # any error
+    pid_cmdline = "/proc/%d/cmdline" % pid
+    try:
+        return (
+            os.path.exists(pid_cmdline)
+            and "mtr\x00--report\x00--report-wide" in open(pid_cmdline).read()
+        )
+    except Exception:
+        return False  # any error
 
 
 def parse_report(host, status):  # pylint: disable=too-many-branches
     reportfile = report_filepre + host_to_filename(host)
     if not os.path.exists(reportfile):
-        if not host in status.keys():
+        if host not in status.keys():
             # New host
             status[host] = {"hops": {}, "lasttime": 0}
         return
@@ -206,7 +205,7 @@ def parse_report(host, status):  # pylint: disable=too-many-branches
                 pid = int(opened_file.readline().rstrip())
             if check_mtr_pid(pid):
                 # Still running, we're done.
-                if not host in status.keys():
+                if host not in status.keys():
                     # New host
                     status[host] = {"hops": {}, "lasttime": 0}
                 status[host]["running"] = True
@@ -226,7 +225,7 @@ def parse_report(host, status):  # pylint: disable=too-many-branches
             "expecting at least 1 hop! Throwing away invalid report\n" % reportfile
         )
         os.unlink(reportfile)
-        if not host in status.keys():
+        if host not in status.keys():
             # New host
             status[host] = {"hops": {}, "lasttime": 0}
         return
@@ -242,10 +241,10 @@ def parse_report(host, status):  # pylint: disable=too-many-branches
         lines.pop(0)  # Get rid of HOST: header
         hopline = re.compile(
             r"^\s*\d+\."
-        )  #  10.|-- 129.250.2.147   0.0%    10  325.6 315.5 310.3 325.6   5.0
+        )  # 10.|-- 129.250.2.147   0.0%    10  325.6 315.5 310.3 325.6   5.0
         for line in lines:
             if not hopline.match(line):
-                continue  #     |  `|-- 129.250.2.159
+                continue  # |  `|-- 129.250.2.159
             hopcount += 1
             parts = line.split()
             if len(parts) < 8:
@@ -379,7 +378,7 @@ def start_mtr(host, mtr_binary, config, status):  # pylint: disable=too-many-bra
     with open(reportfile, "a+") as report:
         report.write(str(int(time.time())) + "\n")
         report.flush()
-        process = subprocess.Popen(  # pylint:disable=consider-using-with
+        process = subprocess.Popen(  # pylint: disable=consider-using-with
             options, stdout=report, stderr=report
         )
     # Write pid to report.pid
@@ -396,7 +395,6 @@ def _is_exe(fpath):
 
 
 def _which(program):
-
     fpath, _fname = os.path.split(program)
     if fpath:
         if _is_exe(program):

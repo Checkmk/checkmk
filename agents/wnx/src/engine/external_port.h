@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -134,13 +134,13 @@ struct SocketInfo {
     uint16_t peer_port;
     IpMode ip_mode;
     static SocketInfo empty() {
-        return {.peer_ip{""}, .peer_port{0U}, .ip_mode{IpMode::ipv4}};
+        return {.peer_ip{""}, .peer_port = 0U, .ip_mode = IpMode::ipv4};
     }
 };
 
 inline SocketInfo GetSocketInfo(const asio::ip::tcp::socket &sock) noexcept {
     std::error_code ec;
-    auto remote_ep = sock.remote_endpoint(ec);
+    const auto remote_ep = sock.remote_endpoint(ec);
     if (ec) {
         XLOG::l("Error on socket [{}] with '{}'", ec.value(), ec.message());
         return SocketInfo::empty();
@@ -150,7 +150,7 @@ inline SocketInfo GetSocketInfo(const asio::ip::tcp::socket &sock) noexcept {
         auto addr = remote_ep.address();
         auto ip = addr.to_string();
         auto mode = addr.is_v6() ? IpMode::ipv6 : IpMode::ipv4;
-        return {.peer_ip{ip}, .peer_port{remote_ep.port()}, .ip_mode{mode}};
+        return {.peer_ip{ip}, .peer_port = remote_ep.port(), .ip_mode = mode};
     } catch (const std::exception &e) {
         XLOG::d("Something goes wrong with socket '{}'", e);
     }
@@ -162,7 +162,7 @@ public:
     // ctor&dtor
     explicit ExternalPort(wtools::BaseServiceProcessor * /* owner*/) {}
 
-    virtual ~ExternalPort() = default;
+    ~ExternalPort() = default;
 
     ExternalPort(const ExternalPort &) = delete;
     ExternalPort(ExternalPort &&) = delete;
@@ -178,12 +178,13 @@ public:
     // Main API
     bool startIo(const ReplyFunc &reply_func, const IoParam &io_param);
     bool startIoTcpPort(const ReplyFunc &reply_func, uint16_t port) {
-        return startIo(reply_func,
-                       {.port{port}, .local_only{LocalOnly::no}, .pid{}});
+        return startIo(
+            reply_func,
+            {.port = port, .local_only = LocalOnly::no, .pid = std::nullopt});
     }
     bool startIoMailSlot(const ReplyFunc &reply_func, uint32_t pid) {
         return startIo(reply_func,
-                       {.port{0U}, .local_only{LocalOnly::yes}, .pid{pid}});
+                       {.port = 0U, .local_only = LocalOnly::yes, .pid = pid});
     }
     void shutdownIo();
 
@@ -239,8 +240,8 @@ protected:
     void wakeThread();
     void timedWaitForSession();
     void processSession(const ReplyFunc &reply, AsioSession::s_ptr session);
-    void processRequest(const ReplyFunc &reply,
-                        const std::string &request) const;
+    void processRequest(const ReplyFunc &reply, const std::string &request,
+                        const encrypt::Commander *commander) const;
 
     bool isShutdown() const noexcept {
         std::lock_guard lk(io_thread_lock_);
@@ -297,7 +298,8 @@ protected:
 };
 
 bool SendDataToMailSlot(const std::string &mailslot_name,
-                        const std::vector<uint8_t> &data_block);
+                        const std::vector<uint8_t> &data_block,
+                        const encrypt::Commander *commander);
 
 }  // namespace cma::world
 

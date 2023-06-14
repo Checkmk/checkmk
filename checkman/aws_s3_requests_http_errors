@@ -10,10 +10,14 @@ description:
  both in counts per second and as a fraction of all HTTP
  requests.
 
- To make this check work you have to configure the related
+ To make this check work, you have to configure the related
  special agent {Amazon Web Services (AWS)}. Furthermore, you
- have to enable requests metrics in the AWS/S3 console. This is
- a paid feature.
+ have to enable request metrics in the AWS/S3 console. This is
+ a paid feature. Note that the filter name has to be set to
+ `EntireBucket`, as is recommended in the AWS documentation for
+ a filter that applies to all objects. The AWS special agent
+ uses this filter name to query S3 request metrics from the AWS
+ API.
 
  No default levels are set. Upper levels on the fractions are
  configurable via the rule "AWS/S3 HTTP Errors".

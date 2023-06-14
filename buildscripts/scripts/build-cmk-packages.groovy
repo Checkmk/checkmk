@@ -37,7 +37,6 @@ def main() {
     ]);
 
     def versioning = load("${checkout_dir}/buildscripts/scripts/utils/versioning.groovy");
-    def windows = load("${checkout_dir}/buildscripts/scripts/utils/windows.groovy");
     def artifacts_helper = load("${checkout_dir}/buildscripts/scripts/utils/upload_artifacts.groovy");
 
     shout("configure");
@@ -46,10 +45,10 @@ def main() {
     /// used on different nodes
     def docker_args = "${mount_reference_repo_dir} --ulimit nofile=1024:1024";
 
-    def (jenkins_base_folder, distro_key, omd_env_vars, upload_path_suffix) = (
+    def (jenkins_base_folder, use_case, omd_env_vars, upload_path_suffix) = (
         env.JOB_BASE_NAME == "testbuild" ? [
             new File(currentBuild.fullProjectName).parent,
-            "DISTROS_TESTBUILD",
+            "testbuild",
             /// Testbuilds: Do not use our build cache to ensure we catch build related
             /// issues. And disable python optimizations to execute the build faster
             ["NEXUS_BUILD_CACHE_URL=", "PYTHON_ENABLE_OPTIMIZATIONS=",
@@ -57,16 +56,14 @@ def main() {
             "testbuild/",
         ] : [
             new File(new File(currentBuild.fullProjectName).parent).parent,
-            "DISTROS",
+            VERSION == "daily" ? "daily" : "release",
             [],
             "",
         ]);
 
-    def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS, distro_key);
+    def distros = versioning.configured_or_overridden_distros(edition, OVERRIDE_DISTROS, use_case);
 
-    def deploy_to_website = (
-        !params.SKIP_DEPLOY_TO_WEBSITE &&
-        (EDITION == "enterprise" && !jenkins_base_folder.startsWith("Testing")));
+    def deploy_to_website = !params.SKIP_DEPLOY_TO_WEBSITE && !jenkins_base_folder.startsWith("Testing");
 
     def agent_list = get_agent_list(EDITION);
 
@@ -156,35 +153,23 @@ def main() {
     //      in the conditional_stage
     def agent_builds = agent_list.collectEntries { agent ->
         [("agent ${agent}") : {
-                conditional_stage("Build ${agent}", !params.FAKE_WINDOWS_ARTIFACTS) {
+                conditional_stage("Build Agent for ${agent}", !params.FAKE_WINDOWS_ARTIFACTS) {
                     if (agent == "windows") {
-                        def win_project_name = "${jenkins_base_folder}/windows-agent-build";
-                        def win_py_project_name = "${jenkins_base_folder}/windows-agent-modules-build";
-                        def win_project_build, win_py_project_build;
-
-                        /// TODO: these builds do not depend on the edition, so we could also just take
-                        ///       nightly builds as well (those can be selected based on parameters, too)
-                        on_dry_run_omit(LONG_RUNNING, "BUILD agent=${agent}") {
-                            win_project_build = build(
-                                job: win_project_name,
-                                parameters: [string(name: 'VERSION', value: VERSION)]);
-                            win_py_project_build = build(
-                                job: win_py_project_name,
-                                parameters: [string(name: 'VERSION', value: VERSION)]);
-                        }
+                        def win_project_name = "${jenkins_base_folder}/winagt-build";
+                        def win_py_project_name = "${jenkins_base_folder}/winagt-build-modules";
 
                         copyArtifacts(
                             projectName: win_project_name,
-                            selector: win_project_build ? specific(win_project_build.getId()) : lastSuccessful(),
+                            selector: specific(get_valid_build_id(win_project_name)),
                             target: "agents",
                             fingerprintArtifacts: true
                         )
                         copyArtifacts(
                             projectName: win_py_project_name,
-                            selector: win_py_project_build ? specific(win_py_project_build.getId()) : lastSuccessful(),
+                            selector: specific(get_valid_build_id(win_py_project_name)),
                             target: "agents",
                             fingerprintArtifacts: true
-                         )
+                        )
                     } else {
                         /// must take place in $WORKSPACE since we need to
                         /// access $WORKSPACE/agents
@@ -336,9 +321,9 @@ def main() {
                 assert_no_dirty_files(checkout_dir);
                 artifacts_helper.download_version_dir(
                     upload_path,
-                    INTERNAL_DEPLOY_PORT, cmk_version, "${WORKSPACE}/versions/${cmk_version}")
+                    INTERNAL_DEPLOY_PORT, cmk_version_rc_aware, "${WORKSPACE}/versions/${cmk_version_rc_aware}")
                 artifacts_helper.upload_version_dir(
-                    "${WORKSPACE}/versions/${cmk_version}", WEB_DEPLOY_DEST, WEB_DEPLOY_PORT);
+                    "${WORKSPACE}/versions/${cmk_version_rc_aware}", WEB_DEPLOY_DEST, WEB_DEPLOY_PORT);
                 if (deploy_to_website) {
                     artifacts_helper.deploy_to_website(cmk_version_rc_aware);
                 }
@@ -456,7 +441,8 @@ def create_source_package(workspace, source_dir, cmk_version) {
         def patch_script = "create_unsign_msi_patch.sh"
         def patch_file = "unsign-msi.patch"
         def ohm_files = "OpenHardwareMonitorLib.dll,OpenHardwareMonitorCLI.exe"
-        def artifacts = "check_mk_agent-64.exe,check_mk_agent.exe,${signed_msi},${unsigned_msi},check_mk.user.yml,python-3.cab,python-3.4.cab,${ohm_files}"
+	    def hashes_file = "windows_files_hashes.txt"
+        def artifacts = "check_mk_agent-64.exe,check_mk_agent.exe,${signed_msi},${unsigned_msi},check_mk.user.yml,python-3.cab,python-3.4.cab,${ohm_files},${hashes_file}"
         if (params.FAKE_WINDOWS_ARTIFACTS) {
             sh "mkdir -p ${agents_dir}"
             if(EDITION != 'raw') {
@@ -472,7 +458,14 @@ def create_source_package(workspace, source_dir, cmk_version) {
             }
             sh "cp ${agents_dir}/{${artifacts}} ${target_dir}"
             sh "${scripts_dir}/${patch_script} ${target_dir}/${signed_msi} ${target_dir}/${unsigned_msi} ${target_dir}/${patch_file}"
-            sh 'make dist || cat /root/.npm/_logs/*-debug.log'
+            withCredentials([
+                usernamePassword(
+                    credentialsId: 'nexus',
+                    passwordVariable: 'NEXUS_PASSWORD',
+                    usernameVariable: 'NEXUS_USERNAME')
+            ]) {
+                sh 'make dist || cat /root/.npm/_logs/*-debug.log'
+            }
         }
     }
 }
@@ -508,11 +501,17 @@ def build_package(package_type, build_dir, env) {
         // * if we then build under an old distro, we get linker issues
         // * so as long as we don't have the protobuf build bazelized, we need to manually clean it up here.
         sh("rm -fr omd/build/intermediate_install/protobuf*")
+        sh("rm -fr omd/build/stamps/protobuf*")
+
 
         // used withEnv(env) before, but sadly Jenkins does not set 0 length environment variables
         // see also: https://issues.jenkins.io/browse/JENKINS-43632
-        def env_str = env.join(" ")
-        sh("${env_str} DEBFULLNAME='Checkmk Team' DEBEMAIL='feedback@checkmk.com' make -C omd ${package_type}");
+        try {
+            def env_str = env.join(" ")
+            sh("${env_str} DEBFULLNAME='Checkmk Team' DEBEMAIL='feedback@checkmk.com' make -C omd ${package_type}");
+        } finally {
+            sh("cd '${checkout_dir}/omd'; echo 'Maximum heap size:'; bazel info peak-heap-size; echo 'Server log:'; cat \$(bazel info server_log)");
+        }
     }
 }
 
@@ -567,4 +566,46 @@ def test_package(package_path, name, workspace, source_dir, cmk_version) {
         ])
     }
 }
+
+def get_valid_build_id(jobName) {
+    /// In order to avoid unnessessary builds for the given job, we check if we
+    /// can use the last completed build instead.
+    /// That's the case if the following requirements are met:
+    /// - there _is_ a last completed build
+    /// - it's been successful
+    /// - it's from same day
+    /// - VERSION parameter matches with current build's
+    /// - and must be one of 'git' or 'daily'
+
+    def currentBuildVersion = params.VERSION;
+    def lastBuild = Jenkins.instance.getItemByFullName(jobName).lastCompletedBuild;
+    if (lastBuild) {
+        def currentBuildDay = Calendar.getInstance().get(Calendar.DAY_OF_YEAR);
+
+        def lastBuildParameters = (
+            lastBuild.getAllActions().find{ it instanceof ParametersAction }?.parameters.collectEntries { entry ->
+                [(entry.name) : entry.value]});
+
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(lastBuild.getTime());
+        def lastBuildDay = calendar.get(Calendar.DAY_OF_YEAR);
+
+        if (currentBuildVersion in ["daily", "git"] &&
+            lastBuildParameters.VERSION == currentBuildVersion &&
+            lastBuildDay == currentBuildDay &&
+            lastBuild.result.toString().equals("SUCCESS")
+        ) {
+            return lastBuild.getId();
+        }
+        print("Some attributes of the last ${jobName} build force a rebuild.");
+    }
+
+    show_duration("Build ${jobName}") {
+        return build(
+            job: jobName,
+            parameters: [string(name: "VERSION", value: currentBuildVersion)]
+        ).getId();
+    }
+}
+
 return this;

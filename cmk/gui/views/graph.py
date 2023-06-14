@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -13,6 +13,13 @@ from cmk.utils.type_defs import UserId
 from cmk.gui.config import active_config
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _l
+from cmk.gui.painter.v0.base import Cell, Painter2
+from cmk.gui.painter_options import (
+    get_graph_timerange_from_painter_options,
+    painter_option_registry,
+    PainterOption,
+    PainterOptions,
+)
 from cmk.gui.plugins.metrics import html_render
 from cmk.gui.plugins.metrics.utils import CombinedGraphMetricSpec
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
@@ -35,15 +42,8 @@ from cmk.gui.valuespec import (
     Transform,
     ValueSpec,
 )
-from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError
+from cmk.gui.view_utils import CellSpec, CSVExportError, JSONExportError, PythonExportError
 
-from .painter.v0.base import Cell, Painter2
-from .painter_options import (
-    get_graph_timerange_from_painter_options,
-    painter_option_registry,
-    PainterOption,
-    PainterOptions,
-)
 from .store import multisite_builtin_views
 
 multisite_builtin_views.update(
@@ -91,6 +91,7 @@ multisite_builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
         "host_graphs": {
             "browser_reload": 30,
@@ -129,12 +130,13 @@ multisite_builtin_views.update(
             "add_context_to_title": True,
             "sort_index": 99,
             "is_show_more": False,
+            "packaged": False,
         },
     }
 )
 
 
-def paint_time_graph_cmk(  # type:ignore[no-untyped-def]
+def paint_time_graph_cmk(  # type: ignore[no-untyped-def]
     row,
     cell,
     resolve_combined_single_metric_spec: Callable[
@@ -220,7 +222,7 @@ def paint_time_graph_cmk(  # type:ignore[no-untyped-def]
     )
 
 
-def paint_cmk_graphs_with_timeranges(  # type:ignore[no-untyped-def]
+def paint_cmk_graphs_with_timeranges(  # type: ignore[no-untyped-def]
     row,
     cell,
     resolve_combined_single_metric_spec: Callable[
@@ -312,6 +314,9 @@ class PainterServiceGraphs(Painter2):
             resolve_combined_single_metric_spec,
         )
 
+    def export_for_python(self, row: Row, cell: Cell) -> object:
+        raise PythonExportError()
+
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
@@ -351,6 +356,9 @@ class PainterHostGraphs(Painter2):
             cell,
             resolve_combined_single_metric_spec,
         )
+
+    def export_for_python(self, row: Row, cell: Cell) -> object:
+        raise PythonExportError()
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
@@ -420,6 +428,9 @@ class PainterSvcPnpgraph(Painter2):
         assert resolve_combined_single_metric_spec is not None
         return paint_time_graph_cmk(row, cell, resolve_combined_single_metric_spec)
 
+    def export_for_python(self, row: Row, cell: Cell) -> object:
+        raise PythonExportError()
+
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()
 
@@ -458,6 +469,9 @@ class PainterHostPnpgraph(Painter2):
         resolve_combined_single_metric_spec = type(self).resolve_combined_single_metric_spec
         assert resolve_combined_single_metric_spec is not None
         return paint_time_graph_cmk(row, cell, resolve_combined_single_metric_spec)
+
+    def export_for_python(self, row: Row, cell: Cell) -> object:
+        raise PythonExportError()
 
     def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
         raise CSVExportError()

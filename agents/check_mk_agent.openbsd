@@ -1,7 +1,9 @@
 #!/bin/sh
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+# shellcheck shell=ksh
 
 # Author: Lars Michelsen <lm@mathias-kettner.de>
 #         Florian Heigl <florian.heigl@gmail.com>
@@ -120,12 +122,9 @@ section_openbsd_mem() {
     return 0
 }
 
-# We're suppressing this, so we can enable the shellchecker.
-# TODO: Find out if this is working, and why. Are we implicitily assuming a specific shell?
-# shellcheck disable=SC2039 # In POSIX sh, set flag -A is undefined.
 section_misc_sections() {
     echo "<<<check_mk>>>"
-    echo "Version: 2.2.0i1"
+    echo "Version: 2.3.0b1"
     echo "AgentOS: openbsd"
     echo "Hostname: $(hostname)"
     echo "AgentDirectory: $MK_CONFDIR"
@@ -139,6 +138,9 @@ section_misc_sections() {
 
     # processes including username, without kernel processes
     echo '<<<ps>>>'
+    echo "[time]"
+    get_epoch
+    echo "[processes]"
     ps ax -ww -o user,vsz,rss,pcpu,command | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
 
     echo '<<<cpu>>>'
@@ -183,21 +185,21 @@ section_misc_sections() {
     # collect netstat values and interface number
     for NS in $NETSTAT_OUTPUT; do
         NI=$((NI + 1))
-        INTERFACES[$NI]=$(echo "$NS" | awk '{ print $1 }')
-        MC[$NI]=$(echo "$NS" | awk '{ print $4 }')
-        PI[$NI]=$(echo "$NS" | awk '{ print $5 }')
-        EI[$NI]=$(echo "$NS" | awk '{ print $6 }')
-        PO[$NI]=$(echo "$NS" | awk '{ print $7 }')
-        EO[$NI]=$(echo "$NS" | awk '{ print $8 }')
-        CO[$NI]=$(echo "$NS" | awk '{ print $9 }')
+        INTERFACES[NI]=$(echo "$NS" | awk '{ print $1 }')
+        MC[NI]=$(echo "$NS" | awk '{ print $4 }')
+        PI[NI]=$(echo "$NS" | awk '{ print $5 }')
+        EI[NI]=$(echo "$NS" | awk '{ print $6 }')
+        PO[NI]=$(echo "$NS" | awk '{ print $7 }')
+        EO[NI]=$(echo "$NS" | awk '{ print $8 }')
+        CO[NI]=$(echo "$NS" | awk '{ print $9 }')
     done
 
     # need NIC counter again for byte values - reset it
     NI=0
     for NS in $NETSTAT_OUTPUT_BYTES; do
         NI=$((NI + 1))
-        BI[$NI]=$(echo "$NS" | awk '{ print $5 }')
-        BO[$NI]=$(echo "$NS" | awk '{ print $6 }')
+        BI[NI]=$(echo "$NS" | awk '{ print $5 }')
+        BO[NI]=$(echo "$NS" | awk '{ print $6 }')
     done
 
     # what is this for?
@@ -216,6 +218,9 @@ section_misc_sections() {
             # Speed
             SP=$(echo "$IO" | grep -E "media:.*base" | cut -d\( -f2 | cut -db -f1)
             if [ "$SP" ]; then
+                case "$SP" in
+                    *G*) SP=$((${SP%G} * 1000)) ;;
+                esac
                 printf "\tSpeed: %sMb/s\n" "${SP}"
             fi
             # Detect duplexity - in reality only available for physical devices but

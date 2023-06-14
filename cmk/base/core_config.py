@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
 import dataclasses
 import os
-import shlex
 import shutil
+import socket
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from pathlib import Path
-from typing import Any, Literal, NamedTuple, Union
+from typing import Literal
 
 import cmk.utils.config_path
 import cmk.utils.config_warnings as config_warnings
@@ -21,21 +21,15 @@ import cmk.utils.paths
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import Labels
-from cmk.utils.log import console
-from cmk.utils.parameters import TimespecificParameters
+from cmk.utils.licensing.handler import LicenseState, LicensingHandler
+from cmk.utils.licensing.helper import get_licensed_state_file_path, write_licensed_state
 from cmk.utils.paths import core_helper_config_dir
-from cmk.utils.store import load_object_from_file, save_object_to_file
-from cmk.utils.type_defs import (
-    CheckPluginName,
-    HostAddress,
-    HostName,
-    HostsToUpdate,
-    Item,
-    ServiceID,
-    ServiceName,
-)
+from cmk.utils.store import load_object_from_file, lock_checkmk_configuration, save_object_to_file
+from cmk.utils.type_defs import HostAddress, HostName, Item, ServiceName
 
-from cmk.checkers.check_table import ConfiguredService
+from cmk.checkengine.check_table import ConfiguredService, ServiceID
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.parameters import TimespecificParameters
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
@@ -45,7 +39,6 @@ from cmk.base.nagios_utils import do_check_nagiosconfig
 
 CoreCommandName = str
 CoreCommand = str
-CheckCommandArguments = Iterable[Union[int, float, str, tuple[str, str, str]]]
 
 
 @dataclasses.dataclass(frozen=True)
@@ -55,6 +48,9 @@ class CollectedHostLabels:
 
 
 class MonitoringCore(abc.ABC):
+    def __init__(self, licensing_handler_type: type[LicensingHandler]):
+        self._licensing_handler_type = licensing_handler_type
+
     @classmethod
     @abc.abstractmethod
     def name(cls) -> Literal["nagios", "cmc"]:
@@ -65,14 +61,28 @@ class MonitoringCore(abc.ABC):
     def is_cmc() -> bool:
         raise NotImplementedError
 
-    @abc.abstractmethod
     def create_config(
         self,
         config_path: VersionedConfigPath,
         config_cache: ConfigCache,
-        hosts_to_update: HostsToUpdate = None,
+        hosts_to_update: set[HostName] | None = None,
+    ) -> None:
+        licensing_handler = self._licensing_handler_type.make()
+        self._persist_licensed_state(licensing_handler.state)
+        self._create_config(config_path, config_cache, licensing_handler, hosts_to_update)
+
+    @abc.abstractmethod
+    def _create_config(
+        self,
+        config_path: VersionedConfigPath,
+        config_cache: ConfigCache,
+        licensing_handler: LicensingHandler,
+        hosts_to_update: set[HostName] | None = None,
     ) -> None:
         raise NotImplementedError
+
+    def _persist_licensed_state(self, license_state: LicenseState) -> None:
+        write_licensed_state(get_licensed_state_file_path(), license_state)
 
 
 ActiveServiceID = tuple[str, Item]  # TODO: I hope the str someday (tm) becomes "CheckPluginName",
@@ -184,18 +194,18 @@ def check_icmp_arguments_of(
     config_cache: ConfigCache,
     hostname: HostName,
     add_defaults: bool = True,
-    family: int | None = None,
+    family: socket.AddressFamily | None = None,
 ) -> str:
     levels = config_cache.ping_levels(hostname)
     if not add_defaults and not levels:
         return ""
 
     if family is None:
-        family = 6 if config_cache.is_ipv6_primary(hostname) else 4
+        family = config_cache.default_address_family(hostname)
 
     args = []
 
-    if family == 6:
+    if family is socket.AF_INET6:
         args.append("-6")
 
     rta = 200.0, 500.0
@@ -238,9 +248,10 @@ def check_icmp_arguments_of(
 def do_create_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
-    hosts_to_update: HostsToUpdate = None,
+    hosts_to_update: set[HostName] | None = None,
     *,
     duplicates: Sequence[HostName],
+    skip_config_locking_for_bakery: bool = False,
 ) -> None:
     """Creating the monitoring core configuration and additional files
 
@@ -258,17 +269,25 @@ def do_create_config(
             raise
         raise MKGeneralException("Error creating configuration: %s" % e)
 
-    _bake_on_restart()
+    if config.bake_agents_on_restart and not config.is_wato_slave_site:
+        _bake_on_restart(config_cache, skip_config_locking_for_bakery)
 
 
-def _bake_on_restart() -> None:
+def _bake_on_restart(config_cache: config.ConfigCache, skip_locking: bool) -> None:
     try:
         # Local import is needed, because this is not available in all environments
         import cmk.base.cee.bakery.agent_bakery as agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel
-
-        agent_bakery.bake_on_restart()
     except ImportError:
-        pass
+        return
+
+    assert isinstance(config_cache, config.CEEConfigCache)
+
+    with nullcontext() if skip_locking else lock_checkmk_configuration():
+        target_configs = agent_bakery.BakeryTargetConfigs.from_config_cache(
+            config_cache, selected_hosts=None
+        )
+
+    agent_bakery.bake_on_restart(target_configs)
 
 
 @contextmanager
@@ -316,7 +335,7 @@ def _backup_objects_file(core: MonitoringCore) -> Iterator[None]:
 def _create_core_config(
     core: MonitoringCore,
     config_cache: ConfigCache,
-    hosts_to_update: HostsToUpdate = None,
+    hosts_to_update: set[HostName] | None = None,
     *,
     duplicates: Sequence[HostName],
 ) -> None:
@@ -334,7 +353,7 @@ def _create_core_config(
 
 def _verify_non_deprecated_checkgroups() -> None:
     """Verify that the user has no deprecated check groups configured."""
-    # 'check_plugin.check_ruleset_name' is of type RuleSetName, which is an ABCName (good),
+    # 'check_plugin.check_ruleset_name' is of type RuleSetName, which is an PluginName (good),
     # but config.checkgroup_parameters contains strings (todo)
     check_ruleset_names_with_plugin = {
         str(plugin.check_ruleset_name)
@@ -368,162 +387,6 @@ def _verify_non_duplicate_hosts(duplicates: Iterable[HostName]) -> None:
 
 
 # .
-#   .--Active Checks-------------------------------------------------------.
-#   |       _        _   _              ____ _               _             |
-#   |      / \   ___| |_(_)_   _____   / ___| |__   ___  ___| | _____      |
-#   |     / _ \ / __| __| \ \ / / _ \ | |   | '_ \ / _ \/ __| |/ / __|     |
-#   |    / ___ \ (__| |_| |\ V /  __/ | |___| | | |  __/ (__|   <\__ \     |
-#   |   /_/   \_\___|\__|_| \_/ \___|  \____|_| |_|\___|\___|_|\_\___/     |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Active check specific functions                                      |
-#   '----------------------------------------------------------------------'
-
-
-class HostAddressConfiguration(NamedTuple):
-    """Host configuration for active checks
-
-    This class is exposed to the active checks that implement a service_generator.
-    However, it's NOT part of the official API and can change at any time.
-    """
-
-    hostname: str
-    host_address: str
-    alias: str
-    ipv4address: str | None
-    ipv6address: str | None
-    indexed_ipv4addresses: dict[str, str]
-    indexed_ipv6addresses: dict[str, str]
-
-
-def _get_indexed_addresses(
-    host_attrs: config.ObjectAttributes, address_family: Literal["4", "6"]
-) -> Iterator[tuple[str, str]]:
-    for name, address in host_attrs.items():
-        address_template = f"_ADDRESSES_{address_family}_"
-        if address_template in name:
-            index = name.removeprefix(address_template)
-            yield f"$_HOSTADDRESSES_{address_family}_{index}$", address
-
-
-def _get_host_address_config(
-    hostname: str, host_attrs: config.ObjectAttributes
-) -> HostAddressConfiguration:
-    return HostAddressConfiguration(
-        hostname=hostname,
-        host_address=host_attrs["address"],
-        alias=host_attrs["alias"],
-        ipv4address=host_attrs.get("_ADDRESS_4"),
-        ipv6address=host_attrs.get("_ADDRESS_6"),
-        indexed_ipv4addresses=dict(_get_indexed_addresses(host_attrs, "4")),
-        indexed_ipv6addresses=dict(_get_indexed_addresses(host_attrs, "6")),
-    )
-
-
-def iter_active_check_services(
-    check_name: str,
-    active_info: Mapping[str, Any],
-    hostname: str,
-    host_attrs: config.ObjectAttributes,
-    params: dict[Any, Any],
-    stored_passwords: Mapping[str, str],
-) -> Iterator[tuple[str, str]]:
-    """Iterate active service descriptions and arguments
-
-    This function is used to allow multiple active services per one WATO rule.
-    This functionality is now used only in ICMP active check and it's NOT
-    part of an official API. This function can be changed at any time.
-    """
-    host_config = _get_host_address_config(hostname, host_attrs)
-
-    if "service_generator" in active_info:
-        for desc, args in active_info["service_generator"](host_config, params):
-            yield str(desc), str(args)
-        return
-
-    description = config.active_check_service_description(
-        hostname, host_config.alias, check_name, params
-    )
-    arguments = commandline_arguments(
-        hostname,
-        description,
-        active_info["argument_function"](params),
-        stored_passwords,
-    )
-
-    yield description, arguments
-
-
-def _prepare_check_command(
-    command_spec: CheckCommandArguments,
-    hostname: HostName,
-    description: ServiceName | None,
-    stored_passwords: Mapping[str, str],
-) -> str:
-    """Prepares a check command for execution by Checkmk
-
-    In case a list is given it quotes element if necessary. It also prepares password store entries
-    for the command line. These entries will be completed by the executed program later to get the
-    password from the password store.
-    """
-    passwords: list[tuple[str, str, str]] = []
-    formatted: list[str] = []
-    for arg in command_spec:
-        if isinstance(arg, (int, float)):
-            formatted.append("%s" % arg)
-
-        elif isinstance(arg, str):
-            formatted.append(shlex.quote(arg))
-
-        elif isinstance(arg, tuple) and len(arg) == 3:
-            pw_ident, preformated_arg = arg[1:]
-            try:
-                password = stored_passwords[pw_ident]
-            except KeyError:
-                if hostname and description:
-                    descr = f' used by service "{description}" on host "{hostname}"'
-                elif hostname:
-                    descr = ' used by host host "%s"' % (hostname)
-                else:
-                    descr = ""
-
-                console.warning(
-                    f'The stored password "{pw_ident}"{descr} does not exist (anymore).'
-                )
-                password = "%%%"
-
-            pw_start_index = str(preformated_arg.index("%s"))
-            formatted.append(shlex.quote(preformated_arg % ("*" * len(password))))
-            passwords.append((str(len(formatted)), pw_start_index, pw_ident))
-
-        else:
-            raise MKGeneralException(f"Invalid argument for command line: {arg!r}")
-
-    if passwords:
-        formatted = ["--pwstore=%s" % ",".join(["@".join(p) for p in passwords])] + formatted
-
-    return " ".join(formatted)
-
-
-def get_active_check_descriptions(
-    hostname: HostName,
-    hostalias: str,
-    host_attrs: ObjectAttributes,
-    check_name: str,
-    params: dict,
-) -> Iterator[str]:
-    host_config = _get_host_address_config(hostname, host_attrs)
-    active_check_info = config.active_check_info[check_name]
-
-    if "service_generator" in active_check_info:
-        for description, _ in active_check_info["service_generator"](host_config, params):
-            yield str(description)
-        return
-
-    yield config.active_check_service_description(hostname, hostalias, check_name, params)
-
-
-# .
 #   .--Argument Thingies---------------------------------------------------.
 #   |    _                                         _                       |
 #   |   / \   _ __ __ _ _   _ _ __ ___   ___ _ __ | |_                     |
@@ -542,73 +405,11 @@ def get_active_check_descriptions(
 #   '----------------------------------------------------------------------'
 
 
-def commandline_arguments(
-    hostname: HostName,
-    description: ServiceName | None,
-    commandline_args: config.SpecialAgentInfoFunctionResult,
-    stored_passwords: Mapping[str, str] | None = None,
-) -> str:
-    """Commandline arguments for special agents or active checks."""
-    if isinstance(commandline_args, str):
-        return commandline_args
-
-    # Some special agents also have stdin configured
-    args = getattr(commandline_args, "args", commandline_args)
-
-    if not isinstance(args, list):
-        raise MKGeneralException(
-            "The check argument function needs to return either a list of arguments or a "
-            "string of the concatenated arguments (Host: %s, Service: %s)."
-            % (hostname, description)
-        )
-
-    return _prepare_check_command(
-        args,
-        hostname,
-        description,
-        cmk.utils.password_store.load() if stored_passwords is None else stored_passwords,
-    )
-
-
-def make_special_agent_cmdline(
-    hostname: HostName,
-    ipaddress: HostAddress | None,
-    agentname: str,
-    params: dict,
-) -> str:
-    def _make_source_path(agentname: str) -> Path:
-        file_name = "agent_%s" % agentname
-        local_path = cmk.utils.paths.local_agents_dir / "special" / file_name
-        if local_path.exists():
-            return local_path
-        return Path(cmk.utils.paths.agents_dir) / "special" / file_name
-
-    def _make_source_args(
-        hostname: HostName,
-        ipaddress: HostAddress | None,
-        agentname: str,
-        params: dict,
-    ) -> str:
-        info_func = config.special_agent_info[agentname]
-        # TODO: CMK-3812 (see above)
-        agent_configuration = info_func(params, hostname, ipaddress)
-        return commandline_arguments(hostname, None, agent_configuration)
-
-    path = _make_source_path(agentname)
-    args = _make_source_args(
-        hostname,
-        ipaddress,
-        agentname,
-        params,
-    )
-    return f"{path} {args}"
-
-
 def make_special_agent_stdin(
     hostname: HostName,
     ipaddress: HostAddress | None,
     agentname: str,
-    params: dict,
+    params: Mapping[str, object],
 ) -> str | None:
     info_func = config.special_agent_info[agentname]
     # TODO: We call a user supplied function here.
@@ -699,7 +500,7 @@ def _extra_service_attributes(
 
 def write_notify_host_file(
     config_path: VersionedConfigPath,
-    labels_per_host: dict[HostName, CollectedHostLabels],
+    labels_per_host: Mapping[HostName, CollectedHostLabels],
 ) -> None:
     notify_labels_path: Path = _get_host_file_path(config_path)
     for host, labels in labels_per_host.items():

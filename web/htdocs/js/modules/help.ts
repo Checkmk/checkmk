@@ -1,9 +1,9 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-import * as utils from "utils";
 import * as ajax from "ajax";
+import * as utils from "utils";
 
 //#   .-Help Toggle--------------------------------------------------------.
 //#   |          _   _      _         _____                 _              |
@@ -21,30 +21,28 @@ function is_help_active() {
     return helpdivs.length !== 0 && helpdivs[0].style.display === "flex";
 }
 
-export function toggle(title_show: string, title_hide: string) {
+export function toggle() {
     if (is_help_active()) {
         switch_help(false);
-        toggle_help_page_menu_entry(title_show);
     } else {
         switch_help(true);
-        toggle_help_page_menu_entry(title_hide);
     }
+    toggle_help_page_menu_icon();
 }
 
 function switch_help(how: boolean) {
     // recursive scan for all div class=help elements
-    var helpdivs = document.getElementsByClassName(
+    const helpdivs = document.getElementsByClassName(
         "help"
     ) as HTMLCollectionOf<HTMLElement>;
-
-    var i;
+    let i;
     for (i = 0; i < helpdivs.length; i++) {
         helpdivs[i].style.display = how ? "flex" : "none";
     }
 
     // small hack for wato ruleset lists, toggle the "float" and "nofloat"
     // classes on those objects to make the layout possible
-    var rulesetdivs = utils.querySelectorAllByClassName("ruleset");
+    const rulesetdivs = utils.querySelectorAllByClassName("ruleset");
     for (i = 0; i < rulesetdivs.length; i++) {
         if (how) {
             if (utils.has_class(rulesetdivs[i], "float")) {
@@ -62,12 +60,10 @@ function switch_help(how: boolean) {
     ajax.call_ajax("ajax_switch_help.py?enabled=" + (how ? "yes" : ""));
 }
 
-function toggle_help_page_menu_entry(title: string) {
-    const entry = document.getElementById("menu_entry_inline_help")!;
-    const span = entry.getElementsByTagName("span")[0];
-    const icon = entry.getElementsByTagName("img")[0];
-
-    span.textContent = title;
+function toggle_help_page_menu_icon() {
+    const icon = document
+        .getElementById("menu_entry_inline_help")!
+        .getElementsByTagName("img")[0];
     icon.src = icon.src.includes("toggle_on")
         ? icon.src.replace("toggle_on", "toggle_off")
         : icon.src.replace("toggle_off", "toggle_on");

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
@@ -21,7 +21,6 @@ from cmk.gui import http
 from cmk.gui.session import FileBasedSession
 from cmk.gui.wsgi.blueprints.checkmk import checkmk
 from cmk.gui.wsgi.blueprints.rest_api import rest_api
-from cmk.gui.wsgi.middleware import FixApacheEnv
 from cmk.gui.wsgi.profiling import ProfileSwitcher
 
 if t.TYPE_CHECKING:
@@ -66,15 +65,14 @@ def make_wsgi_app(debug: bool = False, testing: bool = False) -> Flask:
     app.register_blueprint(checkmk)
 
     # Some middlewares we want to have available in all environments
-    app.wsgi_app = FixApacheEnv(app.wsgi_app).wsgi_app  # type: ignore[assignment]
-    app.wsgi_app = ProxyFix(app.wsgi_app)  # type: ignore[assignment]
-    app.wsgi_app = ProfileSwitcher(  # type: ignore[assignment]
+    app.wsgi_app = ProxyFix(app.wsgi_app)  # type: ignore[method-assign]
+    app.wsgi_app = ProfileSwitcher(  # type: ignore[method-assign]
         app.wsgi_app,
         profile_file=pathlib.Path(paths.var_dir) / "multisite.profile",
     ).wsgi_app
 
     if debug:
-        app.wsgi_app = DebuggedApplication(  # type: ignore[assignment]
+        app.wsgi_app = DebuggedApplication(  # type: ignore[method-assign]
             app.wsgi_app,
             evalex=True,
             pin_logging=False,

@@ -6,7 +6,7 @@ Date: 1656568980
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The activemq agent would complain about incorrect credentials and a mismatched tagline, independent if the credentials were correct or not.
 This has been fixed now.

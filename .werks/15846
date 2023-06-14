@@ -1,0 +1,16 @@
+Title: New views for measuring IT utilization
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1683811712
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Measure the historic utilization of Linux, Windows servers as well as VMware ESXi, Nutanix, Proxmox,
+and Hyper-V hypervisors.
+
+With this change, we ship new views calculating historic averages over the last 365 days for CPU, 
+memory and filesystem utilization. These views were developed in cooperation with the Swiss Data 
+Center Efficiency Association to help companies measure IT utilization in their data centers.

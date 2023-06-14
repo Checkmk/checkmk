@@ -1,0 +1,15 @@
+Title: ntopng: integration with checkmk
+Class: fix
+Compatible: compat
+Component: ntopng_integration
+Date: 1685510749
+Edition: cee
+Knowledge: doc
+Level: 2
+Version: 2.3.0b1
+
+Due to changes in development of the ntopng API, the
+integration with checkmk was no longer compatible. This
+werk addresses this issue by making the necessary
+changes to get all previously working ntopng dashboards
+back in a working state.

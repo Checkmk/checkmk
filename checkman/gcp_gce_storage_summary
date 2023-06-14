@@ -1,9 +1,10 @@
-title: GCP GCE: CPU
+title: GCP GCE Disk: Summary
 agents: gcp
 catalog: cloud/gcp
 license: GPLv2
 distribution: check_mk
 description:
- counts number of gce disks
+ This check counts number of gce disks.
+
 discovery:
- One service is created
+ One service is created for each disk.

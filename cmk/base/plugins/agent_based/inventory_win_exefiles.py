@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -82,9 +82,9 @@ def inventory_win_exefiles(section: Section) -> InventoryResult:
             path=["software", "packages"],
             key_columns={
                 "name": package.name,
+                "path": package.path,
             },
             inventory_columns={
-                "path": package.path,
                 "package_type": package.package_type,
                 "install_date": package.install_date,
                 "size": package.size,

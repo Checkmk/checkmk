@@ -6,7 +6,7 @@ Date: 1666185693
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The check plugin used to crash if there were no FC paths or no iSCSI paths available in the output.
 This has now been fixed.

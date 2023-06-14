@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -204,7 +204,7 @@ class AuxTagIDField(fields.String):
         super().__init__(
             description="An auxiliary tag id",
             example="ip-v4",
-            pattern="^[-a-z0-9A-Z_]*$",
+            pattern="^[-a-z0-9A-Z_]+$",
             **kwargs,
         )
         self.presence = presence

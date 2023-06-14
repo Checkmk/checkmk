@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 On windows the per process cpu utilization used to be twice as large as expected.
 This has been fixed. No user interaction required.

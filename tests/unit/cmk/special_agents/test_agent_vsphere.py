@@ -1,10 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Mapping, Sequence
+from unittest.mock import Mock
+
 import pytest
 
-from cmk.special_agents.agent_vsphere import eval_multipath_info, fetch_virtual_machines
+from cmk.special_agents.agent_vsphere import (
+    eval_multipath_info,
+    fetch_virtual_machines,
+    get_section_snapshot_summary,
+)
 
 
 def _build_id(lun_id):
@@ -50,11 +57,13 @@ PROP_NAME = "foo"
         ),
     ],
 )
-def test_eval_multipath_info(propset, expected) -> None:  # type:ignore[no-untyped-def]
+def test_eval_multipath_info(
+    propset: str, expected: tuple[Mapping[str, Sequence[str]], Mapping[object, object]]
+) -> None:
     assert eval_multipath_info("", PROP_NAME, propset) == expected
 
 
-def test_cloning_vm_is_processed(mocker) -> None:  # type:ignore[no-untyped-def]
+def test_cloning_vm_is_processed(mocker: Mock) -> None:
     """
     VMs that are in the process of being cloned do not define runtime.host.
     Make sure that this does not lead to a KeyError.
@@ -113,3 +122,47 @@ def test_cloning_vm_is_processed(mocker) -> None:  # type:ignore[no-untyped-def]
         },
         {"host-222": ["AAA-BBBBBBB"]},
     )
+
+
+@pytest.mark.parametrize(
+    "virtual_machines, expected_output",
+    [
+        pytest.param(
+            {
+                "vm_name": {
+                    "name": "vm_name",
+                    "snapshot.rootSnapshotList": "871 1605626114 poweredOn SnapshotName|834 1605632160 poweredOff Snapshotname2",
+                }
+            },
+            [
+                "<<<esx_vsphere_snapshots_summary:sep(0)>>>",
+                '{"time": 1605626114, "state": "poweredOn", "name": "SnapshotName", "vm": "vm_name"}',
+                '{"time": 1605632160, "state": "poweredOff", "name": "Snapshotname2", "vm": "vm_name"}',
+            ],
+            id="There are two snapshots available. For every available snapshot, information about the creation time, state, name and vm_name is provided.",
+        ),
+        pytest.param(
+            {"vm_name": {"name": "vm_name"}},
+            ["<<<esx_vsphere_snapshots_summary:sep(0)>>>"],
+            id="There are no snapshots available and because of that an empty section is created.",
+        ),
+        pytest.param(
+            {
+                "vm_name": {
+                    "name": "vm_name",
+                    "snapshot.rootSnapshotList": "871 1605626114 poweredOn SnapshotName",
+                }
+            },
+            [
+                "<<<esx_vsphere_snapshots_summary:sep(0)>>>",
+                '{"time": 1605626114, "state": "poweredOn", "name": "SnapshotName", "vm": "vm_name"}',
+            ],
+            id="There is only one snapshot available. Same behaviour as when there are multiple snapshots available.",
+        ),
+    ],
+)
+def test_get_section_snapshot_summary(
+    virtual_machines: Mapping[str, Mapping[str, str]],
+    expected_output: Sequence[str],
+) -> None:
+    assert get_section_snapshot_summary(virtual_machines) == expected_output

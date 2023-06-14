@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
-import time
+import itertools
 from collections.abc import Iterator
+from typing import Final
 
 import pytest
 
@@ -18,35 +18,44 @@ def fake_sendmail_fixture(site: Site) -> Iterator[None]:
     site.write_text_file(
         "local/bin/sendmail", '#!/bin/bash\nset -e\necho "sendmail called with: $@"\n'
     )
-    os.chmod(site.path("local/bin/sendmail"), 0o775)
-    yield
-    site.delete_file("local/bin/sendmail")
+    try:
+        assert site.execute(["chmod", "0775", site.path("local/bin/sendmail")]).wait() == 0
+        yield
+    finally:
+        site.delete_file("local/bin/sendmail")
 
 
-@pytest.fixture(name="test_log")
-def test_log_fixture(  # type:ignore[no-untyped-def]
-    site: Site, fake_sendmail
-) -> Iterator[WatchLog]:
-    users = {
-        "hh": {
-            "fullname": "Harry Hirsch",
-            "password": "1234",
-            "email": f"{site.id}@localhost",
-            "contactgroups": ["all"],
-        },
-    }
-
+@pytest.fixture(name="test_user")
+def fixture_test_user(site: Site) -> Iterator[None]:
     initial_users = site.openapi.get_all_users()
     assert len(initial_users) == 2  # expect cmkadmin and automation user
 
-    for name, user_dict in users.items():
-        site.openapi.create_user(username=name, **user_dict)  # type: ignore
+    username = "hh"
+    site.openapi.create_user(
+        username=username,
+        fullname="Harry Hirsch",
+        password="1234abcdabcd",
+        email=f"{site.id}@localhost",
+        contactgroups=["all"],
+    )
+
     all_users = site.openapi.get_all_users()
-    assert len(all_users) == len(initial_users) + len(users)
+    assert len(all_users) == len(initial_users) + 1
 
-    site.live.command("[%d] STOP_EXECUTING_HOST_CHECKS" % time.time())
-    site.live.command("[%d] STOP_EXECUTING_SVC_CHECKS" % time.time())
+    try:
+        yield
+    finally:
+        site.openapi.delete_user(username)
 
+
+@pytest.fixture(name="test_log")
+def fixture_test_log(
+    site: Site,
+    fake_sendmail: None,
+    test_user: None,
+    disable_checks: None,
+    disable_flap_detection: None,
+) -> Iterator[WatchLog]:
     site.openapi.create_host(
         "notify-test",
         attributes={
@@ -55,16 +64,12 @@ def test_log_fixture(  # type:ignore[no-untyped-def]
     )
     site.activate_changes_and_wait_for_core_reload()
 
-    with WatchLog(site, default_timeout=20) as l:
-        yield l
-
-    site.live.command("[%d] START_EXECUTING_HOST_CHECKS" % time.time())
-    site.live.command("[%d] START_EXECUTING_SVC_CHECKS" % time.time())
-
-    site.openapi.delete_host("notify-test")
-    for username in users:
-        site.openapi.delete_user(username)
-    site.activate_changes_and_wait_for_core_reload()
+    try:
+        with WatchLog(site, default_timeout=20) as l:
+            yield l
+    finally:
+        site.openapi.delete_host("notify-test")
+        site.activate_changes_and_wait_for_core_reload()
 
 
 def test_simple_rbn_host_notification(test_log: WatchLog, site: Site) -> None:
@@ -81,13 +86,20 @@ def test_simple_rbn_host_notification(test_log: WatchLog, site: Site) -> None:
 
 
 def test_simple_rbn_service_notification(test_log: WatchLog, site: Site) -> None:
-    site.send_service_check_result("notify-test", "PING", 2, "FAKE CRIT")
+    flatten = itertools.chain.from_iterable
+
+    service: Final = "Check_MK"
+    assert service in flatten(site.live.query("GET services\nColumns: description\n"))
+
+    site.send_service_check_result("notify-test", service, 2, "FAKE CRIT")
 
     # NOTE: "] " is necessary to get the actual log line and not the external command execution
     test_log.check_logged(
-        "] SERVICE NOTIFICATION: check-mk-notify;notify-test;PING;CRITICAL;check-mk-notify;FAKE CRIT"
+        f"] SERVICE NOTIFICATION: check-mk-notify;notify-test;{service};CRITICAL;check-mk-notify;FAKE CRIT"
     )
-    test_log.check_logged("] SERVICE NOTIFICATION: hh;notify-test;PING;CRITICAL;mail;FAKE CRIT")
     test_log.check_logged(
-        "] SERVICE NOTIFICATION RESULT: hh;notify-test;PING;OK;mail;Spooled mail to local mail transmission agent;"
+        f"] SERVICE NOTIFICATION: hh;notify-test;{service};CRITICAL;mail;FAKE CRIT"
+    )
+    test_log.check_logged(
+        f"] SERVICE NOTIFICATION RESULT: hh;notify-test;{service};OK;mail;Spooled mail to local mail transmission agent;"
     )

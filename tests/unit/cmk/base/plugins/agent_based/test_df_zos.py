@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -35,6 +35,7 @@ def test_discovery(section: df_zos.Section) -> None:
     assert sorted(df_zos.discover_df_zos([{"groups": []}], section)) == [Service(item="/ALF0")]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_no_item(section: df_zos.Section) -> None:
     assert not list(df_zos.check_df_zos("knut", {}, section))
 

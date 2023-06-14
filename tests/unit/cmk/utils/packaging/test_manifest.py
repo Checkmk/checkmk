@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -35,7 +35,7 @@ class TestManifest:
     def test_read_15_manifest(self) -> None:
         """make sure we can read old packages without 'usable until'"""
         assert Manifest.parse_python_string(
-            "{'author': 'tribe29 GmbH (mo)',\n"
+            "{'author': 'Checkmk GmbH (mo)',\n"
             " 'description': '',\n"
             " 'download_url': '',\n"
             " 'files': {},\n"
@@ -49,7 +49,7 @@ class TestManifest:
     def test_read_20_manifest(self) -> None:
         """make sure we can read old packages with 'num_files'"""
         assert Manifest.parse_python_string(
-            "{'author': 'tribe29 GmbH (mo)',\n"
+            "{'author': 'Checkmk GmbH (mo)',\n"
             " 'description': '',\n"
             " 'download_url': '',\n"
             " 'files': {},\n"
@@ -63,7 +63,7 @@ class TestManifest:
 
     def test_read_21_manifest(self) -> None:
         assert Manifest.parse_python_string(
-            "{'author': 'tribe29 GmbH (mo)',\n"
+            "{'author': 'Checkmk GmbH (mo)',\n"
             " 'description': '',\n"
             " 'download_url': '',\n"
             " 'files': {'checks': ['just-some-file']},\n"
@@ -107,7 +107,7 @@ def test_read_manifest_optionally_missing(tmp_path: Path) -> None:
 
 def test_field_conversion() -> None:
     m = Manifest.parse_python_string(
-        "{'author': 'tribe29 GmbH (mo)',\n"
+        "{'author': 'Checkmk GmbH (mo)',\n"
         " 'description': '',\n"
         " 'download_url': '',\n"
         " 'files': {},\n"
@@ -123,7 +123,7 @@ def test_field_conversion() -> None:
 def test_field_conversion_package_name() -> None:
     with pytest.raises(pydantic.ValidationError, match="must start with a letter or underscore"):
         Manifest.parse_python_string(
-            "{'author': 'tribe29 GmbH (mo)',\n"
+            "{'author': 'Checkmk GmbH (mo)',\n"
             " 'description': '',\n"
             " 'download_url': '',\n"
             " 'files': {},\n"
@@ -138,7 +138,7 @@ def test_field_conversion_package_name() -> None:
 def test_field_conversion_package_part() -> None:
     with pytest.raises(pydantic.ValidationError, match="value is not a valid enumeration member"):
         Manifest.parse_python_string(
-            "{'author': 'tribe29 GmbH (mo)',\n"
+            "{'author': 'Checkmk GmbH (mo)',\n"
             " 'description': '',\n"
             " 'download_url': '',\n"
             " 'files': {'not-a-package-part': ['just-some-file']},\n"

@@ -1,20 +1,23 @@
 #!/usr/bin/env python3
-# Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import annotations
 
+import ipaddress
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from logging import Logger
-from typing import NamedTuple
+from typing import Literal, NamedTuple
 
 from livestatus import SiteId
 
-from cmk.utils.type_defs import TimeperiodName
+import cmk.utils.regex
+from cmk.utils.timeperiod import TimeperiodName
 
-from .config import MatchGroups, Rule, TextMatchResult, TextPattern
+from .config import MatchGroups, Rule, StatePatterns, TextMatchResult, TextPattern
 from .event import Event
 
 
@@ -37,7 +40,66 @@ class MatchSuccess:
 MatchResult = MatchFailure | MatchSuccess
 
 
-def match(pattern: TextPattern, text: str, complete: bool) -> TextMatchResult:
+def compile_matching_value(key: str, val: str) -> TextPattern | None:
+    value = val.strip()
+    # Remove leading .* from regex. This is redundant and
+    # dramatically destroys performance when doing an infix search.
+    if key in ["match", "match_ok"]:
+        while value.startswith(".*") and not value.startswith(".*?"):
+            value = value[2:]
+    if not value:
+        return None
+    if cmk.utils.regex.is_regex(value):
+        return re.compile(value, re.IGNORECASE)
+    return val.lower()
+
+
+def compile_rule_attribute(
+    rule: Rule,
+    key: Literal["match", "match_ok", "match_host", "match_application", "cancel_application"],
+) -> None:
+    if key not in rule:
+        return
+    value = rule[key]
+    if not isinstance(value, str):  # TODO: Remove when we have CompiledRule
+        raise ValueError(f"attribute {key} of rule {rule['id']} already compiled")
+    compiled_value = compile_matching_value(key, value)
+    if compiled_value is None:
+        del rule[key]
+    else:
+        rule[key] = compiled_value
+
+
+def compile_state_pattern(state_patterns: StatePatterns, key: Literal["0", "1", "2"]) -> None:
+    if key not in state_patterns:
+        return
+    value = state_patterns[key]
+    if not isinstance(value, str):  # TODO: Remove when we have CompiledRule
+        raise ValueError(f"state pattern {key} already compiled")
+    compiled_value = compile_matching_value("state", value)
+    if compiled_value is None:
+        del state_patterns[key]
+    else:
+        state_patterns[key] = compiled_value
+
+
+def compile_rule(rule: Rule) -> None:
+    """
+    Tries to convert strings to compiled regex patterns.
+    """
+    compile_rule_attribute(rule, "match")
+    compile_rule_attribute(rule, "match_ok")
+    compile_rule_attribute(rule, "match_host")
+    compile_rule_attribute(rule, "match_application")
+    compile_rule_attribute(rule, "cancel_application")
+    if "state" in rule and isinstance(rule["state"], tuple) and rule["state"][0] == "text_pattern":
+        state_patterns: StatePatterns = rule["state"][1]
+        compile_state_pattern(state_patterns, "2")
+        compile_state_pattern(state_patterns, "1")
+        compile_state_pattern(state_patterns, "0")
+
+
+def match(pattern: TextPattern | None, text: str, complete: bool) -> TextMatchResult:
     """Performs an EC style matching test of pattern on text
 
     Returns False in case of no match or a tuple with the match groups.
@@ -51,7 +113,7 @@ def match(pattern: TextPattern, text: str, complete: bool) -> TextMatchResult:
     return m.groups("") if m else False
 
 
-def format_pattern(pattern: TextPattern) -> str:
+def format_pattern(pattern: TextPattern | None) -> str:
     if pattern is None:
         return str(pattern)
     if isinstance(pattern, str):
@@ -59,40 +121,26 @@ def format_pattern(pattern: TextPattern) -> str:
     return pattern.pattern
 
 
-def parse_ipv4_address(text: str) -> int:
-    parts = list(map(int, text.split(".")))
-    return (parts[0] << 24) + (parts[1] << 16) + (parts[2] << 8) + parts[3]
-
-
-def parse_ipv4_network(text: str) -> tuple[int, int]:
-    if "/" not in text:
-        return parse_ipv4_address(text), 32
-
-    network_text, bits_text = text.split("/")
-    return parse_ipv4_address(network_text), int(bits_text)
-
-
-def match_ipv4_network(pattern: str, ipaddress_text: str) -> bool:
-    network, network_bits = parse_ipv4_network(pattern)  # is validated by valuespec
-    if network_bits == 0:
-        return True  # event if ipaddress is empty
+def match_ip_network(pattern: str, ipaddress_text: str) -> bool:
+    """
+    Return True if ipaddress belongs to the network.
+    Works for both ipv6 and ipv4 addresses.
+    """
     try:
-        ipaddress = parse_ipv4_address(ipaddress_text)
-    except Exception:
+        # strict=False is for 0.0.0.0/0 to be evaluated
+        network = ipaddress.ip_network(pattern, strict=False)
+    except ValueError:
+        return False
+
+    if int(network.netmask) == 0:
+        return True  # event if ipaddress is empty
+
+    try:
+        ipaddress_ = ipaddress.ip_address(ipaddress_text)
+    except ValueError:
         return False  # invalid address never matches
 
-    # first network_bits of network and ipaddress must be
-    # identical. Create a bitmask.
-    bitmask = 0
-    for n in range(32):
-        bitmask = bitmask << 1
-        if n < network_bits:
-            bit = 1
-        else:
-            bit = 0
-        bitmask += bit
-
-    return (network & bitmask) == (ipaddress & bitmask)
+    return ipaddress_ in network
 
 
 class RuleMatcher:
@@ -102,7 +150,6 @@ class RuleMatcher:
         omd_site_id: SiteId,
         is_active_time_period: Callable[[TimeperiodName], bool],
     ) -> None:
-        super().__init__()
         self._logger = logger
         self._omd_site = omd_site_id
         self._is_active_time_period = is_active_time_period
@@ -128,12 +175,12 @@ class RuleMatcher:
         match_priority = self.event_rule_determine_match_priority(rule, event)
         if match_priority is None:
             # Abort on negative outcome, neither positive nor negative
-            result = MatchFailure("The syslog priority does not match")
+            result = MatchFailure(reason="The syslog priority does not match")
             self._log_rule_matching(result.reason)
             return result
 
         # Determine and cleanup match_groups
-        match_groups: MatchGroups = {}
+        match_groups = MatchGroups()
         match_groups_result = self.event_rule_determine_match_groups(rule, event, match_groups)
         if isinstance(match_groups_result, MatchFailure):
             self._log_rule_matching(match_groups_result.reason)
@@ -149,10 +196,12 @@ class RuleMatcher:
         result = self.event_rule_matches_non_inverted(rule, event)
         if rule.get("invert_matching"):
             if isinstance(result, MatchFailure):
-                result = MatchSuccess(cancelling=False, match_groups={})
+                result = MatchSuccess(cancelling=False, match_groups=MatchGroups())
                 self._log_rule_matching("Rule would not match, but due to inverted matching does.")
             else:
-                result = MatchFailure("Rule would match, but due to inverted matching does not.")
+                result = MatchFailure(
+                    reason="Rule would match, but due to inverted matching does not."
+                )
                 self._log_rule_matching(result.reason)
         return result
 
@@ -210,7 +259,7 @@ class RuleMatcher:
                 self._log_rule_matching("did not cancel event, because of wrong cancel priority")
 
         # TODO: create a better reason
-        return MatchFailure("Unknown")
+        return MatchFailure(reason="Unknown")
 
     def event_rule_matches_generic(self, rule: Rule, event: Event) -> MatchResult:
         """
@@ -233,7 +282,7 @@ class RuleMatcher:
                 self._log_rule_matching(result.reason)
                 return result
 
-        return MatchSuccess(cancelling=False, match_groups={})
+        return MatchSuccess(cancelling=False, match_groups=MatchGroups())
 
     def event_rule_determine_match_priority(self, rule: Rule, event: Event) -> MatchPriority | None:
         p = event["priority"]
@@ -256,30 +305,30 @@ class RuleMatcher:
 
     def event_rule_matches_site(self, rule: Rule, event: Event) -> MatchResult:
         if "match_site" not in rule or self._omd_site in rule["match_site"]:
-            return MatchSuccess(cancelling=False, match_groups={})
-        return MatchFailure("The site does not match.")
+            return MatchSuccess(cancelling=False, match_groups=MatchGroups())
+        return MatchFailure(reason="The site does not match.")
 
     def event_rule_matches_host(self, rule: Rule, event: Event) -> MatchResult:
         if match(rule.get("match_host"), event["host"], complete=True) is False:
             return MatchFailure(
-                f"Did not match because of wrong host {event['host']!r} (need {format_pattern(rule.get('match_host'))!r})"
+                reason=f"Did not match because of wrong host {event['host']!r} (need {format_pattern(rule.get('match_host'))!r})"
             )
 
-        return MatchSuccess(cancelling=False, match_groups={})
+        return MatchSuccess(cancelling=False, match_groups=MatchGroups())
 
     def event_rule_matches_ip(self, rule: Rule, event: Event) -> MatchResult:
-        if not match_ipv4_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
+        if not match_ip_network(rule.get("match_ipaddress", "0.0.0.0/0"), event["ipaddress"]):
             return MatchFailure(
-                f"Did not match because of wrong source IP address {event['ipaddress']!r} (need {rule.get('match_ipaddress')!r})"
+                reason=f"Did not match because of wrong source IP address {event['ipaddress']!r} (need {rule.get('match_ipaddress')!r})"
             )
 
-        return MatchSuccess(cancelling=False, match_groups={})
+        return MatchSuccess(cancelling=False, match_groups=MatchGroups())
 
     def event_rule_matches_facility(self, rule: Rule, event: Event) -> MatchResult:
         if "match_facility" in rule and event["facility"] != rule["match_facility"]:
-            return MatchFailure("Did not match because of wrong syslog facility")
+            return MatchFailure(reason="Did not match because of wrong syslog facility")
 
-        return MatchSuccess(cancelling=False, match_groups={})
+        return MatchSuccess(cancelling=False, match_groups=MatchGroups())
 
     def event_rule_matches_service_level(self, rule: Rule, event: Event) -> MatchResult:
         if "match_sl" in rule:
@@ -289,22 +338,21 @@ class RuleMatcher:
             p = event.get("sl", 0)
             if p < sl_from or p > sl_to:
                 return MatchFailure(
-                    f"Did not match because of wrong service level {p} (need {sl_from}..{sl_to})"
+                    reason=f"Did not match because of wrong service level {p} (need {sl_from}..{sl_to})"
                 )
 
-        return MatchSuccess(cancelling=False, match_groups={})
+        return MatchSuccess(cancelling=False, match_groups=MatchGroups())
 
     def event_rule_matches_timeperiod(self, rule: Rule, event: Event) -> MatchResult:
         if "match_timeperiod" in rule and not self._is_active_time_period(rule["match_timeperiod"]):
             return MatchFailure(
-                f"The time period {rule['match_timeperiod']} is not is not known or is currently not active"
+                reason=f"The time period {rule['match_timeperiod']} is not is not known or is currently not active"
             )
-        return MatchSuccess(cancelling=False, match_groups={})
+        return MatchSuccess(cancelling=False, match_groups=MatchGroups())
 
     def event_rule_determine_match_groups(
         self, rule: Rule, event: Event, match_groups: MatchGroups
     ) -> MatchResult:
-
         match_group_functions = [
             self.event_rule_matches_syslog_application,
             self.event_rule_matches_message,
@@ -316,13 +364,13 @@ class RuleMatcher:
                 self._log_rule_matching(result.reason)
                 return result
 
-        return MatchSuccess(cancelling=False, match_groups={})
+        return MatchSuccess(cancelling=False, match_groups=MatchGroups())
 
     def event_rule_matches_syslog_application(
         self, rule: Rule, event: Event, match_groups: MatchGroups
     ) -> MatchResult:
         if "match_application" not in rule and "cancel_application" not in rule:
-            return MatchSuccess(cancelling=False, match_groups={})
+            return MatchSuccess(cancelling=False, match_groups=MatchGroups())
 
         # Syslog application
         if "match_application" in rule:
@@ -341,9 +389,9 @@ class RuleMatcher:
             match_groups.get("match_groups_syslog_application", False) is False
             and match_groups.get("match_groups_syslog_application_ok", False) is False
         ):
-            return MatchFailure("did not match, syslog application does not match")
+            return MatchFailure(reason="did not match, syslog application does not match")
 
-        return MatchSuccess(cancelling=False, match_groups={})
+        return MatchSuccess(cancelling=False, match_groups=MatchGroups())
 
     def event_rule_matches_message(
         self, rule: Rule, event: Event, match_groups: MatchGroups
@@ -364,6 +412,6 @@ class RuleMatcher:
             match_groups["match_groups_message"] is False
             and match_groups.get("match_groups_message_ok", False) is False
         ):
-            return MatchFailure("did not match, message text does not match")
+            return MatchFailure(reason="did not match, message text does not match")
 
-        return MatchSuccess(cancelling=False, match_groups={})
+        return MatchSuccess(cancelling=False, match_groups=MatchGroups())

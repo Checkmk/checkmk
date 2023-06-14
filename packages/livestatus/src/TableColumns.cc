@@ -1,11 +1,10 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
 #include "livestatus/TableColumns.h"
 
-#include <map>
 #include <memory>
 
 #include "livestatus/Column.h"
@@ -13,7 +12,7 @@
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
 
-TableColumns::TableColumns(MonitoringCore *mc) : Table(mc) {
+TableColumns::TableColumns(ICore *mc) : Table(mc) {
     const ColumnOffsets offsets{};
     addColumn(std::make_unique<StringColumn<Column>>(
         "table", "The name of the table", offsets, [this](const Column &col) {
@@ -37,10 +36,12 @@ std::string TableColumns::name() const { return "columns"; }
 
 std::string TableColumns::namePrefix() const { return "column_"; }
 
-void TableColumns::addTable(const Table &table) { _tables.push_back(&table); }
+void TableColumns::addTable(const Table &table) {
+    tables_[table.name()] = &table;
+}
 
 void TableColumns::answerQuery(Query &query, const User & /*user*/) {
-    for (const auto *const table : _tables) {
+    for (const auto &[name, table] : tables_) {
         table->any_column(
             [&](const auto &c) { return !query.processDataset(Row{c.get()}); });
     }
@@ -64,7 +65,7 @@ std::string TableColumns::getValue(const Column &column, Type colcol) const {
 }
 
 std::string TableColumns::tableNameOf(const Column &column) const {
-    for (const auto *const table : _tables) {
+    for (const auto &[name, table] : tables_) {
         if (table->any_column(
                 [&](const auto &c) { return c.get() == &column; })) {
             return table->name();

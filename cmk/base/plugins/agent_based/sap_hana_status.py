@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -62,7 +62,6 @@ def discovery_sap_hana_status(section: sap_hana.ParsedSection) -> DiscoveryResul
 
 
 def check_sap_hana_status(item: str, section: sap_hana.ParsedSection) -> CheckResult:
-
     data = section.get(item)
     if not data:
         raise IgnoreResultsError("Login into database failed.")
@@ -78,7 +77,6 @@ def cluster_check_sap_hana_status(
     item: str,
     section: Mapping[str, Optional[sap_hana.ParsedSection]],
 ) -> CheckResult:
-
     yield Result(state=State.OK, summary="Nodes: %s" % ", ".join(section.keys()))
     for node_section in section.values():
         if node_section is not None and item in node_section:

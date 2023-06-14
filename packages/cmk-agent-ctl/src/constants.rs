@@ -1,8 +1,8 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-pub const VERSION: &str = "2.2.0i1";
+pub const VERSION: &str = "2.3.0b1";
 
 // CONFIGURATION
 pub const DEFAULT_PULL_PORT: u16 = 6556;

@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
+from collections.abc import Callable
+from pathlib import Path
 
 import pytest
 
@@ -29,5 +32,5 @@ DATA1 = """
         pytest.param(DATA1, id="data1"),
     ],
 )
-def test_apc_symmetra_power_detect(walk: str) -> None:
-    assert snmp_is_detected(SectionName("apc_symmetra_power"), walk)
+def test_apc_symmetra_power_detect(walk: str, as_path: Callable[[str], Path]) -> None:
+    assert snmp_is_detected(SectionName("apc_symmetra_power"), as_path(walk))

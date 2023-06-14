@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Sequence
@@ -200,7 +200,7 @@ def _validate_user_attributes(  # pylint: disable=too-many-branches
         secret = user_attrs["automation_secret"]
         if len(secret) < 10:
             raise MKUserError(
-                "secret", _("Please specify a secret of at least 10 characters length.")
+                "_auth_secret", _("Please enter an automation secret of at least 10 characters.")
             )
 
     # Email
@@ -245,14 +245,18 @@ def get_vs_user_idle_timeout():
                 title=_("Disable the login timeout"),
                 totext="",
             ),
-            Age(
-                title=_("Set an individual idle timeout"),
-                display=["minutes", "hours", "days"],
-                minvalue=60,
-                default_value=3600,
-            ),
+            vs_idle_timeout_duration(),
         ],
         orientation="horizontal",
+    )
+
+
+def vs_idle_timeout_duration() -> Age:
+    return Age(
+        title=_("Set an individual idle timeout"),
+        display=["minutes", "hours", "days"],
+        minvalue=60,
+        default_value=5400,
     )
 
 

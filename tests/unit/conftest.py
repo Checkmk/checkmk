@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,17 +7,23 @@ import copy
 import logging
 import os
 import shutil
-import socket
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Callable, Generator, Iterable, Iterator
 from pathlib import Path
-from typing import Any, Generator, NamedTuple
-from unittest import mock
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
-from fakeredis import FakeRedis  # type: ignore[import]
+from fakeredis import FakeRedis
+from pytest import MonkeyPatch
 
-from tests.testlib import is_cloud_repo, is_enterprise_repo, is_managed_repo
+from tests.testlib import (
+    is_cloud_repo,
+    is_enterprise_repo,
+    is_managed_repo,
+    is_saas_repo,
+    repo_path,
+)
+
+# Import this fixture to not clutter this file, but it's unused here...
+from tests.testlib.certs import fixture_self_signed  # pylint: disable=unused-import # noqa: F401
 
 import livestatus
 
@@ -28,7 +34,8 @@ import cmk.utils.redis as redis
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils import tty
-from cmk.utils.licensing.state import LicenseState
+from cmk.utils.licensing.handler import LicensingHandler, NotificationHandler, UserEffect
+from cmk.utils.licensing.registry import LicenseState
 from cmk.utils.livestatus_helpers.testing import (
     mock_livestatus_communication,
     MockLiveStatusConnection,
@@ -47,6 +54,21 @@ def enable_debug_fixture():
 
 
 @pytest.fixture
+def as_path(tmp_path: Path) -> Callable[[str], Path]:
+    """See Also:
+    * https://docs.pytest.org/en/7.2.x/how-to/fixtures.html#factories-as-fixtures
+
+    """
+
+    def _as_path(walk: str) -> Path:
+        data = tmp_path / "data"
+        data.write_text(walk)
+        return data
+
+    return _as_path
+
+
+@pytest.fixture
 def disable_debug():
     debug_mode = cmk.utils.debug.debug_mode
     cmk.utils.debug.disable()
@@ -57,8 +79,11 @@ def disable_debug():
 @pytest.fixture(autouse=True)
 def fixture_umask():
     """Ensure the unit tests always use the same umask"""
-    with cmk.utils.misc.umask(0o0007):
+    old_mask = os.umask(0o0007)
+    try:
         yield
+    finally:
+        os.umask(old_mask)
 
 
 @pytest.fixture(name="capsys")
@@ -75,6 +100,9 @@ def fixture_capsys(capsys: pytest.CaptureFixture[str]) -> Iterator[pytest.Captur
 def fixture_edition(request: pytest.FixtureRequest) -> Iterable[cmk_version.Edition]:
     # The param seems to be an optional attribute which mypy can not understand
     edition_short = request.param
+    if edition_short == "cse" and not is_saas_repo():
+        pytest.skip("Needed files are not available")
+
     if edition_short == "cce" and not is_cloud_repo():
         pytest.skip("Needed files are not available")
 
@@ -110,6 +138,11 @@ def patch_omd_site(monkeypatch):
     store.makedirs(cmk.utils.paths.default_config_dir + "/conf.d/wato")
     store.makedirs(cmk.utils.paths.default_config_dir + "/multisite.d/wato")
     store.makedirs(cmk.utils.paths.default_config_dir + "/mkeventd.d/wato")
+    store.makedirs(cmk.utils.paths.local_dashboards_dir)
+    store.makedirs(cmk.utils.paths.local_views_dir)
+    if not cmk_version.is_raw_edition():
+        # needed for visuals.load()
+        store.makedirs(cmk.utils.paths.local_reports_dir)
     _touch(cmk.utils.paths.default_config_dir + "/mkeventd.mk")
     _touch(cmk.utils.paths.default_config_dir + "/multisite.mk")
 
@@ -135,7 +168,6 @@ CONFIG_MKEVENTD_SYSLOG='on'
 CONFIG_MKEVENTD_SYSLOG_TCP='off'
 CONFIG_MULTISITE_AUTHORISATION='on'
 CONFIG_MULTISITE_COOKIE_AUTH='on'
-CONFIG_NAGIOS_THEME='classicui'
 CONFIG_NSCA='off'
 CONFIG_NSCA_TCP_PORT='5667'
 CONFIG_PNP4NAGIOS='on'
@@ -217,30 +249,6 @@ def clear_caches_per_function():
     _clear_caches()
 
 
-# TODO: This fixes our unit tests when executing the tests while the local
-# resolver uses a search domain which uses wildcard resolution. e.g. in a
-# network where mathias-kettner.de is in the domain search list and
-# [anything].mathias-kettner.de resolves to an IP address.
-# Clean this up once we don't have this situation anymore e.g. via VPN.
-@pytest.fixture()
-def fixup_ip_lookup(monkeypatch):
-    # Fix IP lookup when
-    def _getaddrinfo(host, port, family=None, socktype=None, proto=None, flags=None):
-        if host not in ("localhost", "::1", "127.0.0.1"):
-            return None
-        if family == socket.AF_INET:
-            return [
-                (family, socket.SocketKind.SOCK_STREAM, 6, "", ("127.0.0.1", 0)),
-            ]
-        if family == socket.AF_INET6:
-            return [
-                (family, socket.SocketKind.SOCK_STREAM, 6, "", ("::1", 0)),
-            ]
-        raise NotImplementedError()
-
-    monkeypatch.setattr(socket, "getaddrinfo", _getaddrinfo)
-
-
 class FixRegister:
     """Access agent based plugins"""
 
@@ -251,10 +259,12 @@ class FixRegister:
         import cmk.base.config as config  # pylint: disable=bad-option-value,import-outside-toplevel
 
         config._initialize_data_structures()
-        assert config.check_info == {}
+        assert not config.check_info
 
         config.load_all_agent_based_plugins(
             check_api.get_check_api_context,
+            local_checks_dir=repo_path() / "no-such-path-but-thats-ok",
+            checks_dir=str(repo_path() / "cmk/base/legacy_checks"),
         )
 
         self._snmp_sections = copy.deepcopy(register._config.registered_snmp_sections)
@@ -287,31 +297,9 @@ class FixPluginLegacy:
 
         assert isinstance(fixed_register, FixRegister)  # make sure plugins are loaded
 
-        self._check_info = copy.deepcopy(config.check_info)
-        self._snmp_info = copy.deepcopy(config.snmp_info)
-        self._active_check_info = copy.deepcopy(config.active_check_info)
-        self._snmp_scan_functions = copy.deepcopy(config.snmp_scan_functions)
-        self._check_variables = copy.deepcopy(config.get_check_variables())
-
-    @property
-    def check_info(self):
-        return self._check_info
-
-    @property
-    def snmp_info(self):
-        return self._snmp_info
-
-    @property
-    def active_check_info(self):
-        return self._active_check_info
-
-    @property
-    def snmp_scan_functions(self):
-        return self._snmp_scan_functions
-
-    @property
-    def check_variables(self):
-        return self._check_variables
+        self.check_info = copy.deepcopy(config.check_info)
+        self.active_check_info = copy.deepcopy(config.active_check_info)
+        self.factory_settings = copy.deepcopy(config.factory_settings)
 
 
 @pytest.fixture(scope="session", name="fix_register")
@@ -375,20 +363,7 @@ def use_fakeredis_client(monkeypatch):
         "Redis",
         FakeRedis,
     )
-
-
-class _MockVSManager(NamedTuple):
-    active_service_interface: Mapping[str, Any]
-
-
-@pytest.fixture()
-def initialised_item_state():
-    mock_vs = _MockVSManager({})
-    with mock.patch(
-        "cmk.base.api.agent_based.value_store._global_state._active_host_value_store",
-        mock_vs,
-    ):
-        yield
+    redis.get_redis_client().flushall()
 
 
 @pytest.fixture(autouse=True)
@@ -403,8 +378,45 @@ def fixture_monkeypatch_module() -> Iterator[pytest.MonkeyPatch]:
         yield mp
 
 
-@pytest.fixture(name="is_in_trial_state", scope="module")
-def fixture_is_in_trial_state(monkeypatch_module: pytest.MonkeyPatch) -> None:
+class DummyNotificationHandler(NotificationHandler):
+    def manage_notification(self) -> None:
+        pass
+
+
+class DummyLicensingHandler(LicensingHandler):
+    @classmethod
+    def make(cls) -> "DummyLicensingHandler":
+        return cls()
+
+    @property
+    def state(self) -> LicenseState:
+        return LicenseState.LICENSED
+
+    @property
+    def message(self) -> str:
+        return ""
+
+    def effect_core(self, num_services: int, num_hosts_shadow: int) -> UserEffect:
+        return UserEffect(header=None, email=None, block=None)
+
+    def effect(self, licensing_settings_link: str | None = None) -> UserEffect:
+        return UserEffect(header=None, email=None, block=None)
+
+    @property
+    def notification_handler(self) -> NotificationHandler:
+        return DummyNotificationHandler(email_notification=None)
+
+
+@pytest.fixture(name="is_licensed", scope="module")
+def fixture_is_licensed(monkeypatch_module: pytest.MonkeyPatch) -> None:
     monkeypatch_module.setattr(
-        "cmk.utils.licensing.state._get_expired_status", lambda: LicenseState.TRIAL
+        "cmk.utils.licensing.registry._get_licensing_handler", DummyLicensingHandler
+    )
+
+
+@pytest.fixture(name="suppress_license_expiry_header")
+def fixture_suppress_license_expiry_header(monkeypatch_module: pytest.MonkeyPatch) -> None:
+    """Don't check if message about license expiration should be shown"""
+    monkeypatch_module.setattr(
+        "cmk.gui.htmllib.top_heading._may_show_license_expiry", lambda x: None
     )

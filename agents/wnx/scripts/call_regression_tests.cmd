@@ -2,12 +2,15 @@
 :: File to run Regression Tests in the tests/regression folder
 :: should be called after successful build with correct artifacts
 
-set cur_dir=%cd%
+
+if "%cur_dir%" == "" powershell Write-Host "cur_dir not defined" -Foreground Red & exit /b 1
+if "%arte%" == "" powershell Write-Host "arte not defined" -Foreground Red & exit /b 1
+if "%CHECKMK_GIT_DIR%" == "" powershell Write-Host "CHECKMK_GIT_DIR not defined" -Foreground Red & exit /b 1
+
+set results=regression_tests_results.zip
 set WNX_TEST_ROOT=%temp%\test_i_%random%
 mkdir %WNX_TEST_ROOT%
 ::net stop checkmkservice
-set arte=%cur_dir%\..\..\artefacts
-set results=regression_tests_results.zip
 
 powershell Write-Host "Windows agent Regression Tests are starting in %WNX_TEST_ROOT%" -Foreground Cyan
 

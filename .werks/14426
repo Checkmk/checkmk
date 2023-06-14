@@ -6,7 +6,7 @@ Date: 1656678104
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This werk intorduces a new inventory plugin fortinet_firewall_network_interfaces.
 The plugin adds the IP addresses and corresponding subnets to the "Network Interfaces" table of the hosts' HW/SW Inventory.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,22 +7,18 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State, TableRow
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, InventoryResult
-from cmk.base.plugins.agent_based.oracle_instance import (
-    GeneralError,
-    Instance,
-    InvalidData,
-    inventory_oracle_instance,
-    parse_oracle_instance,
-)
+from cmk.base.plugins.agent_based.oracle_instance_inventory import inventory_oracle_instance
+from cmk.base.plugins.agent_based.oracle_instance_section import parse_oracle_instance
+from cmk.base.plugins.agent_based.utils.oracle_instance import GeneralError, Instance, InvalidData
 
 from .utils_inventory import sort_inventory_result
 
 
-def test_parse_oracle_instance() -> None:
+def test_parse_oracle_instance_db_without_host_12() -> None:
     assert parse_oracle_instance(
         [
             [
@@ -39,6 +35,34 @@ def test_parse_oracle_instance() -> None:
                 "XE",
                 "290520181207",
             ],
+        ]
+    ) == {
+        "XE": Instance(
+            archiver="STOPPED",
+            database_role="PRIMARY",
+            db_creation_time="290520181207",
+            force_logging="NO",
+            log_mode="NOARCHIVELOG",
+            logins="ALLOWED",
+            name="XE",
+            old_agent=False,
+            openmode="OPEN",
+            pluggable="FALSE",
+            pname=None,
+            popenmode=None,
+            prestricted=None,
+            ptotal_size=None,
+            pup_seconds=None,
+            sid="XE",
+            up_seconds=1212537,
+            version="11.2.0.2.0",
+        ),
+    }
+
+
+def test_parse_oracle_instance_db_with_host_13() -> None:
+    assert parse_oracle_instance(
+        [
             [
                 "IC731",
                 "12.1.0.2.0",
@@ -52,8 +76,37 @@ def test_parse_oracle_instance() -> None:
                 "YES",
                 "IC73",
                 "130920150251",
+                "my-oracle-server",
             ],
-            ["I442", "FAILURE"],
+        ]
+    ) == {
+        "IC731": Instance(
+            archiver="STARTED",
+            database_role="PRIMARY",
+            db_creation_time="130920150251",
+            force_logging="YES",
+            log_mode="ARCHIVELOG",
+            logins="ALLOWED",
+            name="IC73",
+            old_agent=False,
+            openmode="OPEN",
+            pluggable="FALSE",
+            pname=None,
+            popenmode=None,
+            prestricted=None,
+            ptotal_size=None,
+            pup_seconds=None,
+            sid="IC731",
+            up_seconds=2144847,
+            version="12.1.0.2.0",
+            host_name="my-oracle-server",
+        )
+    }
+
+
+def test_parse_oracle_instance_error() -> None:
+    assert parse_oracle_instance(
+        [
             [
                 "+ASM",
                 "FAILURE",
@@ -65,49 +118,16 @@ def test_parse_oracle_instance() -> None:
             "+ASM",
             "ORA-99999 tnsping failed for +ASM ERROR: ORA-28002: the password will expire within 1 days",
         ),
-        "I442": InvalidData("I442"),
-        "IC731": Instance(
-            archiver="STARTED",
-            database_role="PRIMARY",
-            db_creation_time="130920150251",
-            force_logging="YES",
-            log_mode="ARCHIVELOG",
-            logins="ALLOWED",
-            name="IC73",
-            old_agent=False,
-            openmode="OPEN",
-            pdb=False,
-            pluggable="FALSE",
-            pname=None,
-            popenmode=None,
-            prestricted=None,
-            ptotal_size=None,
-            pup_seconds=None,
-            sid="IC731",
-            up_seconds="2144847",
-            version="12.1.0.2.0",
-        ),
-        "XE": Instance(
-            archiver="STOPPED",
-            database_role="PRIMARY",
-            db_creation_time="290520181207",
-            force_logging="NO",
-            log_mode="NOARCHIVELOG",
-            logins="ALLOWED",
-            name="XE",
-            old_agent=False,
-            openmode="OPEN",
-            pdb=False,
-            pluggable="FALSE",
-            pname=None,
-            popenmode=None,
-            prestricted=None,
-            ptotal_size=None,
-            pup_seconds=None,
-            sid="XE",
-            up_seconds="1212537",
-            version="11.2.0.2.0",
-        ),
+    }
+
+
+def test_parse_oracle_instance_invalid() -> None:
+    assert parse_oracle_instance(
+        [
+            ["I442", "FAILURE"],
+        ]
+    ) == {
+        "I442": InvalidData("I442", error="Invalid data from agent"),
     }
 
 
@@ -115,12 +135,9 @@ def test_discover_oracle_instance(fix_register: FixRegister) -> None:
     assert list(
         fix_register.check_plugins[CheckPluginName("oracle_instance")].discovery_function(
             {
-                "a": InvalidData(sid="a"),
-                "b": GeneralError(
-                    sid="b",
-                    err="something went wrong",
-                ),
-                "c": Instance(sid="c"),
+                "a": InvalidData("a", "This is an error"),
+                "b": GeneralError("b", "something went wrong"),
+                "c": Instance(sid="c", version="", openmode="", logins=""),
             },
         )
     ) == [
@@ -149,10 +166,13 @@ def test_discover_oracle_instance(fix_register: FixRegister) -> None:
                 "130920150251",
             ],
             [
-                Result(
-                    state=State.OK,
-                    summary="Database Name IC73, Status OPEN, Role PRIMARY, Version 12.1.0.2.0, Logins allowed, Log Mode archivelog, Force Logging yes",
-                ),
+                Result(state=State.OK, summary="Database Name IC73"),
+                Result(state=State.OK, summary="Status OPEN"),
+                Result(state=State.OK, summary="Role PRIMARY"),
+                Result(state=State.OK, summary="Version 12.1.0.2.0"),
+                Result(state=State.OK, summary="Logins allowed"),
+                Result(state=State.OK, summary="Log Mode archivelog"),
+                Result(state=State.OK, summary="Force Logging yes"),
             ],
             id="normal",
         ),
@@ -172,10 +192,12 @@ def test_discover_oracle_instance(fix_register: FixRegister) -> None:
                 "130920150251",
             ],
             [
-                Result(
-                    state=State.CRIT,
-                    summary="Database Name IC73, Status LOCKED(!!), Role PRIMARY, Version 12.1.0.2.0, Log Mode archivelog, Force Logging yes",
-                ),
+                Result(state=State.OK, summary="Database Name IC73"),
+                Result(state=State.CRIT, summary="Status LOCKED"),
+                Result(state=State.OK, summary="Role PRIMARY"),
+                Result(state=State.OK, summary="Version 12.1.0.2.0"),
+                Result(state=State.OK, summary="Log Mode archivelog"),
+                Result(state=State.OK, summary="Force Logging yes"),
             ],
             id="locked",
         ),
@@ -195,10 +217,13 @@ def test_discover_oracle_instance(fix_register: FixRegister) -> None:
                 "130920150251",
             ],
             [
-                Result(
-                    state=State.CRIT,
-                    summary="Database Name IC73, Status OPEN, Role PRIMARY, Version 12.1.0.2.0, Logins restricted(!!), Log Mode archivelog, Force Logging yes",
-                ),
+                Result(state=State.OK, summary="Database Name IC73"),
+                Result(state=State.OK, summary="Status OPEN"),
+                Result(state=State.OK, summary="Role PRIMARY"),
+                Result(state=State.OK, summary="Version 12.1.0.2.0"),
+                Result(state=State.CRIT, summary="Logins restricted"),
+                Result(state=State.OK, summary="Log Mode archivelog"),
+                Result(state=State.OK, summary="Force Logging yes"),
             ],
             id="logins_restricted",
         ),
@@ -218,10 +243,12 @@ def test_discover_oracle_instance(fix_register: FixRegister) -> None:
                 "130920150251",
             ],
             [
-                Result(
-                    state=State.WARN,
-                    summary="Database Name IC73, Status OPEN, Role PRIMARY, Version 12.1.0.2.0, Logins allowed, Log Mode noarchivelog(!)",
-                ),
+                Result(state=State.OK, summary="Database Name IC73"),
+                Result(state=State.OK, summary="Status OPEN"),
+                Result(state=State.OK, summary="Role PRIMARY"),
+                Result(state=State.OK, summary="Version 12.1.0.2.0"),
+                Result(state=State.OK, summary="Logins allowed"),
+                Result(state=State.WARN, summary="Log Mode noarchivelog"),
             ],
             id="no_archive_log",
         ),
@@ -241,10 +268,14 @@ def test_discover_oracle_instance(fix_register: FixRegister) -> None:
                 "130920150251",
             ],
             [
-                Result(
-                    state=State.CRIT,
-                    summary="Database Name IC73, Status OPEN, Role PRIMARY, Version 12.1.0.2.0, Logins allowed, Log Mode archivelog. Archiver stopped(!!), Force Logging yes",
-                ),
+                Result(state=State.OK, summary="Database Name IC73"),
+                Result(state=State.OK, summary="Status OPEN"),
+                Result(state=State.OK, summary="Role PRIMARY"),
+                Result(state=State.OK, summary="Version 12.1.0.2.0"),
+                Result(state=State.OK, summary="Logins allowed"),
+                Result(state=State.OK, summary="Log Mode archivelog"),
+                Result(state=State.CRIT, summary="Archiver stopped"),
+                Result(state=State.OK, summary="Force Logging yes"),
             ],
             id="archiver_stopped",
         ),
@@ -264,10 +295,13 @@ def test_discover_oracle_instance(fix_register: FixRegister) -> None:
                 "130920150251",
             ],
             [
-                Result(
-                    state=State.WARN,
-                    summary="Database Name IC73, Status OPEN, Role PRIMARY, Version 12.1.0.2.0, Logins allowed, Log Mode archivelog, Force Logging no(!)",
-                ),
+                Result(state=State.OK, summary="Database Name IC73"),
+                Result(state=State.OK, summary="Status OPEN"),
+                Result(state=State.OK, summary="Role PRIMARY"),
+                Result(state=State.OK, summary="Version 12.1.0.2.0"),
+                Result(state=State.OK, summary="Logins allowed"),
+                Result(state=State.OK, summary="Log Mode archivelog"),
+                Result(state=State.WARN, summary="Force Logging no"),
             ],
             id="logging_not_forced",
         ),
@@ -281,7 +315,7 @@ def test_discover_oracle_instance(fix_register: FixRegister) -> None:
                 Result(
                     state=State.CRIT,
                     summary="ORA-99999 tnsping failed for IC731 ERROR: ORA-28002: the password will expire within 1 days",
-                )
+                ),
             ],
             id="error",
         ),
@@ -301,6 +335,8 @@ def test_check_oracle_instance(
                     "noforcelogging": 1,
                     "noarchivelog": 1,
                     "primarynotopen": 2,
+                    "archivelog": 0,
+                    "forcelogging": 0,
                 },
                 section=parse_oracle_instance([agent_line]),
             )
@@ -356,6 +392,7 @@ def test_check_oracle_instance_empty_section(fix_register: FixRegister) -> None:
                         "logins": "LOGINS",
                         "db_creation_time": None,
                     },
+                    status_columns={"db_uptime": None, "host": None},
                 ),
             ],
         ),
@@ -366,11 +403,11 @@ def test_check_oracle_instance_empty_section(fix_register: FixRegister) -> None:
                 "OPENMODE",
                 "LOGINS",
                 "_ARCHIVER",
-                "RAW_UP_SECONDS",
-                "_DBID",
-                "LOGMODE",
-                "_DATABASE_ROLE",
-                "_FORCE_LOGGING",
+                "123",
+                "0",
+                "NO",
+                "ASM",
+                "NO",
                 "_NAME",
             ],
             [
@@ -383,9 +420,13 @@ def test_check_oracle_instance_empty_section(fix_register: FixRegister) -> None:
                         "pname": None,
                         "version": "VERSION",
                         "openmode": "OPENMODE",
-                        "logmode": "LOGMODE",
+                        "logmode": "NO",
                         "logins": "LOGINS",
                         "db_creation_time": None,
+                    },
+                    status_columns={
+                        "db_uptime": 123,
+                        "host": None,
                     },
                 ),
             ],
@@ -398,10 +439,10 @@ def test_check_oracle_instance_empty_section(fix_register: FixRegister) -> None:
                 "LOGINS",
                 "_ARCHIVER",
                 "123",
-                "_DBID",
-                "LOGMODE",
-                "_DATABASE_ROLE",
-                "_FORCE_LOGGING",
+                "0",
+                "NO",
+                "ASM",
+                "NO",
                 "_NAME",
             ],
             [
@@ -414,44 +455,13 @@ def test_check_oracle_instance_empty_section(fix_register: FixRegister) -> None:
                         "pname": None,
                         "version": "VERSION",
                         "openmode": "OPENMODE",
-                        "logmode": "LOGMODE",
+                        "logmode": "NO",
                         "logins": "LOGINS",
                         "db_creation_time": None,
                     },
                     status_columns={
                         "db_uptime": 123,
-                    },
-                ),
-            ],
-        ),
-        (
-            [
-                "SID",
-                "VERSION",
-                "OPENMODE",
-                "LOGINS",
-                "_ARCHIVER",
-                "RAW_UP_SECONDS",
-                "_DBID",
-                "LOGMODE",
-                "_DATABASE_ROLE",
-                "_FORCE_LOGGING",
-                "_NAME",
-                "080220151025",
-            ],
-            [
-                TableRow(
-                    path=["software", "applications", "oracle", "instance"],
-                    key_columns={
-                        "sid": "SID",
-                    },
-                    inventory_columns={
-                        "pname": None,
-                        "version": "VERSION",
-                        "openmode": "OPENMODE",
-                        "logmode": "LOGMODE",
-                        "logins": "LOGINS",
-                        "db_creation_time": "2015-02-08 10:25",
+                        "host": None,
                     },
                 ),
             ],
@@ -487,6 +497,7 @@ def test_check_oracle_instance_empty_section(fix_register: FixRegister) -> None:
                     },
                     status_columns={
                         "db_uptime": 123,
+                        "host": None,
                     },
                 ),
             ],
@@ -498,7 +509,43 @@ def test_check_oracle_instance_empty_section(fix_register: FixRegister) -> None:
                 "OPENMODE",
                 "LOGINS",
                 "_ARCHIVER",
-                "RAW_UP_SECONDS",
+                "123",
+                "_DBID",
+                "LOGMODE",
+                "_DATABASE_ROLE",
+                "_FORCE_LOGGING",
+                "_NAME",
+                "080220151025",
+            ],
+            [
+                TableRow(
+                    path=["software", "applications", "oracle", "instance"],
+                    key_columns={
+                        "sid": "SID",
+                    },
+                    inventory_columns={
+                        "pname": None,
+                        "version": "VERSION",
+                        "openmode": "OPENMODE",
+                        "logmode": "LOGMODE",
+                        "logins": "LOGINS",
+                        "db_creation_time": "2015-02-08 10:25",
+                    },
+                    status_columns={
+                        "db_uptime": 123,
+                        "host": None,
+                    },
+                ),
+            ],
+        ),
+        (
+            [
+                "SID",
+                "VERSION",
+                "OPENMODE",
+                "LOGINS",
+                "_ARCHIVER",
+                "123",
                 "_DBID",
                 "LOGMODE",
                 "_DATABASE_ROLE",
@@ -511,9 +558,9 @@ def test_check_oracle_instance_empty_section(fix_register: FixRegister) -> None:
                 "_PDBID",
                 "_POPENMODE",
                 "_PRESTRICTED",
-                "_PTOTAL_SIZE",
+                "42424242",
                 "_PRECOVERY_STATUS",
-                "_PUP_SECONDS",
+                "232323",
                 "_PBLOCK_SIZE",
             ],
             [
@@ -529,6 +576,10 @@ def test_check_oracle_instance_empty_section(fix_register: FixRegister) -> None:
                         "logmode": "LOGMODE",
                         "logins": "LOGINS",
                         "db_creation_time": None,
+                    },
+                    status_columns={
+                        "db_uptime": 123,
+                        "host": None,
                     },
                 ),
             ],
@@ -553,9 +604,9 @@ def test_check_oracle_instance_empty_section(fix_register: FixRegister) -> None:
                 "_PDBID",
                 "_POPENMODE",
                 "_PRESTRICTED",
-                "_PTOTAL_SIZE",
+                "42424242",
                 "_PRECOVERY_STATUS",
-                "_PUP_SECONDS",
+                "232323",
                 "_PBLOCK_SIZE",
             ],
             [
@@ -574,6 +625,7 @@ def test_check_oracle_instance_empty_section(fix_register: FixRegister) -> None:
                     },
                     status_columns={
                         "db_uptime": 123,
+                        "host": None,
                     },
                 ),
             ],
@@ -614,9 +666,9 @@ def test_inv_oracle_instance_multiline() -> None:
             "_PDBID",
             "_POPENMODE",
             "_PRESTRICTED",
-            "_PTOTAL_SIZE",
+            "42424242",
             "_PRECOVERY_STATUS",
-            "_PUP_SECONDS",
+            "232323",
             "_PBLOCK_SIZE",
         ],
         [
@@ -625,7 +677,7 @@ def test_inv_oracle_instance_multiline() -> None:
             "_OPENMODE",
             "LOGINS",
             "_ARCHIVER",
-            "_RAW_UP_SECONDS",
+            "123456",
             "_DBID",
             "LOGMODE",
             "_DATABASE_ROLE",
@@ -638,7 +690,7 @@ def test_inv_oracle_instance_multiline() -> None:
             "_PDBID",
             "POPENMODE",
             "_PRESTRICTED",
-            "_PTOTAL_SIZE",
+            "42424242",
             "_PRECOVERY_STATUS",
             "456",
             "_PBLOCK_SIZE",
@@ -658,7 +710,6 @@ def test_inv_oracle_instance_multiline() -> None:
                 "logins": None,
                 "db_creation_time": None,
             },
-            status_columns={},
         ),
         TableRow(
             path=["software", "applications", "oracle", "instance"],
@@ -675,6 +726,7 @@ def test_inv_oracle_instance_multiline() -> None:
             },
             status_columns={
                 "db_uptime": 123,
+                "host": None,
             },
         ),
         TableRow(
@@ -692,6 +744,7 @@ def test_inv_oracle_instance_multiline() -> None:
             },
             status_columns={
                 "db_uptime": 456,
+                "host": None,
             },
         ),
     ]

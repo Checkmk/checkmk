@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -6,6 +6,19 @@
 // It uses way too much fake objects to render some simple styles
 
 import * as d3 from "d3";
+import {compute_node_position, LayoutManagerLayer} from "nodevis/layout";
+import {
+    LayoutStyleBlock,
+    LayoutStyleHierarchy,
+    LayoutStyleRadial,
+} from "nodevis/layout_styles";
+import {
+    AbstractLayoutStyle,
+    render_style_options,
+    StyleConfig,
+    StyleOptionSpec,
+    StyleOptionValues,
+} from "nodevis/layout_utils";
 import {
     d3SelectionDiv,
     d3SelectionG,
@@ -15,17 +28,6 @@ import {
     NodevisNode,
     NodevisWorld,
 } from "nodevis/type_defs";
-import {
-    AbstractLayoutStyle,
-    StyleConfig,
-    StyleOptionDefinition,
-} from "nodevis/layout_utils";
-import {compute_node_position, LayoutManagerLayer} from "nodevis/layout";
-import {
-    LayoutStyleBlock,
-    LayoutStyleHierarchy,
-    LayoutStyleRadial,
-} from "nodevis/layout_styles";
 import {get_bounding_rect} from "nodevis/utils";
 
 export class LayoutStyleExampleGenerator {
@@ -43,9 +45,13 @@ export class LayoutStyleExampleGenerator {
     _viewport_zoom_links: d3SelectionG;
     _viewport_zoom_nodes: d3SelectionG;
 
+    _example_options_spec: {
+        total_nodes: StyleOptionSpec;
+        depth: StyleOptionSpec;
+    };
     _example_options: {
-        total_nodes: StyleOptionDefinition;
-        depth: StyleOptionDefinition;
+        total_nodes: number;
+        depth: number;
     };
 
     _style_config: StyleConfig;
@@ -74,21 +80,23 @@ export class LayoutStyleExampleGenerator {
             .style("float", "left")
             .attr("width", this._viewport_width)
             .attr("height", this._viewport_height);
-        this._example_options = {
+        this._example_options_spec = {
             total_nodes: {
                 id: "total_nodes",
                 option_type: "range",
                 values: {default: 5, min: 1, max: 50},
                 text: "Sample nodes",
-                value: 20,
             },
             depth: {
                 id: "depth",
                 option_type: "range",
                 values: {default: 1, min: 1, max: 5},
                 text: "Maximum depth",
-                value: 2,
             },
+        };
+        this._example_options = {
+            total_nodes: 20,
+            depth: 2,
         };
 
         this._style_instance = null;
@@ -112,6 +120,7 @@ export class LayoutStyleExampleGenerator {
             .attr("height", this._viewport_height - 8);
 
         this._style_hierarchy = this._create_example_hierarchy(
+            this._example_options_spec,
             this._example_options
         );
         this._fake_world = this._create_fake_world();
@@ -166,6 +175,7 @@ export class LayoutStyleExampleGenerator {
         this._render_style_choice(this._style_choice_selection);
         this._update_viewport_visibility();
         this._style_hierarchy = this._create_example_hierarchy(
+            this._example_options_spec,
             this._example_options
         );
 
@@ -199,17 +209,33 @@ export class LayoutStyleExampleGenerator {
             this._style_hierarchy,
             this._viewport_selection
         );
+        this._style_instance.show_style_configuration = () => null;
         this._update_example();
     }
 
     _update_example(): void {
         this._update_nodes();
         this._render_nodes_and_links();
-        this.style_instance().render_options(
-            this._options_selection,
-            this._varprefix
-        );
         this._render_example_settings(this._example_selection);
+
+        if (this._style_instance)
+            render_style_options(
+                this._style_instance.type(),
+                this._options_selection,
+                this._style_instance.get_style_options(),
+                this._style_instance.style_config.options,
+                (event, new_options) => {
+                    if (this._style_instance)
+                        this._style_instance.changed_options(
+                            event,
+                            new_options
+                        );
+                },
+                event => {
+                    if (this._style_instance)
+                        this._style_instance.reset_default_options(event);
+                }
+            );
     }
 
     _render_style_choice(style_choice_selection: d3SelectionDiv): void {
@@ -269,13 +295,13 @@ export class LayoutStyleExampleGenerator {
             .data([null]);
         table = table.enter().append("table").merge(table);
 
-        const options: StyleOptionDefinition[] = [];
-        options.push(this._example_options.total_nodes);
+        const options: StyleOptionSpec[] = [];
+        options.push(this._example_options_spec.total_nodes);
         if (this._style_config.type != LayoutStyleBlock.class_name)
-            options.push(this._example_options.depth);
+            options.push(this._example_options_spec.depth);
 
         let rows = table
-            .selectAll<HTMLTableRowElement, StyleOptionDefinition>("tr")
+            .selectAll<HTMLTableRowElement, StyleOptionSpec>("tr")
             .data(options);
         rows.exit().remove();
         const rows_enter = rows.enter().append("tr");
@@ -292,12 +318,11 @@ export class LayoutStyleExampleGenerator {
             .attr("step", 1)
             .attr("min", d => d.values.min as number)
             .attr("max", d => d.values.max as number)
-            .property("value", d => d.value)
+            .property("value", d => this._example_options[d.id])
             .on("input", (event, d) => {
-                this._example_options[d.id].value = parseInt(
-                    event.target.value
-                );
+                this._example_options[d.id] = parseInt(event.target.value);
                 this._style_hierarchy = this._create_example_hierarchy(
+                    this._example_options_spec,
                     this._example_options
                 );
                 this.style_instance().style_root_node =
@@ -377,13 +402,16 @@ export class LayoutStyleExampleGenerator {
         }
     }
 
-    _create_example_hierarchy(example_settings: {
-        [name: string]: StyleOptionDefinition;
-    }): NodevisNode {
+    _create_example_hierarchy(
+        example_settings: {
+            [name: string]: StyleOptionSpec;
+        },
+        example_options: StyleOptionValues
+    ): NodevisNode {
         const chunk = {coords: {x: 0, y: 0, width: 400, height: 400}};
         let id_counter = 0;
 
-        const maximum_nodes = example_settings.total_nodes.value;
+        const maximum_nodes = example_options.total_nodes;
         let generated_nodes = 0;
 
         function _add_hierarchy_children(
@@ -417,7 +445,7 @@ export class LayoutStyleExampleGenerator {
             name: "Root node",
             children: [],
         } as unknown as NodeData;
-        let cancel_delta = 1 / (example_settings.depth.value as number);
+        let cancel_delta = 1 / (example_options.depth as number);
         // Maximum depth of block style is 1
         if (this._style_config.type == LayoutStyleBlock.class_name)
             cancel_delta = 1;

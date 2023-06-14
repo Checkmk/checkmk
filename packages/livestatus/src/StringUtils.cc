@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -188,6 +188,80 @@ std::vector<std::string> split_list(const std::string &str) {
     return str.empty() || is_none(str) ? std::vector<std::string>()
                                        : mk::split(str.substr(1), '\001');
 }
+
 }  // namespace ec
+bool is_utf8(std::string_view s) {
+    // https://www.unicode.org/versions/Unicode15.0.0/ch03.pdf p.125
+    // Correct UTF-8 encoding
+    // ----------------------------------------------------------------
+    // Code Points         First Byte Second Byte Third Byte Fourth Byte
+    // U+0000 -   U+007F     00 - 7F
+    // U+0080 -   U+07FF     C2 - DF    80 - BF
+    // U+0800 -   U+0FFF     E0         A0 - BF     80 - BF
+    // U+1000 -   U+CFFF     E1 - EC    80 - BF     80 - BF
+    // U+D000 -   U+D7FF     ED         80 - 9F     80 - BF
+    // U+E000 -   U+FFFF     EE - EF    80 - BF     80 - BF
+    // U+10000 -  U+3FFFF    F0         90 - BF     80 - BF    80 - BF
+    // U+40000 -  U+FFFFF    F1 - F3    80 - BF     80 - BF    80 - BF
+    // U+100000 - U+10FFFF   F4         80 - 8F     80 - BF    80 - BF
+    const auto *end = s.cend();
+    for (const char *p = s.cbegin(); p != end; ++p) {
+        const unsigned char ch0 = *p;
+        if (ch0 < 0x80) {
+            continue;
+        }
+        if (ch0 < 0xC2 || ch0 > 0xF4) {
+            // Invalid first byte: 0x80..0xC2 and 0xF5..0xFF
+            return false;
+        }
+        if (ch0 < 0xE0) {
+            // 2 byte encoding: C2..DF
+            if (end <= &p[1]) {
+                return false;
+            }
+            const unsigned char ch1 = *++p;
+            if (ch1 < 0x80 || ch1 > 0xBF) {
+                return false;
+            }
+            continue;
+        }
+        if (ch0 < 0xF0) {
+            // 3 byte encoding: 0xE0..0xEF
+            if (end <= &p[2]) {
+                return false;
+            }
+            const unsigned char ch1 = *++p;
+            const unsigned char low = ch0 == 0xE0 ? 0xA0 : 0x80;
+            const unsigned char high = ch0 == 0xED ? 0x9F : 0xBF;
+            if (ch1 < low || ch1 > high) {
+                return false;
+            }
+            const unsigned char ch2 = *++p;
+            if (ch2 < 0x80 || ch2 > 0xBF) {
+                return false;
+            }
+            continue;
+        }
+        // 4 byte encoding: 0xF0..0xF3
+        if (end <= &p[3]) {
+            return false;
+        }
+        const unsigned char ch1 = *++p;
+        const unsigned char low = ch0 == 0xF0 ? 0x90 : 0x80;
+        const unsigned char high = ch0 == 0xF4 ? 0x8F : 0xBF;
+        if (ch1 < low || ch1 > high) {
+            return false;
+        }
+        const unsigned char ch2 = *++p;
+        if (ch2 < 0x80 || ch2 > 0xBF) {
+            return false;
+        }
+        const unsigned char ch3 = *++p;
+        if (ch3 < 0x80 || ch3 > 0xBF) {
+            return false;
+        }
+    }
+    return true;
+}
 
 }  // namespace mk

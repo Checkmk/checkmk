@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: Check_MK Enterprise License
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -139,7 +139,8 @@ void setThreadName(std::string name) {
 
 std::string getThreadName() { return thread_name; }
 
-file_lock::file_lock(const char *name) : fd_(::open(name, O_RDWR)) {
+file_lock::file_lock(const std::filesystem::path &name)
+    : fd_{::open(name.c_str(), O_RDWR)} {
     if (fd_ == -1) {
         throw generic_error("could not open lock file");
     }

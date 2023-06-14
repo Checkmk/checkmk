@@ -6,7 +6,7 @@ Date: 1665993318
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In version 2.1, Lambda and Route53 service configuration was
 visible in the CRE and CEE editions. The configuration was

@@ -1,31 +1,26 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import os
 import re
-import socket
-import subprocess
 import sys
 from collections.abc import Callable, Iterable
-from email.message import Message
-from email.utils import formataddr, formatdate, parseaddr
-from html import escape as html_escape
+from email.utils import formataddr
 from http.client import responses as http_responses
 from quopri import encodestring
-from typing import Any, Literal, NamedTuple, NoReturn, TypeVar
+from typing import Any, NamedTuple, NoReturn
 
 import requests
 
 import cmk.utils.password_store
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
+from cmk.utils.escaping import escape, escape_permissive
 from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 from cmk.utils.misc import typeshed_issue_7724
 from cmk.utils.notify import find_wato_folder, NotificationContext
-from cmk.utils.store import load_text_from_file
-from cmk.utils.type_defs import PluginNotificationContext
+from cmk.utils.notify_types import PluginNotificationContext
 
 from cmk.utils.html import (  # noqa: F401  # pylint: disable=unused-import  # isort:skip
     replace_state_markers as format_plugin_output,
@@ -61,16 +56,6 @@ def format_address(display_name: str, email_address: str) -> str:
     return formataddr((display_name, email_address))
 
 
-def default_from_address() -> str:
-    environ_default = os.environ.get("OMD_SITE", "checkmk") + "@" + socket.getfqdn()
-    if cmk_version.is_cma():
-        return load_text_from_file("/etc/nullmailer/default-from", environ_default).replace(
-            "\n", ""
-        )
-
-    return environ_default
-
-
 def _base_url(context: PluginNotificationContext) -> str:
     if context.get("PARAMETER_URL_PREFIX"):
         url_prefix = context["PARAMETER_URL_PREFIX"]
@@ -101,7 +86,6 @@ def html_escape_context(context: PluginNotificationContext) -> PluginNotificatio
         "CONTACTALIAS",
         "CONTACTNAME",
         "CONTACTEMAIL",
-        "PARAMETER_INSERT_HTML_SECTION",
         "PARAMETER_BULK_SUBJECT",
         "PARAMETER_HOST_SUBJECT",
         "PARAMETER_SERVICE_SUBJECT",
@@ -112,15 +96,26 @@ def html_escape_context(context: PluginNotificationContext) -> PluginNotificatio
         "PARAMETER_REPLY_TO_DISPLAY_NAME",
         "SERVICEDESC",
     }
+    permissive_variables = {
+        "PARAMETER_INSERT_HTML_SECTION",
+    }
     if context.get("SERVICE_ESCAPE_PLUGIN_OUTPUT") == "0":
         unescaped_variables |= {"SERVICEOUTPUT", "LONGSERVICEOUTPUT"}
     if context.get("HOST_ESCAPE_PLUGIN_OUTPUT") == "0":
         unescaped_variables |= {"HOSTOUTPUT", "LONGHOSTOUTPUT"}
 
-    return {
-        variable: html_escape(value) if variable not in unescaped_variables else value
-        for variable, value in context.items()
-    }
+    def _escape_or_not_escape(varname: str, value: str) -> str:
+        """currently we escape by default with a large list of exceptions.
+
+        Next step is permissive escaping for certain fields..."""
+
+        if varname in unescaped_variables:
+            return value
+        if varname in permissive_variables:
+            return escape_permissive(value, escape_links=False)
+        return escape(value)
+
+    return {variable: _escape_or_not_escape(variable, value) for variable, value in context.items()}
 
 
 def add_debug_output(template: str, context: PluginNotificationContext) -> str:
@@ -131,7 +126,7 @@ def add_debug_output(template: str, context: PluginNotificationContext) -> str:
         ascii_output += f"{varname}={value}\n"
         html_output += "<tr><td class=varname>{}</td><td class=value>{}</td></tr>\n".format(
             varname,
-            html_escape(value),
+            escape(value),
         )
     html_output += "</table>\n"
     return template.replace("$CONTEXT_ASCII$", ascii_output).replace("$CONTEXT_HTML$", html_output)
@@ -158,74 +153,6 @@ def substitute_context(template: str, context: PluginNotificationContext) -> str
 
 ###############################################################################
 # Mail
-
-EmailType = TypeVar("EmailType", bound=Message)
-
-
-def set_mail_headers(
-    target: str, subject: str, from_address: str, reply_to: str, mail: EmailType
-) -> EmailType:
-    mail["Date"] = formatdate(localtime=True)
-    mail["Subject"] = subject
-    mail["To"] = target
-
-    # Set a few configurable headers
-    if from_address:
-        mail["From"] = from_address
-
-    if reply_to:
-        mail["Reply-To"] = reply_to
-    elif len(target.split(",")) > 1:
-        mail["Reply-To"] = target
-
-    mail["Auto-Submitted"] = "auto-generated"
-    mail["X-Auto-Response-Suppress"] = "DR,RN,NRN,OOF,AutoReply"
-
-    return mail
-
-
-def send_mail_sendmail(m: Message, target: str, from_address: str | None) -> Literal[0]:
-    cmd = [_sendmail_path()]
-    if from_address:
-        # sendmail of the appliance can not handle "FULLNAME <my@mail.com>" format
-        # TODO Currently we only see problems on appliances, so we just change
-        # that handling for now.
-        # If we see problems on other nullmailer sendmail implementations, we
-        # could parse the man page for sendmail and see, if it contains "nullmailer" to
-        # determine if nullmailer is used
-        if cmk_version.is_cma():
-            sender_full_name, sender_address = parseaddr(from_address)
-            if sender_full_name:
-                cmd += ["-F", sender_full_name]
-            cmd += ["-f", sender_address]
-        else:
-            cmd += ["-F", from_address, "-f", from_address]
-    cmd += ["-i", target]
-
-    try:
-        completed_process = subprocess.run(cmd, encoding="utf-8", check=False, input=m.as_string())
-    except OSError:
-        raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
-
-    if completed_process.returncode:
-        raise Exception("sendmail returned with exit code: %d" % completed_process.returncode)
-
-    sys.stdout.write("Spooled mail to local mail transmission agent\n")
-    return 0
-
-
-def _sendmail_path() -> str:
-    # We normally don't deliver the sendmail command, but our notification integration tests
-    # put some fake sendmail command into the site to prevent actual sending of mails.
-
-    for path in [
-        "%s/local/bin/sendmail" % cmk.utils.paths.omd_root,
-        "/usr/sbin/sendmail",
-    ]:
-        if os.path.exists(path):
-            return path
-
-    raise Exception("Failed to send the mail: /usr/sbin/sendmail is missing")
 
 
 def read_bulk_contexts() -> tuple[dict[str, str], list[dict[str, str]]]:
@@ -325,7 +252,7 @@ def post_request(
         verify = False
 
     try:
-        response = requests.post(
+        response = requests.post(  # nosec B113
             url=url,
             json=message_constructor(context),
             proxies=typeshed_issue_7724(

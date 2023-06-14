@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -18,6 +18,8 @@ from cmk.base.plugins.agent_based.utils.ucd_hr_detection import UCD
 from .agent_based_api.v1 import (
     get_rate,
     get_value_store,
+    GetRateError,
+    IgnoreResults,
     register,
     Result,
     Service,
@@ -38,7 +40,6 @@ Section = Mapping[str, Disk]
 
 
 def parse_ucd_diskio(string_table: List[StringTable]) -> Section:
-
     section: MutableMapping[str, Disk] = {}
 
     if not string_table:
@@ -92,6 +93,22 @@ def check_ucd_diskio(
     params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
+    yield from _check_ucd_diskio(
+        item=item,
+        params=params,
+        section=section,
+        this_time=time.time(),
+        value_store=get_value_store(),
+    )
+
+
+def _check_ucd_diskio(
+    item: str,
+    params: Mapping[str, Any],
+    section: Section,
+    value_store: MutableMapping,
+    this_time: float,
+) -> CheckResult:
     if (disk := section.get(item)) is None:
         return
 
@@ -102,14 +119,19 @@ def check_ucd_diskio(
             continue
 
         if isinstance(value, float):
-            disk_data[key] = get_rate(get_value_store(), item, time.time(), value)
+            try:
+                disk_data[key] = get_rate(
+                    value_store, f"ucd_disk_io_{key}.{item}", this_time, value
+                )
+            except GetRateError:
+                yield IgnoreResults()
 
     yield Result(state=State.OK, summary=f"[{disk['disk_index']}]")
 
     yield from check_diskstat_dict(
         params=params,
         disk=disk_data,
-        value_store=get_value_store(),
+        value_store=value_store,
         this_time=time.time(),
     )
 

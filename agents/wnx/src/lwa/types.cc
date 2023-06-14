@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -144,7 +144,7 @@ winperf_counter from_string<winperf_counter>(const std::string &value) {
     if (non_digit == base_id.end()) return {std::stoi(base_id), name, base_id};
 
     auto x =
-        wtools::perf::FindPerfIndexInRegistry(wtools::ConvertToUTF16(base_id));
+        wtools::perf::FindPerfIndexInRegistry(wtools::ConvertToUtf16(base_id));
     if (x.has_value()) return {(int)x.value(), name, base_id};
 
     return {0, "", ""};

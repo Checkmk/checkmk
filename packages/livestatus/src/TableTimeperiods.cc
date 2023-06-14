@@ -1,4 +1,4 @@
-// Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -12,10 +12,10 @@
 #include <vector>
 
 #include "livestatus/Column.h"
+#include "livestatus/ICore.h"
 #include "livestatus/IntColumn.h"
 #include "livestatus/Interface.h"
 #include "livestatus/ListColumn.h"
-#include "livestatus/MonitoringCore.h"
 #include "livestatus/Query.h"
 #include "livestatus/Row.h"
 #include "livestatus/StringColumn.h"
@@ -29,7 +29,7 @@ std::string serialize(const std::chrono::system_clock::time_point &t) {
 }
 }  // namespace column::detail
 
-TableTimeperiods::TableTimeperiods(MonitoringCore *mc) : Table(mc) {
+TableTimeperiods::TableTimeperiods(ICore *mc) : Table(mc) {
     const ColumnOffsets offsets{};
     addColumn(std::make_unique<StringColumn<ITimeperiod>>(
         "name", "The name of the timeperiod", offsets,

@@ -6,7 +6,7 @@ Date: 1658404931
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Even though the operation succeeded, some REST API calls would result
 in a 500 response status code, with a message saying,

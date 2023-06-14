@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -126,7 +126,7 @@ class BIAggregationSchema(Schema):
     id = ReqString(
         dump_default="",
         example="aggr1",
-        description="TODO: Hier muß Andreas noch etwas reinschreiben!",
+        description="The unique aggregation id",
     )
     comment = String(
         description="An optional comment that may be used to explain the purpose of this object.",

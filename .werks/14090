@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This fixes a regression in Checkmk versions 2.0.0 - 2.0.0p25.
 Enforced services on a cluster would go to UNKNOWN if the corresponding services were not additionally configured to be clustered on at least one node.

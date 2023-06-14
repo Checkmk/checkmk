@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """A host attribute is something that is inherited from folders to
@@ -10,15 +10,14 @@ from __future__ import annotations
 import abc
 import functools
 import re
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from typing import Any
 
 from marshmallow import fields
 
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.rulesets.ruleset_matcher import TaggroupIDToTagID
-from cmk.utils.tags import TagGroup, TagID
+from cmk.utils.tags import TagGroup, TagGroupID, TagID
 from cmk.utils.type_defs import HostName
 
 from cmk.gui.config import active_config
@@ -57,7 +56,7 @@ class HostAttributeTopic(abc.ABC):
 
 
 class HostAttributeTopicRegistry(cmk.utils.plugin_registry.Registry[type[HostAttributeTopic]]):
-    def plugin_name(self, instance: type[HostAttributeTopic]):  # type:ignore[no-untyped-def]
+    def plugin_name(self, instance: type[HostAttributeTopic]):  # type: ignore[no-untyped-def]
         return instance().ident
 
     def get_choices(self):
@@ -373,7 +372,7 @@ class ABCHostAttribute(abc.ABC):
         that are represented by the current HTML variables."""
         return crit == value
 
-    def get_tag_groups(self, value: Any) -> TaggroupIDToTagID:
+    def get_tag_groups(self, value: Any) -> Mapping[TagGroupID, TagID]:
         """Each attribute may set multiple tag groups for a host
         This is used for calculating the effective host tags when writing the hosts{.mk|.cfg}"""
         return {}
@@ -449,7 +448,7 @@ def get_sorted_host_attribute_topics(for_what: str, new: bool) -> list[tuple[str
     ]
 
 
-def get_sorted_host_attributes_by_topic(  # type:ignore[no-untyped-def]
+def get_sorted_host_attributes_by_topic(  # type: ignore[no-untyped-def]
     topic_id,
 ) -> list[ABCHostAttribute]:
     # Hack to sort the address family host tag attribute above the IPv4/v6 addresses
@@ -471,7 +470,7 @@ def get_sorted_host_attributes_by_topic(  # type:ignore[no-untyped-def]
 
 # Is used for dynamic host attribute declaration (based on host tags)
 # + Kept for comatibility with pre 1.6 plugins
-def declare_host_attribute(  # type:ignore[no-untyped-def]
+def declare_host_attribute(  # type: ignore[no-untyped-def]
     a: type[ABCHostAttribute],
     show_in_table: bool = True,
     show_in_folder: bool = True,
@@ -486,7 +485,6 @@ def declare_host_attribute(  # type:ignore[no-untyped-def]
     may_edit: Callable[[], bool] | None = None,
     from_config: bool = False,
 ):
-
     if not issubclass(a, ABCHostAttribute):
         raise MKGeneralException(
             _("Failed to load legacy host attribute from local plugins: %r") % a
@@ -696,7 +694,7 @@ def transform_pre_16_host_topics(custom_attributes: list[dict[str, Any]]) -> lis
     This lead to issues with localized topics. We now have internal IDs for
     all the topics and try to convert the values here to the new format.
 
-    We translate the titles which have been distributed with Check_MK to their
+    We translate the titles which have been distributed with Checkmk to their
     internal topic ID. No action should be needed. Custom topics or topics of
     other languages are not translated. The attributes are put into the
     "Custom attributes" topic once. Users will have to re-configure the topic,
@@ -911,12 +909,12 @@ class ABCHostAttributeTag(ABCHostAttributeValueSpec, abc.ABC):
     def is_tag_attribute(self) -> bool:
         return True
 
-    def get_tag_groups(self, value: TagID | None) -> TaggroupIDToTagID:
+    def get_tag_groups(self, value: TagID | None) -> Mapping[TagGroupID, TagID]:
         """Return set of tag groups to set (handles secondary tags)"""
         return self._tag_group.get_tag_group_config(value)
 
     def is_show_more(self) -> bool:
-        return self._tag_group.id in ["address_family", "criticality", "networking", "piggyback"]
+        return self._tag_group.id in ["criticality", "networking", "piggyback"]
 
 
 class ABCHostAttributeHostTagList(ABCHostAttributeTag, abc.ABC):
@@ -978,7 +976,7 @@ class ABCHostAttributeHostTagCheckbox(ABCHostAttributeTag, abc.ABC):
     def _tag_value(self) -> TagID | None:
         return self._tag_group.get_tag_choices()[0][0]
 
-    def get_tag_groups(self, value: TagID | None) -> TaggroupIDToTagID:
+    def get_tag_groups(self, value: TagID | None) -> Mapping[TagGroupID, TagID]:
         if not value:
             return {}
         return super().get_tag_groups(self._tag_value())
@@ -1030,7 +1028,7 @@ def TextAttribute(
 
 
 # TODO: Kept for pre 1.6 plugin compatibility
-def NagiosTextAttribute(  # type:ignore[no-untyped-def]
+def NagiosTextAttribute(  # type: ignore[no-untyped-def]
     name: str,
     nag_name: str,
     title: str,

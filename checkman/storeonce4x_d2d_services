@@ -4,7 +4,7 @@ catalog: hw/storagehw/hpe
 license: GPLv2
 distribution: check_mk
 description:
- This checks monitors the D2D services of a HP storeonce system.
+ This checks monitors the D2D services of a HPE storeonce system.
  The D2D service metric "healthLevelString" is used to obtain the overall service state.
 
 item:

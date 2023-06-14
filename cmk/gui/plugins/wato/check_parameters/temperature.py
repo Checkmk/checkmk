@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -44,10 +44,15 @@ def _parameter_valuespec_temperature() -> Dictionary:
             (
                 "output_unit",
                 DropdownChoice(
-                    title=_("Display values in "),
+                    title=_("Display values in (see also help text)"),
+                    help=_(
+                        "This setting affects service summaries and details only, which are user-"
+                        "independent. Changing the temperature unit for graphs and perfometers is "
+                        "possible via the user profile."
+                    ),
                     choices=[
-                        ("c", _("Celsius")),
-                        ("f", _("Fahrenheit")),
+                        ("c", _("Degree Celsius")),
+                        ("f", _("Degree Fahrenheit")),
                         ("k", _("Kelvin")),
                     ],
                 ),

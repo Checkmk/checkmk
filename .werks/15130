@@ -1,0 +1,16 @@
+Title: Only execute PDF cleanup cronjob if PDF tmp directory exists
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1677571542
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+If no PDF tmp files were created before the cronjob introduced in werk #15125
+was executed, the directory was missing and the cronjob had an output like "No
+such file or directory". The cronjob is now only executed if the directory
+"~/tmp/check_mk/pdf" exists.
+

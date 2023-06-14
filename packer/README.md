@@ -13,8 +13,9 @@ To generate an image first you need to initialize packer and download all requir
 
 Afterwards you can build the images. The builds depends on a few secrets that are defined as variables.
 We recommend you create a build.sh script that sets all variables for you. Have a look at the example\_build.sh file.
+For local development we recommend to only run the qemu builder
 
-  ./build.sh .
+  ./build.sh -only="checkmk-ansible.qemu.builder" .
 
 Since the build definitions are split across multiple files you have to run the build on the current folder ".". Just
 specifying one file will lead to an error.

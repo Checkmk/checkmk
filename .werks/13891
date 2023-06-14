@@ -6,7 +6,7 @@ Date: 1657626039
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 A few columns which are actually available in the event console were not
 available via Livestatus:

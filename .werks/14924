@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously to this Werk an attacker could utilize a cross site request forgery vulnerability in Checkmk to add elements to visuals (e.g. dashboards, reports, etc.).
 
@@ -19,5 +19,6 @@ All versions of Checkmk including (1.6) are subject to this vulnerability.
 
 This vulnerability was found through a self commissioned Penetration test.
 
-We have rated the issue with a CVSS Score of 5.4 (Medium) with the following CVSS vector: <tt>CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:L</tt> A CVE has been requested.
-
+We have rated the issue with a CVSS Score of 5.4 (Medium) with the following CVSS vector:
+<tt>CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:L</tt>.
+We have assigned CVE-2022-48320 for this issue.

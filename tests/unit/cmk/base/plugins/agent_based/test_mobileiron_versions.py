@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import json
@@ -9,10 +9,13 @@ import pytest
 from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.mobileiron_section import parse_mobileiron
 from cmk.base.plugins.agent_based.mobileiron_versions import (
     _try_calculation_age,
     check_mobileiron_versions,
+    Params,
+    Section,
 )
 
 DEVICE_DATA_ANDROID = parse_mobileiron(
@@ -200,8 +203,8 @@ def test_try_calculation_age_raises() -> None:
         ),
     ],
 )
-def test_check_mobileiron_versions(  # type:ignore[no-untyped-def]
-    params, section, expected_results
+def test_check_mobileiron_versions(
+    params: Params, section: Section, expected_results: CheckResult
 ) -> None:
     with on_time(1643360266, "UTC"):
         results = tuple(check_mobileiron_versions(params, section))

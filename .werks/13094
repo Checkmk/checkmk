@@ -6,7 +6,7 @@ Date: 1646912690
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Various changes have been done to <tt>ValueSpec</tt> and its subclasses,
 improving maintainability and robustness. If you don't write your own

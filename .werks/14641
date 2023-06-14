@@ -6,7 +6,7 @@ Date: 1659089256
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Clustered services aggregated via the builtin cluster mode "failover" could go to an unexpected warning state.
 This affected in particular database related services.

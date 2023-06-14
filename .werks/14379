@@ -6,6 +6,6 @@ Date: 1657896153
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When changing rules that contain passwords or SSH private keys, those secrets are now masked as '*' characters instead of hashes in the audit log.

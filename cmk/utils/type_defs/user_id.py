@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -105,10 +105,22 @@ class UserId(str):
                 ...
                 ValueError: Invalid username: '@example.com'
 
+            UserIds must not be longer than 255 bytes.
+
+                >>> UserId.validate("𐌈")
+                >>> UserId.validate(64*"𐌈")
+                Traceback (most recent call last):
+                ...
+                ValueError: Username too long: '𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈…'
         """
         if text == "":
             # see UserId.builtin
             return
+
+        if len(bytes(text, encoding="utf-8")) > 255:
+            # ext4 and others allow filenames of up to 255 bytes
+            raise ValueError(f"Username too long: {text[:16]+'…'!r}")
+
         if not cls.USER_ID_REGEX.match(text):
             raise ValueError(f"Invalid username: {text!r}")
 

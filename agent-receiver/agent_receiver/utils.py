@@ -1,92 +1,64 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import os
-from pathlib import Path
-from uuid import UUID
+from contextlib import suppress
+from dataclasses import dataclass
+from typing import Final, Self
 
-from agent_receiver.models import HostTypeEnum, RegistrationData, RegistrationStatusEnum
+from agent_receiver.models import ConnectionMode, R4RStatus, RequestForRegistration
 from agent_receiver.site_context import agent_output_dir, r4r_dir, users_dir
 from cryptography.x509 import load_pem_x509_csr
 from cryptography.x509.oid import NameOID
 from fastapi.security import HTTPBasicCredentials
+from pydantic import UUID4
 
 INTERNAL_REST_API_USER = "automation"
 
 
-class Host:
-    def __init__(self, uuid: UUID) -> None:
-        self._source_path = agent_output_dir() / str(uuid)
-
-        self._registered = self.source_path.is_symlink()
-        target_path = self._get_target_path() if self.registered else None
-
-        self._hostname = target_path.name if target_path else None
-        self._host_type = self._get_host_type(target_path)
-
-    def _get_target_path(self) -> Path | None:
-        try:
-            return Path(os.readlink(self.source_path))
-        except (FileNotFoundError, OSError):
-            return None
-
-    @staticmethod
-    def _get_host_type(target_path: Path | None) -> HostTypeEnum | None:
-        if not target_path:
-            return None
-
-        return HostTypeEnum.PUSH if target_path.parent.name == "push-agent" else HostTypeEnum.PULL
-
-    @property
-    def source_path(self) -> Path:
-        return self._source_path
-
-    @property
-    def registered(self) -> bool:
-        return self._registered
-
-    @property
-    def hostname(self) -> str | None:
-        return self._hostname
-
-    @property
-    def host_type(self) -> HostTypeEnum | None:
-        return self._host_type
+class NotRegisteredException(Exception):
+    ...
 
 
-def read_rejection_notice_from_file(path: Path) -> str | None:
-    try:
-        registration_request = json.loads(path.read_text())
-    except FileNotFoundError:
-        return None
+class RegisteredHost:
+    def __init__(self, uuid: UUID4) -> None:
+        self.source_path: Final = agent_output_dir() / str(uuid)
+        if not self.source_path.is_symlink():
+            raise NotRegisteredException("Source path is not a symlink")
 
-    return registration_request.get("state", {}).get("readable")
-
-
-def update_file_access_time(path: Path) -> None:
-    try:
-        os.utime(path, None)
-    except OSError:
-        pass
+        target_path = self.source_path.resolve(strict=False)
+        self.name: Final = target_path.name
+        self.connection_mode: Final = (
+            ConnectionMode.PUSH if target_path.parent.name == "push-agent" else ConnectionMode.PULL
+        )
 
 
-def get_registration_status_from_file(uuid: UUID) -> RegistrationData | None:
-    for status in RegistrationStatusEnum:
-        path = r4r_dir() / status.name / f"{uuid}.json"
-        if path.exists():
-            message = (
-                read_rejection_notice_from_file(path)
-                if status is RegistrationStatusEnum.DECLINED
-                else None
-            )
-            # access time is used to determine when to remove registration request file
-            update_file_access_time(path)
-            return RegistrationData(status=status, message=message)
+@dataclass(frozen=True)
+class R4R:
+    status: R4RStatus
+    request: RequestForRegistration
 
-    return None
+    @classmethod
+    def read(cls, uuid: UUID4) -> Self:
+        for status in R4RStatus:
+            if (path := r4r_dir() / status.name / f"{uuid}.json").exists():
+                request = RequestForRegistration.parse_file(path)
+                # access time is used to determine when to remove registration request file
+                with suppress(OSError):
+                    os.utime(path, None)
+                return cls(status, request)
+        raise FileNotFoundError(f"No request for registration with UUID {uuid} found")
+
+    def write(self) -> None:
+        (target_dir := r4r_dir() / self.status.name).mkdir(
+            mode=0o770,
+            parents=True,
+            exist_ok=True,
+        )
+        (target_path := target_dir / f"{self.request.uuid}.json").write_text(self.request.json())
+        target_path.chmod(0o660)
 
 
 def uuid_from_pem_csr(pem_csr: str) -> str:

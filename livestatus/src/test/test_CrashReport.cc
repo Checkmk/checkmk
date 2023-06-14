@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -8,20 +8,41 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <random>
 #include <string>
 
-#include "Comment.h"   // IWYU pragma: keep
-#include "Downtime.h"  // IWYU pragma: keep
-#include "NagiosCore.h"
 #include "TableQueryHelper.h"
 #include "gtest/gtest.h"
 #include "livestatus/CrashReport.h"
+#include "livestatus/Interface.h"
 #include "livestatus/Logger.h"
 #include "livestatus/TableCrashReports.h"
 #include "livestatus/data_encoding.h"
-#include "test/Utilities.h"
+#include "neb/Comment.h"   // IWYU pragma: keep
+#include "neb/Downtime.h"  // IWYU pragma: keep
+#include "neb/NebCore.h"
 
 namespace fs = std::filesystem;
+
+namespace {
+// https://stackoverflow.com/questions/440133/how-do-i-create-a-random-alpha-numeric-string-in-c
+std::string random_string(const std::string::size_type length) {
+    static const auto &chrs =
+        "0123456789"
+        "abcdefghijklmnopqrstuvwxyz"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    thread_local static std::mt19937 rg{std::random_device{}()};
+    thread_local static std::uniform_int_distribution<std::string::size_type>
+        pick(0, sizeof(chrs) - 2);
+
+    std::string str(length, 0);
+    for (auto &c : str) {
+        c = chrs[pick(rg)];
+    };
+    return str;
+}
+}  // namespace
 
 class CrashReportFixture : public ::testing::Test {
 public:
@@ -89,25 +110,27 @@ class CrashReportTableFixture : public CrashReportFixture {
     std::map<unsigned long, std::unique_ptr<Comment>> comments_;
 
 public:
-    NagiosCore core{downtimes_,
-                    comments_,
-                    paths_(),
-                    NagiosLimits{},
-                    NagiosAuthorization{},
-                    Encoding::utf8};
+    NebCore core{downtimes_,
+                 comments_,
+                 paths_(),
+                 NagiosLimits{},
+                 NagiosAuthorization{},
+                 Encoding::utf8,
+                 "enterprise",
+                 {}};
     TableCrashReports table{&core};
     const std::string header{"component;id\n"};
 
 private:
-    [[nodiscard]] NagiosPaths paths_() const {
-        NagiosPaths p{};
-        p._crash_reports_path = basepath;
+    [[nodiscard]] NagiosPathConfig paths_() const {
+        NagiosPathConfig p{};
+        p.crash_reports_directory = basepath;
         return p;
     }
 };
 
 TEST_F(CrashReportTableFixture, TestTable) {
-    EXPECT_EQ(basepath, core.crashReportPath());
+    EXPECT_EQ(basepath, core.paths()->crash_reports_directory());
     EXPECT_EQ("crashreports", table.name());
     EXPECT_EQ("crashreport_", table.namePrefix());
 }

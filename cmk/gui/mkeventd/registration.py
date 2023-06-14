@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.data_source import DataSourceRegistry
+from cmk.gui.painter.v0.base import PainterRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.plugins.wato.utils.base_modes import ModeRegistry
-from cmk.gui.plugins.watolib.utils import (
+from cmk.gui.valuespec import AutocompleterRegistry
+from cmk.gui.views.icon import IconRegistry
+from cmk.gui.watolib.config_domain_name import (
     ConfigDomainRegistry,
     ConfigVariableGroupRegistry,
     ConfigVariableRegistry,
     SampleConfigGeneratorRegistry,
 )
-from cmk.gui.valuespec import AutocompleterRegistry
-from cmk.gui.views.data_source import DataSourceRegistry
-from cmk.gui.views.icon import IconRegistry
-from cmk.gui.views.painter.v0.base import PainterRegistry
 from cmk.gui.watolib.main_menu import MainModuleRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 

@@ -6,7 +6,7 @@ Date: 1670603495
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 On SUSE Linux Enterprise Server 15 SP4 systems, the <tt>curl</tt> command crashed with
 C+:

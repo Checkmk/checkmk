@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -14,11 +14,11 @@ from cmk.fetchers import Mode
 from cmk.fetchers.cache import PersistedSections, SectionStore
 from cmk.fetchers.filecache import MaxAge
 
-from cmk.checkers.type_defs import AgentRawDataSection
+from cmk.checkengine.type_defs import AgentRawDataSection
 
 
 class MockStore:
-    def __init__(self, data) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, data) -> None:  # type: ignore[no-untyped-def]
         super().__init__()
         self._data = data
 

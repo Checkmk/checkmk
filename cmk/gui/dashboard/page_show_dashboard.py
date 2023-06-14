@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,10 +9,10 @@ of the dashboard to render is given in the HTML variable 'name'.
 
 import copy
 import json
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Literal, Mapping
+from typing import Literal
 
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKException
@@ -41,6 +41,7 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
+from cmk.gui.plugins.metrics.utils import MKCombinedGraphLimitExceededError
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import InfoName, VisualContext
 from cmk.gui.utils.html import HTML, HTMLInput
@@ -335,7 +336,7 @@ def _render_dashlet_content(
 
 
 def render_dashlet_exception_content(dashlet: Dashlet, e: Exception) -> HTMLInput:
-    if isinstance(e, MKMissingDataError):
+    if isinstance(e, (MKMissingDataError, MKCombinedGraphLimitExceededError)):
         return html.render_message(str(e))
 
     if not isinstance(e, MKUserError):
@@ -395,7 +396,6 @@ def _fallback_dashlet(
 def _get_mandatory_filters(
     board: DashboardConfig, unconfigured_single_infos: set[str]
 ) -> Iterable[str]:
-
     # Get required single info keys (the ones that are not set by the config)
     for info_key in unconfigured_single_infos:
         for info, _unused in visuals.visual_info_registry[info_key]().single_spec:
@@ -413,7 +413,6 @@ def _page_menu(
     unconfigured_single_infos: set[str],
     mode: str,
 ) -> PageMenu:
-
     html.close_ul()
     menu = PageMenu(
         dropdowns=[
@@ -465,7 +464,7 @@ def _page_menu(
     return menu
 
 
-def _page_menu_dashboards(name) -> Iterable[PageMenuTopic]:  # type:ignore[no-untyped-def]
+def _page_menu_dashboards(name) -> Iterable[PageMenuTopic]:  # type: ignore[no-untyped-def]
     if cmk_version.is_raw_edition():
         linked_dashboards = ["main", "checkmk"]  # problems = main in raw edition
     else:
@@ -494,7 +493,6 @@ def _page_menu_dashboards(name) -> Iterable[PageMenuTopic]:  # type:ignore[no-un
 
 
 def _page_menu_topics(name: DashboardName) -> Iterator[PageMenuTopic]:
-
     yield PageMenuTopic(
         title=_("Views"),
         entries=list(_dashboard_add_views_dashlet_entries(name)),
@@ -665,6 +663,7 @@ def _extend_display_dropdown(
     )
     # Like _dashboard_info_handler we assume that only host / service filters are relevant
     info_list = ["host", "service"]
+    is_filter_set = request.var("filled_in") == "filter"
 
     display_dropdown.topics.insert(
         0,
@@ -673,7 +672,9 @@ def _extend_display_dropdown(
             entries=[
                 PageMenuEntry(
                     title=_("Filter"),
-                    icon_name="filter",
+                    icon_name={"icon": "filter", "emblem": "warning"}
+                    if is_filter_set
+                    else "filter",
                     item=PageMenuSidePopup(
                         visuals.render_filter_form(
                             info_list,
@@ -753,7 +754,6 @@ def _dashboard_add_view_dashlet_link(
 
 
 def _dashboard_add_views_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
-
     yield PageMenuEntry(
         title=_("New view"),
         icon_name="view",
@@ -792,7 +792,6 @@ def _dashboard_add_non_view_dashlet_link(
 
 
 def _dashboard_add_graphs_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
-
     yield PageMenuEntryCEEOnly(
         title="Single metric graph",
         icon_name={
@@ -828,7 +827,6 @@ def _dashboard_add_graphs_dashlet_entries(name: DashboardName) -> Iterable[PageM
 
 
 def _dashboard_add_state_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
-
     yield PageMenuEntryCEEOnly(
         title="Host state",
         icon_name="host_state",
@@ -861,7 +859,6 @@ def _dashboard_add_state_dashlet_entries(name: DashboardName) -> Iterable[PageMe
 
 
 def _dashboard_add_inventory_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
-
     yield PageMenuEntryCEEOnly(
         title="Host inventory",
         icon_name="inventory",
@@ -870,7 +867,6 @@ def _dashboard_add_inventory_dashlet_entries(name: DashboardName) -> Iterable[Pa
 
 
 def _dashboard_add_metrics_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
-
     yield PageMenuEntryCEEOnly(
         title="Average scatterplot",
         icon_name="scatterplot",
@@ -897,7 +893,6 @@ def _dashboard_add_metrics_dashlet_entries(name: DashboardName) -> Iterable[Page
 
 
 def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
-
     yield PageMenuEntryCEEOnly(
         title="Site overview",
         icon_name="site_overview",
@@ -975,7 +970,6 @@ def _dashboard_add_checkmk_dashlet_entries(name: DashboardName) -> Iterable[Page
 
 
 def _dashboard_add_ntop_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntryCEEOnly]:
-
     yield PageMenuEntryCEEOnly(
         title="Alerts",
         icon_name={
@@ -1005,7 +999,6 @@ def _dashboard_add_ntop_dashlet_entries(name: DashboardName) -> Iterable[PageMen
 
 
 def _dashboard_add_other_dashlet_entries(name: DashboardName) -> Iterable[PageMenuEntry]:
-
     yield PageMenuEntry(
         title="Custom URL",
         icon_name="dashlet_url",

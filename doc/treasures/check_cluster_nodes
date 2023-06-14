@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -24,26 +24,29 @@ import livestatus
 
 
 def usage():
-    print("""
+    print(
+        """
     -h --help                 Prints this
     -n --clustername          cluster name
     -w --warning              warning at % of lost hosts
     -c --critical             critical at % of  lost hosts
-    """)
+    """
+    )
 
 
 def main(argv):
-    clustername = 'NoClusterName'
+    clustername = "NoClusterName"
     warning = float(5)
     critical = float(50)
 
-    if len(argv) == 0 or not sys.argv[1].startswith('-'):
+    if len(argv) == 0 or not sys.argv[1].startswith("-"):
         usage()
         sys.exit(2)
 
     try:
-        opt, _args = getopt.getopt(argv, "h:n:w:c:",
-                                   ['help', 'clustername=', 'warning=', 'critical='])
+        opt, _args = getopt.getopt(
+            argv, "h:n:w:c:", ["help", "clustername=", "warning=", "critical="]
+        )
     except getopt.GetoptError as err:
         print(str(err))
         usage()
@@ -78,13 +81,16 @@ def main(argv):
         unknown_list = []
 
         parents = livestatus.SingleSiteConnection(socket_path).query_table(
-            "GET hosts\nColumns: parents\nFilter: host_name = %s\n" % clustername)
+            "GET hosts\nColumns: parents\nFilter: host_name = %s\n" % clustername
+        )
         for i in range(len(parents[0][0])):
             state = livestatus.SingleSiteConnection(socket_path).query_table(
-                "GET hosts\nColumns: name hard_state\nFilter: host_name = %s\n" % parents[0][0][i])
+                "GET hosts\nColumns: name hard_state\nFilter: host_name = %s\n" % parents[0][0][i]
+            )
             cmk_state = livestatus.SingleSiteConnection(socket_path).query_table(
                 "GET services\nColumns: host_name description state\nFilter: description ~ Check_MK$\nFilter: host_name = %s\n"
-                % parents[0][0][i])
+                % parents[0][0][i]
+            )
             nodename = state[0][0]
             if state[0][1] == 0 and cmk_state[0][2] == 0:
                 nodestate = "up"
@@ -96,23 +102,23 @@ def main(argv):
                 nodestate = "unknown"
             clusternodes[nodename] = nodestate
 
-        #clusternodes['zbghvm42'] = 'unknown'
-        #clusternodes['zbghvm43'] = 'unreachable'
-        #clusternodes['zbghvm44'] = 'up'
-        #clusternodes['zbghvm45'] = 'up'
-        #clusternodes['zbghvm46'] = 'down'
-        #clusternodes['zbghvm47'] = 'down'
-        #clusternodes['zbghvm48'] = 'up'
-        #clusternodes['zbghvm49'] = 'unknown'
+        # clusternodes['zbghvm42'] = 'unknown'
+        # clusternodes['zbghvm43'] = 'unreachable'
+        # clusternodes['zbghvm44'] = 'up'
+        # clusternodes['zbghvm45'] = 'up'
+        # clusternodes['zbghvm46'] = 'down'
+        # clusternodes['zbghvm47'] = 'down'
+        # clusternodes['zbghvm48'] = 'up'
+        # clusternodes['zbghvm49'] = 'unknown'
 
         for key, value in clusternodes.items():
-            if value.count('up') > 0:
+            if value.count("up") > 0:
                 up_list.append(key)
-            if value.count('unreachable') > 0:
+            if value.count("unreachable") > 0:
                 unreachable_list.append(key)
-            if value.count('down') > 0:
+            if value.count("down") > 0:
                 down_list.append(key)
-            if value.count('unknown') > 0:
+            if value.count("unknown") > 0:
                 unknown_list.append(key)
 
         all_nodes = float(len(clusternodes))
@@ -120,8 +126,9 @@ def main(argv):
         down_nodes = float(len(down_list))
         unknown_nodes = float(len(unknown_list))
 
-        failedpercent = ((down_nodes + unreachable_nodes + unknown_nodes) /
-                         all_nodes) * 100.0  # fixed: true-division
+        failedpercent = (
+            (down_nodes + unreachable_nodes + unknown_nodes) / all_nodes
+        ) * 100.0  # fixed: true-division
 
         str_up = ""
         str_down = ""
@@ -133,8 +140,9 @@ def main(argv):
         if len(down_list) > 0:
             str_down = ("(!!)%s " % ([str(item) for item in down_list])).translate(tr_table)
         if len(unreachable_list) > 0:
-            str_unreachable = ("(ur)%s " %
-                               ([str(item) for item in unreachable_list])).translate(tr_table)
+            str_unreachable = ("(ur)%s " % ([str(item) for item in unreachable_list])).translate(
+                tr_table
+            )
         if len(unknown_list) > 0:
             str_unknown = ("(?)%s " % ([str(item) for item in unknown_list])).translate(tr_table)
 

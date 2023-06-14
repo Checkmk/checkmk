@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -16,7 +16,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 
 DIR_NAME="bazel"
 TARGET_DIR="/opt"
-BAZEL_VERSION="5.3.2"
+BAZEL_VERSION="$(<"${SCRIPT_DIR}"/.bazelversion)"
 BAZEL_EXE_FILE="bazel-${BAZEL_VERSION}-linux-x86_64"
 
 if [ "$1" != "link-only" ]; then

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 2
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 With this release the unencrypted connection may be allowed only when performing 
 upgrade from version 2.0 or earlier.

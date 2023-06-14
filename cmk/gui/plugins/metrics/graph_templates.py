@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
 from collections.abc import Iterable, Iterator, Sequence
 
 from cmk.utils import pnp_cleanup
@@ -12,6 +11,7 @@ from cmk.utils.type_defs import HostName, ServiceName
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.plugins.metrics.identification import graph_identification_types, GraphIdentification
 from cmk.gui.plugins.metrics.utils import (
     evaluate,
@@ -20,8 +20,7 @@ from cmk.gui.plugins.metrics.utils import (
     get_graph_template,
     get_graph_templates,
     GraphConsoldiationFunction,
-    GraphMetric,
-    GraphRecipe,
+    GraphRecipeBase,
     GraphTemplate,
     horizontal_rules_from_thresholds,
     MetricExpression,
@@ -30,16 +29,11 @@ from cmk.gui.plugins.metrics.utils import (
     replace_expressions,
     split_expression,
     stack_resolver,
-    StackElement,
+    TemplateGraphRecipe,
     translated_metrics_from_row,
     TranslatedMetrics,
-    unit_info,
-    UnitConverter,
 )
-from cmk.gui.type_defs import MetricDefinition, Row, TemplateGraphSpec
-from cmk.gui.views.painter_options import PainterOptions
-
-RPNAtom = tuple  # TODO: Improve this type
+from cmk.gui.type_defs import GraphMetric, MetricDefinition, Row, RPNExpression, TemplateGraphSpec
 
 
 # Performance graph dashlets already use graph_id, but for example in reports, we still use
@@ -73,7 +67,7 @@ def matching_graph_templates(
     )
 
 
-class GraphIdentificationTemplate(GraphIdentification[TemplateGraphSpec]):
+class GraphIdentificationTemplate(GraphIdentification[TemplateGraphSpec, TemplateGraphRecipe]):
     @classmethod
     def ident(cls) -> str:
         return "template"
@@ -90,7 +84,7 @@ class GraphIdentificationTemplate(GraphIdentification[TemplateGraphSpec]):
 
     def create_graph_recipes(
         self, ident_info: TemplateGraphSpec, destination: str | None = None
-    ) -> list[GraphRecipe]:
+    ) -> list[TemplateGraphRecipe]:
         graph_identification_info = ident_info
 
         try:
@@ -122,41 +116,37 @@ class GraphIdentificationTemplate(GraphIdentification[TemplateGraphSpec]):
                 translated_metrics,
                 row,
             )
-            # Put the specification of this graph into the graph_recipe
-            spec_info = dict(graph_identification_info)
+
+            spec_info = graph_identification_info.copy()
             # Performance graph dashlets already use graph_id, but for example in reports, we still
             # use graph_index. We should switch to graph_id everywhere (CMK-7308). Once this is
             # done, we can remove the line below.
             spec_info["graph_index"] = index
             spec_info["graph_id"] = graph_template_tuned["id"]
-            graph_recipe["specification"] = ("template", spec_info)
-            graph_recipes.append(graph_recipe)
+
+            graph_recipes.append(
+                TemplateGraphRecipe(
+                    {
+                        "title": graph_recipe["title"],
+                        "metrics": graph_recipe["metrics"],
+                        "unit": graph_recipe["unit"],
+                        "explicit_vertical_range": graph_recipe["explicit_vertical_range"],
+                        "horizontal_rules": graph_recipe["horizontal_rules"],
+                        "omit_zero_metrics": graph_recipe["omit_zero_metrics"],
+                        "consolidation_function": graph_recipe["consolidation_function"],
+                        "specification": ("template", spec_info),
+                    }
+                )
+            )
         return graph_recipes
 
 
 graph_identification_types.register(GraphIdentificationTemplate)
 
 
-def get_converted_metrics(
-    converter: UnitConverter, translated_metrics: TranslatedMetrics
-) -> TranslatedMetrics:
-    translated_metrics = copy.deepcopy(translated_metrics)
-    for _metric_name, metric_data in translated_metrics.items():
-        if "value" in metric_data:
-            metric_data["value"] = converter.convert(metric_data["value"])
-        if "scalar" in metric_data:
-            metric_data["scalar"] = {
-                k: converter.convert(v) for (k, v) in metric_data["scalar"].items()
-            }
-        if "unit" in metric_data:
-            metric_data["unit"] = copy.deepcopy(unit_info[converter.to_unit])
-
-    return translated_metrics
-
-
 def create_graph_recipe_from_template(
     graph_template: GraphTemplate, translated_metrics: TranslatedMetrics, row: Row
-) -> GraphRecipe:
+) -> GraphRecipeBase:
     def _metric(metric_definition: MetricDefinition) -> GraphMetric:
         metric = GraphMetric(
             {
@@ -182,23 +172,11 @@ def create_graph_recipe_from_template(
         return metric
 
     metrics = list(map(_metric, graph_template["metrics"]))
-    source_units = {m["unit"] for m in metrics}
-    if len(source_units) > 1:
+    units = {m["unit"] for m in metrics}
+    if len(units) > 1:
         raise MKGeneralException(
-            _("Cannot create graph with metrics of different units '%s'") % ", ".join(source_units)
+            _("Cannot create graph with metrics of different units '%s'") % ", ".join(units)
         )
-    source_unit = source_units.pop()
-    unit = source_unit
-
-    target_unit = graph_template.get("convert_unit_to")
-    if (
-        target_unit is not None
-        and (converter := UnitConverter(source_unit, target_unit)).is_conversion_available()
-    ):
-        unit = target_unit
-        translated_metrics = get_converted_metrics(converter, translated_metrics)
-        for metric in metrics:
-            metric["unit"] = target_unit
 
     title = replace_expressions(str(graph_template.get("title", "")), translated_metrics)
     if not title:
@@ -211,14 +189,13 @@ def create_graph_recipe_from_template(
     return {
         "title": title,
         "metrics": metrics,
-        "unit": unit,
+        "unit": units.pop(),
         "explicit_vertical_range": get_graph_range(graph_template, translated_metrics),
         "horizontal_rules": horizontal_rules_from_thresholds(
             graph_template.get("scalars", []), translated_metrics
         ),  # e.g. lines for WARN and CRIT
         "omit_zero_metrics": graph_template.get("omit_zero_metrics", False),
         "consolidation_function": graph_template.get("consolidation_function", "max"),
-        "source_unit": source_unit,
     }
 
 
@@ -262,7 +239,7 @@ def metric_expression_to_graph_recipe_expression(
     translated_metrics: TranslatedMetrics,
     lq_row: Row,
     enforced_consolidation_function: GraphConsoldiationFunction | None,
-) -> StackElement:
+) -> RPNExpression:
     """Convert 'user,util,+,2,*' into this:
 
         ('operator',
@@ -282,7 +259,7 @@ def metric_expression_to_graph_recipe_expression(
     )
 
     expression = split_expression(expression)[0]
-    atoms: list[RPNAtom] = []
+    atoms: list[RPNExpression] = []
     # Break the RPN into parts and translate each part separately
     for part, cf in iter_rpn_expression(expression, enforced_consolidation_function):
         # Some parts are operators. We leave them. We are just interested in

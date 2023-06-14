@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.utils.livestatus_helpers.types import Column, Table
@@ -48,9 +48,9 @@ class Eventconsoleevents(Table):
     event_core_host = Column(
         'event_core_host',
         col_type='string',
-        description='The canoncial name of the host for this event as known in the monitoring',
+        description='The canonical name of the host for this event as known in the monitoring',
     )
-    """The canoncial name of the host for this event as known in the monitoring"""
+    """The canonical name of the host for this event as known in the monitoring"""
 
     event_count = Column(
         'event_count',
@@ -118,9 +118,9 @@ class Eventconsoleevents(Table):
     event_match_groups_syslog_application = Column(
         'event_match_groups_syslog_application',
         col_type='list',
-        description='The sylog application match groups',
+        description='The syslog application match groups',
     )
-    """The sylog application match groups"""
+    """The syslog application match groups"""
 
     event_orig_host = Column(
         'event_orig_host',

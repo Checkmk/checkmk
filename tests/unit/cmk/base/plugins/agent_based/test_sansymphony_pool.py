@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -26,7 +26,17 @@ def test_parse_sansymphony_pool_no_agent_output() -> None:
 
 
 def test_parse_sansymphony_pool() -> None:
-    assert parse_sansymphony_pool([["Disk_pool_1", "57", "Running", "ReadWrite", "Dynamic",]]) == {
+    assert parse_sansymphony_pool(
+        [
+            [
+                "Disk_pool_1",
+                "57",
+                "Running",
+                "ReadWrite",
+                "Dynamic",
+            ]
+        ]
+    ) == {
         "Disk_pool_1": SansymphonyPool(
             name="Disk_pool_1",
             usage_stats=SimpleUsage(percent_allocated=57.0),
@@ -67,7 +77,7 @@ def test_parse_sansymphony_pool_v2() -> None:
 
 
 def test_discover_sansymphony_pool_no_agent_output() -> None:
-    assert list(discover_sansymphony_pool({})) == []
+    assert not list(discover_sansymphony_pool({}))
 
 
 def test_discover_sansymphony_pool() -> None:
@@ -96,15 +106,12 @@ def test_check_sansymphony_pool_item_not_found() -> None:
             pool_type="Dynamic",
         ),
     }
-    assert (
-        list(
-            check_sansymphony_pool(
-                item="Disk_pool_2",
-                params={**FILESYSTEM_DEFAULT_LEVELS},
-                section=section,
-            )
+    assert not list(
+        check_sansymphony_pool(
+            item="Disk_pool_2",
+            params={**FILESYSTEM_DEFAULT_LEVELS},
+            section=section,
         )
-        == []
     )
 
 

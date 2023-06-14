@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
+import subprocess
 import time
+from collections.abc import Iterator
 
 import pytest
 
@@ -26,7 +27,10 @@ def get_test_id(unreachable_enabled):
     params=[True, False],
     ids=get_test_id,
 )
-def unreachable_enabled_fixture(request, web, site: Site):  # type:ignore[no-untyped-def]
+def unreachable_enabled_fixture(
+    request: pytest.FixtureRequest,
+    site: Site,
+) -> Iterator[bool]:
     unreachable_enabled = request.param
 
     rule_id = None
@@ -62,30 +66,12 @@ def unreachable_enabled_fixture(request, web, site: Site):  # type:ignore[no-unt
 
         site.activate_changes_and_wait_for_core_reload()
 
-        site.live.command("[%d] DISABLE_HOST_CHECK;notify-test-parent" % time.time())
-        site.live.command("[%d] DISABLE_SVC_CHECK;notify-test-parent;PING" % time.time())
-        site.live.command(
-            "[%d] DISABLE_SVC_CHECK;notify-test-parent;Check_MK Discovery" % time.time()
-        )
-
-        site.live.command("[%d] DISABLE_HOST_CHECK;notify-test-child" % time.time())
-        site.live.command("[%d] DISABLE_SVC_CHECK;notify-test-child;PING" % time.time())
-        site.live.command(
-            "[%d] DISABLE_SVC_CHECK;notify-test-child;Check_MK Discovery" % time.time()
-        )
-
-        site.live.command("[%d] DISABLE_FLAP_DETECTION" % time.time())
-
         yield unreachable_enabled
     finally:
         #
         # Cleanup code
         #
         print("Cleaning up default config")
-
-        site.live.command("[%d] ENABLE_FLAP_DETECTION" % time.time())
-        site.live.command("[%d] ENABLE_HOST_CHECK;notify-test-child" % time.time())
-        site.live.command("[%d] ENABLE_HOST_CHECK;notify-test-parent" % time.time())
 
         if rule_id is not None:
             site.openapi.delete_rule(rule_id)
@@ -97,7 +83,11 @@ def unreachable_enabled_fixture(request, web, site: Site):  # type:ignore[no-unt
 
 
 @pytest.fixture(name="initial_state", scope="function")
-def initial_state_fixture(site: Site) -> None:
+def initial_state_fixture(
+    site: Site,
+    disable_checks: None,
+    disable_flap_detection: None,
+) -> None:
     # Before each test: Set to initial state: Both UP
     site.send_host_check_result("notify-test-child", 0, "UP")
     site.send_host_check_result("notify-test-parent", 0, "UP")
@@ -105,14 +95,14 @@ def initial_state_fixture(site: Site) -> None:
     # Before each test: Clear logs
     if site.core_name() == "cmc":
         # The command is processed asynchronously -> Wait for completion
-        inode_before = os.stat(site.path("var/check_mk/core/history")).st_ino
+        inode_before = site.inode("var/check_mk/core/history")
         site.live.command("[%d] ROTATE_LOGFILE" % time.time())
 
         def rotated_log():
             try:
-                return inode_before != os.stat(site.path("var/check_mk/core/history")).st_ino
-            except FileNotFoundError:
-                return False
+                return inode_before != site.inode("var/check_mk/core/history")
+            except subprocess.CalledProcessError:
+                return False  # File may vanish while waiting
 
         wait_until(rotated_log, timeout=10)
     else:
@@ -162,19 +152,20 @@ def _send_child_down_expect_unreachable(
         log.check_logged(
             "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;"
         )
-    else:
-        log.check_not_logged(
-            "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;"
-        )
+    # TODO: Can not test this because it drains too many entries from the log. WatchLog could deal
+    # with this by readding the read lines after succeeded test or similar
+    # else:
+    #     log.check_not_logged(
+    #         "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;"
+    #     )
 
 
 # Test the situation where:
 # a) Child goes down
 # b) Parent goes down
 # c) child becomes unreachable
-def test_unreachable_child_down_before_parent_down(  # type:ignore[no-untyped-def]
-    unreachable_enabled: bool, site: Site, initial_state
-):
+@pytest.mark.usefixtures("initial_state")
+def test_unreachable_child_down_before_parent_down(unreachable_enabled: bool, site: Site) -> None:
     with WatchLog(site) as log:
         # - Set child down, expect DOWN notification
         _send_child_down(site, log)
@@ -220,9 +211,8 @@ def test_unreachable_child_down_before_parent_down(  # type:ignore[no-untyped-de
 # Test the situation where:
 # a) Parent goes down
 # b) Child goes down, becomes unreachable
-def test_unreachable_child_after_parent_is_down(  # type:ignore[no-untyped-def]
-    unreachable_enabled, site: Site, initial_state
-) -> None:
+@pytest.mark.usefixtures("initial_state")
+def test_unreachable_child_after_parent_is_down(unreachable_enabled: bool, site: Site) -> None:
     with WatchLog(site) as log:
         # - Set parent down, expect DOWN notification
         _send_parent_down(site, log)
@@ -238,9 +228,8 @@ def test_unreachable_child_after_parent_is_down(  # type:ignore[no-untyped-def]
 # a) Child goes down
 # b) Parent goes down
 # c) Child goes up while parent is down
-def test_parent_down_child_up_on_up_result(  # type:ignore[no-untyped-def]
-    unreachable_enabled, site: Site, initial_state
-) -> None:
+@pytest.mark.usefixtures("initial_state")
+def test_parent_down_child_up_on_up_result(site: Site) -> None:
     with WatchLog(site) as log:
         # - Set child down, expect DOWN notification
         _send_child_down(site, log)
@@ -260,9 +249,8 @@ def test_parent_down_child_up_on_up_result(  # type:ignore[no-untyped-def]
 # b) Child goes down and becomes unreachable
 # c) Child goes up while parent is down
 # d) Child goes down and becomes unreachable while parent is down
-def test_parent_down_child_state_changes(  # type:ignore[no-untyped-def]
-    unreachable_enabled, site: Site, initial_state
-) -> None:
+@pytest.mark.usefixtures("initial_state")
+def test_parent_down_child_state_changes(unreachable_enabled: bool, site: Site) -> None:
     with WatchLog(site) as log:
         # - Set parent down, expect DOWN notification
         _send_parent_down(site, log)
@@ -281,10 +269,12 @@ def test_parent_down_child_state_changes(  # type:ignore[no-untyped-def]
             log.check_logged(
                 "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;"
             )
-        else:
-            log.check_not_logged(
-                "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;"
-            )
+        # TODO: Can not test this because it drains too many entries from the log. WatchLog could deal
+        # with this by readding the read lines after succeeded test or similar
+        # else:
+        #     log.check_not_logged(
+        #         "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;"
+        #     )
 
         # - set child up, expect UP notification
         site.send_host_check_result("notify-test-child", STATE_UP, "UP")
@@ -292,8 +282,10 @@ def test_parent_down_child_state_changes(  # type:ignore[no-untyped-def]
 
         if unreachable_enabled:
             log.check_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;")
-        else:
-            log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;")
+        # TODO: Can not test this because it drains too many entries from the log. WatchLog could deal
+        # with this by readding the read lines after succeeded test or similar
+        # else:
+        #     log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;")
 
         # - set child down, expect UNREACHABLE notification
         assert site.get_host_state("notify-test-child") == STATE_UP
@@ -306,10 +298,12 @@ def test_parent_down_child_state_changes(  # type:ignore[no-untyped-def]
             log.check_logged(
                 "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;"
             )
-        else:
-            log.check_not_logged(
-                "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;"
-            )
+        # TODO: Can not test this because it drains too many entries from the log. WatchLog could deal
+        # with this by readding the read lines after succeeded test or similar
+        # else:
+        #     log.check_not_logged(
+        #         "HOST NOTIFICATION: check-mk-notify;notify-test-child;UNREACHABLE;check-mk-notify;"
+        #     )
 
 
 # Test the situation where:
@@ -317,9 +311,8 @@ def test_parent_down_child_state_changes(  # type:ignore[no-untyped-def]
 # b) Child goes down and becomes unreachable
 # c) Parent goes up
 # d) Child is still down and becomes down
-def test_child_down_after_parent_recovers(  # type:ignore[no-untyped-def]
-    unreachable_enabled, site: Site, initial_state
-) -> None:
+@pytest.mark.usefixtures("initial_state")
+def test_child_down_after_parent_recovers(unreachable_enabled: bool, site: Site) -> None:
     with WatchLog(site) as log:
         # - Set parent down, expect DOWN notification
         _send_parent_down(site, log)
@@ -351,9 +344,8 @@ def test_child_down_after_parent_recovers(  # type:ignore[no-untyped-def]
 # b) Child goes down and becomes unreachable
 # c) Parent goes up
 # d) Child goes up
-def test_child_up_after_parent_recovers(  # type:ignore[no-untyped-def]
-    unreachable_enabled: bool, site: Site, initial_state
-) -> None:
+@pytest.mark.usefixtures("initial_state")
+def test_child_up_after_parent_recovers(unreachable_enabled: bool, site: Site) -> None:
     with WatchLog(site) as log:
         # - Set parent down, expect DOWN notification
         _send_parent_down(site, log)
@@ -378,10 +370,12 @@ def test_child_up_after_parent_recovers(  # type:ignore[no-untyped-def]
             log.check_logged(
                 "HOST NOTIFICATION: check-mk-notify;notify-test-child;UP;check-mk-notify;"
             )
-        else:
-            log.check_not_logged(
-                "HOST NOTIFICATION: check-mk-notify;notify-test-child;UP;check-mk-notify;"
-            )
+        # TODO: Can not test this because it drains too many entries from the log. WatchLog could deal
+        # with this by readding the read lines after succeeded test or similar
+        # else:
+        #     log.check_not_logged(
+        #         "HOST NOTIFICATION: check-mk-notify;notify-test-child;UP;check-mk-notify;"
+        #     )
 
 
 # Test the situation where:
@@ -389,9 +383,8 @@ def test_child_up_after_parent_recovers(  # type:ignore[no-untyped-def]
 # b) Child goes down and becomes unreachable
 # c) Child goes up
 # d) Parent goes up
-def test_child_down_and_up_while_not_reachable(  # type:ignore[no-untyped-def]
-    unreachable_enabled, site: Site, initial_state
-) -> None:
+@pytest.mark.usefixtures("initial_state")
+def test_child_down_and_up_while_not_reachable(unreachable_enabled: bool, site: Site) -> None:
     with WatchLog(site) as log:
         # - Set parent down, expect DOWN notification
         _send_parent_down(site, log)
@@ -410,8 +403,10 @@ def test_child_down_and_up_while_not_reachable(  # type:ignore[no-untyped-def]
             log.check_logged(
                 "HOST NOTIFICATION: check-mk-notify;notify-test-child;UP;check-mk-notify;"
             )
-        else:
-            log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UP")
+        # TODO: Can not test this because it drains too many entries from the log. WatchLog could deal
+        # with this by readding the read lines after succeeded test or similar
+        # else:
+        #    log.check_not_logged("HOST NOTIFICATION: check-mk-notify;notify-test-child;UP")
 
         # - Set parent up, expect UP notification
         _send_parent_recovery(site, log)
@@ -421,9 +416,10 @@ def test_child_down_and_up_while_not_reachable(  # type:ignore[no-untyped-def]
 # a) Child goes down
 # b) Parent goes down, child becomes unreachable
 # d) Parent goes up, child becomes down
-def test_down_child_becomes_unreachable_and_down_again(  # type:ignore[no-untyped-def]
-    unreachable_enabled, site: Site, initial_state
-):
+@pytest.mark.usefixtures("initial_state")
+def test_down_child_becomes_unreachable_and_down_again(
+    unreachable_enabled: bool, site: Site
+) -> None:
     with WatchLog(site) as log:
         # - Set child down, expect DOWN notification
         _send_child_down(site, log)
@@ -487,9 +483,8 @@ def test_down_child_becomes_unreachable_and_down_again(  # type:ignore[no-untype
 # b) Parent goes down, child becomes unreachable
 # c) Child goes up
 # d) Parent goes up
-def test_down_child_becomes_unreachable_then_up(  # type:ignore[no-untyped-def]
-    unreachable_enabled, site: Site, initial_state
-) -> None:
+@pytest.mark.usefixtures("initial_state")
+def test_down_child_becomes_unreachable_then_up(unreachable_enabled: bool, site: Site) -> None:
     with WatchLog(site) as log:
         # - Set child down, expect DOWN notification
         site.send_host_check_result("notify-test-child", STATE_DOWN, "DOWN")

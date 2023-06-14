@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module defines the main_menu_registry and main menu related helper functions.
@@ -8,7 +8,7 @@ Entries of the main_menu_registry must NOT be registered in this module to keep 
 in this module as small as possible.
 """
 
-from cmk.utils.licensing.state import license_status_message
+from cmk.utils.licensing.registry import get_license_message
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.version import __version__, edition
 
@@ -185,14 +185,14 @@ def _help_menu_topics() -> list[TopicMenuTopic]:
                     title=_("Info"),
                     url="info.py",
                     sort_index=10,
-                    icon="tribe29",
+                    icon="checkmk_logo_min",
                 ),
                 TopicMenuItem(
                     name="change_log",
                     title=_("Change log (Werks)"),
                     url="change_log.py",
                     sort_index=20,
-                    icon="tribe29",
+                    icon="checkmk_logo_min",
                 ),
             ],
         ),
@@ -212,7 +212,7 @@ mega_menu_registry.register(
 
 
 def license_status() -> HTML | str:
-    status_message: HTML | str = license_status_message()
+    status_message: HTML | str = get_license_message()
     if not status_message:
         return ""
     if user.may("wato.licensing"):

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,8 +11,8 @@ from cmk.utils.type_defs import ExitSpec, HostName
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
-from cmk.checkers.checkresults import ActiveCheckResult
-from cmk.checkers.error_handling import CheckResultErrorHandler
+from cmk.checkengine.checkresults import ActiveCheckResult
+from cmk.checkengine.error_handling import CheckResultErrorHandler
 
 
 def _handler() -> CheckResultErrorHandler:
@@ -27,7 +27,7 @@ def _handler() -> CheckResultErrorHandler:
     )
 
 
-def test_no_error_keeps_returns_status_from_callee() -> None:
+def test_no_error_keeps_status_from_callee() -> None:
     handler = _handler()
     result = handler.result
 
@@ -40,7 +40,7 @@ def test_no_error_keeps_returns_status_from_callee() -> None:
         )
         result = check_result.state, check_result.as_text()
 
-    assert result == (0, "summary | metrics x\ndetails\nlots of\n")
+    assert result == (0, "summary | metrics x\ndetails\nlots of")
     assert handler.result is None
 
 

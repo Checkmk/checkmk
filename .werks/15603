@@ -1,0 +1,19 @@
+Title: brocade_fcport: Extend Physical States
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1681368622
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Some states have been remapped in accordance with the MIB. Previously, <tt>no sig det</tt> and
+<tt>unknown</tt> where shown, eventhough this is not the state reported by the device. Moreover,
+the following new states have been added from the updated MIB.
+
+LI: <tt>remote fault</tt>
+LI: <tt>local fault</tt>
+LI: <tt>hard fault</tt>
+LI: <tt>unsupported module</tt>
+LI: <tt>module fault</tt>

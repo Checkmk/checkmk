@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,6 +12,7 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Integer,
     ListOfStrings,
+    NetworkPort,
     TextInput,
     Tuple,
 )
@@ -69,7 +70,7 @@ def _valuespec_active_checks_elasticsearch_query():
             ),
             (
                 "port",
-                Integer(
+                NetworkPort(
                     title=_("Port"),
                     help=_(
                         "Use this option to query a port which is different from standard port 9200."

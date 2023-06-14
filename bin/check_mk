@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -14,7 +14,6 @@ import errno
 import getopt
 import logging
 import os
-import socket
 import sys
 
 # Needs to be placed before cmk modules, because they are not available
@@ -45,6 +44,7 @@ logger = logging.getLogger("cmk.base")
 cmk.base.utils.register_sigint_handler()
 
 help_function = modes.get("help").handler_function
+
 
 # We probably don't really need to register that here, do we?
 @crash_report_registry.register
@@ -96,6 +96,8 @@ try:
     if mode_name not in modes.non_checks_options():
         errors = config.load_all_agent_based_plugins(
             check_api.get_check_api_context,
+            local_checks_dir=cmk.utils.paths.local_checks_dir,
+            checks_dir=cmk.utils.paths.checks_dir,
         )
         if sys.stderr.isatty():
             for error_msg in errors:
@@ -135,7 +137,7 @@ except (MKGeneralException, MKBailOut) as e:
         raise
     sys.exit(3)
 
-except socket.error as e:
+except OSError as e:
     if e.errno == errno.EPIPE:
         # this is not an error, caller closes socket(s) and will kill cmk too
         sys.exit(4)

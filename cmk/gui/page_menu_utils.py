@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,6 +11,7 @@ import cmk.gui.pagetypes as pagetypes
 import cmk.gui.visuals as visuals
 from cmk.gui.bi import is_part_of_aggregation
 from cmk.gui.config import active_config
+from cmk.gui.data_source import ABCDataSource
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -28,10 +29,9 @@ from cmk.gui.plugins.visuals.utils import (
     VisualInfo,
     VisualType,
 )
-from cmk.gui.type_defs import HTTPVariables, InfoName, Rows, SingleInfos, Visual
+from cmk.gui.type_defs import InfoName, Rows, SingleInfos, Visual
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
 from cmk.gui.view import View
-from cmk.gui.views.data_source import ABCDataSource
 from cmk.gui.visual_link import get_linked_visual_request_vars, make_linked_visual_url
 from cmk.gui.visuals import view_title
 
@@ -70,17 +70,20 @@ def get_context_page_menu_dropdowns(view: View, rows: Rows, mobile: bool) -> lis
 
         dropdown_visuals = _get_visuals_for_page_menu_dropdown(linked_visuals, info, is_single_info)
 
-        # Special hack for host setup links
+        # Special hack for host setup and parent/child topology links
         if info_name == "host" and is_single_info:
             host_setup_topic = _page_menu_host_setup_topic(view)
+            parent_child_topic = _page_menu_networking_topic(view)
         else:
             host_setup_topic = []
+            parent_child_topic = []
 
         dropdowns.append(
             PageMenuDropdown(
                 name=ident,
                 title=info.title if is_single_info else info.title_plural,
                 topics=host_setup_topic
+                + parent_child_topic
                 + list(
                     _get_context_page_menu_topics(
                         view,
@@ -100,8 +103,8 @@ def get_context_page_menu_dropdowns(view: View, rows: Rows, mobile: bool) -> lis
 
 def get_ntop_page_menu_dropdown(view, host_address):
     return PageMenuDropdown(
-        name="ntop",
-        title="ntop",
+        name="ntopng",
+        title="ntopng",
         topics=_get_ntop_page_menu_topics(view, host_address),
     )
 
@@ -188,7 +191,7 @@ def _get_ntop_page_menu_topics(view, host_address):
     return topics
 
 
-def _get_ntop_entry_item_link(  # type:ignore[no-untyped-def]
+def _get_ntop_entry_item_link(  # type: ignore[no-untyped-def]
     host_name: str, host_address: str, tab: str
 ):
     return make_simple_link(
@@ -220,7 +223,6 @@ def _get_context_page_menu_topics(
     for visual_type, visual in sorted(
         dropdown_visuals, key=lambda i: (i[1]["sort_index"], i[1]["title"])
     ):
-
         if visual.get("topic") == "bi" and not is_part_of_aggregation(
             singlecontext_request_vars.get("host"), singlecontext_request_vars.get("service")
         ):
@@ -427,19 +429,26 @@ def _get_combined_graphs_entry(
     if not _show_in_current_dropdown(view, info.ident, is_single_info):
         return None
 
-    httpvars: HTTPVariables = [
-        ("single_infos", ",".join(view.spec["single_infos"])),
-        ("datasource", view.datasource.ident),
-        ("view_title", view_title(view.spec, view.context)),
-    ]
-
-    url = makeuri(
-        request, httpvars, filename="combined_graphs.py", delvars=["show_checkboxes", "selection"]
-    )
     return PageMenuEntry(
         title=_("All metrics of same type in one graph"),
         icon_name="graph",
-        item=make_simple_link(url),
+        item=make_simple_link(
+            makeuri_contextless(
+                request,
+                [
+                    ("single_infos", ",".join(view.spec["single_infos"])),
+                    ("datasource", view.datasource.ident),
+                    ("view_title", view_title(view.spec, view.context)),
+                    *visuals.context_to_uri_vars(
+                        visuals.active_context_from_request(
+                            view.datasource.infos,
+                            view.context,
+                        )
+                    ),
+                ],
+                filename="combined_graphs.py",
+            )
+        ),
     )
 
 
@@ -485,6 +494,32 @@ def _dropdown_matches_datasource(info_name: InfoName, datasource: ABCDataSource)
     raise ValueError(
         f"Can not decide whether or not to show this button: {info_name}, {datasource.ident}"
     )
+
+
+def _page_menu_networking_topic(view: View) -> list[PageMenuTopic]:
+    if "host" not in view.spec["single_infos"] or "host" in view.missing_single_infos:
+        return []
+
+    host_name = view.context["host"]["host"]
+
+    return [
+        PageMenuTopic(
+            title=_("Network monitoring"),
+            entries=[
+                PageMenuEntry(
+                    title=_("Parent/Child topology"),
+                    icon_name="aggr",
+                    item=make_simple_link(
+                        makeuri_contextless(
+                            request,
+                            [("host_name", host_name)],
+                            filename="parent_child_topology.py",
+                        )
+                    ),
+                )
+            ],
+        )
+    ]
 
 
 def _page_menu_host_setup_topic(view: View) -> list[PageMenuTopic]:

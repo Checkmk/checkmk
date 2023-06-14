@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Functions for logging changes and keeping the "Activate Changes" state and finally activating changes."""
@@ -11,18 +11,22 @@ from contextlib import contextmanager
 from livestatus import SiteId
 
 import cmk.utils
+from cmk.utils.setup_search_index import request_index_update
 from cmk.utils.type_defs import UserId
 
 import cmk.gui.utils
 import cmk.gui.watolib.git
 import cmk.gui.watolib.sidebar_reload
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.watolib.utils import ABCConfigDomain, config_domain_registry, DomainSettings
 from cmk.gui.site_config import site_is_local
 from cmk.gui.user_sites import activation_sites
 from cmk.gui.utils import escaping
-from cmk.gui.watolib import search
 from cmk.gui.watolib.audit_log import log_audit, LogMessage
+from cmk.gui.watolib.config_domain_name import (
+    ABCConfigDomain,
+    config_domain_registry,
+    DomainSettings,
+)
 from cmk.gui.watolib.objref import ObjectRef
 from cmk.gui.watolib.site_changes import SiteChanges
 
@@ -52,7 +56,7 @@ def add_change(
     )
     cmk.gui.watolib.sidebar_reload.need_sidebar_reload()
 
-    search.update_index_background(action_name)
+    request_index_update(action_name)
 
     ActivateChangesWriter().add_change(
         action_name,
@@ -73,8 +77,8 @@ class ActivateChangesWriter:
     @classmethod
     @contextmanager
     def disable(cls) -> Iterator[None]:
+        cls._enabled = False
         try:
-            cls._enabled = False
             yield
         finally:
             cls._enabled = True
@@ -153,7 +157,7 @@ class ActivateChangesWriter:
         if site_is_local(site_id) and need_restart is False:
             return
 
-        SiteChanges(SiteChanges.make_path(site_id)).append(
+        SiteChanges(site_id).append(
             {
                 "id": change_id,
                 "action_name": action_name,

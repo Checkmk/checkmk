@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -207,9 +207,16 @@ metric_info["kube_misscheduled_replicas"] = {
 
 
 metric_info["kube_cron_job_status_job_duration"] = {
-    "title": _("Duration"),
+    "title": _("Total duration"),
     "unit": "s",
     "color": "41/a",
+}
+
+
+metric_info["kube_cron_job_status_execution_duration"] = {
+    "title": _("Execution time"),
+    "unit": "s",
+    "color": "21/a",
 }
 
 
@@ -361,5 +368,14 @@ graph_info["kube_replica_update_state"] = {
     "metrics": [
         ("kube_desired_replicas", "line"),
         ("kube_updated_replicas", "area"),
+    ],
+}
+
+
+graph_info["kube_cronjob_status"] = {
+    "title": _("Duration"),
+    "metrics": [
+        ("kube_cron_job_status_job_duration", "area"),
+        ("kube_cron_job_status_execution_duration", "area"),
     ],
 }

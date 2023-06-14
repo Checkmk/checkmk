@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""This code section deals with the interaction of Check_MK base code. It is
+"""This code section deals with the interaction of Checkmk base code. It is
 used for doing inventory, showing the services of a host, deletion of a host
 and similar things."""
+
+from __future__ import annotations
 
 import ast
 import logging
 import re
 import subprocess
 import uuid
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from io import BytesIO
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import NamedTuple
 
 import requests
 import urllib3
@@ -23,8 +26,10 @@ from livestatus import SiteConfiguration, SiteId
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.licensing.handler import LicenseState
+from cmk.utils.licensing.registry import get_license_state
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import PhaseOneResult, UserId
+from cmk.utils.type_defs import UserId
 
 from cmk.automations.results import result_type_registry, SerializedResult
 
@@ -39,12 +44,20 @@ from cmk.gui.background_job import (
 )
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.http import request
+from cmk.gui.http import request, Request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.site_config import get_site_config
+from cmk.gui.utils.compatibility import (
+    EditionsIncompatible,
+    is_distributed_setup_compatible_for_licensing,
+    LicenseStateIncompatible,
+    LicensingCompatible,
+    make_incompatible_info,
+)
 from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automation_types import PhaseOneResult
 from cmk.gui.watolib.utils import mk_repr
 
 auto_logger = logger.getChild("automations")
@@ -58,16 +71,16 @@ class MKAutomationException(MKGeneralException):
     pass
 
 
-def cmk_version_of_remote_automation_source() -> cmk_version.Version:
+def cmk_version_of_remote_automation_source(remote_request: Request) -> cmk_version.Version:
     # The header is sent by Checkmk as of 2.0.0p1. In case it is missing, assume we are too old.
-    return cmk_version.Version(request.headers.get("x-checkmk-version", "1.6.0p1"))
+    return cmk_version.Version.from_str(remote_request.headers.get("x-checkmk-version", "1.6.0p1"))
 
 
 def check_mk_local_automation_serialized(
     *,
     command: str,
     args: Sequence[str] | None = None,
-    indata: Any = "",
+    indata: object = "",
     stdin_data: str | None = None,
     timeout: int | None = None,
 ) -> tuple[Sequence[str], SerializedResult]:
@@ -146,13 +159,13 @@ def check_mk_local_automation_serialized(
     return cmd, SerializedResult(completed_process.stdout)
 
 
-def local_automation_failure(  # type:ignore[no-untyped-def]
-    command,
-    cmdline,
-    code=None,
-    out=None,
-    err=None,
-    exc=None,
+def local_automation_failure(
+    command: str,
+    cmdline: Iterable[str],
+    code: int | None = None,
+    out: str | None = None,
+    err: str | None = None,
+    exc: Exception | None = None,
 ) -> MKGeneralException:
     call = subprocess.list2cmdline(cmdline) if active_config.debug else command
     msg = "Error running automation call <tt>%s</tt>" % call
@@ -167,7 +180,7 @@ def local_automation_failure(  # type:ignore[no-untyped-def]
     return MKGeneralException(msg)
 
 
-def _hilite_errors(outdata):
+def _hilite_errors(outdata: str) -> str:
     return re.sub("\nError: *([^\n]*)", "\n<div class=err><b>Error:</b> \\1</div>", outdata)
 
 
@@ -176,7 +189,7 @@ def check_mk_remote_automation_serialized(
     site_id: SiteId,
     command: str,
     args: Sequence[str] | None,
-    indata: Any,
+    indata: object,
     stdin_data: str | None = None,
     timeout: int | None = None,
     sync: Callable[[SiteId], None],
@@ -210,10 +223,10 @@ def check_mk_remote_automation_serialized(
             command="checkmk-automation",
             vars_=[
                 ("automation", command),  # The Checkmk automation command
-                ("arguments", mk_repr(args)),  # The arguments for the command
-                ("indata", mk_repr(indata)),  # The input data
-                ("stdin_data", mk_repr(stdin_data)),  # The input data for stdin
-                ("timeout", mk_repr(timeout)),  # The timeout
+                ("arguments", mk_repr(args).decode("ascii")),  # The arguments for the command
+                ("indata", mk_repr(indata).decode("ascii")),  # The input data
+                ("stdin_data", mk_repr(stdin_data).decode("ascii")),  # The input data for stdin
+                ("timeout", mk_repr(timeout).decode("ascii")),  # The timeout
             ],
         )
     )
@@ -227,7 +240,7 @@ def check_mk_remote_automation_serialized(
 # The registered hooks are called with a dictionary as parameter which
 # holds all available with the hostnames as keys and the attributes of
 # the hosts as values.
-def call_hook_pre_activate_changes():
+def call_hook_pre_activate_changes() -> None:
     if hooks.registered("pre-activate-changes"):
         # TODO: Cleanup this local import
         import cmk.gui.watolib.hosts_and_folders  # pylint: disable=redefined-outer-name
@@ -244,7 +257,7 @@ def call_hook_pre_activate_changes():
 # The registered hooks are called with a dictionary as parameter which
 # holds all available with the hostnames as keys and the attributes of
 # the hosts as values.
-def call_hook_activate_changes():
+def call_hook_activate_changes() -> None:
     if hooks.registered("activate-changes"):
         # TODO: Cleanup this local import
         import cmk.gui.watolib.hosts_and_folders  # pylint: disable=redefined-outer-name
@@ -252,13 +265,13 @@ def call_hook_activate_changes():
         hooks.call("activate-changes", cmk.gui.watolib.hosts_and_folders.collect_all_hosts())
 
 
-def _do_remote_automation_serialized(  # type:ignore[no-untyped-def]
+def _do_remote_automation_serialized(
     *,
-    site,
-    command,
-    vars_,
-    files=None,
-    timeout=None,
+    site: SiteConfiguration,
+    command: str,
+    vars_: Sequence[tuple[str, str]],
+    files: Mapping[str, BytesIO] | None = None,
+    timeout: float | None = None,
 ) -> str:
     auto_logger.info("RUN [%s]: %s", site, command)
     auto_logger.debug("VARS: %r", vars_)
@@ -290,23 +303,30 @@ def _do_remote_automation_serialized(  # type:ignore[no-untyped-def]
     return response
 
 
-def execute_phase1_result(site_id: SiteId, connection_id: str) -> PhaseOneResult:
-    command_args = {
-        "request_format": "python",
-        "request": repr(
-            {"action": "get_phase1_result", "kwargs": {"connection_id": connection_id}}
+def execute_phase1_result(site_id: SiteId, connection_id: str) -> PhaseOneResult | str:
+    command_args = [
+        ("request_format", "python"),
+        (
+            "request",
+            repr({"action": "get_phase1_result", "kwargs": {"connection_id": connection_id}}),
         ),
-    }
+    ]
     return ast.literal_eval(
-        do_remote_automation(
-            site=get_site_config(site_id), command="execute-dcd-command", vars_=command_args
+        str(
+            do_remote_automation(
+                site=get_site_config(site_id), command="execute-dcd-command", vars_=command_args
+            )
         )
     )
 
 
-def do_remote_automation(  # type:ignore[no-untyped-def]
-    site, command, vars_, files=None, timeout=None
-) -> Any:
+def do_remote_automation(
+    site: SiteConfiguration,
+    command: str,
+    vars_: Sequence[tuple[str, str]],
+    files: Mapping[str, BytesIO] | None = None,
+    timeout: float | None = None,
+) -> object:
     serialized_response = _do_remote_automation_serialized(
         site=site,
         command=command,
@@ -327,7 +347,14 @@ def do_remote_automation(  # type:ignore[no-untyped-def]
         )
 
 
-def get_url_raw(url, insecure, auth=None, data=None, files=None, timeout=None):
+def get_url_raw(
+    url: str,
+    insecure: bool,
+    auth: tuple[str, str] | None = None,
+    data: Mapping[str, str] | None = None,
+    files: Mapping[str, BytesIO] | None = None,
+    timeout: float | None = None,
+) -> requests.Response:
     response = requests.post(
         url,
         data=data,
@@ -338,6 +365,7 @@ def get_url_raw(url, insecure, auth=None, data=None, files=None, timeout=None):
         headers={
             "x-checkmk-version": cmk_version.__version__,
             "x-checkmk-edition": cmk_version.edition().short,
+            "x-checkmk-license-state": get_license_state().readable,
         },
     )
 
@@ -371,39 +399,65 @@ def _verify_compatibility(response: requests.Response) -> None:
     """
     central_version = cmk_version.__version__
     central_edition_short = cmk_version.edition().short
+    central_license_state = get_license_state()
 
     remote_version = response.headers.get("x-checkmk-version", "")
     remote_edition_short = response.headers.get("x-checkmk-edition", "")
+    remote_license_state = parse_license_state(response.headers.get("x-checkmk-license-state", ""))
 
     if not remote_version or not remote_edition_short:
         return  # No validation
 
     if not isinstance(
         compatibility := compatible_with_central_site(
-            central_version, central_edition_short, remote_version, remote_edition_short
+            central_version,
+            central_edition_short,
+            central_license_state,
+            remote_version,
+            remote_edition_short,
+            remote_license_state,
         ),
         cmk_version.VersionsCompatible,
     ):
         raise MKGeneralException(
-            _(
-                "The central (Version: %s, Edition: %s) and remote site "
-                "(Version: %s, Edition: %s) are not compatible. Reason: %s"
-            )
-            % (
+            make_incompatible_info(
                 central_version,
                 central_edition_short,
+                central_license_state,
                 remote_version,
                 remote_edition_short,
+                remote_license_state,
                 compatibility,
             )
         )
 
 
-def get_url(url, insecure, auth=None, data=None, files=None, timeout=None):
+def parse_license_state(raw_license_state: str) -> LicenseState | None:
+    try:
+        return LicenseState[raw_license_state]
+    except KeyError:
+        return None
+
+
+def get_url(
+    url: str,
+    insecure: bool,
+    auth: tuple[str, str] | None = None,
+    data: Mapping[str, str] | None = None,
+    files: Mapping[str, BytesIO] | None = None,
+    timeout: float | None = None,
+) -> str:
     return get_url_raw(url, insecure, auth, data, files, timeout).text
 
 
-def get_url_json(url, insecure, auth=None, data=None, files=None, timeout=None):
+def get_url_json(
+    url: str,
+    insecure: bool,
+    auth: tuple[str, str] | None = None,
+    data: Mapping[str, str] | None = None,
+    files: Mapping[str, BytesIO] | None = None,
+    timeout: float | None = None,
+) -> object:
     return get_url_raw(url, insecure, auth, data, files, timeout).json()
 
 
@@ -446,7 +500,7 @@ def do_site_login(site: SiteConfiguration, name: UserId, password: str) -> str:
             raise MKUserError(
                 None,
                 _(
-                    "The Check_MK Managed Services Edition can only "
+                    "The Checkmk Managed Services Edition can only "
                     "be connected with other sites using the CME."
                 ),
             )
@@ -457,9 +511,12 @@ def do_site_login(site: SiteConfiguration, name: UserId, password: str) -> str:
 class CheckmkAutomationRequest(NamedTuple):
     command: str
     args: Sequence[str] | None
-    indata: Any
+    indata: object
     stdin_data: str | None
     timeout: int | None
+
+
+RemoteAutomationGetStatusResponseRaw = tuple[dict[str, object], str]
 
 
 class CheckmkAutomationGetStatusResponse(NamedTuple):
@@ -492,6 +549,7 @@ def _do_check_mk_remote_automation_in_background_job_serialized(
                 ("request", repr(job_id)),
             ],
         )
+        assert isinstance(raw_response, tuple)
         response = CheckmkAutomationGetStatusResponse(
             JobStatusSpec.parse_obj(raw_response[0]),
             raw_response[1],
@@ -512,12 +570,14 @@ def _start_remote_automation_job(
     site_config: SiteConfiguration, automation_request: CheckmkAutomationRequest
 ) -> str:
     auto_logger.info("Starting remote automation in background job")
-    job_id = do_remote_automation(
-        site_config,
-        "checkmk-remote-automation-start",
-        [
-            ("request", repr(tuple(automation_request))),
-        ],
+    job_id = str(
+        do_remote_automation(
+            site_config,
+            "checkmk-remote-automation-start",
+            [
+                ("request", repr(tuple(automation_request))),
+            ],
+        )
     )
 
     auto_logger.info("Started background job: %s", job_id)
@@ -557,7 +617,7 @@ class AutomationCheckmkAutomationGetStatus(AutomationCommand):
     def _load_result(path: Path) -> str:
         return store.load_text_from_file(path)
 
-    def execute(self, api_request: str) -> tuple[dict[str, Any], str]:
+    def execute(self, api_request: str) -> RemoteAutomationGetStatusResponseRaw:
         job_id = api_request
         job = CheckmkAutomationBackgroundJob(job_id)
         response = CheckmkAutomationGetStatusResponse(
@@ -609,7 +669,7 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
                 path,
                 result_type_registry[automation_cmd]
                 .deserialize(serialized_result)
-                .serialize(cmk_version_of_remote_automation_source()),
+                .serialize(cmk_version_of_remote_automation_source(request)),
             )
         except SyntaxError as e:
             raise local_automation_failure(
@@ -643,17 +703,26 @@ class CheckmkAutomationBackgroundJob(BackgroundJob):
         job_interface.send_result_message(_("Finished."))
 
 
-class EditionsIncompatible:
-    def __init__(self, reason: str) -> None:
-        self._reason = reason
-
-    def __str__(self) -> str:
-        return self._reason
+def _edition_from_short(edition_short: str) -> cmk_version.Edition:
+    for ed in cmk_version.Edition:
+        if ed.short == edition_short:
+            return ed
+    raise ValueError(edition_short)
 
 
 def compatible_with_central_site(
-    central_version: str, central_edition_short: str, remote_version: str, remote_edition_short: str
-) -> cmk_version.VersionsCompatible | cmk_version.VersionsIncompatible | EditionsIncompatible:
+    central_version: str,
+    central_edition_short: str,
+    central_license_state: LicenseState | None,
+    remote_version: str,
+    remote_edition_short: str,
+    remote_license_state: LicenseState | None,
+) -> (
+    cmk_version.VersionsCompatible
+    | cmk_version.VersionsIncompatible
+    | EditionsIncompatible
+    | LicenseStateIncompatible
+):
     """Whether or not a remote site version and edition is compatible with the central site
 
     The version check is handled by the version utils, the edition check is handled here.
@@ -662,17 +731,20 @@ def compatible_with_central_site(
 
     C*E != CME is not allowed
 
-    >>> str(c("2.0.0p3", "cee", "2.0.0p3", "cme"))
-    'Mix of CME and non-CME is not supported.'
-    >>> str(c("2.0.0p3", "cme", "2.0.0p3", "cee"))
-    'Mix of CME and non-CME is not supported.'
-    >>> str(c("2.0.0p3", "cre", "2.0.0p3", "cme"))
-    'Mix of CME and non-CME is not supported.'
-    >>> str(c("2.0.0p3", "cme", "2.0.0p3", "cre"))
-    'Mix of CME and non-CME is not supported.'
-    >>> isinstance(c("2.0.0p3", "cme", "2.0.0p3", "cme"), cmk_version.VersionsCompatible)
+    >>> str(c("2.2.0p1", "cce", LicenseState.LICENSED, "2.2.0p1", "cce", LicenseState.FREE))
+    'Remote site in license state free is not allowed'
+    >>> str(c("2.0.0p3", "cee", LicenseState.LICENSED, "2.0.0p3", "cme", LicenseState.LICENSED))
+    'Mix of CME and non-CME is not allowed.'
+    >>> str(c("2.0.0p3", "cme", LicenseState.LICENSED, "2.0.0p3", "cee", LicenseState.LICENSED))
+    'Mix of CME and non-CME is not allowed.'
+    >>> str(c("2.0.0p3", "cre", LicenseState.LICENSED, "2.0.0p3", "cme", LicenseState.LICENSED))
+    'Mix of CME and non-CME is not allowed.'
+    >>> str(c("2.0.0p3", "cme", LicenseState.LICENSED, "2.0.0p3", "cre", LicenseState.LICENSED))
+    'Mix of CME and non-CME is not allowed.'
+    >>> isinstance(c("2.0.0p3", "cme", LicenseState.LICENSED, "2.0.0p3", "cme", LicenseState.LICENSED), cmk_version.VersionsCompatible)
     True
     """
+
     # Pre 2.0.0p1 did not sent x-checkmk-* headers -> Not compabile
     if not all(
         (
@@ -684,10 +756,18 @@ def compatible_with_central_site(
     ):
         return cmk_version.VersionsIncompatible("Central or remote site are below 2.0.0p1.")
 
-    if (central_edition_short == "cme") is not (remote_edition_short == "cme"):
-        return EditionsIncompatible("Mix of CME and non-CME is not supported.")
+    if not isinstance(
+        licensing_compatibility := is_distributed_setup_compatible_for_licensing(
+            central_edition=_edition_from_short(central_edition_short),
+            central_license_state=central_license_state,
+            remote_edition=_edition_from_short(remote_edition_short),
+            remote_license_state=remote_license_state,
+        ),
+        LicensingCompatible,
+    ):
+        return licensing_compatibility
 
     return cmk_version.versions_compatible(
-        cmk_version.Version(central_version),
-        cmk_version.Version(remote_version),
+        cmk_version.Version.from_str(central_version),
+        cmk_version.Version.from_str(remote_version),
     )

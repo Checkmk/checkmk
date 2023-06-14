@@ -1,0 +1,31 @@
+Title: Improve UI for edge cases in the service discovery page
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1680156674
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+A <a href="https://checkmk.com/de/werk/15233">recent fix</a> introduced a new message to the service discovery page in case no cached data was available for SNMP devices:
+
+<i>Could not find any service for this host. You might need to trigger a rescan.</i>
+
+This message was also shown if for some other reason the datasources failed, such as an unreachable host or a missconfiguration.
+In those cases a rescan would obviousy not help, and the user would just get this message again.
+
+This is now mitigated by showing a different message once a rescan has been triggered:
+
+<i>No services found.
+If you expect this host to have (vanished) services, it probably means that one of the configured data sources is not operating as expected.
+Take a look at the </i>Check_MK<i> service to see what is wrong.
+</i>
+
+<b>Note:</b>
+The underlying issue here is, that the service discovery currently does not report on the state of the datasources, i.e., whether even the connection to hosts was successfull.
+If the connection can not be established, for instance because of changed SNMP credentials, users probably do not want to remove all of their services.
+While <i>all</i> services being vanished probably alerts an attentive user, the situation is even more intransparent if one of multiple datasources only creates few services.
+In such a case it is impossible to distinguish the truly vanished services from the ones only missing as a result of the failed datasource.
+
+This more fundamental issue will be addressed in Checkmk versions 2.2 upwards.

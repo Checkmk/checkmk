@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -102,7 +102,7 @@ class VPNTunnel:
 Section = Mapping[str, VPNTunnel]
 
 
-def _parse_phase_2(table_phase_2) -> Mapping[str, Phase]:  # type:ignore[no-untyped-def]
+def _parse_phase_2(table_phase_2) -> Mapping[str, Phase]:  # type: ignore[no-untyped-def]
     phase_2_data: Dict[str, Phase] = {}
     for index, state, phase_2_in, phase_2_out in table_phase_2:
         if state == "2":
@@ -209,7 +209,6 @@ def check_cisco_vpn_tunnel(
     params: CheckParameters,
     section: Section,
 ) -> CheckResult:
-
     state_missing, aliases = _state_missing_and_aliases(
         item,
         params,

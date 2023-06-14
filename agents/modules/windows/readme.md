@@ -1,10 +1,10 @@
 # Windows Modules to deploy wint Windows Agent 2.0 and later
 
-## Python 3.8 & Python 3.4.4
+## Python 3.11.2 & Python 3.4.4
 
 ### Source
 
-PYTHON 3.10.4, provided as source tarball by standard Checkmk development process
+PYTHON 3.11.2, provided as source tarball by standard Checkmk development process
 PYTHON 3.4.4, downloaded as msi installer from the python.org
 
 ### Changing or Updating the Python
@@ -17,7 +17,7 @@ PYTHON 3.4.4, downloaded as msi installer from the python.org
 
 ### Required Tools
 
-1. Visual Studio 2019 and v140 toolchain.
+1. Visual Studio 2019 and v142 toolchain.
 2. Python 3.7 or newer on the path
 3. Normal make.
 4. 7zip.
@@ -39,12 +39,6 @@ installation is not possible. The error is "cannot install" or similar
 
 5. You may need to unpack libffi-7.zip into correspoding python source directory.
 
-6. Python 3.8 can't be built with Windows 11 SDK
-Check this path:
-HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Microsoft SDKs\Windows\v10.0
-and set to crrect value 10586
-
-
 ### Changes of the files and names
 
 This procedure may quite annoying, you have to check next points:
@@ -59,7 +53,7 @@ This procedure may quite annoying, you have to check next points:
 
    Usually it is conftest.py and Makefile.
 
-6. Check build_the_module.cmd for 3.9, 3.4 and et cetera
+6. Check build_the_module.cmd for 3.11, 3.4 and et cetera
 7. Check the Windows node builds artifacts succesfully.
 
 ### PROCESS
@@ -67,7 +61,7 @@ This procedure may quite annoying, you have to check next points:
 #### Execution local
 
 ##### Building
-make build PY_VER=3.9 PY_SUBVER=8
+make build PY_VER=3.11 PY_SUBVER=1
 make python_344 PY_VER=3.4 PY_SUBVER=4
 
 ##### Testing
@@ -82,7 +76,7 @@ build_the_module cached
 
 In a turn the script makes two calls:
 build_the_cached artefact_dir credentials url 3.4 4
-build_the_cached artefact_dir credentials url 3.9 8
+build_the_cached artefact_dir credentials url 3.11 1
 
 #### Caching
 
@@ -95,11 +89,11 @@ Just a commit is not enough, because some builds can't get data about current gi
 In latter case the git_hash is replaced with string "latest".
 
 
-#### Steps 3.8 and newer
+#### Steps 3.11 and newer
 
 1. Deploy package from the *omd/packages*
 2. Build  and copy results t the *out*.
-3. Uninstall from backuped python-3.8.exe in *uninstall*
+3. Uninstall from backuped python-3.11.exe in *uninstall*
 4. Install to the *to_install*
 5. Upgrade pip
 6. Install pipenv
@@ -110,7 +104,7 @@ In latter case the git_hash is replaced with string "latest".
 11. Copy correct *pyvenv.cfg* into *tO-save/.venv*
 12. Copy runtime from runtime to DLL
 13. Clean virtual environemtn *to_save*
-14. Compress *tmp/to_save* into *tmp/python-3.8.cab*.
+14. Compress *tmp/to_save* into *tmp/python-3.cab*.
 15. Copy cab to *artefacts*
 
 #### Steps 3.4.4
@@ -120,7 +114,7 @@ In latter case the git_hash is replaced with string "latest".
 3. Build virtual environment and copy files into *to_save*
 4. Uninstall omd/packages/Python/windows/python-3.4.4.msi
 5. Upgradepip and install packages
-6. Copy correct *pyvenv.cfg* into *tO-save/.venv*
+6. Copy correct *pyvenv.cfg* into *to-save/.venv*
 7. Clean virtual environemtn *to_save*
 8. Compress *tmp/to_save* into *tmp/python-3.4.cab*.
 9. Copy cab to *artefacts*
@@ -134,8 +128,8 @@ This can be difficult to obtain, you have to ask a person having Visual Studio P
 |
 |-- tmp/
 |    |
-|    |-- 3.9/
-|    |      |   python-3.9.cab  * resulting module file
+|    |-- 3.11/
+|    |      |   python-3.cab  * resulting module file
 |    |      |
 |    |      |-- to_save/		* to produce module *
 |    |      |
@@ -170,11 +164,11 @@ This can be difficult to obtain, you have to ask a person having Visual Studio P
 |
 |-- python/
      |
-     |-- 3.9/
+     |-- 3.11/
      |       |
-     |       |-- python-3.9.timestamp
+     |       |-- python-3.11.timestamp
      |       |
-     |       +-- python-3.9/
+     |       +-- python-3.11/
      |
      |-- 3.4/
              |

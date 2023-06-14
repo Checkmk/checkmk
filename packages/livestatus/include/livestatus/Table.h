@@ -1,4 +1,4 @@
-// Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -15,9 +15,12 @@
 class Column;
 class DynamicColumn;
 class Logger;
-class MonitoringCore;
+class ICore;
 class Query;
 class User;
+
+enum class LockComments { no, yes };
+enum class LockDowntimes { no, yes };
 
 /// A table-like view for some underlying data, exposed via LQL.
 ///
@@ -47,7 +50,7 @@ class User;
 /// timeperiods         | name
 class Table {
 public:
-    explicit Table(MonitoringCore *mc);
+    explicit Table(ICore *mc);
     virtual ~Table();
 
     void addColumn(std::unique_ptr<Column> col);
@@ -98,7 +101,7 @@ public:
     // and a non-const part can probably fix that wart.
     //
     // A much bigger problem is that we can't make answerQuery() itself 'const',
-    // because its impementations in TableStateHistory and TableCachedStatehist
+    // because its implementations in TableStateHistory and TableCachedStatehist
     // are non-const. Tables are shared between threads and the locking in the
     // problematic answerQuery() implementations is a "bit" chaotic, so this can
     // be a real correctness problem! This has to be fixed...
@@ -114,11 +117,11 @@ public:
         return row.rawData<T>();
     }
 
-    [[nodiscard]] MonitoringCore *core() const { return _mc; }
+    [[nodiscard]] ICore *core() const { return _mc; }
     [[nodiscard]] Logger *logger() const;
 
 private:
-    MonitoringCore *_mc;
+    ICore *_mc;
 
     [[nodiscard]] std::unique_ptr<Column> dynamicColumn(
         const std::string &colname, const std::string &rest) const;

@@ -6,7 +6,7 @@ Date: 1670851592
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, there was an option to decide whether the cache age (in case of activated caching) of
 an MRPE check should be displayed at the corresponding service. This could be specified either at

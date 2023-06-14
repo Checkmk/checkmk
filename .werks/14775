@@ -6,7 +6,7 @@ Date: 1667888498
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This adds 6 columns to the status table in livestatus: carbon_overflows,
 carbon_overflows_rate, influxdb_overflows, influxdb_overflows_rate,

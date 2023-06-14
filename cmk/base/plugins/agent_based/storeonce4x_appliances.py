@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -68,14 +68,12 @@ _LICENSE_MAP = {
 
 
 def parse_storeonce4x_appliances(string_table: StringTable) -> Section:
-
     parsed: dict[str, dict[str, Any]] = {}
 
     federation_json = json.loads(string_table[0][0])
     dashboard_json_list = [json.loads(json_obj[0]) for json_obj in string_table[1:]]
 
     for member in federation_json["members"]:
-
         hostname = member["hostname"]
 
         parsed[hostname] = {}

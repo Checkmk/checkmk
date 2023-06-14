@@ -1,0 +1,33 @@
+Title: Disallow Specifying Invalid Ports in Rulesets
+Class: fix
+Compatible: incomp
+Component: wato
+Date: 1684329737
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+With this Werk, it is no longer possible to specify ports outside of the range 1 to 65535.
+This affects rules such as <tt>Amazon Web Services (AWS)</tt>. In case you have an invalid port,
+the following error will be shown while updating.
+C+:
+-| WARNING: Invalid rule configuration detected
+-| Ruleset: special_agents:aws
+-| Title: Amazon Web Services (AWS)
+-| Folder: main
+-| Rule nr: 1
+-| Exception: -1 is too low. The minimum allowed value is 1.
+-|
+-| You can abort the update process (A) and try to fix the incompatibilities with a downgrade to the version you came from or continue (c) the update.
+-|
+-| Abort update? [A/c]
+C-:
+In this case, you should continue the update, and follow the instructions provided. For example:
+C+:
+-| WARNING: Invalid rule configuration detected (Ruleset: special_agents:aws, Title: Amazon Web Services (AWS), Folder: ,
+-| Rule nr: 1, Exception: -1 is too low. The minimum allowed value is 1.)
+-| Detected 1 issue(s) in configured rules.
+-| To correct these issues, we recommend to open the affected rules in the GUI.
+-| Upon attempting to save them, any problematic fields will be highlighted.
+C-:

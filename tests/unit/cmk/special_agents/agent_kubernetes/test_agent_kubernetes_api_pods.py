@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -246,7 +246,7 @@ class TestPodStartUp(TestCase):
         """
         api_pod_status = api.PodStatus(
             start_time=convert_to_timestamp(
-                datetime.datetime(2021, 11, 22, 16, 11, 38, 710257, tzinfo=datetime.timezone.utc)
+                datetime.datetime(2021, 11, 22, 16, 11, 38, 710257, tzinfo=datetime.UTC)
             ),
             conditions=[
                 api.PodCondition(
@@ -305,7 +305,7 @@ class TestPodStartUp(TestCase):
         """
         api_pod_status = api.PodStatus(
             start_time=convert_to_timestamp(
-                datetime.datetime(2021, 11, 22, 16, 11, 38, 710257, tzinfo=datetime.timezone.utc)
+                datetime.datetime(2021, 11, 22, 16, 11, 38, 710257, tzinfo=datetime.UTC)
             ),
             conditions=[
                 api.PodCondition(

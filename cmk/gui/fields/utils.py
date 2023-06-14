@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -25,7 +25,7 @@ from cmk.utils.livestatus_helpers.expressions import (
     UnaryExpression,
 )
 from cmk.utils.livestatus_helpers.types import Table
-from cmk.utils.tags import BuiltinTagConfig, TagGroup
+from cmk.utils.tags import BuiltinTagConfig, TagGroup, TagID
 
 from cmk.gui import site_config
 from cmk.gui.fields.base import BaseSchema
@@ -44,7 +44,7 @@ class Attr(NamedTuple):
     mandatory: bool
     section: str
     description: str
-    enum: list[str | None] | None = None
+    enum: list[TagID | None] | None = None
     field: fields.Field | None = None
     allow_none: bool = False
 
@@ -159,7 +159,6 @@ def collect_attributes(
 
     tag_group: TagGroup
     for tag_group in tag_config.tag_groups:
-
         tag_name = _ensure(f"tag_{tag_group.id}")
         section = tag_group.topic or "No topic"
         mandatory = False
@@ -281,7 +280,7 @@ def _field_from_attr(attr):
     return fields.String(**kwargs)
 
 
-def _schema_from_dict(name, schema_dict) -> type[BaseSchema]:  # type:ignore[no-untyped-def]
+def _schema_from_dict(name, schema_dict) -> type[BaseSchema]:  # type: ignore[no-untyped-def]
     dict_ = schema_dict.copy()
     dict_["cast_to_dict"] = True
     return type(name, (BaseSchema,), dict_)
@@ -315,14 +314,17 @@ def attr_openapi_schema(
 
         Unknown attributes lead to an error:
 
-            >>> import pytest
-            >>> with pytest.raises(ValidationError):
-            ...     schema_obj.load({'foo': 'bar'})
+            >>> schema_obj.load({'foo': 'bar'})
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: {'foo': ['Unknown field.']}
 
         Wrong values on tag groups also lead to an error:
 
-            >>> with pytest.raises(ValidationError):
-            ...     schema_obj.load({'tag_address_family': 'ip-v5-only'})
+            >>> schema_obj.load({'tag_address_family': 'ip-v5-only'})
+            Traceback (most recent call last):
+            ...
+            marshmallow.exceptions.ValidationError: {'tag_address_family': ["'ip-v5-only' is not one of the enum values: ['ip-v4-only', 'ip-v6-only', 'ip-v4v6', 'no-ip']"]}
 
     Args:
         object_type:
@@ -343,7 +345,7 @@ def attr_openapi_schema(
     return _schema_from_dict(class_name, schema)
 
 
-def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:  # type:ignore[no-untyped-def]
+def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:  # type: ignore[no-untyped-def]
     """Turn a filter-dict into a QueryExpression.
 
     Examples:
@@ -359,7 +361,7 @@ def tree_to_expr(filter_dict, table: Any = None) -> QueryExpression:  # type:ign
 
         >>> tree_to_expr({'op': 'and', \
                           'expr': [{'op': '=', 'left': 'hosts.name', 'right': 'example.com'}, \
-                          {'op': '=', 'left': 'hosts.state', 'right': 0}]})
+                          {'op': '=', 'left': 'hosts.state', 'right': '0'}]})
         And(Filter(name = example.com), Filter(state = 0))
 
         >>> tree_to_expr({'op': 'or', \

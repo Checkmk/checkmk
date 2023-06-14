@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for managing folders"""
@@ -25,7 +25,6 @@ from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.num_split import key_num_split
 from cmk.gui.page_menu import (
-    make_checkbox_selection_json_text,
     make_checkbox_selection_topic,
     make_confirmed_form_submit_link,
     make_display_options_dropdown,
@@ -64,6 +63,7 @@ from cmk.gui.utils.urls import (
     makeactionuri,
     makeuri,
     makeuri_contextless,
+    YouTubeReference,
 )
 from cmk.gui.valuespec import DropdownChoice, TextInput, ValueSpec, WatoFolderChoices
 from cmk.gui.watolib.agent_registration import remove_tls_registration
@@ -71,16 +71,21 @@ from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
 from cmk.gui.watolib.hosts_and_folders import (
+    BaseFolder,
     check_wato_foldername,
     CREFolder,
+    disk_or_search_folder_from_request,
     Folder,
+    folder_from_request,
     folder_preserving_link,
+    folder_tree,
     Host,
     make_action_link,
+    SearchFolder,
 )
 
 
-def make_folder_breadcrumb(folder: CREFolder) -> Breadcrumb:
+def make_folder_breadcrumb(folder: CREFolder | SearchFolder) -> Breadcrumb:
     return (
         Breadcrumb(
             [
@@ -106,7 +111,7 @@ class ModeFolder(WatoMode):
 
     def __init__(self) -> None:
         super().__init__()
-        self._folder = Folder.current()
+        self._folder = disk_or_search_folder_from_request()
 
         if request.has_var("_show_host_tags"):
             user.wato_folders_show_tags = request.get_ascii_input("_show_host_tags") == "1"
@@ -209,10 +214,11 @@ class ModeFolder(WatoMode):
 
         menu.add_youtube_reference(
             title=_("Episode 1: Installing Checkmk and monitoring your first host"),
-            youtube_id="opO-SOgOJ1I",
+            youtube_ref=YouTubeReference.INSTALLING_CHECKMK,
         )
         menu.add_youtube_reference(
-            title=_("Episode 4: Monitoring Windows in Checkmk"), youtube_id="Nxiq7Jb9mB4"
+            title=_("Episode 4: Monitoring Windows in Checkmk"),
+            youtube_ref=YouTubeReference.MONITORING_WINDOWS,
         )
 
     def _search_folder_page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -291,10 +297,10 @@ class ModeFolder(WatoMode):
                 item=make_simple_link(self._folder.url([("mode", "bulk_rename_host")])),
             )
 
-        if user.may("wato.manage_hosts"):
+        if user.may("wato.manage_hosts") and not isinstance(self._folder, SearchFolder):
             yield PageMenuEntry(
                 title=_("Remove TLS registration"),
-                icon_name="delete",
+                icon_name={"icon": "tls", "emblem": "remove"},
                 item=make_confirmed_form_submit_link(
                     form_name="hosts",
                     button_name="_remove_tls_registration_from_folder",
@@ -423,10 +429,10 @@ class ModeFolder(WatoMode):
                     is_enabled=is_enabled,
                 )
 
-        if user.may("wato.manage_hosts"):
+        if user.may("wato.manage_hosts") and not isinstance(self._folder, SearchFolder):
             yield PageMenuEntry(
                 title=_("Remove TLS registration"),
-                icon_name="delete",
+                icon_name={"icon": "tls", "emblem": "remove"},
                 item=make_confirmed_form_submit_link(
                     form_name="hosts",
                     button_name="_remove_tls_registration_from_selection",
@@ -450,6 +456,9 @@ class ModeFolder(WatoMode):
             )
 
     def _page_menu_entries_this_folder(self) -> Iterator[PageMenuEntry]:
+        if isinstance(self._folder, SearchFolder):
+            return
+
         if self._folder.may("read"):
             yield PageMenuEntry(
                 title=_("Properties"),
@@ -467,7 +476,7 @@ class ModeFolder(WatoMode):
                     is_suggested=True,
                 )
 
-        yield make_folder_status_link(Folder.current(), view_name="allhosts")
+        yield make_folder_status_link(self._folder, view_name="allhosts")
 
         if user.may("wato.rulesets") or user.may("wato.seeall"):
             yield PageMenuEntry(
@@ -478,7 +487,7 @@ class ModeFolder(WatoMode):
                         [
                             ("mode", "rule_search"),
                             ("filled_in", "rule_search"),
-                            ("folder", Folder.current().path()),
+                            ("folder", self._folder.path()),
                             ("search_p_ruleset_used", DropdownChoice.option_id(True)),
                             ("search_p_ruleset_used_USE", "on"),
                         ]
@@ -526,7 +535,7 @@ class ModeFolder(WatoMode):
             ("_show_explicit_labels", _("explicit host labels"), user.wato_folders_show_labels),
         ]:
             yield PageMenuEntry(
-                title=_("Hide %s") % title if setting else _("Show %s") % title,
+                title=_("Show %s") % title,
                 icon_name="toggle_on" if setting else "toggle_off",
                 item=make_simple_link(
                     makeuri(
@@ -547,23 +556,30 @@ class ModeFolder(WatoMode):
         # Operations on SUBFOLDERS
 
         if request.var("_delete_folder"):
+            if isinstance(self._folder, SearchFolder):
+                raise MKUserError(None, _("This action can not be performed on search results"))
             if transactions.check_transaction():
                 self._folder.delete_subfolder(request.var("_delete_folder"))
             return redirect(folder_url)
 
         if request.has_var("_move_folder_to"):
+            if isinstance(self._folder, SearchFolder):
+                raise MKUserError(None, _("This action can not be performed on search results"))
             if transactions.check_transaction():
                 var_ident = mandatory_parameter("_ident", request.var("_ident"))
-                what_folder = Folder.folder(var_ident)
-                target_folder = Folder.folder(
+                tree = folder_tree()
+                what_folder = tree.folder(var_ident)
+                target_folder = tree.folder(
                     mandatory_parameter("_move_folder_to", request.var("_move_folder_to"))
                 )
-                Folder.current().move_subfolder_to(what_folder, target_folder)
+                self._folder.move_subfolder_to(what_folder, target_folder)
             return redirect(folder_url)
 
         # Operations on current FOLDER
 
         if request.has_var("_remove_tls_registration_from_folder"):
+            if isinstance(self._folder, SearchFolder):
+                raise MKUserError(None, _("This action can not be performed on search results"))
             remove_tls_registration(self._folder.get_hosts_by_site(list(self._folder.hosts())))
             return None
 
@@ -571,15 +587,18 @@ class ModeFolder(WatoMode):
 
         # Deletion of single hosts
         delname = request.var("_delete_host")
-        if delname and Folder.current().has_host(delname):
-            Folder.current().delete_hosts([delname], automation=delete_hosts)
+        if delname is not None:
+            delname = HostName(delname)
+
+        if delname and self._folder.has_host(delname):
+            self._folder.delete_hosts([delname], automation=delete_hosts)
             return redirect(folder_url)
 
         # Move single hosts to other folders
         if (target_folder_str := request.var("_move_host_to")) is not None:
-            hostname = request.var("_ident")
-            if hostname and Folder.current().has_host(hostname):
-                Folder.current().move_hosts([hostname], Folder.folder(target_folder_str))
+            hostname = HostName(request.get_ascii_input_mandatory("_ident"))
+            if self._folder.has_host(hostname):
+                self._folder.move_hosts([hostname], folder_tree().folder(target_folder_str))
                 return redirect(folder_url)
 
         # bulk operation on hosts
@@ -590,7 +609,7 @@ class ModeFolder(WatoMode):
         if request.var("_hosts_reset_sorting") or request.var("_hosts_sort"):
             return None
 
-        selected_host_names = get_hostnames_from_checkboxes()
+        selected_host_names = get_hostnames_from_checkboxes(self._folder)
         if not selected_host_names:
             raise MKUserError(
                 None, _("Please select some hosts before doing bulk operations on hosts.")
@@ -602,8 +621,8 @@ class ModeFolder(WatoMode):
             target_folder_path = target_folder_path if target_folder_path != "@main" else ""
             if target_folder_path is None:
                 raise MKUserError("_bulk_moveto", _("Please select the destination folder"))
-            target_folder = Folder.folder(target_folder_path)
-            Folder.current().move_hosts(selected_host_names, target_folder)
+            target_folder = folder_tree().folder(target_folder_path)
+            self._folder.move_hosts(selected_host_names, target_folder)
             flash(_("Moved %d hosts to %s") % (len(selected_host_names), target_folder.title()))
             return redirect(folder_url)
 
@@ -635,6 +654,8 @@ class ModeFolder(WatoMode):
                 )
 
         if request.var("_remove_tls_registration_from_selection"):
+            if isinstance(self._folder, SearchFolder):
+                raise MKUserError(None, _("This action can not be performed on search results"))
             remove_tls_registration(self._folder.get_hosts_by_site(selected_host_names))
 
         return None
@@ -878,7 +899,6 @@ class ModeFolder(WatoMode):
         # Show table of hosts in this folder
         html.begin_form("hosts", method="POST")
         with table_element("hosts", title=_("Hosts"), omit_empty_columns=True) as table:
-
             # Compute colspan for bulk actions
             colspan = 6
             for attr in host_attribute_registry.attributes():
@@ -920,11 +940,11 @@ class ModeFolder(WatoMode):
 
     def _show_host_row(
         self,
-        rendered_hosts: list[str],
+        rendered_hosts: list[HostName],
         table: Table,
-        hostname: str,
+        hostname: HostName,
         colspan: int,
-        host_errors: dict[str, list[str]],
+        host_errors: dict[HostName, list[str]],
         contact_group_names: dict[str, dict[str, Any]],
     ) -> None:
         host = self._folder.load_host(hostname)
@@ -939,8 +959,7 @@ class ModeFolder(WatoMode):
                 "_toggle_group",
                 type_="button",
                 class_="checkgroup",
-                onclick="cmk.selection.toggle_all_rows(this.form, %s, %s);"
-                % make_checkbox_selection_json_text(),
+                onclick="cmk.selection.toggle_all_rows(this.form);",
                 value="X",
             ),
             sortable=False,
@@ -1052,7 +1071,7 @@ class ModeFolder(WatoMode):
             labels = dict(sorted(labels.items())[:limit])
         return labels, show_all
 
-    def _render_contact_group(self, contact_group_names, c) -> HTML:  # type:ignore[no-untyped-def]
+    def _render_contact_group(self, contact_group_names, c) -> HTML:  # type: ignore[no-untyped-def]
         display_name = contact_group_names.get(c, {"alias": c})["alias"]
         return HTMLWriter.render_a(display_name, "wato.py?mode=edit_contact_group&edit=%s" % c)
 
@@ -1078,35 +1097,48 @@ class ModeFolder(WatoMode):
                 )
             html.icon_button(host.services_url(), msg, image)
 
+        action_menu_show_flags: list[str] = []
         if not host.locked():
             if user.may("wato.edit_hosts") and user.may("wato.move_hosts"):
                 self._show_move_to_folder_action(host)
 
             if user.may("wato.manage_hosts"):
-                if user.may("wato.clone_hosts"):
-                    html.icon_button(host.clone_url(), _("Create a clone of this host"), "insert")
-                delete_url = make_confirm_delete_link(
-                    url=make_action_link([("mode", "folder"), ("_delete_host", host.name())]),
-                    title=_("Delete host"),
-                    suffix=host.name(),
-                )
-                html.icon_button(delete_url, _("Delete this host"), "delete")
+                action_menu_show_flags.append("show_delete_link")
 
-    def _delete_hosts(self, host_names) -> ActionResult:  # type:ignore[no-untyped-def]
+                if user.may("wato.clone_hosts"):
+                    action_menu_show_flags.append("show_clone_link")
+
+        if not self._folder.locked_hosts() and user.may("wato.parentscan"):
+            action_menu_show_flags.append("show_parentscan_link")
+
+        if user.may("wato.manage_hosts"):
+            action_menu_show_flags.append("show_remove_tls_link")
+
+        if action_menu_show_flags:
+            url_vars = [
+                ("hostname", host.name()),
+                *[(flag_name, True) for flag_name in action_menu_show_flags],
+            ]
+            html.popup_trigger(
+                html.render_icon("menu", _("Open the host action menu"), cssclass="iconbutton"),
+                f"host_action_menu_{host.name()}",
+                MethodAjax(endpoint="host_action_menu", url_vars=url_vars),
+            )
+
+    def _delete_hosts(self, host_names) -> ActionResult:  # type: ignore[no-untyped-def]
         self._folder.delete_hosts(host_names, automation=delete_hosts)
         flash(_("Successfully deleted %d hosts") % len(host_names))
         return redirect(self._folder.url())
 
     def _render_bulk_move_form(self) -> HTML:
         with output_funnel.plugged():
-
             form_name = "form_hosts"
             dropdown = WatoFolderChoices(html_attrs={"form": form_name})
             dropdown.render_input("_bulk_moveto", "")
             html.button("_bulk_move", _("Move"), form=form_name)
             return HTML(output_funnel.drain())
 
-    def _move_to_imported_folders(self, host_names_to_move) -> None:  # type:ignore[no-untyped-def]
+    def _move_to_imported_folders(self, host_names_to_move) -> None:  # type: ignore[no-untyped-def]
         # Create groups of hosts with the same target folder
         target_folder_names: dict[str, list[HostName]] = {}
         for host_name in host_names_to_move:
@@ -1134,18 +1166,19 @@ class ModeFolder(WatoMode):
         # The alias path is a '/' separated path of folder titles.
         # An empty path is interpreted as root path. The actual file
         # name is the host list with the name "Hosts".
+        tree = folder_tree()
         if aliaspath in ("", "/"):
-            folder = Folder.root_folder()
+            folder = tree.root_folder()
         else:
             parts = aliaspath.strip("/").split("/")
-            folder = Folder.root_folder()
+            folder = tree.root_folder()
             while len(parts) > 0:
                 # Look in the current folder for a subfolder with the target title
                 subfolder = folder.subfolder_by_title(parts[0])
                 if subfolder is not None:
                     folder = subfolder
                 else:
-                    name = _create_wato_foldername(parts[0], folder)
+                    name = BaseFolder.find_available_folder_name(parts[0], folder)
                     folder = folder.create_subfolder(name, parts[0], {})
                 parts = parts[1:]
 
@@ -1207,7 +1240,7 @@ class ModeAjaxPopupMoveToFolder(AjaxPage):
                 choices += host.folder().choices_for_moving_host()
 
         elif self._what == "folder" and self._ident is not None:
-            folder = Folder.folder(self._ident)
+            folder = folder_tree().folder(self._ident)
             choices += folder.choices_for_moving_folder()
 
         else:
@@ -1237,13 +1270,13 @@ class ABCFolderMode(WatoMode, abc.ABC):
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         new = self._folder.name() is None
-        is_enabled = new or not Folder.current().locked()
+        is_enabled = new or not folder_from_request().locked()
 
         # When backfolder is set, we have the special situation that we want to redirect the user
         # two breadcrumb layers up. This is a very specific case, so we realize this locally instead
         # of using a generic approach. Just like it done locally by the action method.
         if (backfolder := request.var("backfolder")) is not None:
-            breadcrumb = make_folder_breadcrumb(Folder.folder(backfolder))
+            breadcrumb = make_folder_breadcrumb(folder_tree().folder(backfolder))
             breadcrumb.append(self._breadcrumb_item())
 
         return make_simple_form_page_menu(
@@ -1257,9 +1290,9 @@ class ABCFolderMode(WatoMode, abc.ABC):
     def action(self) -> ActionResult:
         if (backfolder := request.var("backfolder")) is not None:
             # Edit icon on subfolder preview should bring user back to parent folder
-            folder = Folder.folder(backfolder)
+            folder = folder_tree().folder(backfolder)
         else:
-            folder = Folder.current()
+            folder = folder_from_request()
 
         if not transactions.check_transaction():
             return redirect(mode_url("folder", folder=folder.path()))
@@ -1277,10 +1310,11 @@ class ABCFolderMode(WatoMode, abc.ABC):
     def page(self) -> None:
         new = self._folder.name() is None
 
-        Folder.current().need_permission("read")
+        folder = folder_from_request()
+        folder.need_permission("read")
 
-        if new and Folder.current().locked():
-            Folder.current().show_locking_information()
+        if new and folder.locked():
+            folder.show_locking_information()
 
         html.begin_form("edit_host", method="POST")
 
@@ -1291,7 +1325,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
         html.set_focus("title")
 
         # folder name (omit this for root folder)
-        if new or not Folder.current().is_root():
+        if new or not folder.is_root():
             if not active_config.wato_hide_filenames:
                 basic_attributes += [
                     (
@@ -1309,11 +1343,11 @@ class ABCFolderMode(WatoMode, abc.ABC):
 
         # Attributes inherited to hosts
         if new:
-            parent = Folder.current()
+            parent = folder
             myself = None
         else:
-            parent = Folder.current().parent()
-            myself = Folder.current()
+            parent = folder.parent()
+            myself = folder
 
         configure_attributes(
             new=new,
@@ -1340,7 +1374,7 @@ class ModeEditFolder(ABCFolderMode):
         return ["hosts"]
 
     def _init_folder(self):
-        return Folder.current()
+        return folder_from_request()
 
     def title(self) -> str:
         return _("Folder properties")
@@ -1370,53 +1404,9 @@ class ModeCreateFolder(ABCFolderMode):
             name = request.get_ascii_input_mandatory("name", "").strip()
             check_wato_foldername("name", name)
         else:
-            name = _create_wato_foldername(title)
+            name = BaseFolder.find_available_folder_name(title)
 
-        Folder.current().create_subfolder(name, title, attributes)
-
-
-# TODO: Move to Folder()?
-def _create_wato_foldername(title: str, in_folder=None) -> str:  # type:ignore[no-untyped-def]
-    if in_folder is None:
-        in_folder = Folder.current()
-
-    basename = _convert_title_to_filename(title)
-    c = 1
-    name = basename
-    while True:
-        if not in_folder.has_subfolder(name):
-            break
-        c += 1
-        name = "%s-%d" % (basename, c)
-    return name
-
-
-# TODO: Move to Folder()?
-def _convert_title_to_filename(title: str) -> str:
-    """lower(), replace german umlauts then everything except [-a-z0-9_] with '_'
-
-    >>> _convert_title_to_filename("abc")
-    'abc'
-    >>> _convert_title_to_filename("Äbc")
-    'aebc'
-    >>> _convert_title_to_filename("../Äbc")
-    '___aebc'
-    """
-    converted = ""
-    for c in title.lower():
-        if c == "ä":
-            converted += "ae"
-        elif c == "ö":
-            converted += "oe"
-        elif c == "ü":
-            converted += "ue"
-        elif c == "ß":
-            converted += "ss"
-        elif c in "abcdefghijklmnopqrstuvwxyz0123456789-_":
-            converted += c
-        else:
-            converted += "_"
-    return converted
+        folder_from_request().create_subfolder(name, title, attributes)
 
 
 @page_registry.register_page("ajax_set_foldertree")

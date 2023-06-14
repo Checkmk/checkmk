@@ -6,7 +6,7 @@ Date: 1674036625
 Edition: cce
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Checkmk now supports monitoring OpenShift clusters. The OpenShift monitoring builds on top of
 Checkmk's existing Kubernetes monitoring. However, the metrics are collected via methods tailored to
@@ -41,3 +41,6 @@ monitoring is compatible to any Prometheus stack. For compatibility Checkmk requ
 set-up of Prometheus as in OpenShift. This includes scraping the same collectors, renaming metrics
 in the same manner, having the same recording rules and so forth. Thus, we highly recommend using
 the <tt>Checkmk collectors</tt> for any non-OpenShift Kubernetes environment.
+
+The Checkmk Openshift monitoring will display different metric values for some resources than reported
+on the Openshift dashboard.

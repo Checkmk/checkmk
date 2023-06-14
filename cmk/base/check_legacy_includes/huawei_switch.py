@@ -1,32 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Mapping
+from typing import NamedTuple, Sequence
 
-from typing import NamedTuple
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
-from cmk.base.check_api import OID_END
-
-
-def huawei_switch_scan_function(oid):
-    return ".1.3.6.1.4.1.2011.2.23" in oid(".1.3.6.1.2.1.1.2.0")
-
-
-def huawei_entity_specific_snmp_info(snmp_info):
-    """
-    Used for the 'snmp_info' of a check to retrieve values that are indexed by a
-    entPhyisicalIndex. See parse_huawei_physical_entity_values() for a detailed description.
-    """
-    return [
-        (
-            ".1.3.6.1.2.1.47.1.1.1.1",
-            [OID_END, "7"],
-        ),  # retrieve list of [entPhysicalIndex, entPhysicalName]
-        snmp_info,
-    ]
-
-
-huawei_mpu_board_name_start = "mpu board"
+_HUAWEI_MPU_BOARD_NAME_START = "mpu board"
 
 
 class HuaweiPhysicalEntityValue(NamedTuple):
@@ -35,7 +16,12 @@ class HuaweiPhysicalEntityValue(NamedTuple):
     value: str | None
 
 
-def parse_huawei_physical_entity_values(info, entity_name_start=huawei_mpu_board_name_start):
+Section = Mapping[str, HuaweiPhysicalEntityValue]
+
+
+def parse_huawei_physical_entity_values(
+    info: Sequence[StringTable], entity_name_start: str = _HUAWEI_MPU_BOARD_NAME_START
+) -> Section:
     """
     Parses the info structure retrieved by using the huawei_entity_specific_snmp_info() function
     for the 'snmp_info' of a check. This info structure will contain two lists of lists.
@@ -96,7 +82,7 @@ def parse_huawei_physical_entity_values(info, entity_name_start=huawei_mpu_board
         ent_physical_index = entity_line[0]
 
         # each mpu board signals the beginning of a new stack member
-        if lower_entity_name.startswith(huawei_mpu_board_name_start):
+        if lower_entity_name.startswith(_HUAWEI_MPU_BOARD_NAME_START):
             stack_member_number += 1
             entities_per_member[stack_member_number] = []
 
@@ -114,11 +100,14 @@ def parse_huawei_physical_entity_values(info, entity_name_start=huawei_mpu_board
                 )
             )
 
-    multiple_entities_per_member = entity_name_start != huawei_mpu_board_name_start
+    multiple_entities_per_member = entity_name_start != _HUAWEI_MPU_BOARD_NAME_START
     return huawei_item_dict_from_entities(entities_per_member, multiple_entities_per_member)
 
 
-def huawei_item_dict_from_entities(entities_per_member, multiple_entities_per_member=True):
+def huawei_item_dict_from_entities(
+    entities_per_member: Mapping[int, Sequence[HuaweiPhysicalEntityValue]],
+    multiple_entities_per_member: bool = True,
+) -> Mapping[str, HuaweiPhysicalEntityValue]:
     """
     Converts a dictionary of the form:
     {

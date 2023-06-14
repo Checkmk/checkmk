@@ -6,7 +6,7 @@ Date: 1652351997
 Edition: cre
 Knowledge: doc
 Level: 2
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously to this Werk an attacker who could become a site user could replace the sites <tt>bin/unixcat</tt> by a custom executable.
 The Checkmk agent would then run it as root.

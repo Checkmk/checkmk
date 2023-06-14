@@ -1,23 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Classes used by the API for check plugins
 """
 import string
-from typing import (
-    Callable,
-    get_args,
-    Iterable,
-    List,
-    Mapping,
-    NamedTuple,
-    NoReturn,
-    Optional,
-    Union,
-)
+from collections.abc import Callable, Iterable, Mapping
+from typing import get_args, NamedTuple, NoReturn, Union
 
-from cmk.utils.type_defs import InventoryPluginName, ParsedSectionName, RuleSetName
+from cmk.utils.structured_data import MutableTree
+from cmk.utils.type_defs import ParsedSectionName, RuleSetName
+
+from cmk.checkengine.inventory import InventoryPluginName
 
 from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
 
@@ -31,7 +25,7 @@ _ATTR_DICT_VAL_TYPES = get_args(get_args(AttrDict)[1])
 _VALID_CHARACTERS = set(string.ascii_letters + string.digits + "_-")
 
 
-def _parse_valid_path(path: List[str]) -> List[str]:
+def _parse_valid_path(path: list[str]) -> list[str]:
     if not (path and isinstance(path, list) and all(isinstance(s, str) for s in path)):
         raise TypeError("'path' arg expected a non empty List[str], got %r" % path)
     invalid_chars = set("".join(path)) - _VALID_CHARACTERS
@@ -48,7 +42,7 @@ def _raise_invalid_attr_dict(kwarg_name: str, dict_: AttrDict) -> NoReturn:
     )
 
 
-def _parse_valid_dict(kwarg_name: str, dict_: Optional[AttrDict]) -> AttrDict:
+def _parse_valid_dict(kwarg_name: str, dict_: AttrDict | None) -> AttrDict:
     if dict_ is None:
         return {}
     if not isinstance(dict_, dict):
@@ -65,7 +59,7 @@ class Attributes(
     NamedTuple(  # pylint: disable=typing-namedtuple-call
         "_AttributesTuple",
         [
-            ("path", List[str]),
+            ("path", list[str]),
             ("inventory_attributes", AttrDict),
             ("status_attributes", AttrDict),
         ],
@@ -76,9 +70,9 @@ class Attributes(
     def __new__(
         cls,
         *,
-        path: List[str],
-        inventory_attributes: Optional[AttrDict] = None,
-        status_attributes: Optional[AttrDict] = None,
+        path: list[str],
+        inventory_attributes: AttrDict | None = None,
+        status_attributes: AttrDict | None = None,
     ) -> "Attributes":
         """
 
@@ -111,12 +105,20 @@ class Attributes(
             status_attributes=status_attributes,
         )
 
+    def populate_inventory_tree(self, tree: MutableTree) -> None:
+        if self.inventory_attributes:
+            tree.add_pairs(path=tuple(self.path), pairs=self.inventory_attributes)
+
+    def populate_status_data_tree(self, tree: MutableTree) -> None:
+        if self.status_attributes:
+            tree.add_pairs(path=tuple(self.path), pairs=self.status_attributes)
+
 
 class TableRow(
     NamedTuple(  # pylint: disable=typing-namedtuple-call
         "_TableRowTuple",
         [
-            ("path", List[str]),
+            ("path", list[str]),
             ("key_columns", AttrDict),
             ("inventory_columns", AttrDict),
             ("status_columns", AttrDict),
@@ -128,10 +130,10 @@ class TableRow(
     def __new__(
         cls,
         *,
-        path: List[str],
+        path: list[str],
         key_columns: AttrDict,
-        inventory_columns: Optional[AttrDict] = None,
-        status_columns: Optional[AttrDict] = None,
+        inventory_columns: AttrDict | None = None,
+        status_columns: AttrDict | None = None,
     ) -> "TableRow":
         """
 
@@ -154,7 +156,7 @@ class TableRow(
         """
         if not (isinstance(key_columns, dict) and key_columns):
             raise TypeError(
-                "TableRows 'key_columns' expected non empty Dict[str, Any], got %r" % (key_columns,)
+                f"TableRows 'key_columns' expected non empty Dict[str, Any], got {key_columns!r}"
             )
 
         key_columns = _parse_valid_dict("key_columns", key_columns)
@@ -173,6 +175,22 @@ class TableRow(
             status_columns=status_columns,
         )
 
+    def populate_inventory_tree(self, tree: MutableTree) -> None:
+        # No guard: always set key columns.
+        tree.add_rows(
+            path=tuple(self.path),
+            key_columns=list(self.key_columns),
+            rows=[{**self.key_columns, **self.inventory_columns}],
+        )
+
+    def populate_status_data_tree(self, tree: MutableTree) -> None:
+        if self.status_columns:
+            tree.add_rows(
+                path=tuple(self.path),
+                key_columns=list(self.key_columns),
+                rows=[{**self.key_columns, **self.status_columns}],
+            )
+
 
 InventoryResult = Iterable[Union[Attributes, TableRow]]
 InventoryFunction = Callable[..., InventoryResult]
@@ -180,8 +198,8 @@ InventoryFunction = Callable[..., InventoryResult]
 
 class InventoryPlugin(NamedTuple):
     name: InventoryPluginName
-    sections: List[ParsedSectionName]
+    sections: list[ParsedSectionName]
     inventory_function: InventoryFunction
     inventory_default_parameters: ParametersTypeAlias
-    inventory_ruleset_name: Optional[RuleSetName]
+    inventory_ruleset_name: RuleSetName | None
     module: str

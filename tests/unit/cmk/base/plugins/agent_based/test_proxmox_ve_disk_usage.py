@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Mapping
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.proxmox_ve_disk_usage import check_proxmox_ve_disk_usage
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+from cmk.base.plugins.agent_based.proxmox_ve_disk_usage import check_proxmox_ve_disk_usage, Section
 
 DISK_DATA = {"disk": 1024**4, "max_disk": 2 * 1024**4}
 
@@ -77,8 +80,8 @@ DISK_DATA = {"disk": 1024**4, "max_disk": 2 * 1024**4}
         ),
     ),
 )
-def test_check_proxmox_ve_disk_usage(  # type:ignore[no-untyped-def]
-    params, section, expected_results
+def test_check_proxmox_ve_disk_usage(
+    params: Mapping[str, object], section: Section, expected_results: CheckResult
 ) -> None:
     results = tuple(check_proxmox_ve_disk_usage(params, section))
     print("\n" + "\n".join(map(str, results)))

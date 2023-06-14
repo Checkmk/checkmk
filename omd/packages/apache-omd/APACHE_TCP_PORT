@@ -21,14 +21,14 @@ case "$1" in
 default)
     # Scan for a free port number by looking at the
     # configuration of the other sites...
-    PORT=$($OMD_ROOT/lib/omd/port_is_used APACHE_TCP_PORT 5000)
+    PORT=$($OMD_ROOT/lib/omd/next_free_port APACHE_TCP_PORT 5000)
     echo "$PORT"
     ;;
 choices)
     echo "[1-9][0-9]{0,4}"
     ;;
 set)
-    PORT=$($OMD_ROOT/lib/omd/port_is_used APACHE_TCP_PORT $2)
+    PORT=$($OMD_ROOT/lib/omd/next_free_port APACHE_TCP_PORT $2)
 
     # Tell the site apache on where to listen
     cat <<EOF >"$OMD_ROOT/etc/apache/listen-port.conf"

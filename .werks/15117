@@ -6,7 +6,7 @@ Date: 1671652312
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If you used host or service label within "Sorting" or "Grouping" in views, the
 sorting and grouping order was wrong.

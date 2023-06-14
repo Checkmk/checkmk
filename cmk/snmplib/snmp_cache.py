@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """SNMP caching"""
@@ -17,8 +17,6 @@ from .type_defs import OID, SNMPDecodedString
 _g_single_oid_hostname: HostName | None = None
 _g_single_oid_ipaddress: HostAddress | None = None
 _g_single_oid_cache: dict[OID, SNMPDecodedString | None] | None = None
-# TODO: Move to StoredWalkSNMPBackend?
-_g_walk_cache: dict[HostName, list[str]] = {}
 
 
 def initialize_single_oid_cache(
@@ -65,12 +63,7 @@ def single_oid_cache() -> dict[OID, SNMPDecodedString | None]:
     return _g_single_oid_cache
 
 
-def host_cache() -> dict[HostName, list[str]]:
-    return _g_walk_cache
-
-
 def cleanup_host_caches() -> None:
-    host_cache().clear()
     _clear_other_hosts_oid_cache(None)
 
 

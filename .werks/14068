@@ -6,7 +6,7 @@ Date: 1651230603
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Under some circumstances, the Kubernetes API server returns Pods which have no
 entry for status.conditions. The agent previously failed when this field was

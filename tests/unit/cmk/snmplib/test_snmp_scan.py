@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -17,23 +17,15 @@ from tests.unit.conftest import FixPluginLegacy
 
 from cmk.utils.exceptions import OnError
 from cmk.utils.log import logger
-from cmk.utils.type_defs import HostName, SectionName
+from cmk.utils.paths import snmp_scan_cache_dir
+from cmk.utils.type_defs import HostAddress, HostName, SectionName
 
 import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_scan as snmp_scan
-from cmk.snmplib.type_defs import (
-    OID,
-    SNMPBackend,
-    SNMPBackendEnum,
-    SNMPDecodedString,
-    SNMPHostConfig,
-)
+from cmk.snmplib.type_defs import OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig
 from cmk.snmplib.utils import evaluate_snmp_detection
 
 import cmk.base.api.agent_based.register as agent_based_register
-from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_functions import (
-    create_detect_spec,
-)
 
 
 @pytest.mark.parametrize(
@@ -50,12 +42,6 @@ from cmk.base.api.agent_based.register.section_plugins_legacy.convert_scan_funct
                 ".1.3.6.1.2.1.1.2.0": ".1.3.6.1.4.1.8072.3.2.10",
                 ".1.3.6.1.4.1.7244.1.2.1.1.1.0": "exists",
             },
-            True,
-        ),
-        # make sure casing is ignored
-        (
-            "hwg_temp",
-            {".1.3.6.1.2.1.1.1.0": "contains lower HWG"},
             True,
         ),
         # make sure casing is ignored
@@ -130,27 +116,20 @@ def test_evaluate_snmp_detection(
     oids_data: dict[str, str | None],
     expected_result: bool,
 ) -> None:
-    def oid_function(
-        oid: OID, _default: SNMPDecodedString | None = None, _name: SectionName | None = None
-    ) -> SNMPDecodedString | None:
-        return oids_data.get(oid)
-
-    scan_function = fix_plugin_legacy.snmp_scan_functions[name]
-    assert bool(scan_function(oid_function)) is expected_result
-
-    converted_detect_spec = create_detect_spec(name, scan_function, [])
-    actual_result = evaluate_snmp_detection(
-        detect_spec=converted_detect_spec,
-        oid_value_getter=oids_data.get,
+    assert (
+        evaluate_snmp_detection(
+            detect_spec=fix_plugin_legacy.check_info[name]["detect"],
+            oid_value_getter=oids_data.get,
+        )
+        is expected_result
     )
-    assert actual_result is expected_result
 
 
 # C/P from `test_snmplib_snmp_table`.
 SNMPConfig = SNMPHostConfig(
     is_ipv6_primary=False,
     hostname=HostName("testhost"),
-    ipaddress="1.2.3.4",
+    ipaddress=HostAddress("1.2.3.4"),
     credentials="",
     port=42,
     is_bulkwalk_host=False,
@@ -179,9 +158,7 @@ def backend() -> Iterator[SNMPBackend]:
     try:
         yield SNMPTestBackend(SNMPConfig, logger)
     finally:
-        cachefile = Path(
-            f"tmp/check_mk/snmp_scan_cache/{SNMPConfig.hostname}.{SNMPConfig.ipaddress}"
-        )
+        cachefile = Path(snmp_scan_cache_dir, f"{SNMPConfig.hostname}.{SNMPConfig.ipaddress}")
         try:
             cachefile.unlink()
         except FileNotFoundError:

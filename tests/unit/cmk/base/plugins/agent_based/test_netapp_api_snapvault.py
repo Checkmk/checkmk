@@ -1,16 +1,24 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Mapping
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.netapp_api_snapvault import (
     check_netapp_api_snapvault,
     discover_netapp_api_snapvault,
     parse_netapp_api_snapvault,
 )
+from cmk.base.plugins.agent_based.utils.netapp_api import SectionSingleInstance
 
 
 @pytest.mark.parametrize(
@@ -112,8 +120,8 @@ from cmk.base.plugins.agent_based.netapp_api_snapvault import (
         ),
     ],
 )
-def test_parse_netapp_api_snapvault(  # type:ignore[no-untyped-def]
-    string_table, expected_parsed
+def test_parse_netapp_api_snapvault(
+    string_table: StringTable, expected_parsed: SectionSingleInstance
 ) -> None:
     assert parse_netapp_api_snapvault(string_table) == expected_parsed
 
@@ -221,8 +229,10 @@ def test_parse_netapp_api_snapvault(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_discover_netapp_api_snapvault(  # type:ignore[no-untyped-def]
-    string_table, discovery_params, expected_discovery
+def test_discover_netapp_api_snapvault(
+    string_table: StringTable,
+    discovery_params: Mapping[str, object],
+    expected_discovery: DiscoveryResult,
 ) -> None:
     assert (
         list(
@@ -404,7 +414,10 @@ def test_discover_netapp_api_snapvault(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_netapp_api_snapvault(  # type:ignore[no-untyped-def]
-    item, params, parsed, expected_result
+def test_check_netapp_api_snapvault(
+    item: str,
+    params: Mapping[str, object],
+    parsed: SectionSingleInstance,
+    expected_result: CheckResult,
 ) -> None:
     assert list(check_netapp_api_snapvault(item, params, parsed)) == expected_result

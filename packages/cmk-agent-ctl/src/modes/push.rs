@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -33,7 +33,7 @@ pub fn handle_push_cycle(
     client_config: &config::ClientConfig,
     agent_channel: &AgentChannel,
 ) -> AnyhowResult<()> {
-    if registry.push_is_empty() {
+    if registry.is_push_empty() {
         return Ok(());
     }
 
@@ -44,7 +44,7 @@ pub fn handle_push_cycle(
     )
     .context("Error compressing agent output")?;
 
-    for (site_id, connection) in registry.push_connections() {
+    for (site_id, connection) in registry.get_push_connections() {
         info!("{}: Pushing agent output", site_id);
         let site_url = site_spec::make_site_url(site_id, &connection.receiver_port)
             .context("Failed to construct URL for pushing data")?;

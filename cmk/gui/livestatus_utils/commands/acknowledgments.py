@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module contains helpers to trigger acknowledgments.
@@ -16,7 +16,7 @@ from cmk.gui.livestatus_utils.commands.lowlevel import send_command
 from cmk.gui.logged_in import user as _user
 
 
-def acknowledge_service_problem(  # type:ignore[no-untyped-def]
+def acknowledge_service_problem(  # type: ignore[no-untyped-def]
     connection,
     host_name: str,
     service_description: str,
@@ -97,7 +97,7 @@ def acknowledge_service_problem(  # type:ignore[no-untyped-def]
     )
 
 
-def acknowledge_servicegroup_problem(  # type:ignore[no-untyped-def]
+def acknowledge_servicegroup_problem(  # type: ignore[no-untyped-def]
     connection,
     servicegroup_name: str,
     sticky: bool = False,
@@ -150,7 +150,6 @@ def acknowledge_servicegroup_problem(  # type:ignore[no-untyped-def]
     for entry in group_entries:
         site_id = entry["site"]
         for host_name, service_description in entry["members"]:
-
             send_command(
                 connection,
                 "ACKNOWLEDGE_SVC_PROBLEM",
@@ -167,7 +166,7 @@ def acknowledge_servicegroup_problem(  # type:ignore[no-untyped-def]
             )
 
 
-def acknowledge_host_problem(  # type:ignore[no-untyped-def]
+def acknowledge_host_problem(  # type: ignore[no-untyped-def]
     connection,
     host_name,
     sticky: bool = False,
@@ -245,7 +244,7 @@ def acknowledge_host_problem(  # type:ignore[no-untyped-def]
     )
 
 
-def acknowledge_hostgroup_problem(  # type:ignore[no-untyped-def]
+def acknowledge_hostgroup_problem(  # type: ignore[no-untyped-def]
     connection,
     hostgroup_name: str,
     sticky: bool = False,
@@ -312,7 +311,7 @@ def acknowledge_hostgroup_problem(  # type:ignore[no-untyped-def]
             )
 
 
-def _query_site(connection, host_name: str) -> SiteId:  # type:ignore[no-untyped-def]
+def _query_site(connection, host_name: str) -> SiteId:  # type: ignore[no-untyped-def]
     with detailed_connection(connection) as conn:
         site_id = Query([Hosts.name], Hosts.name.equals(host_name)).first_value(conn)
         if not isinstance(site_id, str):

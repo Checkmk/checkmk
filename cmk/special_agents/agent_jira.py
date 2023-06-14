@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -67,14 +67,12 @@ def _handle_jira_connection(args):
 
 def _handle_request(args, jira):
     if args.project_workflows_key:
-
         logging.info("Retrieving workflow data")
         workflow_output = _handle_project(jira, args)
         if workflow_output is not None:
             sys.stdout.write("%s\n" % workflow_output)
 
     if args.jql_result:
-
         logging.info("Retrieving custom service data")
         custom_query_output = _handle_custom_query(jira, args)
         if custom_query_output is not None:
@@ -96,7 +94,6 @@ def _handle_project(jira, args):
     for project in projects:
         project_name = project["Name"][0]
         for workflow in project.get("Workflow", []):
-
             max_results = 0
             field = None
             svc_desc = None
@@ -141,7 +138,6 @@ def _handle_custom_query(jira, args):
     sys.stdout.write("<<<jira_custom_svc>>>\n")
     result_dict: dict[str, dict[str, Any]] = {}
     for query in projects:
-
         jql = query["Query"][0]
         max_results = query["Limit"][0] if query["Limit"][0] != "-1" else None
         svc_desc = query["Description"][0]
@@ -206,7 +202,7 @@ def _handle_custom_query(jira, args):
 
 def _handle_search_issues(jira, jql, field, max_results, args, project, svc_desc):
     try:
-        issues = jira.search_issues(
+        return jira.search_issues(
             jql, maxResults=max_results, json_result=False, fields=field, validate_query=True
         )
     except JIRAError as jira_error:
@@ -221,8 +217,6 @@ def _handle_search_issues(jira, jql, field, max_results, args, project, svc_desc
         if args.debug:
             raise
         return None
-    else:
-        return issues
 
 
 def setup_logging(verbosity: int) -> None:

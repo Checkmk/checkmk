@@ -1,0 +1,14 @@
+Title: site_connection: allow the customer field to be set when creating/updating a site connection
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1680017047
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk allows clients connecting to the checkmk managed edition via the
+rest-api to include the customer attribute when creating or updating a site
+connection. Previously this was not possible.
+

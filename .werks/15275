@@ -1,0 +1,16 @@
+Title: apache_status.py: autodetection for processes with long pids
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1676447543
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+In certain cases (processes with long pids) the autodetection of apache
+instances did not work correctly.
+
+The functionality was broken since Werk #14679 and should now be
+fixed.
+

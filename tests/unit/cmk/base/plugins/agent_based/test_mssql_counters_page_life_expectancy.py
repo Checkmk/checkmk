@@ -1,15 +1,19 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Mapping
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.mssql_counters_page_life_expectancy import (
     check_mssql_counters_page_life_expectancy,
     discover_mssql_counters_page_life_expectancy,
 )
+from cmk.base.plugins.agent_based.utils.mssql_counters import Section
 
 
 @pytest.mark.parametrize(
@@ -55,8 +59,8 @@ from cmk.base.plugins.agent_based.mssql_counters_page_life_expectancy import (
         ),
     ],
 )
-def test_discover_mssql_counters_page_life_expectancy(  # type:ignore[no-untyped-def]
-    section, expected_services
+def test_discover_mssql_counters_page_life_expectancy(
+    section: Section, expected_services: DiscoveryResult
 ) -> None:
     assert list(discover_mssql_counters_page_life_expectancy(section)) == expected_services
 
@@ -183,7 +187,7 @@ def test_discover_mssql_counters_page_life_expectancy(  # type:ignore[no-untyped
         ),
     ],
 )
-def test_check_mssql_counters_page_life_expectancy(  # type:ignore[no-untyped-def]
-    item, params, section, expected_result
+def test_check_mssql_counters_page_life_expectancy(
+    item: str, params: Mapping[str, object], section: Section, expected_result: CheckResult
 ) -> None:
     assert list(check_mssql_counters_page_life_expectancy(item, params, section)) == expected_result

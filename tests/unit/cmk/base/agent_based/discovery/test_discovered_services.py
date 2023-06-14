@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.type_defs import CheckPluginName, EVERYTHING
+from cmk.utils.type_defs import EVERYTHING
 
-from cmk.checkers.discovery import AutocheckEntry
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.discovery import AutocheckEntry
 
 from cmk.base.agent_based.discovery._discovered_services import _analyse_discovered_services
 
@@ -15,7 +16,6 @@ def _service(plugin_name: str, item: str) -> AutocheckEntry:
 
 
 def test_discover_keep_vanished_and_remember() -> None:
-
     result = _analyse_discovered_services(
         existing_services=[_service("A", "1")],
         discovered_services=[_service("B", "1")],
@@ -30,7 +30,6 @@ def test_discover_keep_vanished_and_remember() -> None:
 
 
 def test_discover_drop_vanished_but_remember() -> None:
-
     result = _analyse_discovered_services(
         existing_services=[_service("A", "1")],
         discovered_services=[_service("B", "1")],
@@ -45,7 +44,6 @@ def test_discover_drop_vanished_but_remember() -> None:
 
 
 def test_discover_forget_everything_but_keep_it() -> None:
-
     result = _analyse_discovered_services(
         existing_services=[_service("A", "1")],
         discovered_services=[_service("B", "1")],
@@ -60,7 +58,6 @@ def test_discover_forget_everything_but_keep_it() -> None:
 
 
 def test_discover_forget_everything_and_clear() -> None:  # a.k.a. "tabula rasa"
-
     result = _analyse_discovered_services(
         existing_services=[_service("A", "1")],
         discovered_services=[_service("B", "1")],
@@ -76,7 +73,6 @@ def test_discover_forget_everything_and_clear() -> None:  # a.k.a. "tabula rasa"
 
 
 def test_discover_run_plugin_names() -> None:
-
     result = _analyse_discovered_services(
         existing_services=[_service("A", "1"), _service("B", "1")],
         discovered_services=[_service("B", "2")],

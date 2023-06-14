@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -129,6 +129,9 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
                 "partition_name",
                 "expresscode",
                 "pki_appliance_version",
+                "device_number",
+                "description",
+                "mac_address",
             ],
         },
         ".hardware.system.product": {"title": _l("Product"), "is_show_more": False},
@@ -139,6 +142,9 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".hardware.system.node_name": {"title": _l("Node Name")},
         ".hardware.system.partition_name": {"title": _l("Partition Name")},
         ".hardware.system.pki_appliance_version": {"title": _l("Version of PKI Appliance")},
+        ".hardware.system.device_number": {"title": _l("Device Number")},
+        ".hardware.system.description": {"title": _l("Description")},
+        ".hardware.system.mac_address": {"title": _l("MAC Address")},
         # Legacy ones. Kept to not break existing views - DON'T use these values for new plugins
         ".hardware.system.serial_number": {"title": _l("Serial Number - LEGACY, don't use")},
         ".hardware.system.model_name": {"title": _l("Model Name - LEGACY, don't use")},
@@ -383,6 +389,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".hardware.storage.disks:*.": {"title": _l("Block Device %d")},
         ".hardware.storage.disks:*.fsnode": {"title": _l("Filesystem Node")},
         ".hardware.storage.disks:*.controller": {"title": _l("Controller")},
+        ".hardware.storage.disks:*.drive_index": {"title": _l("Drive")},
         ".hardware.storage.disks:*.signature": {"title": _l("Disk ID")},
         ".hardware.storage.disks:*.vendor": {"title": _l("Vendor")},
         ".hardware.storage.disks:*.local": {"title": _l("Local")},
@@ -512,19 +519,24 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.check_mk.sites:*.num_hosts": {"title": _l("#Hosts")},
         ".software.applications.check_mk.sites:*.num_services": {"title": _l("#Services")},
         ".software.applications.check_mk.sites:*.check_mk_helper_usage": {
-            "title": _l("CMK helper usage")
+            "title": _l("CMK helper usage"),
+            "short": _l("CMK helper")
         },
         ".software.applications.check_mk.sites:*.fetcher_helper_usage": {
-            "title": _l("Fetcher helper usage")
+            "title": _l("Fetcher helper usage"),
+            "short": _l("Fetcher helper")
         },
         ".software.applications.check_mk.sites:*.checker_helper_usage": {
-            "title": _l("Checker helper usage")
+            "title": _l("Checker helper usage"),
+            "short": _l("Checker helper")
         },
         ".software.applications.check_mk.sites:*.livestatus_usage": {
-            "title": _l("Lice helper usage")
+            "title": _l("Live helper usage"),
+            "short": _l("Live helper")
         },
         ".software.applications.check_mk.sites:*.check_helper_usage": {
-            "title": _l("Actual helper usage")
+            "title": _l("Actual helper usage"),
+            "short": _l("Act. helper")
         },
         ".software.applications.check_mk.sites:*.autostart": {
             "title": _l("Autostart"),
@@ -532,50 +544,62 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         },
         ".software.applications.check_mk.sites:*.apache": {
             "title": _l("Apache status"),
+            "short": _l("Apache"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.cmc": {
             "title": _l("CMC status"),
+            "short": _l("CMC"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.crontab": {
             "title": _l("Crontab status"),
+            "short": _l("Crontab"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.dcd": {
             "title": _l("DCD status"),
+            "short": _l("DCD"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.liveproxyd": {
             "title": _l("Liveproxyd status"),
+            "short": _l("Liveproxyd"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.mkeventd": {
             "title": _l("MKEventd status"),
+            "short": _l("MKEventd"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.mknotifyd": {
             "title": _l("MKNotifyd status"),
+            "short": _l("MKNotifyd"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.rrdcached": {
             "title": _l("RRDCached status"),
+            "short": _l("RRDCached"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.stunnel": {
             "title": _l("STunnel status"),
+            "short": _l("STunnel"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.xinetd": {
             "title": _l("XInetd status"),
+            "short": _l("XInetd"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.nagios": {
             "title": _l("Nagios status"),
+            "short": _l("Nagios"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.sites:*.npcd": {
             "title": _l("NPCD status"),
+            "short": _l("NPCD"),
             "paint": "service_status",
         },
         ".software.applications.check_mk.cluster.": {
@@ -605,7 +629,25 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.check_mk.host_labels:*.plugin_name": {
             "title": _l("Discovered by plugin"),
         },
-        ".software.applications.checkmk-agent.": {"title": _l("Checkmk Agent")},
+        ".software.applications.checkmk-agent.": {
+            "title": _l("Checkmk Agent"),
+            "keyorder": [
+                "version",
+                "agentdirectory",
+                "datadirectory",
+                "spooldirectory",
+                "pluginsdirectory",
+                "localdirectory",
+                "agentcontroller",
+            ],
+        },
+        ".software.applications.checkmk-agent.version": {"title": _l("Version")},
+        ".software.applications.checkmk-agent.agentdirectory": {"title": _l("Agent directory")},
+        ".software.applications.checkmk-agent.datadirectory": {"title": _l("Data directory")},
+        ".software.applications.checkmk-agent.spooldirectory": {"title": _l("Spool directory")},
+        ".software.applications.checkmk-agent.pluginsdirectory": {"title": _l("Plugins directory")},
+        ".software.applications.checkmk-agent.localdirectory": {"title": _l("Local directory")},
+        ".software.applications.checkmk-agent.agentcontroller": {"title": _l("Agent Controller")},
         ".software.applications.checkmk-agent.plugins:": {
             "title": _l("Agent plugins"),
             "keyorder": ["name", "version", "cache_interval"],
@@ -813,13 +855,6 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
         ".software.applications.fritz.upnp_config_enabled": {
             "title": _l("uPnP configuration enabled")
         },
-        ".software.applications.kubernetes.": {"title": _l("Kubernetes")},  # CMK-12034
-        ".software.applications.kubernetes.service_info.": {  # CMK-12034
-            "title": _l("Service"),
-            "keyorder": ["cluster_ip", "load_balancer_ip"],
-        },
-        ".software.applications.kubernetes.service_info.cluster_ip": {"title": _l("Cluster IP")},  # CMK-12034
-        ".software.applications.kubernetes.service_info.load_balancer_ip": {"title": _l("Load Balancer IP")},  # CMK-12034
         ".software.applications.kube.": {"title": _l("Kubernetes")},
         ".software.applications.kube.labels:": {
             "title": _l("Labels"),
@@ -1517,6 +1552,19 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
             "is_show_more": False,
         },
         ".software.configuration.snmp_info.name": {"title": _l("System name")},
+        ".software.configuration.organisation.": {
+            "title": _l("Organisation"),
+            "keyorder": [
+                "organisation_id",
+                "organisation_name",
+                "network_id",
+                "address",
+            ],
+        },
+        ".software.configuration.organisation.organisation_id": {"title": _l("Organisation ID")},
+        ".software.configuration.organisation.organisation_name": {"title": _l("Organisation Name")},
+        ".software.configuration.organisation.network_id": {"title": _l("Network ID")},
+        ".software.configuration.organisation.address": {"title": _l("Address")},
         ".software.firmware.": {
             "title": _l("Firmware"),
             "keyorder": [
@@ -1548,7 +1596,7 @@ def register(inventory_displayhints: InventoryHintRegistry) -> None:
                 "service_pack",
             ],
         },
-        ".software.os.name": {"title": _l("Operatin system"), "is_show_more": False},
+        ".software.os.name": {"title": _l("Operating system"), "is_show_more": False},
         ".software.os.version": {"title": _l("Version")},
         ".software.os.vendor": {"title": _l("Vendor")},
         ".software.os.type": {"title": _l("Type"), "is_show_more": False},  # e.g. "linux"

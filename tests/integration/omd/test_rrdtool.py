@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
@@ -29,39 +29,21 @@ v returned data rows, includes end y
         |---------------|
       x---v---v---v---v---y
 """
-import subprocess
+import ast
+from collections.abc import Mapping, Sequence
+from pathlib import Path
 
 import pytest
 
-# NOTE: rrdtool consists of a C part only, so mypy is clueless...
-import rrdtool  # type: ignore[import]
+from tests.testlib.site import Site
 
 
 @pytest.fixture(scope="session", name="rrd_database")
-def fixture_rrd_database(tmp_path_factory):
+def fixture_rrd_database(site: Site) -> Path:
     "Create rrd database for integration test"
-    database = tmp_path_factory.mktemp("databases") / "test.rrd"
-
-    # Choosing a time that is easy on the eyes on the terminal
-    # Fri Jul 14 04:40:00 CEST 2017
-    start = 1500000000
-
-    rrdtool.create(
-        [
-            str(database),
-            "--start",
-            str(start - 60),
-            "--step",
-            "10s",
-            "DS:one:GAUGE:100:0:100000000",
-            "RRA:AVERAGE:0.5:1:10",
-            "RRA:AVERAGE:0.5:4:10",
-        ]
-    )
-
-    for i in range(0, 401, 10):
-        rrdtool.update([str(database), "-t", "one", "%i:%i" % (start + i, i)])
-    return database
+    with site.python_helper("helper_rrd_database.py").execute() as p:
+        assert p.wait() == 0
+    return Path(site.path("test.rrd"))
 
 
 @pytest.mark.parametrize(
@@ -123,22 +105,18 @@ def fixture_rrd_database(tmp_path_factory):
         ),
     ],
 )
-def test_xport(rrd_database, bounds, result) -> None:  # type:ignore[no-untyped-def]
+def test_xport(
+    site: Site, rrd_database: Path, bounds: tuple[int, int], result: Mapping[str, object]
+) -> None:
     "Test python binding and that direct memory access behaves correctly"
     qstart, qend = bounds
-    assert (
-        rrdtool.xport(
-            [
-                "DEF:fir=%s:one:AVERAGE" % rrd_database,
-                "XPORT:fir",
-                "-s",
-                str(qstart),
-                "-e",
-                str(qend),
-            ]
-        )
-        == result
+
+    output = ast.literal_eval(
+        site.python_helper("helper_test_xport.py")
+        .check_output(input=repr((str(rrd_database), qstart, qend)))
+        .rstrip()
     )
+    assert output == result
 
 
 @pytest.mark.parametrize(
@@ -190,25 +168,26 @@ def test_xport(rrd_database, bounds, result) -> None:  # type:ignore[no-untyped-
         ),
     ],
 )
-def test_cli_xport(rrd_database, bounds, out_fmt, result) -> None:  # type:ignore[no-untyped-def]
+def test_cli_xport(
+    site: Site, rrd_database: str, bounds: tuple[int, int], out_fmt: Sequence[str], result: str
+) -> None:
     """Test CLI so that when debugging output from tool it matches state in memory
 
     RRDTool composes the XML/JSON outputs explicitly and one may rely for
     now that the order of elements be always the same."""
     qstart, qend = bounds
-    stdout = subprocess.check_output(
+    stdout = site.check_output(
         [
             "rrdtool",
             "xport",
-            "DEF:fir=%s:one:AVERAGE" % rrd_database,
+            f"DEF:fir={rrd_database}:one:AVERAGE",
             "XPORT:fir",
             "-s",
             str(qstart),
             "-e",
             str(qend),
         ]
-        + out_fmt,
-        encoding="utf-8",
+        + list(out_fmt),
     )
 
     assert stdout == result

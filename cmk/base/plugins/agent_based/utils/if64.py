@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -286,8 +286,7 @@ def _convert_type(if_type: str) -> str:
         int(if_type)
     except ValueError:
         return str(_PORT_TYPES.get(if_type, "1"))
-    else:
-        return if_type
+    return if_type
 
 
 def _convert_status(if_status: str) -> str:
@@ -295,15 +294,14 @@ def _convert_status(if_status: str) -> str:
         int(if_status)
     except ValueError:
         return str(_STATUS_NAMES.get(if_status, "4"))
-    else:
-        return if_status
+    return if_status
 
 
 def fix_if_64_highspeed(highspeed: str) -> str:
     return str(interfaces.saveint(highspeed) * 1000000)
 
 
-def port_mapping(name, port_map: Mapping[str, str]) -> Optional[str]:  # type:ignore[no-untyped-def]
+def port_mapping(name, port_map: Mapping[str, str]) -> Optional[str]:  # type: ignore[no-untyped-def]
     return (
         f"maps to {port_map.get(name, '')}"
         if name in port_map
@@ -356,7 +354,6 @@ def parse_if64(
     for line in string_table:
         # some DLINK switches apparently report a broken interface with index 0, filter that out
         if interfaces.saveint(line[0]) > 0:
-
             # ifHighSpeed can't represent interfaces with less than 10^6 bit bandwidth, ifSpeed is
             # capped at 4GBit.
             # combine the two to get the actual interface speed

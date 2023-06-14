@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module contains functionality for dealing with X509 certificates.
@@ -32,6 +32,7 @@ RsaPublicKey/RsaPrivateKey
 from __future__ import annotations
 
 import contextlib
+import re
 from datetime import datetime
 from pathlib import Path
 from typing import NamedTuple, NewType, overload
@@ -82,6 +83,10 @@ class EncryptedPrivateKeyPEM(_SerializedPEM):
     """A encrypted private key in pem format"""
 
 
+class PublicKeyPEM(_SerializedPEM):
+    """A public key in pem format"""
+
+
 class CertificatePEM(_SerializedPEM):
     """A certificate in pem format"""
 
@@ -92,6 +97,14 @@ class InvalidSignatureError(MKException):
 
 class InvalidExpiryError(MKException):
     """The certificate is either not yet valid or not valid anymore"""
+
+
+class WrongPasswordError(MKException):
+    """The private key could not be decrypted, probably due to a wrong password"""
+
+
+class InvalidPEMError(MKException):
+    """The PEM is invalid"""
 
 
 class CertificateWithPrivateKey(NamedTuple):
@@ -108,20 +121,21 @@ class CertificateWithPrivateKey(NamedTuple):
         organizational_unit_name: str | None = None,
         expiry: relativedelta = relativedelta(years=2),
         key_size: int = 4096,
-        start_date: datetime | None = None,
+        start_date: datetime | None = None,  # defaults to now
+        subject_alt_dns_names: list[str] | None = None,
     ) -> CertificateWithPrivateKey:
         """Generate an RSA private key and create a self-signed certificated for it."""
 
         private_key = RsaPrivateKey.generate(key_size)
-        certificate = Certificate.create(
+        certificate = Certificate._create(
             private_key.public_key,
             private_key,
             common_name,
             organization or f"Checkmk Site {omd_site()}",
             expiry,
-            HashAlgorithm.Sha512,
+            start_date=start_date or datetime.utcnow(),
             organizational_unit_name=organizational_unit_name,
-            start_date=start_date,
+            subject_alt_dns_names=subject_alt_dns_names,
         )
 
         return CertificateWithPrivateKey(certificate, private_key)
@@ -134,6 +148,43 @@ class CertificateWithPrivateKey(NamedTuple):
         This _should_ be the public key that belongs to the private key as well.
         """
         return self.certificate.public_key
+
+    @classmethod
+    def load_combined_file_content(
+        cls, content: str, passphrase: Password | None
+    ) -> CertificateWithPrivateKey:
+        """load a keypair from the contents of a "combined" file (a file
+        containing cert and private key"""
+        if (
+            cert_match := re.search(
+                r"-----BEGIN CERTIFICATE-----[\s\w+/=]+-----END CERTIFICATE-----", content
+            )
+        ) is None:
+            raise InvalidPEMError("Could not find certificate")
+        cert = Certificate.load_pem(CertificatePEM(cert_match.group(0)))
+
+        if passphrase is not None:
+            if (
+                key_match := re.search(
+                    r"-----BEGIN ENCRYPTED PRIVATE KEY-----[\s\w+/=]+-----END ENCRYPTED PRIVATE KEY-----",
+                    content,
+                )
+            ) is None:
+                raise InvalidPEMError("Could not find encrypted private key")
+            key = RsaPrivateKey.load_pem(EncryptedPrivateKeyPEM(key_match.group(0)), passphrase)
+        else:
+            if (
+                key_match := re.search(
+                    r"-----BEGIN PRIVATE KEY-----[\s\w+/=]+-----END PRIVATE KEY-----", content
+                )
+            ) is None:
+                raise InvalidPEMError("Could not find private key")
+            key = RsaPrivateKey.load_pem(PlaintextPrivateKeyPEM(key_match.group(0)), None)
+
+        return cls(
+            certificate=cert,
+            private_key=key,
+        )
 
 
 class PersistedCertificateWithPrivateKey(CertificateWithPrivateKey):
@@ -230,17 +281,23 @@ class Certificate:
         self._cert = certificate
 
     @classmethod
-    def create(
+    def _create(
         cls,
         public_key: RsaPublicKey,
         signing_key: RsaPrivateKey,
         common_name: str,
         organization: str,
         expiry: relativedelta,
-        signature_digest_algorithm: HashAlgorithm,
+        start_date: datetime,
         organizational_unit_name: str | None = None,
-        start_date: datetime | None = None,
+        subject_alt_dns_names: list[str] | None = None,
     ) -> Certificate:
+        """
+        Internal method currently only useful for `CertificateWithPrivateKey.generate_self_signed`
+
+        The reason is that extensions and key usages are hard-coded in a way only appropriate for
+        self-signed certificates.
+        """
         name_attrs = [
             x509.NameAttribute(x509.oid.NameOID.COMMON_NAME, common_name),
             x509.NameAttribute(x509.oid.NameOID.ORGANIZATION_NAME, organization),
@@ -253,39 +310,7 @@ class Certificate:
             )
         name = x509.Name(name_attrs)
 
-        if start_date is None:
-            start_date = datetime.utcnow()
-
-        # TODO: We'll need to set these extensions depending on how we intend to use the cert.
-        #       Right now it's hardcoded for self-signed certs (CA=True) and does not restrict
-        #       the path length.
-
-        # RFC 5280 4.2.1.9.  Basic Constraints
-        basic_constraints = x509.BasicConstraints(ca=True, path_length=None)
-
-        # RFC 5280 4.2.1.9.  Key Usage
-        #     Conforming CAs MUST include this extension in certificates that
-        #     contain public keys that are used to validate digital signatures on
-        #     other public key certificates or CRLs.  When present, conforming CAs
-        #     SHOULD mark this extension as critical.
-        #     ...
-        #     If the keyCertSign bit is asserted, then the cA bit in the basic
-        #     constraints extension (Section 4.2.1.9) MUST also be asserted.
-        #
-        # TODO: What do we wnat to set here?
-        key_usage = x509.KeyUsage(
-            digital_signature=True,  # signing data
-            content_commitment=True,  # aka non_repudiation
-            key_encipherment=False,
-            data_encipherment=False,
-            key_agreement=False,
-            key_cert_sign=True,  # signing certs
-            crl_sign=True,  # signing CRLs
-            encipher_only=False,
-            decipher_only=False,
-        )
-
-        return Certificate(
+        builder = (
             x509.CertificateBuilder()
             .subject_name(name)
             .issuer_name(name)
@@ -293,14 +318,56 @@ class Certificate:
             .not_valid_after(start_date + expiry)
             .serial_number(x509.random_serial_number())
             .public_key(public_key._key)
-            .add_extension(basic_constraints, critical=True)
-            .add_extension(key_usage, critical=True)
-            .sign(private_key=signing_key._key, algorithm=signature_digest_algorithm.value)
+        )
+
+        # RFC 5280 4.2.1.9.  Basic Constraints
+        basic_constraints = x509.BasicConstraints(ca=False, path_length=None)
+        builder = builder.add_extension(basic_constraints, critical=True)
+
+        # RFC 5280 4.2.1.2.  Subject Key Identifier
+        #     this extension SHOULD be included in all end entity certificates
+        #
+        # ... which is all our certs since we don't build any chains at the moment
+        builder = builder.add_extension(
+            x509.SubjectKeyIdentifier.from_public_key(public_key._key), critical=False
+        )
+
+        # RFC 5280 4.2.1.9.  Key Usage
+        #
+        # Currently only digital signature.
+        # Note that some combinations of usage bits may have security implications. See
+        # RFC 3279 2.3 and other links in RFC 5280 4.2.1.9. before enabling more usages.
+        builder = builder.add_extension(
+            x509.KeyUsage(
+                digital_signature=True,  # signing data
+                content_commitment=False,  # aka non_repudiation
+                key_encipherment=False,
+                data_encipherment=False,
+                key_agreement=False,
+                key_cert_sign=False,
+                crl_sign=False,
+                encipher_only=False,
+                decipher_only=False,
+            ),
+            critical=True,
+        )
+
+        if subject_alt_dns_names is not None:
+            builder = builder.add_extension(
+                x509.SubjectAlternativeName([x509.DNSName(san) for san in subject_alt_dns_names]),
+                critical=False,
+            )
+
+        return Certificate(
+            builder.sign(private_key=signing_key._key, algorithm=HashAlgorithm.Sha512.value)
         )
 
     @classmethod
     def load_pem(cls, pem_data: CertificatePEM) -> Certificate:
-        return Certificate(x509.load_pem_x509_certificate(pem_data.bytes))
+        try:
+            return Certificate(x509.load_pem_x509_certificate(pem_data.bytes))
+        except ValueError:
+            raise InvalidPEMError("Unable to load certificate.")
 
     def dump_pem(self) -> CertificatePEM:
         return CertificatePEM(self._cert.public_bytes(serialization.Encoding.PEM))
@@ -334,6 +401,10 @@ class Certificate:
     @property
     def organization_name(self) -> str:
         return self._get_name_attribute(x509.oid.NameOID.ORGANIZATION_NAME)
+
+    @property
+    def not_valid_before(self) -> datetime:
+        return self._cert.not_valid_before
 
     def verify_is_signed_by(self, signer: Certificate) -> None:
         """
@@ -370,19 +441,42 @@ class Certificate:
         ]:
             raise ValueError(f"Unsupported signature scheme for X.509 certificate ({oid})")
 
-        # Check Key Usage. If the extension is missing there's no restriction.
-        with contextlib.suppress(x509.ExtensionNotFound):
-            usage = signer._cert.extensions.get_extension_for_class(x509.KeyUsage).value
-            if not usage.key_cert_sign:
-                raise ValueError(
-                    "Signer certificate does not allow certificate signature verification (keyCertSign)"
-                )
+        # Check if the signer is allowed to sign certificates. Self-signed, non-CA certificates do
+        # not need to set the usage bit. See also https://github.com/openssl/openssl/issues/1418.
+        if not signer.may_sign_certificates() and not self._is_self_signed():
+            raise ValueError(
+                "Signer certificate does not allow certificate signature verification "
+                "(CA flag or keyCertSign bit missing)."
+            )
 
         signer.public_key.verify(
             Signature(self._cert.signature),
             self._cert.tbs_certificate_bytes,
             HashAlgorithm.from_cryptography(self._cert.signature_hash_algorithm),
         )
+
+    def may_sign_certificates(self) -> bool:
+        """
+        Check if this certificate may be used to sign other certificates, that is, has the
+        cA flag set and allows key usage KeyCertSign.
+
+        Note that self-signed, non-CA end entity certificates may self-sign without this.
+        """
+        is_ca = False
+        with contextlib.suppress(x509.ExtensionNotFound):
+            is_ca = self._cert.extensions.get_extension_for_class(x509.BasicConstraints).value.ca
+
+        has_key_sign_bit = False
+        with contextlib.suppress(x509.ExtensionNotFound):
+            has_key_sign_bit = self._cert.extensions.get_extension_for_class(
+                x509.KeyUsage
+            ).value.key_cert_sign
+
+        return is_ca and has_key_sign_bit
+
+    def _is_self_signed(self) -> bool:
+        """Is the issuer the same as the subject?"""
+        return self._cert.subject == self._cert.issuer
 
     def verify_expiry(self, allowed_drift: relativedelta | None = None) -> None:
         """
@@ -446,6 +540,18 @@ class Certificate:
         """
         return self._cert.fingerprint(algorithm.value)
 
+    def get_subject_alt_names(self) -> list[str]:
+        try:
+            sans = self._cert.extensions.get_extension_for_oid(
+                x509.oid.ExtensionOID.SUBJECT_ALTERNATIVE_NAME
+            ).value.get_values_for_type(x509.DNSName)
+        except x509.ExtensionNotFound:
+            return []
+
+        assert all(isinstance(x, str) for x in sans)
+        # Well look at that assert...
+        return sans  # type: ignore[no-any-return]
+
 
 class RsaPrivateKey:
     """
@@ -481,10 +587,59 @@ class RsaPrivateKey:
         Decode a PKCS8 PEM encoded RSA private key.
 
         `password` can be given if the key is encrypted.
+
+        Raises:
+            InvalidPEMError: if the PEM cannot be decoded.
+            WrongPasswordError: if an encrypted PEM cannot be decrypted with the given password.
+                NOTE: it seems we cannot rely on this error being raised. In the unit tests we
+                sometimes saw an InvalidPEMError instead. Expect to see that as well.
+            TypeError: when trying to load an EncryptedPrivateKeyPEM but no password is given.
+                This would be caught by mypy though.
+
+        >>> RsaPrivateKey.load_pem(EncryptedPrivateKeyPEM(""))
+        Traceback (most recent call last):
+            ...
+        cmk.utils.crypto.certificate.InvalidPEMError
+
+        >>> pem = EncryptedPrivateKeyPEM(
+        ...     "\\n".join([
+        ...         "-----BEGIN ENCRYPTED PRIVATE KEY-----",
+        ...         "MIIC3TBXBgkqhkiG9w0BBQ0wSjApBgkqhkiG9w0BBQwwHAQIMRfolchikB0CAggA",
+        ...         "MAwGCCqGSIb3DQIJBQAwHQYJYIZIAWUDBAEqBBBvZ2ZdTgc5U+OgzNvBs3cXBIIC",
+        ...         "gBe7tt6aHu+sfCvU8EzFqVbkf3f3qt6P/YEJZu4zXeGXrE+4D7E64PYooqGk+ZvU",
+        ...         "/xyqHNoRzbAGEAqqEsMhZxjhQbgLmWVqGCJrqkkl8d5UlcG661AuevhYqIW8D3Bk",
+        ...         "PfezIOnL+tDJuNb8y3KgQU0mqjUZ/BFLy6uTm6hQWeBluU5xtJ3C59o2JCP3pQwz",
+        ...         "5V/EuLu0nLRSxCxDGcZqCr0s5A0AGv4U7xA9LEgER+ZuXLa2m+zp8VI8aR+1zUp+",
+        ...         "lWq4rFY2UnA3DNayS/5QV0ljgDbE8Bzje6dwDhRiFUhgIwHa4C6EEDTajAXxbJEz",
+        ...         "JebDaz9HLUMbfFdE2LYjagQx/kopb35eZUihZs3uHZXgXCQzeaaG7bunPBdiCuML",
+        ...         "n0Cg+h13PmuH4eXuzcLEvwGzJrBrhenuYs/Vp9PYhwI7gIq+pqx7cgBprOge4xqM",
+        ...         "gZbyhYoWCITEMg6lMYga1uZuBtvkel7/0PtC35qxdJyo5AEUCwSisY//t7oZownH",
+        ...         "e8RlioxKnCisNxtcMYkPLmU68HNklZSX4/FrSd9zrWrpxC9XKKYeixe/RZPApeXO",
+        ...         "phVLXl8KaX/xEAuonEZXH9XaZRnYA1Lg4Hl3lfbbHVffet9X1jpRRo4RCuQ+yQrJ",
+        ...         "+YvX8SvnNAYHB1Pfp6aEqauUBR6FisUhHx2xahvnJ8y1GFNwY1VUEDdB63Ai0JVK",
+        ...         "zIzEXU8/psX8xDh5Gm+n4ZVkgbuJQdvQgYLNT6vEglytEuJXYKFZQY4zX8J+vc3N",
+        ...         "AVqHeoR61JEG+AcMdUgg2bO3vYorcQ8b3kwKkZzoBNeghMl6IS0Lj5tLVixweS5d",
+        ...         "Rnp7GPpozA4jOM89/WEk+LE=",
+        ...         "-----END ENCRYPTED PRIVATE KEY-----"
+        ...     ])
+        ... )
+
+        >>> RsaPrivateKey.load_pem(pem, Password("foo"))
+        <cmk.utils.crypto.certificate.RsaPrivateKey object at 0x...>
+
+        >>> RsaPrivateKey.load_pem(pem, Password("not foo"))
+        Traceback (most recent call last):
+            ...
+        cmk.utils.crypto.certificate.WrongPasswordError
         """
 
         pw = password.raw_bytes if password is not None else None
-        return RsaPrivateKey(serialization.load_pem_private_key(pem_data.bytes, password=pw))
+        try:
+            return RsaPrivateKey(serialization.load_pem_private_key(pem_data.bytes, password=pw))
+        except ValueError as exception:
+            if str(exception) == "Bad decrypt. Incorrect password?":
+                raise WrongPasswordError
+            raise InvalidPEMError
 
     @overload
     def dump_pem(self, password: None) -> PlaintextPrivateKeyPEM:
@@ -516,6 +671,19 @@ class RsaPrivateKey:
             return PlaintextPrivateKeyPEM(bytes_)
         return EncryptedPrivateKeyPEM(bytes_)
 
+    def dump_legacy_pkcs1(self) -> PlaintextPrivateKeyPEM:
+        """Deprecated. Do not use.
+
+        Encode the private key without encryption in PKCS#1 / OpenSSL format
+        (i.e. '-----BEGIN RSA PRIVATE KEY-----...').
+        """
+        bytes_ = self._key.private_bytes(  # type: ignore[attr-defined]
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption(),
+        )
+        return PlaintextPrivateKeyPEM(bytes_)
+
     @property
     def public_key(self) -> RsaPublicKey:
         return RsaPublicKey(self._key.public_key())
@@ -530,13 +698,33 @@ class RsaPublicKey:
     def __init__(self, key: rsa.RSAPublicKey) -> None:
         self._key = key
 
+    @classmethod
+    def load_pem(cls, pem_data: PublicKeyPEM) -> RsaPublicKey:
+        return RsaPublicKey(serialization.load_pem_public_key(pem_data.bytes))
+
+    def dump_pem(self) -> PublicKeyPEM:
+        # TODO: Use SubjectPublicKeyInfo format rather than PKCS1. PKCS1 doesn't include an
+        # algorithm identifier.
+        return PublicKeyPEM(
+            self._key.public_bytes(
+                serialization.Encoding.PEM,
+                serialization.PublicFormat.PKCS1,
+            )
+        )
+
+    def dump_openssh(self) -> str:
+        """Encode the public key in OpenSSH format (ssh-rsa AAAA...)"""
+        return self._key.public_bytes(
+            serialization.Encoding.OpenSSH,
+            serialization.PublicFormat.OpenSSH,
+        ).decode("utf-8")
+
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, RsaPublicKey):
             return NotImplemented
         return self._key.public_numbers() == other._key.public_numbers()
 
     def verify(self, signature: Signature, message: bytes, digest_algorithm: HashAlgorithm) -> None:
-
         # Currently the discouraged PKCS1 v1.5 padding is assumed. This is the only padding scheme
         # cryptography.io supports for signing X.509 certificates at this time.
         # See https://github.com/pyca/cryptography/issues/2850.
@@ -547,4 +735,4 @@ class RsaPublicKey:
         try:
             self._key.verify(signature, message, padding_scheme, digest_algorithm.value)
         except cryptography.exceptions.InvalidSignature as e:
-            raise InvalidSignatureError(e)
+            raise InvalidSignatureError(e) from e

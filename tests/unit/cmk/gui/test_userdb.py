@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
@@ -14,9 +14,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
 from flask import Flask
-from freezegun import freeze_time
+from pytest import MonkeyPatch
 
 from tests.testlib import is_managed_repo
 
@@ -51,12 +50,6 @@ def fixture_user_id(with_user: tuple[UserId, str]) -> UserId:
 @pytest.fixture(name="zero_uuid")
 def zero_uuid_fixture(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(uuid, "uuid4", lambda: "00000000-0000-0000-0000-000000000000")
-
-
-@pytest.fixture(autouse=True)
-def current_time() -> Iterable[None]:
-    with freeze_time("2023-01-05 14:33:57"):
-        yield
 
 
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of
@@ -407,11 +400,13 @@ def test_ensure_user_can_not_init_with_previous_session(single_auth_request: Sin
         userdb.session.ensure_user_can_init_session(user_id, now)
 
 
-def test_active_sessions_no_existing(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_active_sessions_no_existing() -> None:
     assert userdb.session.active_sessions({}, datetime.now()) == {}
 
 
-def test_active_sessions_remove_outdated(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_active_sessions_remove_outdated() -> None:
     now = datetime.now()
     assert list(
         userdb.session.active_sessions(
@@ -434,7 +429,8 @@ def test_active_sessions_remove_outdated(request_context: None) -> None:
     ) == ["keep"]
 
 
-def test_active_sessions_too_many(request_context: None) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_active_sessions_too_many() -> None:
     now = datetime.now()
     sessions = {
         f"keep_{num}": SessionInfo(
@@ -515,68 +511,67 @@ def test_get_last_activity(single_auth_request: SingleRequest) -> None:
     assert "session_info" in user
 
 
-def test_user_attribute_sync_plugins(
-    request_context: None, monkeypatch: MonkeyPatch, set_config: SetConfig
-) -> None:
-    monkeypatch.setattr(
-        active_config,
-        "wato_user_attrs",
-        [
-            {
-                "add_custom_macro": False,
-                "help": "VIP attribute",
-                "name": "vip",
-                "show_in_table": False,
-                "title": "VIP",
-                "topic": "ident",
-                "type": "TextAscii",
-                "user_editable": True,
-            }
-        ],
-    )
-
+@pytest.mark.usefixtures("request_context")
+def test_user_attribute_sync_plugins(monkeypatch: MonkeyPatch, set_config: SetConfig) -> None:
     monkeypatch.setattr(utils, "user_attribute_registry", utils.UserAttributeRegistry())
     monkeypatch.setattr(userdb, "user_attribute_registry", utils.user_attribute_registry)
     monkeypatch.setattr(ldap, "ldap_attribute_plugin_registry", ldap.LDAPAttributePluginRegistry())
-
-    assert "vip" not in utils.user_attribute_registry
-    assert "vip" not in ldap.ldap_attribute_plugin_registry
-
-    userdb.update_config_based_user_attributes()
-
-    assert "vip" in utils.user_attribute_registry
-    assert "vip" in ldap.ldap_attribute_plugin_registry
-
-    connection = ldap.LDAPUserConnector(
-        {
-            "id": "ldp",
-            "directory_type": (
-                "ad",
+    with monkeypatch.context() as m:
+        m.setattr(
+            active_config,
+            "wato_user_attrs",
+            [
                 {
-                    "connect_to": (
-                        "fixed_list",
-                        {
-                            "server": "127.0.0.1",
-                        },
-                    )
-                },
-            ),
-        }
-    )
+                    "add_custom_macro": False,
+                    "help": "VIP attribute",
+                    "name": "vip",
+                    "show_in_table": False,
+                    "title": "VIP",
+                    "topic": "ident",
+                    "type": "TextAscii",
+                    "user_editable": True,
+                }
+            ],
+        )
 
-    ldap_plugin = ldap.ldap_attribute_plugin_registry["vip"]()
-    assert ldap_plugin.title == "VIP"
-    assert ldap_plugin.help == "VIP attribute"
-    assert ldap_plugin.needed_attributes(connection, {"attr": "vip_attr"}) == ["vip_attr"]
-    assert ldap_plugin.needed_attributes(connection, {"attr": "vip_attr"}) == ["vip_attr"]
-    assert isinstance(ldap_plugin.parameters(connection), Dictionary)
+        assert "vip" not in utils.user_attribute_registry
+        assert "vip" not in ldap.ldap_attribute_plugin_registry
 
-    # Test removing previously registered ones
-    with set_config(wato_user_attrs=[]):
         userdb.update_config_based_user_attributes()
 
-    assert "vip" not in utils.user_attribute_registry
-    assert "vip" not in ldap.ldap_attribute_plugin_registry
+        assert "vip" in utils.user_attribute_registry
+        assert "vip" in ldap.ldap_attribute_plugin_registry
+
+        connection = ldap.LDAPUserConnector(
+            {
+                "id": "ldp",
+                "directory_type": (
+                    "ad",
+                    {
+                        "connect_to": (
+                            "fixed_list",
+                            {
+                                "server": "127.0.0.1",
+                            },
+                        )
+                    },
+                ),
+            }
+        )
+
+        ldap_plugin = ldap.ldap_attribute_plugin_registry["vip"]()
+        assert ldap_plugin.title == "VIP"
+        assert ldap_plugin.help == "VIP attribute"
+        assert ldap_plugin.needed_attributes(connection, {"attr": "vip_attr"}) == ["vip_attr"]
+        assert ldap_plugin.needed_attributes(connection, {"attr": "vip_attr"}) == ["vip_attr"]
+        assert isinstance(ldap_plugin.parameters(connection), Dictionary)
+
+        # Test removing previously registered ones
+        with set_config(wato_user_attrs=[]):
+            userdb.update_config_based_user_attributes()
+
+        assert "vip" not in utils.user_attribute_registry
+        assert "vip" not in ldap.ldap_attribute_plugin_registry
 
 
 def test_check_credentials_local_user(with_user: tuple[UserId, str]) -> None:
@@ -618,7 +613,8 @@ def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, s
     users[user_id]["locked"] = True
     userdb.save_users(users, now)
 
-    assert userdb.check_credentials(user_id, Password(password), now) is False
+    with pytest.raises(MKUserError, match="User is locked"):
+        userdb.check_credentials(user_id, Password(password), now)
 
 
 # user_id needs to be used here because it executes a reload of the config and the monkeypatch of
@@ -632,7 +628,7 @@ def make_cme(
 
     with set_config(current_customer="test-customer"):
         # Fix CRE mypy tests that do not have this attribute defined
-        assert active_config.current_customer == "test-customer"  # type: ignore[attr-defined]
+        assert active_config.current_customer == "test-customer"
         yield
 
 

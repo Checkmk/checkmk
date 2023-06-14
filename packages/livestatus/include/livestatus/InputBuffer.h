@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -25,7 +25,8 @@ public:
         line_too_long,
         eof,
         empty_request,
-        timeout
+        timeout,
+        invalid_utf8
     };
 
     friend std::ostream &operator<<(std::ostream &os, const Result &r);

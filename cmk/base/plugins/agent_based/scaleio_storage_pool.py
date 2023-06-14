@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import time
@@ -60,7 +60,6 @@ def _create_filesystem_storage_pool(
     free_capacity: str,
     failed_capacity: str,
 ) -> FilesystemStoragePool | StorageConversionError:
-
     if unit not in KNOWN_CONVERSION_VALUES_INTO_MB:
         return StorageConversionError(unit=unit)
 
@@ -78,7 +77,6 @@ def _create_filesystem_storage_pool(
 
 
 def parse_scaleio_storage_pool(string_table: StringTable) -> ScaleioStoragePoolSection:
-
     section: MutableMapping[str, StoragePool] = {}
     for pool_id, pool in parse_scaleio(string_table, "STORAGE_POOL").items():
         pool_capacity = pool["MAX_CAPACITY_IN_KB"]
@@ -171,7 +169,6 @@ def _check_scaleio_storage_pool_disks(
     disk_stats: DiskReadWrite | StorageConversionError,
     value_store: MutableMapping[str, Any],
 ) -> CheckResult:
-
     yield Result(state=State.OK, summary=f"Name: {pool_name}")
 
     if isinstance(disk_stats, StorageConversionError):

@@ -6,6 +6,6 @@ Date: 1655133987
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Sometimes the liveproxyd was unwilling to process clients with a pending request.

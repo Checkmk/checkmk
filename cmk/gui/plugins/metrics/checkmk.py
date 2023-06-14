@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -112,13 +112,13 @@ metric_info["helper_usage_checker"] = {
 }
 
 metric_info["helper_usage_generic"] = {
-    "title": _l("Generic helper usage"),
+    "title": _l("Active check helper usage"),
     "unit": "%",
     "color": "41/a",
 }
 
 metric_info["average_latency_cmk"] = {
-    "title": _l("Checkmk check latency"),
+    "title": _l("Checkmk checker latency"),
     "unit": "s",
     "color": "15/a",
 }
@@ -130,7 +130,7 @@ metric_info["average_latency_fetcher"] = {
 }
 
 metric_info["average_latency_generic"] = {
-    "title": _l("Check latency"),
+    "title": _l("Active check latency"),
     "unit": "s",
     "color": "41/a",
 }
@@ -490,7 +490,7 @@ graph_info["helper_usage_checker"] = {
 }
 
 graph_info["helper_usage_generic"] = {
-    "title": _l("Generic helper usage"),
+    "title": _l("Active check helper usage"),
     "metrics": [
         ("helper_usage_generic", "area"),
     ],

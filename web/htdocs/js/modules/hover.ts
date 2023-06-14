@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,7 +9,7 @@ import * as utils from "utils";
 //#   '--------------------------------------------------------------------'
 
 type ContainerSize = {height: number | null; width: number | null};
-var g_hover_menu: HTMLDivElement | null;
+let g_hover_menu: HTMLDivElement | null;
 
 export function hide() {
     if (!g_hover_menu) {
@@ -22,7 +22,6 @@ export function hide() {
 }
 
 export function show(event_: MouseEvent, code: string) {
-    event_ = event_ || window.event;
     add();
     update_content(code, event_);
 }
@@ -111,7 +110,7 @@ export function update_position(event_: MouseEvent) {
         }
     }
 
-    let hoverTop = parseInt(g_hover_menu.style.top.replace("px", ""));
+    const hoverTop = parseInt(g_hover_menu.style.top.replace("px", ""));
     if (
         hoverTop + g_hover_menu.clientHeight >
         scrollTop + container_size.height!

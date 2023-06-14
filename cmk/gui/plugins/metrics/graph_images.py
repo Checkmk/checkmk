@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Render Checkmk graphs as PNG images.
@@ -10,12 +10,12 @@ import json
 import time
 import traceback
 from collections.abc import Callable, Sequence
-from typing import Any, Literal
+from typing import Any, cast, Literal
 
 import livestatus
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import Timestamp
+from cmk.utils.type_defs import HostName, Timestamp
 
 import cmk.gui.pdf as pdf
 from cmk.gui.config import active_config
@@ -38,7 +38,7 @@ from cmk.gui.plugins.metrics.utils import (
     GraphRecipe,
 )
 from cmk.gui.session import SuperUserContext
-from cmk.gui.type_defs import CombinedGraphSpec, TemplateGraphSpec
+from cmk.gui.type_defs import CombinedGraphSpec, GraphConsoldiationFunction, TemplateGraphSpec
 
 
 # Provides a json list containing base64 encoded PNG images of the current 24h graphs
@@ -65,7 +65,7 @@ def _answer_graph_image_request(
     ],
 ) -> None:
     try:
-        host_name = request.get_ascii_input_mandatory("host")
+        host_name = HostName(request.get_ascii_input_mandatory("host"))
         if not host_name:
             raise MKGeneralException(_('Missing mandatory "host" parameter'))
 
@@ -98,7 +98,7 @@ def _answer_graph_image_request(
             "template",
             TemplateGraphSpec(
                 {
-                    "site": site,
+                    "site": livestatus.SiteId(site) if site else None,
                     "host_name": host_name,
                     "service_description": service_description,
                     "graph_index": None,  # all graphs
@@ -215,7 +215,7 @@ def render_graph_image(
 
 def graph_recipes_for_api_request(
     api_request: dict[str, Any]
-) -> tuple[GraphDataRange, list[GraphRecipe]]:
+) -> tuple[GraphDataRange, Sequence[GraphRecipe]]:
     # Get and validate the specification
     graph_identification = api_request.get("specification", [])
     if not graph_identification:
@@ -256,7 +256,10 @@ def graph_recipes_for_api_request(
 
     if api_request.get("consolidation_function"):
         for graph_recipe in graph_recipes:
-            graph_recipe["consolidation_function"] = api_request.get("consolidation_function")
+            graph_recipe["consolidation_function"] = cast(
+                GraphConsoldiationFunction,
+                api_request.get("consolidation_function"),
+            )
 
     return graph_data_range, graph_recipes
 

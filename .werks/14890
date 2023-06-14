@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Using the filter "Host service level" for views with hosts with configured
 custom attributes could lead to an error message like "Internal error: invalid

@@ -1,25 +1,28 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
 import datetime
+import fcntl
 import importlib.machinery
 import importlib.util
 import os
+import subprocess
 import sys
 import tempfile
 import time
-from collections.abc import Callable, Collection, Mapping
+from collections.abc import Callable, Collection, Iterator, Mapping
 from contextlib import contextmanager
 from pathlib import Path
 from types import ModuleType
-from typing import Any, TextIO
+from typing import Any, Final
 
 import freezegun
 import pytest
 import urllib3
+from psutil import Process
 
 from tests.testlib.compare_html import compare_html
 from tests.testlib.event_console import CMKEventConsole, CMKEventConsoleStatus
@@ -35,7 +38,7 @@ from tests.testlib.utils import (
     is_cloud_repo,
     is_enterprise_repo,
     is_managed_repo,
-    is_running_as_site_user,
+    is_saas_repo,
     repo_path,
     site_id,
     virtualenv_path,
@@ -43,13 +46,17 @@ from tests.testlib.utils import (
 from tests.testlib.version import CMKVersion  # noqa: F401 # pylint: disable=unused-import
 from tests.testlib.web_session import APIError, CMKWebSession
 
-from cmk.utils.type_defs import CheckPluginName, HostName
+from cmk.utils.type_defs import HostName
+
+from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
 
 # Disable insecure requests warning message during SSL testing
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-def skip_unwanted_test_types(item) -> None:  # type:ignore[no-untyped-def]
+def skip_unwanted_test_types(item: pytest.Item) -> None:
     test_type = item.get_closest_marker("type")
     if test_type is None:
         raise Exception("Test is not TYPE marked: %s" % item)
@@ -62,17 +69,23 @@ def skip_unwanted_test_types(item) -> None:  # type:ignore[no-untyped-def]
         pytest.skip("Not testing type %r" % test_type_name)
 
 
+_UNPATCHED_PATHS: Final = {
+    # FIXME :-(
+    # dropping these makes tests/unit/cmk/gui/watolib/test_config_sync.py fail.
+    "local_dashboards_dir",
+    "local_views_dir",
+    "local_reports_dir",
+}
+
+
 # Some cmk.* code is calling things like cmk_version.is_raw_edition() at import time
 # (e.g. cmk/base/default_config/notify.py) for edition specific variable
 # defaults. In integration tests we want to use the exact version of the
 # site. For unit tests we assume we are in Enterprise Edition context.
 def fake_version_and_paths() -> None:
-    if is_running_as_site_user():
-        return
+    from pytest import MonkeyPatch  # pylint: disable=import-outside-toplevel
 
-    import _pytest.monkeypatch  # pylint: disable=import-outside-toplevel
-
-    monkeypatch = _pytest.monkeypatch.MonkeyPatch()
+    monkeypatch = MonkeyPatch()
     tmp_dir = tempfile.mkdtemp(prefix="pytest_cmk_")
 
     import cmk.utils.paths  # pylint: disable=import-outside-toplevel
@@ -82,11 +95,14 @@ def fake_version_and_paths() -> None:
         edition_short = "cme"
     elif is_cloud_repo():
         edition_short = "cce"
+    elif is_saas_repo():
+        edition_short = "cse"
     elif is_enterprise_repo():
         edition_short = "cee"
     else:
         edition_short = "cre"
 
+    monkeypatch.setattr(cmk_version, "orig_omd_version", cmk_version.omd_version, raising=False)
     monkeypatch.setattr(
         cmk_version, "omd_version", lambda: f"{cmk_version.__version__}.{edition_short}"
     )
@@ -101,171 +117,26 @@ def fake_version_and_paths() -> None:
     monkeypatch.setattr(cmk_version, "is_managed_edition", is_managed_repo)
     monkeypatch.setattr(cmk_version, "is_cloud_edition", is_cloud_repo)
 
+    original_omd_root = Path(cmk.utils.paths.omd_root)
+    for name, value in vars(cmk.utils.paths).items():
+        if name.startswith("_") or not isinstance(value, (str, Path)) or name in _UNPATCHED_PATHS:
+            continue
+
+        try:
+            monkeypatch.setattr(
+                f"cmk.utils.paths.{name}",
+                type(value)(tmp_dir / Path(value).relative_to(original_omd_root)),
+            )
+        except ValueError:
+            pass  # path is outside of omd_root
+
+    # these use cmk_path
     monkeypatch.setattr("cmk.utils.paths.agents_dir", "%s/agents" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.checks_dir", "%s/checks" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.notifications_dir", Path(cmk_path()) / "notifications")
     monkeypatch.setattr("cmk.utils.paths.inventory_dir", "%s/inventory" % cmk_path())
-    monkeypatch.setattr(
-        "cmk.utils.paths.inventory_output_dir", os.path.join(tmp_dir, "var/check_mk/inventory")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.inventory_archive_dir",
-        os.path.join(tmp_dir, "var/check_mk/inventory_archive"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.inventory_delta_cache_dir",
-        os.path.join(tmp_dir, "var/check_mk/inventory_delta_cache"),
-    )
     monkeypatch.setattr("cmk.utils.paths.check_manpages_dir", "%s/checkman" % cmk_path())
     monkeypatch.setattr("cmk.utils.paths.web_dir", "%s/web" % cmk_path())
-    monkeypatch.setattr("cmk.utils.paths.omd_root", Path(tmp_dir))
-    monkeypatch.setattr("cmk.utils.paths.tmp_dir", Path(tmp_dir, "tmp/check_mk"))
-    monkeypatch.setattr(
-        "cmk.utils.paths.counters_dir", os.path.join(tmp_dir, "tmp/check_mk/counters")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.tcp_cache_dir", os.path.join(tmp_dir, "tmp/check_mk/cache")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.trusted_ca_file", Path(tmp_dir, "var/ssl/ca-certificates.crt")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.data_source_cache_dir",
-        os.path.join(tmp_dir, "tmp/check_mk/data_source_cache"),
-    )
-    monkeypatch.setattr("cmk.utils.paths.var_dir", os.path.join(tmp_dir, "var/check_mk"))
-    monkeypatch.setattr("cmk.utils.paths.log_dir", os.path.join(tmp_dir, "var/log"))
-    monkeypatch.setattr(
-        "cmk.utils.paths.core_helper_config_dir", Path(tmp_dir, "var/check_mk/core/helper_config")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.autochecks_dir", os.path.join(tmp_dir, "var/check_mk/autochecks")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.precompiled_checks_dir",
-        os.path.join(tmp_dir, "var/check_mk/precompiled_checks"),
-    )
-    monkeypatch.setattr("cmk.utils.paths.crash_dir", Path(cmk.utils.paths.var_dir) / "crashes")
-    monkeypatch.setattr(
-        "cmk.utils.paths.include_cache_dir", os.path.join(tmp_dir, "tmp/check_mk/check_includes")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.check_mk_config_dir", os.path.join(tmp_dir, "etc/check_mk/conf.d")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.main_config_file", os.path.join(tmp_dir, "etc/check_mk/main.mk")
-    )
-    monkeypatch.setattr("cmk.utils.paths.default_config_dir", os.path.join(tmp_dir, "etc/check_mk"))
-    monkeypatch.setattr("cmk.utils.paths.piggyback_dir", Path(tmp_dir) / "var/check_mk/piggyback")
-    monkeypatch.setattr(
-        "cmk.utils.paths.piggyback_source_dir", Path(tmp_dir) / "var/check_mk/piggyback_sources"
-    )
-    monkeypatch.setattr("cmk.utils.paths.htpasswd_file", os.path.join(tmp_dir, "etc/htpasswd"))
-
-    monkeypatch.setattr(
-        "cmk.utils.paths.local_agents_dir", Path(tmp_dir, "local/share/check_mk/agents")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.local_agent_based_plugins_dir",
-        Path(tmp_dir, "local/lib/check_mk/base/plugins/agent_based"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.local_alert_handlers_dir",
-        Path(tmp_dir, "local/share/check_mk/alert_handlers"),
-    )
-    monkeypatch.setattr("cmk.utils.paths.local_bin_dir", Path(tmp_dir, "local/bin"))
-    monkeypatch.setattr(
-        "cmk.utils.paths.local_check_manpages_dir", Path(tmp_dir, "local/share/check_mk/checkman")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.local_checks_dir", Path(tmp_dir, "local/share/check_mk/checks")
-    )
-    monkeypatch.setattr("cmk.utils.paths.local_doc_dir", Path(tmp_dir, "local/share/doc/check_mk"))
-    monkeypatch.setattr(
-        "cmk.utils.paths.local_gui_plugins_dir", Path(tmp_dir, "local/lib/check_mk/gui/plugins")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.local_inventory_dir", Path(tmp_dir, "local/share/check_mk/inventory")
-    )
-    monkeypatch.setattr("cmk.utils.paths.local_lib_dir", Path(tmp_dir, "local/lib"))
-    monkeypatch.setattr(
-        "cmk.utils.paths.local_locale_dir", Path(tmp_dir, "local/share/check_mk/locale")
-    )
-    monkeypatch.setattr("cmk.utils.paths.local_mib_dir", Path(tmp_dir, "local/share/snmp/mibs"))
-    monkeypatch.setattr(
-        "cmk.utils.paths.local_notifications_dir",
-        Path(tmp_dir, "local/share/check_mk/notifications"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.local_pnp_templates_dir",
-        Path(tmp_dir, "local/share/check_mk/pnp-templates"),
-    )
-    monkeypatch.setattr("cmk.utils.paths.local_root", Path(tmp_dir, "local"))
-    monkeypatch.setattr("cmk.utils.paths.local_share_dir", Path(tmp_dir, "local/share/check_mk"))
-    monkeypatch.setattr("cmk.utils.paths.local_web_dir", Path(tmp_dir, "local/share/check_mk/web"))
-
-    monkeypatch.setattr(
-        "cmk.utils.paths.diagnostics_dir", Path(tmp_dir).joinpath("var/check_mk/diagnostics")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.site_config_dir", Path(cmk.utils.paths.var_dir, "site_configs")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.disabled_packages_dir", Path(cmk.utils.paths.var_dir, "disabled_packages")
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.nagios_objects_file",
-        os.path.join(tmp_dir, "etc/nagios/conf.d/check_mk_objects.cfg"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.precompiled_hostchecks_dir",
-        os.path.join(tmp_dir, "var/check_mk/precompiled"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.discovered_host_labels_dir",
-        Path(tmp_dir, "var/check_mk/discovered_host_labels"),
-    )
-    monkeypatch.setattr("cmk.utils.paths.profile_dir", Path(cmk.utils.paths.var_dir, "web"))
-
-    # Agent registration paths
-    monkeypatch.setattr(
-        "cmk.utils.paths.received_outputs_dir",
-        Path(cmk.utils.paths.var_dir, "agent-receiver/received-outputs"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.data_source_push_agent_dir",
-        Path(cmk.utils.paths.data_source_cache_dir, "push-agent"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths._r4r_base_dir",
-        Path(cmk.utils.paths.var_dir, "wato/requests-for-registration"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.r4r_new_dir",
-        Path(cmk.utils.paths._r4r_base_dir, "NEW"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.r4r_pending_dir",
-        Path(cmk.utils.paths._r4r_base_dir, "PENDING"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.r4r_declined_dir",
-        Path(cmk.utils.paths._r4r_base_dir, "DECLINED"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.r4r_declined_bundles_dir",
-        Path(cmk.utils.paths._r4r_base_dir, "DECLINED-BUNDLES"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.r4r_ready_dir",
-        Path(cmk.utils.paths._r4r_base_dir, "READY"),
-    )
-    monkeypatch.setattr(
-        "cmk.utils.paths.r4r_discoverable_dir",
-        Path(cmk.utils.paths._r4r_base_dir, "DISCOVERABLE"),
-    )
-
-    monkeypatch.setattr("cmk.utils.paths.licensing_dir", Path(cmk.utils.paths.var_dir, "licensing"))
 
 
 def import_module_hack(pathname: str) -> ModuleType:
@@ -328,24 +199,36 @@ class WatchLog:
     def __init__(self, site: Site, default_timeout: int | None = None) -> None:
         self._site = site
         self._log_path = site.core_history_log()
-        self._log: TextIO | None = None
         self._default_timeout = default_timeout or site.core_history_log_timeout()
 
-    def __enter__(self):
+        self._tail_process: subprocess.Popen[str] | None = None
+
+    def __enter__(self) -> "WatchLog":
         if not self._site.file_exists(self._log_path):
             self._site.write_text_file(self._log_path, "")
 
-        _log = open(self._site.path(self._log_path))
-        _log.seek(0, 2)  # go to end of file
-        self._log = _log
+        self._tail_process = self._site.execute(
+            ["tail", "-f", self._site.path(self._log_path)],
+            stdout=subprocess.PIPE,
+            bufsize=1,  # line buffered
+        )
+
+        # Make stdout non blocking. Otherwise the timeout handling
+        # in _check_for_line will not work
+        assert self._tail_process.stdout is not None
+        fd = self._tail_process.stdout.fileno()
+        fl = fcntl.fcntl(fd, fcntl.F_GETFL)
+        fcntl.fcntl(fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
+
         return self
 
     def __exit__(self, *exc_info):
-        try:
-            if self._log is not None:
-                self._log.close()
-        except AttributeError:
-            pass
+        if self._tail_process is not None:
+            for c in Process(self._tail_process.pid).children(recursive=True):
+                if c.name() == "tail":
+                    assert self._site.execute(["kill", str(c.pid)]).wait() == 0
+            self._tail_process.wait()
+            self._tail_process = None
 
     def check_logged(self, match_for: str, timeout: float | None = None) -> None:
         if timeout is None:
@@ -364,15 +247,17 @@ class WatchLog:
             )
 
     def _check_for_line(self, match_for: str, timeout: float) -> bool:
-        if self._log is None:
+        if self._tail_process is None:
             raise Exception("no log file")
         timeout_at = time.time() + timeout
         sys.stdout.write(
-            "Start checking for matching line at %d until %d\n" % (time.time(), timeout_at)
+            "Start checking for matching line %r at %d until %d\n"
+            % (match_for, time.time(), timeout_at)
         )
         while time.time() < timeout_at:
             # print("read till timeout %0.2f sec left" % (timeout_at - time.time()))
-            line = self._log.readline()
+            assert self._tail_process.stdout is not None
+            line = self._tail_process.stdout.readline()
             if line:
                 sys.stdout.write("PROCESS LINE: %r\n" % line)
             if match_for in line:
@@ -384,6 +269,17 @@ class WatchLog:
 
 
 def create_linux_test_host(request: pytest.FixtureRequest, site: Site, hostname: str) -> None:
+    def get_data_source_cache_files(name: str) -> list[str]:
+        p = site.execute(
+            ["ls", f"tmp/check_mk/data_source_cache/*/{name}"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        output = p.communicate()[0].strip()
+        if not output:
+            return []
+        return output.split(" ")
+
     def finalizer() -> None:
         site.openapi.delete_host(hostname)
         site.activate_changes_and_wait_for_core_reload()
@@ -398,10 +294,7 @@ def create_linux_test_host(request: pytest.FixtureRequest, site: Site, hostname:
             "var/check_mk/autochecks/%s.mk" % hostname,
             "tmp/check_mk/counters/%s" % hostname,
             "tmp/check_mk/cache/%s" % hostname,
-        ] + [
-            str(p.relative_to(site.root))
-            for p in Path(site.root, "tmp/check_mk/data_source_cache/").glob(f"*/{hostname}")
-        ]:
+        ] + get_data_source_cache_files(hostname):
             if site.file_exists(path):
                 site.delete_file(path)
 
@@ -442,12 +335,11 @@ class BaseCheck(abc.ABC):
 
     def __init__(self, name: str) -> None:
         self.name = name
-        self.info: dict[str, Any] = {}
         # we cant use the current_host context, b/c some tests rely on a persistent
         # item state across several calls to run_check
-        import cmk.checkers.plugin_contexts  # pylint: disable=import-outside-toplevel
+        import cmk.checkengine.plugin_contexts  # pylint: disable=import-outside-toplevel
 
-        cmk.checkers.plugin_contexts._hostname = HostName("non-existent-testhost")
+        cmk.checkengine.plugin_contexts._hostname = HostName("non-existent-testhost")
 
 
 class Check(BaseCheck):
@@ -458,8 +350,7 @@ class Check(BaseCheck):
         super().__init__(name)
         if self.name not in config.check_info:
             raise MissingCheckInfoError(self.name)
-        self.info = config.check_info[self.name]
-        self.context = config._check_contexts[self.name]
+        self.info: LegacyCheckDefinition = config.check_info[self.name]
         self._migrated_plugin = register.get_check_plugin(
             CheckPluginName(self.name.replace(".", "_"))
         )
@@ -476,7 +367,7 @@ class Check(BaseCheck):
         return parse_func(info)
 
     def run_discovery(self, info):
-        disco_func = self.info.get("inventory_function")
+        disco_func = self.info.get("discovery_function")
         if not disco_func:
             raise MissingCheckInfoError(
                 "Check '%s' " % self.name + "has no discovery function defined"
@@ -522,30 +413,27 @@ class SpecialAgent:
         self.argument_func = config.special_agent_info[self.name[len("agent_") :]]
 
 
-@contextmanager
-def set_timezone(timezone: str):  # type:ignore[no-untyped-def]
-    if "TZ" not in os.environ:
-        tz_set = False
-        old_tz = ""
-    else:
-        tz_set = True
-        old_tz = os.environ["TZ"]
-
-    os.environ["TZ"] = timezone
-    time.tzset()
-
-    yield
-
-    if not tz_set:
+def _set_tz(timezone: str | None) -> str | None:
+    old_tz = os.environ.get("TZ")
+    if timezone is None:
         del os.environ["TZ"]
     else:
-        os.environ["TZ"] = old_tz
-
+        os.environ["TZ"] = timezone
     time.tzset()
+    return old_tz
 
 
 @contextmanager
-def on_time(utctime, timezone: str):  # type:ignore[no-untyped-def]
+def set_timezone(timezone: str) -> Iterator[None]:
+    old_tz = _set_tz(timezone)
+    try:
+        yield
+    finally:
+        _set_tz(old_tz)
+
+
+@contextmanager
+def on_time(utctime: datetime.datetime | str | int | float, timezone: str) -> Iterator[None]:
     """Set the time and timezone for the test"""
     if isinstance(utctime, (int, float)):
         utctime = datetime.datetime.utcfromtimestamp(utctime)

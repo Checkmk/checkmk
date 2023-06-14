@@ -1,0 +1,12 @@
+Title: ibm_svc_nodestats: support decimal values for newer SVC firmware
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1679616734
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Newer SVC firmware can report decimal values for nodestats. Now, we cast those values to float.
+

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
@@ -31,8 +31,6 @@ from .defaults import default_config, default_rule_pack
 from .settings import Settings
 from .settings import settings as create_settings
 
-ECRuleSpec = dict[str, Any]
-
 
 class RulePackType(Enum):  # pylint: disable=too-few-public-methods
     """
@@ -42,7 +40,7 @@ class RulePackType(Enum):  # pylint: disable=too-few-public-methods
         2. exported: A rule pack that is available in the Extension Packages, but not
                      yet part of a MKP.
         3. unmodified MKP: A rule pack that is packaged/provided in a MKP.
-        4. modified MKP: A rule pack that was orignially packaged/provided in a MKP but
+        4. modified MKP: A rule pack that was originally packaged/provided in a MKP but
                          was modified by a User and therefore replaced by a modified copy
                          of the rule pack.
 
@@ -145,7 +143,7 @@ def load_config(settings: Settings) -> ConfigFromWATO:  # pylint: disable=too-ma
                 rule["livetime"] = (livetime, ["open"])
 
     # Convert legacy rules into a default rule pack. Note that we completely
-    # ignore legacy rules if there are rule packs alreday. It's a bit unclear
+    # ignore legacy rules if there are rule packs already. It's a bit unclear
     # if we really want that, but at least that's how it worked in the past...
     if config["rules"] and not config["rule_packs"]:
         config["rule_packs"] = [default_rule_pack(config["rules"])]
@@ -206,9 +204,9 @@ def save_rule_packs(
     output = "# Written by WATO\n# encoding: utf-8\n\n"
 
     if pretty_print:
-        rule_packs_text = pprint.pformat(rule_packs)
+        rule_packs_text = pprint.pformat(list(rule_packs))
     else:
-        rule_packs_text = repr(rule_packs)
+        rule_packs_text = repr(list(rule_packs))
 
     output += f"rule_packs += \\\n{rule_packs_text}\n"
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -14,17 +14,17 @@ from tests.testlib import on_time
 import cmk.utils.version as cmk_version
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.paths import default_config_dir
-from cmk.utils.structured_data import StructuredDataNode
+from cmk.utils.structured_data import ImmutableTree
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import sites
 from cmk.gui.http import request
+from cmk.gui.painter.v0.base import painter_registry
+from cmk.gui.painter.v0.painters import _paint_custom_notes
 from cmk.gui.type_defs import ColumnSpec, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.view import View
 from cmk.gui.views.page_edit_view import painters_of_datasource
-from cmk.gui.views.painter.v0.base import painter_registry
-from cmk.gui.views.painter.v0.painters import _paint_custom_notes
 from cmk.gui.visual_link import render_link_to_view
 
 
@@ -81,6 +81,7 @@ def test_registered_painters() -> None:
         "aggr_state_num",
         "aggr_treestate",
         "aggr_treestate_boxed",
+        "aggr_treestate_frozen_diff",
         "alert_stats_crit",
         "alert_stats_ok",
         "alert_stats_problem",
@@ -99,6 +100,7 @@ def test_registered_painters() -> None:
         "crash_ident",
         "crash_time",
         "crash_type",
+        "crash_source",
         "crash_version",
         "downtime_author",
         "downtime_comment",
@@ -269,7 +271,10 @@ def test_registered_painters() -> None:
         "inv_hardware_storage_disks",
         "inv_hardware_storage_disks_size",
         "inv_hardware_system",
+        "inv_hardware_system_device_number",
+        "inv_hardware_system_description",
         "inv_hardware_system_expresscode",
+        "inv_hardware_system_mac_address",
         "inv_hardware_system_manufacturer",
         "inv_hardware_system_model",
         "inv_hardware_system_model_name",
@@ -322,6 +327,13 @@ def test_registered_painters() -> None:
         "inv_software_applications_check_mk_sites",
         "inv_software_applications_check_mk_versions",
         "inv_software_applications_checkmk-agent",
+        "inv_software_applications_checkmk-agent_version",
+        "inv_software_applications_checkmk-agent_agentdirectory",
+        "inv_software_applications_checkmk-agent_datadirectory",
+        "inv_software_applications_checkmk-agent_spooldirectory",
+        "inv_software_applications_checkmk-agent_pluginsdirectory",
+        "inv_software_applications_checkmk-agent_localdirectory",
+        "inv_software_applications_checkmk-agent_agentcontroller",
         "inv_software_applications_checkmk-agent_local_checks",
         "inv_software_applications_checkmk-agent_plugins",
         "inv_software_applications_citrix",
@@ -405,10 +417,6 @@ def test_registered_painters() -> None:
         "inv_software_applications_kube_pod_node",
         "inv_software_applications_kube_pod_pod_ip",
         "inv_software_applications_kube_pod_qos_class",
-        "inv_software_applications_kubernetes",
-        "inv_software_applications_kubernetes_service_info",
-        "inv_software_applications_kubernetes_service_info_cluster_ip",
-        "inv_software_applications_kubernetes_service_info_load_balancer_ip",
         "inv_software_applications_mssql",
         "inv_software_applications_mssql_instances",
         "inv_software_applications_oracle",
@@ -425,6 +433,11 @@ def test_registered_painters() -> None:
         "inv_software_bios_vendor",
         "inv_software_bios_version",
         "inv_software_configuration",
+        "inv_software_configuration_organisation",
+        "inv_software_configuration_organisation_address",
+        "inv_software_configuration_organisation_network_id",
+        "inv_software_configuration_organisation_organisation_id",
+        "inv_software_configuration_organisation_organisation_name",
         "inv_software_configuration_snmp_info",
         "inv_software_configuration_snmp_info_contact",
         "inv_software_configuration_snmp_info_location",
@@ -825,9 +838,6 @@ def test_registered_painters() -> None:
     assert sorted(painters) == sorted(expected_painters)
 
 
-# We only get all painters after the plugins and config have been loaded. Since there currently no
-# way to create test parameters while depending on a fixture we can not use pytests parametrization
-@pytest.mark.usefixtures("load_config")
 @pytest.fixture(name="service_painter_idents")
 def fixture_service_painter_names() -> list[str]:
     return sorted(list(painters_of_datasource("services").keys()))
@@ -880,6 +890,7 @@ def _test_painter(painter_ident: str, live: MockLiveStatusConnection) -> None:
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         },
         context={},
     )
@@ -948,7 +959,7 @@ def _service_row():
         "host_in_check_period": 1,
         "host_in_notification_period": 1,
         "host_in_service_period": 1,
-        "host_inventory": StructuredDataNode.deserialize(
+        "host_inventory": ImmutableTree.deserialize(
             {
                 "hardware": {
                     "memory": {

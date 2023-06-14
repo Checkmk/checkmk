@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,12 +10,12 @@ import pytest
 from cmk.utils.type_defs import UserId
 
 from cmk.gui.logged_in import user
+from cmk.gui.painter.v0 import base as painter_base
+from cmk.gui.painter.v0.base import Cell, Painter, PainterRegistry
+from cmk.gui.painter.v0.helpers import replace_action_url_macros
 from cmk.gui.type_defs import ColumnSpec, Row, SorterSpec, ViewSpec
 from cmk.gui.views.layout import group_value
 from cmk.gui.views.page_show_view import _parse_url_sorters
-from cmk.gui.views.painter.v0 import base as painter_base
-from cmk.gui.views.painter.v0.base import Cell, Painter, PainterRegistry
-from cmk.gui.views.painter.v0.helpers import replace_action_url_macros
 from cmk.gui.views.sort_url import _encode_sorter_url
 from cmk.gui.views.store import multisite_builtin_views
 
@@ -75,20 +75,13 @@ def test_url_sorters_parse_encode(url: str, sorters: Sequence[SorterSpec]) -> No
         ),
     ],
 )
+@pytest.mark.usefixtures("request_context")
 def test_replace_action_url_macros(
-    monkeypatch,
-    request_context,
-    url,
-    what,
-    row,
-    result,
-):
-    monkeypatch.setattr(
-        user,
-        "id",
-        UserId("user"),
-    )
-    assert replace_action_url_macros(url, what, row) == result
+    monkeypatch: pytest.MonkeyPatch, url: str, what: str, row: Row, result: str
+) -> None:
+    with monkeypatch.context() as m:
+        m.setattr(user, "id", UserId("user"))
+        assert replace_action_url_macros(url, what, row) == result
 
 
 def test_group_value(monkeypatch: pytest.MonkeyPatch, view_spec: ViewSpec) -> None:

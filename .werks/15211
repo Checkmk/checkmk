@@ -6,7 +6,7 @@ Date: 1674542399
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When activating changes or requesting running changes via the REST API,
 the response would only contain activation ID. This werk adds more

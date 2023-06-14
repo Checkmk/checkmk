@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to hold shared code for filesystem check parameter module internals"""
@@ -61,7 +61,7 @@ def match_dual_level_type(value):
     return 0
 
 
-def _get_free_used_dynamic_valuespec(  # type:ignore[no-untyped-def]
+def _get_free_used_dynamic_valuespec(  # type: ignore[no-untyped-def]
     level_perspective: Literal["used", "free"],
     default_value=(80.0, 90.0),
     *,
@@ -145,7 +145,6 @@ def _tuple_convert(val: tuple[float, ...]) -> tuple[float, ...]:
 
 
 def _transform_filesystem_free(value):
-
     if isinstance(value, tuple):
         return _tuple_convert(value)
 
@@ -243,9 +242,10 @@ def _filesystem_reserved_elements() -> list[DictionaryEntry]:
             DropdownChoice(
                 title=_("Show space reserved for the <tt>root</tt> user"),
                 help=_(
+                    # xgettext: no-python-format
                     "Check_MK treats space that is reserved for the <tt>root</tt> user on Linux and Unix as "
                     "used space. Usually, 5% are being reserved for root when a new filesystem is being created. "
-                    "With this option you can have Check_MK display the current amount of reserved but yet unused "
+                    "With this option you can have Checkmk display the current amount of reserved but yet unused "
                     "space."
                 ),
                 choices=[
@@ -261,9 +261,10 @@ def _filesystem_reserved_elements() -> list[DictionaryEntry]:
                     "Exclude space reserved for the <tt>root</tt> user from calculation of used space"
                 ),
                 help=_(
-                    "By default Check_MK treats space that is reserved for the <tt>root</tt> user on Linux and Unix as "
+                    # xgettext: no-python-format
+                    "By default Checkmk treats space that is reserved for the <tt>root</tt> user on Linux and Unix as "
                     "used space. Usually, 5% are being reserved for root when a new filesystem is being created. "
-                    "With this option you can have Check_MK exclude the current amount of reserved but yet unused "
+                    "With this option you can have Checkmk exclude the current amount of reserved but yet unused "
                     "space from the calculations regarding the used space percentage."
                 ),
                 choices=[
@@ -340,7 +341,11 @@ def _filesystem_inodes_elements() -> list[DictionaryEntry]:
                 title=_("Display inode usage in check output..."),
                 choices=[
                     ("onproblem", _("Only in case of a problem")),
-                    ("onlow", _("Only in case of a problem or if inodes are below 50%")),
+                    (
+                        "onlow",
+                        # xgettext: no-python-format
+                        _("Only in case of a problem or if inodes are below 50%"),
+                    ),
                     ("always", _("Always")),
                 ],
                 default_value="onlow",
@@ -523,8 +528,8 @@ def vs_filesystem(
     elements: Sequence[FilesystemElements] | None = None,
     extra_elements: list[DictionaryEntry] | None = None,
     ignored_keys: Sequence[str] | None = None,
+    title: str | None = None,
 ) -> Dictionary:
-
     if extra_elements is None:
         extra_elements = []
 
@@ -563,4 +568,5 @@ def vs_filesystem(
             "flex_levels"
         ],
         ignored_keys=ignored_keys,
+        title=title,
     )

@@ -1,0 +1,34 @@
+Title: Fix Email HTML Injection
+Class: security
+Compatible: incomp
+Component: notifications
+Date: 1678264782
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously an authenticated attacker with permissions to configure HTML notifications was able to inject HTML into E-Mails via <i>Insert HTML section between body and table</i>.
+
+We found this vulnerability internally and have no indication of any exploitation.
+
+<b>Affected Versions</b>:
+LI: 2.1.0
+LI: 2.0.0
+LI: 1.6.0 (probably older versions as well)
+
+<b>Indicators of Compromise</b>:
+To detect previous exploitation of this vulnerability one can check <tt>etc/check_mk/conf.d/wato/notifications.mk</tt>. Search for <tt>insert_html_section</tt> and malicious HTML.
+
+<b>Vulnerability Management</b>:
+We calculated a CVSS3.1 score of 4.1 (Medium) CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:C/C:L/I:N/A:N and assigned CVE-2023-22288.
+
+<b>Changes</b>:
+With this Werk the <i>Insert HTML section between body and table</i> will be sanitized in the usual manner.
+So certain formatting tags like <tt>h1</tt>, <tt>b</tt>, etc. are still possible to use.
+
+To be precise:
+
+<tt>h1</tt>, <tt>h2</tt>, <tt>b</tt>, <tt>tt</tt>, <tt>i</tt>, <tt>u</tt>, <tt>br</tt>, <tt>nobr</tt>, <tt>pre</tt>, <tt>sup</tt>, <tt>p</tt>, <tt>li</tt>, <tt>ul</tt>, <tt>ol</tt> without any additional attributes are allowed.
+
+Links are currently not possible, this will be fixed with Werk #15686.

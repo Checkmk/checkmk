@@ -1,0 +1,19 @@
+Title: Renaming of old Nutanix Services
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1677857270
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+We changed the service names for the following nutanix checks
+
+LI: prism_alerts
+LI: prism_containers
+LI: prism_info
+LI: prism_storage_pools
+
+The old service names will still be used unless you configured checkmk to
+use the new service names when discovering services.

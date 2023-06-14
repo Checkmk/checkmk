@@ -6,7 +6,7 @@ Date: 1661498856
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, the Prometheus special agent would query endpoints, which don't exist. This would
 (depending on the the HTTP response of the server) result in the following error

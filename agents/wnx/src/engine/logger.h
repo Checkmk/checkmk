@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -664,7 +664,7 @@ private:
 
 // Global Log Engines
 
-extern XLOG::Emitter l;      // Standard log from Check MK
+extern XLOG::Emitter l;      // Standard log from Checkmk
 extern XLOG::Emitter d;      // this is GLOBAL
 extern XLOG::Emitter t;      // temporary log!
 extern XLOG::Emitter stdio;  // only print
@@ -681,22 +681,22 @@ void ReConfigure();
 void Configure(const std::string &log_file_name, int debug_level, bool windbg,
                bool event_log);
 
-/// \brief switch d to send output into the file
+/// switch d to send output into the file
 void EnableDebugLog(bool enable) noexcept;
 
-/// \brief switch t to send output into the file
+/// switch t to send output into the file
 void EnableTraceLog(bool enable) noexcept;
 
-/// \brief change file name for all loggers
+/// change file name for all loggers
 void ChangeLogFileName(const std::string &log_file_name) noexcept;
 
-/// \brief change debug level
+/// change debug level
 void ChangeDebugLogLevel(int debug_level) noexcept;
 
-/// \brief disable enable windbg for all loggers
+/// disable enable windbg for all loggers
 void EnableWinDbg(bool enable) noexcept;
 
-/// \brief reports log status
+/// reports log status
 bool IsEventLogEnabled() noexcept;
 
 }  // namespace setup

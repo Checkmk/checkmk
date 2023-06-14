@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
+raritan_pdu_ocprot_current_default_levels = (14.0, 15.0)
 
 checkname = "raritan_pdu_ocprot"
 
@@ -28,12 +29,12 @@ info = [
 
 discovery = {
     "": [
-        ("C1", "raritan_pdu_ocprot_current_default_levels"),
-        ("C2", "raritan_pdu_ocprot_current_default_levels"),
-        ("C3", "raritan_pdu_ocprot_current_default_levels"),
-        ("C4", "raritan_pdu_ocprot_current_default_levels"),
-        ("C5", "raritan_pdu_ocprot_current_default_levels"),
-        ("C6", "raritan_pdu_ocprot_current_default_levels"),
+        ("C1", raritan_pdu_ocprot_current_default_levels),
+        ("C2", raritan_pdu_ocprot_current_default_levels),
+        ("C3", raritan_pdu_ocprot_current_default_levels),
+        ("C4", raritan_pdu_ocprot_current_default_levels),
+        ("C5", raritan_pdu_ocprot_current_default_levels),
+        ("C6", raritan_pdu_ocprot_current_default_levels),
     ]
 }
 

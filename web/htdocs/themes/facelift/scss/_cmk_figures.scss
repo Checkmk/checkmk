@@ -1,5 +1,5 @@
 @charset "UTF-8";
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -24,7 +24,7 @@ div.cmk_tab {
       position: relative;
       float: left;
       min-width: 10rem;
-      font-weight: bold;
+      font-weight: $font-weight-bold;
       line-height: 2rem;
       text-align: center;
       cursor: pointer;

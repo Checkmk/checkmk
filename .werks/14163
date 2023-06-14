@@ -7,6 +7,6 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This error was never visible in the user interface, but has nevertheless been fixed.

@@ -1,28 +1,25 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
-from cmk.utils.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.utils.type_defs import HostName, LegacyCheckParameters
 
-from cmk.fetchers import SourceType
-
-from cmk.checkers import HostKey
-from cmk.checkers.checkresults import ServiceCheckResult
+from cmk.checkengine import HostKey, SourceType
+from cmk.checkengine.checkresults import ServiceCheckResult
+from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 
 import cmk.base.agent_based.checking._checking as checking
 import cmk.base.config as config
-from cmk.base.api.agent_based.checking_classes import Metric, Result, State
+from cmk.base.api.agent_based.checking_classes import consume_check_results, Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
 
 def make_timespecific_params_list(
@@ -191,9 +188,12 @@ def make_timespecific_params_list(
         ),
     ],
 )
-def test_time_resolved_check_parameters(  # type:ignore[no-untyped-def]
-    monkeypatch, rules: TimespecificParameters, active_timeperiods, expected_result
-):
+def test_time_resolved_check_parameters(
+    monkeypatch: MonkeyPatch,
+    rules: TimespecificParameters,
+    active_timeperiods: Sequence[str],
+    expected_result: LegacyCheckParameters,
+) -> None:
     assert expected_result == rules.evaluate(lambda tp: tp in active_timeperiods)
 
 
@@ -223,10 +223,8 @@ def test_time_resolved_check_parameters(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_aggregate_result(  # type:ignore[no-untyped-def]
-    subresults, aggregated_results: ServiceCheckResult
-) -> None:
-    assert checking._aggregate_results(subresults) == aggregated_results
+def test_aggregate_result(subresults: CheckResult, aggregated_results: ServiceCheckResult) -> None:
+    assert checking._aggregate_results(consume_check_results(subresults)) == aggregated_results
 
 
 def test_config_cache_get_clustered_service_node_keys_no_cluster(monkeypatch: MonkeyPatch) -> None:
@@ -250,7 +248,7 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
 ) -> None:
     cluster_test = HostName("cluster.test")
     ts = Scenario()
-    ts.add_cluster(cluster_test, nodes=["node1.test", "node2.test"])
+    ts.add_cluster(cluster_test, nodes=[HostName("node1.test"), HostName("node2.test")])
     config_cache = ts.apply(monkeypatch)
 
     monkeypatch.setattr(
@@ -265,8 +263,8 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
 
     # empty for cluster (we have not clustered the service)
     assert [
-        HostKey(hostname="node1.test", source_type=SourceType.HOST),
-        HostKey(hostname="node2.test", source_type=SourceType.HOST),
+        HostKey(hostname=HostName("node1.test"), source_type=SourceType.HOST),
+        HostKey(hostname=HostName("node2.test"), source_type=SourceType.HOST),
     ] == checking._get_clustered_service_node_keys(
         config_cache, cluster_test, SourceType.HOST, "Test Service"
     )
@@ -280,7 +278,7 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
     ts = Scenario()
     ts.add_host(node1)
     ts.add_host(node2)
-    ts.add_cluster(cluster, nodes=["node1.test", "node2.test"])
+    ts.add_cluster(cluster, nodes=[HostName("node1.test"), HostName("node2.test")])
     # add a fake rule, that defines a cluster
     ts.set_option(
         "clustered_services_mapping",
@@ -310,8 +308,8 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
         lambda *args, **kw: "dummy.test.ip.0",
     )
     assert [
-        HostKey(hostname="node1.test", source_type=SourceType.HOST),
-        HostKey(hostname="node2.test", source_type=SourceType.HOST),
+        HostKey(hostname=HostName("node1.test"), source_type=SourceType.HOST),
+        HostKey(hostname=HostName("node2.test"), source_type=SourceType.HOST),
     ] == checking._get_clustered_service_node_keys(
         config_cache, cluster, SourceType.HOST, "Test Unclustered"
     )

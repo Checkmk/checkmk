@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -71,6 +71,7 @@ register.agent_section(
     parse_function=parse_windows_updates,
 )
 
+
 # NOTE: section can't be renamed to _section due to creative logic
 def discover(section: Section) -> DiscoveryResult:
     yield Service()
@@ -118,9 +119,9 @@ register.check_plugin(
     check_ruleset_name="windows_updates",
     discovery_function=discover,
     check_function=check_windows_updates,
-    check_default_parameters=dict(
-        levels_important=(1, 1),
-        levels_optional=(1, 99),
-        levels_lower_forced_reboot=(604800, 172800),
-    ),
+    check_default_parameters={
+        "levels_important": (1, 1),
+        "levels_optional": (1, 99),
+        "levels_lower_forced_reboot": (604800, 172800),
+    },
 )

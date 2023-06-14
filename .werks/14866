@@ -6,7 +6,7 @@ Date: 1663160665
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Since this release, the output of all Windows powershell plugins 
 is configured as Utf-8 thus eliminating any problems with non-ASCII 

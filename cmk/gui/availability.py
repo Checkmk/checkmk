@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -38,6 +38,7 @@ from cmk.gui.type_defs import (
     ViewProcessTracking,
     VisualContext,
 )
+from cmk.gui.utils import cmp_service_name_equiv
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode_vars
 from cmk.gui.utils.user_errors import user_errors
@@ -54,7 +55,6 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.view_utils import CSSClass
-from cmk.gui.views.sorter import cmp_service_name_equiv
 
 from cmk.bi.data_fetcher import (
     BIHostSpec,
@@ -135,7 +135,8 @@ AVTimelineLabelling = Literal[
 AVIconSpec = tuple[str, str, str]
 
 AVTimelineStateName = str
-AVTimelineRows = list[tuple[AVSpan, AVTimelineStateName]]
+AVTimelineRow = tuple[AVSpan, AVTimelineStateName]
+AVTimelineRows = list[AVTimelineRow]
 AVTimelineStates = dict[AVTimelineStateName, int]
 AVTimelineStatistics = dict[AVTimelineStateName, tuple[int, int, int]]
 AVTimelineStyle = str
@@ -190,7 +191,7 @@ class AvailabilityColumns:
         self.service = self._service_availability_columns()
         self.bi = self._bi_availability_columns()
 
-    def __getitem__(self, key) -> list[ColumnSpec]:  # type:ignore[no-untyped-def]
+    def __getitem__(self, key) -> list[ColumnSpec]:  # type: ignore[no-untyped-def]
         return getattr(self, key)
 
     def _host_availability_columns(self) -> list[ColumnSpec]:
@@ -474,7 +475,11 @@ def get_av_display_options(what: AVObjectType) -> AVOptionValueSpecs:
                 title=_("Summary line"),
                 choices=[
                     (None, _("Do not show a summary line")),
-                    ("sum", _("Display total sum (for % the average)")),
+                    (
+                        "sum",
+                        # xgettext: no-python-format
+                        _("Display total sum (for % the average)"),
+                    ),
                     ("average", _("Display average")),
                 ],
                 default_value="sum",
@@ -1153,7 +1158,6 @@ def compute_availability(  # pylint: disable=too-many-branches
     # Note: in case of timeline, we have data from exacly one host/service
     for site_host, site_host_entry in reclassified_rawdata.items():
         for service, service_entry in site_host_entry.items():
-
             if grouping == "host":
                 group_ids: AVGroupIds = [site_host]
             elif grouping in ["host_groups", "service_groups"]:
@@ -1166,7 +1170,6 @@ def compute_availability(  # pylint: disable=too-many-branches
             total_duration = 0
             considered_duration = 0
             for span in service_entry:
-
                 # Information about host/service groups are in the actual entries
                 if grouping in ["host_groups", "service_groups"] and what != "bi":
                     assert isinstance(group_ids, set)
@@ -2172,12 +2175,12 @@ def layout_timeline(  # pylint: disable=too-many-branches
             spans.append((row_nr, title, width, css))
     # If timeline span ends before the current time, fill it up with
     # unmonitored entry until end
-    if avoptions["service_period"] == "honor" and this_until_time < until_time:  # GAP
+    if avoptions["service_period"] == "honor" and current_time < until_time:  # GAP
         spans.append(
             (
                 None,
                 "",
-                100.0 * (until_time - this_until_time) / total_duration,
+                100.0 * (until_time - current_time) / total_duration,
                 "unmonitored",
             )
         )
@@ -2379,7 +2382,7 @@ def get_timeline_containers(
 
 # Not a real class, more a struct
 class TimelineContainer:
-    def __init__(self, aggr_row) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, aggr_row) -> None:  # type: ignore[no-untyped-def]
         self._aggr_row = aggr_row
 
         # PUBLIC accessible data
@@ -2446,7 +2449,7 @@ def get_bi_leaf_history(
 
         for site, host, service in timeline_container.aggr_compiled_branch.required_elements():
             this_service = service or ""
-            by_host.setdefault(host, set()).add(this_service)
+            by_host.setdefault(host, {""}).add(this_service)
             timeline_container.host_service_info.add((host, this_service))
             timeline_container.host_service_info.add((host, ""))
 
@@ -2688,7 +2691,6 @@ def _compute_status_info(
     hosts: dict[BIHostSpec, AVBITimelineState],
     services_by_host: dict[BIHostSpec, dict[str, BIServiceWithFullState]],
 ) -> BIStatusInfo:
-
     status_info: BIStatusInfo = {}
 
     for site_host, state_output in hosts.items():

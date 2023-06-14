@@ -6,7 +6,7 @@ Date: 1657713567
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Attempts to flush the DB when the path to the RRD database is
 missing would produce the rather unhelpful error

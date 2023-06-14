@@ -1,0 +1,21 @@
+Title: Fix attribute update and deletion of existing hosts
+Class: fix
+Compatible: compat
+Component: dcd
+Date: 1676881219
+Edition: cre
+Knowledge: doc
+Level: 2
+Version: 2.3.0b1
+
+Previously, the dcd could not handle host configurations, if they were in an
+inconsistent state. In such cases, it would stop updating and deleting the host
+configurations. The following error would be shown:
+C+:
+k: api_attributes[k] for k in future_attributes["locked_attributes"] + internal_keys
+KeyError: 'site'
+C-:
+This meant, the attributes of the host were not present, even though they were
+supposed to be locked by the dcd. With this werk, the dcd will not crash.
+Instead it assigns the attributes, which are configured by the connection. This
+includes the internal attribute "Locked by", which is inaccessible via the GUI.

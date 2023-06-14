@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -26,10 +26,7 @@
 #include "logger.h"
 #include "tools/_misc.h"
 
-namespace cma {
-wtools::InternalUser ObtainInternalUser(std::wstring_view group);
-void KillAllInternalUsers();
-}  // namespace cma
+namespace cma {}  // namespace cma
 
 namespace cma::srv {
 class ServiceProcessor;
@@ -54,7 +51,7 @@ bool CheckArgvForValue(int argc, const wchar_t *argv[], int pos,
                        std::string_view value) noexcept;
 }  // namespace tools
 using PathVector = std::vector<std::filesystem::path>;
-PathVector GatherAllFiles(const PathVector &Folders);
+PathVector GatherAllFiles(const PathVector &folders);
 // Scan one folder and add contents to the dirs and files
 void GatherMatchingFilesAndDirs(
     const std::filesystem::path &search_dir,    // c:\windows
@@ -67,7 +64,7 @@ void FilterPathByExtension(PathVector &paths,
                            const std::vector<std::string> &exts);
 void RemoveDuplicatedNames(PathVector &paths);
 
-/// \brief remove all forbidden files
+/// remove all forbidden files
 ///
 /// Normally deletes only cmk-update-agent.exe
 void RemoveForbiddenNames(PathVector &paths);
@@ -78,6 +75,7 @@ PathVector FilterPathVector(const PathVector &found_files,
 }  // namespace cma
 
 namespace cma {
+enum class ExecType { plugin, local };
 bool IsValidFile(const std::filesystem::path &file_to_exec);
 bool IsExecutable(const std::filesystem::path &file_to_exec);
 std::wstring FindPowershellExe() noexcept;
@@ -152,7 +150,7 @@ public:
         }
         command_line += cmd_line;
 
-        exec_ = wtools::ConvertToUTF16(cmd_line);
+        exec_ = wtools::ConvertToUtf16(cmd_line);
 
         // send exec array entries to internal
         try {
@@ -374,7 +372,7 @@ bool HackDataWithCacheInfo(std::vector<char> &out,
                            const std::string &patch, HackDataMode mode);
 
 // cleans \r from string
-inline bool HackPluginDataRemoveCR(std::vector<char> &out,
+inline bool HackPluginDataRemoveCr(std::vector<char> &out,
                                    const std::vector<char> &original_data) {
     return HackDataWithCacheInfo(out, original_data, "", HackDataMode::header);
 }
@@ -406,7 +404,7 @@ public:
     // ASYNC:
     // if StartProcessNow then process will be started immediately
     // otherwise entry will be marked as required to start
-    std::vector<char> getResultsAsync(bool StartProcessNow);
+    std::vector<char> getResultsAsync(bool start_process_now);
 
     // AU:
     void restartIfRequired();
@@ -416,7 +414,7 @@ public:
 
     bool local() const {
         std::lock_guard lk(lock_);
-        return local_;
+        return exec_type_ == ExecType::local;
     }
 
     int failures() const {
@@ -467,7 +465,8 @@ public:
     }
 
     template <typename T>
-    void applyConfigUnit(const T &unit, bool local) {
+    void applyConfigUnit(const T &unit, ExecType exec_type,
+                         wtools::InternalUsersDb *iu) {
         if (retry() != unit.retry() || timeout() != unit.timeout()) {
             XLOG::t("Important params changed, reset retry '{}'", path_);
             failures_ = 0;
@@ -503,10 +502,9 @@ public:
         }
 
         correctRetry();
+        fillInternalUser(iu);
 
-        fillInternalUser();
-
-        local_ = local;
+        exec_type_ = exec_type;
         defined_ = true;
     }
 
@@ -540,9 +538,9 @@ public:
     const wtools::InternalUser &getUser() const noexcept { return iu_; }
 
 protected:
+    void fillInternalUser(wtools::InternalUsersDb *iu);
     std::optional<std::string> startProcessName();
-    void fillInternalUser();
-    void restartAsyncThreadIfFinished(const std::wstring &Id);
+    void restartAsyncThreadIfFinished(const std::wstring &id);
     void markAsForRestart() {
         XLOG::l.i("markAsForRestart {}", path());
         std::lock_guard lk(lock_);
@@ -554,7 +552,7 @@ protected:
     }
 
     void joinAndReleaseMainThread() noexcept;
-    void threadCore(const std::wstring &Id);
+    void threadCore(const std::wstring &id);
     void registerProcess(uint32_t Id);
 
     // this is not normal situation
@@ -580,7 +578,7 @@ private:
     /// counter of fails, used by async, ignored by sync
     int failures_{0};
 
-    bool local_{false};  // if set then we have deal with local groups
+    ExecType exec_type_{ExecType::plugin};
 
     // async part
     mutable std::mutex data_lock_;  // cache() and time to control
@@ -602,10 +600,10 @@ private:
     friend class PluginTest;
     FRIEND_TEST(PluginTest, ApplyConfig);
     FRIEND_TEST(PluginTest, TimeoutCalc);
-    FRIEND_TEST(PluginTest, AsyncStartSimulation_Long);
-    FRIEND_TEST(PluginTest, AsyncDataPickup_Integration);
-    FRIEND_TEST(PluginTest, AsyncLocal_Integration);
-    FRIEND_TEST(PluginTest, SyncLocal_Integration);
+    FRIEND_TEST(PluginTest, AsyncStartSimulation_Simulation);
+    FRIEND_TEST(PluginTest, AsyncDataPickup_Component);
+    FRIEND_TEST(PluginTest, AsyncLocal_Component);
+    FRIEND_TEST(PluginTest, SyncLocal_Component);
 
     FRIEND_TEST(PluginTest, Entry);
 #endif
@@ -630,27 +628,28 @@ void InsertInPluginMap(PluginMap &plugin_map, const PathVector &found_files);
 
 using UnitMap = std::unordered_map<std::string, cfg::Plugins::ExeUnit>;
 
-void RemoveDuplicatedEntriesByName(UnitMap &um, bool local);
+void RemoveDuplicatedEntriesByName(UnitMap &um, ExecType exec_type);
 std::vector<std::filesystem::path> RemoveDuplicatedFilesByName(
-    const std::vector<std::filesystem::path> &found_files, bool local);
+    const std::vector<std::filesystem::path> &found_files, ExecType exec_type);
 
 void ApplyEverythingToPluginMap(
-    PluginMap &plugin_map, const std::vector<cfg::Plugins::ExeUnit> &units,
-    const std::vector<std::filesystem::path> &found_files, bool local);
+    wtools::InternalUsersDb *iu, PluginMap &plugin_map,
+    const std::vector<cfg::Plugins::ExeUnit> &units,
+    const std::vector<std::filesystem::path> &found_files, ExecType exec_type);
 
 void FilterPluginMap(PluginMap &out_map, const PathVector &found_files);
 
 void RemoveDuplicatedPlugins(PluginMap &plugin_map, bool check_exists);
 
-void UpdatePluginMap(PluginMap &plugin_map, bool local,
-                     const PathVector &found_files,
+void UpdatePluginMap(wtools::InternalUsersDb *iu, PluginMap &plugin_map,
+                     ExecType exec_type, const PathVector &found_files,
                      const std::vector<cfg::Plugins::ExeUnit> &units,
                      bool check_exists);
 
-inline void UpdatePluginMap(PluginMap &plugin_map, bool local,
-                            const PathVector &found_files,
+inline void UpdatePluginMap(wtools::InternalUsersDb *iu, PluginMap &plugin_map,
+                            ExecType exec_type, const PathVector &found_files,
                             const std::vector<cfg::Plugins::ExeUnit> &units) {
-    return UpdatePluginMap(plugin_map, local, found_files, units, true);
+    return UpdatePluginMap(iu, plugin_map, exec_type, found_files, units, true);
 }
 
 void UpdatePluginMapCmdLine(PluginMap &plugin_map, srv::ServiceProcessor *sp);

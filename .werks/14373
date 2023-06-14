@@ -6,7 +6,7 @@ Date: 1655383546
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The AWS special agent was crashing if there was no log group for a
 lambda function.

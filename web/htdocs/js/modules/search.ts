@@ -1,11 +1,12 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
 import {call_ajax} from "ajax";
+import {resize_mega_menu_popup, toggle_popup} from "popup_menu";
 import {add_class, remove_class} from "utils";
-import {toggle_popup, resize_mega_menu_popup} from "popup_menu";
-var g_call_ajax_obj: null | XMLHttpRequest = null;
+
+let g_call_ajax_obj: null | XMLHttpRequest = null;
 
 class Search {
     id: string;
@@ -16,6 +17,7 @@ class Search {
     more_id: string;
     previous_timeout_id: number | null;
     current_search_position: number | null;
+
     constructor(id: string) {
         this.id = id;
         this.content_id = "content_inner_" + id;
@@ -32,7 +34,7 @@ class Search {
             Search.kill_previous_search();
             add_class(document.getElementById(this.clear_id), "clearable");
             this.display_search_results();
-            const obj = document.getElementById(this.search_id);
+            const obj = document.getElementById(this.search_id)!;
             add_class(obj, "search");
             g_call_ajax_obj = call_ajax(
                 "ajax_search_" +
@@ -45,7 +47,7 @@ class Search {
                         obj: obj,
                         menu_popup: document.getElementById(
                             "popup_menu_" + this.id
-                        ),
+                        )!,
                     },
                 }
             );
@@ -93,8 +95,15 @@ class Search {
         add_class(document.getElementById(this.content_id), "hidden");
     }
 
-    static handle_search_response(handler_data, ajax_response) {
-        const response = JSON.parse(ajax_response);
+    static handle_search_response(
+        handler_data: {obj: HTMLElement; menu_popup: HTMLElement},
+        ajax_response: string
+    ) {
+        const response: {
+            result_code: number;
+            result: string;
+            severity: string;
+        } = JSON.parse(ajax_response);
         if (response.result_code !== 0) {
             // TODO: Decide what to display in case of non-zero result code
             handler_data.obj.innerHTML =
@@ -119,8 +128,8 @@ class Search {
 const monitoring_search = new Search("monitoring");
 const setup_search = new Search("setup");
 
-export function on_input_search(id) {
-    let current_search: Search = get_current_search(id)!;
+export function on_input_search(id: string) {
+    const current_search: Search = get_current_search(id)!;
     if (current_search) {
         if (current_search.previous_timeout_id !== null) {
             clearTimeout(current_search.previous_timeout_id);
@@ -136,9 +145,9 @@ export function on_input_search(id) {
     }
 }
 
-export function on_click_show_all_topics(topic) {
-    let current_topic = document.getElementById(topic)!;
-    let topic_results = current_topic.getElementsByTagName("li");
+export function on_click_show_all_topics(topic: string) {
+    const current_topic = document.getElementById(topic)!;
+    const topic_results = current_topic.getElementsByTagName("li");
     remove_class(current_topic, "extended");
     add_class(current_topic, "extendable");
     remove_class(
@@ -154,9 +163,12 @@ export function on_click_show_all_topics(topic) {
     resize_mega_menu_popup(current_topic.closest(".main_menu_popup"));
 }
 
-export function on_click_show_all_results(topic, popup_menu_id) {
-    let current_topic = document.getElementById(topic)!;
-    let topic_results = current_topic.getElementsByTagName("li");
+export function on_click_show_all_results(
+    topic: string,
+    popup_menu_id: string
+) {
+    const current_topic = document.getElementById(topic)!;
+    const topic_results = current_topic.getElementsByTagName("li");
     remove_class(current_topic, "extendable");
     add_class(current_topic, "extended");
     add_class(
@@ -172,7 +184,7 @@ export function on_click_show_all_results(topic, popup_menu_id) {
     resize_mega_menu_popup(document.getElementById(popup_menu_id));
 }
 
-function get_current_search(id) {
+function get_current_search(id: string) {
     let current_search: null | Search = null;
 
     switch (id) {
@@ -189,8 +201,9 @@ function get_current_search(id) {
 
     return current_search;
 }
-export function on_click_reset(id) {
-    let current_search = get_current_search(id)!;
+
+export function on_click_reset(id: string) {
+    const current_search = get_current_search(id)!;
     if (current_search.has_search_query()) {
         (
             document.getElementById(current_search.input_id) as HTMLInputElement
@@ -207,9 +220,10 @@ export function on_click_reset(id) {
     );
     resize_mega_menu_popup(document.getElementById("popup_menu_" + id));
 }
-export function on_key_down(id) {
-    let current_search = get_current_search(id);
-    let current_key = (window.event as KeyboardEvent).key;
+
+export function on_key_down(id: string) {
+    const current_search = get_current_search(id);
+    const current_key = (window.event as KeyboardEvent).key;
 
     if (!(current_key || current_search)) {
         return;
@@ -219,12 +233,12 @@ export function on_key_down(id) {
         case "ArrowUp":
             move_current_search_position(
                 current_key == "ArrowDown" ? 1 : -1,
-                current_search
+                current_search!
             );
-            window.event!.preventDefault();
+            event!.preventDefault();
             break;
         case "Enter":
-            follow_current_search_query(current_search);
+            follow_current_search_query(current_search!);
             break;
         case "Escape":
             on_click_reset(id);
@@ -232,12 +246,13 @@ export function on_key_down(id) {
     }
 }
 
-function follow_current_search_query(current_search) {
+function follow_current_search_query(current_search: Search) {
     // Case 1: no specific result selected
     if (current_search.current_search_position === null) {
         // Regex endpoint for monitoring
         switch (current_search.id) {
             case "monitoring":
+                //@ts-ignore
                 top!.frames["main"].location.href =
                     "search_open.py?q=" +
                     encodeURIComponent(current_search.get_current_input());
@@ -271,14 +286,14 @@ function follow_current_search_query(current_search) {
     on_click_reset(current_search.id);
 }
 
-function move_current_search_position(step, current_search) {
+function move_current_search_position(step: number, current_search: Search) {
     if (current_search.current_search_position === null) {
         current_search.current_search_position = -1;
     }
 
     current_search.current_search_position += step;
 
-    let result_list = document
+    const result_list = document
         .getElementById(current_search.search_id)!
         .getElementsByTagName("li");
     if (!result_list) return;

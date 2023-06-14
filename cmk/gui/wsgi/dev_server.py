@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from __future__ import annotations
@@ -47,7 +47,6 @@ def running_in_ide() -> bool:
 
 
 class ColorizingFormatter(logging.Formatter):
-
     grey = "\x1b[38;20m"
     yellow = "\x1b[33;20m"
     red = "\x1b[31;20m"
@@ -141,7 +140,7 @@ def prepare_dev_wsgi_app() -> WSGIApplication:
         logger.warning(os.environ.get("OMD_ROOT"))
         # We're nice and let the developer know.
         logger.warning("%s doesn't exist. No login possible.", file_name)
-        logger.warning("Create it using 'htpasswd -c %s $username'", file_name)
+        logger.warning("Create it using 'htpasswd -B -c %s cmkadmin'", file_name)
 
     from cmk.gui.wsgi.app import make_wsgi_app
 
@@ -219,22 +218,26 @@ def prepare_dev_wsgi_app() -> WSGIApplication:
 def main() -> None:
     setup_logging()
     args = parse_arguments()
-    from cmk.utils import paths, store
-
-    paths.web_dir = git_absolute("web")
-    paths.local_web_dir = pathlib.Path(git_absolute("web"))
-    paths.htpasswd_file = os.path.expanduser("~/.cmk-htpasswd")
-
-    # We need this to be able to automatically create a new user
-    store.makedirs(paths.profile_dir)
-    store.makedirs(paths.log_dir)
-
-    logger.warning("NOTE: If the design looks like it's missing CSS files, run 'make css'")
 
     with modified_environ(
         OMD_SITE="dev",
         OMD_ROOT=os.path.expanduser("~/.cmk-sites/dev-2.2"),
     ):
+        # IMPORTANT NOTE
+        # Any access on any path in the paths module will "bake" the path into the module.
+        # No further changes to "OMD_SITE" will have any effect then, thus we need to delay
+        # the first access as far as possible, after the environment variable has been set.
+        from cmk.utils import paths, store
+
+        paths.web_dir = git_absolute("web")
+        paths.local_web_dir = pathlib.Path(git_absolute("web"))
+        paths.htpasswd_file = os.path.expanduser("~/.cmk-htpasswd")
+
+        # We need this to be able to automatically create a new user
+        store.makedirs(paths.profile_dir)
+        store.makedirs(paths.log_dir)
+
+        logger.warning("NOTE: If the design looks like it's missing CSS files, run 'make css'")
         # Note we import and prepare everything within this context manager, because imports will
         # "materialize" with OMD_ROOT baked into it. If we import too soon, we will get wrong paths.
         wsgi_app = prepare_dev_wsgi_app()

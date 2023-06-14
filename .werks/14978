@@ -1,0 +1,14 @@
+Title: SAML: remove unsupported algorithms from metadata
+Class: fix
+Compatible: compat
+Component: setup
+Date: 1676930442
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Checkmk's service provider metadata endpoint listed algorithms that are not
+supported as supported algorithms for signing and digest methods. This has been
+fixed.
+

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 
 
 checkname = "veeam_tapejobs"
@@ -37,13 +37,13 @@ mock_item_state = {
 
 discovery = {
     "": [
-        ("Job One", "veeam_tapejobs_default_levels"),
-        ("Job Two", "veeam_tapejobs_default_levels"),
-        ("Job Three", "veeam_tapejobs_default_levels"),
-        ("Job Four", "veeam_tapejobs_default_levels"),
-        ("Job Five (older)", "veeam_tapejobs_default_levels"),
-        ("Job Six", "veeam_tapejobs_default_levels"),
-        ("Job Seven (older)", "veeam_tapejobs_default_levels"),
+        ("Job One", (86400, 172800)),
+        ("Job Two", (86400, 172800)),
+        ("Job Three", (86400, 172800)),
+        ("Job Four", (86400, 172800)),
+        ("Job Five (older)", (86400, 172800)),
+        ("Job Six", (86400, 172800)),
+        ("Job Seven (older)", (86400, 172800)),
     ],
 }
 

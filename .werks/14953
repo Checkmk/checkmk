@@ -1,0 +1,17 @@
+Title: Fix broken "Agent controller auto-registration" rule after site rename or copy
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1681370575
+Edition: cce
+Knowledge: doc
+Level: 2
+Version: 2.3.0b1
+
+Previously, after site rename or copy, the name of the site in the rule 
+"Agent controller auto-registration (Cloud Edition)" has not been changed 
+for the target site. This made baking the agent without fixing the rule 
+impossible.
+
+With this release the problem has been eliminated.
+

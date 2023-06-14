@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Host status
@@ -14,7 +14,7 @@ How to use the query DSL used in the `query` parameters of these endpoints, have
 These endpoints support all [Livestatus filter operators](https://docs.checkmk.com/latest/en/livestatus_references.html#heading_filter),
 which you can look up in the Checkmk documentation.
 
-For a detailed list of columns, please take a look at the [hosts table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/hosts.py)
+For a detailed list of columns, please take a look at the [hosts table](https://github.com/checkmk/checkmk/blob/master/cmk/utils/livestatus_helpers/tables/hosts.py)
 definition on GitHub.
 
 ### Examples
@@ -38,10 +38,11 @@ To search for hosts with specific tags set on them:
     {'op': '~', 'left': 'tag_names', 'right': 'windows'}
 
 """
+import ast
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, Generator, Sequence
 
-from cmk.utils.livestatus_helpers.queries import Query
+from cmk.utils.livestatus_helpers.queries import Query, ResultRow
 from cmk.utils.livestatus_helpers.tables import Hosts
 
 from cmk.gui import fields as gui_fields
@@ -54,7 +55,8 @@ from cmk.gui.plugins.openapi.restful_objects import (
     permissions,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.utils import serve_json
+from cmk.gui.plugins.openapi.restful_objects.type_defs import DomainObject
+from cmk.gui.plugins.openapi.utils import problem, serve_json
 
 from cmk import fields
 
@@ -82,7 +84,13 @@ class HostParameters(BaseSchema):
     columns = gui_fields.column_field(Hosts, mandatory=[Hosts.name], example=["name"])
 
 
-PERMISSIONS = permissions.Ignore(
+class SingleHostParameters(BaseSchema):
+    columns = gui_fields.column_field(
+        Hosts, mandatory=[Hosts.name], example=["name"], required=False
+    )
+
+
+PERMISSIONS = permissions.Undocumented(
     permissions.AnyPerm(
         [
             permissions.Perm("general.see_all"),
@@ -110,7 +118,8 @@ def list_hosts(params: Mapping[str, Any]) -> Response:
     if sites_to_query:
         live.only_sites = sites_to_query
 
-    q = Query(params["columns"])
+    columns = params["columns"]
+    q = Query(columns)
 
     query_expr = params.get("query")
     if query_expr:
@@ -118,19 +127,84 @@ def list_hosts(params: Mapping[str, Any]) -> Response:
 
     result = q.iterate(live)
 
+    # We have to special case the inventory column, as they as dicts stored as bytes in livestatus
+    if contains_an_inventory_colum(columns):
+        result = fixup_inventory_column(result)
+
     return serve_json(
         constructors.collection_object(
             domain_type="host",
-            value=[
-                constructors.domain_object(
-                    domain_type="host",
-                    title=f"{entry['name']}",
-                    identifier=entry["name"],
-                    editable=False,
-                    deletable=False,
-                    extensions=entry,
-                )
-                for entry in result
-            ],
+            value=[_host_object(entry["name"], entry) for entry in result],
         )
     )
+
+
+@Endpoint(
+    constructors.object_href("host", "{host_name}"),
+    "cmk/show",
+    method="get",
+    tag_group="Monitoring",
+    blacklist_in=["swagger-ui"],
+    path_params=[
+        {
+            "host_name": gui_fields.HostField(
+                description="The host name",
+                should_exist=None,
+                example="example.com",
+                required=True,
+            ),
+        }
+    ],
+    query_params=[SingleHostParameters],
+    response_schema=response_schemas.DomainObject,
+    permissions_required=PERMISSIONS,
+)
+def show_host(params: Mapping[str, Any]) -> Response:
+    """Show host"""
+    live = sites.live()
+    host_name = params["host_name"]
+
+    q = Query(
+        columns=params.get("columns", [Hosts.name, Hosts.alias, Hosts.address]),
+        filter_expr=Hosts.name.op("=", host_name),
+    )
+
+    try:
+        host = q.fetchone(live)
+    except ValueError:
+        return problem(
+            status=404,
+            title="The requested host was not found",
+            detail=f"The host name {host_name} did not match any host",
+        )
+    return serve_json(_host_object(host_name, host))
+
+
+def _host_object(host_name: str, host: dict) -> DomainObject:
+    return constructors.domain_object(
+        domain_type="host",
+        identifier=host_name,
+        title=host_name,
+        extensions=host,
+        editable=False,
+        deletable=False,
+    )
+
+
+INVENTORY_COLUMN = "mk_inventory"
+
+
+def contains_an_inventory_colum(columns: Sequence[str]) -> bool:
+    return INVENTORY_COLUMN in columns
+
+
+def fixup_inventory_column(
+    result: Generator[ResultRow, None, None]
+) -> Generator[ResultRow, None, None]:
+    for row in result:
+        if (inventory_data := row.get(INVENTORY_COLUMN)) is not None:
+            copy = dict(row)
+            copy[INVENTORY_COLUMN] = ast.literal_eval(inventory_data.decode("utf-8"))
+            yield ResultRow(copy)
+        else:
+            yield row

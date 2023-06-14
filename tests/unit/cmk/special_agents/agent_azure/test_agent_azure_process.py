@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Mapping, Sequence
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -20,17 +20,19 @@ from cmk.special_agents.agent_azure import (
     LabelsSection,
     MgmtApiClient,
     process_resource,
+    process_resource_health,
     process_vm,
     Section,
     usage_details,
     write_group_info,
+    write_remaining_reads,
     write_section_ad,
 )
 
 pytestmark = pytest.mark.checks
 
 
-class MockMgmtApiClient:
+class MockMgmtApiClient(MgmtApiClient):
     def __init__(
         self,
         resource_groups: Sequence[Mapping[str, Any]],
@@ -38,18 +40,24 @@ class MockMgmtApiClient:
         ratelimit: float,
         usage_data: Sequence[object] | None = None,
         usage_details_exception: Exception | None = None,
+        resource_health: object | None = None,
+        resource_health_exception: Exception | None = None,
     ) -> None:
         self.resource_groups = resource_groups
         self.vmviews = vmviews
         self.rate_limit = ratelimit
         self.usage_data = usage_data if usage_data else []
         self.usage_details_exception = usage_details_exception
+        self.resource_health = resource_health
+        self.resource_health_exception = resource_health_exception
+
+        super().__init__("1234")
 
     def resourcegroups(self) -> Sequence[Mapping[str, Any]]:
         return self.resource_groups
 
-    def vmview(self, group_name: str, vm_name: str) -> Mapping[str, Sequence[Mapping[str, str]]]:
-        return self.vmviews[group_name][vm_name]
+    def vmview(self, group: str, name: str) -> Mapping[str, Sequence[Mapping[str, str]]]:
+        return self.vmviews[group][name]
 
     @property
     def ratelimit(self) -> float:
@@ -60,6 +68,12 @@ class MockMgmtApiClient:
             raise self.usage_details_exception
 
         return self.usage_data
+
+    def resource_health_view(self) -> object:
+        if self.resource_health_exception is not None:
+            raise self.resource_health_exception
+
+        return self.resource_health
 
 
 @pytest.mark.parametrize(
@@ -277,7 +291,6 @@ def test_get_vm_labels_section(
                         '{"my-unique-tag": "unique", "tag4all": "True", "my-resource-tag": "my-resource-value", "resource_group": "BurningMan", "cmk/azure/vm": "instance"}\n'
                     ],
                 ),
-                (AzureSection, [""], ["remaining-reads|2.0\n"]),
                 (
                     AzureSection,
                     ["MyVM"],
@@ -328,7 +341,6 @@ def test_get_vm_labels_section(
                 services=["Microsoft.Compute/virtualMachines"],
             ),
             [
-                (AzureSection, [""], ["remaining-reads|2.0\n"]),
                 (
                     AzureSection,
                     ["BurningMan"],
@@ -383,7 +395,9 @@ def test_get_vm_labels_section(
         ),
     ],
 )
+@patch("cmk.special_agents.agent_azure.gather_metrics", return_value=None)
 def test_process_resource(
+    mock_gather_metrics: MagicMock,
     mgmt_client: MgmtApiClient,
     resource_info: Mapping[str, Any],
     group_tags: GroupLabels,
@@ -518,10 +532,17 @@ def test_write_section_ad(enabled_services: list[str]) -> None:
         pytest.param(
             Args(debug=False, services=["usage_details"]),
             None,
+            ApiError("Customer does not have the privilege to see the cost (Request ID: xxxx)"),
+            "",
+            id="api error customer not privileged",
+        ),
+        pytest.param(
+            Args(debug=False, services=["usage_details"]),
+            None,
             ApiError("unknown offer"),
             "<<<<>>>>\n"
             "<<<azure_agent_info:sep(124)>>>\n"
-            'agent-bailout|[2, "get_usage_data: unknown offer"]\n'
+            'agent-bailout|[2, "Usage client: unknown offer"]\n'
             "<<<<>>>>\n"
             "<<<<test1>>>>\n"
             "<<<azure_usagedetails:sep(124)>>>\n"
@@ -538,7 +559,7 @@ def test_write_section_ad(enabled_services: list[str]) -> None:
             Exception(),
             "<<<<>>>>\n"
             "<<<azure_agent_info:sep(124)>>>\n"
-            'agent-bailout|[2, "get_usage_data: "]\n'
+            'agent-bailout|[2, "Usage client: "]\n'
             "<<<<>>>>\n"
             "<<<<test1>>>>\n"
             "<<<azure_usagedetails:sep(124)>>>\n"
@@ -555,14 +576,7 @@ def test_write_section_ad(enabled_services: list[str]) -> None:
             None,
             "<<<<>>>>\n"
             "<<<azure_agent_info:sep(124)>>>\n"
-            'agent-bailout|[2, "get_usage_data: Azure API did not return any usage details"]\n'
-            "<<<<>>>>\n"
-            "<<<<test1>>>>\n"
-            "<<<azure_usagedetails:sep(124)>>>\n"
-            "<<<<test2>>>>\n"
-            "<<<azure_usagedetails:sep(124)>>>\n"
-            "<<<<>>>>\n"
-            "<<<azure_usagedetails:sep(124)>>>\n"
+            'agent-bailout|[0, "Usage client: Azure API did not return any usage details"]\n'
             "<<<<>>>>\n",
             id="empty usage data",
         ),
@@ -681,7 +695,132 @@ def test_usage_details(
     )
     monitored_groups = ["test1", "test2"]
 
-    usage_details(mgmt_client, monitored_groups, args)  # type: ignore[arg-type]
+    usage_details(mgmt_client, monitored_groups, args)
 
     captured = capsys.readouterr()
     assert captured.out == expected_result
+
+
+@pytest.mark.parametrize(
+    "monitored_resources,resource_health,expected_output",
+    [
+        (
+            (
+                [
+                    AzureResource(
+                        {
+                            "id": "/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourceGroups/test1/providers/Microsoft.Compute/virtualMachines/VM-test-1",
+                            "name": "VM-test-1",
+                            "type": "Microsoft.Compute/virtualMachines",
+                            "location": "uksouth",
+                            "zones": ["1"],
+                            "subscription": "4db89361-bcd9-4353-8edb-33f49608d4fa",
+                            "group": "test1",
+                            "provider": "Microsoft.Compute",
+                        }
+                    )
+                ],
+                {
+                    "value": [
+                        {
+                            "id": "/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourcegroups/test1/providers/microsoft.compute/virtualmachines/vm-test-1/providers/Microsoft.ResourceHealth/availabilityStatuses/current",
+                            "name": "current",
+                            "type": "Microsoft.ResourceHealth/AvailabilityStatuses",
+                            "location": "uksouth",
+                            "properties": {
+                                "availabilityState": "Available",
+                                "title": "Available",
+                                "summary": "There aren't any known Azure platform problems affecting this virtual machine.",
+                                "reasonType": "",
+                                "category": "Not Applicable",
+                                "context": "Not Applicable",
+                                "occuredTime": "2023-02-09T16: 19: 01Z",
+                                "reasonChronicity": "Persistent",
+                                "reportedTime": "2023-02-22T15: 21: 41.7883795Z",
+                            },
+                        }
+                    ]
+                },
+                "<<<<test1>>>>\n"
+                "<<<azure_resource_health:sep(124)>>>\n"
+                '{"id": "/subscriptions/4db89361-bcd9-4353-8edb-33f49608d4fa/resourcegroups/test1/providers/microsoft.compute/virtualmachines/vm-test-1/providers/Microsoft.ResourceHealth/availabilityStatuses/current", "name": "virtualmachines/vm-test-1", "availabilityState": "Available", "summary": "There aren\'t any known Azure platform problems affecting this virtual machine.", "reasonType": "", "occuredTime": "2023-02-09T16: 19: 01Z"}\n'
+                "<<<<>>>>\n",
+            )
+        ),
+        (
+            (
+                [],
+                {"value": []},
+                "",
+            )
+        ),
+    ],
+)
+def test_process_resource_health(
+    capsys: pytest.CaptureFixture[str],
+    monitored_resources: Sequence[AzureResource],
+    resource_health: object,
+    expected_output: str,
+) -> None:
+    mgmt_client = MockMgmtApiClient([], {}, 0, resource_health=resource_health)
+
+    sections = list(
+        process_resource_health(
+            mgmt_client,
+            monitored_resources,
+            Args(debug=True, services=["Microsoft.Compute/virtualMachines"]),
+        )
+    )
+
+    for section in sections:
+        section.write()
+
+    captured = capsys.readouterr()
+    assert captured.out == expected_output
+
+
+def test_process_resource_health_request_error(capsys: pytest.CaptureFixture[str]) -> None:
+    mgmt_client = MockMgmtApiClient(
+        [], {}, 0, resource_health_exception=Exception("Request failed")
+    )
+
+    list(process_resource_health(mgmt_client, [], Args(debug=False)))
+
+    captured = capsys.readouterr()
+    assert captured.out == (
+        "<<<<>>>>\n"
+        "<<<azure_agent_info:sep(124)>>>\n"
+        'agent-bailout|[2, "Management client: Request failed"]\n'
+        "<<<<>>>>\n"
+    )
+
+
+def test_process_resource_health_request_error_debug(capsys: pytest.CaptureFixture[str]) -> None:
+    mgmt_client = MockMgmtApiClient(
+        [], {}, 0, resource_health_exception=Exception("Request failed")
+    )
+
+    with pytest.raises(Exception, match="Request failed"):
+        list(process_resource_health(mgmt_client, [], Args(debug=True)))
+
+
+@pytest.mark.parametrize(
+    "rate_limit,expected_output",
+    [
+        (
+            10000,
+            "<<<<>>>>\n<<<azure_agent_info:sep(124)>>>\nremaining-reads|10000\n<<<<>>>>\n",
+        ),
+        (
+            None,
+            "<<<<>>>>\n<<<azure_agent_info:sep(124)>>>\nremaining-reads|None\n<<<<>>>>\n",
+        ),
+    ],
+)
+def test_write_remaining_reads(
+    capsys: pytest.CaptureFixture[str], rate_limit: int | None, expected_output: str
+) -> None:
+    write_remaining_reads(rate_limit)
+
+    captured = capsys.readouterr()
+    assert captured.out == expected_output

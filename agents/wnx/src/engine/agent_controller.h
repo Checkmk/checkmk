@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -20,8 +20,9 @@ namespace cma::ac {
 constexpr std::string_view kLegacyPullFile{"allow-legacy-pull"};
 constexpr std::string_view kControllerFlagFile{"controller-flag"};
 constexpr std::string_view kCmkAgentUnistall{"cmk_agent_uninstall.txt"};
+// keep old definition here!
 constexpr std::string_view kCmkAgentMarkerNewDeprecated{
-    "Check MK monitoring and management Service - "};
+    "Check MK monitoring and management Service - "};  // Keep!
 constexpr std::string_view kCmkAgentMarkerLatest{
     "Checkmk monitoring agent service - "};
 constexpr std::string_view kCmdLineAsDaemon{"daemon"};

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Prior to this werk, services for cisco_cpu_multiitem & cisco_fru_module_status were
 wrongly discovered despite not having any relevant monitoring information. This werk

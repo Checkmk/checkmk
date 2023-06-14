@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -133,7 +133,7 @@ def page_graph():
     now = time.time()
     if from_time <= now <= until_time:
         timeseries = prediction.get_rrd_data(
-            host_name, service, dsname, "MAX", from_time, until_time
+            livestatus.LocalConnection(), host_name, service, dsname, "MAX", from_time, until_time
         )
         rrd_data = timeseries.values
 
@@ -249,8 +249,9 @@ def stack(apoints, bpoints, scale):
 def compute_vertical_range(swapped):
     mmin, mmax = 0.0, 0.0
     for points in swapped.values():
-        mmax = max(mmax, max(filter(None, points), default=0.0))
-        mmin = min(mmin, min(filter(None, points), default=0.0))
+        # NOTE: pylint emits false positives below
+        mmax = max(mmax, max(filter(None, points), default=0.0))  # pylint: disable=nested-min-max
+        mmin = min(mmin, min(filter(None, points), default=0.0))  # pylint: disable=nested-min-max
     return mmin, mmax
 
 
@@ -282,40 +283,40 @@ def create_graph(name, size, bounds, v_range, legend):
     )
 
 
-def render_coordinates(v_scala, t_scala) -> None:  # type:ignore[no-untyped-def]
+def render_coordinates(v_scala, t_scala) -> None:  # type: ignore[no-untyped-def]
     html.javascript(
         f"cmk.prediction.render_coordinates({json.dumps(v_scala)}, {json.dumps(t_scala)});"
     )
 
 
-def render_curve(points, color, width=1, square=False) -> None:  # type:ignore[no-untyped-def]
+def render_curve(points, color, width=1, square=False) -> None:  # type: ignore[no-untyped-def]
     html.javascript(
         "cmk.prediction.render_curve(%s, %s, %d, %d);"
         % (json.dumps(points), json.dumps(color), width, square and 1 or 0)
     )
 
 
-def render_point(t, v, color) -> None:  # type:ignore[no-untyped-def]
+def render_point(t, v, color) -> None:  # type: ignore[no-untyped-def]
     html.javascript(
         "cmk.prediction.render_point(%s, %s, %s);"
         % (json.dumps(t), json.dumps(v), json.dumps(color))
     )
 
 
-def render_area(points, color, alpha=1.0) -> None:  # type:ignore[no-untyped-def]
+def render_area(points, color, alpha=1.0) -> None:  # type: ignore[no-untyped-def]
     html.javascript(
         f"cmk.prediction.render_area({json.dumps(points)}, {json.dumps(color)}, {alpha:f});"
     )
 
 
-def render_area_reverse(points, color, alpha=1.0) -> None:  # type:ignore[no-untyped-def]
+def render_area_reverse(points, color, alpha=1.0) -> None:  # type: ignore[no-untyped-def]
     html.javascript(
         "cmk.prediction.render_area_reverse(%s, %s, %f);"
         % (json.dumps(points), json.dumps(color), alpha)
     )
 
 
-def render_dual_area(  # type:ignore[no-untyped-def]
+def render_dual_area(  # type: ignore[no-untyped-def]
     lower_points, upper_points, color, alpha=1.0
 ) -> None:
     html.javascript(

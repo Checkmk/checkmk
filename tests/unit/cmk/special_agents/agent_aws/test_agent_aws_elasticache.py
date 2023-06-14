@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -25,7 +25,7 @@ from cmk.special_agents.agent_aws import (
     ResultDistributor,
 )
 
-from .agent_aws_fake_clients import FakeCloudwatchClient
+from .agent_aws_fake_clients import FakeCloudwatchClient, FakeServiceQuotasClient
 
 GetSectionsCallable = Callable[
     [Sequence[str] | None, OverallTags], tuple[ElastiCacheLimits, ElastiCacheSummary, ElastiCache]
@@ -285,19 +285,6 @@ PARAMETER_GROUP_RESPONSE: Final[Sequence[Mapping[str, object]]] = [
     }
 ]
 
-TAGS: Final[Mapping[str, object]] = {
-    "arn:aws:elasticache:us-east-1:710145618630:replicationgroup:test-redis-cluster-2": {
-        "TagList": [
-            {"Key": "tag1", "Value": "value1"},
-        ]
-    },
-    "arn:aws:elasticache:us-east-1:710145618630:replicationgroup:test-redis-cluster-3": {
-        "TagList": [
-            {"Key": "tag2", "Value": "value2"},
-        ]
-    },
-}
-
 
 class Paginator:
     def __init__(self, function: str, cluster_response: Sequence[Mapping[str, object]]) -> None:
@@ -323,39 +310,30 @@ class FakeElastiCacheClient:
     def get_paginator(self, function: str) -> Paginator:
         return Paginator(function, self.cluster_response)
 
-    def list_tags_for_resource(self, ResourceName: str = "") -> object:
-        return TAGS.get(ResourceName, {"TagList": []})
 
-
-class FakeQuotaClient:
-    def list_service_quotas(self, ServiceCode: str) -> object:
-        return {
-            "Quotas": [
+class TaggingPaginator:
+    def paginate(self, *args, **kwargs):
+        yield {
+            "ResourceTagMappingList": [
                 {
-                    "ServiceCode": "elasticache",
-                    "ServiceName": "Amazon ElastiCache",
-                    "QuotaArn": "arn:aws:servicequotas:us-east-1:710145618630:elasticache/L-85EED4F7",
-                    "QuotaCode": "L-85EED4F7",
-                    "QuotaName": "Nodes per cluster per instance type (Redis cluster mode enabled)",
-                    "Value": 5,
-                    "Unit": "None",
-                    "Adjustable": True,
-                    "GlobalQuota": False,
-                }
-            ],
-            "ResponseMetadata": {
-                "RequestId": "3158f3b7-9788-4394-8d8c-ede95a113476",
-                "HTTPStatusCode": 200,
-                "HTTPHeaders": {
-                    "date": "Thu, 20 Oct 2022 08:10:44 GMT",
-                    "content-type": "application/x-amz-json-1.1",
-                    "content-length": "13",
-                    "connection": "keep-alive",
-                    "x-amzn-requestid": "3158f3b7-9788-4394-8d8c-ede95a113476",
+                    "ResourceARN": "arn:aws:elasticache:us-east-1:710145618630:replicationgroup:test-redis-cluster-2",
+                    "Tags": [{"Key": "tag1", "Value": "value1"}],
                 },
-                "RetryAttempts": 0,
-            },
+                {
+                    "ResourceARN": "arn:aws:elasticache:us-east-1:710145618630:replicationgroup:test-redis-cluster-3",
+                    "Tags": [
+                        {"Key": "tag2", "Value": "value2"},
+                    ],
+                },
+            ],
         }
+
+
+class FakeTaggingClient:
+    def get_paginator(self, operation_name):
+        if operation_name == "get_resources":
+            return TaggingPaginator()
+        raise NotImplementedError
 
 
 @pytest.fixture()
@@ -370,17 +348,19 @@ def get_elasticache_sections() -> GetSectionsCallable:
         fake_elasticache_client1 = FakeElastiCacheClient(CLUSTERS_RESPONSE1)
         fake_elasticache_client2 = FakeElastiCacheClient(CLUSTERS_RESPONSE2)
         fake_cloudwatch_client = FakeCloudwatchClient()
-        fake_quota_client = FakeQuotaClient()
+        fake_quota_client = FakeServiceQuotasClient()
+        fake_tagging_client = FakeTaggingClient()
 
         distributor = ResultDistributor()
 
+        # TODO: FakeElastiCacheClient shoud actually subclass ElastiCacheClient, etc.
         elasticache_limits = ElastiCacheLimits(
-            fake_elasticache_client1, region, config, distributor, fake_quota_client
+            fake_elasticache_client1, region, config, distributor, fake_quota_client  # type: ignore[arg-type]
         )
         elasticache_summary = ElastiCacheSummary(
-            fake_elasticache_client2, region, config, distributor
+            fake_elasticache_client2, fake_tagging_client, region, config, distributor  # type: ignore[arg-type]
         )
-        elasticache = ElastiCache(fake_cloudwatch_client, region, config)
+        elasticache = ElastiCache(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
 
         distributor.add(elasticache_limits.name, elasticache_summary)
         distributor.add(elasticache_summary.name, elasticache)
@@ -431,7 +411,8 @@ def test_agent_aws_elasticache_limits_without_quota_client() -> None:
     region = "region"
     config = AWSConfig("hostname", [], ([], []), NamingConvention.ip_region_instance)
     fake_elasticache_client = FakeElastiCacheClient(CLUSTERS_RESPONSE1)
-    elasticache_limits = ElastiCacheLimits(fake_elasticache_client, region, config)
+    # TODO: FakeElastiCacheClient shoud actually subclass ElastiCacheClient.
+    elasticache_limits = ElastiCacheLimits(fake_elasticache_client, region, config)  # type: ignore[arg-type]
 
     assert elasticache_limits.cache_interval == 300
     assert elasticache_limits.period == 600

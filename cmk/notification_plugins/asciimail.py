@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,6 +9,8 @@
 import sys
 from email.mime.text import MIMEText
 from typing import NoReturn
+
+from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
 
 from cmk.notification_plugins import utils
 
@@ -42,7 +44,6 @@ tmpl_alerthandler_service_body = "Service:  $SERVICEDESC$\n" + tmpl_alerthandler
 
 
 def construct_content(context: dict[str, str]) -> str:  # pylint: disable=too-many-branches
-
     # Create a notification summary in a new context variable
     # Note: This code could maybe move to cmk --notify in order to
     # make it available every in all notification scripts
@@ -128,6 +129,8 @@ def main() -> NoReturn:
         content_txt = ""
         parameters, contexts = utils.read_bulk_contexts()
         hosts = set()
+        mailto = ""
+        subject = ""
         for context in contexts:
             context.update(parameters)
             content_txt += construct_content(context)
@@ -153,17 +156,23 @@ def main() -> NoReturn:
     # Create the mail and send it
     from_address = utils.format_address(
         context.get("PARAMETER_FROM_DISPLAY_NAME", ""),
-        context.get("PARAMETER_FROM_ADDRESS", utils.default_from_address()),
+        context.get("PARAMETER_FROM_ADDRESS", default_from_address()),
     )
     reply_to = utils.format_address(
         context.get("PARAMETER_REPLY_TO_DISPLAY_NAME", ""),
         context.get("PARAMETER_REPLY_TO_ADDRESS", ""),
     )
-    m = utils.set_mail_headers(
-        mailto, subject, from_address, reply_to, MIMEText(content_txt, "plain", _charset="utf-8")
+    m = set_mail_headers(
+        MailString(mailto),
+        MailString(subject),
+        MailString(from_address),
+        MailString(reply_to),
+        MIMEText(content_txt, "plain", _charset="utf-8"),
     )
     try:
-        sys.exit(utils.send_mail_sendmail(m, mailto, from_address))
+        send_mail_sendmail(m, MailString(mailto), MailString(from_address))
+        sys.stdout.write("Spooled mail to local mail transmission agent\n")
+        sys.exit(0)
     except Exception as e:
         sys.stderr.write("Unhandled exception: %s\n" % e)
         # unhandled exception, don't retry this...

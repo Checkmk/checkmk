@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -35,7 +35,7 @@ def agent_elasticsearch_main(args: Args) -> int:
                 auth = (args.user, args.password) if args.user and args.password else None
                 certcheck = not args.no_cert_check
                 try:
-                    response = requests.get(url, auth=auth, verify=certcheck)
+                    response = requests.get(url, auth=auth, verify=certcheck)  # nosec B113
                 except requests.exceptions.RequestException as e:
                     sys.stderr.write("Error: %s\n" % e)
                     if args.debug:
@@ -52,7 +52,6 @@ def agent_elasticsearch_main(args: Args) -> int:
 
 
 def parse_arguments(argv: Sequence[str] | None) -> Args:
-
     parser = create_default_argument_parser(description=__doc__)
 
     parser.add_argument("-u", "--user", default=None, help="Username for elasticsearch login")
@@ -131,9 +130,7 @@ def handle_nodes(response: Mapping[str, object]) -> None:
                     node_response.name, node_response.process.max_file_descriptors
                 )
             )
-            writer.append(
-                "{} cpu_percent {}".format(node_response.name, node_response.process.cpu.percent)
-            )
+            writer.append(f"{node_response.name} cpu_percent {node_response.process.cpu.percent}")
             writer.append(
                 "{} cpu_total_in_millis {}".format(
                     node_response.name, node_response.process.cpu.total_in_millis

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If a scaleio device had missing information like error state (ERR_STATE),
 state (STATE) or storage pool id (STORAGE_POOL_ID) the check would crash.

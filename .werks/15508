@@ -1,0 +1,15 @@
+Title: time_period: verify time_period usages before deletion
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1679319960
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, the REST API did not check whether a time period to be
+deleted was referenced by other objects. This caused a conflict after deletion.
+This werk fixes this by preventing the REST API from performing a deletion if
+the time period is currently being referenced.
+

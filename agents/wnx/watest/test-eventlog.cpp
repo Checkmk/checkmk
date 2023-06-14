@@ -40,7 +40,7 @@ TEST(EventLogTest, ChoosePos) {
     EXPECT_EQ(choosePos(cfg::kFromBegin), 0);
 }
 
-TEST(EventLogTest, ScanEventLogIntegration) {
+TEST(EventLogTest, ScanEventLogComponent) {
     for (auto vista_mode : {false, true}) {
         auto ptr = OpenEvl(L"Application", vista_mode);
         ASSERT_TRUE(ptr != nullptr);
@@ -106,13 +106,13 @@ TEST(EventLogTest, PrintEventLogOffset) {
     EXPECT_EQ(table.size(), ApplicationLogData().size() - 3);
 }
 
-TEST(EventLogTest, PrintEventLogIntegration) {
+TEST(EventLogTest, PrintEventLogComponent) {
     for (auto vista_mode : {false, true}) {
         auto ptr = OpenEvl(L"Application", vista_mode);
         ASSERT_TRUE(ptr != nullptr);
 
         std::string str;
-        auto last = PrintEventLog(
+        const auto last = PrintEventLog(
             *ptr, 0, cfg::EventLevels::kCrit, false, SkipDuplicatedRecords::no,
             [&str](const std::string &in) {
                 str += in;
@@ -122,19 +122,19 @@ TEST(EventLogTest, PrintEventLogIntegration) {
         EXPECT_TRUE(!str.empty());
         {
             std::string str;
-            auto last = PrintEventLog(*ptr, 0, cfg::EventLevels::kCrit, false,
-                                      SkipDuplicatedRecords::no,
-                                      [&str](const std::string &in) {
-                                          str += in;
-                                          return str.length() < 10'000;
-                                      });
+            const auto last = PrintEventLog(*ptr, 0, cfg::EventLevels::kCrit,
+                                            false, SkipDuplicatedRecords::no,
+                                            [&str](const std::string &in) {
+                                                str += in;
+                                                return str.length() < 10'000;
+                                            });
             EXPECT_TRUE(last > 0);
             EXPECT_TRUE(str.size() >= 100);
         }
     }
 }
 
-TEST(EventLogTest, BeginningOfTheHardwareLogIntegration) {
+TEST(EventLogTest, BeginningOfTheHardwareLogComponent) {
     auto ptr = OpenEvl(L"HardwareEvents", false);
     std::string str;
     const auto last =
@@ -147,7 +147,7 @@ TEST(EventLogTest, BeginningOfTheHardwareLogIntegration) {
     EXPECT_TRUE(str.empty());
 }
 
-TEST(EventLogTest, BeginningOfTheApplicationLogIntegration) {
+TEST(EventLogTest, BeginningOfTheApplicationLogComponent) {
     auto ptr = OpenEvl(L"Application", false);
     std::string str;
     auto _ =

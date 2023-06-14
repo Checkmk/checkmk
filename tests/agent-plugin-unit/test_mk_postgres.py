@@ -1,18 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import copy
-
 # pylint: disable=protected-access,redefined-outer-name
+
+import copy
 import sys
 
 import pytest
 from mock import Mock, patch
 
-import agents.plugins.mk_postgres as mk_postgres
+if sys.version_info[0] == 2:
+    import agents.plugins.mk_postgres_2 as mk_postgres  # pylint: disable=syntax-error
+else:
+    import agents.plugins.mk_postgres as mk_postgres
 
 try:
     from typing import Dict, Optional  # noqa: F401
@@ -41,6 +44,11 @@ VALID_CONFIG_WITH_INSTANCES = [
     "DBUSER=user_yz",
     "INSTANCE=/home/postgres/db1.env{sep}USER_NAME{sep}/PATH/TO/.pgpass",
 ]
+VALID_CONFIG_WITH_PG_BINARY_PATH = [
+    "PG_BINARY_PATH=C:\\PostgreSQL\\15\\bin\\psql.exe",
+    "",
+    "DBUSER=user_xy",
+]
 PG_PASSFILE = ["myhost:myport:mydb:myusr:mypw"]
 
 #   .--tests---------------------------------------------------------------.
@@ -55,7 +63,7 @@ PG_PASSFILE = ["myhost:myport:mydb:myusr:mypw"]
 
 class TestNotImplementedOS:
     @pytest.fixture(autouse=True)
-    def is_not_implemented_os(self, monkeypatch) -> None:  # type:ignore[no-untyped-def]
+    def is_not_implemented_os(self, monkeypatch) -> None:  # type: ignore[no-untyped-def]
         monkeypatch.setattr(mk_postgres, "IS_WINDOWS", False)
         monkeypatch.setattr(mk_postgres, "IS_LINUX", False)
 
@@ -70,7 +78,7 @@ class TestNotImplementedOS:
 
 class TestLinux:
     @pytest.fixture(autouse=True)
-    def is_linux(self, monkeypatch) -> None:  # type:ignore[no-untyped-def]
+    def is_linux(self, monkeypatch) -> None:  # type: ignore[no-untyped-def]
         monkeypatch.setattr(mk_postgres, "IS_WINDOWS", False)
         monkeypatch.setattr(mk_postgres, "IS_LINUX", True)
         monkeypatch.setattr(
@@ -106,7 +114,7 @@ class TestLinux:
             "pg_passfile": "/home/.pgpass",
             "pg_version": "12.3",
         }  # type: Dict[str, Optional[str]]
-        myPostgresOnLinux = mk_postgres.postgres_factory("postgres", instance)
+        myPostgresOnLinux = mk_postgres.postgres_factory("postgres", None, instance)
 
         assert myPostgresOnLinux.psql_binary_path == "usr/mydb-12.3/bin"
 
@@ -114,9 +122,21 @@ class TestLinux:
         self,
     ):
         sep = mk_postgres.helper_factory().get_conf_sep()
-        dbuser, instances = mk_postgres.parse_postgres_cfg(VALID_CONFIG_WITHOUT_INSTANCE, sep)
+        dbuser, _pg_path, instances = mk_postgres.parse_postgres_cfg(
+            VALID_CONFIG_WITHOUT_INSTANCE, sep
+        )
         assert dbuser == "user_xy"
         assert len(instances) == 0
+
+    def test_config_with_binary_path(
+        self,
+    ):
+        sep = mk_postgres.helper_factory().get_conf_sep()
+        dbuser, pg_binary, _instances = mk_postgres.parse_postgres_cfg(
+            VALID_CONFIG_WITH_PG_BINARY_PATH, sep
+        )
+        assert dbuser == "user_xy"
+        assert pg_binary == "C:\\PostgreSQL\\15\\bin\\psql.exe"
 
     def test_config_with_instance(
         self,
@@ -124,7 +144,7 @@ class TestLinux:
         config = copy.deepcopy(VALID_CONFIG_WITH_INSTANCES)
         config[-1] = config[-1].format(sep=SEP_LINUX)
         sep = mk_postgres.helper_factory().get_conf_sep()
-        dbuser, instances = mk_postgres.parse_postgres_cfg(config, sep)
+        dbuser, _pg_path, instances = mk_postgres.parse_postgres_cfg(config, sep)
         assert dbuser == "user_yz"
         assert len(instances) == 1
         assert instances[0]["pg_port"] == "5432"
@@ -154,7 +174,7 @@ class TestLinux:
             "pg_port": "5432",
             "pg_passfile": "",
         }  # type: Dict[str, Optional[str]]
-        myPostgresOnLinux = mk_postgres.postgres_factory("postgres", instance)
+        myPostgresOnLinux = mk_postgres.postgres_factory("postgres", None, instance)
 
         assert isinstance(myPostgresOnLinux, mk_postgres.PostgresLinux)
         assert myPostgresOnLinux.psql_binary_path == "/usr/lib/postgres/psql"
@@ -189,7 +209,7 @@ class TestLinux:
         }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
-        myPostgresOnLinux = mk_postgres.postgres_factory("postgres", instance)
+        myPostgresOnLinux = mk_postgres.postgres_factory("postgres", None, instance)
 
         assert isinstance(myPostgresOnLinux, mk_postgres.PostgresLinux)
         assert myPostgresOnLinux.psql_binary_path == "/mydb/12.3/bin/psql"
@@ -226,7 +246,7 @@ class TestLinux:
         }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
-        myPostgresOnLinux = mk_postgres.postgres_factory("postgres", instance)
+        myPostgresOnLinux = mk_postgres.postgres_factory("postgres", None, instance)
 
         process_mock = Mock()
         attrs = {
@@ -285,7 +305,7 @@ class TestLinux:
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
 
-        myPostgresOnLinux = mk_postgres.postgres_factory("postgres", instance)
+        myPostgresOnLinux = mk_postgres.postgres_factory("postgres", None, instance)
         process_mock = Mock()
 
         proc_list = []
@@ -312,7 +332,7 @@ class TestLinux:
 
 class TestWindows:
     @pytest.fixture(autouse=True)
-    def is_windows(self, monkeypatch) -> None:  # type:ignore[no-untyped-def]
+    def is_windows(self, monkeypatch) -> None:  # type: ignore[no-untyped-def]
         monkeypatch.setattr(mk_postgres, "IS_WINDOWS", True)
         monkeypatch.setattr(mk_postgres, "IS_LINUX", False)
         monkeypatch.setattr(
@@ -346,7 +366,7 @@ class TestWindows:
         config = copy.deepcopy(VALID_CONFIG_WITH_INSTANCES)
         config[-1] = config[-1].format(sep=SEP_WINDOWS)
         sep = mk_postgres.helper_factory().get_conf_sep()
-        dbuser, instances = mk_postgres.parse_postgres_cfg(config, sep)
+        dbuser, _pg_path, instances = mk_postgres.parse_postgres_cfg(config, sep)
         assert len(instances) == 1
         assert dbuser == "user_yz"
         assert instances[0]["pg_port"] == "5432"
@@ -357,9 +377,7 @@ class TestWindows:
 
     @patch("os.path.isfile", return_value=True)
     @patch("subprocess.Popen")
-    def test_factory_without_instance(  # type:ignore[no-untyped-def]
-        self, mock_Popen, mock_isfile
-    ) -> None:
+    def test_factory_without_instance(self, mock_Popen: Mock, mock_isfile: Mock) -> None:
         process_mock = Mock()
         attrs = {
             "communicate.side_effect": [
@@ -376,7 +394,7 @@ class TestWindows:
             "pg_user": "myuser",
             "pg_passfile": "/home/.pgpass",
         }  # type: Dict[str, Optional[str]]
-        myPostgresOnWin = mk_postgres.postgres_factory("postgres", instance)
+        myPostgresOnWin = mk_postgres.postgres_factory("postgres", None, instance)
 
         mock_isfile.assert_called_with("C:\\Program Files\\PostgreSQL\\12\\bin\\psql.exe")
         assert isinstance(myPostgresOnWin, mk_postgres.PostgresWin)
@@ -414,7 +432,7 @@ class TestWindows:
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
 
-        myPostgresOnWin = mk_postgres.postgres_factory("postgres", instance)
+        myPostgresOnWin = mk_postgres.postgres_factory("postgres", None, instance)
 
         mock_isfile.assert_called_with("C:\\Program Files\\PostgreSQL\\12\\bin\\psql.exe")
         assert isinstance(myPostgresOnWin, mk_postgres.PostgresWin)

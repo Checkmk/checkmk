@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -23,7 +23,7 @@ from typing import Final, NoReturn
 
 from cmk.utils import msi_patch
 
-PRODUCT_NAME: Final = "Check MK Agent 2.1"
+PRODUCT_NAME: Final = "Check MK Agent 2.2"
 AGENT_STANDARD_MSI_FILE: Final = "check_mk_agent.msi"
 AGENT_UNSIGNED_MSI_FILE: Final = "check_mk_agent_unsigned.msi"
 _APPLY_PATCH_SCRIPT: Final = "apply_unsign_msi_patch.sh"

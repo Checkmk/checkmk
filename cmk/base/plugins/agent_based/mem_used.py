@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -26,7 +26,7 @@ class MemBytes(
         "MemBytes", [("bytes", int), ("kb", float), ("mb", float)]
     )
 ):
-    def __new__(cls, value: Union[float, int]):  # type:ignore[no-untyped-def]
+    def __new__(cls, value: Union[float, int]):  # type: ignore[no-untyped-def]
         return super().__new__(cls, int(value * 1024), float(value), value / 1024.0)
 
     def render(self) -> str:

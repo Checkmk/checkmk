@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -37,7 +37,7 @@ def parse_device_status(string_table: StringTable) -> DeviceStatus | None:
 
 
 register.agent_section(
-    name="cisco_meraki_org_device",
+    name="cisco_meraki_org_device_status",
     parse_function=parse_device_status,
 )
 
@@ -70,7 +70,6 @@ def check_device_status(section: DeviceStatus | None) -> CheckResult:
 
 register.check_plugin(
     name="cisco_meraki_org_device_status",
-    sections=["cisco_meraki_org_device"],
     service_name="Cisco Meraki Device Status",
     discovery_function=discover_device_status,
     check_function=check_device_status,

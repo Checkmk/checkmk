@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,7 +11,6 @@
 import abc
 import datetime
 import time
-from typing import Any
 
 from dateutil.relativedelta import relativedelta
 from dateutil.rrule import DAILY, MONTHLY, rrule, WEEKLY
@@ -128,7 +127,7 @@ class EndMonthSchedule(Schedule):
         return relativedelta(months=-2)
 
 
-def _get_schedule(period: str | tuple[str, Any], timeofday: tuple[int, int]) -> Schedule:
+def _get_schedule(period: str | tuple[str, int], timeofday: tuple[int, int]) -> Schedule:
     """
     Returns a schedule instance for a given period and timeofday.
     """
@@ -137,20 +136,18 @@ def _get_schedule(period: str | tuple[str, Any], timeofday: tuple[int, int]) -> 
     if period == "day":
         return DaySchedule(t)
     assert isinstance(period, tuple)
-    if period[0] == "week":
-        weekday = period[1]
-        return WeekSchedule(weekday, t)
-    if period[0] == "month_begin":
-        day = period[1]
-        return StartMonthSchedule(day, t)
-    if period[0] == "month_end":
-        days_from_end = period[1]
-        return EndMonthSchedule(days_from_end, t)
+    match period[0]:
+        case "week":
+            return WeekSchedule(period[1], t)
+        case "month_begin":
+            return StartMonthSchedule(period[1], t)
+        case "month_end":
+            return EndMonthSchedule(period[1], t)
     raise ValueError("Unknown period")
 
 
 def last_scheduled_time(
-    period: str | tuple[str, Any], timeofday: tuple[int, int], dt: datetime.datetime | None = None
+    period: str | tuple[str, int], timeofday: tuple[int, int], dt: datetime.datetime | None = None
 ) -> float:
     if dt is None:
         dt = datetime.datetime.today()
@@ -160,7 +157,7 @@ def last_scheduled_time(
 
 # Timeofday
 def next_scheduled_time(
-    period: str | tuple[str, Any], timeofday: tuple[int, int], dt: datetime.datetime | None = None
+    period: str | tuple[str, int], timeofday: tuple[int, int], dt: datetime.datetime | None = None
 ) -> float:
     if dt is None:
         dt = datetime.datetime.today()

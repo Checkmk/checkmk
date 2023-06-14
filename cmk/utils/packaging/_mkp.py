@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This file provides an abstraction of the internal MKP structure"""
@@ -19,7 +19,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Extra, Field
 
-from ._type_defs import PackageException, PackageID, PackageName, PackageVersion
+from ._type_defs import PackageError, PackageID, PackageName, PackageVersion
 
 _logger = logging.getLogger(__name__)
 
@@ -119,10 +119,10 @@ def extract_manifest(file_content: bytes) -> Manifest:
     with tarfile.open(fileobj=BytesIO(file_content), mode="r:gz") as tar:
         try:
             if (extracted_file := tar.extractfile("info")) is None:
-                raise PackageException("'info' is not a regular file")
+                raise PackageError("'info' is not a regular file")
             raw_info = extracted_file.read()
         except KeyError:
-            raise PackageException("'info' not contained in MKP")
+            raise PackageError("'info' not contained in MKP")
     return Manifest.parse_python_string(raw_info.decode())
 
 
@@ -150,10 +150,9 @@ def _extract_manifest_cached(package_path: Path, mtime: float) -> Manifest:
 
 def create_mkp(
     manifest: Manifest,
-    version_packaged: str,
     site_paths: Callable[[PackagePart], Path],
+    version_packaged: str,
 ) -> bytes:
-
     manifest = Manifest(
         title=manifest.title,
         name=manifest.name,
@@ -245,7 +244,6 @@ def _extract_tgz(mkp: bytes, content: Iterable[tuple[str, Path, Iterable[Path]]]
 
 
 def _extract_tar(tar: tarfile.TarFile, name: str, dst: Path, filenames: Iterable[Path]) -> None:
-
     _logger.debug("  Extracting '%s':", name)
     for fn in filenames:
         _logger.debug("    %s", fn)
@@ -257,7 +255,7 @@ def _extract_tar(tar: tarfile.TarFile, name: str, dst: Path, filenames: Iterable
 
     tarsource = tar.extractfile(name)
     if tarsource is None:
-        raise PackageException("Failed to open %s" % name)
+        raise PackageError("Failed to open %s" % name)
 
     # Important: Do not preserve the tared timestamp.
     # Checkmk needs to know when the files have been installed for cache invalidation.
@@ -268,7 +266,7 @@ def _extract_tar(tar: tarfile.TarFile, name: str, dst: Path, filenames: Iterable
         close_fds=True,
     ) as tardest:
         if tardest.stdin is None:
-            raise PackageException("Failed to open stdin")
+            raise PackageError("Failed to open stdin")
 
         while True:
             data = tarsource.read(4096)

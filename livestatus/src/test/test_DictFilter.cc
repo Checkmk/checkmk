@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -8,8 +8,6 @@
 #include <sstream>
 #include <string>
 
-#include "Comment.h"  // IWYU pragma: keep
-#include "CustomAttributeMap.h"
 #include "gtest/gtest.h"
 #include "livestatus/Column.h"
 #include "livestatus/DictColumn.h"
@@ -19,7 +17,8 @@
 #include "livestatus/Row.h"
 #include "livestatus/User.h"
 #include "livestatus/opids.h"
-#include "nagios.h"
+#include "neb/Comment.h"  // IWYU pragma: keep
+#include "neb/NebHost.h"
 #include "test_utilities.h"
 
 namespace {
@@ -34,13 +33,15 @@ std::string b16encode(const std::string &str) {
 }
 
 struct DictFilterTest : public ::testing::Test {
-    bool accepts(AttributeKind kind, const std::string &value) {
-        DictColumn<host> cvdc{"name", "description", ColumnOffsets{},
-                              CustomAttributeMap{kind}};
+    bool accepts(AttributeKind kind, const std::string &value) const {
+        DictColumn<IHost> cvdc{
+            "name", "description", ColumnOffsets{},
+            [kind](const IHost &r) { return r.attributes(kind); }};
         const DictFilter filter{Filter::Kind::row, "name",
                                 [&cvdc](Row row) { return cvdc.getValue(row); },
                                 RelationalOperator::equal, value};
-        return filter.accepts(Row{&test_host}, NoAuthUser{}, {});
+        NebHost h{test_host};
+        return filter.accepts(Row{&h}, NoAuthUser{}, {});
     }
 
     TestHost test_host{

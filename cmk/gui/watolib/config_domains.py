@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
 import os
+import shutil
 import signal
 import subprocess
 import traceback
@@ -34,16 +35,16 @@ from cmk.gui.config import active_config, get_default_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, get_language_alias, is_community_translation
 from cmk.gui.log import logger
-from cmk.gui.plugins.watolib.utils import (
+from cmk.gui.site_config import is_wato_slave_site
+from cmk.gui.userdb import load_users, save_users
+from cmk.gui.watolib.audit_log import log_audit
+from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
+    ConfigDomainName,
     DomainRequest,
     generate_hosts_to_update_settings,
     SerializedSettings,
 )
-from cmk.gui.site_config import is_wato_slave_site
-from cmk.gui.userdb import load_users, save_users
-from cmk.gui.watolib.audit_log import log_audit
-from cmk.gui.watolib.config_domain_name import ConfigDomainName
 from cmk.gui.watolib.utils import liveproxyd_config_dir, multisite_dir, wato_root_dir
 
 
@@ -53,7 +54,7 @@ class ConfigDomainCoreSettings:
 
     def validate(self) -> None:
         for hostname in self.hosts_to_update:
-            if not isinstance(hostname, HostName):
+            if not isinstance(hostname, str):
                 raise MKGeneralException(f"Invalid hostname type in ConfigDomain: {self}")
 
     def __post_init__(self) -> None:
@@ -72,9 +73,9 @@ class ConfigDomainCore(ABCConfigDomain):
         # Import cycle
         from cmk.gui.watolib.check_mk_automations import reload, restart
 
-        return {"restart": restart, "reload": reload,}[
-            active_config.wato_activation_method
-        ](self._parse_settings(settings).hosts_to_update).config_warnings
+        return {"restart": restart, "reload": reload}[active_config.wato_activation_method](
+            self._parse_settings(settings).hosts_to_update
+        ).config_warnings
 
     def _parse_settings(
         self, activate_settings: SerializedSettings | None
@@ -141,6 +142,16 @@ class ConfigDomainGUI(ABCConfigDomain):
                     )
                     user_config.pop("language", None)
             save_users(users, datetime.now())
+
+        if active_config.wato_use_git and shutil.which("git") is None:
+            raise MKUserError(
+                "",
+                _(
+                    "'git' command was not found on this system, but it is requried for versioning the configuration."
+                    "Please either install 'git' or disable git configuration tracking in WATO."
+                ),
+            )
+
         return warnings
 
     def default_globals(self) -> Mapping[str, Any]:
@@ -266,10 +277,10 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             },
         )
 
-        # We need to activate this immediately to make syncs to WATO slave sites
+        # We need to activate this immediately to make syncs to Setup slave sites
         # possible right after changing the option
         #
-        # Since this can be called from any WATO page it is not possible to report
+        # Since this can be called from any Setup page it is not possible to report
         # errors to the user here. The self._update_trusted_cas() method logs the
         # errors - this must be enough for the moment.
         if not site_specific and custom_site_path is None:
@@ -292,7 +303,7 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                 % (self.trusted_cas_file, traceback.format_exc())
             ]
 
-    def _update_trusted_cas(  # type:ignore[no-untyped-def]
+    def _update_trusted_cas(  # type: ignore[no-untyped-def]
         self, current_config
     ) -> ConfigurationWarnings:
         trusted_cas: list[str] = []
@@ -330,6 +341,15 @@ class ConfigDomainCACertificates(ABCConfigDomain):
             if (site_id := CN_TEMPLATE.extract_site(cert.subject.rfc4514_string()))
         }
 
+    # this is only a non-member, because it used in update config to 2.2
+    @staticmethod
+    def is_valid_cert(raw_cert: str) -> bool:
+        try:
+            _ = load_pem_x509_certificate(raw_cert.encode())
+            return True
+        except ValueError:
+            return False
+
     def _get_system_wide_trusted_ca_certificates(self) -> tuple[list[str], list[str]]:
         trusted_cas: set[str] = set()
         errors: list[str] = []
@@ -340,12 +360,12 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                 continue
 
             for entry in cert_path.iterdir():
+                if entry.suffix not in [".pem", ".crt"]:
+                    continue
+
                 cert_file_path = entry.absolute()
                 try:
-                    if entry.suffix not in [".pem", ".crt"]:
-                        continue
-
-                    trusted_cas.update(raw_certificates_from_file(cert_file_path))
+                    raw_certs = raw_certificates_from_file(cert_file_path)
                 except (OSError, PermissionError):
                     # This error is shown to the user as warning message during "activate changes".
                     # We keep this message for the moment because we think that it is a helpful
@@ -355,15 +375,23 @@ class ConfigDomainCACertificates(ABCConfigDomain):
                     # We know a permission problem with some files that are created by default on
                     # some distros. We simply ignore these files because we assume that they are
                     # not needed.
-                    if cert_file_path == Path("/etc/ssl/certs/localhost.crt"):
-                        continue
+                    if cert_file_path != Path("/etc/ssl/certs/localhost.crt"):
+                        logger.exception("Error reading certificates from %s", cert_file_path)
+                        errors.append(
+                            f"Failed to add certificate '{cert_file_path}' to trusted CA certificates. "
+                            "See web.log for details."
+                        )
+                    continue
 
-                    logger.exception("Error reading certificates from %s", cert_file_path)
-
-                    errors.append(
-                        "Failed to add certificate '%s' to trusted CA certificates. "
-                        "See web.log for details." % cert_file_path
-                    )
+                for raw_cert in raw_certs:
+                    if self.is_valid_cert(raw_cert):
+                        trusted_cas.add(raw_cert)
+                    else:
+                        logger.exception("Skipping invalid certificates in file %s", cert_file_path)
+                        errors.append(
+                            f"Failed to add invalid certificate in '{cert_file_path}' to trusted CA certificates. "
+                            "See web.log for details."
+                        )
 
             break
 
@@ -472,7 +500,7 @@ class ConfigDomainOMD(ABCConfigDomain):
 
         return settings
 
-    # Convert the raw OMD configuration settings to the WATO config format.
+    # Convert the raw OMD configuration settings to the Setup config format.
     # The format that is understood by the valuespecs. Since some valuespecs
     # affect multiple OMD config settings, these need to be converted here.
     #
@@ -531,7 +559,7 @@ class ConfigDomainOMD(ABCConfigDomain):
 
         return settings
 
-    # Bring the WATO internal representation int OMD configuration settings.
+    # Bring the Setup internal representation int OMD configuration settings.
     # Counterpart of the _from_omd_config() method.
     def _to_omd_config(self, settings):  # pylint: disable=too-many-branches
         # Convert to OMD key

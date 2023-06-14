@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """All core related things like direct communication with the running core"""
@@ -9,25 +9,24 @@ import os
 import subprocess
 from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
-from typing import Literal, Union
-
-# suppress "Cannot find module" error from mypy
-import livestatus
+from typing import Literal
 
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
-from cmk.utils.caching import config_cache as _config_cache
-from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKTimeout
-from cmk.utils.type_defs import HostName, HostsToUpdate, TimeperiodName
+from cmk.utils.exceptions import MKBailOut, MKGeneralException
+from cmk.utils.type_defs import HostName
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config
 import cmk.base.nagios_utils
 import cmk.base.obsolete_output as out
 from cmk.base.core_config import MonitoringCore
+
+# suppress "Cannot find module" error from mypy
+
 
 # .
 #   .--Control-------------------------------------------------------------.
@@ -41,7 +40,7 @@ from cmk.base.core_config import MonitoringCore
 #   | Invoke actions affecting the core like reload/restart                |
 #   '----------------------------------------------------------------------'
 
-_LockingMode = Union[Literal["abort", "wait"], None]
+_LockingMode = Literal["abort", "wait"] | None
 
 
 class CoreAction(enum.Enum):
@@ -53,7 +52,7 @@ class CoreAction(enum.Enum):
 
 def do_reload(
     core: MonitoringCore,
-    hosts_to_update: HostsToUpdate = None,
+    hosts_to_update: set[HostName] | None = None,
     *,
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
@@ -70,10 +69,11 @@ def do_reload(
 def do_restart(
     core: MonitoringCore,
     action: CoreAction = CoreAction.RESTART,
-    hosts_to_update: HostsToUpdate = None,
+    hosts_to_update: set[HostName] | None = None,
     *,
     locking_mode: _LockingMode,
     duplicates: Sequence[HostName],
+    skip_config_locking_for_bakery: bool = False,
 ) -> None:
     try:
         with activation_lock(mode=locking_mode):
@@ -82,6 +82,7 @@ def do_restart(
                 config_cache=config.get_config_cache(),
                 hosts_to_update=hosts_to_update,
                 duplicates=duplicates,
+                skip_config_locking_for_bakery=skip_config_locking_for_bakery,
             )
             do_core_action(action, monitoring_core=core.name())
 
@@ -149,70 +150,3 @@ def do_core_action(
         )
     if not quiet:
         out.output(tty.ok + "\n")
-
-
-# .
-#   .--Timeperiods---------------------------------------------------------.
-#   |      _____ _                                _           _            |
-#   |     |_   _(_)_ __ ___   ___ _ __   ___ _ __(_) ___   __| |___        |
-#   |       | | | | '_ ` _ \ / _ \ '_ \ / _ \ '__| |/ _ \ / _` / __|       |
-#   |       | | | | | | | | |  __/ |_) |  __/ |  | | (_) | (_| \__ \       |
-#   |       |_| |_|_| |_| |_|\___| .__/ \___|_|  |_|\___/ \__,_|___/       |
-#   |                            |_|                                       |
-#   +----------------------------------------------------------------------+
-#   | Fetching time periods from the core                                   |
-#   '----------------------------------------------------------------------'
-
-
-def check_timeperiod(timeperiod: TimeperiodName) -> bool:
-    """Check if a time period is currently active. We have no other way than
-    doing a Livestatus query. This is not really nice, but if you have a better
-    idea, please tell me..."""
-    # Let exceptions happen, they will be handled upstream.
-    try:
-        update_timeperiods_cache()
-    except MKTimeout:
-        raise
-
-    except Exception:
-        if cmk.utils.debug.enabled():
-            raise
-
-        # If the query is not successful better skip this check then fail
-        return True
-
-    # Note: This also returns True when the time period is unknown
-    #       The following function time period_active handles this differently
-    return _config_cache.get("timeperiods_cache").get(timeperiod, True)
-
-
-def timeperiod_active(timeperiod: TimeperiodName) -> bool | None:
-    """Returns
-    True : active
-    False: inactive
-    None : unknown timeperiod
-
-    Raises an exception if e.g. a timeout or connection error appears.
-    This way errors can be handled upstream."""
-    update_timeperiods_cache()
-    return _config_cache.get("timeperiods_cache").get(timeperiod)
-
-
-def update_timeperiods_cache() -> None:
-    # { "last_update": 1498820128, "timeperiods": [{"24x7": True}] }
-    # The value is store within the config cache since we need a fresh start on reload
-    tp_cache = _config_cache.get("timeperiods_cache")
-
-    if not tp_cache:
-        connection = livestatus.LocalConnection()
-        connection.set_timeout(2)
-        response = connection.query("GET timeperiods\nColumns: name in")
-        for tp_name, tp_active in response:
-            tp_cache[tp_name] = bool(tp_active)
-
-
-def cleanup_timeperiod_caches() -> None:
-    _config_cache.get("timeperiods_cache").clear()
-
-
-cmk.utils.cleanup.register_cleanup(cleanup_timeperiod_caches)

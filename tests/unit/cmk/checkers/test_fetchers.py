@@ -1,20 +1,24 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from __future__ import annotations
 
+import io
 import json
 import os
 import socket
 from collections.abc import Sequence
 from itertools import product as cartesian_product
 from pathlib import Path
-from typing import Any, NamedTuple
+from types import TracebackType
+from typing import Any, Literal, NamedTuple
+from unittest import mock
 from zlib import compress
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
 from pyghmi.exceptions import IpmiException  # type: ignore[import]
+from pytest import MonkeyPatch
 
 import cmk.utils.version as cmk_version
 from cmk.utils.encryption import TransportProtocol
@@ -46,7 +50,15 @@ from cmk.fetchers import (
     TCPFetcher,
 )
 from cmk.fetchers._agentctl import CompressionType, HeaderV1, Version
-from cmk.fetchers.filecache import AgentFileCache, FileCache, FileCacheMode, MaxAge, SNMPFileCache
+from cmk.fetchers._ipmi import IPMISensor
+from cmk.fetchers.filecache import (
+    AgentFileCache,
+    FileCache,
+    FileCacheMode,
+    MaxAge,
+    NoCache,
+    SNMPFileCache,
+)
 from cmk.fetchers.snmp import SNMPPluginStore, SNMPPluginStoreItem
 
 
@@ -79,7 +91,7 @@ def clone_file_cache(file_cache: FileCache) -> FileCache:
 
 class TestFileCache:
     @pytest.fixture(params=[AgentFileCache, SNMPFileCache])
-    def file_cache(self, request) -> FileCache:  # type:ignore[no-untyped-def]
+    def file_cache(self, request: pytest.FixtureRequest) -> FileCache:
         return request.param(
             HostName("hostname"),
             path_template=os.devnull,
@@ -96,6 +108,12 @@ class TestFileCache:
         assert file_cache == type(file_cache).from_json(json_identity(file_cache.to_json()))
 
 
+class TestNoCache:
+    def test_serialization(self) -> None:
+        cache: NoCache = NoCache(HostName("testhost"))
+        assert cache.from_json(cache.to_json()) == cache
+
+
 # This is horrible to type since the AgentFileCache needs the AgentRawData and the
 # SNMPFileCache needs SNMPRawData, this matches here (I think) but the Union types would not
 # help anybody... And mypy cannot handle the conditions so we would need to ignore the errors
@@ -106,7 +124,9 @@ class TestAgentFileCache_and_SNMPFileCache:
         return tmp_path / "database"
 
     @pytest.fixture(params=[AgentFileCache, SNMPFileCache])
-    def file_cache(self, path: Path, request):  # type:ignore[no-untyped-def]
+    def file_cache(
+        self, path: Path, request: pytest.FixtureRequest
+    ) -> AgentFileCache | SNMPFileCache:
         return request.param(
             HostName("hostname"),
             path_template=str(path),
@@ -124,7 +144,12 @@ class TestAgentFileCache_and_SNMPFileCache:
         table: Sequence[SNMPTable] = []
         return {SectionName("X"): table}
 
-    def test_read_write(self, file_cache, path, raw_data) -> None:  # type:ignore[no-untyped-def]
+    def test_read_write(
+        self,
+        file_cache: FileCache,
+        path: Path,
+        raw_data: AgentRawData | SNMPRawData,
+    ) -> None:
         mode = Mode.DISCOVERY
         file_cache.file_cache_mode = FileCacheMode.READ_WRITE
 
@@ -142,7 +167,12 @@ class TestAgentFileCache_and_SNMPFileCache:
         assert clone.file_cache_mode is FileCacheMode.READ_WRITE
         assert clone.read(mode) == raw_data
 
-    def test_read_only(self, file_cache, path, raw_data) -> None:  # type:ignore[no-untyped-def]
+    def test_read_only(
+        self,
+        file_cache: FileCache,
+        path: Path,
+        raw_data: TRawData,
+    ) -> None:
         mode = Mode.DISCOVERY
         file_cache.file_cache_mode = FileCacheMode.READ
 
@@ -153,7 +183,7 @@ class TestAgentFileCache_and_SNMPFileCache:
         assert not path.exists()
         assert file_cache.read(mode) is None
 
-    def test_write_only(self, file_cache, path, raw_data) -> None:  # type:ignore[no-untyped-def]
+    def test_write_only(self, file_cache: FileCache, path: Path, raw_data: TRawData) -> None:
         mode = Mode.DISCOVERY
         file_cache.file_cache_mode = FileCacheMode.WRITE
 
@@ -167,7 +197,7 @@ class TestAgentFileCache_and_SNMPFileCache:
 class StubFileCache(FileCache[TRawData]):
     """Holds the data to be cached in-memory for testing"""
 
-    def __init__(self, *args, **kwargs) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
         super().__init__(*args, **kwargs)
         self.cache: TRawData | None = None
 
@@ -186,10 +216,38 @@ class StubFileCache(FileCache[TRawData]):
         return self.cache
 
 
+class TestIPMISensor:
+    def test_parse_sensor_reading_standard_case(self) -> None:
+        reading = SensorReading(  #
+            ["lower non-critical threshold"], 1, "Hugo", None, "", [42], "hugo-type", None, 0
+        )
+        assert IPMISensor.from_reading(0, reading) == IPMISensor(
+            id=b"0",
+            name=b"Hugo",
+            type=b"hugo-type",
+            value=b"N/A",
+            unit=b"",
+            health=b"lower non-critical threshold",
+        )
+
+    def test_parse_sensor_reading_false_positive(self) -> None:
+        reading = SensorReading(  #
+            ["Present"], 1, "Dingeling", 0.2, b"\xc2\xb0C", [], "FancyDevice", 3.14159265, 1
+        )
+        assert IPMISensor.from_reading(0, reading) == IPMISensor(
+            id=b"0",
+            name=b"Dingeling",
+            type=b"FancyDevice",
+            value=b"3.14",
+            unit=b"C",
+            health=b"Present",
+        )
+
+
 class TestIPMIFetcher:
     @pytest.fixture
     def fetcher(self) -> IPMIFetcher:
-        return IPMIFetcher(address="1.2.3.4", username="us3r", password="secret")
+        return IPMIFetcher(address=HostAddress("1.2.3.4"), username="us3r", password="secret")
 
     def test_repr(self, fetcher: IPMIFetcher) -> None:
         assert isinstance(repr(fetcher), str)
@@ -217,11 +275,11 @@ class TestIPMIFetcher:
         )
         file_cache.write(AgentRawData(b"<<<whatever>>>"), Mode.CHECKING)
 
-        with IPMIFetcher(address="127.0.0.1", username="", password="") as fetcher:
+        with IPMIFetcher(address=HostAddress("127.0.0.1"), username="", password="") as fetcher:
             assert get_raw_data(file_cache, fetcher, Mode.CHECKING).is_ok()
 
     def test_command_raises_IpmiException_handling(self, monkeypatch: MonkeyPatch) -> None:
-        def open_(*args: object):  # type:ignore[no-untyped-def]
+        def open_(*args: object) -> None:
             raise IpmiException()
 
         monkeypatch.setattr(IPMIFetcher, "open", open_)
@@ -235,36 +293,10 @@ class TestIPMIFetcher:
             file_cache_mode=FileCacheMode.DISABLED,
         )
 
-        with IPMIFetcher(address="127.0.0.1", username="", password="") as fetcher:
+        with IPMIFetcher(address=HostAddress("127.0.0.1"), username="", password="") as fetcher:
             raw_data = get_raw_data(file_cache, fetcher, Mode.CHECKING)
 
         assert isinstance(raw_data.error, MKFetcherError)
-
-    def test_parse_sensor_reading_standard_case(self, fetcher: IPMIFetcher) -> None:
-        reading = SensorReading(  #
-            ["lower non-critical threshold"], 1, "Hugo", None, "", [42], "hugo-type", None, 0
-        )
-        assert fetcher._parse_sensor_reading(0, reading) == [  #
-            b"0",
-            b"Hugo",
-            b"hugo-type",
-            b"N/A",
-            b"",
-            b"lower non-critical threshold",
-        ]
-
-    def test_parse_sensor_reading_false_positive(self, fetcher: IPMIFetcher) -> None:
-        reading = SensorReading(  #
-            ["Present"], 1, "Dingeling", 0.2, b"\xc2\xb0C", [], "FancyDevice", 3.14159265, 1
-        )
-        assert fetcher._parse_sensor_reading(0, reading) == [  #
-            b"0",
-            b"Dingeling",
-            b"FancyDevice",
-            b"3.14",
-            b"C",
-            b"Present",
-        ]
 
 
 class TestPiggybackFetcher:
@@ -379,7 +411,7 @@ class TestSNMPFetcherDeserialization:
             snmp_config=SNMPHostConfig(
                 is_ipv6_primary=False,
                 hostname=HostName("bob"),
-                ipaddress="1.2.3.4",
+                ipaddress=HostAddress("1.2.3.4"),
                 credentials="public",
                 port=42,
                 is_bulkwalk_host=False,
@@ -404,7 +436,7 @@ class TestSNMPFetcherDeserialization:
             snmp_config=SNMPHostConfig(
                 is_ipv6_primary=False,
                 hostname=HostName("bob"),
-                ipaddress="1.2.3.4",
+                ipaddress=HostAddress("1.2.3.4"),
                 credentials="public",
                 port=42,
                 is_bulkwalk_host=False,
@@ -509,7 +541,7 @@ class TestSNMPFetcherFetch:
             snmp_config=SNMPHostConfig(
                 is_ipv6_primary=False,
                 hostname=HostName("bob"),
-                ipaddress="1.2.3.4",
+                ipaddress=HostAddress("1.2.3.4"),
                 credentials="public",
                 port=42,
                 is_bulkwalk_host=False,
@@ -739,7 +771,7 @@ class TestSNMPFetcherFetchCache:
             snmp_config=SNMPHostConfig(
                 is_ipv6_primary=False,
                 hostname=HostName("bob"),
-                ipaddress="1.2.3.4",
+                ipaddress=HostAddress("1.2.3.4"),
                 credentials="public",
                 port=42,
                 is_bulkwalk_host=False,
@@ -797,10 +829,10 @@ class _MockSock:
         self._used += len(use)
         return use
 
-    def __enter__(self, *_args) -> "_MockSock":  # type:ignore[no-untyped-def]
+    def __enter__(self, *_args: object) -> _MockSock:
         return self
 
-    def __exit__(self, *_args) -> None:  # type:ignore[no-untyped-def]
+    def __exit__(self, *_args: object) -> None:
         pass
 
 
@@ -809,7 +841,7 @@ class TestTCPFetcher:
     def fetcher(self) -> TCPFetcher:
         return TCPFetcher(
             family=socket.AF_INET,
-            address=("1.2.3.4", 6556),
+            address=(HostAddress("1.2.3.4"), 6556),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
             encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
@@ -840,7 +872,7 @@ class TestTCPFetcher:
         file_cache.cache = AgentRawData(b"cached_section")
         with TCPFetcher(
             family=socket.AF_INET,
-            address=("This is not an IP address. Connecting would fail.", 6556),
+            address=(HostAddress("999.999.999.999"), 6556),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
             encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
@@ -850,29 +882,6 @@ class TestTCPFetcher:
             # not called to make this test explicit and do what
             # its name advertises.
             assert get_raw_data(file_cache, fetcher, Mode.CHECKING) == b"cached_section"
-
-    def test_fetching_without_cache_raises_in_non_checking_mode(self) -> None:
-        file_cache = StubFileCache[AgentRawData](
-            HostName("hostname"),
-            path_template=os.devnull,
-            max_age=MaxAge.unlimited(),
-            simulation=False,
-            use_only_cache=False,
-            file_cache_mode=FileCacheMode.READ_WRITE,
-        )
-        with TCPFetcher(
-            family=socket.AF_INET,
-            address=("127.0.0.1", 6556),
-            host_name=HostName("irrelevant_for_this_test"),
-            timeout=0.1,
-            encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
-            pre_shared_secret=None,
-        ) as fetcher:
-            for mode in Mode:
-                if mode is Mode.CHECKING:
-                    continue
-                raw_data = get_raw_data(file_cache, fetcher, mode)
-                assert isinstance(raw_data.error, MKFetcherError)
 
     def test_open_exception_becomes_fetcher_error(self) -> None:
         file_cache = StubFileCache[AgentRawData](
@@ -885,7 +894,7 @@ class TestTCPFetcher:
         )
         with TCPFetcher(
             family=socket.AF_INET,
-            address=("This is not an IP address. Connecting fails.", 6556),
+            address=(HostAddress("999.999.999.999"), 6556),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.1,
             encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
@@ -899,7 +908,7 @@ class TestTCPFetcher:
         output = b"<<<section:sep(0)>>>\nbody\n"
         fetcher = TCPFetcher(
             family=socket.AF_INET,
-            address=("1.2.3.4", 0),
+            address=(HostAddress("1.2.3.4"), 0),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
             encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
@@ -910,7 +919,7 @@ class TestTCPFetcher:
     def test_validate_protocol_plaintext_with_enforce_raises(self) -> None:
         fetcher = TCPFetcher(
             family=socket.AF_INET,
-            address=("1.2.3.4", 0),
+            address=(HostAddress("1.2.3.4"), 0),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
             encryption_handling=TCPEncryptionHandling.ANY_ENCRYPTED,
@@ -923,7 +932,7 @@ class TestTCPFetcher:
     def test_validate_protocol_no_tls_with_registered_host_raises(self) -> None:
         fetcher = TCPFetcher(
             family=socket.AF_INET,
-            address=("1.2.3.4", 0),
+            address=(HostAddress("1.2.3.4"), 0),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
             encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,  # not relevant for this test
@@ -941,7 +950,7 @@ class TestTCPFetcher:
         ):
             TCPFetcher(
                 family=socket.AF_INET,
-                address=("1.2.3.4", 0),
+                address=(HostAddress("1.2.3.4"), 0),
                 host_name=HostName("irrelevant_for_this_test"),
                 timeout=0.0,
                 encryption_handling=encryption_handling,
@@ -951,7 +960,7 @@ class TestTCPFetcher:
     def test_validate_protocol_tls_required(self) -> None:
         fetcher = TCPFetcher(
             family=socket.AF_INET,
-            address=("1.2.3.4", 0),
+            address=(HostAddress("1.2.3.4"), 0),
             host_name=HostName("irrelevant_for_this_test"),
             timeout=0.0,
             encryption_handling=TCPEncryptionHandling.TLS_ENCRYPTED_ONLY,
@@ -1008,7 +1017,7 @@ class TestFetcherCaching:
         # We use the TCPFetcher to test a general feature of the fetchers.
         fetcher = TCPFetcher(
             family=socket.AF_INET,
-            address=("1.2.3.4", 0),
+            address=(HostAddress("1.2.3.4"), 0),
             timeout=0.0,
             host_name=HostName("irrelevant_for_this_test"),
             encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
@@ -1046,3 +1055,132 @@ class TestFetcherCaching:
 
         assert get_raw_data(file_cache, fetcher, Mode.INVENTORY) == result.OK(b"cached_section")
         assert file_cache.cache == b"cached_section"
+
+
+@pytest.mark.parametrize(
+    ["wait_connect", "wait_data", "timeout_connect", "exc_type"],
+    [
+        # No delay on connection and recv. No exception
+        (0, 0, 10, None),
+        # 50sec delay on connection. This times out.
+        (50, 0, 10, socket.timeout),
+        # Explicitly set timeout on connection
+        # TCP_TIMEOUT related tests
+        (0, 120, 10, None),  # will definitely run for 2 minutes without any data coming
+        # ... but will time out immediately after 151 seconds due to KEEPALIVE settings
+        (0, (120 + 3 * 10) + 1, 10, MKFetcherError),
+    ],
+)
+def test_tcp_fetcher_dead_connection_timeout(
+    wait_connect: float,
+    wait_data: float,
+    timeout_connect: float,
+    exc_type: type[Exception] | None,
+) -> None:
+    # This tests if the TCPFetcher properly times out in the event of an unresponsive agent (due to
+    # whatever reasons). We can't wait forever, else the process runs into the risk of never dying,
+    # sticking around forever, hogging important resources and blocking user interaction.
+    with FakeSocket(wait_connect=wait_connect, wait_data=wait_data, data=b"<<"):
+        fetcher = TCPFetcher(
+            family=socket.AF_INET,
+            address=(HostAddress("127.0.0.1"), 12345),  # Will be ignored by the FakeSocket
+            timeout=timeout_connect,
+            # Boilerplate stuff to make the code not crash.
+            host_name=HostName("timeout_tcp_test"),
+            encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
+            pre_shared_secret=None,
+        )
+        if exc_type is not None:
+            with pytest.raises(exc_type):
+                fetcher.open()
+                fetcher._get_agent_data()
+        else:
+            fetcher.open()
+            fetcher._get_agent_data()
+
+
+class FakeSocket:
+    """A socket look-alike to test timeout behaviours
+
+    Args:
+
+        wait_connect:
+            How long the "simulated" delay will be, until a connection is established. If longer
+            than the timeout set by `settimeout`, the exception `socket.timeout` will be raised.
+
+        wait_data:
+            How long the "simulated" delay of a `recv` call will be. If the delay is longer than
+            the one registered by `settimeout`, the exception `socket.timeout` will be raised.
+
+        data:
+            The data in bytes which will be received from a `recv` call on the socket.
+
+    """
+
+    def __init__(self, wait_connect: float = 0, wait_data: float = 0, data: bytes = b"") -> None:
+        self._wait_connect = wait_connect
+        self._wait_data = wait_data
+        self._timeout: int | None = None
+        self._buffer = io.BytesIO(data)
+
+    def __enter__(self) -> None:
+        # Patch `socket.socket` to return this object
+        self._mock = mock.patch("socket.socket", new=self)
+        self._mock.__enter__()
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> Literal[False]:
+        # Clean up the mock again
+        self._mock.__exit__(exc_type, exc_val, exc_tb)
+        return False
+
+    def __call__(self, family: int, flags: int) -> FakeSocket:
+        """Fake a `socket.socket` call"""
+        self._family = family
+        self._flags = flags
+        self._sock_opts: dict[int, int] = {}
+        return self
+
+    def settimeout(self, timeout: int) -> None:
+        self._timeout = timeout
+
+    def connect(self, address: tuple[str, int]) -> None:
+        """Simulate a connection to a socket
+
+        Raises:
+            socket.timeout - when `wait_connection` is larger than the timeout set by `settimeout`
+        """
+        self._check_timeout(self._wait_connect)
+
+    def recv(self, byte_count: int, flags: Any) -> bytes:
+        """Simulate a recv call on a socket
+
+        Raises:
+            socket.timeout - when `wait_data` is larger than the timeout set by `settimeout`
+        """
+        self._check_timeout(self._wait_data)
+        return self._buffer.read(byte_count)
+
+    def setsockopt(self, level: int, optname: int, value: int) -> None:
+        self._sock_opts[optname] = value
+
+    def _check_timeout(self, delay_time: float) -> None:
+        if self._timeout is not None and delay_time > self._timeout:
+            raise socket.timeout
+
+        if self._sock_opts.get(socket.SO_KEEPALIVE):
+            # defaults according to tcp(7)
+            keep_idle = self._sock_opts.get(socket.TCP_KEEPIDLE, 7200)
+            keep_interval = self._sock_opts.get(socket.TCP_KEEPINTVL, 75)
+            keep_count = self._sock_opts.get(socket.TCP_KEEPCNT, 9)
+
+            is_timed_out = delay_time > (keep_idle + keep_count * keep_interval)
+            if is_timed_out:
+                raise socket.timeout
+
+    def close(self) -> None:
+        self._buffer.close()

@@ -6,7 +6,7 @@ Date: 1661514473
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The BI Pack endpoint will now check if the contact groups it is given actually exists.
 If that is not the case, it will respond with a validation error that has a 400 status code.

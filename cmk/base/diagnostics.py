@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -19,7 +19,7 @@ import urllib.parse
 import uuid
 from collections.abc import Iterator, Mapping
 from datetime import datetime
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 from typing import Any
 
@@ -32,7 +32,10 @@ import cmk.utils.site as site
 import cmk.utils.store as store
 import cmk.utils.tty as tty
 import cmk.utils.version as cmk_version
+from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.diagnostics import (
+    CheckmkFileEncryption,
+    CheckmkFileInfoByRelFilePathMap,
     CheckmkFilesMap,
     DiagnosticsElementCSVResult,
     DiagnosticsElementFilepaths,
@@ -40,9 +43,11 @@ from cmk.utils.diagnostics import (
     DiagnosticsOptionalParameters,
     get_checkmk_config_files_map,
     get_checkmk_core_files_map,
+    get_checkmk_licensing_files_map,
     get_checkmk_log_files_map,
     OPT_CHECKMK_CONFIG_FILES,
     OPT_CHECKMK_CORE_FILES,
+    OPT_CHECKMK_LICENSING_FILES,
     OPT_CHECKMK_LOG_FILES,
     OPT_CHECKMK_OVERVIEW,
     OPT_LOCAL_FILES,
@@ -50,10 +55,11 @@ from cmk.utils.diagnostics import (
     OPT_PERFORMANCE_GRAPHS,
 )
 from cmk.utils.i18n import _
+from cmk.utils.licensing.usage import deserialize_dump
 from cmk.utils.log import console, section
 from cmk.utils.site import omd_site
-from cmk.utils.structured_data import load_tree
-from cmk.utils.type_defs import HostName
+from cmk.utils.structured_data import load_tree, SDRawTree
+from cmk.utils.type_defs import HostName, UserId
 
 if cmk_version.is_enterprise_edition():
     from cmk.base.cee.diagnostics import (  # type: ignore[import]  # pylint: disable=no-name-in-module,import-error
@@ -170,17 +176,25 @@ class DiagnosticsDump:
         if rel_checkmk_config_files:
             optional_elements.append(CheckmkConfigFilesDiagnosticsElement(rel_checkmk_config_files))
 
-        rel_checkmk_core_files = parameters.get(OPT_CHECKMK_CORE_FILES)
-        if not cmk_version.is_raw_edition() and rel_checkmk_core_files:
-            optional_elements.append(CheckmkCoreFilesDiagnosticsElement(rel_checkmk_core_files))
-            optional_elements.append(CMCDumpDiagnosticsElement())
-
         rel_checkmk_log_files = parameters.get(OPT_CHECKMK_LOG_FILES)
         if rel_checkmk_log_files:
             optional_elements.append(CheckmkLogFilesDiagnosticsElement(rel_checkmk_log_files))
 
-        if not cmk_version.is_raw_edition() and parameters.get(OPT_PERFORMANCE_GRAPHS):
-            optional_elements.append(PerformanceGraphsDiagnosticsElement())
+        # CEE options
+        if not cmk_version.is_raw_edition():
+            rel_checkmk_core_files = parameters.get(OPT_CHECKMK_CORE_FILES)
+            if rel_checkmk_core_files:
+                optional_elements.append(CheckmkCoreFilesDiagnosticsElement(rel_checkmk_core_files))
+                optional_elements.append(CMCDumpDiagnosticsElement())
+
+            if parameters.get(OPT_PERFORMANCE_GRAPHS):
+                optional_elements.append(PerformanceGraphsDiagnosticsElement())
+
+            rel_checkmk_licensing_files = parameters.get(OPT_CHECKMK_LICENSING_FILES)
+            if rel_checkmk_licensing_files:
+                optional_elements.append(
+                    CheckmkLicensingFilesDiagnosticsElement(rel_checkmk_licensing_files)
+                )
 
         return optional_elements
 
@@ -257,12 +271,12 @@ class DiagnosticsDump:
 #   '----------------------------------------------------------------------
 
 
-@lru_cache
+@cache
 def get_omd_config() -> site.OMDConfig:
     return site.get_omd_config()
 
 
-@lru_cache
+@cache
 def get_checkmk_server_name() -> HostName | None:
     result = livestatus.LocalConnection().query(
         f"GET services\nColumns: host_name\nFilter: service_description ~ OMD {omd_site()} performance\n"
@@ -466,6 +480,8 @@ class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
             hw_info[procfile] = parser(content)
 
+        hw_info["vendorinfo"] = self._get_vendor_info()
+
         return hw_info
 
     def _get_proc_content(self, filepath: Path) -> list[str]:
@@ -533,6 +549,30 @@ class HWDiagnosticsElement(ABCDiagnosticsElementJSONDump):
 
     def _load_avg_proc_parser(self, content: list[str]) -> dict[str, str]:
         return dict(zip(["loadavg_1", "loadavg_5", "loadavg_15"], content[0].split()))
+
+    def _get_vendor_info(self) -> dict[str, str]:
+        _SYS_FILES = [
+            "bios_vendor",
+            "bios_version",
+            "sys_vendor",
+            "product_name",
+            "chassis_asset_tag",
+        ]
+        _AZURE_TAG = "7783-7084-3265-9085-8269-3286-77"
+        sys_path = Path("/sys/class/dmi/id")
+        vendor_info = {}
+
+        for sys_file in _SYS_FILES:
+            file_content = store.load_text_from_file(sys_path.joinpath(sys_file)).replace("\n", "")
+            if sys_file == "chassis_asset_tag":
+                if file_content == _AZURE_TAG:
+                    vendor_info[sys_file] = "Azure"
+                else:
+                    vendor_info[sys_file] = "Other"
+            else:
+                vendor_info[sys_file] = file_content
+
+        return vendor_info
 
 
 class EnvironmentDiagnosticsElement(ABCDiagnosticsElementJSONDump):
@@ -655,7 +695,7 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
             "(Agent plugin mk_inventory needs to be installed)"
         )
 
-    def _collect_infos(self) -> DiagnosticsElementJSONResult:
+    def _collect_infos(self) -> SDRawTree:
         checkmk_server_name = get_checkmk_server_name()
         if checkmk_server_name is None:
             raise DiagnosticsElementError("No Checkmk server found")
@@ -667,9 +707,7 @@ class CheckmkOverviewDiagnosticsElement(ABCDiagnosticsElementJSONDump):
                 "No HW/SW inventory tree of '%s' found" % checkmk_server_name
             )
 
-        if (
-            node := tree.get_node(("software", "applications", "check_mk"))
-        ) is None or node.is_empty():
+        if not (node := tree.get_tree(("software", "applications", "check_mk"))):
             raise DiagnosticsElementError(
                 "No HW/SW inventory node 'Software > Applications > Checkmk'"
             )
@@ -688,28 +726,52 @@ class ABCCheckmkFilesDiagnosticsElement(ABCDiagnosticsElement):
     def _checkmk_files_map(self) -> CheckmkFilesMap:
         raise NotImplementedError
 
-    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
+    def _copy_and_decrypt(self, rel_filepath: Path, tmp_dump_folder: Path) -> Path | None:
         checkmk_files_map = self._checkmk_files_map
+
+        filepath = checkmk_files_map.get(str(rel_filepath))
+        if filepath is None or not filepath.exists():
+            return None
+
+        # Respect file path (2), otherwise the paths of same named files are forgotten (1).
+        # We want to pack a folder hierarchy.
+
+        filename = Path(filepath).name
+        subfolder = Path(str(filepath).replace(str(cmk.utils.paths.omd_root) + "/", "")).parent
+
+        # Create relative path in tmp tree
+        tmp_folder = tmp_dump_folder.joinpath(subfolder)
+        tmp_folder.mkdir(parents=True, exist_ok=True)
+
+        # Decrypt if file is encrypted, else only copy
+        encryption = CheckmkFileEncryption.none
+
+        tmp_filepath = tmp_folder.joinpath(filename)
+        file_info = CheckmkFileInfoByRelFilePathMap.get(str(rel_filepath))
+
+        if file_info is not None:
+            encryption = file_info.encryption
+
+        if encryption == CheckmkFileEncryption.rot47:
+            with Path(filepath).open("rb") as source:
+                json_data = json.dumps(deserialize_dump(source.read()), sort_keys=True, indent=4)
+                store.save_text_to_file(tmp_filepath, json_data)
+        else:
+            shutil.copy(str(filepath), str(tmp_filepath))
+
+        return tmp_filepath
+
+    def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
         unknown_files = []
+
         for rel_filepath in self.rel_checkmk_files:
-            filepath = checkmk_files_map.get(rel_filepath)
-            if filepath is None or not filepath.exists():
-                unknown_files.append(rel_filepath)
+            tmp_filepath = self._copy_and_decrypt(Path(rel_filepath), tmp_dump_folder)
+
+            if tmp_filepath is None:
+                unknown_files.append(str(rel_filepath))
                 continue
 
-            # Respect file path (2), otherwise the paths of same named files are forgotten (1).
-            # We want to pack a folder hierarchy.
-
-            filename = Path(filepath).name
-            subfolder = Path(str(filepath).replace(str(cmk.utils.paths.omd_root) + "/", "")).parent
-
-            # Create relative path in tmp tree
-            tmp_folder = tmp_dump_folder.joinpath(subfolder)
-            tmp_folder.mkdir(parents=True, exist_ok=True)
-
-            tmp_filepath = shutil.copy(str(filepath), str(tmp_folder.joinpath(filename)))
-
-            yield Path(tmp_filepath)
+            yield tmp_filepath
 
         if unknown_files:
             raise DiagnosticsElementError("No such files: %s" % ", ".join(unknown_files))
@@ -781,6 +843,27 @@ class CheckmkCoreFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
         return get_checkmk_core_files_map()
 
 
+class CheckmkLicensingFilesDiagnosticsElement(ABCCheckmkFilesDiagnosticsElement):
+    @property
+    def ident(self) -> str:
+        # Unused because we directly pack the config, state and history file
+        return "checkmk_licensing_files"
+
+    @property
+    def title(self) -> str:
+        return _("Checkmk Licensing Files")
+
+    @property
+    def description(self) -> str:
+        return _(
+            "Licensing files (data, config and logs) from var/check_mk/licensing, etc/check_mk/multisite.d and var/log: %s"
+        ) % ", ".join(self.rel_checkmk_files)
+
+    @property
+    def _checkmk_files_map(self) -> CheckmkFilesMap:
+        return get_checkmk_licensing_files_map()
+
+
 class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
     @property
     def ident(self) -> str:
@@ -827,7 +910,7 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
     def _get_response(
         self, checkmk_server_name: str, omd_config: site.OMDConfig
     ) -> requests.Response:
-        automation_secret = self._get_automation_secret()
+        automation_secret = AutomationUserSecret(UserId("automation")).read()
 
         url = "http://{}:{}/{}/check_mk/report.py?".format(
             omd_config["CONFIG_APACHE_TCP_ADDR"],
@@ -835,21 +918,18 @@ class PerformanceGraphsDiagnosticsElement(ABCDiagnosticsElement):
             omd_site(),
         ) + urllib.parse.urlencode(
             [
-                ("_username", "automation"),
-                ("_secret", automation_secret),
                 ("host", checkmk_server_name),
                 ("name", "host_performance_graphs"),
             ]
         )
 
-        return requests.post(url)
-
-    def _get_automation_secret(self) -> str:
-        automation_secret_filepath = Path(cmk.utils.paths.var_dir).joinpath(
-            "web/automation/automation.secret"
+        return requests.post(  # nosec B113 # BNS:773085
+            url,
+            data={
+                "_username": "automation",
+                "_secret": automation_secret,
+            },
         )
-        with automation_secret_filepath.open("r", encoding="utf-8") as f:
-            return f.read().strip()
 
 
 class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
@@ -869,10 +949,9 @@ class CMCDumpDiagnosticsElement(ABCDiagnosticsElement):
         )
 
     def add_or_get_files(self, tmp_dump_folder: Path) -> DiagnosticsElementFilepaths:
-
         command = [str(Path(cmk.utils.paths.omd_root).joinpath("bin/cmcdump"))]
 
-        for dump_args in (None, "config"):
+        for dump_args in (None, "--config"):
             tmpdir = tmp_dump_folder.joinpath("var/check_mk/core")
             tmpdir.mkdir(parents=True, exist_ok=True)
             suffix = ""

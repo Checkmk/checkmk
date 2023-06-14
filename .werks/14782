@@ -6,6 +6,9 @@ Date: 1661955310
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 With this werk, a new summary check (corresponding to Systemd Service Summary) is available.
+
+<b>Note:</b>
+This feature needs an update of the agent as it needs to use '--type socket' for 'systemctl'.

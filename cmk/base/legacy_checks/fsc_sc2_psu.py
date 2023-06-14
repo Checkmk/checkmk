@@ -1,0 +1,66 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
+from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_legacy_includes.fsc import DETECT_FSC_SC2
+from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.3.1.1 "PSU1"
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.3.1.2 "PSU2"
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.5.1.1 3
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.5.1.2 3
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.6.1.1 52
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.6.1.2 40
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.7.1.1 448
+# .1.3.6.1.4.1.231.2.10.2.2.10.6.2.1.7.1.2 448
+
+
+def inventory_fsc_sc2_psu(info):
+    for line in info:
+        if line[1] not in ["2"]:
+            yield line[0], None
+
+
+def check_fsc_sc2_psu(item, _no_params, info):
+    psu_status = {
+        "1": (3, "Status is unknown"),
+        "2": (1, "Status is not-present"),
+        "3": (0, "Status is ok"),
+        "4": (2, "Status is failed"),
+        "5": (2, "Status is ac-fail"),
+        "6": (2, "Status is dc-fail"),
+        "7": (2, "Status is critical-temperature"),
+        "8": (1, "Status is not-manageable"),
+        "9": (1, "Status is fan-failure-predicted"),
+        "10": (2, "Status is fan-failure"),
+        "11": (1, "Status is power-safe-mode"),
+        "12": (1, "Status is non-redundant-dc-fail"),
+        "13": (1, "Status is non-redundant-ac-fail"),
+    }
+
+    for designation, status, load, nominal in info:
+        if designation == item:
+            yield psu_status.get(status, (3, "Status is unknown"))
+            if nominal and load:
+                infotext = "Nominal load: %s W, Actual load: %s W" % (nominal, load)
+                perfdata = [("power", int(load))]
+            else:
+                infotext = "Did not receive load data"
+                perfdata = []
+            yield 0, infotext, perfdata
+
+
+check_info["fsc_sc2_psu"] = LegacyCheckDefinition(
+    detect=DETECT_FSC_SC2,
+    discovery_function=inventory_fsc_sc2_psu,
+    check_function=check_fsc_sc2_psu,
+    service_name="FSC %s",
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.231.2.10.2.2.10.6.2.1",
+        oids=["3", "5", "6", "7"],
+    ),
+)

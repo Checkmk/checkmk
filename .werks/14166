@@ -6,6 +6,6 @@ Date: 1657788624
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The process of loading/transforming filters has been optimized, saving a few hundred milliseconds on every page.

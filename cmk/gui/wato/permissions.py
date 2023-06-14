@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -13,9 +13,9 @@ permission_registry.register(
         name="use",
         title=_l("Use WATO"),
         description=_l(
-            "This permissions allows users to use WATO - Check_MK's "
+            "This permissions allows users to use Setup - Checkmk's "
             "Web Administration Tool. Without this "
-            "permission all references to WATO (buttons, links, "
+            "permission all references to Setup (buttons, links, "
             "snapins) will be invisible."
         ),
         defaults=["admin", "user"],
@@ -72,7 +72,7 @@ permission_registry.register(
         name="activateforeign",
         title=_l("Activate Foreign Changes"),
         description=_l(
-            "When several users work in parallel with WATO then "
+            "When several users work in parallel with Setup then "
             "several pending changes of different users might pile up "
             "before changes are activate. Only with this permission "
             "a user will be allowed to activate the current configuration "
@@ -90,7 +90,7 @@ permission_registry.register(
         description=_l(
             "Access to the historic audit log. "
             "The currently pending changes can be seen by all users "
-            "with access to WATO."
+            "with access to Setup."
         ),
         defaults=["admin"],
     )
@@ -103,7 +103,7 @@ permission_registry.register(
         title=_l("Clear audit Log"),
         description=_l(
             "Clear the entries of the audit log. To be able to clear the audit log "
-            'a user needs the generic WATO permission "Make changes, perform actions", '
+            'a user needs the generic Setup permission "Make changes, perform actions", '
             'the "View audit log" and this permission.'
         ),
         defaults=["admin"],
@@ -370,7 +370,7 @@ permission_registry.register(
         name="rulesets",
         title=_l("Rulesets"),
         description=_l(
-            "Access to the module for managing Check_MK rules. Please note that a user can only "
+            "Access to the module for managing Checkmk rules. Please note that a user can only "
             "manage rules in folders he has permissions to. "
         ),
         defaults=["admin", "user"],
@@ -414,7 +414,7 @@ permission_registry.register(
         title=_l("Site remote automation"),
         description=_l(
             "This permission is needed for a remote administration of the site "
-            "as a distributed WATO slave."
+            "as a distributed Setup slave."
         ),
         defaults=["admin"],
     )
@@ -436,6 +436,16 @@ permission_registry.register(
 permission_registry.register(
     Permission(
         section=PermissionSectionWATO,
+        name="user_migrate",
+        title=_l("Migrate users to another connection"),
+        description=_l("This permission allows users to migrate other users to another connection"),
+        defaults=["admin"],
+    )
+)
+
+permission_registry.register(
+    Permission(
+        section=PermissionSectionWATO,
         name="show_last_user_activity",
         title=_l("Show last user activity"),
         description=_l("Show the online state and last user activity on the users page"),
@@ -449,7 +459,7 @@ permission_registry.register(
         name="notifications",
         title=_l("Notification configuration"),
         description=_l(
-            "This permission is needed for the new rule based notification configuration via the WATO module <i>Notifications</i>."
+            "This permission is needed for the new rule based notification configuration via the Setup module <i>Notifications</i>."
         ),
         defaults=["admin"],
     )
@@ -519,7 +529,7 @@ permission_registry.register(
         name="download_agents",
         title=_l("Monitoring Agents"),
         description=_l(
-            "Download the default Check_MK monitoring agents for Linux, "
+            "Download the default Checkmk monitoring agents for Linux, "
             "Windows and other operating systems."
         ),
         defaults=["admin", "user"],
@@ -542,8 +552,8 @@ permission_registry.register(
     Permission(
         section=PermissionSectionWATO,
         name="set_read_only",
-        title=_l("Set WATO to read only mode for other users"),
-        description=_l("Prevent other users from making modifications to WATO."),
+        title=_l("Set Setup to read only mode for other users"),
+        description=_l("Prevent other users from making modifications to Setup."),
         defaults=["admin"],
     )
 )
@@ -576,14 +586,14 @@ permission_registry.register(
         name="add_or_modify_executables",
         title=_l("Add or modify executables"),
         description=_l(
-            "There are different places in Check_MK where an admin can use the GUI to add "
-            "executable code to Check_MK. For example when configuring "
+            "There are different places in Checkmk where an admin can use the GUI to add "
+            "executable code to Checkmk. For example when configuring "
             "datasource programs, the user inserts a command line for gathering monitoring data. "
-            "This command line is then executed during monitoring by Check_MK. Another example is "
+            "This command line is then executed during monitoring by Checkmk. Another example is "
             "the upload of extension packages (MKPs). All these functions have in "
-            "common that the user provides data that is executed by Check_MK. "
-            'If you want to ensure that your WATO users cannot "inject" arbitrary executables '
-            "into your Check_MK installation, you only need to remove this permission for them. "
+            "common that the user provides data that is executed by Checkmk. "
+            'If you want to ensure that your Setup users cannot "inject" arbitrary executables '
+            "into your Checkmk installation, you only need to remove this permission for them. "
             "This permission is needed in addition to the other component related permissions. "
             "For example you need the <tt>wato.rulesets</tt> permission together with this "
             "permission to be able to configure rulesets where bare command lines are "

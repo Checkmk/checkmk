@@ -6,7 +6,7 @@ Date: 1656424089
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Some legacy plugins can print a newline indicating details to come and not follow up with any details.
 This lead to a crash with the message "ValueError ('details' must be non-empty str or None, got )".

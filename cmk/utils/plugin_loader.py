@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,13 +7,15 @@ import importlib
 import os
 import pkgutil
 import sys
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator, Iterator
 from itertools import chain
 from pathlib import Path
 from types import ModuleType
 
+PluginFailures = Generator[tuple[str, BaseException], None, None]
 
-def load_plugins_with_exceptions(package_name: str) -> Iterator[tuple[str, BaseException]]:
+
+def load_plugins_with_exceptions(package_name: str) -> PluginFailures:
     """Load all specified packages
 
     This function accepts a package name in Python's dotted syntax (e.g.

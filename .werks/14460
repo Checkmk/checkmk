@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Searching for e.g. "Group" or "Ineffective" could lead to an error message like
 "The selected element 'None' is not longer available.".

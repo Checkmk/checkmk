@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -16,14 +16,12 @@ from tests.testlib import create_linux_test_host, on_time, repo_path
 from tests.testlib.site import Site
 
 import cmk.utils.prediction
-from cmk.utils import version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.type_defs import HostName
 
 from cmk.base import prediction
 
 
-@pytest.mark.usefixtures("web")
 @pytest.fixture(name="cfg_setup", scope="module")
 def cfg_setup_fixture(request: pytest.FixtureRequest, site: Site) -> Iterator[None]:
     hostname = "test-prediction"
@@ -31,8 +29,10 @@ def cfg_setup_fixture(request: pytest.FixtureRequest, site: Site) -> Iterator[No
     # Enforce use of the pre-created RRD file from the git. The restart of the core
     # is needed to make it renew it's internal RRD file cache
     site.makedirs("var/check_mk/rrd/test-prediction")
-    with open(site.path("var/check_mk/rrd/test-prediction/CPU_load.rrd"), "wb") as f:
-        f.write((repo_path() / "tests/integration/cmk/base/test-files/CPU_load.rrd").read_bytes())
+    site.write_binary_file(
+        "var/check_mk/rrd/test-prediction/CPU_load.rrd",
+        (repo_path() / "tests/integration/cmk/base/test-files/CPU_load.rrd").read_bytes(),
+    )
 
     site.write_text_file(
         "var/check_mk/rrd/test-prediction/CPU_load.info",
@@ -67,8 +67,7 @@ custom_checks = [
 # This test has a conflict with daemon usage. Since we now don't use
 # daemon, the lower resolution is somehow preferred. Despite having a
 # higher available. See https://github.com/oetiker/rrdtool-1.x/issues/1063
-@pytest.mark.usefixtures("cfg_setup")
-@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="rrd data currently not working on nagios")
+@pytest.mark.usefixtures("cfg_setup", "skip_in_raw_edition")
 @pytest.mark.parametrize(
     "utcdate, timezone, period, result",
     [
@@ -116,8 +115,9 @@ custom_checks = [
         ),
     ],
 )
-def test_get_rrd_data(utcdate: str, timezone: str, period: str, result: tuple[int, int]) -> None:
-
+def test_get_rrd_data(
+    site: Site, utcdate: str, timezone: str, period: str, result: tuple[int, int]
+) -> None:
     with on_time(utcdate, timezone):
         timestamp = time.time()
         _, from_time, until_time, _ = prediction._get_prediction_timegroup(
@@ -125,7 +125,7 @@ def test_get_rrd_data(utcdate: str, timezone: str, period: str, result: tuple[in
         )
 
     timeseries = cmk.utils.prediction.get_rrd_data(
-        HostName("test-prediction"), "CPU load", "load15", "MAX", from_time, until_time
+        site.live, HostName("test-prediction"), "CPU load", "load15", "MAX", from_time, until_time
     )
 
     assert timeseries.start <= from_time
@@ -136,24 +136,29 @@ def test_get_rrd_data(utcdate: str, timezone: str, period: str, result: tuple[in
 # This test has a conflict with daemon usage. Since we now don't use
 # daemon, the lower resolution is somehow preferred. Despite having a
 # higher available. See https://github.com/oetiker/rrdtool-1.x/issues/1063
-@pytest.mark.usefixtures("cfg_setup")
-@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="rrd data currently not working on nagios")
+@pytest.mark.usefixtures("cfg_setup", "skip_in_raw_edition")
 @pytest.mark.parametrize(
     "max_entries, result",
     [(400, (180, 401)), (20, (3600, 21)), (50, (1800, 41)), (1000, (120, 600)), (1200, (60, 1200))],
 )
-def test_get_rrd_data_point_max(max_entries: int, result: tuple[int, int]) -> None:
+def test_get_rrd_data_point_max(site: Site, max_entries: int, result: tuple[int, int]) -> None:
     from_time, until_time = 1543430040, 1543502040
     timeseries = cmk.utils.prediction.get_rrd_data(
-        HostName("test-prediction"), "CPU load", "load15", "MAX", from_time, until_time, max_entries
+        site.live,
+        HostName("test-prediction"),
+        "CPU load",
+        "load15",
+        "MAX",
+        from_time,
+        until_time,
+        max_entries,
     )
     assert timeseries.start <= from_time
     assert timeseries.end >= until_time
     assert (timeseries.step, len(timeseries.values)) == result
 
 
-@pytest.mark.usefixtures("cfg_setup")
-@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="rrd data currently not working on nagios")
+@pytest.mark.usefixtures("cfg_setup", "skip_in_raw_edition")
 @pytest.mark.parametrize(
     "utcdate, timezone, params, reference",
     [
@@ -413,6 +418,7 @@ def test_get_rrd_data_point_max(max_entries: int, result: tuple[int, int]) -> No
     ],
 )
 def test_retieve_grouped_data_from_rrd(
+    site: Site,
     utcdate: str,
     timezone: str,
     params: Mapping[str, str | int],
@@ -435,7 +441,7 @@ def test_retieve_grouped_data_from_rrd(
 
     hostname, service_description, dsname = HostName("test-prediction"), "CPU load", "load15"
     rrd_datacolumn = cmk.utils.prediction.rrd_datacolum(
-        hostname, service_description, dsname, "MAX"
+        site.live, hostname, service_description, dsname, "MAX"
     )
     result = prediction._retrieve_grouped_data_from_rrd(rrd_datacolumn, time_windows)
 
@@ -449,8 +455,7 @@ def _load_expected_result(path: Path) -> object:
 # This test has a conflict with daemon usage. Since we now don't use
 # daemon, the lower resolution is somehow preferred. Despite having a
 # higher available. See https://github.com/oetiker/rrdtool-1.x/issues/1063
-@pytest.mark.usefixtures("cfg_setup")
-@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="rrd data currently not working on nagios")
+@pytest.mark.usefixtures("cfg_setup", "skip_in_raw_edition")
 @pytest.mark.parametrize(
     "utcdate, timezone, params",
     [
@@ -476,9 +481,8 @@ def _load_expected_result(path: Path) -> object:
     ],
 )
 def test_calculate_data_for_prediction(
-    utcdate: str, timezone: str, params: Mapping[str, str | int]
+    site: Site, utcdate: str, timezone: str, params: Mapping[str, str | int]
 ) -> None:
-
     index = params["period"]
     assert isinstance(index, str)
     period_info = prediction._PREDICTION_PERIODS[index]
@@ -493,7 +497,7 @@ def test_calculate_data_for_prediction(
 
     hostname, service_description, dsname = HostName("test-prediction"), "CPU load", "load15"
     rrd_datacolumn = cmk.utils.prediction.rrd_datacolum(
-        hostname, service_description, dsname, "MAX"
+        site.live, hostname, service_description, dsname, "MAX"
     )
     data_for_pred = prediction._calculate_data_for_prediction(time_windows, rrd_datacolumn)
 
@@ -511,8 +515,7 @@ def test_calculate_data_for_prediction(
             assert getattr(data_for_pred, key) == expected_reference[key]
 
 
-@pytest.mark.usefixtures("cfg_setup")
-@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="rrd data currently not working on nagios")
+@pytest.mark.usefixtures("cfg_setup", "skip_in_raw_edition")
 @pytest.mark.parametrize(
     "timerange, result",
     [
@@ -529,11 +532,11 @@ def test_calculate_data_for_prediction(
     ],
 )
 def test_get_rrd_data_incomplete(
-    timerange: tuple[int, int], result: tuple[int, Sequence[float | None]]
+    site: Site, timerange: tuple[int, int], result: tuple[int, Sequence[float | None]]
 ) -> None:
     from_time, until_time = timerange
     timeseries = cmk.utils.prediction.get_rrd_data(
-        HostName("test-prediction"), "CPU load", "load15", "MAX", from_time, until_time
+        site.live, HostName("test-prediction"), "CPU load", "load15", "MAX", from_time, until_time
     )
 
     assert timeseries.start <= from_time
@@ -542,7 +545,7 @@ def test_get_rrd_data_incomplete(
 
 
 @pytest.mark.usefixtures("cfg_setup")
-def test_get_rrd_data_fails() -> None:
+def test_get_rrd_data_fails(site: Site) -> None:
     timestamp = time.mktime(datetime.strptime("2018-11-28 12", "%Y-%m-%d %H").timetuple())
     _, from_time, until_time, _ = prediction._get_prediction_timegroup(
         int(timestamp), prediction._PREDICTION_PERIODS["hour"]
@@ -551,12 +554,24 @@ def test_get_rrd_data_fails() -> None:
     # Fail to get data, because non-existent check
     with pytest.raises(MKGeneralException, match="Cannot get historic metrics via Livestatus:"):
         cmk.utils.prediction.get_rrd_data(
-            HostName("test-prediction"), "Nonexistent check", "util", "MAX", from_time, until_time
+            site.live,
+            HostName("test-prediction"),
+            "Nonexistent check",
+            "util",
+            "MAX",
+            from_time,
+            until_time,
         )
 
     # Empty response, because non-existent perf_data variable
     timeseries = cmk.utils.prediction.get_rrd_data(
-        HostName("test-prediction"), "CPU load", "untracked_prefdata", "MAX", from_time, until_time
+        site.live,
+        HostName("test-prediction"),
+        "CPU load",
+        "untracked_prefdata",
+        "MAX",
+        from_time,
+        until_time,
     )
 
     assert timeseries == cmk.utils.prediction.TimeSeries([0, 0, 0])

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,23 +10,26 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from typing import Any, Literal, NamedTuple, TypedDict, Union
+from typing import Any, Literal, NamedTuple, NotRequired, TypedDict, Union
 
 from pydantic import BaseModel
 
+from livestatus import SiteId
+
 from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.crypto.password import PasswordHash
-from cmk.utils.labels import Labels
-from cmk.utils.structured_data import SDPath
-from cmk.utils.type_defs import (
-    ContactgroupName,
-    DisabledNotificationsOptions,
-    EventRule,
-    HostName,
-    MetricName,
-    ServiceName,
-    UserId,
+from cmk.utils.crypto import HashAlgorithm
+from cmk.utils.crypto.certificate import (
+    Certificate,
+    CertificatePEM,
+    CertificateWithPrivateKey,
+    EncryptedPrivateKeyPEM,
+    RsaPrivateKey,
 )
+from cmk.utils.crypto.password import Password, PasswordHash
+from cmk.utils.labels import Labels
+from cmk.utils.notify_types import DisabledNotificationsOptions, EventRule
+from cmk.utils.structured_data import SDPath
+from cmk.utils.type_defs import ContactgroupName, HostName, MetricName, ServiceName, UserId
 
 from cmk.gui.exceptions import FinalizeRequest
 from cmk.gui.utils.speaklater import LazyString
@@ -86,7 +89,7 @@ class TwoFactorCredentials(TypedDict):
 
 
 SessionId = str
-AuthType = Literal["automation", "cookie", "web_server", "http_header", "bearer"]
+AuthType = Literal["automation", "cookie", "web_server", "http_header", "bearer", "basic_auth"]
 
 
 @dataclass
@@ -178,9 +181,10 @@ class UserSpec(TypedDict, total=False):
     user_scheme_serial: int
     nav_hide_icons_title: Literal["hide"] | None
     icons_per_item: Literal["entry"] | None
+    temperature_unit: str | None
 
 
-class UserObjectValue(TypedDict, total=True):
+class UserObjectValue(TypedDict):
     attributes: UserSpec
     is_new_user: bool
 
@@ -199,7 +203,14 @@ InfoName = str
 SingleInfos = Sequence[InfoName]
 
 
-class _VisualMandatory(TypedDict):
+class LinkFromSpec(TypedDict, total=False):
+    single_infos: SingleInfos
+    host_labels: Labels
+    has_inventory_tree: SDPath
+    has_inventory_tree_history: SDPath
+
+
+class Visual(TypedDict):
     owner: UserId
     name: str
     context: VisualContext
@@ -214,16 +225,7 @@ class _VisualMandatory(TypedDict):
     hidden: bool
     hidebutton: bool
     public: bool | tuple[Literal["contact_groups"], Sequence[str]]
-
-
-class LinkFromSpec(TypedDict, total=False):
-    single_infos: SingleInfos
-    host_labels: Labels
-    has_inventory_tree: Sequence[SDPath]
-    has_inventory_tree_history: Sequence[SDPath]
-
-
-class Visual(_VisualMandatory):
+    packaged: bool
     link_from: LinkFromSpec
 
 
@@ -258,7 +260,7 @@ class PainterParameters(TypedDict, total=False):
     # TODO Improve:
     # First step was: make painter's param a typed dict with all obvious keys
     # but some possible keys are still missing
-    aggregation: tuple[str, str]
+    aggregation: Literal["min", "max", "avg"] | tuple[str, str]
     color_choices: list[str]
     column_title: str
     ident: str
@@ -271,6 +273,10 @@ class PainterParameters(TypedDict, total=False):
     path_to_table: SDPath
     column_to_display: str
     columns_to_match: list[tuple[str, str]]
+    color_levels: tuple[Literal["abs_vals"], tuple[MetricName, tuple[float, float]]]
+    # From historic metric painters
+    rrd_consolidation: Literal["average", "min", "max"]
+    time_range: tuple[str, int]
 
 
 def _make_default_painter_parameters() -> PainterParameters:
@@ -425,7 +431,11 @@ class SorterSpec:
         return str(self.to_raw())
 
 
-class _ViewSpecMandatory(Visual):
+class _InventoryJoinMacrosSpec(TypedDict):
+    macros: list[tuple[str, str]]
+
+
+class ViewSpec(Visual):
     datasource: str
     layout: str  # TODO: Replace with literal? See layout_registry.get_choices()
     group_painters: Sequence[ColumnSpec]
@@ -434,22 +444,15 @@ class _ViewSpecMandatory(Visual):
     num_columns: int
     column_headers: Literal["off", "pergroup", "repeat"]
     sorters: Sequence[SorterSpec]
-
-
-class _InventoryJoinMacrosSpec(TypedDict):
-    macros: list[tuple[str, str]]
-
-
-class ViewSpec(_ViewSpecMandatory, total=False):
-    add_headers: str
+    add_headers: NotRequired[str]
     # View editor only adds them in case they are truish. In our builtin specs these flags are also
     # partially set in case they are falsy
-    mobile: bool
-    mustsearch: bool
-    force_checkboxes: bool
-    user_sortable: bool
-    play_sounds: bool
-    inventory_join_macros: _InventoryJoinMacrosSpec
+    mobile: NotRequired[bool]
+    mustsearch: NotRequired[bool]
+    force_checkboxes: NotRequired[bool]
+    user_sortable: NotRequired[bool]
+    play_sounds: NotRequired[bool]
+    inventory_join_macros: NotRequired[_InventoryJoinMacrosSpec]
 
 
 AllViewSpecs = dict[tuple[UserId, ViewName], ViewSpec]
@@ -527,6 +530,7 @@ class TopicMenuItem(NamedTuple):
     is_show_more: bool = False
     icon: Icon | None = None
     button_title: str | None = None
+    additional_matches_setup_search: Sequence[str] = ()
 
 
 class TopicMenuTopic(NamedTuple):
@@ -568,25 +572,23 @@ SearchResultsByTopic = Iterable[tuple[str, Iterable[SearchResult]]]
 UnitRenderFunc = Callable[[Any], str]
 
 
-class _UnitInfoRequired(TypedDict):
-    title: str
-    symbol: str
-    render: UnitRenderFunc
-    js_render: str
-
-
 GraphTitleFormat = Literal["plain", "add_host_name", "add_host_alias", "add_service_description"]
 GraphUnitRenderFunc = Callable[[list[float]], tuple[str, list[str]]]
 
 
-class UnitInfo(_UnitInfoRequired, TypedDict, total=False):
-    id: str
-    stepping: str
-    color: str
-    graph_unit: GraphUnitRenderFunc
-    description: str
-    valuespec: Any  # TODO: better typing
-    conversions: Mapping[str, Callable[[float | int], float | int]]
+class UnitInfo(TypedDict):
+    title: str
+    symbol: str
+    render: UnitRenderFunc
+    js_render: str
+    id: NotRequired[str]
+    stepping: NotRequired[str]
+    color: NotRequired[str]
+    graph_unit: NotRequired[GraphUnitRenderFunc]
+    description: NotRequired[str]
+    valuespec: NotRequired[Any]  # TODO: better typing
+    conversion: NotRequired[Callable[[float], float]]
+    perfometer_render: NotRequired[UnitRenderFunc]
 
 
 class _TranslatedMetricRequired(TypedDict):
@@ -631,48 +633,52 @@ class RowShading(TypedDict):
     heading: RGBColor
 
 
+RPNExpression = tuple  # TODO: Improve this type
+
+HorizontalRule = tuple[float, str, str, str | LazyString]
+
+
+class GraphMetric(TypedDict):
+    title: str
+    line_type: LineType
+    expression: RPNExpression
+    unit: NotRequired[str]
+    color: NotRequired[str]
+    visible: NotRequired[bool]
+
+
 class GraphSpec(TypedDict):
     pass
 
 
-class _TemplateGraphSpecMandatory(GraphSpec):
-    site: str | None
+class TemplateGraphSpec(GraphSpec):
+    site: SiteId | None
     host_name: HostName
     service_description: ServiceName
+    graph_index: NotRequired[int | None]
+    graph_id: NotRequired[str | None]
 
 
-class TemplateGraphSpec(_TemplateGraphSpecMandatory, total=False):
-    graph_index: int | None
-    graph_id: str | None
-
-
-class ExplicitGraphSpec(GraphSpec, total=False):
-    # This is added during run time by GraphIdentificationExplicit.create_graph_recipes. Where is it
-    # used?
-    specification: tuple[Literal["explicit"], GraphSpec]  # TODO: Correct would be ExplicitGraphSpec
-    # I'd bet they are not mandatory. Needs to be figured out
+class ExplicitGraphSpec(GraphSpec):
     title: str
     unit: str
     consolidation_function: GraphConsoldiationFunction | None
     explicit_vertical_range: tuple[float | None, float | None]
     omit_zero_metrics: bool
-    horizontal_rules: list  # TODO: Be more specific
+    horizontal_rules: Sequence[HorizontalRule]
     context: VisualContext
     add_context_to_title: bool
-    metrics: list  # TODO: Be more specific
+    metrics: Sequence[GraphMetric]
 
 
-class _CombinedGraphSpecMandatory(GraphSpec):
+class CombinedGraphSpec(GraphSpec):
     datasource: str
     single_infos: SingleInfos
     presentation: GraphPresentation
     context: VisualContext
-
-
-class CombinedGraphSpec(_CombinedGraphSpecMandatory, total=False):
-    selected_metric: MetricDefinition
-    consolidation_function: GraphConsoldiationFunction
-    graph_template: str
+    selected_metric: NotRequired[MetricDefinition]
+    consolidation_function: NotRequired[GraphConsoldiationFunction]
+    graph_template: NotRequired[str]
 
 
 class _SingleTimeseriesGraphSpecMandatory(GraphSpec):
@@ -692,11 +698,12 @@ CombinedGraphIdentifier = tuple[Literal["combined"], CombinedGraphSpec]
 CustomGraphIdentifier = tuple[Literal["custom"], str]
 ExplicitGraphIdentifier = tuple[Literal["explicit"], ExplicitGraphSpec]
 SingleTimeseriesGraphIdentifier = tuple[Literal["single_timeseries"], SingleTimeseriesGraphSpec]
+ForecastGraphIdentifier = tuple[Literal["forecast"], str]
 
 # We still need "Union" because of https://github.com/python/mypy/issues/11098
 GraphIdentifier = Union[
     CustomGraphIdentifier,
-    tuple[Literal["forecast"], str],
+    ForecastGraphIdentifier,
     TemplateGraphIdentifier,
     CombinedGraphIdentifier,
     ExplicitGraphIdentifier,
@@ -725,7 +732,7 @@ class ViewProcessTracking:
     duration_view_render: Snapshot = Snapshot.null()
 
 
-class CustomAttr(TypedDict, total=True):
+class CustomAttr(TypedDict):
     title: str
     help: str
     name: str
@@ -741,11 +748,28 @@ class Key(BaseModel):
     alias: str
     owner: UserId
     date: float
-    # Before 2.2 this field was only used for WATO backup keys. Now we add it to all key, because it
+    # Before 2.2 this field was only used for Setup backup keys. Now we add it to all key, because it
     # won't hurt for other types of keys (e.g. the bakery signing keys). We set a default of False
     # to initialize it for all existing keys assuming it was already downloaded. It is still only
     # used in the context of the backup keys.
     not_downloaded: bool = False
+
+    def to_certificate_with_private_key(self, passphrase: Password) -> CertificateWithPrivateKey:
+        return CertificateWithPrivateKey(
+            certificate=Certificate.load_pem(CertificatePEM(self.certificate)),
+            private_key=RsaPrivateKey.load_pem(
+                EncryptedPrivateKeyPEM(self.private_key), passphrase
+            ),
+        )
+
+    def fingerprint(self, algorithm: HashAlgorithm) -> str:
+        """return the fingerprint aka hash of the certificate as a hey string"""
+        return (
+            Certificate.load_pem(CertificatePEM(self.certificate))
+            .fingerprint(algorithm)
+            .hex(":")
+            .upper()
+        )
 
 
 GlobalSettings = Mapping[str, Any]

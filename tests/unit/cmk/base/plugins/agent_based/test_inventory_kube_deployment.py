@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,6 +8,7 @@ from typing import Any
 
 import pytest
 from pydantic_factories import ModelFactory
+from pytest_mock import MockerFixture
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes
 from cmk.base.plugins.agent_based.inventory_kube_deployment import inventory_kube_deployment
@@ -79,8 +80,8 @@ def test_inventory_kube_deployment(
     ) == sort_inventory_result(expected_check_result)
 
 
-def test_inventory_kube_deployment_calls_labels_to_table(  # type:ignore[no-untyped-def]
-    mocker,
+def test_inventory_kube_deployment_calls_labels_to_table(
+    mocker: MockerFixture,
 ) -> None:
     """Test coverage and uniform look across inventories relies on the inventories calling
     labels_to_table."""

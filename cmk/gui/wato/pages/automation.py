@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """These functions implement a web service with that a master can call
@@ -15,6 +15,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.licensing.registry import get_license_state
 from cmk.utils.site import omd_site
 from cmk.utils.type_defs import UserId
 
@@ -31,6 +32,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.session import SuperUserContext
+from cmk.gui.utils.compatibility import make_incompatible_info
 from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.automations import (
     check_mk_local_automation_serialized,
@@ -78,26 +80,29 @@ class ModeAutomationLogin(AjaxPage):
             if "x-checkmk-edition" in request.headers
             else request.get_ascii_input_mandatory("_edition_short")
         )
-
+        central_license_state = get_license_state()
+        remote_version = cmk_version.__version__
+        remote_edition_short = cmk_version.edition().short
+        remote_license_state = get_license_state()
         if not isinstance(
             compatibility := compatible_with_central_site(
                 central_version,
                 central_edition_short,
-                cmk_version.__version__,
-                cmk_version.edition().short,
+                central_license_state,
+                remote_version,
+                remote_edition_short,
+                remote_license_state,
             ),
             cmk_version.VersionsCompatible,
         ):
             raise MKGeneralException(
-                _(
-                    "Your central site (Version: %s, Edition: %s) is incompatible with this "
-                    "remote site (Version: %s, Edition: %s). Reason: %s"
-                )
-                % (
+                make_incompatible_info(
                     central_version,
                     central_edition_short,
-                    cmk_version.__version__,
-                    cmk_version.edition().short,
+                    central_license_state,
+                    remote_version,
+                    remote_edition_short,
+                    remote_license_state,
                     compatibility,
                 )
             )
@@ -140,25 +145,29 @@ class ModeAutomation(AjaxPage):
     def _verify_compatibility(self) -> None:
         central_version = request.headers.get("x-checkmk-version", "")
         central_edition_short = request.headers.get("x-checkmk-edition", "")
+        central_license_state = get_license_state()
+        remote_version = cmk_version.__version__
+        remote_edition_short = cmk_version.edition().short
+        remote_license_state = get_license_state()
         if not isinstance(
             compatibility := compatible_with_central_site(
                 central_version,
                 central_edition_short,
-                cmk_version.__version__,
-                cmk_version.edition().short,
+                central_license_state,
+                remote_version,
+                remote_edition_short,
+                remote_license_state,
             ),
             cmk_version.VersionsCompatible,
         ):
             raise MKGeneralException(
-                _(
-                    "Your central site (Version: %s, Edition: %s) is incompatible with this "
-                    "remote site (Version: %s, Edition: %s): Reason: %s"
-                )
-                % (
+                make_incompatible_info(
                     central_version,
                     central_edition_short,
-                    cmk_version.__version__,
-                    cmk_version.edition().short,
+                    central_license_state,
+                    remote_version,
+                    remote_edition_short,
+                    remote_license_state,
                     compatibility,
                 )
             )
@@ -175,7 +184,7 @@ class ModeAutomation(AjaxPage):
 
     def page(self) -> PageResult:  # pylint: disable=useless-return
         # To prevent mixups in written files we use the same lock here as for
-        # the normal WATO page processing. This might not be needed for some
+        # the normal Setup page processing. This might not be needed for some
         # special automation requests, like inventory e.g., but to keep it simple,
         # we request the lock in all cases.
         lock_config = not (
@@ -211,7 +220,7 @@ class ModeAutomation(AjaxPage):
             return (
                 result_type_registry[cmk_command]
                 .deserialize(serialized_result)
-                .serialize(cmk_version_of_remote_automation_source())
+                .serialize(cmk_version_of_remote_automation_source(request))
             )
         except SyntaxError as e:
             raise local_automation_failure(

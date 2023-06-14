@@ -1,24 +1,29 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable
 
-from cmk.gui.plugins.watolib.utils import ConfigVariable, ConfigVariableGroup
+from pytest import MonkeyPatch
+
 from cmk.gui.valuespec import TextInput, ValueSpec
 from cmk.gui.wato.pages.global_settings import (
     ABCConfigDomain,
     MatchItemGeneratorSettings,
     ModeEditGlobals,
 )
+from cmk.gui.watolib.config_domain_name import ConfigVariable, ConfigVariableGroup
 from cmk.gui.watolib.search import MatchItem
 
 
-def test_match_item_generator_settings(  # type:ignore[no-untyped-def]
-    monkeypatch, request_context
+def test_match_item_generator_settings(
+    monkeypatch: MonkeyPatch,
 ) -> None:
     class SomeConfigVariable(ConfigVariable):
+        def group(self) -> type[ConfigVariableGroup]:
+            raise NotImplementedError()  # Hmmm...
+
         def ident(self) -> str:
             return "ident"
 

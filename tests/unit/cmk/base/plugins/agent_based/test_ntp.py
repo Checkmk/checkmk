@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
 from unittest import mock
+
+import pytest
 
 from tests.testlib import on_time
 
@@ -22,9 +23,10 @@ def test_check_ntp() -> None:
     section: Section = {
         "42.202.61.100": Peer("-", "42.202.61.100", ".INIT.", 16, _ntp_fmt_time("-"), "0", 0.0, 0.0)
     }
-    assert list(check_ntp("item", {}, section)) == []
+    assert not list(check_ntp("item", {}, section))
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_ntp_summanry() -> None:
     section: Section = {}
     assert list(check_ntp_summary({}, section)) == [

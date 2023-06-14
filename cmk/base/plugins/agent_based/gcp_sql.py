@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
@@ -37,9 +37,7 @@ service_namer = gcp.service_name_factory("Cloud SQL")
 ASSET_TYPE = gcp.AssetType("sqladmin.googleapis.com/Instance")
 
 
-def _get_service_labels(
-    project: gcp.Project, service: gcp.GCPAsset, item: str
-) -> list[ServiceLabel]:
+def _get_service_labels(service: gcp.GCPAsset, item: str) -> list[ServiceLabel]:
     data = service.resource_data
     labels = (
         [ServiceLabel(f"cmk/gcp/labels/{k}", v) for k, v in data["settings"]["userLabels"].items()]
@@ -52,7 +50,6 @@ def _get_service_labels(
             ServiceLabel("cmk/gcp/cloud_sql/name", item),
             ServiceLabel("cmk/gcp/cloud_sql/databaseVersion", data["databaseVersion"]),
             ServiceLabel("cmk/gcp/cloud_sql/availability", data["settings"]["availabilityType"]),
-            ServiceLabel("cmk/gcp/projectId", project),
         ]
     )
     return labels
@@ -64,7 +61,7 @@ def discover(
 ) -> DiscoveryResult:
     assets = gcp.validate_asset_section(section_gcp_assets, "cloud_sql")
     for item, service in assets[ASSET_TYPE].items():
-        labels = _get_service_labels(assets.project, service, item)
+        labels = _get_service_labels(service, item)
         yield Service(item=item, labels=labels)
 
 
@@ -328,7 +325,7 @@ def discover_gcp_sql_replication(
         ):
             continue
 
-        labels = _get_service_labels(assets.project, service, item)
+        labels = _get_service_labels(service, item)
         yield Service(item=item, labels=labels)
 
 

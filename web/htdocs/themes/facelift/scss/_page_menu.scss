@@ -1,5 +1,5 @@
 @charset "UTF-8";
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -16,16 +16,21 @@ div#top_heading {
   padding: 0;
 
   div.titlebar {
+    display: flex;
     height: 53px;
     padding: 0.5 * $spacing $spacing 0;
     background-color: $bg-color;
+
+    > div:first-child {
+      flex-grow: 1;
+    }
   }
 
   a.title {
     padding: 0;
     margin: 6px 0 0;
     font-size: $font-size-page-title;
-    font-weight: bold;
+    font-weight: $font-weight-bold;
     color: $font-color;
     text-decoration: none;
     white-space: nowrap;
@@ -36,12 +41,11 @@ div#top_heading {
   }
 
   div.page_state {
-    position: absolute;
-    top: 14px;
-    right: $spacing;
+    position: relative;
     display: flex;
     align-items: center;
     height: inherit;
+    box-sizing: border-box;
 
     > a {
       display: inherit;
@@ -54,7 +58,7 @@ div#top_heading {
     }
 
     &.pending_changes {
-      top: 3px;
+      padding-bottom: 4px;
 
       div.text_container span {
         display: block;
@@ -67,16 +71,20 @@ div#top_heading {
       }
     }
 
-    &.no_changes div.text_container {
-      span.changes_number {
-        display: none;
-      }
+    &.no_changes {
+      padding-top: 18px;
 
-      span.changes_str {
-        color: $font-color-dimmed;
+      div.text_container {
+        span.changes_number {
+          display: none;
+        }
 
-        &:hover {
-          color: $font-color;
+        span.changes_str {
+          color: $font-color-dimmed;
+
+          &:hover {
+            color: $font-color;
+          }
         }
       }
     }
@@ -97,12 +105,12 @@ div#top_heading {
     }
 
     &.reload {
-      top: 6px;
+      padding-top: 2px;
 
       div.text_container span {
         position: absolute;
         right: 6px;
-        bottom: 22px;
+        bottom: 21px;
         font-size: $font-size-small;
         line-height: $font-size-small;
       }
@@ -302,7 +310,7 @@ div#top_heading {
 
           div.topic_title {
             padding: $spacing 0 2px 12px;
-            font-weight: normal;
+            font-weight: $font-weight-default;
             color: $font-color-dimmed;
             cursor: default;
           }
@@ -485,14 +493,23 @@ div#top_heading {
           color: $font-color;
           text-decoration: none;
           background-color: $button-bg-color-suggestions;
+          border: 1px solid $default-button-border-color;
           border-radius: 4px;
           box-sizing: border-box;
+
+          &:hover {
+            cursor: pointer;
+            background-color: $button-bg-color-default;
+
+            animation-duration: 0.5s;
+            animation-name: easyhoverbg;
+            animation-fill-mode: forwards;
+          }
 
           img {
             width: 15px;
             height: 15px;
             padding: 0;
-            margin-top: -1.5px;
             margin-right: 5px;
 
             &:hover {
@@ -506,13 +523,8 @@ div#top_heading {
             }
           }
 
-          &:hover {
-            cursor: pointer;
-            background-color: $button-bg-color-default;
-
-            animation-duration: 0.5s;
-            animation-name: easyhoverbg;
-            animation-fill-mode: forwards;
+          span {
+            padding-top: 3px;
           }
         }
 
@@ -546,10 +558,12 @@ div#page_menu_popups {
         &:active {
           color: $font-color-light-bg;
           background-color: $color-state-1-background;
+          border-color: $color-state-1-background;
         }
 
         &:hover {
           background-color: darken($color-state-1-background, 5%);
+          border-color: darken($color-state-1-background, 5%);
         }
       }
 
@@ -558,10 +572,12 @@ div#page_menu_popups {
         &:active {
           color: $white;
           background-color: darken($color-state-2-background, 5%);
+          border-color: darken($color-state-2-background, 5%);
         }
 
         &:hover {
           background-color: $color-state-2-background;
+          border-color: $color-state-2-background;
         }
       }
     }
@@ -576,16 +592,18 @@ div#page_menu_popups {
     border-radius: $border-radius-left;
     margin: 0;
     font-size: 7px;
-    font-weight: 800;
+    font-weight: $font-weight-bold;
     color: $font-color-light-bg;
 
     &.confirm_question {
       background-color: $yellow;
+      border-color: $yellow;
     }
 
     &.confirm_warning {
       color: $white;
       background-color: $color-state-2-background;
+      border-color: $color-state-2-background;
     }
   }
 
@@ -599,7 +617,7 @@ div#page_menu_popups {
 
   .confirm_title {
     margin: 0 25px 0px;
-    font-weight: 800;
+    font-weight: $font-weight-bold;
   }
 
   .confirm_content {
@@ -868,7 +886,7 @@ div#page_menu_popups div.side_popup {
     a.filter_group_title {
       display: block;
       padding: 8px 10px;
-      font-weight: bold;
+      font-weight: $font-weight-bold;
       color: $font-color;
       cursor: pointer;
     }

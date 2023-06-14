@@ -1,0 +1,13 @@
+Title: agent bakery: win_script_runas: improve help
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1676887003
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Explicitly mention that passwords are stored in plain text when using "user
+mode".
+

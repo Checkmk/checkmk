@@ -6,7 +6,7 @@ Date: 1656339262
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When updating from Checkmk 2.0 to 2.1, there was a crash related to the configuration of the Prometheus special agent:
 C+:

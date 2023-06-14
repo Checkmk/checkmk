@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Callable
+from pathlib import Path
 from typing import Any, cast
 
 import pytest
@@ -89,8 +91,13 @@ UPS_POWER_0 = """
     ],
 )
 @pytest.mark.usefixtures("fix_register")
-def test_power_discover(walk: str, section_name: SectionName, result: DiscoveryResult) -> None:
-    parsed = cast(dict[str, int], get_parsed_snmp_section(section_name, walk))
+def test_power_discover(
+    walk: str,
+    section_name: SectionName,
+    result: DiscoveryResult,
+    as_path: Callable[[str], Path],
+) -> None:
+    parsed = cast(dict[str, int], get_parsed_snmp_section(section_name, as_path(walk)))
 
     assert list(discover_epower(parsed)) == result
 
@@ -179,8 +186,13 @@ def test_power_discover(walk: str, section_name: SectionName, result: DiscoveryR
 )
 @pytest.mark.usefixtures("fix_register")
 def test_epower_check(
-    walk: str, section_name: SectionName, item: str, params: Any, result: CheckResult
+    walk: str,
+    section_name: SectionName,
+    item: str,
+    params: Any,
+    result: CheckResult,
+    as_path: Callable[[str], Path],
 ) -> None:
-    parsed = cast(dict[str, int], get_parsed_snmp_section(section_name, walk))
+    parsed = cast(dict[str, int], get_parsed_snmp_section(section_name, as_path(walk)))
 
     assert list(check_epower(item=item, params=params, section=parsed)) == result

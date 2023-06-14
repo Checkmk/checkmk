@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -28,6 +28,7 @@ CACHE_MAXAGE=120
 
 # Source the optional configuration file for this agent plugin
 if [ -e "$MK_CONFDIR/mk_oracle.cfg" ]; then
+    # shellcheck source=../../../agents/cfg_examples/mk_oracle.cfg
     . "$MK_CONFDIR"/mk_oracle.cfg
 fi
 
@@ -70,6 +71,7 @@ sqlplus() {
     } | "$MK_CONFDIR"/sqlplus.sh "$1"); then
         echo "${OUTPUT}" | sed -e 's/[[:space:]]\+/ /g' -e '/^[[:space:]]*$/d' -e "s/^/$1 /"
     else
+        # shellcheck disable=SC2001 # stylistic false positive
         echo "${OUTPUT}" | sed "s/^/$1 FAILURE /"
     fi
 }
@@ -107,7 +109,7 @@ for SID in $SIDS; do
     if [ -s "$CACHE_FILE" ]; then
         NOW=$(date +%s)
         MTIME=$(stat -c %Y "$CACHE_FILE")
-        if [ $(($NOW - $MTIME)) -le $CACHE_MAXAGE ]; then
+        if [ $((NOW - MTIME)) -le $CACHE_MAXAGE ]; then
             CACHE_FILE_UPTODATE=1
         fi
     fi
@@ -122,7 +124,7 @@ for SID in $SIDS; do
     # because of the existance of the .new file
     # When the cache is old and there is no *new file present, then start a query
     # to update the information for this instance.
-    if [ -z "$CACHE_FILE_UPTODATE" -a ! -e "$CACHE_FILE.new" ]; then
+    if [ -z "$CACHE_FILE_UPTODATE" ] && [ ! -e "$CACHE_FILE.new" ]; then
         setsid bash -c "
             set -o noclobber
             function sqlplus ()
@@ -149,7 +151,7 @@ for SID in $SIDS; do
 
             if [ '$EXCLUDE' = '${EXCLUDE/jobs/}' ]; then
                 echo '<<<oracle_jobs>>>'
-                sqlplus ""$SID"" <<EOF
+                sqlplus \"$SID\" <<EOF
                 SELECT j.OWNER, j.JOB_NAME, j.STATE,
                 (TRUNC(sysdate) + j.LAST_RUN_DURATION - TRUNC(sysdate)) * 86400 AS LAST_RUN_DURATION,
                 j.RUN_COUNT, j.ENABLED, NVL(j.NEXT_RUN_DATE, to_date('1970-01-01', 'YYYY-mm-dd')),
@@ -163,7 +165,7 @@ EOF
 
             if [ '$EXCLUDE' = '${EXCLUDE/rman_backups/}' ]; then
                 echo '<<<oracle_rman_backups>>>'
-                sqlplus ""$SID"" <<EOF
+                sqlplus \"$SID\" <<EOF
                 SELECT b.COMMAND_ID, a.STATUS,
                 to_char(a.START_TIME, 'YYYY-mm-dd_HH24:MI:SS') AS START_TIME,
                 to_char(a.END_TIME, 'YYYY-mm-dd_HH24:MI:SS') AS END_TIME, b.INPUT_TYPE
@@ -176,7 +178,7 @@ EOF
 
             if [ '$EXCLUDE' = '${EXCLUDE/tablespaces/}' ]; then
                 echo '<<<oracle_tablespaces>>>'
-                sqlplus ""$SID"" <<EOF | sed 's/READ ONLY/READONLY/g'
+                sqlplus \"$SID\" <<EOF | sed 's/READ ONLY/READONLY/g'
                 select f.file_name, f.tablespace_name, f.status, f.AUTOEXTENSIBLE,
                 f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY,
                 f.ONLINE_STATUS, t.BLOCK_SIZE, t.status, decode(sum(fs.blocks), NULL, 0,

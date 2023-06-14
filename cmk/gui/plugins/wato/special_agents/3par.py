@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,7 +10,7 @@ from cmk.gui.plugins.wato.utils import (
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
-from cmk.gui.valuespec import Dictionary, DropdownChoice, Integer, ListOfStrings, TextInput
+from cmk.gui.valuespec import Dictionary, DropdownChoice, ListOfStrings, NetworkPort, TextInput
 
 
 def _valuespec_special_agents_3par() -> Dictionary:
@@ -33,7 +33,7 @@ def _valuespec_special_agents_3par() -> Dictionary:
             ),
             (
                 "port",
-                Integer(
+                NetworkPort(
                     title=_("TCP port number"),
                     help=_("Port number that 3par is listening on. The default is 8080."),
                     default_value=8080,

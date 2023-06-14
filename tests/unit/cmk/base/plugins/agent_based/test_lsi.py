@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping
+
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName
+from tests.unit.conftest import FixRegister
+
+from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.lsi import parse_lsi
 
 INFO = [
@@ -20,7 +25,7 @@ INFO = [
 ]
 
 
-def test_lsi_parsing(fix_register) -> None:  # type:ignore[no-untyped-def]
+def test_lsi_parsing() -> None:
     result = parse_lsi(INFO)
     assert "disks" in result and "arrays" in result
     assert "286" in result["arrays"]
@@ -29,7 +34,7 @@ def test_lsi_parsing(fix_register) -> None:  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize(
-    "plugin,expected",
+    "plugin_name,expected",
     [
         (
             "lsi_array",
@@ -46,13 +51,15 @@ def test_lsi_parsing(fix_register) -> None:  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_lsi_discovery(fix_register, plugin, expected) -> None:  # type:ignore[no-untyped-def]
-    plugin = fix_register.check_plugins[CheckPluginName(plugin)]
+def test_lsi_discovery(
+    fix_register: FixRegister, plugin_name: str, expected: DiscoveryResult
+) -> None:
+    plugin = fix_register.check_plugins[CheckPluginName(plugin_name)]
     section = parse_lsi(INFO)
     assert list(plugin.discovery_function(section=section)) == expected
 
 
-def test_lsi_array(fix_register) -> None:  # type:ignore[no-untyped-def]
+def test_lsi_array(fix_register: FixRegister) -> None:
     plugin = fix_register.check_plugins[CheckPluginName("lsi_array")]
     section = parse_lsi(INFO)
     assert list(plugin.check_function(item="286", params={}, section=section)) == [
@@ -61,7 +68,7 @@ def test_lsi_array(fix_register) -> None:  # type:ignore[no-untyped-def]
 
 
 @pytest.mark.parametrize(
-    "plugin,item,params,expected",
+    "plugin_name,item,params,expected",
     [
         (
             "lsi_disk",
@@ -77,8 +84,14 @@ def test_lsi_array(fix_register) -> None:  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_lsi(fix_register, plugin, item, params, expected) -> None:  # type:ignore[no-untyped-def]
-    plugin = fix_register.check_plugins[CheckPluginName(plugin)]
+def test_lsi(
+    fix_register: FixRegister,
+    plugin_name: str,
+    item: str,
+    params: Mapping[str, str],
+    expected: CheckResult,
+) -> None:
+    plugin = fix_register.check_plugins[CheckPluginName(plugin_name)]
     section = parse_lsi(INFO)
     assert (
         list(

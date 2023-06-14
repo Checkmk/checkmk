@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
@@ -148,6 +148,7 @@ def test_check_humidity(check_humidity: CheckFunction) -> None:
     }
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_temp(check_temp: CheckFunction) -> None:
     section = etherbox.etherbox_convert(
         [
@@ -165,7 +166,7 @@ def test_check_temp(check_temp: CheckFunction) -> None:
         )
     )
     assert set(results) == {
-        Result(state=State.OK, summary="[n] Temperature: 4.2°C"),
+        Result(state=State.OK, summary="[n] Temperature: 4.2 °C"),
         Result(
             state=State.OK,
             notice="Configuration: prefer user levels over device levels (no levels found)",

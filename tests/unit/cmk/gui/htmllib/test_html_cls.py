@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -75,11 +75,11 @@ def test_render_help_visible(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_add_manual_link() -> None:
     assert user.language == "en"
     assert compare_html(
-        html.render_help("[intro_welcome|Welcome]"),
+        html.render_help("[welcome|Welcome]"),
         HTML(
             '<div style="display:none;" class="help"><div class="info_icon"><img '
             'src="themes/facelift/images/icon_info.svg" class="icon"></div><div '
-            'class="help_text"><a href="https://docs.checkmk.com/master/en/intro_welcome.html" '
+            'class="help_text"><a href="https://docs.checkmk.com/master/en/welcome.html" '
             'target="_blank">Welcome</a></div></div>'
         ),
     )
@@ -87,30 +87,32 @@ def test_add_manual_link() -> None:
 
 @pytest.mark.usefixtures("request_context")
 def test_add_manual_link_localized(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(user, "language", lambda: "de")
-    assert compare_html(
-        html.render_help("[intro_welcome|Welcome]"),
-        HTML(
-            '<div style="display:none;" class="help"><div class="info_icon"><img '
-            'src="themes/facelift/images/icon_info.svg" class="icon"></div><div '
-            'class="help_text"><a href="https://docs.checkmk.com/master/de/intro_welcome.html" '
-            'target="_blank">Welcome</a></div></div>'
-        ),
-    )
+    with monkeypatch.context() as m:
+        m.setattr(user, "language", lambda: "de")
+        assert compare_html(
+            html.render_help("[welcome|Welcome]"),
+            HTML(
+                '<div style="display:none;" class="help"><div class="info_icon"><img '
+                'src="themes/facelift/images/icon_info.svg" class="icon"></div><div '
+                'class="help_text"><a href="https://docs.checkmk.com/master/de/welcome.html" '
+                'target="_blank">Welcome</a></div></div>'
+            ),
+        )
 
 
 @pytest.mark.usefixtures("request_context")
 def test_add_manual_link_anchor(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(user, "language", lambda: "de")
-    assert compare_html(
-        html.render_help("[graphing#rrds|RRDs]"),
-        HTML(
-            '<div style="display:none;" class="help"><div class="info_icon"><img '
-            'src="themes/facelift/images/icon_info.svg" class="icon"></div><div '
-            'class="help_text"><a href="https://docs.checkmk.com/master/de/graphing.html#rrds" '
-            'target="_blank">RRDs</a></div></div>'
-        ),
-    )
+    with monkeypatch.context() as m:
+        m.setattr(user, "language", lambda: "de")
+        assert compare_html(
+            html.render_help("[graphing#rrds|RRDs]"),
+            HTML(
+                '<div style="display:none;" class="help"><div class="info_icon"><img '
+                'src="themes/facelift/images/icon_info.svg" class="icon"></div><div '
+                'class="help_text"><a href="https://docs.checkmk.com/master/de/graphing.html#rrds" '
+                'target="_blank">RRDs</a></div></div>'
+            ),
+        )
 
 
 @pytest.mark.usefixtures("request_context")
@@ -136,7 +138,6 @@ def test_show_user_errors() -> None:
 @pytest.mark.usefixtures("request_context")
 def test_HTMLWriter() -> None:
     with output_funnel.plugged():
-
         with output_funnel.plugged():
             html.open_div()
             text = output_funnel.drain()

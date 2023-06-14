@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -86,7 +86,6 @@ def cluster_check_if64(
     section_if64: Mapping[str, Optional[interfaces.Section[interfaces.TInterfaceType]]],
     section_if64adm: Mapping[str, Optional[If64AdmSection]],
 ) -> type_defs.CheckResult:
-
     sections_w_admin_status: Dict[str, interfaces.Section[interfaces.TInterfaceType]] = {}
     for node_name, node_section_if64 in section_if64.items():
         if node_section_if64 is not None:

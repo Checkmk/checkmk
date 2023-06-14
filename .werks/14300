@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When Checkmk is used on on the Checkmk Appliance 1.6 or newer, it is necessary
 to update the appliance sidebar snapin.

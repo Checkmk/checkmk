@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -28,20 +28,20 @@ pub fn migrate_registered_connections(path: impl AsRef<Path>) -> AnyhowResult<()
 
     let mut migrated_registry = config::Registry::new(path.as_ref())?;
 
-    for (connection_type, legacy_connections) in [
+    for (connection_mode, legacy_connections) in [
         (
-            config::ConnectionType::Push,
+            config::ConnectionMode::Push,
             registered_connections_legacy.push,
         ),
         (
-            config::ConnectionType::Pull,
+            config::ConnectionMode::Pull,
             registered_connections_legacy.pull,
         ),
     ] {
         for (coordinates, legacy_connection) in legacy_connections.into_iter() {
             let (site_id, migrated_connection) =
                 migrate_standard_connection(coordinates, legacy_connection);
-            migrated_registry.register_connection(&connection_type, &site_id, migrated_connection);
+            migrated_registry.register_connection(&connection_mode, &site_id, migrated_connection);
         }
     }
 
@@ -157,11 +157,33 @@ mod test {
     use super::*;
     use std::path::PathBuf;
 
-    fn tmp_path() -> PathBuf {
-        tempfile::NamedTempFile::new()
-            .unwrap()
-            .into_temp_path()
-            .to_path_buf()
+    struct NamedTempPath {
+        path: PathBuf,
+    }
+
+    impl NamedTempPath {
+        fn new() -> Self {
+            Self {
+                path: tempfile::NamedTempFile::new()
+                    .unwrap()
+                    .into_temp_path()
+                    .to_path_buf(),
+            }
+        }
+    }
+
+    impl AsRef<Path> for NamedTempPath {
+        fn as_ref(&self) -> &Path {
+            &self.path
+        }
+    }
+
+    impl Drop for NamedTempPath {
+        fn drop(&mut self) {
+            if self.path.exists() {
+                std::fs::remove_file(&self.path).unwrap();
+            }
+        }
     }
 
     fn write_legacy_registry(path: impl AsRef<Path>) {
@@ -199,15 +221,15 @@ mod test {
 
     #[test]
     fn test_missing_registry_ok() {
-        let tmp_path = tmp_path();
-        assert!(!tmp_path.exists());
+        let tmp_path = NamedTempPath::new();
+        assert!(!tmp_path.as_ref().exists());
         assert!(migrate_registered_connections(&tmp_path).is_ok());
-        assert!(!tmp_path.exists());
+        assert!(!tmp_path.as_ref().exists());
     }
 
     #[test]
     fn test_up_to_date_registry_untouched() {
-        let tmp_path = tmp_path();
+        let tmp_path = NamedTempPath::new();
         config::Registry::new(&tmp_path).unwrap().save().unwrap();
         let mtime_before_migration = std::fs::metadata(&tmp_path).unwrap().modified().unwrap();
         assert!(migrate_registered_connections(&tmp_path).is_ok());
@@ -217,16 +239,17 @@ mod test {
 
     #[test]
     fn test_legacy_registry_migration() {
-        let tmp_path = tmp_path();
+        let tmp_path = NamedTempPath::new();
         write_legacy_registry(&tmp_path);
         assert!(migrate_registered_connections(&tmp_path).is_ok());
         let migrated_registry = config::Registry::from_file(&tmp_path).unwrap();
 
-        assert_eq!(migrated_registry.push_connections().count(), 1);
-        assert_eq!(migrated_registry.standard_pull_connections().count(), 1);
-        assert_eq!(migrated_registry.imported_pull_connections().count(), 1);
+        assert_eq!(migrated_registry.get_push_connections().count(), 1);
+        assert_eq!(migrated_registry.get_standard_pull_connections().count(), 1);
+        assert_eq!(migrated_registry.get_imported_pull_connections().count(), 1);
 
-        let (site_id_push, connection_push) = migrated_registry.push_connections().next().unwrap();
+        let (site_id_push, connection_push) =
+            migrated_registry.get_push_connections().next().unwrap();
         assert_eq!(site_id_push.to_string(), "server/push-site");
         assert_eq!(
             connection_push.trust.uuid.to_string(),
@@ -247,7 +270,7 @@ mod test {
         assert_eq!(connection_push.receiver_port, 8000);
 
         let (site_id_pull, connection_pull) = migrated_registry
-            .standard_pull_connections()
+            .get_standard_pull_connections()
             .next()
             .unwrap();
         assert_eq!(site_id_pull.to_string(), "server/pull-site");
@@ -270,7 +293,7 @@ mod test {
         assert_eq!(connection_pull.receiver_port, 8000);
 
         let connection_imported = migrated_registry
-            .imported_pull_connections()
+            .get_imported_pull_connections()
             .next()
             .unwrap();
         assert_eq!(
@@ -293,8 +316,8 @@ mod test {
 
     #[test]
     fn test_crash_upon_corrupt_registry() {
-        let tmp_path = tmp_path();
+        let tmp_path = NamedTempPath::new();
         std::fs::write(&tmp_path, "nonsense").unwrap();
-        assert!(migrate_registered_connections(&tmp_path).is_err())
+        assert!(migrate_registered_connections(&tmp_path).is_err());
     }
 }

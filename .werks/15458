@@ -1,0 +1,15 @@
+Title: mk_filestats: bakery rule matching changed to support rule merging
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1679649686
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+The mk_filestats bakery rule matched the first applicable rule until now.
+In order to allow configuring defaults, delimiters and sections separately,
+the matching logic of the rule has been changed to merge rules like it's done
+for the monitoring service rules.
+

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Host tag groups
@@ -16,7 +16,8 @@ You can find an introduction to hosts including host tags and host tag groups in
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.utils.tags import BuiltinTagConfig, TagGroup, TaggroupSpec
+from cmk.utils.regex import REGEX_ID
+from cmk.utils.tags import BuiltinTagConfig, TagGroup, TagGroupID, TagGroupSpec
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -79,7 +80,7 @@ HOST_TAG_GROUP_NAME = {
     "name": HostTagGroupName(
         description="The name of the host tag group",
         example="datasource",
-        pattern="[a-zA-Z_]+[-0-9a-zA-Z_]*",
+        pattern=REGEX_ID,
         required=True,
     )
 }
@@ -171,7 +172,7 @@ def update_host_tag_group(params: Mapping[str, Any]) -> Response:
     updated_details = {x: body[x] for x in body if x != "repair"}
     tag_group = _retrieve_group(ident)
     group_details = tag_group.get_dict_format()
-    # This is an incremental update of the TaggroupSpec
+    # This is an incremental update of the TagGroupSpec
     group_details.update(updated_details)  # type: ignore[typeddict-item]
     try:
         edit_tag_group(ident, TagGroup.from_config(group_details), allow_repair=body["repair"])
@@ -193,7 +194,7 @@ def update_host_tag_group(params: Mapping[str, Any]) -> Response:
     ".../delete",
     method="delete",
     path_params=[HOST_TAG_GROUP_NAME],
-    additional_status_codes=[405],
+    additional_status_codes=[401, 405],
     query_params=[request_schemas.DeleteHostTagGroup],
     permissions_required=RW_PERMISSIONS,
     output_empty=True,
@@ -212,11 +213,27 @@ def delete_host_tag_group(params: Mapping[str, Any]) -> Response:
     affected = change_host_tags(OperationRemoveTagGroup(ident), TagCleanupMode.CHECK)
     if any(affected):
         if not params["repair"]:
+            affected_folder, affected_hosts, affected_rulesets = affected
+            affected_occurrences = []
+
+            if affected_folder:
+                affected_occurrences.append(
+                    f"folders ({', '.join(f.name() for f in affected_folder)})"
+                )
+            if affected_hosts:
+                affected_occurrences.append(
+                    f"hosts ({', '.join(h.name() for h in affected_hosts)})"
+                )
+            if affected_rulesets:
+                affected_occurrences.append(
+                    f"rulesets ({', '.join(r.name for r in affected_rulesets)})"
+                )
+
             return problem(
                 status=401,
                 title=f'Deleting this host tag group "{ident}" requires additional authorization',
                 detail=(
-                    "The host tag group you intend to delete is used by other instances. You must "
+                    f"The host tag group you intend to delete is used in the following occurrences: {', '.join(affected_occurrences)}. You must "
                     "authorize Checkmk to update the relevant instances using the repair parameter"
                 ),
             )
@@ -229,7 +246,7 @@ def delete_host_tag_group(params: Mapping[str, Any]) -> Response:
     return Response(status=204)
 
 
-def _retrieve_group(ident: str) -> TagGroup:
+def _retrieve_group(ident: TagGroupID) -> TagGroup:
     tag_group = load_tag_group(ident)
     if tag_group is None:
         raise ProblemException(
@@ -239,13 +256,12 @@ def _retrieve_group(ident: str) -> TagGroup:
     return tag_group
 
 
-def _serve_host_tag_group(tag_details: TaggroupSpec) -> Response:
+def _serve_host_tag_group(tag_details: TagGroupSpec) -> Response:
     response = serve_json(serialize_host_tag_group(tag_details))
-    response.headers.add("ETag", constructors.etag_of_dict(dict(tag_details)).to_header())
-    return response
+    return constructors.response_with_etag_created_from_dict(response, dict(tag_details))
 
 
-def serialize_host_tag_group(details: TaggroupSpec) -> dict[str, Any]:
+def serialize_host_tag_group(details: TagGroupSpec) -> dict[str, Any]:
     return constructors.domain_object(
         domain_type="host_tag_group",
         identifier=details["id"],

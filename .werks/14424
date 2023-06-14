@@ -6,7 +6,7 @@ Date: 1657013442
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Most of the interface check plugins (such as <tt>if64</tt>) are counter-based. This means that the
 rates shown in the service outputs are computed by Checkmk based on these counters. One property of

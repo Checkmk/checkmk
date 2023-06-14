@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Service discovery
@@ -12,9 +12,7 @@ You can find an introduction to services including service discovery in the
 """
 import enum
 from collections.abc import Mapping, Sequence
-from typing import Any
-
-from typing_extensions import assert_never
+from typing import Any, assert_never
 
 from cmk.automations.results import CheckPreviewEntry
 
@@ -70,6 +68,7 @@ DISCOVERY_PERMISSIONS = permissions.AllPerm(
         permissions.Optional(permissions.Perm("wato.service_discovery_to_ignored")),
         permissions.Optional(permissions.Perm("wato.service_discovery_to_removed")),
         permissions.Optional(permissions.Perm("wato.services")),
+        permissions.Undocumented(permissions.Perm("wato.see_all_folders")),
     ]
 )
 
@@ -102,7 +101,7 @@ class APIDiscoveryAction(enum.Enum):
     tabula_rasa = "tabula_rasa"
 
 
-def _discovery_mode(default_mode: str):  # type:ignore[no-untyped-def]
+def _discovery_mode(default_mode: str):  # type: ignore[no-untyped-def]
     return fields.String(
         description="""The mode of the discovery action. The 'refresh' mode starts a new service
         discovery which will contact the host and identify undecided and vanished services and host
@@ -191,7 +190,7 @@ def show_services(params: Mapping[str, Any]) -> Response:
         host=host,
         folder=host.folder(),
         options=DiscoveryOptions(
-            action="",
+            action=DiscoveryAction.NONE,
             show_checkboxes=False,
             show_parameters=False,
             show_discovered_labels=False,
@@ -255,6 +254,7 @@ class UpdateDiscoveryPhase(BaseSchema):
                         permissions.Perm("wato.service_discovery_to_ignored"),
                         permissions.Perm("wato.service_discovery_to_undecided"),
                         permissions.Perm("wato.service_discovery_to_removed"),
+                        permissions.Undocumented(permissions.Perm("wato.see_all_folders")),
                     ]
                 )
             ),
@@ -355,8 +355,11 @@ def service_discovery_run_wait_for_completion(params: Mapping[str, Any]) -> Resp
     job = ServiceDiscoveryBackgroundJob(host.name())
     if not job.exists():
         raise ProblemException(
-            status=404, title=f"Service discovery job for host {host.name()} not found."
+            status=404,
+            title="The requested service discovery job was not found",
+            detail=f"Could not find a service discovery for host {host.name()}",
         )
+
     if job.is_active():
         response = Response(status=302)
         response.location = request.url
@@ -383,7 +386,7 @@ class DiscoverServices(BaseSchema):
     tag_group="Setup",
     status_descriptions={
         302: "The service discovery background job has been initialized. Redirecting to the "
-        "'Show discovery service background job' endpoint.",
+        "'Wait for service discovery completion' endpoint.",
         409: "A service discovery background job is currently running",
     },
     additional_status_codes=[302, 409],
@@ -407,7 +410,7 @@ def execute_service_discovery(params: Mapping[str, Any]) -> Response:
     tag_group="Setup",
     status_descriptions={
         302: "The service discovery background job has been initialized. Redirecting to the "
-        "'Show discovery service background job' endpoint.",
+        "'Wait for service discovery completion' endpoint.",
         404: "Host could not be found",
         409: "A service discovery background job is currently running",
     },
@@ -434,7 +437,7 @@ def _execute_service_discovery(discovery_action: APIDiscoveryAction, host: CREHo
     if service_discovery_job.is_active():
         return Response(status=409)
     discovery_options = _discovery_options(DISCOVERY_ACTION[discovery_action.value])
-    if not has_discovery_action_specific_permissions(discovery_options.action):
+    if not has_discovery_action_specific_permissions(discovery_options.action, None):
         return problem(
             403,
             "You do not have the necessary permissions to execute this action",
@@ -508,7 +511,7 @@ def _lookup_phase_name(internal_phase_name: str) -> str:
     raise ValueError(f"Key {internal_phase_name} not found in dict.")
 
 
-def serialize_discovery_result(  # type:ignore[no-untyped-def]
+def serialize_discovery_result(  # type: ignore[no-untyped-def]
     host: CREHost,
     discovery_result: DiscoveryResult,
 ):
@@ -670,12 +673,13 @@ def show_bulk_discovery_status(params: Mapping[str, Any]) -> Response:
     if job.get_job_id() != job_id:
         raise ProblemException(
             status=404,
-            title=f"Background job {job_id} not found.",
+            title="The requested background job_id was not found",
+            detail=f"Could not find a background job with id {job_id}.",
         )
     return _serve_background_job(job)
 
 
-def _discovery_options(action_mode: str):  # type:ignore[no-untyped-def]
+def _discovery_options(action_mode: DiscoveryAction) -> DiscoveryOptions:
     return DiscoveryOptions(
         action=action_mode,
         show_checkboxes=False,

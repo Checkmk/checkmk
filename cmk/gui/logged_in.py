@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Manage the currently logged in user"""
@@ -9,8 +9,8 @@ from __future__ import annotations
 import logging
 import os
 import time
-from collections.abc import Container
-from typing import Any, Final, Sequence
+from collections.abc import Container, Sequence
+from typing import Any, Final
 
 from livestatus import SiteConfigurations, SiteId
 
@@ -414,7 +414,7 @@ class LoggedInUser:
             return 0
 
     def get_docs_base_url(self) -> str:
-        version = Version(__version__).version_base
+        version = Version.from_str(__version__).version_base
         version = version if version != "" else "master"
         return "https://docs.checkmk.com/{}/{}".format(
             version, "de" if self.language == "de" else "en"

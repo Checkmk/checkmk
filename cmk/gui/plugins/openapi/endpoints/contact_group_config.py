@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Contact groups
@@ -30,6 +30,7 @@ from cmk.gui.plugins.openapi.endpoints.utils import (
     fetch_group,
     fetch_specific_groups,
     prepare_groups,
+    ProblemException,
     serialize_group,
     serialize_group_list,
     serve_group,
@@ -45,7 +46,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     request_schemas,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
+from cmk.gui.plugins.openapi.restful_objects.parameters import GROUP_NAME_FIELD
 from cmk.gui.plugins.openapi.utils import serve_json
 from cmk.gui.session import SuperUserContext
 from cmk.gui.watolib.groups import (
@@ -53,7 +54,9 @@ from cmk.gui.watolib.groups import (
     check_modify_group_permissions,
     delete_group,
     edit_group,
+    GroupInUseException,
     load_contact_group_information,
+    UnknownGroupException,
 )
 
 PERMISSIONS = permissions.Perm("wato.users")
@@ -81,7 +84,7 @@ def create(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.users")
     body = params["body"]
     name = body["name"]
-    group_details = {"alias": body.get("alias")}
+    group_details = {"alias": body["alias"]}
     if version.is_managed_edition():
         group_details = update_customer_info(group_details, body["customer"])
     add_group(name, "contact", group_details)
@@ -94,7 +97,7 @@ def create(params: Mapping[str, Any]) -> Response:
     "cmk/bulk_create",
     method="post",
     request_schema=request_schemas.BulkInputContactGroup,
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=response_schemas.ContactGroupCollection,
     permissions_required=RW_PERMISSIONS,
 )
 def bulk_create(params: Mapping[str, Any]) -> Response:
@@ -118,7 +121,7 @@ def bulk_create(params: Mapping[str, Any]) -> Response:
     constructors.collection_href("contact_group_config"),
     ".../collection",
     method="get",
-    response_schema=response_schemas.LinkedValueDomainObjectCollection,
+    response_schema=response_schemas.ContactGroupCollection,
     permissions_required=PERMISSIONS,
 )
 def list_group(params: Mapping[str, Any]) -> Response:
@@ -138,7 +141,7 @@ def list_group(params: Mapping[str, Any]) -> Response:
     method="get",
     response_schema=response_schemas.ContactGroup,
     etag="output",
-    path_params=[NAME_FIELD],
+    path_params=[GROUP_NAME_FIELD],
     permissions_required=PERMISSIONS,
 )
 def show(params: Mapping[str, Any]) -> Response:
@@ -153,9 +156,10 @@ def show(params: Mapping[str, Any]) -> Response:
     constructors.object_href("contact_group_config", "{name}"),
     ".../delete",
     method="delete",
-    path_params=[NAME_FIELD],
+    path_params=[GROUP_NAME_FIELD],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
+    additional_status_codes=[409],
 )
 def delete(params: Mapping[str, Any]) -> Response:
     """Delete a contact group"""
@@ -163,9 +167,23 @@ def delete(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.users")
     name = params["name"]
     check_modify_group_permissions("contact")
-    with disable_permission_tracking(), SuperUserContext():
+    with disable_permission_tracking():
         # HACK: We need to supress this, due to lots of irrelevant dashboard permissions
-        delete_group(name, "contact")
+        try:
+            delete_group(name, "contact")
+        except GroupInUseException as exc:
+            raise ProblemException(
+                status=409,
+                title="Group in use problem",
+                detail=str(exc),
+            )
+        except UnknownGroupException as exc:
+            raise ProblemException(
+                status=404,
+                title="Unknown group problem",
+                detail=str(exc),
+            )
+
     return Response(status=204)
 
 
@@ -176,25 +194,32 @@ def delete(params: Mapping[str, Any]) -> Response:
     request_schema=request_schemas.BulkDeleteContactGroup,
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
+    additional_status_codes=[404, 409],
 )
 def bulk_delete(params: Mapping[str, Any]) -> Response:
     """Bulk delete contact groups"""
     user.need_permission("wato.edit")
     user.need_permission("wato.users")
     body = params["body"]
-    entries = body["entries"]
-    for group_name in entries:
-        fetch_group(
-            group_name,
-            "contact",
-            status=400,
-            message=f"contact group {group_name} was not found",
-        )
     with disable_permission_tracking(), SuperUserContext():
-        for group_name in entries:
+        for group_name in body["entries"]:
             # We need to supress this, because a lot of dashboard permissions are checked for
             # various reasons.
-            delete_group(group_name, "contact")
+            try:
+                delete_group(group_name, "contact")
+            except GroupInUseException as exc:
+                raise ProblemException(
+                    status=409,
+                    title="Group in use problem",
+                    detail=str(exc),
+                )
+            except UnknownGroupException as exc:
+                raise ProblemException(
+                    status=404,
+                    title="Unknown group problem",
+                    detail=str(exc),
+                )
+
     return Response(status=204)
 
 
@@ -202,7 +227,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     constructors.object_href("contact_group_config", "{name}"),
     ".../update",
     method="put",
-    path_params=[NAME_FIELD],
+    path_params=[GROUP_NAME_FIELD],
     response_schema=response_schemas.ContactGroup,
     etag="both",
     request_schema=request_schemas.UpdateGroup,
@@ -214,7 +239,7 @@ def update(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.users")
     name = params["name"]
     group = fetch_group(name, "contact")
-    constructors.require_etag(constructors.etag_of_dict(group))
+    constructors.require_etag(constructors.hash_of_dict(group))
     edit_group(name, "contact", updated_group_details(name, "contact", params["body"]))
     group = fetch_group(name, "contact")
     return serve_group(group, serialize_group("contact_group_config"))
@@ -225,7 +250,7 @@ def update(params: Mapping[str, Any]) -> Response:
     "cmk/bulk_update",
     method="put",
     request_schema=request_schemas.BulkUpdateContactGroup,
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=response_schemas.ContactGroupCollection,
     permissions_required=RW_PERMISSIONS,
 )
 def bulk_update(params: Mapping[str, Any]) -> Response:

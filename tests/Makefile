@@ -1,10 +1,11 @@
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 SHELL := /bin/bash -e
 SCRIPTS := $(realpath ../scripts)
 FIND_PYTHON_FILES := $(SCRIPTS)/find-python-files
+FIND_SHELL_FILES := $(SCRIPTS)/find-shell-files
 PIPENV := $(SCRIPTS)/run-pipenv
 PYTEST := $(PIPENV) run pytest $(PYTEST_ARGS)
 CYCLES := $(PIPENV) run py_import_cycles
@@ -21,6 +22,7 @@ PYTEST_UNIT_TEST_OPTS = \
     ../cmk/utils \
     ../agent-receiver \
     ../omd/packages/omd \
+	../cmk/active_checks \
     unit
 PYTEST_OPTS_UNIT_SKIP_SLOW = -m "not slow"
 PYTEST_OPTS_UNIT_SLOW_ONLY = -m "slow"
@@ -33,42 +35,35 @@ ADDITIONAL_MYPY_ARGS := $(JUNIT_XML)
 # the EDITIONS environment variable handed over by some jenkins test jobs.
 # Looks like we need to cleanup the EDITION handling here.
 GCC_TOOLCHAIN := /opt/gcc-$(shell make --no-print-directory --file=../defines.make print-GCC_VERSION)
+AGENT_PLUGIN_PYTHON_VERSIONS := $(shell make --no-print-directory --file=../defines.make print-AGENT_PLUGIN_PYTHON_VERSIONS)
+
+# A random time zone between UTC-11...UTC+14. Note the recursively expanded
+# variable assignment to get a new time zone on every access.
+RANDOM_TZ = $(shell printf "UTC%+d\n" $$(( $$RANDOM / 1261 - 11 )) )
+
+SYSTEM_TESTS := \
+    test-integration \
+    test-composition \
+    test-update \
+    test-gui-crawl \
+    test-xss-crawl \
+    test-gui-e2e
+PYTEST_SYSTEM_TEST_ARGS := -p "no:cov"
 
 # Since the unit tests (that are written for Python 3) are executed with Python
-# 2.6 and 2.7, we need to convert them, just like it is done for the agent
-# plugins (see agents/plugins/Makefile)
+# 2.7, we need to convert them, just like it is done for the agent plugins (see
+# agents/plugins/Makefile)
 AGENT_PLUGIN_UNIT_TEST_FILES := $(wildcard agent-plugin-unit/test_*.py)
 AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/py2,$(AGENT_PLUGIN_UNIT_TEST_FILES))
 
-# evaluate this only if needed, it slows down tab expansion otherwise.
-# asio-asio*, googletest* and __pycache__ are excluded because they are present during CI call
-# "_deps" and "build" is excluded as an owned by cmake build
-SHELL_FILES_REL = $(shell cd ..; grep -rl \
-    --exclude-dir="_deps" \
-    --exclude-dir="build" \
-    --exclude-dir="asio-asio*" \
-    --exclude-dir="googletest*" \
-    --exclude-dir="__pycache__" \
-    --exclude-dir="deprecated" \
-    --exclude-dir="node_modules" \
-    --exclude-dir="omd" \
-    --exclude="LIVEPROXYD" \
-    --exclude="install-sh" \
-    --exclude="code_examples.py" \
-    '^\#!/.*sh' [^.]* 2>/dev/null)
-
-# Due to https://github.com/pypa/pypi-support/issues/978, we need to disable Plugin tests for py2.6
-# until we have a feasible solution or we drop the support for 2.6 completely.
-PYTHON_VERSIONS := 2.7 3.3 3.4 3.5 3.6 3.7 3.8 3.9
-BROWSER_ENGINES = "chromium" "firefox"
-
-.PHONY: clean sync-legacy-checks format-shell help prepare-protobuf-files prepare-playwright  bandit.ini \
-	$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
-	test-bandit test-code-quality test-code-quality-docker test-composition test-composition-docker \
-	test-composition-docker-debug test-docker test-docker-docker test-format-python test-format-python-docker \
+.PHONY: clean format-shell help prepare-protobuf-files prepare-playwright  bandit.ini \
+	$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker) \
+	test-bandit test-code-quality test-code-quality-docker
+	test-docker test-docker-docker test-format-python test-format-python-docker \
 	test-format-shell test-format-js test-format-js-docker test-format-css test-format-css-docker \
-	test-gui-crawl test-gui-crawl-docker test-xss-crawl test-xss-crawl-docker test-gui-e2e test-gui-e2e-docker \
-	test-integration test-integration-docker test-integration-docker-debug \
+	$(SYSTEM_TESTS) \
+	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker) \
+	$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug) \
 	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pipenv-deps test-pylint test-pylint-docker \
 	test-unit test-unit-docker test-unit-resilience test-unit-resilience-docker test-unit-coverage-html \
 	test-unit-shell test-unit-shell-docker test-shellcheck test-cycles test-cycles-docker \
@@ -78,28 +73,20 @@ BROWSER_ENGINES = "chromium" "firefox"
 clean:
 	$(RM) -r .mypy_cache $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
 
-sync-legacy-checks: $(patsubst ../checks/%,../cmk/base/legacy_checks/%.py,$(wildcard ../checks/*))
-	@for i in ../cmk/base/legacy_checks/*.py; do \
-	  j=$${i#../cmk/base/legacy_checks/}; \
-	  test "$$j" == __init__.py && continue; \
-	  test -f ../checks/$${j%.py} || rm -fv $$i; \
-	done
-
-../cmk/base/legacy_checks/%.py: ../checks/% ../checks/.header-for-pylint Makefile
-	sed "s,@@ORIG-FILE@@,$(realpath $<)," ../checks/.header-for-pylint $< > $@
-
 help:
 	@echo "format-shell                        - Format shell agents"
-	@for i in $(PYTHON_VERSIONS); do \
+	@for i in $(AGENT_PLUGIN_PYTHON_VERSIONS); do \
 	    echo "test-agent-plugin-unit-py$${i}-docker - Run Agent plugin tests in container with Python $${i}"; \
+	done
+	@for i in $(SYSTEM_TESTS); do \
+	    echo "$${i}              - Run $${i} locally"; \
+	    echo "$${i}-docker       - Run $${i} in container"; \
+	    echo "$${i}-docker-debug - Run $${i} in container for manual debugging"; \
 	done
 	@echo "test-bandit                         - Run bandit (security) tests"
 	@echo "test-bandit-nosec-markers           - Check if all bandit #nosec markers are annotated properly"
 	@echo "test-code-quality                   - Run code quality tests locally"
 	@echo "test-code-quality-docker            - Run code quality tests in container"
-	@echo "test-composition                    - Run composition tests locally"
-	@echo "test-composition-docker             - Run composition tests in container"
-	@echo "test-composition-docker-debug       - Run test container for manual debugging"
 	@echo "test-docker                         - Run docker tests"
 	@echo "test-docker-docker                  - Run docker tests in docker"
 	@echo "test-format-python                  - Run formatting tests"
@@ -109,15 +96,8 @@ help:
 	@echo "test-format-js-docker               - Run the JavaScript formatting in docker"
 	@echo "test-format-css                     - Run the CSS formatting"
 	@echo "test-format-css-docker              - Run the CSS formatting in docker"
-	@echo "test-gui-crawl                      - Run GUI crawl locally"
-	@echo "test-gui-crawl-docker               - Run GUI crawl in container"
-	@echo "test-xss-crawl                      - Run XSS crawl locally"
-	@echo "test-xss-crawl-docker               - Run XSS crawl in container"
 	@echo "test-gui-e2e                        - Run GUI End-to-End locally"
 	@echo "test-gui-e2e-docker                 - Run GUI End-to-End in container"
-	@echo "test-integration                    - Run integration tests locally"
-	@echo "test-integration-docker             - Run integration tests in container"
-	@echo "test-integration-docker-debug       - Run test container for manual debugging"
 	@echo "test-mypy                           - Run mypy"
 	@echo "test-mypy-raw                       - Run mypy with raw edition config"
 	@echo "test-mypy-docker                    - Run mypy in docker"
@@ -149,16 +129,16 @@ bandit.ini:
 	( echo exclude: /tests >> bandit.ini )
 
 format-shell:
-	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $(SHELL_FILES_REL)
+	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -w -i 4 -ci $$($(FIND_SHELL_FILES))
 
 agent-plugin-unit/py2/test_%.py: agent-plugin-unit/test_%.py
 	mkdir -p "$(dir $@)"
 	cat "$<" | gawk -v text="# Do not test generated 2.x files\n# fmt: off\n# type: ignore" '!/^#/ && !p {print text; p=1} 1' > "$@"
-	$(THREE_TO_TWO) --nofix=str --nobackups --write "$@" >/dev/null
+	$(THREE_TO_TWO) --nofix=str --nofix=next --nobackups --write "$@" >/dev/null
 
-$(foreach VERS,$(filter 2.%,$(PYTHON_VERSIONS)),test-agent-plugin-unit-py$(VERS)-docker): $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
+$(foreach VERS,$(filter 2.%,$(AGENT_PLUGIN_PYTHON_VERSIONS)),test-agent-plugin-unit-py$(VERS)-docker): $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
 
-$(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker):
+$(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker):
 	# Clean up auto-generated files, which do not have a corresponding source file anymore
 	flock ./agent-plugin-unit $(FIND_INVALID_TEST_FILES)
 	# Recursive Makefiles suck big time...
@@ -169,7 +149,7 @@ $(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker):
 	    *) SUFFIX="" ;; \
 	esac ; \
 	TEST_PATH="$(realpath agent-plugin-unit)$$SUFFIX" ; \
-	IMAGE_HASH="$$(docker build --build-arg PYTHON_VERSION="$$PYTHON_VERSION" -q "$(realpath agent-plugin-unit)")" && \
+	IMAGE_HASH="$$(docker build --build-arg PYTHON_VERSION_MAJ_MIN="$$PYTHON_VERSION" -q "$(realpath agent-plugin-unit)")" && \
 	echo "Docker image: $$IMAGE_HASH" && \
 	docker run \
 	    --rm \
@@ -188,6 +168,9 @@ test-bandit: bandit.ini
 # go and enable the medium/low checks.
 	$(BANDIT) -c ../bandit.yaml -r -ll --ini bandit.ini $(BANDIT_OUTPUT_ARGS)
 
+test-bandit-docker:
+	../scripts/run-in-docker.sh make test-bandit
+
 test-bandit-nosec-markers:
 	$(PIPENV) run python bandit-nosec-markers/nosec_reason.py --doc bandit-nosec-markers/bandit-exclusions.md check $(realpath ..)
 
@@ -195,25 +178,11 @@ prepare-protobuf-files:
 	$(MAKE) -C .. protobuf-files
 
 prepare-playwright:
-	@for browser_engine in $(BROWSER_ENGINES); do \
-		../scripts/run-pipenv run playwright install-deps $$browser_engine; \
-		../scripts/run-pipenv run playwright install $$browser_engine; \
-	done
-
-test-integration-docker-debug test-composition-docker-debug:
-	$(PIPENV) run scripts/run-dockerized.py debug
-
-test-build-js:
-	npm ci && ENTERPRISE=yes MANAGED=no npm run build
-
-test-composition-docker:
-	$(PIPENV) run scripts/run-dockerized.py "test-composition"
-
-test-composition:
-	$(PYTEST) -p no:cov -T composition $(realpath composition)
+	../scripts/run-pipenv run playwright install-deps "chromium";
+	../scripts/run-pipenv run playwright install "chromium";
 
 test-docker-docker:
-	DOCKER_RUN_ADDOPTS="-v $$HOME/.docker/config.json:$$HOME/.docker/config.json -v $$HOME/.cmk-credentials:$$HOME/.cmk-credentials --network=host -e HOME -e WORKSPACE -e VERSION -e EDITION" \
+	DOCKER_RUN_ADDOPTS="-v $$HOME/.docker/config.json:$$HOME/.docker/config.json -v $$HOME/.cmk-credentials:$$HOME/.cmk-credentials --network=host -e BRANCH -e HOME -e WORKSPACE -e VERSION -e EDITION" \
 	    ../scripts/run-in-docker.sh make --quiet test-docker
 
 test-docker:
@@ -236,19 +205,25 @@ test-format-python-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-python
 
 test-format-shell:
-	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $(SHELL_FILES_REL)
+	docker run --rm -v "$(realpath ..):/sh" -w /sh peterdavehello/shfmt shfmt -d -i 4 -ci $$($(FIND_SHELL_FILES))
 
 test-format-js:
-	cd ..; scripts/run-prettier --check --no-color --loglevel warn "{{enterprise/web,web}/htdocs/js/**/,}*.{j,t}s"
+	cd ..; npm ci && scripts/run-prettier --check --no-color --ignore-path ./.prettierignore --loglevel warn "{{enterprise/web,web}/htdocs/js/**/,}*.{j,t}s"
 
 test-typescript-types:
-	cd ..; scripts/check-typescript-types.sh
+	cd ..; npm ci && scripts/check-typescript-types.sh
 
 test-lint-js:
-	cd ..; scripts/check-js-lint.sh
+	cd ..; npm ci && scripts/check-js-lint.sh
+
+test-build-js:
+	npm ci && ENTERPRISE=yes MANAGED=no npm run build
 
 test-lint-js-docker:
 	../scripts/run-in-docker.sh make --quiet test-lint-js
+
+test-build-js-docker:
+	../scripts/run-in-docker.sh make --quiet test-build-js
 
 test-format-js-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-js
@@ -257,34 +232,46 @@ test-typescript-types-docker:
 	../scripts/run-in-docker.sh make --quiet test-typescript-types
 
 test-format-css:
-	cd ..; scripts/run-prettier --check --no-color --loglevel warn "web/htdocs/themes/**/*.scss"
+	cd ..; scripts/run-prettier --check --no-color --ignore-path ./.prettierignore --loglevel warn "web/htdocs/themes/**/*.scss"
 
 test-format-css-docker:
 	../scripts/run-in-docker.sh make --quiet test-format-css
 
-test-gui-crawl: prepare-playwright
-	$(PYTEST) -T gui_crawl --log-cli-level=INFO $(realpath gui_crawl/test_gui_crawl.py)
+test-lint-bazel:
+	../scripts/run-buildifier --lint=warn --mode=check
 
-test-gui-crawl-docker:
-	$(PIPENV) run scripts/run-dockerized.py "test-gui-crawl"
+test-lint-bazel-docker:
+	../scripts/run-in-docker.sh make --quiet test-lint-bazel
+
+test-format-bazel:
+	../scripts/run-buildifier --mode=check
+
+test-format-bazel-docker:
+	../scripts/run-in-docker.sh make --quiet test-format-bazel
+
+test-gui-crawl: prepare-playwright
+	$(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)
 
 test-xss-crawl: prepare-playwright
-	XSS_CRAWL=1 $(PYTEST) -T gui_crawl --log-cli-level=INFO $(realpath gui_crawl/test_gui_crawl.py)
-
-test-xss-crawl-docker:
-	$(PIPENV) run scripts/run-dockerized.py "test-xss-crawl"
-
-test-integration:
-	CI=true $(PIPENV) run scripts/run-integration-test.py $(realpath integration)
+	XSS_CRAWL=1 $(PYTEST) -T gui_crawl $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_crawl/test_gui_crawl.py)
 
 test-gui-e2e: prepare-playwright
-	$(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" --log-cli-level=INFO $(realpath gui_e2e/)  --numprocesses=1
+	$(PYTEST) -T gui_e2e --screenshot=only-on-failure --output="$$RESULT_PATH/" $(PYTEST_SYSTEM_TEST_ARGS) $(realpath gui_e2e/)  --numprocesses=1
 
-test-gui-e2e-docker:
-	$(PIPENV) run scripts/run-dockerized.py "test-gui-e2e"
+test-integration:
+	$(PYTEST) -T integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath integration)
 
-test-integration-docker:
-	$(PIPENV) run scripts/run-dockerized.py "test-integration"
+test-composition:
+	$(PYTEST) -T composition $(PYTEST_SYSTEM_TEST_ARGS) $(realpath composition)
+
+test-update:
+	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/test_update.py)
+
+$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):
+	$(PIPENV) run scripts/run-dockerized.py "$(subst -docker,,$@)"
+
+$(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker-debug):
+	$(PIPENV) run scripts/run-dockerized.py debug
 
 test-license-headers:
 	if test -z "$$PYTHON_FILES"; then $(FIND_PYTHON_FILES); else echo "$$PYTHON_FILES"; fi | \
@@ -301,8 +288,11 @@ test-pipfile-docker:
 	../scripts/run-in-docker.sh make --quiet test-pipfile
 
 test-file-content:
-	if test -n "$$CHANGED_FILES"; then echo "--changed-files $$CHANGED_FILES"; else echo "--test-all-files"; fi | \
-	xargs -n 1500 --no-run-if-empty $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content);
+	if test -z "$$CHANGED_FILES_REL"; then \
+	    $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --test-all-files ; \
+	else \
+	    echo "$$CHANGED_FILES_REL" | xargs -n 1500 --no-run-if-empty $(PYTEST) -T code_quality --log-cli-level=INFO $(realpath code_quality/file_content) --changed-files ; \
+	fi \
 
 test-file-content-docker:
 	../scripts/run-in-docker.sh make --quiet test-file-content
@@ -318,8 +308,8 @@ test-code-quality: test-license-headers test-pipfile test-file-content test-werk
 test-code-quality-docker:
 	../scripts/run-in-docker.sh make --quiet test-code-quality
 
-test-mypy: prepare-protobuf-files sync-legacy-checks
-	cd .. ; scripts/run-mypy --no-incremental $(MYPY_ADDOPTS) $(ADDITIONAL_MYPY_ARGS) $$($(FIND_PYTHON_FILES) --omit-legacy-checks)
+test-mypy: prepare-protobuf-files
+	cd .. ; scripts/run-mypy $(MYPY_ADDOPTS) $(ADDITIONAL_MYPY_ARGS) $$($(FIND_PYTHON_FILES))
 
 test-mypy-raw:
 	$(MAKE) test-mypy ADDITIONAL_MYPY_ARGS="--config-file=$(realpath ../mypy-raw.ini)"
@@ -333,44 +323,43 @@ test-packaging:
 test-pipenv-deps:
 	$(PIPENV) check
 
-test-pylint: prepare-protobuf-files sync-legacy-checks
-	cd ..; $(PIPENV) run pylint --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES) --omit-legacy-checks)
+test-pylint: prepare-protobuf-files
+	cd ..; $(PIPENV) run pylint --jobs=6 $(PYLINT_ARGS) $$($(FIND_PYTHON_FILES))
 
 test-pylint-docker:
 	../scripts/run-in-docker.sh make --quiet test-pylint
 
 test-shellcheck:
-	cd .. && shellcheck $(SHELLCHECK_OUTPUT_ARGS) $(SHELL_FILES_REL)
+	cd .. && shellcheck -x $(SHELLCHECK_OUTPUT_ARGS) $$($(FIND_SHELL_FILES))
 
 test-cycles:
 	$(CYCLES) \
-		--threshold 0 \
 		--packages cmk omd/packages/omd/omdlib agent-receiver/agent_receiver \
 		--project-path $$(realpath -L ..) \
-		--strategy dfs \
+		--strategy johnson \
 		--verbose
 
 test-cycles-docker:
 	../scripts/run-in-docker.sh make --quiet test-cycles
 
-test-unit: prepare-protobuf-files sync-legacy-checks
-	$(PYTEST) \
+test-unit: prepare-protobuf-files
+	TZ=$(RANDOM_TZ) $(PYTEST) \
 		$(PYTEST_OPTS_UNIT_SKIP_SLOW) \
 		$(PYTEST_UNIT_TEST_OPTS)
 
 test-unit-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit
 
-test-unit-slow: prepare-protobuf-files sync-legacy-checks
-	$(PYTEST) \
+test-unit-slow: prepare-protobuf-files
+	TZ=$(RANDOM_TZ) $(PYTEST) \
 		$(PYTEST_OPTS_UNIT_SLOW_ONLY) \
 		$(PYTEST_UNIT_TEST_OPTS)
 
 test-unit-slow-docker:
 	../scripts/run-in-docker.sh make --quiet test-unit-slow
 
-test-unit-resilience: prepare-protobuf-files sync-legacy-checks
-	$(PYTEST) \
+test-unit-resilience: prepare-protobuf-files
+	TZ=$(RANDOM_TZ) $(PYTEST) \
 		--count=2 \
 		--random-order-bucket=global \
 	        -m "not non_resilient" \
@@ -381,10 +370,10 @@ test-unit-resilience-docker:
 	../scripts/run-in-docker.sh make test-unit-resilience
 
 test-agent-plugin-docker:
-	../scripts/run-in-docker.sh make $(foreach VERS,$(PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)
+	../scripts/run-in-docker.sh make $(foreach VERS,$(AGENT_PLUGIN_PYTHON_VERSIONS),test-agent-plugin-unit-py$(VERS)-docker)
 
-test-unit-coverage-html: prepare-protobuf-files sync-legacy-checks
-	$(PYTEST) \
+test-unit-coverage-html: prepare-protobuf-files
+	TZ=$(RANDOM_TZ) $(PYTEST) \
 		--cov=cmk \
 		--cov-report=html \
 		--cov-config=.coveragerc_unit \

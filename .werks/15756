@@ -1,0 +1,13 @@
+Title: active_check: Support service attribute macros in active check automations
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1686043958
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Previously, service attribute macros weren't replaced in the discovery page.
+In order to make the behavior consistent to active check results, active
+check automations now replace service attribute macros.

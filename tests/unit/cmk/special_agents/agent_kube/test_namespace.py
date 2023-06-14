@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package
 
-
 from tests.unit.cmk.special_agents.agent_kube.factory import (
+    APINamespaceFactory,
     APIPodFactory,
     APIResourceQuotaFactory,
     MetaDataFactory,
@@ -14,6 +14,63 @@ from tests.unit.cmk.special_agents.agent_kube.factory import (
 
 from cmk.special_agents import agent_kube as agent
 from cmk.special_agents.utils_kubernetes.schemata import api
+
+
+def test_namespace_create_api_sections() -> None:
+    namespace = APINamespaceFactory.build()
+    sections = agent.create_namespace_api_sections(
+        namespace,
+        APIPodFactory.batch(1),
+        agent.CheckmkHostSettings(
+            cluster_name="cluster",
+            kubernetes_cluster_hostname="host",
+            annotation_key_pattern=agent.AnnotationNonPatternOption.ignore_all,
+        ),
+        "namespace",
+    )
+    assert {s.section_name for s in sections} == {
+        "kube_namespace_info_v1",
+        "kube_pod_resources_v1",
+        "kube_memory_resources_v1",
+        "kube_cpu_resources_v1",
+    }
+
+
+def test_resource_quota_write_api_sections() -> None:
+    resource_quota = APIResourceQuotaFactory.build(
+        spec=api.ResourceQuotaSpec(
+            hard=api.HardRequirement(
+                cpu=api.HardResourceRequirement(limit=1.0, request=0.8),
+                memory=api.HardResourceRequirement(limit=10.0, request=10.0),
+            )
+        )
+    )
+    sections = agent.create_resource_quota_api_sections(
+        resource_quota,
+        "namespace",
+    )
+    assert {s.section_name for s in sections} == {
+        "kube_resource_quota_cpu_resources_v1",
+        "kube_resource_quota_memory_resources_v1",
+    }
+
+
+def test_resource_quota_write_partial_sections() -> None:
+    resource_quota = APIResourceQuotaFactory.build(
+        spec=api.ResourceQuotaSpec(
+            hard=api.HardRequirement(
+                cpu=None,
+                memory=api.HardResourceRequirement(limit=10.0, request=10.0),
+            )
+        )
+    )
+    sections = agent.create_resource_quota_api_sections(
+        resource_quota,
+        "namespace",
+    )
+    assert {s.section_name for s in sections} == {
+        "kube_resource_quota_memory_resources_v1",
+    }
 
 
 def test_filter_matching_namespace_resource_quota() -> None:

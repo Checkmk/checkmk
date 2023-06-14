@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -310,7 +310,7 @@ def test_df_check_filesystem_single(
             ["fake1", "fake2"],
         ),
         (
-            {  # pylint:disable= duplicate-key
+            {  # pylint: disable= duplicate-key
                 "fake_same_name": {  # noqa: F601
                     "size_mb": None,
                     "avail_mb": None,
@@ -329,8 +329,11 @@ def test_df_check_filesystem_single(
     ],
     ids=["unique", "duplicates"],
 )
-def test_mountpoints_in_group(  # type:ignore[no-untyped-def]
-    mplist, patterns_include, patterns_exclude, expected
+def test_mountpoints_in_group(
+    mplist: Iterable[str],
+    patterns_include: Sequence[str],
+    patterns_exclude: Sequence[str],
+    expected: Sequence[str],
 ) -> None:
     """Returns list of mountpoints without duplicates."""
 

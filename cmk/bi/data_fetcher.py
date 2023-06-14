@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -65,7 +65,8 @@ def get_cache_dir() -> Path:
 class BIStructureFetcher:
     def __init__(self, sites_callback: SitesCallback) -> None:
         self.sites_callback = sites_callback
-        self._hosts: dict[HostName, BIHostData] = {}
+        # The key may be a pattern / regex, so `str` is the correct type for the key.
+        self._hosts: dict[str, BIHostData] = {}
         self._have_sites: set[SiteId] = set()
         self._path_lock_structure_cache = Path(get_cache_dir(), "bi_structure_cache.LOCK")
 
@@ -78,7 +79,7 @@ class BIStructureFetcher:
         self._hosts.clear()
 
     @property
-    def hosts(self) -> dict[HostName, BIHostData]:
+    def hosts(self) -> dict[str, BIHostData]:
         return self._hosts
 
     def get_cached_program_starts(self) -> set[SiteProgramStart]:
@@ -210,7 +211,7 @@ class BIStructureFetcher:
     def add_site_data(self, site_id: SiteId, hosts: Mapping[HostName, tuple]) -> None:
         # BIHostData
         # ("site_id", str),
-        # ("tags", set[tuple[TaggroupID, TagID]]),
+        # ("tags", set[tuple[TagGroupID, TagID]]),
         # ("labels", set),
         # ("folder", str),
         # ("services", dict[str, BIServiceData]),

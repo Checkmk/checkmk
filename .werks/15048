@@ -6,7 +6,7 @@ Date: 1670421782
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Added check plugin for Graylog alerts.
 The check plugin will provide information about the Total number of alerts. The number of alerts is limited to 300.

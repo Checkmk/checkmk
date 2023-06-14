@@ -1,0 +1,22 @@
+Title: State and Count of Processes: Use remote server time for process creation time for various agents
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1686061664
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+As mentioned in werk 15894, the reference time used to calculate the creation time of a process as displayed by the "State and Count of Processes" service is the time the agent section was parsed.
+The following agents will now also output the time at which the ps command was executed to be used as reference instead:
+
+LI: check_mk_agent.aix
+LI: check_mk_agent.freebsd
+LI: check_mk_agent.macosx
+LI: check_mk_agent.netbsd
+LI: check_mk_agent.openbsd
+LI: check_mk_agent.openwrt
+LI: check_mk_agent.solaris
+
+The agent must be redeployed to take advantage of this change.

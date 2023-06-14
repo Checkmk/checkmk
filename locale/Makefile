@@ -1,4 +1,4 @@
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -38,7 +38,7 @@ update-pot:
 	git pull --rebase
 	# back in CHECKMK_DIR
 	git pull --rebase
-	xgettext -w 80 --sort-output --force-po -L python --from-code=utf-8 -o scanned.pot \
+	xgettext -w 80 --sort-output --force-po -L python --from-code=utf-8 --keyword=_l -o scanned.pot \
 	../web/app/index.wsgi \
 	../livestatus/api/python/livestatus.py \
 		$$(find -L ../cmk -type f -name "*.py") 2>&1 | \

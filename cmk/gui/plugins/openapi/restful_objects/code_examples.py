@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Generate code-examples for the documentation.
@@ -11,7 +11,7 @@ be referenced in the result of _build_code_templates.
 import functools
 import json
 import re
-from typing import Any, NamedTuple
+from typing import Any, cast, NamedTuple, TypeAlias
 
 import black
 import jinja2
@@ -68,6 +68,7 @@ param.example is false or param.example)) %}{% continue %}{% endif %}
 CODE_TEMPLATE_URLLIB = """
 #!/usr/bin/env python3
 import json
+import pprint
 {%- set downloadable = endpoint.content_type == 'application/octet-stream' %}
 {%- if downloadable %}
 import shutil{% endif %}
@@ -109,17 +110,24 @@ request = urllib.request.Request(
     {%- endif %}
 )
 response = urllib.request.urlopen(request)
-if response.status == 200:
-    pprint.pprint(json.loads(response.read()))
-elif response.status == 204:
-    {%- if downloadable %}
-    file_name = response.headers["content-disposition"].split("filename=")[1].strip("\"")
+{%- if downloadable %}
+if resp.status_code == 200:
+    file_name = resp.headers["content-disposition"].split("filename=")[1].strip('\"')
     with open(file_name, 'wb') as out_file:
         shutil.copyfileobj(response, out_file)
-    {%- endif %}
     print("Done")
+{%- else %}
+if resp.status_code == 200:
+    pprint.pprint(resp.json())
+elif resp.status_code == 204:
+    print("Done")
+{%- endif %}
+{%- if endpoint.does_redirects %}
+elif resp.status_code == 302:
+    print("Redirected to", resp.headers["location"])
+{%- endif %}
 else:
-    raise RuntimeError(response.read())
+    raise RuntimeError(pprint.pformat(resp.json()))
 """
 
 CODE_TEMPLATE_CURL = """
@@ -137,11 +145,13 @@ PASSWORD="{{ password }}"
 {%- from '_macros' import comments %}
 {{ comments(comment_format="# ", request_schema_multiple=request_schema_multiple) }}
 out=$(
-  curl \\
+  curl {%- if includes_redirect %} -L {%- endif %} \\
 {%- if query_params %}
     -G \\
 {%- endif %}
+    {%- if not includes_redirect %}
     --request {{ request_method | upper }} \\
+    {%- endif %}
     --write-out "\\nxxx-status_code=%{http_code}\\n" \\
     --header "Authorization: Bearer $USERNAME $PASSWORD" \\
     --header "Accept: {{ endpoint.content_type }}" \\
@@ -166,6 +176,7 @@ out=$(
     --data '{{ request_schema |
             to_dict |
             to_json(indent=2, sort_keys=True) |
+            _escape_single_quotes |
             indent(skip_lines=1, spaces=8) }}' \\
 {%- endif %}
     "$API_URL{{ request_endpoint | fill_out_parameters }}")
@@ -195,6 +206,7 @@ API_URL="http://$HOST_NAME/$SITE_NAME/check_mk/api/1.0"
 USERNAME="{{ username }}"
 PASSWORD="{{ password }}"
 
+# Requires httpie version >= 3
 {%- from '_macros' import comments %}
 {{ comments(comment_format="# ", request_schema_multiple=request_schema_multiple) }}
 http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parameters }}" \\
@@ -215,9 +227,7 @@ http {{ request_method | upper }} "$API_URL{{ request_endpoint | fill_out_parame
  {%- endfor %}
 {%- endif %}
 {%- if request_schema %}
- {%- for key, field in request_schema.declared_fields.items() %}
-    {{ key }}='{{ field | field_value }}' \\
- {%- endfor %}
+{{ request_schema | to_dict | httpie_request_body | indent(spaces=4) }}
 {%- endif %}
 {%- if endpoint.content_type == 'application/octet-stream' %}
     --download \\
@@ -244,6 +254,9 @@ PASSWORD = "{{ password }}"
 session = requests.session()
 session.headers['Authorization'] = f"Bearer {USERNAME} {PASSWORD}"
 session.headers['Accept'] = '{{ endpoint.content_type }}'
+{%- if endpoint.does_redirects %}
+session.max_redirects = 100  # increase if necessary
+{%- endif %}
 {%- set method = request_method | lower %}
 
 {%- from '_macros' import show_params, comments %}
@@ -263,17 +276,27 @@ resp = session.{{ method }}(
     {%- if endpoint.does_redirects %}
     allow_redirects=True,
     {%- endif %}
-)
-if resp.status_code == 200:
-    pprint.pprint(resp.json())
-elif resp.status_code == 204:
     {%- if downloadable %}
-    file_name = resp.headers["content-disposition"].split("filename=")[1].strip("\"")
+    stream=True,
+    {%- endif %}
+)
+{%- if downloadable %}
+if resp.status_code == 200:
+    file_name = resp.headers["content-disposition"].split("filename=")[1].strip('\"')
     with open(file_name, 'wb') as out_file:
         resp.raw.decode_content = True
         shutil.copyfileobj(resp.raw, out_file)
-    {%- endif %}
     print("Done")
+{%- else %}
+if resp.status_code == 200:
+    pprint.pprint(resp.json())
+elif resp.status_code == 204:
+    print("Done")
+{%- endif %}
+{%- if endpoint.does_redirects %}
+elif resp.status_code == 302:
+    print("Redirected to", resp.headers["location"])
+{%- endif %}
 else:
     raise RuntimeError(pprint.pformat(resp.json()))
 """
@@ -301,7 +324,7 @@ TEMPLATES = {
 }
 
 
-def _to_env(value) -> str:  # type:ignore[no-untyped-def]
+def _to_env(value) -> str:  # type: ignore[no-untyped-def]
     if isinstance(value, (list, dict)):
         return json.dumps(value)
 
@@ -400,7 +423,58 @@ def _transform_params(param_list):
     }
 
 
-def code_samples(  # type:ignore[no-untyped-def]
+JsonObject: TypeAlias = dict[
+    str, int | float | str | bool | dict[str, "JsonObject"] | list["JsonObject"]
+]
+
+
+def _httpie_request_body_lines(prefix: str, field: JsonObject, lines: list[str]) -> list[str]:
+    for key, example in field.items():
+        match example:
+            case bool():
+                lines.append(prefix + key + ":=" + str(example).lower())
+            case int() | float():
+                lines.append(prefix + key + ":=" + str(example))
+            case str():
+                lines.append(prefix + key + "=" + "'" + str(example) + "'")
+            case list():
+                lines.append(prefix + key + ":=" + "'" + json.dumps(example) + "'")
+            case dict():
+                nested = cast(dict, example)
+                _httpie_request_body_lines(
+                    f"{prefix}{key}", {f"[{key}]": val for key, val in nested.items()}, lines
+                )
+            case _:
+                raise ValueError(f"Value of unexpected type: {example} of type {type(example)}")
+    return lines
+
+
+def httpie_request_body(examples: JsonObject) -> str:
+    """
+
+    Args:
+        examples: a field to example dict, as created by `to_dict`
+
+    Returns:
+        a str that httpie can use as a request body specification
+
+
+    >>> httpie_request_body({"foo": "bar bar bar"})
+    "foo='bar bar bar'"
+    >>> httpie_request_body({"foo": 5})
+    'foo:=5'
+    >>> httpie_request_body({"foo": False})
+    'foo:=false'
+    >>> httpie_request_body({"foo": [1,2,3]})
+    "foo:='[1, 2, 3]'"
+    >>> httpie_request_body({"foo": {"bar": {"baz" : "buz"}}})
+    "foo[bar][baz]='buz'"
+    """
+
+    return "\\\n".join(_httpie_request_body_lines("", examples, []))
+
+
+def code_samples(  # type: ignore[no-untyped-def]
     endpoint,
     header_params,
     path_params,
@@ -425,30 +499,35 @@ def code_samples(  # type:ignore[no-untyped-def]
 
     """
     env = _jinja_environment()
-
-    return [
-        {
-            "label": example.label,
-            "lang": example.lang,
-            "source": env.get_template(example.label)
-            .render(
-                hostname="localhost",
-                site=omd_site(),
-                username="automation",
-                password="test123",
-                endpoint=endpoint,
-                path_params=to_openapi(path_params, "path"),
-                query_params=to_openapi(query_params, "query"),
-                header_params=to_openapi(header_params, "header"),
-                request_endpoint=endpoint.path,
-                request_method=endpoint.method,
-                request_schema=_get_schema(endpoint.request_schema),
-                request_schema_multiple=_schema_is_multiple(endpoint.request_schema),
-            )
-            .strip(),
-        }
-        for example in CODE_EXAMPLES
-    ]
+    result: list[CodeSample] = []
+    for example in CODE_EXAMPLES:
+        schema = _get_schema(endpoint.request_schema)
+        result.append(
+            {
+                "label": example.label,
+                "lang": example.lang,
+                "source": env.get_template(example.label)
+                .render(
+                    hostname="localhost",
+                    site=omd_site(),
+                    username="automation",
+                    password="test123",
+                    endpoint=endpoint,
+                    path_params=to_openapi(path_params, "path"),
+                    query_params=to_openapi(query_params, "query"),
+                    header_params=to_openapi(header_params, "header"),
+                    includes_redirect="redirect" in schema.declared_fields
+                    if schema is not None
+                    else False,
+                    request_endpoint=endpoint.path,
+                    request_method=endpoint.method,
+                    request_schema=schema,
+                    request_schema_multiple=_schema_is_multiple(endpoint.request_schema),
+                )
+                .strip(),
+            }
+        )
+    return result
 
 
 def format_nicely(obj: object) -> str:
@@ -544,7 +623,7 @@ def _jinja_environment() -> jinja2.Environment:
     # NOTE:
     # This is not a security problem, as this is an Environment which accepts no data from the web
     # but is only used to fill in our code examples.
-    tmpl_env = jinja2.Environment(  # nosec
+    tmpl_env = jinja2.Environment(  # nosec B701 # BNS:bbfc92
         extensions=["jinja2.ext.loopcontrols"],
         autoescape=False,  # because copy-paste we don't want HTML entities in our code examples.
         loader=jinja2.DictLoader(TEMPLATES),
@@ -562,12 +641,18 @@ def _jinja_environment() -> jinja2.Environment:
         to_json=json.dumps,
         to_python=format_nicely,
         repr=repr,
+        httpie_request_body=httpie_request_body,
+        _escape_single_quotes=_escape_single_quotes,
     )
     # These objects will be available in the templates
     tmpl_env.globals.update(
         spec=SPEC,
     )
     return tmpl_env
+
+
+def _escape_single_quotes(text: str) -> str:
+    return text.replace("'", "'\\''")
 
 
 def to_param_dict(params: list[OpenAPIParameter]) -> dict[str, OpenAPIParameter]:
@@ -591,7 +676,7 @@ def to_param_dict(params: list[OpenAPIParameter]) -> dict[str, OpenAPIParameter]
 
 
 @jinja2.pass_context
-def fill_out_parameters(ctx: dict[str, Any], val) -> str:  # type:ignore[no-untyped-def]
+def fill_out_parameters(ctx: dict[str, Any], val) -> str:  # type: ignore[no-untyped-def]
     """Fill out path parameters, either using the global parameter or the endpoint defined ones.
 
     This assumes the parameters to be defined as such:

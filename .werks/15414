@@ -1,0 +1,16 @@
+Title: Clustered Event Console forwarding of Logwatch messages: Avoid duplicates
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1680687019
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Under certain conditions, Checkmk forwarded logwatch messages multiple times to the Event Console.
+Specifically, this happened if all of the following conditions were met:
+
+LI: The forwarding was configured to create a single service (in contrast to one service per log file).
+LI: This single service was clustered across multiple nodes.
+LI: The same log file (wrt. the full path) was present on more than one node.

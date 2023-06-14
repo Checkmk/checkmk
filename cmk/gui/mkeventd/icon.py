@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -37,7 +37,7 @@ class MkeventdIcon(Icon):
     def host_columns(self):
         return ["address", "name"]
 
-    def render(  # type:ignore[no-untyped-def]
+    def render(  # type: ignore[no-untyped-def]
         self, what, row, tags, custom_vars
     ) -> None | tuple[str, str, str]:
         if not active_config.mkeventd_enabled:
@@ -106,7 +106,7 @@ class MkeventdIcon(Icon):
         return "mkeventd", title, url_prefix + url
 
 
-def _get_hostname(args, row) -> str:  # type:ignore[no-untyped-def]
+def _get_hostname(args, row) -> str:  # type: ignore[no-untyped-def]
     args_splitted = args[0].split("/")
     if args_splitted[0] == "$HOSTNAME$":
         return row["host_name"]

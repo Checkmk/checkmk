@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When fetching the data from a Checkmk agent (unix/windows), the fetcher would establish a connection before checking the cache file.
 If the cached data was still valid the connection has been closed.

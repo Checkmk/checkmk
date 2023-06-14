@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Business intelligence (BI)
@@ -92,7 +92,7 @@ class BIRuleEndpointSchema(BIRuleSchema):
 RO_PERMISSIONS = permissions.AllPerm(
     [
         permissions.Perm("wato.bi_rules"),
-        permissions.Ignore(
+        permissions.Undocumented(
             permissions.AnyPerm(
                 [
                     permissions.Perm("bi.see_all"),
@@ -173,7 +173,7 @@ def post_bi_rule(params: Mapping[str, Any]) -> Response:
     return _update_bi_rule(params, must_exist=False)
 
 
-def _update_bi_rule(params, must_exist: bool):  # type:ignore[no-untyped-def]
+def _update_bi_rule(params, must_exist: bool):  # type: ignore[no-untyped-def]
     user.need_permission("wato.edit")
     user.need_permission("wato.bi_rules")
     bi_packs = get_cached_bi_packs()
@@ -430,7 +430,7 @@ def post_bi_aggregation(params: Mapping[str, Any]) -> Response:
     return _update_bi_aggregation(params, must_exist=False)
 
 
-def _update_bi_aggregation(params, must_exist: bool):  # type:ignore[no-untyped-def]
+def _update_bi_aggregation(params, must_exist: bool):  # type: ignore[no-untyped-def]
     user.need_permission("wato.edit")
     user.need_permission("wato.bi_rules")
     bi_packs = get_cached_bi_packs()
@@ -544,7 +544,7 @@ def get_bi_pack(params: Mapping[str, Any]) -> Response:
 
     uri = constructors.object_href("bi_pack", bi_pack.id)
     domain_members = {}
-    for (name, entities) in [
+    for name, entities in [
         ("aggregation", bi_pack.get_aggregations()),
         ("rule", bi_pack.get_rules()),
     ]:
@@ -664,7 +664,7 @@ def post_bi_pack(params: Mapping[str, Any]) -> Response:
     return _update_bi_pack(params, must_exist=False)
 
 
-def _update_bi_pack(params, must_exist: bool):  # type:ignore[no-untyped-def]
+def _update_bi_pack(params, must_exist: bool):  # type: ignore[no-untyped-def]
     user.need_permission("wato.edit")
     user.need_permission("wato.bi_rules")
     user.need_permission("wato.bi_admin")

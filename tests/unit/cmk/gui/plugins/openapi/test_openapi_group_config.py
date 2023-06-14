@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,6 +8,14 @@ import random
 import string
 
 import pytest
+from pytest import FixtureRequest
+
+from tests.testlib.rest_api_client import (
+    ClientRegistry,
+    ContactGroupClient,
+    HostGroupClient,
+    ServiceGroupClient,
+)
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
@@ -17,13 +25,44 @@ from cmk.utils.type_defs.user_id import UserId
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
 
+@pytest.fixture
+def host(clients: ClientRegistry) -> HostGroupClient:
+    return clients.HostGroup
+
+
+@pytest.fixture
+def contact(clients: ClientRegistry) -> ContactGroupClient:
+    return clients.ContactGroup
+
+
+@pytest.fixture
+def service(clients: ClientRegistry) -> ServiceGroupClient:
+    return clients.ServiceGroup
+
+
+@managedtest
+@pytest.mark.parametrize("group_type", ["host", "contact", "service"])
+def test_required_alias_field_create(group_type: str, request: FixtureRequest) -> None:
+    client = request.getfixturevalue(group_type)
+    client.create(name="RandleMcMurphy", alias=None, expect_ok=False).assert_status_code(400)
+
+
 @managedtest
 @pytest.mark.parametrize("group_type", ["host", "contact", "service"])
 def test_openapi_groups(
+    base: str,
     monkeypatch: pytest.MonkeyPatch,
     group_type: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + f"/domain-types/{group_type}_group_config/collections/all",
+        params=json.dumps({"name": "Invalid%&name", "alias": "Invalid", "customer": "provider"}),
+        status=400,
+        headers={"Accept": "application/json"},
+        content_type="application/json",
+    )
 
     name = _random_string(10)
     alias = _random_string(10)
@@ -74,7 +113,7 @@ def test_openapi_groups(
         content_type="application/json",
     )
 
-    monkeypatch.setattr("cmk.gui.watolib.mkeventd._get_rule_stats_from_ec", lambda: {})
+    monkeypatch.setattr("cmk.gui.watolib.mkeventd.get_rule_stats_from_ec", lambda: {})
     aut_user_auth_wsgi_app.follow_link(
         resp,
         ".../delete",
@@ -91,7 +130,6 @@ def test_openapi_bulk_groups(
     group_type: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
-
     groups = [
         {"name": _random_string(10), "alias": _random_string(10), "customer": "provider"}
         for _i in range(2)
@@ -177,7 +215,7 @@ def test_openapi_bulk_groups(
     )
     assert resp.json_body["extensions"]["customer"] == "global"
 
-    monkeypatch.setattr("cmk.gui.watolib.mkeventd._get_rule_stats_from_ec", lambda: {})
+    monkeypatch.setattr("cmk.gui.watolib.mkeventd.get_rule_stats_from_ec", lambda: {})
     _resp = aut_user_auth_wsgi_app.call_method(
         "post",
         base + f"/domain-types/{group_type}_group_config/actions/bulk-delete/invoke",
@@ -195,7 +233,6 @@ def test_openapi_groups_with_customer(
     group_type: str,
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
-
     name = _random_string(10)
     alias = _random_string(10)
 
@@ -243,7 +280,7 @@ def test_openapi_groups_with_customer(
     )
     assert resp.json_body["extensions"]["customer"] == "provider"
 
-    monkeypatch.setattr("cmk.gui.watolib.mkeventd._get_rule_stats_from_ec", lambda: {})
+    monkeypatch.setattr("cmk.gui.watolib.mkeventd.get_rule_stats_from_ec", lambda: {})
     aut_user_auth_wsgi_app.delete(
         base + f"/objects/{group_type}_group_config/{name}",
         headers={"If-Match": resp.headers["ETag"], "Accept": "application/json"},
@@ -290,10 +327,126 @@ def test_openapi_group_values_are_links(
     )
     assert response.status_code == 200
 
-    json_data = response.json
-    assert len(json_data["value"]) == 1
-    assert json_data["value"][0]["domainType"] == "link"
+    assert len(response.json["value"]) == 1
+    assert response.json["value"][0]["links"][0]["domainType"] == "link"
 
 
 def _random_string(size):
     return "".join(random.choice(string.ascii_letters + string.digits) for _ in range(size))
+
+
+@managedtest
+@pytest.mark.parametrize("group_type", ["host", "contact", "service"])
+def test_delete_non_existing_group_types(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    group_type: str,
+    base: str,
+) -> None:
+    aut_user_auth_wsgi_app.delete(
+        base + f"/objects/{group_type}_group_config/I_dont_exist",
+        headers={"Accept": "application/json"},
+        status=404,
+        content_type="application/json",
+    )
+
+
+@managedtest
+@pytest.mark.parametrize("group_type", ["host", "contact", "service"])
+def test_bulk_delete_non_existing_group_types(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    group_type: str,
+    base: str,
+) -> None:
+    groups = [
+        {
+            "name": _random_string(10),
+            "alias": _random_string(10),
+            "customer": "provider",
+        }
+        for _ in range(2)
+    ]
+
+    aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + f"/domain-types/{group_type}_group_config/actions/bulk-delete/invoke",
+        params=json.dumps({"entries": [group["name"] for group in groups]}),
+        headers={"Accept": "application/json"},
+        status=404,
+        content_type="application/json",
+    )
+
+
+@managedtest
+@pytest.mark.parametrize("group_type", ["host", "service", "contact"])
+def test_openapi_bulk_group_schema(
+    aut_user_auth_wsgi_app: WebTestAppForCMK,
+    group_type: str,
+    base: str,
+) -> None:
+    groups = [
+        {"name": _random_string(10), "alias": _random_string(10), "customer": "provider"}
+        for _i in range(2)
+    ]
+
+    # ------------------- bulk create -------------------
+    resp = aut_user_auth_wsgi_app.call_method(
+        "post",
+        base + f"/domain-types/{group_type}_group_config/actions/bulk-create/invoke",
+        params=json.dumps({"entries": groups}),
+        headers={"Accept": "application/json"},
+        status=200,
+        content_type="application/json",
+    )
+    assert set(resp.json["value"][0]) == {
+        "links",
+        "domainType",
+        "id",
+        "title",
+        "members",
+        "extensions",
+    }
+    assert resp.json["value"][0]["domainType"] == f"{group_type}_group_config"
+
+    # ------------------- get collection -------------------
+    resp = aut_user_auth_wsgi_app.call_method(
+        "get",
+        base + f"/domain-types/{group_type}_group_config/collections/all",
+        status=200,
+        headers={"Accept": "application/json"},
+    )
+    assert set(resp.json["value"][0]) == {
+        "links",
+        "domainType",
+        "id",
+        "title",
+        "members",
+        "extensions",
+    }
+    assert resp.json["value"][0]["domainType"] == f"{group_type}_group_config"
+
+    # ------------------- bulk update -------------------
+    updated_groups = [
+        {
+            "name": group["name"],
+            "attributes": {"alias": group["alias"], "customer": "global"},
+        }
+        for group in groups
+    ]
+    resp = aut_user_auth_wsgi_app.call_method(
+        "put",
+        base + f"/domain-types/{group_type}_group_config/actions/bulk-update/invoke",
+        params=json.dumps({"entries": updated_groups}),
+        headers={"Accept": "application/json"},
+        status=200,
+        content_type="application/json",
+    )
+
+    assert set(resp.json["value"][0]) == {
+        "links",
+        "domainType",
+        "id",
+        "title",
+        "members",
+        "extensions",
+    }
+    assert resp.json["value"][0]["domainType"] == f"{group_type}_group_config"

@@ -16,6 +16,8 @@ $(REDIS_INSTALL): $(REDIS_BUILD)
 	cd $(DESTDIR)$(OMD_ROOT)/skel/etc/rc.d/ && \
 	$(LN) -sf ../init.d/redis 85-redis
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/skel/var/redis
-	chmod 664 $(DESTDIR)$(OMD_ROOT)/skel/etc/logrotate.d/redis 
-	chmod 664 $(DESTDIR)$(OMD_ROOT)/skel/etc/redis/redis.conf 
+	chmod 640 $(DESTDIR)$(OMD_ROOT)/skel/etc/logrotate.d/redis
+	chmod 750 $(DESTDIR)$(OMD_ROOT)/skel/etc/redis
+	chmod 640 $(DESTDIR)$(OMD_ROOT)/skel/etc/redis/redis.conf
+	chmod 750 $(DESTDIR)$(OMD_ROOT)/skel/etc/init.d/redis
 	$(TOUCH) $@

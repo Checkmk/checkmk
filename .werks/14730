@@ -1,0 +1,17 @@
+Title: Logwatch EC forwarding using spool files
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1678874255
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+When using Logwatch EC fordwarding using spool files with a hostname
+having a file ending (p.e. myhost.com) some messages would be overwritten
+and therefore these messsage were not forwarded to the event console.
+
+
+

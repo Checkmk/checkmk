@@ -1,60 +1,82 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Mapping
 
 import pytest
 
 import cmk.utils.tags as tags
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.rulesets.ruleset_matcher import TaggroupIDToTagID
+from cmk.utils.tags import AuxTag, GroupedTag, TagConfig, TagGroup, TagGroupID, TagID
 
 
 @pytest.fixture(name="test_cfg")
-def fixture_test_cfg() -> tags.TagConfig:
-    cfg = tags.TagConfig.from_config(
+def fixture_test_cfg() -> TagConfig:
+    cfg = TagConfig.from_config(
         {
             "aux_tags": [
                 {
-                    "id": "bla",
+                    "id": TagID("bla"),
                     "topic": "Bluna",
                     "title": "bläää",
                 }
             ],
             "tag_groups": [
                 {
-                    "id": "criticality",
+                    "id": TagGroupID("criticality"),
                     "topic": "Blubberei",
                     "tags": [
-                        {"aux_tags": ["bla"], "id": "prod", "title": "Productive system"},
-                        {"aux_tags": [], "id": "critical", "title": "Business critical"},
-                        {"aux_tags": [], "id": "test", "title": "Test system"},
-                        {"aux_tags": [], "id": "offline", "title": "Do not monitor this host"},
+                        {
+                            "aux_tags": [TagID("bla")],
+                            "id": TagID("prod"),
+                            "title": "Productive system",
+                        },
+                        {"aux_tags": [], "id": TagID("critical"), "title": "Business critical"},
+                        {"aux_tags": [], "id": TagID("test"), "title": "Test system"},
+                        {
+                            "aux_tags": [],
+                            "id": TagID("offline"),
+                            "title": "Do not monitor this host",
+                        },
                     ],
                     "title": "Criticality",
                 },
                 {
-                    "id": "networking",
+                    "id": TagGroupID("networking"),
                     "tags": [
-                        {"aux_tags": [], "id": "lan", "title": "Local network (low latency)"},
-                        {"aux_tags": [], "id": "wan", "title": "WAN (high latency)"},
-                        {"aux_tags": [], "id": "dmz", "title": "DMZ (low latency, secure access)"},
+                        {
+                            "aux_tags": [],
+                            "id": TagID("lan"),
+                            "title": "Local network (low latency)",
+                        },
+                        {"aux_tags": [], "id": TagID("wan"), "title": "WAN (high latency)"},
+                        {
+                            "aux_tags": [],
+                            "id": TagID("dmz"),
+                            "title": "DMZ (low latency, secure access)",
+                        },
                     ],
                     "title": "Networking Segment",
                 },
                 {
-                    "id": "none_choice",
+                    "id": TagGroupID("none_choice"),
                     "tags": [
-                        {"aux_tags": ["bla"], "id": None, "title": "None"},
-                        {"aux_tags": [], "id": "none_val", "title": "None value"},
+                        {"aux_tags": [TagID("bla")], "id": None, "title": "None"},
+                        {"aux_tags": [], "id": TagID("none_val"), "title": "None value"},
                     ],
                     "title": "None choice",
                 },
                 {
-                    "id": "none_2",
+                    "id": TagGroupID("none_2"),
                     "tags": [
-                        {"aux_tags": ["bla"], "id": "none_val", "title": "None value 2"},
-                        {"aux_tags": [], "id": "none_val_2", "title": "None value again"},
+                        {
+                            "aux_tags": [TagID("bla")],
+                            "id": TagID("none_val"),
+                            "title": "None value 2",
+                        },
+                        {"aux_tags": [], "id": TagID("none_val_2"), "title": "None value again"},
                     ],
                     "title": "None 2",
                 },
@@ -65,22 +87,22 @@ def fixture_test_cfg() -> tags.TagConfig:
 
 
 def test_tag_config() -> None:
-    cfg = tags.TagConfig()
+    cfg = TagConfig()
     assert cfg.tag_groups == []
     assert cfg.aux_tag_list.get_tags() == []
 
 
-def test_iadd_tag_config(test_cfg: tags.TagConfig) -> None:
-    cfg2 = tags.TagConfig()
+def test_iadd_tag_config(test_cfg: TagConfig) -> None:
+    cfg2 = TagConfig()
     cfg2.insert_tag_group(
-        tags.TagGroup.from_config(
+        TagGroup.from_config(
             {
-                "id": "tgid3",
+                "id": TagGroupID("tgid3"),
                 "title": "titlor",
                 "topic": "Topics",
                 "tags": [
                     {
-                        "id": "tgid3",
+                        "id": TagID("tgid3"),
                         "title": "tagid3",
                         "aux_tags": [],
                     }
@@ -89,16 +111,16 @@ def test_iadd_tag_config(test_cfg: tags.TagConfig) -> None:
         )
     )
     cfg2.insert_tag_group(
-        tags.TagGroup.from_config(
+        TagGroup.from_config(
             {
-                "id": "tgid2",
+                "id": TagGroupID("tgid2"),
                 "title": "BLAAA",
-                "tags": [{"id": "tgid2", "title": "tagid2", "aux_tags": []}],
+                "tags": [{"id": TagID("tgid2"), "title": "tagid2", "aux_tags": []}],
             }
         )
     )
-    cfg2.aux_tag_list.append(tags.AuxTag.from_config({"id": "blub", "title": "BLUB"}))
-    cfg2.aux_tag_list.append(tags.AuxTag.from_config({"id": "bla", "title": "BLUB"}))
+    cfg2.aux_tag_list.append(AuxTag.from_config({"id": TagID("blub"), "title": "BLUB"}))
+    cfg2.aux_tag_list.append(AuxTag.from_config({"id": TagID("bla"), "title": "BLUB"}))
 
     test_cfg += cfg2
 
@@ -117,7 +139,7 @@ def test_iadd_tag_config(test_cfg: tags.TagConfig) -> None:
     assert aux_tags[1].id == "blub"
 
 
-def test_tag_config_get_topic_choices(test_cfg: tags.TagConfig) -> None:
+def test_tag_config_get_topic_choices(test_cfg: TagConfig) -> None:
     assert sorted(test_cfg.get_topic_choices()) == sorted(
         [
             ("Blubberei", "Blubberei"),
@@ -127,7 +149,7 @@ def test_tag_config_get_topic_choices(test_cfg: tags.TagConfig) -> None:
     )
 
 
-def test_tag_groups_by_topic(test_cfg: tags.TagConfig) -> None:
+def test_tag_groups_by_topic(test_cfg: TagConfig) -> None:
     expected_groups = {
         "Blubberei": ["criticality"],
         "Tags": ["networking", "none_choice", "none_2"],
@@ -141,26 +163,26 @@ def test_tag_groups_by_topic(test_cfg: tags.TagConfig) -> None:
         assert sorted(tg_ids) == sorted(tag_group_ids)
 
 
-def test_tag_group_exists(test_cfg: tags.TagConfig) -> None:
-    assert test_cfg.tag_group_exists("networking") is True
-    assert test_cfg.tag_group_exists("netnet") is False
+def test_tag_group_exists(test_cfg: TagConfig) -> None:
+    assert test_cfg.tag_group_exists(TagGroupID("networking")) is True
+    assert test_cfg.tag_group_exists(TagGroupID("netnet")) is False
 
 
-def test_tag_config_get_tag_group(test_cfg: tags.TagConfig) -> None:
-    assert test_cfg.get_tag_group("xyz") is None
-    assert isinstance(test_cfg.get_tag_group("networking"), tags.TagGroup)
+def test_tag_config_get_tag_group(test_cfg: TagConfig) -> None:
+    assert test_cfg.get_tag_group(TagGroupID("xyz")) is None
+    assert isinstance(test_cfg.get_tag_group(TagGroupID("networking")), TagGroup)
 
 
-def test_tag_config_remove_tag_group(test_cfg: tags.TagConfig) -> None:
-    assert test_cfg.get_tag_group("xyz") is None
-    test_cfg.remove_tag_group("xyz")  # not existing -> fine
+def test_tag_config_remove_tag_group(test_cfg: TagConfig) -> None:
+    assert test_cfg.get_tag_group(TagGroupID("xyz")) is None
+    test_cfg.remove_tag_group(TagGroupID("xyz"))  # not existing -> fine
 
-    assert test_cfg.get_tag_group("networking") is not None
-    test_cfg.remove_tag_group("networking")
-    assert test_cfg.get_tag_group("networking") is None
+    assert test_cfg.get_tag_group(TagGroupID("networking")) is not None
+    test_cfg.remove_tag_group(TagGroupID("networking"))
+    assert test_cfg.get_tag_group(TagGroupID("networking")) is None
 
 
-def test_tag_config_get_tag_group_choices(test_cfg: tags.TagConfig) -> None:
+def test_tag_config_get_tag_group_choices(test_cfg: TagConfig) -> None:
     assert test_cfg.get_tag_group_choices() == [
         ("criticality", "Blubberei / Criticality"),
         ("networking", "Networking Segment"),
@@ -169,11 +191,11 @@ def test_tag_config_get_tag_group_choices(test_cfg: tags.TagConfig) -> None:
     ]
 
 
-def test_tag_config_get_aux_tags(test_cfg: tags.TagConfig) -> None:
+def test_tag_config_get_aux_tags(test_cfg: TagConfig) -> None:
     assert [a.id for a in test_cfg.get_aux_tags()] == ["bla"]
 
 
-def test_tag_config_get_aux_tags_by_tag(test_cfg: tags.TagConfig) -> None:
+def test_tag_config_get_aux_tags_by_tag(test_cfg: TagConfig) -> None:
     assert test_cfg.get_aux_tags_by_tag() == {
         None: ["bla"],
         "none_val": ["bla"],  # none_val from none_2 overwrites none_val from none_choice
@@ -188,7 +210,7 @@ def test_tag_config_get_aux_tags_by_tag(test_cfg: tags.TagConfig) -> None:
     }
 
 
-def test_tag_config_get_aux_tags_by_topic(test_cfg: tags.TagConfig) -> None:
+def test_tag_config_get_aux_tags_by_topic(test_cfg: TagConfig) -> None:
     expected_groups = {
         "Bluna": ["bla"],
     }
@@ -201,7 +223,7 @@ def test_tag_config_get_aux_tags_by_topic(test_cfg: tags.TagConfig) -> None:
         assert sorted(tg_ids) == sorted(tag_group_ids)
 
 
-def test_tag_config_get_tag_ids(test_cfg: tags.TagConfig) -> None:
+def test_tag_config_get_tag_ids(test_cfg: TagConfig) -> None:
     assert test_cfg.get_tag_ids() == {
         None,
         "none_val",
@@ -217,65 +239,52 @@ def test_tag_config_get_tag_ids(test_cfg: tags.TagConfig) -> None:
     }
 
 
-def test_tag_config_get_tag_ids_with_group_prefix(test_cfg: tags.TagConfig) -> None:
-    assert test_cfg.get_tag_ids_by_group() == {
-        ("bla", "bla"),
-        ("criticality", "critical"),
-        ("criticality", "offline"),
-        ("criticality", "prod"),
-        ("criticality", "test"),
-        ("networking", "dmz"),
-        ("networking", "lan"),
-        ("networking", "wan"),
-        ("none_2", "none_val_2"),
-        ("none_2", "none_val"),
-        ("none_choice", None),
-        ("none_choice", "none_val"),
-    }
+def test_tag_config_get_tag_or_aux_tag(test_cfg: TagConfig) -> None:
+    assert test_cfg.get_tag_or_aux_tag(TagGroupID("nonexisting_group"), TagID("blä")) is None
+    assert isinstance(
+        test_cfg.get_tag_or_aux_tag(TagGroupID("nonexisting_group"), TagID("bla")), AuxTag
+    )
+    assert isinstance(
+        test_cfg.get_tag_or_aux_tag(TagGroupID("criticality"), TagID("prod")), GroupedTag
+    )
 
 
-def test_tag_config_get_tag_or_aux_tag(test_cfg: tags.TagConfig) -> None:
-    assert test_cfg.get_tag_or_aux_tag("nonexisting_group", "blä") is None
-    assert isinstance(test_cfg.get_tag_or_aux_tag("nonexisting_group", "bla"), tags.AuxTag)
-    assert isinstance(test_cfg.get_tag_or_aux_tag("criticality", "prod"), tags.GroupedTag)
-
-
-def test_tag_config_get_tag_or_aux_tag_duplicate(test_cfg: tags.TagConfig) -> None:
-    tag_none_choice_1 = test_cfg.get_tag_or_aux_tag("none_choice", "none_val")
-    assert isinstance(tag_none_choice_1, tags.GroupedTag)
+def test_tag_config_get_tag_or_aux_tag_duplicate(test_cfg: TagConfig) -> None:
+    tag_none_choice_1 = test_cfg.get_tag_or_aux_tag(TagGroupID("none_choice"), TagID("none_val"))
+    assert isinstance(tag_none_choice_1, GroupedTag)
     assert tag_none_choice_1.title == "None value"
     assert tag_none_choice_1.group.id == "none_choice"
-    tag_none_choice_2 = test_cfg.get_tag_or_aux_tag("none_2", "none_val")
-    assert isinstance(tag_none_choice_2, tags.GroupedTag)
+    tag_none_choice_2 = test_cfg.get_tag_or_aux_tag(TagGroupID("none_2"), TagID("none_val"))
+    assert isinstance(tag_none_choice_2, GroupedTag)
     assert tag_none_choice_2.title == "None value 2"
     assert tag_none_choice_2.group.id == "none_2"
 
 
 @pytest.fixture(name="cfg")
-def fixture_cfg() -> tags.TagConfig:
-    return tags.TagConfig()
+def fixture_cfg() -> TagConfig:
+    return TagConfig()
 
 
-def test_tag_config_insert_tag_group_twice(cfg: tags.TagConfig) -> None:
+def test_tag_config_insert_tag_group_twice(cfg: TagConfig) -> None:
     cfg.insert_tag_group(
-        tags.TagGroup.from_config(
+        TagGroup.from_config(
             {
-                "id": "tgid2",
+                "id": TagGroupID("tgid2"),
                 "topic": "Topics",
                 "title": "titlor",
-                "tags": [{"id": "tgid2", "title": "tagid2", "aux_tags": []}],
+                "tags": [{"id": TagID("tgid2"), "title": "tagid2", "aux_tags": []}],
             }
         )
     )
     assert cfg.tag_groups[-1].id == "tgid2"
 
     cfg.insert_tag_group(
-        tags.TagGroup.from_config(
+        TagGroup.from_config(
             {
-                "id": "tgidX",
+                "id": TagGroupID("tgidX"),
                 "topic": "Topics",
                 "title": "titlor",
-                "tags": [{"id": "tgid2", "title": "tagid2", "aux_tags": []}],
+                "tags": [{"id": TagID("tgid2"), "title": "tagid2", "aux_tags": []}],
             }
         )
     )
@@ -283,42 +292,42 @@ def test_tag_config_insert_tag_group_twice(cfg: tags.TagConfig) -> None:
 
     with pytest.raises(MKGeneralException, match="is used twice"):
         cfg.insert_tag_group(
-            tags.TagGroup.from_config(
+            TagGroup.from_config(
                 {
-                    "id": "tgid2",
+                    "id": TagGroupID("tgid2"),
                     "topic": "Topics",
                     "title": "titlor",
-                    "tags": [{"id": "tgid3", "title": "tagid3", "aux_tags": []}],
+                    "tags": [{"id": TagID("tgid3"), "title": "tagid3", "aux_tags": []}],
                 }
             )
         )
         cfg.validate_config()
 
 
-def test_tag_config_insert_tag_group_missing_id(cfg: tags.TagConfig) -> None:
+def test_tag_config_insert_tag_group_missing_id(cfg: TagConfig) -> None:
     with pytest.raises(MKGeneralException, match="Please specify"):
-        tg = tags.TagGroup(group_id="", title="title", help=None, topic=None, tags=[])
+        tg = TagGroup(group_id=TagGroupID(""), title="title", help=None, topic=None, tags=[])
         cfg.insert_tag_group(tg)
         cfg.validate_config()
 
 
-def test_tag_config_insert_tag_group_missing_title(cfg: tags.TagConfig) -> None:
+def test_tag_config_insert_tag_group_missing_title(cfg: TagConfig) -> None:
     with pytest.raises(MKGeneralException, match="Please specify"):
-        tg = tags.TagGroup(group_id="abc", title="", help=None, topic=None, tags=[])
+        tg = TagGroup(group_id=TagGroupID("abc"), title="", help=None, topic=None, tags=[])
         cfg.insert_tag_group(tg)
         cfg.validate_config()
 
 
-def test_tag_config_insert_tag_group_missing_multiple_tags_empty(cfg: tags.TagConfig) -> None:
+def test_tag_config_insert_tag_group_missing_multiple_tags_empty(cfg: TagConfig) -> None:
     with pytest.raises(MKGeneralException, match="Only one tag may be empty"):
-        tg = tags.TagGroup.from_config(
+        tg = TagGroup.from_config(
             {
-                "id": "tgid3",
+                "id": TagGroupID("tgid3"),
                 "topic": "Topics",
                 "title": "titlor",
                 "tags": [
                     {"id": None, "title": "tagid2", "aux_tags": []},
-                    {"id": "", "title": "tagid3", "aux_tags": []},
+                    {"id": TagID(""), "title": "tagid3", "aux_tags": []},
                 ],
             }
         )
@@ -326,16 +335,16 @@ def test_tag_config_insert_tag_group_missing_multiple_tags_empty(cfg: tags.TagCo
         cfg.validate_config()
 
 
-def test_tag_config_insert_tag_group_missing_tag_not_unique(cfg: tags.TagConfig) -> None:
+def test_tag_config_insert_tag_group_missing_tag_not_unique(cfg: TagConfig) -> None:
     with pytest.raises(MKGeneralException, match="must be unique"):
-        tg = tags.TagGroup.from_config(
+        tg = TagGroup.from_config(
             {
-                "id": "tgid4",
+                "id": TagGroupID("tgid4"),
                 "topic": "Topics",
                 "title": "titlor",
                 "tags": [
-                    {"id": "ding", "title": "tagid2", "aux_tags": []},
-                    {"id": "ding", "title": "tagid3", "aux_tags": []},
+                    {"id": TagID("ding"), "title": "tagid2", "aux_tags": []},
+                    {"id": TagID("ding"), "title": "tagid3", "aux_tags": []},
                 ],
             }
         )
@@ -343,15 +352,15 @@ def test_tag_config_insert_tag_group_missing_tag_not_unique(cfg: tags.TagConfig)
         cfg.validate_config()
 
 
-def test_tag_config_insert_tag_group_aux_tag_id_conflict(cfg: tags.TagConfig) -> None:
-    cfg.aux_tag_list.append(tags.AuxTag.from_config({"id": "bla", "title": "BLAAAA"}))
-    tg = tags.TagGroup.from_config(
+def test_tag_config_insert_tag_group_aux_tag_id_conflict(cfg: TagConfig) -> None:
+    cfg.aux_tag_list.append(AuxTag.from_config({"id": TagID("bla"), "title": "BLAAAA"}))
+    tg = TagGroup.from_config(
         {
-            "id": "tgid6",
+            "id": TagGroupID("tgid6"),
             "topic": "Topics",
             "title": "titlor",
             "tags": [
-                {"id": "bla", "title": "tagid2", "aux_tags": []},
+                {"id": TagID("bla"), "title": "tagid2", "aux_tags": []},
             ],
         }
     )
@@ -359,13 +368,13 @@ def test_tag_config_insert_tag_group_aux_tag_id_conflict(cfg: tags.TagConfig) ->
     cfg.validate_config()
 
     with pytest.raises(MKGeneralException, match="is used twice"):
-        tg = tags.TagGroup.from_config(
+        tg = TagGroup.from_config(
             {
-                "id": "bla",
+                "id": TagGroupID("bla"),
                 "topic": "Topics",
                 "title": "titlor",
                 "tags": [
-                    {"id": "tagid2", "title": "tagid2", "aux_tags": []},
+                    {"id": TagID("tagid2"), "title": "tagid2", "aux_tags": []},
                 ],
             }
         )
@@ -373,35 +382,35 @@ def test_tag_config_insert_tag_group_aux_tag_id_conflict(cfg: tags.TagConfig) ->
         cfg.validate_config()
 
 
-def test_tag_config_insert_tag_group_no_tag(cfg: tags.TagConfig) -> None:
+def test_tag_config_insert_tag_group_no_tag(cfg: TagConfig) -> None:
     with pytest.raises(MKGeneralException, match="at least one tag"):
-        tg = tags.TagGroup.from_config(
-            {"id": "tgid7", "topic": "Topics", "title": "titlor", "tags": []}
+        tg = TagGroup.from_config(
+            {"id": TagGroupID("tgid7"), "topic": "Topics", "title": "titlor", "tags": []}
         )
         cfg.insert_tag_group(tg)
         cfg.validate_config()
 
 
-def test_tag_config_update_tag_group(test_cfg: tags.TagConfig) -> None:
+def test_tag_config_update_tag_group(test_cfg: TagConfig) -> None:
     with pytest.raises(MKGeneralException, match="Unknown tag group"):
         test_cfg.update_tag_group(
-            tags.TagGroup.from_config(
+            TagGroup.from_config(
                 {
-                    "id": "tgid2",
+                    "id": TagGroupID("tgid2"),
                     "topic": "Topics",
                     "title": "titlor",
-                    "tags": [{"id": "tgid2", "title": "tagid2", "aux_tags": []}],
+                    "tags": [{"id": TagID("tgid2"), "title": "tagid2", "aux_tags": []}],
                 }
             )
         )
         test_cfg.validate_config()
 
     test_cfg.update_tag_group(
-        tags.TagGroup.from_config(
+        TagGroup.from_config(
             {
-                "id": "networking",
+                "id": TagGroupID("networking"),
                 "title": "title",
-                "tags": [{"id": "tgid2", "title": "tagid2", "aux_tags": []}],
+                "tags": [{"id": TagID("tgid2"), "title": "tagid2", "aux_tags": []}],
             }
         )
     )
@@ -409,37 +418,44 @@ def test_tag_config_update_tag_group(test_cfg: tags.TagConfig) -> None:
     test_cfg.validate_config()
 
 
-def test_tag_group_get_tag_group_config(test_cfg: tags.TagConfig) -> None:
-    tg = test_cfg.get_tag_group("criticality")
+def test_tag_group_get_tag_group_config(test_cfg: TagConfig) -> None:
+    tg = test_cfg.get_tag_group(TagGroupID("criticality"))
     assert tg is not None
-    assert tg.get_tag_group_config("prod") == {"bla": "bla", "criticality": "prod"}
+    assert tg.get_tag_group_config(TagID("prod")) == {
+        TagGroupID("bla"): TagID("bla"),
+        TagGroupID("criticality"): TagID("prod"),
+    }
 
 
-def test_tag_group_get_tag_group_config_none_choice(test_cfg: tags.TagConfig) -> None:
-    tg = test_cfg.get_tag_group("none_choice")
+def test_tag_group_get_tag_group_config_none_choice(test_cfg: TagConfig) -> None:
+    tg = test_cfg.get_tag_group(TagGroupID("none_choice"))
     assert tg is not None
-    assert tg.get_tag_group_config(None) == {"bla": "bla"}
+    assert tg.get_tag_group_config(None) == {TagGroupID("bla"): TagID("bla")}
 
 
-def test_tag_group_get_tag_group_config_none_val(test_cfg: tags.TagConfig) -> None:
-    tg = test_cfg.get_tag_group("none_choice")
+def test_tag_group_get_tag_group_config_none_val(test_cfg: TagConfig) -> None:
+    tg = test_cfg.get_tag_group(TagGroupID("none_choice"))
     assert tg is not None
-    assert tg.get_tag_group_config("none_val") == {"none_choice": "none_val"}
+    assert tg.get_tag_group_config(TagID("none_val")) == {
+        TagGroupID("none_choice"): TagID("none_val")
+    }
 
 
-def test_tag_group_get_tag_group_config_unknown_choice(test_cfg: tags.TagConfig) -> None:
-    tg = test_cfg.get_tag_group("criticality")
+def test_tag_group_get_tag_group_config_unknown_choice(test_cfg: TagConfig) -> None:
+    tg = test_cfg.get_tag_group(TagGroupID("criticality"))
     assert tg is not None
-    assert tg.get_tag_group_config("prodX") == {"criticality": "prodX"}
+    assert tg.get_tag_group_config(TagID("prodX")) == {TagGroupID("criticality"): TagID("prodX")}
 
 
-def test_aux_tag_list_remove(test_cfg: tags.TagConfig) -> None:
-    assert "xyz" not in test_cfg.aux_tag_list.get_tag_ids()
-    test_cfg.aux_tag_list.remove("xyz")  # not existing -> fine
+def test_aux_tag_list_remove(test_cfg: TagConfig) -> None:
+    xyz = TagID("xyz")
+    assert xyz not in test_cfg.aux_tag_list.get_tag_ids()
+    test_cfg.aux_tag_list.remove(xyz)  # not existing -> fine
 
-    assert "bla" in test_cfg.aux_tag_list.get_tag_ids()
-    test_cfg.aux_tag_list.remove("bla")
-    assert "bla" not in test_cfg.aux_tag_list.get_tag_ids()
+    bla = TagID("bla")
+    assert bla in test_cfg.aux_tag_list.get_tag_ids()
+    test_cfg.aux_tag_list.remove(bla)
+    assert bla not in test_cfg.aux_tag_list.get_tag_ids()
 
 
 @pytest.mark.parametrize(
@@ -534,7 +550,7 @@ def test_aux_tag_list_remove(test_cfg: tags.TagConfig) -> None:
     ],
 )
 def test_compute_datasources(
-    tag_groups: TaggroupIDToTagID, expected_computed_datasources: tags.ComputedDataSources
+    tag_groups: Mapping[TagGroupID, TagID], expected_computed_datasources: tags.ComputedDataSources
 ) -> None:
     assert tags.compute_datasources(tag_groups) == expected_computed_datasources
 

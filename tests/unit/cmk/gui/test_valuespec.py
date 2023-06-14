@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from binascii import unhexlify
 from collections.abc import Sequence
 
 import pytest
@@ -130,17 +131,18 @@ def test_timerange_value_to_html_conversion(
     value: vs.CascadingDropdownChoiceValue,
     result_title: vs.ValueSpecText,
 ) -> None:
-    monkeypatch.setattr(
-        active_config,
-        "graph_timeranges",
-        [
-            {"title": "The last 4 fun hours", "duration": 4 * 60 * 60},
-            {"title": "The last 25 hard hours", "duration": 25 * 60 * 60},
-            {"title": "Since a sesquiweek", "duration": 3600 * 24 * 7 * 1.5},
-        ],
-    )
+    with monkeypatch.context() as m:
+        m.setattr(
+            active_config,
+            "graph_timeranges",
+            [
+                {"title": "The last 4 fun hours", "duration": 4 * 60 * 60},
+                {"title": "The last 25 hard hours", "duration": 25 * 60 * 60},
+                {"title": "Since a sesquiweek", "duration": 3600 * 24 * 7 * 1.5},
+            ],
+        )
 
-    assert vs.Timerange().value_to_html(value) == result_title
+        assert vs.Timerange().value_to_html(value) == result_title
 
 
 @pytest.mark.usefixtures("request_context")
@@ -174,6 +176,43 @@ def test_timerange_value_to_json_conversion() -> None:
 )
 def test_email_validation(address: str) -> None:
     vs.EmailAddress().validate_value(address, "")
+
+
+def _example_image_data():
+    """A tiny but valid PNG image"""
+    return unhexlify(
+        b"89504e470d0a1a0a0000000d494844520000000100"
+        b"0000010802000000907753de000000037342495408"
+        b"0808dbe14fe00000000c49444154089963b876f51a"
+        b"0005060282db61224c0000000049454e44ae426082"
+    )
+
+
+@pytest.mark.parametrize(
+    "filedata",
+    [
+        # Should raise is when trying to be opened
+        ("file.png", "image/png", b"\x89PNG"),
+        ("OneByOne.png", "image/jpeg", _example_image_data()),
+        ("OneByOne.jpg", "image/png", _example_image_data()),
+        ("OneByOne.png.jpg", "image/png", _example_image_data()),
+        ("OneByOne.png", "!image/png", _example_image_data()),
+        ("OneByOne.png", "image/pngA", _example_image_data()),
+        ("OneByOne.png%20", "image/png", _example_image_data()),
+    ],
+)
+def test_imageupload_non_compliance(filedata: vs.FileUploadModel) -> None:
+    with pytest.raises(MKUserError):
+        vs.ImageUpload(allowed_extensions=[".png"], mime_types=["image/png"]).validate_value(
+            filedata, "prefix"
+        )
+
+
+@pytest.mark.parametrize("filedata", [("OneByOne.png", "image/png", _example_image_data())])
+def test_imageupload_compliance(filedata: vs.FileUploadModel) -> None:
+    vs.ImageUpload(allowed_extensions=[".png"], mime_types=["image/png"]).validate_value(
+        filedata, "prefix"
+    )
 
 
 @pytest.mark.parametrize(
@@ -324,3 +363,27 @@ def test_canonical_value_in_cascading_dropdown(
 def test_mask_to_json(valuespec, value, expected):
     masked = valuespec.mask(value)
     assert valuespec.value_to_json(masked) == expected
+
+
+class TestAlternative:
+    def test_transform_value_ok(self) -> None:
+        assert (
+            vs.Alternative(
+                elements=[
+                    vs.Transform(
+                        vs.Integer(),
+                        to_valuespec=lambda v: v + 1,
+                        from_valuespec=lambda v: v,
+                    )
+                ]
+            ).transform_value(3)
+            == 3 + 1
+        )
+
+    def test_transform_value_no_match(self) -> None:
+        with pytest.raises(MKUserError):
+            vs.Alternative(
+                elements=[
+                    vs.Integer(),
+                ]
+            ).transform_value("strange")

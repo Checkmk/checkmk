@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Mapping, Sequence
 
 import pytest
 
 from cmk.base.plugins.agent_based import veritas_vcs
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
-from cmk.base.plugins.agent_based.veritas_vcs import Vcs
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
+from cmk.base.plugins.agent_based.veritas_vcs import SubSection, Vcs
 
 STRING_TABLE = [
     ["ClusState", "RUNNING"],
@@ -300,8 +303,8 @@ def test_discover_veritas_vcs_resource() -> None:
         ),
     ],
 )
-def test_veritas_vcs_boil_down_states_in_cluster(  # type:ignore[no-untyped-def]
-    states, expected_state
+def test_veritas_vcs_boil_down_states_in_cluster(
+    states: Sequence[str], expected_state: str
 ) -> None:
     assert veritas_vcs.veritas_vcs_boil_down_states_in_cluster(states) == expected_state
 
@@ -345,7 +348,13 @@ def test_check_veritas_vcs_system() -> None:
 
 
 def test_check_veritas_vcs_group() -> None:
-    assert list(veritas_vcs.check_veritas_vcs_group("nepharius", PARAMS, SECTION_HASHES,)) == [
+    assert list(
+        veritas_vcs.check_veritas_vcs_group(
+            "nepharius",
+            PARAMS,
+            SECTION_HASHES,
+        )
+    ) == [
         Result(
             state=State.WARN,
             summary="temporarily frozen",
@@ -362,7 +371,13 @@ def test_check_veritas_vcs_group() -> None:
 
 
 def test_check_veritas_vcs_resource() -> None:
-    assert list(veritas_vcs.check_veritas_vcs_resource("bob3-dg", PARAMS, SECTION,)) == [
+    assert list(
+        veritas_vcs.check_veritas_vcs_resource(
+            "bob3-dg",
+            PARAMS,
+            SECTION,
+        )
+    ) == [
         Result(
             state=State.WARN,
             summary="offline",
@@ -569,8 +584,8 @@ def test_cluster_check_veritas_vcs_resource() -> None:
         ),
     ],
 )
-def test_cluster_check_veritas_vcs_states(  # type:ignore[no-untyped-def]
-    section, expected_check_result
+def test_cluster_check_veritas_vcs_states(
+    section: Mapping[str, SubSection], expected_check_result: CheckResult
 ) -> None:
     assert (
         list(

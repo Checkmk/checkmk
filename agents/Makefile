@@ -1,4 +1,4 @@
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -6,6 +6,7 @@ include ../defines.make
 include ../artifacts.make
 
 AGENTS_DIR := $(REPO_PATH)/agents
+SPECIAL_AGENTS_DIR := $(REPO_PATH)/cmk/special_agents
 RPM_VERSION := $(subst -,_,$(VERSION))
 NEW_VERSION_MAJOR := $(shell echo $(NEW_VERSION) | sed 's/\([0-9]*\.[0-9]*\)\.\(.*\)/\1/g')
 NAME := check-mk-agent
@@ -74,7 +75,15 @@ setversion:
 	    check_mk_agent.openbsd \
 	    check_mk_agent.openwrt \
 	    check_mk_agent.solaris
+	sed -i 's/__version__ = \"[0-9.a-z-]*\"/__version__ = \"$(NEW_VERSION)\"/g' \
+		$(SPECIAL_AGENTS_DIR)/agent_splunk.py \
+		$(SPECIAL_AGENTS_DIR)/agent_vsphere.py \
+		$(SPECIAL_AGENTS_DIR)/agent_netapp.py \
+		$(SPECIAL_AGENTS_DIR)/agent_jolokia.py
 	sed -i "s/^#define CMK_WIN_AGENT_VERSION .*/#define CMK_WIN_AGENT_VERSION \"$(NEW_VERSION)\"/" wnx/src/common/wnx_version.h
+	sed -i 's/std::wstring_view kAgentProductName.*;/std::wstring_view kAgentProductName{L"Checkmk Agent $(NEW_VERSION_MAJOR)"};/' wnx/src/engine/install_api.h
+	sed -i 's/define ProductName = "Checkmk Agent [^"]*"/define ProductName = "Checkmk Agent $(NEW_VERSION_MAJOR)"/' wnx/install/version.wxi
+	sed -i 's/define ServiceDescription = "Checkmk monitoring agent service - [^"]*"/define ServiceDescription = "Checkmk monitoring agent service - $(NEW_VERSION_MAJOR)"/' wnx/install/Product.wxs
 	sed -i 's/pub const VERSION: &str = "[^"]*";/pub const VERSION: \&str = "$(NEW_VERSION)";/' $(AGENT_CTL_DIR)/src/constants.rs
 
 build: $(DEB_PACKAGE) $(RPM_PACKAGE) $(WIN_PACKAGE) $(AGENT_CTL)
@@ -117,8 +126,8 @@ $(DEB_PACKAGE): $(BUILDROOT_STAMP)
 	    -e 's|\(Installed-Size:\).*|\1 '"$$(du $(BUILDROOT) -s -B1024 | cut -f1)"'|' \
 	    "$(DEB_TOPDIR)/control/control" > "$(DEB_BUILDDIR)/control/control"
 	# gnu formatted tar
-	cd "$(BUILDROOT)"; tar -cz --group=0 --owner=0 -f "$(DEB_BUILDDIR)/data.tar.gz" *
-	cd "$(DEB_BUILDDIR)/control"; tar -cz --group=0 --owner=0 -f "$(DEB_BUILDDIR)/control.tar.gz" *
+	cd "$(BUILDROOT)"; tar -cz --group=0 --owner=0 -f "$(DEB_BUILDDIR)/data.tar.gz" .
+	cd "$(DEB_BUILDDIR)/control"; tar -cz --group=0 --owner=0 -f "$(DEB_BUILDDIR)/control.tar.gz" .
 	cd "$(DEB_TOPDIR)"; ar cr "$(DEB_PACKAGE)" "control/debian-binary" "$(DEB_BUILDDIR)/control.tar.gz" "$(DEB_BUILDDIR)/data.tar.gz"
 	rm $(DEB_BUILDDIR) -rf
 

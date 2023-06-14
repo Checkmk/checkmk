@@ -1,0 +1,14 @@
+Title: sap_hana_instance_status: Fix crash during discovery
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1683188375
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+SAP HANA Instance Status check crashed during discovery if process
+didn't have all the data required.
+Now, processes with incomplete data are ignored.
+

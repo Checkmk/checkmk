@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Until now, the mk_mysql agent plugin could handle multiple sockets,
 but without the possibility to specify one alias per socket.

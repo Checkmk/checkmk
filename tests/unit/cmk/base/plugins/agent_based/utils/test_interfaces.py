@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 from typing import Any
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     IgnoreResults,
@@ -224,26 +224,23 @@ def test_discovery_ungrouped_all() -> None:
 
 
 def test_discovery_ungrouped_empty_section() -> None:
-    assert (
-        list(
-            interfaces.discover_interfaces(
-                [
-                    {
-                        "discovery_single": (
-                            True,
-                            {
-                                "item_appearance": "alias",
-                                "pad_portnumbers": True,
-                            },
-                        ),
-                        "matching_conditions": (True, {}),
-                    },
-                    DEFAULT_DISCOVERY_PARAMS,
-                ],
-                [],
-            )
+    assert not list(
+        interfaces.discover_interfaces(
+            [
+                {
+                    "discovery_single": (
+                        True,
+                        {
+                            "item_appearance": "alias",
+                            "pad_portnumbers": True,
+                        },
+                    ),
+                    "matching_conditions": (True, {}),
+                },
+                DEFAULT_DISCOVERY_PARAMS,
+            ],
+            [],
         )
-        == []
     )
 
 
@@ -304,20 +301,17 @@ def test_discovery_ungrouped_one() -> None:
 
 
 def test_discovery_ungrouped_off() -> None:
-    assert (
-        list(
-            interfaces.discover_interfaces(
-                [
-                    {
-                        "matching_conditions": (True, {}),
-                        "discovery_single": (False, {}),
-                    },
-                    DEFAULT_DISCOVERY_PARAMS,
-                ],
-                _create_interfaces_with_counters(0),
-            )
+    assert not list(
+        interfaces.discover_interfaces(
+            [
+                {
+                    "matching_conditions": (True, {}),
+                    "discovery_single": (False, {}),
+                },
+                DEFAULT_DISCOVERY_PARAMS,
+            ],
+            _create_interfaces_with_counters(0),
         )
-        == []
     )
 
 
@@ -850,7 +844,7 @@ ITEM_PARAMS_RESULTS = (
             Result(state=State.OK, summary="Out: 0.00 B/s (0%)"),
             Metric("out", 0.0, levels=(62500.0, 250000.0), boundaries=(0.0, 1250000.0)),
             Result(state=State.OK, notice="Unicast out: 0 packets/s"),
-            Metric("if_out_unicast", 0.0),
+            Metric("outucast", 0.0),
         ],
     ),
     (
@@ -882,29 +876,29 @@ ITEM_PARAMS_RESULTS = (
             Result(state=State.OK, summary="Total: 4.00 MB/s (16.00%)"),
             Metric("total", 4000000.0, boundaries=(0.0, 25000000.0)),
             Result(state=State.OK, notice="Errors in: 0 packets/s"),
-            Metric("if_in_errors", 0.0, levels=(10.0, 20.0)),
-            Result(state=State.OK, notice="Multicast in: 0 packets/s"),
-            Metric("if_in_mcast", 0.0),
-            Result(state=State.OK, notice="Broadcast in: 0 packets/s"),
-            Metric("if_in_bcast", 0.0),
-            Result(state=State.OK, notice="Unicast in: 0 packets/s"),
-            Metric("if_in_unicast", 0.0),
-            Result(state=State.OK, notice="Non-unicast in: 0 packets/s"),
-            Metric("if_in_non_unicast", 0.0),
+            Metric("inerr", 0.0, levels=(10.0, 20.0)),
             Result(state=State.OK, notice="Discards in: 0 packets/s"),
-            Metric("if_in_discards", 0.0),
+            Metric("indisc", 0.0),
+            Result(state=State.OK, notice="Multicast in: 0 packets/s"),
+            Metric("inmcast", 0.0),
+            Result(state=State.OK, notice="Broadcast in: 0 packets/s"),
+            Metric("inbcast", 0.0),
+            Result(state=State.OK, notice="Unicast in: 0 packets/s"),
+            Metric("inucast", 0.0),
+            Result(state=State.OK, notice="Non-unicast in: 0 packets/s"),
+            Metric("innucast", 0.0),
             Result(state=State.OK, notice="Errors out: 0 packets/s"),
-            Metric("if_out_errors", 0.0, levels=(10.0, 20.0)),
-            Result(state=State.OK, notice="Multicast out: 0 packets/s"),
-            Metric("if_out_mcast", 0.0),
-            Result(state=State.OK, notice="Broadcast out: 0 packets/s"),
-            Metric("if_out_bcast", 0.0),
-            Result(state=State.OK, notice="Unicast out: 0 packets/s"),
-            Metric("if_out_unicast", 0.0),
-            Result(state=State.OK, notice="Non-unicast out: 0 packets/s"),
-            Metric("if_out_non_unicast", 0.0),
+            Metric("outerr", 0.0, levels=(10.0, 20.0)),
             Result(state=State.OK, notice="Discards out: 0 packets/s"),
-            Metric("if_out_discards", 0.0),
+            Metric("outdisc", 0.0),
+            Result(state=State.OK, notice="Multicast out: 0 packets/s"),
+            Metric("outmcast", 0.0),
+            Result(state=State.OK, notice="Broadcast out: 0 packets/s"),
+            Metric("outbcast", 0.0),
+            Result(state=State.OK, notice="Unicast out: 0 packets/s"),
+            Metric("outucast", 0.0),
+            Result(state=State.OK, notice="Non-unicast out: 0 packets/s"),
+            Metric("outnucast", 0.0),
         ],
     ),
     (
@@ -915,7 +909,7 @@ ITEM_PARAMS_RESULTS = (
             "traffic": [("both", ("perc", ("upper", (5.0, 20.0))))],
             "state": ["1"],
             "nucasts": (1, 2),
-            "discards": (1, 2),
+            "discards": {"both": ("abs", (1, 2))},
         },
         [
             Result(state=State.OK, summary="[wlp2s0]"),
@@ -933,29 +927,29 @@ ITEM_PARAMS_RESULTS = (
             ),
             Metric("out", 3200000.0, levels=(625000.0, 2500000.0), boundaries=(0.0, 12500000.0)),
             Result(state=State.OK, notice="Errors in: 0 packets/s"),
-            Metric("if_in_errors", 0.0, levels=(10.0, 20.0)),
-            Result(state=State.OK, notice="Multicast in: 0 packets/s"),
-            Metric("if_in_mcast", 0.0),
-            Result(state=State.OK, notice="Broadcast in: 0 packets/s"),
-            Metric("if_in_bcast", 0.0),
-            Result(state=State.OK, notice="Unicast in: 0 packets/s"),
-            Metric("if_in_unicast", 0.0),
-            Result(state=State.OK, notice="Non-unicast in: 0 packets/s"),
-            Metric("if_in_non_unicast", 0.0, levels=(1.0, 2.0)),
+            Metric("inerr", 0.0, levels=(10.0, 20.0)),
             Result(state=State.OK, notice="Discards in: 0 packets/s"),
-            Metric("if_in_discards", 0.0, levels=(1.0, 2.0)),
+            Metric("indisc", 0.0, levels=(1.0, 2.0)),
+            Result(state=State.OK, notice="Multicast in: 0 packets/s"),
+            Metric("inmcast", 0.0),
+            Result(state=State.OK, notice="Broadcast in: 0 packets/s"),
+            Metric("inbcast", 0.0),
+            Result(state=State.OK, notice="Unicast in: 0 packets/s"),
+            Metric("inucast", 0.0),
+            Result(state=State.OK, notice="Non-unicast in: 0 packets/s"),
+            Metric("innucast", 0.0, levels=(1.0, 2.0)),
             Result(state=State.OK, notice="Errors out: 0 packets/s"),
-            Metric("if_out_errors", 0.0, levels=(10.0, 20.0)),
-            Result(state=State.OK, notice="Multicast out: 0 packets/s"),
-            Metric("if_out_mcast", 0.0),
-            Result(state=State.OK, notice="Broadcast out: 0 packets/s"),
-            Metric("if_out_bcast", 0.0),
-            Result(state=State.OK, notice="Unicast out: 0 packets/s"),
-            Metric("if_out_unicast", 0.0),
-            Result(state=State.OK, notice="Non-unicast out: 0 packets/s"),
-            Metric("if_out_non_unicast", 0.0, levels=(1.0, 2.0)),
+            Metric("outerr", 0.0, levels=(10.0, 20.0)),
             Result(state=State.OK, notice="Discards out: 0 packets/s"),
-            Metric("if_out_discards", 0.0, levels=(1.0, 2.0)),
+            Metric("outdisc", 0.0, levels=(1.0, 2.0)),
+            Result(state=State.OK, notice="Multicast out: 0 packets/s"),
+            Metric("outmcast", 0.0),
+            Result(state=State.OK, notice="Broadcast out: 0 packets/s"),
+            Metric("outbcast", 0.0),
+            Result(state=State.OK, notice="Unicast out: 0 packets/s"),
+            Metric("outucast", 0.0),
+            Result(state=State.OK, notice="Non-unicast out: 0 packets/s"),
+            Metric("outnucast", 0.0, levels=(1.0, 2.0)),
         ],
     ),
 )
@@ -1323,29 +1317,29 @@ def test_check_single_interface_bm_averaging() -> None:
         Result(state=State.OK, summary="Out: 3.20 MB/s"),
         Metric("out", 3200000.0, boundaries=(0.0, None)),
         Result(state=State.OK, notice="Errors in: 0 packets/s"),
-        Metric("if_in_errors", 0.0),
-        Result(state=State.OK, notice="Multicast in average 13min: 0 packets/s"),
-        Metric("if_in_mcast", 0.0),
-        Result(state=State.OK, notice="Broadcast in average 13min: 0 packets/s"),
-        Metric("if_in_bcast", 0.0),
-        Result(state=State.OK, notice="Unicast in: 0 packets/s"),
-        Metric("if_in_unicast", 0.0),
-        Result(state=State.OK, notice="Non-unicast in: 0 packets/s"),
-        Metric("if_in_non_unicast", 0.0),
+        Metric("inerr", 0.0),
         Result(state=State.OK, notice="Discards in: 0 packets/s"),
-        Metric("if_in_discards", 0.0),
+        Metric("indisc", 0.0),
+        Result(state=State.OK, notice="Multicast in average 13min: 0 packets/s"),
+        Metric("inmcast", 0.0),
+        Result(state=State.OK, notice="Broadcast in average 13min: 0 packets/s"),
+        Metric("inbcast", 0.0),
+        Result(state=State.OK, notice="Unicast in: 0 packets/s"),
+        Metric("inucast", 0.0),
+        Result(state=State.OK, notice="Non-unicast in: 0 packets/s"),
+        Metric("innucast", 0.0),
         Result(state=State.OK, notice="Errors out: 0 packets/s"),
-        Metric("if_out_errors", 0.0),
-        Result(state=State.OK, notice="Multicast out average 13min: 0 packets/s"),
-        Metric("if_out_mcast", 0.0),
-        Result(state=State.OK, notice="Broadcast out average 13min: 0 packets/s"),
-        Metric("if_out_bcast", 0.0),
-        Result(state=State.OK, notice="Unicast out: 0 packets/s"),
-        Metric("if_out_unicast", 0.0),
-        Result(state=State.OK, notice="Non-unicast out: 0 packets/s"),
-        Metric("if_out_non_unicast", 0.0),
+        Metric("outerr", 0.0),
         Result(state=State.OK, notice="Discards out: 0 packets/s"),
-        Metric("if_out_discards", 0.0),
+        Metric("outdisc", 0.0),
+        Result(state=State.OK, notice="Multicast out average 13min: 0 packets/s"),
+        Metric("outmcast", 0.0),
+        Result(state=State.OK, notice="Broadcast out average 13min: 0 packets/s"),
+        Metric("outbcast", 0.0),
+        Result(state=State.OK, notice="Unicast out: 0 packets/s"),
+        Metric("outucast", 0.0),
+        Result(state=State.OK, notice="Non-unicast out: 0 packets/s"),
+        Metric("outnucast", 0.0),
     ]
 
 
@@ -1480,7 +1474,9 @@ def test_check_single_interface_packet_levels() -> None:
                 "broadcast": {
                     "both": ("perc", (0.0, 2.0)),
                 },
-                "discards": (50.0, 300.0),
+                "discards": {
+                    "both": ("abs", (50.0, 300.0)),
+                },
             },
             interfaces.InterfaceWithRatesAndAverages(
                 interfaces.Attributes(
@@ -1553,16 +1549,25 @@ def test_check_single_interface_packet_levels() -> None:
             summary="Errors in: 50 packets/s (warn/crit at 10 packets/s/20 packets/s)",
         ),
         Metric(
-            "if_in_errors",
+            "inerr",
             50.0,
             levels=(10.0, 20.0),
+        ),
+        Result(
+            state=State.OK,
+            notice="Discards in: 40 packets/s",
+        ),
+        Metric(
+            "indisc",
+            40.0,
+            levels=(50.0, 300.0),
         ),
         Result(
             state=State.WARN,
             summary="Multicast in: 20 packets/s (warn/crit at 11 packets/s/23 packets/s)",
         ),
         Metric(
-            "if_in_mcast",
+            "inmcast",
             20.0,
             levels=(11.0, 23.0),
         ),
@@ -1571,7 +1576,7 @@ def test_check_single_interface_packet_levels() -> None:
             summary="Broadcast in: 50% (warn/crit at 0%/2%)",
         ),
         Metric(
-            "if_in_bcast",
+            "inbcast",
             30.0,
             levels=(0.0, 1.2),
         ),
@@ -1580,7 +1585,7 @@ def test_check_single_interface_packet_levels() -> None:
             summary="Unicast in: 16.667% (warn/crit at 10%/20%)",
         ),
         Metric(
-            "if_in_unicast",
+            "inucast",
             10.0,
             levels=(6.0, 12.0),
         ),
@@ -1589,34 +1594,34 @@ def test_check_single_interface_packet_levels() -> None:
             summary="Non-unicast in: 50 packets/s (warn/crit at 0 packets/s/5 packets/s)",
         ),
         Metric(
-            "if_in_non_unicast",
+            "innucast",
             50.0,
             levels=(0.0, 5.0),
-        ),
-        Result(
-            state=State.OK,
-            notice="Discards in: 40 packets/s",
-        ),
-        Metric(
-            "if_in_discards",
-            40.0,
-            levels=(50.0, 300.0),
         ),
         Result(
             state=State.CRIT,
             summary="Errors out: 100 packets/s (warn/crit at 10 packets/s/20 packets/s)",
         ),
         Metric(
-            "if_out_errors",
+            "outerr",
             100.0,
             levels=(10.0, 20.0),
+        ),
+        Result(
+            state=State.WARN,
+            summary="Discards out: 90 packets/s (warn/crit at 50 packets/s/300 packets/s)",
+        ),
+        Metric(
+            "outdisc",
+            90.0,
+            levels=(50.0, 300.0),
         ),
         Result(
             state=State.CRIT,
             summary="Multicast out: 33.333% (warn/crit at 10%/20%)",
         ),
         Metric(
-            "if_out_mcast",
+            "outmcast",
             70.0,
             levels=(21.0, 42.0),
         ),
@@ -1625,7 +1630,7 @@ def test_check_single_interface_packet_levels() -> None:
             summary="Broadcast out: 38.095% (warn/crit at 0%/2%)",
         ),
         Metric(
-            "if_out_bcast",
+            "outbcast",
             80.0,
             levels=(0.0, 4.2),
         ),
@@ -1634,7 +1639,7 @@ def test_check_single_interface_packet_levels() -> None:
             summary="Unicast out: 28.571% (warn/crit at 10%/20%)",
         ),
         Metric(
-            "if_out_unicast",
+            "outucast",
             60.0,
             levels=(21.0, 42.0),
         ),
@@ -1643,22 +1648,14 @@ def test_check_single_interface_packet_levels() -> None:
             summary="Non-unicast out: 150 packets/s (warn/crit at 0 packets/s/5 packets/s)",
         ),
         Metric(
-            "if_out_non_unicast",
+            "outnucast",
             150.0,
             levels=(0.0, 5.0),
-        ),
-        Result(
-            state=State.WARN,
-            summary="Discards out: 90 packets/s (warn/crit at 50 packets/s/300 packets/s)",
-        ),
-        Metric(
-            "if_out_discards",
-            90.0,
-            levels=(50.0, 300.0),
         ),
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
 def test_check_multiple_interfaces(
     item: str,
@@ -1686,6 +1683,7 @@ def test_check_multiple_interfaces(
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
 def test_check_multiple_interfaces_duplicate_descr(
     item: str,
@@ -1715,6 +1713,7 @@ def test_check_multiple_interfaces_duplicate_descr(
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
 def test_check_multiple_interfaces_duplicate_alias(
     item: str,
@@ -1733,7 +1732,14 @@ def test_check_multiple_interfaces_duplicate_alias(
         )
     )
     ifaces = _create_interfaces_with_counters(4000000, alias=alias)
-    assert list(interfaces.check_multiple_interfaces(item, params, ifaces, timestamp=5,)) == [
+    assert list(
+        interfaces.check_multiple_interfaces(
+            item,
+            params,
+            ifaces,
+            timestamp=5,
+        )
+    ) == [
         Result(
             state=State.OK,
             summary=f"[{alias}/{ifaces[int(index) - 1].attributes.descr}]",
@@ -1742,6 +1748,7 @@ def test_check_multiple_interfaces_duplicate_alias(
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_multiple_interfaces_group_simple() -> None:
     params = {
         "errors": {"both": ("abs", (10, 20))},
@@ -1791,10 +1798,11 @@ def test_check_multiple_interfaces_group_simple() -> None:
         ),
         Metric("out", 3200000.0, levels=(62500.0, 250000.0), boundaries=(0.0, 1250000.0)),
         Result(state=State.OK, notice="Unicast out: 0 packets/s"),
-        Metric("if_out_unicast", 0.0),
+        Metric("outucast", 0.0),
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_multiple_interfaces_group_exclude() -> None:
     params = {
         "errors": {"both": ("abs", (10, 20))},
@@ -1846,12 +1854,13 @@ def test_check_multiple_interfaces_group_exclude() -> None:
         ),
         Metric("total", 4000000.0, levels=(500000.0, 1500000.0), boundaries=(0.0, 5000000.0)),
         Result(state=State.OK, notice="Unicast in: 0 packets/s"),
-        Metric("if_in_unicast", 0.0),
+        Metric("inucast", 0.0),
         Result(state=State.OK, notice="Unicast out: 0 packets/s"),
-        Metric("if_out_unicast", 0.0),
+        Metric("outucast", 0.0),
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_multiple_interfaces_group_by_agent() -> None:
     params = {
         "errors": {"both": ("abs", (10, 20))},
@@ -1885,7 +1894,14 @@ def test_check_multiple_interfaces_group_by_agent() -> None:
     ifaces = _create_interfaces_with_counters(4000000)
     ifaces[3].attributes.group = "group"
     ifaces[5].attributes.group = "group"
-    assert list(interfaces.check_multiple_interfaces("group", params, ifaces, timestamp=5,)) == [
+    assert list(
+        interfaces.check_multiple_interfaces(
+            "group",
+            params,
+            ifaces,
+            timestamp=5,
+        )
+    ) == [
         Result(state=State.OK, summary="Interface group"),
         Result(state=State.CRIT, summary="(degraded)", details="Operational state: degraded"),
         Result(state=State.OK, summary="Members: [4 (down), 6 (up)]"),
@@ -1902,32 +1918,33 @@ def test_check_multiple_interfaces_group_by_agent() -> None:
         ),
         Metric("total", 4000000.0, levels=(500000.0, 1500000.0), boundaries=(0.0, 5000000.0)),
         Result(state=State.OK, notice="Errors in: 0 packets/s"),
-        Metric("if_in_errors", 0.0, levels=(10.0, 20.0)),
-        Result(state=State.OK, notice="Multicast in: 0 packets/s"),
-        Metric("if_in_mcast", 0.0),
-        Result(state=State.OK, notice="Broadcast in: 0 packets/s"),
-        Metric("if_in_bcast", 0.0),
-        Result(state=State.OK, notice="Unicast in: 0 packets/s"),
-        Metric("if_in_unicast", 0.0),
-        Result(state=State.OK, notice="Non-unicast in: 0 packets/s"),
-        Metric("if_in_non_unicast", 0.0),
+        Metric("inerr", 0.0, levels=(10.0, 20.0)),
         Result(state=State.OK, notice="Discards in: 0 packets/s"),
-        Metric("if_in_discards", 0.0),
+        Metric("indisc", 0.0),
+        Result(state=State.OK, notice="Multicast in: 0 packets/s"),
+        Metric("inmcast", 0.0),
+        Result(state=State.OK, notice="Broadcast in: 0 packets/s"),
+        Metric("inbcast", 0.0),
+        Result(state=State.OK, notice="Unicast in: 0 packets/s"),
+        Metric("inucast", 0.0),
+        Result(state=State.OK, notice="Non-unicast in: 0 packets/s"),
+        Metric("innucast", 0.0),
         Result(state=State.OK, notice="Errors out: 0 packets/s"),
-        Metric("if_out_errors", 0.0, levels=(10.0, 20.0)),
-        Result(state=State.OK, notice="Multicast out: 0 packets/s"),
-        Metric("if_out_mcast", 0.0),
-        Result(state=State.OK, notice="Broadcast out: 0 packets/s"),
-        Metric("if_out_bcast", 0.0),
-        Result(state=State.OK, notice="Unicast out: 0 packets/s"),
-        Metric("if_out_unicast", 0.0),
-        Result(state=State.OK, notice="Non-unicast out: 0 packets/s"),
-        Metric("if_out_non_unicast", 0.0),
+        Metric("outerr", 0.0, levels=(10.0, 20.0)),
         Result(state=State.OK, notice="Discards out: 0 packets/s"),
-        Metric("if_out_discards", 0.0),
+        Metric("outdisc", 0.0),
+        Result(state=State.OK, notice="Multicast out: 0 packets/s"),
+        Metric("outmcast", 0.0),
+        Result(state=State.OK, notice="Broadcast out: 0 packets/s"),
+        Metric("outbcast", 0.0),
+        Result(state=State.OK, notice="Unicast out: 0 packets/s"),
+        Metric("outucast", 0.0),
+        Result(state=State.OK, notice="Non-unicast out: 0 packets/s"),
+        Metric("outnucast", 0.0),
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
 def test_check_multiple_interfaces_w_node(
     item: str,
@@ -1953,6 +1970,7 @@ def test_check_multiple_interfaces_w_node(
     ) == _add_node_name_to_results(result, node_name)
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize("item, params, result", ITEM_PARAMS_RESULTS)
 def test_check_multiple_interfaces_same_item_twice_cluster(
     item: str,
@@ -1985,6 +2003,7 @@ def test_check_multiple_interfaces_same_item_twice_cluster(
     ) == _add_node_name_to_results(result, node_name_1)
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_multiple_interfaces_group_multiple_nodes() -> None:
     params = {
         "errors": {"both": ("abs", (10, 20))},
@@ -2054,10 +2073,11 @@ def test_check_multiple_interfaces_group_multiple_nodes() -> None:
         ),
         Metric("out", 6400000.0, levels=(125000.0, 500000.0), boundaries=(0.0, 2500000.0)),
         Result(state=State.OK, notice="Unicast out: 0 packets/s"),
-        Metric("if_out_unicast", 0.0),
+        Metric("outucast", 0.0),
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_cluster_check(monkeypatch: MonkeyPatch) -> None:
     params = {
         "errors": {"both": ("abs", (10, 20))},
@@ -2107,6 +2127,7 @@ def test_cluster_check(monkeypatch: MonkeyPatch) -> None:
     assert result_cluster_check == result_check_multiple_interfaces
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_cluster_check_ignore_discovered_params() -> None:
     assert list(
         interfaces.cluster_check(
@@ -2147,3 +2168,274 @@ def test_cluster_check_ignore_discovered_params() -> None:
             summary="Speed: 100 kBit/s",
         ),
     ]
+
+
+@pytest.mark.parametrize(
+    ["item", "section", "expected_matches"],
+    [
+        pytest.param(
+            "Port 2",
+            [
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="1",
+                        descr="Port 1",
+                        alias="",
+                        type="10",
+                    ),
+                    interfaces.Counters(),
+                ),
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="2",
+                        descr="Port 2",
+                        alias="",
+                        type="10",
+                    ),
+                    interfaces.Counters(),
+                ),
+            ],
+            [
+                interfaces.Attributes(
+                    index="2",
+                    descr="Port 2",
+                    alias="",
+                    type="10",
+                )
+            ],
+            id="unclustered, simple item",
+        ),
+        pytest.param(
+            "Port 2",
+            [
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="1",
+                        descr="",
+                        alias="Port",
+                        type="10",
+                    ),
+                    interfaces.Counters(),
+                ),
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="2",
+                        descr="",
+                        alias="Port",
+                        type="10",
+                    ),
+                    interfaces.Counters(),
+                ),
+            ],
+            [
+                interfaces.Attributes(
+                    index="2",
+                    descr="",
+                    alias="Port",
+                    type="10",
+                )
+            ],
+            id="unclustered, compound item",
+        ),
+        pytest.param(
+            "Port 2",
+            [
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="1",
+                        descr="",
+                        alias="Port 2",
+                        type="10",
+                    ),
+                    interfaces.Counters(),
+                ),
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="2",
+                        descr="",
+                        alias="Port",
+                        type="10",
+                    ),
+                    interfaces.Counters(),
+                ),
+            ],
+            [
+                interfaces.Attributes(
+                    index="1",
+                    descr="",
+                    alias="Port 2",
+                    type="10",
+                )
+            ],
+            id="unclustered, simple and compound mixed",
+        ),
+        pytest.param(
+            "Port 2",
+            [
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="1",
+                        descr="Port 1",
+                        alias="",
+                        type="10",
+                        node="node1",
+                    ),
+                    interfaces.Counters(),
+                ),
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="2",
+                        descr="Port 2",
+                        alias="",
+                        type="10",
+                        node="node1",
+                    ),
+                    interfaces.Counters(),
+                ),
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="10",
+                        descr="Port 2",
+                        alias="",
+                        type="10",
+                        node="node2",
+                    ),
+                    interfaces.Counters(),
+                ),
+            ],
+            [
+                interfaces.Attributes(
+                    index="2",
+                    descr="Port 2",
+                    alias="",
+                    type="10",
+                    node="node1",
+                ),
+                interfaces.Attributes(
+                    index="10",
+                    descr="Port 2",
+                    alias="",
+                    type="10",
+                    node="node2",
+                ),
+            ],
+            id="clustered, simple item",
+        ),
+        pytest.param(
+            "Port 2",
+            [
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="1",
+                        descr="",
+                        alias="Port",
+                        type="10",
+                        node="node1",
+                    ),
+                    interfaces.Counters(),
+                ),
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="2",
+                        descr="",
+                        alias="Port",
+                        type="10",
+                        node="node1",
+                    ),
+                    interfaces.Counters(),
+                ),
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="2",
+                        descr="",
+                        alias="Port",
+                        type="10",
+                        node="node2",
+                    ),
+                    interfaces.Counters(),
+                ),
+            ],
+            [
+                interfaces.Attributes(
+                    index="2",
+                    descr="",
+                    alias="Port",
+                    type="10",
+                    node="node1",
+                ),
+                interfaces.Attributes(
+                    index="2",
+                    descr="",
+                    alias="Port",
+                    type="10",
+                    node="node2",
+                ),
+            ],
+            id="clustered, compound item",
+        ),
+        pytest.param(
+            "Port 2",
+            [
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="1",
+                        descr="",
+                        alias="Port 2",
+                        type="10",
+                        node="node1",
+                    ),
+                    interfaces.Counters(),
+                ),
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="2",
+                        descr="",
+                        alias="Port",
+                        type="10",
+                        node="node1",
+                    ),
+                    interfaces.Counters(),
+                ),
+                interfaces.InterfaceWithCounters(
+                    interfaces.Attributes(
+                        index="2",
+                        descr="Port",
+                        alias="",
+                        type="10",
+                        node="node2",
+                    ),
+                    interfaces.Counters(),
+                ),
+            ],
+            [
+                interfaces.Attributes(
+                    index="1",
+                    descr="",
+                    alias="Port 2",
+                    type="10",
+                    node="node1",
+                ),
+                interfaces.Attributes(
+                    index="2",
+                    descr="Port",
+                    alias="",
+                    type="10",
+                    node="node2",
+                ),
+            ],
+            id="clustered, simple and compound mixed",
+        ),
+    ],
+)
+def test_matching_interfaces_for_item(
+    item: str,
+    section: interfaces.Section[interfaces.TInterfaceType],
+    expected_matches: Sequence[interfaces.Attributes],
+) -> None:
+    assert [
+        iface.attributes
+        for iface in interfaces.matching_interfaces_for_item(
+            item,
+            section,
+        )
+    ] == expected_matches

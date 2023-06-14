@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
@@ -240,13 +240,15 @@ some users are already created. You can configure them in Checkmk at *Setup* > *
 
 For the various authentication methods that can be used please consult the following descriptions,
 which occur in the order of precedence. This means that on a request which receives multiple
-authentication methods, the one with the hightes priority "wins" and is used. This is especially
+authentication methods, the one with the highest priority "wins" and is used. This is especially
 convenient when developing automation scripts, as these can directly be used with either the
 currently logged in GUI user, or the "Bearer" authentication method which takes precedence over the
 GUI authentication method. The result is that the user doesn't have to log out to check that the
 scripts works with the other method.
 
 <SecurityDefinitions />
+
+
 
 # Compatibility
 
@@ -259,11 +261,11 @@ such a method. In these cases the HTTP method to use has to be POST. You cannot 
 ## Compatibility policy
 
 It is our policy to keep all documented parts backwards compatible, as long as there is no
-compelling reason (like security, etc) to break compatibility.
+compelling reason (like security, etc.) to break compatibility.
 
 In the event of a break in backwards compatibility, these changes are documented and, if possible,
 announced by deprecating the field or endpoint in question beforehand. Please understand that this
-can't be promised for all cases (security, etc) though.
+can't be promised for all cases (security, etc.) though.
 
 ## Versioning
 
@@ -323,17 +325,15 @@ SECURITY_SCHEMES = {
         "scheme": "bearer",
         "description": "Use user credentials in the `Authorization` HTTP header. "
         "The format of the header value is `$user $password`. This method has the "
-        "highest precedence. If it succeeds, all other authentication methods are "
-        "skipped.",
+        "highest precedence. If authentication succeeds, `cookieAuth` will be skipped.",
         "bearerFormat": "username password",
     },
     "webserverAuth": {
         "type": "http",
         "scheme": "basic",
         "description": "Use the authentication method of the webserver ('basic' or 'digest'). To "
-        "use this, you'll either have to re-configure the site's Apache instance "
-        "yourself, or disable multi-site logins via `omd config`. This method "
-        "takes precedence over the `cookieAuth` method.",
+        "use this, you'll either have to re-configure the site's Apache instance by yourself. "
+        "If authentication succeeds, `cookieAuth` will be skipped.",
     },
 }
 
@@ -404,7 +404,7 @@ OPTIONS: ReDocSpec = {
 __version__ = "1.0"
 
 
-def make_spec(options: ReDocSpec):  # type:ignore[no-untyped-def]
+def make_spec(options: ReDocSpec):  # type: ignore[no-untyped-def]
     return apispec.APISpec(
         "Checkmk REST-API",
         __version__,

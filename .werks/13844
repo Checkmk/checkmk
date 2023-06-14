@@ -6,7 +6,7 @@ Date: 1649611893
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The inventory plugin for Solaris now respects the same configuration
 file as the plugins for AIX and Linux.

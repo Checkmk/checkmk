@@ -22,8 +22,9 @@
 
         SSLEngine on
 
-        SSLCertificateFile      /etc/ssl/certs/checkmk.pem
-        SSLCertificateKeyFile /etc/ssl/private/checkmk.key
+        SSLCertificateKeyFile /etc/ssl/private/ssl-cert-snakeoil.key
+        # SSLCertificateChainFile  /etc/ssl/certs/ca_bundle.crt
+        SSLCertificateFile      /etc/ssl/certs/ssl-cert-snakeoil.pem
 
         # Available loglevels: trace8, ..., trace1, debug, info, notice, warn,
         # error, crit, alert, emerg.

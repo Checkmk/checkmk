@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from tests.testlib import on_time
 
@@ -39,7 +39,6 @@ def test_parse_cadvisor_if() -> None:
 
 
 def test_check_cadvisor_if(monkeypatch: MonkeyPatch) -> None:
-
     vs = {
         "in_bcast.0.Summary.Summary.None": (1000.0, 0),
         "in_disc.0.Summary.Summary.None": (1000.0, 0.0),
@@ -65,11 +64,11 @@ def test_check_cadvisor_if(monkeypatch: MonkeyPatch) -> None:
             Result(state=State.OK, summary="Out: 3.00 B/s"),
             Metric("out", 3.0, boundaries=(0.0, None)),
             Result(state=State.OK, notice="Errors in: 0 packets/s"),
-            Metric("if_in_errors", 0.0),
+            Metric("inerr", 0.0),
             Result(state=State.OK, notice="Discards in: 0 packets/s"),
-            Metric("if_in_discards", 0.0),
+            Metric("indisc", 0.0),
             Result(state=State.OK, notice="Errors out: 0 packets/s"),
-            Metric("if_out_errors", 0.0),
+            Metric("outerr", 0.0),
             Result(state=State.OK, notice="Discards out: 0 packets/s"),
-            Metric("if_out_discards", 0.0),
+            Metric("outdisc", 0.0),
         ]

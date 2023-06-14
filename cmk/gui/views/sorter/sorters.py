@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,20 +11,19 @@ from typing import Any
 import cmk.gui.utils as utils
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
+from cmk.gui.painter.v0.helpers import get_tag_groups
+from cmk.gui.painter.v1.helpers import get_perfdata_nth_value
 from cmk.gui.site_config import get_site_config
 from cmk.gui.type_defs import ColumnName, ColumnSpec, Row
 from cmk.gui.valuespec import Dictionary, DropdownChoice
 from cmk.gui.view_utils import get_labels
 
-from ..painter.v0.helpers import get_tag_groups
-from ..painter.v1.helpers import get_perfdata_nth_value
 from .base import ParameterizedSorter, Sorter
 from .helpers import (
     cmp_custom_variable,
     cmp_insensitive_string,
     cmp_ip_address,
     cmp_num_split,
-    cmp_service_name_equiv,
     cmp_simple_number,
     cmp_simple_string,
     cmp_string_list,
@@ -465,8 +464,8 @@ class SorterServicelevel(Sorter):
 
 
 def cmp_service_name(column, r1, r2):
-    return (cmp_service_name_equiv(r1[column]) > cmp_service_name_equiv(r2[column])) - (
-        cmp_service_name_equiv(r1[column]) < cmp_service_name_equiv(r2[column])
+    return (utils.cmp_service_name_equiv(r1[column]) > utils.cmp_service_name_equiv(r2[column])) - (
+        utils.cmp_service_name_equiv(r1[column]) < utils.cmp_service_name_equiv(r2[column])
     ) or cmp_num_split(column, r1, r2)
 
 

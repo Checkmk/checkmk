@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+from collections.abc import Mapping
+
 import pytest
 
 from cmk.base.plugins.agent_based import tsm_stagingpools
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 
 SECTION = {"bar": ["99.9", "97.9"], "foo": ["7.1"]}
 NODE_SECTION = {"node1": SECTION, "node2": SECTION, "node3": {"foo": ["7.1", "9.3"]}}
@@ -45,8 +48,7 @@ NODE_SECTION = {"node1": SECTION, "node2": SECTION, "node3": {"foo": ["7.1", "9.
         ),
     ],
 )
-def test_check(item, params, expected) -> None:  # type:ignore[no-untyped-def]
-
+def test_check(item: str, params: Mapping[str, object], expected: CheckResult) -> None:
     actual = list(tsm_stagingpools.check_tsm_stagingpools(item, params, SECTION))
     assert actual == expected
 
@@ -92,7 +94,6 @@ def test_check(item, params, expected) -> None:  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_cluster_check(item, params, expected) -> None:  # type:ignore[no-untyped-def]
-
+def test_cluster_check(item: str, params: Mapping[str, object], expected: CheckResult) -> None:
     actual = list(tsm_stagingpools.cluster_check_tsm_stagingspools(item, params, NODE_SECTION))
     assert actual == expected

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module contains helpers to set comments for host and service.
@@ -81,7 +81,6 @@ def get_comments(
     query: QueryExpression | None,
     collection_name: CollectionName = CollectionName.all,
 ) -> Mapping[int, Comment]:
-
     # When the user tries to filter for service_descriptions on host only comments.
     if collection_name is CollectionName.host and service_description:
         raise CommentParamException
@@ -113,7 +112,6 @@ def add_host_comment_by_query(
     user: UserId = UserId.builtin(),
     persistent: bool = False,
 ) -> None:
-
     q = Query([Hosts.name]).filter(query)
 
     with detailed_connection(connection) as conn:
@@ -178,7 +176,6 @@ def add_service_comment_by_query(
     persistent: bool = False,
     user: UserId = UserId.builtin(),
 ) -> None:
-
     q = Query([Services.description, Services.host_name], query)
 
     with detailed_connection(connection) as conn:
@@ -200,7 +197,6 @@ def add_service_comment(
     persistent: bool = False,
     user: UserId = UserId.builtin(),
 ) -> None:
-
     """Add service comment
 
     Args:

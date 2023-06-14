@@ -6,7 +6,7 @@ Date: 1670402565
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Page menu entries which toggle certain view parameters, e.g. "Show checkboxes" in the "All hosts" view, used to show a checkbox icon, that was either empty or checked.
 For a more intuitive, consistent and visually understandable user experience, a new toggle icon is introduced and the text of such entries is toggled accordingly.

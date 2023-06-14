@@ -6,7 +6,7 @@ Date: 1673960487
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 From Checkmk version 2.1 the <i>Check_MK</i> service crashed if the settings in <i>Hostname translation for piggybacked hosts</i> resulted in an empty host name.
 

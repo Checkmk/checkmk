@@ -6,7 +6,7 @@ Date: 1667485672
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This Werk mainly fixes an inconvenience that occured when invoking multiple
 instances of the Agent Updater simultaneously.

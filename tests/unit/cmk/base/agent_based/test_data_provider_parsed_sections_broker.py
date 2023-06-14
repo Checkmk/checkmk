@@ -1,29 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+from collections.abc import Callable, Iterable, Sequence
 
-from collections.abc import Callable, Iterable, Mapping, Sequence
-
-import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from cmk.utils.type_defs import HostName, ParsedSectionName, SectionName
 
-from cmk.fetchers import SourceType
-
-from cmk.checkers import HostKey
-from cmk.checkers.host_sections import HostSections
-from cmk.checkers.type_defs import AgentRawDataSection
-
-import cmk.base.api.agent_based.register.section_plugins as section_plugins
-from cmk.base.agent_based.data_provider import (
-    ParsedSectionsBroker,
-    ParsedSectionsResolver,
-    SectionsParser,
-)
+from cmk.checkengine import SectionPlugin
+from cmk.checkengine.host_sections import HostSections
+from cmk.checkengine.sectionparser import ParsedSectionsResolver, SectionsParser
+from cmk.checkengine.type_defs import AgentRawDataSection
 
 
 def _test_section(
@@ -32,11 +21,11 @@ def _test_section(
     parsed_section_name: str,
     parse_function: Callable,
     supersedes: Iterable[str],
-) -> section_plugins.AgentSectionPlugin:
-    return section_plugins.trivial_section_factory(SectionName(section_name))._replace(
-        parsed_section_name=ParsedSectionName(parsed_section_name),
-        parse_function=parse_function,
+) -> tuple[SectionName, SectionPlugin]:
+    return SectionName(section_name), SectionPlugin(
         supersedes={SectionName(n) for n in supersedes},
+        parse_function=parse_function,
+        parsed_section_name=ParsedSectionName(parsed_section_name),
     )
 
 
@@ -79,56 +68,7 @@ NODE_2: Sequence[AgentRawDataSection] = [
 ]
 
 
-@pytest.mark.parametrize(
-    "node_sections,expected_result",
-    [
-        (HostSections[AgentRawDataSection](sections={}), None),
-        (
-            HostSections[AgentRawDataSection](sections={SectionName("one"): NODE_1}),
-            {"parsed_by": "one", "node": "node1"},
-        ),
-        (
-            HostSections[AgentRawDataSection](sections={SectionName("two"): NODE_1}),
-            {"parsed_by": "two", "node": "node1"},
-        ),
-        (
-            HostSections[AgentRawDataSection](
-                sections={
-                    SectionName("one"): NODE_1,
-                    SectionName("two"): NODE_1,
-                }
-            ),
-            {
-                "parsed_by": "two",
-                "node": "node1",
-            },
-        ),
-    ],
-)
-def test_get_parsed_section(
-    node_sections: HostSections[AgentRawDataSection], expected_result: Mapping
-) -> None:
-
-    parsed_sections_broker = ParsedSectionsBroker(
-        {
-            HostKey(HostName("node1"), SourceType.HOST): (
-                ParsedSectionsResolver(
-                    section_plugins=[SECTION_ONE, SECTION_TWO, SECTION_THREE, SECTION_FOUR],
-                ),
-                SectionsParser(host_sections=node_sections, host_name=HostName("node1")),
-            ),
-        }
-    )
-
-    content = parsed_sections_broker.get_parsed_section(
-        HostKey(HostName("node1"), SourceType.HOST),
-        ParsedSectionName("parsed"),
-    )
-
-    assert expected_result == content
-
-
-def _get_parser() -> SectionsParser:
+def make_parser() -> SectionsParser:
     return SectionsParser(
         HostSections[AgentRawDataSection](
             sections={
@@ -141,20 +81,19 @@ def _get_parser() -> SectionsParser:
 
 
 def test_parse_sections_unsuperseded(monkeypatch: MonkeyPatch) -> None:
-
     assert (
         ParsedSectionsResolver(
-            section_plugins=(SECTION_ONE, SECTION_THREE),
-        ).resolve(_get_parser(), ParsedSectionName("parsed"))
+            make_parser(),
+            section_plugins=dict((SECTION_ONE, SECTION_THREE)),
+        ).resolve(ParsedSectionName("parsed"))
         is not None
     )
 
 
 def test_parse_sections_superseded(monkeypatch: MonkeyPatch) -> None:
-
     assert (
         ParsedSectionsResolver(
-            section_plugins=(SECTION_ONE, SECTION_THREE, SECTION_FOUR),
-        ).resolve(_get_parser(), ParsedSectionName("parsed"))
+            make_parser(), section_plugins=dict((SECTION_ONE, SECTION_THREE, SECTION_FOUR))
+        ).resolve(ParsedSectionName("parsed"))
         is None
     )

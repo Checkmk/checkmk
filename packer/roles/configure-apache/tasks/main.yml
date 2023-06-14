@@ -1,24 +1,4 @@
 ---
-- name: Create private key (RSA, 4096 bits)
-  community.crypto.openssl_privatekey:
-    path: /etc/ssl/private/checkmk.key
-  become: true
-
-- name: Create certificate signing request (CSR) for self-signed certificate
-  community.crypto.openssl_csr_pipe:
-    privatekey_path: /etc/ssl/private/checkmk.key
-    common_name: localhost
-  register: csr
-  become: true
-
-- name: Create self-signed certificate from CSR
-  community.crypto.x509_certificate:
-    path: /etc/ssl/certs/checkmk.pem
-    csr_content: "{{ csr.csr }}"
-    privatekey_path: /etc/ssl/private/checkmk.key
-    provider: selfsigned
-  become: true
-
 - name: Enable the Apache2 module headers
   community.general.apache2_module:
     state: present
@@ -54,8 +34,28 @@
     name: rpcbind.socket
   become: yes
 
-- name: Just force systemd to reread configs
+- name: remove snakeoil
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/ssl/private/ssl-cert-snakeoil.key
+    - /etc/ssl/certs/ssl-cert-snakeoil.pem
+  become: yes
+
+- name: Copy cert service
+  template:
+    src: files/cmk-cert.service
+    dest: /lib/systemd/system/cmk-cert.service
+    owner: "root"
+    group: "root"
+    mode: "0644"
+  become: yes
+
+- name: enbale cert service
   ansible.builtin.systemd:
+    name: cmk-cert
+    enabled: true
     daemon_reload: yes
   become: yes
 

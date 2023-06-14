@@ -6,7 +6,7 @@ Date: 1646081230
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The plugin for Oracle processes, "oracle_processes", carshed when it processed
 the output of the 1.6 agent plugin for solaris with the error message

@@ -6,7 +6,7 @@ Date: 1668071151
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The reschedule button of passive services refers to the
 Check_MK service as this service fetches the data. During

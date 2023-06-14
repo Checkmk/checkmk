@@ -94,7 +94,7 @@ SERVICE_FAILURE_ACTIONS CreateServiceFailureAction(int delay) {
     return failure_actions;
 }
 
-/// \brief wraps low level win32 API-calls to make service restartable or not
+/// wraps low level win32 API-calls to make service restartable or not
 bool WinService::configureRestart(bool restart) const {
     const auto action = restart ? SC_ACTION_RESTART : SC_ACTION_NONE;
     constexpr int count_of_actions = 3;  // in windows service
@@ -120,7 +120,7 @@ bool WinService::configureRestart(bool restart) const {
     return false;
 }
 
-/// \brief change service parameters
+/// change service parameters
 ///
 /// returns last error
 static uint32_t CallChangeServiceConfig(SC_HANDLE handle, DWORD start_type,
@@ -141,7 +141,7 @@ static uint32_t CallChangeServiceConfig(SC_HANDLE handle, DWORD start_type,
     return ret == TRUE ? 0 : ::GetLastError();
 }
 
-/// \brief set service delayed flag if configured
+/// set service delayed flag if configured
 ///
 /// returns last error
 static uint32_t CallChangeServiceDelay(SC_HANDLE handle, bool delayed) {

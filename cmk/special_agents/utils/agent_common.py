@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Common module for stuff every special agent should use
@@ -24,6 +24,17 @@ import urllib3
 import cmk.utils.password_store
 
 from cmk.special_agents.utils.crash_reporting import create_agent_crash_dump
+
+
+class CannotRecover(RuntimeError):
+    """Make the special agent fail gracefully
+    Raise this when there is no way to successfully proceed,
+    e.g. the server does not respond or credentials are not valid.
+    This will make the Check_MK service go critical
+    and display the passed message in the GUI.
+    In contrast to any other raised exception,
+    this will not create a crash report.
+    """
 
 
 class SectionManager:
@@ -57,7 +68,7 @@ class SectionManager:
         self._data.clear()
         sys.stdout.flush()
 
-    def writeline(self, line: Any):  # type:ignore[no-untyped-def]
+    def writeline(self, line: Any):  # type: ignore[no-untyped-def]
         sys.stdout.write(str(line))
         sys.stdout.write("\n")
 
@@ -135,10 +146,14 @@ def _special_agent_main_core(
 
     try:
         return main_fn(args)
+    except CannotRecover as exc:
+        print(exc, file=sys.stderr)
     except Exception:
+        if args.debug:
+            raise
         crash_dump = create_agent_crash_dump()
         sys.stderr.write(crash_dump)
-        return 1
+    return 1
 
 
 def special_agent_main(

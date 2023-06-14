@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,6 +7,10 @@
 
 import pytest
 
+from tests.unit.conftest import FixRegister
+
+from cmk.base.api.agent_based.checking_classes import CheckPlugin
+from cmk.base.api.agent_based.type_defs import AgentSectionPlugin
 from cmk.base.plugins.agent_based import kube_memory
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.kube_memory import (
@@ -129,7 +133,7 @@ from cmk.gui.plugins.wato.check_parameters.kube_resources import _parameter_valu
 
 
 @pytest.fixture
-def agent_performance_section(fix_register):
+def agent_performance_section(fix_register: FixRegister) -> AgentSectionPlugin:
     for name, section in fix_register.agent_sections.items():
         if str(name) == "kube_performance_memory_v1":
             return section
@@ -137,7 +141,7 @@ def agent_performance_section(fix_register):
 
 
 @pytest.fixture
-def agent_resources_section(fix_register):
+def agent_resources_section(fix_register: FixRegister) -> AgentSectionPlugin:
     for name, section in fix_register.agent_sections.items():
         if str(name) == "kube_memory_resources_v1":
             return section
@@ -145,7 +149,7 @@ def agent_resources_section(fix_register):
 
 
 @pytest.fixture
-def check_plugin(fix_register):
+def check_plugin(fix_register: FixRegister) -> CheckPlugin:
     for name, plugin in fix_register.check_plugins.items():
         if str(name) == "kube_memory":
             return plugin
@@ -153,27 +157,27 @@ def check_plugin(fix_register):
 
 
 @pytest.fixture
-def section_kube_memory_allocatable_resource():
+def section_kube_memory_allocatable_resource() -> AllocatableResource:
     return AllocatableResource(context="node", value=35917989.0)
 
 
-def test_register_agent_memory_section_calls(  # type:ignore[no-untyped-def]
-    agent_performance_section,
+def test_register_agent_memory_section_calls(
+    agent_performance_section: AgentSectionPlugin,
 ) -> None:
     assert str(agent_performance_section.name) == "kube_performance_memory_v1"
     assert str(agent_performance_section.parsed_section_name) == "kube_performance_memory"
     assert agent_performance_section.parse_function == kube_memory.parse_performance_usage
 
 
-def test_register_agent_memory_resources_section_calls(  # type:ignore[no-untyped-def]
-    agent_resources_section,
+def test_register_agent_memory_resources_section_calls(
+    agent_resources_section: AgentSectionPlugin,
 ) -> None:
     assert str(agent_resources_section.name) == "kube_memory_resources_v1"
     assert str(agent_resources_section.parsed_section_name) == "kube_memory_resources"
     assert agent_resources_section.parse_function == kube_memory.parse_resources
 
 
-def test_register_check_plugin_calls(check_plugin) -> None:  # type:ignore[no-untyped-def]
+def test_register_check_plugin_calls(check_plugin) -> None:  # type: ignore[no-untyped-def]
     assert str(check_plugin.name) == "kube_memory"
     assert check_plugin.service_name == "Memory resources"
     assert check_plugin.discovery_function.__wrapped__ == kube_memory.discovery_kube_memory
@@ -431,8 +435,8 @@ def test_check_kube_memory(
         ),
     ],
 )
-def test_crashes_if_no_resources(  # type:ignore[no-untyped-def]
-    section_kube_performance_memory,
+def test_crashes_if_no_resources(
+    section_kube_performance_memory: PerformanceUsage | None,
 ) -> None:
     with pytest.raises(AssertionError):
         list(

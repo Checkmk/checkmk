@@ -1,0 +1,16 @@
+title: Nutanix Prism: VM state
+agents: nutanix
+catalog: virtual/nutanix
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors the status of the VM's defined in a Nutanix cluster.
+ The desired VM state can be configured through wato.
+
+ This check requires the special agent configurable through "Nutanix Prism".
+
+item:
+ The name of the VM.
+
+discovery:
+ One service is created for each VM.

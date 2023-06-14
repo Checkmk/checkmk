@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -202,7 +202,7 @@ def discovery_ibm_svc_systemstats_cpu(section: IBMSystemStats) -> DiscoveryResul
 
 
 def check_ibm_svc_systemstats_cpu(
-    params: Mapping[str, Any], section: IBMSystemStats
+    params: Mapping[str, tuple[float, float]], section: IBMSystemStats
 ) -> CheckResult:
     if section.cpu_pc is not None:
         yield from check_cpu_util(

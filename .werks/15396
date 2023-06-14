@@ -1,0 +1,15 @@
+Title: HW/SW Inventory: Do not filter tree before delta tree computation
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1684157394
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Previously the delta tree computation, ie. the history, was based on filtered
+trees. These filters depend on contact groups configuration which led to
+incomplete HW/SW inventory history entries for other users.
+Now the delta tree filters are applied after the delta tree computation.

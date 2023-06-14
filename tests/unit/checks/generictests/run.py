@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Submodule providing the `run` function of generictests package"""
-from ast import literal_eval
 from contextlib import contextmanager
 
 import freezegun
@@ -11,9 +10,10 @@ import freezegun
 from tests.testlib import Check, MissingCheckInfoError
 
 from cmk.utils.check_utils import maincheckify
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import HostName
 
-from cmk.checkers.plugin_contexts import current_host, current_service
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.plugin_contexts import current_host, current_service
 
 from ..checktestlib import (
     assertCheckResultsEqual,
@@ -35,46 +35,35 @@ class DiscoveryParameterTypeError(AssertionError):
 def get_info_argument(dataset, subcheck, fallback_parsed=None):
     """Get the argument to the discovery/check function
 
-    This may be the info variable, the parsed variable,
-    and/or including extra sections.
+    This may be the info variable or the parsed variable.
     """
     # see if we have a parsed result defined
     tmp = getattr(dataset, "parsed", None)
     if tmp is not None:
-        arg = [tmp]
+        return tmp
+
     # see if we produced one earlier
-    elif fallback_parsed is not None:
-        arg = [fallback_parsed]
+    if fallback_parsed is not None:
+        return fallback_parsed
+
     # fall back to use info.
-    else:
-        try:
-            arg = [dataset.info]
-        except AttributeError:
-            raise AttributeError("dataset has neither of the attributes 'info' or 'parsed'")
-
-    es_dict = getattr(dataset, "extra_sections", {})
-    for es in es_dict.get(subcheck, []):
-        arg.append(es)
-
-    if len(arg) == 1:
-        return arg[0]
-    return arg
+    try:
+        return dataset.info
+    except AttributeError:
+        raise AttributeError("dataset has neither of the attributes 'info' or 'parsed'")
 
 
 def get_merged_parameters(check, provided_p):
     default_p = check.default_parameters()
 
-    if isinstance(provided_p, int):
+    if isinstance(provided_p, (int, tuple)):
         return provided_p
     if not provided_p:
         return default_p
-    if isinstance(provided_p, str):
-        if provided_p in check.context:
-            return check.context[provided_p]
 
-        evaluated_params = literal_eval(provided_p)
-        default_p.update(evaluated_params)
-        return default_p
+    # legacy, no longer supported
+    assert not isinstance(provided_p, str)
+
     if isinstance(provided_p, dict):
         default_p.update(provided_p)
         return default_p
@@ -95,11 +84,11 @@ def get_discovery_expected(subcheck, dataset):
     return DiscoveryResult(discovery_raw)
 
 
-def get_discovery_actual(check, info_arg, immu):
+def get_discovery_actual(check: Check, info_arg: object, immu: Immutables) -> DiscoveryResult:
     """Validate and return actual DiscoveryResult"""
     print(f"discovery: {check.name!r}")
 
-    disco_func = check.info.get("inventory_function")
+    disco_func = check.info.get("discovery_function")
     if not disco_func:
         return DiscoveryResult()
 
@@ -200,7 +189,6 @@ def run_test_on_checks(check, subcheck, dataset, info_arg, immu):
     check_plugin_name = CheckPluginName(maincheckify(check.name))
 
     for item, params, results_expected_raw in test_cases:
-
         print(f"Dataset item {item!r} in check {check.name!r}")
         immu.register(params, "params")
 
@@ -237,7 +225,6 @@ def run(check_info, dataset):
     immu = Immutables()
 
     with optional_freeze_time(dataset):
-
         parsed = run_test_on_parse(dataset, immu)
 
         # LOOP OVER ALL (SUB)CHECKS
@@ -251,10 +238,11 @@ def run(check_info, dataset):
 
             mock_is, mock_hec, mock_hecm = get_mock_values(dataset, subcheck)
 
-            with current_host("non-existent-testhost"), mock_item_state(mock_is), MockHostExtraConf(
-                check, mock_hec
-            ), MockHostExtraConf(check, mock_hecm, "host_extra_conf_merged"):
-
+            with current_host(HostName("non-existent-testhost")), mock_item_state(
+                mock_is
+            ), MockHostExtraConf(check, mock_hec), MockHostExtraConf(
+                check, mock_hecm, "host_extra_conf_merged"
+            ):
                 run_test_on_discovery(check, subcheck, dataset, info_arg, immu)
 
                 run_test_on_checks(check, subcheck, dataset, info_arg, immu)

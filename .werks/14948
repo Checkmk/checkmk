@@ -1,0 +1,16 @@
+Title: Inline SNMP Backend uses credentials correctly
+Class: fix
+Compatible: compat
+Component: inline-snmp
+Date: 1677150958
+Edition: cee
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.3.0b1
+
+Previously, the microcore had to be restarted to apply the change of SNMPv3
+credentials for inline SNMP backend made in the GUI.
+
+This fix solves the problem.
+

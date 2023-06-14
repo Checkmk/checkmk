@@ -1,35 +1,57 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import sys
+from typing import Final
 
 import cmk.utils.paths
-from cmk.utils.packaging import cli, PathConfig
+from cmk.utils.packaging import cli, PackageOperationCallbacks, PackagePart, PathConfig
+from cmk.utils.version import __version__
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 _PATH_CONFIG = PathConfig(
-    local_root=cmk.utils.paths.local_root,
-    mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
     agent_based_plugins_dir=cmk.utils.paths.local_agent_based_plugins_dir,
-    checks_dir=cmk.utils.paths.local_checks_dir,
-    inventory_dir=cmk.utils.paths.local_inventory_dir,
-    check_manpages_dir=cmk.utils.paths.local_check_manpages_dir,
     agents_dir=cmk.utils.paths.local_agents_dir,
-    notifications_dir=cmk.utils.paths.local_notifications_dir,
-    gui_plugins_dir=cmk.utils.paths.local_gui_plugins_dir,
-    web_dir=cmk.utils.paths.local_web_dir,
-    pnp_templates_dir=cmk.utils.paths.local_pnp_templates_dir,
-    doc_dir=cmk.utils.paths.local_doc_dir,
-    locale_dir=cmk.utils.paths.local_locale_dir,
-    bin_dir=cmk.utils.paths.local_bin_dir,
-    lib_dir=cmk.utils.paths.local_lib_dir,
-    mib_dir=cmk.utils.paths.local_mib_dir,
     alert_handlers_dir=cmk.utils.paths.local_alert_handlers_dir,
+    bin_dir=cmk.utils.paths.local_bin_dir,
+    check_manpages_dir=cmk.utils.paths.local_check_manpages_dir,
+    checks_dir=cmk.utils.paths.local_checks_dir,
+    doc_dir=cmk.utils.paths.local_doc_dir,
+    gui_plugins_dir=cmk.utils.paths.local_gui_plugins_dir,
+    installed_packages_dir=cmk.utils.paths.installed_packages_dir,
+    inventory_dir=cmk.utils.paths.local_inventory_dir,
+    lib_dir=cmk.utils.paths.local_lib_dir,
+    locale_dir=cmk.utils.paths.local_locale_dir,
+    local_root=cmk.utils.paths.local_root,
+    mib_dir=cmk.utils.paths.local_mib_dir,
+    mkp_rule_pack_dir=ec.mkp_rule_pack_dir(),
+    notifications_dir=cmk.utils.paths.local_notifications_dir,
+    packages_enabled_dir=cmk.utils.paths.local_enabled_packages_dir,
+    packages_local_dir=cmk.utils.paths.local_optional_packages_dir,
+    packages_shipped_dir=cmk.utils.paths.optional_packages_dir,
+    pnp_templates_dir=cmk.utils.paths.local_pnp_templates_dir,
+    tmp_dir=cmk.utils.paths.tmp_dir,
+    web_dir=cmk.utils.paths.local_web_dir,
 )
+
+_CALLBACKS: Final = {
+    PackagePart.EC_RULE_PACKS: PackageOperationCallbacks(
+        install=ec.install_packaged_rule_packs,
+        uninstall=ec.uninstall_packaged_rule_packs,
+        release=ec.release_packaged_rule_packs,
+    ),
+}
 
 
 if __name__ == "__main__":
-    sys.exit(cli.main(sys.argv[1:] or ["--help"], _PATH_CONFIG))
+    sys.exit(
+        cli.main(
+            sys.argv[1:] or ["--help"],
+            _PATH_CONFIG,
+            _CALLBACKS,
+            __version__,
+        )
+    )

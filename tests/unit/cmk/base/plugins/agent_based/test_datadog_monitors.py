@@ -1,15 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.datadog_monitors import (
     _DEFAULT_DATADOG_AND_CHECKMK_STATES,
     check_datadog_monitors,
+    CheckParams,
     discover_datadog_monitors,
+    DiscoveryParams,
     Monitor,
     parse_datadog_monitors,
 )
@@ -90,7 +93,9 @@ def test_parse_datadog_monitors() -> None:
         ),
     ),
 )
-def test_discover_datadog_monitors(params, expected_result) -> None:  # type:ignore[no-untyped-def]
+def test_discover_datadog_monitors(
+    params: DiscoveryParams, expected_result: DiscoveryResult
+) -> None:
     assert (
         list(
             discover_datadog_monitors(
@@ -191,8 +196,8 @@ def test_discover_datadog_monitors(params, expected_result) -> None:  # type:ign
         ),
     ),
 )
-def test_check_datadog_monitors(  # type:ignore[no-untyped-def]
-    item, params, expected_result
+def test_check_datadog_monitors(
+    item: str, params: CheckParams, expected_result: CheckResult
 ) -> None:
     assert (
         list(

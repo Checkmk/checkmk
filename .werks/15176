@@ -6,7 +6,7 @@ Date: 1674468624
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 AWS S3 buckets can now be selected as destination when configuring <a href="https://docs.checkmk.com/latest/en/backup.html">backup</a> targets.
 

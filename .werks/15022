@@ -1,0 +1,16 @@
+Title: Change of ruleset for prism_containers check plugin
+Class: feature
+Compatible: incomp
+Component: checks
+Date: 1677857443
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+The prism_containers check plugin now uses the file_system ruleset. The old
+prism_containers ruleset will be ignored.
+
+The old ruleset is now marked as deprecated. You can copy values from previously
+created rules.
+

@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from unittest.mock import Mock
 
-from cmk.checkers.check_table import CheckPluginName
-from cmk.checkers.plugin_contexts import current_host, current_service
+from cmk.utils.type_defs import HostName
+
+from cmk.checkengine.check_table import CheckPluginName
+from cmk.checkengine.plugin_contexts import current_host, current_service
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.utils.cpu import Load, ProcessorType, Section, Threads
@@ -39,7 +41,7 @@ def test_cpu_loads_predictive(mocker: Mock) -> None:
         "cmk.base.check_api._prediction.get_levels",
         return_value=(None, (2.2, 4.2, None, None)),
     )
-    with current_host("unittest"), current_service(CheckPluginName("cpu_loads"), "item"):
+    with current_host(HostName("unittest")), current_service(CheckPluginName("cpu_loads"), "item"):
         assert list(
             check_cpu_load(
                 {

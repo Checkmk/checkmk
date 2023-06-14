@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import annotations
 
+import enum
 from collections.abc import Container, Iterator, Mapping, Sequence
 from os.path import relpath
 from pathlib import Path
@@ -15,6 +16,11 @@ import cmk.utils.paths
 from cmk.utils.type_defs import HostName
 
 
+class HostAgentConnectionMode(enum.Enum):
+    PULL = "pull-agent"
+    PUSH = "push-agent"
+
+
 def get_r4r_filepath(folder: Path, uuid: UUID) -> Path:
     return folder.joinpath(f"{uuid}.json")
 
@@ -23,6 +29,15 @@ def get_uuid_link_manager() -> UUIDLinkManager:
     return UUIDLinkManager(
         received_outputs_dir=cmk.utils.paths.received_outputs_dir,
         data_source_dir=cmk.utils.paths.data_source_push_agent_dir,
+    )
+
+
+def connection_mode_from_host_config(host_config: Mapping[str, object]) -> HostAgentConnectionMode:
+    return HostAgentConnectionMode(
+        host_config.get(
+            "cmk_agent_connection",
+            HostAgentConnectionMode.PULL.value,
+        )
     )
 
 
@@ -101,24 +116,21 @@ class UUIDLinkManager:
     def update_links(self, host_configs: Mapping[HostName, Mapping[str, Any]]) -> None:
         for link in self:
             if (host_config := host_configs.get(link.hostname)) is None:
-                if self._is_ready_or_discoverable(link.uuid):
-                    # Host may not be synced yet, thus we check if UUID is in READY or DISCOVERABLE
-                    # folder.
+                if self._is_discoverable(link.uuid):
+                    # Host may not be synced yet, thus we check if UUID is in DISCOVERABLE folder.
                     continue
                 link.unlink()
             else:
                 self.create_link(
                     link.hostname,
                     link.uuid,
-                    push_configured=host_config.get("cmk_agent_connection", "") == "push-agent",
+                    push_configured=connection_mode_from_host_config(host_config)
+                    is HostAgentConnectionMode.PUSH,
                 )
 
     @staticmethod
-    def _is_ready_or_discoverable(uuid: UUID) -> bool:
-        return any(
-            get_r4r_filepath(folder, uuid).exists()
-            for folder in [cmk.utils.paths.r4r_ready_dir, cmk.utils.paths.r4r_discoverable_dir]
-        )
+    def _is_discoverable(uuid: UUID) -> bool:
+        return get_r4r_filepath(cmk.utils.paths.r4r_discoverable_dir, uuid).exists()
 
     def rename(
         self, successful_renamings: Sequence[tuple[HostName, HostName]]

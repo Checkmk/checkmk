@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -15,11 +15,15 @@ from cmk.utils.type_defs import HostName, UserId
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config, default_authorized_builtin_role_ids
 from cmk.gui.dashboard import DashletConfig, LinkedViewDashletConfig, ViewDashletConfig
+from cmk.gui.data_source import ABCDataSource, DataSourceRegistry, row_id, RowTableLivestatus
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.logged_in import user
+from cmk.gui.painter.v0.base import Cell, Painter, PainterRegistry
+from cmk.gui.painter.v0.helpers import paint_nagiosflag
+from cmk.gui.painter_options import paint_age
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import (
@@ -40,10 +44,6 @@ from cmk.gui.utils.urls import makeactionuri, makeuri_contextless, urlencode_var
 from cmk.gui.valuespec import MonitoringState
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.command import Command, command_registry, CommandActionResult, CommandSpec
-from cmk.gui.views.data_source import ABCDataSource, DataSourceRegistry, row_id, RowTableLivestatus
-from cmk.gui.views.painter.v0.base import Cell, Painter, PainterRegistry
-from cmk.gui.views.painter.v0.helpers import paint_nagiosflag
-from cmk.gui.views.painter_options import paint_age
 from cmk.gui.views.sorter import (
     cmp_num_split,
     cmp_simple_number,
@@ -184,7 +184,7 @@ class RowTableEC(RowTableLivestatus):
 # is not permitted for). In this case the user should be allowed to see the event
 # information, but not the host related information.
 #
-# To realize this, whe filter all data from the host_* columns from the response.
+# To realize this, we filter all data from the host_* columns from the response.
 # See Gitbug #2462 for some more information.
 #
 # This should be handled in the core, but the core does not know anything about
@@ -196,7 +196,7 @@ def _ec_filter_host_information_of_not_permitted_hosts(rows):
 
     user_groups = set(user.contact_groups)
 
-    def is_contact(row) -> bool:  # type:ignore[no-untyped-def]
+    def is_contact(row) -> bool:  # type: ignore[no-untyped-def]
         return bool(user_groups.intersection(row["host_contact_groups"]))
 
     if rows:
@@ -246,7 +246,7 @@ permission_registry.register(
         title=_("See events not related to a known host"),
         description=_(
             "If that user does not have the permission <i>See all events</i> then this permission "
-            "controls wether he/she can see events that are not related to a host in the monitoring "
+            "controls whether he/she can see events that are not related to a host in the monitoring "
             "and that do not have been assigned specific contact groups to via the event rule."
         ),
         defaults=default_authorized_builtin_role_ids,
@@ -371,7 +371,7 @@ class PainterEventCount(Painter):
         return "event_count"
 
     def title(self, cell):
-        return _("Count (number of recent occurrances)")
+        return _("Count (number of recent occurrences)")
 
     def short_title(self, cell):
         return _("Cnt.")
@@ -457,7 +457,7 @@ class PainterEventLast(Painter):
         return "event_last"
 
     def title(self, cell):
-        return _("Time of last occurrance")
+        return _("Time of last occurrence")
 
     def short_title(self, cell):
         return _("Last")
@@ -1178,7 +1178,7 @@ class CommandECUpdateEvent(ECCommand):
             ungettext("event", "events", len_action_rows),
         )
 
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.open_table(border="0", cellpadding="0", cellspacing="3")
         if user.may("mkeventd.update_comment"):
             html.open_tr()
@@ -1269,7 +1269,7 @@ class CommandECChangeState(ECCommand):
             ungettext("event", "events", len_action_rows),
         )
 
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.button("_mkeventd_changestate", _("Change Event state to:"))
         html.nbsp()
         MonitoringState().render_input("_mkeventd_state", 2)
@@ -1319,7 +1319,7 @@ class CommandECCustomAction(ECCommand):
             ungettext("event", "events", len_action_rows),
         )
 
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
         for action_id, title in action_choices(omit_hidden=True):
             html.button("_action_" + action_id, title)
             html.br()
@@ -1366,7 +1366,7 @@ class CommandECArchiveEvent(ECCommand):
             ungettext("event", "events", len_action_rows),
         )
 
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.button("_delete_event", _("Archive Event"))
 
     def _action(
@@ -1408,7 +1408,7 @@ class CommandECArchiveEventsOfHost(ECCommand):
     def tables(self):
         return ["service"]
 
-    def render(self, what) -> None:  # type:ignore[no-untyped-def]
+    def render(self, what) -> None:  # type: ignore[no-untyped-def]
         html.help(
             _(
                 "Note: With this command you can archive all events of one host. "
@@ -1511,6 +1511,7 @@ multisite_builtin_views["ec_events"] = mkeventd_view(
             ColumnSpec(name="event_count"),
         ],
         "is_show_more": True,
+        "packaged": False,
         "owner": UserId.builtin(),
         "name": "ec_events",
         "single_infos": [],
@@ -1592,6 +1593,7 @@ multisite_builtin_views["ec_events_of_monhost"] = mkeventd_view(
         },
         "sort_index": 99,
         "is_show_more": False,
+        "packaged": False,
     }
 )
 
@@ -1643,6 +1645,7 @@ multisite_builtin_views["ec_events_of_host"] = mkeventd_view(
         },
         "sort_index": 99,
         "is_show_more": False,
+        "packaged": False,
     }
 )
 
@@ -1693,6 +1696,7 @@ multisite_builtin_views["ec_event"] = mkeventd_view(
         "context": {},
         "sort_index": 99,
         "is_show_more": False,
+        "packaged": False,
     }
 )
 
@@ -1734,6 +1738,7 @@ multisite_builtin_views["ec_history_recent"] = mkeventd_view(
             ColumnSpec(name="event_count"),
         ],
         "is_show_more": True,
+        "packaged": False,
         "owner": UserId.builtin(),
         "name": "ec_history_recent",
         "single_infos": [],
@@ -1817,6 +1822,7 @@ multisite_builtin_views["ec_historyentry"] = mkeventd_view(
         "context": {},
         "sort_index": 99,
         "is_show_more": False,
+        "packaged": False,
     }
 )
 
@@ -1859,6 +1865,7 @@ multisite_builtin_views["ec_history_of_event"] = mkeventd_view(
         "context": {},
         "sort_index": 99,
         "is_show_more": False,
+        "packaged": False,
     }
 )
 
@@ -1929,6 +1936,7 @@ multisite_builtin_views["ec_history_of_host"] = mkeventd_view(
         "add_context_to_title": True,
         "sort_index": 99,
         "is_show_more": False,
+        "packaged": False,
     }
 )
 
@@ -1986,6 +1994,7 @@ multisite_builtin_views["ec_event_mobile"] = {
     "add_context_to_title": True,
     "sort_index": 99,
     "is_show_more": False,
+    "packaged": False,
 }
 
 multisite_builtin_views["ec_events_mobile"] = {
@@ -2072,4 +2081,5 @@ multisite_builtin_views["ec_events_mobile"] = {
     "add_context_to_title": True,
     "sort_index": 99,
     "is_show_more": False,
+    "packaged": False,
 }

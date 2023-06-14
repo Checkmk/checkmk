@@ -1,0 +1,30 @@
+Title: <tt>logwatch</tt> agent plugin: Always encode output in UTF-8
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1675667869
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk is only incompatible if you monitor logfiles containing non-ASCII characters with the
+<tt>logwatch</tt> agent plugin.
+
+As of this werk, the <tt>logwatch</tt> agent plugin always encodes its ouput in UTF-8. Before, the
+encoding depended on the system settings.
+
+This werk is marked as incompatible because it can have an unexpected side effect: On some systems,
+users might now have to explicitly configure the encoding of the monitored log files. The reason for
+this is that if not explicitly configured, the <tt>logwatch</tt> plugin tries to guess the encoding.
+If the wrong encoding is guessed, log files are decoded incorrectly, however, before this werk, this
+error might have cancelled out due to <tt>logwatch</tt> using the same encoding both for decoding
+logfiles and encoding its output.
+
+Since the latter is now always done using UTF-8, this cancellation will not happen anymore. If you
+are affected by this, you will either see the replacement character `�` appearing in your log
+messages or your log messages will contain random non-ASCII characters which do not make sense.
+
+As a positive side effect, correcting this issue enables the matching of patterns containing non-
+ASCII characters. Before, using the wrong encoding to decode the logfiles prevented this,
+effectively leading to overlooked messages.

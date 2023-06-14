@@ -259,10 +259,10 @@ void CleanArtifacts() {
     fs::remove(ac::ControllerFlagFile(), ec);
     fs::remove(ac::ControllerFlagFile(), ec);
 }
-constexpr auto marker_new = "Checkmk monitoring agent service - 2.1, 64-bit";
+constexpr auto marker_new = "Checkmk monitoring agent service - 2.2, 64-bit";
+// keep value below as is
 constexpr auto marker_old =
-    "Check MK monitoring and management Service, 64-bit";
-
+    "Check MK monitoring and management Service, 64-bit";  // old marker
 }  // namespace
 
 TEST(AgentController, CreateLegacyPullFile) {
@@ -453,13 +453,13 @@ TEST_F(AgentControllerCreateArtifacts, From1620OldWithController) {
     EXPECT_TRUE(legacyExists());
 }
 
-TEST(AgentController, SimulationIntegration) {
+TEST(AgentController, SimulationComponent) {
     const auto m = GetModus();
     ON_OUT_OF_SCOPE(details::SetModus(m));
     details::SetModus(Modus::service);
-    auto temp_fs = tst::TempCfgFs::Create();
+    const auto temp_fs = tst::TempCfgFs::Create();
     ASSERT_TRUE(temp_fs->loadFactoryConfig());
-    fs::copy(fs::path{"c:\\windows\\system32\\whoami.exe"},
+    fs::copy(fs::path{R"(c:\windows\system32\whoami.exe)"},
              temp_fs->root() / cfg::files::kAgentCtl);
     const auto service = fs::path{cfg::GetRootDir()} / "cmd.exe";
     const auto expected =

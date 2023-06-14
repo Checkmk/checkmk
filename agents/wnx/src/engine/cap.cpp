@@ -200,7 +200,7 @@ bool StoreFile(const std::wstring &name, const std::vector<char> &data) {
 }
 
 [[nodiscard]] std::wstring GetProcessToKill(std::wstring_view name) {
-    fs::path p = name;
+    const fs::path p = name;
     if (!p.has_filename()) {
         return {};
     }
@@ -380,7 +380,7 @@ bool Process(const std::string &cap_name, ProcMode mode,
             }
         } else if (mode == ProcMode::remove) {
             std::error_code ec;
-            auto removed = fs::remove(full_path, ec);
+            const auto removed = fs::remove(full_path, ec);
             if (removed || ec.value() == 0) {
                 files_left_on_disk.push_back(full_path);
             } else {
@@ -493,13 +493,13 @@ bool ReinstallYaml(const fs::path &bakery_yaml, const fs::path &target_yaml,
             return false;
         }
 
-        auto global = yaml["global"];
+        const auto global = yaml["global"];
         if (!global.IsDefined() || !global.IsMap()) {
             XLOG::l("Supplied Yaml '{}' has bad global section", source_yaml);
             return false;
         }
 
-        auto install = yml::GetVal(global, vars::kInstall, false);
+        const auto install = yml::GetVal(global, vars::kInstall, false);
         XLOG::l.i("Supplied yaml '{}' {}", source_yaml,
                   install ? "to be installed" : "will not be installed");
         if (!install) return false;
@@ -560,7 +560,7 @@ void PrintInstallCopyLog(std::string_view info_on_error,
                 out_file, ec.value(), ec.message());
 }
 
-std::string KillTrailingCR(std::string &&message) noexcept {
+std::string KillTrailingCr(std::string &&message) noexcept {
     if (!message.empty() &&
         (message.back() == '\n' || message.back() == '\r')) {
         message.pop_back();
@@ -589,7 +589,7 @@ bool InstallFileAsCopy(std::wstring_view filename,    // checkmk.dat
     fs::path target_file = target_dir;
     if (!fs::is_directory(target_dir, ec)) {
         XLOG::l.i("Target Folder '{}' is suspicious [{}] '{}'", target_file,
-                  ec.value(), KillTrailingCR(ec.message()));
+                  ec.value(), KillTrailingCr(ec.message()));
         return false;
     }
 

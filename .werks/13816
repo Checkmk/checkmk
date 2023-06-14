@@ -6,6 +6,6 @@ Date: 1646737002
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 timedsynced agent check accidentily deactivated the chronyd service, if used. Now the timesyncd check is skipped if chronyd or VBoxService are present.

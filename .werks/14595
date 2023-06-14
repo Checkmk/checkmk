@@ -1,0 +1,14 @@
+Title: McAfee Web Gateway: Add Plugins
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1678893493
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+This change adds two new plugins.
+
+LI: <tt>mcafee_webgateway_time_consumed_by_rule_engine</tt>
+LI: <tt>mcafee_webgateway_time_to_resolve_dns</tt>

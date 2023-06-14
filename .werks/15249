@@ -1,0 +1,12 @@
+Title: Show correct cache info for local checks under AIX
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1679325843
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+For cached local checks under AIX the cache age information was not displayed properly.
+

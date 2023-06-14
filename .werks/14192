@@ -1,0 +1,15 @@
+Title: BI configuration: Fixed error with Call-A-Rule arguments
+Class: fix
+Compatible: compat
+Component: bi
+Date: 1680006066
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+The arguments for the <tt>Call a rule</tt> node could sometimes lead to incorrect errors like
+<tt>The rule you selected needs 3 argument(s) (param1, param2, param3), but you configured 4 arguments.</tt>.
+
+

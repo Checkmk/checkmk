@@ -6,7 +6,7 @@ Date: 1662651964
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The Datadog special agent can now be configured to fetch logs from the Datadog API and forward them
 to the Event Console, similar to the events fetched from the Datadog API.

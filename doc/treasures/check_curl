@@ -136,6 +136,7 @@ CONTENT=$2
 # CURL="curl  --silent --fail --insecure $PROXYOPTIONS $URL"
 if [ "$CONTENT" ]; then
     # if $CURL 2>&1 | fgrep -q "$CONTENT"
+    # shellcheck disable=SC2086 # Yes, we want splitting for NTLM and PROXYOPTIONS.
     if curl $NTLM -A "Mozilla/4.0 (compatible; MSIE 6.0;)" --silent --fail --insecure $PROXYOPTIONS "$URL" 2>&1 | grep -F -q "$CONTENT"; then
         echo "OK - $PURL found '$CONTENT' in answer"
         exit 0
@@ -154,6 +155,7 @@ else
     # OUTPUT=$($CURL >/dev/null 2>&1 | head -n 1 ; exit ${PIPESTATUS[0]})
     # shellcheck disable=SC2034 # OUTPUT appears unused.
     OUTPUT=$(
+        # shellcheck disable=SC2086 # Yes, we want splitting for NTLM and PROXYOPTIONS.
         curl $NTLM -A "Mozilla/4.0 (compatible; MSIE 6.0;)" --silent --fail --insecure $PROXYOPTIONS "$URL" >/dev/null 2>&1 | head -n 1
         exit "${PIPESTATUS[0]}"
     )

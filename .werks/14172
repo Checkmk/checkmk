@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The host search option "The found hosts' (with child filtering)" was broken since the BI rework 2 years ago.
 Any attempt to save this setting lead to an exception.

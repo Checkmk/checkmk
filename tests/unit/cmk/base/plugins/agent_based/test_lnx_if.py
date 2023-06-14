@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -226,7 +226,8 @@ PARAMS = {
 }
 
 
-def test_check_lnx_if(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("initialised_item_state")
+def test_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
     section_if = [INTERFACE]
     section: lnx_if.Section = (section_if, {})
     monkeypatch.setattr("time.time", lambda: 0)
@@ -258,7 +259,8 @@ def test_check_lnx_if(monkeypatch) -> None:  # type:ignore[no-untyped-def]
     assert result_lnx_if == result_interfaces
 
 
-def test_cluster_check_lnx_if(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+@pytest.mark.usefixtures("initialised_item_state")
+def test_cluster_check_lnx_if(monkeypatch: pytest.MonkeyPatch) -> None:
     section: dict[str, lnx_if.Section] = {}
     ifaces = []
     for i in range(3):
@@ -910,7 +912,14 @@ def test_lnx_if_regression(
 
     node_name = "node"
     for item, par, res in items_params_results:
-        assert list(lnx_if.cluster_check_lnx_if(item, par, {node_name: section}, {},))[:-1] == [
+        assert list(
+            lnx_if.cluster_check_lnx_if(
+                item,
+                par,
+                {node_name: section},
+                {},
+            )
+        )[:-1] == [
             Result(  # type: ignore[call-overload]
                 state=res[0].state,
                 summary=res[0].summary + " on %s" % node_name if res[0].summary else None,
@@ -921,8 +930,7 @@ def test_lnx_if_regression(
         ]
 
 
-def test_lnx_if_with_bonding(monkeypatch) -> None:  # type:ignore[no-untyped-def]
-
+def test_lnx_if_with_bonding(monkeypatch: pytest.MonkeyPatch) -> None:
     section = lnx_if.parse_lnx_if(
         [
             ["[start_iplink]"],

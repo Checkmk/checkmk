@@ -1,13 +1,21 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName
+from tests.unit.conftest import FixRegister
+
+from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State, TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    InventoryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.netapp_api_disk import (
     inventory_netapp_api_disk,
     parse_netapp_api_disk,
@@ -54,8 +62,8 @@ _AGENT_OUTPUT = [
         (_AGENT_OUTPUT, [Service()]),
     ],
 )
-def test_discover_netapp_api_disk(  # type:ignore[no-untyped-def]
-    fix_register, string_table, expected_result
+def test_discover_netapp_api_disk(
+    fix_register: FixRegister, string_table: StringTable, expected_result: DiscoveryResult
 ) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("netapp_api_disk_summary")]
     assert (
@@ -83,8 +91,8 @@ def test_discover_netapp_api_disk(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_netapp_api_disk(  # type:ignore[no-untyped-def]
-    fix_register, string_table, expected_result
+def test_check_netapp_api_disk(
+    fix_register: FixRegister, string_table: StringTable, expected_result: CheckResult
 ) -> None:
     check_plugin = fix_register.check_plugins[CheckPluginName("netapp_api_disk_summary")]
     assert (
@@ -140,8 +148,8 @@ def test_check_netapp_api_disk(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_inventory_netapp_api_disk(  # type:ignore[no-untyped-def]
-    string_table, expected_result
+def test_inventory_netapp_api_disk(
+    string_table: StringTable, expected_result: InventoryResult
 ) -> None:
     assert sort_inventory_result(
         inventory_netapp_api_disk(parse_netapp_api_disk(string_table))

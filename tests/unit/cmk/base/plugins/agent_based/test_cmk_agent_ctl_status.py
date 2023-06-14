@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -26,7 +26,7 @@ from cmk.base.plugins.agent_based.utils.checkmk import (
         pytest.param(
             [
                 [
-                    """{"version":"2.1.0-2023.01.24","agent_socket_operational":true,"ip_allowlist":[],"allow_legacy_pull":false,"connections":[{"coordinates":"localhost:8001/heute","uuid":"44d137be-179c-4879-9fd1-1dbb295db0e2","local":{"connection_type":"pull-agent","cert_info":{"issuer":"Site 'heute' local CA","from":"Tue, 24 Jan 2023 15:20:54 +0000","to":"Mon, 24 Jan 2028 15:20:54 +0000"}},"remote":{"connection_type":"pull-agent","registration_state":null,"host_name":"heute"}},{"coordinates":"localhost:8000/stable","uuid":"8c3a0bcc-ad63-4003-ac1f-bff9a5bb5fff","local":{"connection_type":"pull-agent","cert_info":{"issuer":"Site 'stable' local CA","from":"Tue, 24 Jan 2023 15:20:40 +0000","to":"Sun, 27 May 3021 15:20:40 +0000"}},"remote":{"connection_type":"pull-agent","registration_state":null,"host_name":"stable"}}]}"""
+                    """{"version":"2.1.0-2023.01.24","agent_socket_operational":true,"ip_allowlist":[],"allow_legacy_pull":false,"connections":[{"coordinates":"localhost:8001/heute","uuid":"44d137be-179c-4879-9fd1-1dbb295db0e2","local":{"connection_mode":"pull-agent","cert_info":{"issuer":"Site 'heute' local CA","from":"Tue, 24 Jan 2023 15:20:54 +0000","to":"Mon, 24 Jan 2028 15:20:54 +0000"}},"remote":{"connection_mode":"pull-agent","registration_state":null,"host_name":"heute"}},{"coordinates":"localhost:8000/stable","uuid":"8c3a0bcc-ad63-4003-ac1f-bff9a5bb5fff","local":{"connection_mode":"pull-agent","cert_info":{"issuer":"Site 'stable' local CA","from":"Tue, 24 Jan 2023 15:20:40 +0000","to":"Sun, 27 May 3021 15:20:40 +0000"}},"remote":{"connection_mode":"pull-agent","registration_state":null,"host_name":"stable"}}]}"""
                 ]
             ],
             ControllerSection(
@@ -39,9 +39,7 @@ from cmk.base.plugins.agent_based.utils.checkmk import (
                         coordinates="localhost:8001/heute",
                         local=LocalConnectionStatus(
                             cert_info=CertInfoController(
-                                to=datetime.datetime(
-                                    2028, 1, 24, 15, 20, 54, tzinfo=datetime.timezone.utc
-                                ),
+                                to=datetime.datetime(2028, 1, 24, 15, 20, 54, tzinfo=datetime.UTC),
                                 issuer="Site 'heute' local CA",
                             )
                         ),
@@ -51,9 +49,7 @@ from cmk.base.plugins.agent_based.utils.checkmk import (
                         coordinates="localhost:8000/stable",
                         local=LocalConnectionStatus(
                             cert_info=CertInfoController(
-                                to=datetime.datetime(
-                                    3021, 5, 27, 15, 20, 40, tzinfo=datetime.timezone.utc
-                                ),
+                                to=datetime.datetime(3021, 5, 27, 15, 20, 40, tzinfo=datetime.UTC),
                                 issuer="Site 'stable' local CA",
                             )
                         ),
@@ -65,7 +61,7 @@ from cmk.base.plugins.agent_based.utils.checkmk import (
         pytest.param(
             [
                 [
-                    """{"version":"2023.01.24","agent_socket_operational":true,"ip_allowlist":[],"allow_legacy_pull":false,"connections":[{"site_id":"localhost/heute","receiver_port":8001,"uuid":"44d137be-179c-4879-9fd1-1dbb295db0e2","local":{"connection_type":"pull-agent","cert_info":{"issuer":"Site \'heute\' local CA","from":"Tue, 24 Jan 2023 15:20:54 +0000","to":"Mon, 24 Jan 2028 15:20:54 +0000"}},"remote":"remote_query_disabled"},{"site_id":"localhost/stable","receiver_port":8000,"uuid":"8c3a0bcc-ad63-4003-ac1f-bff9a5bb5fff","local":{"connection_type":"pull-agent","cert_info":{"issuer":"Site \'stable\' local CA","from":"Tue, 24 Jan 2023 15:20:40 +0000","to":"Sun, 27 May 3021 15:20:40 +0000"}},"remote":"remote_query_disabled"}]}"""
+                    """{"version":"2023.01.24","agent_socket_operational":true,"ip_allowlist":[],"allow_legacy_pull":false,"connections":[{"site_id":"localhost/heute","receiver_port":8001,"uuid":"44d137be-179c-4879-9fd1-1dbb295db0e2","local":{"connection_mode":"pull-agent","cert_info":{"issuer":"Site \'heute\' local CA","from":"Tue, 24 Jan 2023 15:20:54 +0000","to":"Mon, 24 Jan 2028 15:20:54 +0000"}},"remote":"remote_query_disabled"},{"site_id":"localhost/stable","receiver_port":8000,"uuid":"8c3a0bcc-ad63-4003-ac1f-bff9a5bb5fff","local":{"connection_mode":"pull-agent","cert_info":{"issuer":"Site \'stable\' local CA","from":"Tue, 24 Jan 2023 15:20:40 +0000","to":"Sun, 27 May 3021 15:20:40 +0000"}},"remote":"remote_query_disabled"}]}"""
                 ]
             ],
             ControllerSection(
@@ -78,9 +74,7 @@ from cmk.base.plugins.agent_based.utils.checkmk import (
                         coordinates=None,
                         local=LocalConnectionStatus(
                             cert_info=CertInfoController(
-                                to=datetime.datetime(
-                                    2028, 1, 24, 15, 20, 54, tzinfo=datetime.timezone.utc
-                                ),
+                                to=datetime.datetime(2028, 1, 24, 15, 20, 54, tzinfo=datetime.UTC),
                                 issuer="Site 'heute' local CA",
                             )
                         ),
@@ -90,9 +84,7 @@ from cmk.base.plugins.agent_based.utils.checkmk import (
                         coordinates=None,
                         local=LocalConnectionStatus(
                             cert_info=CertInfoController(
-                                to=datetime.datetime(
-                                    3021, 5, 27, 15, 20, 40, tzinfo=datetime.timezone.utc
-                                ),
+                                to=datetime.datetime(3021, 5, 27, 15, 20, 40, tzinfo=datetime.UTC),
                                 issuer="Site 'stable' local CA",
                             )
                         ),
@@ -104,7 +96,7 @@ from cmk.base.plugins.agent_based.utils.checkmk import (
         pytest.param(
             [
                 [
-                    """{"version":"2023.01.24","agent_socket_operational":true,"ip_allowlist":[],"allow_legacy_pull":false,"connections":[{"uuid":"bc834538-64f1-4231-9cfa-0dcd3899f780","local":{"connection_type":"pull-agent","cert_info":{"issuer":"Site 'heute' local CA","from":"Tue, 24 Jan 2023 16:55:14 +0000","to":"Mon, 24 Jan 2028 16:55:14 +0000"}},"remote":"imported_connection"}]}"""
+                    """{"version":"2023.01.24","agent_socket_operational":true,"ip_allowlist":[],"allow_legacy_pull":false,"connections":[{"uuid":"bc834538-64f1-4231-9cfa-0dcd3899f780","local":{"connection_mode":"pull-agent","cert_info":{"issuer":"Site 'heute' local CA","from":"Tue, 24 Jan 2023 16:55:14 +0000","to":"Mon, 24 Jan 2028 16:55:14 +0000"}},"remote":"imported_connection"}]}"""
                 ]
             ],
             ControllerSection(
@@ -117,9 +109,7 @@ from cmk.base.plugins.agent_based.utils.checkmk import (
                         coordinates=None,
                         local=LocalConnectionStatus(
                             cert_info=CertInfoController(
-                                to=datetime.datetime(
-                                    2028, 1, 24, 16, 55, 14, tzinfo=datetime.timezone.utc
-                                ),
+                                to=datetime.datetime(2028, 1, 24, 16, 55, 14, tzinfo=datetime.UTC),
                                 issuer="Site 'heute' local CA",
                             )
                         ),

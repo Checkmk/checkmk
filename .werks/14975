@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 You are affected by this werk if you have configured one or more PostgreSQL
 instances that should be monitored by an agent plugin of Checkmk version >

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import contextlib
@@ -47,8 +47,7 @@ def serve_group(group, serializer):
     response.set_data(json.dumps(serializer(group)))
     if response.status_code != 204:
         response.set_content_type("application/json")
-    response.headers.add("ETag", constructors.etag_of_dict(group).to_header())
-    return response
+    return constructors.response_with_etag_created_from_dict(response, group)
 
 
 def serialize_group_list(
@@ -58,7 +57,7 @@ def serialize_group_list(
     return constructors.collection_object(
         domain_type=domain_type,
         value=[
-            constructors.collection_item(
+            constructors.domain_object(
                 domain_type=domain_type,
                 title=group["alias"],
                 identifier=group["id"],
@@ -90,7 +89,7 @@ def serialize_group(name: GroupName) -> Any:
     return _serializer
 
 
-def update_groups(  # type:ignore[no-untyped-def]
+def update_groups(  # type: ignore[no-untyped-def]
     group_type: GroupType, entries: list[dict[str, Any]]
 ):
     groups = []
@@ -171,7 +170,7 @@ def _retrieve_group(
 
 
 @contextlib.contextmanager
-def may_fail(  # type:ignore[no-untyped-def]
+def may_fail(  # type: ignore[no-untyped-def]
     exc_type: type[Exception] | tuple[type[Exception], ...],
     status: int | None = None,
 ):
@@ -248,7 +247,7 @@ def update_customer_info(attributes, customer_id, remove_provider=False):
     return attributes
 
 
-def group_edit_details(body) -> GroupSpec:  # type:ignore[no-untyped-def]
+def group_edit_details(body) -> GroupSpec:  # type: ignore[no-untyped-def]
     group_details = {k: v for k, v in body.items() if k != "customer"}
 
     if version.is_managed_edition() and "customer" in body:
@@ -256,7 +255,7 @@ def group_edit_details(body) -> GroupSpec:  # type:ignore[no-untyped-def]
     return group_details
 
 
-def updated_group_details(  # type:ignore[no-untyped-def]
+def updated_group_details(  # type: ignore[no-untyped-def]
     name: GroupName, group_type: GroupType, changed_details
 ) -> GroupSpec:
     """Updates the group details without saving

@@ -1,108 +1,80 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
 import "core-js/stable";
-
-import $ from "jquery";
-import * as d3 from "d3";
-import * as d3Sankey from "d3-sankey";
-import crossfilter from "crossfilter2";
-import * as dc from "dc";
-import * as forms from "forms";
-import * as ajax from "ajax";
-import * as prediction from "prediction";
-import * as utils from "utils";
-import * as foldable_container from "foldable_container";
-import * as visibility_detection from "visibility_detection";
-import * as async_progress from "async_progress";
-import * as activation from "activation";
-import * as selection from "selection";
-import * as element_dragging from "element_dragging";
-import * as help from "help";
-import * as availability from "availability";
-import * as sla from "sla";
-import * as bi from "bi";
-import * as transfer from "transfer";
-import * as backup from "backup";
-import * as background_job from "background_job";
-import * as hover from "hover";
-import * as service_discovery from "service_discovery";
-import * as sidebar from "sidebar";
-import * as quicksearch from "quicksearch";
-import * as sites from "sites";
-import * as host_diagnose from "host_diagnose";
-import * as profile_replication from "profile_replication";
-import * as wato from "wato";
-import * as popup_menu from "popup_menu";
-import * as valuespecs from "valuespecs";
-import * as number_format from "number_format";
-import * as views from "views";
-import * as reload_pause from "reload_pause";
-import * as graph_integration from "graph_integration";
-import * as dashboard from "dashboard";
-import * as page_menu from "page_menu";
-import * as webauthn from "webauthn";
-import * as password_meter from "password_meter";
-
-import * as cmk_figures from "cmk_figures";
 import "cmk_figures_plugins";
 
-try {
-    require("cmk_figures_plugins_cee");
-} catch (e) {}
+import * as activation from "activation";
+import * as ajax from "ajax";
+import * as async_progress from "async_progress";
+import * as availability from "availability";
+import * as background_job from "background_job";
+import * as backup from "backup";
+import * as bi from "bi";
+import * as cmk_figures from "cmk_figures";
+import crossfilter from "crossfilter2";
+import * as d3 from "d3";
+import * as d3Sankey from "d3-sankey";
+import * as dashboard from "dashboard";
+import * as dc from "dc";
+import * as element_dragging from "element_dragging";
+import * as foldable_container from "foldable_container";
+import * as forms from "forms";
+import * as graph_integration from "graph_integration";
 import * as graphs from "graphs";
+import * as help from "help";
+import * as host_diagnose from "host_diagnose";
+import * as hover from "hover";
+import $ from "jquery";
+import * as number_format from "number_format";
+import * as page_menu from "page_menu";
+import * as password_meter from "password_meter";
+import * as popup_menu from "popup_menu";
+import * as prediction from "prediction";
+import * as profile_replication from "profile_replication";
+import * as quicksearch from "quicksearch";
+import * as reload_pause from "reload_pause";
+import * as selection from "selection";
+import * as service_discovery from "service_discovery";
+import * as sidebar from "sidebar";
+import * as sites from "sites";
+import * as sla from "sla";
+import * as transfer from "transfer";
+import * as utils from "utils";
+import * as valuespecs from "valuespecs";
+import * as views from "views";
+import * as visibility_detection from "visibility_detection";
+import * as wato from "wato";
+import * as webauthn from "webauthn";
 
 import * as nodevis from "./modules/nodevis/main";
-import {fetch} from "whatwg-fetch";
 
 // Optional import is currently not possible using the ES6 imports
-var graphs_cee;
-try {
+let graphs_cee;
+let ntop_host_details;
+let ntop_alerts;
+let ntop_flows;
+let ntop_top_talkers;
+let ntop_utils;
+let license_usage_timeseries_graph;
+
+if (process.env.ENTERPRISE !== "no") {
+    require("cmk_figures_plugins_cee");
     graphs_cee = require("graphs_cee");
-} catch (e) {
-    graphs_cee = null;
-}
-
-var ntop_host_details;
-try {
     ntop_host_details = require("ntop_host_details");
-} catch (e) {
-    ntop_host_details = null;
-}
-
-var ntop_alerts;
-try {
     ntop_alerts = require("ntop_alerts");
-} catch (e) {
-    ntop_alerts = null;
-}
-
-var ntop_flows;
-try {
     ntop_flows = require("ntop_flows");
-} catch (e) {
-    ntop_flows = null;
-}
-
-var ntop_top_talkers;
-try {
     ntop_top_talkers = require("ntop_top_talkers");
-} catch (e) {
-    ntop_top_talkers = null;
-}
-
-var ntop_utils;
-try {
     ntop_utils = require("ntop_utils");
-} catch (e) {
-    ntop_utils = null;
-}
-
-var license_usage_timeseries_graph;
-try {
     license_usage_timeseries_graph = require("license_usage_timeseries_graph");
-} catch (e) {
+} else {
+    graphs_cee = null;
+    ntop_host_details = null;
+    ntop_alerts = null;
+    ntop_flows = null;
+    ntop_top_talkers = null;
+    ntop_utils = null;
     license_usage_timeseries_graph = null;
 }
 

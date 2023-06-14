@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""Module to hold shared code for WATO internals and the WATO plugins"""
+"""Module to hold shared code for Setup internals and the Setup plugins"""
 
 # TODO: More feature related splitting up would be better
 
@@ -18,13 +18,15 @@ from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.tags import TagGroupID, TagID
+from cmk.utils.type_defs import HostName
+
+from cmk.checkengine.checking import CheckPluginName
 
 import cmk.gui.forms as forms
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb
 import cmk.gui.watolib.host_attributes as _host_attributes
-import cmk.gui.watolib.hosts_and_folders as _hosts_and_folders
 import cmk.gui.watolib.rulespecs as _rulespecs
 import cmk.gui.watolib.timeperiods as _timeperiods
 import cmk.gui.weblib as weblib
@@ -82,7 +84,7 @@ from cmk.gui.site_config import (  # noqa: F401 # pylint: disable=unused-import
     is_wato_slave_site,
 )
 from cmk.gui.type_defs import Choices, ChoiceText
-from cmk.gui.user_sites import get_activation_site_choices
+from cmk.gui.user_sites import get_activation_site_choices, get_configured_site_choices
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.flashed_messages import flash  # noqa: F401 # pylint: disable=unused-import
 from cmk.gui.utils.html import HTML
@@ -162,7 +164,14 @@ from cmk.gui.watolib.host_attributes import (  # noqa: F401 # pylint: disable=un
     HostAttributeTopicMetaData,
     HostAttributeTopicNetworkScan,
 )
-from cmk.gui.watolib.password_store import PasswordStore
+from cmk.gui.watolib.hosts_and_folders import (
+    CREFolder,
+    CREHost,
+    folder_from_request,
+    folder_tree,
+    SearchFolder,
+)
+from cmk.gui.watolib.password_store import PasswordStore, passwordstore_choices
 from cmk.gui.watolib.rulespec_groups import (  # noqa: F401 # pylint: disable=unused-import
     RulespecGroupAgentSNMP,
     RulespecGroupEnforcedServicesApplications,
@@ -386,14 +395,6 @@ def _group_choices(group_information: GroupSpecs) -> Choices:
     )
 
 
-def passwordstore_choices() -> Choices:
-    pw_store = PasswordStore()
-    return [
-        (ident, pw["title"])
-        for ident, pw in pw_store.filter_usable_entries(pw_store.load_for_reading()).items()
-    ]
-
-
 def IndividualOrStoredPassword(  # pylint: disable=redefined-builtin
     title: str | None = None,
     help: ValueSpecHelp | None = None,
@@ -477,7 +478,7 @@ def MigrateNotUpdatedToIndividualOrStoredPassword(  # pylint: disable=redefined-
 _allowed_schemes = frozenset({"http", "https", "socks4", "socks4a", "socks5", "socks5h"})
 
 
-def HTTPProxyReference(  # type:ignore[no-untyped-def]
+def HTTPProxyReference(  # type: ignore[no-untyped-def]
     allowed_schemes=_allowed_schemes,
 ) -> ValueSpec:
     """Use this valuespec in case you want the user to configure a HTTP proxy
@@ -833,11 +834,13 @@ def PredictiveLevels(
                                 elements=[
                                     Percentage(
                                         title=_("Warning at"),
+                                        # xgettext: no-python-format
                                         unit=_("% above predicted value"),
                                         default_value=10,
                                     ),
                                     Percentage(
                                         title=_("Critical at"),
+                                        # xgettext: no-python-format
                                         unit=_("% above predicted value"),
                                         default_value=20,
                                     ),
@@ -914,11 +917,13 @@ def PredictiveLevels(
                                 elements=[
                                     Percentage(
                                         title=_("Warning at"),
+                                        # xgettext: no-python-format
                                         unit=_("% below predicted value"),
                                         default_value=10,
                                     ),
                                     Percentage(
                                         title=_("Critical at"),
+                                        # xgettext: no-python-format
                                         unit=_("% below predicted value"),
                                         default_value=20,
                                     ),
@@ -1041,7 +1046,7 @@ def valuespec_check_plugin_selection(
 
 
 class _CheckTypeHostSelection(DualListChoice):
-    def __init__(self, **kwargs) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
         super().__init__(rows=25, **kwargs)
 
     def get_elements(self):
@@ -1055,7 +1060,7 @@ class _CheckTypeHostSelection(DualListChoice):
 
 
 class _CheckTypeMgmtSelection(DualListChoice):
-    def __init__(self, **kwargs) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
         super().__init__(rows=25, **kwargs)
 
     def get_elements(self):
@@ -1295,7 +1300,7 @@ class ABCEventsMode(WatoMode, abc.ABC):
                 ContactGroupChoice(
                     title=_("Match contact groups"),
                     help=_(
-                        "The host/service must be in one of the selected contact groups. This only works with Check_MK Micro Core. "
+                        "The host/service must be in one of the selected contact groups. This only works with Checkmk Micro Core. "
                         "If you don't use the CMC that filter will not apply"
                     ),
                     allow_empty=False,
@@ -1313,12 +1318,12 @@ class ABCEventsMode(WatoMode, abc.ABC):
                     elements=[
                         DropdownChoice(
                             label=_("from:"),
-                            choices=[],  # Will be removed soon
+                            choices=active_config.mkeventd_service_levels,
                             prefix_values=True,
                         ),
                         DropdownChoice(
                             label=_(" to:"),
-                            choices=[],  # Will be removed soon
+                            choices=active_config.mkeventd_service_levels,
                             prefix_values=True,
                         ),
                     ],
@@ -1340,7 +1345,7 @@ class ABCEventsMode(WatoMode, abc.ABC):
     def _add_change(self, log_what, log_text):
         raise NotImplementedError()
 
-    def _generic_rule_list_actions(  # type:ignore[no-untyped-def]
+    def _generic_rule_list_actions(  # type: ignore[no-untyped-def]
         self, rules, what, what_title, save_rules
     ) -> None:
         if request.has_var("_delete"):
@@ -1555,7 +1560,7 @@ def configure_attributes(  # pylint: disable=too-many-branches
 
             if attr.show_inherited_value():
                 if for_what in ["host", "cluster"]:
-                    url = _hosts_and_folders.Folder.current().edit_url()
+                    url = folder_from_request().edit_url()
 
                 container = parent  # container is of type Folder
                 while container:
@@ -1722,7 +1727,7 @@ def configure_attributes(  # pylint: disable=too-many-branches
                     value = inherited_value
 
             if for_what != "host_search" and not (for_what == "bulk" and not unique):
-                _tdclass, content = attr.paint(value, "")
+                _tdclass, content = attr.paint(value, HostName(""))
                 if not content:
                     content = _("empty")
 
@@ -1782,7 +1787,7 @@ def some_host_hasnt_set(folder, attrname):
     return False
 
 
-# TODO: Kept for compatibility with pre-1.6 WATO plugins
+# TODO: Kept for compatibility with pre-1.6 Setup plugins
 def register_hook(name, func):
     hooks.register_from_plugin(name, func)
 
@@ -1841,7 +1846,7 @@ def register_notification_parameters(scriptname, valuespec):
 
 
 class DictHostTagCondition(Transform):
-    def __init__(self, title, help_txt) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, title, help_txt) -> None:  # type: ignore[no-untyped-def]
         super().__init__(
             valuespec=ListOfMultiple(
                 title=title,
@@ -2015,7 +2020,7 @@ class DictHostTagCondition(Transform):
             orientation="horizontal",
         )
 
-    def _is_or_is_not(self, **kwargs) -> DropdownChoice:  # type:ignore[no-untyped-def]
+    def _is_or_is_not(self, **kwargs) -> DropdownChoice:  # type: ignore[no-untyped-def]
         return DropdownChoice(
             choices=[
                 ("is", _("is")),
@@ -2036,6 +2041,13 @@ class HostTagCondition(ValueSpec[Sequence[str]]):
 
     def _get_tag_conditions(self, varprefix: str) -> Sequence[str]:
         """Retrieve current tag condition settings from HTML variables"""
+
+        def gettagvalue(tgid: TagGroupID) -> TagID | None:
+            v = request.var(varprefix + "tagvalue_" + tgid)
+            if v is None:
+                return None
+            return TagID(v)
+
         if varprefix:
             varprefix += "_"
 
@@ -2045,7 +2057,7 @@ class HostTagCondition(ValueSpec[Sequence[str]]):
             if tag_group.is_checkbox_tag_group:
                 tagvalue = tag_group.default_value
             else:
-                tagvalue = request.var(varprefix + "tagvalue_" + tag_group.id)
+                tagvalue = gettagvalue(tag_group.id)
 
             # Not all tags are submitted, see cmk.gui.forms.remove_unused_vars.
             # So simply skip None values.
@@ -2056,7 +2068,7 @@ class HostTagCondition(ValueSpec[Sequence[str]]):
             if mode == "is":
                 tag_list.append(tagvalue)
             elif mode == "isnot":
-                tag_list.append("!" + tagvalue)
+                tag_list.append(TagID("!" + tagvalue))
 
         # Auxiliary tags
         for aux_tag in active_config.tags.aux_tag_list.get_tags():
@@ -2064,7 +2076,7 @@ class HostTagCondition(ValueSpec[Sequence[str]]):
             if mode == "is":
                 tag_list.append(aux_tag.id)
             elif mode == "isnot":
-                tag_list.append("!" + aux_tag.id)
+                tag_list.append(TagID("!" + aux_tag.id))
 
         return tag_list
 
@@ -2207,7 +2219,7 @@ class HostTagCondition(ValueSpec[Sequence[str]]):
 
 
 class LabelCondition(Transform):
-    def __init__(self, title, help_txt) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, title, help_txt) -> None:  # type: ignore[no-untyped-def]
         super().__init__(
             valuespec=ListOf(
                 valuespec=Tuple(
@@ -2276,25 +2288,27 @@ class PageAjaxDictHostTagConditionGetChoice(ABCPageListOfMultipleGetChoice):
 
 def _simple_host_rule_match_conditions() -> list[DictionaryEntry]:
     return [
-        _site_rule_match_condition(),
+        _site_rule_match_condition(only_sites_with_replication=False),
         _single_folder_rule_match_condition(),
     ] + _common_host_rule_match_conditions()
 
 
 def multifolder_host_rule_match_conditions() -> list[DictionaryEntry]:
     return [
-        _site_rule_match_condition(),
+        _site_rule_match_condition(only_sites_with_replication=True),
         _multi_folder_rule_match_condition(),
     ] + _common_host_rule_match_conditions()
 
 
-def _site_rule_match_condition() -> DictionaryEntry:
+def _site_rule_match_condition(only_sites_with_replication: bool) -> DictionaryEntry:
     return (
         "match_site",
         DualListChoice(
             title=_("Match sites"),
             help=_("This condition makes the rule match only hosts of the selected sites."),
-            choices=get_activation_site_choices,
+            choices=get_activation_site_choices
+            if only_sites_with_replication
+            else get_configured_site_choices,
         ),
     )
 
@@ -2307,7 +2321,7 @@ def _multi_folder_rule_match_condition() -> DictionaryEntry:
                 title=_("Folder"),
                 help=_(
                     "This condition makes the rule match only hosts that are managed "
-                    "via WATO and that are contained in this folder - either directly "
+                    "via Setup and that are contained in this folder - either directly "
                     "or in one of its subfolders."
                 ),
             ),
@@ -2369,7 +2383,7 @@ def _single_folder_rule_match_condition() -> DictionaryEntry:
             title=_("Match folder"),
             help=_(
                 "This condition makes the rule match only hosts that are managed "
-                "via WATO and that are contained in this folder - either directly "
+                "via Setup and that are contained in this folder - either directly "
                 "or in one of its subfolders."
             ),
         ),
@@ -2384,17 +2398,17 @@ def get_search_expression() -> None | str:
 
 
 def get_hostnames_from_checkboxes(
-    filterfunc: Callable | None = None, deflt: bool = False
-) -> list[str]:
+    folder: CREFolder | SearchFolder,
+    filterfunc: Callable[[CREHost], bool] | None = None,
+    deflt: bool = False,
+) -> Sequence[HostName]:
     """Create list of all host names that are select with checkboxes in the current file.
     This is needed for bulk operations."""
-    selected = user.get_rowselection(
-        weblib.selection_id(), "wato-folder-/" + _hosts_and_folders.Folder.current().path()
-    )
+    selected = user.get_rowselection(weblib.selection_id(), "wato-folder-/" + folder.path())
     search_text = request.var("search")
 
-    selected_host_names: list[str] = []
-    for host_name, host in sorted(_hosts_and_folders.Folder.current().hosts().items()):
+    selected_host_names: list[HostName] = []
+    for host_name, host in sorted(folder.hosts().items()):
         if (not search_text or _search_text_matches(host, search_text)) and (
             "_c_" + host_name
         ) in selected:
@@ -2404,10 +2418,9 @@ def get_hostnames_from_checkboxes(
 
 
 def _search_text_matches(
-    host: _hosts_and_folders.CREHost,
+    host: CREHost,
     search_text: str,
 ) -> bool:
-
     match_regex = re.compile(search_text, re.IGNORECASE)
     for pattern in [
         host.name(),
@@ -2423,23 +2436,27 @@ def _search_text_matches(
     return False
 
 
-def get_hosts_from_checkboxes(filterfunc=None):
+def get_hosts_from_checkboxes(
+    folder: CREFolder | SearchFolder, filterfunc: Callable[[CREHost], bool] | None = None
+) -> list[CREHost]:
     """Create list of all host objects that are select with checkboxes in the current file.
     This is needed for bulk operations."""
-    folder = _hosts_and_folders.Folder.current()
-    return [folder.host(host_name) for host_name in get_hostnames_from_checkboxes(filterfunc)]
+    return [
+        folder.load_host(host_name)
+        for host_name in get_hostnames_from_checkboxes(folder, filterfunc)
+    ]
 
 
 class FullPathFolderChoice(DropdownChoice):
-    def __init__(self, **kwargs) -> None:  # type:ignore[no-untyped-def]
-        kwargs["choices"] = _hosts_and_folders.Folder.folder_choices_fulltitle
+    def __init__(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
+        kwargs["choices"] = folder_tree().folder_choices_fulltitle
         kwargs.setdefault("title", _("Folder"))
         DropdownChoice.__init__(self, **kwargs)
 
 
 class FolderChoice(DropdownChoice):
-    def __init__(self, **kwargs) -> None:  # type:ignore[no-untyped-def]
-        kwargs["choices"] = _hosts_and_folders.Folder.folder_choices
+    def __init__(self, **kwargs) -> None:  # type: ignore[no-untyped-def]
+        kwargs["choices"] = folder_tree().folder_choices
         kwargs.setdefault("title", _("Folder"))
         DropdownChoice.__init__(self, **kwargs)
 

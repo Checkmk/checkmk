@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
@@ -20,10 +20,11 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RuleSpec,
     TagCondition,
 )
-from cmk.utils.tags import TagConfig, TaggroupID
-from cmk.utils.type_defs import CheckPluginName, HostName, ServiceName
+from cmk.utils.tags import TagConfig, TagGroupID, TagID
+from cmk.utils.type_defs import HostName, ServiceName
 
-from cmk.checkers.discovery import AutocheckEntry
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.discovery import AutocheckEntry
 
 
 def test_ruleset_match_object_no_conditions() -> None:
@@ -185,21 +186,21 @@ def test_labels_of_service(monkeypatch: MonkeyPatch) -> None:
             {
                 "condition": {
                     "service_description": [{"$regex": "CPU load$"}],
-                    "host_tags": {"agent": "no-agent"},
+                    "host_tags": {TagGroupID("agent"): TagID("no-agent")},
                 },
                 "value": {"label1": "val1"},
             },
             {
                 "condition": {
                     "service_description": [{"$regex": "CPU load$"}],
-                    "host_tags": {"agent": "no-agent"},
+                    "host_tags": {TagGroupID("agent"): TagID("no-agent")},
                 },
                 "value": {"label2": "val2"},
             },
         ],
     )
 
-    ts.add_host(test_host, tags={"agent": "no-agent"})
+    ts.add_host(test_host, tags={TagGroupID("agent"): TagID("no-agent")})
     ruleset_matcher = ts.apply(monkeypatch).ruleset_matcher
 
     assert ruleset_matcher.labels_of_service(xyz_host, "CPU load") == {}
@@ -255,25 +256,19 @@ def test_basic_get_host_ruleset_values(monkeypatch: MonkeyPatch) -> None:
     config_cache = ts.apply(monkeypatch)
     matcher = config_cache.ruleset_matcher
 
-    assert (
-        list(
-            matcher.get_host_ruleset_values(
-                RulesetMatchObject(host_name=HostName("abc"), service_description=None),
-                ruleset=ruleset,
-                is_binary=False,
-            )
+    assert not list(
+        matcher.get_host_ruleset_values(
+            RulesetMatchObject(host_name=HostName("abc"), service_description=None),
+            ruleset=ruleset,
+            is_binary=False,
         )
-        == []
     )
-    assert (
-        list(
-            matcher.get_host_ruleset_values(
-                RulesetMatchObject(host_name=HostName("xyz"), service_description=None),
-                ruleset=ruleset,
-                is_binary=False,
-            )
+    assert not list(
+        matcher.get_host_ruleset_values(
+            RulesetMatchObject(host_name=HostName("xyz"), service_description=None),
+            ruleset=ruleset,
+            is_binary=False,
         )
-        == []
     )
     assert list(
         matcher.get_host_ruleset_values(
@@ -301,15 +296,12 @@ def test_basic_get_host_ruleset_values_subfolders(monkeypatch: MonkeyPatch) -> N
     config_cache = ts.apply(monkeypatch)
     matcher = config_cache.ruleset_matcher
 
-    assert (
-        list(
-            matcher.get_host_ruleset_values(
-                RulesetMatchObject(host_name=HostName("xyz"), service_description=None),
-                ruleset=ruleset,
-                is_binary=False,
-            )
+    assert not list(
+        matcher.get_host_ruleset_values(
+            RulesetMatchObject(host_name=HostName("xyz"), service_description=None),
+            ruleset=ruleset,
+            is_binary=False,
         )
-        == []
     )
     assert list(
         matcher.get_host_ruleset_values(
@@ -325,15 +317,12 @@ def test_basic_get_host_ruleset_values_subfolders(monkeypatch: MonkeyPatch) -> N
             is_binary=False,
         )
     ) == ["LEVEL1", "LEVEL2"]
-    assert (
-        list(
-            matcher.get_host_ruleset_values(
-                RulesetMatchObject(host_name=HostName("lvl1a"), service_description=None),
-                ruleset=ruleset,
-                is_binary=False,
-            )
+    assert not list(
+        matcher.get_host_ruleset_values(
+            RulesetMatchObject(host_name=HostName("lvl1a"), service_description=None),
+            ruleset=ruleset,
+            is_binary=False,
         )
-        == []
     )
 
 
@@ -503,7 +492,7 @@ tag_ruleset: Sequence[RuleSpec[str]] = [
         "value": "crit_prod",
         "condition": {
             "host_tags": {
-                "criticality": "prod",
+                TagGroupID("criticality"): TagID("prod"),
             },
         },
         "options": {},
@@ -514,8 +503,8 @@ tag_ruleset: Sequence[RuleSpec[str]] = [
         "value": "prod_cmk-agent",
         "condition": {
             "host_tags": {
-                "criticality": "prod",
-                "agent": "cmk-agent",
+                TagGroupID("criticality"): TagID("prod"),
+                TagGroupID("agent"): TagID("cmk-agent"),
             },
         },
         "options": {},
@@ -524,7 +513,7 @@ tag_ruleset: Sequence[RuleSpec[str]] = [
     {
         "id": "id2",
         "value": "not_lan",
-        "condition": {"host_tags": {"networking": {"$ne": "lan"}}},
+        "condition": {"host_tags": {TagGroupID("networking"): {"$ne": TagID("lan")}}},
         "options": {},
     },
     # test $or
@@ -533,10 +522,10 @@ tag_ruleset: Sequence[RuleSpec[str]] = [
         "value": "wan_or_lan",
         "condition": {
             "host_tags": {
-                "networking": {
+                TagGroupID("networking"): {
                     "$or": [
-                        "lan",
-                        "wan",
+                        TagID("lan"),
+                        TagID("wan"),
                     ],
                 }
             }
@@ -549,10 +538,10 @@ tag_ruleset: Sequence[RuleSpec[str]] = [
         "value": "not_wan_and_not_lan",
         "condition": {
             "host_tags": {
-                "networking": {
+                TagGroupID("networking"): {
                     "$nor": [
-                        "lan",
-                        "wan",
+                        TagID("lan"),
+                        TagID("wan"),
                     ],
                 }
             }
@@ -586,23 +575,23 @@ def test_ruleset_matcher_get_host_ruleset_values_tags(
     ts.add_host(
         HostName("host1"),
         tags={
-            "criticality": "prod",
-            "agent": "cmk-agent",
-            "networking": "lan",
+            TagGroupID("criticality"): TagID("prod"),
+            TagGroupID("agent"): TagID("cmk-agent"),
+            TagGroupID("networking"): TagID("lan"),
         },
     )
     ts.add_host(
         HostName("host2"),
         tags={
-            "criticality": "test",
-            "networking": "wan",
+            TagGroupID("criticality"): TagID("test"),
+            TagGroupID("networking"): TagID("wan"),
         },
     )
     ts.add_host(
         HostName("host3"),
         tags={
-            "criticality": "test",
-            "networking": "dmz",
+            TagGroupID("criticality"): TagID("test"),
+            TagGroupID("networking"): TagID("dmz"),
         },
     )
     config_cache = ts.apply(monkeypatch)
@@ -628,7 +617,7 @@ def test_ruleset_matcher_get_host_ruleset_values_tags(
                 "value": "value",
                 "condition": {
                     "host_tags": {
-                        "grp1": "v1",
+                        TagGroupID("grp1"): TagID("v1"),
                     },
                 },
                 "options": {},
@@ -641,7 +630,7 @@ def test_ruleset_matcher_get_host_ruleset_values_tags(
                 "value": "value",
                 "condition": {
                     "host_tags": {
-                        "grp2": "v1",
+                        TagGroupID("grp2"): TagID("v1"),
                     },
                 },
                 "options": {},
@@ -662,22 +651,22 @@ def test_ruleset_matcher_get_host_ruleset_values_tags_duplicate_ids(
             "aux_tags": [],
             "tag_groups": [
                 {
-                    "id": "grp1",
+                    "id": TagGroupID("grp1"),
                     "tags": [
                         {
                             "aux_tags": [],
-                            "id": "v1",
+                            "id": TagID("v1"),
                             "title": "Value1",
                         },
                     ],
                     "title": "Group 1",
                 },
                 {
-                    "id": "grp2",
+                    "id": TagGroupID("grp2"),
                     "tags": [
                         {
                             "aux_tags": [],
-                            "id": "v1",
+                            "id": TagID("v1"),
                             "title": "Value1",
                         },
                     ],
@@ -688,9 +677,9 @@ def test_ruleset_matcher_get_host_ruleset_values_tags_duplicate_ids(
     )
     ts.tags += add_tag_config
     ts.add_host(
-        "host",
+        HostName("host"),
         tags={
-            "grp1": "v1",
+            TagGroupID("grp1"): TagID("v1"),
         },
     )
     config_cache = ts.apply(monkeypatch)
@@ -906,7 +895,7 @@ def test_ruleset_optimizer_clear_ruleset_caches(monkeypatch: MonkeyPatch) -> Non
     ],
 )
 def test_matches_tag_condition(
-    taggroud_id: TaggroupID,
+    taggroud_id: TagGroupID,
     tag_condition: TagCondition,
     expected_result: bool,
 ) -> None:
@@ -915,10 +904,10 @@ def test_matches_tag_condition(
             taggroud_id,
             tag_condition,
             {
-                ("t1", "abc"),
-                ("t2", "xyz"),
-                ("t3", "123"),
-                ("t4", "456"),
+                (TagGroupID("t1"), TagID("abc")),
+                (TagGroupID("t2"), TagID("xyz")),
+                (TagGroupID("t3"), TagID("123")),
+                (TagGroupID("t4"), TagID("456")),
             },
         )
         is expected_result

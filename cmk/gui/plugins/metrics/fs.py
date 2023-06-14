@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -86,8 +86,10 @@ graph_info["fs_used"] = {
     "metrics": [
         # NOTE: in this scenario, fs_used includes reserved space
         ("fs_used", "area"),
-        ("fs_free", "stack"),
-        ("fs_used,fs_free,+#006040", "line", "Filesystem_size"),
+        ("fs_size,fs_used,-#e3fff9", "stack", _("Free space")),  # this has to
+        # remain a calculated value for compatibility reasons: fs_free has not
+        # always been available as a metric (see CMK-12488)
+        ("fs_size", "line"),
     ],
     "scalars": [
         "fs_used:warn",
@@ -104,7 +106,7 @@ graph_info["fs_used_2"] = {
         ("fs_used", "area"),
         ("fs_free", "stack"),
         ("reserved", "stack"),
-        ("fs_used,fs_free,reserved,+,+#006040", "line", "Filesystem_size"),
+        ("fs_used,fs_free,reserved,+,+#006040", "line", _("Filesystem size")),
     ],
     "scalars": [
         "fs_used:warn",

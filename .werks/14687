@@ -6,7 +6,7 @@ Date: 1669992480
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Livestatus used an incorrect way of encoding Unicode characters outside of
 the Basic Multilingual Plane (BMP) for the JSON output format.  This

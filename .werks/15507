@@ -1,0 +1,15 @@
+Title: host_tag_group: bring name patterns together
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1678880234
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, the endpoints all had subtle differences in which
+string patterns were allowed as ident. This also differed to the pattern
+in the UI. This werk fixes this and makes the pattern consistent across
+all mentioned.
+

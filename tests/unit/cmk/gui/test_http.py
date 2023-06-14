@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,8 +8,8 @@ import time
 from collections.abc import Iterator
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
 from pydantic import BaseModel
+from pytest import MonkeyPatch
 from werkzeug.test import create_environ
 
 import cmk.gui.http as http
@@ -260,8 +260,8 @@ class ModelForTest(BaseModel):
     my_string: str
 
 
-def test_get_model_mandatory(request_context: RequestContextFixture) -> None:
-
+@pytest.mark.usefixtures("request_context")
+def test_get_model_mandatory() -> None:
     request.set_var("my_model", '{"my_float": 23.42, "my_string": "yes"}')
 
     with pytest.raises(MKUserError):
@@ -272,8 +272,8 @@ def test_get_model_mandatory(request_context: RequestContextFixture) -> None:
     )
 
 
-def test_get_model_mandatory_invalid(request_context: RequestContextFixture) -> None:
-
+@pytest.mark.usefixtures("request_context")
+def test_get_model_mandatory_invalid() -> None:
     request.set_var("my_model", '{"my_float": "mööp", "my_string": 17}')
 
     with pytest.raises(MKUserError):
@@ -302,16 +302,19 @@ def test_get_validated_type_input_mandatory() -> None:
     assert request.get_validated_type_input_mandatory(int, "Not existing", deflt=0) == 0
 
 
-def test_cookie_handling(request_context: RequestContextFixture, monkeypatch: MonkeyPatch) -> None:
-    monkeypatch.setattr(request, "cookies", {"cookie1": {"key": "1a"}})
-    assert request.has_cookie("cookie1")
-    assert not request.has_cookie("cookie2")
-    # TODO: Write proper test assert html.cookie("cookie1", "2n class") == "1a"
-    assert request.cookie("cookie2", "2n class") == "2n class"
+@pytest.mark.usefixtures("request_context")
+def test_cookie_handling(monkeypatch: MonkeyPatch) -> None:
+    with monkeypatch.context() as m:
+        m.setattr(request, "cookies", {"cookie1": {"key": "1a"}})
+        assert request.has_cookie("cookie1")
+        assert not request.has_cookie("cookie2")
+        # TODO: Write proper test assert html.cookie("cookie1", "2n class") == "1a"
+        assert request.cookie("cookie2", "2n class") == "2n class"
 
 
 # TODO: Write valid test
-def test_request_processing(request_context: RequestContextFixture) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_request_processing() -> None:
     global_request.set_var("varname", "1a")
     global_request.set_var("varname2", "1")
 
@@ -326,7 +329,8 @@ def test_request_processing(request_context: RequestContextFixture) -> None:
 COOKIE_PATH = "/NO_SITE/"
 
 
-def test_response_set_http_cookie(request_context: RequestContextFixture) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_response_set_http_cookie() -> None:
     response.set_http_cookie("auth_SITE", "user:123456:abcdefg", secure=False)
 
     assert (
@@ -335,9 +339,8 @@ def test_response_set_http_cookie(request_context: RequestContextFixture) -> Non
     )
 
 
-def test_response_set_http_cookie_secure(
-    request_context: RequestContextFixture, monkeypatch: MonkeyPatch
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_response_set_http_cookie_secure() -> None:
     response.set_http_cookie("auth_SITE", "user:123456:abcdefg", secure=True)
 
     assert (
@@ -346,9 +349,8 @@ def test_response_set_http_cookie_secure(
     )
 
 
-def test_response_del_cookie(
-    request_context: RequestContextFixture, monkeypatch: MonkeyPatch
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_response_del_cookie(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(time, "time", lambda: 0)
 
     response.unset_http_cookie("auth_SITE")
@@ -367,7 +369,7 @@ def test_response_del_cookie(
 #
 # We dropped the old format during 1.6 development. It would be a good time to drop the
 # compatibility with the old format earliest with 1.7.
-def test_pre_16_format_cookie_handling(monkeypatch: MonkeyPatch) -> None:
+def test_pre_16_format_cookie_handling() -> None:
     environ = dict(
         create_environ(),
         HTTP_COOKIE="xyz=123; auth_stable=lärs:1534272374.61:1f59cac3fcd5bcc389e4f8397bed315b; abc=123".encode(),
@@ -446,9 +448,8 @@ def test_del_vars() -> None:
 
 
 @pytest.mark.parametrize("invalid_url", ["http://localhost/", "localhost:80/bla"])
-def test_get_url_input_invalid_urls(
-    request_context: RequestContextFixture, invalid_url: str
-) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_get_url_input_invalid_urls(invalid_url: str) -> None:
     request.set_var("varname", invalid_url)
 
     with pytest.raises(MKUserError) as e:
@@ -456,7 +457,8 @@ def test_get_url_input_invalid_urls(
     assert "not a valid URL" in "%s" % e
 
 
-def test_get_url_input(request_context: RequestContextFixture) -> None:
+@pytest.mark.usefixtures("request_context")
+def test_get_url_input() -> None:
     global_request.set_var("url", "view.py?bla=blub")
     global_request.set_var("no_url", "2")
     global_request.set_var("invalid_url", "http://bla/")

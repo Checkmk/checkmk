@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Mapping
 
 import pytest
 from pytest import param
@@ -94,7 +96,7 @@ from cmk.gui.plugins.wato.bi_valuespecs import _convert_bi_rule_from_vs, _conver
         ),
     ],
 )
-def test_bi_rule_outermost_transform_to_vs(rest_config) -> None:  # type:ignore[no-untyped-def]
+def test_bi_rule_outermost_transform_to_vs(rest_config: None | Mapping[str, object]) -> None:
     if rest_config is None:
         # Error page special handling
         # This handles html.var voodoo, never results in a rest config

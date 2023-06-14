@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping, Sequence
@@ -11,6 +11,7 @@ from tests.testlib import on_time
 
 from cmk.base.plugins.agent_based import hitachi_hnas_volume
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.hitachi_hnas_volume import (
     check_hitachi_hnas_virtual_volume,
     check_hitachi_hnas_volume,
@@ -63,6 +64,7 @@ def value_store_fixture(monkeypatch):
     yield value_store_patched
 
 
+@pytest.mark.usefixtures("value_store_patch")
 @pytest.mark.parametrize(
     "item,params,section,expected",
     [
@@ -89,7 +91,7 @@ def value_store_fixture(monkeypatch):
         (
             "1071 mount_id2",
             {
-                **FILESYSTEM_DEFAULT_PARAMS,  # type: ignore
+                **FILESYSTEM_DEFAULT_PARAMS,
                 "patterns": (["1024 mount_id1", "1071 mount_id2"], []),
             },
             common_section,
@@ -133,7 +135,12 @@ def value_store_fixture(monkeypatch):
     ],
     ids=["mounted", "unformated", "patterns", "with sizes"],
 )
-def test_check_hitachi_hnas_volume(value_store_patch, item, params, section, expected) -> None:
+def test_check_hitachi_hnas_volume(
+    item: str,
+    params: Mapping[str, object],
+    section: Section,
+    expected: CheckResult,
+) -> None:
     """Hitachi volume check function returns expected results for different volume params"""
 
     with on_time("2021-07-22 12:00", "CET"):
@@ -153,6 +160,7 @@ def test_check_hitachi_hnas_volume(value_store_patch, item, params, section, exp
             assert actual_metric.levels[1] == pytest.approx(expected_metric.levels[1])
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item,params,section,expected",
     [

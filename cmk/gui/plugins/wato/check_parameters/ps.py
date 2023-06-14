@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -53,7 +53,11 @@ def process_level_elements():
             # xgettext: no-python-format
             _("100% is all cores at full load"),
         ),
-        (False, _("N * 100% as each core contributes with 100% at full load")),
+        (
+            False,
+            # xgettext: no-python-format
+            _("N * 100% as each core contributes with 100% at full load"),
+        ),
     ]
     return [
         (
@@ -61,6 +65,7 @@ def process_level_elements():
             DropdownChoice[bool](
                 title=_("CPU rescale maximum load"),
                 help=_(
+                    # xgettext: no-python-format
                     "CPU utilization is delivered by the Operating "
                     "System as a per CPU core basis. Thus each core contributes "
                     "with a 100% at full utilization, producing a maximum load "
@@ -360,6 +365,15 @@ def process_level_elements():
             ),
         ),
         (
+            "process_usernames",
+            Checkbox(
+                title="Include usernames in service details",
+                label="Acquire and show usernames",
+                help=_("If enabled, the service details will contain username of a process owner."),
+                default_value=True,
+            ),
+        ),
+        (
             "process_info_arguments",
             Integer(
                 title=_("Include process arguments in long-output"),
@@ -586,7 +600,12 @@ def _item_spec_ps():
 def _parameter_valuespec_ps() -> Dictionary:
     return Dictionary(
         elements=process_level_elements(),
-        ignored_keys=["match_groups", "cgroup"],
+        ignored_keys=[
+            "process",
+            "match_groups",
+            "user",
+            "cgroup",
+        ],
         required_keys=["cpu_rescale_max"],
     )
 
@@ -649,6 +668,10 @@ def _valuespec_inventory_processes_rules() -> Dictionary:
             "done. These services will be created with default parameters. They will get "
             "critical when no process is running and OK otherwise. You can parameterize "
             "the check with the ruleset <i>State and count of processes</i>."
+            "Care should be taken when removing vanished services, for example via "
+            "<i>Bulk Discovery</i>. When a process vanishes, so does the corresponding "
+            "service. So despite that the service is critical, it can be removed by discovery, "
+            "effectively turning off monitoring."
         ),
         elements=[
             ("descr", process_discovery_descr_option()),

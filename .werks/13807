@@ -6,7 +6,7 @@ Date: 1646235289
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This werk introduces the the kube_cluster_info agent plugin. The service displays
 general information about the Kubernetes cluster.

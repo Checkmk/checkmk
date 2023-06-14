@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -86,7 +86,7 @@ class TestOk:
         assert list(result) == [value]
 
     def test_iter_error(self, result: Result[int, object]) -> None:
-        assert list(result.iter_error()) == []
+        assert not list(result.iter_error())
 
     def test_as_optional(self, result: Result[int, object]) -> None:
         assert result.as_optional() == result.ok
@@ -209,7 +209,7 @@ class TestError:
     def test_iter(self, result: Result[object, int]) -> None:
         # TODO: should not be necessary, possibly https://github.com/python/mypy/issues/12553
         assert isinstance(result, Iterable)
-        assert list(result) == []
+        assert not list(result)
 
     def test_iter_error(self, result: Result[object, int], value: int) -> None:
         assert list(result.iter_error()) == [value]

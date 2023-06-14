@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -57,7 +57,7 @@ EOF
 pushd "$PYTHON3_MODULES" >/dev/null || exit 1
 awk "$CHECK_MISSING" python3-modules.make || STATUS=$?
 # shellcheck disable=SC2010 # FIXME: Don't use ls | grep. Use a glob or a for loop with a condition to allow non-alphanumeric filenames
-ls -1 src | grep -E -v "download|README" | xargs -n 1 -i{} awk '/^ *PYTHON3_MODULES_LIST *\+= *{}/ { found = 1 } END { if (!found) { print "{} not in python3-modules.make"; exit 1 } }' python3-modules.make || STATUS=$?
+ls -1 src | grep -E -v "download|README" | xargs -n 1 -I{} awk '/^ *PYTHON3_MODULES_LIST *\+= *{}/ { found = 1 } END { if (!found) { print "{} not in python3-modules.make"; exit 1 } }' python3-modules.make || STATUS=$?
 popd >/dev/null || exit 1
 
 exit $STATUS

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -41,7 +41,6 @@ def check_poe_data(params, poe_data):
 
     # PoE on device is turned ON
     if poe_data.poe_status == PoeStatus.ON:
-
         # calculate percentage of power consumption
         poe_used_percentage = (
             ((float(poe_data.poe_used) / float(poe_data.poe_max)) * 100)

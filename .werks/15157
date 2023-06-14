@@ -6,7 +6,7 @@ Date: 1673261470
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The batch of metrics from Werk 15156 is now compressed before
 it is sent.

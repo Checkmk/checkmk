@@ -6,7 +6,7 @@ Date: 1659074652
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The "host & service history" view could not render plugin outputs
 with semicolons correctly.  This is due to the fact that semicolons

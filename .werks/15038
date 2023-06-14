@@ -6,7 +6,7 @@ Date: 1670005147
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 On remote sites with enabled configuration replication which were one major version ahead of the
 central site, the Setup menu was always active, even if <i>Disable remote configuration</i> was

@@ -1,0 +1,15 @@
+Title: KUBE: Fix crash upon specifying a resource of 1k Pods
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1678718586
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The Kubernetes special agent would crash with the following error
+C+:
+[special_kube] Agent exited with code 1: Invalid value for `pods`, value is not a valid integer (type=type_error.integer)
+C-:
+With this change, the error is fixed.

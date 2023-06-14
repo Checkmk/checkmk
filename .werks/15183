@@ -6,7 +6,7 @@ Date: 1674060884
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 With Checkmk 2.2.0 the support for older and in part insecure password hashing schemes has been removed.
 

@@ -1,0 +1,17 @@
+Title: Agent receiver crashes on IPv4-only Checkmk servers (regression introduced by werk 15416)
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1678208502
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+<a href="https://checkmk.com/werk/15416">Werk 15416</a> introduced a regression which caused the
+agent receiver to crash on IPv4-only Checkmk servers. After starting, the receiver was initially
+reported as `running` for a brief amount of time by <tt>omd status</tt>, however, it then crashed
+with the following error message:
+F+:var/log/agent-receiver/error.log
+[ERROR] Can't connect to ('::', 8000)
+F-:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -14,9 +14,9 @@ import requests
 import urllib3
 
 import cmk.utils.site
+from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.exceptions import MKException
 from cmk.utils.password_store import extract
-from cmk.utils.paths import profile_dir
 from cmk.utils.regex import regex
 from cmk.utils.site import omd_site
 
@@ -24,7 +24,7 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 class AggregationData:
-    def __init__(self, bi_rawdata, config, error) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, bi_rawdata, config, error) -> None:  # type: ignore[no-untyped-def]
         super().__init__()
         self._bi_rawdata = bi_rawdata
         self._error = error
@@ -137,12 +137,14 @@ class AggregationRawdataGenerator:
         self._credentials = config["credentials"]
         if self._credentials == "automation":
             self._username = self._credentials
-            self._secret = (profile_dir / self._username / "automation.secret").read_text(
-                encoding="utf-8"
-            )
+            self._secret = AutomationUserSecret(self._username).read()
         else:
             self._username, automation_secret = self._credentials[1]
-            self._secret = extract(automation_secret)
+            if (secret := extract(automation_secret)) is None:
+                raise ValueError(
+                    f"No automation secret found for user {self._username} found in password store"
+                )
+            self._secret = secret
 
         site_config = config["site"]
 
@@ -167,7 +169,7 @@ class AggregationRawdataGenerator:
     def _fetch_aggregation_data(self):
         filter_query = self._config.get("filter") or {}
 
-        response = requests.post(
+        response = requests.post(  # nosec B113
             f"{self._site_url}"
             + "/check_mk/api/1.0"
             + "/domain-types/bi_aggregation/actions/aggregation_state/invoke",
@@ -197,7 +199,7 @@ class AggregationRawdataGenerator:
 
 
 class AggregationOutputRenderer:
-    def render(self, aggregation_data_results) -> None:  # type:ignore[no-untyped-def]
+    def render(self, aggregation_data_results) -> None:  # type: ignore[no-untyped-def]
         connection_info_fields = ["missing_sites", "missing_aggr", "generic_errors"]
         connection_info: dict[str, set[str]] = {field: set() for field in connection_info_fields}  #
 

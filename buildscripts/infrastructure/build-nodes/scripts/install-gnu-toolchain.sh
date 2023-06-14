@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -48,7 +48,7 @@ download_sources() {
     local MIRROR_BASE_URL=${NEXUS_ARCHIVES_URL}
     local MIRROR_URL=${MIRROR_BASE_URL}$FILE_NAME
     local MIRROR_CREDENTIALS="${NEXUS_USERNAME}:${NEXUS_PASSWORD}"
-    if ! _download_from_mirror "${FILE_NAME}" "${MIRROR_URL}"; then
+    if ! _download_from_mirror "${FILE_NAME}" "${MIRROR_URL}" "${MIRROR_CREDENTIALS}"; then
         log "File not available from ${MIRROR_URL}, creating"
 
         tar xzf "${GCC_ARCHIVE_NAME}"

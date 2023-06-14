@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -54,8 +54,7 @@ set_up_process_commandline_arguments() {
         case "${1}" in
             -d | --debug)
                 set -xv
-                # restore stderr
-                exec 2>&9
+                DISABLE_STDERR=false
                 shift
                 ;;
 
@@ -320,9 +319,17 @@ if inpath timeout; then
     }
 fi
 
+encryption_panic() {
+    echo "<<<check_mk>>>"
+    echo "EncryptionPanic: true"
+    exit 1
+}
+
 set_up_encryption() {
     # shellcheck source=agents/cfg_examples/encryption.cfg
-    [ -f "${MK_CONFDIR}/encryption.cfg" ] && . "${MK_CONFDIR}/encryption.cfg"
+    [ -f "${MK_CONFDIR}/encryption.cfg" ] && {
+        . "${MK_CONFDIR}/encryption.cfg" || encryption_panic
+    }
     define_optionally_encrypt "${ENCRYPTED:-"no"}"
 }
 
@@ -379,7 +386,7 @@ export_utility_functions() {
 section_checkmk() {
     cat <<HERE
 <<<check_mk>>>
-Version: 2.2.0i1
+Version: 2.3.0b1
 AgentOS: linux
 Hostname: $(uname -n)
 AgentDirectory: ${MK_CONFDIR}
@@ -549,13 +556,13 @@ section_df() {
         excludefs="${excludefs} -x zfs"
     fi
 
-    echo '<<<df>>>'
+    echo '<<<df_v2>>>'
     # We really *need* word splitting below!
     # shellcheck disable=SC2086
     df -PTlk ${excludefs} | sed 1d
 
     # df inodes information
-    echo '<<<df>>>'
+    echo '<<<df_v2>>>'
     echo '[df_inodes_start]'
     # We really *need* word splitting below!
     # shellcheck disable=SC2086
@@ -564,7 +571,7 @@ section_df() {
 
     if inpath lsblk; then
         echo "[df_lsblk_start]"
-        lsblk --list --json --paths --output NAME,UUID
+        lsblk --list --paths --output NAME,UUID
         echo "[df_lsblk_end]"
     fi
 }
@@ -619,7 +626,7 @@ section_nfs_mounts() {
             done
 
         echo '<<<cifsmounts>>>'
-        sed -n '/ cifs\? /s/[^ ]* \([^ ]*\) .*/\1/p' </proc/mounts |
+        sed -n -e '/ cifs /s/.*\ \([^ ]*\)\ cifs\ .*/\1/p' </proc/mounts |
             sed 's/\\040/ /g' |
             while read -r MP; do
                 if [ ! -r "${MP}" ]; then
@@ -644,6 +651,9 @@ section_ps() {
     if inpath ps; then
         # processes including username, without kernel processes
         echo '<<<ps_lnx>>>'
+        echo "[time]"
+        get_epoch
+        echo "[processes]"
         CGROUP=""
         if [ -e /sys/fs/cgroup ]; then
             CGROUP="cgroup:512,"
@@ -1078,13 +1088,28 @@ section_omd() {
             fi
         done
 
+        _du_no_errors() {
+            if [ -e "${1}" ]; then
+                output=$(du -bs "$1") && printf "%s\n" "${output}"
+            else
+                printf "0 %s\n" "${1}"
+            fi
+        }
+
         echo '<<<omd_diskusage:sep(0)>>>'
         for sitedir in /omd/sites/*; do
             site=${sitedir#/omd/sites/}
             echo "[site ${site}]"
-            du -bs "$sitedir"
-            du -bs "$sitedir/var/log"
-            du -bs "$sitedir/var/check_mk/rrd"
+            _du_no_errors "$sitedir"
+            _du_no_errors "$sitedir/var/log"
+            _du_no_errors "$sitedir/var/check_mk/rrd"
+            _du_no_errors "$sitedir/var/pnp4nagios/"
+            _du_no_errors "$sitedir/tmp/"
+            _du_no_errors "$sitedir/local/"
+            _du_no_errors "$sitedir/var/check_mk/agents/"
+            _du_no_errors "$sitedir/var/mkeventd/history/"
+            _du_no_errors "$sitedir/var/check_mk/core/"
+            _du_no_errors "$sitedir/var/check_mk/inventory_archive/"
         done
 
         echo '<<<omd_info:sep(59)>>>'
@@ -1605,7 +1630,7 @@ run_cached() {
         # prefix or insert cache info, unless already present.
         # WATCH OUT: AIX does not allow us to pass this as a single '-e' option!
         if [ "${NAME%%_*}" = "local" ] || [ "${NAME%%_*}" = "mrpe" ]; then
-            sed -e '/^<<<.*>>>/{p;d;}' -e "/^cached([0-9]*,[0-9]*) /{p;d;}; s/^/${CACHE_INFO} /" "${CACHEFILE}"
+            sed -e '/^<<<.*>>>/{p;d;}' -e '/^cached([0-9]*,[0-9]*) /{p;d;}' -e "s/^/${CACHE_INFO} /" "${CACHEFILE}"
         else
             sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}' -e 's/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
         fi
@@ -1706,7 +1731,7 @@ get_plugin_interpreter() {
         return 0
     fi
 
-    if [ "${filename#${filename%??}}" != "_2" ]; then
+    if [ "${filename#"${filename%??}"}" != "_2" ]; then
         if [ -n "${NO_PYTHON}" ] || [ -n "${WRONG_PYTHON_COMMAND}" ]; then
             section_checkmk_failed_plugin "${agent_plugin}"
             return 1
@@ -1771,7 +1796,14 @@ _non_comment_lines() {
 }
 
 _mrpe_get_interval() {
-    echo "${1}" | grep -Eo '^\([^)]*\)' | grep -Eo 'interval=[^:)]*' | cut -d= -f2
+    echo "${1}" | grep -E '^\([^)]*\)' | sed -n 's/^.*interval=\([^:)]*\).*$/\1/p'
+}
+
+_mrpe_normalize_spaces() {
+    # watch out:
+    # * [:blank:] does not include \t on AIX
+    # * [:space:] does include \n on Linux
+    tr -s '\t' ' '
 }
 
 run_remote_plugins() {
@@ -1779,9 +1811,9 @@ run_remote_plugins() {
     prefix="${2}"
     [ -f "${configfile}" ] || return
 
-    _non_comment_lines "${configfile}" | while read -r descr rest; do
+    _non_comment_lines "${configfile}" | _mrpe_normalize_spaces | while read -r descr rest; do
         interval="$(_mrpe_get_interval "${rest}")"
-        cmdline="${rest#(*) }"
+        cmdline="${rest#\(*\) }"
 
         if [ -n "${prefix}" ]; then
             cmdline="${prefix} '${cmdline}'"
@@ -1790,7 +1822,8 @@ run_remote_plugins() {
         if [ -z "${interval}" ]; then
             ${MK_RUN_SYNC_PARTS} && run_mrpe "${descr}" "${cmdline}"
         else
-            run_cached "mrpe_${descr}" "${interval}" "${interval}" "run_mrpe '${descr}' '${cmdline}'"
+            # Sourcing the agent here is not very performant, but we need 'run_mrpe', and not all shells support exporting of functions.
+            run_cached "mrpe_${descr}" "${interval}" "${interval}" "MK_SOURCE_AGENT=yes . '${0}'; run_mrpe '${descr}' '${cmdline}'"
         fi
 
     done
@@ -2015,10 +2048,15 @@ main_setup() {
 
     set_up_remote
 
-    # close stdin and tempotarily disable stderr
-    exec </dev/null 9>&2 2>/dev/null
+    # close stdin
+    exec </dev/null
 
     set_up_process_commandline_arguments "$@"
+
+    # close stderr unless explicitly configured to stay open
+    if "${DISABLE_STDERR:-true}"; then
+        exec 2>/dev/null
+    fi
 
     set_up_get_epoch
 

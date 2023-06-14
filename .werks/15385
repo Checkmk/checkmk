@@ -1,0 +1,14 @@
+Title: agent_kube: ignore resource quota with no hard resource requirement
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1677148823
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, the Kubernetes special agent failed when the Kubernetes API reported
+a resource quota but with no underlying hard resource requirement for either memory
+or cpu. This werk fixes this issue.
+

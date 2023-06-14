@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from cmk.utils.site import omd_site
+from cmk.utils.urls import is_allowed_url
 
 import cmk.gui.pages
-import cmk.gui.utils as utils
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.htmllib.generator import HTMLWriter
@@ -32,7 +32,7 @@ def page_index() -> None:
 
 def _get_start_url() -> str:
     default_start_url = user.start_url or active_config.start_url
-    if not utils.is_allowed_url(default_start_url):
+    if not is_allowed_url(default_start_url):
         default_start_url = "dashboard.py"
 
     return request.get_url_input("start_url", default_start_url)

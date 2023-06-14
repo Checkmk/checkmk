@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -17,6 +17,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResul
 from cmk.base.plugins.agent_based.checkmk_agent import (
     _check_agent_update,
     _check_cmk_agent_update,
+    _check_encryption_panic,
     _check_only_from,
     _check_python_plugins,
     _check_transport,
@@ -81,14 +82,28 @@ def test_check_version_match() -> None:
 
 @pytest.mark.parametrize("fail_state", list(State))
 def test_check_version_mismatch(fail_state: State) -> None:
-    assert [*_check_version("1.2.3", "1.2.3", ("specific", {"literal": "1.2.2"}), fail_state,)] == [
+    assert [
+        *_check_version(
+            "1.2.3",
+            "1.2.3",
+            ("specific", {"literal": "1.2.2"}),
+            fail_state,
+        )
+    ] == [
         Result(state=fail_state, summary="Version: 1.2.3 (expected 1.2.2)"),
     ]
 
 
 @pytest.mark.parametrize("fail_state", list(State))
 def test_check_version_site_mismatch(fail_state: State) -> None:
-    assert [*_check_version("1.2.3", "1.2.2", ("site", {}), fail_state,)] == [
+    assert [
+        *_check_version(
+            "1.2.3",
+            "1.2.2",
+            ("site", {}),
+            fail_state,
+        )
+    ] == [
         Result(state=fail_state, summary="Version: 1.2.3 (expected 1.2.2)"),
     ]
 
@@ -191,6 +206,19 @@ def test_check_faild_python_plugins() -> None:
             ),
         )
     ]
+
+
+def test_check_encryption_panic() -> None:
+    assert [*_check_encryption_panic("something")] == [
+        Result(
+            state=State.CRIT,
+            summary="Failed to apply symmetric encryption, aborting communication.",
+        )
+    ]
+
+
+def test_check_no_encryption_panic() -> None:
+    assert not [*_check_encryption_panic(None)]
 
 
 @pytest.mark.parametrize("fail_state", list(State))
@@ -436,7 +464,7 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
                             "aghash 38bf6e44175732bc",
                             "pending_hash 1234abcd5678efgh",
                             "update_url https://server/site/check_mk",
-                            "error 503 Server Error: Service Unavailable",
+                            "error 503 Server Error: Service Unavailable\nSomething for second line",
                         )
                     )
                 },
@@ -445,7 +473,11 @@ def test_check_warn_upon_old_update_check(duplicate: bool) -> None:
         )
 
     assert actual == [
-        Result(state=State.WARN, summary="Update error: 503 Server Error: Service Unavailable"),
+        Result(
+            state=State.WARN,
+            summary="Update error: 503 Server Error: Service Unavailable",
+            details="503 Server Error: Service Unavailable\nSomething for second line",
+        ),
         Result(
             state=State.WARN,
             summary="Time since last update check: 9 days 6 hours (warn/crit at 2 days 0 hours/never)",

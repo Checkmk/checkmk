@@ -6,7 +6,7 @@ Date: 1648822022
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The incompability of this change only affects users, who use the check API to write custom
 Kubernetes checks. The sections kube_daemonset_strategy_v1, kube_deployment_strategy_v1 and

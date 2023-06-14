@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The REST API calls cmk/bulk_create/invoke and bulk-update/invoke may perform
 only parts of the requested actions in some cases. The endpoints now report

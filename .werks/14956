@@ -6,7 +6,7 @@ Date: 1666705082
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When configuring the mk_logwatch agent plugin, it's possible to specify the file
 matching patterns more precisely by defining a regular expression pattern within

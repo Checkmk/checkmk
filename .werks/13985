@@ -1,0 +1,13 @@
+Title: 'debug' setting will no longer try to load a non existing JavaScript file
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1683199151
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Enabling 'debug' in the front end setting would try to load a non minified JavaScript file.
+As Source Maps are used for debugging, this file is not present on the Checkmk server.
+The setting will no longer cause the UI to try to load the non existing file.

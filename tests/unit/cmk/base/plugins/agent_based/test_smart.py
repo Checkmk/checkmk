@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping, Sequence
+from collections.abc import Mapping, Sequence
 
 import pytest
 
@@ -439,21 +439,21 @@ STRING_TABLE_NVME = [
 
 SECTION_SD = {
     "/dev/sda": {
-        "Command_Timeout": 0,
-        "Current_Pending_Sector": 0,
-        "End-to-End_Error": 0,
+        "Command_Timeout_Counter": 0,
+        "Pending_Sectors": 0,
+        "End-to-End_Errors": 0,
         "Erase_Fail_Count_Total": 0,
         "Hardware_ECC_Recovered": 0,
-        "Power_Cycle_Count": 9,
+        "Power_Cycles": 9,
         "Power_On_Hours": 1609,
         "Program_Fail_Cnt_Total": 0,
-        "Reallocated_Sector_Ct": 0,
-        "Reported_Uncorrect": 0,
+        "Reallocated_Sectors": 0,
+        "Uncorrectable_Errors": 0,
         "Runtime_Bad_Block": 0,
-        "Temperature_Celsius": 39,
+        "Temperature": 39,
         "Total_LBAs_Read": 10967739912,
         "Total_LBAs_Written": 7655764477,
-        "UDMA_CRC_Error_Count": 0,
+        "UDMA_CRC_Errors": 0,
         "Unknown_SSD_Attribute": 0,
         "Unused_Rsvd_Blk_Cnt_Tot": 13127,
         "Used_Rsvd_Blk_Cnt_Tot": 0,
@@ -501,12 +501,12 @@ def test_parse_smart(string_table: StringTable, section: smart.Section) -> None:
                 Service(
                     item="/dev/sda",
                     parameters={
-                        "Command_Timeout": 0,
-                        "Current_Pending_Sector": 0,
-                        "End-to-End_Error": 0,
-                        "Reallocated_Sector_Ct": 0,
-                        "Reported_Uncorrect": 0,
-                        "UDMA_CRC_Error_Count": 0,
+                        "Command_Timeout_Counter": 0,
+                        "Pending_Sectors": 0,
+                        "End-to-End_Errors": 0,
+                        "Reallocated_Sectors": 0,
+                        "Uncorrectable_Errors": 0,
+                        "UDMA_CRC_Errors": 0,
                     },
                 ),
             ],
@@ -537,30 +537,30 @@ def test_discover_smart_stats(section: smart.Section, discovered: Sequence[Servi
         (
             "/dev/sda",
             {
-                "Current_Pending_Sector": 0,
-                "End-to-End_Error": 0,
-                "Reallocated_Sector_Ct": 0,
-                "Reported_Uncorrect": 0,
-                "UDMA_CRC_Error_Count": 0,
+                "Pending_Sectors": 0,
+                "End-to-End_Errors": 0,
+                "Reallocated_Sectors": 0,
+                "Uncorrectable_Errors": 0,
+                "UDMA_CRC_Errors": 0,
             },
             SECTION_SD,
             [
+                Result(state=State.OK, summary="Reallocated sectors: 0"),
+                Metric("Reallocated_Sectors", 0),
                 Result(state=State.OK, summary="Powered on: 67 days 1 hour"),
                 Metric("Power_On_Hours", 1609),
                 Result(state=State.OK, summary="Power cycles: 9"),
-                Metric("Power_Cycle_Count", 9),
-                Result(state=State.OK, summary="Uncorrectable errors: 0"),
-                Metric("Reported_Uncorrect", 0),
-                Result(state=State.OK, summary="Reallocated sectors: 0"),
-                Metric("Reallocated_Sector_Ct", 0),
-                Result(state=State.OK, summary="Pending sectors: 0"),
-                Metric("Current_Pending_Sector", 0),
-                Result(state=State.OK, summary="Command timeout counter: 0"),
-                Metric("Command_Timeout", 0.0),
+                Metric("Power_Cycles", 9),
                 Result(state=State.OK, summary="End-to-End errors: 0"),
-                Metric("End-to-End_Error", 0),
+                Metric("End-to-End_Errors", 0),
+                Result(state=State.OK, summary="Uncorrectable errors: 0"),
+                Metric("Uncorrectable_Errors", 0),
+                Result(state=State.OK, summary="Command timeout counter: 0"),
+                Metric("Command_Timeout_Counter", 0.0),
+                Result(state=State.OK, summary="Pending sectors: 0"),
+                Metric("Pending_Sectors", 0),
                 Result(state=State.OK, summary="UDMA CRC errors: 0"),
-                Metric("UDMA_CRC_Error_Count", 0),
+                Metric("UDMA_CRC_Errors", 0),
             ],
         ),
         (
@@ -574,12 +574,12 @@ def test_discover_smart_stats(section: smart.Section, discovered: Sequence[Servi
                 Metric("Power_Cycles", 8),
                 Result(state=State.OK, summary="Critical warning: 0"),
                 Metric("Critical_Warning", 0),
+                Result(state=State.OK, summary="Media and data integrity errors: 0"),
+                Metric("Media_and_Data_Integrity_Errors", 0),
                 Result(state=State.OK, summary="Available spare: 100.00%"),
                 Metric("Available_Spare", 100),
                 Result(state=State.OK, summary="Percentage used: 0%"),
                 Metric("Percentage_Used", 0),
-                Result(state=State.OK, summary="Media and data integrity errors: 0"),
-                Metric("Media_and_Data_Integrity_Errors", 0),
                 Result(state=State.OK, summary="Error information log entries: 0"),
                 Metric("Error_Information_Log_Entries", 0),
                 Result(state=State.OK, summary="Data units read: 2.39 TiB"),
@@ -599,29 +599,30 @@ def test_check_smart_stats(
     assert list(smart.check_smart_stats(item, params, section)) == result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_smart_command_timeout_rate() -> None:
-    section_timeout = {"/dev/sda": {"Command_Timeout": 0}}
+    section_timeout = {"/dev/sda": {"Command_Timeout_Counter": 0}}
     now_simulated = 581792400, "UTC"
     with pytest.raises(GetRateError), on_time(*now_simulated):
-        list(smart.check_smart_stats("/dev/sda", {"Command_Timeout": 0}, section_timeout))
+        list(smart.check_smart_stats("/dev/sda", {"Command_Timeout_Counter": 0}, section_timeout))
 
     # Simulate an accepted increment rate of the counter
     thirty_min_later = now_simulated[0] + 30 * 60, "UTC"
-    section_timeout["/dev/sda"]["Command_Timeout"] = 1
+    section_timeout["/dev/sda"]["Command_Timeout_Counter"] = 1
     with on_time(*thirty_min_later):
         assert list(
-            smart.check_smart_stats("/dev/sda", {"Command_Timeout": 0}, section_timeout)
+            smart.check_smart_stats("/dev/sda", {"Command_Timeout_Counter": 0}, section_timeout)
         ) == [
             Result(state=State.OK, summary="Command timeout counter: 1"),
-            Metric("Command_Timeout", 1.0),
+            Metric("Command_Timeout_Counter", 1.0),
         ]
 
     # Simulate an exceeding rate for command timeouts
     ten_sec_later = thirty_min_later[0] + 10, "UTC"
-    section_timeout["/dev/sda"]["Command_Timeout"] = 5
+    section_timeout["/dev/sda"]["Command_Timeout_Counter"] = 5
     with on_time(*ten_sec_later):
         assert list(
-            smart.check_smart_stats("/dev/sda", {"Command_Timeout": 0}, section_timeout)
+            smart.check_smart_stats("/dev/sda", {"Command_Timeout_Counter": 0}, section_timeout)
         ) == [
             Result(
                 state=State.CRIT,
@@ -631,5 +632,5 @@ def test_check_smart_command_timeout_rate() -> None:
                     "Value during discovery was: 0)"
                 ),
             ),
-            Metric("Command_Timeout", 5),
+            Metric("Command_Timeout_Counter", 5),
         ]

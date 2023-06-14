@@ -1,4 +1,4 @@
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -17,8 +17,6 @@ TAROPTS            := --owner=root --group=root --exclude=.svn --exclude=*~ \
                       --exclude=__pycache__ --exclude=*.pyc
 # We could add clang's -Wshorten-64-to-32 and g++'c/clang's -Wsign-conversion here.
 CXX_FLAGS          := -gdwarf-4 -O3 -Wall -Wextra
-CLANG_FORMAT       := clang-format-$(CLANG_VERSION)
-SCAN_BUILD         := scan-build-$(CLANG_VERSION)
 export DOXYGEN     := doxygen
 ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
 # TODO: Prefixing the command with the environment variable breaks xargs usage below!
@@ -30,22 +28,15 @@ CONFIGURE_DEPS     := $(M4_DEPS) aclocal.m4
 CONFIG_DEPS        := ar-lib compile config.guess config.sub install-sh missing depcomp configure
 DIST_DEPS          := $(CONFIG_DEPS)
 
-LIVESTATUS_SOURCES := Makefile.am api/c++/{Makefile,*.{h,cc}} api/perl/* \
-                      api/python/{README,*.py} {nagios,nagios4}/{README,*.h} \
-                      src/{Makefile.am,{,test/}*.{cc,h}} src/livestatus standalone/config_files.m4
-
-FILES_TO_FORMAT_LINUX := \
-                      $(filter-out %.pb.cc %.pb.h, \
-                      $(wildcard $(addprefix livestatus/api/c++/,*.cc *.h)) \
-                      $(wildcard $(addprefix livestatus/src/,*.cc *.h)) \
-                      $(wildcard $(addprefix livestatus/src/test/,*.cc *.h)) \
-                      $(wildcard $(addprefix bin/,*.cc *.c *.h)) \
-                      $(wildcard $(addprefix enterprise/core/src/,*.cc *.h)) \
-                      $(wildcard $(addprefix enterprise/core/src/test/,*.cc *.h)))
-
-CMAKE_FORMAT       := cmake-format
-CMAKE_TXT_FILES    = $$(find packages -name CMakeLists.txt \! -path '*/build/*')
-
+LIVESTATUS_SOURCES := Makefile.am standalone/config_files.m4 \
+                      api/c++/{Makefile,*.{h,cc}} \
+                      api/perl/* \
+                      api/python/{README,*.py} \
+                      {nagios,nagios4}/{README,*.h} \
+                      src/Makefile.am \
+                      src/include/neb/*.h \
+                      src/src/*.cc \
+                      src/test/*.{cc,h}
 
 WERKS              := $(wildcard .werks/[0-9]*)
 
@@ -75,9 +66,9 @@ ifneq ("$(wildcard $(PY_PATH))","")
   PY_VIRT_MAJ_MIN := $(shell "${PY_PATH}" -c "from sys import version_info as v; print(f'{v.major}.{v.minor}')")
 endif
 
-.PHONY: all analyze build check check-binaries check-permissions check-version \
+.PHONY: all build check check-binaries check-permissions check-version \
         clean compile-neb-cmc compile-neb-cmc-docker css dist documentation \
-        documentation-quick format format-c test-format-c format-python format-shell \
+        format format-c test-format-c format-python format-shell \
         format-js GTAGS help install iwyu mrproper mrclean optimize-images \
         packages setup setversion tidy version am--refresh skel openapi openapi-doc \
         protobuf-files
@@ -113,6 +104,15 @@ check-version:
 	@sed -n 1p ChangeLog | fgrep -qx '$(VERSION):' || { \
 	    echo "Version $(VERSION) not listed at top of ChangeLog!" ; \
 	    false ; }
+
+check-setup:
+	echo "From here on we check the successful setup of some parts ..."
+	@if [[ ":$(PATH):" != *":$(HOME)/.local/bin:"* ]]; then \
+	  echo "Your PATH is missing '~/.local/bin' to work properly with pipenv."; \
+	  exit 1; \
+	else \
+		echo "Checks passed"; \
+	fi
 
 $(SOURCE_BUILT_LINUX_AGENTS):
 	$(MAKE) -C agents $@
@@ -164,7 +164,7 @@ dist: $(LIVESTATUS_INTERMEDIATE_ARCHIVE) config.h.in $(SOURCE_BUILT_AGENTS) $(SO
 	    --exclude .gitmodules \
 	    --exclude .gitattributes \
 	    $$EXCLUDES \
-	    * .werks .clang* | tar x -C check-mk-$(EDITION)-$(OMD_VERSION)
+	    * .werks | tar x -C check-mk-$(EDITION)-$(OMD_VERSION)
 	if [ -f COMMIT ]; then \
 	    rm COMMIT ; \
 	fi
@@ -174,21 +174,36 @@ dist: $(LIVESTATUS_INTERMEDIATE_ARCHIVE) config.h.in $(SOURCE_BUILT_AGENTS) $(SO
 	rm -rf check-mk-$(EDITION)-$(OMD_VERSION)
 
 $(CHECK_MK_RAW_PRECOMPILED_WERKS): $(WERKS)
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run scripts/precompile-werks.py .werks .werks/werks cre
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks precompile .werks .werks/werks --filter-by-edition cre
 
 $(REPO_PATH)/ChangeLog: $(CHECK_MK_RAW_PRECOMPILED_WERKS)
-	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run scripts/create-changelog.py ChangeLog .werks/werks
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks changelog ChangeLog .werks/werks
+
+
+$(CHECK_MK_ANNOUNCE_FOLDER):
+	mkdir -p $(CHECK_MK_ANNOUNCE_FOLDER)
+
+$(CHECK_MK_ANNOUNCE_MD): $(CHECK_MK_ANNOUNCE_FOLDER)
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks announce .werks $(VERSION) --format=md > $(CHECK_MK_ANNOUNCE_MD)
+
+$(CHECK_MK_ANNOUNCE_TXT): $(CHECK_MK_ANNOUNCE_FOLDER)
+	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks announce .werks $(VERSION) --format=txt > $(CHECK_MK_ANNOUNCE_TXT)
+
+$(CHECK_MK_ANNOUNCE_TAR): $(CHECK_MK_ANNOUNCE_TXT) $(CHECK_MK_ANNOUNCE_MD)
+	tar -czf $(CHECK_MK_ANNOUNCE_TAR) -C $(CHECK_MK_ANNOUNCE_FOLDER) .
+
 
 packages:
 	$(MAKE) -C agents packages
+
 
 # NOTE: Old tar versions (e.g. on CentOS 5) don't have the --transform option,
 # so we do things in a slightly complicated way.
 $(LIVESTATUS_INTERMEDIATE_ARCHIVE):
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)
-	tar chf - $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) ) | tar xf - -C mk-livestatus-$(VERSION)
-	tar chf - $(TAROPTS) --exclude=build packages/livestatus third_party/re2 third_party/asio third_party/googletest | tar xf - -C mk-livestatus-$(VERSION)
+	set -o pipefail; tar chf - $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) ) | tar xf - -C mk-livestatus-$(VERSION)
+	set -o pipefail; tar chf - $(TAROPTS) --exclude=build packages/livestatus packages/unixcat third_party/re2 third_party/asio third_party/googletest third_party/rrdtool | tar xf - -C mk-livestatus-$(VERSION)
 	cp -a configure.ac defines.make m4 mk-livestatus-$(VERSION)
 	cd mk-livestatus-$(VERSION) && \
 	    autoreconf --install --include=m4 && \
@@ -205,11 +220,9 @@ version:
 	if [ -n "$$newversion" ] ; then $(MAKE) NEW_VERSION=$$newversion setversion ; fi
 
 setversion:
-	$(MAKE) -C omd NEW_VERSION=$(NEW_VERSION) setversion
-	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" defines.make ; \
-	sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$(NEW_VERSION)"'], [mk@mathias-kettner.de])/' configure.ac ; \
-	sed -i 's/^VERSION = ".*/VERSION = "$(NEW_VERSION)"/' bin/mkbackup ; \
-	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' cmk/utils/version.py bin/mkbench bin/livedump; \
+	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" defines.make
+	sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$(NEW_VERSION)"'], [mk@mathias-kettner.de])/' configure.ac
+	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' cmk/utils/version.py bin/livedump
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
 	$(MAKE) -C docker_image NEW_VERSION=$(NEW_VERSION) setversion
 ifeq ($(ENTERPRISE),yes)
@@ -297,7 +310,7 @@ node_modules/.bin/prettier: .ran-npm
 $(JAVASCRIPT_MINI): .ran-webpack
 $(THEME_CSS_FILES): .ran-webpack
 .ran-webpack: node_modules/.bin/webpack webpack.config.js postcss.config.js $(JAVASCRIPT_SOURCES) $(SCSS_SOURCES)
-	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) PLUS=$(PLUS) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
+	WEBPACK_MODE=$(WEBPACK_MODE) ENTERPRISE=$(ENTERPRISE) MANAGED=$(MANAGED) CLOUD=$(CLOUD) SAAS=$(SAAS) node_modules/.bin/webpack --mode=$(WEBPACK_MODE:quick=development)
 	touch $(JAVASCRIPT_MINI) $(THEME_CSS_FILES)
 
 # TODO(sp) The target below is not correct, we should not e.g. remove any stuff
@@ -307,7 +320,7 @@ $(THEME_CSS_FILES): .ran-webpack
 # https://www.gnu.org/prep/standards/html_node/Standard-Targets.html).
 clean:
 	$(MAKE) -C omd clean
-	rm -rf clang-analyzer dist.tmp rpm.topdir *.rpm *.deb *.exe \
+	rm -rf dist.tmp rpm.topdir *.rpm *.deb *.exe \
 	       omd/packages/mk-livestatus/mk-livestatus-*.tar.gz \
 	       $(NAME)-*.tar.gz *~ counters autochecks \
 	       precompiled cache web/htdocs/js/*_min.js \
@@ -386,6 +399,7 @@ setup:
 	    libpcap-dev \
 	    librrd-dev \
 	    libsasl2-dev \
+	    libsqlite3-dev \
 	    libtool-bin \
 	    libxml2-dev \
 	    libreadline-dev \
@@ -422,9 +436,10 @@ setup:
 	$(MAKE) -C web setup
 	$(MAKE) -C docker_image setup
 	$(MAKE) -C locale setup
+	$(MAKE) check-setup
 
 linesofcode:
-	@wc -l $$(find -type f -name "*.py" -o -name "*.js" -o -name "*.cc" -o -name "*.h" -o -name "*.css" | grep -v openhardwaremonitor | grep -v jquery | grep -v livestatus/src ) | sort -n
+	@wc -l $$(find -type f -name "*.py" -o -name "*.js" -o -name "*.cc" -o -name "*.h" -o -name "*.css" | grep -v openhardwaremonitor | grep -v jquery ) | sort -n
 
 ar-lib compile config.guess config.sub install-sh missing depcomp: configure.ac
 	autoreconf --install --include=m4
@@ -499,29 +514,23 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src iwyu
 endif
 
-# Not really perfect rules, but better than nothing
-analyze: config.h
-	$(MAKE) -C livestatus clean
-	cd livestatus && $(SCAN_BUILD) -o ../clang-analyzer $(MAKE) CXXFLAGS="-std=c++17"
-
-format: format-python format-c format-shell format-js format-css
-
-# TODO: We should probably handle this rule via AM_EXTRA_RECURSIVE_TARGETS in
-# src/configure.ac, but this needs at least automake-1.13, which in turn is only
-# available from e.g. Ubuntu Saucy (13) onwards, so some magic is needed.
-clang-format-with = $(CLANG_FORMAT) -style=file $(1) $$(find $(FILES_TO_FORMAT_LINUX) -type f)
+format: format-python format-c format-shell format-js format-css format-bazel
 
 format-c:
-	$(call clang-format-with,-i)
+	packages/livestatus/run --format
+	packages/unixcat/run --format
+	$(MAKE) -C livestatus/src format
+ifeq ($(ENTERPRISE),yes)
+	$(MAKE) -C enterprise/core/src format
+endif
 
 test-format-c:
-	@$(call clang-format-with,-Werror --dry-run)
-
-format-cmake:
-	$(CMAKE_FORMAT) -i $(CMAKE_TXT_FILES)
-
-test-format-cmake:
-	$(CMAKE_FORMAT) --check $(CMAKE_TXT_FILES)
+	packages/livestatus/run --check-format
+	packages/unixcat/run --check-format
+	$(MAKE) -C livestatus/src check-format
+ifeq ($(ENTERPRISE),yes)
+	$(MAKE) -C enterprise/core/src check-format
+endif
 
 format-python: format-python-isort format-python-black
 
@@ -540,22 +549,19 @@ what-gerrit-makes:
 	$(MAKE)	-C tests what-gerrit-makes
 
 format-js:
-	scripts/run-prettier --no-color --ignore-path ./.prettierignore --write "{enterprise/,}web/htdocs/js/**/*.js"
+	scripts/run-prettier --no-color --ignore-path ./.prettierignore --write "{{enterprise/web,web}/htdocs/js/**/,}*.{j,t}s"
 
 format-css:
 	scripts/run-prettier --no-color --ignore-path ./.prettierignore --write "web/htdocs/themes/**/*.scss"
+
+format-bazel:
+	scripts/run-buildifier --lint=fix --mode=fix
 
 # Note: You need the doxygen and graphviz packages.
 documentation: config.h
 	$(MAKE) -C livestatus/src documentation
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src documentation
-endif
-
-documentation-quick: config.h
-	$(MAKE) -C livestatus/src documentation-quick
-ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C enterprise/core/src documentation-quick
 endif
 
 sw-documentation-docker:

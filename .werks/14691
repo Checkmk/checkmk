@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Check pandacom_psu crashed during discovery for nmCarrierPSU1Type
 with values psu48VDC1100W (9) and psu230VAC1100W (10).

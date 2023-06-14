@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+# Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+import time
+from contextlib import suppress
+from pathlib import Path
+
+import cmk.utils.paths
+from cmk.utils.site import omd_site
+
+from cmk.automations.results import SingleHostDiscoveryResult
+
+from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
+from cmk.gui.i18n import _
+from cmk.gui.log import logger
+from cmk.gui.logged_in import user
+from cmk.gui.watolib.audit_log import log_audit
+from cmk.gui.watolib.changes import add_service_change
+from cmk.gui.watolib.check_mk_automations import autodiscovery
+from cmk.gui.watolib.hosts_and_folders import Host
+
+
+class AutodiscoveryBackgroundJob(BackgroundJob):
+    job_prefix = "autodiscovery"
+
+    @classmethod
+    def gui_title(cls) -> str:
+        return _("Autodiscovery")
+
+    def __init__(self) -> None:
+        super().__init__(
+            self.job_prefix,
+            InitialStatusArgs(
+                title=self.gui_title(),
+                lock_wato=False,
+                stoppable=False,
+            ),
+        )
+        self.site_id = omd_site()
+
+    @staticmethod
+    def last_run_path() -> Path:
+        return Path(cmk.utils.paths.var_dir, "wato", "last_autodiscovery.mk")
+
+    @staticmethod
+    def _get_discovery_message_text(
+        hostname: str, discovery_result: SingleHostDiscoveryResult
+    ) -> str:
+        return _(
+            "Did service discovery on host %s: %d added, %d removed, %d kept, "
+            "%d total services and %d host labels added, %d host labels total"
+        ) % (
+            hostname,
+            discovery_result.self_new,
+            discovery_result.self_removed,
+            discovery_result.self_kept,
+            discovery_result.self_total,
+            discovery_result.self_new_host_labels,
+            discovery_result.self_total_host_labels,
+        )
+
+    def do_execute(self, job_interface: BackgroundProcessInterface) -> None:
+        result = autodiscovery(self.site_id)
+
+        if not result.hosts:
+            job_interface.send_result_message(_("No hosts to be discovered"))
+            AutodiscoveryBackgroundJob.last_run_path().touch(exist_ok=True)
+            return
+
+        for hostname, discovery_result in result.hosts.items():
+            host = Host.host(hostname)
+            if host is None:
+                continue
+
+            message = self._get_discovery_message_text(hostname, discovery_result)
+
+            if result.changes_activated:
+                log_audit(
+                    action="autodiscovery",
+                    message=message,
+                    object_ref=host.object_ref(),
+                    user_id=user.id,
+                    diff_text=discovery_result.diff_text,
+                )
+            else:
+                add_service_change(
+                    "autodiscovery",
+                    message,
+                    host.object_ref(),
+                    self.site_id,
+                    diff_text=discovery_result.diff_text,
+                )
+
+        if result.changes_activated:
+            log_audit("activate-changes", "Started activation of site %s" % self.site_id)
+
+        job_interface.send_result_message(_("Successfully discovered hosts"))
+        AutodiscoveryBackgroundJob.last_run_path().touch(exist_ok=True)
+
+
+def execute_autodiscovery() -> None:
+    job = AutodiscoveryBackgroundJob()
+    if job.is_active():
+        logger.debug("Another 'autodiscovery' job is already running: Skipping this time.")
+        return
+
+    interval = 300
+    with suppress(FileNotFoundError):
+        if time.time() - AutodiscoveryBackgroundJob.last_run_path().stat().st_mtime < interval:
+            logger.debug("Job was already executed within last %d minutes", interval / 60)
+            return
+
+    job.start(job.do_execute)

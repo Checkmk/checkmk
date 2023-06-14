@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mange custom attributes of users and hosts"""
@@ -111,7 +111,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
         """Option to show the custom attribute in overview tables of the setup menu."""
         raise NotImplementedError()
 
-    def _render_table_option(  # type:ignore[no-untyped-def]
+    def _render_table_option(  # type: ignore[no-untyped-def]
         self, section_title, label, help_text
     ) -> None:
         """Helper method to implement _show_in_table_option."""
@@ -218,7 +218,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
             )
         )
         if self._new:
-            html.text_input("name", self._attr.get("name", ""))
+            html.text_input("name", self._attr.get("name", ""), size=61)
             html.set_focus("name")
         else:
             html.write_text(self._name)
@@ -226,7 +226,7 @@ class ModeEditCustomAttr(WatoMode, abc.ABC):
 
         forms.section(_("Title") + "<sup>*</sup>", is_required=True)
         html.help(_("The title is used to label this attribute."))
-        html.text_input("title", self._attr.get("title", ""))
+        html.text_input("title", self._attr.get("title", ""), size=61)
 
         forms.section(_("Topic"))
         html.help(_("The attribute is added to this section in the edit dialog."))

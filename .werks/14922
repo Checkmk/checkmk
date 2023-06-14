@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 When a password change was forced by an administrator and the user had two-factor authentication enabled, the user was unable to login and change the password.
 

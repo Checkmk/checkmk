@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This file is synced from the check_mk repo to the cmk-license repo."""
@@ -7,20 +7,21 @@
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import datetime
 from enum import auto, Enum
 from typing import Final, NamedTuple, Protocol, TypedDict
 from uuid import UUID
 
 from dateutil.relativedelta import relativedelta
 
-LicenseUsageReportVersion: Final[str] = "1.5"
+LicenseUsageReportVersion: Final[str] = "2.1"
 
 
-class LicenseUsageReportVersionError(Exception):
-    pass
+class RawLicenseUsageReport(TypedDict):
+    VERSION: str
+    history: list[RawLicenseUsageSample]
 
 
 #   .--subscription details------------------------------------------------.
@@ -40,10 +41,6 @@ class LicenseUsageReportVersionError(Exception):
 
 
 class SubscriptionDetailsError(Exception):
-    pass
-
-
-class SubscriptionPeriodError(Exception):
     pass
 
 
@@ -219,21 +216,6 @@ class SubscriptionDetails(NamedTuple):
                 raise SubscriptionDetailsError()
 
 
-def validate_subscription_period(attrs: dict[str, object]) -> None:
-    start = attrs["subscription_start"]
-    if not isinstance(start, (int, float)):
-        raise TypeError()
-
-    end = attrs["subscription_end"]
-    if not isinstance(end, (int, float)):
-        raise TypeError()
-
-    delta = date.fromtimestamp(end) - date.fromtimestamp(start)
-    # full year is e.g. 01.01.1970-31.12.1970 (364 days)
-    if delta.days < 364:
-        raise SubscriptionPeriodError()
-
-
 # .
 #   .--sample--------------------------------------------------------------.
 #   |                                            _                         |
@@ -257,14 +239,22 @@ class LicenseUsageExtensions:
         return {"ntop": self.ntop}
 
     @classmethod
-    def parse(cls, raw_sample: object) -> LicenseUsageExtensions:
-        # Extensions are created after execute_activate_changes and may be missing when downloading
-        # or submitting license usage reports. This means that the extensions are not really
-        # dependent on the report version:
+    def parse(cls, raw_extensions: object) -> LicenseUsageExtensions:
+        """
+        >>> LicenseUsageExtensions.parse(LicenseUsageExtensions(ntop=True).for_report())
+        LicenseUsageExtensions(ntop=True)
+        """
+        if not isinstance(raw_extensions, dict):
+            raise TypeError("Wrong extensions type: %r" % type(raw_extensions))
+
+        return cls(ntop=raw_extensions.get("ntop", False))
+
+    @classmethod
+    def parse_from_sample(cls, raw_sample: object) -> LicenseUsageExtensions:
         # Old: {..., "extensions": {"ntop": True/False}, ...}
         # New: {..., "extension_ntop": True/False, ...}
         if not isinstance(raw_sample, dict):
-            raise TypeError()
+            raise TypeError("Wrong sample type: %r" % type(raw_sample))
 
         parsed_extensions = {
             ext_key: raw_sample.get(ext_key, raw_sample.get("extensions", {}).get(key, False))
@@ -285,10 +275,11 @@ class RawLicenseUsageSample(TypedDict):
     timezone: str
     num_hosts: int
     num_hosts_cloud: int
+    num_hosts_shadow: int
     num_hosts_excluded: int
-    num_shadow_hosts: int
     num_services: int
     num_services_cloud: int
+    num_services_shadow: int
     num_services_excluded: int
     extension_ntop: bool
 
@@ -304,6 +295,10 @@ class LicenseUsageSampleParser(Protocol):
         ...
 
 
+class UnknownSampleParserError(Exception):
+    pass
+
+
 @dataclass
 class LicenseUsageSample:
     instance_id: UUID | None
@@ -316,10 +311,11 @@ class LicenseUsageSample:
     timezone: str
     num_hosts: int
     num_hosts_cloud: int
+    num_hosts_shadow: int
     num_hosts_excluded: int
-    num_shadow_hosts: int
     num_services: int
     num_services_cloud: int
+    num_services_shadow: int
     num_services_excluded: int
     extension_ntop: bool
 
@@ -335,29 +331,17 @@ class LicenseUsageSample:
             "timezone": self.timezone,
             "num_hosts": self.num_hosts,
             "num_hosts_cloud": self.num_hosts_cloud,
+            "num_hosts_shadow": self.num_hosts_shadow,
             "num_hosts_excluded": self.num_hosts_excluded,
-            "num_shadow_hosts": self.num_shadow_hosts,
             "num_services": self.num_services,
             "num_services_cloud": self.num_services_cloud,
+            "num_services_shadow": self.num_services_shadow,
             "num_services_excluded": self.num_services_excluded,
             "extension_ntop": self.extension_ntop,
         }
 
     @classmethod
     def get_parser(cls, version: str) -> LicenseUsageSampleParser:
-        # Note:
-        # === Instance ID ===
-        # Checkmk:
-        #    < 1.5: The instance ID is added during history loading (before submit)
-        #   >= 1.5: The instance ID is added during _create_sample
-        # License server:
-        #    < 1.5: The instance ID may be None
-        #   >= 1.5: The instance ID must be an UUID
-        # === Site hash ===
-        # - Old samples do not contain "site_hash".
-        # - When loading the history in Checkmk we add the "site_hash".
-        # - On the license server the "site_hash" is already part of the sample.
-
         if version == "1.0":
             return cls._parse_sample_v1_0
 
@@ -370,7 +354,10 @@ class LicenseUsageSample:
         if version == "1.5":
             return cls._parse_sample_v1_5
 
-        raise ValueError()
+        if version in ["2.0", "2.1"]:
+            return cls._parse_sample_v2_0
+
+        raise UnknownSampleParserError("Unknown report version: %r" % version)
 
     @classmethod
     def _parse_sample_v1_0(
@@ -381,15 +368,12 @@ class LicenseUsageSample:
         site_hash: str | None = None,
     ) -> LicenseUsageSample:
         if not isinstance(raw_sample, dict):
-            raise TypeError()
-
-        if raw_instance_id := raw_sample.get("instance_id"):
-            instance_id = UUID(raw_instance_id)
+            raise TypeError("Parse sample 1.0: Wrong sample type: %r" % type(raw_sample))
 
         if not (site_hash := raw_sample.get("site_hash", site_hash)):
-            raise ValueError()
+            raise ValueError("Parse sample 1.0: No such site hash")
 
-        extensions = LicenseUsageExtensions.parse(raw_sample)
+        extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
         return cls(
             instance_id=instance_id,
             site_hash=site_hash,
@@ -401,10 +385,11 @@ class LicenseUsageSample:
             timezone=raw_sample["timezone"],
             num_hosts=raw_sample["num_hosts"],
             num_hosts_cloud=0,
+            num_hosts_shadow=0,
             num_hosts_excluded=0,
-            num_shadow_hosts=0,
             num_services=raw_sample["num_services"],
             num_services_cloud=0,
+            num_services_shadow=0,
             num_services_excluded=0,
             extension_ntop=extensions.ntop,
         )
@@ -418,15 +403,12 @@ class LicenseUsageSample:
         site_hash: str | None = None,
     ) -> LicenseUsageSample:
         if not isinstance(raw_sample, dict):
-            raise TypeError()
-
-        if raw_instance_id := raw_sample.get("instance_id"):
-            instance_id = UUID(raw_instance_id)
+            raise TypeError("Parse sample 1.1: Wrong sample type: %r" % type(raw_sample))
 
         if not (site_hash := raw_sample.get("site_hash", site_hash)):
-            raise ValueError()
+            raise ValueError("Parse sample 1.1: No such site hash")
 
-        extensions = LicenseUsageExtensions.parse(raw_sample)
+        extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
         return cls(
             instance_id=instance_id,
             site_hash=site_hash,
@@ -438,10 +420,11 @@ class LicenseUsageSample:
             timezone=raw_sample["timezone"],
             num_hosts=raw_sample["num_hosts"],
             num_hosts_cloud=0,
+            num_hosts_shadow=0,
             num_hosts_excluded=raw_sample["num_hosts_excluded"],
-            num_shadow_hosts=0,
             num_services=raw_sample["num_services"],
             num_services_cloud=0,
+            num_services_shadow=0,
             num_services_excluded=raw_sample["num_services_excluded"],
             extension_ntop=extensions.ntop,
         )
@@ -455,15 +438,12 @@ class LicenseUsageSample:
         site_hash: str | None = None,
     ) -> LicenseUsageSample:
         if not isinstance(raw_sample, dict):
-            raise TypeError()
-
-        if raw_instance_id := raw_sample.get("instance_id"):
-            instance_id = UUID(raw_instance_id)
+            raise TypeError("Parse sample 1.4: Wrong sample type: %r" % type(raw_sample))
 
         if not (site_hash := raw_sample.get("site_hash", site_hash)):
-            raise ValueError()
+            raise ValueError("Parse sample 1.4: No such site hash")
 
-        extensions = LicenseUsageExtensions.parse(raw_sample)
+        extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
         return cls(
             instance_id=instance_id,
             site_hash=site_hash,
@@ -475,10 +455,11 @@ class LicenseUsageSample:
             timezone=raw_sample["timezone"],
             num_hosts=raw_sample["num_hosts"],
             num_hosts_cloud=0,
+            num_hosts_shadow=raw_sample["num_shadow_hosts"],
             num_hosts_excluded=raw_sample["num_hosts_excluded"],
-            num_shadow_hosts=raw_sample["num_shadow_hosts"],
             num_services=raw_sample["num_services"],
             num_services_cloud=0,
+            num_services_shadow=0,
             num_services_excluded=raw_sample["num_services_excluded"],
             extension_ntop=extensions.ntop,
         )
@@ -492,20 +473,55 @@ class LicenseUsageSample:
         site_hash: str | None = None,
     ) -> LicenseUsageSample:
         if not isinstance(raw_sample, dict):
-            raise TypeError()
+            raise TypeError("Parse sample 1.4: Wrong sample type: %r" % type(raw_sample))
 
-        if raw_instance_id := raw_sample.get("instance_id"):
-            instance_id = UUID(raw_instance_id)
-
-        if instance_id is None:
-            raise ValueError()
+        if not (raw_instance_id := raw_sample.get("instance_id")):
+            raise ValueError("Parse sample 2.0: No such instance ID")
 
         if not (site_hash := raw_sample.get("site_hash", site_hash)):
-            raise ValueError()
+            raise ValueError("Parse sample 1.4: No such site hash")
 
-        extensions = LicenseUsageExtensions.parse(raw_sample)
+        extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
         return cls(
-            instance_id=instance_id,
+            instance_id=UUID(raw_instance_id),
+            site_hash=site_hash,
+            version=raw_sample["version"],
+            edition=raw_sample["edition"],
+            platform=cls._restrict_platform(raw_sample["platform"]),
+            is_cma=raw_sample["is_cma"],
+            sample_time=raw_sample["sample_time"],
+            timezone=raw_sample["timezone"],
+            num_hosts=raw_sample["num_hosts"],
+            num_hosts_cloud=0,
+            num_hosts_shadow=raw_sample["num_shadow_hosts"],
+            num_hosts_excluded=raw_sample["num_hosts_excluded"],
+            num_services=raw_sample["num_services"],
+            num_services_cloud=0,
+            num_services_shadow=0,
+            num_services_excluded=raw_sample["num_services_excluded"],
+            extension_ntop=extensions.ntop,
+        )
+
+    @classmethod
+    def _parse_sample_v2_0(
+        cls,
+        raw_sample: object,
+        *,
+        instance_id: UUID | None = None,
+        site_hash: str | None = None,
+    ) -> LicenseUsageSample:
+        if not isinstance(raw_sample, dict):
+            raise TypeError("Parse sample 2.0: Wrong sample type: %r" % type(raw_sample))
+
+        if not (raw_instance_id := raw_sample.get("instance_id")):
+            raise ValueError("Parse sample 2.0: No such instance ID")
+
+        if not (site_hash := raw_sample.get("site_hash", site_hash)):
+            raise ValueError("Parse sample 2.0: No such site hash")
+
+        extensions = LicenseUsageExtensions.parse_from_sample(raw_sample)
+        return cls(
+            instance_id=UUID(raw_instance_id),
             site_hash=site_hash,
             version=raw_sample["version"],
             edition=raw_sample["edition"],
@@ -515,10 +531,11 @@ class LicenseUsageSample:
             timezone=raw_sample["timezone"],
             num_hosts=raw_sample["num_hosts"],
             num_hosts_cloud=raw_sample["num_hosts_cloud"],
+            num_hosts_shadow=raw_sample["num_hosts_shadow"],
             num_hosts_excluded=raw_sample["num_hosts_excluded"],
-            num_shadow_hosts=raw_sample["num_shadow_hosts"],
             num_services=raw_sample["num_services"],
             num_services_cloud=raw_sample["num_services_cloud"],
+            num_services_shadow=raw_sample["num_services_shadow"],
             num_services_excluded=raw_sample["num_services_excluded"],
             extension_ntop=extensions.ntop,
         )
@@ -527,39 +544,6 @@ class LicenseUsageSample:
     def _restrict_platform(platform: str) -> str:
         # Restrict platform string to 50 chars due to the restriction of the license DB field.
         return platform[:50]
-
-
-# .
-#   .--history-------------------------------------------------------------.
-#   |                   _     _     _                                      |
-#   |                  | |__ (_)___| |_ ___  _ __ _   _                    |
-#   |                  | '_ \| / __| __/ _ \| '__| | | |                   |
-#   |                  | | | | \__ \ || (_) | |  | |_| |                   |
-#   |                  |_| |_|_|___/\__\___/|_|   \__, |                   |
-#   |                                             |___/                    |
-#   '----------------------------------------------------------------------'
-
-
-class LicenseUsageHistory:
-    def __init__(self, iterable: Iterable[LicenseUsageSample]) -> None:
-        self._samples = list(iterable)
-
-    def __iter__(self) -> Iterator[LicenseUsageSample]:
-        return iter(self._samples)
-
-    def for_report(self) -> list[RawLicenseUsageSample]:
-        return [sample.for_report() for sample in self._samples]
-
-    @classmethod
-    def parse(cls, raw_report: object) -> LicenseUsageHistory:
-        if not isinstance(raw_report, dict):
-            raise TypeError()
-
-        if not isinstance(version := raw_report.get("VERSION"), str):
-            raise LicenseUsageReportVersionError()
-
-        parser = LicenseUsageSample.get_parser(version)
-        return cls(parser(raw_sample) for raw_sample in raw_report.get("history", []))
 
 
 # .

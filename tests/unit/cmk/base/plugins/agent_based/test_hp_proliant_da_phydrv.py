@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State, TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    InventoryResult,
+    StringTable,
+)
 from cmk.base.plugins.agent_based.hp_proliant_da_phydrv import (
     check_hp_proliant_da_phydrv,
     discover_hp_proliant_da_phydrv,
@@ -623,8 +629,8 @@ _AGENT_OUTPUT = [
         ),
     ],
 )
-def test_discover_hp_proliant_da_phydrv(  # type:ignore[no-untyped-def]
-    string_table, expected_result
+def test_discover_hp_proliant_da_phydrv(
+    string_table: StringTable, expected_result: DiscoveryResult
 ) -> None:
     assert (
         list(discover_hp_proliant_da_phydrv(parse_hp_proliant_da_phydrv(string_table)))
@@ -1017,8 +1023,8 @@ def test_discover_hp_proliant_da_phydrv(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_hp_proliant_da_phydrv(  # type:ignore[no-untyped-def]
-    string_table, item, expected_result
+def test_check_hp_proliant_da_phydrv(
+    string_table: StringTable, item: str, expected_result: CheckResult
 ) -> None:
     assert (
         list(
@@ -1057,6 +1063,7 @@ def test_check_hp_proliant_da_phydrv(  # type:ignore[no-untyped-def]
                     path=["hardware", "storage", "disks"],
                     key_columns={
                         "controller": "3",
+                        "drive_index": "8",
                     },
                     inventory_columns={
                         "bay": "1",
@@ -1073,8 +1080,8 @@ def test_check_hp_proliant_da_phydrv(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_inventory_hp_proliant_da_phydrv(  # type:ignore[no-untyped-def]
-    string_table, expected_result
+def test_inventory_hp_proliant_da_phydrv(
+    string_table: StringTable, expected_result: InventoryResult
 ) -> None:
     assert sort_inventory_result(
         inventory_hp_proliant_da_phydrv(parse_hp_proliant_da_phydrv(string_table))

@@ -1,12 +1,20 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Mapping
 
 import pytest
 
 from cmk.base.plugins.agent_based import winperf_msx_queues
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
+from cmk.base.plugins.agent_based.winperf_msx_queues import ParsedSection
 
 ZERO_INSTANCES_INFO = [
     ["12947176002.19"],
@@ -57,7 +65,7 @@ EXCHANGE_2013_SERVER_SECTION: winperf_msx_queues.ParsedSection = {
         (EXCHANGE_2013_SERVER_INFO, EXCHANGE_2013_SERVER_SECTION),
     ],
 )
-def test_parse_function(info, section) -> None:  # type:ignore[no-untyped-def]
+def test_parse_function(info: StringTable, section: ParsedSection) -> None:
     assert winperf_msx_queues.parse_winperf_msx_queues(info) == section
 
 
@@ -74,7 +82,7 @@ def test_parse_function(info, section) -> None:  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_discovery(section, services) -> None:  # type:ignore[no-untyped-def]
+def test_discovery(section: ParsedSection, services: DiscoveryResult) -> None:
     assert (
         list(
             winperf_msx_queues.discover_winperf_msx_queues(
@@ -112,7 +120,7 @@ def test_discovery(section, services) -> None:  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check(item, params, result) -> None:  # type:ignore[no-untyped-def]
+def test_check(item: str, params: Mapping[str, object], result: CheckResult) -> None:
     assert (
         list(
             winperf_msx_queues.check_winperf_msx_queues(item, params, EXCHANGE_2013_SERVER_SECTION)

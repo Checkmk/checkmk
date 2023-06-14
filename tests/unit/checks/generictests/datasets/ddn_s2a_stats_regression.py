@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 
 
 checkname = "ddn_s2a_stats"
@@ -23,15 +23,18 @@ info = [
 ]
 
 
+ddn_s2a_readhits_default_levels = (85.0, 70.0)
+
+
 discovery = {
     "": [("1", {}), ("2", {}), ("3", {}), ("4", {}), ("Total", {})],
     "io": [("1", {}), ("2", {}), ("3", {}), ("4", {}), ("Total", {})],
     "readhits": [
-        ("1", "ddn_s2a_readhits_default_levels"),
-        ("2", "ddn_s2a_readhits_default_levels"),
-        ("3", "ddn_s2a_readhits_default_levels"),
-        ("4", "ddn_s2a_readhits_default_levels"),
-        ("Total", "ddn_s2a_readhits_default_levels"),
+        ("1", ddn_s2a_readhits_default_levels),
+        ("2", ddn_s2a_readhits_default_levels),
+        ("3", ddn_s2a_readhits_default_levels),
+        ("4", ddn_s2a_readhits_default_levels),
+        ("Total", ddn_s2a_readhits_default_levels),
     ],
 }
 

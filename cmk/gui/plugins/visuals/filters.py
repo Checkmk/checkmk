@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -126,7 +126,7 @@ class AjaxDropdownFilter(Filter):
 # was a hack
 filter_registry.register(
     AjaxDropdownFilter(
-        title=_l("Hostname"),
+        title=_l("Hostname (regex)"),
         sort_index=100,
         info="host",
         autocompleter=AutocompleterConfig(ident="monitored_hostname"),
@@ -160,7 +160,7 @@ filter_registry.register(
 
 filter_registry.register(
     InputTextFilter(
-        title=_l("Hostalias"),
+        title=_l("Hostalias (regex)"),
         sort_index=102,
         info="host",
         query_filter=query_filters.TextQuery(
@@ -173,7 +173,7 @@ filter_registry.register(
 
 filter_registry.register(
     AjaxDropdownFilter(
-        title=_l("Service"),
+        title=_l("Service (regex)"),
         sort_index=200,
         info="service",
         autocompleter=AutocompleterConfig(ident="monitored_service_description"),
@@ -206,7 +206,7 @@ filter_registry.register(
 
 filter_registry.register(
     RegExpFilter(
-        title=_l("Service alternative display name"),
+        title=_l("Service alternative display name (regex)"),
         sort_index=202,
         description=_l("Alternative display name of the service, regex match"),
         info="service",
@@ -220,7 +220,7 @@ filter_registry.register(
 
 filter_registry.register(
     InputTextFilter(
-        title=_l("Summary (Plugin output)"),
+        title=_l("Summary (plugin output) (regex)"),
         sort_index=202,
         info="service",
         query_filter=query_filters.TextQuery(
@@ -235,7 +235,7 @@ filter_registry.register(
 
 filter_registry.register(
     InputTextFilter(
-        title=_l("Hostname or Alias"),
+        title=_l("Hostname or alias (regex)"),  # HostnameOrAliasQuery implements a regex match
         sort_index=102,
         info="host",
         description=_l("Search field allowing regular expressions and partial matches"),
@@ -516,7 +516,7 @@ filter_registry.register(
 
 filter_registry.register(
     RegExpFilter(
-        title=_l("Host Contact (Regex)"),
+        title=_l("Host contact (regex)"),
         sort_index=107,
         info="host",
         query_filter=query_filters.TextQuery(
@@ -540,7 +540,7 @@ filter_registry.register(
 
 filter_registry.register(
     RegExpFilter(
-        title=_l("Service Contact (Regex)"),
+        title=_l("Service contact (regex)"),
         sort_index=207,
         info="service",
         query_filter=query_filters.TextQuery(
@@ -554,7 +554,7 @@ filter_registry.register(
 
 filter_registry.register(
     AjaxDropdownFilter(
-        title=_l("Host group"),
+        title=_l("Host group (exact match)"),
         sort_index=104,
         description=_l("Selection of the host group"),
         info="hostgroup",
@@ -569,7 +569,7 @@ filter_registry.register(
 
 filter_registry.register(
     AjaxDropdownFilter(
-        title=_l("Service group"),
+        title=_l("Service group (exact match)"),
         sort_index=104,
         description=_l("Selection of the service group"),
         info="servicegroup",
@@ -586,7 +586,7 @@ filter_registry.register(
 
 filter_registry.register(
     RegExpFilter(
-        title=_l("Host group (Regex)"),
+        title=_l("Host group (regex)"),
         sort_index=101,
         description=_l(
             "Search field allowing regular expressions and partial matches on the names of host groups"
@@ -617,6 +617,8 @@ filter_registry.register(
     )
 )
 
+# TODO: Check whether this filter "Service group (enforced)" is a duplicate of "Service group (exact
+#       match)" and if so, remove this one.
 filter_registry.register(
     AjaxDropdownFilter(
         title=_l("Service group (enforced)"),
@@ -1149,7 +1151,7 @@ filter_registry.register(
 
 filter_registry.register(
     InputTextFilter(
-        title=_l("Comment"),
+        title=_l("Comment (regex)"),
         sort_index=258,
         info="comment",
         query_filter=query_filters.TextQuery(
@@ -1162,7 +1164,7 @@ filter_registry.register(
 
 filter_registry.register(
     InputTextFilter(
-        title=_l("Author comment"),
+        title=_l("Author comment (regex)"),
         sort_index=259,
         info="comment",
         query_filter=query_filters.TextQuery(
@@ -1184,7 +1186,7 @@ filter_registry.register(
 
 filter_registry.register(
     InputTextFilter(
-        title=_l("Downtime comment"),
+        title=_l("Downtime comment (regex)"),
         sort_index=254,
         info="downtime",
         query_filter=query_filters.TextQuery(ident="downtime_comment", op="~"),
@@ -1202,7 +1204,7 @@ filter_registry.register(
 
 filter_registry.register(
     InputTextFilter(
-        title=_l("Downtime author"),
+        title=_l("Downtime author (regex)"),
         sort_index=256,
         info="downtime",
         query_filter=query_filters.TextQuery(ident="downtime_author", op="~"),
@@ -1234,7 +1236,7 @@ filter_registry.register(
 
 filter_registry.register(
     InputTextFilter(
-        title=_l("Log: plugin output"),
+        title=_l("Log: plugin output (regex)"),
         sort_index=202,
         info="log",
         query_filter=query_filters.TextQuery(
@@ -1246,7 +1248,7 @@ filter_registry.register(
 
 filter_registry.register(
     InputTextFilter(
-        title=_l("Log: message type"),
+        title=_l("Log: message type (regex)"),
         sort_index=203,
         info="log",
         query_filter=query_filters.TextQuery(ident="log_type", op="~~"),
@@ -1256,7 +1258,7 @@ filter_registry.register(
 
 filter_registry.register(
     InputTextFilter(
-        title=_l('Log: state type (DEPRECATED: Use "state information")'),
+        title=_l('Log: state type (DEPRECATED: Use "state information") (regex)'),
         sort_index=204,
         info="log",
         query_filter=query_filters.TextQuery(ident="log_state_type", op="~~"),
@@ -1265,7 +1267,7 @@ filter_registry.register(
 
 filter_registry.register(
     InputTextFilter(
-        title=_l("Log: state information"),
+        title=_l("Log: state information (regex)"),
         sort_index=204,
         info="log",
         query_filter=query_filters.TextQuery(ident="log_state_info", op="~~"),
@@ -1297,7 +1299,7 @@ filter_registry.register(
 
 filter_registry.register(
     RegExpFilter(
-        title=_l("Log: contact name"),
+        title=_l("Log: contact name (regex)"),
         sort_index=261,
         info="log",
         query_filter=query_filters.TextQuery(
@@ -1311,7 +1313,7 @@ filter_registry.register(
 
 filter_registry.register(
     RegExpFilter(
-        title=_l("Log: command"),
+        title=_l("Log: command (regex)"),
         sort_index=262,
         info="log",
         query_filter=query_filters.TextQuery(
@@ -1395,7 +1397,7 @@ filter_registry.register(
 
 filter_registry.register(
     InputTextFilter(
-        title=_l("Downtime ID"),
+        title=_l("Downtime ID (exact match)"),
         sort_index=301,
         info="downtime",
         query_filter=query_filters.TextQuery(ident="downtime_id", op="="),
@@ -1411,7 +1413,6 @@ class TagFilter(Filter):
         query_filter: query_filters.TagsQuery,
         is_show_more: bool = False,
     ):
-
         self.query_filter = query_filter
         super().__init__(
             ident=self.query_filter.ident,
@@ -1553,7 +1554,7 @@ class LabelGroupFilter(Filter):
             title=title,
             sort_index=301,
             info=self.query_filter.object_type,
-            htmlvars=self.query_filter.request_vars,
+            htmlvars=[f"{self.query_filter.ident}_count"],
             link_columns=[],
         )
 
@@ -1590,7 +1591,7 @@ filter_registry.register(
 )
 
 
-def filter_kubernetes_register(  # type:ignore[no-untyped-def]
+def filter_kubernetes_register(  # type: ignore[no-untyped-def]
     title: str,
     object_name: Literal["cluster", "node", "deployment", "namespace", "daemonset", "statefulset"],
 ):
@@ -1646,7 +1647,6 @@ class FilterCustomAttribute(Filter):
         return "%s_value" % ident
 
     def display(self, value: FilterHTTPVariables) -> None:
-
         html.dropdown(
             self.name_varname(self.ident),
             self._options(self._custom_attribute_choices()),
@@ -1692,7 +1692,7 @@ def _service_attribute_choices() -> Choices:
 filter_registry.register(
     FilterCustomAttribute(
         ident="service_custom_variable",
-        title=_l("Service custom attribute"),
+        title=_l("Service custom attribute (regex)"),
         info="service",
         choice_func=_service_attribute_choices,
     )
@@ -1709,7 +1709,7 @@ def _host_attribute_choices() -> Choices:
 filter_registry.register(
     FilterCustomAttribute(
         ident="host_custom_variable",
-        title=_l("Host custom attribute"),
+        title=_l("Host custom attribute (regex)"),
         info="host",
         choice_func=_host_attribute_choices,
     )
@@ -1956,6 +1956,57 @@ class _FilterAggrGroupTree(Filter):
 
 
 filter_registry.register(_FilterAggrGroupTree())
+
+
+class _BIFrozenAggregations(Filter):
+    def __init__(self):
+        super().__init__(
+            ident="aggregation_types",
+            title=_("Aggregation types"),
+            sort_index=90,
+            info="aggr",
+            htmlvars=["aggr_type_frozen", "aggr_type_dynamic"],
+            link_columns=[],
+        )
+
+    def filter(self, value: FilterHTTPVariables) -> FilterHeader:
+        return ""
+
+    def display(self, value: FilterHTTPVariables) -> None:
+        html.checkbox(
+            self.htmlvars[0], deflt=bool(value.get(self.htmlvars[0], True)), label=_("Show frozen")
+        )
+        html.checkbox(
+            self.htmlvars[1], deflt=bool(value.get(self.htmlvars[1], True)), label=_("Show dynamic")
+        )
+
+    def filter_table(self, context: VisualContext, rows: Rows) -> Rows:
+        if self.ident not in context:
+            return rows
+        show_frozen = bool(context.get(self.ident, {}).get(self.htmlvars[0]))
+        show_dynamic = bool(context.get(self.ident, {}).get(self.htmlvars[1]))
+        if show_frozen and show_dynamic:
+            return rows
+        if not show_frozen and not show_dynamic:
+            return []
+
+        new_rows = []
+        for row in rows:
+            if (compiled_aggregation := row.get("aggr_compiled_aggregation")) is None:
+                continue
+
+            if compiled_aggregation.frozen_info:
+                if show_frozen:
+                    new_rows.append(row)
+            else:
+                # dynamic aggregation
+                if show_dynamic:
+                    new_rows.append(row)
+
+        return new_rows
+
+
+filter_registry.register(_BIFrozenAggregations())
 
 
 # how is either "regex" or "exact"
@@ -2219,7 +2270,7 @@ filter_registry.register(
 
 filter_registry.register(
     InputTextFilter(
-        title=_l("Event ID"),
+        title=_l("Event ID (exact match)"),
         sort_index=200,
         info="event",
         query_filter=query_filters.TextQuery(ident="event_id", op="="),
@@ -2228,7 +2279,7 @@ filter_registry.register(
 
 filter_registry.register(
     InputTextFilter(
-        title=_l("ID of rule"),
+        title=_l("ID of rule (exact match)"),
         sort_index=200,
         info="event",
         query_filter=query_filters.TextQuery(ident="event_rule_id", op="="),
@@ -2237,7 +2288,7 @@ filter_registry.register(
 
 filter_registry.register(
     InputTextFilter(
-        title=_l("Message/Text of event"),
+        title=_l("Message/Text of event (regex)"),
         sort_index=201,
         info="event",
         query_filter=query_filters.TextQuery(ident="event_text", op="~~"),
@@ -2246,7 +2297,7 @@ filter_registry.register(
 
 filter_registry.register(
     InputTextFilter(
-        title=_l("Application / Syslog-Tag"),
+        title=_l("Application / Syslog-Tag (regex)"),
         sort_index=201,
         info="event",
         query_filter=query_filters.TextQuery(
@@ -2258,7 +2309,7 @@ filter_registry.register(
 
 filter_registry.register(
     InputTextFilter(
-        title=_l("Contact Person"),
+        title=_l("Contact person (regex)"),
         sort_index=201,
         info="event",
         query_filter=query_filters.TextQuery(ident="event_contact", op="~~"),
@@ -2267,7 +2318,7 @@ filter_registry.register(
 
 filter_registry.register(
     InputTextFilter(
-        title=_l("Comment to the event"),
+        title=_l("Comment to the event (regex)"),
         sort_index=201,
         info="event",
         query_filter=query_filters.TextQuery(ident="event_comment", op="~~"),
@@ -2276,7 +2327,7 @@ filter_registry.register(
 
 filter_registry.register(
     RegExpFilter(
-        title=_l("Hostname of original event"),
+        title=_l("Hostname of original event (regex)"),
         sort_index=201,
         info="event",
         query_filter=query_filters.TextQuery(
@@ -2287,7 +2338,7 @@ filter_registry.register(
 
 filter_registry.register(
     InputTextFilter(
-        title=_l("Hostname of event, exact match"),
+        title=_l("Hostname of event (exact match)"),
         sort_index=201,
         info="event",
         query_filter=query_filters.TextQuery(ident="event_host", op="="),
@@ -2296,7 +2347,7 @@ filter_registry.register(
 
 filter_registry.register(
     InputTextFilter(
-        title=_l("Original IP Address of event"),
+        title=_l("Original IP address of event (regex)"),
         sort_index=201,
         info="event",
         query_filter=query_filters.TextQuery(ident="event_ipaddress", op="~~"),
@@ -2305,7 +2356,7 @@ filter_registry.register(
 
 filter_registry.register(
     InputTextFilter(
-        title=_l("Owner of event"),
+        title=_l("Owner of event (regex)"),
         sort_index=201,
         info="event",
         query_filter=query_filters.TextQuery(ident="event_owner", op="~~"),
@@ -2314,7 +2365,7 @@ filter_registry.register(
 
 filter_registry.register(
     InputTextFilter(
-        title=_l("User that performed action"),
+        title=_l("User that performed action (regex)"),
         sort_index=221,
         info="history",
         query_filter=query_filters.TextQuery(ident="history_who", op="~~"),
@@ -2323,7 +2374,7 @@ filter_registry.register(
 
 filter_registry.register(
     InputTextFilter(
-        title=_l("Line number in history logfile"),
+        title=_l("Line number in history logfile (exact match)"),
         sort_index=222,
         info="history",
         query_filter=query_filters.TextQuery(ident="history_line", op="="),
@@ -2429,7 +2480,7 @@ filter_registry.register(
 
 filter_registry.register(
     AjaxDropdownFilter(
-        title=_l("Syslog Facility"),
+        title=_l("Syslog Facility (exact match)"),
         sort_index=210,
         info="event",
         autocompleter=AutocompleterConfig(ident="syslog_facilities", strict=True),
@@ -2478,6 +2529,25 @@ filter_registry.register(_FilterOptEventEffectiveContactgroup())
 
 class FilterCMKSiteStatisticsByCorePIDs(Filter):
     ID = "service_cmk_site_statistics_core_pid"
+
+    def __init__(
+        self,
+        *,
+        ident: str,
+        title: str | LazyString,
+        sort_index: int,
+        info: str,
+        htmlvars: list[str],
+        link_columns: list[ColumnName],
+    ):
+        super().__init__(
+            ident=ident,
+            title=title,
+            sort_index=sort_index,
+            info=info,
+            htmlvars=htmlvars,
+            link_columns=link_columns,
+        )
 
     def display(self, value: FilterHTTPVariables) -> None:
         return html.write_text(
@@ -2555,7 +2625,9 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
                 raise MKMissingDataError(
                     _(
                         "As soon as you add your Checkmk server to the monitoring, a graph showing "
-                        "the history of your host problems will appear here. "
+                        "the history of your host problems will appear here.\n"
+                        "Please also be aware that you might see this message might appear as a result of a filtered dashboard."
+                        "This dashlet currently only supports filtering for sites."
                     )
                     + doc_ref
                 )
@@ -2563,7 +2635,9 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
                 _(
                     "As soon as you add your Checkmk server(s) to the monitoring, a graph showing "
                     "the history of your host problems will appear here. Currently the following "
-                    "Checkmk sites are not monitored: %s. "
+                    "Checkmk sites are not monitored: %s.\n"
+                    "Please also be aware that you might see this message might appear as a result of a filtered dashboard."
+                    "This dashlet currently only supports filtering for sites."
                 )
                 % ", ".join(connected_sites - unique_sites_from_services)
                 + doc_ref

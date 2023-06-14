@@ -1,0 +1,18 @@
+Title: BI service delivers now state changes to backends
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1686122565
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Previously, BI aggregation service didn't send state changes 
+to the backend as Carbon or InfluxDb. With this release the 
+problem had been fixed.
+
+SUP-13859
+
+

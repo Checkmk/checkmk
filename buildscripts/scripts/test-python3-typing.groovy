@@ -5,10 +5,14 @@
 def main() {
     dir("${checkout_dir}") {
         stage("Execute Test") {
-            sh("""
-                MYPY_ADDOPTS='--cobertura-xml-report=$checkout_dir/mypy_reports --html-report=$checkout_dir/mypy_reports/html' \
-                make -C tests test-mypy-docker
-               """);
+            // catch any error, set stage + build result to failure,
+            // but continue in order to execute the publishIssues function
+            catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                sh("""
+                    MYPY_ADDOPTS='--cobertura-xml-report=$checkout_dir/mypy_reports --html-report=$checkout_dir/mypy_reports/html' \
+                    make -C tests test-mypy-docker
+                   """);
+            }
         }
 
         stage("Archive reports") {
@@ -40,5 +44,5 @@ def main() {
         }
     }
 }
-return this;
 
+return this;

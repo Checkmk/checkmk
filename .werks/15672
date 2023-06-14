@@ -1,0 +1,16 @@
+Title: logwatch pattern analyzer: clarify redefinition of states
+Class: fix
+Compatible: compat
+Component: setup
+Date: 1682491998
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The logwatch pattern analyzer tests and shows the reclassification of states of
+log messages which have been configured using the "Logfile patterns" rule. The
+column titled "State" showed the Checkmk state of the corresponding service.
+This could lead to some confusion when the log message had been reclassified to
+"IGNORE". The "State" column has been renamed to "Checkmk state", and an
+additional column "Logwatch state" has been added to remove any ambiguity.

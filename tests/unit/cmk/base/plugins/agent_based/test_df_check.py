@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GMiBH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable
+from collections.abc import Mapping, Sequence
 
 import pytest
 
 from cmk.base.plugins.agent_based import df
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.df_section import parse_df
 
 #   .--Test info sections--------------------------------------------------.
@@ -415,8 +416,10 @@ info_empty_inodes = [
         ),
     ],
 )
-def test_df_discovery_with_parse(  # type:ignore[no-untyped-def]
-    info, expected_result, inventory_df_rules
+def test_df_discovery_with_parse(
+    info: StringTable,
+    expected_result: Sequence[tuple[str, Mapping[str, object]]],
+    inventory_df_rules: Mapping[str, object],
 ) -> None:
     assert sorted(df.discover_df(inventory_df_rules, parse_df(info))) == sorted(
         Service(item=i, parameters=p) for i, p in expected_result
@@ -437,7 +440,7 @@ def make_test_df_params():
     }
 
 
-def _extract_value_to_mock_for_zero_growth(results: Iterable[Result | Metric]) -> float:
+def _extract_value_to_mock_for_zero_growth(results: CheckResult) -> float:
     for r in results:
         if isinstance(r, Metric) and r.name == "fs_used":
             return r.value
@@ -697,8 +700,13 @@ def _extract_value_to_mock_for_zero_growth(results: Iterable[Result | Metric]) -
         ),
     ],
 )
-def test_df_check_with_parse(  # type:ignore[no-untyped-def]
-    item, counter: str, params, info, expected_result, monkeypatch: pytest.MonkeyPatch
+def test_df_check_with_parse(
+    item: str,
+    counter: str,
+    params: Mapping[str, object],
+    info: StringTable,
+    expected_result: CheckResult,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
         df,
@@ -1075,8 +1083,9 @@ info_df_groups = [
         ),
     ],
 )
-def test_df_discovery_groups_with_parse(  # type:ignore[no-untyped-def]
-    inventory_df_rules, expected_result
+def test_df_discovery_groups_with_parse(
+    inventory_df_rules: Mapping[str, object],
+    expected_result: Sequence[tuple[str, Mapping[str, object]]],
 ) -> None:
     assert sorted(df.discover_df(inventory_df_rules, parse_df(info_df_groups))) == sorted(
         Service(item=i, parameters=p) for i, p in expected_result
@@ -1269,8 +1278,10 @@ def test_df_discovery_groups_with_parse(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_df_check_groups_with_parse(  # type:ignore[no-untyped-def]
-    add_params, expected_result, monkeypatch: pytest.MonkeyPatch
+def test_df_check_groups_with_parse(
+    add_params: Mapping[str, object],
+    expected_result: CheckResult,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(
         df,

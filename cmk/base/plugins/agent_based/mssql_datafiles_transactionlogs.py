@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -197,7 +198,6 @@ def discover_mssql_common(
     params: List[Mapping[str, Any]],
     section: SectionDatafiles,
 ) -> DiscoveryResult:
-
     summarize = params[0].get("summarize_%s" % mode, False)
     for inst, database, file_name in section:
         yield Service(

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -18,7 +18,7 @@ _MAP_NODE_STATES: Final = {
 Section = Mapping[str, Sequence[Mapping]]
 
 
-def parse_jenkins_nodes(string_table) -> Section:  # type:ignore[no-untyped-def]
+def parse_jenkins_nodes(string_table) -> Section:  # type: ignore[no-untyped-def]
     parsed: Dict[str, List[Mapping]] = {}
 
     for line in string_table:
@@ -75,7 +75,6 @@ def check_jenkins_nodes(  # pylint: disable=too-many-branches
         return
 
     for node in item_data:
-
         node_desc = node.get("description")
         if node_desc and node_desc is not None:
             yield Result(state=State.OK, summary=f"Description: {node_desc.title()}")
@@ -111,7 +110,6 @@ def check_jenkins_nodes(  # pylint: disable=too-many-branches
             ("busyExecutors", "Number of busy executors"),
             ("idleExecutors", "Number of idle executors"),
         ]:
-
             exec_label_data = node.get("assignedLabels")
 
             if exec_label_data is None:

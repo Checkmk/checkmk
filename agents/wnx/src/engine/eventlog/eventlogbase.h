@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -96,10 +96,10 @@ public:
 };
 
 // Official CheckMK Event Log API
-/// \brief - open event log using one of available mode
+/// - open event log using one of available mode
 std::unique_ptr<EventLogBase> OpenEvl(const std::wstring &name, bool vista_api);
 
-/// \brief - scan existing event log
+/// - scan existing event log
 std::pair<uint64_t, cfg::EventLevels> ScanEventLog(EventLogBase &log,
                                                    uint64_t pos,
                                                    cfg::EventLevels level);

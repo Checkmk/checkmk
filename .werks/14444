@@ -6,7 +6,7 @@ Date: 1656673233
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This change affects asynchronously executed agent plugins for the Checkmk agents for Linux, AIX, Solaris, FreeBSD and OpenWRT.
 

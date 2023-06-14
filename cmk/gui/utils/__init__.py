@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This is an unsorted collection of small unrelated helper functions which are
@@ -7,63 +7,15 @@ usable in all components of the Web GUI of Check_MK
 
 Please try to find a better place for the things you want to put here."""
 
-import itertools
 import marshal
-import urllib.parse
 import uuid
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
 import cmk.utils.paths
-import cmk.utils.regex
 
 from cmk.gui.log import logger
-
-
-def is_allowed_url(url: str, cross_domain: bool = False, schemes: list[str] | None = None) -> bool:
-    """Check if url is allowed
-
-    >>> is_allowed_url("http://checkmk.com/")
-    False
-    >>> is_allowed_url("http://checkmk.com/", cross_domain=True, schemes=["http", "https"])
-    True
-    >>> is_allowed_url("/checkmk/", cross_domain=True, schemes=["http", "https"])
-    True
-    >>> is_allowed_url("//checkmk.com/", cross_domain=True)
-    True
-    >>> is_allowed_url("/foobar")
-    True
-    >>> is_allowed_url("//user:password@domain/", cross_domain=True)
-    True
-    >>> is_allowed_url("javascript:alert(1)")
-    False
-    >>> is_allowed_url("javascript:alert(1)", cross_domain=True, schemes=["javascript"])
-    True
-    >>> is_allowed_url('someXSSAttempt?"><script>alert(1)</script>')
-    False
-    """
-
-    try:
-        parsed = urllib.parse.urlparse(url)
-    except ValueError:
-        return False
-
-    if not cross_domain and parsed.netloc != "":
-        return False
-
-    if schemes is None and parsed.scheme != "":
-        return False
-    if schemes is not None and parsed.scheme and parsed.scheme not in schemes:
-        return False
-
-    urlchar_regex = cmk.utils.regex.regex(cmk.utils.regex.URL_CHAR_REGEX)
-    for part in parsed:
-        if not part:
-            continue
-        if not urlchar_regex.match(part):
-            return False
-
-    return True
 
 
 # TODO: Remove this helper function. Replace with explicit checks and covnersion
@@ -91,15 +43,13 @@ def gen_id() -> str:
 
 # This may not be moved to g, because this needs to be request independent
 # TODO: Move to cmk.gui.modules once load_web_plugins is dropped
-_failed_plugins: dict[str, list[tuple[str, BaseException]]] = {}
+_failed_plugins: dict[Path, tuple[str, str, BaseException]] = {}
 
 
 # Load all files below share/check_mk/web/plugins/WHAT into a specified context
 # (global variables). Also honors the local-hierarchy for OMD
 # TODO: This is kept for pre 1.6.0i1 plugins
 def load_web_plugins(forwhat: str, globalvars: dict) -> None:
-    _failed_plugins.setdefault(forwhat, [])
-
     for plugins_path in [
         Path(cmk.utils.paths.web_dir, "plugins", forwhat),
         cmk.utils.paths.local_web_dir / "plugins" / forwhat,
@@ -108,6 +58,9 @@ def load_web_plugins(forwhat: str, globalvars: dict) -> None:
             continue
 
         for file_path in sorted(plugins_path.iterdir()):
+            if file_path.suffix not in (".py", ".pyc"):
+                continue
+
             try:
                 if file_path.suffix == ".py" and not file_path.with_suffix(".pyc").exists():
                     with file_path.open(encoding="utf-8") as f:
@@ -121,12 +74,36 @@ def load_web_plugins(forwhat: str, globalvars: dict) -> None:
 
             except Exception as e:
                 logger.exception("Failed to load plugin %s: %s", file_path, e)
-                _failed_plugins[forwhat].append((str(file_path), e))
+                add_failed_plugin(file_path.with_suffix(".py"), forwhat, file_path.stem, e)
 
 
-def add_failed_plugin(main_module_name: str, plugin_name: str, e: BaseException) -> None:
-    _failed_plugins.setdefault(main_module_name, []).append((plugin_name, e))
+def add_failed_plugin(
+    path: Path, main_module_name: str, plugin_name: str, e: BaseException
+) -> None:
+    _failed_plugins[path] = main_module_name, plugin_name, e
 
 
-def get_failed_plugins() -> list[tuple[str, BaseException]]:
-    return list(itertools.chain(*list(_failed_plugins.values())))
+def get_failed_plugins() -> Sequence[tuple[Path, str, str, BaseException]]:
+    return [
+        (path, subcomponent, module_name, exc)
+        for path, (subcomponent, module_name, exc) in _failed_plugins.items()
+    ]
+
+
+def remove_failed_plugin(entry: Path) -> None:
+    _drop = _failed_plugins.pop(entry, None)
+
+
+# TODO: Find a better place without introducing any cycles.
+def cmp_service_name_equiv(r: str) -> int:
+    if r == "Check_MK":
+        return -6
+    if r == "Check_MK Agent":
+        return -5
+    if r == "Check_MK Discovery":
+        return -4
+    if r == "Check_MK inventory":
+        return -3  # FIXME: Remove old name one day
+    if r == "Check_MK HW/SW Inventory":
+        return -2
+    return 0

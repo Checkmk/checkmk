@@ -278,88 +278,88 @@
     <ClCompile Include="carrier.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\binary.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\binary.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\convert.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\convert.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\directives.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\directives.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\emit.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\emit.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\emitfromevents.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\emitfromevents.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\emitter.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\emitter.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\emitterstate.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\emitterstate.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\emitterutils.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\emitterutils.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\exceptions.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\exceptions.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\exp.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\exp.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\memory.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\memory.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\node.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\node.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\node_data.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\node_data.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\nodebuilder.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\nodebuilder.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\nodeevents.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\nodeevents.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\null.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\null.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\ostream_wrapper.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\ostream_wrapper.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\parse.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\parse.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\parser.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\parser.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\regex_yaml.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\regex_yaml.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\scanner.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\scanner.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\scanscalar.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\scanscalar.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\scantag.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\scantag.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\scantoken.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\scantoken.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\simplekey.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\simplekey.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\singledocparser.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\singledocparser.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\stream.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\stream.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\extlibs\yaml-cpp\src\tag.cpp">
+    <ClCompile Include="..\..\extlibs\$(YamlCpp)\src\tag.cpp">
       <Filter>yaml-cpp</Filter>
     </ClCompile>
     <ClCompile Include="cfg.cpp">

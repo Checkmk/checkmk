@@ -1,0 +1,17 @@
+Title: Allow match groups in grouping expressions
+Class: feature
+Compatible: compat
+Component: wato
+Date: 1685436380
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+You can now use match groups in the global setting "Grouping of services in
+table views".
+
+For more information see <a href="https://docs.checkmk.com/latest/en/regexes.html#matchgroups">Match groups</a>.
+
+

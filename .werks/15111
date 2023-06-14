@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Due to changes and a small bug in the ALLNET IP-Sensoric API the temperature and pressure services have not been discovered.
 

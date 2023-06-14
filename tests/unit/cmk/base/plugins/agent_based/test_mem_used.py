@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
+from typing import Any
 
 import pytest
 
@@ -14,6 +15,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     Service,
     State,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.mem_used import (
     check_mem_used,
     discover_mem_used,
@@ -199,8 +201,13 @@ def test_check_discovery_total_zero() -> None:
         ),
     ],
 )
-def test_check_memory_element(  # type:ignore[no-untyped-def]
-    label, used, total, levels, kwargs, expected
+def test_check_memory_element(
+    label: str,
+    used: float,
+    total: float,
+    levels: memory.MemoryLevels | None,
+    kwargs: Mapping[str, Any],
+    expected: CheckResult,
 ) -> None:
     result = list(memory.check_element(label, used, total, levels, **kwargs))
     assert result == expected
@@ -269,13 +276,14 @@ MEMINFO_PAGE_MAPPED = {
         ({}, {"MemTotal": 42 * KILO, "MemFree": 28 * KILO, "SwapFree": 23}, KeyError),
     ],
 )
-def test_check_memory_fails(  # type:ignore[no-untyped-def]
-    params, meminfo, fail_with_exception
+def test_check_memory_fails(
+    params: Mapping, meminfo: memory.SectionMemUsed, fail_with_exception: type[KeyError]
 ) -> None:
     with pytest.raises(fail_with_exception):
         list(check_mem_used(params, meminfo))
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "params,meminfo,expected",
     [
@@ -739,7 +747,9 @@ def test_check_memory_fails(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_memory(params, meminfo, expected) -> None:  # type:ignore[no-untyped-def]
+def test_check_memory(
+    params: Mapping, meminfo: memory.SectionMemUsed, expected: CheckResult
+) -> None:
     copy_info = meminfo.copy()
 
     result = list(check_mem_used(params, meminfo))

@@ -1,23 +1,23 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Mapping, NamedTuple
+from typing import NamedTuple
 
 from livestatus import lqencode, SiteId
 
 from cmk.utils.regex import regex
 
+from cmk.gui.data_source import data_source_registry
+from cmk.gui.painter.v0.base import columns_of_cells, JoinCell
 from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.type_defs import ColumnName, LivestatusQuery, Row, Rows
 from cmk.gui.view import View
-from cmk.gui.views.data_source import data_source_registry
-from cmk.gui.views.painter.v0.base import columns_of_cells, JoinCell
 from cmk.gui.views.sorter import SorterEntry
 from cmk.gui.views.store import get_permitted_views
 

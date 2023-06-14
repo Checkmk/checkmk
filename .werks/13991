@@ -6,7 +6,7 @@ Date: 1659348615
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The check plugin palo_alto used to be purely informative, i.e. the status
 of the service was always ok. Ha mode, ha local state and ha peer state are

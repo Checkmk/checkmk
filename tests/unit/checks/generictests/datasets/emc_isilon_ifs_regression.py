@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.base.plugins.agent_based.emc_isilon_ifs import parse_emc_isilon_ifs
+
 # fmt: off
-# type: ignore
+# mypy: disable-error-code=var-annotated
 from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_LEVELS
 
 checkname = "emc_isilon_ifs"
 
-info = [["615553001652224", "599743491129344"]]
+parsed = parse_emc_isilon_ifs([["615553001652224", "599743491129344"]])
 
 discovery = {"": [("Cluster", None)]}
 

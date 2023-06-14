@@ -1,0 +1,73 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition, MKCounterWrapped
+from cmk.base.config import check_info
+
+db2_mem_default_levels = (10.0, 5.0)
+
+
+def inventory_db2_mem(info):
+    return [(x[1], db2_mem_default_levels) for x in info if x[0] == "Instance"]
+
+
+def check_db2_mem(item, params, info):  # pylint: disable=too-many-branches
+    if not info:
+        raise MKCounterWrapped("Login into database failed")
+
+    warn, crit = params
+
+    in_block = False
+    limit, usage = None, None
+    for line in info:
+        if line[1] == item:
+            in_block = True
+        elif in_block is True:
+            if line[-1].lower() == "kb":
+                value = int(line[-2]) * 1024
+            elif line[-1].lower() == "mb":
+                value = int(line[-2]) * 1024 * 1024
+            else:
+                value = int(line[-2])
+
+            if limit is None:
+                limit = value
+            else:
+                usage = value
+                break
+
+    if limit is None or usage is None:
+        return None
+
+    left = limit - usage
+    perc_level = (100.0 / limit) * left
+    label = " (Warn/Crit %d%%/%d%%)" % (warn, crit)
+
+    if perc_level <= crit:
+        state = 2
+    elif perc_level <= warn:
+        state = 1
+    else:
+        label = ""
+        state = 0
+
+    message = "Max: %s, Used: %s (%.2d%% Free%s) " % (
+        get_bytes_human_readable(limit),
+        get_bytes_human_readable(usage),
+        perc_level,
+        label,
+    )
+    perf = [("mem", usage, 0, 0, 0, limit)]
+
+    return state, message, perf
+
+
+check_info["db2_mem"] = LegacyCheckDefinition(
+    check_function=check_db2_mem,
+    discovery_function=inventory_db2_mem,
+    service_name="Memory %s",
+    check_ruleset_name="db2_mem",
+)

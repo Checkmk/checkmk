@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -75,8 +75,8 @@ std::wstring GetProcessListFromWmi(std::wstring_view separator) {
 
     // status will be ignored, ps doesn't support correct error processing
     // like other wmi sections
-    auto [table, ignored] = wmi.queryTable({}, L"Win32_Process", separator,
-                                           cfg::groups::global.getWmiTimeout());
+    auto [table, ignored] = wmi.queryTable(
+        {}, L"Win32_Process", separator, cfg::groups::g_global.getWmiTimeout());
     return table;
 }
 
@@ -332,7 +332,7 @@ std::string ProducePsWmi(bool use_full_path) {
         IWbemClassObject *object{nullptr};
         auto status{wtools::WmiStatus::ok};
         std::tie(object, status) = wtools::WmiGetNextObject(
-            processes, cfg::groups::global.getWmiTimeout());
+            processes, cfg::groups::g_global.getWmiTimeout());
         if (object == nullptr) {
             break;
         }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -38,7 +38,7 @@ def compress_history_file(  # pylint: disable=too-many-branches
     known_services: dict[str, set[str | None]] = {}
     machine_state = "START"
 
-    with open(output_path, "wt") as output:
+    with open(output_path, "w") as output:
         with open(input_path) as opened_file:
             for line in opened_file:
                 skip_this_line = False

@@ -6,7 +6,7 @@ Date: 1667808761
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 We now can detect the PID of a running postfix instance if it is not installed in `/var/spool/postfix`.
 To do this we search for the pid file in the queue directory as reported by `postconf`.

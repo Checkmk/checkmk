@@ -1,16 +1,22 @@
 #!/bin/bash
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 PIDFILE=$OMD_ROOT/tmp/run/agent-receiver.pid
 PID=$(cat $PIDFILE 2>/dev/null)
-KEY_AND_CERT_FILE=$OMD_ROOT/etc/ssl/agent_receiver_cert.pem
+KEY_AND_CERT_FILE="${OMD_ROOT}/etc/ssl/sites/${OMD_SITE}.pem"
 CERT_STORE="${OMD_ROOT}/etc/ssl/agent_cert_store.pem"
 
 . $OMD_ROOT/etc/omd/site.conf
 if [ "$CONFIG_AGENT_RECEIVER" != on ] ; then
     exit 5
+fi
+
+if ping -c1 ::1 &>/dev/null; then
+    ANY_ADDRESS="[::]"
+else
+    ANY_ADDRESS="0.0.0.0"
 fi
 
 case "$1" in
@@ -36,7 +42,7 @@ case "$1" in
                 --certfile "$KEY_AND_CERT_FILE" \
                 --ca-certs "${CERT_STORE}" \
                 --cert-reqs 1 \
-                -b 0.0.0.0:$CONFIG_AGENT_RECEIVER_PORT \
+                -b "${ANY_ADDRESS}:${CONFIG_AGENT_RECEIVER_PORT}" \
                 -k agent_receiver.worker.ClientCertWorker 'agent_receiver.main:main_app()'
         if [ $? -eq 0 ]; then
             echo "OK"

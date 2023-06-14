@@ -1,0 +1,13 @@
+Title: mssql_tablespaces: Do not create services for databases that are offline during discovery
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1681893462
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Currently the mssql_tablespaces plugin will discover databases that can never be correctly monitored because they are offline or mirror databases.
+With this werk, databases not providing monitoring data will not be added as services.
+Already monitored databases will behave the same as before.

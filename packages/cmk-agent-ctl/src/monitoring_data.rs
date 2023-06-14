@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,9 +9,9 @@ mod linux;
 #[cfg(unix)]
 pub use linux::{async_collect, collect};
 #[cfg(windows)]
-mod windows;
+mod win;
 #[cfg(windows)]
-pub use windows::{async_collect, collect};
+pub use win::{async_collect, collect};
 
 pub fn compress(data: &[u8]) -> IoResult<Vec<u8>> {
     let mut zlib_enc = flate2::write::ZlibEncoder::new(Vec::new(), flate2::Compression::default());

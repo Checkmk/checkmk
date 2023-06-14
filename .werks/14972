@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The agent plugin for Oracle on Windows, "mk_oracle.ps1", is able to connect to
 multiple Oracle instances. If the plugin was configured to connect to these

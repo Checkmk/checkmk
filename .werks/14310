@@ -6,7 +6,7 @@ Date: 1653393598
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The <tt>sap_hana_backup</tt> cluster check crashed when at least one node had
 no relevant data with the error message "TypeError: argument of type 'NoneType'

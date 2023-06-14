@@ -6,7 +6,7 @@ Date: 1659013414
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Changing the log levels for the event console only didn't have an effect
 when it was triggered via the GUI, only when the EC was restarted.  This has

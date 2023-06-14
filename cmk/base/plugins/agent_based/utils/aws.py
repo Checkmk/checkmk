@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -145,7 +145,7 @@ def check_aws_metrics(metric_infos: Sequence[AWSMetric]) -> CheckResult:
         )
 
 
-def extract_aws_metrics_by_labels(  # type:ignore[no-untyped-def]
+def extract_aws_metrics_by_labels(  # type: ignore[no-untyped-def]
     expected_metric_names: Iterable[str],
     section: GenericAWSSection,
     extra_keys: Optional[Iterable[str]] = None,
@@ -260,22 +260,22 @@ def function_arn_to_item(function_arn: str) -> str:
         The account_id can be omitted, because it stays equal for all lambda functions of the same AWS account.
 
     >>> function_arn_to_item("arn:aws:lambda:eu-central-1:710145618630:function:my_python_test_function:OPTIONAL_ALIAS_OR_VERSION")
-    'eu-central-1 my_python_test_function OPTIONAL_ALIAS_OR_VERSION'
+    'my_python_test_function OPTIONAL_ALIAS_OR_VERSION [eu-central-1]'
     """
     splitted = function_arn.split(":")
     return (
-        f"{splitted[3]} {splitted[6]} {splitted[7]}"
+        f"{splitted[6]} {splitted[7]} [{splitted[3]}]"
         if len(splitted) == 8
-        else f"{splitted[3]} {splitted[6]}"
+        else f"{splitted[6]} [{splitted[3]}]"
     )
 
 
 def get_region_from_item(item: str) -> str:
     """
-    >>> get_region_from_item("eu-central-1 my_python_test_function")
+    >>> get_region_from_item("my_python_test_function [eu-central-1]")
     'eu-central-1'
     """
-    return item.split(" ")[0]
+    return item.split(" ")[-1].strip("[]")
 
 
 @dataclass

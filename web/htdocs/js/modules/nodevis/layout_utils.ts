@@ -1,7 +1,10 @@
-// Copyright (C) 2023 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2023 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+import * as d3 from "d3";
+import {ForceOptions} from "nodevis/force_simulation";
+import {compute_node_positions_from_list_of_nodes} from "nodevis/layout";
 import {
     Coords,
     d3SelectionDiv,
@@ -16,8 +19,6 @@ import {
     get_bounding_rect,
     log,
 } from "nodevis/utils";
-import {compute_node_positions_from_list_of_nodes} from "nodevis/layout";
-import * as d3 from "d3";
 
 export class LineConfig {
     style: "straight" | "elbow" | "round" = "round";
@@ -26,15 +27,16 @@ export class LineConfig {
 
 export interface SerializedNodevisLayout {
     reference_size: Rectangle;
-    style_configs: {[name: string]: any}[]; // TODO: improve typing
+    style_configs: StyleConfig[];
     line_config: LineConfig;
+    force_options: ForceOptions;
 }
 
 // TODO: fix styles
 export class NodeVisualizationLayout {
     id: string;
     reference_size: Rectangle;
-    style_configs: {[name: string]: any}[];
+    style_configs: StyleConfig[];
     line_config: LineConfig;
 
     constructor(viewport, id) {
@@ -57,11 +59,12 @@ export class NodeVisualizationLayout {
         this.style_configs.splice(idx, 1);
     }
 
-    serialize(): SerializedNodevisLayout {
+    serialize(world: NodevisWorld): SerializedNodevisLayout {
         return {
             reference_size: this.reference_size,
             style_configs: this.style_configs,
             line_config: this.line_config,
+            force_options: world.force_simulation.get_force_options(),
         };
     }
 
@@ -147,16 +150,19 @@ export class AbstractLayoutStyle extends Object {
                 this.style_config.options[option.id] = option.values.default;
         });
 
-        // matcher
-        const matcher = this.get_matcher();
-        if (matcher) this.style_config.matcher = matcher;
+        if (this.style_root_node) {
+            // matcher
+            const matcher = this.get_matcher();
+            if (matcher) this.style_config.matcher = matcher;
 
-        // position
-        if (this.style_root_node && !this.style_config.position)
-            this.style_config.position =
-                this._world.layout_manager.get_viewport_percentage_of_node(
-                    this.style_root_node
-                );
+            // position
+            if (!this.style_config.position) {
+                this.style_config.position =
+                    this._world.layout_manager.get_viewport_percentage_of_node(
+                        this.style_root_node
+                    );
+            }
+        }
     }
 
     id(): string {
@@ -166,190 +172,46 @@ export class AbstractLayoutStyle extends Object {
         );
     }
 
-    get_style_options(): StyleOptionDefinition[] {
-        return [];
+    show_style_configuration() {
+        this._world.layout_manager.toolbar_plugin
+            .layout_style_configuration()
+            .show_style_configuration(this);
     }
 
-    render_options(into_selection: d3SelectionDiv, varprefix = "") {
-        this.options_selection = into_selection;
-        this._update_options_in_input_field(varprefix);
+    get_style_options(): StyleOptionSpec[] {
+        return [];
     }
 
     generate_overlay(): void {
         return;
     }
 
-    _update_options_in_input_field(varprefix = "") {
-        if (!this.options_selection) return;
-
-        const style_options = this.get_style_options();
-        if (style_options.length == 0) return;
-
-        this.options_selection
-            .selectAll("#styleoptions_headline")
-            .data([null])
-            .enter()
-            .append("b")
-            .attr("id", "styleoptions_headline")
-            .text("Options");
-
-        let table = this.options_selection
-            .selectAll<HTMLTableElement, unknown>("table")
-            .data([null]);
-        table = table.enter().append("table").merge(table);
-
-        this._render_range_options(table, style_options, varprefix);
-        this._render_checkbox_options(table, style_options, varprefix);
-
-        this.options_selection
-            .selectAll("input.reset_options")
-            .data([null])
-            .enter()
-            .append("input")
-            .attr("type", "button")
-            .classed("button", true)
-            .classed("reset_options", true)
-            .attr("value", "Reset default values")
-            .on("click", () => {
-                this.reset_default_options();
-            });
-        this.options_selection
-            .selectAll("div.clear_float")
-            .data([null])
-            .enter()
-            .append("div")
-            .classed("clear_float", true)
-            .style("clear", "right");
+    get_default_options(): StyleOptionValues {
+        const default_options: StyleOptionValues = {};
+        this.get_style_options().forEach(option => {
+            default_options[option.id] = option.values.default;
+        });
+        return default_options;
     }
 
-    _render_range_options(
-        table,
-        style_options: StyleOptionDefinition[],
-        varprefix: string
-    ): void {
-        let rows = table
-            .selectAll("tr.range_option")
-            .data(style_options.filter(d => d.option_type == "range"));
-        rows.exit().remove();
-        const rows_enter = rows
-            .enter()
-            .append("tr")
-            .classed("range_option", true);
-        rows_enter
-            .append("td")
-            .text(d => d.text)
-            .classed("style_infotext", true);
-        rows_enter
-            .append("td")
-            .append("input")
-            .classed("range", true)
-            .attr("id", d => d.id)
-            .attr("name", d => varprefix + "_type_value_" + d.id)
-            .attr("type", "range")
-            .attr("step", 1)
-            .attr("min", d => d.values.min)
-            .attr("max", d => d.values.max)
-            .on("input", () => {
-                this._world.layout_manager.dragging = true;
-                this.option_changed_in_input_field();
-                this.changed_options();
-            })
-            .on("change", () => {
-                this._world.layout_manager.dragging = false;
-                this._world.layout_manager.create_undo_step();
-            });
-        rows_enter.append("td").classed("text", true);
-        rows = rows_enter.merge(rows);
-
-        rows.select("td input.range").property("value", d => d.value);
-        rows.select("td.text").text(d => d.value);
+    reset_default_options(event): void {
+        this.changed_options(event, this.get_default_options());
     }
 
-    _render_checkbox_options(
-        table,
-        style_options: StyleOptionDefinition[],
-        varprefix: string
-    ): void {
-        const rows = table
-            .selectAll("tr.checkbox_option")
-            .data(style_options.filter(d => d.option_type == "checkbox"));
-
-        // TODO: fixme: style options handle is lost...
-        rows.exit().remove();
-
-        const rows_enter = rows
-            .enter()
-            .append("tr")
-            .classed("checkbox_option", true);
-        rows_enter
-            .append("td")
-            .text(d => d.text)
-            .classed("style_infotext", true);
-        rows_enter
-            .append("td")
-            .append("input")
-            .classed("checkbox", true)
-            .attr("id", d => d.id)
-            .attr("name", d => varprefix + "_type_checkbox_" + d.id)
-            .attr("type", "checkbox")
-            .property("checked", d => d.value)
-            .on("input", () => {
-                this.option_changed_in_input_field();
-                this.changed_options();
-            });
-        rows_enter.append("td").classed("text", true);
-    }
-
-    reset_default_options(): void {
-        const style_options = this.get_style_options();
-        for (const idx in style_options) {
-            const option = style_options[idx];
-            this.style_config.options[option.id] = option.values.default;
-        }
-        this.changed_options();
-    }
-
-    option_changed_in_input_field(): void {
-        if (this.options_selection == null) return;
-
-        const style_options = this.get_style_options();
-        let reapply_layouts = false;
-        for (const idx in style_options) {
-            const option = style_options[idx];
-            if (option.option_type == "range")
-                this.style_config.options[option.id] = +this.options_selection
-                    .select("#" + option.id)
-                    .property("value");
-            else if (option.option_type == "checkbox") {
-                this.style_config.options[option.id] = +this.options_selection
-                    .select("#" + option.id)
-                    .property("checked");
-                if (
-                    option.id == "box_leaf_nodes" &&
-                    +this.options_selection
-                        .select("#" + option.id)
-                        .property("value") !=
-                        this.style_config.options[option.id]
-                )
-                    reapply_layouts = true;
-            }
-        }
-        if (reapply_layouts) {
-            this._world.layout_manager.layout_applier.apply_all_layouts();
-            this._world.layout_manager.update_style_indicators();
-        }
-    }
-
-    changed_options() {
-        this._update_options_in_input_field();
+    changed_options(event, new_options: StyleOptionValues) {
+        this._world.layout_manager.skip_optional_transitions = true;
+        this.style_config.options = new_options;
         this.force_style_translation();
 
-        compute_node_positions_from_list_of_nodes(
-            this.style_root_node.descendants()
-        );
+        if (this.style_root_node)
+            compute_node_positions_from_list_of_nodes(
+                this.style_root_node.descendants()
+            );
 
         this._world.force_simulation.restart_with_alpha(0.5);
         this._world.viewport.update_layers();
+        this._world.layout_manager.skip_optional_transitions = false;
+        this.show_style_configuration();
     }
 
     get_size(): XYCoords {
@@ -425,12 +287,9 @@ export class AbstractLayoutStyle extends Object {
                     value: this.style_root_node.data.name,
                 };
             } else {
-                // End node: Match by hostname or service
-                matcher_conditions.hostname = {
-                    value: this.style_root_node.data.hostname,
-                };
-                matcher_conditions.service = {
-                    value: this.style_root_node.data.service,
+                // End node: Match by id
+                matcher_conditions.id = {
+                    value: this.style_root_node.data.id,
                 };
             }
         } else {
@@ -622,12 +481,16 @@ export class AbstractLayoutStyle extends Object {
     }
 
     add_optional_transition(selection_with_node_data) {
-        if (!this._world.layout_manager.dragging) {
-            return selection_with_node_data
-                .transition()
-                .duration(DefaultTransition.duration());
-        }
-        return selection_with_node_data;
+        if (this._world.layout_manager.skip_optional_transitions)
+            return selection_with_node_data;
+
+        // TODO: deprecate this option
+        if (this._world.layout_manager.dragging)
+            return selection_with_node_data;
+
+        return selection_with_node_data
+            .transition()
+            .duration(DefaultTransition.duration());
     }
 }
 
@@ -640,6 +503,8 @@ export class LayoutStyleFactory {
     }
 
     get_styles(): {[name: string]: typeof AbstractLayoutStyle} {
+        if (this._world.current_datasource == "topology")
+            return {fixed: layout_style_class_registry.get_class("fixed")};
         return layout_style_class_registry.get_classes();
     }
 
@@ -664,19 +529,31 @@ export class LayoutStyleFactory {
         selection: d3SelectionDiv
     ): AbstractLayoutStyle {
         return this.instantiate_style(
-            {type: style_class.prototype.type()},
+            {type: style_class.class_name},
             node,
             selection
         );
     }
 }
 
-export interface StyleOptionDefinition {
+export type StyleOptionValue = boolean | number;
+export type StyleOptionValues = {[name: string]: StyleOptionValue};
+
+export interface StyleOptionSpec {
     id: string;
-    values: {default: number | boolean; min?: number; max?: number};
-    option_type: "range" | "checkbox";
+    option_type: string;
     text: string;
-    value: number | boolean; // current value, TODO: shouldn't be here
+    values: any;
+}
+
+export interface StyleOptionSpecRange extends StyleOptionSpec {
+    values: {default: number; min: number; max: number; step: number};
+    option_type: "range";
+}
+
+export interface StyleOptionSpecCheckbox extends StyleOptionSpec {
+    values: {default: boolean};
+    option_type: "checkbox";
 }
 
 interface MatcherConditionValue {
@@ -691,15 +568,14 @@ export interface StyleMatcherConditions {
     rule_name?: MatcherConditionValue;
     hostname?: MatcherConditionValue;
     service?: MatcherConditionValue;
+    id?: MatcherConditionValue;
 }
 
 export interface StyleConfig {
     type: string;
     position: Coords | null;
     weight: number;
-    options: {
-        [name: string]: number | boolean;
-    };
+    options: StyleOptionValues;
     matcher: StyleMatcherConditions;
 }
 
@@ -728,3 +604,194 @@ class LayoutStyleClassRegistry extends AbstractClassRegistry<
 > {}
 
 export const layout_style_class_registry = new LayoutStyleClassRegistry();
+
+export function render_style_options(
+    style_id: string,
+    into_selection: d3SelectionDiv,
+    style_option_specs: StyleOptionSpec[],
+    style_option_values: StyleOptionValues,
+    options_changed_callback,
+    reset_default_options_callback: (event) => void = _event => {
+        return;
+    }
+) {
+    into_selection
+        .selectAll("#styleoptions_headline")
+        .data([null])
+        .join("b")
+        .attr("id", "styleoptions_headline")
+        .text("Options");
+
+    const table = into_selection
+        .selectAll<HTMLTableElement, string>("table")
+        .data([style_id], d => d)
+        .join("table");
+
+    _render_range_options(
+        table,
+        style_option_specs,
+        style_option_values,
+        options_changed_callback
+    );
+    _render_checkbox_options(
+        table,
+        style_option_specs,
+        style_option_values,
+        options_changed_callback
+    );
+
+    into_selection
+        .selectAll<HTMLInputElement, string>("input.reset_options")
+        .data([style_id], d => d)
+        .join(enter =>
+            enter
+                .append("input")
+                .attr("type", "button")
+                .classed("button", true)
+                .classed("reset_options", true)
+                .attr("value", "Reset default values")
+                .on("click", event => {
+                    reset_default_options_callback(event);
+                })
+        );
+}
+
+function _get_style_option_values(
+    from_selection: d3.Selection<HTMLTableElement, string, any, unknown>,
+    style_option_specs: StyleOptionSpec[]
+): StyleOptionValues {
+    const option_values: StyleOptionValues = {};
+    style_option_specs.forEach(option_spec => {
+        switch (option_spec.option_type) {
+            case "range":
+                option_values[option_spec.id] = parseFloat(
+                    from_selection
+                        .select("input#" + option_spec.id)
+                        .property("value")
+                );
+                break;
+            case "checkbox":
+                option_values[option_spec.id] = from_selection
+                    .select("input#" + option_spec.id)
+                    .property("checked");
+                break;
+        }
+    });
+    return option_values;
+}
+
+function _render_range_options(
+    table: d3.Selection<HTMLTableElement, string, any, unknown>,
+    style_option_specs: StyleOptionSpec[],
+    style_option_values: StyleOptionValues,
+    option_changed_callback: (any, StyleOptionValues) => void
+): void {
+    const rows = table
+        .selectAll<HTMLTableRowElement, StyleOptionSpecRange>("tr.range_option")
+        .data(style_option_specs.filter(d => d.option_type == "range"))
+        .join<HTMLTableRowElement>(enter =>
+            enter.append("tr").classed("range_option", true)
+        );
+
+    rows.selectAll("td.text")
+        .data(d => [d])
+        .join(enter => enter.append("td").classed("text", true))
+        .text(d => d.text);
+
+    rows.selectAll("td input")
+        .data(d => [d])
+        .join("td")
+        .selectAll("input")
+        .data(d => [d])
+        .join(enter =>
+            enter
+                .append("input")
+                .classed("range", true)
+                .attr("id", d => d.id)
+                .attr("name", d => "type_value_" + d.id)
+                .attr("type", "range")
+                .attr("step", d => d.values.step || 1)
+                .attr("min", d => d.values.min)
+                .attr("max", d => d.values.max)
+                .on("input", event => {
+                    const new_options = _get_style_option_values(
+                        table,
+                        style_option_specs
+                    );
+                    option_changed_callback(event, new_options);
+                    _render_range_options(
+                        table,
+                        style_option_specs,
+                        new_options,
+                        option_changed_callback
+                    );
+                })
+                .on("change", event => {
+                    const new_options = _get_style_option_values(
+                        table,
+                        style_option_specs
+                    );
+                    option_changed_callback(event, new_options);
+                    _render_range_options(
+                        table,
+                        style_option_specs,
+                        new_options,
+                        option_changed_callback
+                    );
+                })
+        );
+
+    rows.selectAll("td.value")
+        .data(d => [d])
+        .join(enter => enter.append("td").classed("value", true))
+        .text(d => style_option_values[d.id]);
+
+    rows.selectAll("input")
+        .data(d => [d])
+        .property("value", d => style_option_values[d.id]);
+}
+
+function _render_checkbox_options(
+    table: d3.Selection<HTMLTableElement, string, any, unknown>,
+    style_option_specs: StyleOptionSpec[],
+    style_option_values: StyleOptionValues,
+    options_changed_callback: (any, StyleOptionValues) => void
+): void {
+    const rows = table
+        .selectAll<HTMLTableRowElement, StyleOptionSpecCheckbox>(
+            "tr.checkbox_option"
+        )
+        .data(style_option_specs.filter(d => d.option_type == "checkbox"))
+        .join(enter => enter.append("tr").classed("checkbox_option", true));
+
+    rows.selectAll("td.text")
+        .data(d => [d])
+        .join(enter => enter.append("td").classed("text", true))
+        .text(d => d.text);
+
+    rows.selectAll("td input")
+        .data(d => [d])
+        .join(enter =>
+            enter
+                .append("td")
+                .append("input")
+                .classed("checkbox", true)
+                .attr("id", d => d.id)
+                .attr("name", d => "type_checkbox_" + d.id)
+                .attr("type", "checkbox")
+                .property("checked", d => style_option_values[d.id])
+                .on("input", event => {
+                    const new_options = _get_style_option_values(
+                        table,
+                        style_option_specs
+                    );
+                    options_changed_callback(event, new_options);
+                    _render_checkbox_options(
+                        table,
+                        style_option_specs,
+                        new_options,
+                        options_changed_callback
+                    );
+                })
+        );
+}

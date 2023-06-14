@@ -6,7 +6,7 @@ Date: 1670943342
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The Setup search was slowed down by inefficient permission checks. These checks ensure that only
 pages which the current user is allowed to see are included in the results. The permissions are now

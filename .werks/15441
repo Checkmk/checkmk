@@ -1,0 +1,17 @@
+Title: isc_dhcpd.py: unable to determine DHCPD processes on Debian 10 (buster)
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1678271411
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk is a follow-up to werk #10815.
+
+Due to a bug that made the "pidof" command unstable in Debian 10, the agent
+plugin was not able to reliably determine DHCPD processes. This has been fixed.
+
+Please read https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=926896 for
+details on the bug.

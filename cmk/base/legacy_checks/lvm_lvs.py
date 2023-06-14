@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+# example output
+
+
+import collections
+
+from cmk.base.check_api import (
+    check_levels,
+    discover,
+    get_parsed_item_data,
+    get_percent_human_readable,
+    LegacyCheckDefinition,
+)
+from cmk.base.config import check_info
+
+LvmLvsEntry = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
+    "LvmLvsEntry", ["data", "meta"]
+)
+
+
+def parse_lvm_lvs(info):
+    possible_items = {"%s/%s" % (line[1], line[4]) for line in info if line[4] != ""}
+
+    parsed = {}
+    for line in info:
+        item = "%s/%s" % (line[1], line[0])
+        if item not in possible_items:
+            continue
+
+        try:
+            parsed[item] = LvmLvsEntry(data=float(line[6]), meta=float(line[7]))
+        except (IndexError, ValueError):
+            pass
+    return parsed
+
+
+@get_parsed_item_data
+def check_lvm_lvs(item, params, entry):
+    yield check_levels(
+        entry.data,
+        "data_usage",
+        params["levels_data"],
+        human_readable_func=get_percent_human_readable,
+        infoname="Data usage",
+    )
+    yield check_levels(
+        entry.meta,
+        "meta_usage",
+        params["levels_meta"],
+        human_readable_func=get_percent_human_readable,
+        infoname="Meta usage",
+    )
+
+
+check_info["lvm_lvs"] = LegacyCheckDefinition(
+    parse_function=parse_lvm_lvs,
+    discovery_function=discover(),
+    check_function=check_lvm_lvs,
+    service_name="LVM LV Pool %s",
+    check_ruleset_name="lvm_lvs_pools",
+    check_default_parameters={
+        "levels_data": (80.0, 90.0),
+        "levels_meta": (80.0, 90.0),
+    },
+)

@@ -6,7 +6,7 @@ Date: 1650872232
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This updates paramiko to 2.3.10 and Pillow to 9.1.0. These new versions include fixes for these CVEs:
 

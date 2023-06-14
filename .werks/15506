@@ -1,0 +1,14 @@
+Title: time_period: restrict name pattern for create endpoint
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1678871937
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, the user was allowed to specify any string
+as name of a new time period. This behaviour differs from the UI
+behaviour and this werk fixes this.
+

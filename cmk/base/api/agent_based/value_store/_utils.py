@@ -1,46 +1,42 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from ast import literal_eval
-from contextlib import contextmanager
-from pathlib import Path
-from typing import (
-    Any,
+from collections.abc import (
     Callable,
     Container,
-    Dict,
-    Final,
     Hashable,
     Iterable,
     Iterator,
     Mapping,
     MutableMapping,
-    Optional,
-    Set,
-    Tuple,
-    TypeVar,
-    Union,
 )
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Any, Final, TypeVar
 
 import cmk.utils.cleanup
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import logger
-from cmk.utils.type_defs import CheckPluginName, HostName, Item, ServiceID
+from cmk.utils.type_defs import HostName, Item
+
+from cmk.checkengine.check_table import ServiceID
+from cmk.checkengine.checking import CheckPluginName
 
 _PluginName = str
 _UserKey = str
-_ValueStoreKey = Tuple[HostName, _PluginName, Item, _UserKey]
+_ValueStoreKey = tuple[HostName, _PluginName, Item, _UserKey]
 
 _TKey = TypeVar("_TKey", bound=Hashable)
 _TValue = TypeVar("_TValue")
 _TDefault = TypeVar("_TDefault")
 
 
-class _DynamicDiskSyncedMapping(Dict[_TKey, _TValue]):
+class _DynamicDiskSyncedMapping(dict[_TKey, _TValue]):
     """Represents the values that have been changed in a session
 
     This is a dict derivat that remembers if a key has been
@@ -50,10 +46,10 @@ class _DynamicDiskSyncedMapping(Dict[_TKey, _TValue]):
 
     def __init__(self) -> None:
         super().__init__()
-        self._removed_keys: Set[_TKey] = set()
+        self._removed_keys: set[_TKey] = set()
 
     @property
-    def removed_keys(self) -> Set[_TKey]:
+    def removed_keys(self) -> set[_TKey]:
         return self._removed_keys
 
     def __setitem__(self, key: _TKey, value: _TValue) -> None:
@@ -64,7 +60,7 @@ class _DynamicDiskSyncedMapping(Dict[_TKey, _TValue]):
         self._removed_keys.add(key)
         super().__delitem__(key)
 
-    def pop(self, key: _TKey, *args: Union[_TValue, _TDefault]) -> Union[_TValue, _TDefault]:
+    def pop(self, key: _TKey, *args: _TValue | _TDefault) -> _TValue | _TDefault:
         self._removed_keys.add(key)
         return super().pop(key, *args)
 
@@ -87,7 +83,7 @@ class _StaticDiskSyncedMapping(Mapping[_TKey, _TValue]):
         deserializer: Callable[[str], Mapping[_TKey, _TValue]],
     ) -> None:
         self._path: Final = path
-        self._last_sync: Optional[float] = None
+        self._last_sync: float | None = None
         self._data: Mapping[_TKey, _TValue] = {}
         self._log_debug = log_debug
         self._serializer: Final = serializer
@@ -107,7 +103,7 @@ class _StaticDiskSyncedMapping(Mapping[_TKey, _TValue]):
         self,
         *,
         removed: Container[_TKey] = (),
-        updated: Iterable[Tuple[_TKey, _TValue]] = (),
+        updated: Iterable[tuple[_TKey, _TValue]] = (),
     ) -> None:
         """Re-load and write the changes of the stored values
 
@@ -121,29 +117,26 @@ class _StaticDiskSyncedMapping(Mapping[_TKey, _TValue]):
 
         self._path.parent.mkdir(parents=True, exist_ok=True)
 
-        try:
-            store.acquire_lock(self._path)
+        with store.locked(self._path):
+            try:
+                if self._path.stat().st_mtime == self._last_sync:
+                    self._log_debug("already loaded")
+                else:
+                    self._log_debug("loading from disk")
+                    self._data = self._deserializer(
+                        store.load_text_from_file(self._path, default="{}", lock=False)
+                    )
 
-            if self._path.stat().st_mtime == self._last_sync:
-                self._log_debug("already loaded")
-            else:
-                self._log_debug("loading from disk")
-                self._data = self._deserializer(
-                    store.load_text_from_file(self._path, default="{}", lock=False)
-                )
+                if removed or updated:
+                    data = {k: v for k, v in self._data.items() if k not in removed}
+                    data.update(updated)
+                    self._log_debug("writing to disk")
+                    store.save_text_to_file(self._path, self._serializer(data))
+                    self._data = data
 
-            if removed or updated:
-                data = {k: v for k, v in self._data.items() if k not in removed}
-                data.update(updated)
-                self._log_debug("writing to disk")
-                store.save_text_to_file(self._path, self._serializer(data))
-                self._data = data
-
-            self._last_sync = self._path.stat().st_mtime
-        except Exception as exc:
-            raise MKGeneralException from exc
-        finally:
-            store.release_lock(self._path)
+                self._last_sync = self._path.stat().st_mtime
+            except Exception as exc:
+                raise MKGeneralException from exc
 
 
 class _DiskSyncedMapping(MutableMapping[_TKey, _TValue]):  # pylint: disable=too-many-ancestors
@@ -177,7 +170,7 @@ class _DiskSyncedMapping(MutableMapping[_TKey, _TValue]):  # pylint: disable=too
         self._dynamic = dynamic
         self.static = static
 
-    def _keys(self) -> Set[_TKey]:
+    def _keys(self) -> set[_TKey]:
         return {
             k
             for k in (set(self._dynamic) | set(self.static))
@@ -201,7 +194,7 @@ class _DiskSyncedMapping(MutableMapping[_TKey, _TValue]):  # pylint: disable=too
         except KeyError:
             _ = self.static[key]
 
-    def pop(self, key: _TKey, *args: Union[_TValue, _TDefault]) -> Union[_TValue, _TDefault]:
+    def pop(self, key: _TKey, *args: _TValue | _TDefault) -> _TValue | _TDefault:
         try:
             return self._dynamic.pop(key)
             # key is now marked as removed.
@@ -237,7 +230,7 @@ class _ValueStore(MutableMapping[_UserKey, Any]):  # pylint: disable=too-many-an
         self,
         *,
         data: MutableMapping[_ValueStoreKey, Any],
-        service_id: Tuple[CheckPluginName, Item],
+        service_id: tuple[CheckPluginName, Item],
         host_name: HostName,
     ) -> None:
         self._prefix = (host_name, str(service_id[0]), service_id[1])
@@ -290,13 +283,11 @@ class ValueStoreManager:
             serializer=repr,
             deserializer=literal_eval,
         )
-        self.active_service_interface: Optional[_ValueStore] = None
+        self.active_service_interface: _ValueStore | None = None
         self._host_name = host_name
 
     @contextmanager
-    def namespace(
-        self, service_id: ServiceID, host_name: Optional[HostName] = None
-    ) -> Iterator[None]:
+    def namespace(self, service_id: ServiceID, host_name: HostName | None = None) -> Iterator[None]:
         """Return a context manager
 
         In the corresponding context the value store for the given service is active

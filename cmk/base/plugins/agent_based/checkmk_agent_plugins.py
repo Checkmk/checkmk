@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -92,7 +92,6 @@ def _parse_plugin_win(line: str, prefix: str) -> Optional[Plugin]:
 def _parse_checkmk_agent_plugins_core(
     string_table: StringTable, parser: Callable[[str, str], Optional[Plugin]]
 ) -> PluginSection:
-
     assert string_table[0][0].startswith("pluginsdir ")
     plugins_dir = string_table[0][0][len("pluginsdir ") :]
 

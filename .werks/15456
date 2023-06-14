@@ -1,0 +1,13 @@
+Title: mailbox: Fix exchangelib warning in the service summary
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1678452198
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, a warning "WARNING:exchangelib.account:Failed to guess local timezone. Fallback to UTC"
+was shown in the mailbox service summary on some of the Checkmk servers.
+

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """A few upgraded Fields which handle some OpenAPI validation internally."""
@@ -27,6 +27,7 @@ from cmk.utils.livestatus_helpers.expressions import NothingExpression, QueryExp
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hostgroups, Hosts, Servicegroups
 from cmk.utils.livestatus_helpers.types import Column, Table
+from cmk.utils.tags import TagGroupID, TagID
 
 from cmk.gui import sites
 from cmk.gui.exceptions import MKUserError
@@ -36,7 +37,7 @@ from cmk.gui.groups import GroupName, GroupType, load_group_information
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import configured_sites
 from cmk.gui.watolib.host_attributes import host_attribute
-from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, Host
+from cmk.gui.watolib.hosts_and_folders import CREFolder, folder_tree, Host
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 from cmk.gui.watolib.tags import load_tag_group
 
@@ -91,9 +92,7 @@ class PythonString(base.String):
 
     """
 
-    def _serialize(  # type:ignore[no-untyped-def]
-        self, value, attr, obj, **kwargs
-    ) -> str | None:
+    def _serialize(self, value, attr, obj, **kwargs) -> str | None:  # type: ignore[no-untyped-def]
         return repr(value)
 
     def _deserialize(self, value, attr, data, **kwargs):
@@ -110,11 +109,11 @@ class PythonString(base.String):
 
 # NOTE
 # All these non-capturing match groups are there to properly distinguish the alternatives.
-FOLDER_PATTERN = r"(?:(?:[~\\\/]|(?:[~\\\/][-_ a-zA-Z0-9.]+)+[~\\\/]?)|[0-9a-fA-F]{32})"
+FOLDER_PATTERN = r"^(?:(?:[~\\\/]|(?:[~\\\/][-_ a-zA-Z0-9.]+)+[~\\\/]?)|[0-9a-fA-F]{32})$"
 
 
 class FolderField(base.String):
-    """This field represents a WATO Folder.
+    """This field represents a Setup Folder.
 
     It will return a Folder instance, ready to use.
     """
@@ -189,13 +188,14 @@ class FolderField(base.String):
             except ValueError:
                 return False
 
+        tree = folder_tree()
         if folder_id == "/":
-            folder = Folder.root_folder()
+            folder = tree.root_folder()
         elif _ishexdigit(folder_id):
-            folder = Folder._by_id(folder_id)
+            folder = tree._by_id(folder_id)
         else:
             folder_id = cls._normalize_folder(folder_id)
-            folder = Folder.folder(folder_id[1:])
+            folder = tree.folder(folder_id[1:])
 
         return folder
 
@@ -208,9 +208,7 @@ class FolderField(base.String):
                 raise self.make_error("not_found", folder_id=value)
         return None
 
-    def _serialize(  # type:ignore[no-untyped-def]
-        self, value, attr, obj, **kwargs
-    ) -> str | None:
+    def _serialize(self, value, attr, obj, **kwargs) -> str | None:  # type: ignore[no-untyped-def]
         if isinstance(value, str):
             if not value.startswith("/"):
                 value = f"/{value}"
@@ -233,7 +231,7 @@ class BinaryExprSchema(BaseSchema):
 
     op = base.String(description="The operator.")
     left = base.String(
-        description="The LiveStatus column name.", pattern=r"([a-z]+\.)?[_a-z]+", example="name"
+        description="The LiveStatus column name.", pattern=r"^([a-z]+\.)?[_a-z]+$", example="name"
     )
     right = base.String(
         description="The value to compare the column to."
@@ -360,7 +358,7 @@ class _ExprNested(base.Nested):
         return tree_to_expr(_data, table=self.metadata["table"])
 
 
-def query_field(  # type:ignore[no-untyped-def]
+def query_field(  # type: ignore[no-untyped-def]
     table: type[Table], required: bool = False, example=None
 ) -> base.Nested:
     """Returns a Nested ExprSchema Field which validates a Livestatus query.
@@ -468,7 +466,7 @@ class _ListOfColumns(base.List):
         "unknown_column": "Unknown default column: {table_name}.{column_name}",
     }
 
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
         self,
         cls_or_instance: _fields.Field | type,
         table: type[Table],
@@ -506,12 +504,10 @@ class _LiveStatusColumn(base.String):
         >>> _LiveStatusColumn(table=Hosts).deserialize('name')
         'name'
 
-        >>> import pytest
-        >>> with pytest.raises(ValidationError) as exc:
-        ...     _LiveStatusColumn(table=Hosts).deserialize('bar')
-        >>> exc.value.messages
-        ['Unknown column: hosts.bar']
-
+        >>> _LiveStatusColumn(table=Hosts).deserialize('bar')
+        Traceback (most recent call last):
+        ...
+        marshmallow.exceptions.ValidationError: Unknown column: hosts.bar
     """
 
     default_error_messages = {
@@ -527,7 +523,7 @@ class _LiveStatusColumn(base.String):
         return value
 
 
-HOST_NAME_REGEXP = "[-0-9a-zA-Z_.]+"
+HOST_NAME_REGEXP = "^[-0-9a-zA-Z_.]+$"
 
 
 class HostField(base.String):
@@ -536,9 +532,9 @@ class HostField(base.String):
     default_error_messages = {
         "should_exist": "Host not found: {host_name!r}",
         "should_not_exist": "Host {host_name!r} already exists.",
-        "should_be_monitored": "Host {host_name!r} exists, but is not monitored. "
+        "should_be_monitored": "Host {host_name!r} should be monitored but it's not. "
         "Activate the configuration?",
-        "should_not_be_monitored": "Host {host_name!r} exists, but should not be monitored. "
+        "should_not_be_monitored": "Host {host_name!r} should not be monitored but it is. "
         "Activate the configuration?",
         "should_be_cluster": "Host {host_name!r} is not a cluster host, but needs to be.",
         "should_not_be_cluster": "Host {host_name!r} may not be a cluster host, but is.",
@@ -546,7 +542,7 @@ class HostField(base.String):
         "invalid_name": "The provided name for host {host_name!r} is invalid: {invalid_reason!r}",
     }
 
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
         self,
         example="example.com",
         pattern=HOST_NAME_REGEXP,
@@ -576,15 +572,30 @@ class HostField(base.String):
 
         # Regex gets checked through the `pattern` of the String instance
 
+        host = Host.host(value)
+
         if self._should_exist is not None:
-            host = Host.host(value)
-            if self._should_exist and not host:
+            if self._should_exist and host is None:
                 raise self.make_error("should_exist", host_name=value)
 
-            if not self._should_exist and host:
+            if (
+                self._should_exist and host is not None and not host.may("read")
+            ):  # host is there but user isn't allowed see it
+                # TODO: This is probably the wrong Exception Type to use here.
+                # TODO: We're adressing this in CMK-13171
+                raise MKUserError(
+                    varname=None,
+                    message=f"You don't have access to this host: {value!r}",
+                    status=403,
+                )
+
+            if not self._should_exist and host is not None:
                 raise self.make_error("should_not_exist", host_name=value)
 
-        if self._should_be_cluster is not None and (host := Host.host(value)) is not None:
+        if self._should_be_cluster is not None:
+            if host is None:
+                raise self.make_error("should_exist", host_name=value)
+
             if self._should_be_cluster and not host.is_cluster():
                 raise self.make_error("should_be_cluster", host_name=value)
 
@@ -806,7 +817,7 @@ class CustomHostAttributes(ValueTypedDictSchema):
     )
 
     @post_load
-    def _valid(  # type:ignore[no-untyped-def]
+    def _valid(  # type: ignore[no-untyped-def]
         self, data: dict[str, Any], **kwargs
     ) -> dict[str, Any]:
         # NOTE
@@ -866,12 +877,12 @@ class TagGroupAttributes(ValueTypedDictSchema):
         )
     )
 
-    def _validate_tag_group(self, name: str) -> set[str | None]:
+    def _validate_tag_group(self, name: str) -> set[TagID | None]:
         if not name.startswith("tag_"):
             raise ValidationError({name: "Tag group name must start with 'tag_'"})
 
         try:
-            tag_group = load_tag_group(name[4:])
+            tag_group = load_tag_group(TagGroupID(name[4:]))
         except MKUserError as exc:
             raise ValidationError({name: str(exc)}) from exc
 
@@ -888,7 +899,7 @@ class TagGroupAttributes(ValueTypedDictSchema):
         return allowed_ids
 
     @pre_dump
-    def _pre_dump(  # type:ignore[no-untyped-def]
+    def _pre_dump(  # type: ignore[no-untyped-def]
         self, data: dict[str, str], **kwargs
     ) -> dict[str, str]:
         rv: dict[str, str] = {}
@@ -903,7 +914,7 @@ class TagGroupAttributes(ValueTypedDictSchema):
         return rv
 
     @post_load
-    def _post_load(  # type:ignore[no-untyped-def]
+    def _post_load(  # type: ignore[no-untyped-def]
         self, data: dict[str, str], **kwargs
     ) -> dict[str, str]:
         rv: dict[str, str] = {}
@@ -989,12 +1000,17 @@ class SiteField(base.String):
         presence: Literal[
             "should_exist", "should_not_exist", "might_not_exist", "ignore"
         ] = "should_exist",
+        allow_all_value: bool = False,
         **kwargs: Any,
     ) -> None:
         super().__init__(**kwargs)
         self.presence = presence
+        self.allow_all_value = allow_all_value
 
     def _validate(self, value):
+        if self.allow_all_value and value == "all":
+            return
+
         if self.presence == "might_not_exist":
             return
 
@@ -1027,7 +1043,7 @@ class _CustomerField(base.String):
         "should_not_exist": "Customer {customer!r} already exists.",
     }
 
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
         self,
         example="provider",
         description="By specifying a customer, you configure on which sites the user object will be "
@@ -1084,7 +1100,7 @@ class GroupField(base.String):
         "Activate the configuration?",
     }
 
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
         self,
         group_type,
         example,
@@ -1132,9 +1148,10 @@ class PasswordIdent(base.String):
     default_error_messages = {
         "should_exist": "Identifier missing: {name!r}",
         "should_not_exist": "Identifier {name!r} already exists.",
+        "contains_colon": "Identifier {name!r} contains a colon.",
     }
 
-    def __init__(  # type:ignore[no-untyped-def]
+    def __init__(  # type: ignore[no-untyped-def]
         self,
         example,
         required=True,
@@ -1150,7 +1167,7 @@ class PasswordIdent(base.String):
             **kwargs,
         )
 
-    def _validate(self, value: str):  # type:ignore[no-untyped-def]
+    def _validate(self, value: str):  # type: ignore[no-untyped-def]
         super()._validate(value)
 
         if ":" in value:
@@ -1310,7 +1327,7 @@ class X509ReqPEMFieldUUID(base.String):
         except ValueError:
             raise self.make_error("cn_no_uuid", cn=cn)
 
-    def _deserialize(  # type:ignore[no-untyped-def]
+    def _deserialize(  # type: ignore[no-untyped-def]
         self, value, attr, data, **kwargs
     ) -> CertificateSigningRequest:
         try:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -331,7 +331,7 @@ class ConfigurationConnectionAttributes(BaseSchema):
     )
     disable_remote_configuration = fields.Boolean(
         required=True,
-        description="It is a good idea to disable access to WATO completely on the remote site. Otherwise a user who does not now about the replication could make local changes that are overridden at the next configuration activation.",
+        description="It is a good idea to disable access to Setup completely on the remote site. Otherwise a user who does not now about the replication could make local changes that are overridden at the next configuration activation.",
         example=True,
     )
     ignore_tls_errors = fields.Boolean(
@@ -381,6 +381,7 @@ class BasicSettingsAttributes(BaseSchema):
         description="The alias of the site.",
         example="Site Alias",
     )
+    customer = gui_fields.customer_field()
 
 
 class BasicSettingsAttributesCreate(BasicSettingsAttributes):
@@ -436,7 +437,7 @@ class SiteConnectionRequestCreate(BaseSchema):
         SiteConfigAttributesCreate,
         required=True,
         description="A site's connection.",
-        example=default_config_example()["site_config"],
+        example=default_config_example(),
     )
 
 
@@ -445,5 +446,5 @@ class SiteConnectionRequestUpdate(BaseSchema):
         SiteConfigAttributesUpdate,
         required=True,
         description="A site's connection.",
-        example=default_config_example()["site_config"],
+        example=default_config_example(),
     )

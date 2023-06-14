@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+
+import re
 
 from tests.testlib.playwright.helpers import expect, PPage
 
@@ -34,6 +37,9 @@ def _create_encryption_key(logged_in_page: PPage) -> None:
     logged_in_page.main_area.get_input("key_p_alias").fill("My backup key")
     logged_in_page.main_area.get_input("key_p_passphrase").fill(_backup_passphrase)
     logged_in_page.main_area.get_suggestion("Create").click()
+    logged_in_page.main_area.check_warning(
+        re.compile(".*The following keys have not been downloaded yet: My backup key.*")
+    )
 
 
 def _create_backup_job(logged_in_page: PPage) -> None:
@@ -44,6 +50,10 @@ def _create_backup_job(logged_in_page: PPage) -> None:
 
     logged_in_page.main_area.locator_via_xpath("span", "Do not encrypt the backup").click()
     logged_in_page.main_area.locator_via_xpath("li", "Encrypt the backup using the key:").click()
+    logged_in_page.click_and_wait(
+        locator=logged_in_page.main_area.locator_via_xpath("span", "My backup key"),
+        reload_on_error=True,
+    )
     logged_in_page.main_area.get_suggestion("Save").click()
 
 

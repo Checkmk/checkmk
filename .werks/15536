@@ -1,0 +1,23 @@
+Title: IPMI sensors: consider sensor state as reported by freeipmi
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1683409029
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+This werk changes the way Checkmk derives the state of IPMI sensors from their status descriptions.
+
+Previously, Checkmk would first check the user configured parameters (<i>IPMI sensors -> Set states of IPMI sensor status texts</i>), and then fall back to built-in heuristics to derive the service state from the sensors status description.
+These heuristics missed a lot of possible "OK" states, and thus produced false positives.
+
+This situation is improved by using the sensor status interpretation provided by <tt>freeipmi</tt>, if present.
+
+The order of preference is: Use the first matching user configured state, if found.
+Otherwise use the status as reported by <tt>freeipmi</tt>, if it is present.
+If neither of these can be applied, still fall back to the built-in heuristics.
+
+In order to get the <tt>freeipmi</tt> status reported by the agent, you need to select <i>"Sensor state"</i> in the rule set <i>"IPMI Sensors via Freeipmi or IPMItool"</i>.
+

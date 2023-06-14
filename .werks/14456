@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If a view used filter with operators like "=" or "≠" (e.g. the "Host Tags"
 filter), the value of the operator was empty when opening the filter popup.

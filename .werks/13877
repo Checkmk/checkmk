@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Notifying users with the option "Send an E-Mail" via "Notify users" could lead
 to an UnicodeDecodeError.

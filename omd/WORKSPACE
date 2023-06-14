@@ -15,18 +15,143 @@ load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_depende
 # https://bazelbuild.github.io/rules_foreign_cc/0.9.0/flatten.html#rules_foreign_cc_dependencies
 rules_foreign_cc_dependencies()
 
+http_archive(
+    name = "rules_pkg",
+    sha256 = "8f9ee2dc10c1ae514ee599a8b42ed99fa262b757058f65ad3c384289ff70c4b8",
+    urls = [
+        "https://mirror.bazel.build/github.com/bazelbuild/rules_pkg/releases/download/0.9.1/rules_pkg-0.9.1.tar.gz",
+        "https://github.com/bazelbuild/rules_pkg/releases/download/0.9.1/rules_pkg-0.9.1.tar.gz",
+    ],
+)
+
+load("@rules_pkg//:deps.bzl", "rules_pkg_dependencies")
+
+rules_pkg_dependencies()
+
+#   .--PACKAGES------------------------------------------------------------.
+#   |           ____   _    ____ _  __    _    ____ _____ ____             |
+#   |          |  _ \ / \  / ___| |/ /   / \  / ___| ____/ ___|            |
+#   |          | |_) / _ \| |   | ' /   / _ \| |  _|  _| \___ \            |
+#   |          |  __/ ___ \ |___| . \  / ___ \ |_| | |___ ___) |           |
+#   |          |_| /_/   \_\____|_|\_\/_/   \_\____|_____|____/            |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 load("//packages/patch:patch_http.bzl", "patch")
-patch()
+
+patch(
+    sha256 = "8cf86e00ad3aaa6d26aca30640e86b0e3e1f395ed99f189b06d4c9f74bc58a4e",
+    version_str = "2.7.6",
+)
 
 load("//packages/redis:redis_http.bzl", "redis")
-redis()
+
+redis(
+    sha256 = "5b2b8b7a50111ef395bf1c1d5be11e6e167ac018125055daa8b5c2317ae131ab",
+    version_str = "6.2.6",
+)
 
 load("//packages/openssl:openssl_http.bzl", "openssl")
-openssl()
+
+openssl(
+    sha256 = "8dee9b24bdb1dcbf0c3d1e9b02fb8f6bf22165e807f45adeb7c9677536859d3b",
+    version_str = "1.1.1t",
+)
 
 load("//packages/xmlsec1:xmlsec1_http.bzl", "xmlsec1")
-xmlsec1()
+
+xmlsec1(
+    sha256 = "5f8dfbcb6d1e56bddd0b5ec2e00a3d0ca5342a9f57c24dffde5c796b2be2871c",
+    version_str = "1.2.37",
+)
 
 load("//packages/heirloom-mailx:heirloom-mailx_http.bzl", "heirloommailx")
-heirloommailx()
+
+heirloommailx(
+    sha256 = "015ba4209135867f37a0245d22235a392b8bbed956913286b887c2e2a9a421ad",
+    version_str = "12.5",
+)
+
+load("//packages/monitoring-plugins:monitoring-plugins_http.bzl", "monitoring_plugins")
+
+monitoring_plugins(
+    sha256 = "7023b1dc17626c5115b061e7ce02e06f006e35af92abf473334dffe7ff3c2d6d",
+    version_str = "2.3.3",
+)
+
+load("//packages/stunnel:stunnel_http.bzl", "stunnel")
+
+stunnel(
+    sha256 = "c74c4e15144a3ae34b8b890bb31c909207301490bd1e51bfaaa5ffeb0a994617",
+    version_str = "5.63",
+)
+
+load("//packages/freetds:freetds_http.bzl", "freetds")
+
+freetds(
+    sha256 = "be7c90fc771f30411eff6ae3a0d2e55961f23a950a4d93c44d4c488006e64c70",
+    version_str = "0.95.95",
+)
+
+load("//packages/heirloom-pkgtools:heirloom-pkgtools_http.bzl", "heirloom_pkgtools")
+
+heirloom_pkgtools(
+    sha256 = "aa94d33550847d57c62138cabd0f742d4af2f14aa2bfb9e9d4a9427bf498e6cc",
+    version_str = "070227",
+)
+
+load("//packages/libgsf:libgsf_http.bzl", "libgsf")
+
+libgsf(
+    sha256 = "68bede10037164764992970b4cb57cd6add6986a846d04657af9d5fac774ffde",
+    version_str = "1.14.44",
+)
+
+load("//packages/lcab:lcab_http.bzl", "lcab")
+
+lcab(
+    sha256 = "065f2c1793b65f28471c0f71b7cf120a7064f28d1c44b07cabf49ec0e97f1fc8",
+    version_str = "1.0b12",
+)
+
+load("//packages/msitools:msitools_http.bzl", "msitools")
+
+msitools(
+    sha256 = "ebbdd9aa714a6a6ada4450aff5e86351cf910d09b24a85645425737602d75df5",
+    version_str = "0.94",
+)
+
+load("//packages/snap7:snap7_http.bzl", "snap7")
+
+snap7(
+    sha256 = "fe137737b432d95553ebe5d5f956f0574c6a80c0aeab7a5262fb36b535df3cf4",
+    version_str = "1.4.2",
+)
+
+load("//packages/perl-modules:perl-modules_http.bzl", "perl_modules")
+
+perl_modules()
+
+load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
+
+http_archive(
+    name = "Crypt-SSLeay",
+    build_file = "//packages/perl-modules:BUILD.Crypt-SSLeay.bazel",
+    patch_args = ["-p1"],
+    patch_tool = "patch",
+    patches = [
+        "//packages/perl-modules/patches:Crypt-SSLeay-0.72-do-not-use-SSLv2_client_method-with-new-openssl.dif",
+    ],
+    strip_prefix = "Crypt-SSLeay-0.72",
+    urls = [
+        "https://www.cpan.org/modules/by-module/Net/NANIS/Crypt-SSLeay-0.72.tar.gz",
+        UPSTREAM_MIRROR_URL + "Crypt-SSLeay-0.72.tar.gz",
+    ],
+)
+
+load("//packages/nrpe:nrpe_http.bzl", "nrpe")
+
+nrpe(
+    sha256 = "8ad2d1846ab9011fdd2942b8fc0c99dfad9a97e57f4a3e6e394a4ead99c0f1f0",
+    version_str = "3.2.1",
+)

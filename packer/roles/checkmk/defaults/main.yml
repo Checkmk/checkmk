@@ -1,0 +1,10 @@
+---
+checkmk_server_server_stable_os:
+  - Ubuntu-22
+
+checkmk_server_edition: cce
+checkmk_server_version: 2.1.0p18
+checkmk_server_verify_setup: 'true'
+
+checkmk_server_download_user: []
+checkmk_server_download_pass: []

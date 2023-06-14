@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Service groups
@@ -30,6 +30,7 @@ from cmk.gui.plugins.openapi.endpoints.utils import (
     fetch_group,
     fetch_specific_groups,
     prepare_groups,
+    ProblemException,
     serialize_group,
     serialize_group_list,
     serve_group,
@@ -44,8 +45,9 @@ from cmk.gui.plugins.openapi.restful_objects import (
     request_schemas,
     response_schemas,
 )
-from cmk.gui.plugins.openapi.restful_objects.parameters import NAME_FIELD
+from cmk.gui.plugins.openapi.restful_objects.parameters import GROUP_NAME_FIELD
 from cmk.gui.plugins.openapi.utils import serve_json
+from cmk.gui.watolib.groups import GroupInUseException, UnknownGroupException
 
 PERMISSIONS = permissions.Perm("wato.groups")
 
@@ -72,7 +74,7 @@ def create(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.groups")
     body = params["body"]
     name = body["name"]
-    group_details = {"alias": body.get("alias")}
+    group_details = {"alias": body["alias"]}
     if version.is_managed_edition():
         group_details = update_customer_info(group_details, body["customer"])
     groups.add_group(name, "service", group_details)
@@ -85,7 +87,7 @@ def create(params: Mapping[str, Any]) -> Response:
     "cmk/bulk_create",
     method="post",
     request_schema=request_schemas.BulkInputServiceGroup,
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=response_schemas.ServiceGroupCollection,
     permissions_required=RW_PERMISSIONS,
 )
 def bulk_create(params: Mapping[str, Any]) -> Response:
@@ -109,7 +111,7 @@ def bulk_create(params: Mapping[str, Any]) -> Response:
     constructors.collection_href("service_group_config"),
     ".../collection",
     method="get",
-    response_schema=response_schemas.LinkedValueDomainObjectCollection,
+    response_schema=response_schemas.ServiceGroupCollection,
     permissions_required=PERMISSIONS,
 )
 def list_groups(params: Mapping[str, Any]) -> Response:
@@ -127,7 +129,7 @@ def list_groups(params: Mapping[str, Any]) -> Response:
     method="get",
     response_schema=response_schemas.ServiceGroup,
     etag="output",
-    path_params=[NAME_FIELD],
+    path_params=[GROUP_NAME_FIELD],
     permissions_required=PERMISSIONS,
 )
 def show_group(params: Mapping[str, Any]) -> Response:
@@ -142,16 +144,31 @@ def show_group(params: Mapping[str, Any]) -> Response:
     constructors.object_href("service_group_config", "{name}"),
     ".../delete",
     method="delete",
-    path_params=[NAME_FIELD],
+    path_params=[GROUP_NAME_FIELD],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
+    additional_status_codes=[409],
 )
 def delete(params: Mapping[str, Any]) -> Response:
     """Delete a service group"""
     user.need_permission("wato.edit")
     user.need_permission("wato.groups")
     name = params["name"]
-    groups.delete_group(name, group_type="service")
+    try:
+        groups.delete_group(name, group_type="service")
+    except GroupInUseException as exc:
+        raise ProblemException(
+            status=409,
+            title="Group in use problem",
+            detail=str(exc),
+        )
+    except UnknownGroupException as exc:
+        raise ProblemException(
+            status=404,
+            title="Unknown group problem",
+            detail=str(exc),
+        )
+
     return Response(status=204)
 
 
@@ -162,19 +179,29 @@ def delete(params: Mapping[str, Any]) -> Response:
     request_schema=request_schemas.BulkDeleteServiceGroup,
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
+    additional_status_codes=[404, 409],
 )
 def bulk_delete(params: Mapping[str, Any]) -> Response:
     """Bulk delete service groups"""
     user.need_permission("wato.edit")
     user.need_permission("wato.groups")
     body = params["body"]
-    entries = body["entries"]
-    for group_name in entries:
-        _group = fetch_group(
-            group_name, "service", status=400, message="service group %s was not found" % group_name
-        )
-    for group_name in entries:
-        groups.delete_group(group_name, group_type="service")
+    for group_name in body["entries"]:
+        try:
+            groups.delete_group(group_name, group_type="service")
+        except GroupInUseException as exc:
+            raise ProblemException(
+                status=409,
+                title="Group in use problem",
+                detail=str(exc),
+            )
+        except UnknownGroupException as exc:
+            raise ProblemException(
+                status=404,
+                title="Unknown group problem",
+                detail=str(exc),
+            )
+
     return Response(status=204)
 
 
@@ -182,7 +209,7 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     constructors.object_href("service_group_config", "{name}"),
     ".../update",
     method="put",
-    path_params=[NAME_FIELD],
+    path_params=[GROUP_NAME_FIELD],
     etag="both",
     response_schema=response_schemas.ServiceGroup,
     request_schema=request_schemas.UpdateGroup,
@@ -194,7 +221,7 @@ def update(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.groups")
     name = params["name"]
     group = fetch_group(name, "service")
-    constructors.require_etag(constructors.etag_of_dict(group))
+    constructors.require_etag(constructors.hash_of_dict(group))
     groups.edit_group(name, "service", updated_group_details(name, "service", params["body"]))
     group = fetch_group(name, "service")
     return serve_group(group, serialize_group("service_group_config"))
@@ -205,7 +232,7 @@ def update(params: Mapping[str, Any]) -> Response:
     "cmk/bulk_update",
     method="put",
     request_schema=request_schemas.BulkUpdateServiceGroup,
-    response_schema=response_schemas.DomainObjectCollection,
+    response_schema=response_schemas.ServiceGroupCollection,
     permissions_required=RW_PERMISSIONS,
 )
 def bulk_update(params: Mapping[str, Any]) -> Response:

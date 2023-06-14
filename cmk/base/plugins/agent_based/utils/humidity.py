@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -14,7 +14,7 @@ CheckParams = Union[
 
 def check_humidity(humidity: float, params: CheckParams) -> type_defs.CheckResult:
     levels_upper, levels_lower = None, None
-    if isinstance(params, dict):
+    if isinstance(params, (dict, Mapping)):
         levels_upper = params.get("levels") or None
         levels_lower = params.get("levels_lower") or None
     elif isinstance(params, (list, tuple)):

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,6 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 from pydantic_factories import ModelFactory
+from pytest_mock import MockerFixture
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
 from cmk.base.plugins.agent_based.inventory_kube_pod import _containers_to_table, inventory_kube_pod
@@ -156,7 +157,6 @@ def test_inventory_kube_pod(
     section_init_container_specs: ContainerSpecs,
     expected_check_result: Sequence[TableRow | Attributes],
 ) -> None:
-
     assert expected_check_result == list(
         inventory_kube_pod(
             section_info,
@@ -271,7 +271,6 @@ def test_container_to_table(
     container_statuses: PodContainers | None,
     expected_check_result: Sequence[TableRow | Attributes],
 ) -> None:
-
     assert expected_check_result == list(
         _containers_to_table(
             container_specs,
@@ -280,7 +279,7 @@ def test_container_to_table(
     )
 
 
-def test_inventory_kube_pod_calls_labels_to_table(mocker) -> None:  # type:ignore[no-untyped-def]
+def test_inventory_kube_pod_calls_labels_to_table(mocker: MockerFixture) -> None:
     """Test coverage and uniform look across inventories relies on the inventories calling
     labels_to_table."""
 

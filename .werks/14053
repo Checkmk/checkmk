@@ -6,7 +6,7 @@ Date: 1655126390
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 CPU Memory utilization services with total memory of size 0 were previously
 discovered and assumed the state UNKNOWN. Since the service delivered no

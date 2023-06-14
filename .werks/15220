@@ -1,0 +1,15 @@
+Title: time period: put endpoint now returns 200 with edited time period config
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1675855343
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+The time period put endpoint previously returned a 204 and no
+data response.  This werk is a fix to return the time period
+object along with a status code of 200 to align with our
+other put endpoints.
+

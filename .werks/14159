@@ -6,6 +6,6 @@ Date: 1655135191
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The feature itself was already implemented, but only worked once after every liveproxyd restart.

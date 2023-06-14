@@ -1,30 +1,45 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
+import {PartialK} from "types";
+
 declare global {
-    var global_csrf_token: string;
+    let global_csrf_token: string;
 }
 
-interface Args {
+type OptionalArgs<HandlerData = any> = PartialK<
+    Args<HandlerData>,
+    | "method"
+    | "post_data"
+    | "handler_data"
+    | "add_ajax_id"
+    | "plain_error"
+    | "sync"
+>;
+
+interface Args<HandlerData = any> {
     method: "GET" | "POST";
-    post_data?: any;
-    response_handler?: (a?: any, b?: any) => void;
-    handler_data?: any;
+    post_data: string | null;
+    response_handler?: (a: HandlerData, b: string) => void;
+    handler_data: HandlerData | null;
     error_handler?: (
-        handler_data: any,
+        handler_data: HandlerData,
         status: number,
-        staus_text: string,
+        status_text: string,
         response_text?: string
     ) => void;
-    add_ajax_id?: boolean;
+    add_ajax_id: boolean;
     plain_error: boolean;
     sync: boolean;
     authorization?: string;
 }
 
-export function call_ajax(url: string, optional_args?: any) {
-    const default_args: Args = {
+export function call_ajax<HandlerData = any>(
+    url: string,
+    optional_args?: OptionalArgs<HandlerData>
+) {
+    const default_args: Args<HandlerData> = {
         add_ajax_id: true,
         plain_error: false,
         response_handler: undefined,
@@ -35,14 +50,12 @@ export function call_ajax(url: string, optional_args?: any) {
         sync: false,
         authorization: undefined,
     };
-    var args: Args = {
+    const args: Args<HandlerData> = {
         ...default_args,
         ...optional_args,
     };
 
-    var AJAX = window.XMLHttpRequest
-        ? new window.XMLHttpRequest()
-        : new window.ActiveXObject("Microsoft.XMLHTTP");
+    const AJAX = new window.XMLHttpRequest();
     if (!AJAX) return null;
 
     // Dynamic part to prevent caching
@@ -61,9 +74,9 @@ export function call_ajax(url: string, optional_args?: any) {
     } catch (e) {
         if (args.error_handler) {
             if (typeof e === "string")
-                args.error_handler(args.handler_data, 0, e);
+                args.error_handler(args.handler_data!, 0, e);
             else if (e instanceof Error)
-                args.error_handler(args.handler_data, 0, e.message);
+                args.error_handler(args.handler_data!, 0, e.message);
             else throw new Error("There is an error while using AJAX.open()");
             return null;
         } else {
@@ -89,7 +102,7 @@ export function call_ajax(url: string, optional_args?: any) {
                 if (AJAX.status == 200) {
                     if (args.response_handler)
                         args.response_handler(
-                            args.handler_data,
+                            args.handler_data!,
                             AJAX.responseText
                         );
                 } else if (AJAX.status == 401) {
@@ -104,7 +117,7 @@ export function call_ajax(url: string, optional_args?: any) {
                 } else {
                     if (args.error_handler)
                         args.error_handler(
-                            args.handler_data,
+                            args.handler_data!,
                             AJAX.status,
                             AJAX.statusText,
                             AJAX.responseText

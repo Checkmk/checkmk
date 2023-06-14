@@ -1,0 +1,45 @@
+Title: KUBE: Trim Trailing Slash in Configured URLs
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1685003160
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This Werk is relevant to users, whom create a new <tt>Kubernetes</tt> rule.
+
+With this change, one trailing slash will be removed from endpoints. This affects both API server
+connection and the data collection from the collectors. Specifically, previously specifying the URL
+
+C+:
+https://<control plane ip>:443/
+C-:
+
+results in an API call to
+
+C+:
+https://<control plane ip>:443//version
+C-:
+
+But now it results in a call to
+
+C+:
+https://<control plane ip>:443/version
+C-:
+
+With the new change, specifying
+
+C+:
+https://<control plane ip>:443//
+C-:
+
+will results in the behaviour of calling
+
+C+:
+https://<control plane ip>:443//version
+C-:
+
+Old configurations are migrated to match the new calling convention. Thus, existing rules are
+unaffected. Note, this Werk does not implement RFC 3986 URL joining.

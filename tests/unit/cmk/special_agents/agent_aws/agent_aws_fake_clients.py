@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import abc
 import random
-from collections.abc import Callable, Container, Iterable, Mapping, Sequence
+from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
 from typing import Any, TypedDict
 
 from cmk.utils.aws_constants import AWSEC2InstTypes
@@ -29,7 +29,7 @@ class Entity(abc.ABC):
         self.key = key
 
     @abc.abstractmethod
-    def create(self, idx, amount: int) -> "Entity":  # type:ignore[no-untyped-def]
+    def create(self, idx, amount: int) -> Entity:  # type: ignore[no-untyped-def]
         ...
 
 
@@ -208,7 +208,7 @@ class DictInstanceBuilder(abc.ABC):
 
     @classmethod
     def create_instances(
-        cls: Callable[[int, int], "DictInstanceBuilder"], amount: int
+        cls: Callable[[int, int], DictInstanceBuilder], amount: int
     ) -> Mapping[Entity, Entity]:
         return {
             # static analysis does not recognize that None can not happen because of if clause -> disable warning
@@ -3068,21 +3068,85 @@ class FakeCloudwatchClientLogsClient:
         raise NotImplementedError(f"Please implement the paginator for {api_call}")
 
 
-class FakeServiceQuotasClient:
-    def list_service_quotas(self, ServiceCode):
-        q_val = Float("Value")
-        return {
-            "Quotas": [
-                {"QuotaName": name, "Value": q_val.create(None, None)}
-                for name in [
-                    "Running On-Demand F instances",
-                    "Running On-Demand G instances",
-                    "Running On-Demand P instances",
-                    "Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances",
-                    "Running On-Demand X instances",
+class QuotaPaginator:
+    def paginate(self, ServiceCode: str = "") -> Iterator[Mapping[str, object]]:
+        if ServiceCode == "ec2":
+            q_val = Float("Value")
+            yield {
+                "Quotas": [
+                    {"QuotaName": name, "Value": q_val.create(None, None)}
+                    for name in [
+                        "Running On-Demand F instances",
+                        "Running On-Demand G instances",
+                        "Running On-Demand P instances",
+                        "Running On-Demand Standard (A, C, D, H, I, M, R, T, Z) instances",
+                        "Running On-Demand X instances",
+                    ]
                 ]
-            ]
-        }
+            }
+        elif ServiceCode == "ecs":
+            yield {
+                "Quotas": [
+                    {
+                        "ServiceCode": "ecs",
+                        "ServiceName": "Amazon Elastic Container Service (Amazon ECs)",
+                        "QuotaArn": "arn:aws:servicequotas:us-east-1:710145618630:ecs/L-85EED4F7",
+                        "QuotaCode": "L-85EED4F7",
+                        "QuotaName": "Container instances per cluster",
+                        "Value": 20,
+                        "Unit": "None",
+                        "Adjustable": True,
+                        "GlobalQuota": False,
+                    }
+                ],
+                "ResponseMetadata": {
+                    "RequestId": "3158f3b7-9788-4394-8d8c-ede95a113476",
+                    "HTTPStatusCode": 200,
+                    "HTTPHeaders": {
+                        "date": "Thu, 20 Oct 2022 08:10:44 GMT",
+                        "content-type": "application/x-amz-json-1.1",
+                        "content-length": "13",
+                        "connection": "keep-alive",
+                        "x-amzn-requestid": "3158f3b7-9788-4394-8d8c-ede95a113476",
+                    },
+                    "RetryAttempts": 0,
+                },
+            }
+        elif ServiceCode == "elasticache":
+            yield {
+                "Quotas": [
+                    {
+                        "ServiceCode": "elasticache",
+                        "ServiceName": "Amazon ElastiCache",
+                        "QuotaArn": "arn:aws:servicequotas:us-east-1:710145618630:elasticache/L-85EED4F7",
+                        "QuotaCode": "L-85EED4F7",
+                        "QuotaName": "Nodes per cluster per instance type (Redis cluster mode enabled)",
+                        "Value": 5,
+                        "Unit": "None",
+                        "Adjustable": True,
+                        "GlobalQuota": False,
+                    }
+                ],
+                "ResponseMetadata": {
+                    "RequestId": "3158f3b7-9788-4394-8d8c-ede95a113476",
+                    "HTTPStatusCode": 200,
+                    "HTTPHeaders": {
+                        "date": "Thu, 20 Oct 2022 08:10:44 GMT",
+                        "content-type": "application/x-amz-json-1.1",
+                        "content-length": "13",
+                        "connection": "keep-alive",
+                        "x-amzn-requestid": "3158f3b7-9788-4394-8d8c-ede95a113476",
+                    },
+                    "RetryAttempts": 0,
+                },
+            }
+
+
+class FakeServiceQuotasClient:
+    def get_paginator(self, function: str) -> QuotaPaginator:
+        assert function == "list_service_quotas"
+
+        return QuotaPaginator()
 
 
 #   .--Lambda----------------------------------

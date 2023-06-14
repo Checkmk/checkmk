@@ -6,7 +6,7 @@ Date: 1656422525
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Using <tt>GET</tt> requests to <tt>login.py</tt> means that the credentials supplied in the query parameters will appear in the site's Apache logs. To avoid unintentional leakage of such credentials, we <b>by default</b> block login attempts via the <tt>GET</tt> method.
 

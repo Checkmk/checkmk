@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
+from collections.abc import Sequence
+
 import pytest
+from pytest import MonkeyPatch
 
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
@@ -69,7 +72,7 @@ def test_rulespec_sub_group() -> None:
     assert test_sub_group.title == "Sub"
 
 
-def test_legacy_register_rulegroup(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_legacy_register_rulegroup(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         cmk.gui.watolib.rulespecs, "rulespec_group_registry", RulespecGroupRegistry()
     )
@@ -82,7 +85,7 @@ def test_legacy_register_rulegroup(monkeypatch) -> None:  # type:ignore[no-untyp
     assert group.help == "abc 123"
 
 
-def test_legacy_get_not_existing_rulegroup(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_legacy_get_not_existing_rulegroup(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         cmk.gui.watolib.rulespecs, "rulespec_group_registry", RulespecGroupRegistry()
     )
@@ -94,7 +97,7 @@ def test_legacy_get_not_existing_rulegroup(monkeypatch) -> None:  # type:ignore[
     assert group.help is None
 
 
-def test_legacy_get_not_existing_rule_sub_group(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_legacy_get_not_existing_rule_sub_group(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         cmk.gui.watolib.rulespecs, "rulespec_group_registry", RulespecGroupRegistry()
     )
@@ -337,7 +340,6 @@ def test_grouped_rulespecs() -> None:
             "static_checks:generic_rate",
             "static_checks:generic_string",
             "static_checks:jvm_uptime",
-            "static_checks:k8s_resources",
             "static_checks:netapp_systemtime",
             "static_checks:jvm_sessions",
             "static_checks:jvm_requests",
@@ -503,7 +505,6 @@ def test_grouped_rulespecs() -> None:
             "checkgroup_parameters:ups_out_load",
             "checkgroup_parameters:epower_single",
             "checkgroup_parameters:hw_temperature",
-            "checkgroup_parameters:hw_temperature_single",
             "checkgroup_parameters:disk_temperature",
             "checkgroup_parameters:eaton_enviroment",
             "checkgroup_parameters:ups_outphase",
@@ -545,6 +546,7 @@ def test_grouped_rulespecs() -> None:
             "clustered_services_mapping",
             "extra_host_conf:service_period",
             "extra_service_conf:service_period",
+            "cmc_graphite_host_metrics",
             "cmc_graphite_service_metrics",
             "cmc_service_rrd_config",
             "cmc_host_rrd_config",
@@ -662,7 +664,6 @@ def test_grouped_rulespecs() -> None:
             "static_checks:mongodb_mem",
             "static_checks:openhardwaremonitor_smart",
             "static_checks:mongodb_locks",
-            "static_checks:prism_container",
             "static_checks:inotify",
             "static_checks:emcvnx_disks",
             "static_checks:lvm_lvs_pools",
@@ -732,7 +733,6 @@ def test_grouped_rulespecs() -> None:
             "checkgroup_parameters:mongodb_mem",
             "checkgroup_parameters:openhardwaremonitor_smart",
             "checkgroup_parameters:mongodb_locks",
-            "checkgroup_parameters:prism_container",
             "checkgroup_parameters:inotify",
             "checkgroup_parameters:emcvnx_disks",
             "checkgroup_parameters:lvm_lvs_pools",
@@ -856,7 +856,6 @@ def test_grouped_rulespecs() -> None:
             "checkgroup_parameters:generic_rate",
             "checkgroup_parameters:generic_string",
             "checkgroup_parameters:jvm_uptime",
-            "checkgroup_parameters:k8s_resources",
             "checkgroup_parameters:netapp_systemtime",
             "checkgroup_parameters:jvm_sessions",
             "checkgroup_parameters:jvm_requests",
@@ -1186,7 +1185,6 @@ def test_grouped_rulespecs() -> None:
             "static_checks:ups_out_load",
             "static_checks:epower_single",
             "static_checks:hw_temperature",
-            "static_checks:hw_temperature_single",
             "static_checks:disk_temperature",
             "static_checks:eaton_enviroment",
             "static_checks:ups_outphase",
@@ -1321,12 +1319,12 @@ def _expected_rulespec_group_choices():
 
 
 @pytest.mark.parametrize(
-    "mode,result",
+    "result",
     [
-        ("rulesets", _expected_rulespec_group_choices()),
+        (_expected_rulespec_group_choices()),
     ],
 )
-def test_rulespec_group_choices(mode, result) -> None:  # type:ignore[no-untyped-def]
+def test_rulespec_group_choices(result: Sequence[tuple[str, str]]) -> None:
     assert sorted(rulespec_group_registry.get_group_choices()) == sorted(result)
 
 
@@ -1370,7 +1368,7 @@ def test_rulespec_group_choices(mode, result) -> None:  # type:ignore[no-untyped
         ),
     ],
 )
-def test_rulespec_get_matching_group_names(term, result) -> None:  # type:ignore[no-untyped-def]
+def test_rulespec_get_matching_group_names(term: str, result: Sequence[str]) -> None:
     assert sorted(rulespec_group_registry.get_matching_group_names(term)) == sorted(result)
 
 
@@ -1411,6 +1409,7 @@ def test_rulespec_get_all_groups() -> None:
         "monconf/printers",
         "monconf/storage",
         "monconf/various",
+        "monconf/virtualization",
         "agent/general_settings",
         "agent/check_mk_agent",
         "agents/generic_options",
@@ -1449,7 +1448,6 @@ def test_rulespec_get_all_groups() -> None:
 
 
 def test_rulespec_get_host_groups() -> None:
-
     expected_rulespec_host_groups = [
         "checkparams",
         "checkparams/discovery",
@@ -1487,7 +1485,7 @@ def test_rulespec_get_host_groups() -> None:
     assert sorted(group_names) == sorted(expected_rulespec_host_groups)
 
 
-def test_legacy_register_rule(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_legacy_register_rule(monkeypatch: MonkeyPatch) -> None:
     group_registry = RulespecGroupRegistry()
     monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry", group_registry)
     monkeypatch.setattr(
@@ -1533,7 +1531,7 @@ def test_legacy_register_rule(monkeypatch) -> None:  # type:ignore[no-untyped-de
     assert spec.factory_default == Rulespec.NO_FACTORY_DEFAULT
 
 
-def test_legacy_register_rule_attributes(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_legacy_register_rule_attributes(monkeypatch: MonkeyPatch) -> None:
     group_registry = RulespecGroupRegistry()
     monkeypatch.setattr(cmk.gui.watolib.rulespecs, "rulespec_group_registry", group_registry)
     monkeypatch.setattr(
@@ -1564,7 +1562,7 @@ def test_legacy_register_rule_attributes(monkeypatch) -> None:  # type:ignore[no
     assert spec.group_name == "dingdong_group"
     assert isinstance(spec.valuespec, Dictionary)
     assert spec.match_type == "dict"
-    assert spec.title == "title"
+    assert spec.title == "Deprecated: title"
     assert spec.help == "help me!"
     assert isinstance(spec.item_spec, TextInput)
     assert spec.item_type == "service"
@@ -1576,7 +1574,7 @@ def test_legacy_register_rule_attributes(monkeypatch) -> None:  # type:ignore[no
 
 
 @pytest.fixture(name="patch_rulespec_registries")
-def fixture_patch_rulespec_registries(monkeypatch):
+def fixture_patch_rulespec_registries(monkeypatch: MonkeyPatch) -> None:
     group_registry = RulespecGroupRegistry()
     group_registry.register(RulespecGroupEnforcedServices)
     test_rulespec_registry = RulespecRegistry(group_registry)
@@ -1585,9 +1583,7 @@ def fixture_patch_rulespec_registries(monkeypatch):
     monkeypatch.setattr(cmk.gui.plugins.wato.utils, "rulespec_registry", test_rulespec_registry)
 
 
-def test_register_check_parameters(  # type:ignore[no-untyped-def]
-    patch_rulespec_registries,
-) -> None:
+def test_register_check_parameters(patch_rulespec_registries: None) -> None:
     register_check_parameters(
         "netblabla",
         "bla_params",
@@ -1663,9 +1659,7 @@ def test_register_check_parameters(  # type:ignore[no-untyped-def]
     assert isinstance(rulespec.valuespec._elements[2], TimeperiodValuespec)
 
 
-def test_register_host_check_parameters(  # type:ignore[no-untyped-def]
-    patch_rulespec_registries,
-) -> None:
+def test_register_host_check_parameters(patch_rulespec_registries: None) -> None:
     register_check_parameters(
         "netblabla",
         "bla_params",
@@ -1690,9 +1684,7 @@ def test_register_host_check_parameters(  # type:ignore[no-untyped-def]
     assert isinstance(rulespec.valuespec._elements[2], TimeperiodValuespec)
 
 
-def test_register_without_discovery(  # type:ignore[no-untyped-def]
-    patch_rulespec_registries,
-) -> None:
+def test_register_without_discovery(patch_rulespec_registries: None) -> None:
     with pytest.raises(MKGeneralException, match="registering manual check"):
         register_check_parameters(
             "netblabla",
@@ -1707,7 +1699,7 @@ def test_register_without_discovery(  # type:ignore[no-untyped-def]
         )
 
 
-def test_register_without_static(patch_rulespec_registries) -> None:  # type:ignore[no-untyped-def]
+def test_register_without_static(patch_rulespec_registries: None) -> None:
     register_check_parameters(
         "netblabla",
         "bla_params",
@@ -1810,10 +1802,10 @@ def test_match_item_generator_rules() -> None:
             match_texts=["title", "some_host_rulespec"],
         ),
         MatchItem(
-            title="Title",
+            title="Deprecated: Title",
             topic="Deprecated rulesets",
             url="wato.py?mode=edit_ruleset&varname=some_deprecated_host_rulespec",
-            match_texts=["title", "some_deprecated_host_rulespec"],
+            match_texts=["deprecated: title", "some_deprecated_host_rulespec"],
         ),
     ]
 

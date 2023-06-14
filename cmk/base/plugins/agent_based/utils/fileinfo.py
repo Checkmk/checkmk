@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -128,7 +128,7 @@ def _parse_single_row(row: List[str], header: Iterable[str]) -> Optional[FileSta
     )
 
 
-def _construct_fileinfo_item(file_stats: FileStats):  # type:ignore[no-untyped-def]
+def _construct_fileinfo_item(file_stats: FileStats):  # type: ignore[no-untyped-def]
     return FileinfoItem(
         file_stats.name,
         "missing" in file_stats.status,
@@ -267,7 +267,6 @@ def discovery_fileinfo_common(
     section: Fileinfo,
     check_type: CheckType,
 ) -> DiscoveryResult:
-
     reftime = section.reftime
     if reftime is None:
         return
@@ -304,7 +303,6 @@ def _fileinfo_check_function(
     check_definition: List[MetricInfo],
     params: Mapping[str, Any],
 ) -> CheckResult:
-
     for metric in check_definition:
         if metric.value is None:
             continue
@@ -357,7 +355,7 @@ def check_fileinfo_data(
         else:
             age = reftime - file_info.time
             check_definition = [
-                MetricInfo("Size", "size", file_info.size, render.filesize),
+                MetricInfo("Size", "size", file_info.size, render.bytes),
                 MetricInfo("Age", "age", age, render.timespan),
             ]
             yield from _fileinfo_check_function(check_definition, params)
@@ -411,7 +409,6 @@ def _update_minmax(
     new_value: int,
     current_minmax: Optional[Tuple[int, int]],
 ) -> Tuple[int, int]:
-
     if not current_minmax:
         return new_value, new_value
 
@@ -456,7 +453,7 @@ def _check_individual_files(
     if skip_ok_files and State(overall_state) == State.OK:
         return
 
-    size = render.filesize(file_size)
+    size = render.bytes(file_size)
     age = render.timespan(abs(adjusted_file_age))
 
     if adjusted_file_age < 0:
@@ -479,9 +476,9 @@ def _define_fileinfo_group_check(
     age_newest, age_oldest = files_matching["age_minmax"] or (None, None)
     return [
         MetricInfo("Count", "count", files_matching["count_all"], saveint),
-        MetricInfo("Size", "size", files_matching["size_all"], render.filesize),
-        MetricInfo("Largest size", "size_largest", size_largest, render.filesize),
-        MetricInfo("Smallest size", "size_smallest", size_smallest, render.filesize),
+        MetricInfo("Size", "size", files_matching["size_all"], render.bytes),
+        MetricInfo("Largest size", "size_largest", size_largest, render.bytes),
+        MetricInfo("Smallest size", "size_smallest", size_smallest, render.bytes),
         MetricInfo("Oldest age", "age_oldest", age_oldest, render.timespan),
         MetricInfo("Newest age", "age_newest", age_newest, render.timespan),
     ]
@@ -491,7 +488,6 @@ def _fileinfo_check_conjunctions(
     check_definition: List[MetricInfo],
     params: Mapping[str, Any],
 ) -> CheckResult:
-
     conjunctions = params.get("conjunctions", [])
     for conjunction_state, levels in conjunctions:
         levels = dict(levels)
@@ -521,7 +517,6 @@ def check_fileinfo_groups_data(
     section: Fileinfo,
     reftime: int,
 ) -> CheckResult:
-
     date_inclusion = None
     files_stat_failed = set()
     files_matching: Dict[str, Any] = {
@@ -555,7 +550,6 @@ def check_fileinfo_groups_data(
             continue
 
         for inclusion, exclusion in group_patterns:
-
             filename_matches, date_inclusion = _filename_matches(
                 file_stat.name, reftime, inclusion, exclusion
             )

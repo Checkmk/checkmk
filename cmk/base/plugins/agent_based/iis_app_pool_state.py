@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -27,14 +27,14 @@ class IisAppPoolStateCheckParams(TypedDict):
     state_mapping: Dict[str, int]
 
 
-DefaultCheckParameters: IisAppPoolStateCheckParams = dict(
-    state_mapping={
+DefaultCheckParameters: IisAppPoolStateCheckParams = {
+    "state_mapping": {
         app_state.name: {IisAppPoolState.Running: State.OK, IisAppPoolState.Initialized: State.WARN}
         .get(app_state, State.CRIT)
         .value
         for app_state in IisAppPoolState
     }
-)
+}
 
 
 def parse_iis_app_pool_state(string_table: StringTable) -> Section:

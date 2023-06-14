@@ -1,0 +1,16 @@
+Title: 'effective_attributes' now uses the same format as 'attributes' in 'show host' and 'show all hosts' endpoints
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1684227444
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The 'effective_attributes' field that can optionally be requested in the 'show host' and 'show all hosts'
+endpoints now uses the same format as the 'attributes' field.
+This Werk completes Werk 13978 and also fixes a bug that was introduced with it.
+After Werk 13978, all attributes except for 'meta_data' were omitted from the output in 'effective_attributes'.
+The is no longer the case.
+

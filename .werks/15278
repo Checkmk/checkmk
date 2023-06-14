@@ -1,0 +1,19 @@
+Title: synology_disk: read disk health status
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1677583789
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+A Failing disks would report a working file system (as the file system was
+still readable) but still needs to be replaced.
+The check was extended to also report disk health status which was
+introduced with DSM 7.1.
+
+Also split the summary, remove duplicated temperature text, and remove text
+about temperature levels, as no temperature levels can be defined for this
+service.

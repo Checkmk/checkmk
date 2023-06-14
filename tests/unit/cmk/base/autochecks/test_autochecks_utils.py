@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,10 +8,11 @@ from collections.abc import Sequence
 import pytest
 
 import cmk.utils.paths
-from cmk.utils.type_defs import CheckPluginName, HostName
+from cmk.utils.type_defs import HostName
 
-from cmk.checkers.discovery import AutocheckEntry, AutochecksStore
-from cmk.checkers.discovery._autochecks import _AutochecksSerializer as AutochecksSerializer
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.discovery import AutocheckEntry, AutochecksStore
+from cmk.checkengine.discovery._autochecks import _AutochecksSerializer as AutochecksSerializer
 
 # pylint: disable=redefined-outer-name
 

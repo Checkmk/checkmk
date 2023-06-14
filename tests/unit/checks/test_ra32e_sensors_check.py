@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Mapping, Sequence
 
 import pytest
 
 from tests.testlib import Check
+
+from cmk.base.api.agent_based.type_defs import StringTable
 
 from .checktestlib import BasicCheckResult
 
@@ -60,7 +64,7 @@ pytestmark = pytest.mark.checks
             ],
         ),
         (  # temp sensor (ignores fahrenheit value)
-            [[["", "", ""]], [["2.0", "2580", "9999", "", "", ""]]],
+            [[["", "", ""]], [], [["2580", "9999", "", "", ""]], [], [], [], [], [], []],
             [
                 ("ra32e_sensors", [("Sensor 2", {})]),
             ],
@@ -69,7 +73,7 @@ pytestmark = pytest.mark.checks
             ],
         ),
         (  # temp/active sensor
-            [[["", "", ""]], [["5.0", "3100", "9999", "0", "", ""]]],
+            [[["", "", ""]], [], [], [], [], [["3100", "9999", "0", "", ""]], [], [], []],
             [
                 ("ra32e_sensors", [("Sensor 5", {})]),
                 ("ra32e_sensors.power", [("Sensor 5", {})]),
@@ -101,8 +105,16 @@ pytestmark = pytest.mark.checks
             [
                 [["", "", ""]],
                 [
-                    ["1.0", "2790", "9999", "7500", "9999", "2800"],
-                    ["8.0", "2580", "9999", "200", "9999", ""],
+                    ["2790", "9999", "7500", "9999", "2800"],
+                ],
+                [],
+                [],
+                [],
+                [],
+                [],
+                [],
+                [
+                    ["2580", "9999", "200", "9999", ""],
                 ],
             ],
             [
@@ -148,8 +160,10 @@ pytestmark = pytest.mark.checks
         ),
     ],
 )
-def test_ra32e_sensors_inputs(  # type:ignore[no-untyped-def]
-    info, discoveries_expected, checks_expected
+def test_ra32e_sensors_inputs(
+    info: Sequence[StringTable],
+    discoveries_expected: Sequence[tuple[str, Sequence[object]]],
+    checks_expected: Sequence[tuple[str, str, Mapping[str, object], BasicCheckResult]],
 ) -> None:
     ra32e_sensors_checks = [
         "ra32e_sensors",
@@ -165,7 +179,7 @@ def test_ra32e_sensors_inputs(  # type:ignore[no-untyped-def]
         result = checks[check].run_discovery(parsed)
         assert sorted(result) == expected
 
-    for check, item, params, expected in checks_expected:
+    for check, item, params, expected_result in checks_expected:
         output = checks[check].run_check(item, params, parsed)
         result = BasicCheckResult(*output)
-        assert result == expected
+        assert result == expected_result

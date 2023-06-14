@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,35 +8,31 @@ import time
 
 import cmk.utils.render
 import cmk.utils.tty as tty
-from cmk.utils.parameters import TimespecificParameters
 from cmk.utils.paths import tmp_dir
-from cmk.utils.type_defs import HostName
+from cmk.utils.timeperiod import timeperiod_active
+from cmk.utils.type_defs import HostAddress, HostName
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
-from cmk.fetchers import (
-    Fetcher,
-    IPMIFetcher,
-    PiggybackFetcher,
-    ProgramFetcher,
-    SNMPFetcher,
-    SourceInfo,
-    SourceType,
-    TCPFetcher,
-)
+from cmk.fetchers import IPMIFetcher, PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
-from cmk.checkers.check_table import LegacyCheckParameters
+from cmk.checkengine import SourceType
+from cmk.checkengine.check_table import LegacyCheckParameters
+from cmk.checkengine.parameters import TimespecificParameters
 
 import cmk.base.config as config
+import cmk.base.core
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.sources as sources
 from cmk.base.config import ConfigCache
+from cmk.base.ip_lookup import AddressFamily
+from cmk.base.sources import Source
 
 
-def dump_source(source: SourceInfo, fetcher: Fetcher) -> str:
-    # pylint: disable=too-many-branches
+def dump_source(source: Source) -> str:  # pylint: disable=too-many-branches
+    fetcher = source.fetcher()
     if isinstance(fetcher, IPMIFetcher):
         description = "Management board - IPMI"
         items = []
@@ -73,7 +69,9 @@ def dump_source(source: SourceInfo, fetcher: Fetcher) -> str:
             bulk = "no"
 
         return "%s (%s, Bulk walk: %s, Port: %d, Backend: %s)" % (
-            "SNMP" if source.source_type is SourceType.HOST else "Management board - SNMP",
+            "SNMP"
+            if source.source_info().source_type is SourceType.HOST
+            else "Management board - SNMP",
             credentials_text,
             bulk,
             snmp_config.port,
@@ -120,19 +118,21 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     )
 
     addresses: str | None = ""
-    if not ConfigCache.is_ipv4v6_host(hostname):
+    if ConfigCache.address_family(hostname) is not AddressFamily.DUAL_STACK:
         addresses = ipaddress
     else:
         try:
-            secondary = _ip_address_for_dump_host(
-                hostname,
-                family=config_cache.default_address_family(hostname),
+            secondary = str(
+                _ip_address_for_dump_host(
+                    hostname,
+                    family=config_cache.default_address_family(hostname),
+                )
             )
         except Exception:
             secondary = "X.X.X.X"
 
         addresses = f"{ipaddress}, {secondary}"
-        if config_cache.is_ipv6_primary(hostname):
+        if config_cache.default_address_family(hostname) is socket.AF_INET6:
             addresses += " (Primary: IPv6)"
         else:
             addresses += " (Primary: IPv4)"
@@ -158,7 +158,7 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
             raise RuntimeError()
     else:
         parents_list = config_cache.parents(hostname)
-    if len(parents_list) > 0:
+    if parents_list:
         out.output(
             tty.yellow + "Parents:                " + tty.normal + ", ".join(parents_list) + "\n"
         )
@@ -178,10 +178,11 @@ def dump_host(hostname: HostName) -> None:  # pylint: disable=too-many-branches
     )
 
     agenttypes = [
-        dump_source(source, fetcher)
-        for source, _file_cache, fetcher in sources.make_sources(
+        dump_source(source)
+        for source in sources.make_sources(
             hostname,
             ipaddress,
+            ConfigCache.address_family(hostname),
             file_cache_options=FileCacheOptions(),
             config_cache=config_cache,
             simulation_mode=config.simulation_mode,
@@ -227,10 +228,10 @@ def _evaluate_params(params: LegacyCheckParameters | TimespecificParameters) -> 
         return repr(params)
 
     if params.is_constant():
-        return repr(params.evaluate(cmk.base.core.timeperiod_active))
+        return repr(params.evaluate(timeperiod_active))
     return "Timespecific parameters at {}: {!r}".format(
         cmk.utils.render.date_and_time(time.time()),
-        params.evaluate(cmk.base.core.timeperiod_active),
+        params.evaluate(timeperiod_active),
     )
 
 
@@ -238,9 +239,13 @@ def _ip_address_for_dump_host(
     host_name: HostName,
     *,
     family: socket.AddressFamily,
-) -> str | None:
+) -> HostAddress | None:
     config_cache = config.get_config_cache()
     try:
         return config.lookup_ip_address(config_cache, host_name, family=family)
     except Exception:
-        return "" if config_cache.is_cluster(host_name) else ip_lookup.fallback_ip_for(family)
+        return (
+            HostAddress("")
+            if config_cache.is_cluster(host_name)
+            else ip_lookup.fallback_ip_for(family)
+        )

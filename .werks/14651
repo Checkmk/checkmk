@@ -6,7 +6,7 @@ Date: 1666275650
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If users configured a rule <i>"Encryption (Linux, Windows)"</i> without actually setting values in it and used the unencryted mode of the agent controller, the Checkmk service would go {CRIT}.
 

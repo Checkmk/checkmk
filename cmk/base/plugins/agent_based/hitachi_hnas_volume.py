@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from typing import Any, Dict, List, Mapping, NamedTuple, Optional, Tuple
@@ -101,7 +101,6 @@ def check_hitachi_hnas_volume(
     params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
-
     fslist_blocks = [
         (mount_point, size_mb, avail_mb, 0)
         for mount_point, (_, size_mb, avail_mb, _) in section.volumes.items()
@@ -184,7 +183,6 @@ def check_hitachi_hnas_virtual_volume(
     params: Mapping[str, Any],
     section: Section,
 ) -> CheckResult:
-
     fslist_blocks = [
         (mount_point, size_mb, avail_mb, 0)
         for mount_point, (size_mb, avail_mb) in section.virtual_volumes.items()

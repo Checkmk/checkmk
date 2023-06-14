@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -25,7 +25,6 @@ Section = Mapping[str, Switch]
 
 
 def parse_cisco_stack(string_table: StringTable) -> Section:
-
     switch_state_names = {
         "1": "waiting",
         "2": "progressing",
@@ -83,7 +82,6 @@ def discovery_cisco_stack(section: Section) -> DiscoveryResult:
 
 
 def check_cisco_stack(item: str, params: Mapping[str, int], section: Section) -> CheckResult:
-
     switch_state_descriptions = {
         "waiting": "Waiting for other switches to come online",
         "progressing": "Master election or mismatch checks in progress",

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,10 +11,10 @@ import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui import hooks
 from cmk.gui.config import active_config
-from cmk.gui.plugins.watolib.utils import ABCConfigDomain, SerializedSettings
 from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.watolib import config_domain_name
 from cmk.gui.watolib.audit_log import log_audit
+from cmk.gui.watolib.config_domain_name import ABCConfigDomain, SerializedSettings
 
 from .livestatus import execute_command
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -46,7 +46,6 @@ MAP_STATES = {
 
 
 def parse_fjdarye_pcie_flash_modules(string_table: List[StringTable]) -> PCIeFlashModuleSection:
-
     if not string_table:
         return {}
 
@@ -74,7 +73,6 @@ register.snmp_section(
 
 
 def discover_fjdarye_pcie_flash_modules(section: PCIeFlashModuleSection) -> DiscoveryResult:
-
     for module in section.values():
         if module.status != "4":
             yield Service(item=module.module_id)
@@ -85,7 +83,6 @@ def check_fjdarye_pcie_flash_modules(
     params: Mapping[str, tuple[float, float]],
     section: PCIeFlashModuleSection,
 ) -> CheckResult:
-
     if (module := section.get(item)) is None:
         return
 

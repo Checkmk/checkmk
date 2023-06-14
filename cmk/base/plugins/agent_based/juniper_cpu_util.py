@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,7 +9,7 @@ from typing import Mapping, Tuple, TypedDict
 from .agent_based_api.v1 import get_value_store, register, Service, SNMPTree
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils.cpu_util import check_cpu_util
-from .utils.juniper import DETECT
+from .utils.juniper import DETECT_JUNIPER
 
 Section = Mapping[str, int]
 
@@ -32,7 +32,7 @@ register.snmp_section(
             "8",  # jnxOperatingCPU
         ],
     ),
-    detect=DETECT,
+    detect=DETECT_JUNIPER,
 )
 
 

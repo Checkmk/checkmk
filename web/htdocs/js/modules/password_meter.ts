@@ -80,10 +80,9 @@ export async function initPasswordStrength() {
 
                 // The strings are stored in the data attributes, since we currently have the
                 // translations only on the backend...
-                const score_string =
-                    meter.attributes[
-                        "data-password_strength_" + score.toString()
-                    ].value;
+                const score_string = meter.attributes.getNamedItem(
+                    "data-password_strength_" + score.toString()
+                )!.value;
                 passwordText.innerHTML = score_string;
                 meter.innerHTML = score_string;
             });

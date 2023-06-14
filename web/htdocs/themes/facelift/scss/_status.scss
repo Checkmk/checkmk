@@ -1,5 +1,5 @@
 @charset "UTF-8";
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -106,6 +106,7 @@ div.stated {
 /* WARN */
 .bibox_box.state1,
 span.content.state1,
+label.state1,
 b.state1,
 td.count.state1,
 td.number.state1,
@@ -126,6 +127,7 @@ td.fillbackground.state1,
 /* CRIT/DOWN */
 .bibox_box.state2,
 span.content.state2,
+label.state2,
 b.state2,
 td.count.state2,
 td.number.state2,
@@ -148,6 +150,7 @@ td.count.hstate1 {
 /* UNKNOWN / UNREACH */
 .bibox_box.state3,
 span.content.state3,
+label.state3,
 b.state3,
 td.count.state3,
 td.number.state3,
@@ -167,6 +170,11 @@ td.count.hstate2 {
 }
 
 /* PENDING / in DOWNTIME */
+.statebullet.statep {
+  color: $font-color-white !important;
+  background-color: $color-state-4-background !important;
+}
+
 .statep,
 .hstatep,
 .stated,
@@ -450,12 +458,12 @@ table.data {
     white-space: nowrap;
 
     &.staletime {
-      font-weight: bold;
+      font-weight: $font-weight-bold;
       color: $font-color-red;
     }
 
     &.recent {
-      font-weight: bold;
+      font-weight: $font-weight-bold;
       color: $font-color;
     }
   }
@@ -467,7 +475,7 @@ table.data {
 }
 
 td.badflag span {
-  font-weight: bold;
+  font-weight: $font-weight-bold;
   background-color: $orange-2;
 }
 

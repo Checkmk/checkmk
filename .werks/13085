@@ -6,7 +6,7 @@ Date: 1648196080
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This werk fixes the disappearing attributes (e.g. locked_by, locked_attributes).
 

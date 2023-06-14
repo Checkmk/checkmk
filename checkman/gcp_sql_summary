@@ -4,6 +4,7 @@ catalog: cloud/gcp
 license: GPLv2
 distribution: check_mk
 description:
- counts number of database servers
+ This check counts number of databases.
+
 discovery:
- One service is created
+ One service is created for all databases in this project.

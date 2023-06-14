@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -39,9 +39,8 @@ import getopt
 import os
 import subprocess
 import sys
-from typing import NoReturn
-
 import urllib.parse
+from typing import NoReturn
 
 omd_site = os.getenv("OMD_SITE")
 omd_root = os.getenv("OMD_ROOT")
@@ -64,7 +63,8 @@ def verbose(text):
 
 
 def usage():
-    sys.stdout.write("""Usage: multisite_to_mrpe -U URL {-P PASSWORD|-S SECRET} [OPTIONS] HOST
+    sys.stdout.write(
+        """Usage: multisite_to_mrpe -U URL {-P PASSWORD|-S SECRET} [OPTIONS] HOST
 
 This program is intended to be used as a datasource program.
 It fetches the current state of all services of a host
@@ -84,10 +84,11 @@ Options:
   -P, --password P    Use HTTP password P (when using BasicAuth, no Cookies)
       --debug         Let Python exceptions come through
 
-""")
+"""
+    )
 
 
-short_options = 'hvu:U:S:P:'
+short_options = "hvu:U:S:P:"
 long_options = ["help", "verbose", "user=", "url=", "secret=", "debug", "password="]
 
 opt_verbose = False
@@ -109,22 +110,22 @@ except getopt.GetoptError as err:
 
 for o, a in opts:
     # Docu modes
-    if o in ['-h', '--help']:
+    if o in ["-h", "--help"]:
         usage()
         sys.exit(0)
 
     # Modifiers
-    elif o in ['-v', '--verbose']:
+    elif o in ["-v", "--verbose"]:
         opt_verbose = True
-    elif o == '--debug':
+    elif o == "--debug":
         opt_debug = True
-    elif o in ['-u', '--user']:
+    elif o in ["-u", "--user"]:
         opt_user = a
-    elif o in ['-S', '--secret']:
+    elif o in ["-S", "--secret"]:
         opt_secret = a
-    elif o in ['-P', '--password']:
+    elif o in ["-P", "--password"]:
         opt_password = a
-    elif o in ['-U', '--url']:
+    elif o in ["-U", "--url"]:
         opt_url = a
 
 if not opt_secret and not opt_password:
@@ -170,12 +171,12 @@ verbose("URL:              " + url)
 
 try:
     arguments = [
-        'curl',
-        '--silent',
-        '--insecure',
+        "curl",
+        "--silent",
+        "--insecure",
     ]
     if opt_password:
-        arguments.append('--user')
+        arguments.append("--user")
         arguments.append("%s:%s" % (opt_user, opt_password))
     else:
         arguments.append(opt_user)
@@ -184,7 +185,7 @@ try:
 
     process = subprocess.Popen(
         arguments,
-        executable='curl',
+        executable="curl",
         stdout=subprocess.PIPE,
         encoding="utf-8",
     )
@@ -204,10 +205,10 @@ except Exception as e:
         raise
     bail_out("Cannot call Multisite URL: %s" % e)
 
-sys.stdout.write('<<<mrpe>>>\n')
+sys.stdout.write("<<<mrpe>>>\n")
 
 for service in services:
-    state = {"OK": 0, "WARN": 1, "CRIT": 2, "UNKNOWN": 3}.get(service['service_state'])
+    state = {"OK": 0, "WARN": 1, "CRIT": 2, "UNKNOWN": 3}.get(service["service_state"])
     if state is not None:  # skip pending services
         msg = "(%s) %s %d %s|%s\n" % (
             service["svc_check_command"].replace(" ", "_"),

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""The WATO folders network scan for new hosts"""
+"""The Setup folders network scan for new hosts"""
 
 import re
 import socket
@@ -26,7 +26,7 @@ from cmk.gui.session import UserContext
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
-from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, Host, update_metadata
+from cmk.gui.watolib.hosts_and_folders import CREFolder, folder_tree, Host, update_metadata
 
 NetworkScanFoundHosts = list[tuple[HostName, HostAddress]]
 NetworkScanResult = dict[str, Any]
@@ -103,7 +103,7 @@ def execute_network_scan_job() -> None:
 def _find_folder_to_scan() -> CREFolder | None:
     """Find the folder which network scan is longest waiting and return the folder object."""
     folder_to_scan = None
-    for folder in Folder.all_folders().values():
+    for folder in folder_tree().all_folders().values():
         scheduled_time = folder.next_network_scan_at()
         if scheduled_time is not None and scheduled_time < time.time():
             if folder_to_scan is None:
@@ -141,11 +141,11 @@ def _add_scanned_hosts_to_folder(folder: CREFolder, found: NetworkScanFoundHosts
 
 
 def _save_network_scan_result(folder: CREFolder, result: NetworkScanResult) -> None:
-    # Reload the folder, lock WATO before to protect against concurrency problems.
+    # Reload the folder, lock Setup before to protect against concurrency problems.
     with store.lock_checkmk_configuration():
         # A user might have changed the folder somehow since starting the scan. Load the
         # folder again to get the current state.
-        write_folder = Folder.folder(folder.path())
+        write_folder = folder_tree().folder(folder.path())
         write_folder.set_attribute("network_scan_result", result)
         write_folder.save()
 
@@ -162,7 +162,7 @@ class AutomationNetworkScan(AutomationCommand):
         return NetworkScanRequest(folder_path=folder_path)
 
     def execute(self, api_request):
-        folder = Folder.folder(api_request.folder_path)
+        folder = folder_tree().folder(api_request.folder_path)
         return _do_network_scan(folder)
 
 
@@ -243,7 +243,7 @@ def _string_from_ip_int(ip_int: int) -> HostAddress:
     for _unused in range(4):
         octets.insert(0, str(ip_int & 0xFF))
         ip_int >>= 8
-    return ".".join(octets)
+    return HostAddress(".".join(octets))
 
 
 def _ip_addresses_of_network(spec):
@@ -323,7 +323,9 @@ def _scan_ip_addresses(folder, ip_addresses):
     return found_hosts
 
 
-def _ping_worker(addresses: list[HostAddress], hosts: list[tuple[HostName, HostAddress]]) -> None:
+def _ping_worker(
+    addresses: list[HostAddress], hosts: list[tuple[HostName | HostAddress, HostAddress]]
+) -> None:
     while True:
         try:
             ipaddress = addresses.pop()
@@ -332,7 +334,7 @@ def _ping_worker(addresses: list[HostAddress], hosts: list[tuple[HostName, HostA
 
         if _ping(ipaddress):
             try:
-                host_name = socket.gethostbyaddr(ipaddress)[0]
+                host_name: HostName | HostAddress = HostName(socket.gethostbyaddr(ipaddress)[0])
             except OSError:
                 host_name = ipaddress
 

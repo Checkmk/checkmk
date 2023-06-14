@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Mapping, Sequence
 
 import pytest
 
 from tests.testlib import Check
+
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 
 @pytest.mark.parametrize(
@@ -30,8 +34,9 @@ from tests.testlib import Check
         )
     ],
 )
-def test_apc_netbotz_drycontact_inventory(parsed, expected) -> None:  # type:ignore[no-untyped-def]
-
+def test_apc_netbotz_drycontact_inventory(
+    parsed: Mapping[str, object], expected: Sequence[object]
+) -> None:
     check = Check("apc_netbotz_drycontact")
     assert list(check.run_discovery(parsed)) == expected
 
@@ -67,8 +72,7 @@ def test_apc_netbotz_drycontact_inventory(parsed, expected) -> None:  # type:ign
         ([], {}),
     ],
 )
-def test_apc_netbotz_drycontact_parse(info, expected) -> None:  # type:ignore[no-untyped-def]
-
+def test_apc_netbotz_drycontact_parse(info: StringTable, expected: Mapping[str, object]) -> None:
     check = Check("apc_netbotz_drycontact")
     assert check.run_parse(info) == expected
 
@@ -114,9 +118,11 @@ def test_apc_netbotz_drycontact_parse(info, expected) -> None:  # type:ignore[no
         ),
     ],
 )
-def test_apc_netbotz_drycontact_check(  # type:ignore[no-untyped-def]
-    item, params, data, expected
+def test_apc_netbotz_drycontact_check(
+    item: str,
+    params: Mapping[object, object],
+    data: Mapping[str, object],
+    expected: tuple[int, str],
 ) -> None:
-
     check = Check("apc_netbotz_drycontact")
     assert check.run_check(item, params, data) == expected

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Classes used by the API for section plugins
 """
 import string
-from typing import List, Sequence, Union
+from collections.abc import Sequence
 
 from cmk.utils.type_defs import SNMPDetectBaseType
 
@@ -105,9 +105,9 @@ class SNMPTree(SNMPTreeTuple):
         ...     ],
         ... )
     """
-    VALID_CHARACTERS = set((".", *string.digits))
+    VALID_CHARACTERS = {".", *string.digits}
 
-    def __new__(cls, base: str, oids: Sequence[Union[str, OIDSpecTuple]]) -> "SNMPTree":
+    def __new__(cls, base: str, oids: Sequence[str | OIDSpecTuple]) -> "SNMPTree":
         # TODO: we must validate list property before iterating over oids
         # (otherwise '123' will become ['1', '2', '3']).
         if not isinstance(oids, list):
@@ -154,7 +154,7 @@ class SNMPTree(SNMPTreeTuple):
         """
 
         # collect beginnings of OIDs to ensure base is as long as possible:
-        heads: List[str] = []
+        heads: list[str] = []
 
         for column, _encoding, _save_to_cache in oid_list:
             if column in (0, -1, -2, -3, -4):  # alowed for legacy checks. Remove some day (tm).

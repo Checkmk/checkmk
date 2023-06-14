@@ -6,7 +6,7 @@ Date: 1655289075
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The agent controller (<tt>cmk-agent-ctl</tt>) crashed on IPv4-only hosts when
 attempting to open a TCP socket in order to allow Checkmk to connect to the host

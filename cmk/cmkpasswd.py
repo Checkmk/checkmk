@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
 import argparse
 import sys
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from getpass import getpass
 from pathlib import Path
-from typing import Callable
 
 import cmk.utils.crypto.password_hashing as password_hashing
 import cmk.utils.version as cmk_version

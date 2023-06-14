@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Page menu processing
@@ -35,6 +35,8 @@ from cmk.gui.utils.urls import (
     makeuri,
     makeuri_contextless,
     requested_file_with_query,
+    youtube_reference_url,
+    YouTubeReference,
 )
 
 
@@ -102,21 +104,34 @@ def make_confirmed_form_submit_link(
             json.dumps(form_name),
             json.dumps(button_name),
             json.dumps(
-                {
-                    "title": get_confirm_link_title(title, suffix),
-                    "html": escaping.escape_text(message),
-                    "confirmButtonText": confirm_button if confirm_button else _("Delete"),
-                    "cancelButtonText": cancel_button if cancel_button else _("Cancel"),
-                    "icon": "warning" if warning else "question",
-                    "customClass": {
-                        "confirmButton": "confirm_warning" if warning else "confirm_question",
-                        "icon": "confirm_icon"
-                        + (" confirm_warning" if warning else " confirm_question"),
-                    },
-                }
+                confirmed_form_submit_options(
+                    title, suffix, message, confirm_button, cancel_button, icon, warning
+                )
             ),
         )
     )
+
+
+def confirmed_form_submit_options(
+    title: str | None = None,
+    suffix: str | None = None,
+    message: str | None = None,
+    confirm_button: str | None = None,
+    cancel_button: str | None = None,
+    icon: str | None = None,
+    warning: bool = False,
+) -> dict[str, str | dict[str, str]]:
+    return {
+        "title": get_confirm_link_title(title, suffix),
+        "html": escaping.escape_text(message),
+        "confirmButtonText": confirm_button if confirm_button else _("Delete"),
+        "cancelButtonText": cancel_button if cancel_button else _("Cancel"),
+        "icon": "warning" if warning else "question",
+        "customClass": {
+            "confirmButton": "confirm_warning" if warning else "confirm_question",
+            "icon": "confirm_icon" + (" confirm_warning" if warning else " confirm_question"),
+        },
+    }
 
 
 @dataclass
@@ -288,13 +303,13 @@ class PageMenu:
             )
         )
 
-    def add_youtube_reference(self, title: str, youtube_id: str) -> None:
+    def add_youtube_reference(self, title: str, youtube_ref: YouTubeReference) -> None:
         help_dropdown = self.get_dropdown_by_name("help", make_help_dropdown())
         help_dropdown.topics[2].entries.append(
             PageMenuEntry(
                 title=title,
                 icon_name="video",
-                item=make_external_link("https://youtu.be/%s" % youtube_id),
+                item=make_external_link(youtube_reference_url(youtube_ref)),
             )
         )
 
@@ -308,7 +323,7 @@ def make_display_options_dropdown() -> PageMenuDropdown:
                 title=_("General display options"),
                 entries=[
                     PageMenuEntry(
-                        title=(_("Hide page navigation")),
+                        title=(_("Show page navigation")),
                         name="hide_navigation",
                         icon_name="toggle_on",
                         item=PageMenuLink(
@@ -344,8 +359,6 @@ def make_display_options_dropdown() -> PageMenuDropdown:
 
 
 def make_help_dropdown() -> PageMenuDropdown:
-    title_show_help = _("Show inline help")
-    title_hide_help = _("Hide inline help")
     return PageMenuDropdown(
         name="help",
         title=_("Help"),
@@ -354,11 +367,9 @@ def make_help_dropdown() -> PageMenuDropdown:
                 title=_("Context sensitive help"),
                 entries=[
                     PageMenuEntry(
-                        title=title_hide_help if user.show_help else title_show_help,
+                        title=_("Show inline help"),
                         icon_name="toggle_" + ("on" if user.show_help else "off"),
-                        item=make_javascript_link(
-                            f'cmk.help.toggle("{title_show_help}", "{title_hide_help}")'
-                        ),
+                        item=make_javascript_link("cmk.help.toggle()"),
                         name="inline_help",
                         is_enabled=False,
                         disabled_tooltip=_("This page does not provide an inline help."),
@@ -406,24 +417,16 @@ def make_up_link(breadcrumb: Breadcrumb) -> PageMenuDropdown:
     )
 
 
-def make_checkbox_selection_json_text() -> tuple[str, str]:
-    return json.dumps(_("Select all checkboxes")), json.dumps(_("Deselect all checkboxes"))
-
-
 def make_checkbox_selection_topic(selection_key: str, is_enabled: bool = True) -> PageMenuTopic:
     is_selected = user.get_rowselection(request.var("selection") or "", selection_key)
-    name_selected, name_deselected = make_checkbox_selection_json_text()
     return PageMenuTopic(
         title=_("Selection"),
         entries=[
             PageMenuEntry(
                 name="checkbox_selection",
-                title=_("Deselect all checkboxes") if is_selected else _("Select all checkboxes"),
+                title=_("Select all checkboxes"),
                 icon_name="toggle_on" if is_selected else "toggle_off",
-                item=make_javascript_link(
-                    "cmk.selection.toggle_all_rows(this.form, %s, %s);"
-                    % (name_selected, name_deselected)
-                ),
+                item=make_javascript_link("cmk.selection.toggle_all_rows(this.form);"),
                 is_enabled=is_enabled,
             ),
         ],
@@ -438,8 +441,8 @@ def make_simple_form_page_menu(
     save_title: str | None = None,
     save_icon: str = "save",
     save_is_enabled: bool = True,
-    add_abort_link: bool = False,
-    abort_url: str | None = None,
+    add_cancel_link: bool = False,
+    cancel_url: str | None = None,
     inpage_search: PageMenuSearch | None = None,
 ) -> PageMenu:
     """Factory for creating a simple menu for object edit dialogs that just link back"""
@@ -450,8 +453,8 @@ def make_simple_form_page_menu(
             _make_form_save_link(form_name, button_name, save_title, save_icon, save_is_enabled)
         )
 
-    if add_abort_link:
-        entries.append(_make_form_abort_link(breadcrumb, abort_url))
+    if add_cancel_link:
+        entries.append(_make_form_cancel_link(breadcrumb, cancel_url))
 
     return PageMenu(
         dropdowns=[
@@ -489,17 +492,17 @@ def _make_form_save_link(
     )
 
 
-def _make_form_abort_link(breadcrumb: Breadcrumb, abort_url: str | None) -> PageMenuEntry:
-    if not abort_url:
+def _make_form_cancel_link(breadcrumb: Breadcrumb, cancel_url: str | None) -> PageMenuEntry:
+    if not cancel_url:
         if not breadcrumb or len(breadcrumb) < 2 or not breadcrumb[-2].url:
             raise ValueError("Can not create back link for this page")
-        abort_url = breadcrumb[-2].url
-    assert abort_url is not None
+        cancel_url = breadcrumb[-2].url
+    assert cancel_url is not None
 
     return PageMenuEntry(
-        title=_("Abort"),
-        icon_name="abort",
-        item=make_simple_link(abort_url),
+        title=_("Cancel"),
+        icon_name="cancel",
+        item=make_simple_link(cancel_url),
         is_shortcut=True,
         is_suggested=True,
     )
@@ -691,7 +694,7 @@ class SuggestedEntryRenderer:
             id_=("menu_suggestion_%s" % entry.name if entry.name else None),
         )
         html.icon(entry.icon_name or "trans")
-        html.write_text(entry.shortcut_title or entry.title)
+        html.span(entry.shortcut_title or entry.title)
         html.close_a()
 
 

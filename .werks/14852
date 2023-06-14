@@ -6,7 +6,7 @@ Date: 1667582668
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The Event history details are now displayed correctly
 for the selected event. Previously in some cases the history_line

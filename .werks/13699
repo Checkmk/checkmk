@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The functionality of the former ruleset <i>"Check for correct
 version of Checkmk agent"</i> is now included in the service

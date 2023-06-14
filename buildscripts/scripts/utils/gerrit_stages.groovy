@@ -24,15 +24,16 @@ def log_stage_duration(last_stage_date) {
 // ENV_VARS: Array [] of environment variables needed for the test
 // COMMAND:  command that should be executed. It should be possible to use this exact
 //           command to reproduce the test locally in the coresponding DIR
-def create_stage(Map args, issues, time_stage_started) {
+def create_stage(Map args, time_stage_started) {
     def duration;
+    def issues = [];
     stage(args.NAME) {
         if (args.SKIPPED) {
             Utils.markStageSkippedForConditional(STAGE_NAME);
             println("SKIPPED: ${args.SKIPPED}");
             duration = groovy.time.TimeCategory.minus(new Date(), time_stage_started);
             desc_add_status_row(args.NAME, duration, 'skipped', '--');
-            return true;
+            return [true, issues];
         }
 
         sh(script: "figlet -w 150 '${args.NAME}'", returnStatus: true);
@@ -51,25 +52,18 @@ def create_stage(Map args, issues, time_stage_started) {
 
                 println("Check results: ${args.RESULT_CHECK_TYPE}");
                 if (args.RESULT_CHECK_TYPE) {
-                    if (args.RESULT_CHECK_TYPE == "MYPY") {
-                        issues.add(scanForIssues(
-                            tool: myPy(pattern: "${args.RESULT_CHECK_FILE_PATTERN}")));
-                    } else if (args.RESULT_CHECK_TYPE == "PYLINT") {
-                        issues.add(scanForIssues(
-                            tool: pyLint(pattern: "${args.RESULT_CHECK_FILE_PATTERN}")));
-                    } else if (args.RESULT_CHECK_TYPE == "GCC") {
-                        issues.add(scanForIssues(
-                            tool: gcc(pattern: "${args.RESULT_CHECK_FILE_PATTERN}")));
-                    } else if (args.RESULT_CHECK_TYPE == "CLANG") {
-                        issues.add(scanForIssues(
-                            tool: clang(pattern: "${args.RESULT_CHECK_FILE_PATTERN}")));
-                    }
+                    def test_jenkins_helper = load("${checkout_dir}/buildscripts/scripts/utils/test_helper.groovy");
+                    issues = test_jenkins_helper.analyse_issues(
+                        args.RESULT_CHECK_TYPE,
+                        args.RESULT_CHECK_FILE_PATTERN,
+                        false
+                    );
                 }
                 /// make the stage fail if the command returned nonzero
                 sh("exit ${cmd_status}");
             }
         }
-        return cmd_status == 0;
+        return [cmd_status == 0, issues];
     }
 }
 

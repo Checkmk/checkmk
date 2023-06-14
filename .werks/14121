@@ -6,7 +6,7 @@ Date: 1651152296
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 By default, Checkmk does not import Kubernetes annotations. With this werk,
 this bevaviour can be configured via the option <tt>Import annotations as host

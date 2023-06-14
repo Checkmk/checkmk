@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,10 +12,12 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
+    MigrateNotUpdated,
     MigrateToIndividualOrStoredPassword,
     rulespec_registry,
 )
-from cmk.gui.valuespec import Checkbox, Dictionary, ListChoice, TextInput
+from cmk.gui.utils.urls import DocReference
+from cmk.gui.valuespec import Dictionary, ListChoice, TextInput
 
 RAW_GCP_SERVICES: Final = [
     ("gcs", "Google Cloud Storage (GCS)"),
@@ -40,6 +42,7 @@ def get_gcp_services() -> Sequence[tuple[str, str]]:
 
 
 def _valuespec_special_agents_gcp():
+    valid_service_choices = {c[0] for c in get_gcp_services()}
     return Dictionary(
         title=_("Google Cloud Platform"),
         elements=[
@@ -52,11 +55,15 @@ def _valuespec_special_agents_gcp():
             ),
             (
                 "services",
-                ListChoice(
-                    title=_("GCP services to monitor"),
-                    choices=get_gcp_services(),
-                    default_value=[s[0] for s in get_gcp_services()],
-                    allow_empty=True,
+                MigrateNotUpdated(
+                    valuespec=ListChoice(
+                        title=_("GCP services to monitor"),
+                        choices=get_gcp_services(),
+                        default_value=[s[0] for s in get_gcp_services()],
+                        allow_empty=True,
+                    ),
+                    # silently cut off invalid CCE only choices if we're CEE now.
+                    migrate=lambda slist: [s for s in slist if s in valid_service_choices],
                 ),
             ),
             (
@@ -104,14 +111,6 @@ def _valuespec_special_agents_gcp():
                     required_keys=["tableid"],
                 ),
             ),
-            (
-                "health",
-                Checkbox(
-                    title="Health",
-                    label="Monitor GCP health",
-                    help="Monitor health of GCP products in any region",
-                ),
-            ),
         ],
         optional_keys=["cost"],
     )
@@ -123,5 +122,6 @@ rulespec_registry.register(
         name="special_agents:gcp",
         title=lambda: _("Google Cloud Platform (GCP)"),
         valuespec=_valuespec_special_agents_gcp,
+        doc_references={DocReference.GCP: _("Monitoring Google Cloud Platform (GCP)")},
     )
 )

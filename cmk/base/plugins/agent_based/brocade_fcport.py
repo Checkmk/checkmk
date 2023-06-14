@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -46,8 +46,13 @@ _BROCADE_FCPORT_PHYSTATES = {
     9: "lock ref",
     10: "validating",
     11: "invalid module",
-    12: "no sig det",
-    13: "unknown",
+    12: "remote fault",
+    13: "local fault",
+    14: "no sig det",
+    15: "hard fault",
+    16: "unsupported module",
+    17: "module fault",
+    255: "unknown",
 }
 
 # Taken from swFCPortOpStatus
@@ -132,7 +137,19 @@ def _get_if_table_offset(speed_info: StringTable, offset: int) -> int | None:
     return None
 
 
-def parse_brocade_fcport(string_table) -> Section | None:  # type:ignore[no-untyped-def]
+def _get_relevant_part_of_speed_info(speed_info: StringTable, offset: int) -> StringTable:
+    # if-table and brocade-if-table do NOT have same length
+    # first remove interfaces at the beginning of the speed info table:
+    speed_info = [x[1:] for x in speed_info[_get_if_table_offset(speed_info, offset) :]]
+
+    # but there may also be some vlan (or other non fc) interfaces at the bottom of speed_info:
+    while speed_info and speed_info[-1] and speed_info[-1][0] != "56":
+        speed_info.pop()
+
+    return speed_info
+
+
+def parse_brocade_fcport(string_table) -> Section | None:  # type: ignore[no-untyped-def]
     if_info: StringTable = string_table[0]
     link_info: StringTable = string_table[1]
     speed_info: StringTable = string_table[2]
@@ -144,8 +161,7 @@ def parse_brocade_fcport(string_table) -> Section | None:  # type:ignore[no-unty
         return None
 
     isl_ports = dict(link_info)
-    # if-table and brocade-if-table do NOT have same length
-    speed_info = [x[1:] for x in speed_info[_get_if_table_offset(speed_info, offset) :]]
+    speed_info = _get_relevant_part_of_speed_info(speed_info, offset)
 
     if len(if_info) == len(speed_info):
         # extract the speed from IF-MIB::ifHighSpeed.
@@ -179,7 +195,6 @@ def parse_brocade_fcport(string_table) -> Section | None:  # type:ignore[no-unty
         porttype,
         ifspeed,
     ) in if_table:
-
         # Since FW v8.0.1b [rx/tx]words are no longer available
         # Use 64bit counters if available
         bbcredits = None

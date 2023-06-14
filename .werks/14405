@@ -6,7 +6,7 @@ Date: 1656593110
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Newer models like the Bigup i5600 do not have their fans running and report 0 rpm.
 If this is detected we now check the fan status before alerting on a fan with 0 rpm.

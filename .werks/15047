@@ -6,7 +6,7 @@ Date: 1670319733
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Added support for a new argument to be set when configuring the graylog special agent.
 The argument is "source_since" and allows to set a specific timeframe in which the total number of messages should be checked.

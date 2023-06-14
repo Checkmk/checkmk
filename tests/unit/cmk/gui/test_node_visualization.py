@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This is mainly meant to test for rough data coming from livestatus and its errorhandling
@@ -16,14 +16,14 @@ somewhere expected :-)
 Also sometimes livestatus just tries again which can result in unexpected queries.
 Good luck!
 """
-
 import pytest
+from pytest_mock import MockerFixture
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.type_defs import HostName
+from cmk.utils.type_defs.user_id import UserId
 
 from cmk.gui.node_visualization import (
-    _get_default_view_hostnames,
     _get_hostnames_for_query,
     _get_topology_configuration,
     ParentChildNetworkTopology,
@@ -62,13 +62,15 @@ def rough_livestatus_mock(mock_livestatus: MockLiveStatusConnection) -> MockLive
 
 
 def test_ParentChildNetworkTopology_fetch_data_for_hosts(
-    rough_livestatus: MockLiveStatusConnection,
+    rough_livestatus: MockLiveStatusConnection, with_admin_login: UserId
 ) -> None:
     with rough_livestatus(expect_status_query=True):
         rough_livestatus.expect_query(
-            "GET hosts\nColumns: name\nFilter: parents =\nLocaltime: 1673730468\nOutputFormat: python3\nKeepAlive: on\nResponseHeader: fixed16"
+            "GET hosts\nColumns: name\nLocaltime: 1673730468\nOutputFormat: python3\nKeepAlive: on\nResponseHeader: fixed16"
         )
-        topology = ParentChildNetworkTopology(_get_topology_configuration("parent_child_topology"))
+
+        topology_config, _hash = _get_topology_configuration("parent_child_topology")
+        topology = ParentChildNetworkTopology(topology_config)
 
     rough_livestatus.expect_query(
         "GET hosts\nColumns: name state alias icon_image parents childs has_been_checked\nFilter: host_name = heute\nOr: 1",
@@ -77,8 +79,8 @@ def test_ParentChildNetworkTopology_fetch_data_for_hosts(
     assert host_info[0]["name"] == "foo<(/"
 
 
-def test_ParentChildTopologyPage_get_hostnames_from_filters(  # type:ignore[no-untyped-def]
-    rough_livestatus: MockLiveStatusConnection, mocker
+def test_ParentChildTopologyPage_get_hostnames_from_filters(
+    rough_livestatus: MockLiveStatusConnection, mocker: MockerFixture
 ) -> None:
     class MockView:
         context = None
@@ -93,18 +95,8 @@ def test_ParentChildTopologyPage_get_hostnames_from_filters(  # type:ignore[no-u
     )
 
     with rough_livestatus(expect_status_query=True):
-        rough_livestatus.expect_query("GET hosts\nColumns: name\nFilter: parents =")
-        result_set = _get_hostnames_for_query(_get_topology_configuration("parent_child_topology"))
+        rough_livestatus.expect_query("GET hosts\nColumns: name")
+        topology_config, _hash = _get_topology_configuration("parent_child_topology")
+        result_set = _get_hostnames_for_query(topology_config)
         print(result_set)
     assert "bar<(/" in result_set
-
-
-def test_ParentChildTopologyPage_get_default_view_hostnames(
-    rough_livestatus: MockLiveStatusConnection,
-) -> None:
-    rough_livestatus.expect_query("GET hosts\nColumns: name\nFilter: parents =")
-    with rough_livestatus(expect_status_query=True):
-        result_set = _get_default_view_hostnames(
-            _get_topology_configuration("parent_child_topology")
-        )
-    assert result_set.pop() == "bar<(/"

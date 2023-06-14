@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-__version__ = "2.2.0i1"
+__version__ = "2.3.0b1"
 
-# this file has to work with both Python 2 and 3
-# pylint: disable=super-with-arguments
+USER_AGENT = "checkmk-agent-mk_jolokia-" + __version__
 
 import io
 import os
 import socket
 import sys
+import urllib.parse
 
 # For Python 3 sys.stdout creates \r\n as newline for Windows.
 # Checkmk can't handle this therefore we rewrite sys.stdout to a new_stdout function.
@@ -25,14 +25,17 @@ if sys.version_info[0] >= 3:
 
 # Continue if typing cannot be imported, e.g. for running unit tests
 try:
-    from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+    from typing import (  # noqa: F401 # pylint: disable=unused-import
+        Any,
+        Callable,
+        Dict,
+        List,
+        Optional,
+        Tuple,
+        Union,
+    )
 except ImportError:
     pass
-
-if sys.version_info[0] >= 3:
-    from urllib.parse import quote  # pylint: disable=import-error,no-name-in-module
-else:
-    from urllib2 import quote  # pylint: disable=import-error
 
 try:
     try:
@@ -325,7 +328,7 @@ def cached(function):
     return cached_function
 
 
-class JolokiaInstance(object):  # pylint: disable=useless-object-inheritance
+class JolokiaInstance:
     # use this to filter headers whien recording via vcr trace
     FILTER_SENSITIVE = {"filter_headers": [("authorization", "****")]}
 
@@ -377,8 +380,9 @@ class JolokiaInstance(object):  # pylint: disable=useless-object-inheritance
 
         return config
 
-    def __init__(self, config):
-        super(JolokiaInstance, self).__init__()
+    def __init__(self, config, user_agent):
+        # type: (object, str) -> None
+        super().__init__()
         self._config = self._sanitize_config(config)
 
         self.name = self._config["instance"]
@@ -388,7 +392,7 @@ class JolokiaInstance(object):  # pylint: disable=useless-object-inheritance
         self.base_url = self._get_base_url()
         self.target = self._get_target()
         self.post_config = {"ignoreErrors": "true"}
-        self._session = self._initialize_http_session()
+        self._session = self._initialize_http_session(user_agent)
 
     def _get_base_url(self):
         return "%s://%s:%d/%s/" % (
@@ -411,7 +415,8 @@ class JolokiaInstance(object):  # pylint: disable=useless-object-inheritance
             "password": self._config["service_password"],
         }
 
-    def _initialize_http_session(self):
+    def _initialize_http_session(self, user_agent):
+        # type: (str) -> requests.Session
         session = requests.Session()
         # Watch out: we must provide the verify keyword to every individual request call!
         # Else it will be overwritten by the REQUESTS_CA_BUNDLE env variable
@@ -419,6 +424,7 @@ class JolokiaInstance(object):  # pylint: disable=useless-object-inheritance
         if session.verify is False:
             urllib3.disable_warnings(category=urllib3.exceptions.InsecureRequestWarning)
         session.timeout = self._config["timeout"]  # type: ignore[attr-defined]
+        session.headers["User-Agent"] = user_agent
 
         auth_method = self._config.get("mode")
         if auth_method is None:
@@ -615,7 +621,9 @@ def _get_queries(do_search, inst, itemspec, title, path, mbean):
     except IndexError:
         return []
 
-    return [("%s/%s" % (quote(mbean_exp), path), path, itemspec) for mbean_exp in paths]
+    return [
+        ("%s/%s" % (urllib.parse.quote(mbean_exp), path), path, itemspec) for mbean_exp in paths
+    ]
 
 
 def _process_queries(inst, queries):
@@ -729,7 +737,7 @@ def main(configs_iterable=None):
         configs_iterable = yield_configured_instances()
 
     for config in configs_iterable:
-        instance = JolokiaInstance(config)
+        instance = JolokiaInstance(config, USER_AGENT)
         try:
             query_instance(instance)
         except SkipInstance:

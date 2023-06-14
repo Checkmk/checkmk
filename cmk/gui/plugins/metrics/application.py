@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -678,6 +678,18 @@ metric_info["sms_success_rate"] = {
     "color": "35/a",
 }
 
+metric_info["cpu_credits_consumed"] = {
+    "title": _l("Credits consumed"),
+    "unit": "count",
+    "color": "15/a",
+}
+
+metric_info["cpu_credits_remaining"] = {
+    "title": _l("Credits remaining"),
+    "unit": "count",
+    "color": "11/a",
+}
+
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -759,5 +771,13 @@ graph_info["messages"] = {
         ("failed_notifications", "line"),
         ("delivered_notifications", "line"),
         ("messages_publish", "line"),
+    ],
+}
+
+graph_info["cpu_credits"] = {
+    "title": _l("CPU credits"),
+    "metrics": [
+        ("cpu_credits_consumed", "line"),
+        ("cpu_credits_remaining", "line"),
     ],
 }

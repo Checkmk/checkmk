@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
 
-from collections.abc import Iterable, Mapping, Sequence
-from typing import Callable
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from unittest.mock import MagicMock
 
 import pytest
@@ -27,11 +26,11 @@ from .agent_aws_fake_clients import FakeCloudwatchClient, SNSListSubscriptionsIB
 SNSSectionsGetter = Callable[[list[str] | None, OverallTags], tuple[SNSSMS, SNS]]
 
 ALL_TOPICS = {
-    "eu-west-1 TopicName-0",
-    "eu-west-1 TopicName-1",
-    "eu-west-1 TopicName-2",
-    "eu-west-1 TopicName-3.fifo",
-    "eu-west-1 TopicName-4.fifo",
+    "TopicName-0 [eu-west-1]",
+    "TopicName-1 [eu-west-1]",
+    "TopicName-2 [eu-west-1]",
+    "TopicName-3.fifo [eu-west-1]",
+    "TopicName-4.fifo [eu-west-1]",
 }
 
 TAGGING_PAGINATOR_RESULT = {
@@ -108,9 +107,10 @@ def _create_sns_limits(n_std_topics: int, n_fifo_topics: int, n_subs: int) -> SN
     config.add_single_service_config("sns_names", [])
     config.add_single_service_config("sns_tags", [])
     fake_sns_client = FakeSNSClient(n_std_topics, n_fifo_topics, n_subs)
-    topics_fetcher = SNSTopicsFetcher(fake_sns_client, MagicMock(), "region", config)
+    # TODO: FakeSNSClient shoud actually subclass SNSClient.
+    topics_fetcher = SNSTopicsFetcher(fake_sns_client, MagicMock(), "region", config)  # type: ignore[arg-type]
     return SNSLimits(
-        client=fake_sns_client,
+        client=fake_sns_client,  # type: ignore[arg-type]
         region="region",
         config=config,
         sns_topics_fetcher=topics_fetcher,
@@ -146,9 +146,10 @@ def get_sns_sections() -> SNSSectionsGetter:
         fake_cloudwatch_client = FakeCloudwatchClient()
         fake_tagging_client = FakeTaggingClient()
 
-        sns_topics_fetcher = SNSTopicsFetcher(fake_sns_client, fake_tagging_client, region, config)
-        sns_sms = SNSSMS(fake_cloudwatch_client, region, config)
-        sns = SNS(fake_cloudwatch_client, region, config, sns_topics_fetcher)
+        # TODO: FakeSNSClient shoud actually subclass SNSClient, FakeCloudwatchClient should subclass CloudWatchClient, etc.
+        sns_topics_fetcher = SNSTopicsFetcher(fake_sns_client, fake_tagging_client, region, config)  # type: ignore[arg-type]
+        sns_sms = SNSSMS(fake_cloudwatch_client, region, config)  # type: ignore[arg-type]
+        sns = SNS(fake_cloudwatch_client, region, config, sns_topics_fetcher)  # type: ignore[arg-type]
         return sns_sms, sns
 
     return _create_sns_sections
@@ -159,9 +160,9 @@ sns_params = [
     (
         ["TopicName-1", "TopicName-4.fifo"],
         (None, None),
-        ["eu-west-1 TopicName-1", "eu-west-1 TopicName-4.fifo"],
+        ["TopicName-1 [eu-west-1]", "TopicName-4.fifo [eu-west-1]"],
     ),
-    (None, ([["test-tag-key"]], [["test-tag-value"]]), ["eu-west-1 TopicName-3.fifo"]),
+    (None, ([["test-tag-key"]], [["test-tag-value"]]), ["TopicName-3.fifo [eu-west-1]"]),
     (None, ([["test-tag-key"]], [["wrong-tag-value"]]), []),
     (None, ([["wrong-tag-key"]], [["test-tag-value"]]), []),
     (["NONEXISTINGID"], (None, None), []),

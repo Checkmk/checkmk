@@ -1,90 +1,55 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import pytest
 
-from tests.unit.cmk.gui.conftest import WebTestAppForCMK
+from tests.testlib.rest_api_client import ClientRegistry
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 from cmk.automations.results import DeleteHostsResult
 
-from cmk.gui.plugins.openapi.restful_objects import constructors
 
-CMK_WAIT_FOR_COMPLETION = "cmk/wait-for-completion"
-
-
-def test_openapi_show_activations(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    base = "/NO_SITE/check_mk/api/1.0"
-    aut_user_auth_wsgi_app.call_method(
+def test_wait_for_completion_invalid_activation_id(clients: ClientRegistry) -> None:
+    resp = clients.ActivateChanges.request(
         "get",
-        base + "/objects/activation_run/asdf/actions/wait-for-completion/invoke",
-        status=404,
-        headers={"Accept": "application/json"},
+        url="/objects/activation_run/asdf/actions/wait-for-completion/invoke",
+        expect_ok=False,
     )
+    resp.assert_status_code(404)
+    assert resp.json["detail"] == "Could not find an activation with id 'asdf'."
 
 
-def test_openapi_show_single_activation(aut_user_auth_wsgi_app: WebTestAppForCMK) -> None:
-    base = "/NO_SITE/check_mk/api/1.0"
-    aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + constructors.object_href("activation_run", "asdf"),
-        status=404,
-        headers={"Accept": "application/json"},
-    )
+def test_get_non_existing_activation(clients: ClientRegistry) -> None:
+    clients.ActivateChanges.get_activation(
+        activation_id="non_existing_activation_id",
+        expect_ok=False,
+    ).assert_status_code(404)
 
 
-def test_openapi_list_currently_running_activations(
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
-) -> None:
-    base = "/NO_SITE/check_mk/api/1.0"
-    aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + constructors.collection_href("activation_run", "running"),
-        status=200,
-        headers={"Accept": "application/json"},
-    )
+def test_list_currently_running_activations(clients: ClientRegistry) -> None:
+    clients.ActivateChanges.get_running_activations()
 
 
-def test_openapi_activate_changes(
+def test_activate_changes_unknown_site(clients: ClientRegistry) -> None:
+    resp = clients.ActivateChanges.activate_changes(sites=["asdf"], expect_ok=False)
+    resp.assert_status_code(400)
+    assert "Unknown site" in repr(resp.json), resp.json
+
+
+def test_activate_changes(
+    clients: ClientRegistry,
     monkeypatch: pytest.MonkeyPatch,
-    aut_user_auth_wsgi_app: WebTestAppForCMK,
     mock_livestatus: MockLiveStatusConnection,
 ) -> None:
-    base = "/NO_SITE/check_mk/api/1.0"
+    # Create a host
+    clients.HostConfig.create(host_name="foobar", folder="/")
 
-    # We create a host
-    live = mock_livestatus
-
-    host_created = aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/collections/all",
-        params='{"host_name": "foobar", "folder": "/"}',
-        headers={"Accept": "application/json"},
-        status=200,
-        content_type="application/json",
-    )
-
-    with live(expect_status_query=True):
-        resp = aut_user_auth_wsgi_app.call_method(
-            "post",
-            base + "/domain-types/activation_run/actions/activate-changes/invoke",
-            status=400,
-            params='{"sites": ["asdf"]}',
-            headers={"Accept": "application/json"},
-            content_type="application/json",
-        )
-        assert "Unknown site" in repr(resp.json), resp.json
-
-        resp = aut_user_auth_wsgi_app.call_method(
-            "post",
-            base + "/domain-types/activation_run/actions/activate-changes/invoke",
-            status=200,
-            headers={"Accept": "application/json"},
-            content_type="application/json",
-        )
+    # Activate changes
+    with mock_livestatus(expect_status_query=True):
+        resp = clients.ActivateChanges.activate_changes()
 
     assert set(resp.json["extensions"]) == {
         "sites",
@@ -101,52 +66,60 @@ def test_openapi_activate_changes(
         "time",
     }
 
-    with live(expect_status_query=True):
-        resp = aut_user_auth_wsgi_app.call_method(
-            "post",
-            base + "/domain-types/activation_run/actions/activate-changes/invoke",
-            status=302,
-            params='{"redirect": true}',
-            headers={"Accept": "application/json"},
-            content_type="application/json",
-        )
-
-    for _ in range(10):
-        resp = aut_user_auth_wsgi_app.follow_link(
-            resp,
-            CMK_WAIT_FOR_COMPLETION,
-        )
-        if resp.status_code == 204:
-            break
-
-    # We delete the host again
+    # Delete the previously created host
     monkeypatch.setattr(
         "cmk.gui.plugins.openapi.endpoints.host_config.delete_hosts",
         lambda *args, **kwargs: DeleteHostsResult(),
     )
-    aut_user_auth_wsgi_app.follow_link(
-        host_created,
-        ".../delete",
-        status=204,
-        headers={"If-Match": host_created.headers["ETag"], "Accept": "application/json"},
-        content_type="application/json",
+    clients.HostConfig.delete(host_name="foobar")
+
+    # Activate the changes and wait for completion
+    with mock_livestatus(expect_status_query=True):
+        clients.ActivateChanges.call_activate_changes_and_wait_for_completion()
+
+
+def test_list_pending_changes(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(host_name="foobar", folder="/")
+    resp = clients.ActivateChanges.list_pending_changes()
+    assert set(resp.json["value"][0]) == {"id", "user_id", "action_name", "text", "time"}
+    assert "actions/activate-changes/invoke" in resp.json["links"][0]["href"]
+
+
+def test_list_activate_changes_invalid_etag(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(host_name="foobar", folder="/")
+    resp = clients.ActivateChanges.activate_changes(
+        etag="invalid_etag",
+        expect_ok=False,
     )
+    resp.assert_status_code(412)
+    assert resp.json["title"] == "Precondition failed"
 
-    # And activate the changes
 
-    with live(expect_status_query=True):
-        resp = aut_user_auth_wsgi_app.call_method(
-            "post",
-            base + "/domain-types/activation_run/actions/activate-changes/invoke",
-            headers={"Accept": "application/json"},
-            content_type="application/json",
-        )
+def test_list_activate_changes_no_if_match_header(clients: ClientRegistry) -> None:
+    clients.HostConfig.create(host_name="foobar", folder="/")
+    resp = clients.ActivateChanges.activate_changes(
+        etag=None,
+        expect_ok=False,
+    )
+    resp.assert_status_code(428)
+    assert resp.json["title"] == "Precondition required"
 
-    for _ in range(10):
-        resp = aut_user_auth_wsgi_app.follow_link(
-            resp,
-            CMK_WAIT_FOR_COMPLETION,
-            headers={"Accept": "application/json"},
-        )
-        if resp.status_code == 204:
-            break
+
+def test_list_activate_changes_star_etag(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    clients.HostConfig.create(host_name="foobar", folder="/")
+
+    with mock_livestatus(expect_status_query=True):
+        clients.ActivateChanges.activate_changes(etag="star")
+
+
+def test_list_activate_changes_valid_etag(
+    clients: ClientRegistry,
+    mock_livestatus: MockLiveStatusConnection,
+) -> None:
+    clients.HostConfig.create(host_name="foobar", folder="/")
+
+    with mock_livestatus(expect_status_query=True):
+        clients.ActivateChanges.activate_changes(etag="valid_etag")

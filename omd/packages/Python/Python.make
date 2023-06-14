@@ -9,7 +9,7 @@ PYTHON_DEPS := \
     $(REPO_PATH)/omd/packages/Python/sitecustomize.py
 
 # Increase the number before the "-" to enforce a recreation of the build cache
-PYTHON_BUILD_ID := $(call cache_pkg_build_id,4,$(PYTHON_DEPS))
+PYTHON_BUILD_ID := $(call cache_pkg_build_id,5,$(PYTHON_DEPS))
 
 PYTHON_UNPACK := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-unpack
 PYTHON_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-build
@@ -38,6 +38,7 @@ PYTHON_PACKAGE_DIR := $(PACKAGE_DIR)/$(PYTHON)
 PYTHON_SITECUSTOMIZE_SOURCE := $(PYTHON_PACKAGE_DIR)/sitecustomize.py
 PYTHON_SITECUSTOMIZE_WORK := $(PYTHON_WORK_DIR)/sitecustomize.py
 PYTHON_SITECUSTOMIZE_COMPILED := $(PYTHON_WORK_DIR)/__pycache__/sitecustomize.cpython-$(PYTHON_MAJOR_MINOR).pyc
+PYTHON_PIP_WRAPPER_SOURCE := $(PYTHON_PACKAGE_DIR)/pip
 PYTHON_PREFIX := /replace-me
 
 .NOTPARALLEL: $(PYTHON_INSTALL)
@@ -111,10 +112,17 @@ $(PYTHON_INTERMEDIATE_INSTALL): $(PYTHON_BUILD)
 # the same one as before.
 	$(RSYNC) $(PYTHON_INSTALL_DIR)$(PYTHON_PREFIX)/* $(PYTHON_INSTALL_DIR)
 	rm -r $(PYTHON_INSTALL_DIR)$(PYTHON_PREFIX)
-# Fix python interpreter
-	$(SED) -E -i '1s|^#!.*/python('$(PYTHON_VERSION_MAJOR)'\.'$(PYTHON_VERSION_MINOR)')?$$|#!/usr/bin/env python'$(PYTHON_VERSION_MAJOR)'|' $(addprefix $(PYTHON_INSTALL_DIR)/bin/,2to3-$(PYTHON_MAJOR_DOT_MINOR) idle$(PYTHON_MAJOR_DOT_MINOR) pip3 pip$(PYTHON_MAJOR_DOT_MINOR) pydoc$(PYTHON_MAJOR_DOT_MINOR))
-# Fix pip3 configuration
-	$(SED) -i '/^import re$$/i import os\nos.environ["PIP_DISABLE_PIP_VERSION_CHECK"] = "True"\nos.environ["PIP_TARGET"] = os.path.join(os.environ["OMD_ROOT"], "local/lib/python$(PYTHON_VERSION_MAJOR)")' $(addprefix $(PYTHON_INSTALL_DIR)/bin/,pip$(PYTHON_VERSION_MAJOR) pip$(PYTHON_MAJOR_DOT_MINOR))
+# Fix shebang of scripts
+	$(SED) -i '1s|^#!'$(PYTHON_PREFIX)'.*|#!/usr/bin/env python'$(PYTHON_VERSION_MAJOR)'|' $(addprefix $(PYTHON_INSTALL_DIR)/bin/,2to3-$(PYTHON_MAJOR_DOT_MINOR) idle$(PYTHON_MAJOR_DOT_MINOR) pip$(PYTHON_VERSION_MAJOR) pip$(PYTHON_MAJOR_DOT_MINOR) pydoc$(PYTHON_MAJOR_DOT_MINOR))
+# Fix pip3 configuration by using own wrapper script
+# * PIP_TARGET currently has an issue when installing non-wheel packages, see https://github.com/pypa/pip/issues/8438
+# * The workaround is to set the target via the commandline
+# * The wrapper script we're using is based on what PipScriptMaker would create, see:
+# https://github.com/pypa/pip/blob/83c800d3b8b367b6ae1fbf92fd4f699612cecfc7/src/pip/_internal/operations/install/wheel.py#L422
+# * However, we may run into issues in the future again. It seems actually the module invocation (python -m pip) is more solid, see:
+# https://github.com/pypa/pip/issues/5599
+	install -m 755 --no-target-directory $(PYTHON_PIP_WRAPPER_SOURCE) $(PYTHON_INSTALL_DIR)/bin/pip$(PYTHON_VERSION_MAJOR)
+	install -m 755 --no-target-directory $(PYTHON_PIP_WRAPPER_SOURCE) $(PYTHON_INSTALL_DIR)/bin/pip$(PYTHON_MAJOR_DOT_MINOR)
 	install -m 644 $(PYTHON_SITECUSTOMIZE_SOURCE) $(PYTHON_INSTALL_DIR)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/
 	install -m 644 $(PYTHON_SITECUSTOMIZE_COMPILED) $(PYTHON_INSTALL_DIR)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/__pycache__
 	$(TOUCH) $@

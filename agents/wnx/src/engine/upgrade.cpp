@@ -71,7 +71,7 @@ bool IsPathProgramData(const fs::path &program_data) {
 
     return rs::any_of(forbidden_files,
                       [text](std::string_view file) {
-                          return wtools::ConvertToUTF16(file) == text;
+                          return wtools::ConvertToUtf16(file) == text;
                       }
 
     );
@@ -114,10 +114,10 @@ int CopyAllFolders(const fs::path &legacy_root, const fs::path &program_data,
 
 namespace details {
 
-constexpr std::wstring_view ignored_exts[] = {L".ini", L".exe", L".log",
-                                              L".tmp"};
+constexpr std::wstring_view g_ignored_exts[] = {L".ini", L".exe", L".log",
+                                                L".tmp"};
 
-constexpr std::wstring_view ignored_names[] = {
+constexpr std::wstring_view g_ignored_names[] = {
     L"plugins.cap",
 };
 
@@ -126,14 +126,15 @@ bool IsIgnoredFile(const fs::path &filename) {
     // check extension
     auto ext = filename.extension().wstring();
     tools::WideLower(ext);
-    if (rs::any_of(ignored_exts, [ext](auto cur) { return ext == cur; })) {
+    if (rs::any_of(g_ignored_exts, [ext](auto cur) { return ext == cur; })) {
         return true;
     }
 
     // check name
     auto fname = filename.filename().wstring();
     tools::WideLower(fname);
-    if (rs::any_of(ignored_names, [fname](auto cur) { return fname == cur; })) {
+    if (rs::any_of(g_ignored_names,
+                   [fname](auto cur) { return fname == cur; })) {
         return true;
     }
 
@@ -259,11 +260,11 @@ uint32_t GetServiceHint(SC_HANDLE ServiceHandle) {
     return ssp.dwWaitHint;
 }
 
-std::optional<DWORD> SendServiceCommand(SC_HANDLE Handle, uint32_t Command) {
+std::optional<DWORD> SendServiceCommand(SC_HANDLE handle, uint32_t command) {
     SERVICE_STATUS_PROCESS ssp;
-    if (::ControlService(Handle, Command,
+    if (::ControlService(handle, command,
                          reinterpret_cast<LPSERVICE_STATUS>(&ssp)) == FALSE) {
-        XLOG::l("ControlService command [{}] failed [{}]", Command,
+        XLOG::l("ControlService command [{}] failed [{}]", command,
                 GetLastError());
         return {};
     }
@@ -733,14 +734,13 @@ bool FindActivateStartLegacyAgent(AddAction action) {
     return true;
 }
 
-bool RunDetachedProcess(const std::wstring &Name) {
+bool RunDetachedProcess(const std::wstring &name) {
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
 
     ZeroMemory(&si, sizeof si);
     si.cb = sizeof si;
     ZeroMemory(&pi, sizeof pi);
-    std::wstring name = Name;
     auto windows_name = const_cast<LPWSTR>(name.c_str());
 
     const auto ret = CreateProcessW(
@@ -755,7 +755,7 @@ bool RunDetachedProcess(const std::wstring &Name) {
         &si,      // Pointer to STARTUPINFO structure
         &pi);     // Pointer to PROCESS_INFORMATION structure
     if (ret != TRUE) {
-        XLOG::l("Cant start the process {}, error is {}", wtools::ToUtf8(Name),
+        XLOG::l("Cant start the process {}, error is {}", wtools::ToUtf8(name),
                 GetLastError());
     }
     CloseHandle(pi.hProcess);
@@ -1046,22 +1046,22 @@ bool UpgradeLegacy(Force force_upgrade) {
     return true;
 }
 
-std::optional<YAML::Node> LoadIni(fs::path File) {
+std::optional<YAML::Node> LoadIni(fs::path file) {
     std::error_code ec;
 
-    if (!fs::exists(File, ec)) {
-        XLOG::l.i("File not found '{}', this may be ok", File);
+    if (!fs::exists(file, ec)) {
+        XLOG::l.i("File not found '{}', this may be ok", file);
         return {};
     }
-    if (!fs::is_regular_file(File, ec)) {
-        XLOG::l.w("File '{}' is not a regular file, this is wrong", File);
+    if (!fs::is_regular_file(file, ec)) {
+        XLOG::l.w("File '{}' is not a regular file, this is wrong", file);
         return {};
     }
 
     cfg::cvt::Parser p;
     p.prepare();
-    if (!p.readIni(File, false)) {
-        XLOG::l.e("File '{}' is not a valid INI file, this is wrong", File);
+    if (!p.readIni(file, false)) {
+        XLOG::l.e("File '{}' is not a valid INI file, this is wrong", file);
         return {};
     }
 
@@ -1115,18 +1115,15 @@ bool ConvertUserIniFile(
     // check_mk.user.yml or check_mk.bakery.yml
     const auto name = wtools::ToUtf8(files::kDefaultMainConfigName);
 
-    // generate
-    auto out_folder = program_data;
-
     // if local.ini file exists, then second file must be a bakery file(pure
     // logic)
     const auto ini_from_wato = IsBakeryIni(user_ini_file);
     fs::path yaml_file;
 
     if (ini_from_wato || local_ini_exists)
-        yaml_file = CreateBakeryYamlFromIni(user_ini_file, out_folder, name);
+        yaml_file = CreateBakeryYamlFromIni(user_ini_file, program_data, name);
     else
-        yaml_file = CreateUserYamlFromIni(user_ini_file, out_folder, name);
+        yaml_file = CreateUserYamlFromIni(user_ini_file, program_data, name);
 
     if (!yaml_file.empty() && fs::exists(yaml_file, ec)) {
         XLOG::l.t("User ini File {} was converted to YML file {}",
@@ -1179,11 +1176,11 @@ bool ConvertIniFiles(const fs::path &legacy_root,
 }
 
 // read first line and check for a marker
-bool IsBakeryIni(const fs::path &Path) noexcept {
-    if (!cma::tools::IsValidRegularFile(Path)) return false;
+bool IsBakeryIni(const fs::path &path) noexcept {
+    if (!tools::IsValidRegularFile(path)) return false;
 
     try {
-        std::ifstream ifs(Path, std::ios::binary);
+        std::ifstream ifs(path, std::ios::binary);
         if (!ifs) {
             return false;
         }

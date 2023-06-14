@@ -6,7 +6,7 @@ Date: 1648552667
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 New host labels are added to hosts corresponding to resource groups
 and virtual machines in Azure.

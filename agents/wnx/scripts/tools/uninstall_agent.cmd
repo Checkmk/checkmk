@@ -3,7 +3,7 @@ rem ****************************************************************************
 rem This is small tool to remove Windows Agent from the command line
 rem USE CAREFULLY, because all your files in the "%ProgramData%\CheckMK\Agent" will be deleted
 rem This tool can optionally remove logs and ugrade.protocol
-rem We are using sc to find Check MK Service instead of wmic, because 'wmic' is very very slow
+rem We are using sc to find Checkmk Service instead of wmic, because 'wmic' is very very slow
 rem **************************************************************************************
 rem uninstall_agent.cmd with yes parameter uninstall service and remove all files silently
 rem uninstall_agent.cmd with all additionally remove service log and upgrade.protocol

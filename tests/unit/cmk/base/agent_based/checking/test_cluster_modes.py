@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
 import re
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from typing import Any, Literal
 
 import pytest
 
-from cmk.utils.type_defs import CheckPluginName, ServiceID
+from cmk.utils.type_defs import HostName
 
-from cmk.base.agent_based.checking import _cluster_modes as cluster_modes
+from cmk.checkengine import CheckPlugin
+from cmk.checkengine.check_table import ServiceID
+from cmk.checkengine.checking import CheckPluginName
+
+from cmk.base.api.agent_based import cluster_mode
 from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,
-    CheckPlugin,
     CheckResult,
     IgnoreResults,
     IgnoreResultsError,
@@ -31,29 +32,17 @@ TEST_SERVICE_ID = ServiceID(CheckPluginName("unit_test_plugin"), "unit_test_item
 
 @pytest.fixture(name="vsm", scope="module")
 def _vsm():
-    vsm = ValueStoreManager("test-host")
+    vsm = ValueStoreManager(HostName("test-host"))
     return vsm
 
 
-def _get_test_check_plugin(**kwargs) -> CheckPlugin:  # type:ignore[no-untyped-def]
+def _get_test_check_plugin(**kwargs) -> CheckPlugin:  # type: ignore[no-untyped-def]
     return CheckPlugin(
-        **{  # type: ignore[arg-type]
-            **{
-                "name": None,
-                "sections": None,
-                "service_name": None,
-                "discovery_function": None,
-                "discovery_default_parameters": None,
-                "discovery_ruleset_name": None,
-                "discovery_ruleset_type": None,
-                "check_function": None,
-                "check_default_parameters": None,
-                "check_ruleset_name": None,
-                "cluster_check_function": None,
-                "module": None,
-            },
-            **kwargs,
-        }
+        sections=kwargs.get("sections", ()),
+        function=kwargs.get("check_function", lambda *args, **kw: object),
+        cluster_function=kwargs.get("cluster_check_function", lambda *args, **kw: object),
+        default_parameters=kwargs.get("check_default_parameters"),
+        ruleset_name=kwargs.get("check_ruleset_name"),
     )
 
 
@@ -71,14 +60,14 @@ def _simple_check(section: Iterable[int]) -> CheckResult:
                 yield Metric("n", value)
 
 
-def _is_ok(*elements: Result | Metric | IgnoreResults) -> bool:
+def _is_ok(*elements: object) -> bool:
     return State.worst(*(r.state for r in elements if isinstance(r, Result))) is State.OK
 
 
 def test_get_cluster_check_function_native_missing(vsm: ValueStoreManager) -> None:
     plugin = _get_test_check_plugin(cluster_check_function=None)
 
-    cc_function = cluster_modes.get_cluster_check_function(
+    cc_function = cluster_mode.get_cluster_check_function(
         mode="native",
         clusterization_parameters={},
         service_id=TEST_SERVICE_ID,
@@ -93,7 +82,7 @@ def test_get_cluster_check_function_native_missing(vsm: ValueStoreManager) -> No
 def test_get_cluster_check_function_native_ok(vsm: ValueStoreManager) -> None:
     plugin = _get_test_check_plugin(cluster_check_function=_simple_check)
 
-    cc_function = cluster_modes.get_cluster_check_function(
+    cc_function = cluster_mode.get_cluster_check_function(
         mode="native",
         clusterization_parameters={},
         service_id=TEST_SERVICE_ID,
@@ -110,10 +99,10 @@ def _get_cluster_check_function(
     mode: Literal["native", "failover", "worst", "best"],
     vsm: ValueStoreManager,
     clusterization_parameters: Mapping[str, Any] | None = None,
-) -> CheckFunction:
-    """small wrapper for cluster_modes.get_cluster_check_function"""
+) -> Callable[..., Iterable[object]]:
+    """small wrapper for cluster_mode.get_cluster_check_function"""
     plugin = _get_test_check_plugin(check_function=check_function)
-    return cluster_modes.get_cluster_check_function(
+    return cluster_mode.get_cluster_check_function(
         mode=mode,
         clusterization_parameters=clusterization_parameters or {},
         service_id=TEST_SERVICE_ID,
@@ -132,7 +121,13 @@ def _simple_check_notice(section: Any) -> CheckResult:
 
 def test_notice_propagation_if_OK(vsm: ValueStoreManager) -> None:
     check_worst = _get_cluster_check_function(_simple_check_notice, mode="worst", vsm=vsm)
-    assert list(check_worst(section={"Nodett": [],})) == [
+    assert list(
+        check_worst(
+            section={
+                "Nodett": [],
+            }
+        )
+    ) == [
         Result(state=State.OK, summary="Worst: [Nodett]"),
         Result(state=State.OK, notice="[Nodett]: notice text moved to details"),
         Result(state=State.OK, notice="[Nodett]: yeah details"),
@@ -162,7 +157,14 @@ def test_cluster_check_worst_ignore_results(vsm: ValueStoreManager) -> None:
 def test_cluster_check_worst_others_are_notice_only(vsm: ValueStoreManager) -> None:
     check_worst = _get_cluster_check_function(_simple_check, mode="worst", vsm=vsm)
 
-    assert list(check_worst(section={"Nodett": [2], "Nomo": [1],},)) == [
+    assert list(
+        check_worst(
+            section={
+                "Nodett": [2],
+                "Nomo": [1],
+            },
+        )
+    ) == [
         Result(state=State.OK, summary="Worst: [Nodett]"),
         Result(state=State.CRIT, summary="Hi", details="[Nodett]: Hi"),
         Result(state=State.OK, summary="Additional results from: [Nomo]"),
@@ -171,7 +173,6 @@ def test_cluster_check_worst_others_are_notice_only(vsm: ValueStoreManager) -> N
 
 
 def test_cluster_check_worst_yield_worst_nodes_metrics(vsm: ValueStoreManager) -> None:
-
     check_worst = _get_cluster_check_function(_simple_check, mode="worst", vsm=vsm)
 
     assert list(
@@ -189,7 +190,6 @@ def test_cluster_check_worst_yield_worst_nodes_metrics(vsm: ValueStoreManager) -
 
 
 def test_cluster_check_worst_yield_selected_nodes_metrics(vsm: ValueStoreManager) -> None:
-
     check_worst = _get_cluster_check_function(
         _simple_check, mode="worst", vsm=vsm, clusterization_parameters={"metrics_node": "Nodett"}
     )
@@ -209,7 +209,6 @@ def test_cluster_check_worst_yield_selected_nodes_metrics(vsm: ValueStoreManager
 
 
 def test_cluster_check_worst_unprefered_node_is_ok(vsm: ValueStoreManager) -> None:
-
     check_failover = _get_cluster_check_function(
         _simple_check, mode="worst", vsm=vsm, clusterization_parameters={"primary_node": "Nodebert"}
     )
@@ -241,7 +240,11 @@ def test_cluster_check_best_ignore_results(vsm: ValueStoreManager) -> None:
 def test_cluster_check_best_empty_results_are_ignored(vsm: ValueStoreManager) -> None:
     check_best = _get_cluster_check_function(_simple_check, mode="best", vsm=vsm)
 
-    assert list(check_best(section={"Nodett": [2], "Nomo": [1], "NoResults": []},)) == [
+    assert list(
+        check_best(
+            section={"Nodett": [2], "Nomo": [1], "NoResults": []},
+        )
+    ) == [
         Result(state=State.OK, summary="Best: [Nomo]"),
         Result(state=State.WARN, summary="Hi", details="[Nomo]: Hi"),
         Result(state=State.OK, summary="Additional results from: [Nodett]"),
@@ -252,7 +255,14 @@ def test_cluster_check_best_empty_results_are_ignored(vsm: ValueStoreManager) ->
 def test_cluster_check_best_others_are_notice_only(vsm: ValueStoreManager) -> None:
     check_best = _get_cluster_check_function(_simple_check, mode="best", vsm=vsm)
 
-    assert list(check_best(section={"Nodett": [2], "Nomo": [1],},)) == [
+    assert list(
+        check_best(
+            section={
+                "Nodett": [2],
+                "Nomo": [1],
+            },
+        )
+    ) == [
         Result(state=State.OK, summary="Best: [Nomo]"),
         Result(state=State.WARN, summary="Hi", details="[Nomo]: Hi"),
         Result(state=State.OK, summary="Additional results from: [Nodett]"),
@@ -261,7 +271,6 @@ def test_cluster_check_best_others_are_notice_only(vsm: ValueStoreManager) -> No
 
 
 def test_cluster_check_best_yield_best_nodes_metrics(vsm: ValueStoreManager) -> None:
-
     check_best = _get_cluster_check_function(_simple_check, mode="best", vsm=vsm)
 
     assert list(
@@ -279,7 +288,6 @@ def test_cluster_check_best_yield_best_nodes_metrics(vsm: ValueStoreManager) -> 
 
 
 def test_cluster_check_best_unprefered_node_is_ok(vsm: ValueStoreManager) -> None:
-
     check_failover = _get_cluster_check_function(
         _simple_check, mode="best", vsm=vsm, clusterization_parameters={"primary_node": "Nodebert"}
     )
@@ -311,13 +319,19 @@ def test_cluster_check_failover_ignore_results(vsm: ValueStoreManager) -> None:
 def test_cluster_check_failover_others_are_notice_only(vsm: ValueStoreManager) -> None:
     check_failover = _get_cluster_check_function(_simple_check, mode="failover", vsm=vsm)
 
-    assert list(check_failover(section={"Nodett": [2], "Nomo": [1],},))[3:] == [
+    assert list(
+        check_failover(
+            section={
+                "Nodett": [2],
+                "Nomo": [1],
+            },
+        )
+    )[3:] == [
         Result(state=State.OK, notice="[Nomo]: Hi(!)"),
     ]
 
 
 def test_cluster_check_failover_yield_worst_nodes_metrics(vsm: ValueStoreManager) -> None:
-
     check_failover = _get_cluster_check_function(_simple_check, mode="failover", vsm=vsm)
 
     assert list(
@@ -335,7 +349,6 @@ def test_cluster_check_failover_yield_worst_nodes_metrics(vsm: ValueStoreManager
 
 
 def test_cluster_check_failover_two_are_not_ok(vsm: ValueStoreManager) -> None:
-
     check_failover = _get_cluster_check_function(_simple_check, mode="failover", vsm=vsm)
     section = {"Nodett": [0], "Nodebert": [0]}  # => everything ok, but to many results
 
@@ -343,7 +356,6 @@ def test_cluster_check_failover_two_are_not_ok(vsm: ValueStoreManager) -> None:
 
 
 def test_cluster_check_failover_unprefered_node_is_not_ok(vsm: ValueStoreManager) -> None:
-
     check_failover = _get_cluster_check_function(
         _simple_check,
         mode="failover",
@@ -359,16 +371,18 @@ def test_cluster_check_failover_unprefered_node_is_not_ok(vsm: ValueStoreManager
     "node_results, expected_primary_result, expected_secondary_result",
     [
         pytest.param(
-            cluster_modes.NodeResults(
+            cluster_mode.NodeResults(
                 results={
-                    "Nodebert": [Result(state=State.OK, notice="[Nodebert]: CPU load: 0.00")],
-                    "Nodett": [Result(state=State.OK, notice="[Nodett]: CPU load: 0.00")],
+                    HostName("Nodebert"): [
+                        Result(state=State.OK, notice="[Nodebert]: CPU load: 0.00")
+                    ],
+                    HostName("Nodett"): [Result(state=State.OK, notice="[Nodett]: CPU load: 0.00")],
                 },
                 metrics={
-                    "Nodebert": [Metric("CPULoad", 0.00335345)],
-                    "Nodett": [Metric("CPULoad", 0.00387467)],
+                    HostName("Nodebert"): [Metric("CPULoad", 0.00335345)],
+                    HostName("Nodett"): [Metric("CPULoad", 0.00387467)],
                 },
-                ignore_results={"Nodebert": [], "Nodett": []},
+                ignore_results={HostName("Nodebert"): [], HostName("Nodett"): []},
             ),
             [
                 Result(state=State.OK, summary="Best: [Nodebert]"),
@@ -383,12 +397,12 @@ def test_cluster_check_failover_unprefered_node_is_not_ok(vsm: ValueStoreManager
     ],
 )
 def test_summarizer_result_generation(
-    node_results: cluster_modes.NodeResults,
+    node_results: cluster_mode.NodeResults,
     expected_primary_result: CheckResult,
     expected_secondary_result: CheckResult,
 ) -> None:
-    clusterization_parameters = {"primary_node": "Nodebert"}
-    summarizer = cluster_modes.Summarizer(
+    clusterization_parameters = {"primary_node": HostName("Nodebert")}
+    summarizer = cluster_mode.Summarizer(
         node_results=node_results,
         label="Best",
         selector=State.best,

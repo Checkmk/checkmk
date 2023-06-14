@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -66,7 +66,7 @@ class SidebarSnapinAggregationGroupTree(SidebarSnapin):
             child = child.setdefault("__children__", {})
             self._build_tree(children, child, path)
 
-    def _render_tree(self, tree) -> None:  # type:ignore[no-untyped-def]
+    def _render_tree(self, tree) -> None:  # type: ignore[no-untyped-def]
         for group, attrs in tree.items():
             aggr_group_tree = "/".join(attrs["__path__"])
             fetch_url = makeuri_contextless(

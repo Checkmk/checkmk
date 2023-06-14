@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,7 +11,7 @@ from .utils import expect_validate_failure, expect_validate_success, request_var
 class TestValueSpecAge:
     def test_validate(self) -> None:
         expect_validate_success(vs.Age(), 100)
-        expect_validate_failure(vs.Age(), "smth")  # type: ignore
+        expect_validate_failure(vs.Age(), "smth")  # type: ignore[misc]
         expect_validate_failure(vs.Age(minvalue=300), 100)
         expect_validate_failure(vs.Age(maxvalue=300), 400)
         expect_validate_success(vs.Age(minvalue=100, maxvalue=300), 200)

@@ -6,6 +6,6 @@ Date: 1656065231
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Update python-ldap to version 3.4.0 which has a fix for CVE-2021-46823.

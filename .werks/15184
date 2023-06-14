@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The <tt>enforce_pw_change</tt> flag is now ignored for automation users.
 Since automation users cannot change their passwords themselves, Checkmk will now no longer require them to do so, even if the flag is set.

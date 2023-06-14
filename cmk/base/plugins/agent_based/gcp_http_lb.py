@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
 from collections.abc import Mapping
 from typing import Any
 
-from .agent_based_api.v1 import register, render, Service, ServiceLabel
+from .agent_based_api.v1 import register, render, Service
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult, StringTable
 from .utils import gcp
 
@@ -29,8 +29,7 @@ def discover(
 ) -> DiscoveryResult:
     assets = gcp.validate_asset_section(section_gcp_assets, "http_lb")
     for item, _ in assets[ASSET_TYPE].items():
-        labels = [ServiceLabel("cmk/gcp/projectId", assets.project)]
-        yield Service(item=item, labels=labels)
+        yield Service(item=item, labels=[])
 
 
 def check_requests(

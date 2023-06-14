@@ -1,0 +1,14 @@
+Title: user_config: fixing auth types for SAML2 and LDAP users
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1679471487
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, the REST API always reported an auth_type
+"password" for a SAML2 or LDAP user. This werk fixes this and checks
+the underlying connection before determining the auth type.
+

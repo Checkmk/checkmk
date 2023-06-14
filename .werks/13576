@@ -6,7 +6,7 @@ Date: 1645619631
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The section of the agent plugin mk_redis may contain the following error message:
 

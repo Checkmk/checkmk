@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """
 Special agent for monitoring Kubernetes clusters. This agent is required for
 monitoring data provided by the Kubernetes API and the Checkmk collectors,
 which can optionally be deployed within a cluster. The agent requires
-Kubernetes version v1.21 or higher. Moreover, read access to the Kubernetes API
+Kubernetes version v1.22 or higher. Moreover, read access to the Kubernetes API
 endpoints monitored by Checkmk must be provided.
 """
 
@@ -20,38 +20,25 @@ import contextlib
 import enum
 import functools
 import itertools
-import json
 import logging
 import re
 import sys
 from collections import Counter, defaultdict
-from collections.abc import (
-    Callable,
-    Collection,
-    Iterable,
-    Iterator,
-    Mapping,
-    MutableMapping,
-    Sequence,
-)
+from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from itertools import chain
 from typing import Literal, NamedTuple, TypeVar
-from urllib.parse import urlparse
 
 import requests
 import urllib3
-from kubernetes import client  # type: ignore[import]
 from pydantic import parse_raw_as
 
 import cmk.utils.password_store
 import cmk.utils.paths
 import cmk.utils.profile
-from cmk.utils.http_proxy_config import deserialize_http_proxy_config
 
 from cmk.special_agents.utils import vcrtrace
 from cmk.special_agents.utils.agent_common import ConditionalPiggybackSection, SectionWriter
-from cmk.special_agents.utils.request_helper import get_requests_ca
 from cmk.special_agents.utils_kubernetes import common, performance, prometheus_section, query
 from cmk.special_agents.utils_kubernetes.api_server import APIData, from_kubernetes
 from cmk.special_agents.utils_kubernetes.common import (
@@ -65,6 +52,7 @@ from cmk.special_agents.utils_kubernetes.common import (
     WriteableSection,
 )
 from cmk.special_agents.utils_kubernetes.schemata import api, section
+from cmk.special_agents.utils_kubernetes.schemata.api import NamespaceName
 
 NATIVE_NODE_CONDITION_TYPES = [
     "Ready",
@@ -112,6 +100,7 @@ class MonitoredObject(enum.Enum):
     pods = "pods"
     cronjobs = "cronjobs"
     cronjobs_pods = "cronjobs_pods"
+    pvcs = "pvcs"
 
 
 def parse_arguments(args: list[str]) -> argparse.Namespace:
@@ -1047,18 +1036,12 @@ def pod_attached_persistent_volume_claim_names(pod: api.Pod) -> Iterator[str]:
         if volume.persistent_volume_claim is None:
             continue
 
-        yield api.namespaced_name(
-            namespace=pod_namespace(pod), name=volume.persistent_volume_claim.claim_name
-        )
+        yield volume.persistent_volume_claim.claim_name
 
 
-def attached_pvc_namespaced_names_from_pods(pods: Sequence[api.Pod]) -> Sequence[str]:
+def attached_pvc_names_from_pods(pods: Sequence[api.Pod]) -> Sequence[str]:
     return list(
-        {
-            namespaced_name
-            for pod in pods
-            for namespaced_name in pod_attached_persistent_volume_claim_names(pod)
-        }
+        {pvc_name for pod in pods for pvc_name in pod_attached_persistent_volume_claim_names(pod)}
     )
 
 
@@ -1070,8 +1053,14 @@ def filter_kubelet_volume_metrics(
 
 def serialize_attached_volumes_from_kubelet_metrics(
     volume_metric_samples: Iterator[api.KubeletVolumeMetricSample],
-) -> Mapping[str, section.AttachedVolume]:
-    volumes: dict[str, section.AttachedVolume] = {}
+) -> Iterator[section.AttachedVolume]:
+    """Serialize attached volumes from kubelet metrics
+
+    A PV can be bound to one PVC only, so while a PV itself has no namespace, the PVC
+    namespace + name can be used to identify it uniquely (and easily)
+
+    Remember: since a PVC has a namespace, only the namespace + name combination is unique
+    """
 
     def pvc_unique(v: api.KubeletVolumeMetricSample) -> tuple[str, str]:
         return v.labels.namespace, v.labels.persistentvolumeclaim
@@ -1080,28 +1069,54 @@ def serialize_attached_volumes_from_kubelet_metrics(
         sorted(volume_metric_samples, key=pvc_unique), key=pvc_unique
     ):
         volume_details = {sample.metric_name.value: sample.value for sample in samples}
-        volumes[api.namespaced_name(namespace, pvc)] = section.AttachedVolume(
+        yield section.AttachedVolume(
             capacity=volume_details["kubelet_volume_stats_capacity_bytes"],
             free=volume_details["kubelet_volume_stats_available_bytes"],
             persistent_volume_claim=pvc,
-            namespace=namespace,
+            namespace=NamespaceName(namespace),
         )
-    return volumes
+
+
+def group_serialized_volumes_by_namespace(
+    serialized_pvs: Iterator[section.AttachedVolume],
+) -> Mapping[NamespaceName, Mapping[str, section.AttachedVolume]]:
+    namespaced_grouped_pvs: dict[NamespaceName, dict[str, section.AttachedVolume]] = {}
+    for pv in serialized_pvs:
+        namespace_pvs: dict[str, section.AttachedVolume] = namespaced_grouped_pvs.setdefault(
+            pv.namespace, {}
+        )
+        namespace_pvs[pv.persistent_volume_claim] = pv
+    return namespaced_grouped_pvs
+
+
+def group_parsed_pvcs_by_namespace(
+    api_pvcs: Sequence[api.PersistentVolumeClaim],
+) -> Mapping[NamespaceName, Mapping[str, section.PersistentVolumeClaim]]:
+    namespace_sorted_pvcs: dict[NamespaceName, dict[str, section.PersistentVolumeClaim]] = {}
+    for pvc in api_pvcs:
+        namespace_pvcs: dict[str, section.PersistentVolumeClaim] = namespace_sorted_pvcs.setdefault(
+            pvc.metadata.namespace, {}
+        )
+        namespace_pvcs[pvc.metadata.name] = section.PersistentVolumeClaim(
+            metadata=section.PersistentVolumeClaimMetaData.parse_obj(pvc.metadata),
+            status=section.PersistentVolumeClaimStatus.parse_obj(pvc.status),
+            volume_name=pvc.spec.volume_name,
+        )
+    return namespace_sorted_pvcs
 
 
 def create_pvc_sections(
     piggyback_name: str,
-    attached_pvc_namespaced_names: Sequence[str],
-    api_persistent_volume_claims: Mapping[str, section.PersistentVolumeClaim],
+    attached_pvc_names: Sequence[str],
+    api_pvcs: Mapping[str, section.PersistentVolumeClaim],
+    api_pvs: Mapping[str, section.PersistentVolume],
     attached_volumes: Mapping[str, section.AttachedVolume],
 ) -> Iterator[WriteableSection]:
-    if not attached_pvc_namespaced_names:
+    """Create PVC & PV related sections"""
+    if not attached_pvc_names:
         return
 
-    attached_pvcs = {
-        pvc_namespaced_name: api_persistent_volume_claims[pvc_namespaced_name]
-        for pvc_namespaced_name in attached_pvc_namespaced_names
-    }
+    attached_pvcs = {pvc_name: api_pvcs[pvc_name] for pvc_name in attached_pvc_names}
 
     yield WriteableSection(
         piggyback_name=piggyback_name,
@@ -1109,10 +1124,23 @@ def create_pvc_sections(
         section=section.PersistentVolumeClaims(claims=attached_pvcs),
     )
 
+    pvc_attached_api_pvs = {
+        pvc.volume_name: api_pvs[pvc.volume_name]
+        for pvc in attached_pvcs.values()
+        if pvc.volume_name is not None
+    }
+
+    if pvc_attached_api_pvs:
+        yield WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_pvc_pvs_v1"),
+            section=section.AttachedPersistentVolumes(volumes=pvc_attached_api_pvs),
+        )
+
     pvc_attached_volumes = {
-        pvc_namespaced_name: volume
-        for pvc_namespaced_name in attached_pvc_namespaced_names
-        if (volume := attached_volumes.get(pvc_namespaced_name)) is not None
+        pvc_name: volume
+        for pvc_name in attached_pvc_names
+        if (volume := attached_volumes.get(pvc_name)) is not None
     }
     if pvc_attached_volumes:
         yield WriteableSection(
@@ -1204,6 +1232,11 @@ def namespace_name(namespace: api.Namespace) -> api.NamespaceName:
     return namespace.metadata.name
 
 
+def kube_object_namespace_name(kube_object: KubeNamespacedObj) -> NamespaceName:
+    """The namespace name of the Kubernetes object"""
+    return kube_object.metadata.namespace
+
+
 def cron_job_namespaced_name(cron_job: api.CronJob) -> str:
     """The name of the cron job appended to the namespace
     >>> metadata = api.MetaData.parse_obj({"name": "foo", "namespace": "bar", "creation_timestamp": "2021-05-04T09:01:13Z", "labels": {}, "annotations": {}})
@@ -1288,60 +1321,60 @@ def write_cronjobs_api_sections(
             )
 
 
-def write_namespaces_api_sections(
-    api_namespaces: Sequence[api.Namespace],
-    api_resource_quotas: Sequence[api.ResourceQuota],
-    api_pods: Sequence[api.Pod],
+def create_namespace_api_sections(
+    api_namespace: api.Namespace,
+    namespace_api_pods: Sequence[api.Pod],
     host_settings: CheckmkHostSettings,
-    piggyback_formatter: PiggybackFormatter,
-) -> None:
-    def output_namespace_sections(
-        namespace: api.Namespace, namespaced_api_pods: Sequence[api.Pod]
-    ) -> None:
-        sections = {
-            "kube_namespace_info_v1": lambda: namespace_info(
-                namespace,
+    piggyback_name: str,
+) -> Iterator[WriteableSection]:
+    yield from (
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_namespace_info_v1"),
+            section=namespace_info(
+                api_namespace,
                 host_settings.cluster_name,
                 host_settings.annotation_key_pattern,
                 host_settings.kubernetes_cluster_hostname,
             ),
-            "kube_pod_resources_v1": lambda: _pod_resources_from_api_pods(namespaced_api_pods),
-            "kube_memory_resources_v1": lambda: _collect_memory_resources_from_api_pods(
-                namespaced_api_pods
-            ),
-            "kube_cpu_resources_v1": lambda: _collect_cpu_resources_from_api_pods(
-                namespaced_api_pods
-            ),
-        }
-        _write_sections(sections)
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_pod_resources_v1"),
+            section=_pod_resources_from_api_pods(namespace_api_pods),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_memory_resources_v1"),
+            section=_collect_memory_resources_from_api_pods(namespace_api_pods),
+        ),
+        WriteableSection(
+            piggyback_name=piggyback_name,
+            section_name=SectionName("kube_cpu_resources_v1"),
+            section=_collect_cpu_resources_from_api_pods(namespace_api_pods),
+        ),
+    )
 
-    def output_resource_quota_sections(resource_quota: api.ResourceQuota) -> None:
-        sections = {
-            "kube_resource_quota_memory_resources_v1": lambda: section.HardResourceRequirement.parse_obj(
-                resource_quota.spec.hard.memory
-            )
-            if resource_quota.spec.hard
-            else None,
-            "kube_resource_quota_cpu_resources_v1": lambda: section.HardResourceRequirement.parse_obj(
-                resource_quota.spec.hard.cpu
-            )
-            if resource_quota.spec.hard
-            else None,
-        }
-        _write_sections(sections)
 
-    for api_namespace in api_namespaces:
-        with ConditionalPiggybackSection(piggyback_formatter(api_namespace)):
-            output_namespace_sections(
-                api_namespace, filter_pods_by_namespace(api_pods, namespace_name(api_namespace))
-            )
+def create_resource_quota_api_sections(
+    resource_quota: api.ResourceQuota, piggyback_name: str
+) -> Iterator[WriteableSection]:
+    if (hard := resource_quota.spec.hard) is None:
+        return
 
-            if (
-                api_resource_quota := filter_matching_namespace_resource_quota(
-                    namespace_name(api_namespace), api_resource_quotas
-                )
-            ) is not None:
-                output_resource_quota_sections(api_resource_quota)
+    if hard.memory is not None:
+        yield WriteableSection(
+            section_name=SectionName("kube_resource_quota_memory_resources_v1"),
+            section=section.HardResourceRequirement.parse_obj(hard.memory),
+            piggyback_name=piggyback_name,
+        )
+
+    if hard.cpu is not None:
+        yield WriteableSection(
+            section_name=SectionName("kube_resource_quota_cpu_resources_v1"),
+            section=section.HardResourceRequirement.parse_obj(hard.cpu),
+            piggyback_name=piggyback_name,
+        )
 
 
 def write_nodes_api_sections(
@@ -1530,21 +1563,14 @@ def create_statefulset_api_sections(
 
 def write_machine_sections(
     composed_entities: ComposedEntities,
-    machine_sections: tuple[prometheus_section.ClusterAggregation, Mapping[str, str]],
+    machine_sections: Mapping[str, str],
     piggyback_formatter: PiggybackFormatter,
 ) -> None:
     # make sure we only print sections for nodes currently visible via Kubernetes api:
-    cluster_sections, node_sections = machine_sections
     for node in composed_entities.nodes:
-        if sections := node_sections.get(str(node.metadata.name)):
+        if sections := machine_sections.get(str(node.metadata.name)):
             with ConditionalPiggybackSection(piggyback_formatter(node)):
                 sys.stdout.write(sections)
-    if cluster_sections.cpu_section is not None:
-        with SectionWriter("prometheus_cpu_v1") as writer:
-            writer.append(cluster_sections.cpu_section.json())
-    if cluster_sections.memory_section is not None:
-        with SectionWriter("prometheus_mem_used_v1") as writer:
-            writer.append(cluster_sections.memory_section.json())
 
 
 def _supported_cluster_collector_major_version(
@@ -1579,7 +1605,7 @@ def request_cluster_collector(
     parser: Callable[[bytes], Model],
 ) -> Model:
     session = query.create_session(config, LOGGER)
-    url = config.cluster_collector_endpoint + path
+    url = config.cluster_collector_endpoint.removesuffix("/") + path
     request = requests.Request("GET", url)
     prepare_request = session.prepare_request(request)
     try:
@@ -1603,46 +1629,12 @@ def request_cluster_collector(
     return parser(cluster_resp.content)
 
 
-def make_api_client(arguments: argparse.Namespace) -> client.ApiClient:
-    config = client.Configuration()
-
-    host = arguments.api_server_endpoint
-    config.host = host
-    if arguments.token:
-        config.api_key_prefix["authorization"] = "Bearer"
-        config.api_key["authorization"] = arguments.token
-
-    http_proxy_config = deserialize_http_proxy_config(arguments.api_server_proxy)
-
-    # Mimic requests.get("GET", url=host, proxies=http_proxy_config.to_requests_proxies())
-    # function call, in order to obtain proxies in the same way as the requests library
-    with requests.Session() as session:
-        req = requests.models.Request(method="GET", url=host, data={}, params={})
-        prep = session.prepare_request(req)
-        proxies: MutableMapping = dict(http_proxy_config.to_requests_proxies() or {})
-        proxies = session.merge_environment_settings(
-            prep.url, proxies, session.stream, session.verify, session.cert
-        )["proxies"]
-
-    config.proxy = proxies.get(urlparse(host).scheme)
-    config.proxy_headers = requests.adapters.HTTPAdapter().proxy_headers(config.proxy)
-
-    if arguments.verify_cert_api:
-        config.ssl_ca_cert = get_requests_ca()
-    else:
-        LOGGER.info("Disabling SSL certificate verification")
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-        config.verify_ssl = False
-
-    return client.ApiClient(config)
-
-
 def pod_lookup_from_api_pod(api_pod: api.Pod) -> PodLookupName:
     return lookup_name(pod_namespace(api_pod), pod_name(api_pod))
 
 
 KubeNamespacedObj = TypeVar(
-    "KubeNamespacedObj", bound=DaemonSet | Deployment | StatefulSet | api.CronJob
+    "KubeNamespacedObj", bound=DaemonSet | Deployment | StatefulSet | api.CronJob | api.Pod
 )
 
 
@@ -1723,12 +1715,6 @@ def _names_of_running_pods(
     return list(map(pod_lookup_from_api_pod, running_pods))
 
 
-def pods_from_namespaces(
-    pods: Iterable[api.Pod], namespaces: set[api.NamespaceName]
-) -> Sequence[api.Pod]:
-    return [pod for pod in pods if pod.metadata.namespace in namespaces]
-
-
 def determine_pods_to_host(
     monitored_objects: Sequence[MonitoredObject],
     composed_entities: ComposedEntities,
@@ -1778,8 +1764,9 @@ def determine_pods_to_host(
     # on write_sections_based_on_performance_pods should be refactored to use the
     # other function similar to namespaces
     if MonitoredObject.pods in monitored_objects:
-        monitored_pods = pods_from_namespaces(
-            filter_pods_by_phase(api_pods, api.Phase.RUNNING), monitored_namespaces
+        monitored_pods = kube_objects_from_namespaces(
+            filter_pods_by_phase(api_pods, api.Phase.RUNNING),
+            monitored_namespaces,
         )
         if MonitoredObject.cronjobs_pods not in monitored_objects:
             cronjob_pod_uids = {uid for cronjob in api_cron_jobs for uid in cronjob.pod_uids}
@@ -1934,30 +1921,6 @@ def collector_exception_handler(
         )
 
 
-class CustomKubernetesApiException(Exception):
-    def __init__(self, api_exception: client.ApiException) -> None:
-        self.e = api_exception
-        super().__init__()
-
-    def __str__(self) -> str:
-        """
-
-        This is a modified version of __str__ method of client.kubernetes.ApiException.
-        It strips the first \n in order make the output of plugin check-mk more verbose.
-        """
-
-        error_message_visible_in_check_mk_service_summary = (
-            f"{self.e.status}, Reason: {self.e.reason}"
-        )
-
-        if self.e.body:
-            error_message_visible_in_check_mk_service_summary += (
-                f", Message: {json.loads(self.e.body).get('message')}"
-            )
-
-        return error_message_visible_in_check_mk_service_summary
-
-
 def pod_conditions(pod_status: api.PodStatus) -> section.PodConditions | None:
     if pod_status.conditions is None:
         return None
@@ -2109,7 +2072,6 @@ def piggyback_formatter_with_cluster_name(
     cluster_name: str,
     kube_object: PB_KUBE_OBJECT,
 ) -> str:
-
     match kube_object:
         case Cluster():
             return ""
@@ -2163,21 +2125,23 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
         with cmk.utils.profile.Profile(
             enabled=bool(arguments.profile), profile_file=arguments.profile
         ):
-            api_client = make_api_client(arguments)
+            client_config = query.parse_api_session_config(arguments)
             LOGGER.info("Collecting API data")
-
             try:
                 api_data = from_kubernetes(
-                    api_client,
-                    timeout=(arguments.k8s_api_connect_timeout, arguments.k8s_api_read_timeout),
+                    client_config,
+                    LOGGER,
+                    query_kubelet_endpoints=MonitoredObject.pvcs in arguments.monitored_objects,
                 )
             except urllib3.exceptions.MaxRetryError as e:
                 raise ClusterConnectionError(
                     f"Failed to establish a connection to {e.pool.host}:{e.pool.port} "
                     f"at URL {e.url}"
                 ) from e
-            except client.ApiException as e:
-                raise CustomKubernetesApiException(e) from e
+            except requests.RequestException as e:
+                raise ClusterConnectionError(
+                    f"Failed to establish a connection at URL {e.request.url} "
+                ) from e
 
             # Namespaces are handled independently from the cluster object in order to improve
             # testability. The long term goal is to remove all objects from the cluster object
@@ -2194,14 +2158,19 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                 arguments.namespace_include_patterns,
                 arguments.namespace_exclude_patterns,
             )
-            api_persistent_volume_claims = {
-                namespaced_name_from_metadata(pvc.metadata): section.PersistentVolumeClaim(
-                    **pvc.dict()
-                )
-                for pvc in api_data.persistent_volume_claims
+
+            namespace_grouped_api_pvcs = group_parsed_pvcs_by_namespace(
+                api_data.persistent_volume_claims
+            )
+
+            api_persistent_volumes = {
+                pv.metadata.name: section.PersistentVolume(name=pv.metadata.name, spec=pv.spec)
+                for pv in api_data.persistent_volumes
             }
-            attached_volumes = serialize_attached_volumes_from_kubelet_metrics(
-                filter_kubelet_volume_metrics(api_data.kubelet_open_metrics)
+            namespaced_grouped_attached_volumes = group_serialized_volumes_by_namespace(
+                serialize_attached_volumes_from_kubelet_metrics(
+                    filter_kubelet_volume_metrics(api_data.kubelet_open_metrics)
+                )
             )
             piggyback_formatter = functools.partial(
                 piggyback_formatter_with_cluster_name, arguments.cluster
@@ -2226,17 +2195,20 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                         host_settings=checkmk_host_settings,
                         piggyback_name=deployment_piggyback_name,
                     )
-                    sections = chain(
-                        sections,
-                        create_pvc_sections(
-                            piggyback_name=deployment_piggyback_name,
-                            attached_pvc_namespaced_names=attached_pvc_namespaced_names_from_pods(
-                                deployment.pods
+                    if MonitoredObject.pvcs in arguments.monitored_objects:
+                        deployment_namespace = kube_object_namespace_name(deployment)
+                        sections = chain(
+                            sections,
+                            create_pvc_sections(
+                                piggyback_name=deployment_piggyback_name,
+                                attached_pvc_names=attached_pvc_names_from_pods(deployment.pods),
+                                api_pvcs=namespace_grouped_api_pvcs.get(deployment_namespace, {}),
+                                api_pvs=api_persistent_volumes,
+                                attached_volumes=namespaced_grouped_attached_volumes.get(
+                                    deployment_namespace, {}
+                                ),
                             ),
-                            api_persistent_volume_claims=api_persistent_volume_claims,
-                            attached_volumes=attached_volumes,
-                        ),
-                    )
+                        )
                     common.write_sections(sections)
 
             resource_quotas = api_data.resource_quotas
@@ -2257,14 +2229,29 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
             )
             if MonitoredObject.namespaces in arguments.monitored_objects:
                 LOGGER.info("Write namespaces sections based on API data")
-
-                write_namespaces_api_sections(
-                    monitored_api_namespaces,
-                    resource_quotas,
-                    api_data.pods,
-                    host_settings=checkmk_host_settings,
-                    piggyback_formatter=piggyback_formatter,
-                )
+                for api_namespace in monitored_api_namespaces:
+                    namespace_piggyback_name = piggyback_formatter(api_namespace)
+                    api_pods_from_namespace = filter_pods_by_namespace(
+                        api_data.pods, namespace_name(api_namespace)
+                    )
+                    namespace_sections = create_namespace_api_sections(
+                        api_namespace,
+                        api_pods_from_namespace,
+                        host_settings=checkmk_host_settings,
+                        piggyback_name=namespace_piggyback_name,
+                    )
+                    if (
+                        api_resource_quota := filter_matching_namespace_resource_quota(
+                            namespace_name(api_namespace), resource_quotas
+                        )
+                    ) is not None:
+                        namespace_sections = chain(
+                            namespace_sections,
+                            create_resource_quota_api_sections(
+                                api_resource_quota, piggyback_name=namespace_piggyback_name
+                            ),
+                        )
+                    common.write_sections(namespace_sections)
 
             if MonitoredObject.daemonsets in arguments.monitored_objects:
                 LOGGER.info("Write daemon sets sections based on API data")
@@ -2277,17 +2264,20 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                         host_settings=checkmk_host_settings,
                         piggyback_name=daemonset_piggyback_name,
                     )
-                    daemonset_sections = chain(
-                        daemonset_sections,
-                        create_pvc_sections(
-                            piggyback_name=daemonset_piggyback_name,
-                            attached_pvc_namespaced_names=attached_pvc_namespaced_names_from_pods(
-                                daemonset.pods
+                    if MonitoredObject.pvcs in arguments.monitored_objects:
+                        daemonset_namespace = kube_object_namespace_name(daemonset)
+                        daemonset_sections = chain(
+                            daemonset_sections,
+                            create_pvc_sections(
+                                piggyback_name=daemonset_piggyback_name,
+                                attached_pvc_names=attached_pvc_names_from_pods(daemonset.pods),
+                                api_pvcs=namespace_grouped_api_pvcs.get(daemonset_namespace, {}),
+                                api_pvs=api_persistent_volumes,
+                                attached_volumes=namespaced_grouped_attached_volumes.get(
+                                    daemonset_namespace, {}
+                                ),
                             ),
-                            api_persistent_volume_claims=api_persistent_volume_claims,
-                            attached_volumes=attached_volumes,
-                        ),
-                    )
+                        )
                     common.write_sections(daemonset_sections)
 
             if MonitoredObject.statefulsets in arguments.monitored_objects:
@@ -2301,20 +2291,23 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                         host_settings=checkmk_host_settings,
                         piggyback_name=statefulset_piggyback_name,
                     )
-                    statefulset_sections = chain(
-                        statefulset_sections,
-                        create_pvc_sections(
-                            piggyback_name=statefulset_piggyback_name,
-                            attached_pvc_namespaced_names=attached_pvc_namespaced_names_from_pods(
-                                statefulset.pods
+                    if MonitoredObject.pvcs in arguments.monitored_objects:
+                        statefulset_namespace = kube_object_namespace_name(statefulset)
+                        statefulset_sections = chain(
+                            statefulset_sections,
+                            create_pvc_sections(
+                                piggyback_name=statefulset_piggyback_name,
+                                attached_pvc_names=attached_pvc_names_from_pods(statefulset.pods),
+                                api_pvcs=namespace_grouped_api_pvcs.get(statefulset_namespace, {}),
+                                api_pvs=api_persistent_volumes,
+                                attached_volumes=namespaced_grouped_attached_volumes.get(
+                                    statefulset_namespace, {}
+                                ),
                             ),
-                            api_persistent_volume_claims=api_persistent_volume_claims,
-                            attached_volumes=attached_volumes,
-                        ),
-                    )
+                        )
                     common.write_sections(statefulset_sections)
 
-            monitored_api_cron_job_pods = [
+            api_cron_job_pods = [
                 api_pod
                 for cron_job in api_data.cron_jobs
                 for api_pod in api_data.pods
@@ -2323,7 +2316,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
             if MonitoredObject.cronjobs in arguments.monitored_objects:
                 write_cronjobs_api_sections(
                     kube_objects_from_namespaces(api_data.cron_jobs, monitored_namespace_names),
-                    monitored_api_cron_job_pods,
+                    api_cron_job_pods,
                     {job.uid: job for job in api_data.jobs},
                     host_settings=checkmk_host_settings,
                     piggyback_formatter=piggyback_formatter,
@@ -2331,16 +2324,20 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
 
             if MonitoredObject.pods in arguments.monitored_objects:
                 LOGGER.info("Write pods sections based on API data")
-                unmonitored_pods = (
-                    {pod_lookup_from_api_pod(pod) for pod in monitored_api_cron_job_pods}
-                    if MonitoredObject.cronjobs_pods not in arguments.monitored_objects
-                    else {}
+                pods_in_relevant_namespaces = kube_objects_from_namespaces(
+                    api_data.pods, monitored_namespace_names
                 )
+                if MonitoredObject.cronjobs_pods in arguments.monitored_objects:
+                    monitored_pods = pods_in_relevant_namespaces
+                else:
+                    cronjob_pod_ids = {pod_lookup_from_api_pod(pod) for pod in api_cron_job_pods}
+                    monitored_pods = [
+                        pod
+                        for pod in pods_in_relevant_namespaces
+                        if pod_lookup_from_api_pod(pod) not in cronjob_pod_ids
+                    ]
 
-                for pod in api_data.pods:
-                    if pod_lookup_from_api_pod(pod) in unmonitored_pods:
-                        continue
-
+                for pod in monitored_pods:
                     pod_piggyback_name = piggyback_formatter(pod)
                     sections = create_pod_api_sections(pod, piggyback_name=pod_piggyback_name)
                     sections = chain(
@@ -2359,17 +2356,21 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                         ],
                     )
 
-                    sections = chain(
-                        sections,
-                        create_pvc_sections(
-                            piggyback_name=pod_piggyback_name,
-                            attached_pvc_namespaced_names=list(
-                                pod_attached_persistent_volume_claim_names(pod)
+                    if MonitoredObject.pvcs in arguments.monitored_objects:
+                        sections = chain(
+                            sections,
+                            create_pvc_sections(
+                                piggyback_name=pod_piggyback_name,
+                                attached_pvc_names=list(
+                                    pod_attached_persistent_volume_claim_names(pod)
+                                ),
+                                api_pvcs=namespace_grouped_api_pvcs.get(pod_namespace(pod), {}),
+                                api_pvs=api_persistent_volumes,
+                                attached_volumes=namespaced_grouped_attached_volumes.get(
+                                    pod_namespace(pod), {}
+                                ),
                             ),
-                            api_persistent_volume_claims=api_persistent_volume_claims,
-                            attached_volumes=attached_volumes,
-                        ),
-                    )
+                        )
                     common.write_sections(sections)
 
             usage_config = query.parse_session_config(arguments)
@@ -2546,10 +2547,7 @@ def main(args: list[str] | None = None) -> int:  # pylint: disable=too-many-bran
                     try:
                         write_machine_sections(
                             composed_entities,
-                            (
-                                prometheus_section.ClusterAggregation(),
-                                {s["node_name"]: s["sections"] for s in machine_sections},
-                            ),
+                            {s["node_name"]: s["sections"] for s in machine_sections},
                             piggyback_formatter,
                         )
                     except Exception as e:

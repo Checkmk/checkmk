@@ -1,0 +1,25 @@
+Title: Agent controller certificate lifetime
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1676449669
+Edition: cre
+Knowledge: undoc
+Level: 1
+State: unknown
+Version: 2.2.0b1
+
+The TLS encryption for agent communication (introduced with Checkmk 2.1) makes use of x509 Certificates to authenticate the agent against the Checkmk site.<br>
+Therefore, the Checkmk site issues a certificate to the agent controller of a host on agent registration.
+
+Previously, these certificates used to have a virtually unlimited expiration period.
+
+Starting with this Werk, agent certificates will only be issued with a limited expiration period.<br>
+This period is configurable with the global setting "Site management/Agent certificates" and defaults to 5 years.<br>
+You can choose from various values, with a minumum of 3 months and a maximum of 50 years.
+
+The agent controller will automatically renew the agent certificate in time before it expires, provided that it's running.<br>
+The same holds true for legacy certificates with a too-long validity period.<br>
+That said, inactive TLS agents (agent controller daemon(Linux)/Checkmk agent service(Windows) not running) will actually lose their registration on certificate expiration.<br>
+To resume agent communication, you'll then have to re-register the agent.
+

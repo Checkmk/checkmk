@@ -6,7 +6,7 @@ Date: 1654768212
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, the Kubernetes special agent raised the error "[special_kube] TypeError: Can not convert
 to timestamp: 'None' of type <class 'NoneType’>" when a terminated container had no information

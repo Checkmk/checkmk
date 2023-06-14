@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections import OrderedDict
+from collections.abc import Mapping
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_cpu_usage import (
     check_esx_vsphere_hostsystem_cpu_usage,
     cluster_check_esx_vsphere_hostsystem_cpu_usage,
     discover_esx_vsphere_hostsystem_cpu_usage,
     EsxVsphereHostsystemCpuSection,
     extract_esx_vsphere_hostsystem_cpu_usage,
+    Section,
 )
 
 
@@ -51,8 +54,8 @@ from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_cpu_usage import (
         ),
     ],
 )
-def test_extract_esx_vsphere_hostsystem_cpu(  # type:ignore[no-untyped-def]
-    section, cpu_section
+def test_extract_esx_vsphere_hostsystem_cpu(
+    section: Section, cpu_section: EsxVsphereHostsystemCpuSection | None
 ) -> None:
     assert extract_esx_vsphere_hostsystem_cpu_usage(section) == cpu_section
 
@@ -85,12 +88,13 @@ def test_extract_esx_vsphere_hostsystem_cpu(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_discover_esx_vsphere_hostsystem_cpu_usage(  # type:ignore[no-untyped-def]
-    section, discovered_service
+def test_discover_esx_vsphere_hostsystem_cpu_usage(
+    section: Section | None, discovered_service: DiscoveryResult
 ) -> None:
     assert list(discover_esx_vsphere_hostsystem_cpu_usage(section, None)) == discovered_service
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section, params, check_results",
     [
@@ -143,12 +147,13 @@ def test_discover_esx_vsphere_hostsystem_cpu_usage(  # type:ignore[no-untyped-de
         ),
     ],
 )
-def test_check_esx_vsphere_hostsystem_cpu(  # type:ignore[no-untyped-def]
-    section, params, check_results
+def test_check_esx_vsphere_hostsystem_cpu(
+    section: Section | None, params: Mapping[str, object], check_results: CheckResult
 ) -> None:
     assert list(check_esx_vsphere_hostsystem_cpu_usage(params, section, None)) == check_results
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "section, params, check_results",
     [
@@ -293,8 +298,8 @@ def test_check_esx_vsphere_hostsystem_cpu(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_cluster_check_esx_vsphere_hostsystem_cpu(  # type:ignore[no-untyped-def]
-    section, params, check_results
+def test_cluster_check_esx_vsphere_hostsystem_cpu(
+    section: Mapping[str, Section | None], params: Mapping[str, object], check_results: CheckResult
 ) -> None:
     assert (
         list(

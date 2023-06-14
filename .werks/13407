@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Before this werk all rest api calls would generate config updates and trigger
 git commits (if git config changes is configured).

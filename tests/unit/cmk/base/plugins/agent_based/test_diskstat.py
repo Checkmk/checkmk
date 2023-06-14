@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,9 +7,10 @@
 import pytest
 from pytest_mock import MockerFixture
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import HostName
 
-from cmk.checkers import plugin_contexts
+from cmk.checkengine import plugin_contexts
+from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.plugins.agent_based import diskstat
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
@@ -23,16 +24,14 @@ from cmk.base.plugins.agent_based.utils.multipath import Group
 
 
 def test_parse_diskstat_minimum() -> None:
-    assert (
-        diskstat.parse_diskstat(
-            [
-                ["12341241243"],
-            ]
-        )
-        == {}
+    assert not diskstat.parse_diskstat(
+        [
+            ["12341241243"],
+        ]
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_parse_diskstat_predictive(mocker: MockerFixture) -> None:
     # SUP-5924
     DATA = [
@@ -154,11 +153,10 @@ def test_parse_diskstat_predictive(mocker: MockerFixture) -> None:
     mocker.patch(
         "cmk.base.check_api._prediction.get_levels", return_value=(None, (2.1, 4.1, None, None))
     )
-    with plugin_contexts.current_host("unittest-hn"), plugin_contexts.current_service(
+    with plugin_contexts.current_host(HostName("unittest-hn")), plugin_contexts.current_service(
         CheckPluginName("unittest_sd"),
         "unittest_sd_description",
     ):
-
         with pytest.raises(IgnoreResultsError):
             list(diskstat.check_diskstat("nvme0n1", PARAMS, diskstat.parse_diskstat(DATA), None))
         DATA[0][0] = "1617784512"
@@ -1212,12 +1210,9 @@ def test_diskstat_convert_info() -> None:
 
     section_diskstat_reference = section_diskstat.copy()
 
-    assert (
-        diskstat.diskstat_convert_info(
-            {},
-            section_multipath,
-        )
-        == {}
+    assert not diskstat.diskstat_convert_info(
+        {},
+        section_multipath,
     )
 
     assert (
@@ -1274,6 +1269,7 @@ EXP_METRICS = {
 }
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_compute_rates_single_disk_same_time_same_values() -> None:
     # same timestamp twice --> IgnoreResultsError twice
     with pytest.raises(IgnoreResultsError):
@@ -1288,6 +1284,7 @@ def test_compute_rates_single_disk_same_time_same_values() -> None:
         )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_compute_rates_single_disk_diff_time_same_values() -> None:
     # different timestamps --> IgnoreResults once
     with pytest.raises(IgnoreResultsError):
@@ -1308,6 +1305,7 @@ def test_compute_rates_single_disk_diff_time_same_values() -> None:
     }
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_compute_rates_single_disk_diff_time_diff_values() -> None:
     # different timestamps --> IgnoreResults once
     with pytest.raises(IgnoreResultsError):
@@ -1327,6 +1325,7 @@ def test_compute_rates_single_disk_diff_time_diff_values() -> None:
             assert v > 0
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_diskstat_single_item() -> None:
     with pytest.raises(IgnoreResultsError):
         list(
@@ -1337,7 +1336,14 @@ def test_check_diskstat_single_item() -> None:
                 None,
             )
         )
-    assert list(diskstat.check_diskstat("item", {}, {"item": DISK}, None,)) == [
+    assert list(
+        diskstat.check_diskstat(
+            "item",
+            {},
+            {"item": DISK},
+            None,
+        )
+    ) == [
         Result(state=State.OK, notice="Utilization: <0.01%"),
         Metric("disk_utilization", 3.933167173747347e-06),
         Result(state=State.OK, summary="Read: 17.7 B/s"),
@@ -1364,6 +1370,7 @@ def test_check_diskstat_single_item() -> None:
     ]
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_diskstat_summary() -> None:
     with pytest.raises(IgnoreResultsError):
         list(
@@ -1446,6 +1453,7 @@ def test_check_diskstat_summary() -> None:
             assert res_sum.value >= res_single.value
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_cluster_check_diskstat_single_item() -> None:
     with pytest.raises(IgnoreResultsError):
         list(
@@ -1504,6 +1512,7 @@ def test_cluster_check_diskstat_single_item() -> None:
     assert results_cluster == results_non_cluster
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_cluster_check_diskstat_summary() -> None:
     with pytest.raises(IgnoreResultsError):
         list(
@@ -1568,6 +1577,7 @@ def test_cluster_check_diskstat_summary() -> None:
     assert results_cluster == results_non_cluster
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_latency_calculation() -> None:
     with pytest.raises(IgnoreResultsError):
         list(

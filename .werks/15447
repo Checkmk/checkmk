@@ -1,0 +1,19 @@
+Title: SAML: global settings default user profile overwrites manual configuration
+Class: fix
+Compatible: compat
+Component: setup
+Date: 1678979021
+Edition: cee
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+When a user attribute was *not* mapped via SAML, the default user profile,
+which is configured in the global settings (Global settings -> User management
+-> Default user profile), would overwrite any manual configuration done for
+this user. This has been fixed. User profiles are now created/updated with the
+following priority:
+
+1. SAML attributes (if configured)
+2. Manually selected attributes
+3. Defaults

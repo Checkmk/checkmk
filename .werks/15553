@@ -1,0 +1,18 @@
+Title: time_period: making time-related validation more strict
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1679645114
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, the REST API was quite lenient when it came
+to specifying a time allowing the format hh:mm for some while asking
+the hh:mm:ss format for others. This werk targets the active_time_ranges
+field where now a hh:mm:ss format is enforced.
+
+Due to the introduction of the more strict pattern, user scripts must be
+adjusted accordingly to respect the new format.
+

@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If views with context / search filter defined were exported via "Export this
 view as PDF", the filter were ignored.

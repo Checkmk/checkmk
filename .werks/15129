@@ -1,0 +1,16 @@
+Title: Fix possible lost publish configuration of visuals after saving
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1677512026
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+If a user without the permission "Publish ..." but with permission "Publish ...
+to allowed contact groups" saved a visual (views, dashboards, etc.) with a
+choosen contact group the visual should be published to, the changes were lost
+after saving the visual.
+

@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from __future__ import annotations
 
 import textwrap
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.plugin_loader import load_plugins
+from cmk.utils.tags import TagID
 from cmk.utils.type_defs import HostName
 
 import cmk.base.config as config
@@ -32,7 +33,7 @@ class Modes:
         self._modes: list[Mode] = []
         self._general_options: list[Option] = []
 
-    def register(self, mode: "Mode") -> None:
+    def register(self, mode: Mode) -> None:
         self._modes.append(mode)
 
         self._mode_map[mode.long_option] = mode
@@ -67,7 +68,7 @@ class Modes:
 
         return handler(*handler_args)
 
-    def _get(self, opt: str) -> "Mode":
+    def _get(self, opt: str) -> Mode:
         opt_name = self._strip_dashes(opt)
         return self._mode_map[opt_name]
 
@@ -78,7 +79,7 @@ class Modes:
             return opt[1:]
         raise NotImplementedError()
 
-    def get(self, name: OptionName) -> "Mode":
+    def get(self, name: OptionName) -> Mode:
         return self._mode_map[name]
 
     def short_getopt_specs(self) -> str:
@@ -129,7 +130,7 @@ class Modes:
 
     def parse_hostname_list(
         self, args: list[str], with_clusters: bool = True, with_foreign_hosts: bool = False
-    ) -> list[HostName]:
+    ) -> Sequence[HostName]:
         config_cache = config.get_config_cache()
         if with_foreign_hosts:
             valid_hosts = config_cache.all_configured_realhosts()
@@ -139,10 +140,10 @@ class Modes:
         if with_clusters:
             valid_hosts = valid_hosts.union(config_cache.all_active_clusters())
 
-        hostlist = []
+        hostlist: list[HostName] = []
         for arg in args:
             if arg[0] != "@" and arg in valid_hosts:
-                hostlist.append(arg)
+                hostlist.append(HostName(arg))
             else:
                 if arg[0] == "@":
                     arg = arg[1:]
@@ -150,7 +151,9 @@ class Modes:
 
                 num_found = 0
                 for hostname in valid_hosts:
-                    if config.hosttags_match_taglist(config_cache.tag_list(hostname), tagspec):
+                    if config.hosttags_match_taglist(
+                        config_cache.tag_list(hostname), (TagID(_) for _ in tagspec)
+                    ):
                         hostlist.append(hostname)
                         num_found += 1
                 if num_found == 0:
@@ -163,7 +166,7 @@ class Modes:
     # GENERAL OPTIONS
     #
 
-    def register_general_option(self, option: "Option") -> None:
+    def register_general_option(self, option: Option) -> None:
         self._general_options.append(option)
 
     def process_general_options(self, all_opts: Options) -> None:

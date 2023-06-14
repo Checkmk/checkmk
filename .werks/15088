@@ -6,7 +6,7 @@ Date: 1670934129
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Now you can use regexes in {{Joined column}}s. If multiple entries are found
 the first one of the sorted entries will be used.
@@ -23,4 +23,19 @@ Example:
 <li>Choose {{SID}} with {{$SID$}} below macros</li>
 <li>Now you can connect {{Services: Summary}} of the services
 {{ORA $SID$.(SYSAUX|TEMP) Tablespace}} below {{Joined column}}</li>
+</ul>
+
+Note:
+
+These regexes are basically case sensitive. If you need case insensitive
+regexes you have to add the global flag {{(?i)}} at the beginning of this
+regex.
+
+Example:
+
+<ul>
+<li>From the data source {{Oracle instances}} we get the SIDs in upper case format</li>
+<li>Items in filesystem service description are in lower case format</li>
+<li>Use the regex {{(?i)Filesystem /path/to/$SID$}} below {{Joined services}}
+in order to join the related service column</li>
 </ul>

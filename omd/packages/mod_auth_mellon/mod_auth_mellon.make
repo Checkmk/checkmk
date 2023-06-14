@@ -14,7 +14,7 @@ $(MOD_AUTH_MELLON): $(MOD_AUTH_MELLON_BUILD)
 
 $(MOD_AUTH_MELLON)-unpack: $(MOD_AUTH_MELLON_UNPACK)
 
-ifeq ($(filter sles%,$(DISTRO_CODE)),)
+ifeq ($(filter sles% el9,$(DISTRO_CODE)),)
 $(MOD_AUTH_MELLON_BUILD): $(MOD_AUTH_MELLON_UNPACK) $(LASSO_CACHE_PKG_PROCESS)
 	export LASSO_DIR="$(LASSO_DIR)" \
 	&& sed -i "s|^prefix=$$|prefix=$(LASSO_INSTALL_DIR)|" $(LASSO_INSTALL_DIR)/lib/pkgconfig/lasso.pc
@@ -33,16 +33,13 @@ $(MOD_AUTH_MELLON_BUILD):
 endif
 
 $(MOD_AUTH_MELLON_INSTALL): $(MOD_AUTH_MELLON_BUILD)
-ifeq ($(filter sles%,$(DISTRO_CODE)),)
+ifeq ($(filter sles% el9,$(DISTRO_CODE)),)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/apache/modules
-	cp $(MOD_AUTH_MELLON_BUILD_DIR)/.libs/mod_auth_mellon.so $(DESTDIR)$(OMD_ROOT)/lib/apache/modules
-	chmod 644 $(DESTDIR)$(OMD_ROOT)/lib/apache/modules/mod_auth_mellon.so
+	install -m 644 $(MOD_AUTH_MELLON_BUILD_DIR)/.libs/mod_auth_mellon.so $(DESTDIR)$(OMD_ROOT)/lib/apache/modules
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/bin
-	cp $(MOD_AUTH_MELLON_BUILD_DIR)/mellon_create_metadata.sh $(DESTDIR)$(OMD_ROOT)/bin/mellon_create_metadata
-	chmod 644 $(DESTDIR)$(OMD_ROOT)/bin/mellon_create_metadata
+	install -m 755 $(MOD_AUTH_MELLON_BUILD_DIR)/mellon_create_metadata.sh $(DESTDIR)$(OMD_ROOT)/bin/mellon_create_metadata
 endif
 	$(TOUCH) $@
 
 $(MOD_AUTH_MELLON)_download:
 	wget https://github.com/latchset/mod_auth_mellon/releases/download/v$(MOD_AUTH_MELLON_VERS)/mod_auth_mellon-$(MOD_AUTH_MELLON_VERS).tar.gz
-

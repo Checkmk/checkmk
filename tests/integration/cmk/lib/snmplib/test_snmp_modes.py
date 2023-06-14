@@ -1,54 +1,53 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+"""
+"netsnmp" python module (used for inline SNMP) and snmp commands (used for
+classic SNMP) are not available in the git environment. For the moment it
+does not make sense to build these tests as unit tests because we want to
+tests the whole chain from single SNMP actions in our modules to the faked
+SNMP device and back.
+"""
+
+import ast
+from collections.abc import Sequence
+from pathlib import Path
+from subprocess import CalledProcessError
+
 import pytest
 
-from cmk.utils.exceptions import MKGeneralException
+from tests.testlib.site import Site
 
-import cmk.snmplib.snmp_cache as snmp_cache
-import cmk.snmplib.snmp_modes as snmp_modes
-from cmk.snmplib.type_defs import SNMPBackend, SNMPBackendEnum
+from cmk.utils.type_defs import HostAddress
 
-# "netsnmp" python module (used for inline SNMP) and snmp commands (used for
-# classic SNMP) are not available in the git environment. For the moment it
-# does not make sense to build these tests as unit tests because we want to
-# tests the whole chain from single SNMP actions in our modules to the faked
-# SNMP device and back.
+from cmk.snmplib import snmp_modes
+from cmk.snmplib.type_defs import OID, SNMPBackendEnum, SNMPHostConfig
+
+from .snmp_helpers import default_config, get_single_oid
 
 
-# Found no other way to achieve this
-# https://github.com/pytest-dev/pytest/issues/363
-@pytest.fixture(scope="module")
-def monkeymodule(request):
-    # pylint: disable=import-outside-toplevel
-    from _pytest.monkeypatch import MonkeyPatch
-
-    # pylint: enable=import-outside-toplevel
-    mpatch = MonkeyPatch()
-    yield mpatch
-    mpatch.undo()
-
-
-def test_get_single_oid_ipv6(backend: SNMPBackend) -> None:
-    if backend.config.snmp_backend is SNMPBackendEnum.STORED_WALK:
+@pytest.mark.usefixtures("snmpsim")
+def test_get_single_oid_ipv6(site: Site, backend_type: SNMPBackendEnum) -> None:
+    if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
-    backend.config = backend.config._replace(
+    config = default_config(backend_type)._replace(
         is_ipv6_primary=True,
-        ipaddress="::1",
+        ipaddress=HostAddress("::1"),
     )
 
-    result = snmp_modes.get_single_oid(".1.3.6.1.2.1.1.1.0", backend=backend)
+    result, _ = get_single_oid(site, ".1.3.6.1.2.1.1.1.0", backend_type, config)
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
 
-def test_get_single_oid_snmpv3(backend: SNMPBackend) -> None:
-    if backend.config.snmp_backend is SNMPBackendEnum.STORED_WALK:
+@pytest.mark.usefixtures("snmpsim")
+def test_get_single_oid_snmpv3(site: Site, backend_type: SNMPBackendEnum) -> None:
+    if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
-    backend.config = backend.config._replace(
+    config = default_config(backend_type)._replace(
         credentials=(
             "authNoPriv",
             "md5",
@@ -57,96 +56,117 @@ def test_get_single_oid_snmpv3(backend: SNMPBackend) -> None:
         )
     )
 
-    result = snmp_modes.get_single_oid(".1.3.6.1.2.1.1.1.0", backend=backend)
+    result, _ = get_single_oid(site, ".1.3.6.1.2.1.1.1.0", backend_type, config)
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
 
-def test_get_single_oid_snmpv3_higher_encryption(backend: SNMPBackend) -> None:
-    if backend.config.snmp_backend is SNMPBackendEnum.STORED_WALK:
+@pytest.mark.usefixtures("snmpsim")
+@pytest.mark.parametrize("priv_proto, port", [("DES", 1341), ("AES-256", 1342), ("AES-192", 1343)])
+def test_get_single_oid_snmpv3_higher_encryption(
+    site: Site, backend_type: SNMPBackendEnum, priv_proto: str, port: int
+) -> None:
+    if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
-    backend.config = backend.config._replace(
+    config = default_config(backend_type)._replace(
         credentials=(
             "authPriv",
             "SHA-512",
             "authPrivUser",
             "A_long_authKey",
-            "DES",
+            priv_proto,
             "A_long_privKey",
         ),
+        # TODO: Reorganize snmp tests: at the moment we create *all* snmpsimd processes at setup
+        #  but with different ports. Those different processes are then used in test_snmp_modes.py and
+        #  backend_snmp.py...
+        port=port,
     )
 
-    # TODO: Reorganize snmp tests: at the moment we create *all* snmpsimd processes at setup
-    #  but with different ports. Those different processes are then used in test_snmp_modes.py and
-    #  backend_snmp.py...
-    backend.port = 1341
-
-    result = snmp_modes.get_single_oid(".1.3.6.1.2.1.1.1.0", backend=backend)
+    result, _ = get_single_oid(site, ".1.3.6.1.2.1.1.1.0", backend_type, config)
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
 
-def test_get_single_oid_wrong_credentials(backend: SNMPBackend) -> None:
-    if backend.config.snmp_backend is SNMPBackendEnum.STORED_WALK:
+@pytest.mark.usefixtures("snmpsim")
+def test_get_single_oid_wrong_credentials(site: Site, backend_type: SNMPBackendEnum) -> None:
+    if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
-    backend.config = backend.config._replace(credentials="dingdong")
+    config = default_config(backend_type)._replace(credentials="dingdong")
 
-    result = snmp_modes.get_single_oid(".1.3.6.1.2.1.1.1.0", backend=backend)
+    result, _ = get_single_oid(site, ".1.3.6.1.2.1.1.1.0", backend_type, config)
     assert result is None
 
 
-def test_get_single_oid(backend: SNMPBackend) -> None:
-    result = snmp_modes.get_single_oid(".1.3.6.1.2.1.1.1.0", backend=backend)
+@pytest.mark.usefixtures("snmpsim")
+def test_get_single_oid(site: Site, backend_type: SNMPBackendEnum) -> None:
+    result, _ = get_single_oid(
+        site, ".1.3.6.1.2.1.1.1.0", backend_type, default_config(backend_type)
+    )
     assert result == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
     assert isinstance(result, str)
 
 
-def test_get_single_oid_cache(backend: SNMPBackend) -> None:
+@pytest.mark.usefixtures("snmpsim")
+def test_get_single_oid_cache(site: Site, backend_type: SNMPBackendEnum) -> None:
     oid = ".1.3.6.1.2.1.1.1.0"
     expected_value = "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
 
-    assert snmp_modes.get_single_oid(oid, backend=backend) == expected_value
-    assert oid in snmp_cache.single_oid_cache()
-    cached_oid = snmp_cache.single_oid_cache()[oid]
+    value, cache = get_single_oid(site, oid, backend_type, default_config(backend_type))
+    assert value == expected_value
+    assert oid in cache
+    cached_oid = cache[oid]
     assert cached_oid == expected_value
     assert isinstance(cached_oid, str)
 
 
-def test_get_single_non_prefixed_oid(backend: SNMPBackend) -> None:
-    with pytest.raises(MKGeneralException, match="does not begin with"):
-        snmp_modes.get_single_oid("1.3.6.1.2.1.1.1.0", backend=backend)
+@pytest.mark.usefixtures("snmpsim")
+def test_get_single_non_prefixed_oid(site: Site, backend_type: SNMPBackendEnum) -> None:
+    with pytest.raises(CalledProcessError) as e:
+        get_single_oid(site, "1.3.6.1.2.1.1.1.0", backend_type, default_config(backend_type))
+    assert "does not begin with" in e.value.stderr
 
 
-def test_get_single_oid_next(backend: SNMPBackend) -> None:
+@pytest.mark.usefixtures("snmpsim")
+def test_get_single_oid_next(site: Site, backend_type: SNMPBackendEnum) -> None:
     assert (
-        snmp_modes.get_single_oid(".1.3.6.1.2.1.1.9.1.*", backend=backend)
+        get_single_oid(site, ".1.3.6.1.2.1.1.9.1.*", backend_type, default_config(backend_type))[0]
         == ".1.3.6.1.6.3.10.3.1.1"
     )
 
 
 # The get_single_oid function currently does not support OID_BIN handling
+# @pytest.mark.usefixtures("snmpsim")
 # def test_get_single_oid_hex(snmp_config) -> None:
-#    assert snmp_modes.get_single_oid(snmp_config, ".1.3.6.1.2.1.2.2.1.6.2") == b"\x00\x12yb\xf9@"
+#    assert snmp_modes.get_single_oid(snmp_config, ".1.3.6.1.2.1.2.2.1.6.2")[0] == b"\x00\x12yb\xf9@"
 
 
-def test_get_single_oid_value(backend: SNMPBackend) -> None:
+@pytest.mark.usefixtures("snmpsim")
+def test_get_single_oid_value(site: Site, backend_type: SNMPBackendEnum) -> None:
     assert (
-        snmp_modes.get_single_oid(".1.3.6.1.2.1.1.9.1.2.1", backend=backend)
+        get_single_oid(site, ".1.3.6.1.2.1.1.9.1.2.1", backend_type, default_config(backend_type))[
+            0
+        ]
         == ".1.3.6.1.6.3.10.3.1.1"
     )
 
 
-def test_get_single_oid_not_existing(backend: SNMPBackend) -> None:
-    assert snmp_modes.get_single_oid(".1.3.100.200.300.400", backend=backend) is None
+@pytest.mark.usefixtures("snmpsim")
+def test_get_single_oid_not_existing(site: Site, backend_type: SNMPBackendEnum) -> None:
+    assert (
+        get_single_oid(site, ".1.3.100.200.300.400", backend_type, default_config(backend_type))[0]
+        is None
+    )
 
 
-def test_get_single_oid_not_resolvable(backend: SNMPBackend) -> None:
-    if backend.config.snmp_backend is SNMPBackendEnum.STORED_WALK:
+@pytest.mark.usefixtures("snmpsim")
+def test_get_single_oid_not_resolvable(site: Site, backend_type: SNMPBackendEnum) -> None:
+    if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
-    backend.config = backend.config._replace(ipaddress="bla.local")
+    config = default_config(backend_type)._replace(ipaddress=HostAddress("bla.local"))
 
-    assert snmp_modes.get_single_oid(".1.3.6.1.2.1.1.7.0", backend=backend) is None
+    assert get_single_oid(site, ".1.3.6.1.2.1.1.7.0", backend_type, config)[0] is None
 
 
 @pytest.mark.parametrize(
@@ -205,11 +225,29 @@ def test_get_single_oid_not_resolvable(backend: SNMPBackend) -> None:
         ),
     ],
 )
-def test_walk_for_export(  # type:ignore[no-untyped-def]
-    backend: SNMPBackend, oid, expected_table
+@pytest.mark.usefixtures("snmpsim")
+def test_walk_for_export(
+    site: Site, backend_type: SNMPBackendEnum, oid: OID, expected_table: Sequence[tuple[OID, str]]
 ) -> None:
-    if backend.config.snmp_backend is SNMPBackendEnum.STORED_WALK:
+    if backend_type is SNMPBackendEnum.STORED_WALK:
         pytest.skip("Not relevant")
 
-    table = snmp_modes.walk_for_export(oid, backend=backend)
+    table = walk_for_export(site, oid, backend_type, default_config(backend_type))
     assert table == expected_table
+
+
+def walk_for_export(
+    site: Site, oid: OID, backend_type: SNMPBackendEnum, config: SNMPHostConfig
+) -> snmp_modes.SNMPRowInfoForStoredWalk:
+    return ast.literal_eval(
+        site.python_helper("helper_walk_for_export.py").check_output(
+            input=repr(
+                (
+                    oid,
+                    backend_type.serialize(),
+                    config.serialize(),
+                    str(Path(__file__).parent.resolve() / "snmp_data" / "cmk-walk"),
+                )
+            )
+        )
+    )

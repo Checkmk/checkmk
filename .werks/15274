@@ -1,0 +1,13 @@
+Title: brocade_fcport: wrong port speed
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1676389666
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+For certain configuration of Brocade FC Switches the "assumed speed"
+(configurable, defaults to 2GByte/s) was displayed, although the
+inventory table showed the correct port speed.

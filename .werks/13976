@@ -1,0 +1,13 @@
+Title: Fields with autocompletion will not also match on internal ids
+Class: feature
+Compatible: compat
+Component: multisite
+Date: 1678957465
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+
+UI fields that offer autocompletion of values will now also match against the internal ids of these values.
+

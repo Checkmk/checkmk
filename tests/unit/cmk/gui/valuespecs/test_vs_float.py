@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -14,7 +14,7 @@ from .utils import expect_validate_failure, expect_validate_success, request_var
 
 class TestValueSpecFloat:
     def test_validate(self) -> None:
-        expect_validate_failure(vs.Float(), "asd")  # type:ignore
+        expect_validate_failure(vs.Float(), "asd")  # type: ignore[misc]
         expect_validate_failure(vs.Float(), 128)
         expect_validate_success(vs.Float(allow_int=True), 128)
         expect_validate_success(vs.Float(), 128.0)
@@ -48,7 +48,7 @@ class TestValueSpecFloat:
 
     def test_value_to_html(self) -> None:
         assert vs.Float().value_to_html(123) == "123.00"
-        assert vs.Float().value_to_html(None) == "0.00"  # type: ignore
+        assert vs.Float().value_to_html(None) == "0.00"  # type: ignore[arg-type]
         assert vs.Float(unit="unit").value_to_html(1002003) == "1002003.00 unit"
         assert vs.Float(unit="unit").value_to_html(0.999) == "1.00 unit"
         assert vs.Float().value_to_html(0.99) == "0.99"

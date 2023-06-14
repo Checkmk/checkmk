@@ -7,7 +7,7 @@ Edition: cee
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If the button "Create regular time-schedule for this report" was used, the
 error "Cannot edit schedule entry for non-existing report MY_REPORT" could

@@ -1,0 +1,14 @@
+Title: sap_hana_status: Handle WARNING status correctly
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1678271797
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously, SAP HANA Database Status service would go to CRIT in case of
+database status 'WARNING'.
+Now, the service goes to Checkmk state WARN.
+

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -25,7 +25,6 @@ def test_discovery(section: eiq.Section) -> None:
 
 
 def test_check(section: eiq.Section, monkeypatch: pytest.MonkeyPatch) -> None:
-
     monkeypatch.setattr(
         eiq,
         "get_value_store",

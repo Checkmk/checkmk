@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,7 +10,7 @@ from typing import Any, Literal
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils.tags import TagGroup, TagID
+from cmk.utils.tags import TagGroup, TagGroupID, TagID
 from cmk.utils.version import is_cloud_edition, is_raw_edition
 
 from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
@@ -52,13 +52,7 @@ from cmk.gui.plugins.wato.utils import (
     UserIconOrAction,
     valuespec_check_plugin_selection,
 )
-from cmk.gui.plugins.watolib.utils import (
-    ABCConfigDomain,
-    config_variable_group_registry,
-    config_variable_registry,
-    ConfigVariable,
-    ConfigVariableGroup,
-)
+from cmk.gui.utils.temperate_unit import temperature_unit_choices
 from cmk.gui.utils.theme import theme_choices
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import (
@@ -85,6 +79,7 @@ from cmk.gui.valuespec import (
     LogLevelChoice,
     Migrate,
     MonitoringState,
+    NetworkPort,
     Optional,
     PasswordSpec,
     RegExp,
@@ -96,6 +91,13 @@ from cmk.gui.valuespec import (
 from cmk.gui.views.icon import icon_and_action_registry
 from cmk.gui.watolib.attributes import IPMIParameters, SNMPCredentials
 from cmk.gui.watolib.bulk_discovery import vs_bulk_discovery
+from cmk.gui.watolib.config_domain_name import (
+    ABCConfigDomain,
+    config_variable_group_registry,
+    config_variable_registry,
+    ConfigVariable,
+    ConfigVariableGroup,
+)
 from cmk.gui.watolib.config_domains import (
     ConfigDomainCACertificates,
     ConfigDomainCore,
@@ -105,6 +107,7 @@ from cmk.gui.watolib.config_domains import (
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.timeperiods import TimeperiodSelection
 from cmk.gui.watolib.translation import HostnameTranslation, ServiceDescriptionTranslation
+from cmk.gui.watolib.users import vs_idle_timeout_duration
 from cmk.gui.watolib.utils import site_neutral_path
 
 #   .--Global Settings-----------------------------------------------------.
@@ -294,7 +297,7 @@ class ConfigVariableLogLevels(ConfigVariable):
                 "cmk.web.bi.compilation",
                 _("BI compilation"),
                 _(
-                    "If this option is enabled, Check_MK BI will create a log with details "
+                    "If this option is enabled, Checkmk BI will create a log with details "
                     "about compiling BI aggregations. This includes statistics and "
                     "details for each executed compilation."
                 ),
@@ -683,7 +686,7 @@ class ConfigVariableStartURL(ConfigVariable):
         return TextInput(
             title=_("Start URL to display in main frame"),
             help=_(
-                "When you point your browser to the Check_MK GUI, usually the dashboard "
+                "When you point your browser to the Checkmk GUI, usually the dashboard "
                 "is shown in the main (right) frame. You can replace this with any other "
                 "URL you like here."
             ),
@@ -837,8 +840,8 @@ class ConfigVariableDrawRuleIcon(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Checkbox(
-            title=_("Show icon linking to WATO parameter editor for services"),
-            label=_("Show WATO icon"),
+            title=_("Show icon linking to Setup parameter editor for services"),
+            label=_("Show Setup icon"),
             help=_(
                 "When enabled a rule editor icon is displayed for each "
                 "service in the multisite views. It is only displayed if the user "
@@ -921,7 +924,7 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
         # 2. All *topics* that:
         #  - consist only of checkbox tags
         #  - contain at least two entries
-        choices = []
+        choices: list[tuple[TagGroupID, str]] = []
         by_topic: dict[str, list[TagGroup]] = {}
         for tag_group in active_config.tags.tag_groups:
             choices.append((tag_group.id, tag_group.title))
@@ -936,7 +939,7 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
                 if len(tag_groups) > 1:
                     choices.append(
                         (
-                            "topic:" + topic,
+                            TagGroupID("topic:" + topic),
                             _("Topic") + ": " + topic,
                         )
                     )
@@ -1705,7 +1708,11 @@ class ConfigVariableServiceViewGrouping(ConfigVariable):
                             title=_("Grouping expression"),
                             help=_(
                                 "This regular expression is used to match the services to be put "
-                                "into this group. This is a prefix match regular expression."
+                                "into this group. You can use prefix match "
+                                "regular expressions here. In the regular "
+                                "expressions, you can use match groups. Matched "
+                                "services with the same match groups will be put "
+                                "in the same group."
                             ),
                             mode=RegExp.prefix,
                         ),
@@ -1789,6 +1796,28 @@ class ConfigVariableViewActionDefaults(ConfigVariable):
 
 
 @config_variable_registry.register
+class ConfigVariableDefaultTemperatureUnit(ConfigVariable):
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupUserInterface
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainGUI
+
+    def ident(self) -> str:
+        return "default_temperature_unit"
+
+    def valuespec(self) -> ValueSpec:
+        return DropdownChoice(
+            title=_("Default temperature unit"),
+            help=_(
+                "Set the default temperature unit used for graphs and perfometers. The option can "
+                "be configured individually for each user in the user settings."
+            ),
+            choices=temperature_unit_choices(),
+        )
+
+
+@config_variable_registry.register
 class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
     def group(self) -> type[ConfigVariableGroup]:
         return ConfigVariableGroupSiteManagement
@@ -1803,9 +1832,9 @@ class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
         return Dictionary(
             title=_("Trusted certificate authorities for SSL"),
             help=_(
-                "Whenever a server component of Check_MK opens a SSL connection it uses the "
+                "Whenever a server component of Checkmk opens a SSL connection it uses the "
                 "certificate authorities configured here for verifying the SSL certificate of "
-                "the destination server. This is used for example when performing WATO "
+                "the destination server. This is used for example when performing Setup "
                 "replication to slave sites or when special agents are communicating via HTTPS. "
                 "The CA certificates configured here will be written to the CA bundle %s."
             )
@@ -1821,7 +1850,7 @@ class ConfigVariableTrustedCertificateAuthorities(ConfigVariable):
                             "these CAs are stored and the commands to manage the CAs differ. "
                             "Please check out the documentation of your linux distribution "
                             "in case you want to customize trusted CAs system wide. You can "
-                            "choose here to trust the system wide CAs here. Check_MK will search "
+                            "choose here to trust the system wide CAs here. Checkmk will search "
                             "these directories for system wide CAs: %s"
                         )
                         % ", ".join(ConfigDomainCACertificates.system_wide_trusted_ca_search_paths),
@@ -1911,15 +1940,15 @@ class RestAPIETagLocking(ConfigVariable):
 
 
 # .
-#   .--WATO----------------------------------------------------------------.
-#   |                     __        ___  _____ ___                         |
-#   |                     \ \      / / \|_   _/ _ \                        |
-#   |                      \ \ /\ / / _ \ | || | | |                       |
-#   |                       \ V  V / ___ \| || |_| |                       |
-#   |                        \_/\_/_/   \_\_| \___/                        |
-#   |                                                                      |
+#   .--Setup---------------------------------------------------------------.
+#   |                     ____       _                                     |
+#   |                    / ___|  ___| |_ _   _ _ __                        |
+#   |                    \___ \ / _ \ __| | | | '_ \                       |
+#   |                     ___) |  __/ |_| |_| | |_) |                      |
+#   |                    |____/ \___|\__|\__,_| .__/                       |
+#   |                                         |_|                          |
 #   +----------------------------------------------------------------------+
-#   | Global Configuration for WATO                                        |
+#   | Global Configuration for Setup                                       |
 #   '----------------------------------------------------------------------'
 
 
@@ -1939,7 +1968,7 @@ class ConfigVariableWATOMaxSnapshots(ConfigVariable):
             title=_("Number of configuration snapshots to keep"),
             help=_(
                 "Whenever you successfully activate changes a snapshot of the configuration "
-                "will be created. You can also create snapshots manually. WATO will delete old "
+                "will be created. You can also create snapshots manually. Setup will delete old "
                 "snapshots when the maximum number of snapshots is reached."
             ),
             minvalue=1,
@@ -2046,7 +2075,7 @@ class ConfigVariableWATOHideFilenames(ConfigVariable):
             title=_("Hide internal folder names in WATO"),
             label=_("hide folder names"),
             help=_(
-                "When enabled, then the internal names of WATO folder in the filesystem "
+                "When enabled, then the internal names of Setup folder in the filesystem "
                 "are not shown. They will automatically be derived from the name of the folder "
                 "when a new folder is being created. Disable this option if you want to see and "
                 "set the filenames manually."
@@ -2067,7 +2096,7 @@ class ConfigVariableWATOUploadInsecureSnapshots(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Checkbox(
-            title=_("Allow upload of insecure WATO snapshots"),
+            title=_("Allow upload of insecure Setup snapshots"),
             label=_("upload insecure snapshots"),
             help=_(
                 "When enabled, insecure snapshots are allowed. Please keep in mind that the upload "
@@ -2091,9 +2120,9 @@ class ConfigVariableWATOHideHosttags(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Checkbox(
-            title=_("Hide hosttags in WATO folder view"),
+            title=_("Hide hosttags in Setup folder view"),
             label=_("hide hosttags"),
-            help=_("When enabled, hosttags are no longer shown within the WATO folder view"),
+            help=_("When enabled, hosttags are no longer shown within the Setup folder view"),
         )
 
 
@@ -2113,7 +2142,7 @@ class ConfigVariableWATOHideVarnames(ConfigVariable):
             title=_("Hide names of configuration variables"),
             label=_("hide variable names"),
             help=_(
-                "When enabled, internal configuration variable names of Check_MK are hidden "
+                "When enabled, internal configuration variable names of Checkmk are hidden "
                 "from the user (for example in the rule editor)"
             ),
         )
@@ -2134,7 +2163,7 @@ class ConfigVariableHideHelpInLists(ConfigVariable):
         return Checkbox(
             title=_("Hide help text of rules in list views"),
             label=_("hide help text"),
-            help=_("When disabled, WATO shows the help texts of rules also in the list views."),
+            help=_("When disabled, Setup shows the help texts of rules also in the list views."),
         )
 
 
@@ -2157,7 +2186,7 @@ class ConfigVariableWATOUseGit(ConfigVariable):
                 "When enabled, all changes of configuration files are tracked with the "
                 "version control system GIT. You need to make sure that git is installed "
                 "on your monitoring server. The version history currently cannot be viewed "
-                "via the web GUI. Please use git command line tools within your Check_MK "
+                "via the web GUI. Please use git command line tools within your Checkmk "
                 "configuration directory. If you want easier tracking of configuration file changes "
                 "simply enable the global settings option <tt>Pretty print configuration files</tt>"
             ),
@@ -2182,7 +2211,7 @@ class ConfigVariableWATOPrettyPrintConfig(ConfigVariable):
             help=_(
                 "When enabled, most of the configuration files are pretty printed and easier to read. "
                 "On the downside, however, pretty printing bigger configurations can be quite slow - "
-                "so the overall WATO GUI performance will decrease."
+                "so the overall Setup GUI performance will decrease."
             ),
         )
 
@@ -2349,6 +2378,7 @@ class ConfigVariablePasswordPolicy(ConfigVariable):
                     Integer(
                         title=_("Minimum password length"),
                         minvalue=1,
+                        default_value=12,
                     ),
                 ),
                 (
@@ -2395,12 +2425,7 @@ class ConfigVariableUserIdleTimeout(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return Optional(
-            valuespec=Age(
-                title=None,
-                display=["minutes", "hours", "days"],
-                minvalue=5400,
-                default_value=5400,
-            ),
+            valuespec=vs_idle_timeout_duration(),
             title=_("Login session idle timeout"),
             label=_("Enable a login session idle timeout"),
             help=_(
@@ -2520,7 +2545,7 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
 #   |             \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\              |
 #   |                                      |_____|                         |
 #   +----------------------------------------------------------------------+
-#   |  Operation mode of Check_MK                                          |
+#   |  Operation mode of Checkmk                                          |
 #   '----------------------------------------------------------------------'
 
 
@@ -2548,7 +2573,7 @@ class ConfigVariableUseNewDescriptionsFor(ConfigVariable):
         return ListChoice(
             title=_("Use new service descriptions"),
             help=_(
-                "In order to make Check_MK more consistent, "
+                "In order to make Checkmk more consistent, "
                 "the descriptions of several services have been renamed in newer "
                 "Check_MK versions. One example is the filesystem services that have "
                 "been renamed from <tt>fs_</tt> into <tt>Filesystem</tt>. But since renaming "
@@ -2789,7 +2814,7 @@ class ConfigVariableDelayPrecompile(ConfigVariable):
             title=_("Delay precompiling of host checks"),
             label=_("delay precompiling"),
             help=_(
-                "If you enable this option, then Check_MK will not directly Python-bytecompile "
+                "If you enable this option, then Checkmk will not directly Python-bytecompile "
                 "all host checks when activating the configuration and restarting Nagios. "
                 "Instead it will delay this to the first "
                 "time the host is actually checked being by Nagios.<p>This reduces the time needed "
@@ -2863,7 +2888,7 @@ class ConfigVariableCheckMKPerfdataWithTimes(ConfigVariable):
             label=_("Return process times within performance data"),
             help=_(
                 "Enabling this option results in additional performance data "
-                "for the Check_MK output, giving information regarding the process times. "
+                "for the Checkmk output, giving information regarding the process times. "
                 "It provides the following fields: user_time, system_time, children_user_time "
                 "and children_system_time"
             ),
@@ -2886,7 +2911,7 @@ class ConfigVariableUseDNSCache(ConfigVariable):
             title=_("Use DNS lookup cache"),
             label=_("Prevent DNS lookups by use of a cache file"),
             help=_(
-                "When this option is enabled (which is the default), then Check_MK tries to "
+                "When this option is enabled (which is the default), then Checkmk tries to "
                 "prevent IP address lookups during the configuration generation. This can speed "
                 "up this process greatly when you have a larger number of hosts. The cache is stored "
                 "in a simple file. Note: when the cache is enabled then changes of the IP address "
@@ -2931,7 +2956,9 @@ class ConfigVariableChooseSNMPBackend(ConfigVariable):
     def valuespec(self) -> ValueSpec:
         return Transform(
             valuespec=DropdownChoice(
-                title=_("Choose SNMP Backend (Enterprise Edition only)"),
+                title=cmk_version.mark_edition_only(
+                    _("Choose SNMP Backend"), cmk_version.Edition.CEE
+                ),
                 choices=[
                     (SNMPBackendEnum.CLASSIC, _("Use Classic SNMP Backend")),
                     (SNMPBackendEnum.INLINE, _("Use Inline SNMP Backend")),
@@ -2978,7 +3005,7 @@ class ConfigVariableUseInlineSNMP(ConfigVariable):
                 "Changes to this option will have no effect to the behaviour of "
                 "Checkmk"
             )
-            % _("Choose SNMP Backend (Enterprise Edition only)"),
+            % cmk_version.mark_edition_only(_("Choose SNMP Backend"), cmk_version.Edition.CEE),
         )
 
 
@@ -3085,7 +3112,7 @@ class ConfigVariableInventoryCheckInterval(ConfigVariable):
             ),
             title=_("Enable regular service discovery checks (deprecated)"),
             help=_(
-                "If enabled, Check_MK will create one additional service per host "
+                "If enabled, Checkmk will create one additional service per host "
                 "that does a regular check, if the service discovery would find new services "
                 "currently un-monitored. <b>Note:</b> This option is deprecated and has been "
                 "replaced by the rule set <a href='%s'>Periodic Service Discovery</a>, "
@@ -3143,7 +3170,7 @@ class ConfigVariableInventoryCheckAutotrigger(ConfigVariable):
             ),
             help=_(
                 "When this option is enabled then after each change of the service "
-                "configuration of a host via WATO - may it be via manual changes or a bulk "
+                "configuration of a host via Setup - may it be via manual changes or a bulk "
                 "discovery - the service discovery check is automatically rescheduled in order "
                 "to reflect the new service state correctly immediately."
             ),
@@ -3262,11 +3289,11 @@ def _valuespec_extra_service_conf_check_interval():
         from_valuespec=lambda v: float(v) / 60.0,
         title=_("Normal check interval for service checks"),
         help=_(
-            "Check_MK usually uses an interval of one minute for the active Check_MK "
+            "Check_MK usually uses an interval of one minute for the active Checkmk "
             "check and for legacy checks. Here you can specify a larger interval. Please "
             "note, that this setting only applies to active checks (those with the "
             "reschedule button). If you want to change the check interval of "
-            "the Check_MK service only, specify <tt><b>Check_MK$</b></tt> in the list "
+            "the 'Check_MK' service only, specify <tt><b>Check_MK$</b></tt> in the list "
             "of services."
         ),
     )
@@ -3315,8 +3342,8 @@ def _valuespec_extra_service_conf_check_period():
         help=_(
             "If you specify a notification period for a service then active checks "
             "of that service will only be done in that period. Please note, that the "
-            "checks driven by Check_MK are passive checks and are not affected by this "
-            "rule. You can use the rule for the active Check_MK check, however."
+            "checks driven by Checkmk are passive checks and are not affected by this "
+            "rule. You can use the rule for the active Checkmk check, however."
         ),
     )
 
@@ -3335,7 +3362,7 @@ def _valuespec_check_periods():
     return TimeperiodSelection(
         title=_("Check period for passive Checkmk services"),
         help=_(
-            "If you specify a notification period for a Check_MK service then "
+            "If you specify a notification period for a 'Check_MK' service then "
             "results will be processed only within this period."
         ),
     )
@@ -3517,7 +3544,7 @@ def _host_check_commands_host_check_command_choices() -> list[CascadingDropdownC
         (
             "tcp",
             _("TCP Connect"),
-            Integer(label=_("to port:"), minvalue=1, maxvalue=65535, default_value=80),
+            NetworkPort(label=_("to port:"), minvalue=1, maxvalue=65535, default_value=80),
         ),
         ("ok", _("Always assume host to be up")),
         ("agent", _("Use the status of the Checkmk Agent")),
@@ -3810,6 +3837,7 @@ def _valuespec_extra_host_conf_notification_interval():
     return Migrate(
         Optional(
             valuespec=Float(
+                size=7,
                 minvalue=0.05,
                 default_value=120.0,
                 label=_("Interval:"),
@@ -3842,7 +3870,11 @@ def _valuespec_extra_service_conf_notification_interval():
     return Migrate(
         Optional(
             valuespec=Float(
-                minvalue=0.05, default_value=120.0, label=_("Interval:"), unit=_("minutes")
+                size=7,
+                minvalue=0.05,
+                default_value=120.0,
+                label=_("Interval:"),
+                unit=_("minutes"),
             ),
             title=_("Periodic notifications during service problems"),
             help=_(
@@ -4011,7 +4043,7 @@ def _vs_periodic_discovery() -> Dictionary:
     return Dictionary(
         title=_("Perform periodic service discovery check"),
         help=_(
-            "If enabled, Check_MK will create one additional service per host "
+            "If enabled, Checkmk will create one additional service per host "
             "that does a periodic check, if the service discovery would find new services "
             "that are currently not monitored."
         ),
@@ -4289,7 +4321,7 @@ rulespec_registry.register(
 
 def _help_clustered_services():
     return _(
-        "When you define HA clusters in WATO then you also have to specify which services "
+        "When you define HA clusters in Setup then you also have to specify which services "
         "of a node should be assigned to the cluster and which services to the physical "
         "node. This is done by this ruleset. Please note that the rule will be applied to "
         "the <i>nodes</i>, not to the cluster.<br><br>Please make sure that you re-"
@@ -4663,9 +4695,9 @@ def _valuespec_automatic_host_removal() -> CascadingDropdown:
                         (
                             "checkmk_service_crit",
                             Age(
-                                title=_("Duration of CRITICAL state of Check_MK service"),
+                                title=_("Duration of CRITICAL state of 'Check_MK' service"),
                                 help=_(
-                                    "Automatically remove hosts whose Check_MK service has been in the state "
+                                    "Automatically remove hosts whose 'Check_MK' service has been in the state "
                                     "CRITICAL for longer than the configured time period."
                                 ),
                                 display=("days", "hours", "minutes"),
@@ -4906,7 +4938,7 @@ def _valuespec_primary_address_family():
         ],
         title=_("Primary IP address family of dual-stack hosts"),
         help=_(
-            "When you configure dual-stack host (IPv4 + IPv6) monitoring in Check_MK, "
+            "When you configure dual-stack host (IPv4 + IPv6) monitoring in Checkmk, "
             "normally IPv4 is used as primary address family to communicate with this "
             "host. The other family, IPv6, is just being pinged. You can use this rule "
             "to invert this behaviour to use IPv6 as primary address family."
@@ -4927,7 +4959,7 @@ def _valuespec_snmp_communities():
     return SNMPCredentials(
         title=_("SNMP credentials of monitored hosts"),
         help=_(
-            'By default Check_MK uses the community "public" to contact hosts via SNMP v1/v2. This rule '
+            'By default Checkmk uses the community "public" to contact hosts via SNMP v1/v2. This rule '
             "can be used to customize the credentials to be used when contacting hosts via SNMP."
         ),
     )
@@ -5027,7 +5059,7 @@ def _valuespec_snmp_bulk_size():
         maxvalue=100,
         default_value=10,
         help=_(
-            "This variable allows you to configure the numbr of OIDs Check_MK should request "
+            "This variable allows you to configure the numbr of OIDs Checkmk should request "
             "at once. This rule only applies to SNMP hosts that are configured to be bulk "
             "walk hosts.You may want to use this rule to tune SNMP performance. Be aware: A "
             "higher value is not always better. It may decrease the transactions between "
@@ -5202,7 +5234,9 @@ rulespec_registry.register(
         group=RulespecGroupAgentSNMP,
         help_func=_help_snmp_backend,
         name="snmp_backend_hosts",
-        title=lambda: _("Hosts using a specific SNMP Backend (Enterprise Edition only)"),
+        title=lambda: cmk_version.mark_edition_only(
+            _("Hosts using a specific SNMP Backend"), cmk_version.Edition.CEE
+        ),
     )
 )
 
@@ -5227,7 +5261,7 @@ rulespec_registry.register(
 
 
 def _valuespec_snmp_ports():
-    return Integer(
+    return NetworkPort(
         minvalue=1,
         maxvalue=65535,
         default_value=161,
@@ -5264,7 +5298,7 @@ class RulespecGroupAgentCMKAgent(RulespecSubGroup):
 
 
 def _valuespec_agent_ports():
-    return Integer(
+    return NetworkPort(
         minvalue=1,
         maxvalue=65535,
         default_value=6556,
@@ -5292,7 +5326,7 @@ def _valuespec_tcp_connect_timeouts():
         unit="sec",
         title=_("Agent TCP connect timeout"),
         help=_(
-            "Timeout for TCP connect to the Check_MK agent in seconds. If the connection "
+            "Timeout for TCP connect to the Checkmk agent in seconds. If the connection "
             "to the agent cannot be established within this time, it is considered to be unreachable. "
             "Note: This does <b>not</b> limit the time the agent needs to "
             "generate its output. "
@@ -5446,11 +5480,11 @@ def _valuespec_check_mk_exit_status() -> Dictionary:
     return Dictionary(
         title=_("Status of the Checkmk services"),
         help=_(
-            "This ruleset specifies the total status of the Check_MK services <i>Check_MK</i>, "
+            "This ruleset specifies the total status of the 'Check_MK' services <i>Check_MK</i>, "
             "<i>Check_MK Discovery</i> and <i>Check_MK HW/SW Inventory</i> in case of various "
             "error situations. One use case is the monitoring of hosts that are not always up. "
-            "You can have Check_MK an OK status here if the host is not reachable. Note: the "
-            "<i>Timeout</i> setting only works when using the Check_MK Micro Core."
+            "You can have Checkmk an OK status here if the host is not reachable. Note: the "
+            "<i>Timeout</i> setting only works when using the Checkmk Micro Core."
         ),
         elements=[
             (
@@ -5549,7 +5583,7 @@ rulespec_registry.register(
 
 def _valuespec_check_mk_agent_target_versions() -> CascadingDropdown:
     return CascadingDropdown(
-        title="{} - {}".format(_("Check for correct version of Checkmk agent"), _("Deprecated")),
+        title=_("Check for correct version of Checkmk agent"),
         help=_('This ruleset is deprecated. Please use the ruleset <i>"%s"</i> instead.')
         % _("Checkmk Agent installation auditing"),
         choices=[
@@ -5623,7 +5657,7 @@ def _valuespec_agent_config_only_from():
             "ruleset. Even if you don't use the bakery, the configured IP address "
             "restrictions of a host will be verified against the allowed "
             "IP addresses reported by the agent. This is done during "
-            "monitoring by the Check_MK service."
+            "monitoring by the 'Check_MK' service."
         ),
     )
 
@@ -5811,7 +5845,7 @@ def _valuespec_snmpv3_contexts():
     return Tuple(
         title=_("SNMPv3 contexts to use in requests"),
         help=_(
-            "By default Check_MK does not use a specific context during SNMPv3 queries, "
+            "By default Checkmk does not use a specific context during SNMPv3 queries, "
             "but some devices are offering their information in different SNMPv3 contexts. "
             "This rule can be used to configure, based on hosts and SNMP sections, which SNMPv3 "
             "contexts Checkmk should ask for when getting information via SNMPv3."

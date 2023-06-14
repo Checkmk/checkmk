@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import NamedTuple, TypedDict
 
 import pytest
@@ -104,7 +104,7 @@ def splitter(text):
     ),
     ids=["win7", "win2012", "win2008", "win10"],
 )
-def test_parse_win_license(capture, result) -> None:  # type:ignore[no-untyped-def]
+def test_parse_win_license(capture: str, result: Mapping[str, object]) -> None:
     check = Check("win_license")
     assert result == check.run_parse(splitter(capture))
 
@@ -207,7 +207,7 @@ class check_ref(NamedTuple):
     ),
     ids=[str(x) for x in range(6)],
 )
-def test_check_win_license(capture, result) -> None:  # type:ignore[no-untyped-def]
+def test_check_win_license(capture: str, result: check_ref) -> None:
     check = Check("win_license")
     output = check.run_check(
         None, result.parameters or check.default_parameters(), check.run_parse(splitter(capture))

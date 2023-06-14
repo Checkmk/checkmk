@@ -1,25 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import List, Mapping, NamedTuple
 
-from .agent_based_api.v1 import (
-    all_of,
-    any_of,
-    check_levels,
-    equals,
-    exists,
-    register,
-    render,
-    Result,
-    Service,
-    SNMPTree,
-    startswith,
-    State,
-)
+from .agent_based_api.v1 import check_levels, register, render, Result, Service, SNMPTree, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
+from .utils.stormshield import DETECT_STORMSHIELD
 
 _SERVICE_STATE_MAP = {"0": "down", "1": "up"}
 
@@ -54,13 +42,7 @@ register.snmp_section(
             "4",  # snsServicesUptime
         ],
     ),
-    detect=all_of(
-        any_of(
-            startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072"),
-            equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.11256.2.0"),
-        ),
-        exists(".1.3.6.1.4.1.11256.1.0.1.0"),
-    ),
+    detect=DETECT_STORMSHIELD,
 )
 
 

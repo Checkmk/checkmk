@@ -1,40 +1,28 @@
 LIBGSF := libgsf
-LIBGSF_VERS := 1.14.44
-LIBGSF_DIR := $(LIBGSF)-$(LIBGSF_VERS)
 
-LIBGSF_UNPACK := $(BUILD_HELPER_DIR)/$(LIBGSF_DIR)-unpack
-LIBGSF_BUILD := $(BUILD_HELPER_DIR)/$(LIBGSF_DIR)-build
-LIBGSF_INTERMEDIATE_INSTALL := $(BUILD_HELPER_DIR)/$(LIBGSF_DIR)-install-intermediate
-LIBGSF_INSTALL := $(BUILD_HELPER_DIR)/$(LIBGSF_DIR)-install
+LIBGSF_BUILD := $(BUILD_HELPER_DIR)/$(LIBGSF)-build
+LIBGSF_INTERMEDIATE_INSTALL := $(BUILD_HELPER_DIR)/$(LIBGSF)-install-intermediate
+LIBGSF_INSTALL := $(BUILD_HELPER_DIR)/$(LIBGSF)-install
 
-LIBGSF_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(LIBGSF_DIR)
-LIBGSF_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(LIBGSF_DIR)
-#LIBGSF_WORK_DIR := $(PACKAGE_WORK_DIR)/$(LIBGSF_DIR)
+LIBGSF_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(LIBGSF)
+LIBGSF_BUILD_DIR := $(PACKAGE_BUILD_DIR)/$(LIBGSF)
 
-# Used by msitools
-PACKAGE_LIBGSF_DESTDIR := $(LIBGSF_INSTALL_DIR)
-PACKAGE_LIBGSF_LDFLAGS := -L$(PACKAGE_LIBGSF_DESTDIR)/lib -lgsf-1
-PACKAGE_LIBGSF_CFLAGS := -I$(PACKAGE_LIBGSF_DESTDIR)/include/libgsf-1
-
-ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3 sles15sp4),)
-$(LIBGSF_BUILD): $(LIBGSF_UNPACK)
-	cd $(LIBGSF_BUILD_DIR) && ./configure --prefix=""
-	$(MAKE) -C $(LIBGSF_BUILD_DIR)
-	$(TOUCH) $@
-else
 $(LIBGSF_BUILD):
-	$(MKDIR) $(BUILD_HELPER_DIR)
-	$(TOUCH) $@
+ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3 sles15sp4),)
+	$(BAZEL_BUILD) @$(LIBGSF)//:$(LIBGSF)
 endif
 
 $(LIBGSF_INTERMEDIATE_INSTALL): $(LIBGSF_BUILD)
 ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3 sles15sp4),)
-	$(MAKE) DESTDIR=$(LIBGSF_INSTALL_DIR) -C $(LIBGSF_BUILD_DIR) install
+	$(MKDIR) $(LIBGSF_INSTALL_DIR)
+	$(RSYNC) --chmod=u+w $(BAZEL_BIN)/$(LIBGSF)/$(LIBGSF)/ $(LIBGSF_INSTALL_DIR)/
+	# TODO: Linking with force is needed as this target might be executed more than once
+	cd $(LIBGSF_INSTALL_DIR)/lib ; \
+	    ln -sf libgsf-1.so.114.0.44 libgsf-1.so ;\
+	    ln -sf libgsf-1.so.114.0.44 libgsf-1.so.114
 endif
-	$(TOUCH) $@
 
 $(LIBGSF_INSTALL): $(LIBGSF_INTERMEDIATE_INSTALL)
 ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3 sles15sp4),)
 	$(RSYNC) $(LIBGSF_INSTALL_DIR)/ $(DESTDIR)$(OMD_ROOT)/
 endif
-	$(TOUCH) $@

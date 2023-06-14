@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from collections.abc import Mapping
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.f5_bigip_cluster_status import (
     check_f5_bigip_cluster_status,
     check_f5_bigip_cluster_status_v11_2,
@@ -16,9 +19,11 @@ from cmk.base.plugins.agent_based.f5_bigip_cluster_status import (
     F5_BIGIP_CLUSTER_CHECK_DEFAULT_PARAMETERS as def_params,
 )
 from cmk.base.plugins.agent_based.f5_bigip_cluster_status import (
+    NodeState,
     parse_f5_bigip_cluster_status,
     parse_f5_bigip_vcmpfailover,
 )
+from cmk.base.plugins.agent_based.utils.f5_bigip import F5BigipClusterStatusVSResult
 
 
 @pytest.mark.parametrize(
@@ -27,8 +32,8 @@ from cmk.base.plugins.agent_based.f5_bigip_cluster_status import (
         ([[["4"]]], 4),
     ],
 )
-def test_parse_f5_bigip_cluster_status(  # type:ignore[no-untyped-def]
-    string_table, expected_parsed_data
+def test_parse_f5_bigip_cluster_status(
+    string_table: list[StringTable], expected_parsed_data: NodeState | None
 ) -> None:
     assert parse_f5_bigip_cluster_status(string_table) == expected_parsed_data
 
@@ -42,7 +47,9 @@ def test_parse_f5_bigip_cluster_status(  # type:ignore[no-untyped-def]
         ((def_params, 0), [Result(state=State.OK, summary="Node is standby")]),
     ],
 )
-def test_check_f5_bigip_cluster_status(arg, result) -> None:  # type:ignore[no-untyped-def]
+def test_check_f5_bigip_cluster_status(
+    arg: tuple[F5BigipClusterStatusVSResult, int], result: CheckResult
+) -> None:
     assert list(check_f5_bigip_cluster_status(arg[0], arg[1])) == result
 
 
@@ -66,7 +73,9 @@ def test_check_f5_bigip_cluster_status(arg, result) -> None:  # type:ignore[no-u
         ((def_params, 0), [Result(state=State.UNKNOWN, summary="Node is unknown")]),
     ],
 )
-def test_check_f5_bigip_cluster_status_v11_2(arg, result) -> None:  # type:ignore[no-untyped-def]
+def test_check_f5_bigip_cluster_status_v11_2(
+    arg: tuple[F5BigipClusterStatusVSResult, int], result: CheckResult
+) -> None:
     assert list(check_f5_bigip_cluster_status_v11_2(arg[0], arg[1])) == result
 
 
@@ -96,7 +105,9 @@ def test_check_f5_bigip_cluster_status_v11_2(arg, result) -> None:  # type:ignor
         ),
     ],
 )
-def test_cluster_check_f5_bigip_cluster_status(arg, result) -> None:  # type:ignore[no-untyped-def]
+def test_cluster_check_f5_bigip_cluster_status(
+    arg: tuple[F5BigipClusterStatusVSResult, Mapping[str, NodeState | None]], result: CheckResult
+) -> None:
     assert list(cluster_check_f5_bigip_cluster_status(arg[0], arg[1])) == result
 
 
@@ -134,8 +145,8 @@ def test_cluster_check_f5_bigip_cluster_status(arg, result) -> None:  # type:ign
         ),
     ],
 )
-def test_cluster_check_f5_bigip_cluster_status_v11_2(  # type:ignore[no-untyped-def]
-    arg, result
+def test_cluster_check_f5_bigip_cluster_status_v11_2(
+    arg: tuple[F5BigipClusterStatusVSResult, Mapping[str, NodeState | None]], result: CheckResult
 ) -> None:
     assert list(cluster_check_f5_bigip_cluster_status_v11_2(arg[0], arg[1])) == result
 
@@ -147,7 +158,7 @@ def test_cluster_check_f5_bigip_cluster_status_v11_2(  # type:ignore[no-untyped-
         ([[["3", "4"]]], None),
     ],
 )
-def test_parse_f5_bigip_vcmpfailover(  # type:ignore[no-untyped-def]
-    string_table, expected_parsed_data
+def test_parse_f5_bigip_vcmpfailover(
+    string_table: list[StringTable], expected_parsed_data: NodeState | None
 ) -> None:
     assert parse_f5_bigip_vcmpfailover(string_table) == expected_parsed_data

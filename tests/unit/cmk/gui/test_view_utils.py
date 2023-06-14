@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -54,6 +54,13 @@ from cmk.gui.view_utils import format_plugin_output
                 """Don&#x27;t look at this: <a href="https://bitly.com/98K8eH" title="https://bitly.com/98K8eH" target="_blank" onfocus="if (this.blur) this.blur();"><img src="themes/facelift/images/icon_link.png" class="icon iconbutton png" /></a>, This is another summary"""
             ),
             id="The comma is not part of the URL",
+        ),
+        pytest.param(
+            "Link with a state marker: https://bitly.com/98K8eH(!), This is another summary(!!), Another summary with a link https://bitly.com/98K8eH(.)",
+            HTML(
+                """Link with a state marker: <a href="https://bitly.com/98K8eH" title="https://bitly.com/98K8eH" target="_blank" onfocus="if (this.blur) this.blur();"><img src="themes/facelift/images/icon_link.png" class="icon iconbutton png" /></a><b class="stmark state1">WARN</b>, This is another summary<b class="stmark state2">CRIT</b>, Another summary with a link <a href="https://bitly.com/98K8eH" title="https://bitly.com/98K8eH" target="_blank" onfocus="if (this.blur) this.blur();"><img src="themes/facelift/images/icon_link.png" class="icon iconbutton png" /></a><b class="stmark state0">OK</b>"""
+            ),
+            id="The link has appended state marker",
         ),
     ],
 )

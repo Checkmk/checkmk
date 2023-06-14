@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -61,6 +61,7 @@ def parse_sap_hana_instance_status(string_table: StringTable) -> Dict[str, Insta
                 pid=line[6],
             )
             for line in lines[3:]
+            if len(line) > 5
         ]
 
         section[sid_instance] = InstanceStatus(status=status, processes=processes)

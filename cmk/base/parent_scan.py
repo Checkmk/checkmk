@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,7 +9,9 @@ import socket
 import subprocess
 import sys
 import time
+from collections.abc import Sequence
 from pathlib import Path
+from typing import Iterable
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -17,16 +19,21 @@ import cmk.utils.tty as tty
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
-from cmk.utils.type_defs import Gateways, HostAddress, HostName
+from cmk.utils.type_defs import HostAddress, HostName
+
+from cmk.automations.results import Gateway
 
 import cmk.base.config as config
 import cmk.base.obsolete_output as out
 from cmk.base.config import ConfigCache
 
 
-def do_scan_parents(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branches
-    config_cache = config.get_config_cache()
-
+def do_scan_parents(
+    config_cache: ConfigCache,
+    monitoring_host: HostName | None,
+    hosts: list[HostName],
+) -> None:
+    # pylint: disable=too-many-branches
     if not hosts:
         hosts = list(sorted(config_cache.all_active_realhosts()))
 
@@ -62,7 +69,7 @@ def do_scan_parents(hosts: list[HostName]) -> None:  # pylint: disable=too-many-
     out.output("Scanning for parents (%d processes)..." % config.max_num_processes)
     while hosts:
         chunk: list[HostName] = []
-        while len(chunk) < config.max_num_processes and len(hosts) > 0:
+        while len(chunk) < config.max_num_processes and hosts:
             host = hosts.pop()
 
             # skip hosts that already have a parent
@@ -71,7 +78,7 @@ def do_scan_parents(hosts: list[HostName]) -> None:  # pylint: disable=too-many-
                 continue
             chunk.append(host)
 
-        gws = scan_parents_of(config_cache, chunk)
+        gws = scan_parents_of(config_cache, monitoring_host, chunk)
 
         for host, (gw, _unused_state, _unused_ping_fails, _unused_message) in zip(chunk, gws):
             if gw:
@@ -85,14 +92,14 @@ def do_scan_parents(hosts: list[HostName]) -> None:  # pylint: disable=too-many-
                         gateway_hosts.add(gateway)
                         parent_hosts.append("%s|parent|ping" % gateway)
                         parent_ips[gateway] = gateway_ip
-                        if config.monitoring_host:
+                        if monitoring_host:
                             parent_rules.append(
-                                (config.monitoring_host, [gateway])
+                                (monitoring_host, [gateway])
                             )  # make Nagios a parent of gw
                 parent_rules.append((gateway, [host]))
-            elif host != config.monitoring_host and config.monitoring_host:
+            elif host != monitoring_host and monitoring_host:
                 # make monitoring host the parent of all hosts without real parent
-                parent_rules.append((config.monitoring_host, [host]))
+                parent_rules.append((monitoring_host, [host]))
 
     with outfilename.open(mode="w") as file:
         file.write("# Automatically created by --scan-parents at %s\n\n" % time.asctime())
@@ -121,17 +128,16 @@ def traceroute_available() -> str | None:
 
 def scan_parents_of(  # pylint: disable=too-many-branches
     config_cache: ConfigCache,
-    hosts: list[HostName],
+    monitoring_host: HostName | None,
+    hosts: Iterable[HostName],
     silent: bool = False,
     settings: dict[str, int] | None = None,
-) -> Gateways:
+) -> Sequence[Gateway]:
     if settings is None:
         settings = {}
 
-    if config.monitoring_host:
-        nagios_ip = config.lookup_ip_address(
-            config_cache, config.monitoring_host, family=socket.AF_INET
-        )
+    if monitoring_host:
+        nagios_ip = config.lookup_ip_address(config_cache, monitoring_host, family=socket.AF_INET)
     else:
         nagios_ip = None
 
@@ -163,7 +169,7 @@ def scan_parents_of(  # pylint: disable=too-many-branches
                 (
                     host,
                     ip,
-                    subprocess.Popen(  # pylint:disable=consider-using-with
+                    subprocess.Popen(  # pylint: disable=consider-using-with
                         command,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.STDOUT,
@@ -184,7 +190,7 @@ def scan_parents_of(  # pylint: disable=too-many-branches
 
     # Now all run and we begin to read the answers. For each host
     # we add a triple to gateways: the gateway, a scan state  and a diagnostic output
-    gateways: Gateways = []
+    gateways: list[Gateway] = []
     for host, ip, proc_or_error in procs:
         if isinstance(proc_or_error, str):
             lines = [proc_or_error]
@@ -245,12 +251,12 @@ def scan_parents_of(  # pylint: disable=too-many-branches
         # 10  216.239.48.53  45.608 ms  47.121 ms 64.233.174.29  43.126 ms
         # 11  209.85.255.245  49.265 ms  40.470 ms  39.870 ms
         # 12  8.8.8.8  28.339 ms  28.566 ms  28.791 ms
-        routes: list[str | None] = []
+        routes: list[HostAddress | None] = []
         for line in lines[1:]:
             parts = line.split()
             route = parts[1]
             if route.count(".") == 3:
-                routes.append(route)
+                routes.append(HostAddress(route))
             elif route == "*":
                 routes.append(None)  # No answer from this router
             else:
@@ -272,8 +278,8 @@ def scan_parents_of(  # pylint: disable=too-many-branches
             if ip == nagios_ip:
                 gateways.append((None, "root", 0, ""))  # We are the root-monitoring host
                 dot(tty.white, "N")
-            elif config.monitoring_host and nagios_ip:
-                gateways.append(((config.monitoring_host, nagios_ip, None), "direct", 0, ""))
+            elif monitoring_host and nagios_ip:
+                gateways.append(((monitoring_host, nagios_ip, None), "direct", 0, ""))
                 dot(tty.cyan, "L")
             else:
                 gateways.append((None, "direct", 0, ""))

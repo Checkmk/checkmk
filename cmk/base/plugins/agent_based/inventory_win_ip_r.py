@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -51,7 +51,7 @@ def parse_win_ip_r(string_table: StringTable) -> Section:
             target="{target}/{subnet}".format(
                 target=target,
                 # Convert subnetmask to CIDR
-                subnet=sum(bin(int(x)).count("1") for x in mask.split(".")),
+                subnet=sum(int(x).bit_count() for x in mask.split(".")),
             ),
             device=device,
             gateway=gateway,

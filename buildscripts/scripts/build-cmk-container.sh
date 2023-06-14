@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -32,12 +32,15 @@ docker_tag() {
     log "Erstelle \"${VERSION}\" tag..."
     docker tag "${SOURCE_TAG}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${TARGET_VERSION}"
 
-    if [ "$SET_BRANCH_LATEST_TAG" = "yes" ]; then
+    if [ "$SET_BRANCH_LATEST_TAG" = "true" ]; then
         log "Erstelle \"{$BRANCH}-latest\" tag..."
         docker tag "${SOURCE_TAG}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-latest"
+    else
+        log "Erstelle \"daily\" tag..."
+        docker tag "${SOURCE_TAG}" "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-daily"
     fi
 
-    if [ "$SET_LATEST_TAG" = "yes" ]; then
+    if [ "$SET_LATEST_TAG" = "true" ]; then
         log "Erstelle \"latest\" tag..."
         docker tag "${SOURCE_TAG}" "$REGISTRY$FOLDER/check-mk-${EDITION}:latest"
     fi
@@ -51,11 +54,7 @@ docker_push() {
     if [[ "$VERSION_TAG" == *"-rc"* ]]; then
         echo "${VERSION_TAG} was a release candidate, do a retagging before pushing".
         RELEASE_VERSION=$(echo -n "${VERSION_TAG}" | sed 's/-rc[0-9]*//g')
-        if [ "$EDITION" = raw ] || [ "$EDITION" = free ]; then
-            docker_tag "" "checkmk" "${RELEASE_VERSION}"
-        else
-            docker_tag "registry.checkmk.com" "/${EDITION}" "${RELEASE_VERSION}"
-        fi
+        docker_tag "${REGISTRY}" "${NAMESPACE}" "${RELEASE_VERSION}"
     else
         RELEASE_VERSION="${VERSION_TAG}"
     fi
@@ -64,11 +63,13 @@ docker_push() {
     docker login "${REGISTRY}" -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSPHRASE}"
     DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:${RELEASE_VERSION}"
 
-    if [ "$SET_BRANCH_LATEST_TAG" = "yes" ]; then
+    if [ "$SET_BRANCH_LATEST_TAG" = "true" ]; then
         DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-latest"
+    else
+        DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:${BRANCH}-daily"
     fi
 
-    if [ "$SET_LATEST_TAG" = "yes" ]; then
+    if [ "$SET_LATEST_TAG" = "true" ]; then
         DOCKERCLOUD_NAMESPACE=checkmk docker push "$REGISTRY$FOLDER/check-mk-${EDITION}:latest"
     fi
 }
@@ -86,25 +87,16 @@ build_image() {
     log "Verschiebe Image-Tarball..."
     mv -v "$DOCKER_PATH/$DOCKER_IMAGE_ARCHIVE" "${SOURCE_PATH}/"
 
-    if [ "$EDITION" = raw ] || [ "$EDITION" = free ]; then
-        docker_tag "" "checkmk"
-    else
-        docker_tag "registry.checkmk.com" "/${EDITION}"
-    fi
+    docker_tag "${REGISTRY}" "${NAMESPACE}"
 }
 
 push_image() {
-    if [ "$EDITION" = raw ] || [ "$EDITION" = free ]; then
-        docker_push "" "checkmk"
-    else
-        docker_push "registry.checkmk.com" "/${EDITION}"
-    fi
-
+    docker_push "${REGISTRY}" "${NAMESPACE}"
 }
 
 if [ "$1" = "-h" ] || [ "$1" = "--help" ] || [ "$1" = "" ] || [ "$2" = "" ] || [ "$3" = "" ] || [ "$4" = "" ] || [ "$5" = "" ] || [ "$6" = "" ] || [ "$7" = "" ]; then
     echo "Aufrufen: build-cmk-container.sh [BRANCH] [EDITION] [VERSION] [SOURCE_PATH] [SET_LATEST_TAG] [SET_BRANCH_LATEST_TAG] [ACTION]"
-    echo "          build-cmk-container.sh 2.2.0 enterprise 2.2.0p1 /foo/bar/2.1.0p1-rc1 no no push"
+    echo "          build-cmk-container.sh 2.2.0 enterprise 2.2.0p1 /foo/bar/2.1.0p1-rc1 false false push"
     echo
     exit 1
 fi
@@ -119,16 +111,26 @@ ACTION=$7
 
 VERSION_TAG=$(basename "${SOURCE_PATH}")
 
+# Default to our internal registry, set it to "" if you want push it to dockerhub
+REGISTRY="registry.checkmk.com"
+NAMESPACE="/${EDITION}"
+
 if [ "$EDITION" = raw ]; then
     SUFFIX=.cre
-elif [ "$EDITION" = free ]; then
-    SUFFIX=.cfe
+    REGISTRY=""
+    NAMESPACE="checkmk"
 elif [ "$EDITION" = enterprise ]; then
     SUFFIX=.cee
 elif [ "$EDITION" = managed ]; then
     SUFFIX=.cme
 elif [ "$EDITION" = cloud ]; then
     SUFFIX=.cce
+    REGISTRY=""
+    NAMESPACE="checkmk"
+elif [ "$EDITION" = saas ]; then
+    SUFFIX=.cse
+    REGISTRY="artifacts.lan.tribe29.com:4000"
+    NAMESPACE=""
 else
     die "FEHLER: Unbekannte Edition '$EDITION'"
 fi

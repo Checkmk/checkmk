@@ -1,29 +1,20 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import logging
 import subprocess
-import time
 from pathlib import Path
 
-import pytest
-
+from tests.testlib.agent import wait_until_host_has_services, wait_until_host_receives_data
 from tests.testlib.site import Site
-
-from tests.composition.controller_site_interactions.common import query_hosts_service_count
-from tests.composition.utils import execute
+from tests.testlib.utils import execute
 
 from cmk.utils.type_defs import HostName
 
-LOGGER = logging.getLogger(__name__)
-LOGGER.setLevel(logging.INFO)
+from ..utils import LOGGER
 
 
-@pytest.mark.skip(
-    "Controller / receiver architecture is being reworked, will be re-activated afterwards"
-)
 def test_proxy_register_import_workflow(
     *,
     central_site: Site,
@@ -60,15 +51,15 @@ def test_proxy_register_import_workflow(
         check=True,
     )
 
-    LOGGER.info("Sleeping 60s to give controller time to open TCP socket")
-    time.sleep(60)
-
-    # TODO (jh): Remove once we figured out how to handle live data fetching during discovery
-    assert not central_site.execute(["cmk", "-d", hostname]).wait()
+    LOGGER.info("Waiting for controller to open TCP socket or push data")
+    wait_until_host_receives_data(central_site, hostname)
 
     central_site.openapi.discover_services_and_wait_for_completion(hostname)
     central_site.openapi.activate_changes_and_wait_for_completion()
 
-    # Without this sleep, the test is flaky. Should probably be investigated.
-    time.sleep(1)
-    assert query_hosts_service_count(central_site, hostname) > 5
+    wait_until_host_has_services(
+        central_site,
+        hostname,
+        timeout=30,
+        interval=10,
+    )

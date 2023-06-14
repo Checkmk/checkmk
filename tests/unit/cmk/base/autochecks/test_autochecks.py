@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -13,11 +13,12 @@ import pytest
 from tests.testlib.base import Scenario
 
 import cmk.utils.paths
-from cmk.utils.parameters import TimespecificParameters
-from cmk.utils.type_defs import CheckPluginName, HostName
+from cmk.utils.type_defs import HostName
 
-from cmk.checkers.check_table import ConfiguredService
-from cmk.checkers.discovery import AutocheckEntry, AutocheckServiceWithNodes
+from cmk.checkengine.check_table import ConfiguredService
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.discovery import AutocheckEntry, AutocheckServiceWithNodes
+from cmk.checkengine.parameters import TimespecificParameters
 
 from cmk.base._autochecks import _consolidate_autochecks_of_real_hosts
 from cmk.base.config import ConfigCache
@@ -33,7 +34,7 @@ def autochecks_dir(monkeypatch, tmp_path):
 @pytest.fixture()
 def test_config(monkeypatch: pytest.MonkeyPatch) -> ConfigCache:
     ts = Scenario()
-    ts.add_host("host")
+    ts.add_host(HostName("host"))
     return ts.apply(monkeypatch)
 
 
@@ -54,6 +55,7 @@ def test_config(monkeypatch: pytest.MonkeyPatch) -> ConfigCache:
                     parameters=_COMPUTED_PARAMETERS_SENTINEL,
                     discovered_parameters={},
                     service_labels={},
+                    is_enforced=False,
                 ),
             ],
         ),
@@ -89,7 +91,6 @@ def _entry(name: str, params: dict[str, str] | None = None) -> AutocheckEntry:
 
 
 def test_consolidate_autochecks_of_real_hosts() -> None:
-
     new_services_with_nodes = [
         AutocheckServiceWithNodes(  # found on node and new
             _entry("A"), [HostName("node"), HostName("othernode")]

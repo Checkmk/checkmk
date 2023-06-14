@@ -6,7 +6,7 @@ Date: 1664959900
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously, the Prometheus special agent would use the path prefix as a URL base prefix.
 For example, specifying the use of the host IP address, e.g. <tt>1.2.3.4</tt>, together with a

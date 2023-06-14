@@ -1,11 +1,11 @@
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.61])
-AC_INIT([MK Livestatus],[2.2.0i1],[mk@mathias-kettner.de])
+AC_INIT([MK Livestatus], [2.3.0b1], [mk@mathias-kettner.de])
 AM_INIT_AUTOMAKE([-Wall -Wno-portability foreign subdir-objects])
 AM_EXTRA_RECURSIVE_TARGETS([all-packaging])
 AC_CONFIG_MACRO_DIR([m4])

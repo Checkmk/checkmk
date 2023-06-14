@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -64,7 +64,7 @@ def parse_netapp_api_qtree_quota(string_table: StringTable) -> Section:
     return dict(iter_netapp_api_qtree_quota(string_table))
 
 
-def get_item_names(qtree: Qtree):  # type:ignore[no-untyped-def]
+def get_item_names(qtree: Qtree):  # type: ignore[no-untyped-def]
     short_name = ".".join([n for n in [qtree.quota, qtree.quota_users] if n])
     long_name = f"{qtree.volume}/{short_name}" if qtree.volume else short_name
     return short_name, long_name

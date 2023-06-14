@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
+# <<<elasticsearch_nodes>>>
+# mynode1 open_file_descriptors 434
+# mynode1 max_file_descriptors 4096
+# mynode1 cpu_percent 0
+# mynode1 cpu_total_in_millis 167010
+# mynode1 mem_total_virtual_in_bytes 7126290432
+# mynode2 open_file_descriptors 430
+# mynode2 max_file_descriptors 4096
+# mynode2 cpu_percent 0
+# mynode2 cpu_total_in_millis 151810
+# mynode2 mem_total_virtual_in_bytes 7107313664
+
+
+# mypy: disable-error-code="var-annotated,arg-type"
+
+from cmk.base.check_api import (
+    check_levels,
+    discover,
+    get_bytes_human_readable,
+    get_parsed_item_data,
+    get_percent_human_readable,
+    LegacyCheckDefinition,
+)
+from cmk.base.config import check_info
+
+nodes_info = {
+    "open_file_descriptors": "Open file descriptors",
+    "max_file_descriptors": "Max file descriptors",
+    "cpu_percent": "CPU used",
+    "cpu_total_in_millis": "CPU total in ms",
+    "mem_total_virtual_in_bytes": "Total virtual memory",
+}
+
+
+def parse_elasticsearch_nodes(info):
+    parsed = {}
+
+    for name, desc, value_str in info:
+        try:
+            if desc == "cpu_percent":
+                value = float(value_str)
+            else:
+                value = int(value_str)
+
+            parsed.setdefault(name, {}).setdefault(desc, (value, nodes_info[desc]))
+
+        except (IndexError, ValueError):
+            pass
+
+    return parsed
+
+
+@get_parsed_item_data
+def check_elasticsearch_nodes(item, params, item_data):
+    for data_key, params_key, hr_func in [
+        ("cpu_percent", "cpu_levels", get_percent_human_readable),
+        ("cpu_total_in_millis", "cpu_total_in_millis", int),
+        ("mem_total_virtual_in_bytes", "mem_total_virtual_in_bytes", get_bytes_human_readable),
+        ("open_file_descriptors", "open_file_descriptors", int),
+        ("max_file_descriptors", "max_file_descriptors", int),
+    ]:
+        value, infotext = item_data[data_key]
+
+        yield check_levels(
+            value, data_key, params.get(params_key), human_readable_func=hr_func, infoname=infotext
+        )
+
+
+check_info["elasticsearch_nodes"] = LegacyCheckDefinition(
+    parse_function=parse_elasticsearch_nodes,
+    check_function=check_elasticsearch_nodes,
+    discovery_function=discover(),
+    service_name="Elasticsearch Node %s",
+    check_ruleset_name="elasticsearch_nodes",
+    check_default_parameters={"cpu_levels": (75.0, 90.0)},
+)

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Before this change a Service <tt>CPU utilization 0</tt> was created, although
 the corresponding MIB describes that <tt>0</tt> for cpmCPUTotalPhysicalIndex

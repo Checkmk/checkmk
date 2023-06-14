@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -388,7 +388,7 @@ class TestLogsQuerier:
         pytest.param(["Number:attributes.number"], " Number=42", id="numerical"),
         pytest.param(
             ["object:attributes.object"],
-            " object=[1, 2, 3, cmk: [4, 5, 6], tribe29]",
+            " object=[1, 2, 3, cmk: [4, 5, 6], Checkmk]",
             id="composite object",
         ),
     ],
@@ -403,7 +403,7 @@ def test_log_to_syslog_message(raw_translator: Sequence[str], message_text: str)
                     attributes={
                         "test": {"baz": "fun"},
                         "number": 42,
-                        "object": [1, 2, 3, {"cmk": [4, 5, 6]}, "tribe29"],
+                        "object": [1, 2, 3, {"cmk": [4, 5, 6]}, "Checkmk"],
                     },
                     host="cmk",
                     service="app",

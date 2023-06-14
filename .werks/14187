@@ -1,0 +1,14 @@
+Title: Improved rendering speed of rules which use the password store
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1678284363
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+
+
+

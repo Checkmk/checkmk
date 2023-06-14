@@ -6,7 +6,7 @@ Date: 1675324834
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Sometimes the full agent output, ie. the output of the agent itself and of all
 installed agent plugins, of a host is needed for debugging or simulation

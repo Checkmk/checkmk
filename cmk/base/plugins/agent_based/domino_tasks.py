@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+import time
 from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 from .agent_based_api.v1 import IgnoreResultsError, register, SNMPTree
@@ -21,13 +22,15 @@ from .utils import domino, memory, ps
 # .1.3.6.1.4.1.334.72.1.1.6.1.2.1.4.7 tm_grab
 # .1.3.6.1.4.1.334.72.1.1.6.1.2.1.4.8 Router
 
+
 # Bring the SNMP data in the format expected by the common ps functions.
 # e.g.:
 # [PsInfo(), u'/sbin/init', u'splash']
 def parse_domino_tasks(string_table: List[StringTable]) -> ps.Section:
+    now = int(time.time())
     process_lines = [(ps.PsInfo(), line) for line in string_table[0]]
     # add cpu_cores count to be compatible with ps section
-    return 1, process_lines
+    return 1, process_lines, now
 
 
 register.snmp_section(
@@ -57,14 +60,13 @@ def check_domino_tasks(
     section_domino_tasks: Optional[ps.Section],
     section_mem: Optional[Dict[str, float]],
 ) -> CheckResult:
-
     if section_domino_tasks is None:
         # The driving force of this check is the section 'domino_tasks'. If
         # this data is not available, the check should go stale.
         raise IgnoreResultsError
 
-    cpu_cores, lines = section_domino_tasks
-    process_lines = [(None, psi, cmd_line) for (psi, cmd_line) in lines]
+    cpu_cores, lines, ps_time = section_domino_tasks
+    process_lines = [(None, psi, cmd_line, ps_time) for (psi, cmd_line) in lines]
 
     total_ram = section_mem.get("MemTotal") if section_mem else None
 
@@ -84,14 +86,13 @@ def cluster_check_domino_tasks(
     section_domino_tasks: Mapping[str, Optional[ps.Section]],
     section_mem: Mapping[str, Optional[memory.SectionMem]],
 ) -> CheckResult:
-
     iter_non_trivial_sections = (
         (node_name, node_section)
         for node_name, node_section in section_domino_tasks.items()
         if node_section is not None
     )
     process_lines = [
-        (node_name, psi, cmd_line)
+        (node_name, psi, cmd_line, node_section[2])
         for node_name, node_section in iter_non_trivial_sections
         for (psi, cmd_line) in node_section[1]
     ]

@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If a user saved a form dialog, it was possible, that this change was
 not applied correctly. This situation could happen if a user had to many

@@ -6,7 +6,7 @@ Date: 1661857259
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If netstat is not installed the apache status plugin will fallback to ss.
 

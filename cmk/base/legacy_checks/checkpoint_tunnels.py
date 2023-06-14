@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
+from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.utils.checkpoint import DETECT
+
+tunnel_states = {
+    "3": "Active",
+    "4": "Destroy",
+    "129": "Idle",
+    "130": "Phase1",
+    "131": "Down",
+    "132": "Init",
+}
+
+
+def inventory_checkpoint_tunnels(info):
+    for peer, _ in info:
+        yield peer, {}
+
+
+def check_checkpoint_tunnels(item, params, info):
+    for peer, status in info:
+        if peer == item:
+            state = params[tunnel_states[status]]
+            return state, tunnel_states[status]
+    return None
+
+
+check_info["checkpoint_tunnels"] = LegacyCheckDefinition(
+    detect=DETECT,
+    check_function=check_checkpoint_tunnels,
+    discovery_function=inventory_checkpoint_tunnels,
+    check_ruleset_name="checkpoint_tunnels",
+    service_name="Tunnel %s",
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.2620.500.9002.1",
+        oids=["2", "3"],
+    ),
+    check_default_parameters={
+        "Active": 0,
+        "Destroy": 1,
+        "Idle": 0,
+        "Phase1": 2,
+        "Down": 2,
+        "Init": 1,
+    },
+)

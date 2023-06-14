@@ -6,7 +6,7 @@ Date: 1661931083
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The agent updater comes with a systemd timer unit that invokes cmk-update-agent minutely
 in order to check for a pending installation.

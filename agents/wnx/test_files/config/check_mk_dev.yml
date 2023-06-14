@@ -1,4 +1,4 @@
-﻿# example of Check MK configuration file
+# example of Checkmk configuration file
 
 # global must be presented
 # IMPORTANT notes
@@ -8,7 +8,7 @@
 global:
     # use name to have mor clear logs just for user
     # Descriptive name of the configuration file
-    name: Config File Example from Check MK distribution
+    name: Config File Example from Checkmk distribution
 
     # section may be fully disabled
     enabled: yes
@@ -203,7 +203,7 @@ plugins:
 
     # folders are scanned top -> down
     folders: 
-        - core          # [-] folder with Check MK plugins(installation)
+        - core          # [-] folder with Checkmk plugins(installation)
         - user          # [-] folder in ProgramData/checkmk/agent/plugins
         - "c:\__mydlx"  # [-] absolute path here
         - "c:\__zx"     # 

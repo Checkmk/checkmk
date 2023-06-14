@@ -1,0 +1,24 @@
+Title: mk_logwatch: Correctly handle UNIX paths with non-UTF-8 characters
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1677831146
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+On UNIX, filenames may consist of arbitrary bytes.
+
+To display filenames in Checkmk, the mk_logwatch plugin assumes a UTF-8 encoding and previously replaced each non-UTF-8
+(hence non-printable) byte with the replacement character �.<br>
+This lead to the problem that multiple filenames were represented by the same name in Checkmk.<br>
+As a result, the logfiles got displayed in one service, with the logfile contents merged to one log view.
+
+In order to handle this situation, mk_logwatch now uses a backslash escape sequence instead of the replacement character.<br>
+Non-UTF-8 bytes are now represented by their hexadecimal value with a <tt>\x</tt> prefix.<br>
+E.g., monitoring the two files (as shown with <tt>ls</tt>, i.e., with octal escape sequence)  <tt>'my'$'\300\201''file'</tt> and
+<tt>'my'$'\300\200''file</tt> now yields two services <i>Log my\xc0\x80file</i> and <i>Log my\xc0\x81file</i>,
+while it used to yield only one service <i>Log my��file</i> before.
+
+Due to the new service name, you have to discover the newly named services if you are affected by this change.<br>

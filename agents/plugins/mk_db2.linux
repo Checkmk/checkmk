@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,10 +9,11 @@
 
 # Disable unused variable error (needed to keep track of version)
 # shellcheck disable=SC2034
-CMK_VERSION="2.2.0i1"
+CMK_VERSION="2.3.0b1"
 
 # Agent plugin to monitor DB/2 databases on Linux.
 
+# shellcheck disable=SC2317 # called indirectly
 function compare_version_greater_equal {
     local greater_one
     greater_one=$(echo "$1 $2" | awk "{if ($1 >= $2) print $1; else print $2}")
@@ -21,9 +22,9 @@ function compare_version_greater_equal {
     else
         return 1
     fi
-    return 0
 }
 
+# shellcheck disable=SC2317 # called indirectly
 function get_sections_for_single_db {
     if [ ! -f "$HOME"/sqllib/db2profile ]; then
         exit 0

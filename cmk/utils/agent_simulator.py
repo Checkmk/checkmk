@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -35,7 +35,7 @@ def process(output: AgentRawData) -> AgentRawData:
                 "us know."
             )
             # simfunc = output[i + 2:e]
-            # replacement = str(eval(b"agentsim_" + simfunc)).encode("utf-8")  # nosec
+            # replacement = str(eval(b"agentsim_" + simfunc)).encode("utf-8")
             # output = AgentRawData(output[:i] + replacement + output[e + 1:])
     except MKGeneralException:
         raise

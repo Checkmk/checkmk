@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -127,7 +127,6 @@ def _filter_out_deprecated_plugin_lines(
     found_mk_dhcp_enabled = False
 
     for line in (lines := iter(string_table)):
-
         # from mk_dhcp_enabled.bat
         if line[0].startswith("[dhcp_start]"):
             found_mk_dhcp_enabled = True
@@ -173,7 +172,7 @@ def parse_winperf_if(string_table: StringTable) -> SectionCounters:
         found_mk_dhcp_enabled,
     ) = _filter_out_deprecated_plugin_lines(string_table)
 
-    for line in (lines := iter(string_table_filtered)):  # pylint:disable=superfluous-parens
+    for line in (lines := iter(string_table_filtered)):  # pylint: disable=superfluous-parens
         if len(line) in (2, 3) and not line[-1].endswith("count"):
             # Do not consider lines containing counters:
             # ['-122', '38840302775', 'bulk_count']
@@ -390,7 +389,7 @@ def _normalize_name(
     return mod_name
 
 
-def _match_add_data_to_interfaces(  # type:ignore[no-untyped-def]
+def _match_add_data_to_interfaces(  # type: ignore[no-untyped-def]
     interface_names: Collection[str],
     section_teaming: SectionTeaming,
     section_extended: SectionExtended,
@@ -435,7 +434,6 @@ def _merge_sections(
     section_teaming: Optional[SectionTeaming],
     section_extended: Optional[SectionExtended],
 ) -> Sequence[interfaces.InterfaceWithCounters]:
-
     section_teaming = section_teaming or {}
     additional_data = (
         _match_add_data_to_interfaces(
@@ -452,16 +450,18 @@ def _merge_sections(
             attributes=interfaces.Attributes(
                 **{
                     **asdict(interface.attributes),
-                    **dict(
-                        alias=add_if_data.alias,
-                        speed=add_if_data.speed or interface.attributes.speed,
-                        group=section_teaming[add_if_data.guid].team_name
+                    **{
+                        "alias": add_if_data.alias,
+                        "speed": add_if_data.speed or interface.attributes.speed,
+                        "group": section_teaming[add_if_data.guid].team_name
                         if add_if_data.guid in section_teaming
                         else None,
-                        oper_status=add_if_data.oper_status,
-                        oper_status_name=add_if_data.oper_status_name,
-                        phys_address=interfaces.mac_address_from_hexstring(add_if_data.mac_address),
-                    ),
+                        "oper_status": add_if_data.oper_status,
+                        "oper_status_name": add_if_data.oper_status_name,
+                        "phys_address": interfaces.mac_address_from_hexstring(
+                            add_if_data.mac_address
+                        ),
+                    },
                 },
             ),
             counters=interface.counters,

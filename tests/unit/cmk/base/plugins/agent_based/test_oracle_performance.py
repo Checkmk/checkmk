@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -89,6 +89,7 @@ def test_discover_oracle_performance(
     assert sorted(opc.discover_oracle_performance({}, section)) == expected_result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "string_table, item, expected_result",
     [
@@ -163,6 +164,7 @@ def test_check_oracle_performance(
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "string_table, expected_result",
     [
@@ -210,6 +212,7 @@ def test_inventory_oracle_performance(
     )
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item, params, section, expected_result",
     [
@@ -234,13 +237,13 @@ def test_inventory_oracle_performance(
         )
     ],
 )
-def test_check_oracle_performance_dbtime(  # type:ignore[no-untyped-def]
+def test_check_oracle_performance_dbtime(
     get_rate_zero: None,
     item: str,
     params: Mapping[str, Sequence[tuple[str, tuple[float, float]]]],
     section: SectionPerformance,
-    expected_result,
-):
+    expected_result: CheckResult,
+) -> None:
     assert list(opc.check_oracle_performance_dbtime(item, params, section)) == expected_result
 
 
@@ -274,15 +277,16 @@ def test_check_oracle_performance_dbtime(  # type:ignore[no-untyped-def]
         )
     ],
 )
-def test_check_oracle_performance_memory(  # type:ignore[no-untyped-def]
+def test_check_oracle_performance_memory(
     item: str,
     params: Mapping[str, Sequence[tuple[str, tuple[float, float]]]],
     section: SectionPerformance,
-    expected_result,
-):
+    expected_result: CheckResult,
+) -> None:
     assert list(opc.check_oracle_performance_memory(item, params, section)) == expected_result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item, params, section, expected_result",
     [
@@ -319,16 +323,17 @@ def test_check_oracle_performance_memory(  # type:ignore[no-untyped-def]
         )
     ],
 )
-def test_check_oracle_performance_iostat_ios(  # type:ignore[no-untyped-def]
+def test_check_oracle_performance_iostat_ios(
     get_rate_zero: None,
     item: str,
     params: Mapping[str, Sequence[tuple[str, tuple[float, float]]]],
     section: SectionPerformance,
-    expected_result,
-):
+    expected_result: CheckResult,
+) -> None:
     assert list(opc.check_oracle_performance_iostat_ios(item, params, section)) == expected_result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "item, params, section, expected_result",
     [
@@ -357,11 +362,11 @@ def test_check_oracle_performance_iostat_ios(  # type:ignore[no-untyped-def]
         )
     ],
 )
-def test_check_oracle_performance_waitclasses(  # type:ignore[no-untyped-def]
+def test_check_oracle_performance_waitclasses(
     get_rate_zero: None,
     item: str,
     params: Mapping[str, Sequence[tuple[str, tuple[float, float]]]],
     section: SectionPerformance,
-    expected_result,
-):
+    expected_result: CheckResult,
+) -> None:
     assert list(opc.check_oracle_performance_waitclasses(item, params, section)) == expected_result

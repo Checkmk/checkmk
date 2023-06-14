@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
+from collections.abc import Mapping
 
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.proxmox_ve_vm_info import (
     check_proxmox_ve_vm_info,
     parse_proxmox_ve_vm_info,
+    Section,
 )
 
 VM_DATA = parse_proxmox_ve_vm_info(
@@ -55,8 +58,8 @@ VM_DATA = parse_proxmox_ve_vm_info(
         ),
     ],
 )
-def test_check_proxmox_ve_vm_info(  # type:ignore[no-untyped-def]
-    params, section, expected_results
+def test_check_proxmox_ve_vm_info(
+    params: Mapping[str, object], section: Section, expected_results: CheckResult
 ) -> None:
     results = tuple(check_proxmox_ve_vm_info(params, section))
     print("\n" + "\n".join(map(str, results)))

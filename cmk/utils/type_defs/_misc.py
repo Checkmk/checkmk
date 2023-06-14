@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -8,17 +8,12 @@ from __future__ import annotations
 import sys
 from collections.abc import Container, Mapping
 from dataclasses import dataclass
-from typing import Any, Literal, NewType, TypedDict, Union
+from typing import Any, Literal, NewType, TypeAlias, TypedDict
 
 __all__ = [
-    "HostName",
-    "HostAddress",
-    "HostgroupName",
     "ServiceName",
     "ServicegroupName",
     "ContactgroupName",
-    "TimeperiodName",
-    "AgentTargetVersion",
     "AgentRawData",
     "HostOrServiceConditionRegex",
     "HostOrServiceConditionsSimple",
@@ -27,12 +22,10 @@ __all__ = [
     "CheckPluginNameStr",
     "ActiveCheckPluginName",
     "Item",
-    "CheckVariables",
     "Seconds",
     "Timestamp",
     "TimeRange",
     "ServiceState",
-    "HostState",
     "ServiceDetails",
     "ServiceAdditionalDetails",
     "MetricName",
@@ -41,30 +34,19 @@ __all__ = [
     "LegacyCheckParameters",
     "ParametersTypeAlias",
     "DiscoveryResult",
-    "HWSWInventoryParameters",
     "SNMPDetectBaseType",
-    "TimeperiodSpec",
-    "TimeperiodSpecs",
-    "timeperiod_spec_alias",
     "EvalableFloat",
     "EVERYTHING",
     "state_markers",
     "ExitSpec",
     "InfluxDBConnectionSpec",
-    "IPMICredentials",
     "HTTPMethod",
 ]
 
-HostName = str
-HostAddress = str
-HostgroupName = str
 ServiceName = str
 ServicegroupName = str
 ContactgroupName = str
-TimeperiodName = str
 
-# We still need "Union" because of https://github.com/python/mypy/issues/11098
-AgentTargetVersion = Union[None, str, tuple[str, str], tuple[str, dict[str, str]]]
 
 AgentRawData = NewType("AgentRawData", bytes)
 
@@ -87,13 +69,11 @@ ActiveCheckPluginName = str
 Item = str | None
 
 
-CheckVariables = dict[str, Any]
 Seconds = int
 Timestamp = int
 TimeRange = tuple[int, int]
 
 ServiceState = int
-HostState = int
 ServiceDetails = str
 ServiceAdditionalDetails = str
 
@@ -107,6 +87,11 @@ MetricTuple = tuple[
     float | None,
 ]
 
+JsonSerializable: TypeAlias = (
+    dict[str, "JsonSerializable"] | list["JsonSerializable"] | str | int | float | bool | None
+)
+
+
 ClusterMode = Literal["native", "failover", "worst", "best"]
 
 LegacyCheckParameters = None | Mapping[Any, Any] | tuple[Any, ...] | list[Any] | str | int | bool
@@ -115,6 +100,8 @@ ParametersTypeAlias = Mapping[str, Any]  # Modification may result in an incompa
 
 @dataclass
 class DiscoveryResult:
+    # TODO(ml): Move to `autodiscovery` when the dependency to
+    #           `cmk.base.config` has been inverted.
     self_new: int = 0
     self_removed: int = 0
     self_kept: int = 0
@@ -135,48 +122,9 @@ class DiscoveryResult:
     diff_text: str | None = None
 
 
-@dataclass(frozen=True)
-class HWSWInventoryParameters:
-    # TODO(ml): Move to inventory when the dependency to
-    #           `cmk.base.config` has been inverted.
-    hw_changes: int
-    sw_changes: int
-    sw_missing: int
-
-    # Do not use source states which would overwrite "State when
-    # inventory fails" in the ruleset "Do hardware/software Inventory".
-    # These are handled by the "Check_MK" service
-    fail_status: int
-    status_data_inventory: bool
-
-    @classmethod
-    def from_raw(cls, raw_parameters: dict) -> HWSWInventoryParameters:
-        return cls(
-            hw_changes=int(raw_parameters.get("hw-changes", 0)),
-            sw_changes=int(raw_parameters.get("sw-changes", 0)),
-            sw_missing=int(raw_parameters.get("sw-missing", 0)),
-            fail_status=int(raw_parameters.get("inv-fail-status", 1)),
-            status_data_inventory=bool(raw_parameters.get("status_data_inventory", False)),
-        )
-
-
 # This def is used to keep the API-exposed object in sync with our
 # implementation.
 SNMPDetectBaseType = list[list[tuple[str, str, bool]]]
-
-# TODO: TimeperiodSpec should really be a class or at least a NamedTuple! We
-# can easily transform back and forth for serialization.
-TimeperiodSpec = dict[str, str | list[str] | list[tuple[str, str]]]
-TimeperiodSpecs = dict[TimeperiodName, TimeperiodSpec]
-
-
-# TODO: We should really parse our configuration file and use a
-# class/NamedTuple, see above.
-def timeperiod_spec_alias(timeperiod_spec: TimeperiodSpec, default: str = "") -> str:
-    alias = timeperiod_spec.get("alias", default)
-    if isinstance(alias, str):
-        return alias
-    raise Exception(f"invalid timeperiod alias {alias!r}")
 
 
 class EvalableFloat(float):
@@ -218,10 +166,5 @@ class ExitSpec(TypedDict, total=False):
 
 
 InfluxDBConnectionSpec = dict[str, Any]
-
-# TODO(ml): IPMICredentials belongs with IPMIFetcher but
-#           we need to fix the layering problem with the
-#           global config before this is safe.
-IPMICredentials = Mapping[str, str]
 
 HTTPMethod = Literal["get", "put", "post", "delete"]

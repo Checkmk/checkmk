@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import functools
+from collections.abc import Sequence
 
 import pytest
 
@@ -19,7 +20,7 @@ from cmk.gui.views.perfometer import Perfometer, SorterPerfometer
         [1, None, 0, -1],
     ],
 )
-def test_cmp_of_missing_values(sort_values) -> None:  # type:ignore[no-untyped-def]
+def test_cmp_of_missing_values(sort_values: Sequence[float | None]) -> None:
     """If perfometer values are missing, sort_value() of Perfometer will return (None, None).
     The sorting chosen below is consistent with how _data_sort from cmk.gui.views.__init__.py
     treats missing values."""

@@ -1,0 +1,14 @@
+Title: Fix minimal session idle timeout in global setting
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1679468842
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0b1
+
+The default session idle timeout was changed to 90 minutes with #12061. In this
+step also the minimal possible value was accidentally set to the same value.
+
+The minimal value has now been set back to 60 seconds as before.

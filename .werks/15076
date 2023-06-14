@@ -1,0 +1,12 @@
+Title: Shorten inventory filter titles
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1684231169
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Recently, inventory filter titles were given a prefix, e.g. "Inventory attribute: ", which made them too long for proper display in the filter popup. These prefixes are removed again.
+

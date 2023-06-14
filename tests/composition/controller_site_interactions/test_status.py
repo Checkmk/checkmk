@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,11 +9,10 @@ from typing import Any
 
 import pytest
 
+from tests.testlib.agent import controller_status_json, register_controller
 from tests.testlib.site import Site
 
-from tests.composition.controller_site_interactions.common import controller_status_json
-from tests.composition.utils import execute
-
+from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.type_defs import HostName
 
 
@@ -26,24 +25,7 @@ def _get_status_output_json(
 ) -> Mapping[str, Any]:
     site.openapi.create_host(hostname=hostname, attributes=dict(host_attributes))
     site.openapi.activate_changes_and_wait_for_completion()
-    execute(
-        [
-            "sudo",
-            agent_ctl.as_posix(),
-            "register",
-            "--server",
-            site.http_address,
-            "--site",
-            site.id,
-            "--hostname",
-            hostname,
-            "--user",
-            "cmkadmin",
-            "--password",
-            site.admin_password,
-            "--trust-cert",
-        ]
-    )
+    register_controller(agent_ctl, site, hostname)
     return controller_status_json(agent_ctl)
 
 
@@ -57,8 +39,8 @@ def test_status_pull(
         hostname=HostName("pull-host"),
         host_attributes={},
     )["connections"][0]["remote"]
-    assert remote_status["host_name"] == "pull-host"
-    assert remote_status["connection_type"] == "pull-agent"
+    assert remote_status["hostname"] == "pull-host"
+    assert HostAgentConnectionMode(remote_status["connection_mode"]) is HostAgentConnectionMode.PULL
 
 
 @pytest.mark.usefixtures("skip_if_not_cloud_edition")
@@ -70,14 +52,7 @@ def test_status_push(
         site=central_site,
         agent_ctl=agent_ctl,
         hostname=HostName("push-host"),
-        host_attributes={"cmk_agent_connection": "push-agent"},
+        host_attributes={"cmk_agent_connection": HostAgentConnectionMode.PUSH.value},
     )["connections"][0]["remote"]
-    assert remote_status["host_name"] == "push-host"
-    assert remote_status["connection_type"] == "push-agent"
-
-
-@pytest.fixture(scope="module", autouse=True)
-def _deactivate() -> None:
-    pytest.skip(
-        "Controller / receiver architecture is being reworked, will be re-activated afterwards"
-    )
+    assert remote_status["hostname"] == "push-host"
+    assert HostAgentConnectionMode(remote_status["connection_mode"]) is HostAgentConnectionMode.PUSH

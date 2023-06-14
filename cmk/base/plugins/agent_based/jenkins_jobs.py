@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -55,7 +55,7 @@ MAP_BUILD_STATES = {
 Section = Mapping[str, JenkinsJobInfo]
 
 
-def parse_jenkins_jobs(string_table) -> Section:  # type:ignore[no-untyped-def]
+def parse_jenkins_jobs(string_table) -> Section:  # type: ignore[no-untyped-def]
     parsed: Dict[str, JenkinsJobInfo] = {}
 
     for line in string_table:

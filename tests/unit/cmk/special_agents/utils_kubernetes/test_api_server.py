@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,12 +9,11 @@ import logging
 from collections.abc import Mapping, Sequence
 from unittest.mock import patch
 
+import pydantic_factories
 import pytest
-from kubernetes import client  # type: ignore[import]
-from kubernetes.client import ApiClient  # type: ignore[import]
+import requests
 
-from tests.unit.cmk.special_agents.agent_kubernetes.utils import FakeByteResponse
-
+from cmk.special_agents.utils_kubernetes import common, query
 from cmk.special_agents.utils_kubernetes.api_server import (
     _verify_version_support,
     CoreAPI,
@@ -25,40 +24,42 @@ from cmk.special_agents.utils_kubernetes.api_server import (
 from cmk.special_agents.utils_kubernetes.schemata import api
 
 
-def kubernetes_api_client() -> ApiClient:
-    config = client.Configuration()
-    config.host = "http://api-unittest"
-    return ApiClient(config)
+class APISessionConfigFactory(pydantic_factories.ModelFactory):
+    __model__ = query.APISessionConfig
 
 
 @pytest.fixture(name="core_api")
 def _core_api() -> CoreAPI:
-    return CoreAPI(kubernetes_api_client(), timeout=(10, 10))
+    config = APISessionConfigFactory.build(api_server_endpoint="http://api-unittest")
+    client = query.make_api_client_requests(config, common.LOGGER)
+    return CoreAPI(config, client)
 
 
-CALL_API = "cmk.special_agents.utils_kubernetes.api_server.client.ApiClient.call_api"
+CALL_API = "cmk.special_agents.utils_kubernetes.api_server.send_request"
+SUPPORTED_VERSION_STR = "Supported versions are v1.22, v1.23, v1.24, v1.25, v1.26."
 
 
 def test_raw_api_get_healthz_ok(core_api: CoreAPI) -> None:
     with patch(CALL_API) as mock_request:
-        mock_request.return_value = (FakeByteResponse("response-ok"), 200, {})
+        response = requests.Response()
+        response.status_code = 200
+        response._content = b"response-ok"
+        mock_request.return_value = response
         result = core_api._get_healthz("/some_health_endpoint")
     assert result.status_code == 200
     assert result.response == "response-ok"
-    assert result.verbose_response is None
 
 
 def test_raw_api_get_healthz_nok(core_api: CoreAPI) -> None:
     with patch(CALL_API) as mock_request:
-        mock_request.side_effect = [
-            (FakeByteResponse("response-nok"), 500, {}),
-            (FakeByteResponse("verbose\nresponse\nnok"), 500, {}),
-        ]
+        response = requests.Response()
+        response.status_code = 500
+        response._content = b"response-nok"
+        mock_request.return_value = response
         result = core_api._get_healthz("/some_health_endpoint")
 
     assert result.status_code == 500
     assert result.response == "response-nok"
-    assert result.verbose_response == "verbose\nresponse\nnok"
 
 
 version_json_pytest_params = [
@@ -131,13 +132,12 @@ def test_version_endpoint(
 ) -> None:
     # arrange
     version_json_dump = json.dumps(version_json)
+    response = requests.Response()
+    response.status_code = 200
+    response._content = version_json_dump.encode("utf-8")
     # act
     with patch(CALL_API) as mock_request:
-        mock_request.return_value = (
-            FakeByteResponse(version_json_dump),
-            200,
-            {"content-type": "application/json"},
-        )
+        mock_request.return_value = response
         queried_version = core_api.query_raw_version()
     # assert
     assert queried_version == version_json_dump
@@ -149,8 +149,11 @@ def test_version_endpoint_no_json(core_api: CoreAPI) -> None:
     Invalid endpoint, since returned data is not json. RawAPI will not
     identify this issue. Instead, the issue needs to be handled seperately.
     """
+    response = requests.Response()
+    response.status_code = 200
+    response._content = b"I'm not json"
     with patch(CALL_API) as mock_request:
-        mock_request.return_value = (FakeByteResponse("I'm not json"), 200, {})
+        mock_request.return_value = response
         result = core_api.query_raw_version()
     assert result == "I'm not json"
 
@@ -163,13 +166,12 @@ def test_version_endpoint_invalid_json(core_api: CoreAPI) -> None:
     """
 
     # arrange
+    response = requests.Response()
+    response.status_code = 200
+    response._content = b"{}"
+    # act
     with patch(CALL_API) as mock_request:
-        mock_request.return_value = (
-            FakeByteResponse(json.dumps({})),
-            200,
-            {"content-type": "application/json"},
-        )
-        # act
+        mock_request.return_value = response
         queried_version = core_api.query_raw_version()
     # assert
     assert queried_version == "{}"
@@ -272,14 +274,9 @@ def test_decompose_git_version(
         (
             api.UnknownKubernetesVersion(git_version=api.GitVersion("")),
             [
-                "WARNING Unsupported Kubernetes version ''. "
-                "Supported versions are v1.21, v1.22, v1.23.",
+                "WARNING Unsupported Kubernetes version ''. " + SUPPORTED_VERSION_STR,
                 "WARNING Processing data is done on a best effort basis.",
             ],
-        ),
-        (
-            api.KubernetesVersion(git_version=api.GitVersion("v1.21.0"), major=1, minor=21),
-            [],
         ),
         (
             api.KubernetesVersion(git_version=api.GitVersion("v1.22.1"), major=1, minor=22),
@@ -291,9 +288,12 @@ def test_decompose_git_version(
         ),
         (
             api.KubernetesVersion(git_version=api.GitVersion("v1.24.0"), major=1, minor=24),
+            [],
+        ),
+        (
+            api.KubernetesVersion(git_version=api.GitVersion("v1.27.0"), major=1, minor=27),
             [
-                "WARNING Unsupported Kubernetes version 'v1.24.0'. "
-                "Supported versions are v1.21, v1.22, v1.23.",
+                "WARNING Unsupported Kubernetes version 'v1.27.0'. " + SUPPORTED_VERSION_STR,
                 "WARNING Processing data is done on a best effort basis.",
             ],
         ),
@@ -314,15 +314,13 @@ def test__verify_version_support_continue_processing(
     [
         (
             api.KubernetesVersion(git_version=api.GitVersion("v1.16.0"), major=1, minor=16),
-            "Unsupported Kubernetes version 'v1.16.0'. API Servers with version < v1.21 are "
-            "known to return incompatible data. Aborting processing API data. "
-            "Supported versions are v1.21, v1.22, v1.23.",
+            "Unsupported Kubernetes version 'v1.16.0'. Aborting processing API data. "
+            + SUPPORTED_VERSION_STR,
         ),
         (
             api.KubernetesVersion(git_version=api.GitVersion("1.14.0"), major=1, minor=14),
-            "Unsupported Kubernetes version '1.14.0'. API Servers with version < v1.21 are "
-            "known to return incompatible data. Aborting processing API data. "
-            "Supported versions are v1.21, v1.22, v1.23.",
+            "Unsupported Kubernetes version '1.14.0'. Aborting processing API data. "
+            + SUPPORTED_VERSION_STR,
         ),
     ],
 )
@@ -330,7 +328,6 @@ def test__verify_version_support_abort_processing(
     kubernetes_version: api.KubernetesVersion | api.UnknownKubernetesVersion,
     message: str,
 ) -> None:
-
     with pytest.raises(UnsupportedEndpointData) as excinfo:
         _verify_version_support(kubernetes_version)
     assert str(excinfo.value) == message

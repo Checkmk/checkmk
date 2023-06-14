@@ -6,7 +6,7 @@ Date: 1664368116
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Previously if a user was created via the REST-API it could not be edited in the GUI. This has been fixed now.
 

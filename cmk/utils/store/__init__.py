@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module cares about Check_MK's file storage accessing. Most important
@@ -9,6 +9,7 @@ import logging
 import pickle
 import pprint
 import shutil
+from collections.abc import Mapping
 from contextlib import nullcontext
 from pathlib import Path
 from typing import Any
@@ -21,6 +22,7 @@ from cmk.utils.store._file import (
     DimSerializer,
     ObjectStore,
     PickleSerializer,
+    Serializer,
     TextSerializer,
 )
 from cmk.utils.store._locks import acquire_lock, cleanup_locks, configuration_lockfile, have_lock
@@ -40,6 +42,7 @@ __all__ = [
     "DimSerializer",
     "ObjectStore",
     "PickleSerializer",
+    "Serializer",
     "TextSerializer",
     "acquire_lock",
     "cleanup_locks",
@@ -105,11 +108,13 @@ def makedirs(path: Path | str, mode: int = 0o770) -> None:
 # This function generalizes reading from a .mk configuration file. It is basically meant to
 # generalize the exception handling for all file IO. This function handles all those files
 # that are read with exec().
-def load_mk_file(path: Path | str, default: Any = None, lock: bool = False) -> Any:
+def load_mk_file(
+    path: Path | str, default: Mapping[str, object], lock: bool = False
+) -> Mapping[str, object]:
     if not isinstance(path, Path):
         path = Path(path)
 
-    if default is None:
+    if default is None:  # leave this for now, we still have a lot of `Any`s flying around
         raise MKGeneralException(
             _(
                 "You need to provide a config dictionary to merge with the "
@@ -199,54 +204,56 @@ def load_bytes_from_file(path: Path | str, default: bytes = b"", lock: bool = Fa
         return ObjectStore(Path(path), serializer=BytesSerializer()).read_obj(default=default)
 
 
-# A simple wrapper for cases where you want to store a python data
-# structure that is then read by load_data_from_file() again
 def save_object_to_file(path: Path | str, data: Any, pretty: bool = False) -> None:
-    serializer = DimSerializer(pretty=pretty)
-    # Normally the file is already locked (when data has been loaded before with lock=True),
-    # but lock it just to be sure we have the lock on the file.
-    #
-    # NOTE:
-    #  * this creates the file with 0 bytes in case it is missing
-    #  * this will leave the file behind unlocked, regardless of it being locked before or
-    #    not!
-    with locked(path):
-        ObjectStore(Path(path), serializer=serializer).write_obj(data)
+    _write(Path(path), DimSerializer(pretty=pretty), data)
 
 
 def save_text_to_file(path: Path | str, content: str) -> None:
     if not isinstance(content, str):
         raise TypeError("content argument must be Text, not bytes")
-    # Normally the file is already locked (when data has been loaded before with lock=True),
-    # but lock it just to be sure we have the lock on the file.
-    #
-    # NOTE:
-    #  * this creates the file with 0 bytes in case it is missing
-    #  * this will leave the file behind unlocked, regardless of it being locked before or
-    #    not!
-    with locked(path):
-        ObjectStore(Path(path), serializer=TextSerializer()).write_obj(content)
+    _write(Path(path), TextSerializer(), content)
 
 
 def save_bytes_to_file(path: Path | str, content: bytes) -> None:
     if not isinstance(content, bytes):
         raise TypeError("content argument must be bytes, not Text")
+    _write(Path(path), BytesSerializer(), content)
+
+
+def _write(path: Path, serializer: Serializer, content: Any) -> None:
+    store = ObjectStore(Path(path), serializer=serializer)
     # Normally the file is already locked (when data has been loaded before with lock=True),
     # but lock it just to be sure we have the lock on the file.
     #
     # NOTE:
     #  * this creates the file with 0 bytes in case it is missing
-    #  * this will leave the file behind unlocked, regardless of it being locked before or
-    #    not!
-    with locked(path):
-        ObjectStore(Path(path), serializer=BytesSerializer()).write_obj(content)
+    with store.locked():
+        store.write_obj(content)
 
 
-_pickled_files_base_dir = cmk.utils.paths.tmp_dir / "pickled_files_cache"
+def _default_temp_dir() -> Path:
+    return cmk.utils.paths.tmp_dir
+
+
+def _default_root_dir() -> Path:
+    return cmk.utils.paths.omd_root
+
+
+def _pickled_files_cache_dir(temp_dir: Path) -> Path:
+    return temp_dir / "pickled_files_cache"
+
+
 _pickle_serializer = PickleSerializer[Any]()
 
 
-def try_load_file_from_pickle_cache(path: Path, *, default: Any, lock: bool = False) -> Any:
+def try_load_file_from_pickle_cache(
+    path: Path,
+    *,
+    default: Any,
+    lock: bool = False,
+    temp_dir: Path = _default_temp_dir(),
+    root_dir: Path = _default_root_dir(),
+) -> Any:
     """Try to load a pickled version of the requested file from cache, otherwise load `path`
 
     This function tries to find a ".pkl" version of the requested filename in the pickle files cache
@@ -268,12 +275,14 @@ def try_load_file_from_pickle_cache(path: Path, *, default: Any, lock: bool = Fa
         acquire_lock(path)
 
     try:
-        relative_path = path.relative_to(cmk.utils.paths.omd_root)
+        relative_path = path.relative_to(root_dir)  # usually cmk.utils.paths.omd_root
     except ValueError:
-        # No idea why someone is trying to load something outside of the sites home directory
+        # No idea why someone is trying to load something outside the sites home directory
         return load_object_from_file(path, default=default, lock=lock)
 
-    pickle_path = _pickled_files_base_dir / relative_path.parent / (relative_path.name + ".pkl")
+    pickle_path = (
+        _pickled_files_cache_dir(temp_dir) / relative_path.parent / (relative_path.name + ".pkl")
+    )
     try:
         if pickle_path.stat().st_mtime > path.stat().st_mtime:
             # Use pickled version since this file is newer and therefore valid
@@ -297,6 +306,6 @@ def try_load_file_from_pickle_cache(path: Path, *, default: Any, lock: bool = Fa
     return data
 
 
-def clear_pickled_object_files() -> None:
+def clear_pickled_files_cache(temp_dir: Path = _default_temp_dir()) -> None:
     """Remove all cached pickle files"""
-    shutil.rmtree(_pickled_files_base_dir, ignore_errors=True)
+    shutil.rmtree(_pickled_files_cache_dir(temp_dir), ignore_errors=True)

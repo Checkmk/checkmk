@@ -6,7 +6,7 @@ Date: 1665561361
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The configuration file of mk_redis.py already had a way to specify a socket
 connection, but it was not possible to configure this via the bakery.

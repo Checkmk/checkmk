@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,7 +7,7 @@ from typing import Any, Mapping
 
 from .agent_based_api.v1 import check_levels, IgnoreResultsError, register, Result, State
 from .agent_based_api.v1.type_defs import CheckResult
-from .utils.azure import discover_azure_by_metrics, parse_resources, Section
+from .utils.azure import create_discover_by_metrics_function, parse_resources, Section
 
 register.agent_section(
     name="azure_trafficmanagerprofiles",
@@ -39,7 +39,7 @@ register.check_plugin(
     name="azure_traffic_manager_qps",
     sections=["azure_trafficmanagerprofiles"],
     service_name="Azure/Traffic Mgr. %s Qps",
-    discovery_function=discover_azure_by_metrics("total_QpsByEndpoint"),
+    discovery_function=create_discover_by_metrics_function("total_QpsByEndpoint"),
     check_function=check_qps,
     check_ruleset_name="azure_traffic_manager_qps",
     check_default_parameters={},
@@ -67,7 +67,7 @@ register.check_plugin(
     name="azure_traffic_manager_probe_state",
     sections=["azure_trafficmanagerprofiles"],
     service_name="Azure/Traffic Mgr. %s Probe State",
-    discovery_function=discover_azure_by_metrics(
+    discovery_function=create_discover_by_metrics_function(
         "maximum_ProbeAgentCurrentEndpointStateByProfileResourceId"
     ),
     check_function=check_probe_state,

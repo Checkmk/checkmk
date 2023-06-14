@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 If you tried to download an agent output via "Download agent output" in the
 service icons of the "Check_MK" service, an exception like "'utf-8' codec can't

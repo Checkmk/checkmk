@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Folders
@@ -51,7 +51,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
-from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder
+from cmk.gui.watolib.hosts_and_folders import BaseFolder, CREFolder, folder_tree
 
 from cmk import fields
 
@@ -99,17 +99,18 @@ def create(params: Mapping[str, Any]) -> Response:
     """Create a folder"""
     user.need_permission("wato.edit")
     put_body = params["body"]
-    name = put_body["name"]
+    name = put_body.get("name")
     title = put_body["title"]
     parent_folder = put_body["parent"]
     attributes = put_body.get("attributes", {})
 
     if parent_folder.has_subfolder(name):
         raise ProblemException(
-            status=400,
-            title="Path already exists",
-            detail=f"The path '{parent_folder.name()}/{name}' already exists.",
+            detail=f"A folder with name {name!r} already exists.",
         )
+
+    if name is None:
+        name = BaseFolder.find_available_folder_name(title)
 
     folder = parent_folder.create_subfolder(name, title, attributes)
 
@@ -146,7 +147,7 @@ def update(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.edit")
     user.need_permission("wato.edit_folders")
     folder = params["folder"]
-    constructors.require_etag(etag_of_folder(folder))
+    constructors.require_etag(hash_of_folder(folder))
 
     post_body = params["body"]
     if "title" in post_body:
@@ -255,12 +256,18 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
     path_params=[PATH_FOLDER_FIELD],
     output_empty=True,
     permissions_required=RW_PERMISSIONS,
+    additional_status_codes=[401],
 )
 def delete(params: Mapping[str, Any]) -> Response:
     """Delete a folder"""
     user.need_permission("wato.edit")
-    folder = params["folder"]
-    parent = folder.parent()
+    folder: CREFolder = params["folder"]
+    if (parent := folder.parent()) is None:
+        raise ProblemException(
+            title="Problem deleting folder.",
+            detail="Deleting the root folder is not permitted.",
+            status=401,
+        )
     parent.delete_subfolder(folder.name())
     return Response(status=204)
 
@@ -281,7 +288,7 @@ def move(params: Mapping[str, Any]) -> Response:
     folder: CREFolder = params["folder"]
     folder_id = folder.id()
 
-    constructors.require_etag(etag_of_folder(folder))
+    constructors.require_etag(hash_of_folder(folder))
 
     dest_folder: CREFolder = params["body"]["destination"]
 
@@ -306,7 +313,7 @@ def move(params: Mapping[str, Any]) -> Response:
             "parent": gui_fields.FolderField(
                 description="Show all sub-folders of this folder. The default is the root-folder.",
                 example="/servers",
-                load_default=Folder.root_folder,  # because we can't load it too early.
+                load_default=lambda: folder_tree().root_folder(),
             ),
             "recursive": fields.Boolean(
                 description="List the folder (default: root) and all its sub-folders recursively.",
@@ -339,7 +346,7 @@ def list_folders(params: Mapping[str, Any]) -> Response:
     return serve_json(_folders_collection(folders, params["show_hosts"]))
 
 
-def _folders_collection(  # type:ignore[no-untyped-def]
+def _folders_collection(  # type: ignore[no-untyped-def]
     folders: list[CREFolder],
     show_hosts: bool,
 ):
@@ -414,11 +421,11 @@ def _serve_folder(
 ):
     folder_json = _serialize_folder(folder, show_hosts)
     response = serve_json(folder_json, profile=profile)
-    response.headers.add("ETag", etag_of_folder(folder).to_header())
+    response.headers.add("ETag", ETags(strong_etags=[hash_of_folder(folder)]).to_header())
     return response
 
 
-def _serialize_folder(folder: CREFolder, show_hosts):  # type:ignore[no-untyped-def]
+def _serialize_folder(folder: CREFolder, show_hosts):  # type: ignore[no-untyped-def]
     links = []
 
     if not folder.is_root():
@@ -461,8 +468,8 @@ def _serialize_folder(folder: CREFolder, show_hosts):  # type:ignore[no-untyped-
     return rv
 
 
-def etag_of_folder(folder: CREFolder) -> ETags:
-    return constructors.etag_of_dict(
+def hash_of_folder(folder: CREFolder) -> constructors.ETagHash:
+    return constructors.hash_of_dict(
         {
             "path": folder.path(),
             "attributes": folder.attributes(),

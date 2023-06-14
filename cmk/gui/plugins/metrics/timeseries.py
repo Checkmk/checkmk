@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -7,24 +7,25 @@ import functools
 import operator
 from collections.abc import Callable, Sequence
 from itertools import chain
-from typing import Literal
+from typing import Literal, TypeVar
 
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.prediction import TimeSeries
+from cmk.utils.prediction import TimeSeries, TimeSeriesValues
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import (
+    CombinedGraphMetricSpec,
     Curve,
     ExpressionParams,
     fade_color,
-    GraphMetric,
     parse_color,
     render_color,
     RRDData,
     time_series_expression_registry,
 )
+from cmk.gui.type_defs import GraphMetric
 
 # .
 #   .--Curves--------------------------------------------------------------.
@@ -39,7 +40,10 @@ from cmk.gui.plugins.metrics.utils import (
 #   '----------------------------------------------------------------------'
 
 
-def compute_graph_curves(metrics: Sequence[GraphMetric], rrd_data: RRDData) -> list[Curve]:
+def compute_graph_curves(
+    metrics: Sequence[GraphMetric] | Sequence[CombinedGraphMetricSpec],
+    rrd_data: RRDData,
+) -> list[Curve]:
     curves = []
     for metric_definition in metrics:
         expression = metric_definition["expression"]
@@ -76,7 +80,7 @@ def compute_graph_curves(metrics: Sequence[GraphMetric], rrd_data: RRDData) -> l
     return curves
 
 
-def evaluate_time_series_expression(  # type:ignore[no-untyped-def]
+def evaluate_time_series_expression(  # type: ignore[no-untyped-def]
     expression, rrd_data: RRDData
 ) -> Sequence[TimeSeries]:
     ident, parameters = expression[0], expression[1:]
@@ -132,8 +136,11 @@ def _derive_num_points_twindow(rrd_data: RRDData) -> tuple[int, tuple[int, int, 
     return 1, (0, 60, 60)
 
 
+Operator = Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"]
+
+
 def time_series_math(
-    operator_id: Literal["+", "*", "-", "/", "MAX", "MIN", "AVERAGE", "MERGE"],
+    operator_id: Operator,
     operands_evaluated: list[TimeSeries],
 ) -> TimeSeries | None:
     operators = time_series_operators()
@@ -156,10 +163,18 @@ def time_series_math(
     _op_title, op_func = operators[operator_id]
     twindow = operands_evaluated[0].twindow
 
-    return TimeSeries([op_func_wrapper(op_func, tsp) for tsp in zip(*operands_evaluated)], twindow)
+    return TimeSeries(
+        [op_func_wrapper(op_func, list(tsp)) for tsp in zip(*operands_evaluated)], twindow
+    )
 
 
-def op_func_wrapper(op_func, tsp):
+_TOperatorReturn = TypeVar("_TOperatorReturn")
+
+
+def op_func_wrapper(
+    op_func: Callable[[TimeSeries | TimeSeriesValues], _TOperatorReturn],
+    tsp: TimeSeries | TimeSeriesValues,
+) -> _TOperatorReturn | None:
     if tsp.count(None) < len(tsp):  # At least one non-None value
         try:
             return op_func(tsp)
@@ -168,22 +183,22 @@ def op_func_wrapper(op_func, tsp):
     return None
 
 
-def clean_time_series_point(tsp: TimeSeries) -> list[float]:
+def clean_time_series_point(tsp: TimeSeries | TimeSeriesValues) -> list[float]:
     """removes "None" entries from input list"""
     return [x for x in tsp if x is not None]
 
 
-def time_series_operator_sum(tsp: TimeSeries) -> float:
+def time_series_operator_sum(tsp: TimeSeries | TimeSeriesValues) -> float:
     return sum(clean_time_series_point(tsp))
 
 
-def time_series_operator_product(tsp: TimeSeries) -> float | None:
+def time_series_operator_product(tsp: TimeSeries | TimeSeriesValues) -> float | None:
     if None in tsp:
         return None
     return functools.reduce(operator.mul, tsp, 1)
 
 
-def time_series_operator_difference(tsp: TimeSeries) -> float | None:
+def time_series_operator_difference(tsp: TimeSeries | TimeSeriesValues) -> float | None:
     if None in tsp:
         return None
     assert tsp[0] is not None
@@ -191,7 +206,7 @@ def time_series_operator_difference(tsp: TimeSeries) -> float | None:
     return tsp[0] - tsp[1]
 
 
-def time_series_operator_fraction(tsp: TimeSeries) -> float | None:
+def time_series_operator_fraction(tsp: TimeSeries | TimeSeriesValues) -> float | None:
     if None in tsp or tsp[1] == 0:
         return None
     assert tsp[0] is not None
@@ -199,22 +214,28 @@ def time_series_operator_fraction(tsp: TimeSeries) -> float | None:
     return tsp[0] / tsp[1]
 
 
-def time_series_operator_maximum(tsp: TimeSeries) -> float:
+def time_series_operator_maximum(tsp: TimeSeries | TimeSeriesValues) -> float:
     return max(clean_time_series_point(tsp))
 
 
-def time_series_operator_minimum(tsp: TimeSeries) -> float:
+def time_series_operator_minimum(tsp: TimeSeries | TimeSeriesValues) -> float:
     return min(clean_time_series_point(tsp))
 
 
-def time_series_operator_average(tsp: TimeSeries) -> float:
+def time_series_operator_average(tsp: TimeSeries | TimeSeriesValues) -> float:
     tsp_clean = clean_time_series_point(tsp)
     return sum(tsp_clean) / len(tsp_clean)
 
 
-def time_series_operators() -> dict[
-    str, tuple[str, Callable[[TimeSeries], float] | Callable[[TimeSeries], float | None]]
-]:
+def time_series_operators() -> (
+    dict[
+        Operator,
+        tuple[
+            str,
+            Callable[[TimeSeries | TimeSeriesValues], float | None],
+        ],
+    ]
+):
     return {
         "+": (_("Sum"), time_series_operator_sum),
         "*": (_("Product"), time_series_operator_product),

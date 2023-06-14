@@ -91,7 +91,6 @@ is being checked. This is useful for testing and debugging a check plugin.
  cmk -D, --dump [H1 H2 ..]            dump all or some hosts
  cmk -d HOSTNAME|IPADDRESS            show raw information from agent
  cmk --check-discovery HOSTNAME       check for items not yet checked
- cmk --discover-marked-hosts          run discovery for hosts known to have changed services
  cmk --update-dns-cache               update IP address lookup cache
  cmk -l, --list-hosts [G1 G2 ...]     print list of all hosts
  cmk --list-tag TAG1 TAG2 ...         list hosts having certain tags
@@ -179,12 +178,7 @@ NOTES:
   --check-discovery make check_mk behave as monitoring plugins that
   checks if an inventory would find new or vanished services for the host.
   If configured to do so, this will queue those hosts for automatic
-  discover-marked-hosts
-
-  --discover-marked-hosts run actual service discovery on all hosts that
-  are known to have new/vanished services due to an earlier run of
-  check-discovery. The results of this discovery may be activated
-  automatically if that was discovered.
+  autodiscovery
 
   --list-hosts called without argument lists all hosts. You may
   specify one or more host groups to restrict the output to hosts
@@ -260,5 +254,3 @@ NOTES:
   -i, --inventory does a HW/SW-Inventory for all, one or several
   hosts. If you add the option -f, --force then persisted sections
   will be used even if they are outdated.
-
-

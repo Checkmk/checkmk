@@ -6,7 +6,7 @@ Date: 1650375243
 Edition: cre
 Knowledge: undoc
 Level: 2
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Large installations with several thousand hosts/folders suffered from a decreased performance
 when navigating through the folder hierarchy or when displaying rulesets.

@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
 
 import pytest
+
+from tests.testlib import is_enterprise_repo
 
 from cmk.utils.type_defs import HostAddress, HostName
 
@@ -14,9 +16,11 @@ from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPHostConfig
 from cmk.fetchers.snmp import make_backend
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend
 
-try:
-    from cmk.fetchers.cee.snmp_backend.inline import InlineSNMPBackend  # type: ignore[import]
-except ImportError:
+if is_enterprise_repo():
+    from cmk.fetchers.cee.snmp_backend.inline import (  # type: ignore[import] # pylint: disable=import-error,no-name-in-module
+        InlineSNMPBackend,
+    )
+else:
     InlineSNMPBackend = None  # type: ignore[assignment, misc]
 
 

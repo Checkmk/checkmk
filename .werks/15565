@@ -1,0 +1,13 @@
+Title: Ship logrotate with Checkmk-as-container
+Class: feature
+Compatible: compat
+Component: omd
+Date: 1685449104
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+This werk is relevant for you if you're using checkmk as docker container.
+We now ship the tool "logrotate" with this docker image.
+

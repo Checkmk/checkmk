@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Display information about the Checkmk check plugins
 
 The maxium depth of the catalog paths is 3. The top level is being rendered
-like the WATO main menu. The second and third level are being rendered like
+like the Setup main menu. The second and third level are being rendered like
 the global settings.
 """
 
@@ -68,7 +68,7 @@ class ModeCheckPlugins(WatoMode):
         html.help(
             _(
                 "This catalog of check plugins gives you a complete listing of all plugins "
-                "that are shipped with your Check_MK installation. It also allows you to "
+                "that are shipped with your Checkmk installation. It also allows you to "
                 "access the rule sets for configuring the parameters of the checks and to "
                 "manually create services in case you cannot or do not want to rely on the "
                 "automatic service discovery."
@@ -308,7 +308,7 @@ def _add_breadcrumb_topic_items(breadcrumb, titles, path):
     return breadcrumb
 
 
-def _render_manpage_list(  # type:ignore[no-untyped-def]
+def _render_manpage_list(  # type: ignore[no-untyped-def]
     titles, manpage_list, path_comp, heading
 ) -> None:
     def translate(t):
@@ -381,6 +381,12 @@ def _man_page_catalog_topics():
             False,
             _("Generic check plugins"),
             _("Plugins for local agent extensions or communication with the agent in general"),
+        ),
+        (
+            "virtual",
+            False,
+            _("Virtualization"),
+            _("Monitoring of classic virtual environment like ESX, Nutanix and HyperV"),
         ),
     ]
 
@@ -463,6 +469,7 @@ class ModeCheckManPage(WatoMode):
             self._ruleset: str | None = (
                 f"checkgroup_parameters:{ruleset_name}" if ruleset_name else None
             )
+            self._check_default_parameters: object = check_info.get("check_default_parameters")
 
         elif self._check_plugin_name in check_builtins:
             self._check_type = "check_mk"
@@ -523,7 +530,6 @@ class ModeCheckManPage(WatoMode):
         )
 
     def page(self) -> None:
-
         html.open_table(class_=["data", "headerleft"])
 
         html.open_tr()
@@ -565,6 +571,7 @@ class ModeCheckManPage(WatoMode):
 
         if self._ruleset:
             self._show_ruleset(self._ruleset)
+            self._show_defaults(self._ruleset, self._check_default_parameters)
 
         html.close_table()
 
@@ -573,7 +580,7 @@ class ModeCheckManPage(WatoMode):
         html_code = re.sub("\n\n+", "<p>", html_code)
         return html_code
 
-    def _show_ruleset(self, varname):
+    def _show_ruleset(self, varname: str) -> None:
         if varname not in rulespec_registry:
             return
 
@@ -587,9 +594,30 @@ class ModeCheckManPage(WatoMode):
         html.close_td()
         html.close_tr()
         html.open_tr()
-        html.th(_("Example for Parameters"))
+        html.th(_("Example for parameters"))
         html.open_td()
         vs = rulespec.valuespec
         vs.render_input("dummy", vs.default_value())
+        html.close_td()
+        html.close_tr()
+
+    def _show_defaults(self, varname: str, params: object) -> None:
+        if not params or varname not in rulespec_registry:
+            return
+
+        rulespec = rulespec_registry[varname]
+        try:
+            rulespec.valuespec.validate_datatype(params, "")
+            rulespec.valuespec.validate_value(params, "")
+            paramtext = rulespec.valuespec.value_to_html(params)
+        except Exception:
+            # This should not happen, we have tests for that.
+            # If it does happen, do not fail here.
+            return
+
+        html.open_tr()
+        html.th(_("Default parameters"))
+        html.open_td()
+        html.write_html(HTML(paramtext))
         html.close_td()
         html.close_tr()

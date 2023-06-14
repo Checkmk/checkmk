@@ -25,5 +25,4 @@ export PKR_VAR_cmk_version=""
 export PKR_VAR_cmk_download_user=""
 export PKR_VAR_cmk_download_pass=""
 
-packer init .
 packer build "$@"

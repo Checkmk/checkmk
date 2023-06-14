@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -38,7 +38,6 @@ else:
 if cmk_version.is_managed_edition():
     from cmk.gui.cme.plugins.config.cme import CMEConfig  # pylint: disable=no-name-in-module
 else:
-
     # Stub needed for non managed services edition
     class CMEConfig:  # type: ignore[no-redef]
         pass
@@ -57,9 +56,7 @@ else:
 
 # hard coded in various permissions
 default_authorized_builtin_role_ids: Final[list[RoleName]] = ["user", "admin", "guest"]
-default_unauthorized_builtin_role_ids: Final[list[RoleName]] = (
-    ["agent_registration"] if cmk_version.is_cloud_edition() else []
-)
+default_unauthorized_builtin_role_ids: Final[list[RoleName]] = ["agent_registration"]
 builtin_role_ids: Final[list[RoleName]] = [
     *default_authorized_builtin_role_ids,
     *default_unauthorized_builtin_role_ids,
@@ -192,7 +189,7 @@ def load_config() -> None:
             for key_id, raw_key in raw_config["agent_signature_keys"].items()
         }
 
-    # Make sure, builtin roles are present, even if not modified and saved with WATO.
+    # Make sure, builtin roles are present, even if not modified and saved with Setup.
     for br in builtin_role_ids:
         raw_config["roles"].setdefault(br, {})
 

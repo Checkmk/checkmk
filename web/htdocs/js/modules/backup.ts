@@ -1,9 +1,9 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-import * as utils from "utils";
 import * as ajax from "ajax";
+import * as utils from "utils";
 
 type BackupHandlerData = {url: string; ident: string; is_site: boolean};
 
@@ -36,9 +36,11 @@ function handle_job_detail_response(
     response_body: string
 ) {
     // when a message was shown and now not anymore, assume the job has finished
-    var had_message = document.getElementById("job_detail_msg") ? true : false;
+    const had_message = document.getElementById("job_detail_msg")
+        ? true
+        : false;
 
-    var container = document.getElementById("job_details");
+    const container = document.getElementById("job_details");
     container!.innerHTML = response_body;
 
     if (!had_message) {
@@ -61,19 +63,25 @@ function handle_job_detail_error(
 
     if (status_code == 0) return; // ajax request aborted. Stop refresh.
 
-    var container = document.getElementById("job_details");
+    const container = document.getElementById("job_details");
 
-    var msg = document.createElement("div");
+    const msg = document.createElement("div");
     container?.insertBefore(msg, container.children[0]);
     msg.setAttribute("id", "job_detail_msg");
     msg.className = "message";
 
-    var txt = "Could not update the job details.";
+    let txt = "";
     if (handler_data.is_site)
-        txt += " The site will be started again after the restore.";
-    else txt += " Maybe the device is currently being rebooted.";
+        txt +=
+            "The restore is still in progress. Please keep this page open until it's finished." +
+            "<br><br>The site will automatically stop and restart during the restore process.";
+    else
+        txt +=
+            "Could not update the job details. Maybe the device is currently being rebooted.";
 
-    txt += "<br>Will continue trying to refresh the job details.";
+    txt +=
+        "<br>You may see error messages on this page while it is stopping and restarting." +
+        "<br>These should disappear with the refresh at the end of the process.";
 
     txt += "<br><br>HTTP status code: " + status_code;
     if (error_msg) txt += ", Error: " + error_msg;
@@ -88,6 +96,6 @@ function handle_job_detail_error(
 }
 
 function hide_job_detail_msg() {
-    var msg = document.getElementById("job_detail_msg");
+    const msg = document.getElementById("job_detail_msg");
     if (msg) msg.parentNode?.removeChild(msg);
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -37,10 +37,10 @@ DATA = [
         ),
     ],
 )
-def test_discover_aruba_psu_status(  # type:ignore[no-untyped-def]
+def test_discover_aruba_psu_status(
     string_table: StringTable,
     result: DiscoveryResult,
-):
+) -> None:
     section = aruba_psu.parse_aruba_psu(string_table)
     assert list(aruba_psu.discover_aruba_psu(section)) == result
 
@@ -82,15 +82,16 @@ def test_discover_aruba_psu_status(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_aruba_psu_status(  # type:ignore[no-untyped-def]
+def test_check_aruba_psu_status(
     string_table: StringTable,
     item: str,
     result: CheckResult,
-):
+) -> None:
     section = aruba_psu.parse_aruba_psu(string_table)
     assert list(aruba_psu.check_aruba_psu_status(item, section)) == result
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "string_table, item, result",
     [
@@ -99,7 +100,7 @@ def test_check_aruba_psu_status(  # type:ignore[no-untyped-def]
             "JL086A 1",
             [
                 Metric("temp", 24.0, levels=(50.0, 60.0)),
-                Result(state=State.OK, summary="Temperature: 24.0°C"),
+                Result(state=State.OK, summary="Temperature: 24.0 °C"),
                 Result(state=State.OK, notice="Configuration: only use user levels"),
             ],
         ),
@@ -108,7 +109,7 @@ def test_check_aruba_psu_status(  # type:ignore[no-untyped-def]
             "JL086A 2",
             [
                 Metric("temp", 27.0, levels=(50.0, 60.0)),
-                Result(state=State.OK, summary="Temperature: 27.0°C"),
+                Result(state=State.OK, summary="Temperature: 27.0 °C"),
                 Result(state=State.OK, notice="Configuration: only use user levels"),
             ],
         ),
@@ -118,7 +119,7 @@ def test_check_aruba_psu_status(  # type:ignore[no-untyped-def]
             [
                 Metric("temp", 51.0, levels=(50.0, 60.0)),
                 Result(
-                    state=State.WARN, summary="Temperature: 51.0°C (warn/crit at 50.0°C/60.0°C)"
+                    state=State.WARN, summary="Temperature: 51.0 °C (warn/crit at 50.0 °C/60.0 °C)"
                 ),
                 Result(state=State.OK, notice="Configuration: only use user levels"),
             ],
@@ -129,18 +130,18 @@ def test_check_aruba_psu_status(  # type:ignore[no-untyped-def]
             [
                 Metric("temp", 61.0, levels=(50.0, 60.0)),
                 Result(
-                    state=State.CRIT, summary="Temperature: 61.0°C (warn/crit at 50.0°C/60.0°C)"
+                    state=State.CRIT, summary="Temperature: 61.0 °C (warn/crit at 50.0 °C/60.0 °C)"
                 ),
                 Result(state=State.OK, notice="Configuration: only use user levels"),
             ],
         ),
     ],
 )
-def test_check_aruba_psu_temp(  # type:ignore[no-untyped-def]
+def test_check_aruba_psu_temp(
     string_table: StringTable,
     item: str,
     result: CheckResult,
-):
+) -> None:
     section = aruba_psu.parse_aruba_psu(string_table)
     assert (
         list(
@@ -203,11 +204,11 @@ def test_check_aruba_psu_temp(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_check_aruba_psu_wattage(  # type:ignore[no-untyped-def]
+def test_check_aruba_psu_wattage(
     string_table: StringTable,
     item: str,
     result: CheckResult,
-):
+) -> None:
     section = aruba_psu.parse_aruba_psu(string_table)
     assert (
         list(

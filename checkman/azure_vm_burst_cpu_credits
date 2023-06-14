@@ -1,0 +1,16 @@
+title: Microsoft Azure Virtual Machine: Burst CPU Credits
+agents: azure
+catalog: cloud/azure
+license: GPLv2
+distribution: check_mk
+description:
+ This check provides information about VM CPU burst credits in
+ the Microsoft Azure cloud.
+ The number of consumed and remaining credits is displayed.
+
+ The thresholds for CPU remaining credits can be configured using the rule
+ "Azure VM Burst CPU Credits".
+
+discovery:
+ One service is created on every VM host. The option
+ "Map data to the VM itself" has to be configured in the Azure agent.

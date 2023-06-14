@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from logging import Logger
 from pathlib import Path
-from typing import Dict
 
 import cmk.utils.paths
 from cmk.utils import version
@@ -37,9 +36,9 @@ class RemoveOldCustomLogos(UpdateAction):
                 logo_path.unlink()
 
         try:
-            customers: Dict[CustomerId, Customer] = load_customers()
+            customers: dict[CustomerId, Customer] = load_customers()
             for config in customers.values():
-                globals_config: Dict[str, Dict] = config.get("globals", {})
+                globals_config: dict[str, dict] = config.get("globals", {})
                 if "logo" in globals_config:
                     del globals_config["logo"]
             save_customers(customers)

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -35,6 +35,9 @@ DETECT_UPS_GENERIC = any_of(
     startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.818.1.100.1"),
     startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.935"),
 )
+
+
+DETECT_UPS_CPS = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3808.1.1.1")
 
 
 class UpsParameters(TypedDict, total=False):
@@ -197,7 +200,6 @@ def check_ups_battery_state(
     section_ups_on_battery: Optional[Battery],
     section_ups_seconds_on_battery: Optional[Battery],
 ) -> CheckResult:
-
     battery = _assemble_battery(
         section_ups_battery_warnings,
         section_ups_on_battery,

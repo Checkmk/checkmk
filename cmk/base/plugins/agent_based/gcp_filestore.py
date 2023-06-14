@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 # mypy: disallow_untyped_defs
@@ -43,7 +43,6 @@ def discover(
         labels = [
             ServiceLabel("cmk/gcp/location", share.location),
             ServiceLabel("cmk/gcp/filestore/name", item),
-            ServiceLabel("cmk/gcp/projectId", assets.project),
         ]
         labels.extend(
             [ServiceLabel(f"cmk/gcp/labels/{k}", v) for k, v in data.get("labels", {}).items()]
@@ -57,7 +56,6 @@ def check(
     section_gcp_service_filestore: gcp.Section | None,
     section_gcp_assets: gcp.AssetSection | None,
 ) -> CheckResult:
-
     if section_gcp_service_filestore is None or not gcp.item_in_section(
         item, ASSET_TYPE, section_gcp_assets
     ):

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+from collections.abc import Sequence
 
 import pytest
 
-from cmk.base.agent_based.discovery import _filters
+from cmk.checkengine.discovery import filters as _filters
 
 
 @pytest.mark.parametrize(
@@ -36,8 +36,8 @@ from cmk.base.agent_based.discovery import _filters
         },
     ],
 )
-def test__get_service_filter_func_no_lists(  # type:ignore[no-untyped-def]
-    parameters_rediscovery,
+def test__get_service_filter_func_no_lists(
+    parameters_rediscovery: dict[str, Sequence[object]],
 ) -> None:
     service_filters = _filters.ServiceFilters.from_settings(parameters_rediscovery)
     assert service_filters.new is _filters._accept_all_services
@@ -53,8 +53,8 @@ def test__get_service_filter_func_no_lists(  # type:ignore[no-untyped-def]
         ([".*Descript$"], False),
     ],
 )
-def test__get_service_filter_func_same_lists(  # type:ignore[no-untyped-def]
-    monkeypatch, whitelist, result
+def test__get_service_filter_func_same_lists(
+    monkeypatch: pytest.MonkeyPatch, whitelist: Sequence[str], result: bool
 ) -> None:
     service_filters = _filters.ServiceFilters.from_settings({"service_whitelist": whitelist})
     assert service_filters.new is not None
@@ -115,8 +115,10 @@ def test__get_service_filter_func_same_lists(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test__get_service_filter_func(  # type:ignore[no-untyped-def]
-    monkeypatch, parameters_rediscovery, result
+def test__get_service_filter_func(
+    monkeypatch: pytest.MonkeyPatch,
+    parameters_rediscovery: dict[str, Sequence[str]],
+    result: bool,
 ) -> None:
     service_filters = _filters.ServiceFilters.from_settings(parameters_rediscovery)
     assert service_filters.new is not None

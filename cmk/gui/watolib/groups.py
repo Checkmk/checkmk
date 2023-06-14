@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -10,12 +10,16 @@ from typing import Any, Literal
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import EventRule, timeperiod_spec_alias
+from cmk.utils.notify_types import EventRule
+from cmk.utils.regex import GROUP_NAME_PATTERN
+from cmk.utils.timeperiod import timeperiod_spec_alias
+
+# It's OK to import centralized config load logic
+import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.hooks as hooks
 import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.userdb as userdb
-import cmk.gui.watolib.mkeventd as mkeventd
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.groups import (
     AllGroupSpecs,
@@ -31,12 +35,12 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.watolib.utils import config_variable_registry
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DualListChoice
 from cmk.gui.watolib.changes import add_change
+from cmk.gui.watolib.config_domain_name import config_variable_registry
 from cmk.gui.watolib.global_settings import GlobalSettings, load_configuration_settings
 from cmk.gui.watolib.group_writer import save_group_information
 from cmk.gui.watolib.host_attributes import (
@@ -44,7 +48,7 @@ from cmk.gui.watolib.host_attributes import (
     HostAttributeTopic,
     HostAttributeTopicBasicSettings,
 )
-from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, folder_preserving_link
+from cmk.gui.watolib.hosts_and_folders import CREFolder, folder_preserving_link, folder_tree
 from cmk.gui.watolib.notifications import load_notification_rules, load_user_notification_rules
 from cmk.gui.watolib.rulesets import AllRulesets
 from cmk.gui.watolib.utils import convert_cgroups_from_tuple
@@ -64,7 +68,7 @@ def add_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) -> 
         raise MKUserError("name", _("Please specify a name of the new group."))
     if " " in name:
         raise MKUserError("name", _("Sorry, spaces are not allowed in group names."))
-    if not re.match(r"^[-a-z0-9A-Z_\.]*$", name):
+    if not re.match(GROUP_NAME_PATTERN, name):
         raise MKUserError(
             "name",
             _("Invalid group name. Only the characters a-z, A-Z, 0-9, _, . and - are allowed."),
@@ -119,18 +123,29 @@ def edit_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) ->
         )
 
 
+class UnknownGroupException(Exception):
+    ...
+
+
+class GroupInUseException(Exception):
+    ...
+
+
 def delete_group(name: GroupName, group_type: GroupType) -> None:
     check_modify_group_permissions(group_type)
     # Check if group exists
     all_groups = load_group_information()
     groups = all_groups.get(group_type, {})
     if name not in groups:
-        raise MKUserError(None, _("Unknown %s group: %s") % (group_type, name))
+        raise UnknownGroupException(
+            None,
+            _("Unknown %s group: %s") % (group_type, name),
+        )
 
     # Check if still used
     usages = find_usages_of_group(name, group_type)
     if usages:
-        raise MKUserError(
+        raise GroupInUseException(
             None,
             _("Unable to delete group. It is still in use by: %s")
             % ", ".join([e[0] for e in usages]),
@@ -139,7 +154,9 @@ def delete_group(name: GroupName, group_type: GroupType) -> None:
     # Delete group
     group = groups.pop(name)
     save_group_information(all_groups)
-    _add_group_change(group, "edit-%sgroups", _l("Deleted %s group %s") % (group_type, name))
+    _add_group_change(
+        group, "edit-%sgroups" % group_type, _l("Deleted %s group %s") % (group_type, name)
+    )
 
 
 # TODO: Consolidate all group change related functions in a class that can be overriden
@@ -217,7 +234,7 @@ def find_usages_of_contact_group(name: GroupName) -> list[tuple[str, str]]:
     used_in += _find_usages_of_contact_group_in_users(name)
     used_in += _find_usages_of_contact_group_in_default_user_profile(name, global_config)
     used_in += _find_usages_of_contact_group_in_mkeventd_notify_contactgroup(name, global_config)
-    used_in += _find_usages_of_contact_group_in_hosts_and_folders(name, Folder.root_folder())
+    used_in += _find_usages_of_contact_group_in_hosts_and_folders(name, folder_tree().root_folder())
     used_in += _find_usages_of_contact_group_in_notification_rules(name)
     used_in += _find_usages_of_contact_group_in_dashboards(name)
     used_in += _find_usages_of_contact_group_in_ec_rules(name)
@@ -357,7 +374,7 @@ def _used_in_notification_rule(name: str, rule: EventRule) -> bool:
 def _find_usages_of_contact_group_in_ec_rules(name: str) -> list[tuple[str, str]]:
     """Is the contactgroup used in an eventconsole rule?"""
     used_in: list[tuple[str, str]] = []
-    rule_packs = mkeventd.load_mkeventd_rules()
+    rule_packs = ec.load_rule_packs()
     for pack in rule_packs:
         for nr, rule in enumerate(pack.get("rules", [])):
             if name in rule.get("contact_groups", {}).get("groups", []):
@@ -459,11 +476,11 @@ class HostAttributeContactGroups(ABCHostAttribute):
         )
         return (
             _(
-                "Only members of the contact groups listed here have WATO permission "
-                "to the host / folder. If you want, you can make those contact groups "
-                "automatically also <b>monitoring contacts</b>. This is completely "
-                "optional. Assignment of host to contact groups can be done by "
-                "<a href='%s'>rules</a> as well."
+                "Only members of the contact groups listed here have Setup "
+                "permission for the host/folder. Optionally, you can make these "
+                "contact groups automatically monitor contacts. The assignment "
+                "of hosts to contact groups can also be defined by "
+                "<a href='%s'>rules</a>."
             )
             % url
         )

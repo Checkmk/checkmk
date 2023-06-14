@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import json
 import time
-from typing import Mapping, Optional, Tuple
+from typing import Mapping
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     check_levels,
@@ -23,6 +23,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 from cmk.base.plugins.agent_based.utils.kube import (
     condition_detailed_description,
     condition_short_description,
+    get_age_levels_for,
     PodCondition,
     PodConditions,
     VSResultAge,
@@ -38,31 +39,14 @@ def discovery(section: PodConditions) -> DiscoveryResult:
     yield Service()
 
 
-LOGICAL_ORDER = ["scheduled", "initialized", "containersready", "ready"]
-
-
-def get_levels_for(params: Mapping[str, VSResultAge], key: str) -> Optional[Tuple[int, int]]:
-    """Get the levels for the given key from the params
-
-    Examples:
-        >>> params = dict(
-        ...     initialized="no_levels",
-        ...     scheduled=("levels", (89, 179)),
-        ...     containersready="no_levels",
-        ...     ready=("levels", (359, 719)),
-        ... )
-        >>> get_levels_for(params, "initialized")
-        >>> get_levels_for(params, "scheduled")
-        (89, 179)
-        >>> get_levels_for(params, "containersready")
-        >>> get_levels_for(params, "ready")
-        (359, 719)
-        >>> get_levels_for({}, "ready")
-    """
-    levels = params.get(key, "no_levels")
-    if levels == "no_levels":
-        return None
-    return levels[1]
+LOGICAL_ORDER = [
+    "scheduled",
+    "hasnetwork",
+    "initialized",
+    "containersready",
+    "ready",
+    "disruptiontarget",
+]
 
 
 def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions) -> CheckResult:
@@ -75,11 +59,16 @@ def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions
     `LOGICAL_ORDER`.  The last two conditions, `containersready` and `ready`,
     can be in a failed state simultaneously.  When a condition is missing (i.e.
     is `None`), it means that the previous condition is in a failed state."""
+
     condition_list: list[tuple[str, PodCondition | None]] = [
         (name, getattr(section, name)) for name in LOGICAL_ORDER
     ]
 
-    if all(cond and cond.status for _, cond in section):
+    # DisruptionTarget is a special case, and the user should be able to see the condition details
+    # when this condition appears.
+    if section.disruptiontarget is None and all(
+        cond and cond.status for name, cond in section if name != "disruptiontarget"
+    ):
         yield Result(
             state=State.OK,
             summary="Ready, all conditions passed",
@@ -92,10 +81,20 @@ def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions
             ),
         )
         return
+
     for name, cond in condition_list:
         if cond is not None:
+            if name == "disruptiontarget":
+                yield Result(
+                    state=State.OK,
+                    summary=condition_detailed_description(
+                        name, cond.status, cond.reason, cond.detail
+                    ),
+                )
+                continue
+
             # keep the last-seen one
-            time_diff = now - cond.last_transition_time  # type: ignore  # SUP-12170
+            time_diff = now - cond.last_transition_time  # type: ignore[operator]  # SUP-12170
             if cond.status:
                 # TODO: CMK-11697
                 yield Result(state=State.OK, summary=condition_short_description(name, cond.status))
@@ -103,10 +102,12 @@ def _check(now: float, params: Mapping[str, VSResultAge], section: PodConditions
             summary_prefix = condition_detailed_description(
                 name, cond.status, cond.reason, cond.detail
             )
+        elif name == "disruptiontarget":
+            continue
         else:
             summary_prefix = condition_short_description(name, False)
         for result in check_levels(
-            time_diff, levels_upper=get_levels_for(params, name), render_func=render.timespan
+            time_diff, levels_upper=get_age_levels_for(params, name), render_func=render.timespan
         ):
             yield Result(state=result.state, summary=f"{summary_prefix} for {result.summary}")
 
@@ -126,11 +127,12 @@ register.check_plugin(
     service_name="Condition",
     discovery_function=discovery,
     check_function=check,
-    check_default_parameters=dict(
-        scheduled="no_levels",
-        initialized="no_levels",
-        containersready="no_levels",
-        ready="no_levels",
-    ),
+    check_default_parameters={
+        "scheduled": "no_levels",
+        "hasnetwork": "no_levels",
+        "initialized": "no_levels",
+        "containersready": "no_levels",
+        "ready": "no_levels",
+    },
     check_ruleset_name="kube_pod_conditions",
 )

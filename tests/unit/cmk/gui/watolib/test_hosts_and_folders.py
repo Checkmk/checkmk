@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import datetime
 import os
 import pprint
 import shutil
 import sys
+import time
+import uuid
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
@@ -14,12 +17,15 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
+import freezegun
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
-import cmk.utils.paths
+from tests.testlib import on_time
+
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import ContactgroupName, UserId
+from cmk.utils.redis import disable_redis
+from cmk.utils.type_defs import ContactgroupName, HostName, UserId
 
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders
 from cmk.gui import userdb
@@ -27,19 +33,21 @@ from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.watolib.bakery import has_agent_bakery
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.search import MatchItem
 
 
 @pytest.fixture(autouse=True)
 def test_env(with_admin_login: UserId, load_config: None) -> Iterator[None]:
     # Ensure we have clean folder/host caches
-    hosts_and_folders.Folder.invalidate_caches()
+    tree = folder_tree()
+    tree.invalidate_caches()
 
     yield
 
     # Cleanup WATO folders created by the test
-    shutil.rmtree(hosts_and_folders.Folder.root_folder().filesystem_path(), ignore_errors=True)
-    os.makedirs(hosts_and_folders.Folder.root_folder().filesystem_path())
+    shutil.rmtree(tree.root_folder().filesystem_path(), ignore_errors=True)
+    os.makedirs(tree.root_folder().filesystem_path())
 
 
 @pytest.fixture(autouse=True)
@@ -106,7 +114,7 @@ def fake_start_bake_agents(monkeypatch: MonkeyPatch) -> None:
     ],
 )
 def test_host_tags(attributes: dict, expected_tags: dict[str, str]) -> None:
-    folder = hosts_and_folders.Folder.root_folder()
+    folder = folder_tree().root_folder()
     host = hosts_and_folders.Host(folder, "test-host", attributes, cluster_nodes=None)
 
     assert host.tag_groups() == expected_tags
@@ -140,7 +148,7 @@ def test_host_tags(attributes: dict, expected_tags: dict[str, str]) -> None:
     ],
 )
 def test_host_is_ping_host(attributes: dict[str, str], result: bool) -> None:
-    folder = hosts_and_folders.Folder.root_folder()
+    folder = folder_tree().root_folder()
     host = hosts_and_folders.Host(folder, "test-host", attributes, cluster_nodes=None)
 
     assert host.is_ping_host() == result
@@ -163,16 +171,16 @@ def test_write_and_read_host_attributes(
     folder_path = str(tmp_path)
     # Used to write the data
     write_data_folder = hosts_and_folders.Folder(
-        "testfolder", folder_path=folder_path, parent_folder=None
+        name="testfolder", folder_path=folder_path, parent_folder=None
     )
 
     # Used to read the previously written data
     read_data_folder = hosts_and_folders.Folder(
-        "testfolder", folder_path=folder_path, parent_folder=None
+        name="testfolder", folder_path=folder_path, parent_folder=None
     )
 
     # Write data
-    write_data_folder.create_hosts([("testhost", attributes, [])])
+    write_data_folder.create_hosts([(HostName("testhost"), attributes, [])])
     write_folder_hosts = write_data_folder.hosts()
     assert len(write_folder_hosts) == 1
 
@@ -187,21 +195,23 @@ def test_write_and_read_host_attributes(
 
 
 @contextmanager
-def in_chdir(directory) -> Iterator[None]:  # type:ignore[no-untyped-def]
+def in_chdir(directory: str) -> Iterator[None]:
     cur = os.getcwd()
     os.chdir(directory)
-    yield
-    os.chdir(cur)
+    try:
+        yield
+    finally:
+        os.chdir(cur)
 
 
 def test_create_nested_folders(request_context: None) -> None:
     with in_chdir("/"):
-        root = hosts_and_folders.Folder.root_folder()
+        root = folder_tree().root_folder()
 
-        folder1 = hosts_and_folders.Folder("folder1", parent_folder=root)
+        folder1 = hosts_and_folders.Folder(name="folder1", parent_folder=root)
         folder1.persist_instance()
 
-        folder2 = hosts_and_folders.Folder("folder2", parent_folder=folder1)
+        folder2 = hosts_and_folders.Folder(name="folder2", parent_folder=folder1)
         folder2.persist_instance()
 
         shutil.rmtree(os.path.dirname(folder1.wato_info_path()))
@@ -209,18 +219,18 @@ def test_create_nested_folders(request_context: None) -> None:
 
 def test_eq_operation(request_context: None) -> None:
     with in_chdir("/"):
-        root = hosts_and_folders.Folder.root_folder()
-        folder1 = hosts_and_folders.Folder("folder1", parent_folder=root)
+        root = folder_tree().root_folder()
+        folder1 = hosts_and_folders.Folder(name="folder1", parent_folder=root)
         folder1.persist_instance()
 
-        folder1_new = hosts_and_folders.Folder("folder1")
+        folder1_new = hosts_and_folders.Folder(name="folder1", folder_path="folder1")
         folder1_new.load_instance()
 
         assert folder1 == folder1_new
         assert id(folder1) != id(folder1_new)
         assert folder1 in [folder1_new]
 
-        folder2 = hosts_and_folders.Folder("folder2", parent_folder=folder1)
+        folder2 = hosts_and_folders.Folder(name="folder2", parent_folder=folder1)
         folder2.persist_instance()
 
         assert folder1 not in [folder2]
@@ -252,14 +262,13 @@ def test_mgmt_inherit_credentials_explicit_host(
     credentials: str | dict[str, str],
     folder_credentials: str | dict[str, str],
 ) -> None:
-
-    folder = hosts_and_folders.Folder.root_folder()
+    folder = folder_tree().root_folder()
     folder.set_attribute(host_attribute, folder_credentials)
 
     folder.create_hosts(
         [
             (
-                "test-host",
+                HostName("test-host"),
                 {
                     "ipaddress": "127.0.0.1",
                     "management_protocol": protocol,
@@ -297,13 +306,13 @@ def test_mgmt_inherit_credentials(
     base_variable: str,
     folder_credentials: str | dict[str, str],
 ) -> None:
-    folder = hosts_and_folders.Folder.root_folder()
+    folder = folder_tree().root_folder()
     folder.set_attribute(host_attribute, folder_credentials)
 
     folder.create_hosts(
         [
             (
-                "mgmt-host",
+                HostName("mgmt-host"),
                 {
                     "ipaddress": "127.0.0.1",
                     "management_protocol": protocol,
@@ -345,14 +354,14 @@ def test_mgmt_inherit_protocol_explicit_host(
     credentials: str | dict[str, str],
     folder_credentials: str | dict[str, str],
 ) -> None:
-    folder = hosts_and_folders.Folder.root_folder()
+    folder = folder_tree().root_folder()
     folder.set_attribute("management_protocol", None)
     folder.set_attribute(host_attribute, folder_credentials)
 
     folder.create_hosts(
         [
             (
-                "mgmt-host",
+                HostName("mgmt-host"),
                 {
                     "ipaddress": "127.0.0.1",
                     "management_protocol": protocol,
@@ -390,14 +399,14 @@ def test_mgmt_inherit_protocol(
     base_variable: str,
     folder_credentials: str | dict[str, str],
 ) -> None:
-    folder = hosts_and_folders.Folder.root_folder()
+    folder = folder_tree().root_folder()
     folder.set_attribute("management_protocol", protocol)
     folder.set_attribute(host_attribute, folder_credentials)
 
     folder.create_hosts(
         [
             (
-                "mgmt-host",
+                HostName("mgmt-host"),
                 {
                     "ipaddress": "127.0.0.1",
                 },
@@ -418,14 +427,8 @@ def fixture_make_folder(mocker: MagicMock) -> Callable:
     Returns a function to create patched folders for tests. Note that the global setting
     "Hide folders without read permissions" will currently always be set during setup.
     """
-    mocker.patch.object(
-        hosts_and_folders.active_config,
-        "wato_hide_folders_without_read_permissions",
-        True,
-        create=True,
-    )
 
-    def prefixed_title(self_, current_depth: int, pretty) -> str:  # type:ignore[no-untyped-def]
+    def prefixed_title(self_: hosts_and_folders.CREFolder, current_depth: int, pretty: bool) -> str:
         return "_" * current_depth + self_.title()
 
     mocker.patch.object(hosts_and_folders.Folder, "_prefixed_title", prefixed_title)
@@ -445,9 +448,15 @@ def fixture_make_folder(mocker: MagicMock) -> Callable:
 
     mocker.patch.object(hosts_and_folders.Folder, "add_subfolders", add_subfolders, create=True)
 
-    def f(name, title, root_dir="/", parent_folder=None, may_see=True):
+    def f(
+        name: str,
+        title: str,
+        root_dir: str = "/",
+        parent_folder: hosts_and_folders.CREFolder | None = None,
+        may_see: bool = True,
+    ) -> hosts_and_folders.CREFolder:
         folder = hosts_and_folders.Folder(
-            name, folder_path=None, parent_folder=parent_folder, title=title, root_dir=root_dir
+            name=name, folder_path=None, parent_folder=parent_folder, title=title, root_dir=root_dir
         )
         # Attribute only used for testing
         folder._may_see = may_see  # type: ignore[attr-defined]
@@ -456,13 +465,13 @@ def fixture_make_folder(mocker: MagicMock) -> Callable:
     return f
 
 
-def only_root(folder):
+def only_root(folder: Callable) -> hosts_and_folders.CREFolder:
     root_folder = folder("", title="Main")
     root_folder._loaded_subfolders = {}
     return root_folder
 
 
-def three_levels(folder):
+def three_levels(folder: Callable) -> hosts_and_folders.CREFolder:
     return folder("", title="Main").add_subfolders(
         [
             folder("a", title="A").add_subfolders(
@@ -484,7 +493,7 @@ def three_levels(folder):
     )
 
 
-def three_levels_leaf_permissions(folder):
+def three_levels_leaf_permissions(folder: Callable) -> hosts_and_folders.CREFolder:
     return folder("", title="Main", may_see=False).add_subfolders(
         [
             folder("a", title="A", may_see=False).add_subfolders(
@@ -535,40 +544,48 @@ def three_levels_leaf_permissions(folder):
         ),
     ],
 )
-def test_recursive_subfolder_choices(  # type:ignore[no-untyped-def]
-    make_folder, actual_builder, expected
+def test_recursive_subfolder_choices(
+    monkeypatch: MonkeyPatch,
+    make_folder: Callable,
+    actual_builder: Callable[[Callable], hosts_and_folders.CREFolder],
+    expected: list[tuple[str, str]],
 ) -> None:
-    actual = actual_builder(make_folder)
-    assert actual.recursive_subfolder_choices() == expected
+    with monkeypatch.context() as m:
+        m.setattr(
+            hosts_and_folders.active_config, "wato_hide_folders_without_read_permissions", True
+        )
+        assert actual_builder(make_folder).recursive_subfolder_choices() == expected
 
 
-def test_recursive_subfolder_choices_function_calls(  # type:ignore[no-untyped-def]
-    mocker: MagicMock, make_folder
+def test_recursive_subfolder_choices_function_calls(
+    monkeypatch: MonkeyPatch, mocker: MagicMock, make_folder: Callable
 ) -> None:
     """Every folder should only be visited once"""
-    spy = mocker.spy(hosts_and_folders.Folder, "_walk_tree")
-
-    tree = three_levels_leaf_permissions(make_folder)
-    tree.recursive_subfolder_choices()
-
-    assert spy.call_count == 7
+    with monkeypatch.context() as m:
+        m.setattr(
+            hosts_and_folders.active_config, "wato_hide_folders_without_read_permissions", True
+        )
+        spy = mocker.spy(hosts_and_folders.Folder, "_walk_tree")
+        tree = three_levels_leaf_permissions(make_folder)
+        tree.recursive_subfolder_choices()
+        assert spy.call_count == 7
 
 
 def test_subfolder_creation() -> None:
-    folder = hosts_and_folders.Folder.root_folder()
+    folder = folder_tree().root_folder()
     folder.create_subfolder("foo", "Foo Folder", {})
 
     # Upon instantiation, all the subfolders should be already known.
-    folder = hosts_and_folders.Folder.root_folder()
+    folder = folder_tree().root_folder()
     assert len(folder._subfolders) == 1
 
 
 def test_match_item_generator_hosts() -> None:
     assert list(
         hosts_and_folders.MatchItemGeneratorHosts(
-            "hosts",
+            HostName("hosts"),
             lambda: {
-                "host": {
+                HostName("host"): {
                     "edit_url": "some_url",
                     "alias": "alias",
                     "ipaddress": "1.2.3.4",
@@ -596,11 +613,11 @@ class _TreeStructure:
     num_hosts: int = 0
 
 
-def make_monkeyfree_folder(  # type:ignore[no-untyped-def]
-    tree_structure, parent=None
+def make_monkeyfree_folder(
+    tree_structure: _TreeStructure, parent: hosts_and_folders.CREFolder | None = None
 ) -> hosts_and_folders.CREFolder:
     new_folder = hosts_and_folders.CREFolder(
-        tree_structure.path,
+        name=tree_structure.path,
         parent_folder=parent,
         title=f"Title of {tree_structure.path}",
         attributes=tree_structure.attributes,
@@ -619,15 +636,11 @@ def make_monkeyfree_folder(  # type:ignore[no-untyped-def]
     return new_folder
 
 
-def dump_wato_folder_structure(  # type:ignore[no-untyped-def]
-    wato_folder: hosts_and_folders.CREFolder,
-):
+def dump_wato_folder_structure(wato_folder: hosts_and_folders.CREFolder) -> None:
     # Debug function to have a look at the internal folder tree structure
     sys.stdout.write("\n")
 
-    def dump_structure(  # type:ignore[no-untyped-def]
-        wato_folder: hosts_and_folders.CREFolder, indent=0
-    ):
+    def dump_structure(wato_folder: hosts_and_folders.CREFolder, indent: int = 0) -> None:
         indent_space = " " * indent * 6
         sys.stdout.write(f"{indent_space + '->' + str(wato_folder):80} {wato_folder.path()}\n")
         sys.stdout.write(
@@ -759,22 +772,23 @@ def dump_wato_folder_structure(  # type:ignore[no-untyped-def]
         ),
     ],
 )
-def test_folder_permissions(  # type:ignore[no-untyped-def]
-    structure, testfolder_expected_groups
+def test_folder_permissions(
+    structure: _TreeStructure, testfolder_expected_groups: set[str]
 ) -> None:
-    wato_folder = make_monkeyfree_folder(structure)
-    # dump_wato_folder_structure(wato_folder)
-    testfolder = wato_folder._subfolders["sub1"]._subfolders["testfolder"]
-    permitted_groups_cre_folder, _host_contact_groups, _use_for_service = testfolder.groups()
-    assert permitted_groups_cre_folder == testfolder_expected_groups
+    with disable_redis():
+        wato_folder = make_monkeyfree_folder(structure)
+        # dump_wato_folder_structure(wato_folder)
+        testfolder = wato_folder._subfolders["sub1"]._subfolders["testfolder"]
+        permitted_groups_cre_folder, _host_contact_groups, _use_for_service = testfolder.groups()
+        assert permitted_groups_cre_folder == testfolder_expected_groups
 
-    all_folders = _convert_folder_tree_to_all_folders(wato_folder)
-    permitted_groups_bulk = hosts_and_folders._get_permitted_groups_of_all_folders(all_folders)
-    assert permitted_groups_bulk["sub1/testfolder"].actual_groups == testfolder_expected_groups
+        all_folders = _convert_folder_tree_to_all_folders(wato_folder)
+        permitted_groups_bulk = hosts_and_folders._get_permitted_groups_of_all_folders(all_folders)
+        assert permitted_groups_bulk["sub1/testfolder"].actual_groups == testfolder_expected_groups
 
 
-def _convert_folder_tree_to_all_folders(  # type:ignore[no-untyped-def]
-    root_folder,
+def _convert_folder_tree_to_all_folders(
+    root_folder: hosts_and_folders.CREFolder,
 ) -> dict[hosts_and_folders.PathWithoutSlash, hosts_and_folders.CREFolder]:
     all_folders = {}
 
@@ -796,7 +810,7 @@ class _UserTest:
 
 
 @contextmanager
-def hide_folders_without_permission(do_hide) -> Iterator[None]:  # type:ignore[no-untyped-def]
+def hide_folders_without_permission(do_hide: bool) -> Iterator[None]:
     old_value = active_config.wato_hide_folders_without_read_permissions
     try:
         active_config.wato_hide_folders_without_read_permissions = do_hide
@@ -805,7 +819,7 @@ def hide_folders_without_permission(do_hide) -> Iterator[None]:  # type:ignore[n
         active_config.wato_hide_folders_without_read_permissions = old_value
 
 
-def _default_groups(configured_groups: list[ContactgroupName]):  # type:ignore[no-untyped-def]
+def _default_groups(configured_groups: list[ContactgroupName]) -> dict[str, Any]:
     return {
         "contactgroups": {
             "groups": configured_groups,
@@ -867,17 +881,18 @@ group_tree_test = (
     "structure, user_tests",
     [group_tree_test],
 )
-def test_num_hosts_normal_user(  # type:ignore[no-untyped-def]
-    structure, user_tests, monkeypatch
+def test_num_hosts_normal_user(
+    structure: _TreeStructure, user_tests: list[_UserTest], monkeypatch: MonkeyPatch
 ) -> None:
-    for user_test in user_tests:
-        _run_num_host_test(
-            structure,
-            user_test,
-            user_test.expected_num_hosts,
-            False,
-            monkeypatch,
-        )
+    with disable_redis():
+        for user_test in user_tests:
+            _run_num_host_test(
+                structure,
+                user_test,
+                user_test.expected_num_hosts,
+                False,
+                monkeypatch,
+            )
 
 
 @pytest.mark.usefixtures("with_admin_login")
@@ -885,14 +900,21 @@ def test_num_hosts_normal_user(  # type:ignore[no-untyped-def]
     "structure, user_tests",
     [group_tree_test],
 )
-def test_num_hosts_admin_user(  # type:ignore[no-untyped-def]
-    structure, user_tests, monkeypatch
+def test_num_hosts_admin_user(
+    structure: _TreeStructure, user_tests: list[_UserTest], monkeypatch: MonkeyPatch
 ) -> None:
-    for user_test in user_tests:
-        _run_num_host_test(structure, user_test, 117, True, monkeypatch)
+    with disable_redis():
+        for user_test in user_tests:
+            _run_num_host_test(structure, user_test, 117, True, monkeypatch)
 
 
-def _run_num_host_test(structure, user_test, expected_host_count, is_admin, monkeypatch):
+def _run_num_host_test(
+    structure: _TreeStructure,
+    user_test: _UserTest,
+    expected_host_count: int,
+    is_admin: bool,
+    monkeypatch: MonkeyPatch,
+) -> None:
     wato_folder = make_monkeyfree_folder(structure)
     with hide_folders_without_permission(user_test.hide_folders_without_permission):
         # The algorithm implemented in CREFolder actually computes the num_hosts_recursively wrong.
@@ -924,43 +946,17 @@ def _run_num_host_test(structure, user_test, expected_host_count, is_admin, monk
             assert wato_folder.num_hosts_recursively() == expected_host_count
 
 
-def _fake_redis_num_hosts_answer(  # type:ignore[no-untyped-def]
-    wato_folder: hosts_and_folders.CREFolder,
-):
+def _fake_redis_num_hosts_answer(wato_folder: hosts_and_folders.CREFolder) -> list[list[str]]:
     redis_answer = []
     for folder in _convert_folder_tree_to_all_folders(wato_folder).values():
         redis_answer.extend([",".join(folder.groups()[0]), str(folder._num_hosts)])
     return [redis_answer]
 
 
-@contextmanager
-def get_fake_setup_redis_client(  # type:ignore[no-untyped-def]
-    monkeypatch, all_folders, redis_answers: list
-):
-    monkeypatch.setattr(hosts_and_folders, "may_use_redis", lambda: True)
-    mock_redis_client = MockRedisClient(redis_answers)
-    monkeypatch.setattr(hosts_and_folders._RedisHelper, "_cache_integrity_ok", lambda x: True)
-    redis_helper = hosts_and_folders.get_wato_redis_client()
-    monkeypatch.setattr(redis_helper, "_client", mock_redis_client)
-    monkeypatch.setattr(redis_helper, "_folder_paths", [f"{x}/" for x in all_folders.keys()])
-    monkeypatch.setattr(
-        redis_helper,
-        "_folder_metadata",
-        {
-            f"{x}/": hosts_and_folders.FolderMetaData(f"{x}/", "nix", "nix", [])
-            for x in all_folders.keys()
-        },
-    )
-    yield mock_redis_client
-    monkeypatch.setattr(hosts_and_folders, "may_use_redis", lambda: False)
-    # I have no idea if this is actually working..
-    monkeypatch.undo()
-
-
 class MockRedisClient:
-    def __init__(self, answers: list[list[str]]) -> None:
+    def __init__(self, answers: list[list[list[str]]]) -> None:
         class FakePipeline:
-            def __init__(self, answers) -> None:  # type:ignore[no-untyped-def]
+            def __init__(self, answers: list[list[list[str]]]) -> None:
                 self._answers = answers
 
             def execute(self):
@@ -979,13 +975,41 @@ class MockRedisClient:
         return lambda *args, **kwargs: lambda *args, **kwargs: None
 
 
+@contextmanager
+def get_fake_setup_redis_client(
+    monkeypatch: MonkeyPatch,
+    all_folders: dict[hosts_and_folders.PathWithoutSlash, hosts_and_folders.CREFolder],
+    redis_answers: list[list[list[str]]],
+) -> Iterator[MockRedisClient]:
+    monkeypatch.setattr(hosts_and_folders, "may_use_redis", lambda: True)
+    mock_redis_client = MockRedisClient(redis_answers)
+    monkeypatch.setattr(hosts_and_folders._RedisHelper, "_cache_integrity_ok", lambda x: True)
+    redis_helper = hosts_and_folders.get_wato_redis_client()
+    monkeypatch.setattr(redis_helper, "_client", mock_redis_client)
+    monkeypatch.setattr(redis_helper, "_folder_paths", [f"{x}/" for x in all_folders.keys()])
+    monkeypatch.setattr(
+        redis_helper,
+        "_folder_metadata",
+        {
+            f"{x}/": hosts_and_folders.FolderMetaData(f"{x}/", "nix", "nix", [])
+            for x in all_folders.keys()
+        },
+    )
+    try:
+        yield mock_redis_client
+    finally:
+        monkeypatch.setattr(hosts_and_folders, "may_use_redis", lambda: False)
+        # I have no idea if this is actually working..
+        monkeypatch.undo()
+
+
 @pytest.mark.usefixtures("with_admin_login")
-def test_load_redis_folders_on_demand(monkeypatch) -> None:  # type:ignore[no-untyped-def]
+def test_load_redis_folders_on_demand(monkeypatch: MonkeyPatch) -> None:
     wato_folder = make_monkeyfree_folder(group_tree_structure)
     with get_fake_setup_redis_client(
         monkeypatch, _convert_folder_tree_to_all_folders(wato_folder), []
     ):
-        hosts_and_folders.CREFolder.all_folders()
+        folder_tree().all_folders()
         # Check if wato_folders class matches
         assert isinstance(g.wato_folders, hosts_and_folders.WATOFoldersOnDemand)
         # Check if item is None
@@ -1001,21 +1025,123 @@ def test_load_redis_folders_on_demand(monkeypatch) -> None:  # type:ignore[no-un
         assert isinstance(g.wato_folders._raw_dict[""], hosts_and_folders.CREFolder)
 
 
-def test_folder_exists(mocker: MagicMock, tmp_path: Path) -> None:
-    mocker.patch.object(cmk.utils.paths, "check_mk_config_dir", str(tmp_path))
-    (tmp_path / "wato" / "foo" / "bar").mkdir(parents=True)
-    assert hosts_and_folders.Folder.folder_exists("foo")
-    assert hosts_and_folders.Folder.folder_exists("foo/bar")
-    assert not hosts_and_folders.Folder.folder_exists("bar")
-    assert not hosts_and_folders.Folder.folder_exists("foo/foobar")
+def test_folder_exists() -> None:
+    tree = folder_tree()
+    tree.root_folder().create_subfolder("foo", "foo", {}).create_subfolder("bar", "bar", {})
+    assert tree.folder_exists("foo")
+    assert tree.folder_exists("foo/bar")
+    assert not tree.folder_exists("bar")
+    assert not tree.folder_exists("foo/foobar")
     with pytest.raises(MKUserError):
-        hosts_and_folders.Folder.folder_exists("../wato")
+        tree.folder_exists("../wato")
 
 
-def test_folder_access(mocker: MagicMock, tmp_path: Path) -> None:
-    mocker.patch.object(cmk.utils.paths, "check_mk_config_dir", str(tmp_path))
-    (tmp_path / "wato" / "foo" / "bar").mkdir(parents=True)
-    assert isinstance(hosts_and_folders.Folder.folder("foo/bar"), hosts_and_folders.CREFolder)
-    assert isinstance(hosts_and_folders.Folder.folder(""), hosts_and_folders.CREFolder)
+def test_folder_access() -> None:
+    tree = folder_tree()
+    tree.root_folder().create_subfolder("foo", "foo", {}).create_subfolder("bar", "bar", {})
+    assert isinstance(tree.folder("foo/bar"), hosts_and_folders.CREFolder)
+    assert isinstance(tree.folder(""), hosts_and_folders.CREFolder)
     with pytest.raises(MKGeneralException):
-        hosts_and_folders.Folder.folder("unknown_folder")
+        tree.folder("unknown_folder")
+
+
+def test_new_empty_folder(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(uuid, "uuid4", lambda: uuid.UUID("a8098c1a-f86e-11da-bd1a-00112444be1e"))
+    with on_time("2018-01-10 02:00:00", "CET"):
+        folder = Folder(
+            name="bla",
+            title="Bla",
+            attributes={},
+        )
+    assert folder.name() == "bla"
+    assert folder.id() == "a8098c1af86e11dabd1a00112444be1e"
+    assert folder.title() == "Bla"
+    assert folder.attributes() == {
+        "meta_data": {
+            "created_at": 1515549600.0,
+            "created_by": None,
+            "updated_at": 1515549600.0,
+        }
+    }
+
+
+def test_new_loaded_folder(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(uuid, "uuid4", lambda: uuid.UUID("c6bda767ae5c47038f73d8906fb91bb4"))
+
+    tree = folder_tree()
+    with on_time("2018-01-10 02:00:00", "CET"):
+        folder1 = Folder(name="folder1", parent_folder=tree.root_folder())
+        folder1.persist_instance()
+        tree.invalidate_caches()
+
+    folder = Folder(name="bla", folder_path="/folder1")
+    assert folder.name() == "bla"
+    assert folder.id() == "c6bda767ae5c47038f73d8906fb91bb4"
+    assert folder.title() == "folder1"
+    assert folder.attributes() == {
+        "meta_data": {
+            "created_at": 1515549600.0,
+            "created_by": None,
+            "updated_at": 1515549600.0,
+        }
+    }
+
+
+@pytest.mark.parametrize(
+    "allowed,last_end,next_time",
+    [
+        (((0, 0), (24, 0)), None, 1515549600.0),
+        (
+            ((0, 0), (24, 0)),
+            1515549600.0,
+            1515549900.0,
+        ),
+        (((20, 0), (24, 0)), None, 1515610800.0),
+        ([((0, 0), (2, 0)), ((20, 0), (22, 0))], None, 1515610800.0),
+        ([((0, 0), (2, 0)), ((20, 0), (22, 0))], 1515621600.0, 1515625200.0),
+    ],
+)
+def test_next_network_scan_at(
+    allowed: object,
+    last_end: float | None,
+    next_time: float,
+) -> None:
+    folder = Folder(
+        name="bla",
+        title="Bla",
+        attributes={
+            "network_scan": {
+                "exclude_ranges": [],
+                "ip_ranges": [("ip_range", ("10.3.1.1", "10.3.1.100"))],
+                "run_as": UserId("cmkadmin"),
+                "scan_interval": 300,
+                "set_ipaddress": True,
+                "tag_criticality": "offline",
+                "time_allowed": allowed,
+            },
+            "network_scan_result": {
+                "end": last_end,
+            },
+        },
+    )
+
+    with on_time("2018-01-10 02:00:00", "CET"):
+        assert folder.next_network_scan_at() == next_time
+
+
+@pytest.mark.usefixtures("request_context")
+def test_folder_times() -> None:
+    root = folder_tree().root_folder()
+
+    with freezegun.freeze_time(datetime.datetime(2020, 2, 2, 2, 2, 2)):
+        current = time.time()
+        Folder(name="test", parent_folder=root).save()
+        folder = Folder(name="test", folder_path="")
+        folder.save()
+
+    meta_data = folder.attributes()["meta_data"]
+    assert int(meta_data["created_at"]) == int(current)
+    assert int(meta_data["updated_at"]) == int(current)
+
+    folder.persist_instance()
+    assert int(meta_data["updated_at"]) > int(current)

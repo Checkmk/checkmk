@@ -1,0 +1,16 @@
+---
+- name: aws specific installation
+  hosts: 127.0.0.1
+  connection: local
+
+  tasks:
+   - name: remove ssh authorized keys
+     # automated removal does not work for ubuntu user. However the images we use only have an ubuntu user
+     # https://github.com/buildkite/elastic-ci-stack-for-aws/issues/544
+     ansible.builtin.file:
+       path: "{{ item }}"
+       state: absent
+     become: true
+     loop:
+       - /home/ubuntu/.ssh/authorized_keys
+       - /root/.ssh/authorized_keys

@@ -1,22 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from abc import ABC, abstractmethod
 from collections.abc import Iterator, Mapping
 from pathlib import Path
-from typing import Final, Generic, Protocol, TypeVar
+from typing import Final, Generic, Protocol, TypedDict, TypeVar
 
 from cmk.utils.backup.targets.local import LocalTarget
-from cmk.utils.backup.type_defs import (
-    Backup,
-    Job,
-    RemoteTargetParams,
-    SiteBackupInfo,
-    TargetId,
-    TRemoteParams,
-)
+from cmk.utils.backup.type_defs import Backup, SiteBackupInfo
 from cmk.utils.backup.utils import (
     BACKUP_INFO_FILENAME,
     load_backup_info,
@@ -25,6 +18,17 @@ from cmk.utils.backup.utils import (
     verify_backup_file,
 )
 from cmk.utils.exceptions import MKGeneralException
+
+from ..job import Job
+from . import TargetId
+from .local import LocalTargetParams
+
+TRemoteParams = TypeVar("TRemoteParams", bound=Mapping[str, object])
+
+
+class RemoteTargetParams(TypedDict, Generic[TRemoteParams]):
+    remote: TRemoteParams
+    temp_folder: LocalTargetParams
 
 
 class RemoteStorage(Protocol):

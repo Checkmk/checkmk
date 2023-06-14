@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,20 +12,21 @@ from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.utils as utils
 from cmk.gui.config import active_config
+from cmk.gui.data_source import row_id
+from cmk.gui.exporter import output_csv_headers
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.painter.v0.base import Cell, EmptyCell
+from cmk.gui.painter.v1.helpers import is_stale
+from cmk.gui.painter_options import PainterOptions
 from cmk.gui.table import init_rowselect, table_element
 from cmk.gui.type_defs import GroupSpec, Row, Rows, ViewSpec
 from cmk.gui.utils.theme import theme
 from cmk.gui.visual_link import render_link_to_view
 
-from ..data_source import row_id
-from ..painter.v0.base import Cell, EmptyCell
-from ..painter.v1.helpers import is_stale
-from ..painter_options import PainterOptions
 from .base import Layout
-from .helpers import group_value, output_csv_headers
+from .helpers import group_value
 from .registry import LayoutRegistry
 
 
@@ -95,7 +96,7 @@ class LayoutSingleDataset(Layout):
         while rownum < len(rows):
             if rownum > 0:
                 html.open_tr(class_="gap")
-                html.td("", class_="gap", colspan=(num_columns + 1))
+                html.td("", class_="gap", colspan=num_columns + 1)
                 html.close_tr()
             thispart = rows[rownum : rownum + num_columns]
             for cell in cells:
@@ -401,6 +402,9 @@ def try_to_match_group(row: Row) -> GroupSpec | None:
         if row.get("service_description") and re.match(
             group_spec["pattern"], row["service_description"]
         ):
+            group_spec["title"] = re.sub(
+                group_spec["pattern"], group_spec["title"], row["service_description"]
+            )
             return group_spec
 
     return None
@@ -478,7 +482,6 @@ class LayoutTiled(Layout):
             if group_cells:
                 this_group = group_value(row, group_cells)
                 if this_group != last_group:
-
                     # paint group header
                     if group_open:
                         html.close_td()
@@ -867,7 +870,6 @@ class LayoutMatrix(Layout):
         for groups, unique_row_ids, matrix_cells in create_matrices(
             rows, group_cells, cells, num_columns
         ):
-
             # Paint the matrix. Begin with the group headers
             html.open_table(class_="data matrix")
             odd = "odd"

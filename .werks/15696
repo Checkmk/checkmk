@@ -1,0 +1,25 @@
+Title: Linux agent: timing problem with 5 minute check interval
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1682072755
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+When setting the check interval of a Linux host to 5 minutes, you recently may have experienced sporadic connection resets.
+This results in a critical <i>Check_MK</i> service, showing a summary containing
+C+:
+[agent] Communication failed: [Errno 111] Connection refused
+C-:
+or similar.
+
+The reason for this was that the agent controller checks for an active connection registry every 5 minutes and by that closes the socket for an instant.<br>
+Since this 5-minute timeout starts whenever a connection has been accepted successfully, there's a significant chance to exacly hit a request from a 5-minute check interval.
+
+To fix this, the config reload is now done without closing the socket temporarily.<br>
+
+To apply this fix, you have to update agents once on affected hosts.<br>
+Since the agent communation only fails sporadically, this can be accomplished by an automatic agent update, if configured.
+

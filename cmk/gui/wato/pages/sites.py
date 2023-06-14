@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Mode for managing sites"""
@@ -19,7 +19,8 @@ from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId
 import cmk.utils.paths
 from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.licensing.state import is_expired_trial
+from cmk.utils.licensing.handler import LicenseState
+from cmk.utils.licensing.registry import is_free
 from cmk.utils.site import omd_site
 
 import cmk.gui.forms as forms
@@ -49,15 +50,11 @@ from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
-from cmk.gui.plugins.watolib.utils import (
-    ABCConfigDomain,
-    config_variable_registry,
-    ConfigVariableGroup,
-)
 from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site, site_is_local
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName, UserId
+from cmk.gui.utils.compatibility import make_site_version_info
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
@@ -83,8 +80,18 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 from cmk.gui.wato.pages.global_settings import ABCEditGlobalSettingMode, ABCGlobalSettingsMode
-from cmk.gui.watolib.activate_changes import get_trial_expired_message
-from cmk.gui.watolib.automations import do_remote_automation, do_site_login, MKAutomationException
+from cmk.gui.watolib.activate_changes import get_free_message
+from cmk.gui.watolib.automations import (
+    do_remote_automation,
+    do_site_login,
+    MKAutomationException,
+    parse_license_state,
+)
+from cmk.gui.watolib.config_domain_name import (
+    ABCConfigDomain,
+    config_variable_registry,
+    ConfigVariableGroup,
+)
 from cmk.gui.watolib.config_domains import ConfigDomainGUI, ConfigDomainLiveproxy
 from cmk.gui.watolib.global_settings import (
     load_configuration_settings,
@@ -92,7 +99,7 @@ from cmk.gui.watolib.global_settings import (
     save_global_settings,
     save_site_global_settings,
 )
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, make_action_link
+from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, folder_tree, make_action_link
 from cmk.gui.watolib.site_management import add_changes_after_editing_site_connection
 from cmk.gui.watolib.sites import (
     is_livestatus_encrypted,
@@ -140,8 +147,8 @@ class ModeEditSite(WatoMode):
         self._clone_id = None if _clone_id_return is None else SiteId(_clone_id_return)
         self._new = self._site_id is None
 
-        if is_expired_trial() and (self._new or self._site_id != omd_site()):
-            raise MKUserError(None, get_trial_expired_message())
+        if is_free() and (self._new or self._site_id != omd_site()):
+            raise MKUserError(None, get_free_message())
 
         configured_sites = self._site_mgmt.load_sites()
 
@@ -452,7 +459,7 @@ class ModeEditSite(WatoMode):
                 HTTPUrl(
                     title=_("URL of remote site"),
                     help=_(
-                        "URL of the remote Check_MK including <tt>/check_mk/</tt>. "
+                        "URL of the remote Checkmk including <tt>/check_mk/</tt>. "
                         "This URL is in many cases the same as the URL-Prefix but with <tt>check_mk/</tt> "
                         "appended, but it must always be an absolute URL. Please note, that "
                         "that URL will be fetched by the Apache server of the local "
@@ -465,9 +472,9 @@ class ModeEditSite(WatoMode):
                 "disable_wato",
                 Checkbox(
                     title=_("Disable remote configuration"),
-                    label=_("Disable configuration via WATO on this site"),
+                    label=_("Disable configuration via Setup on this site"),
                     help=_(
-                        "It is a good idea to disable access to WATO completely on the remote site. "
+                        "It is a good idea to disable access to Setup completely on the remote site. "
                         "Otherwise a user who does not now about the replication could make local "
                         "changes that are overridden at the next configuration activation."
                     ),
@@ -588,14 +595,14 @@ class ModeDistributedMonitoring(WatoMode):
         return None
 
     # Mypy wants the explicit return, pylint does not like it.
-    def _action_delete(  # type:ignore[no-untyped-def] # pylint: disable=useless-return
+    def _action_delete(  # type: ignore[no-untyped-def] # pylint: disable=useless-return
         self, delete_id
     ) -> ActionResult:
         # TODO: Can we delete this ancient code? The site attribute is always available
         # these days and the following code does not seem to have any effect.
         configured_sites = self._site_mgmt.load_sites()
         # The last connection can always be deleted. In that case we
-        # fall back to non-distributed-WATO and the site attribute
+        # fall back to non-distributed-Setup and the site attribute
         # will be removed.
         test_sites = dict(configured_sites.items())
         del test_sites[delete_id]
@@ -606,7 +613,7 @@ class ModeDistributedMonitoring(WatoMode):
             raise MKUserError(None, _("You can not delete the connection to the local site."))
 
         # Make sure that site is not being used by hosts and folders
-        if delete_id in Folder.root_folder().all_site_ids():
+        if delete_id in folder_tree().root_folder().all_site_ids():
             search_url = makeactionuri_contextless(
                 request,
                 transactions,
@@ -649,7 +656,7 @@ class ModeDistributedMonitoring(WatoMode):
 
     def _action_login(self, login_id: SiteId) -> ActionResult:
         configured_sites = self._site_mgmt.load_sites()
-        if request.get_ascii_input("_abort"):
+        if request.get_ascii_input("_cancel"):
             return redirect(mode_url("sites"))
 
         if not transactions.check_transaction():
@@ -728,7 +735,7 @@ class ModeDistributedMonitoring(WatoMode):
         )
         forms.end()
         html.button("_do_login", _("Login"))
-        html.button("_abort", _("Abort"))
+        html.button("_cancel", _("Cancel"))
         html.hidden_field("_login", login_id)
         html.hidden_fields()
         html.end_form()
@@ -738,8 +745,8 @@ class ModeDistributedMonitoring(WatoMode):
     def page(self) -> None:
         sites = sort_sites(self._site_mgmt.load_sites())
 
-        if is_expired_trial():
-            html.show_message(get_trial_expired_message())
+        if is_free():
+            html.show_message(get_free_message(format_html=True))
 
         html.div("", id_="message_container")
         with table_element(
@@ -752,7 +759,6 @@ class ModeDistributedMonitoring(WatoMode):
                 "you want to display its data."
             ),
         ) as table:
-
             for site_id, site in sites:
                 table.row()
 
@@ -922,9 +928,10 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
         if status.success:
             assert not isinstance(status.response, Exception)
             icon = "success"
-            msg = _("Online (Version: %s, Edition: %s)") % (
+            msg = _("Online (%s)") % make_site_version_info(
                 status.response.version,
                 status.response.edition,
+                status.response.license_state,
             )
         else:
             assert isinstance(status.response, Exception)
@@ -956,6 +963,7 @@ class ModeAjaxFetchSiteStatus(AjaxPage):
 class PingResult(NamedTuple):
     version: str
     edition: str
+    license_state: LicenseState | None
 
 
 class ReplicationStatus(NamedTuple):
@@ -1032,10 +1040,16 @@ class ReplicationStatusFetcher:
             # Reinitialize logging targets
             log.init_logging()  # NOTE: We run in a subprocess!
 
+            raw_result = do_remote_automation(site, "ping", [], timeout=5)
+            assert isinstance(raw_result, dict)
             result = ReplicationStatus(
                 site_id=site_id,
                 success=True,
-                response=PingResult(**do_remote_automation(site, "ping", [], timeout=5)),
+                response=PingResult(
+                    version=raw_result["version"],
+                    edition=raw_result["edition"],
+                    license_state=parse_license_state(raw_result.get("license_state", "")),
+                ),
             )
             self._logger.debug("[%s] Finished" % site_id)
         except Exception as e:

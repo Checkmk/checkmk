@@ -78,7 +78,7 @@ TEST(LogWatchEventTest, GetLastPos) {
     }
 }
 
-/// \brief Keeps temporary folder and pair of file names and dirs
+/// Keeps temporary folder and pair of file names and dirs
 class LogWatchEventFixture : public ::testing::Test {
 public:
     cma::evl::EventLogDebug event_log{tst::SimpleLogData()};
@@ -318,13 +318,11 @@ TEST(LogWatchEventTest, CheckFabricConfig) {
     ASSERT_EQ(sections.size(), LogWatchSections_Main);
 
     // data to be tested against
-    const RawLogWatchData base[LogWatchSections_Test] = {
+    constexpr RawLogWatchData base[LogWatchSections_Test] = {
         //{false, "", cfg::EventLevels::kOff, false},
-        {true, "Parameters", cfg::EventLevels::kIgnore,
-         provider::LogWatchContext::hide},
-        {true, "State", cfg::EventLevels::kIgnore,
-         provider::LogWatchContext::hide},
-        {true, "*", cfg::EventLevels::kWarn, provider::LogWatchContext::hide},
+        {true, "Parameters", cfg::EventLevels::kIgnore, LogWatchContext::hide},
+        {true, "State", cfg::EventLevels::kIgnore, LogWatchContext::hide},
+        {true, "*", cfg::EventLevels::kWarn, LogWatchContext::hide},
     };
 
     int pos = 0;
@@ -364,14 +362,12 @@ TEST(LogWatchEventTest, CheckTestConfig) {
     ASSERT_EQ(sections.size(), LogWatchSections_Test);
 
     // data to be tested against
-    const RawLogWatchData base[LogWatchSections_Test] = {
-        {true, "Application", cfg::EventLevels::kCrit,
-         provider::LogWatchContext::with},
-        {true, "System", cfg::EventLevels::kWarn,
-         provider::LogWatchContext::hide},
-        {true, "Demo", cfg::EventLevels::kAll, provider::LogWatchContext::hide},
-        {false, "", cfg::EventLevels::kOff, provider::LogWatchContext::hide},
-        {true, "*", cfg::EventLevels::kWarn, provider::LogWatchContext::with},
+    constexpr RawLogWatchData base[LogWatchSections_Test] = {
+        {true, "Application", cfg::EventLevels::kCrit, LogWatchContext::with},
+        {true, "System", cfg::EventLevels::kWarn, LogWatchContext::hide},
+        {true, "Demo", cfg::EventLevels::kAll, LogWatchContext::hide},
+        {false, "", cfg::EventLevels::kOff, LogWatchContext::hide},
+        {true, "*", cfg::EventLevels::kWarn, LogWatchContext::with},
     };
 
     int pos = 0;
@@ -667,7 +663,7 @@ TEST(LogWatchEventTest, TestAddLog) {
     }
 }
 
-TEST(LogWatchEventTest, CheckMakeBodyIntegration) {
+TEST(LogWatchEventTest, CheckMakeBodyComponent) {
     auto temp_fs = tst::TempCfgFs::CreateNoIo();
     LogWatchEvent lw;
     lw.loadConfig();
@@ -776,7 +772,8 @@ TEST(LogWatchEventTest, TestMakeBody) {
         auto st = states;
         auto logs_in = logs_in_registry;
         logs_in.emplace_back("Zcx");
-        auto processed = UpdateEventLogStates(st, logs_in, SendMode::normal);
+        uint32_t processed =
+            UpdateEventLogStates(st, logs_in, SendMode::normal);
         EXPECT_TRUE(processed == logs_in.size());
         int count = 0;
         for (auto &s : st) {

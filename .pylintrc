@@ -28,11 +28,6 @@ disable=
     # Use local suppressions or (even better) refactor the code.
     import-outside-toplevel,
     #---------------------------------------------------------------------------
-    # We should really enable this, there could be some real exceptions waiting
-    # to be thrown. But some work is needed first to sprinkle abc annotations
-    # through our code and fix a few obscure places.
-    abstract-method,
-    #---------------------------------------------------------------------------
     # Enabling this would be very desirable, it vastly improves readability and
     # it might even be necessary for tools like mypy. Fixing this involves some
     # amount of relatively easy work, especially if we want to avoid code
@@ -47,12 +42,6 @@ disable=
     # improve readability and involve some cleanups in our class hierarchy, so
     # we should do this some day.
     protected-access,
-    #---------------------------------------------------------------------------
-    # Enabling this would be nice, but not crucial. At the moment, we have quite
-    # a few violations (about 220 in roughly 40 modules), so we postpone fixing
-    # this. Note that due to our arcane use of types, we need to be very careful
-    # when fixing these warnings!
-    len-as-condition,
     #---------------------------------------------------------------------------
     # Enabling this would be nice, but not crucial. At the moment, we have quite
     # a few violations, so we postpone fixing this. When we do it eventually, we
@@ -125,9 +114,6 @@ disable=
     duplicate-code,
     R0801,
     #---------------------------------------------------------------------------
-    # Useful, but quite a few findings.
-    use-implicit-booleaness-not-comparison,
-    #---------------------------------------------------------------------------
     # A stylistic thing only, many findings, but all fixes are mechanical.
     consider-using-from-import,
     #---------------------------------------------------------------------------
@@ -147,7 +133,10 @@ disable=
     consider-using-f-string,
     #---------------------------------------------------------------------------
     # New in version 2.15.0 which causes a few findings
-    missing-timeout
+    missing-timeout,
+    #---------------------------------------------------------------------------
+    # New in version 2.16.0 which causes a few findings
+    broad-exception-raised
 
 [IMPORTS]
 # This complies with PEP 8 and avoids code duplication in some cases.

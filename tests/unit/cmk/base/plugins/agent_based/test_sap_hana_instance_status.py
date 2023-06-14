@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,7 +9,9 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName, SectionName
+from cmk.utils.type_defs import SectionName
+
+from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
@@ -19,7 +21,7 @@ from cmk.base.plugins.agent_based.sap_hana_instance_status import InstanceProces
 @pytest.mark.parametrize(
     "info, expected_result",
     [
-        (
+        pytest.param(
             [
                 ["[[HXE 98]]"],
                 ["instanceStatus: 3"],
@@ -73,13 +75,62 @@ from cmk.base.plugins.agent_based.sap_hana_instance_status import InstanceProces
                     ],
                 )
             },
+            id="instance with processes",
         ),
-        (
+        pytest.param(
             [
                 ["[[HXE 98]]"],
                 ["instanceStatus: 4"],
             ],
             {"HXE 98": InstanceStatus(status="4")},
+            id="instance without processes",
+        ),
+        pytest.param(
+            [
+                ["[[HXE 98]]"],
+                ["instanceStatus: 3"],
+                ["OK"],
+                [
+                    "name",
+                    "description",
+                    "dispstatus",
+                    "textstatus",
+                    "starttime",
+                    "elapsedtime",
+                    "pid",
+                ],
+                [
+                    "hdbdaemon",
+                    "HDB Daemon",
+                    "GREEN",
+                    "Running",
+                    "2021 05 19 07:50:33",
+                ],
+                [
+                    "hdbcompileserver",
+                    "HDB Compileserver",
+                    "GREEN",
+                    "Running",
+                    "2021 05 19 07:50:44",
+                    "0:40:39",
+                    "3546",
+                ],
+            ],
+            {
+                "HXE 98": InstanceStatus(
+                    status="3",
+                    processes=[
+                        InstanceProcess(
+                            name="HDB Compileserver",
+                            state="GREEN",
+                            description="Running",
+                            elapsed_time=2439.0,
+                            pid="3546",
+                        ),
+                    ],
+                )
+            },
+            id="incomplete process data",
         ),
     ],
 )

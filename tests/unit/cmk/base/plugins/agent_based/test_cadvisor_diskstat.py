@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -47,6 +47,7 @@ def test_discover_cadvisor_diskstat(
     assert list(discover_cadvisor_diskstat(section)) == discovered_services
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 def test_check_cadvisor_diskstat() -> None:
     check_result = list(check_cadvisor_diskstat(item="Summary", params={}, section=SECTION))
     assert len(check_result) == 10  # A Result and Metric for every field in the section
@@ -54,4 +55,4 @@ def test_check_cadvisor_diskstat() -> None:
 
 def test_check_cadvisor_diskstat_item_not_found() -> None:
     check_result = list(check_cadvisor_diskstat(item="not_found", params={}, section=SECTION))
-    assert check_result == []
+    assert not check_result

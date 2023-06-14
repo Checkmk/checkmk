@@ -6,7 +6,7 @@ Date: 1656689269
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In particular setups, the graph "Percentage of total service problems" comprised unwanted data. This
 happened in setups with Checkmk hosts (hosts running Checkmk sites) whose sites were not connected

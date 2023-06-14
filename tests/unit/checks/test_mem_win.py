@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,9 +11,10 @@ from pytest_mock import MockerFixture
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import CheckPluginName
+from cmk.utils.type_defs import HostName
 
-from cmk.checkers.plugin_contexts import current_host, current_service
+from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.plugin_contexts import current_host, current_service
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
@@ -30,6 +31,7 @@ _SECTION = {
 }
 
 
+@pytest.mark.usefixtures("initialised_item_state")
 @pytest.mark.parametrize(
     "params, expected_result",
     [
@@ -274,7 +276,7 @@ def test_mem_win(
         "cmk.base.check_api._prediction.get_levels",
         return_value=(100000, (90000, 110000, None, None)),
     )
-    with current_host("unittest-hn"), current_service(
+    with current_host(HostName("unittest-hn")), current_service(
         CheckPluginName("unittest_sd"), "unittest_sd_description"
     ):
         assert (

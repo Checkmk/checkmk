@@ -6,7 +6,7 @@ Date: 1673514758
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The Prometheus agent provides the `kube-state-metrics` as a possible data source. This in turn would
 enable the following checks.

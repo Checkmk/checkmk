@@ -1,0 +1,14 @@
+Title: Fix rule search for folders with same name
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1677245049
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+If you used the page menu option "Folder" - "Rules" in "Setup" - "Hosts" for
+a folder which name already existed in another folder, the rule search result
+may have shown rules for the other folder. In this case, the displayed rules
+were linked to empty ruleset pages.

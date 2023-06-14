@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Test the documentation of the host label functions
@@ -38,13 +38,9 @@ ALL_DOCUMENTED_BUILTIN_HOST_LABELS: Final = {
     "cmk/kubernetes/cluster-host",
     "cmk/os_family",
     "cmk/vsphere_object",
+    "cmk/vsphere_vcenter",
 }
 
-
-KNOWN_MISSING_DOCSTRING: Final = {  # TODO CMK-7660
-    "k8s_daemon_pods",
-    "k8s_pod_container",
-}
 
 KNOWN_NON_BUILTIN_LABEL_PRODUCERS: Final = {
     "labels",
@@ -67,11 +63,6 @@ def test_all_sections_have_host_labels_documented(
     for section in (
         s for s in sections if s.host_label_function.__name__ != "_noop_host_label_function"
     ):
-
-        if str(section.name) in KNOWN_MISSING_DOCSTRING:
-            assert not section.host_label_function.__doc__
-            continue
-
         assert (
             section.host_label_function.__doc__
         ), f"Missing doc-string for host label function of {section.name}"

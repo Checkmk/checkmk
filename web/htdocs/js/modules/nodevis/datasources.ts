@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
@@ -21,6 +21,8 @@
 import * as d3 from "d3";
 import {DatasourceCallback} from "nodevis/type_defs";
 
+import * as utils from "../utils";
+
 // Takes care of all available datasources
 // Offers register and get methods for datasource
 // Prevents duplicate instantiations of same datasources
@@ -31,7 +33,7 @@ export class DatasourceManager {
         // Datasources lookup {id: instance}
         this.datasources = {};
         this._initialize_datasources();
-        // setInterval(() => this.schedule(true), 10000);
+        setInterval(() => this.schedule(true), 30000);
     }
 
     _initialize_datasources(): void {
@@ -45,6 +47,7 @@ export class DatasourceManager {
     }
 
     schedule(enforce = false): void {
+        if (!utils.is_window_active()) return;
         const now = Math.floor(new Date().getTime() / 1000);
         for (const idx in this.datasources) {
             const datasource = this.datasources[idx];

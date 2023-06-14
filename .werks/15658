@@ -1,0 +1,21 @@
+Title: Agent auto-registration: Re-register if registration at monitoring site is gone
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1681394147
+Edition: cce
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+When starting, the agent controller checks if the <a href="https://docs.checkmk.com/master/en/hosts_autoregister.html">auto-registration</a>
+(introduced in <a href="https://checkmk.com/werk/15243">werk 15243</a>) is configured. If this is
+the case, the controller proceeds to register at the configured site, but only if it is not already
+registered there according to its local configuration.
+
+As of this werk, if the connection to the configured site is found in the local configuration, we
+additionally check if the configured site also reports that the host is registered. If this is not
+the case, we proceed with the registration in order to re-establish the connection.
+
+This feature is relevant in scenarios where hosts are temporarily shut down and removed from the
+monitoring site. Once these hosts re-boot, they will re-register st. they are monitored again.

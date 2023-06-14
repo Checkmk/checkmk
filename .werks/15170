@@ -6,7 +6,7 @@ Date: 1673534490
 Edition: cee
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 Prior to this werk, the DCD raised a REST API authentication error
 when the user's automation password was changed after it was started.

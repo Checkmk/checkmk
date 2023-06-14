@@ -1,0 +1,20 @@
+#!/bin/bash
+set -e
+
+VERSION=1.7.2
+PACKAGE=rrdtool-${VERSION}
+
+rm -rf ${PACKAGE}.tar.gz ${PACKAGE} ${PACKAGE}-patched
+curl --silent \
+    --show-error \
+    --fail \
+    --location \
+    --output ${PACKAGE}.tar.gz \
+    "https://github.com/oetiker/rrdtool-1.x/releases/download/v${VERSION}/${PACKAGE}.tar.gz"
+tar xzf ${PACKAGE}.tar.gz
+for PATCH in patches/*.dif; do
+    patch --strip=1 --directory=${PACKAGE} <"${PATCH}"
+done
+mv ${PACKAGE} ${PACKAGE}-patched
+tar cf - ${PACKAGE}-patched | gzip -9 >${PACKAGE}-patched.tar.gz
+rm -rf ${PACKAGE}.tar.gz ${PACKAGE} ${PACKAGE}-patched

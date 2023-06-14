@@ -4,6 +4,7 @@ set(livestatus_headers
     ${header_location}/AndingFilter.h
     ${header_location}/AttributeBitmaskColumn.h
     ${header_location}/AttributeListColumn.h
+    ${header_location}/Attributes.h
     ${header_location}/Average.h
     ${header_location}/BitMask.h
     ${header_location}/BlobColumn.h
@@ -21,18 +22,22 @@ set(livestatus_headers
     ${header_location}/DoubleFilter.h
     ${header_location}/DowntimeRenderer.h
     ${header_location}/DynamicColumn.h
-    ${header_location}/DynamicFileColumn.h
     ${header_location}/DynamicEventConsoleReplicationColumn.h
+    ${header_location}/DynamicFileColumn.h
+    ${header_location}/DynamicRRDColumn.h
     ${header_location}/EventConsoleConnection.h
     ${header_location}/FileSystemHelper.h
     ${header_location}/Filter.h
     ${header_location}/global_counters.h
+    ${header_location}/HostListRenderer.h
+    ${header_location}/HostListState.h
+    ${header_location}/HostServiceState.h
+    ${header_location}/ICore.h
     ${header_location}/InputBuffer.h
     ${header_location}/IntAggregator.h
     ${header_location}/IntColumn.h
     ${header_location}/Interface.h
     ${header_location}/IntFilter.h
-    ${header_location}/HostServiceState.h
     ${header_location}/ListColumn.h
     ${header_location}/ListFilter.h
     ${header_location}/LogCache.h
@@ -61,13 +66,14 @@ set(livestatus_headers
     ${header_location}/RendererBrokenCSV.h
     ${header_location}/RendererCSV.h
     ${header_location}/RendererJSON.h
-    ${header_location}/ServiceGroupMembersColumn.h
-    ${header_location}/ServiceListRenderer.h
     ${header_location}/RendererPython3.h
     ${header_location}/Row.h
+    ${header_location}/RRDColumn.h
     ${header_location}/ServiceGroupMembersColumn.h
     ${header_location}/ServiceListRenderer.h
+    ${header_location}/ServiceListState.h
     ${header_location}/StatsColumn.h
+    ${header_location}/Store.h
     ${header_location}/StringColumn.h
     ${header_location}/StringFilter.h
     ${header_location}/StringUtils.h
@@ -75,41 +81,59 @@ set(livestatus_headers
     ${header_location}/Table.h
     ${header_location}/TableColumns.h
     ${header_location}/TableCommands.h
-    ${header_location}/TableContacts.h
+    ${header_location}/TableComments.h
     ${header_location}/TableContactGroups.h
+    ${header_location}/TableContacts.h
     ${header_location}/TableCrashReports.h
+    ${header_location}/TableDowntimes.h
+    ${header_location}/TableDummy.h
     ${header_location}/TableEventConsole.h
+    ${header_location}/TableEventConsoleEvents.h
+    ${header_location}/TableEventConsoleHistory.h
     ${header_location}/TableEventConsoleReplication.h
     ${header_location}/TableEventConsoleRules.h
     ${header_location}/TableEventConsoleStatus.h
+    ${header_location}/TableHostGroups.h
+    ${header_location}/TableHosts.h
+    ${header_location}/TableHostsByGroup.h
     ${header_location}/TableLabels.h
-    ${header_location}/TableTimeperiods.h
+    ${header_location}/TableLog.h
+    ${header_location}/TableServiceGroups.h
+    ${header_location}/TableServices.h
+    ${header_location}/TableServicesByGroup.h
+    ${header_location}/TableServicesByHostGroup.h
+    ${header_location}/TableStateHistory.h
     ${header_location}/TableStatus.h
+    ${header_location}/TableTimeperiods.h
     ${header_location}/TimeAggregator.h
     ${header_location}/TimeColumn.h
     ${header_location}/TimeFilter.h
+    ${header_location}/TrialManager.h
     ${header_location}/Triggers.h
     ${header_location}/User.h)
 set(livestatus_sources
     AndingFilter.cc
     AttributeListColumn.cc
     Average.cc
-    CrashReport.cc
     Column.cc
     ColumnFilter.cc
     CommentRenderer.cc
     CountAggregator.cc
+    CrashReport.cc
     DictFilter.cc
     DoubleFilter.cc
     DowntimeRenderer.cc
-    EventConsoleConnection.cc
     DynamicEventConsoleReplicationColumn.cc
+    EventConsoleConnection.cc
     FileSystemHelper.cc
     Filter.cc
     global_counters.cc
+    HostListRenderer.cc
+    HostListState.cc
+    HostServiceState.cc
+    ICore.cc
     InputBuffer.cc
     IntFilter.cc
-    HostServiceState.cc
     ListFilter.cc
     LogCache.cc
     LogEntry.cc
@@ -119,8 +143,8 @@ set(livestatus_sources
     Metric.cc
     mk_inventory.cc
     mk_logwatch.cc
-    opids.cc
     NullColumn.cc
+    opids.cc
     OringFilter.cc
     OutputBuffer.cc
     PerfdataAggregator.cc
@@ -133,26 +157,43 @@ set(livestatus_sources
     RendererCSV.cc
     RendererJSON.cc
     RendererPython3.cc
+    RRDColumn.cc
     ServiceGroupMembersColumn.cc
     ServiceListRenderer.cc
+    ServiceListState.cc
     StatsColumn.cc
+    Store.cc
     StringFilter.cc
     StringUtils.cc
     strutil.cc
     Table.cc
     TableColumns.cc
     TableCommands.cc
-    TableContacts.cc
+    TableComments.cc
     TableContactGroups.cc
+    TableContacts.cc
     TableCrashReports.cc
+    TableDowntimes.cc
     TableEventConsole.cc
+    TableEventConsoleEvents.cc
+    TableEventConsoleHistory.cc
     TableEventConsoleReplication.cc
     TableEventConsoleRules.cc
     TableEventConsoleStatus.cc
+    TableHostGroups.cc
+    TableHosts.cc
+    TableHostsByGroup.cc
     TableLabels.cc
-    TableTimeperiods.cc
+    TableLog.cc
+    TableServiceGroups.cc
+    TableServices.cc
+    TableServicesByGroup.cc
+    TableServicesByHostGroup.cc
+    TableStateHistory.cc
     TableStatus.cc
+    TableTimeperiods.cc
     TimeFilter.cc
+    TrialManager.cc
     Triggers.cc
     User.cc)
 
@@ -194,12 +235,54 @@ target_compile_options(re2 PRIVATE -Wno-unused-parameter -DRE2_ON_VALGRIND -O3
 FetchContent_GetProperties(re2 SOURCE_DIR re2_src_dir)
 set(re2_ext_include ${re2_src_dir})
 
-target_include_directories(livestatus PUBLIC ../include ${asio_ext_include}
-                                             ${re2_ext_include})
+# NOTE: Build rrdtool as Cmake External Project, because few rrdtool functions
+# (rrd_clear_error, rrd_flushcached, rrd_get_error, rrd_xport) must be
+# statically linked into liblivestatus. When everything is bazelized, we can
+# probably do this better.
+include(ExternalProject)
+
+# TODO(sp): Use -fdata-sections -ffunction-sections + -Wl,--gc-sections (plus
+# perhaps -Wl,--print-gc-sections)
+set(RRDTOOL_CFLAGS
+    "CFLAGS=-g -O2 -D_GNU_SOURCE -fno-strict-aliasing -std=gnu99 -fPIC -Wno-format-truncation -Wno-implicit-fallthrough -Wno-stringop-truncation"
+)
+ExternalProject_Add(
+  rrdtool
+  URL ${root_repo_dir}/third_party/rrdtool/rrdtool-1.7.2-patched.tar.gz
+  URL_HASH
+    SHA256=26ae8b0fd13fbc1967ea55974a13988dde1b072bfd1bd7f11031cb2664e60719
+  DOWNLOAD_EXTRACT_TIMESTAMP no
+  PREFIX ${CMAKE_CURRENT_BINARY_DIR}/rrdtool
+  CONFIGURE_COMMAND
+    <SOURCE_DIR>/configure --disable-lua --disable-perl --disable-python
+    --disable-ruby --disable-tcl --disable-docs --disable-examples
+    --disable-rrdcached --disable-rrdcgi
+  BUILD_COMMAND make --jobs=6 ${RRDTOOL_CFLAGS}
+  INSTALL_COMMAND "")
+
+ExternalProject_Add_StepDependencies(
+  rrdtool download
+  ${root_repo_dir}/third_party/rrdtool/rrdtool-1.7.2-patched.tar.gz)
+
+ExternalProject_Get_Property(rrdtool SOURCE_DIR)
+set(rrdtool_ext_include "${SOURCE_DIR}/src")
+ExternalProject_Get_Property(rrdtool BINARY_DIR)
+set(rrdtool_ext_lib "${BINARY_DIR}/src/.libs/librrd.a")
+add_dependencies(livestatus rrdtool)
+
+target_include_directories(
+  livestatus PUBLIC ../include ${asio_ext_include} ${re2_ext_include}
+                    ${rrdtool_ext_include})
+
 target_link_libraries(
   livestatus
   PRIVATE pthread
-  PUBLIC re2::re2)
+  PRIVATE re2::re2
+  PRIVATE ${rrdtool_ext_lib}
+  PRIVATE cairo # rrdtool stuff
+  PRIVATE pango-1.0 # rrdtool stuff
+  PRIVATE pangocairo-1.0) # rrdtool stuff too
+
 target_compile_features(livestatus PUBLIC cxx_std_17)
 set_target_properties(livestatus PROPERTIES VERSION ${PROJECT_VERSION}
                                             SOVERSION ${PROJECT_VERSION_MAJOR})

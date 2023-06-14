@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -12,14 +12,17 @@ import string
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Any, Literal, NamedTuple, overload, TypedDict
 
+from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.structured_data import SDPath
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import visuals
+from cmk.gui.data_source import ABCDataSource, data_source_registry
 from cmk.gui.exceptions import MKInternalError, MKUserError
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageResult
+from cmk.gui.painter.v0.base import Cell, Painter, painter_registry, PainterRegistry
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry
 from cmk.gui.type_defs import (
     ColumnName,
@@ -54,10 +57,7 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.views.inventory import DISPLAY_HINTS, DisplayHints
 
-from ...utils.exceptions import MKGeneralException
-from .data_source import ABCDataSource, data_source_registry
 from .layout import layout_registry
-from .painter.v0.base import Cell, Painter, painter_registry, PainterRegistry
 from .sorter import ParameterizedSorter, Sorter, sorter_registry, SorterRegistry
 from .store import get_all_views
 from .view_choices import view_choices
@@ -217,7 +217,7 @@ def view_inventory_join_macros(ds_name: str) -> Dictionary:
 
 
 def view_editor_column_spec(ident: str, ds_name: str) -> Dictionary:
-    choices = [_get_common_vs_column_choice(ds_name)]
+    choices = [_get_common_vs_column_choice(ds_name, add_custom_column_title=True)]
     if join_vs_column_choice := _get_join_vs_column_choice(ds_name):
         choices.append(join_vs_column_choice)
 
@@ -239,7 +239,9 @@ def view_editor_grouping_spec(ident: str, ds_name: str) -> Dictionary:
         ds_name=ds_name,
         ident=ident,
         title=_("Grouping"),
-        vs_column=CascadingDropdown(choices=[_get_common_vs_column_choice(ds_name)]),
+        vs_column=CascadingDropdown(
+            choices=[_get_common_vs_column_choice(ds_name, add_custom_column_title=False)]
+        ),
         allow_empty=True,
         empty_text=None,
     )
@@ -251,19 +253,26 @@ class _VSColumnChoice(NamedTuple):
     vs: Dictionary
 
 
-def _get_common_vs_column_choice(ds_name: str) -> _VSColumnChoice:
+def _get_common_vs_column_choice(ds_name: str, add_custom_column_title: bool) -> _VSColumnChoice:
     painters = painters_of_datasource(ds_name)
+
+    elements = [_get_vs_column_dropdown(ds_name, "painter", painters)]
+    if add_custom_column_title:
+        elements.append(_get_vs_column_title())
+    elements.extend(_get_vs_link_or_tooltip_elements(painters))
+
     return _VSColumnChoice(
         column_type="column",
         title=_("Column"),
         vs=Dictionary(
-            elements=[
-                _get_vs_column_dropdown(ds_name, "painter", painters),
-            ]
-            + _get_vs_link_or_tooltip_elements(painters),
+            elements=elements,
             optional_keys=["link_spec", "tooltip"],
         ),
     )
+
+
+def _get_vs_column_title() -> tuple[str, TextInput]:
+    return ("column_title", TextInput(title=_("Title")))
 
 
 def _get_join_vs_column_choice(ds_name: str) -> None | _VSColumnChoice:
@@ -298,7 +307,7 @@ def _get_join_vs_column_choice(ds_name: str) -> None | _VSColumnChoice:
                         % ", ".join([f"'{c}'" for c in "[]\\().?{}|*^$+"]),
                     ),
                 ),
-                ("column_title", TextInput(title=_("Title"))),
+                _get_vs_column_title(),
             ]
             + _get_vs_link_or_tooltip_elements(join_painters),
             optional_keys=["link_spec", "tooltip"],
@@ -367,7 +376,7 @@ def _get_join_inv_vs_column_choice(ds_name: str) -> _VSColumnChoice | None:
                 ],
             ),
         ),
-        ("column_title", TextInput(title=_("Title"))),
+        _get_vs_column_title(),
     ]
 
     return _VSColumnChoice(
@@ -473,11 +482,11 @@ class _RawVSColumnSpecOptional(TypedDict, total=False):
 
 class _RawVSColumnSpec(_RawVSColumnSpecOptional):
     painter_spec: PainterName | tuple[PainterName, PainterParameters]
+    column_title: str
 
 
 class _RawVSJoinColumnSpec(_RawVSColumnSpec):
     join_value: ColumnName
-    column_title: str
 
 
 class _RawVSJoinInvColumnSpec(_RawVSColumnSpecOptional):
@@ -510,6 +519,7 @@ def _view_editor_spec(
                 _column_type=column_type,
                 name=_get_name(inner_value),
                 parameters=_get_params(inner_value),
+                column_title=inner_value.get("column_title", ""),
                 link_spec=_get_link_spec(inner_value),
                 tooltip=inner_value.get("tooltip"),
             )
@@ -520,10 +530,10 @@ def _view_editor_spec(
                 _column_type=join_column_type,
                 name=_get_name(inner_value),
                 parameters=_get_params(inner_value),
-                link_spec=_get_link_spec(inner_value),
-                tooltip=inner_value.get("tooltip"),
                 join_value=inner_value["join_value"],
                 column_title=inner_value["column_title"],
+                link_spec=_get_link_spec(inner_value),
+                tooltip=inner_value.get("tooltip"),
             )
 
         if value[0] == "join_inv_column":
@@ -547,10 +557,10 @@ def _view_editor_spec(
                 columns_to_match=parameters["columns_to_match"],
                 path_to_table=parameters["path_to_table"],
             ),
-            link_spec=_get_link_spec(inner_value),
-            tooltip=inner_value.get("tooltip"),
             join_value=join_value,
             column_title=inner_value["column_title"],
+            link_spec=_get_link_spec(inner_value),
+            tooltip=inner_value.get("tooltip"),
         )
 
     def _get_name(value: _RawVSColumnSpec) -> PainterName:
@@ -574,7 +584,10 @@ def _view_editor_spec(
             return None
 
         if (column_type := column_spec.column_type) == "column":
-            raw_vs = _RawVSColumnSpec(painter_spec=_get_painter_spec(column_spec))
+            raw_vs = _RawVSColumnSpec(
+                painter_spec=_get_painter_spec(column_spec),
+                column_title=column_spec.column_title or "",
+            )
             if column_spec.link_spec:
                 raw_vs["link_spec"] = column_spec.link_spec.to_raw()
             if column_spec.tooltip:
@@ -928,6 +941,7 @@ def _dummy_view_spec() -> ViewSpec:
             "link_from": {},
             "add_context_to_title": True,
             "is_show_more": False,
+            "packaged": False,
         }
     )
 

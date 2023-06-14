@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """This module wraps some regex handling functions used by Check_MK"""
@@ -34,6 +34,8 @@ URL_CHAR_REGEX = r"^[%s]+$" % URL_CHAR_REGEX_CHARS
 # for the names on disk
 WATO_FOLDER_PATH_NAME_CHARS = r"-\w"
 WATO_FOLDER_PATH_NAME_REGEX = r"^[%s]*$" % WATO_FOLDER_PATH_NAME_CHARS
+
+GROUP_NAME_PATTERN = r"^[-a-z0-9A-Z_\.]*$"
 
 
 def regex(pattern: str, flags: int = 0) -> re.Pattern[str]:

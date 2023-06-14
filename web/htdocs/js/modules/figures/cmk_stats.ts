@@ -24,8 +24,8 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponceData> {
     _table_div;
     _hexagon_box;
     _max_radius!: number;
-    _title: string = "";
-    _title_url: string = "";
+    _title = "";
+    _title_url = "";
     ident() {
         return "hoststats";
     }
@@ -57,16 +57,18 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponceData> {
     update_data(data) {
         this._title = data.title;
         this._title_url = data.title_url;
+        //This assignment changes the type of our Data so it not FigureData but FigureData.Data
+        //It's difficult to have a workaround for this...
         this._data = data.data;
     }
 
     update_gui() {
-        if (!this._data || !this._data.total) return;
+        if (!this._data || this._data.total.count == 0) return;
 
         this.resize();
-        let parts = this._data.parts;
+        const parts = this._data.parts;
         const hexbin = d3Hexbin.hexbin();
-        let hexagon_config: Hex_Config[] = [];
+        const hexagon_config: Hex_Config[] = [];
 
         let largest_element_count = 0;
         for (const element of this._data.parts) {
@@ -113,16 +115,16 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponceData> {
             .attr("class", d => "hexagon " + d.css_class);
 
         // render table
-        let table = this._table_div
+        const table = this._table_div
             .selectAll("table")
             .data([parts.concat(this._data.total)])
             .join("table");
-        let rows = table
+        const rows = table
             .selectAll("tr")
             .data(d => d)
             .join("tr");
 
-        let a = rows.selectAll("td a").data(d => [
+        const a = rows.selectAll("td a").data(d => [
             {text: d.count, url: d.url, css_class: "count " + d.css_class},
             {css_class: "box " + d.css_class, url: d.url},
             {text: d.title, url: d.url, css_class: "text"},

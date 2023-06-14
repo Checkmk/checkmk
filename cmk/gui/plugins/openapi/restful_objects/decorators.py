@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Decorators to expose API endpoints.
@@ -19,7 +19,7 @@ import logging
 import warnings
 from collections.abc import Callable, Generator, Iterator, Mapping, Sequence
 from types import FunctionType
-from typing import Any, Final, Literal, TYPE_CHECKING, TypeVar
+from typing import Any, Final, Literal, TypeVar
 from urllib import parse
 
 import apispec
@@ -51,6 +51,8 @@ from cmk.gui.plugins.openapi.restful_objects.parameters import (
     CONTENT_TYPE,
     ETAG_HEADER_PARAM,
     ETAG_IF_MATCH_HEADER,
+    HEADER_CHECKMK_EDITION,
+    HEADER_CHECKMK_VERSION,
 )
 from cmk.gui.plugins.openapi.restful_objects.params import path_parameters, to_openapi, to_schema
 from cmk.gui.plugins.openapi.restful_objects.specification import SPEC
@@ -71,15 +73,25 @@ from cmk.gui.plugins.openapi.restful_objects.type_defs import (
     SchemaParameter,
     StatusCodeInt,
 )
-from cmk.gui.plugins.openapi.utils import problem, ProblemException
+from cmk.gui.plugins.openapi.utils import (
+    EXT,
+    FIELDS,
+    problem,
+    ProblemException,
+    RestAPIHeaderSchemaValidationException,
+    RestAPIHeaderValidationException,
+    RestAPIPathValidationException,
+    RestAPIPermissionException,
+    RestAPIQueryPathValidationException,
+    RestAPIRequestContentTypeException,
+    RestAPIRequestDataValidationException,
+    RestAPIResponseException,
+    RestAPIWatoDisabledException,
+)
 from cmk.gui.watolib.activate_changes import (
     update_config_generation as activate_changes_update_config_generation,
 )
 from cmk.gui.watolib.git import do_git_commit
-
-if TYPE_CHECKING:
-    # TODO: Directly import from wsgiref.types in Python 3.11, without any import guard
-    from _typeshed.wsgi import WSGIApplication
 
 _SEEN_ENDPOINTS: set[FunctionType] = set()
 
@@ -427,7 +439,7 @@ class Endpoint:
 
         self.operation_id: str
         self.func: WrappedFunc
-        self.wrapped: Callable[[Mapping[str, Any]], WSGIApplication]
+        self.wrapped: Callable[[Mapping[str, Any]], cmk_http.Response]
 
         self.permissions_required = permissions_required
         self._used_permissions: set[str] = set()
@@ -525,12 +537,12 @@ class Endpoint:
             )
 
             if request.environ.get("paste.testing"):
-                raise PermissionError(
-                    f"Required permissions not declared for this endpoint.\n"
-                    f"Endpoint: {self}\n"
+                raise RestAPIPermissionException(
+                    title=f"Required permissions ({pname}) not declared for this endpoint.",
+                    detail=f"Endpoint: {self}\n"
                     f"Permission: {pname}\n"
                     f"Used permission: {self._used_permissions}\n"
-                    f"Declared: {self.permissions_required}\n"
+                    f"Declared: {self.permissions_required}\n",
                 )
 
     def remember_checked_permission(self, permission: str) -> None:
@@ -622,27 +634,278 @@ class Endpoint:
 
         return WrappedEndpoint(self, wrapped)
 
-    def _is_expected_content_type(self, content_type_header: str | None) -> None:
-        if content_type_header is None:
-            raise ValueError(f"No content-type specified. Possible value is: {self.content_type}")
+    def _format_fields(self, _messages: list | dict) -> str:
+        if isinstance(_messages, list):
+            return ", ".join(_messages)
+        return ", ".join(_messages.keys())
 
-        content_type, options = parse_options_header(content_type_header)
-        if content_type == self.content_type:
-            # Content-Type is as expected.
-            if (
-                content_type == "application/json"
-                and "charset" in options
-                and options["charset"] is not None
-            ):
-                # but there are options
-                if options["charset"].lower() != "utf-8":
-                    # with a charset we don't understand
-                    raise ValueError(
-                        f"Character set {options['charset']!r} not supported "
-                        f"for content-type {content_type!r}."
+    def _content_type_validation(self) -> None:
+        # If there is a request body with no content-type, raise an error.
+        if self.request_schema and not request.content_type:
+            raise RestAPIRequestContentTypeException(
+                detail="Please specify a content type.",
+                title="Missing content type.",
+            )
+
+        if self.request_schema and self.method in ("post", "put"):
+            if request.content_type is None:
+                raise RestAPIRequestContentTypeException(
+                    detail=f"No content-type specified. Possible value is: {self.content_type}",
+                    title="Content type not valid for this endpoint.",
+                )
+
+            content_type, options = parse_options_header(request.content_type)
+            if content_type == self.content_type:
+                # Content-Type is as expected.
+                if (
+                    content_type == "application/json"
+                    and "charset" in options
+                    and options["charset"] is not None
+                ):
+                    # but there are options.
+                    if options["charset"].lower() != "utf-8":
+                        raise RestAPIRequestContentTypeException(
+                            detail=f"Character set {options['charset']!r} not supported "
+                            f"for content-type {content_type!r}.",
+                            title="Content type not valid for this endpoint.",
+                        )
+            else:
+                # If the content type doesn't match what the endpoint expects.
+                raise RestAPIRequestContentTypeException(
+                    detail=f"Content-Type {content_type!r} not supported for this endpoint.",
+                    title="Content type not valid for this endpoint.",
+                )
+
+    def _path_validation(self, path_schema: type[Schema] | None, _params: dict[str, Any]) -> None:
+        try:
+            if path_schema:
+                _params.update(
+                    path_schema().load({k: parse.unquote(v) for k, v in _params.items()})
+                )
+        except ValidationError as exc:
+            raise RestAPIPathValidationException(
+                title=http.client.responses[404],
+                detail=f"These fields have problems: {self._format_fields(exc.messages)}",
+                fields=FIELDS(
+                    exc.messages if isinstance(exc.messages, dict) else {"exc": exc.messages},
+                ),
+            )
+
+    def _query_param_validation(
+        self, query_schema: type[Schema] | None, _params: dict[str, Any]
+    ) -> None:
+        try:
+            if query_schema:
+                list_fields = tuple(
+                    {k for k, v in query_schema().fields.items() if isinstance(v, ma_fields.List)}
+                )
+                _params.update(
+                    query_schema().load(
+                        _filter_profile_headers(_from_multi_dict(request.args, list_fields))
                     )
-        else:
-            raise ValueError(f"Content-Type {content_type!r} not supported for this endpoint.")
+                )
+        except ValidationError as exc:
+            raise RestAPIQueryPathValidationException(
+                title=http.client.responses[400],
+                detail=f"These fields have problems: {self._format_fields(exc.messages)}",
+                fields=FIELDS(
+                    exc.messages if isinstance(exc.messages, dict) else {"exc": exc.messages},
+                ),
+            )
+
+    def _header_validation(
+        self, header_schema: type[Schema] | None, _params: dict[str, Any]
+    ) -> None:
+        try:
+            if header_schema:
+                _params.update(header_schema().load(request.headers))
+        except ValidationError as exc:
+            raise RestAPIHeaderSchemaValidationException(
+                title=http.client.responses[400],
+                detail=f"These fields have problems: {self._format_fields(exc.messages)}",
+                fields=FIELDS(
+                    exc.messages if isinstance(exc.messages, dict) else {"exc": exc.messages},
+                ),
+            )
+
+        # Accept Header Missing
+        if not request.accept_mimetypes:
+            raise RestAPIHeaderValidationException(
+                title="Not Acceptable",
+                detail="Please specify an Accept Header.",
+            )
+
+        # Accept Header Not Supported
+        if not request.accept_mimetypes.best_match([self.content_type]):
+            raise RestAPIHeaderValidationException(
+                title="Not Acceptable",
+                detail="Can not send a response with the content type specified in the 'Accept' Header."
+                f" Accept Header: {request.accept_mimetypes}."
+                f" Supported content types: [{self.content_type}]",
+            )
+
+    def _request_data_validation(
+        self, request_schema: type[Schema] | None, _params: dict[str, Any]
+    ) -> None:
+        try:
+            if request_schema:
+                # Try to decode only when there is data. Decoding an empty string will fail.
+                if request.get_data(cache=True):
+                    json_data = request.json or {}
+                else:
+                    json_data = {}
+                _params["body"] = request_schema().load(json_data)
+        except ValidationError as exc:
+            raise RestAPIRequestDataValidationException(
+                title=http.client.responses[400],
+                detail=f"These fields have problems: {self._format_fields(exc.messages)}",
+                fields=FIELDS(
+                    exc.messages if isinstance(exc.messages, dict) else {"exc": exc.messages},
+                ),
+            )
+
+    def _validate_response(  # pylint: disable=too-many-branches
+        self, response_schema: type[Schema] | None, _params: dict[str, Any]
+    ) -> cmk_http.Response:
+        try:
+            response = self.func(_params)
+        except ValidationError as exc:
+            response = problem(
+                status=400,
+                title=http.client.responses[400],
+                detail=f"These fields have problems: {self._format_fields(exc.messages)}",
+                fields=FIELDS(
+                    exc.messages if isinstance(exc.messages, dict) else {"exc": exc.messages},
+                ),
+            )
+        except ProblemException as problem_exception:
+            response = problem_exception.to_problem()
+
+        # We don't expect a permission to be triggered when an endpoint ran into an error.
+        if response.status_code < 400:
+            if self.permissions_required is not None and not self.permissions_required.validate(
+                list(self._used_permissions)
+            ):
+                required_permissions = list(self._used_permissions)
+                declared_permissions = self.permissions_required
+
+                _logger.error(
+                    "Permission mismatch: %r Params: %s Required: %s Declared: %s",
+                    self,
+                    _params,
+                    required_permissions,
+                    declared_permissions,
+                )
+
+                if request.environ.get("paste.testing"):
+                    raise RestAPIPermissionException(
+                        title="Permission mismatch",
+                        detail="There can be some causes for this error:\n"
+                        "* a permission which was required (successfully) was not declared\n"
+                        "* a permission which was declared (not optional) was not required\n"
+                        "* No permission was required at all, although permission were declared\n"
+                        f"Endpoint: {self}\n"
+                        f"Params: {_params!r}\n"
+                        f"Required: {required_permissions}\n"
+                        f"Declared: {declared_permissions}\n",
+                    )
+
+                raise RestAPIPermissionException(
+                    title="Permission mismatch",
+                    detail="See the server logs for more information.",
+                )
+
+        if self.output_empty and response.status_code < 400 and response.data:
+            raise RestAPIResponseException(
+                title="Unexpected data was sent.",
+                detail=f"Endpoint {self.operation_id}\nThis is a bug, please report.",
+                ext=EXT({"data_sent": str(response.data)}),
+            )
+
+        if response.status_code == 204:
+            response.content_type = ""
+
+        if response.status_code not in self._expected_status_codes:
+            raise RestAPIResponseException(
+                title=f"Unexpected status code returned: {response.status_code}",
+                detail=f"Endpoint {self.operation_id}",
+                ext=EXT(
+                    {
+                        "The following status codes are allowed for this endpoint": self._expected_status_codes
+                    }
+                ),
+            )
+
+        # We assume something has been modified and increase the config generation ID
+        # by one. This is necessary to ensure a warning in the "Activate Changes" GUI
+        # about there being new changes to activate can be given to the user.
+        if self.method != "get" and response.status_code < 300 and self.update_config_generation:
+            # We assume no configuration change on GET and no configuration change on
+            # non-ok responses.
+            activate_changes_update_config_generation()
+            if active_config.wato_use_git:
+                do_git_commit()
+
+        if (
+            self.content_type == "application/json"
+            and response.status_code < 300
+            and response_schema
+            and response.data
+        ):
+            try:
+                data = json.loads(response.data.decode("utf-8"))
+            except json.decoder.JSONDecodeError as exc:
+                raise RestAPIResponseException(
+                    title="Server was about to send invalid JSON data.",
+                    detail="This is an error of the implementation.",
+                    ext=EXT(
+                        {
+                            "errors": str(exc),
+                            "orig": response.data,
+                        },
+                    ),
+                )
+
+            try:
+                outbound = response_schema().dump(data)
+            except ValidationError as exc:
+                raise RestAPIResponseException(
+                    title="Mismatch between endpoint and internal data format. ",
+                    detail="This could be due to invalid or outdated configuration, or be an error of the implementation. "
+                    "Please check your *.mk files in case you have modified them by hand and run cmk-update-config. "
+                    "If the problem persists afterwards, please report a bug.",
+                    ext=EXT(
+                        {
+                            "errors": exc.messages,
+                            "debug_data": {"orig": data},
+                        },
+                    ),
+                )
+
+            if self.convert_response:
+                response.set_data(json.dumps(outbound))
+        elif response.headers["Content-Type"] == "application/problem+json" and response.data:
+            data = response.data.decode("utf-8")
+            try:
+                json.loads(data)
+            except ValidationError as exc:
+                raise RestAPIResponseException(
+                    title="Server was about to send an invalid response.",
+                    detail="This is an error of the implementation.",
+                    ext=EXT(
+                        {
+                            "errors": exc.messages,
+                            "orig": data,
+                        },
+                    ),
+                )
+
+        response.freeze()
+        # response code 204 does not have headers.
+        if response.status_code == 204:
+            for key in ["Content-Type", "Etag"]:
+                del response.headers[key]
+        return response
 
     def wrap_with_validation(
         self,
@@ -677,9 +940,7 @@ class Endpoint:
             raise RuntimeError("Decorating failure. function not set.")
 
         @functools.wraps(self.func)
-        def _validating_wrapper(  # pylint: disable=too-many-branches
-            param: Mapping[str, Any]
-        ) -> cmk_http.Response:
+        def _validating_wrapper(param: Mapping[str, Any]) -> cmk_http.Response:
             # TODO: Better error messages, pointing to the location where variables are missing
 
             self._used_permissions = set()
@@ -687,99 +948,18 @@ class Endpoint:
             _params = dict(param)
             del param
 
-            def _format_fields(_messages: list | dict) -> str:
-                if isinstance(_messages, list):
-                    return ", ".join(_messages)
-                if isinstance(_messages, dict):
-                    return ", ".join(_messages.keys())
-                return ""
-
-            def _problem(exc_, status_code=400):
-                if isinstance(exc_.messages, dict):
-                    messages = exc_.messages
-                else:
-                    messages = {"exc": exc_.messages}
-                return problem(
-                    status=status_code,
-                    title=http.client.responses[status_code],
-                    detail=f"These fields have problems: {_format_fields(exc_.messages)}",
-                    fields=messages,
-                )
-
-            if self.request_schema and not request.content_type:
-                return problem(
-                    status=415,
-                    detail="Please specify a content type.",
-                    title="Missing content type.",
-                )
-
-            if self.request_schema and self.method in ("post", "put"):
-                try:
-                    self._is_expected_content_type(request.content_type)
-                except ValueError as exc:
-                    return problem(
-                        status=415,
-                        detail=str(exc),
-                        title="Content type not valid for this endpoint.",
-                    )
-
-            try:
-                if path_schema:
-                    _params.update(
-                        path_schema().load({k: parse.unquote(v) for k, v in _params.items()})
-                    )
-            except ValidationError as exc:
-                return _problem(exc, status_code=404)
-
-            try:
-                if query_schema:
-                    list_fields = tuple(
-                        {
-                            k
-                            for k, v in query_schema().fields.items()
-                            if isinstance(v, ma_fields.List)
-                        }
-                    )
-                    _params.update(
-                        query_schema().load(
-                            _filter_profile_headers(_from_multi_dict(request.args, list_fields))
-                        )
-                    )
-
-                if header_schema:
-                    _params.update(header_schema().load(request.headers))
-
-                if request_schema:
-                    # Try to decode only when there is data. Decoding an empty string will fail.
-                    if request.get_data(cache=True):
-                        json_data = request.json or {}
-                    else:
-                        json_data = {}
-                    _params["body"] = request_schema().load(json_data)
-            except ValidationError as exc:
-                return _problem(exc, status_code=400)
-
-            if not request.accept_mimetypes:
-                return problem(
-                    status=406, title="Not Acceptable", detail="Please specify an Accept Header."
-                )
-
-            if not request.accept_mimetypes.best_match([self.content_type]):
-                return problem(
-                    status=406,
-                    title="Not Acceptable",
-                    detail="Can not send a response with the content type specified in the 'Accept' Header."
-                    f" Accept Header: {request.accept_mimetypes}."
-                    f" Supported content types: [{self.content_type}]",
-                )
+            self._content_type_validation()
+            self._path_validation(path_schema, _params)
+            self._query_param_validation(query_schema, _params)
+            self._header_validation(header_schema, _params)
+            self._request_data_validation(request_schema, _params)
 
             # make pylint happy
             assert callable(self.func)
 
             if self.tag_group == "Setup" and not active_config.wato_enabled:
-                return problem(
-                    status=403,
-                    title="Forbidden: WATO is disabled",
+                raise RestAPIWatoDisabledException(
+                    title="Forbidden: Setup is disabled",
                     detail="This endpoint is currently disabled via the "
                     "'Disable remote configuration' option in 'Distributed Monitoring'. "
                     "You may be able to query the central site.",
@@ -790,139 +970,7 @@ class Endpoint:
             #     # Intentionally generate a crash report.
             #     raise PermissionError(f"Permissions need to be specified for {self}")
 
-            try:
-                response = self.func(_params)
-            except ValidationError as exc:
-                response = _problem(exc, status_code=400)
-            except ProblemException as problem_exception:
-                response = problem_exception.to_problem()
-
-            # We don't expect a permission to be triggered when an endpoint ran into an error.
-            if response.status_code < 400:
-                if (
-                    self.permissions_required is not None
-                    and not self.permissions_required.validate(list(self._used_permissions))
-                ):
-
-                    required_permissions = list(self._used_permissions)
-                    declared_permissions = self.permissions_required
-
-                    _logger.error(
-                        "Permission mismatch: %r Params: %s Required: %s Declared: %s",
-                        self,
-                        _params,
-                        required_permissions,
-                        declared_permissions,
-                    )
-
-                    if request.environ.get("paste.testing"):
-                        raise PermissionError(
-                            "Permission mismatch\n"
-                            "There can be some causes for this error:\n"
-                            "* a permission which was required (successfully) was not declared\n"
-                            "* a permission which was declared (not optional) was not required\n"
-                            "* No permission was required at all, although permission were declared\n"
-                            f"Endpoint: {self}\n"
-                            f"Params: {_params!r}\n"
-                            f"Required: {required_permissions}\n"
-                            f"Declared: {declared_permissions}\n"
-                        )
-
-                    return problem(
-                        status=500,
-                        title="Internal Server Error",
-                        detail="Permission mismatch. See the server logs for more information.",
-                    )
-
-            if self.output_empty and response.status_code < 400 and response.data:
-                return problem(
-                    status=500,
-                    title="Unexpected data was sent.",
-                    detail=f"Endpoint {self.operation_id}\nThis is a bug, please report.",
-                    ext={"data_sent": str(response.data)},
-                )
-
-            if self.output_empty:
-                response.content_type = ""
-
-            if response.status_code not in self._expected_status_codes:
-                return problem(
-                    status=500,
-                    title=f"Unexpected status code returned: {response.status_code}",
-                    detail=f"Endpoint {self.operation_id}\nThis is a bug, please report.",
-                    ext={"codes": self._expected_status_codes},
-                )
-
-            # We assume something has been modified and increase the config generation ID
-            # by one. This is necessary to ensure a warning in the "Activate Changes" GUI
-            # about there being new changes to activate can be given to the user.
-            if (
-                self.method != "get"
-                and response.status_code < 300
-                and self.update_config_generation
-            ):
-                # We assume no configuration change on GET and no configuration change on
-                # non-ok responses.
-                activate_changes_update_config_generation()
-                if active_config.wato_use_git:
-                    do_git_commit()
-
-            if (
-                self.content_type == "application/json"
-                and response.status_code < 300
-                and response_schema
-                and response.data
-            ):
-                try:
-                    data = json.loads(response.data.decode("utf-8"))
-                except json.decoder.JSONDecodeError as exc:
-                    return problem(
-                        status=500,
-                        title="Server was about to send invalid JSON data.",
-                        detail="This is an error of the implementation.",
-                        ext={
-                            "errors": str(exc),
-                            "orig": response.data,
-                        },
-                    )
-                try:
-                    outbound = response_schema().dump(data)
-                except ValidationError as exc:
-                    return problem(
-                        status=500,
-                        title="Mismatch between endpoint and internal data format. ",
-                        detail="This could be due to invalid or outdated configuration, or be an error of the implementation. "
-                        "Please check your *.mk files in case you have modified them by hand and run cmk-update-config. "
-                        "If the problem persists afterwards, please report a bug.",
-                        ext={
-                            "errors": exc.messages,
-                            "debug_data": {"orig": data},
-                        },
-                    )
-
-                if self.convert_response:
-                    response.set_data(json.dumps(outbound))
-            elif response.headers["Content-Type"] == "application/problem+json" and response.data:
-                data = response.data.decode("utf-8")
-                try:
-                    json.loads(data)
-                except ValidationError as exc:
-                    return problem(
-                        status=500,
-                        title="Server was about to send an invalid response.",
-                        detail="This is an error of the implementation.",
-                        ext={
-                            "errors": exc.messages,
-                            "orig": data,
-                        },
-                    )
-
-            response.freeze()
-            # response code 204 does not have headers.
-            if response.status_code == 204:
-                for key in ["Content-Type", "Etag"]:
-                    del response.headers[key]
-            return response
+            return self._validate_response(response_schema, _params)
 
         def _wrap_with_wato_lock(func: WrappedFunc) -> WrappedFunc:
             # We need to lock the whole of the validation process, not just the function itself.
@@ -970,7 +1018,7 @@ class Endpoint:
             )
         return path
 
-    def make_url(self, parameter_values: dict[str, Any]):  # type:ignore[no-untyped-def]
+    def make_url(self, parameter_values: dict[str, Any]):  # type: ignore[no-untyped-def]
         return self.path.format(**parameter_values)
 
     def _path_item(
@@ -1015,9 +1063,10 @@ class Endpoint:
         module_obj = import_string(self.func.__module__)
 
         response_headers: dict[str, OpenAPIParameter] = {}
-        content_type_header = to_openapi([CONTENT_TYPE], "header")[0]
-        del content_type_header["in"]
-        response_headers[content_type_header.pop("name")] = content_type_header
+        for header_to_add in [CONTENT_TYPE, HEADER_CHECKMK_EDITION, HEADER_CHECKMK_VERSION]:
+            openapi_header = to_openapi([header_to_add], "header")[0]
+            del openapi_header["in"]
+            response_headers[openapi_header.pop("name")] = openapi_header
 
         if self.etag in ("output", "both"):
             etag_header = to_openapi([ETAG_HEADER_PARAM], "header")[0]
@@ -1034,7 +1083,7 @@ class Endpoint:
             )
 
         if self.tag_group == "Setup":
-            responses["403"] = self._path_item(403, "Configuration via WATO is disabled.")
+            responses["403"] = self._path_item(403, "Configuration via Setup is disabled.")
         if self.tag_group == "Checkmk Internal" and 403 in self._expected_status_codes:
             responses["403"] = self._path_item(
                 403,
@@ -1266,7 +1315,7 @@ def _build_description(description_text: str | None, werk_id: int | None = None)
     return description
 
 
-def _verify_parameters(  # type:ignore[no-untyped-def]
+def _verify_parameters(  # type: ignore[no-untyped-def]
     path: str,
     path_schema: type[Schema] | None,
 ):
@@ -1354,7 +1403,7 @@ def _add_tag(tag: OpenAPITag, tag_group: str | None = None) -> None:
         _assign_to_tag_group(tag_group, name)
 
 
-def _schema_name(schema_name: str):  # type:ignore[no-untyped-def]
+def _schema_name(schema_name: str):  # type: ignore[no-untyped-def]
     """Remove the suffix 'Schema' from a schema-name.
 
     Examples:
@@ -1376,7 +1425,7 @@ def _schema_name(schema_name: str):  # type:ignore[no-untyped-def]
     return schema_name[:-6] if schema_name.endswith("Schema") else schema_name
 
 
-def _schema_definition(schema_name: str):  # type:ignore[no-untyped-def]
+def _schema_definition(schema_name: str):  # type: ignore[no-untyped-def]
     ref = f"#/components/schemas/{_schema_name(schema_name)}"
     return f'<SchemaDefinition schemaRef="{ref}" showReadOnly={{true}} showWriteOnly={{true}} />'
 
@@ -1502,7 +1551,7 @@ def _permission_descriptions(
 
         >>> _permission_descriptions(
         ...     permissions.AllPerm([permissions.Perm("wato.edit_folders"),
-        ...                          permissions.Ignore(permissions.Perm("wato.edit"))]),
+        ...                          permissions.Undocumented(permissions.Perm("wato.edit"))]),
         ...     {'wato.edit_folders': 'Allowed to cook the books.'},
         ... )
         'This endpoint requires the following permissions: \n * `wato.edit_folders`: Allowed to cook the books.\n'
@@ -1541,7 +1590,7 @@ def _permission_descriptions(
     _description: list[str] = ["This endpoint requires the following permissions: "]
 
     def _count_perms(_perms):
-        return len([p for p in _perms if not isinstance(p, permissions.Ignore)])
+        return len([p for p in _perms if not isinstance(p, permissions.Undocumented)])
 
     def _add_desc(permission: permissions.BasePerm, indent: int, desc_list: list[str]) -> None:
         # We indent by two spaces, as is required by markdown.
@@ -1569,7 +1618,7 @@ def _permission_descriptions(
         elif isinstance(permission, permissions.Optional):
             desc_list.append(f"{prefix} * Optionally:")
             _add_desc(permission.perm, indent + 1, desc_list)
-        elif isinstance(permission, permissions.Ignore):
+        elif isinstance(permission, permissions.Undocumented):
             # Don't render
             pass
         else:

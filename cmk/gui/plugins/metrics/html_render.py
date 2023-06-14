@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -78,7 +78,7 @@ min_resize_width = 50
 min_resize_height = 6
 
 
-def host_service_graph_popup_cmk(  # type:ignore[no-untyped-def]
+def host_service_graph_popup_cmk(  # type: ignore[no-untyped-def]
     site,
     host_name,
     service_description,
@@ -223,17 +223,17 @@ def _render_graph_title_elements(
         title_elements.append((graph_artwork["title"], None))
 
     # Only add host/service information for template based graphs
-    ident_type, spec_info = graph_artwork["definition"]["specification"]
-    if ident_type != "template":
+    specification = graph_artwork["definition"]["specification"]
+    if specification[0] != "template":
         return title_elements
 
-    title_elements.extend(title_info_elements(spec_info, title_format))
+    title_elements.extend(title_info_elements(specification[1], title_format))
 
     return title_elements
 
 
 def title_info_elements(
-    spec_info: dict[str, Any], title_format: Sequence[str]
+    spec_info: TemplateGraphSpec, title_format: Sequence[str]
 ) -> Iterable[tuple[str, str]]:
     if "add_host_name" in title_format:
         host_url = makeuri_contextless(
@@ -265,9 +265,6 @@ def title_info_elements(
                 filename="view.py",
             )
             yield service_description, service_url
-
-    if "add_metric_name" in title_format:
-        yield spec_info["metric"], ""
 
 
 def _show_html_graph_title(
@@ -334,14 +331,13 @@ def _show_graph_html_content(
     if _graph_legend_enabled(graph_render_options, graph_artwork):
         _show_graph_legend(graph_artwork, graph_render_options)
 
-    model_params_repr = graph_artwork["definition"].get("model_params_repr")
-    model_params_display = (
-        graph_artwork["definition"].get("model_params", {}).get("display_model_parametrization")
-    )
-    if model_params_repr and model_params_display:
+    graph_definition = graph_artwork["definition"]
+    if graph_definition["specification"][0] == "forecast" and graph_definition["model_params"].get(
+        "display_model_parametrization"
+    ):
         html.open_div(align="center")
         html.h2(_("Forecast Parametrization"))
-        html.write_html(model_params_repr)
+        html.write_html(HTML(graph_definition["model_params_repr"]))
         html.close_div()
 
     html.close_div()
@@ -410,7 +406,6 @@ def get_scalars(
         ("max", _("Maximum")),
         ("average", _("Average")),
     ]:
-
         consolidation_function = graph_artwork["definition"]["consolidation_function"]
         inactive = consolidation_function is not None and consolidation_function != scalar
 
@@ -545,7 +540,7 @@ def _graph_padding_styles(graph_render_options: GraphRenderOptions) -> str:
     return "padding: %0.2fex %0.2fex %0.2fex %0.2fex;" % _graph_margin_ex(graph_render_options)
 
 
-def _graph_margin_ex(  # type:ignore[no-untyped-def]
+def _graph_margin_ex(  # type: ignore[no-untyped-def]
     graph_render_options: GraphRenderOptions, defaults=(8, 16, 4, 8)
 ) -> Bounds:
     """Return 4-Tuple for top, right, bottom, left spacing"""
@@ -715,7 +710,6 @@ def render_graphs_from_specification_html(
     *,
     render_async: bool = True,
 ) -> HTML:
-
     graph_recipes = resolve_graph_recipe_with_error_handling(graph_identification)
     if isinstance(graph_recipes, HTML):
         return graph_recipes  # This is to html.write the exception

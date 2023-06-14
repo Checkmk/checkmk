@@ -6,7 +6,7 @@ Date: 1667825668
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The active check <tt>check_http</tt> is configurable in the Checkmk user interface via the ruleset
 <i>Check HTTP service</i>. As of this werk, this ruleset allows for selecting <tt>CONNECT:POST</tt>

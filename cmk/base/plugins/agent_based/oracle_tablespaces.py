@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -162,7 +162,6 @@ register.agent_section(
 
 
 def discovery_oracle_tablespaces(section: oracle.SectionTableSpaces) -> DiscoveryResult:
-
     for (sid, ts_name), tablespace in section["tablespaces"].items():
         if tablespace["status"] in ("ONLINE", "READONLY", "OFFLINE"):
             yield Service(
@@ -304,7 +303,6 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
             or (ts_type == "TEMPORARY" and params.get("temptablespace"))
             or (ts_type == "UNDO" and params.get("monitor_undo_tablespace"))
         ):
-
             yield from check_levels(
                 stats.free_space,
                 levels_lower=(warn, crit),
@@ -333,7 +331,7 @@ def check_oracle_tablespaces(  # pylint: disable=too-many-branches
             )
 
 
-def cluster_check_oracle_tablespaces(  # type:ignore[no-untyped-def]
+def cluster_check_oracle_tablespaces(  # type: ignore[no-untyped-def]
     item, params, section: Mapping[str, Optional[oracle.SectionTableSpaces]]
 ) -> CheckResult:
     selected_tablespaces: oracle.SectionTableSpaces = {"tablespaces": {}, "error_sids": {}}

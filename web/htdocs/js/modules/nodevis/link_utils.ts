@@ -1,3 +1,4 @@
+import {LineConfig} from "nodevis/layout_utils";
 import {
     d3SelectionG,
     NodevisLink,
@@ -5,7 +6,6 @@ import {
     NodevisWorld,
 } from "nodevis/type_defs";
 import {AbstractClassRegistry, DefaultTransition} from "nodevis/utils";
-import {LineConfig} from "nodevis/layout_utils";
 
 export function compute_link_id(link_data: NodevisLink): string {
     return link_data.source.data.id + "#@#" + link_data.target.data.id;
@@ -37,29 +37,35 @@ export class AbstractLink {
     }
 
     render_into(selection): void {
-        switch (this._line_config.style) {
-            case "straight": {
-                this._selection = selection
-                    .append("line")
-                    .classed("link_element", true)
-                    .attr("marker-end", "url(#triangle)")
-                    .attr("stroke-width", function (d) {
-                        return Math.max(1, 2 - d.depth);
-                    })
-                    .style("stroke", "darkgrey");
-                break;
-            }
-            default: {
-                this._selection = selection
-                    .append("path")
-                    .classed("link_element", true)
-                    .attr("fill", "none")
-                    .attr("stroke-width", 1)
-                    .style("stroke", "darkgrey");
-                break;
-            }
-        }
+        // Straigth line style
+        const line_selection = selection
+            .selectAll("line")
+            .data(this._line_config.style == "straight" ? [this.id()] : [])
+            .join("line")
+            .attr("marker-end", "url(#triangle)")
+            .attr("stroke-width", function (d) {
+                return Math.max(1, 2 - d.depth);
+            })
+            .style("stroke", this._color());
+
+        // Elbow and round style
+        const path_selection = selection
+            .selectAll("path")
+            .data(this._line_config.style != "straight" ? [this.id()] : [])
+            .join("path")
+            .attr("fill", "none")
+            .attr("stroke-width", 1)
+            .style("stroke", this._color());
+
+        this._selection =
+            this._line_config.style == "straight"
+                ? line_selection
+                : path_selection;
         if (this._line_config.dashed) this.selection().classed("dashed", true);
+    }
+
+    _color(): string {
+        return "darkgrey";
     }
 
     update_position(_enforce_transition = false) {
@@ -83,10 +89,10 @@ export class AbstractLink {
         }
 
         if (source.data.current_positioning.hide_node_link) {
-            this.selection().attr("opacity", 0);
+            this.selection().style("stroke-opacity", 0);
             return;
         }
-        this.selection().attr("opacity", 1);
+        this.selection().style("stroke-opacity", 0.3);
 
         const x1 = source.data.target_coords.x;
         const y1 = source.data.target_coords.y;

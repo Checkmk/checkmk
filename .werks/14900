@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: undoc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This werk adjusts the menu entries in "Display" when viewing views.
 Until now it was not really visible to users if they edited views of other users

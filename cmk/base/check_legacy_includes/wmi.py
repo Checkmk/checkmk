@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -51,7 +51,7 @@ class WMITableLegacy(WMITable):
     Needed since WMITable.get raises IgnoreResultsError
     """
 
-    def get(  # type:ignore[no-untyped-def]
+    def get(  # type: ignore[no-untyped-def]
         self,
         row: str | int,
         column: str | int,
@@ -109,11 +109,11 @@ def wmi_filter_global_only(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_wmi_table_instances(  # type:ignore[no-untyped-def]
+def inventory_wmi_table_instances(  # type: ignore[no-untyped-def]
     tables: WMISection,
     required_tables: Iterable[str] | None = None,
     filt: Callable[[WMISection, str | int], bool] | None = None,
-    levels=None,
+    levels: tuple | dict | None = None,  # important for now: not str!
 ):
     if required_tables is None:
         required_tables = tables
@@ -136,11 +136,11 @@ def inventory_wmi_table_instances(  # type:ignore[no-untyped-def]
     return [(row, levels) for row in potential_instances if filt is None or filt(tables, row)]
 
 
-def inventory_wmi_table_total(  # type:ignore[no-untyped-def]
+def inventory_wmi_table_total(  # type: ignore[no-untyped-def]
     tables: WMISection,
     required_tables: Iterable[str] | None = None,
     filt: Callable[[WMISection, None], bool] | None = None,
-    levels=None,
+    levels: tuple | dict | None = None,  # important for now: not str!
 ):
     if required_tables is None:
         required_tables = tables
@@ -183,7 +183,7 @@ def get_levels_quadruple(params):
     return upper + lower
 
 
-def wmi_yield_raw_persec(  # type:ignore[no-untyped-def]
+def wmi_yield_raw_persec(  # type: ignore[no-untyped-def]
     table: WMITable,
     row: str | int,
     column: str | int,
@@ -215,7 +215,7 @@ def wmi_yield_raw_persec(  # type:ignore[no-untyped-def]
     )
 
 
-def wmi_yield_raw_counter(  # type:ignore[no-untyped-def]
+def wmi_yield_raw_counter(  # type: ignore[no-untyped-def]
     table: WMITable,
     row: str | int,
     column: str | int,
@@ -303,7 +303,7 @@ def wmi_calculate_raw_average_time(
     return measure_per_sec / base_per_sec  # fixed: true-division
 
 
-def wmi_yield_raw_average(  # type:ignore[no-untyped-def]
+def wmi_yield_raw_average(  # type: ignore[no-untyped-def]
     table: WMITable,
     row: str | int,
     column: str,
@@ -326,7 +326,7 @@ def wmi_yield_raw_average(  # type:ignore[no-untyped-def]
     )
 
 
-def wmi_yield_raw_average_timer(  # type:ignore[no-untyped-def]
+def wmi_yield_raw_average_timer(  # type: ignore[no-untyped-def]
     table: WMITable,
     row: str | int,
     column: str,
@@ -355,7 +355,7 @@ def wmi_yield_raw_average_timer(  # type:ignore[no-untyped-def]
     )
 
 
-def wmi_yield_raw_fraction(  # type:ignore[no-untyped-def]
+def wmi_yield_raw_fraction(  # type: ignore[no-untyped-def]
     table: WMITable,
     row: str | int,
     column: str,

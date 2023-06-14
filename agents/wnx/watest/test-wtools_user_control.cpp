@@ -11,7 +11,6 @@
 
 namespace wtools::uc {  // to become friendly for cma::cfg classes
 
-
 TEST(WtoolsUserControl, Base) {
     LdapControl lc;
     ASSERT_TRUE(lc.name() == nullptr);
@@ -62,7 +61,7 @@ TEST(WtoolsUserControl, AddDeleteUserToUsers) {
 TEST(WtoolsUserControl, AddDeleteCheckGroup) {
     LdapControl lc;
     std::wstring_view g = L"x_test_group";
-    std::wstring_view c = L"Check MK Testing Group";
+    std::wstring_view c = L"Checkmk Testing Group";
 
     lc.localGroupDel(g);
     ON_OUT_OF_SCOPE(lc.localGroupDel(g));
@@ -73,7 +72,7 @@ TEST(WtoolsUserControl, AddDeleteCheckGroup) {
     EXPECT_EQ(Status::absent, lc.localGroupDel(g));
 }
 
-TEST(WtoolsUserControl, AddDeleteCheckForbiddenGroupIntegration) {
+TEST(WtoolsUserControl, AddDeleteCheckForbiddenGroupComponent) {
     using namespace std::literals::string_literals;
     LdapControl lc;
     if (SidToName(L"S-1-5-32-545", SidTypeGroup) != L"Users") {
@@ -110,7 +109,7 @@ TEST(WtoolsUserControl, AddDeleteMembers) {
     LdapControl lc;
     std::wstring_view g = L"x_test_group";
     std::wstring_view u = L"x_user_name";
-    std::wstring_view c = L"Check MK Testing Group";
+    std::wstring_view c = L"Checkmk Testing Group";
     EXPECT_NE(lc.localGroupDel(g), Status::error);
     ON_OUT_OF_SCOPE({
         lc.userDel(u);

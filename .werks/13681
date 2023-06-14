@@ -6,7 +6,7 @@ Date: 1652773056
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 It's now possible to narrow down the target platforms (i.e., the operating system and
 package format) for baked agent packages.

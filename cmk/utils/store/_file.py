@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import pickle
@@ -11,12 +11,13 @@ from contextlib import contextmanager
 from os import getgid, getuid
 from pathlib import Path
 from stat import S_IMODE, S_IWOTH
-from typing import Any, Final, Generic, Protocol, TypeVar
+from typing import Any, Final, Generic, Protocol, Type, TypeVar
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException, MKTerminate, MKTimeout
 from cmk.utils.i18n import _
-from cmk.utils.store._locks import acquire_lock, have_lock, release_lock
+
+from ._locks import acquire_lock, release_lock
 
 __all__ = [
     "BytesSerializer",
@@ -24,6 +25,9 @@ __all__ = [
     "ObjectStore",
     "PickleSerializer",
     "TextSerializer",
+    "RealIo",
+    "FileIo",
+    "Serializer",
 ]
 
 TObject = TypeVar("TObject")
@@ -83,46 +87,49 @@ class PickleSerializer(Generic[TObject]):
         return obj
 
 
-def _check_permissions(path: Path) -> None:
-    """Check if the file owned by the site user and not world writable.
+def _raise_for_permissions(path: Path) -> None:
+    """Ensure that the file is owned by the current user or root and not world writable.
     Raise an exception otherwise."""
     stat = path.stat()
     # we trust root and ourselves
-    owned_by_site_user_or_root = stat.st_uid in [0, getuid()] and stat.st_gid in [0, getgid()]
+    owned_by_current_user_or_root = stat.st_uid in [0, getuid()] and stat.st_gid in [0, getgid()]
     world_writable = S_IMODE(stat.st_mode) & S_IWOTH != 0
 
-    if not owned_by_site_user_or_root:
-        raise MKGeneralException(_('Refusing to read file not owned by site user: "%s"') % path)
+    if path.resolve() == Path("/etc/cma/backup.conf"):
+        # The file is group-owned by omd. To fix this in the appliance will
+        # take more time, considering the compatibility with older versions
+        # So we check for owner and world and don't care for group...
+        if not stat.st_uid in [0, getuid()] or world_writable:
+            raise MKGeneralException(
+                _("/etc/cma/backup.conf has wrong permissions. Refusing to read file")
+            )
+        return
+
+    if not owned_by_current_user_or_root:
+        raise MKGeneralException(_('Refusing to read file not owned by us: "%s"') % path)
     if world_writable:
         raise MKGeneralException(_('Refusing to read world writable file: "%s"') % path)
 
 
-class ObjectStore(Generic[TObject]):
-    def __init__(self, path: Path, *, serializer: Serializer[TObject]) -> None:
-        self.path: Final = path
-        self._serializer = serializer
+class FileIo(Protocol):
+    def __init__(self, path: Path):
+        ...
 
-    def __fspath__(self) -> str:
-        return str(self.path)
+    def write(self, data: bytes) -> None:
+        ...
 
-    @contextmanager
+    def read(self) -> bytes:
+        ...
+
     def locked(self) -> Iterator[None]:
-        already_locked = have_lock(self.path)
-        acquire_lock(self.path)  # no-op if already_locked
-        try:
-            yield
-        finally:
-            if not already_locked:
-                release_lock(self.path)
+        ...
 
-    def write_obj(self, obj: TObject) -> None:
-        return self._save_bytes_to_file(data=self._serializer.serialize(obj))
 
-    def read_obj(self, *, default: TObject) -> TObject:
-        raw = self._load_bytes_from_file()
-        return self._serializer.deserialize(raw) if raw else default
+class RealIo:
+    def __init__(self, path: Path):
+        self.path = path
 
-    def _save_bytes_to_file(self, *, data: bytes) -> None:
+    def write(self, data: bytes) -> None:
         tmp_path = None
         try:
             with tempfile.NamedTemporaryFile(
@@ -149,9 +156,9 @@ class ObjectStore(Generic[TObject]):
         finally:
             release_lock(self.path)
 
-    def _load_bytes_from_file(self) -> bytes:
+    def read(self) -> bytes:
         try:
-            _check_permissions(self.path)
+            _raise_for_permissions(self.path)
             return self.path.read_bytes()
         except FileNotFoundError:
             # Since locking (currently) creates an empty file,
@@ -165,3 +172,40 @@ class ObjectStore(Generic[TObject]):
             if cmk.utils.debug.enabled():
                 raise
             raise MKGeneralException(_('Cannot read file "%s": %s') % (self.path, e))
+
+    def locked(self) -> Iterator[None]:
+        acquired = acquire_lock(self.path)
+        try:
+            yield
+        finally:
+            if acquired:
+                release_lock(self.path)
+
+
+class ObjectStore(Generic[TObject]):
+    """Normally used to serialize data to and from the certain file.
+    It can be used without touching IO: ObjectStore("hurz", TextSerializer, io=NoOpIo).
+    where NoOpIo does nothing(see the testing)
+    Typical use case for Fake/NoOp IO is a testing and, probably in the future validation(dry-run).
+    """
+
+    def __init__(
+        self, path: Path, *, serializer: Serializer[TObject], io: Type[FileIo] = RealIo
+    ) -> None:
+        self.path: Final = path
+        self._serializer = serializer
+        self._io: Final = io(path)
+
+    def __fspath__(self) -> str:
+        return str(self.path)
+
+    @contextmanager
+    def locked(self) -> Iterator[None]:
+        yield from self._io.locked()
+
+    def write_obj(self, obj: TObject) -> None:
+        return self._io.write(self._serializer.serialize(obj))
+
+    def read_obj(self, *, default: TObject) -> TObject:
+        raw = self._io.read()
+        return self._serializer.deserialize(raw) if raw else default

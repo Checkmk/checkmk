@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+
+from cmk.base.check_api import LegacyCheckDefinition
+from cmk.base.check_legacy_includes.perle import perle_check_alarms
+from cmk.base.config import check_info
+
+
+def inventory_perle_chassis_slots(info):
+    return [
+        (index, None)
+        for index, _name, _modelname, _serial, _bootloader, _fw, _alarms_str, _diagstate, ty, _descr in info
+        if ty != "0"
+    ]
+
+
+def check_perle_chassis_slots(item, _no_params, info):
+    map_diagstates = {
+        "0": (0, "passed"),
+        "1": (2, "media converter module's PHY is not functional"),
+        "2": (1, "firmware download required"),
+    }
+
+    for (
+        index,
+        name,
+        _modelname,
+        _serial,
+        _bootloader,
+        _fw,
+        alarms_str,
+        diagstate,
+        _ty,
+        _descr,
+    ) in info:
+        if item == index:
+            state, state_readable = map_diagstates[diagstate]
+            yield state, "[%s] Diagnostic result: %s" % (name, state_readable)
+            yield perle_check_alarms(alarms_str)
+
+
+check_info["perle_chassis_slots"] = LegacyCheckDefinition(
+    # section is already migrated!
+    discovery_function=inventory_perle_chassis_slots,
+    check_function=check_perle_chassis_slots,
+    service_name="Chassis status slot %s",
+)

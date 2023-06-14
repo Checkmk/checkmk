@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import importlib
 import sys
+import traceback
 from collections.abc import Iterator
+from contextlib import suppress
+from pathlib import Path
 from types import ModuleType
 
 import cmk.utils.version as cmk_version
@@ -14,21 +17,21 @@ from cmk.utils.plugin_loader import load_plugins_with_exceptions
 import cmk.gui.utils as utils
 from cmk.gui.log import logger
 
-# The following imports trigger loading of builtin main modules
-# isort: off
-import cmk.gui.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
-
-if cmk_version.is_raw_edition():
+# The following imports trigger loading of builtin main modules.
+# Note: They are loaded once more in `_import_main_module_plugins()` and
+# possibly a third time over the plugin discovery mechanism.
+with suppress(ModuleNotFoundError):
+    import cmk.gui.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
+with suppress(ModuleNotFoundError):
     import cmk.gui.raw.plugins.main_modules  # pylint: disable=unused-import
-else:
+with suppress(ModuleNotFoundError):
     import cmk.gui.cee.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
-
-if cmk_version.is_managed_edition():
+with suppress(ModuleNotFoundError):
     import cmk.gui.cme.plugins.main_modules  # pylint: disable=no-name-in-module,unused-import
-
-if cmk_version.is_cloud_edition():
+with suppress(ModuleNotFoundError):
     import cmk.gui.cce.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import
-# isort: on
+with suppress(ModuleNotFoundError):
+    import cmk.gui.cse.plugins.main_modules  # noqa: F401 # pylint: disable=no-name-in-module,unused-import
 
 
 def _imports() -> Iterator[str]:
@@ -83,7 +86,12 @@ def _import_main_module_plugins(main_modules: list[ModuleType]) -> None:
                 logger.error(
                     "  Error in %s plugin '%s'\n", main_module_name, plugin_name, exc_info=exc
                 )
-                utils.add_failed_plugin(main_module_name, plugin_name, exc)
+                utils.add_failed_plugin(
+                    Path(traceback.extract_tb(exc.__traceback__)[-1].filename),
+                    main_module_name,
+                    plugin_name,
+                    exc,
+                )
 
     logger.debug("Main module plugins imported")
 
@@ -101,6 +109,9 @@ def _plugin_package_names(main_module_name: str) -> Iterator[str]:
 
     if cmk_version.is_cloud_edition():
         yield f"cmk.gui.cce.plugins.{main_module_name}"
+
+    if cmk_version.is_saas_edition():
+        yield f"cmk.gui.cse.plugins.{main_module_name}"
 
 
 def _is_plugin_namespace(plugin_package_name: str) -> bool:
@@ -162,6 +173,8 @@ def _cmk_gui_top_level_modules() -> list[ModuleType]:
             or name.startswith("cmk.gui.cme.")
             and len(name.split(".")) == 4
             or name.startswith("cmk.gui.cce.")
+            and len(name.split(".")) == 4
+            or name.startswith("cmk.gui.cse.")
             and len(name.split(".")) == 4
         )
     ]

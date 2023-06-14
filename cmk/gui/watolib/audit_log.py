@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
+
+from __future__ import annotations
 
 import json
 import time
 from collections.abc import Sequence
-from pathlib import Path
 from typing import NamedTuple
 
 from cmk.utils.type_defs import UserId
@@ -25,6 +26,9 @@ LogMessage = str | HTML | LazyString
 
 
 class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
+    def __init__(self) -> None:
+        super().__init__(wato_var_dir() / "log" / "wato_audit.log")
+
     class Entry(NamedTuple):
         time: int
         object_ref: ObjectRef | None
@@ -34,11 +38,7 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
         diff_text: str | None
 
     @staticmethod
-    def make_path(*args: str) -> Path:
-        return wato_var_dir() / "log" / "wato_audit.log"
-
-    @staticmethod
-    def _serialize(entry: "AuditLogStore.Entry") -> object:
+    def _serialize(entry: AuditLogStore.Entry) -> object:
         raw = entry._asdict()
         raw["text"] = (
             ("html", str(entry.text)) if isinstance(entry.text, HTML) else ("str", entry.text)
@@ -47,7 +47,7 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
         return raw
 
     @staticmethod
-    def _deserialize(raw: object) -> "AuditLogStore.Entry":
+    def _deserialize(raw: object) -> AuditLogStore.Entry:
         if not isinstance(raw, dict):
             raise ValueError("expected a dictionary")
         # TODO: Parse raw's entries, too, below we have our traditional 'wishful typing'... :-P
@@ -72,15 +72,15 @@ class AuditLogStore(ABCAppendStore["AuditLogStore.Entry"]):
 
         self._path.rename(newpath)
 
-    def get_entries_since(self, timestamp: int) -> Sequence["AuditLogStore.Entry"]:
+    def get_entries_since(self, timestamp: int) -> Sequence[AuditLogStore.Entry]:
         return [entry for entry in self.read() if entry.time > timestamp]
 
     @classmethod
-    def to_json(cls, entries: Sequence["AuditLogStore.Entry"]) -> str:
+    def to_json(cls, entries: Sequence[AuditLogStore.Entry]) -> str:
         return json.dumps([cls._serialize(entry) for entry in entries])
 
     @classmethod
-    def from_json(cls, raw: str) -> Sequence["AuditLogStore.Entry"]:
+    def from_json(cls, raw: str) -> Sequence[AuditLogStore.Entry]:
         return [cls._deserialize(entry) for entry in json.loads(raw)]
 
 
@@ -117,4 +117,4 @@ def _log_entry(
         text=message,
         diff_text=diff_text,
     )
-    AuditLogStore(AuditLogStore.make_path()).append(entry)
+    AuditLogStore().append(entry)

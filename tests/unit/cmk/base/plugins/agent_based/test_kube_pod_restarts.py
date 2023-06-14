@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=comparison-with-callable,redefined-outer-name
 
 import json
+from collections.abc import Mapping, Sequence
 
 import pytest
 
 from cmk.base.plugins.agent_based import kube_pod_restarts
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.utils.kube import PodContainers
 
 from cmk.gui.plugins.wato.check_parameters.kube_pod_restarts import _parameter_valuespec
@@ -42,7 +44,7 @@ def string_table_element(restart_count):
                 "container_id": "docker://fcde010771eafc68bb644d180808d0f3f3f93c04a627a7cc53cb255efad99c5a",
                 "image_id": "some-id",
                 "name": f"doge-{i}",
-                "image": "tribe29/worker_agent:0.4",
+                "image": "checkmk/worker_agent:0.4",
                 "ready": True,
                 "state": {"type": "running", "start_time": 359},
                 "restart_count": restart_count,
@@ -92,8 +94,13 @@ def is_empty_value_store() -> bool:
     return False
 
 
+RestartCount = Mapping[str, Sequence[tuple[float, float]]]
+
+
 @pytest.fixture
-def value_store(expired_values, current_values, restart_count, is_empty_value_store):
+def value_store(
+    expired_values: int, current_values: int, restart_count: float, is_empty_value_store: bool
+) -> RestartCount:
     if is_empty_value_store:
         return {}
     n = ONE_HOUR // ONE_MINUTE + expired_values
@@ -109,19 +116,19 @@ def value_store(expired_values, current_values, restart_count, is_empty_value_st
     return {"restart_count_list": restart_count_list}
 
 
-def test_discovery_returns_single_service(section) -> None:  # type:ignore[no-untyped-def]
+def test_discovery_returns_single_service(section: PodContainers) -> None:
     assert len(list(kube_pod_restarts.discovery(section))) == 1
 
 
-def test_check_yields_two_results(check_result) -> None:  # type:ignore[no-untyped-def]
+def test_check_yields_two_results(check_result: CheckResult) -> None:
     assert len([r for r in check_result if isinstance(r, Result)]) == 2
 
 
-def test_check_results_state_ok(check_result) -> None:  # type:ignore[no-untyped-def]
+def test_check_results_state_ok(check_result: CheckResult) -> None:
     assert all(r.state == State.OK for r in check_result if isinstance(r, Result))
 
 
-def test_check_result_summary(check_result) -> None:  # type:ignore[no-untyped-def]
+def test_check_result_summary(check_result: CheckResult) -> None:
     expected = [
         f"Total: {OK * NUMBER_OF_CONTAINERS}",
         f"In last hour: {OK * NUMBER_OF_CONTAINERS * ONE_HOUR // ONE_MINUTE}",
@@ -131,8 +138,8 @@ def test_check_result_summary(check_result) -> None:  # type:ignore[no-untyped-d
 
 
 @pytest.mark.parametrize("restart_count", [WARN, CRIT])
-def test_check_result_summary_alert(  # type:ignore[no-untyped-def]
-    restart_count, params, check_result
+def test_check_result_summary_alert(
+    restart_count: int, params: kube_pod_restarts.Params, check_result: CheckResult
 ) -> None:
     warn_crit_count = "(warn/crit at {}/{})".format(*params["restart_count"][1])
     warn_crit_rate = "(warn/crit at {}/{})".format(*params["restart_rate"][1])
@@ -144,11 +151,11 @@ def test_check_result_summary_alert(  # type:ignore[no-untyped-def]
     assert actual == expected
 
 
-def test_check_yields_two_metrics(check_result) -> None:  # type:ignore[no-untyped-def]
+def test_check_yields_two_metrics(check_result: CheckResult) -> None:
     assert len([m for m in check_result if isinstance(m, Metric)]) == 2
 
 
-def test_check_metric_value(check_result) -> None:  # type:ignore[no-untyped-def]
+def test_check_metric_value(check_result: CheckResult) -> None:
     expected = [OK * NUMBER_OF_CONTAINERS, OK * NUMBER_OF_CONTAINERS * ONE_HOUR // ONE_MINUTE]
     actual = [int(m.value) for m in check_result if isinstance(m, Metric)]
     assert actual == expected
@@ -162,16 +169,16 @@ def test_check_metric_value(check_result) -> None:  # type:ignore[no-untyped-def
         (CRIT, [State.CRIT, State.CRIT]),
     ],
 )
-def test_check_result_state_mixed(  # type:ignore[no-untyped-def]
-    expected_states, check_result
+def test_check_result_state_mixed(
+    expected_states: Sequence[State], check_result: CheckResult
 ) -> None:
     assert [r.state for r in check_result if isinstance(r, Result)] == expected_states
 
 
 @pytest.mark.parametrize("expired_values", [0, 10, 30, 50, 59])
 @pytest.mark.parametrize("current_values", [10, 30, 50, 59])
-def test_check_results_considers_only_current_values(  # type:ignore[no-untyped-def]
-    current_values, check_result
+def test_check_results_considers_only_current_values(
+    current_values: int, check_result: CheckResult
 ) -> None:
     expected = [OK * NUMBER_OF_CONTAINERS, OK * NUMBER_OF_CONTAINERS * (current_values + 1)]
     actual = [int(m.value) for m in check_result if isinstance(m, Metric)]
@@ -180,8 +187,8 @@ def test_check_results_considers_only_current_values(  # type:ignore[no-untyped-
 
 @pytest.mark.parametrize("expired_values", [0, 10, 30, 50, 59])
 @pytest.mark.parametrize("current_values", [0])
-def test_check_yields_single_result_when_no_current_values(  # type:ignore[no-untyped-def]
-    current_values, check_result
+def test_check_yields_single_result_when_no_current_values(
+    current_values: int, check_result: CheckResult
 ) -> None:
     expected = [OK * NUMBER_OF_CONTAINERS]
     actual = [int(m.value) for m in check_result if isinstance(m, Metric)]
@@ -189,8 +196,8 @@ def test_check_yields_single_result_when_no_current_values(  # type:ignore[no-un
 
 
 @pytest.mark.parametrize("is_empty_value_store", [True])
-def test_check_results_creates_restart_count_list(  # type:ignore[no-untyped-def]
-    value_store, check_result
+def test_check_results_creates_restart_count_list(
+    value_store: RestartCount, check_result: CheckResult
 ) -> None:
     list(check_result)
     assert len(value_store) == 1
@@ -199,8 +206,8 @@ def test_check_results_creates_restart_count_list(  # type:ignore[no-untyped-def
     assert value_store["restart_count_list"][0] == (TIMESTAMP, OK * NUMBER_OF_CONTAINERS)
 
 
-def test_check_results_updates_restart_count_list(  # type:ignore[no-untyped-def]
-    value_store, check_result
+def test_check_results_updates_restart_count_list(
+    value_store: RestartCount, check_result: CheckResult
 ) -> None:
     list(check_result)
     assert len(value_store["restart_count_list"]) == ONE_HOUR // ONE_MINUTE
@@ -208,16 +215,16 @@ def test_check_results_updates_restart_count_list(  # type:ignore[no-untyped-def
 
 
 @pytest.mark.parametrize("expired_values", [0, 10, 100])
-def test_check_results_disregards_expired_values(  # type:ignore[no-untyped-def]
-    value_store, check_result
+def test_check_results_disregards_expired_values(
+    value_store: RestartCount, check_result: CheckResult
 ) -> None:
     list(check_result)
     assert len(value_store["restart_count_list"]) == ONE_HOUR // ONE_MINUTE
 
 
 @pytest.mark.parametrize("expired_values", [0, 10, 100])
-def test_check_results_maintains_restart_count_list_sorted(  # type:ignore[no-untyped-def]
-    value_store, check_result
+def test_check_results_maintains_restart_count_list_sorted(
+    value_store: RestartCount, check_result: CheckResult
 ) -> None:
     list(check_result)
     assert value_store["restart_count_list"] == sorted(value_store["restart_count_list"])

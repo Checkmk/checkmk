@@ -6,7 +6,7 @@ Date: 1666177030
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 It was possible that checkmk returned an error message like "Permission
 mismatch. See the server logs for more information." when trying to delete a

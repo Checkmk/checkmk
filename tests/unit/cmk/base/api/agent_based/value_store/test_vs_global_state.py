@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
+from pytest import MonkeyPatch
 
 import cmk.utils.store as store
-from cmk.utils.type_defs import CheckPluginName, ServiceID
+from cmk.utils.type_defs import HostName
+
+from cmk.checkengine.check_table import ServiceID
+from cmk.checkengine.checking import CheckPluginName
 
 from cmk.base.api.agent_based.value_store._global_state import (
     get_value_store,
@@ -16,8 +19,7 @@ from cmk.base.api.agent_based.value_store._global_state import (
 _TEST_KEY = ("check", "item", "user-key")
 
 
-def test_load_host_value_store_loads_file(monkeypatch) -> None:  # type:ignore[no-untyped-def]
-
+def test_load_host_value_store_loads_file(monkeypatch: MonkeyPatch) -> None:
     service_id = ServiceID(CheckPluginName("test_service"), None)
 
     monkeypatch.setattr(
@@ -28,7 +30,7 @@ def test_load_host_value_store_loads_file(monkeypatch) -> None:  # type:ignore[n
     )
 
     with load_host_value_store(
-        "test_load_host_value_store_loads_file",
+        HostName("test_load_host_value_store_loads_file"),
         store_changes=False,
     ) as mgr:
         with mgr.namespace(service_id):

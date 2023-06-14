@@ -6,7 +6,7 @@ Date: 1656423677
 Edition: cre
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The Checkmk agents for Linux and Solaris kill plugin processes that are
 started asynchronously and don't terminate after a certain period of inactivity.

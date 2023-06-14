@@ -1,0 +1,12 @@
+Title: solaris_psrinfo: Fix missing Hardware>Processor inventory entries
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1677066981
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+
+

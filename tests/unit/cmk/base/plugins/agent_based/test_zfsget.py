@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from collections.abc import Mapping, Sequence
+
 import pytest
 
+from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based import zfsget
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Service
 
@@ -50,7 +53,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Service
         ),
     ],
 )
-def test_zfsget_parse(info, expected_parse_result) -> None:  # type:ignore[no-untyped-def]
+def test_zfsget_parse(info: StringTable, expected_parse_result: zfsget.Section) -> None:
     assert zfsget.parse_zfsget(info) == expected_parse_result
 
 
@@ -296,7 +299,9 @@ def test_zfsget_parse(info, expected_parse_result) -> None:  # type:ignore[no-un
         ),
     ],
 )
-def test_zfsget_discovery(info, expected_discovery_result) -> None:  # type:ignore[no-untyped-def]
+def test_zfsget_discovery(
+    info: StringTable, expected_discovery_result: Sequence[tuple[str, Mapping[str, object]]]
+) -> None:
     assert sorted(zfsget.discover_zfsget([{"groups": []}], zfsget.parse_zfsget(info))) == sorted(
         Service(item=i, parameters=p) for i, p in expected_discovery_result
     )

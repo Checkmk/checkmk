@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+
+from collections.abc import Mapping, Sequence
 
 import pytest
 
@@ -55,8 +57,10 @@ def get_average(_counter, _time, value, _time_span):
         ),
     ],
 )
-def test_check_diskstat_line(  # type:ignore[no-untyped-def]
-    monkeypatch, args, expected_result
+def test_check_diskstat_line(
+    monkeypatch: pytest.MonkeyPatch,
+    args: tuple[float, str, Mapping[str, object], Sequence[object]],
+    expected_result: CheckResult,
 ) -> None:
     monkeypatch.setattr(cmk.base.check_legacy_includes.diskstat, "get_rate", get_rate)
     monkeypatch.setattr(cmk.base.check_legacy_includes.diskstat, "get_average", get_average)

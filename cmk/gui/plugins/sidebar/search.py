@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -17,6 +17,7 @@ import livestatus
 
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKException, MKGeneralException
+from cmk.utils.redis import get_redis_client
 
 import cmk.gui.sites as sites
 import cmk.gui.utils
@@ -1052,7 +1053,7 @@ match_plugin_registry.register(ServiceMatchPlugin())
 
 
 class HostMatchPlugin(ABCLivestatusMatchPlugin):
-    def __init__(self, livestatus_field, name) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, livestatus_field, name) -> None:  # type: ignore[no-untyped-def]
         super().__init__(["hosts", "services"], "hosts", name)
         self._livestatus_field = livestatus_field  # address, name or alias
 
@@ -1399,7 +1400,10 @@ class MenuSearchResultsRenderer:
             )
         if search_type == "setup":
             return (
-                IndexSearcher(PermissionsHandler()).search,
+                IndexSearcher(
+                    get_redis_client(),
+                    PermissionsHandler(),
+                ).search,
                 80,
             )
         raise NotImplementedError(f"Renderer not implemented for type '{search_type}'")
@@ -1528,7 +1532,7 @@ class MenuSearchResultsRenderer:
         html.span(topic)
         html.close_h2()
 
-    def _render_result(self, result, hidden=False) -> None:  # type:ignore[no-untyped-def]
+    def _render_result(self, result, hidden=False) -> None:  # type: ignore[no-untyped-def]
         html.open_li(
             class_="hidden" if hidden else "",
             **{"data-extended": "false" if hidden else ""},

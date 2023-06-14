@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -11,8 +11,12 @@ from pytest_mock import MockerFixture
 
 from tests.testlib import on_time
 
+from tests.unit.cmk.gui.conftest import SetConfig
+
 import cmk.utils.tags
 import cmk.utils.version as cmk_version
+from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.utils.structured_data import ImmutableTree
 
 import cmk.gui.inventory
 import cmk.gui.plugins.visuals
@@ -22,7 +26,7 @@ import cmk.gui.views
 import cmk.gui.visuals
 from cmk.gui.plugins.visuals import filters
 from cmk.gui.plugins.visuals.wato import FilterWatoFolder
-from cmk.gui.type_defs import VisualContext
+from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
 
 
@@ -113,8 +117,8 @@ def fixture_livestatus_test_config(mock_livestatus, mock_wato_folders):
 
 # In general filters should not affect livestatus query in case there is no variable set for them
 @pytest.mark.parametrize("filter_ident", cmk.gui.plugins.visuals.utils.filter_registry.keys())
-def test_filters_filter_with_empty_request(  # type:ignore[no-untyped-def]
-    request_context, filter_ident, live
+def test_filters_filter_with_empty_request(
+    filter_ident: str, live: MockLiveStatusConnection
 ) -> None:
     if filter_ident == "hostgroupvisibility":
         expected_filter = "Filter: hostgroup_num_hosts > 0\n"
@@ -302,26 +306,26 @@ filter_tests = [
     ),
     # Testing base class LabelGroupFilter
     FilterTest(
-        ident="host_label_groups",
-        request_vars=[("host_label_groups_count", "0")],
+        ident="host_labels",
+        request_vars=[("host_labels_count", "0")],
         expected_filters="",
     ),
     FilterTest(
-        ident="host_label_groups",
+        ident="host_labels",
         request_vars=[
-            ("host_label_groups_count", "2"),
+            ("host_labels_count", "2"),
             # Group 1
-            ("host_label_groups_1_vs_count", "2"),
-            ("host_label_groups_1_bool", "and"),
-            ("host_label_groups_1_vs_1_bool", "and"),
-            ("host_label_groups_1_vs_1_vs", "label:abc"),
-            ("host_label_groups_1_vs_2_bool", "or"),
-            ("host_label_groups_1_vs_2_vs", "label:xyz"),
+            ("host_labels_1_vs_count", "2"),
+            ("host_labels_1_bool", "and"),
+            ("host_labels_1_vs_1_bool", "and"),
+            ("host_labels_1_vs_1_vs", "label:abc"),
+            ("host_labels_1_vs_2_bool", "or"),
+            ("host_labels_1_vs_2_vs", "label:xyz"),
             # Group 2
-            ("host_label_groups_2_vs_count", "1"),
-            ("host_label_groups_2_bool", "not"),
-            ("host_label_groups_2_vs_1_bool", "and"),
-            ("host_label_groups_2_vs_1_vs", "label:mno"),
+            ("host_labels_2_vs_count", "1"),
+            ("host_labels_2_bool", "not"),
+            ("host_labels_2_vs_1_bool", "and"),
+            ("host_labels_2_vs_1_vs", "label:mno"),
         ],
         expected_filters=(
             "Filter: host_labels = 'label' 'abc'\nFilter: host_labels = 'label' 'xyz'\nOr: 2\n"
@@ -608,7 +612,7 @@ def filter_test_id(t):
 
 
 @pytest.mark.parametrize("test", filter_tests, ids=filter_test_id)
-def test_filters_filter(request_context, test, set_config) -> None:  # type:ignore[no-untyped-def]
+def test_filters_filter(test: FilterTest, set_config: SetConfig) -> None:
     with set_config(
         wato_host_attrs=[{"name": "bla", "title": "Bla"}],  # Needed for ABCFilterCustomAttribute
         tags=cmk.utils.tags.BuiltinTagConfig(),  # Need for ABCTagFilter
@@ -622,7 +626,7 @@ def test_filters_filter(request_context, test, set_config) -> None:  # type:igno
 class FilterTableTest(NamedTuple):
     ident: str
     request_vars: Sequence[tuple[str, str]]
-    rows: Sequence[Mapping[str, Any]]
+    rows: Rows
     expected_rows: Sequence[Mapping[str, Any]]
 
 
@@ -804,82 +808,6 @@ filter_table_tests = [
         expected_rows=[
             {"discovery_state": "ignored"},
             {"discovery_state": "vanished"},
-        ],
-    ),
-    FilterTableTest(
-        ident="has_inv",
-        request_vars=[
-            ("is_has_inv", "0"),
-        ],
-        rows=[
-            {"host_inventory": {}},
-            {"host_inventory": {"a": "b"}},
-        ],
-        expected_rows=[
-            {"host_inventory": {}},
-        ],
-    ),
-    FilterTableTest(
-        ident="has_inv",
-        request_vars=[
-            ("is_has_inv", "1"),
-        ],
-        rows=[
-            {"host_inventory": {}},
-            {"host_inventory": {"a": "b"}},
-        ],
-        expected_rows=[
-            {"host_inventory": {"a": "b"}},
-        ],
-    ),
-    FilterTableTest(
-        ident="has_inv",
-        request_vars=[
-            ("is_has_inv", "-1"),
-        ],
-        rows=[
-            {"host_inventory": {}},
-            {"host_inventory": {"a": "b"}},
-        ],
-        expected_rows=[
-            {"host_inventory": {}},
-            {"host_inventory": {"a": "b"}},
-        ],
-    ),
-    # Testing base class FilterInvText
-    FilterTableTest(
-        ident="inv_software_os_vendor",
-        request_vars=[
-            ("inv_software_os_vendor", "bla"),
-        ],
-        rows=[
-            # Not real inventory structures, just input for our monkeypatched function
-            {"host_inventory": {".software.os.vendor": "bla"}},
-            {"host_inventory": {".software.os.vendor": "blabla"}},
-            {"host_inventory": {".software.os.vendor": "ag blabla"}},
-            {"host_inventory": {".software.os.vendor": "blu"}},
-        ],
-        expected_rows=[
-            {"host_inventory": {".software.os.vendor": "bla"}},
-            {"host_inventory": {".software.os.vendor": "blabla"}},
-            {"host_inventory": {".software.os.vendor": "ag blabla"}},
-        ],
-    ),
-    # Testing base class FilterInvFloat
-    FilterTableTest(
-        ident="inv_hardware_cpu_bus_speed",
-        request_vars=[
-            ("inv_hardware_cpu_bus_speed_from", "10"),
-            ("inv_hardware_cpu_bus_speed_until", "20"),
-        ],
-        rows=[
-            # Not real inventory structures, just input for our monkeypatched function
-            {"host_inventory": {".hardware.cpu.bus_speed": 1000000}},
-            {"host_inventory": {".hardware.cpu.bus_speed": 15000000}},
-            {"host_inventory": {".hardware.cpu.bus_speed": 21000000}},
-        ],
-        expected_rows=[
-            {"host_inventory": {".hardware.cpu.bus_speed": 15000000}},
         ],
     ),
     # Testing base class FilterInvtableText
@@ -1190,9 +1118,7 @@ filter_table_tests = [
 
 
 @pytest.mark.parametrize("test", filter_table_tests)
-def test_filters_filter_table(  # type:ignore[no-untyped-def]
-    request_context, test, monkeypatch
-) -> None:
+def test_filters_filter_table(test: FilterTableTest, monkeypatch: pytest.MonkeyPatch) -> None:
     # Needed for DeploymentTristateFilter test
     def deployment_states(host_name):
         return {
@@ -1207,20 +1133,8 @@ def test_filters_filter_table(  # type:ignore[no-untyped-def]
 
         monkeypatch.setattr(agent_bakery, "get_cached_deployment_status", deployment_states)
 
-    # Needed for FilterInvFloat test
-    monkeypatch.setattr(
-        cmk.gui.views.inventory,
-        "_get_table_rows",
-        lambda t, p: {cmk.gui.inventory.InventoryPath.parse(k): v for k, v in t.items()}[p],
-    )
-    monkeypatch.setattr(
-        cmk.gui.inventory,
-        "get_attribute",
-        lambda t, p: {cmk.gui.inventory.InventoryPath.parse(k): v for k, v in t.items()}[p],
-    )
-
     # Needed for FilterAggrServiceUsed test
-    def is_part_of_aggregation_patch(host, service) -> bool:  # type:ignore[no-untyped-def]
+    def is_part_of_aggregation_patch(host: str, service: str) -> bool:
         return {("h", "srv1"): True}.get((host, service), False)
 
     monkeypatch.setattr(cmk.gui.bi, "is_part_of_aggregation", is_part_of_aggregation_patch)
@@ -1234,10 +1148,148 @@ def test_filters_filter_table(  # type:ignore[no-untyped-def]
             assert filt.filter_table(context, test.rows) == test.expected_rows
 
 
+@pytest.mark.parametrize(
+    "test",
+    [
+        # Filter out filled trees (is_has_inv == 0)
+        FilterTableTest(
+            ident="has_inv",
+            request_vars=[
+                ("is_has_inv", "0"),
+            ],
+            rows=[
+                {"host_inventory": ImmutableTree.deserialize({})},
+                {"host_inventory": ImmutableTree.deserialize({"a": "b"})},
+            ],
+            expected_rows=[
+                {"host_inventory": ImmutableTree.deserialize({})},
+            ],
+        ),
+        # Filter out empty trees (is_has_inv == 1)
+        FilterTableTest(
+            ident="has_inv",
+            request_vars=[
+                ("is_has_inv", "1"),
+            ],
+            rows=[
+                {"host_inventory": ImmutableTree.deserialize({}).tree},
+                {"host_inventory": ImmutableTree.deserialize({"a": "b"})},
+            ],
+            expected_rows=[
+                {"host_inventory": ImmutableTree.deserialize({"a": "b"})},
+            ],
+        ),
+        # Do not apply filter (is_has_inv == -1)
+        FilterTableTest(
+            ident="has_inv",
+            request_vars=[
+                ("is_has_inv", "-1"),
+            ],
+            rows=[
+                {"host_inventory": ImmutableTree.deserialize({}).tree},
+                {"host_inventory": ImmutableTree.deserialize({"a": "b"})},
+            ],
+            expected_rows=[
+                {"host_inventory": ImmutableTree.deserialize({}).tree},
+                {"host_inventory": ImmutableTree.deserialize({"a": "b"})},
+            ],
+        ),
+        # Testing base class FilterInvText
+        FilterTableTest(
+            ident="inv_software_os_vendor",
+            request_vars=[
+                ("inv_software_os_vendor", "bla"),
+            ],
+            rows=[
+                {
+                    "host_inventory": ImmutableTree.deserialize(
+                        {"software": {"os": {"vendor": "bla"}}}
+                    )
+                },
+                {
+                    "host_inventory": ImmutableTree.deserialize(
+                        {"software": {"os": {"vendor": "blabla"}}}
+                    )
+                },
+                {
+                    "host_inventory": ImmutableTree.deserialize(
+                        {"software": {"os": {"vendor": "ag blabla"}}}
+                    )
+                },
+                {
+                    "host_inventory": ImmutableTree.deserialize(
+                        {"software": {"os": {"vendor": "blu"}}}
+                    )
+                },
+            ],
+            expected_rows=[
+                {
+                    "host_inventory": ImmutableTree.deserialize(
+                        {"software": {"os": {"vendor": "bla"}}}
+                    )
+                },
+                {
+                    "host_inventory": ImmutableTree.deserialize(
+                        {"software": {"os": {"vendor": "blabla"}}}
+                    )
+                },
+                {
+                    "host_inventory": ImmutableTree.deserialize(
+                        {"software": {"os": {"vendor": "ag blabla"}}}
+                    )
+                },
+            ],
+        ),
+        # Testing base class FilterInvFloat
+        FilterTableTest(
+            ident="inv_hardware_cpu_bus_speed",
+            request_vars=[
+                ("inv_hardware_cpu_bus_speed_from", "10"),
+                ("inv_hardware_cpu_bus_speed_until", "20"),
+            ],
+            rows=[
+                {
+                    "host_inventory": ImmutableTree.deserialize(
+                        {"hardware": {"cpu": {"bus_speed": 1000000}}}
+                    )
+                },
+                {
+                    "host_inventory": ImmutableTree.deserialize(
+                        {"hardware": {"cpu": {"bus_speed": 15000000}}}
+                    )
+                },
+                {
+                    "host_inventory": ImmutableTree.deserialize(
+                        {"hardware": {"cpu": {"bus_speed": 21000000}}}
+                    )
+                },
+            ],
+            expected_rows=[
+                {
+                    "host_inventory": ImmutableTree.deserialize(
+                        {"hardware": {"cpu": {"bus_speed": 15000000}}}
+                    )
+                },
+            ],
+        ),
+    ],
+)
+def test_filters_filter_inv_table(test: FilterTableTest) -> None:
+    with on_time("2018-04-15 16:50", "CET"):
+        context: VisualContext = {test.ident: dict(test.request_vars)}
+
+        # TODO: Fix this for real...
+        if not cmk_version.is_raw_edition():
+            rows = cmk.gui.plugins.visuals.utils.filter_registry[test.ident].filter_table(
+                context, test.rows
+            )
+            assert len(rows) == len(test.expected_rows)
+            for row, expected_row in zip(rows, test.expected_rows):
+                assert row["host_inventory"] == expected_row["host_inventory"]
+
+
 # Filter form is not really checked. Only checking that no exception occurs
-def test_filters_display_with_empty_request(  # type:ignore[no-untyped-def]
-    request_context, live
-) -> None:
+def test_filters_display_with_empty_request(live: MockLiveStatusConnection) -> None:
     with live:
         for filt in cmk.gui.plugins.visuals.utils.filter_registry.values():
             with output_funnel.plugged():

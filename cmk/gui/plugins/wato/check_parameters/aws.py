@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -186,7 +186,6 @@ def vs_aws_limits(
     unit: str = "",
     title_default: str = _("Limit from AWS API"),
 ) -> Alternative:
-
     if vs_limit_cls is None:
         vs_limit = Integer(
             title=resource,
@@ -1442,7 +1441,6 @@ rulespec_registry.register(
 
 
 def _vs_aws_dynamodb_capacity(title: str, unit: str) -> Dictionary:
-
     elements_extr: list[ValueSpec] = [
         Float(title=_("Warning at"), unit=unit),
         Float(title=_("Critical at"), unit=unit),

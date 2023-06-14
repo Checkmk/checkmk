@@ -6,7 +6,7 @@ Date: 1652079452
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The memory and CPU resources checks depend on the section from the Kubernetes API
 and optionally on the section from the cluster collector. For some namespace hosts,

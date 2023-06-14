@@ -1,0 +1,15 @@
+Title: dcd: increase the max number of redirects to 1000
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1680540903
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+This werk introduces a fix to the dcd endpoints.  Previously,
+the default max_redirects of 30 was being used and was often
+being exceeded, causing an exception. We now set it to 1000
+to make sure that this doesn't happen.
+

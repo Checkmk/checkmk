@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
 from typing import overload
 
-from bs4 import BeautifulSoup as bs  # type: ignore[import]
-from bs4 import NavigableString
+from bs4 import BeautifulSoup, NavigableString, Tag
 
 from cmk.gui.utils.html import HTML
 
 
 def prettify(html_text: str) -> str:
-    txt = bs("%s" % html_text, "lxml").prettify()
+    txt = BeautifulSoup("%s" % html_text, "lxml").prettify()
     return re.sub("\n{2,}", "\n", re.sub(">", ">\n", txt))
 
 
@@ -83,8 +82,8 @@ def subber(value: list[str] | str) -> list[str] | str:
 
 
 def compare_soup(html1: str, html2: str) -> None:
-    s1 = bs(prettify(html1), "lxml")
-    s2 = bs(prettify(html2), "lxml")
+    s1 = BeautifulSoup(prettify(html1), "lxml")
+    s2 = BeautifulSoup(prettify(html2), "lxml")
 
     children_1 = list(s1.recursiveChildGenerator())
     children_2 = list(s2.recursiveChildGenerator())
@@ -93,15 +92,12 @@ def compare_soup(html1: str, html2: str) -> None:
         return encode_attribute(undo_encode_attribute(subber(x)))
 
     for d1, d2 in zip(children_1, children_2):
-
-        assert isinstance(d1, type(d2)), f"\n{type(d1)}\n{type(d2)}"
-
-        if isinstance(d1, NavigableString):
+        if isinstance(d1, NavigableString) and isinstance(d2, NavigableString):
             set1 = {x for x in subber(d1).split(" ") if x}
             set2 = {x for x in subber(d2).split(" ") if x}
             assert set1 == set2, f"\n{set1}\n{set2}\n"
 
-        else:
+        elif isinstance(d1, Tag) and isinstance(d2, Tag):
             assert len(list(d1.children)) == len(list(d2.children)), f"{html1}\n{html2}"
             attrs1 = {
                 k: [x for x in (v) if x != ""]  #
@@ -127,6 +123,8 @@ def compare_soup(html1: str, html2: str) -> None:
                     assert val1 == val2, f"\n{val1}\n{val2}"
 
             assert attrs1 == attrs2, f"\n{html1}\n{html2}"
+        else:
+            assert False, f"\n{type(d1)}\n{type(d2)}"
 
 
 def compare_html(html1: HTML | str, html2: HTML | str) -> bool:

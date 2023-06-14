@@ -6,7 +6,7 @@ Date: 1667891609
 Edition: cee
 Knowledge: undoc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 This adds 4 columns to the status table: perf_data_count, perf_data_count_rate,
 metrics_count, and metrics_count_rate that represent the total number of performance

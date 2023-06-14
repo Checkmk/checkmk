@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -115,10 +115,10 @@ register.check_plugin(
     service_name="Condition",
     discovery_function=discovery,
     check_function=check,
-    check_default_parameters=dict(
-        available="no_levels",
-        progressing="no_levels",
-        replicafailure="no_levels",
-    ),
+    check_default_parameters={
+        "available": "no_levels",
+        "progressing": "no_levels",
+        "replicafailure": "no_levels",
+    },
     check_ruleset_name="kube_deployment_conditions",
 )

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """The user can change own 2FA related settings on this page"""
@@ -47,7 +47,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.pages import Page, page_registry
 from cmk.gui.plugins.wato.utils.base_modes import redirect
-from cmk.gui.session import session, set_two_factor_completed
+from cmk.gui.session import session
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import WebAuthnCredential
 from cmk.gui.userdb import (
@@ -113,7 +113,7 @@ class UserTwoFactorOverview(ABCUserProfilePage):
                 % "".join(f"<li><tt>{password.raw}</tt></li>" for password, _pwhashed in codes)
             )
 
-    def _page_menu(self, breadcrumb) -> PageMenu:  # type:ignore[no-untyped-def]
+    def _page_menu(self, breadcrumb) -> PageMenu:  # type: ignore[no-untyped-def]
         page_menu: PageMenu = PageMenu(
             dropdowns=[
                 PageMenuDropdown(
@@ -264,7 +264,7 @@ class UserChangePasswordPage(ABCUserProfilePage):
 
     def _page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         menu = make_simple_form_page_menu(
-            _("Profile"), breadcrumb, form_name="profile", button_name="_save", add_abort_link=True
+            _("Profile"), breadcrumb, form_name="profile", button_name="_save", add_cancel_link=True
         )
         return menu
 
@@ -465,7 +465,7 @@ class UserLoginTwoFactor(Page):
         html.open_a(href="https://checkmk.com", class_="login_window_logo_link")
         html.img(
             src=theme.detect_icon_path(
-                icon_name="login_logo" if theme.has_custom_logo("login_logo") else "mk-logo",
+                icon_name="login_logo" if theme.has_custom_logo("login_logo") else "checkmk_logo",
                 prefix="",
             ),
             id_="logo",
@@ -485,7 +485,7 @@ class UserLoginTwoFactor(Page):
 
         if backup_code := request.get_validated_type_input(Password, "_backup_code"):
             if is_two_factor_backup_code_valid(user.id, backup_code):
-                set_two_factor_completed()
+                session.session_info.two_factor_completed = True
                 raise HTTPRedirect(origtarget)
 
         html.label(
@@ -580,5 +580,5 @@ class UserWebAuthnLoginComplete(CBORPage):
             signature,
         )
         session.session_info.webauthn_action_state = None
-        set_two_factor_completed()
+        session.session_info.two_factor_completed = True
         return {"status": "OK"}

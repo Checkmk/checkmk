@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Manage roles and permissions
 
-In order to make getting started easier - Check_MK Multisite comes with three
+In order to make getting started easier - Checkmk Multisite comes with three
 builtin-roles: admin, user and guest. These roles have predefined permissions.
 The builtin roles cannot be deleted. Users listed in admin_users in
 multisite.mk automatically get the role admin - even if no such user or contact
 has been configured yet. By that way an initial login - e.g. as omdamin - is
 possible. The admin role cannot be removed from that user as long as he is
 listed in admin_users. Also the variables guest_users, users and default_user_
-role still work. That way Multisite is fully operable without WATO and also
-backwards compatible.  In WATO you can create further roles and also edit the
+role still work. That way Multisite is fully operable without Setup and also
+backwards compatible.  In Setup you can create further roles and also edit the
 permissions of the existing roles. Users can be assigned to builtin and custom
 roles.  This modes manages the creation of custom roles and the permissions
 configuration of all roles.
@@ -127,7 +127,6 @@ class ModeRoles(WatoMode):
 
     def page(self) -> None:
         with table_element("roles") as table:
-
             users = userdb.load_users()
             for nr, role in enumerate(
                 sorted(userroles.get_all_roles().values(), key=lambda a: (a.alias, a.name))
@@ -305,11 +304,12 @@ class ModeEditRole(WatoMode):
         base_role_id = self._role_id if self._role.basedon is None else self._role.basedon
         html.help(
             _(
-                "When you leave the permissions at &quot;default&quot; then they get their "
-                "settings from the factory defaults (for builtin roles) or from the "
-                "factory default of their base role (for user define roles). Factory defaults "
-                "may change due to software updates. When choosing another base role, all "
-                "permissions that are on default will reflect the new base role."
+                'If you leave the permissions at "default", '
+                "they get their settings from the factory defaults (for builtin roles) or from the "
+                "factory default of their base role (for user define roles). "
+                "Factory defaults may change due to software updates. "
+                "When choosing another base role, all permissions that are on default will reflect "
+                "the new base role."
             )
         )
 
@@ -374,7 +374,6 @@ class ModeRoleMatrix(WatoMode):
                 section.title,
                 foldable=Foldable.FOLDABLE_SAVE_STATE,
             ) as table:
-
                 permission_list = permission_registry.get_sorted_permissions(section)
 
                 if not permission_list:

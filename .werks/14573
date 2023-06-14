@@ -6,7 +6,7 @@ Date: 1673533179
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 The rules <tt>Prometheus</tt> and <tt>Alertmanager</tt> both allowed omitting the server address
 from the connection option by specifying <tt>IP Address</tt> or <tt>Host name</tt>. The

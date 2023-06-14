@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2020 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2020 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Downtimes
@@ -16,7 +16,7 @@ How to use the query DSL used in the `query` parameters of these endpoints, have
 These endpoints support all [Livestatus filter operators](https://docs.checkmk.com/latest/en/livestatus_references.html#heading_filter),
 which you can look up in the Checkmk documentation.
 
-For a detailed list of columns, please take a look at the [downtimes table](https://github.com/tribe29/checkmk/blob/master/cmk/gui/plugins/openapi/livestatus_helpers/tables/downtimes.py)
+For a detailed list of columns, please take a look at the [downtimes table](https://github.com/checkmk/checkmk/blob/master/cmk/utils/livestatus_helpers/tables/downtimes.py)
 definition on GitHub.
 
 ### Relations
@@ -28,10 +28,9 @@ Downtime object can have the following relations:
  * `urn:org.restfulobjects/delete` - The endpoint to delete downtimes.
 
 """
-
 import datetime as dt
 import json
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import Any, Literal
 
 from cmk.utils.livestatus_helpers.expressions import And, Or
@@ -64,7 +63,9 @@ DowntimeType = Literal[
 SERVICE_DESCRIPTION_SHOW = {
     "service_description": fields.String(
         description="The service description. No exception is raised when the specified service "
-        "description does not exist",
+        "description does not exist. This parameter can be combined with the host_name parameter "
+        "to only filter for service downtimes of on a specific host. Cannot be used "
+        "together with the query parameter.",
         example="Memory",
         required=False,
     )
@@ -72,19 +73,33 @@ SERVICE_DESCRIPTION_SHOW = {
 
 HOST_NAME_SHOW = {
     "host_name": gui_fields.HostField(
-        description="The host name. No exception is raised when the specified host name does not exist",
+        description="The host name. No exception is raised when the specified host name does not "
+        "exist. Using this parameter only will filter for host downtimes only. Cannot "
+        "be used together with the query parameter.",
         should_exist=None,  # we do not care
         example="example.com",
         required=False,
     )
 }
 
-PERMISSIONS = permissions.Ignore(
+DOWNTIME_TYPE = {
+    "downtime_type": fields.String(
+        description="The type of the downtime to be listed. Only filters the result when using "
+        "the host_name or service_description parameter.",
+        enum=["host", "service", "both"],
+        example="host",
+        load_default="both",
+        required=False,
+    )
+}
+
+PERMISSIONS = permissions.Undocumented(
     permissions.AnyPerm(
         [
             permissions.Perm("general.see_all"),
             permissions.Perm("bi.see_all"),
             permissions.Perm("mkeventd.seeall"),
+            permissions.Perm("wato.see_all_folders"),
         ]
     )
 )
@@ -184,6 +199,25 @@ def create_host_related_downtime(params: Mapping[str, Any]) -> Response:
     return Response(status=204)
 
 
+def _with_defaulted_timezone(
+    date: dt.datetime,
+    _get_local_timezone: Callable[[], dt.tzinfo | None] = lambda: dt.datetime.now(dt.timezone.utc)
+    .astimezone()
+    .tzinfo,
+) -> dt.datetime:
+    """Default a datetime to the local timezone.
+
+    Params:
+        date: a datetime that might not have a timezone
+
+    Returns: The input datetime if it had a timezone set or
+             the input datetime with the local timezone if no timezone was set.
+    """
+    if date.tzinfo is None:
+        date = date.replace(tzinfo=_get_local_timezone())
+    return date
+
+
 @Endpoint(
     constructors.collection_href("downtime", "service"),
     "cmk/create_service",
@@ -206,16 +240,22 @@ def create_service_related_downtime(params: Mapping[str, Any]) -> Response:
     if downtime_type == "service":
         host_name = body["host_name"]
         with detailed_connection(live) as conn:
-            site_id = Query(columns=[Hosts.name], filter_expr=Hosts.name.op("=", host_name)).value(
-                conn
-            )
+            try:
+                site_id = Query(
+                    columns=[Hosts.name], filter_expr=Hosts.name.op("=", host_name)
+                ).value(conn)
+            except ValueError:
+                # Request user can't see the host (but may still be able to access the service)
+                site_id = None
+        start_time = _with_defaulted_timezone(body["start_time"])
+        end_time = _with_defaulted_timezone(body["end_time"])
         downtime_commands.schedule_service_downtime(
             live,
             site_id,
             host_name=body["host_name"],
             service_description=body["service_descriptions"],
-            start_time=body["start_time"],
-            end_time=body["end_time"],
+            start_time=start_time,
+            end_time=end_time,
             recur=body["recur"],
             duration=body["duration"],
             user_id=user.ident,
@@ -272,6 +312,7 @@ def create_service_related_downtime(params: Mapping[str, Any]) -> Response:
         HOST_NAME_SHOW,
         SERVICE_DESCRIPTION_SHOW,
         DowntimeParameter,
+        DOWNTIME_TYPE,
     ],
     response_schema=response_schemas.DomainObjectCollection,
     permissions_required=PERMISSIONS,
@@ -314,15 +355,23 @@ def _show_downtimes(param):
             Downtimes.comment,
         ]
     )
+
     query_expr = param.get("query")
+    host_name = param.get("host_name")
+    service_description = param.get("service_description")
+
+    if (downtime_type := param["downtime_type"]) != "both":
+        q = q.filter(Downtimes.is_service.equals(1 if downtime_type == "service" else 0))
+
     if query_expr is not None:
         q = q.filter(query_expr)
-    host_name = param.get("host_name")
+
     if host_name is not None:
-        q = q.filter(And(Downtimes.host_name.op("=", host_name), Downtimes.is_service.equals(0)))
-    service_description = param.get("service_description")
+        q = q.filter(Downtimes.host_name.op("=", host_name))
+
     if service_description is not None:
         q = q.filter(Downtimes.service_description.contains(service_description))
+
     gen_downtimes = q.iterate(live)
     return serve_json(_serialize_downtimes(gen_downtimes))
 

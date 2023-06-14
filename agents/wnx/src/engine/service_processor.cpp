@@ -34,24 +34,68 @@ using namespace std::string_literals;
 namespace fs = std::filesystem;
 
 namespace cma::srv {
+enum class FirewallController { with, without };
+std::wstring_view RuleName() {
+    switch (GetModus()) {
+        case Modus::service:
+            return srv::kSrvFirewallRuleName;
+        case Modus::app:
+        case Modus::test:
+        case Modus::integration:
+            return srv::kAppFirewallRuleName;
+    }
+    // unreachable
+    return {};
+}
+
+void OpenFirewall(FirewallController w) {
+    const auto rule_name = RuleName();
+    switch (w) {
+        case FirewallController::with:
+            XLOG::l.i("Controller has started: firewall to controller");
+            ProcessFirewallConfiguration(ac::GetWorkController().wstring(),
+                                         GetFirewallPort(), rule_name);
+            break;
+        case FirewallController::without:
+            XLOG::l.i("Controller has NOT started: firewall to agent");
+            ProcessFirewallConfiguration(wtools::GetArgv(0), GetFirewallPort(),
+                                         rule_name);
+            break;
+    }
+}
+
 void ServiceProcessor::startService() {
     if (thread_.joinable()) {
         XLOG::l("Attempt to start service twice, no way!");
         return;
     }
 
-    auto installed = cfg::cap::Install();
-    cfg::upgrade::UpgradeLegacy(cfg::upgrade::Force::no);
-
-    // service must reload config, because service may reconfigure itself
-    ReloadConfig();
-
+    const auto results = executeOptionalTasks();
     rm_lwa_thread_ = std::thread(&cfg::rm_lwa::Execute);
-
     thread_ = std::thread(&ServiceProcessor::mainThread, this, &external_port_,
-                          installed);
+                          results.cap_installed);
 
     XLOG::l.t("Successful start of thread");
+}
+
+ServiceProcessor::OptionalTasksResults
+ServiceProcessor::executeOptionalTasks() {
+    switch (GetModus()) {
+        case Modus::service: {
+            const bool installed = cfg::cap::Install();
+            cfg::upgrade::UpgradeLegacy(cfg::upgrade::Force::no);
+            // service must reload config: service may reconfigure itself
+            ReloadConfig();
+            return {.cap_installed = installed};
+        }
+        case Modus::integration:
+            [[fallthrough]];
+        case Modus::app:
+            [[fallthrough]];
+        case Modus::test:
+            break;
+    }
+    return {};
 }
 
 void ServiceProcessor::startServiceAsLegacyTest() {
@@ -132,7 +176,6 @@ void ServiceProcessor::cleanupOnStop() {
     if (GetModus() != Modus::service) {
         XLOG::l("Invalid call!");
     }
-    KillAllInternalUsers();
 
     TryCleanOnExit();
 }
@@ -167,7 +210,7 @@ void ServiceProcessor::stopTestingMainThread() {
 
 namespace {
 std::string FindWinPerfExe() {
-    auto exe_name = cfg::groups::winperf.exe();
+    auto exe_name = cfg::groups::g_winperf.exe();
 
     if (tools::IsEqual(exe_name, "agent")) {
         XLOG::t.i("Looking for default agent");
@@ -199,7 +242,7 @@ std::string FindWinPerfExe() {
 }
 
 std::wstring GetWinPerfLogFile() {
-    return cfg::groups::winperf.isTrace()
+    return cfg::groups::g_winperf.isTrace()
                ? (fs::path{cfg::GetLogDir()} / "winperf.log").wstring()
                : L"";
 }
@@ -207,19 +250,17 @@ std::wstring GetWinPerfLogFile() {
 
 void ServiceProcessor::kickWinPerf(AnswerId answer_id,
                                    const std::string &ip_addr) {
-    using cfg::groups::winperf;
-
-    auto cmd_line = winperf.buildCmdLine();
+    auto cmd_line = cfg::groups::g_winperf.buildCmdLine();
     if (!ip_addr.empty()) {
         // we may need IP info and using for this pseudo-counter
-        cmd_line = L"ip:" + wtools::ConvertToUTF16(ip_addr) + L" " + cmd_line;
+        cmd_line = L"ip:" + wtools::ConvertToUtf16(ip_addr) + L" " + cmd_line;
     }
 
-    auto exe_name = wtools::ConvertToUTF16(FindWinPerfExe());
-    const auto timeout = winperf.timeout();
-    auto prefix = wtools::ConvertToUTF16(winperf.prefix());
+    auto exe_name = wtools::ConvertToUtf16(FindWinPerfExe());
+    const auto timeout = cfg::groups::g_winperf.timeout();
+    auto prefix = wtools::ConvertToUtf16(cfg::groups::g_winperf.prefix());
 
-    if (winperf.isFork() && !exe_name.empty()) {
+    if (cfg::groups::g_winperf.isFork() && !exe_name.empty()) {
         vf_.emplace_back(kickExe(true,                   // async ???
                                  exe_name,               // perf_counter.exe
                                  answer_id,              // answer id
@@ -236,7 +277,7 @@ void ServiceProcessor::kickWinPerf(AnswerId answer_id,
                 auto cs = tools::SplitString(cmd_line, L" ");
                 std::vector<std::wstring_view> counters{cs.begin(), cs.end()};
                 return provider::RunPerf(prefix,
-                                         wtools::ConvertToUTF16(internal_port_),
+                                         wtools::ConvertToUtf16(internal_port_),
                                          AnswerIdToWstring(answer_id), timeout,
                                          std::vector<std::wstring_view>{
                                              cs.begin(), cs.end()}) == 0;
@@ -255,21 +296,21 @@ void ServiceProcessor::informDevice(rt::Device &rt_device,
         return;
     }
 
-    if (!cfg::groups::global.realtimeEnabled()) {
+    if (!cfg::groups::g_global.realtimeEnabled()) {
         XLOG::t("Real time is disabled in config");
         return;
     }
 
-    auto sections = cfg::groups::global.realtimeSections();
+    auto sections = cfg::groups::g_global.realtimeSections();
     if (sections.empty()) {
         return;
     }
 
     auto s_view = tools::ToView(sections);
 
-    const auto rt_port = cfg::groups::global.realtimePort();
-    auto password = cfg::groups::global.realtimePassword();
-    const auto rt_timeout = cfg::groups::global.realtimeTimeout();
+    const auto rt_port = cfg::groups::g_global.realtimePort();
+    auto password = cfg::groups::g_global.realtimePassword();
+    const auto rt_timeout = cfg::groups::g_global.realtimeTimeout();
 
     rt_device.connectFrom(ip_addr, rt_port, s_view, password, rt_timeout);
 }
@@ -423,8 +464,9 @@ int ServiceProcessor::startProviders(AnswerId answer_id,
     // sections to be kicked out
     tryToKick(uptime_provider_, answer_id, ip_addr);
 
-    if (cfg::groups::winperf.enabledInConfig() &&
-        cfg::groups::global.allowedSection(cfg::vars::kWinPerfPrefixDefault)) {
+    if (cfg::groups::g_winperf.enabledInConfig() &&
+        cfg::groups::g_global.allowedSection(
+            cfg::vars::kWinPerfPrefixDefault)) {
         kickWinPerf(answer_id, ip_addr);
     }
 
@@ -452,7 +494,7 @@ int ServiceProcessor::startProviders(AnswerId answer_id,
     return static_cast<int>(vf_.size()) + (started_sync ? 1 : 0);
 }
 
-/// \brief To be used, when no real connection, i.e. test
+/// To be used, when no real connection, i.e. test
 void ServiceProcessor::sendDebugData() {
     XLOG::l.i("Started without IO. Debug mode");
 
@@ -468,7 +510,7 @@ void ServiceProcessor::sendDebugData() {
     }
 }
 
-/// \brief called before every answer to execute routine tasks
+/// called before every answer to execute routine tasks
 void ServiceProcessor::prepareAnswer(const std::string &ip_from,
                                      rt::Device &rt_device) {
     const auto value = tools::win::GetEnv(env::auto_reload);
@@ -532,8 +574,8 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop(
     std::optional<ControllerParam> &controller_param) {
     XLOG::l.i("main Wait Loop");
     // memorize vars to check for changes in loop below
-    const auto ipv6 = cfg::groups::global.ipv6();
-    const auto port = cfg::groups::global.port();
+    const auto ipv6 = cfg::groups::g_global.ipv6();
+    const auto port = cfg::groups::g_global.port();
     auto uniq_cfg_id = cfg::details::ConfigInfo::uniqId();
     if (GetModus() == Modus::service) {
         ProcessServiceConfiguration(kServiceName);
@@ -552,11 +594,11 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop(
         }
 
         // check for config update and inform external port
-        auto new_ipv6 = cfg::groups::global.ipv6();
-        auto new_port = cfg::groups::global.port();
+        auto new_ipv6 = cfg::groups::g_global.ipv6();
+        auto new_port = cfg::groups::g_global.port();
         if (new_ipv6 != ipv6 || new_port != port) {
             XLOG::l.i("Restarting server with new parameters [{}] ipv6:[{}]",
-                      new_port, new_port);
+                      new_port, new_ipv6);
             return Signal::restart;
         }
 
@@ -567,6 +609,7 @@ ServiceProcessor::Signal ServiceProcessor::mainWaitLoop(
                         controller_param->pid);
                 if (ac::IsConfiguredEmergencyOnCrash()) {
                     controller_param.reset();
+                    XLOG::d("Restarting");
                     return Signal::restart;
                 }
             }
@@ -621,51 +664,23 @@ void WaitForNetwork(std::chrono::seconds period) noexcept {
 ///  returns non empty port if controller had been started
 std::optional<ServiceProcessor::ControllerParam> OptionallyStartAgentController(
     std::chrono::milliseconds validate_process_delay) {
-    if (!ac ::IsRunController(cfg::GetLoadedConfig())) {
-        return {};
-    }
-
-    if (auto pid = ac::StartAgentController()) {
-        std::this_thread::sleep_for(validate_process_delay);
-        if (wtools::GetProcessPath(*pid).empty()) {
+    if (ac ::IsRunController(cfg::GetLoadedConfig())) {
+        if (const auto pid = ac::StartAgentController()) {
+            std::this_thread::sleep_for(validate_process_delay);
+            if (!wtools::GetProcessPath(*pid).empty()) {
+                OpenFirewall(FirewallController::with);
+                return ServiceProcessor::ControllerParam{
+                    .port = ac::GetConfiguredAgentChannelPort(GetModus()),
+                    .pid = *pid,
+                };
+            }
             XLOG::l("Controller process pid={} died in {}ms", *pid,
                     validate_process_delay.count());
             ac::DeleteControllerInBin();
-            return {};
         }
-        return ServiceProcessor::ControllerParam{
-            .port = ac::GetConfiguredAgentChannelPort(GetModus()),
-            .pid = *pid,
-        };
     }
-
+    OpenFirewall(FirewallController::without);
     return {};
-}
-
-std::wstring_view RuleName() {
-    switch (GetModus()) {
-        case Modus::service:
-            return srv::kSrvFirewallRuleName;
-        case Modus::app:
-        case Modus::test:
-        case Modus::integration:
-            return srv::kAppFirewallRuleName;
-    }
-    // unreachable
-    return srv::kAppFirewallRuleName;
-}
-
-void OpenFirewall(bool controller) {
-    const auto rule_name = RuleName();
-    if (controller) {
-        XLOG::l.i("Controller has started: firewall to controller");
-        ProcessFirewallConfiguration(ac::GetWorkController().wstring(),
-                                     GetFirewallPort(), rule_name);
-    } else {
-        XLOG::l.i("Controller has NOT started: firewall to agent");
-        ProcessFirewallConfiguration(wtools::GetArgv(0), GetFirewallPort(),
-                                     rule_name);
-    }
 }
 
 world::ExternalPort::IoParam AsIoParam(
@@ -687,7 +702,7 @@ world::ExternalPort::IoParam AsIoParam(
 
 }  // namespace
 
-/// \brief <HOSTING THREAD>
+/// <HOSTING THREAD>
 /// ex_port may be nullptr(command line test, for example)
 /// cap_installed is signaled from the service thread about cap_installation
 /// makes a mail slot + starts IO on TCP
@@ -712,8 +727,8 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
         ON_OUT_OF_SCOPE(mailbox.DismantleThread());
 
         auto controller_params = OptionallyStartAgentController(1000ms);
+
         ON_OUT_OF_SCOPE(ac::KillAgentController());
-        OpenFirewall(controller_params.has_value());
         if (cap_installed) {
             ac::CreateArtifacts(fs::path{tools::win::GetSomeSystemFolder(
                                     FOLDERID_ProgramData)} /
@@ -735,10 +750,10 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
             return;
         }
 
-        rt::Device rt_device;
-
         // Main Processing Loop
-        while (true) {
+        bool run = true;
+        while (run) {
+            rt::Device rt_device;
             rt_device.start();
             const auto io_param = AsIoParam(controller_params);
             XLOG::l.i("Starting io with {} {}", io_param.port, io_param.pid);
@@ -766,10 +781,20 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
             }
 
             // we wait her to the end of the External port
-            if (mainWaitLoop(controller_params) == Signal::quit) {
-                break;
+            switch (mainWaitLoop(controller_params)) {
+                case Signal::quit:
+                    run = false;
+                    break;
+                case Signal::restart:
+                    XLOG::l.i("restart main loop");
+                    if (!controller_params) {
+                        break;
+                    }
+                    wtools::KillProcessesByFullPath(
+                        fs::path{cfg::GetUserBinDir()} / cfg::files::kAgentCtl);
+                    controller_params = OptionallyStartAgentController(1000ms);
+                    break;
             }
-            XLOG::l.i("restart main loop");
         }
 
         // the end of the fun
@@ -780,7 +805,7 @@ void ServiceProcessor::mainThread(world::ExternalPort *ex_port,
         XLOG::l.bp("Not expected exception. Fix it!");
     }
     internal_port_ = "";
-}  // namespace cma::srv
+}
 
 void ServiceProcessor::startTestingMainThread() {
     if (thread_.joinable()) {
@@ -917,7 +942,7 @@ bool TheMiniProcess::start(const std::wstring &exe_name) {
     return true;
 }
 
-/// \brief - stops process
+/// - stops process
 /// returns true if killing occurs
 bool TheMiniProcess::stop() {
     std::unique_lock lk(lock_);

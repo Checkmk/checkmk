@@ -1,46 +1,76 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import os
 import tempfile
-from contextlib import suppress
+from functools import cache
 from pathlib import Path
-from uuid import UUID
+from typing import assert_never
 
 from agent_receiver.apps_and_routers import AGENT_RECEIVER_APP, UUID_VALIDATION_ROUTER
 from agent_receiver.checkmk_rest_api import (
     cmk_edition,
+    controller_certificate_settings,
     get_root_cert,
     host_configuration,
     HostConfiguration,
     link_host_with_uuid,
     post_csr,
+    register,
 )
 from agent_receiver.decompression import DecompressionError, Decompressor
 from agent_receiver.log import logger
 from agent_receiver.models import (
-    CertResponse,
-    CsrBody,
-    HostTypeEnum,
+    CertificateRenewalBody,
+    ConnectionMode,
+    CsrField,
+    PairingBody,
     PairingResponse,
+    R4RStatus,
+    RegisterExistingBody,
+    RegisterExistingResponse,
+    RegisterNewBody,
+    RegisterNewOngoingResponseDeclined,
+    RegisterNewOngoingResponseInProgress,
+    RegisterNewOngoingResponseSuccess,
+    RegisterNewResponse,
     RegistrationStatus,
-    RegistrationStatusEnum,
+    RegistrationStatusV2ResponseNotRegistered,
+    RegistrationStatusV2ResponseRegistered,
     RegistrationWithHNBody,
-    RegistrationWithLabelsBody,
+    RenewCertResponse,
+    RequestForRegistration,
 )
-from agent_receiver.site_context import r4r_dir, site_name
+from agent_receiver.site_context import site_name
 from agent_receiver.utils import (
-    get_registration_status_from_file,
-    Host,
     internal_credentials,
+    NotRegisteredException,
+    R4R,
+    RegisteredHost,
     uuid_from_pem_csr,
 )
+from cryptography.x509 import Certificate
 from fastapi import Depends, File, Header, HTTPException, Response, UploadFile
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from starlette.status import HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN, HTTP_501_NOT_IMPLEMENTED
+from pydantic import UUID4
+from starlette.status import (
+    HTTP_204_NO_CONTENT,
+    HTTP_400_BAD_REQUEST,
+    HTTP_403_FORBIDDEN,
+    HTTP_404_NOT_FOUND,
+    HTTP_500_INTERNAL_SERVER_ERROR,
+    HTTP_501_NOT_IMPLEMENTED,
+)
+
+from .certs import (
+    agent_root_ca,
+    extract_cn_from_csr,
+    serialize_to_pem,
+    sign_agent_csr,
+    site_root_certificate,
+)
 
 # pylint does not understand the syntax of agent_receiver.checkmk_rest_api.log_http_exception
 # pylint: disable=too-many-function-args
@@ -48,11 +78,70 @@ from starlette.status import HTTP_204_NO_CONTENT, HTTP_403_FORBIDDEN, HTTP_501_N
 security = HTTPBasic()
 
 
+def _validate_uuid_against_csr(uuid: UUID4, csr_field: CsrField) -> None:
+    if str(uuid) != (cn := extract_cn_from_csr(csr_field.csr)):
+        raise HTTPException(
+            status_code=HTTP_400_BAD_REQUEST,
+            detail=f"UUID ({uuid}) does not match CN ({cn}) of CSR.",
+        )
+
+
+def _sign_agent_csr(uuid: UUID4, csr_field: CsrField) -> Certificate:
+    return sign_agent_csr(
+        csr_field.csr,
+        controller_certificate_settings(
+            f"uuid={uuid} Querying agent controller certificate settings failed",
+            internal_credentials(),
+        ).lifetime_in_months,
+        agent_root_ca(),
+    )
+
+
+@cache
+def _pem_serizialized_site_root_cert() -> str:
+    return serialize_to_pem(site_root_certificate())
+
+
+@AGENT_RECEIVER_APP.post(
+    "/register_existing",
+    response_model=RegisterExistingResponse,
+)
+async def register_existing(
+    *,
+    credentials: HTTPBasicCredentials = Depends(security),
+    registration_body: RegisterExistingBody,
+) -> RegisterExistingResponse:
+    _validate_uuid_against_csr(registration_body.uuid, registration_body.csr)
+    root_cert = _pem_serizialized_site_root_cert()
+    agent_cert = serialize_to_pem(
+        _sign_agent_csr(
+            registration_body.uuid,
+            registration_body.csr,
+        )
+    )
+    register_response = register(
+        f"uuid={registration_body.uuid} Registration failed",
+        credentials,
+        registration_body.uuid,
+        registration_body.host_name,
+    )
+    logger.info(
+        "uuid=%s registered host %s",
+        registration_body.uuid,
+        registration_body.host_name,
+    )
+    return RegisterExistingResponse(
+        root_cert=root_cert,
+        agent_cert=agent_cert,
+        connection_mode=register_response.connection_mode,
+    )
+
+
 @AGENT_RECEIVER_APP.post("/pairing", response_model=PairingResponse)
 async def pairing(
     *,
     credentials: HTTPBasicCredentials = Depends(security),
-    pairing_body: CsrBody,
+    pairing_body: PairingBody,
 ) -> PairingResponse:
     uuid = uuid_from_pem_csr(pairing_body.csr)
 
@@ -120,59 +209,132 @@ async def register_with_hostname(
     return Response(status_code=HTTP_204_NO_CONTENT)
 
 
-def _write_registration_file(
-    username: str,
-    registration_body: RegistrationWithLabelsBody,
-) -> None:
-    (dir_new_requests := r4r_dir() / RegistrationStatusEnum.NEW.name).mkdir(
-        mode=0o770,
-        parents=True,
-        exist_ok=True,
-    )
-    (new_request := dir_new_requests / f"{registration_body.uuid}.json").write_text(
-        json.dumps(
-            {
-                "uuid": str(registration_body.uuid),
-                "username": username,
-                "agent_labels": registration_body.agent_labels,
-            }
-        )
-    )
-    new_request.chmod(0o660)
+@AGENT_RECEIVER_APP.post(
+    "/register_new",
+    response_model=RegisterNewResponse,
+)
+async def register_new(
+    *,
+    credentials: HTTPBasicCredentials = Depends(security),
+    registration_body: RegisterNewBody,
+) -> RegisterNewResponse:
+    _validate_is_cce(credentials, registration_body.uuid)
+    _validate_uuid_against_csr(registration_body.uuid, registration_body.csr)
+
+    root_cert = _pem_serizialized_site_root_cert()
+
+    R4R(
+        status=R4RStatus.NEW,
+        request=RequestForRegistration(
+            uuid=registration_body.uuid,
+            username=credentials.username,
+            agent_labels=registration_body.agent_labels,
+            agent_cert=serialize_to_pem(
+                _sign_agent_csr(
+                    registration_body.uuid,
+                    registration_body.csr,
+                )
+            ),
+        ),
+    ).write()
     logger.info(
         "uuid=%s Stored new request for registration",
         registration_body.uuid,
     )
 
+    return RegisterNewResponse(root_cert=root_cert)
+
 
 @AGENT_RECEIVER_APP.post(
-    "/register_with_labels",
-    status_code=HTTP_204_NO_CONTENT,
+    "/register_new_ongoing/{uuid}",
+    # https://fastapi.tiangolo.com/tutorial/extra-models/#union-or-anyof
+    response_model=RegisterNewOngoingResponseInProgress
+    | RegisterNewOngoingResponseDeclined
+    | RegisterNewOngoingResponseSuccess,
 )
-async def register_with_labels(
+async def register_new_ongoing(
+    uuid: UUID4,
     *,
     credentials: HTTPBasicCredentials = Depends(security),
-    registration_body: RegistrationWithLabelsBody,
-) -> Response:
+) -> RegisterNewOngoingResponseInProgress | RegisterNewOngoingResponseDeclined | RegisterNewOngoingResponseSuccess:
+    _validate_is_cce(credentials, uuid)
+
+    try:
+        r4r = R4R.read(uuid)
+    except FileNotFoundError:
+        logger.error(
+            "uuid=%s No registration in progress",
+            uuid,
+        )
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND,
+            detail="No registration with this UUID in progress",
+        )
+    if r4r.request.username != credentials.username:
+        logger.error(
+            "uuid=%s Username mismatch",
+            uuid,
+        )
+        raise HTTPException(
+            status_code=HTTP_403_FORBIDDEN,
+            detail="A registration is in progress, but it was triggered by a different user",
+        )
+
+    match r4r.status:
+        case R4RStatus.NEW | R4RStatus.PENDING:
+            logger.info(
+                "uuid=%s Registration in progress",
+                uuid,
+            )
+            return RegisterNewOngoingResponseInProgress()
+        case R4RStatus.DECLINED:
+            logger.info(
+                "uuid=%s Registration declined",
+                uuid,
+            )
+            return RegisterNewOngoingResponseDeclined(
+                reason=r4r.request.rejection_notice() or "Reason unknown"
+            )
+        case R4RStatus.DISCOVERABLE:
+            try:
+                host = RegisteredHost(uuid)
+            except NotRegisteredException:
+                logger.error(
+                    "uuid=%s Not registered even though r4r says otherwise!?",
+                    uuid,
+                )
+                raise HTTPException(
+                    status_code=HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="Registration was successful, but host is still not registered. This "
+                    "should not have happend. Maybe someone removed the registration by hand?",
+                )
+            logger.info(
+                "uuid=%s Registration successful",
+                uuid,
+            )
+            return RegisterNewOngoingResponseSuccess(
+                agent_cert=r4r.request.agent_cert,
+                connection_mode=host.connection_mode,
+            )
+
+    assert_never(r4r.status)
+
+
+def _validate_is_cce(credentials: HTTPBasicCredentials, uuid: UUID4) -> None:
     if not (
         edition := cmk_edition(
-            f"uuid={registration_body.uuid} Querying Checkmk edition failed",
+            f"uuid={uuid} Querying Checkmk edition failed",
             credentials,
         )
-    ).supports_registration_with_labels():
+    ).supports_register_new():
         logger.error(
-            "uuid=%s Registration with labels not supported",
-            registration_body.uuid,
+            "uuid=%s Registration of new hosts not suppored",
+            uuid,
         )
         raise HTTPException(
             status_code=HTTP_501_NOT_IMPLEMENTED,
-            detail=f"The Checkmk {edition.value} edition does not support registration with agent labels",
+            detail=f"The Checkmk {edition.value} edition does not support registration of new hosts",
         )
-    _write_registration_file(
-        credentials.username,
-        registration_body,
-    )
-    return Response(status_code=HTTP_204_NO_CONTENT)
 
 
 def _store_agent_data(
@@ -191,26 +353,19 @@ def _store_agent_data(
             Path(temp_file.name).unlink(missing_ok=True)
 
 
-def _move_ready_file(uuid: UUID) -> None:
-    (dir_discoverable := r4r_dir() / RegistrationStatusEnum.DISCOVERABLE.name).mkdir(exist_ok=True)
-    with suppress(FileNotFoundError):
-        (r4r_dir() / RegistrationStatusEnum.READY.name / f"{uuid}.json").rename(
-            dir_discoverable / f"{uuid}.json"
-        )
-
-
 @UUID_VALIDATION_ROUTER.post(
     "/agent_data/{uuid}",
     status_code=HTTP_204_NO_CONTENT,
 )
 async def agent_data(
-    uuid: UUID,
+    uuid: UUID4,
     *,
     compression: str = Header(...),
     monitoring_data: UploadFile = File(...),
 ) -> Response:
-    host = Host(uuid)
-    if not host.registered:
+    try:
+        host = RegisteredHost(uuid)
+    except NotRegisteredException:
         logger.error(
             "uuid=%s Host is not registered",
             uuid,
@@ -219,7 +374,7 @@ async def agent_data(
             status_code=HTTP_403_FORBIDDEN,
             detail="Host is not registered",
         )
-    if host.host_type is not HostTypeEnum.PUSH:
+    if host.connection_mode is not ConnectionMode.PUSH:
         logger.error(
             "uuid=%s Host is not a push host",
             uuid,
@@ -260,8 +415,6 @@ async def agent_data(
         decompressed_agent_data,
     )
 
-    _move_ready_file(uuid)
-
     logger.info(
         "uuid=%s Agent data saved",
         uuid,
@@ -274,47 +427,67 @@ async def agent_data(
     response_model=RegistrationStatus,
 )
 async def registration_status(
-    uuid: UUID,
+    uuid: UUID4,
 ) -> RegistrationStatus:
-    host = Host(uuid)
-    registration_data = get_registration_status_from_file(uuid)
+    try:
+        r4r = R4R.read(uuid)
+    except FileNotFoundError:
+        r4r = None
 
-    if not host.registered:
-        if registration_data:
+    try:
+        host = RegisteredHost(uuid)
+    except NotRegisteredException:
+        if r4r:
             return RegistrationStatus(
-                status=registration_data.status, message=registration_data.message
+                status=r4r.status,
+                message=r4r.request.rejection_notice(),
             )
         raise HTTPException(status_code=404, detail="Host is not registered")
 
     return RegistrationStatus(
-        hostname=host.hostname,
-        status=registration_data.status if registration_data else None,
-        type=host.host_type,
+        hostname=host.name,
+        status=r4r.status if r4r else None,
+        connection_mode=host.connection_mode,
         message="Host registered",
+        type=host.connection_mode,
+    )
+
+
+@UUID_VALIDATION_ROUTER.get(
+    "/registration_status_v2/{uuid}",
+    response_model=RegistrationStatusV2ResponseNotRegistered
+    | RegistrationStatusV2ResponseRegistered,
+)
+async def registration_status_v2(
+    uuid: UUID4,
+) -> RegistrationStatusV2ResponseNotRegistered | RegistrationStatusV2ResponseRegistered:
+    try:
+        host = RegisteredHost(uuid)
+    except NotRegisteredException:
+        return RegistrationStatusV2ResponseNotRegistered()
+    return RegistrationStatusV2ResponseRegistered(
+        hostname=host.name,
+        connection_mode=host.connection_mode,
     )
 
 
 @UUID_VALIDATION_ROUTER.post(
     "/renew_certificate/{uuid}",
-    response_model=CertResponse,
+    response_model=RenewCertResponse,
 )
 async def renew_certificate(
     *,
-    uuid: UUID,
-    csr_body: CsrBody,
-) -> CertResponse:
-
+    uuid: UUID4,
+    cert_renewal_body: CertificateRenewalBody,
+) -> RenewCertResponse:
     # Note: Technically, we could omit the {uuid} part of the endpoint url.
     # We explicitly require it for consistency with other endpoints.
-    if str(uuid) != uuid_from_pem_csr(csr_body.csr):
-        raise HTTPException(
-            status_code=HTTP_403_FORBIDDEN,
-            detail=f"You requested a certificate renewal for {uuid}, but the provided CSR doesn't match.",
-        )
+    _validate_uuid_against_csr(uuid, cert_renewal_body.csr)
 
     # Don't maintain deleted registrations.
-    host = Host(uuid)
-    if not host.registered:
+    try:
+        RegisteredHost(uuid)
+    except NotRegisteredException:
         logger.error(
             "uuid=%s Host is not registered",
             uuid,
@@ -324,17 +497,13 @@ async def renew_certificate(
             detail="Host is not registered",
         )
 
-    client_cert = post_csr(
-        f"uuid={uuid} Certificate renewal failed",
-        internal_credentials(),
-        csr_body.csr,
-    )
+    agent_cert = _sign_agent_csr(uuid, cert_renewal_body.csr)
 
     logger.info(
         "uuid=%s Certificate renewal succeeded",
         uuid,
     )
 
-    return CertResponse(
-        client_cert=client_cert,
+    return RenewCertResponse(
+        agent_cert=serialize_to_pem(agent_cert),
     )

@@ -1,4 +1,4 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
@@ -86,7 +86,7 @@ private:
     FRIEND_TEST(ModulesTest, IsMyScript);
 
     friend class ModuleCommanderTest;
-    FRIEND_TEST(ModuleCommanderTest, InstallModulesIntegration);
+    FRIEND_TEST(ModuleCommanderTest, InstallModulesComponent);
 
 #endif
 };
@@ -137,7 +137,7 @@ public:
 
     [[nodiscard]] static std::vector<StringViewPair> GetSystemExtensions();
 
-    /// \brief Returns path in the %temp% where content of module will be moved
+    /// Returns path in the %temp% where content of module will be moved
     static std::filesystem::path GetMoveLocation(
         const std::filesystem::path &module_file);
 
@@ -175,7 +175,7 @@ private:
 #if defined(ENABLE_WHITE_BOX_TESTING)
     friend class ModuleCommanderTest;
     FRIEND_TEST(ModuleCommanderTest, FindModules);
-    FRIEND_TEST(ModuleCommanderTest, InstallModulesIntegration);
+    FRIEND_TEST(ModuleCommanderTest, InstallModulesComponent);
     FRIEND_TEST(ModuleCommanderTest, Internal);
     FRIEND_TEST(ModuleCommanderTest, LowLevelFs);
     FRIEND_TEST(ModuleCommanderTest, PrepareToWork2);

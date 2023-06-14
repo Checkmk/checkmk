@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -50,6 +50,7 @@ class DashboardStore:
 
 
 def _internal_dashboard_to_runtime_dashboard(raw_dashboard: dict[str, Any]) -> DashboardConfig:
+    raw_dashboard["packaged"] = False
     return {
         # Need to assume that we are right for now. We will have to introduce parsing there to do a
         # real conversion in one of the following typing steps
@@ -80,7 +81,6 @@ def load_dashboard_with_cloning(
     name: DashboardName,
     edit: bool = True,
 ) -> DashboardConfig:
-
     all_dashboards = get_all_dashboards()
     board = visuals.get_permissioned_visual(
         name,

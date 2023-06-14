@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """EC UPDATE methods with one or more event IDs"""
@@ -8,6 +8,8 @@ import pytest
 from tests.testlib import CMKEventConsole
 
 from tests.unit.cmk.ec.helpers import FakeStatusSocket
+
+from cmk.utils.type_defs import HostName
 
 from cmk.ec.main import Event, EventStatus, StatusServer
 from cmk.ec.query import MKClientError
@@ -24,9 +26,9 @@ def test_update_event(
 ) -> None:
     """Update and acknowledge one event"""
     event: Event = {
-        "host": "host_1",
+        "host": HostName("host_1"),
         "phase": start_phase,
-        "core_host": "ABC",
+        "core_host": HostName("ABC"),
     }
     event_status.new_event(CMKEventConsole.new_event(event))
     s = FakeStatusSocket(
@@ -47,9 +49,9 @@ def test_update_events_that_cant_be_acked(
 ) -> None:
     """Update and acknowledge an event when the phase is not 'ack' or 'open'"""
     event: Event = {
-        "host": "host_1",
+        "host": HostName("host_1"),
         "phase": test_phase,
-        "core_host": "ABC",
+        "core_host": HostName("ABC"),
     }
     event_status.new_event(CMKEventConsole.new_event(event))
     s = FakeStatusSocket(b"COMMAND UPDATE;1;testuser;1;test_comment;test_contact_name")
@@ -63,9 +65,9 @@ def test_update_multiple_evens(event_status: EventStatus, status_server: StatusS
     """Update and acknowledge multiple events"""
     events: list[Event] = [
         {
-            "host": f"host_{i}",
+            "host": HostName(f"host_{i}"),
             "phase": "open",
-            "core_host": "ABC",
+            "core_host": HostName("ABC"),
         }
         for i in range(1, 11)
     ]

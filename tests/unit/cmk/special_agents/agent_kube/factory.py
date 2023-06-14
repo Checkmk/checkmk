@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2022 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 """Module to help generate pydantic based Kubernetes models
@@ -54,9 +54,7 @@ class ContainerTerminatedStateFactory(ModelFactory):
     __model__ = api.ContainerTerminatedState
 
 
-def create_container_state(
-    state: api.ContainerStateType, **kwargs: dict[str, object]
-) -> api.ContainerState:
+def create_container_state(state: api.ContainerStateType) -> api.ContainerState:
     state_factory = {
         api.ContainerStateType.running: ContainerRunningStateFactory.build,
         api.ContainerStateType.waiting: ContainerWaitingStateFactory.build,
@@ -217,6 +215,10 @@ class CPURateSampleFactory(ModelFactory):
     __model__ = performance.CPURateSample
 
 
+class CPUSampleFactory(ModelFactory):
+    __model__ = performance.CPUSample
+
+
 class IdentifiableSampleFactory(ModelFactory):
     __model__ = common.IdentifiableSample
 
@@ -252,6 +254,12 @@ class PersistentVolumeClaimFactory(ModelFactory):
 
     spec = PersistentVolumeSpecFactory.build
     status = PersistentVolumeClaimStatusFactory.build
+    metadata = Use(MetaDataFactory.build, factory_use_construct=True)
+
+
+class PersistentVolumeFactory(ModelFactory):
+    __model__ = api.PersistentVolume
+
     metadata = Use(MetaDataFactory.build, factory_use_construct=True)
 
 
@@ -369,6 +377,7 @@ class APIDataFactory(ModelFactory):
     __model__ = APIData
 
     persistent_volume_claims = randomize_size(PersistentVolumeClaimFactory.batch)
+    persistent_volumes = randomize_size(PersistentVolumeFactory.batch)
     nodes = randomize_size(APINodeFactory.batch)
     cron_jobs = randomize_size(APICronJobFactory.batch)
     deployments = randomize_size(APIDeploymentFactory.batch)

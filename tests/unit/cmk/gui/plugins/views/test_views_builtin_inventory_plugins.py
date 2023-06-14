@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,12 +9,13 @@ from cmk.gui.views.inventory import _RelatedRawHints, DisplayHints, inventory_di
 
 
 def test_display_hint_titles() -> None:
-    assert all("title" in hint and "short" not in hint for hint in inventory_displayhints.values())
+    assert all("title" in hint for hint in inventory_displayhints.values())
 
 
 _IGNORED_KEYS_BY_PATH = {
     ("hardware", "system"): ["serial_number", "model_name"],
     ("hardware", "storage", "disks"): [
+        "drive_index",
         "bus",
         "serial",
         "local",
@@ -83,7 +84,7 @@ def test_missing_table_keyorder() -> None:
     missing_keyorders = [
         path
         for path, hint in inventory_displayhints.items()
-        if path.endswith(":") and path not in ignore_paths and not bool(hint.get("keyorder"))
+        if path.endswith(":") and path not in ignore_paths and not hint.get("keyorder")
     ]
 
     # TODO test second part

@@ -1,0 +1,12 @@
+Title: Automatic host removal: Apply rules in subfolders
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1680525863
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Any rules for configuring the <a href="https://checkmk.com/werk/15407">automatic removal of hosts</a>
+that were not located in the main folder had no effect.

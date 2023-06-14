@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -19,7 +19,7 @@ def _valuespec_special_agents_storeonce4x():
         title=_("HPE StoreOnce via REST API 4.x"),
         help=_(
             "This rule set selects the special agent for HPE StoreOnce Appliances "
-            "instead of the normal Check_MK agent and allows monitoring via REST API v4.x or "
+            "instead of the normal Checkmk agent and allows monitoring via REST API v4.x or "
             "higher. "
         ),
         optional_keys=["cert"],

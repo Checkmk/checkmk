@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0i1
+Version: 2.2.0b1
 
 In case a user tries to register two-factor credentials without HTTPS, the
 error message was not very helpful. And also the handling access via IP address

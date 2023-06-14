@@ -1,5 +1,5 @@
 #!/bin/bash
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -9,7 +9,6 @@ usage() {
     cat >&2 <<-HERE
 usage: $(basename "${0}") [--omit-legacy-checks|--filter]
 
-   --omit-legacy-checks: omit files below checks/
    --filter:             read file candidates from lines of stdin (one file per line)
 HERE
     exit 1
@@ -23,7 +22,6 @@ get_candidates_from_stdin() {
 }
 
 get_candidates_from_filesystem() {
-    LEGACY_CHECK_HANDLING=$1
     cd "$(dirname "$(dirname "$(realpath "$0")")")" || exit $?
 
     SEARCH=
@@ -34,9 +32,6 @@ get_candidates_from_filesystem() {
     SEARCH+=" agents"
     SEARCH+=" bin"
     PRUNE+=" -path $(realpath bin)/cmk -prune -o" # symlink to bin/check_mk + confusion with cmk/ directory
-    if [ "${LEGACY_CHECK_HANDLING}" = "keep" ]; then
-        SEARCH+=" checks"
-    fi
     SEARCH+=" cmk"
     SEARCH+=" doc"
     PRUNE+=" -path $(realpath doc/treasures) -prune -o" # our "treasures" need much more love before they can be linted
@@ -83,17 +78,16 @@ get_candidates_from_filesystem() {
 }
 
 filter_for_python_files() {
-    sort -z | xargs --no-run-if-empty -0 grep --binary-files=without-match -l '^#!.*python3$'
+    sort --zero-terminated |
+        xargs --no-run-if-empty --null \
+            grep --binary-files=without-match --files-with-matches '^#!.*python3$'
 }
 
 main() {
     if [ $# -eq 0 ]; then
-        get_candidates_from_filesystem keep | filter_for_python_files
+        get_candidates_from_filesystem | filter_for_python_files
     elif [ $# -eq 1 ]; then
         case $1 in
-            --omit-legacy-checks)
-                get_candidates_from_filesystem omit | filter_for_python_files
-                ;;
             --filter)
                 # in the filtering case, no match by grep is OK!
                 get_candidates_from_stdin | filter_for_python_files || true

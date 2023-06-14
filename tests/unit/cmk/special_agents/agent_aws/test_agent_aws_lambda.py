@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
 # pylint: disable=redefined-outer-name
 
-from collections.abc import Generator, Mapping, Sequence
+from collections.abc import Iterator, Mapping, Sequence
 from typing import Any
 
 import pytest
-from _pytest.monkeypatch import MonkeyPatch
+from pytest import MonkeyPatch
 
 from cmk.special_agents.agent_aws import (
     _create_lamdba_sections,
@@ -36,13 +36,13 @@ from .agent_aws_fake_clients import (
 
 
 class PaginatorListFunctions:
-    def paginate(self) -> Generator[Mapping[str, Any], None, None]:
+    def paginate(self) -> Iterator[Mapping[str, Any]]:
         yield {"Functions": LambdaListFunctionsIB.create_instances(2)}
 
 
 class PaginatorProvisionedConcurrencyConfigs:
     # "FunctionName" must occur in the function signature, but is not used in the current implementation => disable warning
-    def paginate(self, FunctionName: str) -> Mapping[str, Any]:  # type: ignore
+    def paginate(self, FunctionName: str) -> Iterator[Mapping[str, Any]]:
         yield {
             "ProvisionedConcurrencyConfigs": LambdaListProvisionedConcurrencyConfigsIB.create_instances(
                 2
@@ -51,7 +51,7 @@ class PaginatorProvisionedConcurrencyConfigs:
 
 
 class FakeLambdaClient:
-    def __init__(self, skip_entities=None) -> None:  # type:ignore[no-untyped-def]
+    def __init__(self, skip_entities=None) -> None:  # type: ignore[no-untyped-def]
         self._skip_entities = {} if not skip_entities else skip_entities
 
     def get_paginator(self, operation_name: str) -> Any:
@@ -98,10 +98,11 @@ def get_lambda_sections(
 ]:
     distributor = ResultDistributor()
 
+    # TODO: FakeLambdaClient shoud actually subclass LambdaClient, etc.
     return _create_lamdba_sections(
-        FakeLambdaClient(False),
-        FakeCloudwatchClient(),
-        FakeCloudwatchClientLogsClient(),
+        FakeLambdaClient(False),  # type: ignore[arg-type]
+        FakeCloudwatchClient(),  # type: ignore[arg-type]
+        FakeCloudwatchClientLogsClient(),  # type: ignore[arg-type]
         "region",
         create_config(names, tags),
         distributor,
@@ -273,13 +274,14 @@ def test_lambda_cloudwatch_insights_query_results_timeout(monkeypatch: MonkeyPat
     client = FakeCloudwatchClientLogsClient()
     # disable warning: "Argument 1 to "setitem" of "MonkeyPatch" has incompatible type "QueryResults"; expected "MutableMapping[str, str]"mypy(error)"
     monkeypatch.setitem(
-        FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE,  # type: ignore
+        FAKE_CLOUDWATCH_CLIENT_LOGS_CLIENT_DEFAULT_RESPONSE,  # type: ignore[arg-type]
         "status",
         "Running",
     )
+    # TODO: FakeCloudwatchClient shoud actually subclass CloudWatchClient.
     assert (
         LambdaCloudwatchInsights.query_results(
-            client=client,
+            client=client,  # type: ignore[arg-type]
             query_id="FakeQueryId",
             timeout_seconds=0.001,
             sleep_duration=0.001,

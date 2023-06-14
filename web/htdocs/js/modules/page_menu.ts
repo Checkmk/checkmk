@@ -1,23 +1,24 @@
-// Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+// Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 // This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 // conditions defined in the file COPYING, which is part of this source code package.
 
-import * as utils from "utils";
 import "element-closest-polyfill";
+
 import * as foldable_container from "foldable_container";
-import * as popup_menu from "popup_menu";
 import * as forms from "forms";
+import * as popup_menu from "popup_menu";
+import * as utils from "utils";
 
 // Closes the active page menu dropdown
 export function close_active_dropdown() {
     popup_menu.close_popup();
 }
 
-export function set_checkbox_entry(id_stem, checked) {
-    var oEntryChecked = document.getElementById(
+export function set_checkbox_entry(id_stem: string, checked: boolean) {
+    const oEntryChecked = document.getElementById(
         "menu_entry_" + id_stem + "_checked"
     );
-    var oEntryUnhecked = document.getElementById(
+    const oEntryUnhecked = document.getElementById(
         "menu_entry_" + id_stem + "_unchecked"
     );
 
@@ -31,17 +32,17 @@ export function set_checkbox_entry(id_stem, checked) {
 }
 
 // Make a dropdown usable
-export function enable_dropdown(id) {
+export function enable_dropdown(id: string) {
     toggle_dropdown_enabled(id, true);
 }
 
 // Set a dropdown to be not usable (inactive)
-export function disable_dropdown(id) {
+export function disable_dropdown(id: string) {
     toggle_dropdown_enabled(id, false);
 }
 
-function toggle_dropdown_enabled(id, enabled) {
-    var dropdown = document.getElementById("page_menu_dropdown_" + id);
+function toggle_dropdown_enabled(id: string, enabled: boolean) {
+    const dropdown = document.getElementById("page_menu_dropdown_" + id);
     if (enabled) {
         utils.remove_class(dropdown, "disabled");
     } else {
@@ -49,8 +50,8 @@ function toggle_dropdown_enabled(id, enabled) {
     }
 }
 
-export function enable_menu_entry(id, enabled) {
-    var from, to;
+export function enable_menu_entry(id: string, enabled: boolean) {
+    let from, to;
     if (enabled) {
         from = "disabled";
         to = "enabled";
@@ -58,21 +59,21 @@ export function enable_menu_entry(id, enabled) {
         from = "enabled";
         to = "disabled";
     }
-    var oEntry = document.getElementById("menu_entry_" + id);
+    const oEntry = document.getElementById("menu_entry_" + id);
     utils.change_class(oEntry, from, to);
 
     if (enabled && oEntry?.getAttribute("title")) {
         oEntry.removeAttribute("title");
     }
 
-    var oShortCut = document.getElementById("menu_shortcut_" + id);
+    const oShortCut = document.getElementById("menu_shortcut_" + id);
     if (oShortCut) utils.change_class(oShortCut, from, to);
 
-    var oSuggestion = document.getElementById("menu_suggestion_" + id);
+    const oSuggestion = document.getElementById("menu_suggestion_" + id);
     if (oSuggestion) utils.change_class(oSuggestion.parentElement, from, to);
 }
 
-export function enable_menu_entries(css_class, enabled) {
+export function enable_menu_entries(css_class: string, enabled: boolean) {
     const page_menu = document.getElementById("page_menu_bar");
     if (!page_menu) {
         return;
@@ -95,26 +96,26 @@ export function enable_menu_entries(css_class, enabled) {
 }
 
 // Toggles a PageMenuEntryPopup from a page menu entry
-export function toggle_popup(popup_id) {
-    let popup = document.getElementById(popup_id);
-    let was_open = utils.has_class(popup, "active");
+export function toggle_popup(popup_id: string) {
+    const popup = document.getElementById(popup_id);
+    const was_open = utils.has_class(popup, "active");
 
     close_active_dropdown();
     close_active_popups();
 
-    if (was_open) do_close_popup(popup);
+    if (was_open) do_close_popup(popup!);
     else do_open_popup(popup);
 }
 
 // Opens a PageMenuEntryPopup from a page menu entry
-export function open_popup(popup_id) {
+export function open_popup(popup_id: string) {
     close_active_dropdown();
     close_active_popups();
 
     do_open_popup(document.getElementById(popup_id));
 }
 
-function do_open_popup(popup) {
+function do_open_popup(popup: HTMLElement | undefined | null | string) {
     // This prevents an exception when a view is rendered as a dashlet.
     // Since a dashlet is in an iframe, it can't access the popup_filters menu
     // The whole dashboard will do this anyway, but having no error on the
@@ -129,6 +130,9 @@ function do_open_popup(popup) {
         return;
     }
 
+    if (!(popup instanceof HTMLElement))
+        throw new Error("popup should be an HTMLElement");
+
     utils.add_class(popup, "active");
 
     // Call registered hook
@@ -139,17 +143,19 @@ function do_open_popup(popup) {
 
 // Closes all open PageMenuEntryPopup
 function close_active_popups() {
-    document.querySelectorAll(".page_menu_popup").forEach(popup => {
-        do_close_popup(popup);
-    });
+    document
+        .querySelectorAll<HTMLElement>(".page_menu_popup")
+        .forEach(popup => {
+            do_close_popup(popup);
+        });
 }
 
 // Close a specific PageMenuEntryPopup
-export function close_popup(a) {
-    do_close_popup(a.closest(".page_menu_popup"));
+export function close_popup(a: HTMLAnchorElement) {
+    do_close_popup(a.closest<HTMLElement>(".page_menu_popup")!);
 }
 
-function do_close_popup(popup) {
+function do_close_popup(popup: HTMLElement) {
     utils.remove_class(popup, "active");
 
     // Call registered hook
@@ -158,26 +164,32 @@ function do_close_popup(popup) {
     }
 }
 
-const on_open = {};
-const on_close = {};
+const on_open: Record<string, () => void> = {} as any;
+const on_close: Record<string, () => void> = {} as any;
 
-export function register_on_open_handler(popup_id, handler) {
+export function register_on_open_handler(
+    popup_id: string,
+    handler: () => void
+) {
     on_open[popup_id] = handler;
 }
 
-export function register_on_close_handler(popup_id, handler) {
+export function register_on_close_handler(
+    popup_id: string,
+    handler: () => void
+) {
     on_close[popup_id] = handler;
 }
 
-var on_toggle_suggestions: null | Function = null;
+let on_toggle_suggestions: null | (() => void) = null;
 
-export function register_on_toggle_suggestions_handler(handler) {
+export function register_on_toggle_suggestions_handler(handler: () => void) {
     on_toggle_suggestions = handler;
 }
 
 export function toggle_suggestions() {
-    var oPageMenuBar = document.getElementById("page_menu_bar");
-    var open;
+    const oPageMenuBar = document.getElementById("page_menu_bar");
+    let open: "on" | "off";
     if (utils.has_class(oPageMenuBar, "hide_suggestions")) {
         utils.remove_class(oPageMenuBar, "hide_suggestions");
         open = "on";
@@ -193,9 +205,9 @@ export function toggle_suggestions() {
     }
 }
 
-export function form_submit(form_name, button_name) {
-    var form = document.getElementById("form_" + form_name);
-    var field = document.createElement("input");
+export function form_submit(form_name: string, button_name: string) {
+    const form = document.getElementById("form_" + form_name);
+    const field = document.createElement("input");
     field.type = "submit";
     field.name = button_name;
     field.value = "SET";
@@ -205,15 +217,33 @@ export function form_submit(form_name, button_name) {
     field.click();
 }
 
+interface ConfirmedFromSubmitOptions {
+    title: string;
+    html: string;
+    confirmButtonText: string;
+    cancelButtonText: string;
+    icon: "warning" | "question";
+    customClass: {
+        confirmButton: "confirm_warning" | "confirm_question";
+        icon: "confirm_icon confirm_warning" | "confirm_icon confirm_question";
+    };
+}
 // Helper for building form submit links after confirming a dialog
-export function confirmed_form_submit(form_name, button_name, options) {
+export function confirmed_form_submit(
+    form_name: string,
+    button_name: string,
+    options: ConfirmedFromSubmitOptions
+) {
     forms.confirm_dialog(options, () => {
         form_submit(form_name, button_name);
     });
 }
 
 // Show / hide all entries of this group
-export function toggle_popup_filter_list(trigger, filter_list_id) {
+export function toggle_popup_filter_list(
+    trigger: HTMLAnchorElement,
+    filter_list_id: string
+) {
     utils.toggle_class(trigger, "active", "inactive");
     utils.toggle_class(
         document.getElementById(filter_list_id),
@@ -222,7 +252,7 @@ export function toggle_popup_filter_list(trigger, filter_list_id) {
     );
 }
 
-export function toggle_filter_group_display(filter_group) {
+export function toggle_filter_group_display(filter_group: HTMLAnchorElement) {
     utils.toggle_class(filter_group, "active", "inactive");
 }
 
@@ -235,9 +265,9 @@ export function on_filter_popup_close() {
 }
 
 // Scroll to the top after adding new filters
-export function update_filter_list_scroll(filter_list_id) {
-    let filter_list = document.getElementById(filter_list_id);
-    let scrollable = filter_list!.getElementsByClassName(
+export function update_filter_list_scroll(filter_list_id: string) {
+    const filter_list = document.getElementById(filter_list_id);
+    const scrollable = filter_list!.getElementsByClassName(
         "simplebar-content-wrapper"
     )[0];
     try {
@@ -250,15 +280,18 @@ export function update_filter_list_scroll(filter_list_id) {
     }
 }
 
-export function side_popup_add_simplebar_scrollbar(popup_id) {
-    let popup = document.getElementById(popup_id);
-    let content = popup!.getElementsByClassName(
+export function side_popup_add_simplebar_scrollbar(popup_id: string) {
+    const popup = document.getElementById(popup_id);
+    const content = popup!.getElementsByClassName(
         "side_popup_content"
     )[0] as HTMLElement;
     utils.add_simplebar_scrollbar_to_object(content);
 }
 
-export function inpage_search_init(reset_button_id, was_submitted) {
+export function inpage_search_init(
+    reset_button_id: string,
+    was_submitted: boolean
+) {
     const reset_button = document.getElementById(
         reset_button_id
     ) as HTMLButtonElement;

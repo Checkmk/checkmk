@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -127,7 +127,7 @@ def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
 
 
 # ALREADY MIGRATED
-def check_cpu_util_unix(  # type:ignore[no-untyped-def]
+def check_cpu_util_unix(  # type: ignore[no-untyped-def]
     values: CPUInfo, params, cores=None, values_counter=True
 ):
     this_time = time.time()
@@ -222,7 +222,6 @@ def _check_single_core_util(util, metric, levels, infoname):
 
 # ALREADY MIGRATED
 def _util_perfdata(core, total_perc, core_index, this_time, params):
-
     if "core_util_time" in params:
         threshold, warn, crit = params["core_util_time"]
         yield cpu_util_time(this_time, core, total_perc, threshold, warn, crit)

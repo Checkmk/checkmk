@@ -1,43 +1,33 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-# pylint: disable=protected-access
-
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping
 
 from cmk.utils.type_defs import HostName, ParsedSectionName, SectionName
 
-from cmk.fetchers import SourceType
-
-from cmk.checkers import HostKey
-
-from cmk.base.agent_based.data_provider import (
-    ParsedSectionsBroker,
-    ParsedSectionsResolver,
-    ParsingResult,
-    ResolvedResult,
-    SectionParser,
-)
-from cmk.base.agent_based.discovery._host_labels import _all_parsing_results as all_parsing_results
-from cmk.base.api.agent_based.register.section_plugins import trivial_section_factory
-from cmk.base.api.agent_based.type_defs import SectionPlugin
+from cmk.checkengine import HostKey, SectionPlugin, SourceType
+from cmk.checkengine.discovery._host_labels import _all_parsing_results as all_parsing_results
+from cmk.checkengine.sectionparser import _ParsingResult as ParsingResult
+from cmk.checkengine.sectionparser import ParsedSectionsResolver, ResolvedResult
 
 # import pytest
 
 
-def _section(name: str, parsed_section_name: str, supersedes: set[str]) -> SectionPlugin:
-    section = trivial_section_factory(SectionName(name))
-    return section._replace(
-        parsed_section_name=ParsedSectionName(parsed_section_name),
+def _section(
+    name: str, parsed_section_name: str, supersedes: set[str]
+) -> tuple[SectionName, SectionPlugin]:
+    return SectionName(name), SectionPlugin(
         supersedes={SectionName(n) for n in supersedes},
+        parsed_section_name=ParsedSectionName(parsed_section_name),
+        parse_function=lambda *args, **kw: object,
     )
 
 
 class _FakeParser(dict):
-    def parse(self, section_parser: SectionParser):  # type:ignore[no-untyped-def]
-        return self.get(str(section_parser.section_name))
+    def parse(self, section_name: SectionName, *args: object) -> object:
+        return self.get(str(section_name))
 
     def disable(self, names: Iterable[SectionName]) -> None:
         for name in names:
@@ -47,115 +37,85 @@ class _FakeParser(dict):
 class TestParsedSectionsResolver:
     @staticmethod
     def make_provider(
-        section_plugins: Sequence[SectionPlugin],
-    ) -> tuple[ParsedSectionsResolver, _FakeParser]:
-        return (
-            ParsedSectionsResolver(
-                section_plugins=section_plugins,
-            ),
-            _FakeParser(
+        section_plugins: Mapping[SectionName, SectionPlugin],
+    ) -> ParsedSectionsResolver:
+        return ParsedSectionsResolver(
+            _FakeParser(  # type: ignore[arg-type]
                 {
                     "section_one": ParsingResult(data=1, cache_info=None),
                     "section_two": ParsingResult(data=2, cache_info=None),
                     "section_thr": ParsingResult(data=3, cache_info=None),
                 }
             ),
+            section_plugins=section_plugins,
         )
 
     def test_straight_forward_case(self) -> None:
-        resolver, parser = self.make_provider(
-            section_plugins=[
-                _section("section_one", "parsed_section_name", set()),
-            ]
+        resolver = self.make_provider(
+            section_plugins=dict((_section("section_one", "parsed_section_name", set()),))
         )
 
-        resolved = resolver.resolve(
-            parser,  # type: ignore[arg-type]
-            ParsedSectionName("parsed_section_name"),
-        )
-        assert resolved
-        parsed, section = resolved
-        assert parsed and parsed.data == 1
-        assert section and section.name == SectionName("section_one")
-        assert (
-            resolver.resolve(
-                parser,  # type: ignore[arg-type]
-                ParsedSectionName("no_such_section"),
-            )
-            is None
-        )
+        resolved = resolver.resolve(ParsedSectionName("parsed_section_name"))
+        assert resolved is not None
+        assert resolved.parsed_data == 1
+        assert resolved.section_name == SectionName("section_one")
+        assert resolver.resolve(ParsedSectionName("no_such_section")) is None
 
     def test_superseder_is_present(self) -> None:
-        resolver, parser = self.make_provider(
-            section_plugins=[
-                _section("section_one", "parsed_section_one", set()),
-                _section("section_two", "parsed_section_two", {"section_one"}),
-            ]
+        resolver = self.make_provider(
+            section_plugins=dict(
+                (
+                    _section("section_one", "parsed_section_one", set()),
+                    _section("section_two", "parsed_section_two", {"section_one"}),
+                )
+            )
         )
 
-        assert (
-            resolver.resolve(
-                parser,  # type: ignore[arg-type]
-                ParsedSectionName("parsed_section_one"),
-            )
-            is None
-        )
+        assert resolver.resolve(ParsedSectionName("parsed_section_one")) is None
 
     def test_superseder_with_same_name(self) -> None:
-        resolver, parser = self.make_provider(
-            section_plugins=[
-                _section("section_one", "parsed_section", set()),
-                _section("section_two", "parsed_section", {"section_one"}),
-            ]
+        resolver = self.make_provider(
+            section_plugins=dict(
+                (
+                    _section("section_one", "parsed_section", set()),
+                    _section("section_two", "parsed_section", {"section_one"}),
+                )
+            )
         )
 
-        resolved = resolver.resolve(
-            parser,  # type: ignore[arg-type]
-            ParsedSectionName("parsed_section"),
-        )
-        assert resolved
-        parsed, section = resolved
-        assert parsed and parsed.data == 2
-        assert section and section.name == SectionName("section_two")
+        resolved = resolver.resolve(ParsedSectionName("parsed_section"))
+        assert resolved is not None
+        assert resolved.parsed_data == 2
+        assert resolved.section_name == SectionName("section_two")
 
     def test_superseder_has_no_data(self) -> None:
-        resolver, parser = self.make_provider(
-            section_plugins=[
-                _section("section_one", "parsed_section_one", set()),
-                _section("section_iix", "parsed_section_iix", {"section_one"}),
-            ]
+        resolver = self.make_provider(
+            section_plugins=dict(
+                (
+                    _section("section_one", "parsed_section_one", set()),
+                    _section("section_iix", "parsed_section_iix", {"section_one"}),
+                )
+            )
         )
 
-        resolved = resolver.resolve(
-            parser,  # type: ignore[arg-type]
-            ParsedSectionName("parsed_section_one"),
-        )
-        assert resolved
-        parsed, section = resolved
-        assert parsed and parsed.data == 1
-        assert section and section.name == SectionName("section_one")
+        resolved = resolver.resolve(ParsedSectionName("parsed_section_one"))
+        assert resolved is not None
+        assert resolved.parsed_data == 1
+        assert resolved.section_name == SectionName("section_one")
 
     def test_iteration(self) -> None:
         host_key = HostKey(HostName("host"), SourceType.HOST)
-        sections = [
-            _section("section_one", "parsed_section_one", set()),
-            _section("section_two", "parsed_section_two", set()),
-            _section("section_thr", "parsed_section_thr", {"section_two"}),
-            _section("section_fou", "parsed_section_fou", {"section_one"}),
-        ]
-        broker = ParsedSectionsBroker(
-            {
-                host_key: self.make_provider(sections),  # type: ignore[dict-item]
-            }
+        sections = dict(
+            (
+                _section("section_one", "parsed_section_one", set()),
+                _section("section_two", "parsed_section_two", set()),
+                _section("section_thr", "parsed_section_thr", {"section_two"}),
+                _section("section_fou", "parsed_section_fou", {"section_one"}),
+            )
         )
+        providers = {host_key: self.make_provider(sections)}
 
-        assert all_parsing_results(host_key, broker) == [
-            ResolvedResult(
-                parsed=ParsingResult(data=1, cache_info=None),
-                section=sections[0],
-            ),
-            ResolvedResult(
-                parsed=ParsingResult(data=3, cache_info=None),
-                section=sections[2],
-            ),
+        assert all_parsing_results(host_key, providers) == [
+            ResolvedResult(section_name=SectionName("section_one"), parsed_data=1, cache_info=None),
+            ResolvedResult(section_name=SectionName("section_thr"), parsed_data=3, cache_info=None),
         ]

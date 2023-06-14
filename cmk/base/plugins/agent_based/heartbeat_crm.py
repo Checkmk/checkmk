@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2019 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -145,7 +145,7 @@ def heartbeat_crm_parse_resources(  # pylint: disable=too-many-branches
             # Clone set
             resource = _title(parts[2])
             resources[resource] = []
-            mode = "cloneset"
+            mode = "masterslaveset" if "(promotable)" in parts[-1] else "cloneset"
         elif line.startswith("Master/Slave Set:"):
             # Master/Slave set
             resource = _title(parts[2])
@@ -321,7 +321,6 @@ def discover_heartbeat_crm(
 
 
 def check_heartbeat_crm(params: Mapping[str, Any], section: Section) -> CheckResult:
-
     last_updated, dc, num_nodes, num_resources, error = section.cluster
 
     if error is not None:
@@ -428,7 +427,7 @@ def check_heartbeat_crm_resources(
     if (resources := section.resources.resources.get(item)) is None:
         return
 
-    if not len(resources):
+    if not resources:
         yield Result(state=State.OK, summary="No resources found")
 
     for resource in resources:

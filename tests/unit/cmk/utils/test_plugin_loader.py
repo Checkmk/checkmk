@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (C) 2021 tribe29 GmbH - License: GNU General Public License v2
+# Copyright (C) 2021 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
@@ -49,7 +49,7 @@ def fixture_tmp_package(tmp_path: Path, package_type: str) -> str:
 
 
 def test_load_plugins_with_exceptions(tmp_package: str) -> None:
-    assert list(load_plugins_with_exceptions(f"{tmp_package}.plugins.abc")) == []
+    assert not list(load_plugins_with_exceptions(f"{tmp_package}.plugins.abc"))
     imported = [n for n in sys.modules if n.startswith(tmp_package)]
     assert sorted(imported) == sorted(
         [

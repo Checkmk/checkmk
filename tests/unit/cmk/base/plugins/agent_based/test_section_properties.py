@@ -94,7 +94,6 @@ def test_detect_spec_dedup(
         ("dell_idrac_fans", "dell_idrac_power", "dell_idrac_raid"),
         ("f5_bigip_cluster_status_v11_2", "f5_bigip_vcmpfailover", "f5_bigip_vcmpguests"),
         ("hp_procurve_cpu", "hp_procurve_mem", "hp_procurve_sensors"),
-        ("mcafee_webgateway", "mcafee_webgateway_info", "mcafee_webgateway_misc"),
         ("orion_backup", "orion_batterytest", "orion_system"),
         ("pfsense_counter", "pfsense_if", "pfsense_status"),
         ("sentry_pdu", "sentry_pdu_outlets", "sentry_pdu_systempower"),

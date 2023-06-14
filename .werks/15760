@@ -1,0 +1,24 @@
+Title: mk_oracle: '--no-spool' command-line option added
+Class: fix
+Compatible: compat
+Component: agents
+Date: 1686812378
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Previously, mk_oracle behaved differently depending on if it was
+run from CLI or the Checkmk agent. The approach wasn't consistent
+and led to errors if the script was called from CLI without arguments.
+
+Now, mk_oracle will always behave as if run from the agent unless
+additional arguments are provided.
+
+Additionally, new command-line argument was introduced, '--no-spool'.
+If used on host with systemd, the output of mk_oracle will be written
+to stdout instead of the spool file. The option doesn't influence the behavior
+of the script if xinetd is used.
+
+

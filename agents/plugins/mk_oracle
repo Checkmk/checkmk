@@ -76,6 +76,10 @@ OPTIONS:
                         Note: These sections are executed as synchronous sections
                         The logfile is in the folder \$MK_VARDIR/log.
 
+  --no-spool        Writes output to stdout instead of the spool file if systemd is used.
+                        Note: The option doesn't influence the behavior of the script
+                        if xinetd is used to run the check_mk_agent.
+
   -s, --sections <section>,...
                         Execute only these sections.
                         Note: These sections are execute as synchronous sections
@@ -216,12 +220,7 @@ MK-ORA-USAGE
 #   |                                   |___/                              |
 #   '----------------------------------------------------------------------'
 
-if [ $# -eq 0 ]; then
-    MK_ORA_ON_CL=false
-else
-    MK_ORA_ON_CL=true
-fi
-
+MK_ORA_NOSPOOL=false
 MK_ORA_DEBUG=false
 MK_ORA_DEBUG_CONNECT=false
 MK_ORA_LOGGING=false
@@ -247,6 +246,11 @@ while test -n "$1"; do
 
         -l | --log)
             MK_ORA_LOGGING=true
+            shift
+            ;;
+
+        --no-spool)
+            MK_ORA_NOSPOOL=true
             shift
             ;;
 
@@ -3070,7 +3074,7 @@ main() {
         pwd
     )")
 
-    if $MK_ORA_ON_CL || [ "$parent_dir" = plugins ]; then
+    if $MK_ORA_NOSPOOL || [ "$parent_dir" = plugins ]; then
         # Does not work properly (async sections) on distros
         # where check_mk_agent.sync.service is a systemd service
         main_mode() { main_queries; }

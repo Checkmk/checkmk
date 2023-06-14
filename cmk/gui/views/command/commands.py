@@ -1345,11 +1345,11 @@ def _bi_commands(downtime: DowntimeSchedule, node: Any) -> Sequence[CommandSpec]
 
 def _find_all_leaves(  # type: ignore[no-untyped-def]
     node,
-) -> list[tuple[str | None, HostName, ServiceName | None]]:
+) -> list[tuple[livestatus.SiteId | None, HostName, ServiceName | None]]:
     # leaf node
     if node["type"] == 1:
         site, host = node["host"]
-        return [(site, host, node.get("service"))]
+        return [(livestatus.SiteId(site), host, node.get("service"))]
 
     # rule node
     if node["type"] == 2:

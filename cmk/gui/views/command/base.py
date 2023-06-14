@@ -18,7 +18,7 @@ from cmk.gui.type_defs import Row, Rows
 from .group import command_group_registry, CommandGroup
 
 CommandSpecWithoutSite = str
-CommandSpecWithSite = tuple[str | None, CommandSpecWithoutSite]
+CommandSpecWithSite = tuple[SiteId | None, CommandSpecWithoutSite]
 CommandSpec = CommandSpecWithoutSite | CommandSpecWithSite
 CommandActionResult = tuple[CommandSpecWithoutSite | Sequence[CommandSpec], str] | None
 CommandExecutor = Callable[[CommandSpec, SiteId | None], None]

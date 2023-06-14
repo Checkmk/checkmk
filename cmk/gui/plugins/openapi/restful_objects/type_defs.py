@@ -7,7 +7,7 @@ from typing import Any, Literal, TypedDict, Union
 
 from marshmallow import fields, Schema
 
-from cmk.utils.type_defs import HTTPMethod
+from cmk.gui.http import HTTPMethod
 
 URL = str
 

@@ -9,7 +9,7 @@ import json
 import urllib.parse
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
-from typing import Any, cast, overload, Protocol, TypeVar
+from typing import Any, cast, Literal, overload, Protocol, TypeVar
 
 import flask
 from flask import request as flask_request
@@ -28,6 +28,8 @@ from cmk.gui.i18n import _
 UploadedFile = tuple[str, str, bytes]
 T = TypeVar("T")
 Value = TypeVar("Value")
+
+HTTPMethod = Literal["get", "put", "post", "delete"]
 
 
 class ValidatedClass(Protocol):

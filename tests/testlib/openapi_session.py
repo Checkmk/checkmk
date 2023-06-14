@@ -13,7 +13,7 @@ import requests
 
 from tests.testlib.rest_api_client import RequestHandler, Response
 
-from cmk.utils.type_defs import HTTPMethod
+from cmk.gui.http import HTTPMethod
 
 logger = logging.getLogger("rest-session")
 

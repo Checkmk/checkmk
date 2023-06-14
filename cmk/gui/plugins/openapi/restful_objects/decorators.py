@@ -32,12 +32,11 @@ from werkzeug.http import parse_options_header
 from werkzeug.utils import import_string
 
 from cmk.utils import store
-from cmk.utils.type_defs import HTTPMethod
 
 from cmk.gui import fields, hooks
 from cmk.gui import http as cmk_http
 from cmk.gui.config import active_config
-from cmk.gui.http import request
+from cmk.gui.http import HTTPMethod, request
 from cmk.gui.permissions import permission_registry
 from cmk.gui.plugins.openapi.permission_tracking import (
     enable_permission_tracking,

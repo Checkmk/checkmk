@@ -12,10 +12,9 @@ from urllib.parse import quote
 from werkzeug.datastructures import ETags
 
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import HTTPMethod
 
 from cmk.gui.config import active_config
-from cmk.gui.http import request, Response
+from cmk.gui.http import HTTPMethod, request, Response
 from cmk.gui.livestatus_utils.testing import mock_site
 from cmk.gui.plugins.openapi.restful_objects.endpoint_registry import ENDPOINT_REGISTRY
 from cmk.gui.plugins.openapi.restful_objects.type_defs import (

@@ -25,7 +25,6 @@ from werkzeug.routing import Map, Rule, Submount
 import cmk.utils.version as cmk_version
 from cmk.utils import crash_reporting, paths
 from cmk.utils.exceptions import MKException
-from cmk.utils.type_defs import HTTPMethod
 
 from cmk.gui import config, session
 from cmk.gui.exceptions import MKAuthException, MKHTTPException, MKUserError
@@ -53,6 +52,7 @@ if TYPE_CHECKING:
     # TODO: Directly import from wsgiref.types in Python 3.11, without any import guard
     from _typeshed.wsgi import StartResponse, WSGIApplication, WSGIEnvironment
 
+    from cmk.gui.http import HTTPMethod
     from cmk.gui.plugins.openapi.restful_objects.type_defs import EndpointTarget
     from cmk.gui.wsgi.type_defs import WSGIResponse
 

@@ -40,7 +40,6 @@ __all__ = [
     "state_markers",
     "ExitSpec",
     "InfluxDBConnectionSpec",
-    "HTTPMethod",
 ]
 
 ServiceName = str
@@ -166,5 +165,3 @@ class ExitSpec(TypedDict, total=False):
 
 
 InfluxDBConnectionSpec = dict[str, Any]
-
-HTTPMethod = Literal["get", "put", "post", "delete"]

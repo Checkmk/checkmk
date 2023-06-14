@@ -297,45 +297,6 @@ class DomainObject(Linkable):
     )
 
 
-class FolderMembers(BaseSchema):
-    hosts = fields.Nested(
-        ObjectCollectionMember(),
-        description="A list of links pointing to the actual host-resources.",
-    )
-    move = fields.Nested(
-        ObjectActionMember(),
-        description="An action which triggers the move of this folder to another folder.",
-    )
-
-
-class FolderExtensions(BaseSchema):
-    path = fields.String(
-        description="The full path of this folder, slash delimited.",
-    )
-    attributes = gui_fields.host_attributes_field(
-        "folder",
-        "view",
-        "outbound",
-        description=(
-            "The folder's attributes. Hosts placed in this folder will inherit " "these attributes."
-        ),
-    )
-
-
-class FolderSchema(Linkable):
-    domainType = fields.Constant("folder_config", description="The domain type of the object.")
-    id = fields.String(description="The full path of the folder, tilde-separated.")
-    title = fields.String(description="The human readable title for this folder.")
-    members = fields.Nested(
-        FolderMembers(),
-        description="Specific collections or actions applicable to this object.",
-    )
-    extensions = fields.Nested(
-        FolderExtensions(),
-        description="Data and Meta-Data of this object.",
-    )
-
-
 class MoveFolder(BaseSchema):
     destination = fields.String(
         description=(
@@ -398,17 +359,6 @@ class DomainObjectCollection(Linkable):
         many=True,
     )
     extensions = fields.Dict(description="Additional attributes alongside the collection.")
-
-
-class FolderCollection(DomainObjectCollection):
-    domainType = fields.Constant(
-        "folder_config",
-        description="The domain type of the objects in the collection.",
-    )
-    value = fields.List(
-        fields.Nested(FolderSchema()),
-        description="A list of folder objects.",
-    )
 
 
 class VersionCapabilities(BaseSchema):

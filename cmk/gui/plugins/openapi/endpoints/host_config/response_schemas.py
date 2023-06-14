@@ -12,10 +12,74 @@ from cmk.gui.fields.utils import attr_openapi_schema, BaseSchema
 from cmk.gui.plugins.openapi.restful_objects.response_schemas import (
     DomainObject,
     DomainObjectCollection,
-    FolderSchema,
+    Linkable,
+    ObjectActionMember,
+    ObjectCollectionMember,
 )
 
 from cmk import fields
+
+# <------------------------------------ Folders ------------------------------------>
+
+
+class FolderMembers(BaseSchema):
+    hosts = fields.Nested(
+        ObjectCollectionMember,
+        description="A list of links pointing to the actual host-resources.",
+    )
+    move = fields.Nested(
+        ObjectActionMember,
+        description="An action which triggers the move of this folder to another folder.",
+    )
+
+
+class FolderExtensions(BaseSchema):
+    path = fields.String(
+        description="The full path of this folder, slash delimited.",
+    )
+    attributes = gui_fields.host_attributes_field(
+        "folder",
+        "view",
+        "outbound",
+        description=(
+            "The folder's attributes. Hosts placed in this folder will inherit " "these attributes."
+        ),
+    )
+
+
+class FolderSchema(Linkable):
+    domainType = fields.Constant(
+        "folder_config",
+        description="The domain type of the object.",
+    )
+    id = fields.String(
+        description="The full path of the folder, tilde-separated.",
+    )
+    title = fields.String(
+        description="The human readable title for this folder.",
+    )
+    members = fields.Nested(
+        FolderMembers,
+        description="Specific collections or actions applicable to this object.",
+    )
+    extensions = fields.Nested(
+        FolderExtensions,
+        description="Data and Meta-Data of this object.",
+    )
+
+
+class FolderCollection(DomainObjectCollection):
+    domainType = fields.Constant(
+        "folder_config",
+        description="The domain type of the objects in the collection.",
+    )
+    value = fields.List(
+        fields.Nested(FolderSchema),
+        description="A list of folder objects.",
+    )
+
+
+# <------------------------------------ Hosts ------------------------------------>
 
 
 class HostExtensionsEffectiveAttributesSchema(attr_openapi_schema("host", "view")):  # type: ignore
@@ -41,7 +105,7 @@ class HostExtensions(BaseSchema):
         example={"ipaddress": "192.168.0.123"},
     )
     effective_attributes = fields.Nested(
-        HostExtensionsEffectiveAttributesSchema(),
+        HostExtensionsEffectiveAttributesSchema,
         required=False,
         description="All attributes of this host and all parent folders.",
         example={"tag_snmp_ds": None},

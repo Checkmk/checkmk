@@ -41,16 +41,20 @@ from cmk.gui import fields as gui_fields
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.openapi.endpoints.host_config import serve_host_collection
-from cmk.gui.plugins.openapi.endpoints.host_config.response_schemas import HostConfigCollection
-from cmk.gui.plugins.openapi.endpoints.utils import folder_slug
-from cmk.gui.plugins.openapi.restful_objects import (
-    constructors,
-    Endpoint,
-    permissions,
-    request_schemas,
-    response_schemas,
+from cmk.gui.plugins.openapi.endpoints.folder_config.request_schemas import (
+    BulkUpdateFolder,
+    CreateFolder,
+    MoveFolder,
+    UpdateFolder,
 )
+from cmk.gui.plugins.openapi.endpoints.host_config import serve_host_collection
+from cmk.gui.plugins.openapi.endpoints.host_config.response_schemas import (
+    FolderCollection,
+    FolderSchema,
+    HostConfigCollection,
+)
+from cmk.gui.plugins.openapi.endpoints.utils import folder_slug
+from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
 from cmk.gui.watolib.hosts_and_folders import BaseFolder, CREFolder, Folder
 
@@ -92,8 +96,8 @@ UPDATE_PERMISSIONS = permissions.AllPerm(
     "cmk/create",
     method="post",
     etag="output",
-    response_schema=response_schemas.FolderSchema,
-    request_schema=request_schemas.CreateFolder,
+    response_schema=FolderSchema,
+    request_schema=CreateFolder,
     permissions_required=RW_PERMISSIONS,
 )
 def create(params: Mapping[str, Any]) -> Response:
@@ -139,8 +143,8 @@ def hosts_of_folder(params: Mapping[str, Any]) -> Response:
     method="put",
     path_params=[PATH_FOLDER_FIELD],
     etag="both",
-    response_schema=response_schemas.FolderSchema,
-    request_schema=request_schemas.UpdateFolder,
+    response_schema=FolderSchema,
+    request_schema=UpdateFolder,
     permissions_required=UPDATE_PERMISSIONS,
 )
 def update(params: Mapping[str, Any]) -> Response:
@@ -191,8 +195,8 @@ def update(params: Mapping[str, Any]) -> Response:
     constructors.domain_type_action_href("folder_config", "bulk-update"),
     "cmk/bulk_update",
     method="put",
-    response_schema=response_schemas.FolderCollection,
-    request_schema=request_schemas.BulkUpdateFolder,
+    response_schema=FolderCollection,
+    request_schema=BulkUpdateFolder,
     permissions_required=UPDATE_PERMISSIONS,
 )
 def bulk_update(params: Mapping[str, Any]) -> Response:
@@ -278,8 +282,8 @@ def delete(params: Mapping[str, Any]) -> Response:
     "cmk/move",
     method="post",
     path_params=[PATH_FOLDER_FIELD],
-    response_schema=response_schemas.FolderSchema,
-    request_schema=request_schemas.MoveFolder,
+    response_schema=FolderSchema,
+    request_schema=MoveFolder,
     etag="both",
     permissions_required=RW_PERMISSIONS,
 )
@@ -332,7 +336,7 @@ def move(params: Mapping[str, Any]) -> Response:
             ),
         }
     ],
-    response_schema=response_schemas.FolderCollection,
+    response_schema=FolderCollection,
     permissions_required=permissions.Optional(permissions.Perm("wato.see_all_folders")),
 )
 def list_folders(params: Mapping[str, Any]) -> Response:
@@ -390,7 +394,7 @@ def _folders_collection(  # type:ignore[no-untyped-def]
     constructors.object_href("folder_config", "{folder}"),
     "cmk/show",
     method="get",
-    response_schema=response_schemas.FolderSchema,
+    response_schema=FolderSchema,
     etag="output",
     query_params=[
         {

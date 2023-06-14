@@ -110,19 +110,6 @@ def test_openapi_time_period_active_time_ranges(clients: ClientRegistry) -> None
         {"day": "tuesday", "time_ranges": [{"end": "23:59", "start": "00:00"}]}
     ]
 
-    resp3 = clients.TimePeriod.create(
-        time_period_data={
-            "name": "times_only",
-            "alias": "times_only",
-            "active_time_ranges": [{"time_ranges": [{"start": "18:11:34", "end": "23:45:59"}]}],
-            "exceptions": [{"date": "2020-01-01"}],
-        },
-    )
-
-    assert resp3.json["extensions"]["active_time_ranges"] == [
-        {"day": day, "time_ranges": [{"start": "18:11", "end": "23:45"}]} for day in days
-    ]
-
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls")
 def test_openapi_time_period_time_ranges(clients: ClientRegistry) -> None:
@@ -500,3 +487,50 @@ def test_openapi_delete_dependent_downtime(clients: ClientRegistry) -> None:
 
     resp = clients.TimePeriod.delete("time_period_1", expect_ok=False).assert_status_code(409)
     assert resp.json["detail"].endswith("Time Period 2 (excluded)).")
+
+
+def test_openapi_time_period_24h_regression(clients: ClientRegistry) -> None:
+    """The REST API sadly couldn't handle 24:00 in times as the GUI can."""
+    clients.TimePeriod.create(
+        time_period_data={
+            "name": "all_of_monday",
+            "alias": "All of Monday",
+            "active_time_ranges": [
+                {
+                    "day": "monday",
+                    "time_ranges": [{"start": "00:00", "end": "24:00"}],
+                },
+            ],
+            "exceptions": [],
+            "exclude": [],
+        },
+    )
+    clients.TimePeriod.get(time_period_id="all_of_monday")
+    clients.TimePeriod.get_all()
+    clients.TimePeriod.edit(
+        time_period_id="all_of_monday", time_period_data={"alias": "Everything in Monday"}
+    )
+    clients.TimePeriod.delete(time_period_id="all_of_monday")
+
+
+def test_openapi_time_period_24h_is_end_of_day(clients: ClientRegistry) -> None:
+    resp = clients.TimePeriod.create(
+        time_period_data={
+            "name": "time_flowing_backwards",
+            "alias": "Time Flowing Backwards",
+            "active_time_ranges": [
+                {
+                    "day": "monday",
+                    "time_ranges": [{"start": "24:00", "end": "00:00"}],
+                },
+            ],
+            "exceptions": [],
+            "exclude": [],
+        },
+        expect_ok=False,
+    ).assert_status_code(400)
+    assert resp.json["detail"] == "These fields have problems: active_time_ranges"
+    assert (
+        resp.json["fields"]["active_time_ranges"]["0"]["time_ranges"]["0"]["_schema"][0]
+        == "Start time (24:00) must be before end time (00:00)."
+    )

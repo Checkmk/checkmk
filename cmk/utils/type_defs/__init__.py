@@ -11,7 +11,6 @@ __all__ = [
     "CheckPluginNameStr",
     "ClusterMode",
     "ContactgroupName",
-    "Deserializer",
     "DiscoveryResult",
     "EvalableFloat",
     "EVERYTHING",
@@ -35,7 +34,6 @@ __all__ = [
     "RuleSetName",
     "Seconds",
     "SectionName",
-    "Serializer",
     "ServiceAdditionalDetails",
     "ServiceDetails",
     "ServicegroupName",
@@ -83,5 +81,4 @@ from ._misc import (
 )
 from .host import HostAddress, HostgroupName, HostName, HostState
 from .pluginname import ParsedSectionName, RuleSetName, SectionName, ValidatedString
-from .protocol import Deserializer, Serializer
 from .user_id import UserId

@@ -10,7 +10,7 @@ from collections.abc import Iterator
 from enum import Enum
 from typing import Final
 
-from cmk.utils.type_defs.protocol import Deserializer, Serializer
+from cmk.utils.serializertype import Deserializer, Serializer
 
 
 class Version(Enum):

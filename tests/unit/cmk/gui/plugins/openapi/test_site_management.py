@@ -12,17 +12,17 @@ from pytest import MonkeyPatch
 from tests.testlib.rest_api_client import ClientRegistry
 
 from cmk.utils import version
-from cmk.utils.type_defs.rest_api_types.site_connection import (
+
+from cmk.gui.exceptions import MKUserError
+from cmk.gui.plugins.openapi.endpoints.site_management.common import (
+    default_config_example as _default_config,
+)
+from cmk.gui.rest_api_types.site_connection import (
     ConfigurationConnection,
     Connection,
     Proxy,
     SiteConfig,
     StatusHost,
-)
-
-from cmk.gui.exceptions import MKUserError
-from cmk.gui.plugins.openapi.endpoints.site_management.common import (
-    default_config_example as _default_config,
 )
 
 DOMAIN_TYPE = "site_connection"

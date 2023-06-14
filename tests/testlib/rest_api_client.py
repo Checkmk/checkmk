@@ -16,9 +16,9 @@ from collections.abc import Mapping, Sequence
 from typing import Any, cast, Literal, NoReturn, TypedDict
 
 from cmk.utils import version
-from cmk.utils.type_defs.rest_api_types.site_connection import SiteConfig
 
 from cmk.gui.http import HTTPMethod
+from cmk.gui.rest_api_types.site_connection import SiteConfig
 
 JSON = int | str | bool | list[Any] | dict[str, Any] | None
 JSON_HEADERS = {"Accept": "application/json", "Content-Type": "application/json"}

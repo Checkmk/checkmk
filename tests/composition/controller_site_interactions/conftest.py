@@ -5,7 +5,7 @@
 
 import pytest
 
-from tests.testlib.version import CMKVersion
+from tests.testlib.version import version_from_env
 
 from tests.composition.utils import should_skip_because_uncontainerized
 
@@ -19,6 +19,6 @@ def _skip_if_uncontainerized() -> None:
 
 
 @pytest.fixture(name="skip_if_not_cloud_edition")
-def _skip_if_not_cloud_edition(version: CMKVersion) -> None:
-    if not version.is_cloud_edition():
+def _skip_if_not_cloud_edition() -> None:
+    if not version_from_env().is_cloud_edition():
         pytest.skip("Skipping since we are not testing with a cloud edition")

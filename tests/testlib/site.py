@@ -1347,10 +1347,11 @@ class SiteFactory:
 def get_site_factory(
     *,
     prefix: str,
+    version: CMKVersion | None = None,
     update_from_git: bool | None = None,
     fallback_branch: str | Callable[[], str] | None = None,
 ) -> SiteFactory:
-    version = version_from_env(
+    version = version or version_from_env(
         fallback_version_spec=CMKVersion.DAILY,
         fallback_edition=Edition.CEE,
         fallback_branch=fallback_branch,

@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import subprocess
-from collections.abc import Iterator
 from pathlib import Path
+from typing import Iterator
 
 import pytest
 
@@ -14,107 +14,78 @@ from tests.testlib.agent import (
     clean_agent_controller,
     install_agent_package,
 )
-from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import current_branch_name, restart_httpd
-from tests.testlib.version import CMKVersion, version_from_env
+from tests.testlib.site import get_site_factory, Site
 
 from tests.composition.utils import bake_agent, get_cre_agent_path, is_containerized
 
-from cmk.utils.version import Edition
-
-site_number = 0
+site_factory = get_site_factory(prefix="comp_", update_from_git=False)
 
 
-@pytest.fixture(name="version", scope="session")
-def _version() -> CMKVersion:
-    return version_from_env(
-        fallback_version_spec=CMKVersion.DAILY,
-        fallback_edition=Edition.CEE,
-        fallback_branch=current_branch_name,
-    )
-
-
-# Disable this. We have a site_factory instead.
-@pytest.fixture(name="site", scope="module")
-def _site(request):
-    pass
-
-
-# The scope of the site factory is "module" to avoid that changing the site properties in a module
+# The scope of the site fixtures is "module" to avoid that changing the site properties in a module
 # may result in a test failing in another one
-@pytest.fixture(name="site_factory", scope="module")
-def _site_factory(version: CMKVersion) -> Iterator[SiteFactory]:
+@pytest.fixture(name="central_site", scope="module")
+def _central_site(request: pytest.FixtureRequest) -> Iterator[Site]:
     # Using a different site for every module to avoid having issues when saving the results for the
     # tests: if you call SiteFactory.save_results() twice with the same site_id, it will crash
     # because the results are already there.
-    global site_number
-    sf = SiteFactory(
-        version=version,
-        prefix=f"comp_{site_number}_",
+    site_number = len([_ for _ in site_factory.sites if _.endswith("_central")])
+    yield from site_factory.get_test_site(
+        f"{site_number}_central",
+        description=request.node.name,
+        auto_restart_httpd=True,
     )
-    site_number += 1
-    try:
-        yield sf
-    finally:
-        sf.save_results()
-        sf.cleanup()
-
-
-@pytest.fixture(name="central_site", scope="module")
-def _central_site(site_factory: SiteFactory) -> Site:
-    return _create_site_and_restart_httpd(site_factory, "central")
 
 
 @pytest.fixture(name="remote_site", scope="module")
-def _remote_site(central_site: Site, site_factory: SiteFactory) -> Site:
-    remote_site = _create_site_and_restart_httpd(site_factory, "remote")
-    central_site.openapi.create_site(
-        {
-            "basic_settings": {
-                "alias": "Remote Testsite",
-                "site_id": remote_site.id,
-            },
-            "status_connection": {
-                "connection": {
-                    "socket_type": "tcp",
-                    "host": remote_site.http_address,
-                    "port": remote_site.livestatus_port,
-                    "encrypted": False,
-                    "verify": False,
+def _remote_site(central_site: Site, request: pytest.FixtureRequest) -> Iterator[Site]:
+    site_number = central_site.id.split("_")[1]
+    for remote_site in site_factory.get_test_site(
+        f"{site_number}_remote",
+        description=request.node.name,
+        auto_restart_httpd=True,
+    ):
+        central_site.open_livestatus_tcp(encrypted=False)
+        central_site.openapi.create_site(
+            {
+                "basic_settings": {
+                    "alias": "Remote Testsite",
+                    "site_id": remote_site.id,
                 },
-                "proxy": {
-                    "use_livestatus_daemon": "direct",
+                "status_connection": {
+                    "connection": {
+                        "socket_type": "tcp",
+                        "host": remote_site.http_address,
+                        "port": remote_site.livestatus_port,
+                        "encrypted": False,
+                        "verify": False,
+                    },
+                    "proxy": {
+                        "use_livestatus_daemon": "direct",
+                    },
+                    "connect_timeout": 2,
+                    "persistent_connection": False,
+                    "url_prefix": f"/{remote_site.id}/",
+                    "status_host": {"status_host_set": "disabled"},
+                    "disable_in_status_gui": False,
                 },
-                "connect_timeout": 2,
-                "persistent_connection": False,
-                "url_prefix": f"/{remote_site.id}/",
-                "status_host": {"status_host_set": "disabled"},
-                "disable_in_status_gui": False,
-            },
-            "configuration_connection": {
-                "enable_replication": True,
-                "url_of_remote_site": remote_site.internal_url,
-                "disable_remote_configuration": True,
-                "ignore_tls_errors": True,
-                "direct_login_to_web_gui_allowed": True,
-                "user_sync": {"sync_with_ldap_connections": "all"},
-                "replicate_event_console": True,
-                "replicate_extensions": True,
-            },
-        }
-    )
-    central_site.openapi.login_to_site(remote_site.id)
-    central_site.openapi.activate_changes_and_wait_for_completion(
-        # this seems to be necessary to avoid sporadic CI failures
-        force_foreign_changes=True,
-    )
-    return remote_site
-
-
-def _create_site_and_restart_httpd(site_factory: SiteFactory, site_name: str) -> Site:
-    site = site_factory.get_site(site_name)
-    restart_httpd()
-    return site
+                "configuration_connection": {
+                    "enable_replication": True,
+                    "url_of_remote_site": remote_site.internal_url,
+                    "disable_remote_configuration": True,
+                    "ignore_tls_errors": True,
+                    "direct_login_to_web_gui_allowed": True,
+                    "user_sync": {"sync_with_ldap_connections": "all"},
+                    "replicate_event_console": True,
+                    "replicate_extensions": True,
+                },
+            }
+        )
+        central_site.openapi.login_to_site(remote_site.id)
+        central_site.openapi.activate_changes_and_wait_for_completion(
+            # this seems to be necessary to avoid sporadic CI failures
+            force_foreign_changes=True,
+        )
+        yield remote_site
 
 
 @pytest.fixture(name="installed_agent_ctl_in_unknown_state", scope="module")

@@ -26,6 +26,14 @@ from cmk.utils.structured_data import (
 )
 
 
+def _make_mutable_tree(tree: ImmutableTree) -> MutableTree:
+    return MutableTree(tree.node)
+
+
+def _make_immutable_tree(tree: MutableTree) -> ImmutableTree:
+    return ImmutableTree(tree.node)
+
+
 def _create_empty_mut_tree() -> MutableTree:
     # Abbreviations:
     # nta: has StructuredDataNode, Table, Attributes
@@ -41,7 +49,7 @@ def _create_empty_mut_tree() -> MutableTree:
 
 
 def _create_empty_imm_tree() -> ImmutableTree:
-    return ImmutableTree(_create_empty_mut_tree().tree)
+    return _make_immutable_tree(_create_empty_mut_tree())
 
 
 def _create_filled_mut_tree() -> MutableTree:
@@ -73,7 +81,7 @@ def _create_filled_mut_tree() -> MutableTree:
 
 
 def _create_filled_imm_tree() -> ImmutableTree:
-    return ImmutableTree(_create_filled_mut_tree().tree)
+    return _make_immutable_tree(_create_filled_mut_tree())
 
 
 def test_serialize_empty_mut_tree() -> None:
@@ -547,7 +555,9 @@ def test_difference_pairs(
     current_tree.add_pairs(path=(), pairs=current_pairs)
 
     stats = (
-        ImmutableTree(current_tree.tree).difference(ImmutableTree(previous_tree.tree)).get_stats()
+        _make_immutable_tree(current_tree)
+        .difference(_make_immutable_tree(previous_tree))
+        .get_stats()
     )
     assert (stats["new"], stats["changed"], stats["removed"]) == result
 
@@ -612,7 +622,7 @@ def test_difference_rows(
     current_tree = MutableTree()
     current_tree.add_rows(path=(), key_columns=["id"], rows=current_rows)
 
-    delta_tree = ImmutableTree(current_tree.tree).difference(ImmutableTree(previous_tree.tree))
+    delta_tree = _make_immutable_tree(current_tree).difference(_make_immutable_tree(previous_tree))
     if any(result):
         assert len(delta_tree) > 0
     else:
@@ -643,7 +653,7 @@ def test_difference_rows_keys(
     current_tree = MutableTree()
     current_tree.add_rows(path=(), key_columns=["id"], rows=[current_row])
 
-    delta_tree = ImmutableTree(current_tree.tree).difference(ImmutableTree(previous_tree.tree))
+    delta_tree = _make_immutable_tree(current_tree).difference(_make_immutable_tree(previous_tree))
     assert {k for r in delta_tree.table.rows for k in r} == expected_keys
 
 
@@ -751,7 +761,7 @@ def test_filter_tree_mixed() -> None:
             filter_nodes=lambda k: True,
         ),
     ]
-    filtered_root = ImmutableTree(filled_root_.tree).filter(filters)
+    filtered_root = _make_immutable_tree(filled_root_).filter(filters)
 
     assert len(filtered_root) == 9
     assert len(filtered_root.get_tree(("path-to-nta", "nt"))) == 0
@@ -896,7 +906,7 @@ def test_save_and_load_real_tree(tree_name: HostName, tmp_path: Path) -> None:
     orig_tree = _get_tree_store().load(host_name=tree_name)
     tree_store = TreeStore(tmp_path / "inventory")
     try:
-        tree_store.save(host_name=HostName("foo"), tree=MutableTree(orig_tree.tree))
+        tree_store.save(host_name=HostName("foo"), tree=_make_mutable_tree(orig_tree))
         loaded_tree = tree_store.load(host_name=HostName("foo"))
         assert orig_tree == loaded_tree
     finally:
@@ -1425,7 +1435,7 @@ def test_update_from_previous_1() -> None:
         lambda k: True,  # filter func
         RetentionInterval(4, 5, 6),
     )
-    current_tree = ImmutableTree(current_tree_.tree)
+    current_tree = _make_immutable_tree(current_tree_)
     assert current_tree.table.key_columns == ["kc"]
     assert current_tree.table.retentions == {
         ("KC",): {
@@ -1474,7 +1484,7 @@ def test_update_from_previous_2() -> None:
         lambda k: k in ["c2", "c3"],  # filter func
         RetentionInterval(4, 5, 6),
     )
-    current_tree = ImmutableTree(current_tree_.tree)
+    current_tree = _make_immutable_tree(current_tree_)
     assert current_tree.table.key_columns == ["kc"]
     assert current_tree.table.retentions == {
         ("KC",): {

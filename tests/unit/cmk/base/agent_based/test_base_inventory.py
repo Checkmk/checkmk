@@ -35,6 +35,10 @@ from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.modes.check_mk import _get_save_tree_actions, _SaveTreeActions
 
 
+def _make_immutable_tree(tree: MutableTree) -> ImmutableTree:
+    return ImmutableTree(tree.node)
+
+
 @pytest.mark.parametrize(
     "item, known_class_name",
     [
@@ -744,7 +748,7 @@ def test_updater_merge_previous_attributes(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    inv_node = ImmutableTree(trees.inventory.get_tree(("path-to", "node-with-attrs")).tree)
+    inv_node = _make_immutable_tree(trees.inventory.get_tree(("path-to", "node-with-attrs")))
     assert inv_node.attributes.retentions == expected_retentions
 
     if expected_retentions:
@@ -781,7 +785,7 @@ def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str
     assert not update_result.save_tree
     assert not update_result.reasons_by_path
 
-    inv_node = ImmutableTree(trees.inventory.get_tree(("path-to", "node-with-attrs")).tree)
+    inv_node = _make_immutable_tree(trees.inventory.get_tree(("path-to", "node-with-attrs")))
     assert inv_node.attributes.retentions == {}
 
 
@@ -830,7 +834,7 @@ def test_updater_merge_previous_tables(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    inv_node = ImmutableTree(trees.inventory.get_tree(("path-to", "node-with-table")).tree)
+    inv_node = _make_immutable_tree(trees.inventory.get_tree(("path-to", "node-with-table")))
     assert inv_node.table.retentions == expected_retentions
 
     if expected_retentions:
@@ -871,7 +875,7 @@ def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]]) 
     assert not update_result.save_tree
     assert not update_result.reasons_by_path
 
-    inv_node = ImmutableTree(trees.inventory.get_tree(("path-to", "node-with-table")).tree)
+    inv_node = _make_immutable_tree(trees.inventory.get_tree(("path-to", "node-with-table")))
     assert inv_node.table.retentions == {}
 
 
@@ -921,7 +925,7 @@ def test_updater_merge_attributes(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    inv_node = ImmutableTree(trees.inventory.get_tree(("path-to", "node-with-attrs")).tree)
+    inv_node = _make_immutable_tree(trees.inventory.get_tree(("path-to", "node-with-attrs")))
     assert inv_node.attributes.retentions == expected_retentions
 
     if expected_retentions:
@@ -974,7 +978,7 @@ def test_updater_merge_attributes_outdated(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    inv_node = ImmutableTree(trees.inventory.get_tree(("path-to", "node-with-attrs")).tree)
+    inv_node = _make_immutable_tree(trees.inventory.get_tree(("path-to", "node-with-attrs")))
     assert inv_node.attributes.retentions == expected_retentions
 
 
@@ -1040,7 +1044,7 @@ def test_updater_merge_tables(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    inv_node = ImmutableTree(trees.inventory.get_tree(("path-to", "node-with-table")).tree)
+    inv_node = _make_immutable_tree(trees.inventory.get_tree(("path-to", "node-with-table")))
     assert inv_node.table.retentions == expected_retentions
 
     if expected_retentions:
@@ -1104,7 +1108,7 @@ def test_updater_merge_tables_outdated(
         assert not update_result.save_tree
         assert not update_result.reasons_by_path
 
-    inv_node = ImmutableTree(trees.inventory.get_tree(("path-to", "node-with-table")).tree)
+    inv_node = _make_immutable_tree(trees.inventory.get_tree(("path-to", "node-with-table")))
     assert inv_node.table.retentions == expected_retentions
 
 

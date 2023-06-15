@@ -229,30 +229,30 @@ def _make_filter_tree(filters: Iterable[SDFilter]) -> _FilterTree:
 
 
 class MutableTree:
-    def __init__(self, tree: StructuredDataNode | None = None) -> None:
-        self.tree: Final = StructuredDataNode() if tree is None else tree
+    def __init__(self, node: StructuredDataNode | None = None) -> None:
+        self.node: Final = StructuredDataNode() if node is None else node
 
     def serialize(self) -> SDRawTree:
-        return self.tree.serialize()
+        return self.node.serialize()
 
     def __len__(self) -> int:
-        return len(self.tree)
+        return len(self.node)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, (MutableTree, ImmutableTree)):
             raise TypeError(type(other))
-        return self.tree == other.tree
+        return self.node == other.node
 
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
     def add_pairs(self, *, path: SDPath, pairs: Mapping[SDKey, SDValue]) -> None:
-        self.tree.setdefault_node(tuple(path)).attributes.add_pairs(pairs)
+        self.node.setdefault_node(tuple(path)).attributes.add_pairs(pairs)
 
     def add_rows(
         self, *, path: SDPath, key_columns: Sequence[SDKey], rows: Sequence[Mapping[SDKey, SDValue]]
     ) -> None:
-        node = self.tree.setdefault_node(tuple(path))
+        node = self.node.setdefault_node(tuple(path))
         node.table.add_key_columns(sorted(key_columns))
         node.table.add_rows(rows)
 
@@ -264,10 +264,10 @@ class MutableTree:
         filter_func: SDFilterFunc,
         retention_interval: RetentionInterval,
     ) -> UpdateResult:
-        return self.tree.setdefault_node(path).attributes.update_pairs(
+        return self.node.setdefault_node(path).attributes.update_pairs(
             now,
             path,
-            previous_tree.get_tree(path).tree.attributes,
+            previous_tree.get_tree(path).node.attributes,
             filter_func,
             retention_interval,
         )
@@ -280,24 +280,24 @@ class MutableTree:
         filter_func: SDFilterFunc,
         retention_interval: RetentionInterval,
     ) -> UpdateResult:
-        return self.tree.setdefault_node(path).table.update_rows(
+        return self.node.setdefault_node(path).table.update_rows(
             now,
             path,
-            previous_tree.get_tree(path).tree.table,
+            previous_tree.get_tree(path).node.table,
             filter_func,
             retention_interval,
         )
 
     def get_attribute(self, path: SDPath, key: SDKey) -> SDValue:
         return (
-            None if (node := self.tree.get_node(path)) is None else node.attributes.pairs.get(key)
+            None if (node := self.node.get_node(path)) is None else node.attributes.pairs.get(key)
         )
 
     def get_tree(self, path: SDPath) -> MutableTree:
-        return MutableTree(self.tree.get_node(path))
+        return MutableTree(self.node.get_node(path))
 
     def has_table(self, path: SDPath) -> bool:
-        return bool(MutableTree(self.tree.get_node(path)).tree.table)
+        return bool(MutableTree(self.node.get_node(path)).node.table)
 
 
 # .
@@ -429,23 +429,23 @@ def _filter_table(table: Table, filter_funcs: Sequence[SDFilterFunc]) -> Table:
     return filtered
 
 
-def _filter_tree(tree: StructuredDataNode, filter_tree: _FilterTree) -> StructuredDataNode:
+def _filter_node(node: StructuredDataNode, filter_tree: _FilterTree) -> StructuredDataNode:
     filtered_nodes: dict[SDNodeName, StructuredDataNode] = {}
     for name in set(
-        name for name in tree.nodes_by_name for f in filter_tree.filters if f.filter_nodes(name)
+        name for name in node.nodes_by_name for f in filter_tree.filters if f.filter_nodes(name)
     ).union(filter_tree.nodes):
-        if filtered_node := _filter_tree(
-            tree.nodes_by_name.get(name, StructuredDataNode(path=tree.path + (name,))),
+        if filtered_node := _filter_node(
+            node.nodes_by_name.get(name, StructuredDataNode(path=node.path + (name,))),
             filter_tree.nodes.get(name, _FilterTree()),
         ):
             filtered_nodes.setdefault(name, filtered_node)
 
     return StructuredDataNode(
-        path=tree.path,
+        path=node.path,
         attributes=(
-            _filter_attributes(tree.attributes, [f.filter_pairs for f in filter_tree.filters])
+            _filter_attributes(node.attributes, [f.filter_pairs for f in filter_tree.filters])
         ),
-        table=_filter_table(tree.table, [f.filter_columns for f in filter_tree.filters]),
+        table=_filter_table(node.table, [f.filter_columns for f in filter_tree.filters]),
         nodes=filtered_nodes,
     )
 
@@ -676,30 +676,30 @@ class ImmutableTable:
 
 
 class ImmutableTree:
-    def __init__(self, tree: StructuredDataNode | None = None) -> None:
+    def __init__(self, node: StructuredDataNode | None = None) -> None:
         self.attributes: Final = (
             ImmutableAttributes()
-            if tree is None
+            if node is None
             else ImmutableAttributes(
-                pairs=tree.attributes.pairs,
-                retentions=tree.attributes.retentions,
+                pairs=node.attributes.pairs,
+                retentions=node.attributes.retentions,
             )
         )
         self.table: Final = (
             ImmutableTable()
-            if tree is None
+            if node is None
             else ImmutableTable(
-                key_columns=tree.table.key_columns,
-                rows_by_ident=tree.table.rows_by_ident,
-                retentions=tree.table.retentions,
+                key_columns=node.table.key_columns,
+                rows_by_ident=node.table.rows_by_ident,
+                retentions=node.table.retentions,
             )
         )
-        self.tree: Final[StructuredDataNode] = StructuredDataNode() if tree is None else tree
-        self.path: Final = () if tree is None else tree.path
+        self.node: Final[StructuredDataNode] = StructuredDataNode() if node is None else node
+        self.path: Final = () if node is None else node.path
 
     @property
     def nodes_by_name(self) -> Mapping[SDNodeName, ImmutableTree]:
-        return {name: ImmutableTree(node) for name, node in self.tree.nodes_by_name.items()}
+        return {name: ImmutableTree(node) for name, node in self.node.nodes_by_name.items()}
 
     @classmethod
     def deserialize(cls, raw_tree: Mapping) -> ImmutableTree:
@@ -711,7 +711,7 @@ class ImmutableTree:
             return cls(_deserialize_legacy_node(path=tuple(), raw_tree=raw_tree))
 
         return cls(
-            tree=StructuredDataNode.deserialize(
+            node=StructuredDataNode.deserialize(
                 path=tuple(),
                 raw_attributes=raw_attributes,
                 raw_table=raw_table,
@@ -720,38 +720,38 @@ class ImmutableTree:
         )
 
     def serialize(self) -> SDRawTree:
-        return self.tree.serialize()
+        return self.node.serialize()
 
     def __len__(self) -> int:
-        return len(self.tree)
+        return len(self.node)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, (MutableTree, ImmutableTree)):
             raise TypeError(type(other))
-        return self.tree == other.tree
+        return self.node == other.node
 
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
     def filter(self, filters: Iterable[SDFilter]) -> ImmutableTree:
-        return ImmutableTree(_filter_tree(self.tree, _make_filter_tree(filters)))
+        return ImmutableTree(_filter_node(self.node, _make_filter_tree(filters)))
 
     def merge(self, rhs: ImmutableTree) -> ImmutableTree:
-        return ImmutableTree(_merge_nodes(self.tree, rhs.tree))
+        return ImmutableTree(_merge_nodes(self.node, rhs.node))
 
     def difference(self, rhs: ImmutableTree) -> ImmutableDeltaTree:
-        return ImmutableDeltaTree(_compare_nodes(self.tree, rhs.tree))
+        return ImmutableDeltaTree(_compare_nodes(self.node, rhs.node))
 
     def get_attribute(self, path: SDPath, key: SDKey) -> SDValue:
         return (
-            None if (node := self.tree.get_node(path)) is None else node.attributes.pairs.get(key)
+            None if (node := self.node.get_node(path)) is None else node.attributes.pairs.get(key)
         )
 
     def get_rows(self, path: SDPath) -> Sequence[Mapping[SDKey, SDValue]]:
-        return [] if (node := self.tree.get_node(path)) is None else node.table.rows
+        return [] if (node := self.node.get_node(path)) is None else node.table.rows
 
     def get_tree(self, path: SDPath) -> ImmutableTree:
-        return ImmutableTree(self.tree.get_node(path))
+        return ImmutableTree(self.node.get_node(path))
 
 
 # .
@@ -799,33 +799,33 @@ def _filter_delta_table(
     return DeltaTable(key_columns=delta_table.key_columns, rows=filtered_rows)
 
 
-def _filter_delta_tree(
-    delta_tree: DeltaStructuredDataNode, filter_tree: _FilterTree
+def _filter_delta_node(
+    delta_node: DeltaStructuredDataNode, filter_tree: _FilterTree
 ) -> DeltaStructuredDataNode:
     filtered_nodes: dict[SDNodeName, DeltaStructuredDataNode] = {}
     for name in set(
         name
-        for name in delta_tree.nodes_by_name
+        for name in delta_node.nodes_by_name
         for f in filter_tree.filters
         if f.filter_nodes(name)
     ).union(filter_tree.nodes):
-        if filtered_node := _filter_delta_tree(
-            delta_tree.nodes_by_name.get(
-                name, DeltaStructuredDataNode(path=delta_tree.path + (name,))
+        if filtered_node := _filter_delta_node(
+            delta_node.nodes_by_name.get(
+                name, DeltaStructuredDataNode(path=delta_node.path + (name,))
             ),
             filter_tree.nodes.get(name, _FilterTree()),
         ):
             filtered_nodes.setdefault(name, filtered_node)
 
     return DeltaStructuredDataNode(
-        path=delta_tree.path,
+        path=delta_node.path,
         attributes=(
             _filter_delta_attributes(
-                delta_tree.attributes, [f.filter_pairs for f in filter_tree.filters]
+                delta_node.attributes, [f.filter_pairs for f in filter_tree.filters]
             )
         ),
         table=_filter_delta_table(
-            delta_tree.table, [f.filter_columns for f in filter_tree.filters]
+            delta_node.table, [f.filter_columns for f in filter_tree.filters]
         ),
         nodes=filtered_nodes,
     )
@@ -843,42 +843,42 @@ class ImmutableDeltaTable:
 
 
 class ImmutableDeltaTree:
-    def __init__(self, tree: DeltaStructuredDataNode | None = None) -> None:
+    def __init__(self, node: DeltaStructuredDataNode | None = None) -> None:
         self.attributes: Final = (
             ImmutableDeltaAttributes()
-            if tree is None
-            else ImmutableDeltaAttributes(pairs=tree.attributes.pairs)
+            if node is None
+            else ImmutableDeltaAttributes(pairs=node.attributes.pairs)
         )
         self.table: Final = (
             ImmutableDeltaTable()
-            if tree is None
-            else ImmutableDeltaTable(key_columns=tree.table.key_columns, rows=tree.table.rows)
+            if node is None
+            else ImmutableDeltaTable(key_columns=node.table.key_columns, rows=node.table.rows)
         )
-        self.tree: Final = tree or DeltaStructuredDataNode()
-        self.path: Final = () if tree is None else tree.path
+        self.node: Final = DeltaStructuredDataNode() if node is None else node
+        self.path: Final = () if node is None else node.path
 
     @property
     def nodes_by_name(self) -> Mapping[SDNodeName, ImmutableDeltaTree]:
-        return {name: ImmutableDeltaTree(node) for name, node in self.tree.nodes_by_name.items()}
+        return {name: ImmutableDeltaTree(node) for name, node in self.node.nodes_by_name.items()}
 
     @classmethod
     def deserialize(cls, raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
         return cls(DeltaStructuredDataNode.deserialize(path=tuple(), raw_tree=raw_tree))
 
     def serialize(self) -> SDRawDeltaTree:
-        return self.tree.serialize()
+        return self.node.serialize()
 
     def __len__(self) -> int:
-        return len(self.tree)
+        return len(self.node)
 
     def filter(self, filters: Iterable[SDFilter]) -> ImmutableDeltaTree:
-        return ImmutableDeltaTree(_filter_delta_tree(self.tree, _make_filter_tree(filters)))
+        return ImmutableDeltaTree(_filter_delta_node(self.node, _make_filter_tree(filters)))
 
     def get_stats(self) -> _SDDeltaCounter:
-        return self.tree.get_stats()
+        return self.node.get_stats()
 
     def get_tree(self, path: SDPath) -> ImmutableDeltaTree:
-        return ImmutableDeltaTree(self.tree.get_node(path))
+        return ImmutableDeltaTree(self.node.get_node(path))
 
 
 # .

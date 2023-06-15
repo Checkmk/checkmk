@@ -186,3 +186,24 @@ possible to define dependencies between the targets of the different packages.
 
 All targets and variables in the packages need to be prefixed with the package
 name variables to avoid name clashes.
+
+## Add/remove new package to distribution
+
+Summary: you must modify omd/Makefile, omd/packages/packages.make and create 
+[name].make which build/deploy your binary or library.
+
+Step by step:
+
+1. Modify PACKAGES variable in omd/Makefile adding a line with [name] of a 
+package to be added.
+2. Create a corresponding directory with name of the package in the omd/packages 
+subdir, i.e. omd/packages/[name].
+3. Create in the directory from p.2 the file having name of the package and 
+extension make, i.e. omd/packages/[name]/[name].make
+4. Add omd/packages/[name]/[name].make to the rule include in the file 
+omd/packages/package.make
+
+In the simple cases you should use livestatus.make or unixcat.make as a template.
+
+To remove package just remove the line in omd/Makefile, the line in 
+omd/packages/package.make and directory in the omd/packages.

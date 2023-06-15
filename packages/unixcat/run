@@ -180,6 +180,17 @@ run_cmake_format() {
     fi
 }
 
+run_check_format() {
+    run_clang_format --dry-run -Werror
+    run_cmake_format --check
+}
+
+run_format() {
+    run_clang_format -i
+    run_cmake_format --in-place
+
+}
+
 run_build() {
     update_cmake_artifacts
     touch build/.run-build-stamp
@@ -259,14 +270,14 @@ main() {
     cd -- "${BASH_SOURCE%/*}"
     parse_options "$@"
     test ${RUN_CLEAN} = yes && run_clean
-    test ${RUN_CHECK_FORMAT} = yes && run_clang_format --dry-run -Werror && run_cmake_format --check
+    test ${RUN_CHECK_FORMAT} = yes && run_check_format
     test ${RUN_BUILD} = yes && run_build
     test ${RUN_BUILD_UNIT_TESTS} = yes && run_build_unit_tests
     calculate_files_to_use
     test ${RUN_UNIT_TESTS} = yes && run_unit_tests
     test ${RUN_IWYU} = yes && run_iwyu
     test ${RUN_CLANG_TIDY} = yes && run_clang_tidy
-    test ${RUN_FORMAT} = yes && run_clang_format -i && run_cmake_format --in-place
+    test ${RUN_FORMAT} = yes && run_format
     test ${RUN_DOCUMENTATION} = yes && run_documentation
     true
 }

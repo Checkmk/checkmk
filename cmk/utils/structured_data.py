@@ -16,7 +16,7 @@ from collections import Counter
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Final, Literal, NamedTuple, TypedDict
+from typing import Final, Literal, NamedTuple, overload, TypedDict
 
 from cmk.utils import store
 from cmk.utils.hostaddress import HostName
@@ -468,7 +468,10 @@ def _merge_tables_by_same_or_empty_key_columns(
         retentions={**left.retentions, **right.retentions},
     )
 
-    compared_keys = _compare_dict_keys(old_dict=right.rows_by_ident, new_dict=left.rows_by_ident)
+    compared_keys = _compare_dict_keys(
+        left=set(right.rows_by_ident),
+        right=set(left.rows_by_ident),
+    )
 
     for key in compared_keys.only_old:
         table.add_row(key, right.rows_by_ident[key])
@@ -503,7 +506,10 @@ def _merge_tables(left: Table, right: Table) -> Table:
 
 
 def _merge_nodes(left: StructuredDataNode, right: StructuredDataNode) -> StructuredDataNode:
-    compared_keys = _compare_dict_keys(old_dict=right.nodes_by_name, new_dict=left.nodes_by_name)
+    compared_keys = _compare_dict_keys(
+        left=set(right.nodes_by_name),
+        right=set(left.nodes_by_name),
+    )
 
     nodes: dict[SDNodeName, StructuredDataNode] = {}
     for key in compared_keys.only_old:
@@ -536,9 +542,7 @@ class ComparedDictResult(NamedTuple):
     has_changes: bool
 
 
-def _compare_dicts(
-    *, old_dict: Mapping, new_dict: Mapping, keep_identical: bool
-) -> ComparedDictResult:
+def _compare_dicts(*, left: Mapping, right: Mapping, keep_identical: bool) -> ComparedDictResult:
     """
     Format of compared entries:
       new:          {k: (None, new_value), ...}
@@ -546,19 +550,19 @@ def _compare_dicts(
       removed:      {k: (old_value, None), ...}
       identical:    {k: (value, value), ...}
     """
-    compared_keys = _compare_dict_keys(old_dict=old_dict, new_dict=new_dict)
+    compared_keys = _compare_dict_keys(left=set(left), right=set(right))
     compared_dict: dict[SDKey, tuple[SDValue, SDValue]] = {}
 
     has_changes = False
     for k in compared_keys.both:
-        if (new_value := new_dict[k]) != (old_value := old_dict[k]):
+        if (new_value := right[k]) != (old_value := left[k]):
             compared_dict.setdefault(k, (old_value, new_value))
             has_changes = True
         elif keep_identical:
             compared_dict.setdefault(k, (old_value, old_value))
 
-    compared_dict.update({k: _encode_as_new(new_dict[k]) for k in compared_keys.only_new})
-    compared_dict.update({k: _encode_as_removed(old_dict[k]) for k in compared_keys.only_old})
+    compared_dict.update({k: _encode_as_new(right[k]) for k in compared_keys.only_new})
+    compared_dict.update({k: _encode_as_removed(left[k]) for k in compared_keys.only_old})
 
     return ComparedDictResult(
         result_dict=compared_dict,
@@ -569,8 +573,8 @@ def _compare_dicts(
 def _compare_attributes(left: Attributes, right: Attributes) -> DeltaAttributes:
     return DeltaAttributes(
         pairs=_compare_dicts(
-            old_dict=right.pairs,
-            new_dict=left.pairs,
+            left=right.pairs,
+            right=left.pairs,
             keep_identical=False,
         ).result_dict,
     )
@@ -578,7 +582,10 @@ def _compare_attributes(left: Attributes, right: Attributes) -> DeltaAttributes:
 
 def _compare_tables(left: Table, right: Table) -> DeltaTable:
     key_columns = sorted(set(left.key_columns).union(right.key_columns))
-    compared_keys = _compare_dict_keys(old_dict=right.rows_by_ident, new_dict=left.rows_by_ident)
+    compared_keys = _compare_dict_keys(
+        left=set(right.rows_by_ident),
+        right=set(left.rows_by_ident),
+    )
 
     delta_rows: list[dict[SDKey, tuple[SDValue, SDValue]]] = []
 
@@ -592,8 +599,8 @@ def _compare_tables(left: Table, right: Table) -> DeltaTable:
         # then it would be very annoying if the rest of the row is not shown.
         if (
             compared_dict_result := _compare_dicts(
-                old_dict=right.rows_by_ident[key],
-                new_dict=left.rows_by_ident[key],
+                left=right.rows_by_ident[key],
+                right=left.rows_by_ident[key],
                 keep_identical=True,
             )
         ).has_changes:
@@ -611,7 +618,10 @@ def _compare_tables(left: Table, right: Table) -> DeltaTable:
 def _compare_nodes(left: StructuredDataNode, right: StructuredDataNode) -> DeltaStructuredDataNode:
     delta_nodes: dict[SDNodeName, DeltaStructuredDataNode] = {}
 
-    compared_keys = _compare_dict_keys(old_dict=right.nodes_by_name, new_dict=left.nodes_by_name)
+    compared_keys = _compare_dict_keys(
+        left=set(right.nodes_by_name),
+        right=set(left.nodes_by_name),
+    )
 
     for key in compared_keys.only_new:
         if child_left := left.nodes_by_name[key]:
@@ -1020,15 +1030,17 @@ class Attributes:
         retention_interval: RetentionInterval,
     ) -> UpdateResult:
         compared_filtered_keys = _compare_dict_keys(
-            old_dict=_get_filtered_dict(
-                other.pairs,
-                _make_retentions_filter_func(
-                    filter_func=filter_func,
-                    intervals_by_key=other.retentions,
-                    now=now,
-                ),
+            left=set(
+                _get_filtered_dict(
+                    other.pairs,
+                    _make_retentions_filter_func(
+                        filter_func=filter_func,
+                        intervals_by_key=other.retentions,
+                        now=now,
+                    ),
+                )
             ),
-            new_dict=_get_filtered_dict(self.pairs, filter_func),
+            right=set(_get_filtered_dict(self.pairs, filter_func)),
         )
 
         pairs: dict[SDKey, SDValue] = {}
@@ -1099,13 +1111,14 @@ class Table:
             raise TypeError(type(other))
 
         compared_keys = _compare_dict_keys(
-            old_dict=other._rows_by_ident, new_dict=self._rows_by_ident
+            left=set(other.rows_by_ident),
+            right=set(self.rows_by_ident),
         )
         if compared_keys.only_old or compared_keys.only_new:
             return False
 
         for key in compared_keys.both:
-            if self._rows_by_ident[key] != other._rows_by_ident[key]:
+            if self.rows_by_ident[key] != other.rows_by_ident[key]:
                 return False
 
         return True
@@ -1169,8 +1182,8 @@ class Table:
             if (filtered_row := _get_filtered_dict(row, filter_func))
         }
         compared_filtered_idents = _compare_dict_keys(
-            old_dict=old_filtered_rows,
-            new_dict=self_filtered_rows,
+            left=set(old_filtered_rows),
+            right=set(self_filtered_rows),
         )
 
         retentions: dict[SDRowIdent, dict[SDKey, RetentionInterval]] = {}
@@ -1189,8 +1202,8 @@ class Table:
 
         for ident in compared_filtered_idents.both:
             compared_filtered_keys = _compare_dict_keys(
-                old_dict=old_filtered_rows[ident],
-                new_dict=self_filtered_rows[ident],
+                left=set(old_filtered_rows[ident]),
+                right=set(self_filtered_rows[ident]),
             )
             row: dict[SDKey, SDValue] = {}
             for key in compared_filtered_keys.only_old:
@@ -1299,7 +1312,10 @@ class StructuredDataNode:
         if self.attributes != other.attributes or self.table != other.table:
             return False
 
-        compared_keys = _compare_dict_keys(old_dict=other._nodes, new_dict=self._nodes)
+        compared_keys = _compare_dict_keys(
+            left=set(other.nodes_by_name),
+            right=set(self.nodes_by_name),
+        )
         if compared_keys.only_old or compared_keys.only_new:
             return False
 
@@ -1556,23 +1572,38 @@ class DeltaStructuredDataNode:
 
 
 class ComparedDictKeys(NamedTuple):
-    only_old: set
-    both: set
-    only_new: set
+    only_old: set[SDKey]
+    both: set[SDKey]
+    only_new: set[SDKey]
 
 
-def _compare_dict_keys(*, old_dict: Mapping, new_dict: Mapping) -> ComparedDictKeys:
+class ComparedRowIdents(NamedTuple):
+    only_old: set[SDRowIdent]
+    both: set[SDRowIdent]
+    only_new: set[SDRowIdent]
+
+
+@overload
+def _compare_dict_keys(*, left: set[SDKey], right: set[SDKey]) -> ComparedDictKeys:
+    ...
+
+
+@overload
+def _compare_dict_keys(*, left: set[SDRowIdent], right: set[SDRowIdent]) -> ComparedRowIdents:
+    ...
+
+
+def _compare_dict_keys(*, left, right):
     """
     Returns the set relationships of the keys between two dictionaries:
-    - relative complement of new_dict in old_dict
+    - relative complement of right in left
     - intersection of both
-    - relative complement of old_dict in new_dict
+    - relative complement of left in right
     """
-    old_keys, new_keys = set(old_dict), set(new_dict)
     return ComparedDictKeys(
-        only_old=old_keys - new_keys,
-        both=old_keys.intersection(new_keys),
-        only_new=new_keys - old_keys,
+        only_old=left - right,
+        both=left.intersection(right),
+        only_new=right - left,
     )
 
 

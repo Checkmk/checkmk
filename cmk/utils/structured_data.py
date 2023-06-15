@@ -232,9 +232,6 @@ class MutableTree:
     def __init__(self, node: StructuredDataNode | None = None) -> None:
         self.node: Final = StructuredDataNode() if node is None else node
 
-    def serialize(self) -> SDRawTree:
-        return self.node.serialize()
-
     def __len__(self) -> int:
         return len(self.node)
 
@@ -298,6 +295,9 @@ class MutableTree:
 
     def has_table(self, path: SDPath) -> bool:
         return bool(MutableTree(self.node.get_node(path)).node.table)
+
+    def serialize(self) -> SDRawTree:
+        return self.node.serialize()
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({pprint.pformat(self.node.to_raw())})"
@@ -670,14 +670,14 @@ class ImmutableTable:
     rows_by_ident: Mapping[SDRowIdent, Mapping[SDKey, SDValue]] = field(default_factory=dict)
     retentions: Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]] = field(default_factory=dict)
 
-    @property
-    def rows(self) -> Sequence[Mapping[SDKey, SDValue]]:
-        return list(self.rows_by_ident.values())
-
     def __len__(self) -> int:
         # The attribute 'rows' is decisive. Other attributes like 'key_columns' or 'retentions'
         # have no impact if there are no rows.
         return sum(map(len, self.rows_by_ident.values()))
+
+    @property
+    def rows(self) -> Sequence[Mapping[SDKey, SDValue]]:
+        return list(self.rows_by_ident.values())
 
 
 class ImmutableTree:
@@ -702,9 +702,40 @@ class ImmutableTree:
         self.node: Final[StructuredDataNode] = StructuredDataNode() if node is None else node
         self.path: Final = () if node is None else node.path
 
+    def __len__(self) -> int:
+        return len(self.node)
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, (MutableTree, ImmutableTree)):
+            raise TypeError(type(other))
+        return self.node == other.node
+
+    def __ne__(self, other: object) -> bool:
+        return not self.__eq__(other)
+
     @property
     def nodes_by_name(self) -> Mapping[SDNodeName, ImmutableTree]:
         return {name: ImmutableTree(node) for name, node in self.node.nodes_by_name.items()}
+
+    def filter(self, filters: Iterable[SDFilter]) -> ImmutableTree:
+        return ImmutableTree(_filter_node(self.node, _make_filter_tree(filters)))
+
+    def merge(self, rhs: ImmutableTree) -> ImmutableTree:
+        return ImmutableTree(_merge_nodes(self.node, rhs.node))
+
+    def difference(self, rhs: ImmutableTree) -> ImmutableDeltaTree:
+        return ImmutableDeltaTree(_compare_nodes(self.node, rhs.node))
+
+    def get_attribute(self, path: SDPath, key: SDKey) -> SDValue:
+        return (
+            None if (node := self.node.get_node(path)) is None else node.attributes.pairs.get(key)
+        )
+
+    def get_rows(self, path: SDPath) -> Sequence[Mapping[SDKey, SDValue]]:
+        return [] if (node := self.node.get_node(path)) is None else node.table.rows
+
+    def get_tree(self, path: SDPath) -> ImmutableTree:
+        return ImmutableTree(self.node.get_node(path))
 
     @classmethod
     def deserialize(cls, raw_tree: Mapping) -> ImmutableTree:
@@ -726,37 +757,6 @@ class ImmutableTree:
 
     def serialize(self) -> SDRawTree:
         return self.node.serialize()
-
-    def __len__(self) -> int:
-        return len(self.node)
-
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, (MutableTree, ImmutableTree)):
-            raise TypeError(type(other))
-        return self.node == other.node
-
-    def __ne__(self, other: object) -> bool:
-        return not self.__eq__(other)
-
-    def filter(self, filters: Iterable[SDFilter]) -> ImmutableTree:
-        return ImmutableTree(_filter_node(self.node, _make_filter_tree(filters)))
-
-    def merge(self, rhs: ImmutableTree) -> ImmutableTree:
-        return ImmutableTree(_merge_nodes(self.node, rhs.node))
-
-    def difference(self, rhs: ImmutableTree) -> ImmutableDeltaTree:
-        return ImmutableDeltaTree(_compare_nodes(self.node, rhs.node))
-
-    def get_attribute(self, path: SDPath, key: SDKey) -> SDValue:
-        return (
-            None if (node := self.node.get_node(path)) is None else node.attributes.pairs.get(key)
-        )
-
-    def get_rows(self, path: SDPath) -> Sequence[Mapping[SDKey, SDValue]]:
-        return [] if (node := self.node.get_node(path)) is None else node.table.rows
-
-    def get_tree(self, path: SDPath) -> ImmutableTree:
-        return ImmutableTree(self.node.get_node(path))
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({pprint.pformat(self.node.to_raw())})"
@@ -865,19 +865,12 @@ class ImmutableDeltaTree:
         self.node: Final = DeltaStructuredDataNode() if node is None else node
         self.path: Final = () if node is None else node.path
 
+    def __len__(self) -> int:
+        return len(self.node)
+
     @property
     def nodes_by_name(self) -> Mapping[SDNodeName, ImmutableDeltaTree]:
         return {name: ImmutableDeltaTree(node) for name, node in self.node.nodes_by_name.items()}
-
-    @classmethod
-    def deserialize(cls, raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
-        return cls(DeltaStructuredDataNode.deserialize(path=tuple(), raw_tree=raw_tree))
-
-    def serialize(self) -> SDRawDeltaTree:
-        return self.node.serialize()
-
-    def __len__(self) -> int:
-        return len(self.node)
 
     def filter(self, filters: Iterable[SDFilter]) -> ImmutableDeltaTree:
         return ImmutableDeltaTree(_filter_delta_node(self.node, _make_filter_tree(filters)))
@@ -887,6 +880,13 @@ class ImmutableDeltaTree:
 
     def get_tree(self, path: SDPath) -> ImmutableDeltaTree:
         return ImmutableDeltaTree(self.node.get_node(path))
+
+    @classmethod
+    def deserialize(cls, raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
+        return cls(DeltaStructuredDataNode.deserialize(path=tuple(), raw_tree=raw_tree))
+
+    def serialize(self) -> SDRawDeltaTree:
+        return self.node.serialize()
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({pprint.pformat(self.node.to_raw())})"
@@ -1001,12 +1001,6 @@ class Attributes:
         self.retentions = retentions if retentions else {}
         self._pairs: dict[SDKey, SDValue] = {}
 
-    @property
-    def pairs(self) -> Mapping[SDKey, SDValue]:
-        return self._pairs
-
-    #   ---common methods-------------------------------------------------------
-
     def __len__(self) -> int:
         # The attribute 'pairs' is decisive. Other attributes like 'retentions' have no impact
         # if there are no pairs.
@@ -1020,12 +1014,12 @@ class Attributes:
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
-    #   ---attributes methods---------------------------------------------------
+    @property
+    def pairs(self) -> Mapping[SDKey, SDValue]:
+        return self._pairs
 
     def add_pairs(self, pairs: Mapping[SDKey, SDValue]) -> None:
         self._pairs.update(pairs)
-
-    #   ---retentions-----------------------------------------------------------
 
     def update_pairs(
         self,
@@ -1067,13 +1061,16 @@ class Attributes:
 
         return update_result
 
-    #   ---representation-------------------------------------------------------
-
-    def to_raw(self) -> Mapping:
-        # Useful for debugging; no restrictions
-        return {"Pairs": self._pairs, "Retentions": self.retentions}
-
-    #   ---de/serializing-------------------------------------------------------
+    @classmethod
+    def deserialize(cls, raw_attributes: SDRawAttributes) -> Attributes:
+        attributes = cls(
+            retentions={
+                key: RetentionInterval.deserialize(interval)
+                for key, interval in raw_attributes.get("Retentions", {}).items()
+            }
+        )
+        attributes.add_pairs(raw_attributes.get("Pairs", {}))
+        return attributes
 
     def serialize(self) -> SDRawAttributes:
         raw_attributes: SDRawAttributes = {}
@@ -1086,16 +1083,9 @@ class Attributes:
             }
         return raw_attributes
 
-    @classmethod
-    def deserialize(cls, raw_attributes: SDRawAttributes) -> Attributes:
-        attributes = cls(
-            retentions={
-                key: RetentionInterval.deserialize(interval)
-                for key, interval in raw_attributes.get("Retentions", {}).items()
-            }
-        )
-        attributes.add_pairs(raw_attributes.get("Pairs", {}))
-        return attributes
+    def to_raw(self) -> Mapping:
+        # Useful for debugging; no restrictions
+        return {"Pairs": self._pairs, "Retentions": self.retentions}
 
 
 class Table:
@@ -1108,21 +1098,6 @@ class Table:
         self.key_columns = key_columns if key_columns else []
         self.retentions = retentions if retentions else {}
         self._rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
-
-    def add_key_columns(self, key_columns: Sequence[SDKey]) -> None:
-        for key in key_columns:
-            if key not in self.key_columns:
-                self.key_columns.append(key)
-
-    @property
-    def rows(self) -> Sequence[Mapping[SDKey, SDValue]]:
-        return list(self._rows_by_ident.values())
-
-    @property
-    def rows_by_ident(self) -> Mapping[SDRowIdent, Mapping[SDKey, SDValue]]:
-        return self._rows_by_ident
-
-    #   ---common methods-------------------------------------------------------
 
     def __len__(self) -> int:
         # The attribute 'rows' is decisive. Other attributes like 'key_columns' or 'retentions'
@@ -1148,7 +1123,18 @@ class Table:
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
-    #   ---table methods--------------------------------------------------------
+    @property
+    def rows(self) -> Sequence[Mapping[SDKey, SDValue]]:
+        return list(self._rows_by_ident.values())
+
+    @property
+    def rows_by_ident(self) -> Mapping[SDRowIdent, Mapping[SDKey, SDValue]]:
+        return self._rows_by_ident
+
+    def add_key_columns(self, key_columns: Sequence[SDKey]) -> None:
+        for key in key_columns:
+            if key not in self.key_columns:
+                self.key_columns.append(key)
 
     def add_rows(self, rows: Sequence[Mapping[SDKey, SDValue]]) -> None:
         for row in rows:
@@ -1246,35 +1232,6 @@ class Table:
 
         return update_result
 
-    #   ---representation-------------------------------------------------------
-
-    def to_raw(self) -> Mapping:
-        # Useful for debugging; no restrictions
-        return {
-            "KeyColumns": self.key_columns,
-            "RowsByIdent": self._rows_by_ident,
-            "Retentions": self.retentions,
-        }
-
-    #   ---de/serializing-------------------------------------------------------
-
-    def serialize(self) -> SDRawTable:
-        raw_table: SDRawTable = {}
-        if self._rows_by_ident:
-            raw_table.update(
-                {
-                    "KeyColumns": self.key_columns,
-                    "Rows": list(self._rows_by_ident.values()),
-                }
-            )
-
-        if self.retentions:
-            raw_table["Retentions"] = {
-                ident: {key: interval.serialize() for key, interval in intervals_by_key.items()}
-                for ident, intervals_by_key in self.retentions.items()
-            }
-        return raw_table
-
     @classmethod
     def deserialize(cls, raw_table: SDRawTable) -> Table:
         rows = raw_table.get("Rows", [])
@@ -1296,6 +1253,31 @@ class Table:
         table.add_rows(rows)
         return table
 
+    def serialize(self) -> SDRawTable:
+        raw_table: SDRawTable = {}
+        if self._rows_by_ident:
+            raw_table.update(
+                {
+                    "KeyColumns": self.key_columns,
+                    "Rows": list(self._rows_by_ident.values()),
+                }
+            )
+
+        if self.retentions:
+            raw_table["Retentions"] = {
+                ident: {key: interval.serialize() for key, interval in intervals_by_key.items()}
+                for ident, intervals_by_key in self.retentions.items()
+            }
+        return raw_table
+
+    def to_raw(self) -> Mapping:
+        # Useful for debugging; no restrictions
+        return {
+            "KeyColumns": self.key_columns,
+            "RowsByIdent": self._rows_by_ident,
+            "Retentions": self.retentions,
+        }
+
 
 class StructuredDataNode:
     def __init__(
@@ -1310,12 +1292,6 @@ class StructuredDataNode:
         self.attributes = attributes or Attributes()
         self.table = table or Table()
         self._nodes = nodes or {}
-
-    @property
-    def nodes_by_name(self) -> Mapping[SDNodeName, StructuredDataNode]:
-        return self._nodes
-
-    #   ---common methods-------------------------------------------------------
 
     def __len__(self) -> int:
         return sum(
@@ -1346,7 +1322,9 @@ class StructuredDataNode:
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
-    #   ---node methods---------------------------------------------------------
+    @property
+    def nodes_by_name(self) -> Mapping[SDNodeName, StructuredDataNode]:
+        return self._nodes
 
     def setdefault_node(self, path: SDPath) -> StructuredDataNode:
         if not path:
@@ -1360,26 +1338,6 @@ class StructuredDataNode:
         if not path:
             return self
         return None if (node := self._nodes.get(path[0])) is None else node.get_node(path[1:])
-
-    #   ---representation-------------------------------------------------------
-
-    def to_raw(self) -> Mapping:
-        # Useful for debugging; no restrictions
-        return {
-            "Path": self.path,
-            "Attributes": self.attributes.to_raw(),
-            "Table": self.table.to_raw(),
-            "Nodes": {name: node.to_raw() for name, node in self._nodes.items()},
-        }
-
-    #   ---de/serializing-------------------------------------------------------
-
-    def serialize(self) -> SDRawTree:
-        return {
-            "Attributes": self.attributes.serialize(),
-            "Table": self.table.serialize(),
-            "Nodes": {name: node.serialize() for name, node in self._nodes.items() if node},
-        }
 
     @classmethod
     def deserialize(
@@ -1404,6 +1362,22 @@ class StructuredDataNode:
                 for name, raw_node in raw_nodes.items()
             },
         )
+
+    def serialize(self) -> SDRawTree:
+        return {
+            "Attributes": self.attributes.serialize(),
+            "Table": self.table.serialize(),
+            "Nodes": {name: node.serialize() for name, node in self._nodes.items() if node},
+        }
+
+    def to_raw(self) -> Mapping:
+        # Useful for debugging; no restrictions
+        return {
+            "Path": self.path,
+            "Attributes": self.attributes.to_raw(),
+            "Table": self.table.to_raw(),
+            "Nodes": {name: node.to_raw() for name, node in self._nodes.items()},
+        }
 
 
 # .
@@ -1438,34 +1412,37 @@ def _count_dict_entries(dict_: Mapping[SDKey, tuple[SDValue, SDValue]]) -> _SDDe
 class DeltaAttributes:
     pairs: Mapping[SDKey, tuple[SDValue, SDValue]] = field(default_factory=dict)
 
+    def __len__(self) -> int:
+        return len(self.pairs)
+
     @classmethod
     def make_from_attributes(
         cls, *, attributes: Attributes, encode_as: _SDEncodeAs
     ) -> DeltaAttributes:
         return cls(pairs={key: encode_as(value) for key, value in attributes.pairs.items()})
 
-    def __len__(self) -> int:
-        return len(self.pairs)
-
-    def to_raw(self) -> Mapping:
-        # Useful for debugging; no restrictions
-        return {"Pairs": self.pairs}
-
-    def serialize(self) -> SDRawDeltaAttributes:
-        return {"Pairs": self.pairs} if self.pairs else {}
+    def get_stats(self) -> _SDDeltaCounter:
+        return _count_dict_entries(self.pairs)
 
     @classmethod
     def deserialize(cls, raw_attributes: SDRawDeltaAttributes) -> DeltaAttributes:
         return cls(pairs=raw_attributes.get("Pairs", {}))
 
-    def get_stats(self) -> _SDDeltaCounter:
-        return _count_dict_entries(self.pairs)
+    def serialize(self) -> SDRawDeltaAttributes:
+        return {"Pairs": self.pairs} if self.pairs else {}
+
+    def to_raw(self) -> Mapping:
+        # Useful for debugging; no restrictions
+        return {"Pairs": self.pairs}
 
 
 @dataclass(frozen=True, kw_only=True)
 class DeltaTable:
     key_columns: Sequence[SDKey] = field(default_factory=list)
     rows: Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]] = field(default_factory=list)
+
+    def __len__(self) -> int:
+        return sum(map(len, self.rows))
 
     @classmethod
     def make_from_table(cls, *, table: Table, encode_as: _SDEncodeAs) -> DeltaTable:
@@ -1474,25 +1451,22 @@ class DeltaTable:
             rows=[{key: encode_as(value) for key, value in row.items()} for row in table.rows],
         )
 
-    def __len__(self) -> int:
-        return sum(map(len, self.rows))
-
-    def to_raw(self) -> Mapping:
-        # Useful for debugging; no restrictions
-        return {"KeyColumns": self.key_columns, "Rows": self.rows}
-
-    def serialize(self) -> SDRawDeltaTable:
-        return {"KeyColumns": self.key_columns, "Rows": self.rows} if self.rows else {}
-
-    @classmethod
-    def deserialize(cls, raw_table: SDRawDeltaTable) -> DeltaTable:
-        return cls(key_columns=raw_table.get("KeyColumns", []), rows=raw_table.get("Rows", []))
-
     def get_stats(self) -> _SDDeltaCounter:
         counter: _SDDeltaCounter = Counter()
         for row in self.rows:
             counter.update(_count_dict_entries(row))
         return counter
+
+    @classmethod
+    def deserialize(cls, raw_table: SDRawDeltaTable) -> DeltaTable:
+        return cls(key_columns=raw_table.get("KeyColumns", []), rows=raw_table.get("Rows", []))
+
+    def serialize(self) -> SDRawDeltaTable:
+        return {"KeyColumns": self.key_columns, "Rows": self.rows} if self.rows else {}
+
+    def to_raw(self) -> Mapping:
+        # Useful for debugging; no restrictions
+        return {"KeyColumns": self.key_columns, "Rows": self.rows}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -1501,6 +1475,15 @@ class DeltaStructuredDataNode:
     attributes: DeltaAttributes = DeltaAttributes()
     table: DeltaTable = DeltaTable()
     nodes_by_name: Mapping[SDNodeName, DeltaStructuredDataNode] = field(default_factory=dict)
+
+    def __len__(self) -> int:
+        return sum(
+            [
+                len(self.attributes),
+                len(self.table),
+            ]
+            + [len(node) for node in self.nodes_by_name.values()]
+        )
 
     @classmethod
     def make_from_node(
@@ -1525,36 +1508,19 @@ class DeltaStructuredDataNode:
             },
         )
 
-    def __len__(self) -> int:
-        return sum(
-            [
-                len(self.attributes),
-                len(self.table),
-            ]
-            + [len(node) for node in self.nodes_by_name.values()]
-        )
-
     def get_node(self, path: SDPath) -> DeltaStructuredDataNode | None:
         if not path:
             return self
         node = self.nodes_by_name.get(path[0])
         return None if node is None else node.get_node(path[1:])
 
-    def to_raw(self) -> Mapping:
-        # Useful for debugging; no restrictions
-        return {
-            "Path": self.path,
-            "Attributes": self.attributes.to_raw(),
-            "Table": self.table.to_raw(),
-            "Nodes": {edge: node.to_raw() for edge, node in self.nodes_by_name.items()},
-        }
-
-    def serialize(self) -> SDRawDeltaTree:
-        return {
-            "Attributes": self.attributes.serialize(),
-            "Table": self.table.serialize(),
-            "Nodes": {edge: node.serialize() for edge, node in self.nodes_by_name.items() if node},
-        }
+    def get_stats(self) -> _SDDeltaCounter:
+        counter: _SDDeltaCounter = Counter()
+        counter.update(self.attributes.get_stats())
+        counter.update(self.table.get_stats())
+        for node in self.nodes_by_name.values():
+            counter.update(node.get_stats())
+        return counter
 
     @classmethod
     def deserialize(cls, *, path: SDPath, raw_tree: SDRawDeltaTree) -> DeltaStructuredDataNode:
@@ -1571,13 +1537,21 @@ class DeltaStructuredDataNode:
             },
         )
 
-    def get_stats(self) -> _SDDeltaCounter:
-        counter: _SDDeltaCounter = Counter()
-        counter.update(self.attributes.get_stats())
-        counter.update(self.table.get_stats())
-        for node in self.nodes_by_name.values():
-            counter.update(node.get_stats())
-        return counter
+    def serialize(self) -> SDRawDeltaTree:
+        return {
+            "Attributes": self.attributes.serialize(),
+            "Table": self.table.serialize(),
+            "Nodes": {edge: node.serialize() for edge, node in self.nodes_by_name.items() if node},
+        }
+
+    def to_raw(self) -> Mapping:
+        # Useful for debugging; no restrictions
+        return {
+            "Path": self.path,
+            "Attributes": self.attributes.to_raw(),
+            "Table": self.table.to_raw(),
+            "Nodes": {edge: node.to_raw() for edge, node in self.nodes_by_name.items()},
+        }
 
 
 # .

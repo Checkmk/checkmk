@@ -1256,7 +1256,6 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
     def parent_folder_chain(self) -> list[CREFolder]:  # pylint: disable=useless-super-delegation
         return super().parent_folder_chain()
 
-    # Arguments will be cleaned up in follow-up commits
     @classmethod
     def new(
         cls,
@@ -1271,11 +1270,16 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
             tree=tree,
             name=name,
             parent_folder=parent_folder,
-            title=title,
-            attributes=attributes,
+            folder_id=uuid.uuid4().hex,
+            folder_path=(folder_path := os.path.join(parent_folder.path(), name)),
+            title=title or _fallback_title(folder_path),
+            attributes=update_metadata(attributes or {}),
+            locked=False,
+            locked_subfolders=False,
+            num_hosts=0,
+            hosts={},
         )
 
-    # Arguments will be cleaned up in follow-up commits
     @classmethod
     def load(
         cls,
@@ -1284,13 +1288,27 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         name: str,
         parent_folder: CREFolder | None,
     ) -> CREFolder:
+        folder_path = os.path.join(parent_folder.path(), name) if parent_folder else name
+        serialized = cls.wato_info_storage_manager().read(
+            Path(_folder_wato_info_path(_folder_filesystem_path(tree.get_root_dir(), folder_path)))
+        )
+
         return cls(
             tree=tree,
             name=name,
-            folder_path=os.path.join(parent_folder.path(), name) if parent_folder else name,
             parent_folder=parent_folder,
-            title=None,
-            attributes=None,
+            # Cleanup this compatibility code by adding a cmk-update-config action
+            folder_id=serialized["__id"] if "__id" in serialized else uuid.uuid4().hex,
+            folder_path=folder_path,
+            title=serialized.get("title", _fallback_title(folder_path)),
+            attributes=dict(serialized.get("attributes", {})),
+            # Can either be set to True or a string (which will be used as host lock message)
+            locked=serialized.get("lock", False),
+            # Can either be set to True or a string (which will be used as host lock message)
+            locked_subfolders=serialized.get("lock_subfolders", False),
+            num_hosts=serialized.get("num_hosts", 0),
+            # Collection of loaded hosts or None (load on demand)
+            hosts=None,
         )
 
     def __init__(
@@ -1298,71 +1316,32 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         *,
         tree: FolderTree,
         name: str,
-        folder_path: str | None = None,
-        parent_folder: CREFolder | None = None,
-        title: str | None = None,
-        attributes: dict[str, Any] | None = None,
+        folder_id: str,
+        folder_path: str,
+        parent_folder: CREFolder | None,
+        title: str,
+        attributes: dict[str, Any],
+        locked: bool,
+        locked_subfolders: bool,
+        num_hosts: int,
+        hosts: dict[HostName, CREHost] | None,
     ):
         super().__init__()
         self.tree = tree
-
         self._name = name
-        self._parent = parent_folder
-
+        self._id = folder_id
         self._path_existing_folder = folder_path
+        self._title = title
+        self._attributes = attributes
+        self._locked = locked
+        self._locked_subfolders = locked_subfolders
+        self._locked_hosts = False
+        self._parent = parent_folder
+        self._num_hosts = num_hosts
+        self._hosts = hosts
+
         self._loaded_subfolders: dict[PathWithoutSlash, CREFolder] | None = None
-
-        if attributes is None:
-            attributes = {}
-
-        attributes.setdefault("meta_data", {})
-
         self._choices_for_moving_host: Choices | None = None
-
-        self._hosts: dict[HostName, CREHost] | None
-        if self._path_existing_folder is not None:
-            # Existing folder
-            self._hosts = None
-
-            wato_info = self.wato_info_storage_manager().read(
-                Path(
-                    _folder_wato_info_path(
-                        _folder_filesystem_path(tree.get_root_dir(), self._path_existing_folder)
-                    )
-                )
-            )
-
-            if "__id" in wato_info:
-                self._id = wato_info["__id"]
-            else:
-                # Cleanup this compatibility code by adding a cmk-update-config action
-                self._id = uuid.uuid4().hex
-
-            self._title = wato_info.get("title", _fallback_title(self._path_existing_folder))
-            self._attributes = dict(wato_info.get("attributes", {}))
-            # Can either be set to True or a string (which will be used as host lock message)
-            self._locked = wato_info.get("lock", False)
-            # Can either be set to True or a string (which will be used as host lock message)
-            self._locked_subfolders = wato_info.get("lock_subfolders", False)
-
-            if "num_hosts" in wato_info:
-                self._num_hosts = wato_info.get("num_hosts", 0)
-            else:
-                # We don't want to trigger any state modifying methods on loading, as this leads to
-                # very unpredictable behaviour. We dictate that `hosts()` will only ever be called
-                # intentionally.
-                self._num_hosts = len(self._hosts or {})
-
-        else:
-            # New folder
-            self._id = uuid.uuid4().hex
-            self._hosts = {}
-            self._num_hosts = 0
-            self._title = title or _fallback_title(self.path())
-            self._attributes = update_metadata(attributes)
-            self._locked = False
-            self._locked_hosts = False
-            self._locked_subfolders = False
 
     @property
     def _subfolders(self) -> dict[PathWithoutSlash, CREFolder]:

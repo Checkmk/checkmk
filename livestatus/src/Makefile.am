@@ -32,7 +32,7 @@ GOOGLETEST_INCLUDE := $(INCLUDES_DIR)/googletest
 
 AM_CPPFLAGS = \
     -Iinclude \
-    -I.. \
+    -Ithird_party/include \
     -I$(LIBLIVESTATUS_INCLUDE) \
     -isystem $(ASIO_INCLUDE) \
     -DASIO_DISABLE_CONCEPTS \
@@ -130,7 +130,7 @@ livestatus.o: $(liblivestatusneb_a_OBJECTS) $(LIBLIVESTATUS_SO)
 # Note: libstdc++fs is only available as a static library, so we are lucky.
 	$(CXXLINK) -shared $^ -lpthread $(AM_LDFLAGS) $(LIBLIVESTATUS_SO)
 # To make sure we can dlopen() our NEB later. TODO: This should be part of the tests.
-	$(CXX) $(liblivestatusneb_a_CXXFLAGS) $(CXXFLAGS) -Iinclude -I. -I.. -c test/NagiosMockup.cc -o test/NagiosMockup.o
+	$(CXX) $(liblivestatusneb_a_CXXFLAGS) $(CXXFLAGS) -Iinclude -I. -Ithird_party/include -c test/NagiosMockup.cc -o test/NagiosMockup.o
 	$(CXX) $(liblivestatusneb_a_CXXFLAGS) $(CXXFLAGS) test/NagiosMockup.o $@ -o test/NagiosMockup $(liblivestatusneb_a_LD_FLAGS) $(LIBLIVESTATUS_SO)
 	$(RM) test/NagiosMockup
 

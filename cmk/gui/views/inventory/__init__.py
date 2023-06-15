@@ -2056,25 +2056,28 @@ multisite_builtin_views["inv_host_history"] = {
 
 @overload
 def _sort_pairs(
-    attributes: Attributes, key_order: Sequence[SDKey]
+    pairs: Mapping[SDKey, SDValue], key_order: Sequence[SDKey]
 ) -> Sequence[tuple[SDKey, SDValue]]:
     ...
 
 
 @overload
 def _sort_pairs(
-    attributes: DeltaAttributes, key_order: Sequence[SDKey]
+    pairs: Mapping[SDKey, tuple[SDValue, SDValue]], key_order: Sequence[SDKey]
 ) -> Sequence[tuple[SDKey, tuple[SDValue, SDValue]]]:
     ...
 
 
-def _sort_pairs(attributes, key_order):
-    sorted_keys = list(key_order) + sorted(set(attributes.pairs) - set(key_order))
-    return [(k, attributes.pairs[k]) for k in sorted_keys if k in attributes.pairs]
+def _sort_pairs(pairs, key_order):
+    sorted_keys = list(key_order) + sorted(set(pairs) - set(key_order))
+    return [(k, pairs[k]) for k in sorted_keys if k in pairs]
 
 
-def _make_columns(table: Table | DeltaTable, key_order: Sequence[SDKey]) -> Sequence[SDKey]:
-    return list(key_order) + sorted({k for r in table.rows for k in r} - set(key_order))
+def _make_columns(
+    rows: Sequence[Mapping[SDKey, SDValue]] | Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]],
+    key_order: Sequence[SDKey],
+) -> Sequence[SDKey]:
+    return list(key_order) + sorted({k for r in rows for k in r} - set(key_order))
 
 
 def _empty_or_equal_row_value(value: SDValue | tuple[SDValue, SDValue]) -> bool:
@@ -2107,18 +2110,20 @@ def _sort_row(row, columns):
 
 
 @overload
-def _sort_rows(table: Table, columns: Sequence[SDKey]) -> Sequence[Sequence[tuple[SDKey, SDValue]]]:
+def _sort_rows(
+    rows: Sequence[Mapping[SDKey, SDValue]], columns: Sequence[SDKey]
+) -> Sequence[Sequence[tuple[SDKey, SDValue]]]:
     ...
 
 
 @overload
 def _sort_rows(
-    table: DeltaTable, columns: Sequence[SDKey]
+    rows: Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]], columns: Sequence[SDKey]
 ) -> Sequence[Sequence[tuple[SDKey, tuple[SDValue, SDValue]]]]:
     ...
 
 
-def _sort_rows(table, columns):
+def _sort_rows(rows, columns):
     # The sorting of rows is overly complicated here, because of the type SDValue = Any and
     # because the given values can be from both an inventory tree or from a delta tree.
     # Therefore, values may also be tuples of old and new value (delta tree), see _compare_dicts
@@ -2152,8 +2157,7 @@ def _sort_rows(table, columns):
     return [
         _sort_row(row, columns)
         for row in sorted(
-            table.rows,
-            key=lambda r: tuple(_sanitize_value_for_sorting(r.get(k)) for k in columns),
+            rows, key=lambda r: tuple(_sanitize_value_for_sorting(r.get(k)) for k in columns)
         )
         if not all(_empty_or_equal_row_value(v) for _k, v in row.items())
     ]
@@ -2233,7 +2237,7 @@ class ABCNodeRenderer(abc.ABC):
                 class_="invtablelink",
             )
 
-        columns = _make_columns(table, hints.table_hint.key_order)
+        columns = _make_columns(table.rows, hints.table_hint.key_order)
 
         # TODO: Use table.open_table() below.
         html.open_table(class_="data")
@@ -2258,7 +2262,7 @@ class ABCNodeRenderer(abc.ABC):
                 key, {k: v for k, v in row if not isinstance(v, tuple)}
             )
 
-        for row in _sort_rows(table, columns):
+        for row in _sort_rows(table.rows, columns):
             html.open_tr(class_="even0")
             for key, value in row:
                 column_hint = hints.get_column_hint(key)
@@ -2288,7 +2292,7 @@ class ABCNodeRenderer(abc.ABC):
         self, attributes: Attributes | DeltaAttributes, hints: DisplayHints
     ) -> None:
         html.open_table()
-        for key, value in _sort_pairs(attributes, hints.attributes_hint.key_order):
+        for key, value in _sort_pairs(attributes.pairs, hints.attributes_hint.key_order):
             attr_hint = hints.get_attribute_hint(key)
 
             html.open_tr()

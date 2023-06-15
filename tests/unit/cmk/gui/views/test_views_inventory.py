@@ -3,22 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 # No stub file
 import pytest
 
-from cmk.utils.structured_data import (
-    Attributes,
-    DeltaAttributes,
-    DeltaTable,
-    ImmutableDeltaTree,
-    ImmutableTree,
-    SDKey,
-    SDPath,
-    SDValue,
-    Table,
-)
+from cmk.utils.structured_data import ImmutableDeltaTree, ImmutableTree, SDKey, SDPath, SDValue
 
 import cmk.gui.inventory
 import cmk.gui.utils
@@ -472,20 +462,15 @@ def test_make_node_displayhint_from_hint(
 
 
 @pytest.mark.parametrize(
-    "table, expected",
+    "rows, expected",
     [
-        (Table(), []),
+        ([], []),
         (
-            Table.deserialize(
-                {
-                    "KeyColumns": ["sid"],
-                    "Rows": [
-                        {"sid": "SID 2", "flashback": "Flashback 2", "other": "Other 2"},
-                        {"sid": "SID 1", "flashback": "Flashback 1", "other": "Other 1"},
-                        {"sid": None, "flashback": None, "other": None},
-                    ],
-                }
-            ),
+            [
+                {"sid": "SID 2", "flashback": "Flashback 2", "other": "Other 2"},
+                {"sid": "SID 1", "flashback": "Flashback 1", "other": "Other 1"},
+                {"sid": None, "flashback": None, "other": None},
+            ],
             [
                 [
                     ("sid", "SID 1"),
@@ -499,33 +484,27 @@ def test_make_node_displayhint_from_hint(
                 ],
             ],
         ),
-        (DeltaTable(), []),
         (
-            DeltaTable.deserialize(
+            [
                 {
-                    "KeyColumns": ["sid"],
-                    "Rows": [
-                        {
-                            "sid": ("SID 2", None),
-                            "flashback": (None, "Flashback 2"),
-                            "other": ("Other 2", "Other 2"),
-                            "changed": ("Changed 21", "Changed 22"),
-                        },
-                        {
-                            "sid": ("SID 1", None),
-                            "flashback": (None, "Flashback 1"),
-                            "other": ("Other 1", "Other 1"),
-                            "changed": ("Changed 11", "Changed 12"),
-                        },
-                        {
-                            "sid": ("SID 3", "SID 3"),
-                            "flashback": ("Flashback 3", "Flashback 3"),
-                            "other": (None, None),
-                            "changed": (None, None),
-                        },
-                    ],
-                }
-            ),
+                    "sid": ("SID 2", None),
+                    "flashback": (None, "Flashback 2"),
+                    "other": ("Other 2", "Other 2"),
+                    "changed": ("Changed 21", "Changed 22"),
+                },
+                {
+                    "sid": ("SID 1", None),
+                    "flashback": (None, "Flashback 1"),
+                    "other": ("Other 1", "Other 1"),
+                    "changed": ("Changed 11", "Changed 12"),
+                },
+                {
+                    "sid": ("SID 3", "SID 3"),
+                    "flashback": ("Flashback 3", "Flashback 3"),
+                    "other": (None, None),
+                    "changed": (None, None),
+                },
+            ],
             [
                 [
                     ("sid", ("SID 1", None)),
@@ -544,11 +523,11 @@ def test_make_node_displayhint_from_hint(
     ],
 )
 def test_sort_table_rows_displayhint(
-    table: Table | DeltaTable,
+    rows: Sequence[Mapping[SDKey, SDValue]] | Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]],
     expected: Sequence[Sequence[tuple[SDKey, SDValue]]]
     | Sequence[Sequence[tuple[SDKey, tuple[SDValue, SDValue]]]],
 ) -> None:
-    assert _sort_rows(table, ["sid", "changed", "flashback", "other"]) == expected
+    assert _sort_rows(rows, ["sid", "changed", "flashback", "other"]) == expected
 
 
 @pytest.mark.parametrize(
@@ -687,20 +666,16 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
 
 
 @pytest.mark.parametrize(
-    "attributes, expected",
+    "pairs, expected",
     [
-        (Attributes(), []),
+        ({}, []),
         (
-            Attributes.deserialize(
-                {
-                    "Pairs": {
-                        "b": "B",
-                        "d": "D",
-                        "c": "C",
-                        "a": "A",
-                    },
-                }
-            ),
+            {
+                "b": "B",
+                "d": "D",
+                "c": "C",
+                "a": "A",
+            },
             [
                 ("a", "A"),
                 ("b", "B"),
@@ -708,18 +683,13 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
                 ("c", "C"),
             ],
         ),
-        (DeltaAttributes(), []),
         (
-            DeltaAttributes.deserialize(
-                {
-                    "Pairs": {
-                        "b": ("B", None),
-                        "d": (None, "D"),
-                        "c": ("C", "C"),
-                        "a": ("A1", "A2"),
-                    },
-                }
-            ),
+            {
+                "b": ("B", None),
+                "d": (None, "D"),
+                "c": ("C", "C"),
+                "a": ("A1", "A2"),
+            },
             [
                 ("a", ("A1", "A2")),
                 ("b", ("B", None)),
@@ -730,10 +700,10 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
     ],
 )
 def test_sort_attributes_pairs_displayhint(
-    attributes: Attributes | DeltaAttributes,
+    pairs: Mapping[SDKey, SDValue] | Mapping[SDKey, tuple[SDValue, SDValue]],
     expected: Sequence[tuple[SDKey, SDValue]] | Sequence[tuple[SDKey, tuple[SDValue, SDValue]]],
 ) -> None:
-    assert _sort_pairs(attributes, ["a", "b", "d", "c"]) == expected
+    assert _sort_pairs(pairs, ["a", "b", "d", "c"]) == expected
 
 
 @pytest.mark.parametrize(

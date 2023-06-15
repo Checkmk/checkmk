@@ -52,6 +52,13 @@ from cmk.gui.watolib.site_management import (
 
 PERMISSIONS = permissions.Perm("wato.sites")
 
+LOGIN_PERMISSIONS = permissions.AllPerm(
+    [
+        permissions.Perm("wato.users"),
+        PERMISSIONS,
+    ]
+)
+
 
 def _problem_from_user_error(e: MKUserError) -> Response:
     return problem(
@@ -170,7 +177,7 @@ def delete_site(params: Mapping[str, Any]) -> Response:
     request_schema=SiteLoginRequest,
     output_empty=True,
     additional_status_codes=[401],
-    permissions_required=PERMISSIONS,
+    permissions_required=LOGIN_PERMISSIONS,
 )
 def site_login(params: Mapping[str, Any]) -> Response:
     """Login to a remote site"""

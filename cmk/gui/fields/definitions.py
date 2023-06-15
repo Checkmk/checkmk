@@ -1439,6 +1439,7 @@ class Username(base.String):
 
     def _validate(self, value):
         super()._validate(value)
+        user.need_permission("wato.users")
 
         try:
             UserId(value)

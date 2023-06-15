@@ -14,6 +14,7 @@ from cmk.utils.user import UserId
 import cmk.gui.plugins.userdb.utils as userdb_utils
 from cmk.gui import userdb
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.fields import Username
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.endpoints.user_config.request_schemas import CreateUser, UpdateUser
@@ -23,14 +24,22 @@ from cmk.gui.plugins.openapi.endpoints.user_config.response_schemas import (
 )
 from cmk.gui.plugins.openapi.endpoints.utils import complement_customer, update_customer_info
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
-from cmk.gui.plugins.openapi.restful_objects.parameters import USERNAME
-from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
+from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.userdb import htpasswd
 from cmk.gui.watolib.custom_attributes import load_custom_attrs_from_mk_file
 from cmk.gui.watolib.users import delete_users, edit_users, verify_password_policy
 
 TIMESTAMP_RANGE = tuple[float, float]
+
+USERNAME = {
+    "username": Username(
+        required=True,
+        should_exist=True,
+        description="An unique username for the user",
+        example="cmkuser",
+    )
+}
 
 
 class ApiInterfaceAttributes(TypedDict, total=False):
@@ -72,14 +81,7 @@ def show_user(params: Mapping[str, Any]) -> Response:
     """Show a user"""
     user.need_permission("wato.users")
     username = params["username"]
-    try:
-        return serve_user(username)
-    except KeyError:
-        return problem(
-            404,
-            f"User '{username}' is not known.",
-            "The user you asked for is not known. Please check for eventual misspellings.",
-        )
+    return serve_user(username)
 
 
 @Endpoint(
@@ -151,14 +153,7 @@ def create_user(params: Mapping[str, Any]) -> Response:
 def delete_user(params: Mapping[str, Any]) -> Response:
     """Delete a user"""
     username = params["username"]
-    try:
-        delete_users([username])
-    except MKUserError:
-        return problem(
-            status=404,
-            title=f'User "{username}" is not known.',
-            detail="The user to delete does not exist. Please check for eventual misspellings.",
-        )
+    delete_users([username])
     return Response(status=204)
 
 
@@ -177,16 +172,7 @@ def edit_user(params: Mapping[str, Any]) -> Response:
     # last_pw_change & serial must be changed manually if edit happens
     username = params["username"]
     api_attrs = params["body"]
-
-    try:
-        internal_attrs = _api_to_internal_format(_load_user(username), api_attrs)
-    except KeyError:
-        return problem(
-            status=404,
-            title=f'User "{username}" is not known.',
-            detail="The user to edit does not exist. Please check for eventual misspellings.",
-        )
-
+    internal_attrs = _api_to_internal_format(_load_user(username), api_attrs)
     edit_users(
         {
             username: {

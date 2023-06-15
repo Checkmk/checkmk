@@ -11,7 +11,7 @@ from collections import OrderedDict
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import total_ordering
-from typing import Any, Literal, overload, Protocol, TypeVar
+from typing import Any, Literal, NamedTuple, overload, Protocol, TypeVar
 
 from livestatus import LivestatusResponse, OnlySites, SiteId
 
@@ -2056,21 +2056,25 @@ multisite_builtin_views["inv_host_history"] = {
 
 @overload
 def _sort_pairs(
-    pairs: Mapping[SDKey, SDValue], key_order: Sequence[SDKey]
-) -> Sequence[tuple[SDKey, SDValue]]:
+    pairs: Mapping[SDKey, SDValue],
+    retentions: Mapping[SDKey, RetentionInterval],
+    key_order: Sequence[SDKey],
+) -> Sequence[tuple[SDKey, SDValue, RetentionInterval | None]]:
     ...
 
 
 @overload
 def _sort_pairs(
-    pairs: Mapping[SDKey, tuple[SDValue, SDValue]], key_order: Sequence[SDKey]
-) -> Sequence[tuple[SDKey, tuple[SDValue, SDValue]]]:
+    pairs: Mapping[SDKey, tuple[SDValue, SDValue]],
+    retentions: Mapping[SDKey, RetentionInterval],
+    key_order: Sequence[SDKey],
+) -> Sequence[tuple[SDKey, tuple[SDValue, SDValue], None]]:
     ...
 
 
-def _sort_pairs(pairs, key_order):
+def _sort_pairs(pairs, retentions, key_order):
     sorted_keys = list(key_order) + sorted(set(pairs) - set(key_order))
-    return [(k, pairs[k]) for k in sorted_keys if k in pairs]
+    return [(k, pairs[k], retentions.get(k)) for k in sorted_keys if k in pairs]
 
 
 def _make_columns(
@@ -2091,35 +2095,53 @@ def _empty_or_equal_row_value(value: SDValue | tuple[SDValue, SDValue]) -> bool:
     return False
 
 
-@overload
-def _sort_row(
-    row: Mapping[SDKey, SDValue], columns: Sequence[SDKey]
-) -> Sequence[tuple[SDKey, SDValue]]:
-    ...
+class _RowOrRetentions(NamedTuple):
+    row: Mapping[SDKey, SDValue]
+    retentions: Mapping[SDKey, RetentionInterval]
+
+
+class _DeltaRowOrRetentions(NamedTuple):
+    row: Mapping[SDKey, tuple[SDValue, SDValue]]
+
+    @property
+    def retentions(self) -> Mapping[SDKey, RetentionInterval]:
+        return {}
 
 
 @overload
 def _sort_row(
-    row: Mapping[SDKey, tuple[SDValue, SDValue]], columns: Sequence[SDKey]
-) -> Sequence[tuple[SDKey, tuple[SDValue, SDValue]]]:
-    ...
-
-
-def _sort_row(row, columns):
-    return [(c, row[c]) for c in columns if c in row]
-
-
-@overload
-def _sort_rows(
-    rows: Sequence[Mapping[SDKey, SDValue]], columns: Sequence[SDKey]
-) -> Sequence[Sequence[tuple[SDKey, SDValue]]]:
+    row_or_retentions: _RowOrRetentions, columns: Sequence[SDKey]
+) -> Sequence[tuple[SDKey, SDValue, RetentionInterval | None]]:
     ...
 
 
 @overload
+def _sort_row(
+    row_or_retentions: _DeltaRowOrRetentions,
+    columns: Sequence[SDKey],
+) -> Sequence[tuple[SDKey, tuple[SDValue, SDValue], None]]:
+    ...
+
+
+def _sort_row(row_or_retentions, columns):
+    return [
+        (c, row_or_retentions.row[c], row_or_retentions.retentions.get(c))
+        for c in columns
+        if c in row_or_retentions.row
+    ]
+
+
+@overload
 def _sort_rows(
-    rows: Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]], columns: Sequence[SDKey]
-) -> Sequence[Sequence[tuple[SDKey, tuple[SDValue, SDValue]]]]:
+    rows: Sequence[_RowOrRetentions], columns: Sequence[SDKey]
+) -> Sequence[Sequence[tuple[SDKey, SDValue, RetentionInterval | None]]]:
+    ...
+
+
+@overload
+def _sort_rows(
+    rows: Sequence[_DeltaRowOrRetentions], columns: Sequence[SDKey]
+) -> Sequence[Sequence[tuple[SDKey, tuple[SDValue, SDValue], None]]]:
     ...
 
 
@@ -2155,11 +2177,11 @@ def _sort_rows(rows, columns):
         return value
 
     return [
-        _sort_row(row, columns)
-        for row in sorted(
-            rows, key=lambda r: tuple(_sanitize_value_for_sorting(r.get(k)) for k in columns)
+        _sort_row(row_or_retentions, columns)
+        for row_or_retentions in sorted(
+            rows, key=lambda t: tuple(_sanitize_value_for_sorting(t.row.get(k)) for k in columns)
         )
-        if not all(_empty_or_equal_row_value(v) for _k, v in row.items())
+        if not all(_empty_or_equal_row_value(v) for _k, v in row_or_retentions.row.items())
     ]
 
 
@@ -2251,31 +2273,25 @@ class ABCNodeRenderer(abc.ABC):
             )
         html.close_tr()
 
-        def _get_retention_interval(
-            table: Table | DeltaTable,
-            key: SDKey,
-            row: Sequence[tuple[SDKey, SDValue | tuple[SDValue, SDValue]]],
-        ) -> RetentionInterval | None:
-            if isinstance(table, DeltaTable):
-                return None
-            return table.get_retention_interval(
-                key, {k: v for k, v in row if not isinstance(v, tuple)}
-            )
+        rows: Sequence[_RowOrRetentions] | Sequence[_DeltaRowOrRetentions]
+        if isinstance(table, Table):
+            rows = [
+                _RowOrRetentions(row, table.retentions.get(ident, {}))
+                for ident, row in table.rows_by_ident.items()
+            ]
+        else:
+            rows = [_DeltaRowOrRetentions(row) for row in table.rows]
 
-        for row in _sort_rows(table.rows, columns):
+        for row in _sort_rows(rows, columns):
             html.open_tr(class_="even0")
-            for key, value in row:
+            for key, value, retention_interval in row:
                 column_hint = hints.get_column_hint(key)
 
                 # TODO separate tdclass from rendered value
                 tdclass, _rendered_value = column_hint.paint_function(None)
 
                 html.open_td(class_=tdclass)
-                self._show_row_value(
-                    value,
-                    column_hint,
-                    _get_retention_interval(table, key, row),
-                )
+                self._show_row_value(value, column_hint, retention_interval)
                 html.close_td()
             html.close_tr()
         html.close_table()
@@ -2292,21 +2308,17 @@ class ABCNodeRenderer(abc.ABC):
         self, attributes: Attributes | DeltaAttributes, hints: DisplayHints
     ) -> None:
         html.open_table()
-        for key, value in _sort_pairs(attributes.pairs, hints.attributes_hint.key_order):
+        for key, value, retention_interval in _sort_pairs(
+            attributes.pairs,
+            attributes.retentions if isinstance(attributes, Attributes) else {},
+            hints.attributes_hint.key_order,
+        ):
             attr_hint = hints.get_attribute_hint(key)
 
             html.open_tr()
             html.th(self._get_header(attr_hint.title, key))
             html.open_td()
-            self.show_attribute(
-                value,
-                attr_hint,
-                retention_interval=(
-                    None
-                    if isinstance(attributes, DeltaAttributes)
-                    else attributes.get_retention_interval(key)
-                ),
-            )
+            self.show_attribute(value, attr_hint, retention_interval)
             html.close_td()
             html.close_tr()
         html.close_table()

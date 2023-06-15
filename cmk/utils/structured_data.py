@@ -989,9 +989,6 @@ class Attributes:
 
         return update_result
 
-    def get_retention_interval(self, key: SDKey) -> RetentionInterval | None:
-        return self.retentions.get(key)
-
     #   ---representation-------------------------------------------------------
 
     def __repr__(self) -> str:
@@ -1169,11 +1166,6 @@ class Table:
                 update_result.add_row_reason(path, ident, "interval", interval)
 
         return update_result
-
-    def get_retention_interval(
-        self, key: SDKey, row: Mapping[SDKey, SDValue]
-    ) -> RetentionInterval | None:
-        return self.retentions.get(self._make_row_ident(row), {}).get(key)
 
     #   ---representation-------------------------------------------------------
 

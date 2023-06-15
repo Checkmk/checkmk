@@ -8,7 +8,14 @@ from collections.abc import Mapping, Sequence
 # No stub file
 import pytest
 
-from cmk.utils.structured_data import ImmutableDeltaTree, ImmutableTree, SDKey, SDPath, SDValue
+from cmk.utils.structured_data import (
+    ImmutableDeltaTree,
+    ImmutableTree,
+    RetentionInterval,
+    SDKey,
+    SDPath,
+    SDValue,
+)
 
 import cmk.gui.inventory
 import cmk.gui.utils
@@ -20,7 +27,9 @@ from cmk.gui.view import View
 from cmk.gui.views.inventory import (
     _cmp_inv_generic,
     _decorate_sort_function,
+    _DeltaRowOrRetentions,
     _register_sorter,
+    _RowOrRetentions,
     _sort_pairs,
     _sort_rows,
     AttributeDisplayHint,
@@ -467,65 +476,92 @@ def test_make_node_displayhint_from_hint(
         ([], []),
         (
             [
-                {"sid": "SID 2", "flashback": "Flashback 2", "other": "Other 2"},
-                {"sid": "SID 1", "flashback": "Flashback 1", "other": "Other 1"},
-                {"sid": None, "flashback": None, "other": None},
+                _RowOrRetentions(
+                    {"sid": "SID 2", "flashback": "Flashback 2", "other": "Other 2"},
+                    {"sid": RetentionInterval(1, 2, 3)},
+                ),
+                _RowOrRetentions(
+                    {"sid": "SID 1", "flashback": "Flashback 1", "other": "Other 1"},
+                    {},
+                ),
+                _RowOrRetentions(
+                    {"sid": None, "flashback": None, "other": None},
+                    {},
+                ),
             ],
             [
                 [
-                    ("sid", "SID 1"),
-                    ("flashback", "Flashback 1"),
-                    ("other", "Other 1"),
+                    ("sid", "SID 1", None),
+                    ("flashback", "Flashback 1", None),
+                    ("other", "Other 1", None),
                 ],
                 [
-                    ("sid", "SID 2"),
-                    ("flashback", "Flashback 2"),
-                    ("other", "Other 2"),
-                ],
-            ],
-        ),
-        (
-            [
-                {
-                    "sid": ("SID 2", None),
-                    "flashback": (None, "Flashback 2"),
-                    "other": ("Other 2", "Other 2"),
-                    "changed": ("Changed 21", "Changed 22"),
-                },
-                {
-                    "sid": ("SID 1", None),
-                    "flashback": (None, "Flashback 1"),
-                    "other": ("Other 1", "Other 1"),
-                    "changed": ("Changed 11", "Changed 12"),
-                },
-                {
-                    "sid": ("SID 3", "SID 3"),
-                    "flashback": ("Flashback 3", "Flashback 3"),
-                    "other": (None, None),
-                    "changed": (None, None),
-                },
-            ],
-            [
-                [
-                    ("sid", ("SID 1", None)),
-                    ("changed", ("Changed 11", "Changed 12")),
-                    ("flashback", (None, "Flashback 1")),
-                    ("other", ("Other 1", "Other 1")),
-                ],
-                [
-                    ("sid", ("SID 2", None)),
-                    ("changed", ("Changed 21", "Changed 22")),
-                    ("flashback", (None, "Flashback 2")),
-                    ("other", ("Other 2", "Other 2")),
+                    ("sid", "SID 2", RetentionInterval(1, 2, 3)),
+                    ("flashback", "Flashback 2", None),
+                    ("other", "Other 2", None),
                 ],
             ],
         ),
     ],
 )
 def test_sort_table_rows_displayhint(
-    rows: Sequence[Mapping[SDKey, SDValue]] | Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]],
-    expected: Sequence[Sequence[tuple[SDKey, SDValue]]]
-    | Sequence[Sequence[tuple[SDKey, tuple[SDValue, SDValue]]]],
+    rows: Sequence[_RowOrRetentions],
+    expected: Sequence[Sequence[tuple[SDKey, SDValue, RetentionInterval | None]]],
+) -> None:
+    assert _sort_rows(rows, ["sid", "changed", "flashback", "other"]) == expected
+
+
+@pytest.mark.parametrize(
+    "rows, expected",
+    [
+        ([], []),
+        (
+            [
+                _DeltaRowOrRetentions(
+                    {
+                        "sid": ("SID 2", None),
+                        "flashback": (None, "Flashback 2"),
+                        "other": ("Other 2", "Other 2"),
+                        "changed": ("Changed 21", "Changed 22"),
+                    }
+                ),
+                _DeltaRowOrRetentions(
+                    {
+                        "sid": ("SID 1", None),
+                        "flashback": (None, "Flashback 1"),
+                        "other": ("Other 1", "Other 1"),
+                        "changed": ("Changed 11", "Changed 12"),
+                    }
+                ),
+                _DeltaRowOrRetentions(
+                    {
+                        "sid": ("SID 3", "SID 3"),
+                        "flashback": ("Flashback 3", "Flashback 3"),
+                        "other": (None, None),
+                        "changed": (None, None),
+                    }
+                ),
+            ],
+            [
+                [
+                    ("sid", ("SID 1", None), None),
+                    ("changed", ("Changed 11", "Changed 12"), None),
+                    ("flashback", (None, "Flashback 1"), None),
+                    ("other", ("Other 1", "Other 1"), None),
+                ],
+                [
+                    ("sid", ("SID 2", None), None),
+                    ("changed", ("Changed 21", "Changed 22"), None),
+                    ("flashback", (None, "Flashback 2"), None),
+                    ("other", ("Other 2", "Other 2"), None),
+                ],
+            ],
+        ),
+    ],
+)
+def test_sort_deltatable_rows_displayhint(
+    rows: Sequence[_DeltaRowOrRetentions],
+    expected: Sequence[Sequence[tuple[SDKey, tuple[SDValue, SDValue], None]]],
 ) -> None:
     assert _sort_rows(rows, ["sid", "changed", "flashback", "other"]) == expected
 
@@ -666,9 +702,9 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
 
 
 @pytest.mark.parametrize(
-    "pairs, expected",
+    "pairs, retentions, expected",
     [
-        ({}, []),
+        ({}, {}, []),
         (
             {
                 "b": "B",
@@ -676,13 +712,28 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
                 "c": "C",
                 "a": "A",
             },
+            {"c": RetentionInterval(1, 2, 3)},
             [
-                ("a", "A"),
-                ("b", "B"),
-                ("d", "D"),
-                ("c", "C"),
+                ("a", "A", None),
+                ("b", "B", None),
+                ("d", "D", None),
+                ("c", "C", RetentionInterval(1, 2, 3)),
             ],
         ),
+    ],
+)
+def test_sort_attributes_pairs_displayhint(
+    pairs: Mapping[SDKey, SDValue],
+    retentions: Mapping[SDKey, RetentionInterval],
+    expected: Sequence[tuple[SDKey, SDValue, RetentionInterval | None]],
+) -> None:
+    assert _sort_pairs(pairs, retentions, ["a", "b", "d", "c"]) == expected
+
+
+@pytest.mark.parametrize(
+    "pairs, expected",
+    [
+        ({}, []),
         (
             {
                 "b": ("B", None),
@@ -691,19 +742,19 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
                 "a": ("A1", "A2"),
             },
             [
-                ("a", ("A1", "A2")),
-                ("b", ("B", None)),
-                ("d", (None, "D")),
-                ("c", ("C", "C")),
+                ("a", ("A1", "A2"), None),
+                ("b", ("B", None), None),
+                ("d", (None, "D"), None),
+                ("c", ("C", "C"), None),
             ],
         ),
     ],
 )
-def test_sort_attributes_pairs_displayhint(
-    pairs: Mapping[SDKey, SDValue] | Mapping[SDKey, tuple[SDValue, SDValue]],
-    expected: Sequence[tuple[SDKey, SDValue]] | Sequence[tuple[SDKey, tuple[SDValue, SDValue]]],
+def test_sort_delta_attributes_pairs_displayhint(
+    pairs: Mapping[SDKey, tuple[SDValue, SDValue]],
+    expected: Sequence[tuple[SDKey, tuple[SDValue, SDValue], None]],
 ) -> None:
-    assert _sort_pairs(pairs, ["a", "b", "d", "c"]) == expected
+    assert _sort_pairs(pairs, {}, ["a", "b", "d", "c"]) == expected
 
 
 @pytest.mark.parametrize(

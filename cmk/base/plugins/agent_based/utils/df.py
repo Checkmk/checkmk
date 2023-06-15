@@ -78,7 +78,7 @@ DfSection = tuple[BlocksSubsection, InodesSubsection]
 
 # Filesystems to ignore.
 # They should not be sent by agent anyway and will indeed not be sent on Linux beginning with 1.6.0
-EXCLUDED_MOUNTPOINTS = ("/dev",)
+EXCLUDED_MOUNTPOINTS = ("/dev", "")
 
 FILESYSTEM_DEFAULT_LEVELS: Mapping[str, Any] = {
     "levels": (80.0, 90.0),  # warn/crit in percent

@@ -275,11 +275,13 @@ CEE_UNUSED_PACKAGES = [
     "pyprof2calltree",
     "pyrsistent",
     "pysaml2",
+    "pysmi-lextudio",
+    "pysnmp-lextudio",
     "requests-kerberos",
     "requests-toolbelt",
     "s3transfer",
     "setuptools-scm",
-    "snmpsim",
+    "snmpsim-lextudio",
     "tenacity",
     "websocket-client",
     "wrapt",
@@ -318,6 +320,8 @@ def test_dependencies_are_declared() -> None:
             "docstring_parser",  # TODO: Bug in the test code, it *is* used!
             "saml2",
             "jwt",
+            "pysnmp",
+            "pysmi",
         }
     )
 

@@ -1401,7 +1401,7 @@ _SDEncodeAs = Callable[[SDValue], tuple[SDValue, SDValue]]
 _SDDeltaCounter = Counter[Literal["new", "changed", "removed"]]
 
 
-def _count_dict_entries(dict_: Mapping[SDKey, tuple[SDValue, SDValue]]) -> _SDDeltaCounter:
+def _compute_delta_stats(dict_: Mapping[SDKey, tuple[SDValue, SDValue]]) -> _SDDeltaCounter:
     counter: _SDDeltaCounter = Counter()
     for value0, value1 in dict_.values():
         match [value0 is None, value1 is None]:
@@ -1428,7 +1428,7 @@ class DeltaAttributes:
         return cls(pairs={key: encode_as(value) for key, value in attributes.pairs.items()})
 
     def get_stats(self) -> _SDDeltaCounter:
-        return _count_dict_entries(self.pairs)
+        return _compute_delta_stats(self.pairs)
 
     @classmethod
     def deserialize(cls, raw_attributes: SDRawDeltaAttributes) -> DeltaAttributes:
@@ -1460,7 +1460,7 @@ class DeltaTable:
     def get_stats(self) -> _SDDeltaCounter:
         counter: _SDDeltaCounter = Counter()
         for row in self.rows:
-            counter.update(_count_dict_entries(row))
+            counter.update(_compute_delta_stats(row))
         return counter
 
     @classmethod

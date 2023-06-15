@@ -7,7 +7,6 @@ import pytest
 
 import cmk.base.plugins.agent_based.local as local
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils.cache_helper import CacheInfo
 
 
@@ -52,40 +51,12 @@ def test_regex_parser(
 
 
 @pytest.mark.parametrize(
-    "string_table,exception_reason",
-    [
-        (
-            [["node_1", "cached(1556005301,300)", "foo"]],
-            (
-                "Invalid line in agent section <<<local>>>. Reason:"
-                " Invalid plugin status node_1."
-                ' First offending line: "node_1 cached(1556005301,300) foo"'
-            ),
-        ),
-        (
-            [[]],
-            (
-                "Invalid line in agent section <<<local>>>. Reason:"
-                " Received empty line. Maybe some of the local checks"
-                " returns a superfluous newline character."
-                ' First offending line: ""'
-            ),
-        ),
-    ],
-)
-def test_local_format_error(string_table: StringTable, exception_reason: str) -> None:
-    with pytest.raises(ValueError) as e:
-        list(local.discover_local(local.parse_local(string_table)))
-    assert str(e.value) == exception_reason
-
-
-@pytest.mark.parametrize(
     "string_table_row,expected_parsed_data",
     [
-        (
+        pytest.param(
             ["0", "Service_FOO", "V=1", "This", "Check", "is", "OK"],
             local.LocalSection(
-                errors=[],
+                errors={},
                 data={
                     "Service_FOO": local.LocalResult(
                         cache_info=None,
@@ -105,11 +76,12 @@ def test_local_format_error(string_table: StringTable, exception_reason: str) ->
                     )
                 },
             ),
+            id="state OK, input without quotes",
         ),
-        (
+        pytest.param(
             ['0 "Service FOO" V=1 This Check is OK'],  # 1.7: sep(0) + shlex
             local.LocalSection(
-                errors=[],
+                errors={},
                 data={
                     "Service FOO": local.LocalResult(
                         cache_info=None,
@@ -129,11 +101,12 @@ def test_local_format_error(string_table: StringTable, exception_reason: str) ->
                     )
                 },
             ),
+            id="state OK, input with quotes",
         ),
-        (
+        pytest.param(
             ["1", "Bar_Service", "-", "This", "is", "WARNING", "and", "has", "no", "metrics"],
             local.LocalSection(
-                errors=[],
+                errors={},
                 data={
                     "Bar_Service": local.LocalResult(
                         cache_info=None,
@@ -145,11 +118,12 @@ def test_local_format_error(string_table: StringTable, exception_reason: str) ->
                     )
                 },
             ),
+            id="state WARN, no metrics",
         ),
-        (
+        pytest.param(
             ["2", "NotGood", "V=120;50;100;0;1000", "A", "critical", "check"],
             local.LocalSection(
-                errors=[],
+                errors={},
                 data={
                     "NotGood": local.LocalResult(
                         cache_info=None,
@@ -169,8 +143,9 @@ def test_local_format_error(string_table: StringTable, exception_reason: str) ->
                     )
                 },
             ),
+            id="state CRIT",
         ),
-        (
+        pytest.param(
             [
                 "P",
                 "Some_other_Service",
@@ -183,7 +158,7 @@ def test_local_format_error(string_table: StringTable, exception_reason: str) ->
                 "values",
             ],
             local.LocalSection(
-                errors=[],
+                errors={},
                 data={
                     "Some_other_Service": local.LocalResult(
                         cache_info=None,
@@ -210,11 +185,12 @@ def test_local_format_error(string_table: StringTable, exception_reason: str) ->
                     )
                 },
             ),
+            id="multiple metrics",
         ),
-        (
+        pytest.param(
             ["P", "No-Text", "hirn=-8;-20"],
             local.LocalSection(
-                errors=[],
+                errors={},
                 data={
                     "No-Text": local.LocalResult(
                         cache_info=None,
@@ -234,35 +210,41 @@ def test_local_format_error(string_table: StringTable, exception_reason: str) ->
                     )
                 },
             ),
+            id="no text",
         ),
-        (
+        pytest.param(
             ["P", "D’oh!", "this_is_an_invalid_metric|isotopes=0", "I", "messed", "up!"],
             local.LocalSection(
-                errors=[
-                    local.LocalError(
+                errors={
+                    "D’oh!": local.LocalError(
                         output="P D’oh! this_is_an_invalid_metric|isotopes=0 I messed up!",
                         reason="Invalid performance data: 'this_is_an_invalid_metric'. ",
                     )
-                ],
-                data={
-                    "D’oh!": local.LocalResult(
-                        cache_info=None,
-                        item="D’oh!",
-                        state=State.UNKNOWN,
-                        apply_levels=False,
-                        text="Invalid performance data: 'this_is_an_invalid_metric'. Output is: I messed up!",
-                        perfdata=[
-                            local.Perfdata(
-                                name="isotopes",
-                                value=0,
-                                levels_upper=None,
-                                levels_lower=None,
-                                boundaries=(None, None),
-                            )
-                        ],
+                },
+                data={},
+            ),
+            id="invalid format, invalid metric data",
+        ),
+        pytest.param(
+            ["node_1", "cached(1556005301,300)", "foo"],
+            local.LocalSection(
+                errors={
+                    "cached(1556005301,300)": local.LocalError(
+                        output="node_1 cached(1556005301,300) foo",
+                        reason="Invalid plugin status node_1.",
                     )
                 },
+                data={},
             ),
+            id="invalid format, invalid status",
+        ),
+        pytest.param(
+            [],
+            local.LocalSection(
+                errors={},
+                data={},
+            ),
+            id="invalid format, empty line",
         ),
     ],
 )
@@ -290,7 +272,9 @@ def test_fix_state() -> None:
 
     assert list(
         local.check_local(
-            "NotGood", {}, local.LocalSection(errors=[], data={"NotGood": local_result})
+            "NotGood",
+            {},
+            local.LocalSection(errors={}, data={"NotGood": local_result}),
         )
     ) == [
         Result(state=State.CRIT, summary="A critical check"),
@@ -327,7 +311,7 @@ def test_cached(age: float, expected: float) -> None:
     )
 
     assert list(
-        local.check_local("", {}, local.LocalSection(errors=[], data={"": local_result}))
+        local.check_local("", {}, local.LocalSection(errors={}, data={"": local_result}))
     ) == [
         Result(state=State.OK, summary="A cached data service"),
         Result(
@@ -363,7 +347,7 @@ def test_compute_state() -> None:
     )
 
     assert list(
-        local.check_local("", {}, local.LocalSection(errors=[], data={"": local_result}))
+        local.check_local("", {}, local.LocalSection(errors={}, data={"": local_result}))
     ) == [
         Result(state=State.OK, summary="Result is computed from two values"),
         Result(state=State.OK, summary="Value 1: 10.00"),

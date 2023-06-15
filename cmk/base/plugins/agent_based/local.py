@@ -49,7 +49,7 @@ class LocalError(NamedTuple):
 
 
 class LocalSection(NamedTuple):
-    errors: List[LocalError]
+    errors: Mapping[str, LocalError]
     data: Mapping[str, LocalResult]
 
 
@@ -255,10 +255,10 @@ def parse_local_pure(string_table: Iterable[Sequence[str]], now: float) -> Local
     #       would make it invalid with no hints about what exactly was the problem.
     #       Therefore we first apply a very loosy pattern to "split" into raw components
     #       and later check those for validity.
-    errors = []
+    errors = {}
     parsed_data = {}
 
-    # turn splittet lines into monolithic strings again in order to be able to handle
+    # turn split lines into monolithic strings again in order to be able to handle
     # all input in the same manner. current `local` sections are 0-separated anyway so
     # joining is only needed for legacy input
     for line in (l[0] if len(l) == 1 else " ".join(l) for l in string_table):
@@ -268,41 +268,26 @@ def parse_local_pure(string_table: Iterable[Sequence[str]], now: float) -> Local
         raw_cached, raw_result = split_cache_match.groups()
 
         if not raw_result:
-            errors.append(
-                LocalError(
-                    output=line,
-                    reason="Received empty line. Maybe some of the local checks"
-                    " returns a superfluous newline character.",
-                )
-            )
             continue
 
         raw_components = _split_check_result(raw_result)
         if not raw_components:
-            # splitting into raw components didn't work out so the given line must
-            # be really crappy
-            errors.append(
-                LocalError(
-                    output=line,
-                    reason="Received wrong format of local check output. "
-                    "Please read the documentation regarding the correct format: "
-                    "https://docs.checkmk.com/latest/en/localchecks.html",
-                )
-            )
             continue
 
         # these are raw components - not checked for validity yet
         raw_state, raw_item, raw_perf, raw_info = raw_components
 
+        item = raw_item
+
         state, state_msg = _sanitize_state(raw_state)
         if state_msg:
-            errors.append(LocalError(output=line, reason=state_msg))
-
-        item = raw_item
+            errors[item] = LocalError(output=line, reason=state_msg)
+            continue
 
         perfdata, perf_msg = _parse_perftxt(raw_perf)
         if perf_msg:
-            errors.append(LocalError(output=line, reason=perf_msg))
+            errors[item] = LocalError(output=line, reason=perf_msg)
+            continue
 
         # convert escaped newline chars
         # (will be converted back later individually for the different cores)
@@ -405,21 +390,19 @@ def _labelify(word: str) -> str:
 
 
 def discover_local(section: LocalSection) -> DiscoveryResult:
-    if section.errors:
-        output = section.errors[0].output
-        reason = section.errors[0].reason
-        raise ValueError(
-            (
-                "Invalid line in agent section <<<local>>>. "
-                'Reason: %s First offending line: "%s"' % (reason, output)
-            )
-        )
-
     for key in section.data:
+        yield Service(item=key)
+
+    for key in section.errors:
         yield Service(item=key)
 
 
 def check_local(item: str, params: Mapping[str, Any], section: LocalSection) -> LocalCheckResult:
+    if (local_error := section.errors.get(item)) is not None:
+        raise ValueError(
+            (f'Invalid local check line: "{local_error.output}". Reason: {local_error.reason}')
+        )
+
     local_result = section.data.get(item)
     if local_result is None:
         return

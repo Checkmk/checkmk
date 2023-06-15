@@ -254,7 +254,7 @@ def main() {
                         // * Bazel opens many files which can lead to crashes
                         // * See CMK-12159
                         docker.image("${distro}:${docker_tag}").inside(
-                                "${mount_reference_repo_dir} --ulimit nofile=16384:32768" -v ${checkout_dir}:${checkout_dir}:ro --hostname ${distro}") {
+                                "${mount_reference_repo_dir} --ulimit nofile=16384:32768 -v ${checkout_dir}:${checkout_dir}:ro --hostname ${distro}") {
                             stage("${distro} initialize workspace") {
                                 cleanup_directory("${WORKSPACE}/versions");
                                 sh("rm -rf ${distro_dir}")

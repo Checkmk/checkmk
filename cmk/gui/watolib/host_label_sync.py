@@ -18,8 +18,8 @@ from livestatus import SiteConfiguration, SiteId
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore
-from cmk.utils.type_defs import HostName
 
 import cmk.gui.log as log
 from cmk.gui.background_job import (

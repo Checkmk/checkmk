@@ -10,8 +10,9 @@ from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import logger
-from cmk.utils.type_defs import HostAddress, HostName, SectionName
+from cmk.utils.type_defs import SectionName
 
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import (

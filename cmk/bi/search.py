@@ -11,8 +11,8 @@ from typing import Any
 from marshmallow import fields, post_dump, pre_load
 from marshmallow_oneofschema import OneOfSchema
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.macros import MacroMapping
-from cmk.utils.type_defs import HostName
 
 from cmk.bi.lib import (
     ABCBISearch,

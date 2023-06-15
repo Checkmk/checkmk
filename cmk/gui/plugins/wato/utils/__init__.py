@@ -18,8 +18,8 @@ from livestatus import SiteConfiguration, SiteConfigurations, SiteId
 
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.type_defs import HostName
 
 from cmk.checkengine.checking import CheckPluginName
 

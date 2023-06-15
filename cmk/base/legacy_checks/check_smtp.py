@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.base.check_api import host_name, is_ipv6_primary, passwordstore_get_cmdline
 from cmk.base.config import active_check_info

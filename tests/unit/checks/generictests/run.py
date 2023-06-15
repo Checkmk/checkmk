@@ -10,7 +10,7 @@ import freezegun
 from tests.testlib import Check, MissingCheckInfoError
 
 from cmk.utils.check_utils import maincheckify
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.plugin_contexts import current_host, current_service

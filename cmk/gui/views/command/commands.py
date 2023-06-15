@@ -9,8 +9,9 @@ from typing import Any, Literal
 
 import livestatus
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.render import SecondsRenderer
-from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.type_defs import ServiceName
 
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils

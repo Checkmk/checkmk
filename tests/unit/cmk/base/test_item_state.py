@@ -6,7 +6,7 @@
 import pytest
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.base import item_state
 from cmk.base.api.agent_based import value_store

@@ -11,8 +11,9 @@ Note:
 
 from collections.abc import Callable, Iterable, Mapping, Sequence
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import ServiceLabel
-from cmk.utils.type_defs import HostName, Item, ServiceName
+from cmk.utils.type_defs import Item, ServiceName
 
 from cmk.checkengine.check_table import ConfiguredService, LegacyCheckParameters
 from cmk.checkengine.checking import CheckPluginName

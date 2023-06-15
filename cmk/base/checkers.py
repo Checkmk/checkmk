@@ -17,16 +17,10 @@ import cmk.utils.resulttype as result
 import cmk.utils.tty as tty
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import OnError
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
 from cmk.utils.piggyback import PiggybackTimeSettings
-from cmk.utils.type_defs import (
-    AgentRawData,
-    ExitSpec,
-    HostAddress,
-    HostName,
-    SectionName,
-    ServiceState,
-)
+from cmk.utils.type_defs import AgentRawData, ExitSpec, SectionName, ServiceState
 
 from cmk.snmplib.type_defs import SNMPRawData
 

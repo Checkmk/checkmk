@@ -7,7 +7,7 @@ import pytest
 
 from tests.testlib import CMKEventConsole
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.ec.config import Config, ServiceLevel
 from cmk.ec.defaults import default_rule_pack

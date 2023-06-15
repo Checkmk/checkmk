@@ -16,6 +16,7 @@ from typing import Protocol
 import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
+from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console, section
 from cmk.utils.structured_data import (
     ImmutableTree,
@@ -26,7 +27,7 @@ from cmk.utils.structured_data import (
     RetentionInterval,
     UpdateResult,
 )
-from cmk.utils.type_defs import HostName, RuleSetName, SectionName, ValidatedString
+from cmk.utils.type_defs import RuleSetName, SectionName, ValidatedString
 
 from ._api import FetcherFunction, ParserFunction, SectionPlugin, SummarizerFunction
 from ._typedefs import HostKey, SourceType

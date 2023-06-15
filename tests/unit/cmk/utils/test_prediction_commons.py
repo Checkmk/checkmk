@@ -8,7 +8,7 @@ from collections.abc import Mapping
 import pytest
 
 import cmk.utils.prediction as prediction
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 
 @pytest.mark.parametrize(

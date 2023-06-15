@@ -24,7 +24,8 @@ import cmk.utils.resulttype as result
 import cmk.utils.version as cmk_version
 from cmk.utils.encryption import TransportProtocol
 from cmk.utils.exceptions import MKFetcherError, OnError
-from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, SectionName
+from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.type_defs import AgentRawData, SectionName
 
 from cmk.snmplib import snmp_table
 from cmk.snmplib.type_defs import (

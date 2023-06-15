@@ -11,8 +11,9 @@ from typing import Any, NamedTuple
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.store import ObjectStore
-from cmk.utils.type_defs import HostName, Item
+from cmk.utils.type_defs import Item
 
 from cmk.checkengine.check_table import LegacyCheckParameters, ServiceID
 from cmk.checkengine.checking import CheckPluginName

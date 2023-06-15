@@ -11,9 +11,9 @@ from pytest_mock import MockerFixture
 
 from tests.testlib import on_time
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.paths import default_config_dir
-from cmk.utils.type_defs import HostName
 
 from cmk.gui.watolib import automatic_host_removal
 from cmk.gui.watolib.hosts_and_folders import folder_tree

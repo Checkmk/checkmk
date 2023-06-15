@@ -12,10 +12,11 @@ from dataclasses import dataclass
 from typing import NamedTuple, Self, TypeVar
 
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
+from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel as _HostLabel
 from cmk.utils.log import console
 from cmk.utils.rulesets.ruleset_matcher import merge_cluster_labels
-from cmk.utils.type_defs import HostName, SectionName
+from cmk.utils.type_defs import SectionName
 
 from cmk.checkengine._typedefs import HostKey, Parameters, SourceType
 from cmk.checkengine.discovery._utils import QualifiedDiscovery

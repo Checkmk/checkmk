@@ -39,9 +39,10 @@ import cmk.utils.paths as _paths
 # with an underscore. These names will be skipped when loading into the
 # check context.
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
-from cmk.utils.type_defs import HostName, MetricName
+from cmk.utils.type_defs import MetricName
 from cmk.utils.type_defs import SectionName as _SectionName
 from cmk.utils.type_defs import ServiceDetails, ServiceState, state_markers
 

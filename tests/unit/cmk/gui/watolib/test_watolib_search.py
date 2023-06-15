@@ -11,8 +11,8 @@ from fakeredis import FakeRedis
 from pytest import MonkeyPatch
 from redis import Redis
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.type_defs import HostName
 
 from cmk.automations.results import GetConfigurationResult
 

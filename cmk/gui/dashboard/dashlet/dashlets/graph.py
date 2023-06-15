@@ -11,8 +11,9 @@ from typing import Any, Generic, TypeVar
 import livestatus
 
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.macros import MacroMapping
-from cmk.utils.type_defs import HostName, MetricName
+from cmk.utils.type_defs import MetricName
 
 import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKMissingDataError, MKUserError

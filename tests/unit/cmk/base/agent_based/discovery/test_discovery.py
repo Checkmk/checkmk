@@ -15,9 +15,10 @@ from pytest import MonkeyPatch
 from tests.testlib.base import Scenario
 
 from cmk.utils.exceptions import OnError
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
-from cmk.utils.type_defs import EVERYTHING, HostAddress, HostName, RuleSetName, SectionName
+from cmk.utils.type_defs import EVERYTHING, RuleSetName, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawDataSection
 

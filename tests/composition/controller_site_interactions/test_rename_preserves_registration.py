@@ -10,7 +10,7 @@ from tests.testlib.agent import controller_status_json, register_controller
 from tests.testlib.openapi_session import UnexpectedResponse
 from tests.testlib.site import Site
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 
 def _activate_changes_and_wait_for_completion_with_retries(site: Site) -> None:

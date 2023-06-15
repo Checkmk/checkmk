@@ -34,6 +34,7 @@ from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKSNMPError, MKTimeout, OnError
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
@@ -63,8 +64,6 @@ from cmk.utils.type_defs import (
     AgentRawData,
     CheckPluginNameStr,
     EVERYTHING,
-    HostAddress,
-    HostName,
     ServiceDetails,
     ServiceState,
 )

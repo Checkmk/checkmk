@@ -12,8 +12,8 @@ from pytest import MonkeyPatch
 from tests.testlib.utils import get_standard_linux_agent_output
 
 import cmk.utils.tags
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.type_defs import HostAddress, HostName
 
 from cmk.checkengine.discovery import AutocheckEntry
 

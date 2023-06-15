@@ -10,6 +10,7 @@ from pytest import MonkeyPatch
 
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import (
     _Label,
     DiscoveredHostLabelsStore,
@@ -17,7 +18,7 @@ from cmk.utils.labels import (
     HostLabelValueDict,
     ServiceLabel,
 )
-from cmk.utils.type_defs import HostName, SectionName
+from cmk.utils.type_defs import SectionName
 
 import cmk.base.config as config
 

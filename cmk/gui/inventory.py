@@ -25,6 +25,7 @@ import cmk.utils.paths
 import cmk.utils.regex
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKException, MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
     ImmutableDeltaTree,
     ImmutableTree,
@@ -35,7 +36,6 @@ from cmk.utils.structured_data import (
     SDPath,
     SDRawTree,
 )
-from cmk.utils.type_defs import HostName
 
 import cmk.gui.pages
 import cmk.gui.sites as sites

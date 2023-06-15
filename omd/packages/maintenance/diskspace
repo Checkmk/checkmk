@@ -13,9 +13,9 @@ import traceback
 from pathlib import Path
 from typing import Any, Literal
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import omd_root, var_dir
 from cmk.utils.render import fmt_bytes
-from cmk.utils.type_defs import HostName
 
 opt_verbose = "-v" in sys.argv
 opt_force = "-f" in sys.argv

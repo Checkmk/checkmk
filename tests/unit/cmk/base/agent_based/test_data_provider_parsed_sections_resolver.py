@@ -5,7 +5,8 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.utils.type_defs import HostName, SectionName
+from cmk.utils.hostaddress import HostName
+from cmk.utils.type_defs import SectionName
 
 from cmk.checkengine import HostKey, SectionPlugin, SourceType
 from cmk.checkengine.discovery._host_labels import _all_parsing_results as all_parsing_results

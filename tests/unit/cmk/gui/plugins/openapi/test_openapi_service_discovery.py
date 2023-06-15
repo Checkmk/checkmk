@@ -12,8 +12,9 @@ from pytest_mock import MockerFixture
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel
-from cmk.utils.type_defs import HostName, SectionName
+from cmk.utils.type_defs import SectionName
 
 from cmk.automations.results import (
     CheckPreviewEntry,

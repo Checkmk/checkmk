@@ -7,7 +7,8 @@
 import pytest
 
 from cmk.utils.exceptions import MKAgentError, MKGeneralException, MKTimeout
-from cmk.utils.type_defs import ExitSpec, HostName
+from cmk.utils.hostaddress import HostName
+from cmk.utils.type_defs import ExitSpec
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 

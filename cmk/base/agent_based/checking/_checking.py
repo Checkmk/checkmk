@@ -15,6 +15,7 @@ import cmk.utils.paths
 from cmk.utils.check_utils import wrap_parameters
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import MKTimeout
+from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
 from cmk.utils.regex import regex
 from cmk.utils.resulttype import Result
@@ -24,7 +25,6 @@ from cmk.utils.type_defs import (
     AgentRawData,
     EVERYTHING,
     ExitSpec,
-    HostName,
     MetricTuple,
     SectionName,
     ServiceName,

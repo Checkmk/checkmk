@@ -14,8 +14,6 @@ __all__ = [
     "EvalableFloat",
     "EVERYTHING",
     "ExitSpec",
-    "HostAddress",
-    "HostName",
     "HostOrServiceConditionRegex",
     "HostOrServiceConditions",
     "HostOrServiceConditionsNegated",
@@ -73,5 +71,4 @@ from ._misc import (
     TimeRange,
     Timestamp,
 )
-from .host import HostAddress, HostName
 from .pluginname import RuleSetName, SectionName, ValidatedString

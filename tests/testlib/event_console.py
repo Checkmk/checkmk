@@ -9,7 +9,7 @@ from typing import Any
 
 from tests.testlib.site import Site
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.ec.event import Event
 

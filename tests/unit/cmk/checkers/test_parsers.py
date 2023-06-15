@@ -17,8 +17,9 @@ from typing import Mapping
 import pytest
 
 import cmk.utils.debug
+from cmk.utils.hostaddress import HostName
 from cmk.utils.translations import TranslationOptions
-from cmk.utils.type_defs import AgentRawData, HostName, SectionName
+from cmk.utils.type_defs import AgentRawData, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
 

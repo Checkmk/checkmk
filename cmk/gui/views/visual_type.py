@@ -7,8 +7,8 @@ from collections.abc import Iterator
 
 from livestatus import SiteId
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import ImmutableDeltaTree, ImmutableTree, SDPath
-from cmk.utils.type_defs import HostName
 
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError

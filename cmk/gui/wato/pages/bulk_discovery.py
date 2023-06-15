@@ -9,7 +9,7 @@ import copy
 from collections.abc import Collection
 from typing import cast
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 import cmk.gui.forms as forms
 import cmk.gui.sites as sites

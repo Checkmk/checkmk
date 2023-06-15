@@ -8,8 +8,9 @@ from unittest.mock import call, MagicMock, patch
 import pytest
 from pytest_mock import MockerFixture
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel
-from cmk.utils.type_defs import HostName, SectionName
+from cmk.utils.type_defs import SectionName
 from cmk.utils.user import UserId
 
 from cmk.automations.results import (

@@ -11,7 +11,7 @@ from tests.testlib import CMKEventConsole
 
 from tests.unit.cmk.ec.helpers import FakeStatusSocket
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.ec.config import ConfigFromWATO
 from cmk.ec.main import Event, EventStatus, StatusServer

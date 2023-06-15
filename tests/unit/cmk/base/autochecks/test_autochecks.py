@@ -13,7 +13,7 @@ import pytest
 from tests.testlib.base import Scenario
 
 import cmk.utils.paths
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.check_table import ConfiguredService
 from cmk.checkengine.checking import CheckPluginName

@@ -16,7 +16,7 @@ from dateutil.tz import tzlocal
 
 from livestatus import SiteId
 
-from cmk.utils.type_defs import HostAddress, HostName
+from cmk.utils.hostaddress import HostAddress, HostName
 
 
 # This is far from perfect, but at least we see all possible keys.

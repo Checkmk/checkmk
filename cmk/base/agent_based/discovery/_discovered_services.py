@@ -10,8 +10,8 @@ import cmk.utils.debug
 import cmk.utils.misc
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
+from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console, section
-from cmk.utils.type_defs import HostName
 
 from cmk.checkengine import DiscoveryPlugin, HostKey, plugin_contexts, SourceType
 from cmk.checkengine.check_table import ServiceID

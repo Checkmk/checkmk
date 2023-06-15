@@ -8,7 +8,7 @@ from pathlib import Path
 
 import cmk.utils
 import cmk.utils.paths
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 RRDServiceName = str
 

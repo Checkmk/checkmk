@@ -11,7 +11,7 @@ from contextlib import contextmanager
 from typing import Any
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from ._utils import ValueStoreManager
 

@@ -6,7 +6,7 @@
 from collections.abc import Iterable, MutableMapping
 from pathlib import Path
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.snmplib.snmp_table import WalkCache
 from cmk.snmplib.type_defs import BackendOIDSpec, BackendSNMPTree, SNMPRowInfo

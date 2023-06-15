@@ -8,11 +8,11 @@ import time
 from datetime import datetime
 from typing import Any, Iterable, Mapping, Optional, Sequence, Union
 
+from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.misc import (  # pylint: disable=cmk-module-layer-violation
     is_daily_build_version,
     normalize_ip_addresses,
 )
-from cmk.utils.type_defs import HostName  # pylint: disable=cmk-module-layer-violation
 
 # The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
 from cmk.utils.version import (  # pylint: disable=cmk-module-layer-violation

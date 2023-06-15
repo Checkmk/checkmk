@@ -13,6 +13,7 @@ from pytest import MonkeyPatch
 from tests.testlib.base import Scenario
 
 import cmk.utils.paths
+from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.ruleset_matcher import (
     matches_tag_condition,
     RuleConditionsSpec,
@@ -21,7 +22,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     TagCondition,
 )
 from cmk.utils.tags import TagConfig, TagGroupID, TagID
-from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.type_defs import ServiceName
 
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry

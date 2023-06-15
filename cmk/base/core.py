@@ -17,7 +17,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config

@@ -17,8 +17,8 @@ import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.exceptions import MKIPAddressLookupError, MKTerminate, MKTimeout
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
-from cmk.utils.type_defs import HostAddress, HostName
 
 from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
 

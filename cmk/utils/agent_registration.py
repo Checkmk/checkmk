@@ -13,7 +13,7 @@ from typing import Any, NamedTuple
 from uuid import UUID
 
 import cmk.utils.paths
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 
 class HostAgentConnectionMode(enum.Enum):

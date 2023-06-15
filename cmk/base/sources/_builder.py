@@ -14,7 +14,8 @@ from typing import assert_never, Final
 
 from cmk.utils.agent_registration import HostAgentConnectionMode
 from cmk.utils.exceptions import OnError
-from cmk.utils.type_defs import HostAddress, HostName, SectionName
+from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.type_defs import SectionName
 
 from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPRawDataSection
 

@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from cmk.utils.auto_queue import AutoQueue
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 
 @pytest.fixture(name="auto_queue")

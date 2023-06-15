@@ -12,7 +12,7 @@ from tests.testlib.site import Site
 from tests.testlib.utils import current_base_branch_name
 from tests.testlib.version import CMKVersion, version_from_env
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 from cmk.utils.version import Edition
 
 from .conftest import (

@@ -16,9 +16,10 @@ from tests.testlib.base import Scenario
 from tests.unit.conftest import FixPluginLegacy
 
 from cmk.utils.exceptions import OnError
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import logger
 from cmk.utils.paths import snmp_scan_cache_dir
-from cmk.utils.type_defs import HostAddress, HostName, SectionName
+from cmk.utils.type_defs import SectionName
 
 import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_scan as snmp_scan

@@ -12,7 +12,7 @@ from tests.testlib.base import Scenario
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.plugin_contexts import current_host
 from cmk.checkengine.sectionparser import ParsedSectionName

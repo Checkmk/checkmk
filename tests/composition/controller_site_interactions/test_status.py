@@ -13,7 +13,7 @@ from tests.testlib.agent import controller_status_json, register_controller
 from tests.testlib.site import Site
 
 from cmk.utils.agent_registration import HostAgentConnectionMode
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 
 def _get_status_output_json(

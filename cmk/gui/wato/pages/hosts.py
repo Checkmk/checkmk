@@ -10,7 +10,7 @@ from typing import overload
 
 import cmk.utils.tags
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib as watolib

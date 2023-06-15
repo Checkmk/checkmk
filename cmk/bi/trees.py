@@ -14,7 +14,8 @@ from livestatus import SiteId
 
 from cmk.utils.caching import instance_method_lru_cache
 from cmk.utils.defines import host_state_name, service_state_name
-from cmk.utils.type_defs import HostName, ServiceName, ServiceState
+from cmk.utils.hostaddress import HostName
+from cmk.utils.type_defs import ServiceName, ServiceState
 
 from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
 from cmk.bi.lib import (

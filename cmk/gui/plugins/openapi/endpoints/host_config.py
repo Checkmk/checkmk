@@ -44,7 +44,7 @@ from typing import Any
 from urllib.parse import urlencode
 
 import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 import cmk.gui.watolib.bakery as bakery
 from cmk.gui import fields as gui_fields

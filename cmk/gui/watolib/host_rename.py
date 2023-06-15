@@ -14,8 +14,8 @@ from livestatus import SiteId
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.agent_registration import get_uuid_link_manager
+from cmk.utils.hostaddress import HostName
 from cmk.utils.object_diff import make_diff_text
-from cmk.utils.type_defs import HostName
 
 from cmk.gui import background_job, userdb
 from cmk.gui.background_job import (

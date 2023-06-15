@@ -8,9 +8,9 @@ import socket
 from collections.abc import Collection, Mapping, Sequence
 
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import HostName
 
 import cmk.gui.background_job as background_job
 import cmk.gui.forms as forms

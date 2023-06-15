@@ -26,6 +26,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils import store
 from cmk.utils.datastructures import deep_update
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.redis import get_redis_client, Pipeline, redis_enabled, redis_server_reachable
 from cmk.utils.regex import regex, WATO_FOLDER_PATH_NAME_CHARS, WATO_FOLDER_PATH_NAME_REGEX
@@ -47,7 +48,7 @@ from cmk.utils.store.host_storage import (
     StorageFormat,
 )
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.type_defs import ContactgroupName, HostName
+from cmk.utils.type_defs import ContactgroupName
 
 from cmk.automations.results import ABCAutomationResult
 

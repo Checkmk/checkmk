@@ -47,12 +47,13 @@ import cmk.utils.render
 import cmk.utils.version as cmk_version
 from cmk.utils import log, store
 from cmk.utils.exceptions import MKException
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.iterables import partition
 from cmk.utils.log import VERBOSE
 from cmk.utils.site import omd_site
 from cmk.utils.timeperiod import TimeperiodName
 from cmk.utils.translations import translate_hostname
-from cmk.utils.type_defs import HostAddress, HostName, Timestamp
+from cmk.utils.type_defs import Timestamp
 
 from .actions import do_event_action, do_event_actions, do_notify, event_has_opened
 from .config import Config, ConfigFromWATO, Count, ECRulePack, MatchGroups, Rule

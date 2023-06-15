@@ -11,6 +11,7 @@ from pytest import MonkeyPatch
 
 import cmk.utils
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import ImmutableTree, SDPath
 
 import cmk.gui.inventory
@@ -21,7 +22,7 @@ from cmk.gui.inventory import (
     PermittedPath,
     TreeSource,
 )
-from cmk.gui.type_defs import HostName, Row
+from cmk.gui.type_defs import Row
 
 
 @pytest.mark.parametrize(

@@ -9,7 +9,8 @@ import dataclasses
 from collections.abc import Sequence
 
 from cmk.utils.check_utils import worst_service_state
-from cmk.utils.type_defs import HostName, MetricTuple, state_markers
+from cmk.utils.hostaddress import HostName
+from cmk.utils.type_defs import MetricTuple, state_markers
 
 __all__ = ["ActiveCheckResult", "ServiceCheckResult"]
 

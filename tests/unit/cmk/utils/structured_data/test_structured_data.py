@@ -12,6 +12,7 @@ import pytest
 
 from tests.testlib import cmk_path
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
     ImmutableDeltaTree,
     ImmutableTree,
@@ -23,7 +24,6 @@ from cmk.utils.structured_data import (
     SDPath,
     TreeStore,
 )
-from cmk.utils.type_defs import HostName
 
 
 def _create_empty_mut_tree() -> MutableTree:

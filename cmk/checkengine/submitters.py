@@ -16,9 +16,10 @@ from typing import Final, IO, Literal, NamedTuple
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
 from cmk.utils.timeout import Timeout
-from cmk.utils.type_defs import HostName, ServiceDetails, ServiceName, ServiceState
+from cmk.utils.type_defs import ServiceDetails, ServiceName, ServiceState
 
 from cmk.checkengine.checkresults import ServiceCheckResult
 

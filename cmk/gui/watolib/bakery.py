@@ -6,7 +6,7 @@
 from collections.abc import Sequence
 
 import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.gui.background_job import BackgroundJobAlreadyRunning
 

@@ -9,7 +9,8 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import partial
 from typing import Any, Final, NamedTuple, Protocol
 
-from cmk.utils.type_defs import ClusterMode, HostName, state_markers
+from cmk.utils.hostaddress import HostName
+from cmk.utils.type_defs import ClusterMode, state_markers
 
 from cmk.checkengine import CheckPlugin
 from cmk.checkengine.check_table import ServiceID

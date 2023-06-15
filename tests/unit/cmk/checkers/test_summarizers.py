@@ -6,7 +6,8 @@
 import pytest
 
 from cmk.utils.exceptions import MKAgentError, MKTimeout
-from cmk.utils.type_defs import ExitSpec, HostAddress, HostName
+from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.type_defs import ExitSpec
 
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.summarize import summarize_failure, summarize_piggyback, summarize_success

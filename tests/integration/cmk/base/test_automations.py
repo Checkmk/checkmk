@@ -14,7 +14,7 @@ from tests.testlib.rest_api_client import ClientRegistry
 from tests.testlib.site import Site
 from tests.testlib.utils import get_standard_linux_agent_output
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.automations import results
 from cmk.automations.results import SetAutochecksTable

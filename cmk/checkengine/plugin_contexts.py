@@ -11,7 +11,8 @@ from collections.abc import Iterator
 # incremental cleanup is impossible.
 from contextlib import contextmanager
 
-from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.hostaddress import HostName
+from cmk.utils.type_defs import ServiceName
 
 from cmk.checkengine.checking import CheckPluginName
 

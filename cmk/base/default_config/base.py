@@ -5,6 +5,7 @@
 
 from typing import Any, Final, Literal, TypeAlias
 
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
 from cmk.utils.notify_types import Contact, ContactName
 from cmk.utils.password_store import Password
@@ -13,14 +14,7 @@ from cmk.utils.store.host_storage import FolderAttributesForBase
 from cmk.utils.tags import TagConfigSpec
 from cmk.utils.timeperiod import TimeperiodSpecs
 from cmk.utils.translations import TranslationOptionsSpec
-from cmk.utils.type_defs import (
-    CheckPluginNameStr,
-    ContactgroupName,
-    HostAddress,
-    HostName,
-    ServicegroupName,
-    ServiceName,
-)
+from cmk.utils.type_defs import CheckPluginNameStr, ContactgroupName, ServicegroupName, ServiceName
 
 from cmk.snmplib.type_defs import SNMPCredentials
 

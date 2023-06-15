@@ -19,9 +19,9 @@ from livestatus import SiteId
 import cmk.utils.regex
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.prediction import livestatus_lql, TimeSeries, TimeSeriesValue
-from cmk.utils.type_defs import HostName
 from cmk.utils.type_defs import MetricName as _MetricName
 from cmk.utils.type_defs import Seconds, ServiceName, TimeRange
 from cmk.utils.version import parse_check_mk_version

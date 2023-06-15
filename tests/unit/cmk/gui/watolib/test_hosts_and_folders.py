@@ -24,8 +24,9 @@ from pytest import MonkeyPatch
 from tests.testlib import on_time
 
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.redis import disable_redis
-from cmk.utils.type_defs import ContactgroupName, HostName
+from cmk.utils.type_defs import ContactgroupName
 from cmk.utils.user import UserId
 
 import cmk.gui.watolib.hosts_and_folders as hosts_and_folders

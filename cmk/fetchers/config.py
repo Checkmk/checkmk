@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import assert_never, Final
 
 import cmk.utils.paths
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from ._typedefs import FetcherType
 

@@ -9,7 +9,7 @@ import pytest
 
 from tests.testlib import is_enterprise_repo
 
-from cmk.utils.type_defs import HostAddress, HostName
+from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPHostConfig
 

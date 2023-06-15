@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Final, Literal, NamedTuple, TypedDict
 
 from cmk.utils import store
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 # TODO key_columns should be a tuple[SDKey, ...]
 # TODO Cleanup path in utils, base, gui, find ONE place (type defs or similar)

@@ -16,8 +16,8 @@ from cmk.utils.agent_registration import (
     get_uuid_link_manager,
     HostAgentConnectionMode,
 )
+from cmk.utils.hostaddress import HostName
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import HostName
 
 from cmk.gui.agent_registration import PermissionSectionAgentRegistration
 from cmk.gui.exceptions import MKAuthException

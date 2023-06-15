@@ -18,8 +18,8 @@ from tests.testlib.base import Scenario
 
 import cmk.utils.rulesets.tuple_rulesets as tuple_rulesets
 import cmk.utils.version as cmk_version
+from cmk.utils.hostaddress import HostName
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.type_defs import HostName
 
 import cmk.base.config as config
 from cmk.base.config import RuleSpec

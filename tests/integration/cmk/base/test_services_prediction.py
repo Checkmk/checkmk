@@ -17,7 +17,7 @@ from tests.testlib.site import Site
 
 import cmk.utils.prediction
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.base import prediction
 

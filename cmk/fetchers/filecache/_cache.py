@@ -58,8 +58,8 @@ import cmk.utils
 import cmk.utils.paths
 import cmk.utils.store as _store
 from cmk.utils.exceptions import MKFetcherError, MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import HostName
 
 from cmk.snmplib.type_defs import TRawData
 

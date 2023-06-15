@@ -14,8 +14,9 @@ from typing import final, Final, NamedTuple
 import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.debug
 import cmk.utils.misc
+from cmk.utils.hostaddress import HostName
 from cmk.utils.translations import TranslationOptions
-from cmk.utils.type_defs import AgentRawData, HostName, SectionName
+from cmk.utils.type_defs import AgentRawData, SectionName
 
 from cmk.fetchers.cache import SectionStore
 

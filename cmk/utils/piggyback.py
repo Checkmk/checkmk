@@ -17,10 +17,11 @@ import cmk.utils
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.translations
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import VERBOSE
 from cmk.utils.regex import regex
 from cmk.utils.render import Age
-from cmk.utils.type_defs import AgentRawData, HostAddress, HostName
+from cmk.utils.type_defs import AgentRawData
 
 logger = logging.getLogger("cmk.base")
 

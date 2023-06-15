@@ -18,10 +18,10 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils import password_store
 from cmk.utils.config_path import ConfigPath, LATEST_CONFIG, VersionedConfigPath
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
 from cmk.utils.rulesets.ruleset_matcher import LabelSources
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.type_defs import HostAddress, HostName
 
 from cmk.checkengine.check_table import ConfiguredService
 from cmk.checkengine.checking import CheckPluginName

@@ -10,7 +10,8 @@ from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
-from cmk.utils.type_defs import HostName, LegacyCheckParameters
+from cmk.utils.hostaddress import HostName
+from cmk.utils.type_defs import LegacyCheckParameters
 
 from cmk.checkengine import HostKey, SourceType
 from cmk.checkengine.checkresults import ServiceCheckResult

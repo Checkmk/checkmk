@@ -10,6 +10,7 @@ from typing import cast, Generic, Literal, NamedTuple, Required, TypeAlias, Type
 
 from cmk.utils.caching import instance_method_lru_cache
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import BuiltinHostLabelsStore, DiscoveredHostLabelsStore, HostLabel, Labels
 from cmk.utils.parameters import boil_down_parameters
 from cmk.utils.regex import regex
@@ -21,13 +22,7 @@ from cmk.utils.rulesets.tuple_rulesets import (
     PHYSICAL_HOSTS,
 )
 from cmk.utils.tags import TagConfig, TagGroupID, TagID
-from cmk.utils.type_defs import (
-    HostAddress,
-    HostName,
-    HostOrServiceConditions,
-    HostOrServiceConditionsSimple,
-    ServiceName,
-)
+from cmk.utils.type_defs import HostOrServiceConditions, HostOrServiceConditionsSimple, ServiceName
 
 RulesetName = str  # Could move to a less cluttered module as it is often used on its own.
 TRuleValue = TypeVar("TRuleValue")

@@ -10,6 +10,7 @@ import pytest
 
 import cmk.utils.resulttype as result
 from cmk.utils.cpu_tracking import Snapshot
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.structured_data import (
     ImmutableTree,
     MutableTree,
@@ -17,7 +18,7 @@ from cmk.utils.structured_data import (
     StructuredDataNode,
     UpdateResult,
 )
-from cmk.utils.type_defs import AgentRawData, EVERYTHING, HostAddress, HostName, SectionName
+from cmk.utils.type_defs import AgentRawData, EVERYTHING, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawData
 

@@ -16,7 +16,8 @@ from cmk.utils.exceptions import (
     MKSNMPError,
     MKTimeout,
 )
-from cmk.utils.type_defs import CheckPluginNameStr, ExitSpec, HostName, ServiceName, ServiceState
+from cmk.utils.hostaddress import HostName
+from cmk.utils.type_defs import CheckPluginNameStr, ExitSpec, ServiceName, ServiceState
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 

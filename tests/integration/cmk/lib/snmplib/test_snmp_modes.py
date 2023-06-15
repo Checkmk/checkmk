@@ -20,7 +20,7 @@ import pytest
 
 from tests.testlib.site import Site
 
-from cmk.utils.type_defs import HostAddress
+from cmk.utils.hostaddress import HostAddress
 
 from cmk.snmplib import snmp_modes
 from cmk.snmplib.type_defs import OID, SNMPBackendEnum, SNMPHostConfig

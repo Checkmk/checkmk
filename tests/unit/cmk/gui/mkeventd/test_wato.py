@@ -11,7 +11,7 @@ from pytest import MonkeyPatch
 
 from livestatus import SiteId
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.ec.export import ECRulePack, Event, MkpRulePackProxy, Rule
 

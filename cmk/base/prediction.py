@@ -16,6 +16,7 @@ import livestatus
 import cmk.utils.debug
 import cmk.utils.defines as defines
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
 from cmk.utils.prediction import (
     ConsolidationFunctionName,
@@ -34,7 +35,7 @@ from cmk.utils.prediction import (
     Timestamp,
     TimeWindow,
 )
-from cmk.utils.type_defs import HostName, MetricName, ServiceName
+from cmk.utils.type_defs import MetricName, ServiceName
 
 logger = logging.getLogger("cmk.prediction")
 

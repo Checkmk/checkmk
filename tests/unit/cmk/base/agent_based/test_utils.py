@@ -8,7 +8,8 @@ from typing import Any
 
 import pytest
 
-from cmk.utils.type_defs import HostName, SectionName
+from cmk.utils.hostaddress import HostName
+from cmk.utils.type_defs import SectionName
 
 from cmk.checkengine import HostKey, SectionPlugin, SourceType
 from cmk.checkengine.checkresults import ActiveCheckResult

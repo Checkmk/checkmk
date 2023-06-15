@@ -15,7 +15,8 @@ from typing import Any, cast, Literal
 import livestatus
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostName, Timestamp
+from cmk.utils.hostaddress import HostName
+from cmk.utils.type_defs import Timestamp
 
 import cmk.gui.pdf as pdf
 from cmk.gui.config import active_config

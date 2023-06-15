@@ -9,7 +9,7 @@ import operator
 from collections.abc import Collection, Iterator
 from typing import Any
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 import cmk.gui.forms as forms
 import cmk.gui.view_utils

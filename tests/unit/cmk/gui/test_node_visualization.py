@@ -19,8 +19,8 @@ Good luck!
 import pytest
 from pytest_mock import MockerFixture
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.type_defs import HostName
 from cmk.utils.user import UserId
 
 from cmk.gui.node_visualization import (

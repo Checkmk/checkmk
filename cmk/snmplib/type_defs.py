@@ -10,9 +10,9 @@ import logging
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from typing import Any, cast, Literal, NamedTuple, TypeVar, Union
 
+from cmk.utils.hostaddress import HostAddress as _HostAddress
+from cmk.utils.hostaddress import HostName as _HostName
 from cmk.utils.type_defs import AgentRawData as _AgentRawData
-from cmk.utils.type_defs import HostAddress as _HostAddress
-from cmk.utils.type_defs import HostName as _HostName
 from cmk.utils.type_defs import SectionName as _SectionName
 from cmk.utils.type_defs import SNMPDetectBaseType as _SNMPDetectBaseType
 

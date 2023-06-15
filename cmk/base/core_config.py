@@ -20,12 +20,13 @@ import cmk.utils.password_store
 import cmk.utils.paths
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
 from cmk.utils.licensing.handler import LicenseState, LicensingHandler
 from cmk.utils.licensing.helper import get_licensed_state_file_path, write_licensed_state
 from cmk.utils.paths import core_helper_config_dir
 from cmk.utils.store import load_object_from_file, lock_checkmk_configuration, save_object_to_file
-from cmk.utils.type_defs import HostAddress, HostName, Item, ServiceName
+from cmk.utils.type_defs import Item, ServiceName
 
 from cmk.checkengine.check_table import ConfiguredService, ServiceID
 from cmk.checkengine.checking import CheckPluginName

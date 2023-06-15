@@ -10,7 +10,7 @@ from typing import Any, Mapping
 
 import cmk.utils.debug
 import cmk.utils.paths
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 from cmk.utils.version import is_raw_edition
 
 from cmk.snmplib import snmp_cache, snmp_modes

@@ -18,7 +18,7 @@ from tests.testlib import wait_until
 from tests.testlib.site import Site
 from tests.testlib.utils import execute
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 logger = logging.getLogger(__name__)
 

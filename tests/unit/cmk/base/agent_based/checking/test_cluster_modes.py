@@ -9,7 +9,7 @@ from typing import Any, Literal
 
 import pytest
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine import CheckPlugin
 from cmk.checkengine.check_table import ServiceID

@@ -12,7 +12,7 @@ from typing import Literal
 
 from livestatus import LivestatusRow, lqencode, MKLivestatusNotFoundError, SiteId
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 import cmk.gui.pages
 from cmk.gui.breadcrumb import Breadcrumb

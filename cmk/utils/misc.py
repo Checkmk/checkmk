@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostAddress
+from cmk.utils.hostaddress import HostAddress
 
 
 # TODO: Change to better name like: quote_pnp_string()

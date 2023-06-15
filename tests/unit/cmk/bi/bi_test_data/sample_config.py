@@ -5,7 +5,7 @@
 
 from livestatus import LivestatusResponse, LivestatusRow
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 bi_structure_states = {
     HostName("heute"): (

@@ -10,7 +10,8 @@ import copy
 from collections.abc import Mapping, MutableMapping, Sequence
 from typing import Final, Generic
 
-from cmk.utils.type_defs import HostName, SectionName
+from cmk.utils.hostaddress import HostName
+from cmk.utils.type_defs import SectionName
 
 from cmk.fetchers.cache import TRawDataSection
 

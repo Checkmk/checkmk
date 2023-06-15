@@ -13,8 +13,8 @@ from pytest_mock import MockerFixture
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils.agent_registration import UUIDLinkManager
+from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import data_source_push_agent_dir, received_outputs_dir
-from cmk.utils.type_defs import HostName
 
 from cmk.gui.exceptions import MKAuthException
 

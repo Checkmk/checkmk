@@ -9,7 +9,7 @@ import os
 import cmk.utils.cleanup
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.type_defs import HostAddress, HostName
+from cmk.utils.hostaddress import HostAddress, HostName
 
 from .type_defs import OID, SNMPDecodedString
 

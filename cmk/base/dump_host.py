@@ -8,9 +8,9 @@ import time
 
 import cmk.utils.render
 import cmk.utils.tty as tty
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.paths import tmp_dir
 from cmk.utils.timeperiod import timeperiod_active
-from cmk.utils.type_defs import HostAddress, HostName
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 

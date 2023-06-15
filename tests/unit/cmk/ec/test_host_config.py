@@ -8,8 +8,8 @@ from typing import Any
 
 import pytest
 
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.type_defs import HostAddress, HostName
 
 from cmk.ec.host_config import HostConfig, HostInfo
 

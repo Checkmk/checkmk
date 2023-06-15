@@ -24,19 +24,13 @@ import cmk.utils.tty as tty
 from cmk.utils.check_utils import section_name_of
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import Labels
 from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.timeperiod import TimeperiodName
-from cmk.utils.type_defs import (
-    CheckPluginNameStr,
-    ContactgroupName,
-    HostAddress,
-    HostName,
-    ServicegroupName,
-    ServiceName,
-)
+from cmk.utils.type_defs import CheckPluginNameStr, ContactgroupName, ServicegroupName, ServiceName
 
 from cmk.checkengine import plugin_contexts
 from cmk.checkengine.check_table import FilterMode

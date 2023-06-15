@@ -83,7 +83,7 @@ try:
 except ImportError:
     keepalive = None  # type: ignore[assignment]
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 logger = logging.getLogger("cmk.base.notify")
 

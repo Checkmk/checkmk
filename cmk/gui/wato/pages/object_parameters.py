@@ -8,7 +8,8 @@ modified via rules."""
 
 from collections.abc import Collection, Iterator
 
-from cmk.utils.type_defs import HostName, Item
+from cmk.utils.hostaddress import HostName
+from cmk.utils.type_defs import Item
 
 from cmk.automations.results import AnalyseServiceResult
 

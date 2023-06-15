@@ -9,7 +9,7 @@ from pytest import MonkeyPatch
 from tests.testlib.base import Scenario
 
 from cmk.utils.crash_reporting import CrashReportStore
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.crash_reporting import CheckCrashReport
 

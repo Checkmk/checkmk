@@ -11,7 +11,7 @@ from livestatus import SiteId
 
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.automations.results import Gateway
 

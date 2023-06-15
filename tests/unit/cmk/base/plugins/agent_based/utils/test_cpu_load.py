@@ -5,7 +5,7 @@
 
 from unittest.mock import Mock
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.check_table import CheckPluginName
 from cmk.checkengine.plugin_contexts import current_host, current_service

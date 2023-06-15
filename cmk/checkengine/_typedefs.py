@@ -10,7 +10,8 @@ import pprint
 from collections.abc import Iterator
 from typing import NamedTuple
 
-from cmk.utils.type_defs import HostAddress, HostName, ParametersTypeAlias
+from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.type_defs import ParametersTypeAlias
 
 from cmk.fetchers import FetcherType
 

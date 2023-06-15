@@ -10,7 +10,8 @@ from typing import Protocol
 
 import cmk.utils.resulttype as result
 from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, RuleSetName
+from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.type_defs import AgentRawData, RuleSetName
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
 

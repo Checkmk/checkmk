@@ -17,7 +17,7 @@ import cmk.utils.plugin_registry
 import cmk.utils.store as store
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.gui.hooks import request_memoize
 from cmk.gui.i18n import _

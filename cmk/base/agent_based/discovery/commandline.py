@@ -13,9 +13,10 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, OnError
+from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
-from cmk.utils.type_defs import HostName, SectionName
+from cmk.utils.type_defs import SectionName
 
 from cmk.checkengine import DiscoveryPlugin, FetcherFunction, HostKey, ParserFunction, SectionPlugin
 from cmk.checkengine.checking import CheckPluginName

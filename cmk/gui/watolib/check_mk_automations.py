@@ -10,8 +10,9 @@ from livestatus import SiteId
 
 from cmk.utils.diagnostics import DiagnosticsCLParameters
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel
-from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.type_defs import ServiceName
 
 from cmk.automations import results
 from cmk.automations.results import SetAutochecksTable

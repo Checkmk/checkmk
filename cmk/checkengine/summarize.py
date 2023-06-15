@@ -15,8 +15,9 @@ from cmk.utils.exceptions import (
     MKSNMPError,
     MKTimeout,
 )
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackTimeSettings
-from cmk.utils.type_defs import ExitSpec, HostAddress, HostName
+from cmk.utils.type_defs import ExitSpec
 
 from cmk.fetchers import FetcherType
 

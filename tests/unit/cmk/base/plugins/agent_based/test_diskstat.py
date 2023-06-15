@@ -7,7 +7,7 @@
 import pytest
 from pytest_mock import MockerFixture
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine import plugin_contexts
 from cmk.checkengine.checking import CheckPluginName

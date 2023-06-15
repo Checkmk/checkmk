@@ -13,7 +13,7 @@ import livestatus
 import cmk.utils.paths
 import cmk.utils.prediction as prediction
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 import cmk.gui.pages
 import cmk.gui.sites as sites

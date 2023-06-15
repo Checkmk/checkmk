@@ -7,7 +7,8 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.utils.type_defs import HostName, SectionName
+from cmk.utils.hostaddress import HostName
+from cmk.utils.type_defs import SectionName
 
 from cmk.checkengine.host_sections import HostSections
 from cmk.checkengine.type_defs import AgentRawDataSection

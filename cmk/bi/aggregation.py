@@ -7,8 +7,10 @@ from __future__ import annotations
 
 from typing import Any
 
+from cmk.utils.hostaddress import HostName
+
 # TODO: fix duplicate type def. the original type def is in gui-managed (module layer violation)
-from cmk.utils.type_defs import HostName, ServiceName
+from cmk.utils.type_defs import ServiceName
 
 from cmk.bi.lib import (
     ABCBICompiledNode,

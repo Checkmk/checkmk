@@ -7,8 +7,8 @@ from collections.abc import Callable, Sequence
 from typing import Any, Literal
 
 import cmk.utils.tags
+from cmk.utils.hostaddress import HostName
 from cmk.utils.tags import TagGroupID
-from cmk.utils.type_defs import HostName
 from cmk.utils.user import UserId
 
 import cmk.gui.hooks as hooks

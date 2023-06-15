@@ -10,9 +10,9 @@ import pytest
 
 from livestatus import SiteId
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.prediction import TimeSeries, TimeSeriesValues
-from cmk.utils.type_defs import HostName
 
 import cmk.gui.plugins.metrics.rrd_fetch as rf
 from cmk.gui.config import active_config

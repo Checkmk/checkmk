@@ -5,8 +5,8 @@
 
 from typing import Any, Literal, Mapping, NewType, Sequence, TypedDict, Union
 
+from cmk.utils.hostaddress import HostName
 from cmk.utils.timeperiod import TimeperiodName
-from cmk.utils.type_defs.host import HostName
 
 __all__ = [
     # Types

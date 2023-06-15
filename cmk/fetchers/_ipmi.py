@@ -22,8 +22,9 @@ if TYPE_CHECKING:
 from six import ensure_binary
 
 from cmk.utils.exceptions import MKFetcherError
+from cmk.utils.hostaddress import HostAddress
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import AgentRawData, HostAddress
+from cmk.utils.type_defs import AgentRawData
 
 from cmk.fetchers import Fetcher, Mode
 

@@ -8,8 +8,8 @@ from pytest import MonkeyPatch
 from tests.testlib.base import Scenario
 
 import cmk.utils.version as cmk_version
+from cmk.utils.hostaddress import HostName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
-from cmk.utils.type_defs import HostName
 
 from cmk.automations.results import AnalyseHostResult, GetServicesLabelsResult
 

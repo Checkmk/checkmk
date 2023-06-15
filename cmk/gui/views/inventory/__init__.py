@@ -17,6 +17,7 @@ from livestatus import LivestatusResponse, OnlySites, SiteId
 
 import cmk.utils.defines as defines
 import cmk.utils.render
+from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
     Attributes,
     DeltaAttributes,
@@ -33,7 +34,6 @@ from cmk.utils.structured_data import (
     StructuredDataNode,
     Table,
 )
-from cmk.utils.type_defs import HostName
 from cmk.utils.user import UserId
 
 import cmk.gui.inventory as inventory

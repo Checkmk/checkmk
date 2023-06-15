@@ -10,7 +10,7 @@ from tests.testlib.agent import wait_until_host_has_services, wait_until_host_re
 from tests.testlib.site import Site
 from tests.testlib.utils import execute
 
-from cmk.utils.type_defs import HostName
+from cmk.utils.hostaddress import HostName
 
 from ..utils import LOGGER
 

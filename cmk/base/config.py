@@ -68,6 +68,7 @@ from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.check_utils import maincheckify, section_name_of, unwrap_parameters
 from cmk.utils.config_path import ConfigPath
 from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate, OnError
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTTPProxyConfig
 from cmk.utils.labels import Labels
 from cmk.utils.log import console
@@ -91,8 +92,6 @@ from cmk.utils.type_defs import (
     ClusterMode,
     ContactgroupName,
     ExitSpec,
-    HostAddress,
-    HostName,
     Item,
     RuleSetName,
     Seconds,

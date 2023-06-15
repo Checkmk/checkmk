@@ -36,7 +36,7 @@ from typing import (
 
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
-from cmk.utils.type_defs import HostName  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
 
 from cmk.checkengine.checking import CheckPluginName  # pylint: disable=cmk-module-layer-violation
 from cmk.checkengine.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation

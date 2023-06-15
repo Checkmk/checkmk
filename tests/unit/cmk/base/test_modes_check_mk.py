@@ -8,7 +8,7 @@ import pytest
 from tests.testlib.base import Scenario
 
 import cmk.utils.resulttype as result
-from cmk.utils.type_defs.host import HostName
+from cmk.utils.hostaddress import HostName
 
 from cmk.fetchers import PiggybackFetcher
 

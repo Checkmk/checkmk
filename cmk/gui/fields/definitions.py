@@ -27,6 +27,7 @@ from cmk.utils.livestatus_helpers.expressions import NothingExpression, QueryExp
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hostgroups, Hosts, Servicegroups
 from cmk.utils.livestatus_helpers.types import Column, Table
+from cmk.utils.regex import regex, REGEX_ID
 from cmk.utils.type_defs import UserId
 
 from cmk.gui import sites
@@ -1155,6 +1156,7 @@ class PasswordIdent(base.String):
     """A field representing a password identifier"""
 
     default_error_messages = {
+        "pattern": "{name!r} does not match pattern. An identifier must only consist of letters, digits, dash and underscore and it must start with a letter or underscore.",
         "should_exist": "Identifier missing: {name!r}",
         "should_not_exist": "Identifier {name!r} already exists.",
         "contains_colon": "Identifier {name!r} contains a colon.",
@@ -1179,8 +1181,9 @@ class PasswordIdent(base.String):
     def _validate(self, value: str):  # type:ignore[no-untyped-def]
         super()._validate(value)
 
-        if ":" in value:
-            raise self.make_error("contains_colon", name=value)
+        pattern: re.Pattern[str] = regex(REGEX_ID, re.ASCII)
+        if pattern.match(value) is None:
+            raise self.make_error("pattern", name=value)
 
         exists = password_exists(value)
         if self._should_exist and not exists:

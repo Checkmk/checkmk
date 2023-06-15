@@ -308,3 +308,22 @@ def test_openapi_password_without_owner_regression(clients: ClientRegistry) -> N
 
     resp = clients.Password.get("so_secret")
     assert resp.json["extensions"].get("owned_by") is not None
+
+
+@managedtest
+def test_password_identifier_regex(clients: ClientRegistry) -> None:
+    resp = clients.Password.create(
+        ident="abcℕ",
+        title="so_secret",
+        owner="admin",
+        password="no_one_can_know",
+        shared=["all"],
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(400)
+    assert resp.json["fields"] == {
+        "ident": [
+            "'abcℕ' does not match pattern. An identifier must only consist of letters, digits, dash and underscore and it must start with a letter or underscore."
+        ]
+    }

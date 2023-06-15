@@ -492,11 +492,15 @@ def test_make_node_displayhint_from_hint(
             [
                 [
                     ("sid", "SID 1", None),
+                    ("changed", None, None),
+                    ("foo", None, None),
                     ("flashback", "Flashback 1", None),
                     ("other", "Other 1", None),
                 ],
                 [
                     ("sid", "SID 2", RetentionInterval(1, 2, 3)),
+                    ("changed", None, None),
+                    ("foo", None, None),
                     ("flashback", "Flashback 2", None),
                     ("other", "Other 2", None),
                 ],
@@ -508,7 +512,7 @@ def test_sort_table_rows_displayhint(
     rows: Sequence[_RowOrRetentions],
     expected: Sequence[Sequence[tuple[SDKey, SDValue, RetentionInterval | None]]],
 ) -> None:
-    assert _sort_rows(rows, ["sid", "changed", "flashback", "other"]) == expected
+    assert _sort_rows(rows, ["sid", "changed", "foo", "flashback", "other"]) == expected
 
 
 @pytest.mark.parametrize(
@@ -546,12 +550,14 @@ def test_sort_table_rows_displayhint(
                 [
                     ("sid", ("SID 1", None), None),
                     ("changed", ("Changed 11", "Changed 12"), None),
+                    ("foo", None, None),
                     ("flashback", (None, "Flashback 1"), None),
                     ("other", ("Other 1", "Other 1"), None),
                 ],
                 [
                     ("sid", ("SID 2", None), None),
                     ("changed", ("Changed 21", "Changed 22"), None),
+                    ("foo", None, None),
                     ("flashback", (None, "Flashback 2"), None),
                     ("other", ("Other 2", "Other 2"), None),
                 ],
@@ -563,7 +569,7 @@ def test_sort_deltatable_rows_displayhint(
     rows: Sequence[_DeltaRowOrRetentions],
     expected: Sequence[Sequence[tuple[SDKey, tuple[SDValue, SDValue], None]]],
 ) -> None:
-    assert _sort_rows(rows, ["sid", "changed", "flashback", "other"]) == expected
+    assert _sort_rows(rows, ["sid", "changed", "foo", "flashback", "other"]) == expected
 
 
 @pytest.mark.parametrize(

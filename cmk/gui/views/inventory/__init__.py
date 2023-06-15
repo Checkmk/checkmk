@@ -2125,11 +2125,7 @@ def _sort_row(
 
 
 def _sort_row(row_or_retentions, columns):
-    return [
-        (c, row_or_retentions.row[c], row_or_retentions.retentions.get(c))
-        for c in columns
-        if c in row_or_retentions.row
-    ]
+    return [(c, row_or_retentions.row.get(c), row_or_retentions.retentions.get(c)) for c in columns]
 
 
 @overload

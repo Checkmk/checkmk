@@ -12,6 +12,8 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
+from cmk.utils.render import fmt_bytes, percent
+
 
 class SMBShareDiskUsageProto(Protocol):
     def __call__(
@@ -286,3 +288,55 @@ class _SMBShareDiskUsage:
                 return ErrorResult(2, f"Invalid share name \\\\{hostname}\\{share}")
 
         return ErrorResult(state, summary)
+
+
+def _check_smb_share(
+    smb_share: ErrorResult | SMBShare,
+    warn: int,
+    crit: int,
+) -> tuple[int, str]:
+    if isinstance(smb_share, ErrorResult):
+        return (smb_share.state, smb_share.summary)
+    return _check_disk_usage_threshold(smb_share, warn, crit)
+
+
+def _check_disk_usage_threshold(smb_share: SMBShare, warn: int, crit: int) -> tuple[int, str]:
+    free_percentage = (smb_share.available_bytes / smb_share.total_bytes) * 100
+    used_percentage = 100 - free_percentage
+
+    if used_percentage >= crit:
+        return (
+            2,
+            f"CRITICAL: Only {fmt_bytes(smb_share.available_bytes, precision=1)} ({percent(free_percentage)}) free on {smb_share.mountpoint}",
+        )
+    if used_percentage >= warn:
+        return (
+            1,
+            f"WARNING: Only {fmt_bytes(smb_share.available_bytes, precision=1)} ({percent(free_percentage)}) free on {smb_share.mountpoint}",
+        )
+    return (
+        0,
+        f"Disk ok - {fmt_bytes(smb_share.available_bytes, precision=1)} ({percent(free_percentage)}) free on {smb_share.mountpoint}",
+    )
+
+
+def _check_disk_usage_main(
+    argv: Sequence[str],
+    smb_share_disk_usage: SMBShareDiskUsageProto,
+) -> tuple[int, str]:
+    args = parse_arguments(argv=argv)
+
+    return _check_smb_share(
+        smb_share=smb_share_disk_usage(
+            share=args.share,
+            hostname=args.hostname,
+            user=args.user,
+            password=args.password,
+            workgroup=args.workgroup if args.workgroup else None,
+            port=args.port if args.port else None,
+            ip_address=args.address if args.address else None,
+            configfile=args.configfile if args.configfile else None,
+        ),
+        warn=args.levels[0],
+        crit=args.levels[1],
+    )

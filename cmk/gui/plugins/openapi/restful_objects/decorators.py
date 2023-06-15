@@ -37,6 +37,7 @@ from cmk.utils.type_defs import HTTPMethod
 from cmk.gui import fields, hooks
 from cmk.gui import http as cmk_http
 from cmk.gui.config import active_config
+from cmk.gui.exceptions import MKAuthException
 from cmk.gui.http import request
 from cmk.gui.permissions import permission_registry
 from cmk.gui.plugins.openapi.permission_tracking import (
@@ -86,6 +87,7 @@ from cmk.gui.plugins.openapi.utils import (
     RestAPIRequestContentTypeException,
     RestAPIRequestDataValidationException,
     RestAPIResponseException,
+    RestAPIUnauthorizedException,
     RestAPIWatoDisabledException,
 )
 from cmk.gui.watolib.activate_changes import (
@@ -762,6 +764,12 @@ class Endpoint:
                 fields=FIELDS(
                     exc.messages if isinstance(exc.messages, dict) else {"exc": exc.messages},
                 ),
+            )
+
+        except MKAuthException as exc:
+            raise RestAPIUnauthorizedException(
+                title=http.client.responses[401],
+                detail=exc.args[0],
             )
 
     def _validate_response(  # pylint: disable=too-many-branches

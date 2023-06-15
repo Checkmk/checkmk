@@ -1377,7 +1377,9 @@ def test_user_with_invalid_id(clients: ClientRegistry, username: str) -> None:
 
 def test_openapi_edit_non_existing_user_regression(clients: ClientRegistry) -> None:
     clients.User.edit(
-        "i_do_not_exists", fullname="I hopefully won't crash the site!", expect_ok=False
+        "i_do_not_exists",
+        fullname="I hopefully won't crash the site!",
+        expect_ok=False,
     ).assert_status_code(404)
 
 
@@ -1434,3 +1436,81 @@ def test_openapi_auth_type_of_saml_user(clients: ClientRegistry) -> None:
     """
     resp = clients.User.get("saml.user@example.com")
     assert resp.json["extensions"]["auth_option"] == {"auth_type": ConnectorType.SAML2}
+
+
+def test_user_without_permission_cant_interrogate_if_user_exists(clients: ClientRegistry) -> None:
+    # Create a guest user using default client credentials
+    clients.User.create(
+        username="user1",
+        fullname="user1",
+        authorized_sites=["NO_SITE"],
+        roles=["guest"],
+        auth_option={"auth_type": "password", "password": "supersecretish1"},
+    )
+
+    # Set client credentials to new guest user
+    clients.User.set_credentials("user1", "supersecretish1")
+
+    # Attempt to create a new user using a guest user
+    resp1 = clients.User.create(
+        username="user2",
+        fullname="user2",
+        authorized_sites=["NO_SITE"],
+        roles=["guest"],
+        auth_option={"auth_type": "password", "password": "supersecretish2"},
+        expect_ok=False,
+    )
+    resp1.assert_status_code(401)
+    assert (
+        resp1.json["detail"]
+        == "We are sorry, but you lack the permission for this operation. If you do not like this then please ask your administrator to provide you with the following permission: '<b>User management</b>'."
+    )
+
+    # Attempt to edit a user using a guest user
+    resp2 = clients.User.edit(
+        username="user1",
+        fullname="user1",
+        authorized_sites=["all"],
+        expect_ok=False,
+    )
+    resp2.assert_status_code(401)
+    assert (
+        resp2.json["detail"]
+        == "We are sorry, but you lack the permission for this operation. If you do not like this then please ask your administrator to provide you with the following permission: '<b>User management</b>'."
+    )
+
+    # Attempt to delete a user using a guest user
+    resp3 = clients.User.delete(
+        username="user1",
+        expect_ok=False,
+    )
+    resp3.assert_status_code(401)
+    assert (
+        resp3.json["detail"]
+        == "We are sorry, but you lack the permission for this operation. If you do not like this then please ask your administrator to provide you with the following permission: '<b>User management</b>'."
+    )
+
+
+def test_delete_and_edit_user_when_client_user_has_permission_to_do_so(
+    clients: ClientRegistry,
+) -> None:
+    clients.User.create(
+        username="user1",
+        fullname="user1",
+        authorized_sites=["NO_SITE"],
+        roles=["guest"],
+        auth_option={"auth_type": "password", "password": "supersecretish1"},
+    )
+    clients.User.edit(
+        username="user1",
+        fullname="user1",
+        authorized_sites=["all"],
+    )
+    clients.User.delete(username="user1")
+
+
+def test_get_unknown_user(clients: ClientRegistry) -> None:
+    clients.User.get(
+        username="userA",
+        expect_ok=False,
+    ).assert_status_code(404)

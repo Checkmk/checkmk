@@ -50,6 +50,7 @@ from cmk.gui.fields.definitions import (
     query_field,
     SiteField,
     Timestamp,
+    Username,
     X509ReqPEMFieldUUID,
 )
 
@@ -86,6 +87,7 @@ __all__ = [
     "Timeout",
     "Timestamp",
     "UnixPath",
+    "Username",
     "RelativeUrl",
     "X509ReqPEMFieldUUID",
 ]

@@ -51,13 +51,10 @@ def _only_set_keys(body: dict[str, Any | None]) -> dict[str, Any]:
 
 def set_if_match_header(
     if_match: IF_MATCH_HEADER_OPTIONS,
-    resp: Response,
 ) -> Mapping[str, str] | None:
     match if_match:
         case "star":
             return {"If-Match": "*"}
-        case "valid_etag":
-            return {"If-Match": resp.headers["ETag"]}
         case "invalid_etag":
             return {"If-Match": "asdf"}
         case _:
@@ -418,7 +415,7 @@ class ActivateChangesClient(RestApiClient):
                 "sites": sites,
                 "force_foreign_changes": force_foreign_changes,
             },
-            headers=set_if_match_header(etag, self.list_pending_changes()),
+            headers=self._set_etag_header(etag),
             expect_ok=expect_ok,
         )
 
@@ -440,7 +437,7 @@ class ActivateChangesClient(RestApiClient):
                 "force_foreign_changes": force_foreign_changes,
             },
             expect_ok=False,
-            headers=set_if_match_header(etag, self.list_pending_changes()),
+            headers=self._set_etag_header(etag),
             follow_redirects=False,
         )
 
@@ -478,6 +475,11 @@ class ActivateChangesClient(RestApiClient):
             url=f"/domain-types/{self.domain}/collections/pending_changes",
             expect_ok=expect_ok,
         )
+
+    def _set_etag_header(self, etag: IF_MATCH_HEADER_OPTIONS) -> Mapping[str, str] | None:
+        if etag == "valid_etag":
+            return {"If-Match": self.list_pending_changes().headers["ETag"]}
+        return set_if_match_header(etag)
 
 
 @register_client
@@ -538,6 +540,7 @@ class UserClient(RestApiClient):
         contactgroups: list[str] | None = None,
         authorized_sites: Sequence[str] | None = None,
         expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
     ) -> Response:
         body: dict[str, str | Sequence[str] | None] = {
             "fullname": fullname,
@@ -547,21 +550,33 @@ class UserClient(RestApiClient):
         if authorized_sites is not None:
             body["authorized_sites"] = authorized_sites
 
-        # if there is no object, there's probably no etag.
-        # But we want the 404 from the request below!
-        etag = self.get(username, expect_ok=expect_ok).headers.get("E-Tag")
-        if etag is not None:
-            headers = {"If-Match": etag}
-        else:
-            headers = {}
-
         return self.request(
             "put",
             url=f"/objects/{self.domain}/{username}",
             body={k: v for k, v in body.items() if v is not None},
-            headers=headers,
+            headers=self._set_etag_header(username, etag),
             expect_ok=expect_ok,
         )
+
+    def delete(
+        self,
+        username: str,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{username}",
+            expect_ok=expect_ok,
+            headers=self._set_etag_header(username, etag),
+        )
+
+    def _set_etag_header(
+        self, username: str, etag: IF_MATCH_HEADER_OPTIONS
+    ) -> Mapping[str, str] | None:
+        if etag == "valid_etag":
+            return {"If-Match": self.get(username).headers["ETag"]}
+        return set_if_match_header(etag)
 
 
 @register_client

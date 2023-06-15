@@ -89,7 +89,7 @@ class GeneralRestAPIException(HTTPException):
 class RestAPIRequestGeneralException(GeneralRestAPIException):
     def __init__(
         self,
-        status: Literal[400, 403, 404, 406, 415],
+        status: Literal[400, 401, 403, 404, 406, 415],
         title: str,
         detail: str,
         fields: FIELDS | None = None,
@@ -197,7 +197,21 @@ class RestAPIWatoDisabledException(RestAPIRequestGeneralException):
 
 
 # ==================================================== PERMISSION Exceptions
-class RestAPIPermissionException(GeneralRestAPIException):  # Crash report?
+class RestAPIUnauthorizedException(RestAPIRequestGeneralException):
+    status: Literal[401] = 401
+
+    def __init__(
+        self,
+        title: str,
+        detail: str,
+        *,
+        fields: FIELDS | None = None,
+        ext: EXT | None = None,
+    ) -> None:
+        super().__init__(RestAPIUnauthorizedException.status, title, detail, fields, ext)
+
+
+class RestAPIPermissionException(GeneralRestAPIException):
     status: Literal[500] = 500
 
     def __init__(

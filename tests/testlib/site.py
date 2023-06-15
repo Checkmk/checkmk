@@ -673,6 +673,7 @@ class Site:
             cmk_path() + "/notifications",
             cmk_path() + "/.werks",
             cmk_path() + "/agent-receiver",
+            cmk_path() + "/active_checks",
         ]
 
         if self.version.is_raw_edition():

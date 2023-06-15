@@ -17,14 +17,7 @@ from tests.testlib.base import Scenario
 from cmk.utils.exceptions import OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
-from cmk.utils.type_defs import (
-    DiscoveryResult,
-    EVERYTHING,
-    HostAddress,
-    HostName,
-    RuleSetName,
-    SectionName,
-)
+from cmk.utils.type_defs import EVERYTHING, HostAddress, HostName, RuleSetName, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawDataSection
 
@@ -42,6 +35,7 @@ from cmk.checkengine.discovery import (
     AutochecksStore,
     discover_host_labels,
     DiscoveryMode,
+    DiscoveryResult,
     QualifiedDiscovery,
 )
 from cmk.checkengine.host_sections import HostSections

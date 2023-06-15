@@ -8,7 +8,6 @@ from dataclasses import dataclass
 
 from cmk.utils import version as cmk_version
 from cmk.utils.labels import HostLabel
-from cmk.utils.type_defs import DiscoveryResult as SingleHostDiscoveryResult
 from cmk.utils.type_defs import HostName, SectionName
 
 from cmk.automations.results import (
@@ -18,6 +17,8 @@ from cmk.automations.results import (
     ServiceDiscoveryPreviewResult,
     ServiceDiscoveryResult,
 )
+
+from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
 
 from cmk.base.automations import automations
 

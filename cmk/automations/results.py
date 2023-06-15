@@ -17,9 +17,9 @@ from cmk.utils.labels import HostLabel, HostLabelValueDict, Labels
 from cmk.utils.notify_types import NotifyAnalysisInfo, NotifyBulks
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.rulesets.ruleset_matcher import LabelSources, RulesetName
-from cmk.utils.type_defs import AgentRawData, CheckPluginNameStr
-from cmk.utils.type_defs import DiscoveryResult as SingleHostDiscoveryResult
 from cmk.utils.type_defs import (
+    AgentRawData,
+    CheckPluginNameStr,
     HostAddress,
     HostName,
     Item,
@@ -31,6 +31,7 @@ from cmk.utils.type_defs import (
     ServiceState,
 )
 
+from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
 from cmk.checkengine.parameters import TimespecificParameters
 
 DiscoveredHostLabelsDict = dict[str, HostLabelValueDict]

@@ -9,9 +9,10 @@ from typing import NamedTuple, NewType, TypedDict
 from livestatus import SiteId
 
 import cmk.utils.store as store
-from cmk.utils.type_defs import DiscoveryResult
 
 from cmk.automations.results import ServiceDiscoveryResult as AutomationDiscoveryResult
+
+from cmk.checkengine.discovery import DiscoveryResult
 
 from cmk.gui.background_job import (
     BackgroundJob,

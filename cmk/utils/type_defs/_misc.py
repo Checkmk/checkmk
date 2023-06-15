@@ -7,7 +7,6 @@ from __future__ import annotations
 
 import sys
 from collections.abc import Container, Mapping
-from dataclasses import dataclass
 from typing import Any, Literal, NewType, TypeAlias, TypedDict
 
 __all__ = [
@@ -33,7 +32,6 @@ __all__ = [
     "ClusterMode",
     "LegacyCheckParameters",
     "ParametersTypeAlias",
-    "DiscoveryResult",
     "SNMPDetectBaseType",
     "EvalableFloat",
     "EVERYTHING",
@@ -95,30 +93,6 @@ ClusterMode = Literal["native", "failover", "worst", "best"]
 
 LegacyCheckParameters = None | Mapping[Any, Any] | tuple[Any, ...] | list[Any] | str | int | bool
 ParametersTypeAlias = Mapping[str, Any]  # Modification may result in an incompatible API change.
-
-
-@dataclass
-class DiscoveryResult:
-    # TODO(ml): Move to `autodiscovery` when the dependency to
-    #           `cmk.base.config` has been inverted.
-    self_new: int = 0
-    self_removed: int = 0
-    self_kept: int = 0
-    self_total: int = 0
-    self_new_host_labels: int = 0
-    self_total_host_labels: int = 0
-    clustered_new: int = 0
-    clustered_old: int = 0
-    clustered_vanished: int = 0
-    clustered_ignored: int = 0
-
-    # None  -> No error occured
-    # ""    -> Not monitored (disabled host)
-    # "..." -> An error message about the failed discovery
-    error_text: str | None = None
-
-    # An optional text to describe the services changed by the operation
-    diff_text: str | None = None
 
 
 # This def is used to keep the API-exposed object in sync with our

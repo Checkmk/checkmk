@@ -16,14 +16,7 @@ from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
-from cmk.utils.type_defs import (
-    DiscoveryResult,
-    EVERYTHING,
-    HostName,
-    Item,
-    SectionName,
-    ServiceName,
-)
+from cmk.utils.type_defs import EVERYTHING, HostName, Item, SectionName, ServiceName
 
 from cmk.checkengine import (
     DiscoveryPlugin,
@@ -40,6 +33,7 @@ from cmk.checkengine.discovery import (
     AutocheckServiceWithNodes,
     discover_host_labels,
     DiscoveryMode,
+    DiscoveryResult,
     HostLabelPlugin,
     QualifiedDiscovery,
 )

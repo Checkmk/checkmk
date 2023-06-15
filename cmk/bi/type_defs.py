@@ -39,3 +39,5 @@ class AggrConfigDict(TypedDict, total=True):
 
 
 frozen_aggregations_dir = Path(cmk.utils.paths.var_dir) / "frozen_aggregations"
+
+HostState = int

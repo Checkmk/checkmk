@@ -46,14 +46,7 @@ from cmk.utils.structured_data import (
 )
 from cmk.utils.tags import TagID
 from cmk.utils.timeout import Timeout
-from cmk.utils.type_defs import (
-    EVERYTHING,
-    HostAddress,
-    HostgroupName,
-    HostName,
-    SectionName,
-    ServiceState,
-)
+from cmk.utils.type_defs import EVERYTHING, HostAddress, HostName, SectionName, ServiceState
 
 import cmk.snmplib.snmp_modes as snmp_modes
 
@@ -271,7 +264,7 @@ def mode_list_hosts(options: dict, args: list[str]) -> None:
 
 
 # TODO: Does not care about internal group "check_mk"
-def _list_all_hosts(hostgroups: list[HostgroupName], options: dict) -> list[HostName]:
+def _list_all_hosts(hostgroups: list[str], options: dict) -> list[HostName]:
     config_cache = config.get_config_cache()
 
     hostnames = set()

@@ -14,7 +14,7 @@ from livestatus import SiteId
 
 from cmk.utils.caching import instance_method_lru_cache
 from cmk.utils.defines import host_state_name, service_state_name
-from cmk.utils.type_defs import HostName, HostState, ServiceName, ServiceState
+from cmk.utils.type_defs import HostName, ServiceName, ServiceState
 
 from cmk.bi.aggregation_functions import BIAggregationFunctionSchema
 from cmk.bi.lib import (
@@ -46,6 +46,7 @@ from cmk.bi.node_vis import (
 )
 from cmk.bi.rule_interface import BIRuleProperties
 from cmk.bi.schema import Schema
+from cmk.bi.type_defs import HostState
 
 #   .--Leaf----------------------------------------------------------------.
 #   |                         _                __                          |

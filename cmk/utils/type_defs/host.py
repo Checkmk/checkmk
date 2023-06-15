@@ -5,17 +5,9 @@
 
 from typing import NewType, TypeAlias
 
-__all__ = [
-    "HostName",
-    "HostAddress",
-    "HostgroupName",
-    "HostState",
-]
+__all__ = ["HostAddress", "HostName"]
 
 HostAddress = NewType("HostAddress", str)
 # Let us be honest here, we do not actually make a difference
 # between HostAddress and HostName in our code.
 HostName: TypeAlias = HostAddress
-
-HostgroupName = str
-HostState = int

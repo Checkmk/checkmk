@@ -33,7 +33,6 @@ from cmk.utils.type_defs import (
     CheckPluginNameStr,
     ContactgroupName,
     HostAddress,
-    HostgroupName,
     HostName,
     ServicegroupName,
     ServiceName,
@@ -131,7 +130,7 @@ class NagiosConfig:
         self._outfile = outfile
         self.hostnames = hostnames
 
-        self.hostgroups_to_define: set[HostgroupName] = set()
+        self.hostgroups_to_define: set[str] = set()
         self.servicegroups_to_define: set[ServicegroupName] = set()
         self.contactgroups_to_define: set[ContactgroupName] = set()
         self.checknames_to_define: set[CheckPluginName] = set()

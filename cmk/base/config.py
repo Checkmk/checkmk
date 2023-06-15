@@ -92,7 +92,6 @@ from cmk.utils.type_defs import (
     ContactgroupName,
     ExitSpec,
     HostAddress,
-    HostgroupName,
     HostName,
     Item,
     RuleSetName,
@@ -2213,7 +2212,7 @@ class ConfigCache:
         self.__discovery_check_parameters: dict[HostName, DiscoveryCheckParameters] = {}
         self.__active_checks: dict[HostName, list[tuple[str, list[Any]]]] = {}
         self.__special_agents: dict[HostName, Sequence[tuple[str, Mapping[str, object]]]] = {}
-        self.__hostgroups: dict[HostName, Sequence[HostgroupName]] = {}
+        self.__hostgroups: dict[HostName, Sequence[str]] = {}
         self.__contactgroups: dict[HostName, Sequence[ContactgroupName]] = {}
         self.__explicit_check_command: dict[HostName, HostCheckCommand] = {}
         self.__snmp_fetch_interval: dict[tuple[HostName, SectionName], int | None] = {}
@@ -3051,13 +3050,13 @@ class ConfigCache:
 
         return self.__special_agents.setdefault(host_name, special_agents_impl())
 
-    def hostgroups(self, host_name: HostName) -> Sequence[HostgroupName]:
+    def hostgroups(self, host_name: HostName) -> Sequence[str]:
         """Returns the list of hostgroups of this host
 
         If the host has no hostgroups it will be added to the default hostgroup
         (Nagios requires each host to be member of at least on group)."""
 
-        def hostgroups_impl() -> Sequence[HostgroupName]:
+        def hostgroups_impl() -> Sequence[str]:
             groups = self.host_extra_conf(host_name, host_groups)
             if not groups:
                 return [default_host_group]

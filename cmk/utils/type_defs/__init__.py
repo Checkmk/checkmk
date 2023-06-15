@@ -15,13 +15,11 @@ __all__ = [
     "EVERYTHING",
     "ExitSpec",
     "HostAddress",
-    "HostgroupName",
     "HostName",
     "HostOrServiceConditionRegex",
     "HostOrServiceConditions",
     "HostOrServiceConditionsNegated",
     "HostOrServiceConditionsSimple",
-    "HostState",
     "InfluxDBConnectionSpec",
     "Item",
     "JsonSerializable",
@@ -75,5 +73,5 @@ from ._misc import (
     TimeRange,
     Timestamp,
 )
-from .host import HostAddress, HostgroupName, HostName, HostState
+from .host import HostAddress, HostName
 from .pluginname import RuleSetName, SectionName, ValidatedString

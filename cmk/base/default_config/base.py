@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Final, Literal
+from typing import Any, Final, Literal, TypeAlias
 
 from cmk.utils.labels import Labels
 from cmk.utils.notify_types import Contact, ContactName
@@ -17,7 +17,6 @@ from cmk.utils.type_defs import (
     CheckPluginNameStr,
     ContactgroupName,
     HostAddress,
-    HostgroupName,
     HostName,
     ServicegroupName,
     ServiceName,
@@ -34,6 +33,7 @@ from cmk.fetchers import IPMICredentials
 # TODO: Remove the duplication with cmk.base.config
 _ALL_HOSTS: Final = ["@all"]  # physical and cluster hosts
 _NEGATE: Final = "@negate"  # negation in boolean lists
+_HostgroupName: TypeAlias = str
 
 monitoring_core: Literal["nagios", "cmc"] = "nagios"
 mkeventd_enabled = False  # Set by OMD hook
@@ -218,7 +218,7 @@ service_notification_periods: list[RuleSpec[object]] = []
 host_notification_periods: list[RuleSpec[object]] = []
 host_contactgroups: list[RuleSpec[object]] = []
 parents: list[RuleSpec[object]] = []
-define_hostgroups: dict[HostgroupName, str] = {}
+define_hostgroups: dict[_HostgroupName, str] = {}
 define_servicegroups: dict[ServicegroupName, str] = {}
 define_contactgroups: dict[ContactgroupName, str] = {}
 contactgroup_members: dict[ContactgroupName, list[ContactName]] = {}

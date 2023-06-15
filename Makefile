@@ -32,7 +32,7 @@ LIVESTATUS_SOURCES := Makefile.am standalone/config_files.m4 \
                       api/c++/{Makefile,*.{h,cc}} \
                       api/perl/* \
                       api/python/{README,*.py} \
-                      {nagios,nagios4}/{README,*.h} \
+                      src/third_party/include/{nagios,nagios4}/{README,*.h} \
                       src/Makefile.am \
                       src/include/neb/*.h \
                       src/src/*.cc \

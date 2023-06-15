@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Container, Mapping
+from collections.abc import Mapping
 from typing import Any, NewType, TypedDict
 
 __all__ = [
@@ -27,7 +27,6 @@ __all__ = [
     "MetricName",
     "LegacyCheckParameters",
     "ParametersTypeAlias",
-    "EVERYTHING",
     "state_markers",
 ]
 
@@ -68,13 +67,6 @@ MetricName = str
 LegacyCheckParameters = None | Mapping[Any, Any] | tuple[Any, ...] | list[Any] | str | int | bool
 ParametersTypeAlias = Mapping[str, Any]  # Modification may result in an incompatible API change.
 
-
-class _Everything(Container[Any]):
-    def __contains__(self, other: object) -> bool:
-        return True
-
-
-EVERYTHING = _Everything()
 
 # Symbolic representations of states in plugin output
 # TODO(ml): Should probably be of type enum::int -> str

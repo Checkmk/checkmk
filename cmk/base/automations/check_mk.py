@@ -33,6 +33,7 @@ from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.caching import config_cache as _config_cache
 from cmk.utils.diagnostics import deserialize_cl_parameters, DiagnosticsCLParameters
 from cmk.utils.encoding import ensure_str_with_fallback
+from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKSNMPError, MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
@@ -60,13 +61,7 @@ from cmk.utils.paths import (
 )
 from cmk.utils.timeout import Timeout
 from cmk.utils.timeperiod import timeperiod_active
-from cmk.utils.type_defs import (
-    AgentRawData,
-    CheckPluginNameStr,
-    EVERYTHING,
-    ServiceDetails,
-    ServiceState,
-)
+from cmk.utils.type_defs import AgentRawData, CheckPluginNameStr, ServiceDetails, ServiceState
 
 from cmk.automations.results import (
     ActiveCheckResult,

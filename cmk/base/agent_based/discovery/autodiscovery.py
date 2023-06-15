@@ -13,11 +13,12 @@ import cmk.utils.debug
 import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.auto_queue import AutoQueue
+from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
-from cmk.utils.type_defs import EVERYTHING, Item, SectionName, ServiceName
+from cmk.utils.type_defs import Item, SectionName, ServiceName
 
 from cmk.checkengine import (
     DiscoveryPlugin,

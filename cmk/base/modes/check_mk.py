@@ -34,6 +34,7 @@ from cmk.utils.diagnostics import (
     OPT_OMD_CONFIG,
     OPT_PERFORMANCE_GRAPHS,
 )
+from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console, section
@@ -47,7 +48,7 @@ from cmk.utils.structured_data import (
 )
 from cmk.utils.tags import TagID
 from cmk.utils.timeout import Timeout
-from cmk.utils.type_defs import EVERYTHING, SectionName, ServiceState
+from cmk.utils.type_defs import SectionName, ServiceState
 
 import cmk.snmplib.snmp_modes as snmp_modes
 

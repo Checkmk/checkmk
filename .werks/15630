@@ -1,0 +1,16 @@
+Title: <tt>hr_fs</tt>: Don't Discover Services without Mount Information
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1686830019
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The check <tt>hr_fs</tt> would sometimes crash with the error
+C+:
+raise TypeError(\"'item' must be a non empty string or ommited entirely, got %r\" % (item,))
+C-:
+during discovery. This behaviour differs from the 2.1.0, since it previously discovered an empty
+mountpoint. With this Werk, this incorrect empty is no longer discovered.

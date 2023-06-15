@@ -320,3 +320,22 @@ def test_password_min_length_update(password_client: PasswordClient) -> None:
 
     resp.assert_status_code(400)
     assert resp.json["fields"] == {"password": ["string '' is too short. The minimum length is 1."]}
+
+
+@managedtest
+def test_password_identifier_regex(password_client: PasswordClient) -> None:
+    resp = password_client.create(
+        ident="abcℕ",
+        title="so_secret",
+        owner="admin",
+        password="no_one_can_know",
+        shared=["all"],
+        expect_ok=False,
+    )
+
+    resp.assert_status_code(400)
+    assert resp.json["fields"] == {
+        "ident": [
+            "'abcℕ' does not match pattern. An identifier must only consist of letters, digits, dash and underscore and it must start with a letter or underscore."
+        ]
+    }

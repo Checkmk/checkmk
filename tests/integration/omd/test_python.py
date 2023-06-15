@@ -126,6 +126,7 @@ def _get_import_names_from_pipfile() -> Iterable[ImportName]:
         "ordered-set": "ordered_set",
         "openapi-spec-validator": "openapi_spec_validator",
         "pysaml2": "saml2",
+        "pysmi_lextudio": "pysmi-lextudio",
     }
 
     for dist_name in _load_pipfile_data()["default"].keys():

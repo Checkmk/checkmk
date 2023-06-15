@@ -80,7 +80,7 @@ def snmpsim_fixture(site: Site, snmp_data_dir: Path) -> Iterator[None]:
                 p = _snmpsimd_process(process_def)
                 if p:
                     p.terminate()
-                process_def.process.wait()
+                process_def.process.wait(36)
             logger.debug("Stopped snmpsimd.")
 
 
@@ -104,7 +104,7 @@ def _define_process(index, auth, tmp_path, snmp_data_dir, with_sudo):
         process=subprocess.Popen(
             sudo
             + [
-                f"{repo_path()}/.venv/bin/snmpsimd.py",
+                f"{repo_path()}/.venv/bin/snmpsim-command-responder",
                 "--log-level=error",
                 "--cache-dir",
                 # Each snmpsim instance needs an own cache directory otherwise
@@ -193,13 +193,16 @@ def _is_listening(process_def: ProcessDef) -> bool:
 
     process = _snmpsimd_process(process_def)
     if process is None:
-        return False
-    pid = process.pid
+        snmpsimd_died = True
 
     if not snmpsimd_died:
+        pid = process.pid  # type: ignore[union-attr]
         # Wait for snmpsimd to initialize the UDP sockets
         num_sockets = 0
         try:
+            print("============================================= %d" % pid)
+            os.system("ls -al /proc/%d/fd" % pid)
+            os.system("ps -ef | grep %d" % pid)
             for e in os.listdir("/proc/%d/fd" % pid):
                 try:
                     if os.readlink("/proc/%d/fd/%s" % (pid, e)).startswith("socket:"):
@@ -211,13 +214,18 @@ def _is_listening(process_def: ProcessDef) -> bool:
             if exitcode is None:
                 raise
             snmpsimd_died = True
+
     if snmpsimd_died:
-        assert p.stdout is not None and exitcode is not None
+        assert p.stdout is not None
         output = p.stdout.read()
-        raise Exception("snmpsimd died. Exit code: %d; output: %s" % (exitcode, output))
+        raise Exception("snmpsimd died. Exit code: %s; output: %s" % (exitcode, output))
+
+    logger.debug("snmpsimd is running")
 
     if num_sockets < 2:
         return False
+
+    logger.debug("snmpsimd has opened it's sockets")
 
     # We got the expected number of listen sockets. One for IPv4 and one for IPv6. Now test
     # whether or not snmpsimd is already answering.
@@ -229,7 +237,10 @@ def _is_listening(process_def: ProcessDef) -> bool:
         ObjectType(ObjectIdentity("SNMPv2-MIB", "sysDescr", 0)),
     )
     _error_indication, _error_status, _error_index, var_binds = next(g)
+    logger.debug("SNMP get response")
+    logger.debug(repr((_error_indication, _error_status, _error_index, var_binds)))
     assert len(var_binds) == 1
+    logger.debug(var_binds[0][1].prettyPrint())
     assert (
         var_binds[0][1].prettyPrint()
         == "Linux zeus 4.8.6.5-smp #2 SMP Sun Nov 13 14:58:11 CDT 2016 i686"
@@ -238,14 +249,18 @@ def _is_listening(process_def: ProcessDef) -> bool:
 
 
 def _snmpsimd_process(process_def: ProcessDef) -> psutil.Process | None:
-    if process_def.with_sudo:
-        proc = psutil.Process(process_def.process.pid)
-        for child in (children := proc.children(recursive=True)):
-            if child.name() == "snmpsimd.py":
-                return child
-        logger.debug("Did not find snmpsimd in children %r", children)
+    try:
+        if process_def.with_sudo:
+            proc = psutil.Process(process_def.process.pid)
+            for child in (children := proc.children(recursive=True)):
+                if child.name() == "snmpsim-command":
+                    return child
+            logger.debug("Did not find snmpsim-command in children %r", children)
+            return None
+        return psutil.Process(process_def.process.pid)
+    except psutil.NoSuchProcess:
+        logger.exception("No such process", exc_info=True)
         return None
-    return psutil.Process(process_def.process.pid)
 
 
 @pytest.fixture(name="backend_type", params=SNMPBackendEnum)

@@ -61,15 +61,19 @@ def get_snmp_table(
 def get_single_oid(
     site: Site, oid: OID, backend_type: SNMPBackendEnum, config: SNMPHostConfig
 ) -> tuple[SNMPDecodedString | None, MutableMapping[OID, SNMPDecodedString | None]]:
-    return ast.literal_eval(
-        site.python_helper("helper_get_single_oid.py").check_output(
-            input=repr(
-                (
-                    oid,
-                    backend_type.serialize(),
-                    config.serialize(),
-                    str(Path(__file__).parent.resolve() / "snmp_data" / "cmk-walk"),
+    with site.copy_file(
+        str(Path(__file__).parent.resolve() / "snmp_data" / "cmk-walk" / "localhost"),
+        site.path("cmk-walk/localhost"),
+    ):
+        return ast.literal_eval(
+            site.python_helper("helper_get_single_oid.py").check_output(
+                input=repr(
+                    (
+                        oid,
+                        backend_type.serialize(),
+                        config.serialize(),
+                        site.path("cmk-walk"),
+                    )
                 )
             )
         )
-    )

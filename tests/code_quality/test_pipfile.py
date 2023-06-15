@@ -339,7 +339,7 @@ CEE_UNUSED_PACKAGES = [
     "requests-toolbelt",
     "s3transfer",
     "setuptools-scm",
-    "snmpsim",
+    "snmpsim-lextudio",
     "tenacity",
     "websocket-client",
     "wrapt",

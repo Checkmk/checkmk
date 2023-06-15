@@ -1172,7 +1172,7 @@ CLANG_ADD_INC_PATHS    = YES
 # This tag requires that the tag CLANG_ASSISTED_PARSING is set to YES.
 
 CLANG_OPTIONS          = -std=c++17 \
-                         -Ithird_party/include \
+                         -I.. \
                          -I ../../packages/livestatus/include \
                          -isystem includes/asio \
                          -DASIO_DISABLE_CONCEPTS \

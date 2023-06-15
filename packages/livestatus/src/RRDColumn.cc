@@ -319,9 +319,11 @@ std::vector<RRDDataMaker::value_type> RRDDataMaker::make(
                   &step, &col_cnt, &legend_v, &rrd_data) != 0) {
         std::string rrd_error{rrd_get_error()};
         if (mk::starts_with(rrd_error, "don't understand ")) {
-            // The error msg "don't understand '<metric_name>'" is logged on info lvl only as
-            // preventing such queries for non-given metrics is not feasible atm
-            Informational(logger) << "Error parsing RPN expression: " << rrd_error;
+            // The error msg "don't understand '<metric_name>'" is logged on
+            // info lvl only as preventing such queries for non-given metrics is
+            // not feasible atm
+            Informational(logger)
+                << "Error parsing RPN expression: " << rrd_error;
         } else {
             Warning(logger) << "Error accessing RRD: " << rrd_error;
         }

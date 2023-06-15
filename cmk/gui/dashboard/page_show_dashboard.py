@@ -16,7 +16,7 @@ from typing import Literal
 
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKException
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.crash_handler as crash_handler
 import cmk.gui.pages

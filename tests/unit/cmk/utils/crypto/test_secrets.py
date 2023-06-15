@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 import cmk.utils.crypto.secrets as secrets
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 
 def test_create_secret_and_hmac(tmp_path: Path) -> None:

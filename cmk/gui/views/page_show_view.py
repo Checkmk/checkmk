@@ -16,7 +16,7 @@ import livestatus
 
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.log as log
 import cmk.gui.visuals as visuals

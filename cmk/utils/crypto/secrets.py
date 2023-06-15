@@ -11,7 +11,7 @@ from hashlib import sha256
 from pathlib import Path
 
 import cmk.utils.paths as paths
-from cmk.utils.type_defs.user_id import UserId
+from cmk.utils.user import UserId
 
 
 class _LocalSecret(ABC):

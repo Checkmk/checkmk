@@ -9,7 +9,7 @@ import pytest
 
 import cmk.utils.paths
 from cmk.utils.crypto.password import Password
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.wato as wato
 from cmk.gui.logged_in import user

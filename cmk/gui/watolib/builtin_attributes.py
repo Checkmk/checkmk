@@ -8,7 +8,8 @@ from typing import Any, Literal
 
 import cmk.utils.tags
 from cmk.utils.tags import TagGroupID
-from cmk.utils.type_defs import HostName, UserId
+from cmk.utils.type_defs import HostName
+from cmk.utils.user import UserId
 
 import cmk.gui.hooks as hooks
 import cmk.gui.userdb as userdb

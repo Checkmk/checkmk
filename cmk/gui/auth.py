@@ -16,7 +16,7 @@ from typing import Literal
 from cmk.utils.crypto.password import Password
 from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.log.security_event import log_security_event
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui import userdb
 from cmk.gui.config import active_config

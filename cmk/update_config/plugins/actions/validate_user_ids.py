@@ -6,7 +6,7 @@
 from logging import Logger
 
 from cmk.utils import tty
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.userdb import load_contacts, load_multisite_users, load_users
 

@@ -15,7 +15,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.paths import default_config_dir
 from cmk.utils.structured_data import ImmutableTree
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui import sites
 from cmk.gui.http import request

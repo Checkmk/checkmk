@@ -17,7 +17,7 @@ from requests_kerberos import HTTPKerberosAuth  # type: ignore[import]
 
 import cmk.utils.password_store
 from cmk.utils.crypto.secrets import AutomationUserSecret
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 cmk.utils.password_store.replace_passwords()
 

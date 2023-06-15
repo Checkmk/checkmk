@@ -73,8 +73,9 @@ from cmk.utils.encryption import Encrypter, fetch_certificate_details
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.render import SecondsRenderer
-from cmk.utils.type_defs import Seconds, TimeRange, UserId
+from cmk.utils.type_defs import Seconds, TimeRange
 from cmk.utils.urls import is_allowed_url
+from cmk.utils.user import UserId
 from cmk.utils.version import Version
 
 import cmk.gui.forms as forms

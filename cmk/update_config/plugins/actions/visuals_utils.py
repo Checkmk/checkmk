@@ -7,7 +7,7 @@ import json
 from collections.abc import Iterator
 from contextlib import contextmanager
 
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui import visuals
 from cmk.gui.query_filters import AllLabelGroupsQuery

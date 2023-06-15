@@ -11,7 +11,7 @@ from collections.abc import Iterator
 
 import cmk.utils.paths
 from cmk.utils.crypto.password import PasswordHash
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.config as config
 from cmk.gui.session import SuperUserContext

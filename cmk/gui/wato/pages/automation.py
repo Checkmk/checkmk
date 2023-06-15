@@ -17,7 +17,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.licensing.registry import get_license_state
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.automations.results import result_type_registry, SerializedResult
 

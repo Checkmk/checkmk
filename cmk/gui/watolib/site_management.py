@@ -27,7 +27,7 @@ from livestatus import (
 
 from cmk.utils import version
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.i18n import _
 from cmk.gui.site_config import site_is_local

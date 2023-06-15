@@ -10,7 +10,7 @@ from pytest_mock import MockerFixture
 
 from tests.unit.cmk.gui.test_userdb import _load_users_uncached
 
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.userdb as userdb
 from cmk.gui.type_defs import UserSpec

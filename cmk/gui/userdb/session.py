@@ -22,7 +22,7 @@ from datetime import datetime
 
 from cmk.utils.crypto.secrets import AuthenticationSecret
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.utils as utils
 from cmk.gui.config import active_config

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import cmk.utils.store as store
 from cmk.utils.crypto.password import PasswordHash
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 Entries = dict[UserId, PasswordHash]
 

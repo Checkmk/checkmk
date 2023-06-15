@@ -19,7 +19,8 @@ import cmk.utils.plugin_registry
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.store import locked
-from cmk.utils.type_defs import HostName, UserId
+from cmk.utils.type_defs import HostName
+from cmk.utils.user import UserId
 
 import cmk.gui.bi as bi
 import cmk.gui.visuals

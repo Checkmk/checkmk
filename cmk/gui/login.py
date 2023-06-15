@@ -16,7 +16,7 @@ from cmk.utils.licensing.handler import LicenseStateError, RemainingTrialTime
 from cmk.utils.licensing.registry import get_remaining_trial_time
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.site import omd_site, url_prefix
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.mobile
 import cmk.gui.userdb as userdb

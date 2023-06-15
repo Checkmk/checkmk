@@ -22,7 +22,7 @@ from tests.unit.cmk.gui.conftest import SetConfig, WebTestAppForCMK
 
 from cmk.utils import version
 from cmk.utils.crypto.password import PasswordHash
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui import userdb
 from cmk.gui.config import active_config

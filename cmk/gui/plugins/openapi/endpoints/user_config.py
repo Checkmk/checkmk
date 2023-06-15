@@ -9,7 +9,7 @@ from collections.abc import Mapping
 from typing import Any, Literal, TypedDict
 
 from cmk.utils.crypto.password import Password
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.plugins.userdb.utils as userdb_utils
 from cmk.gui import userdb

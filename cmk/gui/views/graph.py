@@ -8,7 +8,7 @@ import time
 from collections.abc import Callable, Sequence
 from typing import Literal
 
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
 from cmk.gui.http import request, response

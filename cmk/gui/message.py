@@ -14,7 +14,7 @@ from six import ensure_str
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.notify import ensure_utf8
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.pages
 import cmk.gui.userdb as userdb

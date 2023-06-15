@@ -9,7 +9,8 @@ from typing import Any, NamedTuple
 from livestatus import LocalConnection
 
 from cmk.utils.timeperiod import TimeperiodName
-from cmk.utils.type_defs import ContactgroupName, HostAddress, HostName, Timestamp, UserId
+from cmk.utils.type_defs import ContactgroupName, HostAddress, HostName, Timestamp
+from cmk.utils.user import UserId
 
 
 # NOTE: This function is a polished copy of cmk/base/notify.py. :-/

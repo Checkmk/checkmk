@@ -33,7 +33,7 @@ from typing import cast, Generic, Literal, TypedDict, TypeVar
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.pages
 import cmk.gui.sites as sites

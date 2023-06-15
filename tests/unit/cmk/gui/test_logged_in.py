@@ -16,7 +16,7 @@ from tests.testlib.users import create_and_destroy_user
 from livestatus import SiteConfigurations, SiteId
 
 import cmk.utils.paths
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.permissions as permissions
 from cmk.gui.config import (

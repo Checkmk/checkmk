@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from typing import Any
 
 import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.i18n import _l
 from cmk.gui.type_defs import (

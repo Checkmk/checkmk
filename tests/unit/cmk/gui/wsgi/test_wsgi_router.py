@@ -14,7 +14,7 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 
 def test_request_url(flask_app: flask.Flask) -> None:

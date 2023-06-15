@@ -28,7 +28,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.packaging import id_to_mkp, Installer, PackageName, PackagePart
 from cmk.utils.store import save_object_to_file
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.forms as forms
 import cmk.gui.pagetypes as pagetypes

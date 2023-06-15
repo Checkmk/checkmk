@@ -23,7 +23,7 @@ import cmk.utils.paths
 import cmk.utils.version
 from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password, PasswordHash
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.plugins.userdb.utils as utils
 import cmk.gui.userdb as userdb

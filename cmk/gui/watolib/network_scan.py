@@ -15,7 +15,8 @@ from typing import Any, NamedTuple
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.translations import translate_hostname
-from cmk.utils.type_defs import HostAddress, HostName, UserId
+from cmk.utils.type_defs import HostAddress, HostName
+from cmk.utils.user import UserId
 
 import cmk.gui.watolib.bakery as bakery
 from cmk.gui import userdb

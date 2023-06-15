@@ -10,7 +10,7 @@ from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.crypto.secrets import AutomationUserSecret
 from cmk.utils.store.htpasswd import Htpasswd
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _

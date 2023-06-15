@@ -42,7 +42,6 @@ __all__ = [
     "state_markers",
     "TimeRange",
     "Timestamp",
-    "UserId",
 ]
 
 
@@ -80,4 +79,3 @@ from ._misc import (
 )
 from .host import HostAddress, HostgroupName, HostName, HostState
 from .pluginname import RuleSetName, SectionName, ValidatedString
-from .user_id import UserId

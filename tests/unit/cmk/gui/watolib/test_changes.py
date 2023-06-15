@@ -21,7 +21,7 @@ from tests.unit.cmk.gui.test_i18n import (  # pylint: disable=unused-import  # n
 from livestatus import SiteId
 
 from cmk.utils.object_diff import make_diff_text
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.i18n as i18n
 from cmk.gui.utils.html import HTML

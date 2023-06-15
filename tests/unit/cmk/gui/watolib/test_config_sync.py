@@ -19,7 +19,7 @@ from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId
 import cmk.utils.packaging
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.watolib.activate_changes as activate_changes
 import cmk.gui.watolib.config_sync as config_sync

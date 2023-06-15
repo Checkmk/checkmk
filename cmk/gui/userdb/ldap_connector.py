@@ -54,7 +54,7 @@ from cmk.utils.crypto.password import Password
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.hooks as hooks
 import cmk.gui.log as log

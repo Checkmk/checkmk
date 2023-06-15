@@ -17,8 +17,8 @@ import cmk.utils.plugin_registry
 import cmk.utils.store as store
 from cmk.utils.crypto.password import Password
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import UserId
 from cmk.utils.urls import is_allowed_url
+from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config, builtin_role_ids
 from cmk.gui.exceptions import MKUserError

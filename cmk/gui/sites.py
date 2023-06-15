@@ -27,7 +27,7 @@ from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
 from cmk.utils.paths import livestatus_unix_socket
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 from cmk.utils.version import (
     __version__,
     Edition,

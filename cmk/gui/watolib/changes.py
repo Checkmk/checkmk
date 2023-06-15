@@ -12,7 +12,7 @@ from livestatus import SiteId
 
 import cmk.utils
 from cmk.utils.setup_search_index import request_index_update
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.utils
 import cmk.gui.watolib.git

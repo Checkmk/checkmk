@@ -29,7 +29,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import get_license_state
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.automations.results import result_type_registry, SerializedResult
 

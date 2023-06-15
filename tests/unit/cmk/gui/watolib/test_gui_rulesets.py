@@ -19,7 +19,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.redis import disable_redis
 from cmk.utils.rulesets.ruleset_matcher import RuleOptionsSpec, RulesetName, RuleSpec
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.type_defs.user_id import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.utils
 import cmk.gui.watolib.rulesets as rulesets

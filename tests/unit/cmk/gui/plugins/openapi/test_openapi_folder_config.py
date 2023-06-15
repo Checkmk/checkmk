@@ -17,7 +17,7 @@ from tests.testlib.rest_api_client import ClientRegistry
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils import paths, version
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.fields import FOLDER_PATTERN, FolderField
 from cmk.gui.fields.utils import BaseSchema

@@ -8,7 +8,7 @@ from collections.abc import Callable, Sequence
 from typing import cast, Literal, TypeVar
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui import visuals
 from cmk.gui.data_source import data_source_registry

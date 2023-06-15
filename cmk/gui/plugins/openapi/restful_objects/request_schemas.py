@@ -10,7 +10,7 @@ from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.livestatus_helpers import tables
 from cmk.utils.regex import GROUP_NAME_PATTERN, REGEX_ID, WATO_FOLDER_PATH_NAME_REGEX
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.config import builtin_role_ids

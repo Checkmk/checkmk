@@ -39,7 +39,8 @@ from tests.testlib.users import create_and_destroy_user
 import cmk.utils.log
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.type_defs import HostName, UserId
+from cmk.utils.type_defs import HostName
+from cmk.utils.user import UserId
 
 from cmk.automations.results import DeleteHostsResult
 

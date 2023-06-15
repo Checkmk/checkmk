@@ -10,7 +10,8 @@ from typing import Literal, TypeGuard, TypeVar
 from livestatus import OnlySites, SiteId
 
 from cmk.utils.defines import short_service_state_name
-from cmk.utils.type_defs import HostName, UserId
+from cmk.utils.type_defs import HostName
+from cmk.utils.user import UserId
 
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.config import active_config, default_authorized_builtin_role_ids

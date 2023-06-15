@@ -22,7 +22,7 @@ from tests.testlib.rest_api_client import (
 
 from cmk.utils import paths
 from cmk.utils.store import load_mk_file
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.watolib.check_mk_automations
 import cmk.gui.watolib.rulespecs

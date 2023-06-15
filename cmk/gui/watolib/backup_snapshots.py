@@ -20,7 +20,7 @@ import cmk.utils
 import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _

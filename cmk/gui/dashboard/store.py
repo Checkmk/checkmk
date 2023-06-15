@@ -7,7 +7,7 @@ import copy
 import time
 from typing import Any
 
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui import visuals
 from cmk.gui.exceptions import MKUserError

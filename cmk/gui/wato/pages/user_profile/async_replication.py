@@ -11,7 +11,7 @@ from collections.abc import Sequence
 from livestatus import SiteConfiguration, SiteId
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.sites
 from cmk.gui import userdb

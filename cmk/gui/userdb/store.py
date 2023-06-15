@@ -30,7 +30,8 @@ from cmk.utils.store import (
     save_text_to_file,
     save_to_mk_file,
 )
-from cmk.utils.type_defs import ContactgroupName, UserId
+from cmk.utils.type_defs import ContactgroupName
+from cmk.utils.user import UserId
 
 import cmk.gui.hooks as hooks
 import cmk.gui.pages

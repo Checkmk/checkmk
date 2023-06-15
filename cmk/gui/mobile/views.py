@@ -5,7 +5,7 @@
 
 from collections.abc import Sequence
 
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response

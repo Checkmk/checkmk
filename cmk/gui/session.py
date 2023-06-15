@@ -17,7 +17,7 @@ from flask.sessions import SessionInterface, SessionMixin
 from cmk.utils.exceptions import MKException
 from cmk.utils.log.security_event import log_security_event
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.userdb.session  # NOQA  # pylint: disable=unused-import
 from cmk.gui import config, userdb

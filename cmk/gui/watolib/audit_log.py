@@ -10,7 +10,7 @@ import time
 from collections.abc import Sequence
 from typing import NamedTuple
 
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.watolib.git
 from cmk.gui.config import active_config

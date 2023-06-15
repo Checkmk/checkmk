@@ -11,7 +11,7 @@ import pytest
 from livestatus import SiteId
 
 from cmk.utils.crypto.password import Password
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.key_mgmt as key_mgmt
 

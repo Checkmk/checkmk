@@ -17,7 +17,7 @@ from tests.testlib.users import create_and_destroy_user
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.session  # pylint: disable=unused-import  # this is here for it's side effects...
 from cmk.gui import auth, http, login

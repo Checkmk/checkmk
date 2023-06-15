@@ -20,7 +20,7 @@ from tests.testlib.rest_api_client import (
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils import version
-from cmk.utils.type_defs.user_id import UserId
+from cmk.utils.user import UserId
 
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 

@@ -33,7 +33,8 @@ from cmk.utils.structured_data import (
     StructuredDataNode,
     Table,
 )
-from cmk.utils.type_defs import HostName, UserId
+from cmk.utils.type_defs import HostName
+from cmk.utils.user import UserId
 
 import cmk.gui.inventory as inventory
 import cmk.gui.pages

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.version as cmk_version
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui.i18n import _, _l
 from cmk.gui.type_defs import ColumnSpec, SorterSpec, VisualLinkSpec

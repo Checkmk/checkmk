@@ -32,7 +32,7 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException, MKTerminate
 from cmk.utils.log import VERBOSE
 from cmk.utils.regex import regex, REGEX_GENERIC_IDENTIFIER
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui import log, sites
 from cmk.gui.http import request

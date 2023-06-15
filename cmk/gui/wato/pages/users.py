@@ -13,7 +13,7 @@ from typing import cast, overload
 import cmk.utils.render as render
 import cmk.utils.version as cmk_version
 from cmk.utils.crypto.password import Password
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 import cmk.gui.background_job as background_job
 import cmk.gui.forms as forms

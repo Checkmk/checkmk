@@ -14,7 +14,7 @@ from typing import Any, Literal, NamedTuple, overload, TypedDict
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.structured_data import SDPath
-from cmk.utils.type_defs import UserId
+from cmk.utils.user import UserId
 
 from cmk.gui import visuals
 from cmk.gui.data_source import ABCDataSource, data_source_registry

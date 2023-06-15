@@ -155,3 +155,11 @@ nrpe(
     sha256 = "8ad2d1846ab9011fdd2942b8fc0c99dfad9a97e57f4a3e6e394a4ead99c0f1f0",
     version_str = "3.2.1",
 )
+
+load("//packages/Python:Python_http.bzl", "python")
+load("//:package_versions.bzl", "PYTHON_SHA256", "PYTHON_VERSION")
+
+python(
+    sha256 = PYTHON_SHA256,
+    version_str = PYTHON_VERSION,
+)

@@ -658,6 +658,7 @@ class Site:
     def _update_with_f12_files(self) -> None:
         paths = [
             cmk_path() + "/omd/packages/omd",
+            cmk_path() + "/omd/packages/maintenance",
             cmk_path() + "/omd/packages/check_mk/skel/etc/init.d",
             cmk_path() + "/livestatus/api/python",
             cmk_path() + "/bin",

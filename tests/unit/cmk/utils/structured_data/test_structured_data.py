@@ -35,11 +35,6 @@ def _make_immutable_tree(tree: MutableTree) -> ImmutableTree:
 
 
 def _create_empty_mut_tree() -> MutableTree:
-    # Abbreviations:
-    # nta: has StructuredDataNode, Table, Attributes
-    # nt: has StructuredDataNode, Table
-    # na: has StructuredDataNode, Attributes
-    # ta: has Table, Attributes
     root = MutableTree()
     root.add_rows(path=("path-to-nta", "nt"), key_columns=[], rows=[])
     root.add_pairs(path=("path-to-nta", "na"), pairs={})
@@ -53,11 +48,6 @@ def _create_empty_imm_tree() -> ImmutableTree:
 
 
 def _create_filled_mut_tree() -> MutableTree:
-    # Abbreviations:
-    # nta: has StructuredDataNode, Table, Attributes
-    # nt: has StructuredDataNode, Table
-    # na: has StructuredDataNode, Attributes
-    # ta: has Table, Attributes
     root = MutableTree()
     root.add_rows(
         path=("path-to-nta", "nt"),
@@ -791,7 +781,7 @@ def _get_tree_store() -> TreeStore:
         HostName("tree_new_heute"),
     ],
 )
-def test_structured_data_StructuredDataTree_load_from(tree_name: HostName) -> None:
+def test_load_from(tree_name: HostName) -> None:
     _get_tree_store().load(host_name=tree_name)
 
 

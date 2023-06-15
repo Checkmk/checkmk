@@ -13,7 +13,7 @@ import gzip
 import io
 import pprint
 from collections import Counter
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final, Literal, NamedTuple, TypedDict
@@ -299,6 +299,9 @@ class MutableTree:
     def has_table(self, path: SDPath) -> bool:
         return bool(MutableTree(self.node.get_node(path)).node.table)
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({pprint.pformat(self.node.to_raw())})"
+
 
 # .
 #   .--immutable tree------------------------------------------------------.
@@ -583,12 +586,14 @@ def _compare_attributes(left: Attributes, right: Attributes) -> DeltaAttributes:
 
 def _compare_tables(left: Table, right: Table) -> DeltaTable:
     key_columns = sorted(set(left.key_columns).union(right.key_columns))
-    compared_keys = _compare_dict_keys(old_dict=right._rows, new_dict=left._rows)
+    compared_keys = _compare_dict_keys(old_dict=right.rows_by_ident, new_dict=left.rows_by_ident)
 
     delta_rows: list[dict[SDKey, tuple[SDValue, SDValue]]] = []
 
     for key in compared_keys.only_old:
-        delta_rows.append({k: _removed_delta_tree_node(v) for k, v in right._rows[key].items()})
+        delta_rows.append(
+            {k: _removed_delta_tree_node(v) for k, v in right.rows_by_ident[key].items()}
+        )
 
     for key in compared_keys.both:
         # Note: Rows which have at least one change also provide all table fields.
@@ -597,15 +602,15 @@ def _compare_tables(left: Table, right: Table) -> DeltaTable:
         # then it would be very annoying if the rest of the row is not shown.
         if (
             compared_dict_result := _compare_dicts(
-                old_dict=right._rows[key],
-                new_dict=left._rows[key],
+                old_dict=right.rows_by_ident[key],
+                new_dict=left.rows_by_ident[key],
                 keep_identical=True,
             )
         ).has_changes:
             delta_rows.append(compared_dict_result.result_dict)
 
     for key in compared_keys.only_new:
-        delta_rows.append({k: _new_delta_tree_node(v) for k, v in left._rows[key].items()})
+        delta_rows.append({k: _new_delta_tree_node(v) for k, v in left.rows_by_ident[key].items()})
 
     return DeltaTable(
         key_columns=key_columns,
@@ -644,7 +649,7 @@ def _compare_nodes(left: StructuredDataNode, right: StructuredDataNode) -> Delta
         path=left.path,
         attributes=_compare_attributes(left.attributes, right.attributes),
         table=_compare_tables(left.table, right.table),
-        nodes=delta_nodes,
+        nodes_by_name=delta_nodes,
     )
 
 
@@ -753,6 +758,9 @@ class ImmutableTree:
     def get_tree(self, path: SDPath) -> ImmutableTree:
         return ImmutableTree(self.node.get_node(path))
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({pprint.pformat(self.node.to_raw())})"
+
 
 # .
 #   .--immutable delta tree------------------------------------------------.
@@ -827,7 +835,7 @@ def _filter_delta_node(
         table=_filter_delta_table(
             delta_node.table, [f.filter_columns for f in filter_tree.filters]
         ),
-        nodes=filtered_nodes,
+        nodes_by_name=filtered_nodes,
     )
 
 
@@ -879,6 +887,9 @@ class ImmutableDeltaTree:
 
     def get_tree(self, path: SDPath) -> ImmutableDeltaTree:
         return ImmutableDeltaTree(self.node.get_node(path))
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({pprint.pformat(self.node.to_raw())})"
 
 
 # .
@@ -1058,9 +1069,9 @@ class Attributes:
 
     #   ---representation-------------------------------------------------------
 
-    def __repr__(self) -> str:
-        # Only used for repr/debug purposes
-        return f"{self.__class__.__name__}({pprint.pformat(self.serialize())})"
+    def to_raw(self) -> Mapping:
+        # Useful for debugging; no restrictions
+        return {"Pairs": self._pairs, "Retentions": self.retentions}
 
     #   ---de/serializing-------------------------------------------------------
 
@@ -1096,7 +1107,7 @@ class Table:
     ) -> None:
         self.key_columns = key_columns if key_columns else []
         self.retentions = retentions if retentions else {}
-        self._rows: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
+        self._rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
 
     def add_key_columns(self, key_columns: Sequence[SDKey]) -> None:
         for key in key_columns:
@@ -1105,29 +1116,31 @@ class Table:
 
     @property
     def rows(self) -> Sequence[Mapping[SDKey, SDValue]]:
-        return list(self._rows.values())
+        return list(self._rows_by_ident.values())
 
     @property
     def rows_by_ident(self) -> Mapping[SDRowIdent, Mapping[SDKey, SDValue]]:
-        return self._rows
+        return self._rows_by_ident
 
     #   ---common methods-------------------------------------------------------
 
     def __len__(self) -> int:
         # The attribute 'rows' is decisive. Other attributes like 'key_columns' or 'retentions'
         # have no impact if there are no rows.
-        return sum(map(len, self._rows.values()))
+        return sum(map(len, self._rows_by_ident.values()))
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Table):
             raise TypeError(type(other))
 
-        compared_keys = _compare_dict_keys(old_dict=other._rows, new_dict=self._rows)
+        compared_keys = _compare_dict_keys(
+            old_dict=other._rows_by_ident, new_dict=self._rows_by_ident
+        )
         if compared_keys.only_old or compared_keys.only_new:
             return False
 
         for key in compared_keys.both:
-            if self._rows[key] != other._rows[key]:
+            if self._rows_by_ident[key] != other._rows_by_ident[key]:
                 return False
 
         return True
@@ -1146,7 +1159,7 @@ class Table:
 
     def add_row(self, ident: SDRowIdent, row: Mapping[SDKey, SDValue]) -> None:
         if row:
-            self._rows.setdefault(ident, {}).update(row)
+            self._rows_by_ident.setdefault(ident, {}).update(row)
 
     #   ---retentions-----------------------------------------------------------
 
@@ -1162,7 +1175,7 @@ class Table:
 
         old_filtered_rows = {
             ident: filtered_row
-            for ident, row in other._rows.items()
+            for ident, row in other._rows_by_ident.items()
             if (
                 filtered_row := _get_filtered_dict(
                     row,
@@ -1176,7 +1189,7 @@ class Table:
         }
         self_filtered_rows = {
             ident: filtered_row
-            for ident, row in self._rows.items()
+            for ident, row in self._rows_by_ident.items()
             if (filtered_row := _get_filtered_dict(row, filter_func))
         }
         compared_filtered_idents = _compare_dict_keys(
@@ -1194,7 +1207,7 @@ class Table:
 
             if old_row:
                 # Update row with key column entries
-                old_row.update({k: other._rows[ident][k] for k in other.key_columns})
+                old_row.update({k: other._rows_by_ident[ident][k] for k in other.key_columns})
                 self.add_row(ident, old_row)
                 update_result.add_row_reason(path, ident, "row", old_row)
 
@@ -1205,7 +1218,7 @@ class Table:
             )
             row: dict[SDKey, SDValue] = {}
             for key in compared_filtered_keys.only_old:
-                row.setdefault(key, other._rows[ident][key])
+                row.setdefault(key, other._rows_by_ident[ident][key])
                 retentions.setdefault(ident, {})[key] = other.retentions[ident][key]
 
             for key in compared_filtered_keys.both.union(compared_filtered_keys.only_new):
@@ -1215,8 +1228,8 @@ class Table:
                 # Update row with key column entries
                 row.update(
                     {
-                        **{k: other._rows[ident][k] for k in other.key_columns},
-                        **{k: self._rows[ident][k] for k in self.key_columns},
+                        **{k: other._rows_by_ident[ident][k] for k in other.key_columns},
+                        **{k: self._rows_by_ident[ident][k] for k in self.key_columns},
                     }
                 )
                 self.add_row(ident, row)
@@ -1235,19 +1248,23 @@ class Table:
 
     #   ---representation-------------------------------------------------------
 
-    def __repr__(self) -> str:
-        # Only used for repr/debug purposes
-        return f"{self.__class__.__name__}({pprint.pformat(self.serialize())})"
+    def to_raw(self) -> Mapping:
+        # Useful for debugging; no restrictions
+        return {
+            "KeyColumns": self.key_columns,
+            "RowsByIdent": self._rows_by_ident,
+            "Retentions": self.retentions,
+        }
 
     #   ---de/serializing-------------------------------------------------------
 
     def serialize(self) -> SDRawTable:
         raw_table: SDRawTable = {}
-        if self._rows:
+        if self._rows_by_ident:
             raw_table.update(
                 {
                     "KeyColumns": self.key_columns,
-                    "Rows": list(self._rows.values()),
+                    "Rows": list(self._rows_by_ident.values()),
                 }
             )
 
@@ -1293,10 +1310,6 @@ class StructuredDataNode:
         self.attributes = attributes or Attributes()
         self.table = table or Table()
         self._nodes = nodes or {}
-
-    @property
-    def nodes(self) -> Iterator[StructuredDataNode]:
-        yield from self._nodes.values()
 
     @property
     def nodes_by_name(self) -> Mapping[SDNodeName, StructuredDataNode]:
@@ -1350,9 +1363,14 @@ class StructuredDataNode:
 
     #   ---representation-------------------------------------------------------
 
-    def __repr__(self) -> str:
-        # Only used for repr/debug purposes
-        return f"{self.__class__.__name__}({pprint.pformat(self.serialize())})"
+    def to_raw(self) -> Mapping:
+        # Useful for debugging; no restrictions
+        return {
+            "Path": self.path,
+            "Attributes": self.attributes.to_raw(),
+            "Table": self.table.to_raw(),
+            "Nodes": {name: node.to_raw() for name, node in self._nodes.items()},
+        }
 
     #   ---de/serializing-------------------------------------------------------
 
@@ -1429,6 +1447,10 @@ class DeltaAttributes:
     def __len__(self) -> int:
         return len(self.pairs)
 
+    def to_raw(self) -> Mapping:
+        # Useful for debugging; no restrictions
+        return {"Pairs": self.pairs}
+
     def serialize(self) -> SDRawDeltaAttributes:
         return {"Pairs": self.pairs} if self.pairs else {}
 
@@ -1455,6 +1477,10 @@ class DeltaTable:
     def __len__(self) -> int:
         return sum(map(len, self.rows))
 
+    def to_raw(self) -> Mapping:
+        # Useful for debugging; no restrictions
+        return {"KeyColumns": self.key_columns, "Rows": self.rows}
+
     def serialize(self) -> SDRawDeltaTable:
         return {"KeyColumns": self.key_columns, "Rows": self.rows} if self.rows else {}
 
@@ -1474,7 +1500,7 @@ class DeltaStructuredDataNode:
     path: SDPath = ()
     attributes: DeltaAttributes = DeltaAttributes()
     table: DeltaTable = DeltaTable()
-    nodes: Mapping[SDNodeName, DeltaStructuredDataNode] = field(default_factory=dict)
+    nodes_by_name: Mapping[SDNodeName, DeltaStructuredDataNode] = field(default_factory=dict)
 
     @classmethod
     def make_from_node(
@@ -1490,7 +1516,7 @@ class DeltaStructuredDataNode:
                 table=node.table,
                 encode_as=encode_as,
             ),
-            nodes={
+            nodes_by_name={
                 name: cls.make_from_node(
                     node=child,
                     encode_as=encode_as,
@@ -1505,24 +1531,29 @@ class DeltaStructuredDataNode:
                 len(self.attributes),
                 len(self.table),
             ]
-            + [len(node) for node in self.nodes.values()]
+            + [len(node) for node in self.nodes_by_name.values()]
         )
 
     def get_node(self, path: SDPath) -> DeltaStructuredDataNode | None:
         if not path:
             return self
-        node = self.nodes.get(path[0])
+        node = self.nodes_by_name.get(path[0])
         return None if node is None else node.get_node(path[1:])
 
-    @property
-    def nodes_by_name(self) -> Mapping[SDNodeName, DeltaStructuredDataNode]:
-        return self.nodes
+    def to_raw(self) -> Mapping:
+        # Useful for debugging; no restrictions
+        return {
+            "Path": self.path,
+            "Attributes": self.attributes.to_raw(),
+            "Table": self.table.to_raw(),
+            "Nodes": {edge: node.to_raw() for edge, node in self.nodes_by_name.items()},
+        }
 
     def serialize(self) -> SDRawDeltaTree:
         return {
             "Attributes": self.attributes.serialize(),
             "Table": self.table.serialize(),
-            "Nodes": {edge: node.serialize() for edge, node in self.nodes.items() if node},
+            "Nodes": {edge: node.serialize() for edge, node in self.nodes_by_name.items() if node},
         }
 
     @classmethod
@@ -1531,7 +1562,7 @@ class DeltaStructuredDataNode:
             path=path,
             attributes=DeltaAttributes.deserialize(raw_attributes=raw_tree["Attributes"]),
             table=DeltaTable.deserialize(raw_table=raw_tree["Table"]),
-            nodes={
+            nodes_by_name={
                 raw_node_name: cls.deserialize(
                     path=path + (raw_node_name,),
                     raw_tree=raw_node,
@@ -1544,7 +1575,7 @@ class DeltaStructuredDataNode:
         counter: _SDDeltaCounter = Counter()
         counter.update(self.attributes.get_stats())
         counter.update(self.table.get_stats())
-        for node in self.nodes.values():
+        for node in self.nodes_by_name.values():
             counter.update(node.get_stats())
         return counter
 

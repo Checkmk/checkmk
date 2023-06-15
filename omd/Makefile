@@ -54,6 +54,7 @@ PACKAGES := \
     snap7 \
     heirloom-pkgtools \
     livestatus \
+    unixcat \
     xmlsec1
 
 ifeq ($(EDITION),enterprise)

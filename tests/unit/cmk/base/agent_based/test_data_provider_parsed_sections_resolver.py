@@ -5,12 +5,12 @@
 
 from collections.abc import Iterable, Mapping
 
-from cmk.utils.type_defs import HostName, ParsedSectionName, SectionName
+from cmk.utils.type_defs import HostName, SectionName
 
 from cmk.checkengine import HostKey, SectionPlugin, SourceType
 from cmk.checkengine.discovery._host_labels import _all_parsing_results as all_parsing_results
 from cmk.checkengine.sectionparser import _ParsingResult as ParsingResult
-from cmk.checkengine.sectionparser import ParsedSectionsResolver, ResolvedResult
+from cmk.checkengine.sectionparser import ParsedSectionName, ParsedSectionsResolver, ResolvedResult
 
 # import pytest
 

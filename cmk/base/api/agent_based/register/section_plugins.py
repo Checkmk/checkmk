@@ -13,7 +13,9 @@ from typing import Any, List
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import ParsedSectionName, RuleSetName, SectionName, SNMPDetectBaseType
+from cmk.utils.type_defs import RuleSetName, SectionName, SNMPDetectBaseType
+
+from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.base.api.agent_based.register.utils import (
     RuleSetType,

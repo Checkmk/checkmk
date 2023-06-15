@@ -8,9 +8,10 @@ import functools
 from collections.abc import Callable, Generator
 from typing import Any
 
-from cmk.utils.type_defs import ParsedSectionName, RuleSetName
+from cmk.utils.type_defs import RuleSetName
 
 from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.base.api.agent_based.checking_classes import (
     CheckFunction,

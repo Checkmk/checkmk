@@ -8,12 +8,12 @@ from typing import Any
 
 import pytest
 
-from cmk.utils.type_defs import HostName, ParsedSectionName, SectionName
+from cmk.utils.type_defs import HostName, SectionName
 
 from cmk.checkengine import HostKey, SectionPlugin, SourceType
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.host_sections import HostSections
-from cmk.checkengine.sectionparser import ParsedSectionsResolver, SectionsParser
+from cmk.checkengine.sectionparser import ParsedSectionName, ParsedSectionsResolver, SectionsParser
 from cmk.checkengine.sectionparserutils import (
     check_parsing_errors,
     get_section_cluster_kwargs,

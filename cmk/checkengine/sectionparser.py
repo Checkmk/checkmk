@@ -5,14 +5,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Mapping, Sequence, Set
+from collections.abc import Callable, Container, Iterable, Mapping, Sequence, Set
 from dataclasses import dataclass
 from typing import Any, Final, Generic, NamedTuple
 
 import cmk.utils.piggyback
 import cmk.utils.resulttype as result
 from cmk.utils.log import console
-from cmk.utils.type_defs import HostName, ParsedSectionName, SectionName
+from cmk.utils.type_defs import HostName, SectionName
+from cmk.utils.type_defs.pluginname import ValidatedString
 
 from ._typedefs import HostKey, SourceInfo, SourceType
 from .crash_reporting import create_section_crash_dump
@@ -21,6 +22,12 @@ from .host_sections import HostSections, TRawDataSection
 _CacheInfo = tuple[int, int]
 
 ParsedSectionContent = object  # the parse function may return *anything*.
+
+
+class ParsedSectionName(ValidatedString):
+    @classmethod
+    def exceptions(cls) -> Container[str]:
+        return super().exceptions()
 
 
 @dataclass(frozen=True)

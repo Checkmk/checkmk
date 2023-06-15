@@ -17,14 +17,7 @@ from cmk.utils.structured_data import (
     StructuredDataNode,
     UpdateResult,
 )
-from cmk.utils.type_defs import (
-    AgentRawData,
-    EVERYTHING,
-    HostAddress,
-    HostName,
-    ParsedSectionName,
-    SectionName,
-)
+from cmk.utils.type_defs import AgentRawData, EVERYTHING, HostAddress, HostName, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawData
 
@@ -41,6 +34,7 @@ from cmk.checkengine.inventory import (
     inventorize_host,
     ItemsOfInventoryPlugin,
 )
+from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.modes.check_mk import _get_save_tree_actions, _SaveTreeActions

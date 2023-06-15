@@ -10,7 +10,7 @@ from typing import Protocol
 
 import cmk.utils.resulttype as result
 from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, ParsedSectionName, RuleSetName
+from cmk.utils.type_defs import AgentRawData, HostAddress, HostName, RuleSetName
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
 
@@ -20,7 +20,7 @@ from .checking import CheckPluginName
 from .checkresults import ActiveCheckResult
 from .discovery import AutocheckEntry
 from .host_sections import HostSections
-from .sectionparser import SectionPlugin
+from .sectionparser import ParsedSectionName, SectionPlugin
 from .type_defs import AgentRawDataSection, SectionNameCollection
 
 __all__ = [

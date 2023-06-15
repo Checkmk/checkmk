@@ -7,11 +7,11 @@ from collections.abc import Callable, Iterable, Sequence
 
 from pytest import MonkeyPatch
 
-from cmk.utils.type_defs import HostName, ParsedSectionName, SectionName
+from cmk.utils.type_defs import HostName, SectionName
 
 from cmk.checkengine import SectionPlugin
 from cmk.checkengine.host_sections import HostSections
-from cmk.checkengine.sectionparser import ParsedSectionsResolver, SectionsParser
+from cmk.checkengine.sectionparser import ParsedSectionName, ParsedSectionsResolver, SectionsParser
 from cmk.checkengine.type_defs import AgentRawDataSection
 
 

@@ -26,13 +26,7 @@ from cmk.utils.structured_data import (
     RetentionInterval,
     UpdateResult,
 )
-from cmk.utils.type_defs import (
-    HostName,
-    ParsedSectionName,
-    RuleSetName,
-    SectionName,
-    ValidatedString,
-)
+from cmk.utils.type_defs import HostName, RuleSetName, SectionName, ValidatedString
 
 from ._api import FetcherFunction, ParserFunction, SectionPlugin, SummarizerFunction
 from ._typedefs import HostKey, SourceType
@@ -41,6 +35,7 @@ from .host_sections import HostSections
 from .sectionparser import (
     filter_out_errors,
     make_providers,
+    ParsedSectionName,
     Provider,
     ResolvedResult,
     store_piggybacked_sections,

@@ -9,9 +9,10 @@ from pytest import MonkeyPatch
 from tests.testlib.base import Scenario
 
 from cmk.utils.exceptions import MKIPAddressLookupError
-from cmk.utils.type_defs import HostName, ParsedSectionName
+from cmk.utils.type_defs import HostName
 
 from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.sectionparser import ParsedSectionName
 
 import cmk.base.config as config
 import cmk.base.ip_lookup as ip_lookup

@@ -5,7 +5,9 @@
 
 import pytest
 
-from cmk.utils.type_defs import ParsedSectionName, SectionName
+from cmk.utils.type_defs import SectionName
+
+from cmk.checkengine.sectionparser import ParsedSectionName
 
 import cmk.base.api.agent_based.register.section_plugins as section_plugins
 import cmk.base.api.agent_based.register.section_plugins_legacy as section_plugins_legacy

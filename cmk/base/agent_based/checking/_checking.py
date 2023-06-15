@@ -26,7 +26,6 @@ from cmk.utils.type_defs import (
     ExitSpec,
     HostName,
     MetricTuple,
-    ParsedSectionName,
     SectionName,
     ServiceName,
     state_markers,
@@ -61,6 +60,7 @@ from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.sectionparser import (
     filter_out_errors,
     make_providers,
+    ParsedSectionName,
     Provider,
     ResolvedResult,
     store_piggybacked_sections,

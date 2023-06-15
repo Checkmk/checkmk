@@ -30,7 +30,6 @@ __all__ = [
     "MetricName",
     "MetricTuple",
     "ParametersTypeAlias",
-    "ParsedSectionName",
     "RuleSetName",
     "Seconds",
     "SectionName",
@@ -80,5 +79,5 @@ from ._misc import (
     Timestamp,
 )
 from .host import HostAddress, HostgroupName, HostName, HostState
-from .pluginname import ParsedSectionName, RuleSetName, SectionName, ValidatedString
+from .pluginname import RuleSetName, SectionName, ValidatedString
 from .user_id import UserId

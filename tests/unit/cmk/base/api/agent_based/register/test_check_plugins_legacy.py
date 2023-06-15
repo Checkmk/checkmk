@@ -7,9 +7,10 @@ import inspect
 
 from pytest import MonkeyPatch
 
-from cmk.utils.type_defs import ParsedSectionName, RuleSetName
+from cmk.utils.type_defs import RuleSetName
 
 from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.sectionparser import ParsedSectionName
 
 import cmk.base.api.agent_based.checking_classes as checking_classes
 import cmk.base.api.agent_based.register.check_plugins_legacy as check_plugins_legacy

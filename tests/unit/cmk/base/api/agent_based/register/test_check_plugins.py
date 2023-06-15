@@ -10,10 +10,9 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import ParsedSectionName
-
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.inventory import InventoryPluginName
+from cmk.checkengine.sectionparser import ParsedSectionName
 
 import cmk.base.api.agent_based.register.check_plugins as check_plugins
 

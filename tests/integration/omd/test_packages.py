@@ -8,6 +8,7 @@ from typing import Literal
 
 import pytest
 
+from tests.testlib.pytest_helpers.calls import abort_if_not_containerized
 from tests.testlib.site import Site
 
 StreamType = Literal["stderr", "stdout"]
@@ -170,6 +171,8 @@ def test_monitoring_plugins_can_be_executed(
     stream_type: StreamType,
     site: Site,
 ) -> None:
+    abort_if_not_containerized("check_mysql" in cmd_line[0])
+
     cmd_line[0] = f"{site.root}/{cmd_line[0]}"
 
     p = site.execute(cmd_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

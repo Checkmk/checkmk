@@ -523,20 +523,12 @@ def _merge_nodes(left: StructuredDataNode, right: StructuredDataNode) -> Structu
     )
 
 
-def _new_delta_tree_node(value: SDValue) -> tuple[None, SDValue]:
+def _encode_as_new(value: SDValue) -> tuple[None, SDValue]:
     return (None, value)
 
 
-def _removed_delta_tree_node(value: SDValue) -> tuple[SDValue, None]:
+def _encode_as_removed(value: SDValue) -> tuple[SDValue, None]:
     return (value, None)
-
-
-def _changed_delta_tree_node(old_value: SDValue, new_value: SDValue) -> tuple[SDValue, SDValue]:
-    return (old_value, new_value)
-
-
-def _identical_delta_tree_node(value: SDValue) -> tuple[SDValue, SDValue]:
-    return (value, value)
 
 
 class ComparedDictResult(NamedTuple):
@@ -560,13 +552,13 @@ def _compare_dicts(
     has_changes = False
     for k in compared_keys.both:
         if (new_value := new_dict[k]) != (old_value := old_dict[k]):
-            compared_dict.setdefault(k, _changed_delta_tree_node(old_value, new_value))
+            compared_dict.setdefault(k, (old_value, new_value))
             has_changes = True
         elif keep_identical:
-            compared_dict.setdefault(k, _identical_delta_tree_node(old_value))
+            compared_dict.setdefault(k, (old_value, old_value))
 
-    compared_dict.update({k: _new_delta_tree_node(new_dict[k]) for k in compared_keys.only_new})
-    compared_dict.update({k: _removed_delta_tree_node(old_dict[k]) for k in compared_keys.only_old})
+    compared_dict.update({k: _encode_as_new(new_dict[k]) for k in compared_keys.only_new})
+    compared_dict.update({k: _encode_as_removed(old_dict[k]) for k in compared_keys.only_old})
 
     return ComparedDictResult(
         result_dict=compared_dict,
@@ -591,9 +583,7 @@ def _compare_tables(left: Table, right: Table) -> DeltaTable:
     delta_rows: list[dict[SDKey, tuple[SDValue, SDValue]]] = []
 
     for key in compared_keys.only_old:
-        delta_rows.append(
-            {k: _removed_delta_tree_node(v) for k, v in right.rows_by_ident[key].items()}
-        )
+        delta_rows.append({k: _encode_as_removed(v) for k, v in right.rows_by_ident[key].items()})
 
     for key in compared_keys.both:
         # Note: Rows which have at least one change also provide all table fields.
@@ -610,7 +600,7 @@ def _compare_tables(left: Table, right: Table) -> DeltaTable:
             delta_rows.append(compared_dict_result.result_dict)
 
     for key in compared_keys.only_new:
-        delta_rows.append({k: _new_delta_tree_node(v) for k, v in left.rows_by_ident[key].items()})
+        delta_rows.append({k: _encode_as_new(v) for k, v in left.rows_by_ident[key].items()})
 
     return DeltaTable(
         key_columns=key_columns,
@@ -627,7 +617,7 @@ def _compare_nodes(left: StructuredDataNode, right: StructuredDataNode) -> Delta
         if child_left := left.nodes_by_name[key]:
             delta_nodes[key] = DeltaStructuredDataNode.make_from_node(
                 node=child_left,
-                encode_as=_new_delta_tree_node,
+                encode_as=_encode_as_new,
             )
 
     for key in compared_keys.both:
@@ -642,7 +632,7 @@ def _compare_nodes(left: StructuredDataNode, right: StructuredDataNode) -> Delta
         if child_right := right.nodes_by_name[key]:
             delta_nodes[key] = DeltaStructuredDataNode.make_from_node(
                 node=child_right,
-                encode_as=_removed_delta_tree_node,
+                encode_as=_encode_as_removed,
             )
 
     return DeltaStructuredDataNode(

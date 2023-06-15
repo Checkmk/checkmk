@@ -87,16 +87,12 @@ from cmk.utils.structured_data import RawIntervalsFromConfig
 from cmk.utils.tags import ComputedDataSources, TagGroupID, TagID
 from cmk.utils.timeperiod import TimeperiodName
 from cmk.utils.type_defs import (
-    ActiveCheckPluginName,
     CheckPluginNameStr,
-    ClusterMode,
     ContactgroupName,
-    ExitSpec,
     Item,
     RuleSetName,
     Seconds,
     SectionName,
-    ServicegroupName,
     ServiceName,
 )
 
@@ -133,6 +129,7 @@ from cmk.checkengine.check_table import (
 )
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckServiceWithNodes
+from cmk.checkengine.error_handling import ExitSpec
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.type_defs import AgentRawDataSection, NO_SELECTION, SectionNameCollection
@@ -142,6 +139,7 @@ import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.default_config as default_config
 import cmk.base.ip_lookup as ip_lookup
 from cmk.base._autochecks import AutochecksManager
+from cmk.base.api.agent_based.cluster_mode import ClusterMode
 from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_plugin_from_legacy
 from cmk.base.api.agent_based.register.section_plugins_legacy import (
     create_agent_section_plugin_from_legacy,
@@ -161,6 +159,10 @@ HOST_CHECK_INTERVAL: Final = 1.0
 # Services. Check and retry intervals may differ
 SERVICE_RETRY_INTERVAL: Final = 1.0
 SERVICE_CHECK_INTERVAL: Final = 1.0
+
+ServicegroupName = str
+HostgroupName = str
+ActiveCheckPluginName = str
 
 service_service_levels = []
 host_service_levels = []

@@ -14,7 +14,7 @@ from cmk.utils.store.host_storage import FolderAttributesForBase
 from cmk.utils.tags import TagConfigSpec
 from cmk.utils.timeperiod import TimeperiodSpecs
 from cmk.utils.translations import TranslationOptionsSpec
-from cmk.utils.type_defs import CheckPluginNameStr, ContactgroupName, ServicegroupName, ServiceName
+from cmk.utils.type_defs import CheckPluginNameStr, ContactgroupName, ServiceName
 
 from cmk.snmplib.type_defs import SNMPCredentials
 
@@ -28,6 +28,7 @@ from cmk.fetchers import IPMICredentials
 _ALL_HOSTS: Final = ["@all"]  # physical and cluster hosts
 _NEGATE: Final = "@negate"  # negation in boolean lists
 _HostgroupName: TypeAlias = str
+_ServicegroupName: TypeAlias = str
 
 monitoring_core: Literal["nagios", "cmc"] = "nagios"
 mkeventd_enabled = False  # Set by OMD hook
@@ -213,7 +214,7 @@ host_notification_periods: list[RuleSpec[object]] = []
 host_contactgroups: list[RuleSpec[object]] = []
 parents: list[RuleSpec[object]] = []
 define_hostgroups: dict[_HostgroupName, str] = {}
-define_servicegroups: dict[ServicegroupName, str] = {}
+define_servicegroups: dict[_ServicegroupName, str] = {}
 define_contactgroups: dict[ContactgroupName, str] = {}
 contactgroup_members: dict[ContactgroupName, list[ContactName]] = {}
 contacts: dict[ContactName, Contact] = {}

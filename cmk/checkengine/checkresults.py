@@ -10,9 +10,19 @@ from collections.abc import Sequence
 
 from cmk.utils.check_utils import worst_service_state
 from cmk.utils.hostaddress import HostName
-from cmk.utils.type_defs import MetricTuple, state_markers
+from cmk.utils.type_defs import MetricName, state_markers
 
-__all__ = ["ActiveCheckResult", "ServiceCheckResult"]
+__all__ = ["ActiveCheckResult", "MetricTuple", "ServiceCheckResult"]
+
+
+MetricTuple = tuple[
+    MetricName,
+    float,
+    float | None,
+    float | None,
+    float | None,
+    float | None,
+]
 
 
 @dataclasses.dataclass

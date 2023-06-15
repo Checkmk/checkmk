@@ -30,7 +30,7 @@ from cmk.utils.licensing.handler import LicensingHandler
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.timeperiod import TimeperiodName
-from cmk.utils.type_defs import CheckPluginNameStr, ContactgroupName, ServicegroupName, ServiceName
+from cmk.utils.type_defs import CheckPluginNameStr, ContactgroupName, ServiceName
 
 from cmk.checkengine import plugin_contexts
 from cmk.checkengine.check_table import FilterMode
@@ -43,7 +43,7 @@ import cmk.base.core_config as core_config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.utils
-from cmk.base.config import ConfigCache, ObjectAttributes
+from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
 from cmk.base.core_config import (
     AbstractServiceID,
     CollectedHostLabels,
@@ -124,7 +124,7 @@ class NagiosConfig:
         self._outfile = outfile
         self.hostnames = hostnames
 
-        self.hostgroups_to_define: set[str] = set()
+        self.hostgroups_to_define: set[HostgroupName] = set()
         self.servicegroups_to_define: set[ServicegroupName] = set()
         self.contactgroups_to_define: set[ContactgroupName] = set()
         self.checknames_to_define: set[CheckPluginName] = set()

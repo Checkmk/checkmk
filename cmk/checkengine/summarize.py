@@ -17,11 +17,11 @@ from cmk.utils.exceptions import (
 )
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackTimeSettings
-from cmk.utils.type_defs import ExitSpec
 
 from cmk.fetchers import FetcherType
 
 from cmk.checkengine.checkresults import ActiveCheckResult
+from cmk.checkengine.error_handling import ExitSpec
 from cmk.checkengine.host_sections import HostSections
 
 __all__ = ["summarize"]

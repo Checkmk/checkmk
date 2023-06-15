@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from typing import Final, Literal
+from typing import Final, Literal, TypedDict
 
 import cmk.utils.debug
 from cmk.utils.exceptions import (
@@ -17,11 +17,22 @@ from cmk.utils.exceptions import (
     MKTimeout,
 )
 from cmk.utils.hostaddress import HostName
-from cmk.utils.type_defs import CheckPluginNameStr, ExitSpec, ServiceName, ServiceState
+from cmk.utils.type_defs import CheckPluginNameStr, ServiceName, ServiceState
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
 from cmk.checkengine import crash_reporting
+
+
+class ExitSpec(TypedDict, total=False):
+    connection: int
+    timeout: int
+    exception: int
+    wrong_version: int
+    missing_sections: int
+    specific_missing_sections: list[tuple[str, int]]
+    restricted_address_mismatch: int
+    legacy_pull_mode: int
 
 
 class CheckResultErrorHandler:

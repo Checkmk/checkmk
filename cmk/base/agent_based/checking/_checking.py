@@ -21,15 +21,7 @@ from cmk.utils.regex import regex
 from cmk.utils.resulttype import Result
 from cmk.utils.structured_data import TreeStore
 from cmk.utils.timeperiod import check_timeperiod, timeperiod_active, TimeperiodName
-from cmk.utils.type_defs import (
-    AgentRawData,
-    EVERYTHING,
-    ExitSpec,
-    MetricTuple,
-    SectionName,
-    ServiceName,
-    state_markers,
-)
+from cmk.utils.type_defs import AgentRawData, EVERYTHING, SectionName, ServiceName, state_markers
 
 from cmk.snmplib.type_defs import SNMPRawData
 
@@ -49,7 +41,8 @@ from cmk.checkengine import (
 )
 from cmk.checkengine.check_table import ConfiguredService, LegacyCheckParameters
 from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.checkresults import ActiveCheckResult, ServiceCheckResult
+from cmk.checkengine.checkresults import ActiveCheckResult, MetricTuple, ServiceCheckResult
+from cmk.checkengine.error_handling import ExitSpec
 from cmk.checkengine.inventory import (
     HWSWInventoryParameters,
     inventorize_status_data_of_real_host,

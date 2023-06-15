@@ -7,10 +7,10 @@
 from collections import defaultdict
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from functools import partial
-from typing import Any, Final, NamedTuple, Protocol
+from typing import Any, Final, Literal, NamedTuple, Protocol
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.type_defs import ClusterMode, state_markers
+from cmk.utils.type_defs import state_markers
 
 from cmk.checkengine import CheckPlugin
 from cmk.checkengine.check_table import ServiceID
@@ -30,6 +30,8 @@ _Kwargs = Mapping[str, Any]
 _NON_SECTION_KEYS: Final = {"item", "params"}
 
 _INF = float("inf")
+
+ClusterMode = Literal["native", "failover", "worst", "best"]
 
 
 class Selector(Protocol):

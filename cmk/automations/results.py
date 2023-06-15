@@ -23,13 +23,13 @@ from cmk.utils.type_defs import (
     CheckPluginNameStr,
     Item,
     LegacyCheckParameters,
-    MetricTuple,
     ParametersTypeAlias,
     ServiceDetails,
     ServiceName,
     ServiceState,
 )
 
+from cmk.checkengine.checkresults import MetricTuple
 from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
 from cmk.checkengine.parameters import TimespecificParameters
 

@@ -8,14 +8,16 @@
 from __future__ import annotations
 
 import enum
+import sys
 from collections.abc import Callable, Iterable, Sequence
 from typing import NamedTuple, Optional, overload, Self, Union
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
 from cmk.utils.check_utils import unwrap_parameters
-from cmk.utils.type_defs import EvalableFloat, MetricTuple, RuleSetName
+from cmk.utils.type_defs import RuleSetName
 
 from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checkresults import MetricTuple
 from cmk.checkengine.discovery import AutocheckEntry
 from cmk.checkengine.sectionparser import ParsedSectionName
 
@@ -28,6 +30,21 @@ _OptionalPair = Optional[tuple[Optional[float], Optional[float]]]
 class _KV(NamedTuple):
     name: str
     value: str
+
+
+class EvalableFloat(float):
+    """Extends the float representation for Infinities in such way that
+    they can be parsed by eval"""
+
+    def __str__(self) -> str:
+        return super().__repr__()
+
+    def __repr__(self) -> str:
+        if self > sys.float_info.max:
+            return "1e%d" % (sys.float_info.max_10_exp + 1)
+        if self < -1 * sys.float_info.max:
+            return "-1e%d" % (sys.float_info.max_10_exp + 1)
+        return super().__repr__()
 
 
 class ServiceLabel(_KV):

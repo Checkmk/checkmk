@@ -14,7 +14,6 @@ from cmk.utils.hostaddress import HostAddress as _HostAddress
 from cmk.utils.hostaddress import HostName as _HostName
 from cmk.utils.type_defs import AgentRawData as _AgentRawData
 from cmk.utils.type_defs import SectionName as _SectionName
-from cmk.utils.type_defs import SNMPDetectBaseType as _SNMPDetectBaseType
 
 SNMPContextName = str
 SNMPDecodedString = str
@@ -86,7 +85,12 @@ class SNMPBackendEnum(enum.Enum):
         return cls[name]
 
 
-class SNMPDetectSpec(_SNMPDetectBaseType):
+# This def is used to keep the API-exposed object in sync with our
+# implementation.
+SNMPDetectBaseType = list[list[tuple[str, str, bool]]]
+
+
+class SNMPDetectSpec(SNMPDetectBaseType):
     """A specification for SNMP device detection"""
 
     @classmethod

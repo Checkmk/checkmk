@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 import cmk.utils.paths
-from cmk.utils.type_defs import JsonSerializable
+from cmk.utils.jsontype import JsonSerializable
 
 
 @dataclass

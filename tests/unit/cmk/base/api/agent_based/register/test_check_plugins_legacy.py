@@ -7,7 +7,7 @@ import inspect
 
 from pytest import MonkeyPatch
 
-from cmk.utils.type_defs import RuleSetName
+from cmk.utils.rulesets import RuleSetName
 
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName

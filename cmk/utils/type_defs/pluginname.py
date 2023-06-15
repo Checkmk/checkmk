@@ -10,7 +10,7 @@ import string
 from collections.abc import Container
 from typing import Final, Self
 
-__all__ = ["ValidatedString", "SectionName", "RuleSetName"]
+__all__ = ["ValidatedString", "SectionName"]
 
 
 class ValidatedString(abc.ABC):
@@ -87,29 +87,3 @@ class SectionName(ValidatedString):
     @classmethod
     def exceptions(cls) -> Container[str]:
         return super().exceptions()
-
-
-class RuleSetName(ValidatedString):
-    @classmethod
-    def exceptions(cls) -> Container[str]:
-        """
-        allow these names
-
-        Unfortunately, we have some WATO rules that contain dots or dashes.
-        In order not to break things, we allow those
-        """
-        return frozenset(
-            (
-                "drbd.net",
-                "drbd.disk",
-                "drbd.stats",
-                "fileinfo-groups",
-                "hpux_snmp_cs.cpu",
-                "j4p_performance.mem",
-                "j4p_performance.threads",
-                "j4p_performance.uptime",
-                "j4p_performance.app_state",
-                "j4p_performance.app_sess",
-                "j4p_performance.serv_req",
-            )
-        )

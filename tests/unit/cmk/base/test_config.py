@@ -22,9 +22,10 @@ from cmk.utils import password_store
 from cmk.utils.config_path import VersionedConfigPath
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
+from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.type_defs import RuleSetName, SectionName
+from cmk.utils.type_defs import SectionName
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 

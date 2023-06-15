@@ -10,7 +10,8 @@ Some of these are exposed in the API, some are not.
 from collections.abc import Callable, Generator, Sequence
 from typing import Any, List, Literal, NamedTuple, Union
 
-from cmk.utils.type_defs import ParametersTypeAlias, RuleSetName, SectionName
+from cmk.utils.rulesets import RuleSetName
+from cmk.utils.type_defs import ParametersTypeAlias, SectionName
 
 from cmk.snmplib.type_defs import SNMPDetectBaseType
 

@@ -18,8 +18,9 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
+from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
-from cmk.utils.type_defs import RuleSetName, SectionName
+from cmk.utils.type_defs import SectionName
 
 from cmk.snmplib.type_defs import SNMPRawDataSection
 

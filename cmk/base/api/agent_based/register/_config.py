@@ -6,8 +6,9 @@
 from collections import defaultdict
 from collections.abc import Iterable, Sequence
 
+from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
-from cmk.utils.type_defs import RuleSetName, SectionName
+from cmk.utils.type_defs import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.inventory import InventoryPluginName

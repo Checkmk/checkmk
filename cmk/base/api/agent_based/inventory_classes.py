@@ -8,8 +8,8 @@ import string
 from collections.abc import Callable, Iterable, Mapping
 from typing import get_args, NamedTuple, NoReturn, Union
 
+from cmk.utils.rulesets import RuleSetName
 from cmk.utils.structured_data import MutableTree, SDKey, SDValue
-from cmk.utils.type_defs import RuleSetName
 
 from cmk.checkengine.inventory import InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName

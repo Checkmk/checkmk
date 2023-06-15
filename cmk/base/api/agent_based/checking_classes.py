@@ -14,7 +14,7 @@ from typing import NamedTuple, Optional, overload, Self, Union
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
 from cmk.utils.check_utils import unwrap_parameters
-from cmk.utils.type_defs import RuleSetName
+from cmk.utils.rulesets import RuleSetName
 
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.checkresults import MetricTuple

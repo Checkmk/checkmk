@@ -10,7 +10,7 @@ from collections.abc import Callable, Mapping, Sequence
 from typing import Final, get_args, Literal, NoReturn
 
 from cmk.utils.paths import agent_based_plugins_dir
-from cmk.utils.type_defs import RuleSetName
+from cmk.utils.rulesets import RuleSetName
 from cmk.utils.version import Edition
 
 from cmk.checkengine.checking import CheckPluginName

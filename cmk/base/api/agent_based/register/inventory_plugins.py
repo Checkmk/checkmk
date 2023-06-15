@@ -8,7 +8,7 @@ import functools
 from collections.abc import Callable, Iterable, Mapping
 from typing import Any
 
-from cmk.utils.type_defs import RuleSetName
+from cmk.utils.rulesets import RuleSetName
 
 from cmk.checkengine.inventory import InventoryPluginName
 

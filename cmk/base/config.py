@@ -74,6 +74,7 @@ from cmk.utils.labels import Labels
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.regex import regex
+from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import (
     LabelManager,
     LabelSources,
@@ -90,7 +91,6 @@ from cmk.utils.type_defs import (
     CheckPluginNameStr,
     ContactgroupName,
     Item,
-    RuleSetName,
     Seconds,
     SectionName,
     ServiceName,

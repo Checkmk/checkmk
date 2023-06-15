@@ -11,8 +11,9 @@ from pytest import MonkeyPatch
 from tests.testlib.base import Scenario
 
 from cmk.utils.hostaddress import HostName
+from cmk.utils.rulesets import RuleSetName
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.type_defs import LegacyCheckParameters, RuleSetName
+from cmk.utils.type_defs import LegacyCheckParameters
 
 from cmk.checkengine.check_table import ConfiguredService, FilterMode, HostCheckTable, ServiceID
 from cmk.checkengine.checking import CheckPluginName

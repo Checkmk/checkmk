@@ -17,7 +17,6 @@ __all__ = [
     "LegacyCheckParameters",
     "MetricName",
     "ParametersTypeAlias",
-    "RuleSetName",
     "Seconds",
     "SectionName",
     "ServiceAdditionalDetails",
@@ -55,4 +54,4 @@ from ._misc import (
     TimeRange,
     Timestamp,
 )
-from .pluginname import RuleSetName, SectionName, ValidatedString
+from .pluginname import SectionName, ValidatedString

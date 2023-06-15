@@ -18,6 +18,7 @@ import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console, section
+from cmk.utils.rulesets import RuleSetName
 from cmk.utils.structured_data import (
     ImmutableTree,
     make_filter_func,
@@ -27,7 +28,7 @@ from cmk.utils.structured_data import (
     RetentionInterval,
     UpdateResult,
 )
-from cmk.utils.type_defs import RuleSetName, SectionName, ValidatedString
+from cmk.utils.type_defs import SectionName, ValidatedString
 
 from ._api import FetcherFunction, ParserFunction, SectionPlugin, SummarizerFunction
 from ._typedefs import HostKey, SourceType

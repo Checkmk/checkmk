@@ -1,0 +1,19 @@
+#!/bin/bash
+# Copyright (C) 2023 Checkmk GmbH - License: Check_MK Enterprise License
+# This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
+# conditions defined in the file COPYING, which is part of this source code package.
+
+set -e
+
+./run --build-all
+
+SITE=${SITE:-$(until [ "${PWD}" = "/" ]; do if [ -e .site ]; then
+    cat .site
+    break
+else cd ..; fi; done)}
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
+ROOT=/omd/sites/$SITE
+
+if [ -d "$ROOT" ]; then
+    sudo install -v -m 755 build/src/unixcat "$ROOT/bin"
+fi

@@ -1339,21 +1339,11 @@ class ABCFolderMode(WatoMode, abc.ABC):
                     ),
                 ]
 
-        # Attributes inherited to hosts
-        if new:
-            parent = folder
-            myself = None
-        else:
-            this_parent = folder.parent()
-            assert this_parent is not None
-            parent = this_parent
-            myself = folder
-
         configure_attributes(
             new=new,
-            hosts={"folder": myself},
+            hosts={"folder": (myself := None if new else folder)},
             for_what="folder",
-            parent=parent,
+            parent=folder if new else folder.parent(),
             myself=myself,
             basic_attributes=basic_attributes,
         )

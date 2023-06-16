@@ -1,0 +1,64 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+filegroup(
+    name = "all_srcs",
+    srcs = glob(
+        ["**/*"],
+        exclude = ["bazel-*"],
+    ),
+)
+
+configure_make(
+    name = "nagios",
+    args = ["-j4"],
+    configure_in_place = True,
+    configure_options = [
+        "--with-nagios-user=\\$\\$\\(id\\ -un\\)",
+        "--with-nagios-group=\\$\\$\\(id\\ -gn\\)",
+        "--with-perlcache",
+        "--enable-embedded-perl",
+    ],
+    copts = ["-Wl,--rpath,$ORIGIN_VAR/../lib"],
+    env = {"ORIGIN_VAR": "\\\\$$\\$$ORIGIN"},
+    lib_source = ":all_srcs",
+    out_binaries = [
+        "nagios",
+        "nagiostats",
+    ],
+    out_data_dirs = [
+        "share",
+        "lib",
+    ],
+    postfix_script = """
+        mkdir -p ${INSTALLDIR}/lib/nagios
+        install -m 644 ${BUILD_TMPDIR}/p1.pl ${INSTALLDIR}/lib/nagios
+
+        # Copy package documentations to have these information in the binary packages
+        mkdir -p ${INSTALLDIR}/share/doc/nagios
+        set -e ; for file in README THANKS LEGAL LICENSE ; do \
+            install -m 644 ${BUILD_TMPDIR}/$file ${INSTALLDIR}/share/doc/nagios; \
+        done
+    """,
+    targets = [
+        "all",
+        "install-base",
+    ],
+)
+
+genrule(
+    name = "skel",
+    srcs = [
+        "@omd_packages//packages/nagios:merge-nagios-config",
+        "@omd_packages//packages/nagios:diskspace",
+    ],
+    outs = [
+        "bin/merge-nagios-config",
+        "share/diskspace/nagios",
+    ],
+    cmd = """
+        mkdir -p $(RULEDIR)/bin
+        cp --dereference $(execpath @omd_packages//packages/nagios:merge-nagios-config) $$(realpath $(RULEDIR))/bin
+        mkdir -p $(RULEDIR)/share/diskspace/
+        cp --dereference $(execpath @omd_packages//packages/nagios:diskspace) $$(realpath $(RULEDIR))/share/diskspace/nagios
+    """,
+)

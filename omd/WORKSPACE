@@ -52,6 +52,8 @@ load(
     "MONITORING_PLUGINS_VERSION",
     "MSITOOLS_SHA256",
     "MSITOOLS_VERSION",
+    "NAGIOS_SHA256",
+    "NAGIOS_VERSION",
     "NRPE_SHA256",
     "NRPE_VERSION",
     "OPENSSL_SHA256",
@@ -201,4 +203,11 @@ load("//packages/pnp4nagios:pnp4nagios_http.bzl", "pnp4nagios")
 pnp4nagios(
     sha256 = "ab59a8a02d0f70de3cf89b12fe1e9216e4b1127bc29c04a036cd06dde72ee8fb",
     version_str = "0.6.26",
+)
+
+load("//packages/nagios:nagios_http.bzl", "nagios")
+
+nagios(
+    sha256 = NAGIOS_SHA256,
+    version_str = NAGIOS_VERSION,
 )

@@ -54,6 +54,8 @@ load(
     "MONITORING_PLUGINS_VERSION",
     "MSITOOLS_SHA256",
     "MSITOOLS_VERSION",
+    "NAGIOS_SHA256",
+    "NAGIOS_VERSION",
     "NRPE_SHA256",
     "NRPE_VERSION",
     "OPENSSL_SHA256",
@@ -219,4 +221,11 @@ load("//packages/xinetd:xinetd_http.bzl", "xinetd")
 xinetd(
     sha256 = XINETD_SHA256,
     version_str = XINETD_VERSION,
+)
+
+load("//packages/nagios:nagios_http.bzl", "nagios")
+
+nagios(
+    sha256 = NAGIOS_SHA256,
+    version_str = NAGIOS_VERSION,
 )

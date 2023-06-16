@@ -4,9 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Modes for managing timeperiod definitions for the core"""
 
+import logging
 import time
 from collections.abc import Collection
-from typing import Any
+from datetime import date, datetime, timedelta
+
+import recurring_ical_events  # type: ignore[import]
+from icalendar import Calendar, Event  # type: ignore[import]
+from icalendar.prop import vDDDTypes  # type: ignore[import]
 
 import cmk.utils.dateutils as dateutils
 from cmk.utils.timeperiod import timeperiod_spec_alias
@@ -16,7 +21,6 @@ import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes as _changes
 import cmk.gui.watolib.groups as groups
 from cmk.gui.breadcrumb import Breadcrumb
-from cmk.gui.config import active_config
 from cmk.gui.default_name import unique_default_name_suggestion
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
@@ -61,7 +65,87 @@ from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 from cmk.gui.watolib.timeperiods import find_usages_of_timeperiod
 
+logger = logging.getLogger(__name__)
+
 TimeperiodUsage = tuple[str, str]
+
+
+class ICalEvent(Event):
+    def __init__(self, event: Event):
+        super().__init__(**event)
+        self.time_ranges: list[tuple[str, str]] = []
+
+    def _as_datetime(self, key: str) -> datetime:
+        if key not in self:
+            raise ValueError(f"Event obj doesn't have the key {key}")
+
+        vddd: vDDDTypes = self[key]
+        dt = vddd.dt
+
+        if isinstance(dt, datetime):
+            return dt.astimezone()
+
+        if isinstance(dt, date):
+            return datetime.combine(dt, datetime.min.time()).astimezone()
+
+        raise ValueError(f"Error getting datetime obj for the key: {key}")
+
+    @property
+    def dtstart_dt(self) -> datetime:
+        return self._as_datetime("DTSTART")
+
+    @property
+    def dtstart_str(self) -> str:
+        return self.dtstart_dt.strftime("%Y-%m-%d")
+
+    @property
+    def _dtend(self) -> datetime:
+        return self._as_datetime("DTEND")
+
+    @property
+    def _description(self) -> str:
+        if "DESCRIPTION" not in self:
+            return ""
+        return self.decoded("DESCRIPTION").decode("UTF-8")
+
+    @property
+    def summary(self) -> str:
+        if "SUMMARY" not in self:
+            return self._description
+        return self.decoded("SUMMARY").decode("UTF-8")
+
+    @property
+    def _duration(self) -> timedelta:
+        if "DURATION" in self:
+            dur: vDDDTypes = self["DURATION"]
+            if isinstance(dur.dt, timedelta):
+                return dur.dt
+
+        return self._dtend - self.dtstart_dt
+
+    @property
+    def _timerange_to(self) -> str:
+        if self._duration == timedelta(days=1):
+            return "24:00"
+
+        return (self.dtstart_dt + self._duration).strftime("%H:%M")
+
+    @property
+    def timerange(self) -> tuple[str, str]:
+        return self.dtstart_dt.strftime("%H:%M"), self._timerange_to
+
+    @property
+    def timeranges(self) -> set[tuple[str, str]]:
+        self.time_ranges.append(self.timerange)
+        if ("00:00", "24:00") in self.time_ranges:
+            return {("00:00", "24:00")}
+        return set(self.time_ranges)
+
+    def add_timerange(self, new_timerange: tuple[str, str]) -> None:
+        self.time_ranges.append(new_timerange)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({super().__repr__()})"
 
 
 @mode_registry.register
@@ -298,149 +382,6 @@ class ModeTimeperiodImportICal(WatoMode):
                 varprefix, _("The file does not seem to be a valid iCalendar file.BBB")
             )
 
-    # Returns a dictionary in the format:
-    # {
-    #   'name'   : '...',
-    #   'descr'  : '...',
-    #   'events' : [
-    #       {
-    #           'name': '...',
-    #           'date': '...',
-    #       },
-    #   ],
-    # }
-    #
-    # Relevant format specifications:
-    #   http://tools.ietf.org/html/rfc2445
-    #   http://tools.ietf.org/html/rfc5545
-    # TODO: Let's use some sort of standard module in the future. Maybe we can then also handle
-    # times instead of only full day events.
-    def _parse_ical(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
-        self, ical_blob: str, horizon=10
-    ):
-        ical: dict[str, Any] = {"raw_events": []}
-
-        def get_params(key: str) -> dict[str, str]:
-            return {k: v for p in key.split(";")[1:] for k, v in [p.split("=", 1)]}
-
-        def parse_date(params, val):
-            # First noprmalize the date value to make it easier parsable later
-            if "T" not in val and params.get("VALUE") == "DATE":
-                val += "T000000"  # add 00:00:00 to date specification
-
-            return list(time.strptime(val, "%Y%m%dT%H%M%S"))
-
-        # FIXME: The code below is incorrect, the contentlines have to be unfolded before parsing, see RFC 5545!
-        # First extract the relevant information from the file
-        in_event = False
-        event: dict[str, Any] = {}
-        for l in ical_blob.split("\n"):
-            line = l.strip()
-            if not line:
-                continue
-            try:
-                key, val = line.split(":", 1)
-            except ValueError:
-                raise Exception("Failed to parse line: %r" % line)
-
-            if key == "X-WR-CALNAME":
-                ical["name"] = val
-            elif key == "X-WR-CALDESC":
-                ical["descr"] = val
-
-            elif line == "BEGIN:VEVENT":
-                in_event = True
-                event = {}  # create new event
-
-            elif line == "END:VEVENT":
-                # Finish the current event
-                ical["raw_events"].append(event)
-                in_event = False
-
-            elif in_event:
-                if key.startswith("DTSTART"):
-                    params = get_params(key)
-                    event["start"] = parse_date(params, val)
-
-                elif key.startswith("DTEND"):
-                    params = get_params(key)
-                    event["end"] = parse_date(params, val)
-
-                elif key == "RRULE":
-                    event["recurrence"] = {
-                        k: v for p in val.split(";") for k, v in [p.split("=", 1)]
-                    }
-
-                elif key == "SUMMARY":
-                    event["name"] = val
-
-        def next_occurrence(start, now, freq) -> time.struct_time:  # type: ignore[no-untyped-def]
-            # convert struct_time to list to be able to modify it,
-            # then set it to the next occurence
-            t = start[:]
-
-            if freq == "YEARLY":
-                t[0] = now[0] + 1  # add 1 year
-            elif freq == "MONTHLY":
-                if now[1] + 1 > 12:
-                    t[0] = now[0] + 1
-                    t[1] = now[1] + 1 - 12
-                else:
-                    t[0] = now[0]
-                    t[1] = now[1] + 1
-            else:
-                raise Exception('The frequency "%s" is currently not supported' % freq)
-            return time.struct_time(t)
-
-        def resolve_multiple_days(  # type: ignore[no-untyped-def]
-            event, cur_start_time: time.struct_time
-        ):
-            end = time.struct_time(event["end"])
-            if time.strftime("%Y-%m-%d", cur_start_time) == time.strftime("%Y-%m-%d", end):
-                # Simple case: a single day event
-                return [
-                    {
-                        "name": event["name"],
-                        "date": time.strftime("%Y-%m-%d", cur_start_time),
-                    }
-                ]
-
-            # Resolve multiple days
-            resolved, cur_timestamp, day = [], time.mktime(cur_start_time), 1
-            while cur_timestamp < time.mktime(end):
-                resolved.append(
-                    {
-                        "name": "{} {}".format(event["name"], _(" (day %d)") % day),
-                        "date": time.strftime("%Y-%m-%d", time.localtime(cur_timestamp)),
-                    }
-                )
-                cur_timestamp += 86400
-                day += 1
-
-            return resolved
-
-        # TODO(ml): We should just use datetime to manipulate the time instead
-        #           of messing around with lists and tuples.
-        # Now resolve recurring events starting from 01.01 of current year
-        # Non-recurring events are simply copied
-        resolved = []
-        now = time.strptime(str(time.localtime().tm_year - 1), "%Y")
-        last = time.struct_time((horizon + 1, *now[1:]))
-        for event in ical["raw_events"]:
-            if "recurrence" in event and time.struct_time(event["start"]) < now:
-                rule = event["recurrence"]
-                freq = rule["FREQ"]
-                cur = now
-                while cur < last:
-                    cur = next_occurrence(event["start"], cur, freq)
-                    resolved += resolve_multiple_days(event, cur)
-            else:
-                resolved += resolve_multiple_days(event, time.struct_time(event["start"]))
-
-        ical["events"] = sorted(resolved, key=lambda x: x["date"])
-
-        return ical
-
     def page(self) -> None:
         if not request.var("upload"):
             self._show_import_ical_page()
@@ -471,41 +412,44 @@ class ModeTimeperiodImportICal(WatoMode):
         vs_ical.validate_value(ical, "ical")
 
         filename, _ty, content = ical["file"]
+        cal_obj: Calendar = Calendar.from_ical(content)
 
-        try:
-            # TODO(ml): If we could open the file in text mode, we would not
-            #           need to `decode()` here.
-            data = self._parse_ical(content.decode("utf-8"), ical["horizon"])
-        except Exception as e:
-            if active_config.debug:
-                raise
-            raise MKUserError("ical_file", _("Failed to parse file: %s") % e)
+        event_map: dict[datetime, ICalEvent] = {}
+        now = datetime.now()
+        for e in recurring_ical_events.of(cal_obj).between(
+            now, now + timedelta(days=365 * ical["horizon"])
+        ):
+            ice = ICalEvent(e)
+            if ice.dtstart_dt is None:
+                continue
+
+            if existing_event := event_map.get(ice.dtstart_dt):
+                existing_event.add_timerange(ice.timerange)
+                continue
+
+            event_map[ice.dtstart_dt] = ice
 
         get_vars = {
-            "timeperiod_p_alias": data.get("descr", data.get("name", filename)),
+            "timeperiod_p_alias": str(
+                cal_obj.get("X-WR-CALDESC", cal_obj.get("X-WR-CALNAME", filename))
+            ),
         }
 
         for day in dateutils.weekday_ids():
             get_vars["%s_0_from" % day] = ""
             get_vars["%s_0_until" % day] = ""
 
-        # Default to whole day
-        if not ical["times"]:
-            ical["times"] = [((0, 0), (24, 0))]
+        get_vars["timeperiod_p_exceptions_count"] = "%d" % len(event_map)
 
-        get_vars["timeperiod_p_exceptions_count"] = "%d" % len(data["events"])
-        for index, event in enumerate(data["events"]):
-            index += 1
-            get_vars["timeperiod_p_exceptions_%d_0" % index] = event["date"]
+        for index, event in enumerate(dict(sorted(event_map.items())).values(), 1):
+            get_vars["timeperiod_p_exceptions_%d_0" % index] = event.dtstart_str
             get_vars["timeperiod_p_exceptions_indexof_%d" % index] = "%d" % index
-
-            get_vars["timeperiod_p_exceptions_%d_1_count" % index] = "%d" % len(ical["times"])
-            for n, time_spec in enumerate(ical["times"]):
-                n += 1
-                start_time = ":".join("%02d" % x for x in time_spec[0])
-                end_time = ":".join("%02d" % x for x in time_spec[1])
-                get_vars["timeperiod_p_exceptions_%d_1_%d_from" % (index, n)] = start_time
-                get_vars["timeperiod_p_exceptions_%d_1_%d_until" % (index, n)] = end_time
+            get_vars["timeperiod_p_exceptions_%d_1_count" % index] = "%d" % len(
+                event.timeranges
+            )  # "1"  # "%d" % len(ical["times"])
+            for n, (timerange_from, timerange_to) in enumerate(event.timeranges, 1):
+                get_vars["timeperiod_p_exceptions_%d_1_%d_from" % (index, n)] = timerange_from
+                get_vars["timeperiod_p_exceptions_%d_1_%d_until" % (index, n)] = timerange_to
                 get_vars["timeperiod_p_exceptions_%d_1_indexof_%d" % (index, n)] = "%d" % index
 
         for var, val in get_vars.items():

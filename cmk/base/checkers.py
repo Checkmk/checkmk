@@ -21,7 +21,6 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
 from cmk.utils.piggyback import PiggybackTimeSettings
 from cmk.utils.sectionname import SectionName
-from cmk.utils.type_defs import ServiceState
 
 from cmk.snmplib.type_defs import AgentRawData, SNMPRawData
 
@@ -35,6 +34,7 @@ from cmk.checkengine.discovery import HostLabelPlugin
 from cmk.checkengine.error_handling import ExitSpec
 from cmk.checkengine.host_sections import HostSections
 from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
+from cmk.checkengine.submitters import ServiceState
 from cmk.checkengine.summarize import summarize
 from cmk.checkengine.type_defs import NO_SELECTION, SectionNameCollection
 

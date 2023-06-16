@@ -61,7 +61,7 @@ from cmk.utils.paths import (
 )
 from cmk.utils.timeout import Timeout
 from cmk.utils.timeperiod import timeperiod_active
-from cmk.utils.type_defs import CheckPluginNameStr, ServiceDetails, ServiceState
+from cmk.utils.type_defs import CheckPluginNameStr
 
 from cmk.automations.results import (
     ActiveCheckResult,
@@ -113,6 +113,7 @@ from cmk.checkengine import parse_raw_data, plugin_contexts, SourceType
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry, AutocheckServiceWithNodes, DiscoveryMode
 from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
+from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.checkengine.summarize import summarize
 from cmk.checkengine.type_defs import NO_SELECTION
 

@@ -23,7 +23,6 @@ __all__ = [
     "MetricName",
     "LegacyCheckParameters",
     "ParametersTypeAlias",
-    "state_markers",
 ]
 
 ServiceName = str
@@ -48,8 +47,3 @@ MetricName = str
 
 LegacyCheckParameters = None | Mapping[Any, Any] | tuple[Any, ...] | list[Any] | str | int | bool
 ParametersTypeAlias = Mapping[str, Any]  # Modification may result in an incompatible API change.
-
-
-# Symbolic representations of states in plugin output
-# TODO(ml): Should probably be of type enum::int -> str
-state_markers = ("", "(!)", "(!!)", "(?)")

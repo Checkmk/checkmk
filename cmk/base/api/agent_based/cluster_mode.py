@@ -10,10 +10,10 @@ from functools import partial
 from typing import Any, Final, Literal, NamedTuple, Protocol
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.type_defs import state_markers
 
 from cmk.checkengine import CheckPlugin
 from cmk.checkengine.check_table import ServiceID
+from cmk.checkengine.checkresults import state_markers
 
 from cmk.base.api.agent_based.checking_classes import (
     CheckResult,

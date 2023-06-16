@@ -229,8 +229,8 @@ def _make_filter_tree(filters: Iterable[SDFilter]) -> _FilterTree:
 
 
 class MutableTree:
-    def __init__(self, node: StructuredDataNode | None = None) -> None:
-        self.node: Final = StructuredDataNode() if node is None else node
+    def __init__(self, node: Node | None = None) -> None:
+        self.node: Final = Node() if node is None else node
 
     def __len__(self) -> int:
         return len(self.node)
@@ -340,7 +340,7 @@ def _deserialize_legacy_node(  # pylint: disable=too-many-branches
     path: SDPath,
     raw_tree: Mapping[str, object],
     raw_rows: Sequence[Mapping] | None = None,
-) -> StructuredDataNode:
+) -> Node:
     raw_pairs: dict[SDKey, SDValue] = {}
     raw_tables: dict[SDNodeName, list[dict]] = {}
     raw_nodes: dict[SDNodeName, dict] = {}
@@ -384,7 +384,7 @@ def _deserialize_legacy_node(  # pylint: disable=too-many-branches
         else:
             raise TypeError(value)
 
-    return StructuredDataNode(
+    return Node(
         path=path,
         attributes=_deserialize_legacy_attributes(raw_pairs),
         table=_deserialize_legacy_table(raw_rows) if raw_rows else Table(),
@@ -398,7 +398,7 @@ def _deserialize_legacy_node(  # pylint: disable=too-many-branches
                 for name, raw_node in raw_nodes.items()
             },
             **{
-                name: StructuredDataNode(
+                name: Node(
                     path=path + (name,),
                     table=_deserialize_legacy_table(raw_rows),
                 )
@@ -432,18 +432,18 @@ def _filter_table(table: Table, filter_funcs: Sequence[SDFilterFunc]) -> Table:
     return filtered
 
 
-def _filter_node(node: StructuredDataNode, filter_tree: _FilterTree) -> StructuredDataNode:
-    filtered_nodes: dict[SDNodeName, StructuredDataNode] = {}
+def _filter_node(node: Node, filter_tree: _FilterTree) -> Node:
+    filtered_nodes: dict[SDNodeName, Node] = {}
     for name in set(
         name for name in node.nodes_by_name for f in filter_tree.filters if f.filter_nodes(name)
     ).union(filter_tree.nodes):
         if filtered_node := _filter_node(
-            node.nodes_by_name.get(name, StructuredDataNode(path=node.path + (name,))),
+            node.nodes_by_name.get(name, Node(path=node.path + (name,))),
             filter_tree.nodes.get(name, _FilterTree()),
         ):
             filtered_nodes.setdefault(name, filtered_node)
 
-    return StructuredDataNode(
+    return Node(
         path=node.path,
         attributes=(
             _filter_attributes(node.attributes, [f.filter_pairs for f in filter_tree.filters])
@@ -505,13 +505,13 @@ def _merge_tables(left: Table, right: Table) -> Table:
     return table
 
 
-def _merge_nodes(left: StructuredDataNode, right: StructuredDataNode) -> StructuredDataNode:
+def _merge_nodes(left: Node, right: Node) -> Node:
     compared_keys = _compare_dict_keys(
         left=set(right.nodes_by_name),
         right=set(left.nodes_by_name),
     )
 
-    nodes: dict[SDNodeName, StructuredDataNode] = {}
+    nodes: dict[SDNodeName, Node] = {}
     for key in compared_keys.only_old:
         nodes[key] = right.nodes_by_name[key]
 
@@ -521,7 +521,7 @@ def _merge_nodes(left: StructuredDataNode, right: StructuredDataNode) -> Structu
     for key in compared_keys.only_new:
         nodes[key] = left.nodes_by_name[key]
 
-    return StructuredDataNode(
+    return Node(
         path=left.path,
         attributes=_merge_attributes(left.attributes, right.attributes),
         table=_merge_tables(left.table, right.table),
@@ -615,8 +615,8 @@ def _compare_tables(left: Table, right: Table) -> DeltaTable:
     )
 
 
-def _compare_nodes(left: StructuredDataNode, right: StructuredDataNode) -> DeltaStructuredDataNode:
-    delta_nodes: dict[SDNodeName, DeltaStructuredDataNode] = {}
+def _compare_nodes(left: Node, right: Node) -> DeltaNode:
+    delta_nodes: dict[SDNodeName, DeltaNode] = {}
 
     compared_keys = _compare_dict_keys(
         left=set(right.nodes_by_name),
@@ -625,7 +625,7 @@ def _compare_nodes(left: StructuredDataNode, right: StructuredDataNode) -> Delta
 
     for key in compared_keys.only_new:
         if child_left := left.nodes_by_name[key]:
-            delta_nodes[key] = DeltaStructuredDataNode.make_from_node(
+            delta_nodes[key] = DeltaNode.make_from_node(
                 node=child_left,
                 encode_as=_encode_as_new,
             )
@@ -640,12 +640,12 @@ def _compare_nodes(left: StructuredDataNode, right: StructuredDataNode) -> Delta
 
     for key in compared_keys.only_old:
         if child_right := right.nodes_by_name[key]:
-            delta_nodes[key] = DeltaStructuredDataNode.make_from_node(
+            delta_nodes[key] = DeltaNode.make_from_node(
                 node=child_right,
                 encode_as=_encode_as_removed,
             )
 
-    return DeltaStructuredDataNode(
+    return DeltaNode(
         path=left.path,
         attributes=_compare_attributes(left.attributes, right.attributes),
         table=_compare_tables(left.table, right.table),
@@ -681,7 +681,7 @@ class ImmutableTable:
 
 
 class ImmutableTree:
-    def __init__(self, node: StructuredDataNode | None = None) -> None:
+    def __init__(self, node: Node | None = None) -> None:
         self.attributes: Final = (
             ImmutableAttributes()
             if node is None
@@ -699,7 +699,7 @@ class ImmutableTree:
                 retentions=node.table.retentions,
             )
         )
-        self.node: Final[StructuredDataNode] = StructuredDataNode() if node is None else node
+        self.node: Final[Node] = Node() if node is None else node
         self.path: Final = () if node is None else node.path
 
     def __len__(self) -> int:
@@ -747,7 +747,7 @@ class ImmutableTree:
             return cls(_deserialize_legacy_node(path=tuple(), raw_tree=raw_tree))
 
         return cls(
-            node=StructuredDataNode.deserialize(
+            node=Node.deserialize(
                 path=tuple(),
                 raw_attributes=raw_attributes,
                 raw_table=raw_table,
@@ -807,10 +807,8 @@ def _filter_delta_table(
     return DeltaTable(key_columns=delta_table.key_columns, rows=filtered_rows)
 
 
-def _filter_delta_node(
-    delta_node: DeltaStructuredDataNode, filter_tree: _FilterTree
-) -> DeltaStructuredDataNode:
-    filtered_nodes: dict[SDNodeName, DeltaStructuredDataNode] = {}
+def _filter_delta_node(delta_node: DeltaNode, filter_tree: _FilterTree) -> DeltaNode:
+    filtered_nodes: dict[SDNodeName, DeltaNode] = {}
     for name in set(
         name
         for name in delta_node.nodes_by_name
@@ -818,14 +816,12 @@ def _filter_delta_node(
         if f.filter_nodes(name)
     ).union(filter_tree.nodes):
         if filtered_node := _filter_delta_node(
-            delta_node.nodes_by_name.get(
-                name, DeltaStructuredDataNode(path=delta_node.path + (name,))
-            ),
+            delta_node.nodes_by_name.get(name, DeltaNode(path=delta_node.path + (name,))),
             filter_tree.nodes.get(name, _FilterTree()),
         ):
             filtered_nodes.setdefault(name, filtered_node)
 
-    return DeltaStructuredDataNode(
+    return DeltaNode(
         path=delta_node.path,
         attributes=(
             _filter_delta_attributes(
@@ -851,7 +847,7 @@ class ImmutableDeltaTable:
 
 
 class ImmutableDeltaTree:
-    def __init__(self, node: DeltaStructuredDataNode | None = None) -> None:
+    def __init__(self, node: DeltaNode | None = None) -> None:
         self.attributes: Final = (
             ImmutableDeltaAttributes()
             if node is None
@@ -862,7 +858,7 @@ class ImmutableDeltaTree:
             if node is None
             else ImmutableDeltaTable(key_columns=node.table.key_columns, rows=node.table.rows)
         )
-        self.node: Final = DeltaStructuredDataNode() if node is None else node
+        self.node: Final = DeltaNode() if node is None else node
         self.path: Final = () if node is None else node.path
 
     def __len__(self) -> int:
@@ -883,7 +879,7 @@ class ImmutableDeltaTree:
 
     @classmethod
     def deserialize(cls, raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
-        return cls(DeltaStructuredDataNode.deserialize(path=tuple(), raw_tree=raw_tree))
+        return cls(DeltaNode.deserialize(path=tuple(), raw_tree=raw_tree))
 
     def serialize(self) -> SDRawDeltaTree:
         return self.node.serialize()
@@ -1282,14 +1278,14 @@ class Table:
         }
 
 
-class StructuredDataNode:
+class Node:
     def __init__(
         self,
         *,
         path: SDPath | None = None,
         attributes: Attributes | None = None,
         table: Table | None = None,
-        nodes: dict[SDNodeName, StructuredDataNode] | None = None,
+        nodes: dict[SDNodeName, Node] | None = None,
     ) -> None:
         self.path = path if path else tuple()
         self.attributes = attributes or Attributes()
@@ -1306,7 +1302,7 @@ class StructuredDataNode:
         )
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, StructuredDataNode):
+        if not isinstance(other, Node):
             raise TypeError(type(other))
 
         if self.attributes != other.attributes or self.table != other.table:
@@ -1329,18 +1325,18 @@ class StructuredDataNode:
         return not self.__eq__(other)
 
     @property
-    def nodes_by_name(self) -> Mapping[SDNodeName, StructuredDataNode]:
+    def nodes_by_name(self) -> Mapping[SDNodeName, Node]:
         return self._nodes
 
-    def setdefault_node(self, path: SDPath) -> StructuredDataNode:
+    def setdefault_node(self, path: SDPath) -> Node:
         if not path:
             return self
 
         name = path[0]
-        node = self._nodes.setdefault(name, StructuredDataNode(path=self.path + (name,)))
+        node = self._nodes.setdefault(name, Node(path=self.path + (name,)))
         return node.setdefault_node(path[1:])
 
-    def get_node(self, path: SDPath) -> StructuredDataNode | None:
+    def get_node(self, path: SDPath) -> Node | None:
         if not path:
             return self
         return None if (node := self._nodes.get(path[0])) is None else node.get_node(path[1:])
@@ -1353,7 +1349,7 @@ class StructuredDataNode:
         raw_attributes: SDRawAttributes,
         raw_table: SDRawTable,
         raw_nodes: Mapping[SDNodeName, SDRawTree],
-    ) -> StructuredDataNode:
+    ) -> Node:
         return cls(
             path=path,
             attributes=Attributes.deserialize(raw_attributes),
@@ -1476,11 +1472,11 @@ class DeltaTable:
 
 
 @dataclass(frozen=True, kw_only=True)
-class DeltaStructuredDataNode:
+class DeltaNode:
     path: SDPath = ()
     attributes: DeltaAttributes = DeltaAttributes()
     table: DeltaTable = DeltaTable()
-    nodes_by_name: Mapping[SDNodeName, DeltaStructuredDataNode] = field(default_factory=dict)
+    nodes_by_name: Mapping[SDNodeName, DeltaNode] = field(default_factory=dict)
 
     def __len__(self) -> int:
         return sum(
@@ -1492,9 +1488,7 @@ class DeltaStructuredDataNode:
         )
 
     @classmethod
-    def make_from_node(
-        cls, *, node: StructuredDataNode, encode_as: _SDEncodeAs
-    ) -> DeltaStructuredDataNode:
+    def make_from_node(cls, *, node: Node, encode_as: _SDEncodeAs) -> DeltaNode:
         return cls(
             path=node.path,
             attributes=DeltaAttributes.make_from_attributes(
@@ -1514,7 +1508,7 @@ class DeltaStructuredDataNode:
             },
         )
 
-    def get_node(self, path: SDPath) -> DeltaStructuredDataNode | None:
+    def get_node(self, path: SDPath) -> DeltaNode | None:
         if not path:
             return self
         node = self.nodes_by_name.get(path[0])
@@ -1529,7 +1523,7 @@ class DeltaStructuredDataNode:
         return counter
 
     @classmethod
-    def deserialize(cls, *, path: SDPath, raw_tree: SDRawDeltaTree) -> DeltaStructuredDataNode:
+    def deserialize(cls, *, path: SDPath, raw_tree: SDRawDeltaTree) -> DeltaNode:
         return cls(
             path=path,
             attributes=DeltaAttributes.deserialize(raw_attributes=raw_tree["Attributes"]),

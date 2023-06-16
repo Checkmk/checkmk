@@ -31,11 +31,10 @@ from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
 from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.timeperiod import TimeperiodName
-from cmk.utils.type_defs import CheckPluginNameStr, ServiceName
 
 from cmk.checkengine import plugin_contexts
 from cmk.checkengine.check_table import FilterMode
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr, ServiceName
 from cmk.checkengine.inventory import InventoryPluginName
 
 import cmk.base.api.agent_based.register as agent_based_register

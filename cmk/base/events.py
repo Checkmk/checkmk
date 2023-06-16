@@ -26,7 +26,8 @@ from cmk.utils.regex import regex
 from cmk.utils.site import omd_site
 from cmk.utils.tags import TagID
 from cmk.utils.timeperiod import check_timeperiod, cleanup_timeperiod_caches
-from cmk.utils.type_defs import ServiceName
+
+from cmk.checkengine.checking import ServiceName
 
 import cmk.base.config as config
 import cmk.base.core

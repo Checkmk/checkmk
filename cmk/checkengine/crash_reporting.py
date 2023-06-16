@@ -15,11 +15,10 @@ import cmk.utils.encoding
 import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
-from cmk.utils.type_defs import CheckPluginNameStr, ServiceName
 
 from cmk.snmplib.type_defs import AgentRawData, SNMPBackendEnum
 
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr, ServiceName
 
 CrashReportStore = crash_reporting.CrashReportStore
 

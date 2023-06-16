@@ -12,9 +12,8 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.type_defs import ServiceName
 
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName, ServiceName
 
 # Is set before check/discovery function execution
 # Host currently being checked

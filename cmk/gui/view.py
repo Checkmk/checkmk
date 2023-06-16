@@ -8,7 +8,8 @@ from collections.abc import Iterable, Sequence
 from livestatus import SiteId
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.type_defs import ServiceName
+
+from cmk.checkengine.checking import ServiceName
 
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.visuals as visuals

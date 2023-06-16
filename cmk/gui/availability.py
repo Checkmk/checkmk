@@ -21,7 +21,8 @@ import cmk.utils.version as cmk_version
 from cmk.utils.cpu_tracking import CPUTracker
 from cmk.utils.hostaddress import HostName
 from cmk.utils.prediction import lq_logic
-from cmk.utils.type_defs import ServiceName
+
+from cmk.checkengine.checking import ServiceName
 
 import cmk.gui.sites as sites
 from cmk.gui.bi import BIManager

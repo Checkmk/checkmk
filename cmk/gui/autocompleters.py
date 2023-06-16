@@ -11,7 +11,8 @@ from livestatus import LivestatusColumn, MultiSiteConnection
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import MetricName
+
+from cmk.checkengine.checking import MetricName
 
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config

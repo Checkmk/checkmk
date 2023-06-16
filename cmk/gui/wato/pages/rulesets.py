@@ -27,7 +27,8 @@ from cmk.utils.rulesets.ruleset_matcher import (
     TagConditionOR,
 )
 from cmk.utils.tags import GroupedTag, TagGroupID, TagID
-from cmk.utils.type_defs import ServiceName
+
+from cmk.checkengine.checking import ServiceName
 
 import cmk.gui.forms as forms
 import cmk.gui.view_utils

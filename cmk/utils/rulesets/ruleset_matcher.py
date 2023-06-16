@@ -22,7 +22,8 @@ from cmk.utils.rulesets.tuple_rulesets import (
     PHYSICAL_HOSTS,
 )
 from cmk.utils.tags import TagConfig, TagGroupID, TagID
-from cmk.utils.type_defs import ServiceName
+
+from cmk.checkengine.checking import ServiceName
 
 from .conditions import HostOrServiceConditions, HostOrServiceConditionsSimple
 

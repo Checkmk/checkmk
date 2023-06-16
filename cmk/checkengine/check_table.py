@@ -9,9 +9,8 @@ from collections.abc import Iterable, Iterator, Mapping
 from typing import NamedTuple
 
 from cmk.utils.labels import ServiceLabel
-from cmk.utils.type_defs import Item, ServiceName
 
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName, Item, ServiceName
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
 

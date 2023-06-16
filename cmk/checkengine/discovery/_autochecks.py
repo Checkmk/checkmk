@@ -13,10 +13,9 @@ import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.store import ObjectStore
-from cmk.utils.type_defs import Item
 
 from cmk.checkengine.check_table import ServiceID
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName, Item
 from cmk.checkengine.legacy import LegacyCheckParameters
 
 __all__ = ["AutocheckServiceWithNodes", "AutocheckEntry", "AutochecksStore"]

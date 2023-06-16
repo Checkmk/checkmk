@@ -15,7 +15,6 @@ from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.sectionname import SectionName
-from cmk.utils.type_defs import Item, ServiceName
 
 from cmk.snmplib.type_defs import AgentRawData, SNMPRawData
 
@@ -26,7 +25,7 @@ from cmk.checkengine import (
     SourceInfo,
     SummarizerFunction,
 )
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName, Item, ServiceName
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import (
     analyse_cluster_labels,

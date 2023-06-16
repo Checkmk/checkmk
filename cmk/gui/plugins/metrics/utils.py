@@ -29,8 +29,9 @@ from cmk.utils.prediction import (
     TimeSeries,
     TimeSeriesValue,
 )
-from cmk.utils.type_defs import MetricName as _MetricName
 from cmk.utils.version import parse_check_mk_version
+
+from cmk.checkengine.checking import MetricName as _MetricName
 
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config

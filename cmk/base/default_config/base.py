@@ -14,11 +14,12 @@ from cmk.utils.store.host_storage import ContactgroupName, FolderAttributesForBa
 from cmk.utils.tags import TagConfigSpec
 from cmk.utils.timeperiod import TimeperiodSpecs
 from cmk.utils.translations import TranslationOptionsSpec
-from cmk.utils.type_defs import CheckPluginNameStr, ServiceName
 
 from cmk.snmplib.type_defs import SNMPCredentials
 
 from cmk.fetchers import IPMICredentials
+
+from cmk.checkengine.checking import CheckPluginNameStr, ServiceName
 
 # This file contains the defaults settings for almost all configuration
 # variables that can be overridden in main.mk. Some configuration
@@ -186,7 +187,7 @@ tcp_hosts: list = [
     # Match all those that don't have ping and don't have no-agent set
     (["!ping", "!no-agent"], _ALL_HOSTS),
 ]
-# cf. cmk.utils.type_defs.HostAgentConnectionMode, currently there seems to be no good way to
+# cf. cmk.checkengine.checking.HostAgentConnectionMode, currently there seems to be no good way to
 # directly couple these two definitions
 # https://github.com/python/typing/issues/781
 cmk_agent_connection: dict[HostName, Literal["pull-agent", "push-agent"]] = {}

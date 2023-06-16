@@ -35,7 +35,8 @@ from cmk.utils.prediction import (
     Timestamp,
     TimeWindow,
 )
-from cmk.utils.type_defs import MetricName, ServiceName
+
+from cmk.checkengine.checking import MetricName, ServiceName
 
 logger = logging.getLogger("cmk.prediction")
 

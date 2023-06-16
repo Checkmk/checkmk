@@ -9,7 +9,8 @@ from typing import NamedTuple
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.type_defs import ServiceName
+
+from cmk.checkengine.checking import ServiceName
 
 from cmk.bi.data_fetcher import BIStatusFetcher
 from cmk.bi.lib import RequiredBIElement

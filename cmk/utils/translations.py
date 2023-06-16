@@ -9,7 +9,8 @@ from typing import cast, Literal, TypedDict
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import ServiceName
+
+from cmk.checkengine.checking import ServiceName
 
 
 # This can probably improved further by making it total and removing the None,

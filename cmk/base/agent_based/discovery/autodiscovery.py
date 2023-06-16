@@ -18,7 +18,8 @@ from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
-from cmk.utils.type_defs import Item, SectionName, ServiceName
+from cmk.utils.sectionname import SectionName
+from cmk.utils.type_defs import Item, ServiceName
 
 from cmk.checkengine import (
     DiscoveryPlugin,

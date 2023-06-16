@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from cmk.utils import version as cmk_version
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionName
 
 from cmk.automations.results import (
     ABCAutomationResult,

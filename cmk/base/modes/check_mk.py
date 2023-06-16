@@ -38,6 +38,7 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.exceptions import MKBailOut, MKGeneralException, MKTimeout, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console, section
+from cmk.utils.sectionname import SectionName
 from cmk.utils.structured_data import (
     ImmutableTree,
     load_tree,
@@ -48,7 +49,7 @@ from cmk.utils.structured_data import (
 )
 from cmk.utils.tags import TagID
 from cmk.utils.timeout import Timeout
-from cmk.utils.type_defs import SectionName, ServiceState
+from cmk.utils.type_defs import ServiceState
 
 import cmk.snmplib.snmp_modes as snmp_modes
 

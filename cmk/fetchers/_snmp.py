@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any, Final
 
 from cmk.utils.exceptions import MKFetcherError, OnError
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionName
 
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.snmp_scan import gather_available_raw_section_names

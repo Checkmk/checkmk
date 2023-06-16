@@ -18,7 +18,7 @@ from cmk.utils.labels import (
     HostLabelValueDict,
     ServiceLabel,
 )
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionName
 
 import cmk.base.config as config
 

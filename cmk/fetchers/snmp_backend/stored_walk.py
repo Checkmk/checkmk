@@ -13,7 +13,8 @@ import cmk.utils.agent_simulator as agent_simulator
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError
 from cmk.utils.log import console
-from cmk.utils.type_defs import AgentRawData, SectionName
+from cmk.utils.sectionname import SectionName
+from cmk.utils.type_defs import AgentRawData
 
 from cmk.snmplib.type_defs import (
     OID,

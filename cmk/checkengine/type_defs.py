@@ -8,7 +8,7 @@ import enum
 from collections.abc import Sequence
 from typing import Final
 
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionName
 
 __all__ = ["NO_SELECTION", "SectionNameCollection"]
 

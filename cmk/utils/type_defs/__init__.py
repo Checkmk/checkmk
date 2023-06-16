@@ -18,7 +18,6 @@ __all__ = [
     "MetricName",
     "ParametersTypeAlias",
     "Seconds",
-    "SectionName",
     "ServiceAdditionalDetails",
     "ServiceDetails",
     "ServiceName",
@@ -50,4 +49,4 @@ from ._misc import (
     TimeRange,
     Timestamp,
 )
-from .pluginname import SectionName, ValidatedString
+from .pluginname import ValidatedString

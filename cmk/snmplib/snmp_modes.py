@@ -15,7 +15,7 @@ import cmk.utils.paths
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionName
 
 from . import snmp_cache
 from .type_defs import OID, SNMPBackend, SNMPDecodedString, SNMPRawValue, SNMPRowInfo

@@ -7,7 +7,7 @@ import logging
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Any, Final, NamedTuple
 
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib.type_defs import (
     BackendSNMPTree,

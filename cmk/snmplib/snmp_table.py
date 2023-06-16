@@ -12,7 +12,7 @@ import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionName
 
 from .type_defs import (
     BackendSNMPTree,

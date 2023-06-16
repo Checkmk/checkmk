@@ -14,8 +14,8 @@ import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
+from cmk.utils.sectionname import SectionName
 from cmk.utils.site import omd_site
-from cmk.utils.type_defs import SectionName
 
 Labels = Mapping[str, str]
 

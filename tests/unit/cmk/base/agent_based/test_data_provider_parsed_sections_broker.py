@@ -8,7 +8,7 @@ from collections.abc import Callable, Iterable, Sequence
 from pytest import MonkeyPatch
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine import SectionPlugin
 from cmk.checkengine.host_sections import HostSections

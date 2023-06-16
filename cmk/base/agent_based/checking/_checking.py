@@ -20,9 +20,10 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
 from cmk.utils.regex import regex
 from cmk.utils.resulttype import Result
+from cmk.utils.sectionname import SectionName
 from cmk.utils.structured_data import TreeStore
 from cmk.utils.timeperiod import check_timeperiod, timeperiod_active, TimeperiodName
-from cmk.utils.type_defs import AgentRawData, SectionName, ServiceName, state_markers
+from cmk.utils.type_defs import AgentRawData, ServiceName, state_markers
 
 from cmk.snmplib.type_defs import SNMPRawData
 

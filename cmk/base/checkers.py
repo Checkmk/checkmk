@@ -20,7 +20,8 @@ from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
 from cmk.utils.piggyback import PiggybackTimeSettings
-from cmk.utils.type_defs import AgentRawData, SectionName, ServiceState
+from cmk.utils.sectionname import SectionName
+from cmk.utils.type_defs import AgentRawData, ServiceState
 
 from cmk.snmplib.type_defs import SNMPRawData
 

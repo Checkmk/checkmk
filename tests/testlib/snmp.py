@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any, Final
 
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib.snmp_table import get_snmp_table
 from cmk.snmplib.type_defs import BackendSNMPTree, SNMPBackendEnum, SNMPHostConfig

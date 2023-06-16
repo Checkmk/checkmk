@@ -12,8 +12,9 @@ from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, ServiceLabel
 from cmk.utils.log import console
+from cmk.utils.sectionname import SectionName
 from cmk.utils.timeperiod import timeperiod_active
-from cmk.utils.type_defs import Item, SectionName, ServiceName
+from cmk.utils.type_defs import Item, ServiceName
 
 from cmk.automations.results import CheckPreviewEntry
 

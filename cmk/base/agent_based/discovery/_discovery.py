@@ -14,7 +14,8 @@ import cmk.utils.resulttype as result
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
-from cmk.utils.type_defs import AgentRawData, Item, SectionName, ServiceName
+from cmk.utils.sectionname import SectionName
+from cmk.utils.type_defs import AgentRawData, Item, ServiceName
 
 from cmk.snmplib.type_defs import SNMPRawData
 

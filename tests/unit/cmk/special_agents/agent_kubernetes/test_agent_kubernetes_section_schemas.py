@@ -9,7 +9,9 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.base.api.agent_based.type_defs import AgentParseFunction, AgentSectionPlugin, SectionName
+from cmk.utils.sectionname import SectionName
+
+from cmk.base.api.agent_based.type_defs import AgentParseFunction, AgentSectionPlugin
 from cmk.base.plugins.agent_based.utils import kube as check
 
 from cmk.special_agents.utils_kubernetes.schemata import section as agent

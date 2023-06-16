@@ -10,7 +10,8 @@ import pytest
 from pytest import MonkeyPatch
 
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.type_defs import ParametersTypeAlias, SectionName
+from cmk.utils.sectionname import SectionName
+from cmk.utils.type_defs import ParametersTypeAlias
 
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.inventory import InventoryPluginName

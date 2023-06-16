@@ -14,7 +14,7 @@ from typing import Any, List
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib.type_defs import SNMPDetectBaseType
 

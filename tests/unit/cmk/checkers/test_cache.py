@@ -8,7 +8,7 @@ import json
 import logging
 from collections.abc import Sequence
 
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionName
 
 from cmk.fetchers import Mode
 from cmk.fetchers.cache import PersistedSections, SectionStore

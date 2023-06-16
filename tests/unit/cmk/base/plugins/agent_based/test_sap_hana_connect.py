@@ -7,7 +7,7 @@ import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionName
 
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 

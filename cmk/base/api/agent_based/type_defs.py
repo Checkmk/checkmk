@@ -11,7 +11,8 @@ from collections.abc import Callable, Generator, Sequence
 from typing import Any, List, Literal, NamedTuple, Union
 
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.type_defs import ParametersTypeAlias, SectionName
+from cmk.utils.sectionname import SectionName
+from cmk.utils.type_defs import ParametersTypeAlias
 
 from cmk.snmplib.type_defs import SNMPDetectBaseType
 

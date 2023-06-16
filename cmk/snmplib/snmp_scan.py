@@ -9,7 +9,7 @@ from collections.abc import Collection, Iterable
 import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException, MKSNMPError, OnError
 from cmk.utils.log import console
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionName
 
 import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_modes as snmp_modes

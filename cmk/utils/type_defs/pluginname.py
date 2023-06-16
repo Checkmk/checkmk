@@ -10,7 +10,7 @@ import string
 from collections.abc import Container
 from typing import Final, Self
 
-__all__ = ["ValidatedString", "SectionName"]
+__all__ = ["ValidatedString"]
 
 
 class ValidatedString(abc.ABC):
@@ -81,9 +81,3 @@ class ValidatedString(abc.ABC):
 
     def __hash__(self) -> int:
         return self._hash
-
-
-class SectionName(ValidatedString):
-    @classmethod
-    def exceptions(cls) -> Container[str]:
-        return super().exceptions()

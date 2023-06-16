@@ -9,8 +9,8 @@ from typing import NamedTuple
 from cmk.utils.encoding import ensure_str_with_fallback
 from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex, REGEX_HOST_NAME_CHARS
+from cmk.utils.sectionname import SectionName
 from cmk.utils.translations import translate_hostname, TranslationOptions
-from cmk.utils.type_defs import SectionName
 
 __all__ = ["PiggybackMarker", "SectionMarker"]
 

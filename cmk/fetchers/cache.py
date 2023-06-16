@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Final, Generic, TypeVar
 
 import cmk.utils.store as _store
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib.type_defs import SNMPRawDataSection
 

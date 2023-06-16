@@ -13,7 +13,7 @@ import cmk.utils.piggyback
 import cmk.utils.resulttype as result
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionName
 from cmk.utils.type_defs.pluginname import ValidatedString
 
 from ._typedefs import HostKey, SourceInfo, SourceType

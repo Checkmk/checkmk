@@ -10,7 +10,7 @@ from collections.abc import Mapping, MutableMapping
 from typing import Any
 
 import cmk.utils.paths
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionName
 from cmk.utils.version import is_raw_edition
 
 import cmk.snmplib.snmp_table as snmp_table

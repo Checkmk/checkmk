@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import ast
 
-from cmk.utils.type_defs import SectionName
+from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib.type_defs import SNMPRawData
 

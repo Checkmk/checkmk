@@ -12,8 +12,8 @@ from typing import Any, cast, Literal, NamedTuple, TypeVar, Union
 
 from cmk.utils.hostaddress import HostAddress as _HostAddress
 from cmk.utils.hostaddress import HostName as _HostName
+from cmk.utils.sectionname import SectionName as _SectionName
 from cmk.utils.type_defs import AgentRawData as _AgentRawData
-from cmk.utils.type_defs import SectionName as _SectionName
 
 SNMPContextName = str
 SNMPDecodedString = str

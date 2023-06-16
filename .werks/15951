@@ -1,0 +1,12 @@
+Title: Dashboards and graph collections: Support same graph multiple times
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1687152844
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Before this werk, when adding the same graph multiple times to a dashboard or a graph collection,
+only one of the graphs was actually rendered. The other ones were displayed as empty frames.

@@ -801,4 +801,5 @@ def page_graph_dashlet(
         graph_identification,
         custom_graph_render_options,
         resolve_combined_single_metric_spec,
+        graph_display_id=json.loads(request.get_str_input_mandatory("id")),
     )

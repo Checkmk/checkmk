@@ -101,6 +101,9 @@ class GraphArtwork(TypedDict):
     pin_time: Timestamp | None
     # Definition itself, for reproducing the graph
     definition: GraphRecipe
+    # Display id to avoid mixups in our JS code when rendering the same graph multiple times in
+    # graph collections and dashboards. Often set to the empty string when not needed.
+    display_id: str
 
 
 #   .--Default Render Options----------------------------------------------.
@@ -215,6 +218,8 @@ def compute_graph_artwork(
     resolve_combined_single_metric_spec: Callable[
         [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
     ],
+    *,
+    graph_display_id: str = "",
 ) -> GraphArtwork:
     graph_render_options = add_default_render_options(graph_render_options)
 
@@ -261,6 +266,9 @@ def compute_graph_artwork(
         "pin_time": pin_time,
         # Definition itself, for reproducing the graph
         "definition": graph_recipe,
+        # Display id to avoid mixups in our JS code when rendering the same graph multiple times in
+        # graph collections and dashboards. Often set to the empty string when not needed.
+        "display_id": graph_display_id,
     }
 
 

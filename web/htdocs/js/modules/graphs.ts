@@ -57,6 +57,7 @@ interface AjaxContext {
     definition: GraphRecipe;
     data_range: GraphDataRange;
     render_options: GraphRenderOptions;
+    display_id: string;
 }
 
 interface AjaxGraph {
@@ -137,6 +138,9 @@ interface GraphArtwork {
     pin_time: Timestamp | null;
     // Definition itself, for reproducing the graph
     definition: GraphRecipe;
+    // Display id to avoid mixups in get_id_of_graph when rendering the same graph multiple times
+    // in graph collections and dashboards. Often set to the empty string when not needed.
+    display_id: string;
 }
 
 // Styling. Please note that for each visible pixel our canvas
@@ -160,6 +164,7 @@ interface DelayedGraph {
     graph_data_range: GraphDataRange;
     graph_render_options: GraphRenderOptions;
     script_object: HTMLScriptElement;
+    graph_display_id: string;
 }
 
 //#   .-Creation-----------------------------------------------------------.
@@ -185,7 +190,11 @@ function get_id_of_graph(ajax_context: AjaxContext) {
                     g_graphs[graph_id].ajax_context!.definition.specification
                 ) &&
             JSON.stringify(ajax_context.render_options) ==
-                JSON.stringify(g_graphs[graph_id].ajax_context!.render_options)
+                JSON.stringify(
+                    g_graphs[graph_id].ajax_context!.render_options
+                ) &&
+            ajax_context.display_id ==
+                g_graphs[graph_id].ajax_context!.display_id
         ) {
             return graph_id;
         }
@@ -266,7 +275,8 @@ function get_current_script(): HTMLScriptElement {
 export function load_graph_content(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
-    graph_render_options: GraphRenderOptions
+    graph_render_options: GraphRenderOptions,
+    graph_display_id: string
 ) {
     const script_object = get_current_script();
 
@@ -280,6 +290,7 @@ export function load_graph_content(
             graph_data_range: graph_data_range,
             graph_render_options: graph_render_options,
             script_object: script_object,
+            graph_display_id: graph_display_id,
         });
         return;
     } else {
@@ -287,7 +298,8 @@ export function load_graph_content(
             graph_recipe,
             graph_data_range,
             graph_render_options,
-            script_object
+            script_object,
+            graph_display_id
         );
     }
 }
@@ -313,7 +325,8 @@ function do_load_graph_content(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
-    script_object: HTMLScriptElement
+    script_object: HTMLScriptElement,
+    graph_display_id: string
 ) {
     const graph_load_container = script_object.previousSibling as HTMLElement;
     update_graph_load_container(
@@ -329,6 +342,7 @@ function do_load_graph_content(
                 graph_recipe: graph_recipe,
                 graph_data_range: graph_data_range,
                 graph_render_options: graph_render_options,
+                graph_display_id: graph_display_id,
             })
         );
 
@@ -413,7 +427,8 @@ function delayed_graph_renderer() {
                 entry.graph_recipe,
                 entry.graph_data_range,
                 entry.graph_render_options,
-                entry.script_object
+                entry.script_object,
+                entry.graph_display_id
             );
             g_delayed_graphs.splice(i, 1);
         }

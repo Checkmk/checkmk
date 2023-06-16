@@ -1,4 +1,4 @@
-Title: mk_postgres: support Latin-1 server encoding
+Title: mk_postgres: support Latin-1 and SQL_ASCII server encodings
 Class: fix
 Compatible: compat
 Component: checks
@@ -8,6 +8,6 @@ Knowledge: doc
 Level: 1
 Version: 2.2.0b1
 
-Previously, any Postgresgl server with encoding Latin-1 would be rejected by the agent
+Previously, any Postgresgl server with encoding Latin-1 or SQL_ASCII would be rejected by the agent
 <tt>mk_postgres.py</tt>. This is because some of the SQL queries sent by the agent contained utf-8
-only characters. With this werk, the agent supports Latin-1 encoding.
+only characters. With this werk, the agent supports these encodings.

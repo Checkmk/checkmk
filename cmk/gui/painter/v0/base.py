@@ -17,7 +17,7 @@ from typing import Any, Literal, Union
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.type_defs import TimeRange
+from cmk.utils.prediction import TimeRange
 
 from cmk.gui import visuals
 from cmk.gui.display_options import display_options

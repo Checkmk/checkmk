@@ -10,8 +10,7 @@ import pytest
 
 from tests.testlib import set_timezone
 
-from cmk.utils.prediction import TimeSeries, TimeSeriesValue
-from cmk.utils.type_defs import Seconds, Timestamp
+from cmk.utils.prediction import Seconds, TimeSeries, TimeSeriesValue, Timestamp
 
 from cmk.gui.plugins.metrics import artwork
 

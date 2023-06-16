@@ -7,7 +7,7 @@ from logging import Logger
 from threading import Lock
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.type_defs import Timestamp
+from cmk.utils.prediction import Timestamp
 
 from .core_queries import HostInfo, query_hosts_infos, query_status_program_start
 

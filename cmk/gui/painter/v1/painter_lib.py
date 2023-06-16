@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from typing import Any, Generic, TypeVar
 
 import cmk.utils
-from cmk.utils.type_defs import TimeRange
+from cmk.utils.prediction import TimeRange
 
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.type_defs import ColumnName, PainterParameters, Rows

@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.type_defs import Seconds
+from cmk.utils.prediction import Seconds
 
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Age, DropdownChoice, MonitoringState, Tuple

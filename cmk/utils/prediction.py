@@ -19,9 +19,13 @@ import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import MetricName, Seconds, ServiceName, Timestamp
+from cmk.utils.type_defs import MetricName, ServiceName
 
 logger = logging.getLogger("cmk.prediction")
+
+Seconds = int
+Timestamp = int
+TimeRange = tuple[int, int]
 
 TimeWindow = tuple[Timestamp, Timestamp, Seconds]
 RRDColumnFunction = Callable[[Timestamp, Timestamp], "TimeSeries"]

@@ -14,7 +14,7 @@ import livestatus
 
 import cmk.utils.render
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import TimeRange
+from cmk.utils.prediction import TimeRange
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError

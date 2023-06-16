@@ -7,7 +7,7 @@
 from collections.abc import Sequence
 from typing import TypeGuard
 
-from cmk.utils.type_defs import Timestamp
+from cmk.utils.prediction import Timestamp
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger

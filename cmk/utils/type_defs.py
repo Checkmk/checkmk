@@ -13,9 +13,6 @@ __all__ = [
     "AgentRawData",
     "CheckPluginNameStr",
     "Item",
-    "Seconds",
-    "Timestamp",
-    "TimeRange",
     "ServiceState",
     "ServiceDetails",
     "ServiceAdditionalDetails",
@@ -30,11 +27,6 @@ AgentRawData = NewType("AgentRawData", bytes)
 
 CheckPluginNameStr = str
 Item = str | None
-
-
-Seconds = int
-Timestamp = int
-TimeRange = tuple[int, int]
 
 ServiceState = int
 ServiceDetails = str

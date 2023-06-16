@@ -16,8 +16,8 @@ from re import Pattern
 from typing import Any, Literal, TypedDict, Union
 
 from cmk.utils.exceptions import MKException
+from cmk.utils.prediction import Seconds
 from cmk.utils.translations import TranslationOptions
-from cmk.utils.type_defs import Seconds
 
 TextPattern = str | Pattern[str]
 TextMatchResult = Literal[False] | Sequence[str]

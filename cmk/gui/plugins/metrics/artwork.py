@@ -14,8 +14,7 @@ from typing import Literal, TypedDict
 from dateutil.relativedelta import relativedelta
 
 import cmk.utils.render
-from cmk.utils.prediction import TimeSeries, TimeSeriesValue
-from cmk.utils.type_defs import Seconds, TimeRange, Timestamp
+from cmk.utils.prediction import Seconds, TimeRange, TimeSeries, TimeSeriesValue, Timestamp
 
 from cmk.gui.http import request
 from cmk.gui.i18n import _

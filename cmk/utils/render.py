@@ -15,7 +15,7 @@ from datetime import timedelta
 from typing import final
 
 from cmk.utils.i18n import _
-from cmk.utils.type_defs import Seconds
+from cmk.utils.prediction import Seconds
 
 # .
 #   .--Date/Time-----------------------------------------------------------.

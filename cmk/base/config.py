@@ -78,6 +78,7 @@ from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTT
 from cmk.utils.labels import Labels
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
+from cmk.utils.prediction import Seconds
 from cmk.utils.regex import regex
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import (
@@ -93,7 +94,7 @@ from cmk.utils.store.host_storage import apply_hosts_file_to_object, get_host_st
 from cmk.utils.structured_data import RawIntervalsFromConfig
 from cmk.utils.tags import ComputedDataSources, TagGroupID, TagID
 from cmk.utils.timeperiod import TimeperiodName
-from cmk.utils.type_defs import CheckPluginNameStr, ContactgroupName, Item, Seconds, ServiceName
+from cmk.utils.type_defs import CheckPluginNameStr, ContactgroupName, Item, ServiceName
 
 from cmk.automations.results import CheckPreviewEntry
 

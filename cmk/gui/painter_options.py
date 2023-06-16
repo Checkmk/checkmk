@@ -12,7 +12,7 @@ from typing import Any
 
 import cmk.utils.render
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.type_defs import TimeRange, Timestamp
+from cmk.utils.prediction import TimeRange, Timestamp
 
 import cmk.gui.forms as forms
 import cmk.gui.valuespec as valuespec

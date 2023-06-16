@@ -7,7 +7,8 @@ import math
 
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.type_defs import AgentRawData
+
+from cmk.snmplib.type_defs import AgentRawData  # pylint: disable=cmk-module-layer-violation
 
 
 def our_uptime() -> float:

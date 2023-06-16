@@ -61,7 +61,7 @@ from cmk.utils.paths import (
 )
 from cmk.utils.timeout import Timeout
 from cmk.utils.timeperiod import timeperiod_active
-from cmk.utils.type_defs import AgentRawData, CheckPluginNameStr, ServiceDetails, ServiceState
+from cmk.utils.type_defs import CheckPluginNameStr, ServiceDetails, ServiceState
 
 from cmk.automations.results import (
     ActiveCheckResult,
@@ -97,7 +97,13 @@ from cmk.automations.results import (
 
 import cmk.snmplib.snmp_modes as snmp_modes
 import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib.type_defs import BackendOIDSpec, BackendSNMPTree, SNMPCredentials, SNMPHostConfig
+from cmk.snmplib.type_defs import (
+    AgentRawData,
+    BackendOIDSpec,
+    BackendSNMPTree,
+    SNMPCredentials,
+    SNMPHostConfig,
+)
 
 from cmk.fetchers import FetcherType, get_raw_data, Mode, ProgramFetcher, TCPFetcher
 from cmk.fetchers.filecache import FileCacheOptions

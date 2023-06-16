@@ -23,9 +23,9 @@ from cmk.utils.resulttype import Result
 from cmk.utils.sectionname import SectionName
 from cmk.utils.structured_data import TreeStore
 from cmk.utils.timeperiod import check_timeperiod, timeperiod_active, TimeperiodName
-from cmk.utils.type_defs import AgentRawData, ServiceName
+from cmk.utils.type_defs import ServiceName
 
-from cmk.snmplib.type_defs import SNMPRawData
+from cmk.snmplib.type_defs import AgentRawData, SNMPRawData
 
 from cmk.fetchers import FetcherType
 

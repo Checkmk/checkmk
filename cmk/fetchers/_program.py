@@ -13,7 +13,8 @@ from contextlib import suppress
 from typing import Any, Final
 
 from cmk.utils.exceptions import MKFetcherError
-from cmk.utils.type_defs import AgentRawData
+
+from cmk.snmplib.type_defs import AgentRawData
 
 from cmk.fetchers import Fetcher, Mode
 

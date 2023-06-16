@@ -17,7 +17,8 @@ import cmk.utils.misc
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
 from cmk.utils.translations import TranslationOptions
-from cmk.utils.type_defs import AgentRawData
+
+from cmk.snmplib.type_defs import AgentRawData
 
 from cmk.fetchers.cache import SectionStore
 

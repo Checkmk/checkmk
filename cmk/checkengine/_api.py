@@ -12,9 +12,8 @@ import cmk.utils.resulttype as result
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.type_defs import AgentRawData
 
-from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
+from cmk.snmplib.type_defs import AgentRawData, SNMPRawData, SNMPRawDataSection
 
 from ._parser import Parser
 from ._typedefs import Parameters, SourceInfo

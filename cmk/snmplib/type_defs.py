@@ -8,12 +8,11 @@ import copy
 import enum
 import logging
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import Any, cast, Literal, NamedTuple, TypeVar, Union
+from typing import Any, cast, Literal, NamedTuple, NewType, TypeVar, Union
 
 from cmk.utils.hostaddress import HostAddress as _HostAddress
 from cmk.utils.hostaddress import HostName as _HostName
 from cmk.utils.sectionname import SectionName as _SectionName
-from cmk.utils.type_defs import AgentRawData as _AgentRawData
 
 SNMPContextName = str
 SNMPDecodedString = str
@@ -66,9 +65,11 @@ SNMPTiming = dict
 
 SNMPDetectAtom = tuple[str, str, bool]  # (oid, regex_pattern, expected_match)
 
-# TODO(ml): This type does not really belong here but there currently
-#           is not better place.
-AbstractRawData = _AgentRawData | SNMPRawData
+# TODO(ml): The `Agent*` types have obviously nothing to do here.  We need
+#           to clarify the layering between fetchers and checkengine and
+#           then move them in one of these packages.
+AgentRawData = NewType("AgentRawData", bytes)
+AbstractRawData = AgentRawData | SNMPRawData
 TRawData = TypeVar("TRawData", bound=AbstractRawData)
 
 

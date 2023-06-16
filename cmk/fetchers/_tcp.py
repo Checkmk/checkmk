@@ -19,7 +19,8 @@ from cmk.utils.certs import write_cert_store
 from cmk.utils.encryption import decrypt_by_agent_protocol, TransportProtocol
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.type_defs import AgentRawData
+
+from cmk.snmplib.type_defs import AgentRawData
 
 from cmk.fetchers import Fetcher, Mode
 

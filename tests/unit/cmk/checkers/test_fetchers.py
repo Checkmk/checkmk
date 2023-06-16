@@ -26,10 +26,10 @@ from cmk.utils.encryption import TransportProtocol
 from cmk.utils.exceptions import MKFetcherError, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
-from cmk.utils.type_defs import AgentRawData
 
 from cmk.snmplib import snmp_table
 from cmk.snmplib.type_defs import (
+    AgentRawData,
     BackendOIDSpec,
     BackendSNMPTree,
     SNMPBackendEnum,

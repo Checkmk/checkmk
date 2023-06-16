@@ -10,9 +10,8 @@ from typing import Final
 
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.type_defs import AgentRawData
 
-from cmk.snmplib.type_defs import SNMPRawData
+from cmk.snmplib.type_defs import AgentRawData, SNMPRawData
 
 from cmk.fetchers import Fetcher, FetcherType, NoFetcher, NoFetcherError, ProgramFetcher
 from cmk.fetchers.config import make_file_cache_path_template

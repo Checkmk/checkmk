@@ -5,12 +5,9 @@
 
 from __future__ import annotations
 
-from typing import NewType
-
 __all__ = [
     "ServiceName",
     "ContactgroupName",
-    "AgentRawData",
     "CheckPluginNameStr",
     "Item",
     "ServiceState",
@@ -21,9 +18,6 @@ __all__ = [
 
 ServiceName = str
 ContactgroupName = str
-
-
-AgentRawData = NewType("AgentRawData", bytes)
 
 CheckPluginNameStr = str
 Item = str | None

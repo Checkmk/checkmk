@@ -20,9 +20,8 @@ import cmk.utils.debug
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
 from cmk.utils.translations import TranslationOptions
-from cmk.utils.type_defs import AgentRawData
 
-from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
+from cmk.snmplib.type_defs import AgentRawData, SNMPRawData, SNMPRawDataSection
 
 from cmk.fetchers.cache import PersistedSections, SectionStore
 

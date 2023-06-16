@@ -21,7 +21,8 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import VERBOSE
 from cmk.utils.regex import regex
 from cmk.utils.render import Age
-from cmk.utils.type_defs import AgentRawData
+
+from cmk.snmplib.type_defs import AgentRawData  # pylint: disable=cmk-module-layer-violation
 
 logger = logging.getLogger("cmk.base")
 

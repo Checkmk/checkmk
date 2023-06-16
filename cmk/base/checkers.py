@@ -21,9 +21,9 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
 from cmk.utils.piggyback import PiggybackTimeSettings
 from cmk.utils.sectionname import SectionName
-from cmk.utils.type_defs import AgentRawData, ServiceState
+from cmk.utils.type_defs import ServiceState
 
-from cmk.snmplib.type_defs import SNMPRawData
+from cmk.snmplib.type_defs import AgentRawData, SNMPRawData
 
 from cmk.fetchers import Fetcher, get_raw_data, Mode
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge

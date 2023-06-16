@@ -570,8 +570,8 @@ def _compare_dicts(*, left: Mapping, right: Mapping, keep_identical: bool) -> Co
     )
 
 
-def _compare_attributes(left: Attributes, right: Attributes) -> DeltaAttributes:
-    return DeltaAttributes(
+def _compare_attributes(left: Attributes, right: Attributes) -> ImmutableDeltaAttributes:
+    return ImmutableDeltaAttributes(
         pairs=_compare_dicts(
             left=right.pairs,
             right=left.pairs,
@@ -580,8 +580,7 @@ def _compare_attributes(left: Attributes, right: Attributes) -> DeltaAttributes:
     )
 
 
-def _compare_tables(left: Table, right: Table) -> DeltaTable:
-    key_columns = sorted(set(left.key_columns).union(right.key_columns))
+def _compare_tables(left: Table, right: Table) -> ImmutableDeltaTable:
     compared_keys = _compare_dict_keys(
         left=set(right.rows_by_ident),
         right=set(left.rows_by_ident),
@@ -609,14 +608,14 @@ def _compare_tables(left: Table, right: Table) -> DeltaTable:
     for key in compared_keys.only_new:
         delta_rows.append({k: _encode_as_new(v) for k, v in left.rows_by_ident[key].items()})
 
-    return DeltaTable(
-        key_columns=key_columns,
+    return ImmutableDeltaTable(
+        key_columns=sorted(set(left.key_columns).union(right.key_columns)),
         rows=delta_rows,
     )
 
 
-def _compare_nodes(left: Node, right: Node) -> DeltaNode:
-    delta_nodes: dict[SDNodeName, DeltaNode] = {}
+def _compare_nodes(left: Node, right: Node) -> ImmutableDeltaTree:
+    delta_nodes: dict[SDNodeName, ImmutableDeltaTree] = {}
 
     compared_keys = _compare_dict_keys(
         left=set(right.nodes_by_name),
@@ -625,7 +624,7 @@ def _compare_nodes(left: Node, right: Node) -> DeltaNode:
 
     for key in compared_keys.only_new:
         if child_left := left.nodes_by_name[key]:
-            delta_nodes[key] = DeltaNode.make_from_node(
+            delta_nodes[key] = ImmutableDeltaTree.make_from_node(
                 node=child_left,
                 encode_as=_encode_as_new,
             )
@@ -640,12 +639,12 @@ def _compare_nodes(left: Node, right: Node) -> DeltaNode:
 
     for key in compared_keys.only_old:
         if child_right := right.nodes_by_name[key]:
-            delta_nodes[key] = DeltaNode.make_from_node(
+            delta_nodes[key] = ImmutableDeltaTree.make_from_node(
                 node=child_right,
                 encode_as=_encode_as_removed,
             )
 
-    return DeltaNode(
+    return ImmutableDeltaTree(
         path=left.path,
         attributes=_compare_attributes(left.attributes, right.attributes),
         table=_compare_tables(left.table, right.table),
@@ -724,7 +723,7 @@ class ImmutableTree:
         return ImmutableTree(_merge_nodes(self.node, rhs.node))
 
     def difference(self, rhs: ImmutableTree) -> ImmutableDeltaTree:
-        return ImmutableDeltaTree(_compare_nodes(self.node, rhs.node))
+        return _compare_nodes(self.node, rhs.node)
 
     def get_attribute(self, path: SDPath, key: SDKey) -> SDValue:
         return (
@@ -780,22 +779,22 @@ class ImmutableTree:
 
 
 def _filter_delta_attributes(
-    delta_attributes: DeltaAttributes, filter_funcs: Sequence[SDFilterFunc]
-) -> DeltaAttributes:
+    delta_attributes: ImmutableDeltaAttributes, filter_funcs: Sequence[SDFilterFunc]
+) -> ImmutableDeltaAttributes:
     if not filter_funcs:
-        return DeltaAttributes(pairs=delta_attributes.pairs)
+        return ImmutableDeltaAttributes(pairs=delta_attributes.pairs)
 
     filtered_pairs: dict[SDKey, tuple[SDValue, SDValue]] = {}
     for filter_func in filter_funcs:
         filtered_pairs.update(_get_filtered_dict(delta_attributes.pairs, filter_func))
-    return DeltaAttributes(pairs=filtered_pairs)
+    return ImmutableDeltaAttributes(pairs=filtered_pairs)
 
 
 def _filter_delta_table(
-    delta_table: DeltaTable, filter_funcs: Sequence[SDFilterFunc]
-) -> DeltaTable:
+    delta_table: ImmutableDeltaTable, filter_funcs: Sequence[SDFilterFunc]
+) -> ImmutableDeltaTable:
     if not filter_funcs:
-        return DeltaTable(key_columns=delta_table.key_columns, rows=delta_table.rows)
+        return ImmutableDeltaTable(key_columns=delta_table.key_columns, rows=delta_table.rows)
 
     filtered_rows: list[dict[SDKey, tuple[SDValue, SDValue]]] = []
     for row in delta_table.rows:
@@ -804,40 +803,82 @@ def _filter_delta_table(
             filtered_row.update(_get_filtered_dict(row, filter_func))
         if filtered_row:
             filtered_rows.append(filtered_row)
-    return DeltaTable(key_columns=delta_table.key_columns, rows=filtered_rows)
+    return ImmutableDeltaTable(key_columns=delta_table.key_columns, rows=filtered_rows)
 
 
-def _filter_delta_node(delta_node: DeltaNode, filter_tree: _FilterTree) -> DeltaNode:
-    filtered_nodes: dict[SDNodeName, DeltaNode] = {}
+def _filter_delta_tree(
+    delta_tree: ImmutableDeltaTree, filter_tree: _FilterTree
+) -> ImmutableDeltaTree:
+    filtered_nodes: dict[SDNodeName, ImmutableDeltaTree] = {}
     for name in set(
         name
-        for name in delta_node.nodes_by_name
+        for name in delta_tree.nodes_by_name
         for f in filter_tree.filters
         if f.filter_nodes(name)
     ).union(filter_tree.nodes):
-        if filtered_node := _filter_delta_node(
-            delta_node.nodes_by_name.get(name, DeltaNode(path=delta_node.path + (name,))),
+        if filtered_node := _filter_delta_tree(
+            delta_tree.nodes_by_name.get(name, ImmutableDeltaTree(path=delta_tree.path + (name,))),
             filter_tree.nodes.get(name, _FilterTree()),
         ):
             filtered_nodes.setdefault(name, filtered_node)
 
-    return DeltaNode(
-        path=delta_node.path,
+    return ImmutableDeltaTree(
+        path=delta_tree.path,
         attributes=(
             _filter_delta_attributes(
-                delta_node.attributes, [f.filter_pairs for f in filter_tree.filters]
+                delta_tree.attributes, [f.filter_pairs for f in filter_tree.filters]
             )
         ),
         table=_filter_delta_table(
-            delta_node.table, [f.filter_columns for f in filter_tree.filters]
+            delta_tree.table, [f.filter_columns for f in filter_tree.filters]
         ),
         nodes_by_name=filtered_nodes,
     )
 
 
+_SDEncodeAs = Callable[[SDValue], tuple[SDValue, SDValue]]
+_SDDeltaCounter = Counter[Literal["new", "changed", "removed"]]
+
+
+def _compute_delta_stats(dict_: Mapping[SDKey, tuple[SDValue, SDValue]]) -> _SDDeltaCounter:
+    counter: _SDDeltaCounter = Counter()
+    for value0, value1 in dict_.values():
+        match [value0 is None, value1 is None]:
+            case [True, False]:
+                counter["new"] += 1
+            case [False, True]:
+                counter["removed"] += 1
+            case [False, False] if value0 != value1:
+                counter["changed"] += 1
+    return counter
+
+
 @dataclass(frozen=True, kw_only=True)
 class ImmutableDeltaAttributes:
     pairs: Mapping[SDKey, tuple[SDValue, SDValue]] = field(default_factory=dict)
+
+    def __len__(self) -> int:
+        return len(self.pairs)
+
+    @classmethod
+    def make_from_attributes(
+        cls, *, attributes: Attributes, encode_as: _SDEncodeAs
+    ) -> ImmutableDeltaAttributes:
+        return cls(pairs={key: encode_as(value) for key, value in attributes.pairs.items()})
+
+    def get_stats(self) -> _SDDeltaCounter:
+        return _compute_delta_stats(self.pairs)
+
+    @classmethod
+    def deserialize(cls, raw_attributes: SDRawDeltaAttributes) -> ImmutableDeltaAttributes:
+        return cls(pairs=raw_attributes.get("Pairs", {}))
+
+    def serialize(self) -> SDRawDeltaAttributes:
+        return {"Pairs": self.pairs} if self.pairs else {}
+
+    def to_raw(self) -> Mapping:
+        # Useful for debugging; no restrictions
+        return {"Pairs": self.pairs}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -845,47 +886,125 @@ class ImmutableDeltaTable:
     key_columns: Sequence[SDKey] = field(default_factory=list)
     rows: Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]] = field(default_factory=list)
 
-
-class ImmutableDeltaTree:
-    def __init__(self, node: DeltaNode | None = None) -> None:
-        self.attributes: Final = (
-            ImmutableDeltaAttributes()
-            if node is None
-            else ImmutableDeltaAttributes(pairs=node.attributes.pairs)
-        )
-        self.table: Final = (
-            ImmutableDeltaTable()
-            if node is None
-            else ImmutableDeltaTable(key_columns=node.table.key_columns, rows=node.table.rows)
-        )
-        self.node: Final = DeltaNode() if node is None else node
-        self.path: Final = () if node is None else node.path
-
     def __len__(self) -> int:
-        return len(self.node)
+        return sum(map(len, self.rows))
 
-    @property
-    def nodes_by_name(self) -> Mapping[SDNodeName, ImmutableDeltaTree]:
-        return {name: ImmutableDeltaTree(node) for name, node in self.node.nodes_by_name.items()}
-
-    def filter(self, filters: Iterable[SDFilter]) -> ImmutableDeltaTree:
-        return ImmutableDeltaTree(_filter_delta_node(self.node, _make_filter_tree(filters)))
+    @classmethod
+    def make_from_table(cls, *, table: Table, encode_as: _SDEncodeAs) -> ImmutableDeltaTable:
+        return cls(
+            key_columns=table.key_columns,
+            rows=[{key: encode_as(value) for key, value in row.items()} for row in table.rows],
+        )
 
     def get_stats(self) -> _SDDeltaCounter:
-        return self.node.get_stats()
+        counter: _SDDeltaCounter = Counter()
+        for row in self.rows:
+            counter.update(_compute_delta_stats(row))
+        return counter
+
+    @classmethod
+    def deserialize(cls, raw_table: SDRawDeltaTable) -> ImmutableDeltaTable:
+        return cls(key_columns=raw_table.get("KeyColumns", []), rows=raw_table.get("Rows", []))
+
+    def serialize(self) -> SDRawDeltaTable:
+        return {"KeyColumns": self.key_columns, "Rows": self.rows} if self.rows else {}
+
+    def to_raw(self) -> Mapping:
+        # Useful for debugging; no restrictions
+        return {"KeyColumns": self.key_columns, "Rows": self.rows}
+
+
+@dataclass(frozen=True, kw_only=True)
+class ImmutableDeltaTree:
+    path: SDPath = ()
+    attributes: ImmutableDeltaAttributes = ImmutableDeltaAttributes()
+    table: ImmutableDeltaTable = ImmutableDeltaTable()
+    nodes_by_name: Mapping[SDNodeName, ImmutableDeltaTree] = field(default_factory=dict)
+
+    def __len__(self) -> int:
+        return sum(
+            [
+                len(self.attributes),
+                len(self.table),
+            ]
+            + [len(node) for node in self.nodes_by_name.values()]
+        )
+
+    @classmethod
+    def make_from_node(cls, *, node: Node, encode_as: _SDEncodeAs) -> ImmutableDeltaTree:
+        return cls(
+            path=node.path,
+            attributes=ImmutableDeltaAttributes.make_from_attributes(
+                attributes=node.attributes,
+                encode_as=encode_as,
+            ),
+            table=ImmutableDeltaTable.make_from_table(
+                table=node.table,
+                encode_as=encode_as,
+            ),
+            nodes_by_name={
+                name: cls.make_from_node(
+                    node=child,
+                    encode_as=encode_as,
+                )
+                for name, child in node.nodes_by_name.items()
+            },
+        )
 
     def get_tree(self, path: SDPath) -> ImmutableDeltaTree:
-        return ImmutableDeltaTree(self.node.get_node(path))
+        if not path:
+            return self
+        node = self.nodes_by_name.get(path[0])
+        return ImmutableDeltaTree() if node is None else node.get_tree(path[1:])
+
+    def filter(self, filters: Iterable[SDFilter]) -> ImmutableDeltaTree:
+        return _filter_delta_tree(self, _make_filter_tree(filters))
+
+    def get_stats(self) -> _SDDeltaCounter:
+        counter: _SDDeltaCounter = Counter()
+        counter.update(self.attributes.get_stats())
+        counter.update(self.table.get_stats())
+        for node in self.nodes_by_name.values():
+            counter.update(node.get_stats())
+        return counter
 
     @classmethod
     def deserialize(cls, raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
-        return cls(DeltaNode.deserialize(path=tuple(), raw_tree=raw_tree))
+        return cls._deserialize(path=(), raw_tree=raw_tree)
+
+    @classmethod
+    def _deserialize(cls, *, path: SDPath, raw_tree: SDRawDeltaTree) -> ImmutableDeltaTree:
+        return cls(
+            path=path,
+            attributes=ImmutableDeltaAttributes.deserialize(raw_attributes=raw_tree["Attributes"]),
+            table=ImmutableDeltaTable.deserialize(raw_table=raw_tree["Table"]),
+            nodes_by_name={
+                raw_node_name: cls._deserialize(
+                    path=path + (raw_node_name,),
+                    raw_tree=raw_node,
+                )
+                for raw_node_name, raw_node in raw_tree["Nodes"].items()
+            },
+        )
 
     def serialize(self) -> SDRawDeltaTree:
-        return self.node.serialize()
+        return {
+            "Attributes": self.attributes.serialize(),
+            "Table": self.table.serialize(),
+            "Nodes": {edge: node.serialize() for edge, node in self.nodes_by_name.items() if node},
+        }
+
+    def to_raw(self) -> Mapping:
+        # Useful for debugging; no restrictions
+        return {
+            "Path": self.path,
+            "Attributes": self.attributes.to_raw(),
+            "Table": self.table.to_raw(),
+            "Nodes": {edge: node.to_raw() for edge, node in self.nodes_by_name.items()},
+        }
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({pprint.pformat(self.node.to_raw())})"
+        return f"{self.__class__.__name__}({pprint.pformat(self.to_raw())})"
 
 
 # .
@@ -1379,178 +1498,6 @@ class Node:
             "Attributes": self.attributes.to_raw(),
             "Table": self.table.to_raw(),
             "Nodes": {name: node.to_raw() for name, node in self._nodes.items()},
-        }
-
-
-# .
-#   .--delta tree----------------------------------------------------------.
-#   |                  _      _ _          _                               |
-#   |               __| | ___| | |_ __ _  | |_ _ __ ___  ___               |
-#   |              / _` |/ _ \ | __/ _` | | __| '__/ _ \/ _ \              |
-#   |             | (_| |  __/ | || (_| | | |_| | |  __/  __/              |
-#   |              \__,_|\___|_|\__\__,_|  \__|_|  \___|\___|              |
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-_SDEncodeAs = Callable[[SDValue], tuple[SDValue, SDValue]]
-_SDDeltaCounter = Counter[Literal["new", "changed", "removed"]]
-
-
-def _compute_delta_stats(dict_: Mapping[SDKey, tuple[SDValue, SDValue]]) -> _SDDeltaCounter:
-    counter: _SDDeltaCounter = Counter()
-    for value0, value1 in dict_.values():
-        match [value0 is None, value1 is None]:
-            case [True, False]:
-                counter["new"] += 1
-            case [False, True]:
-                counter["removed"] += 1
-            case [False, False] if value0 != value1:
-                counter["changed"] += 1
-    return counter
-
-
-@dataclass(frozen=True, kw_only=True)
-class DeltaAttributes:
-    pairs: Mapping[SDKey, tuple[SDValue, SDValue]] = field(default_factory=dict)
-
-    def __len__(self) -> int:
-        return len(self.pairs)
-
-    @classmethod
-    def make_from_attributes(
-        cls, *, attributes: Attributes, encode_as: _SDEncodeAs
-    ) -> DeltaAttributes:
-        return cls(pairs={key: encode_as(value) for key, value in attributes.pairs.items()})
-
-    def get_stats(self) -> _SDDeltaCounter:
-        return _compute_delta_stats(self.pairs)
-
-    @classmethod
-    def deserialize(cls, raw_attributes: SDRawDeltaAttributes) -> DeltaAttributes:
-        return cls(pairs=raw_attributes.get("Pairs", {}))
-
-    def serialize(self) -> SDRawDeltaAttributes:
-        return {"Pairs": self.pairs} if self.pairs else {}
-
-    def to_raw(self) -> Mapping:
-        # Useful for debugging; no restrictions
-        return {"Pairs": self.pairs}
-
-
-@dataclass(frozen=True, kw_only=True)
-class DeltaTable:
-    key_columns: Sequence[SDKey] = field(default_factory=list)
-    rows: Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]] = field(default_factory=list)
-
-    def __len__(self) -> int:
-        return sum(map(len, self.rows))
-
-    @classmethod
-    def make_from_table(cls, *, table: Table, encode_as: _SDEncodeAs) -> DeltaTable:
-        return cls(
-            key_columns=table.key_columns,
-            rows=[{key: encode_as(value) for key, value in row.items()} for row in table.rows],
-        )
-
-    def get_stats(self) -> _SDDeltaCounter:
-        counter: _SDDeltaCounter = Counter()
-        for row in self.rows:
-            counter.update(_compute_delta_stats(row))
-        return counter
-
-    @classmethod
-    def deserialize(cls, raw_table: SDRawDeltaTable) -> DeltaTable:
-        return cls(key_columns=raw_table.get("KeyColumns", []), rows=raw_table.get("Rows", []))
-
-    def serialize(self) -> SDRawDeltaTable:
-        return {"KeyColumns": self.key_columns, "Rows": self.rows} if self.rows else {}
-
-    def to_raw(self) -> Mapping:
-        # Useful for debugging; no restrictions
-        return {"KeyColumns": self.key_columns, "Rows": self.rows}
-
-
-@dataclass(frozen=True, kw_only=True)
-class DeltaNode:
-    path: SDPath = ()
-    attributes: DeltaAttributes = DeltaAttributes()
-    table: DeltaTable = DeltaTable()
-    nodes_by_name: Mapping[SDNodeName, DeltaNode] = field(default_factory=dict)
-
-    def __len__(self) -> int:
-        return sum(
-            [
-                len(self.attributes),
-                len(self.table),
-            ]
-            + [len(node) for node in self.nodes_by_name.values()]
-        )
-
-    @classmethod
-    def make_from_node(cls, *, node: Node, encode_as: _SDEncodeAs) -> DeltaNode:
-        return cls(
-            path=node.path,
-            attributes=DeltaAttributes.make_from_attributes(
-                attributes=node.attributes,
-                encode_as=encode_as,
-            ),
-            table=DeltaTable.make_from_table(
-                table=node.table,
-                encode_as=encode_as,
-            ),
-            nodes_by_name={
-                name: cls.make_from_node(
-                    node=child,
-                    encode_as=encode_as,
-                )
-                for name, child in node.nodes_by_name.items()
-            },
-        )
-
-    def get_node(self, path: SDPath) -> DeltaNode | None:
-        if not path:
-            return self
-        node = self.nodes_by_name.get(path[0])
-        return None if node is None else node.get_node(path[1:])
-
-    def get_stats(self) -> _SDDeltaCounter:
-        counter: _SDDeltaCounter = Counter()
-        counter.update(self.attributes.get_stats())
-        counter.update(self.table.get_stats())
-        for node in self.nodes_by_name.values():
-            counter.update(node.get_stats())
-        return counter
-
-    @classmethod
-    def deserialize(cls, *, path: SDPath, raw_tree: SDRawDeltaTree) -> DeltaNode:
-        return cls(
-            path=path,
-            attributes=DeltaAttributes.deserialize(raw_attributes=raw_tree["Attributes"]),
-            table=DeltaTable.deserialize(raw_table=raw_tree["Table"]),
-            nodes_by_name={
-                raw_node_name: cls.deserialize(
-                    path=path + (raw_node_name,),
-                    raw_tree=raw_node,
-                )
-                for raw_node_name, raw_node in raw_tree["Nodes"].items()
-            },
-        )
-
-    def serialize(self) -> SDRawDeltaTree:
-        return {
-            "Attributes": self.attributes.serialize(),
-            "Table": self.table.serialize(),
-            "Nodes": {edge: node.serialize() for edge, node in self.nodes_by_name.items() if node},
-        }
-
-    def to_raw(self) -> Mapping:
-        # Useful for debugging; no restrictions
-        return {
-            "Path": self.path,
-            "Attributes": self.attributes.to_raw(),
-            "Table": self.table.to_raw(),
-            "Nodes": {edge: node.to_raw() for edge, node in self.nodes_by_name.items()},
         }
 
 

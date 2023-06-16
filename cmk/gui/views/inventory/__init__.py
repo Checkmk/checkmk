@@ -1892,7 +1892,7 @@ class PainterInvhistDelta(Painter):
         except MultipleInventoryTreesError:
             return ImmutableDeltaTree()
 
-        return ImmutableDeltaTree(row.get("invhist_delta"))
+        return row.get("invhist_delta", ImmutableDeltaTree())
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
         if not (tree := self._compute_data(row, cell)):

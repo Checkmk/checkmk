@@ -80,19 +80,19 @@ def test_serialize_empty_mut_tree() -> None:
 
 def test_serialize_filled_mut_tree() -> None:
     raw_tree = _create_filled_mut_tree().serialize()
-    assert raw_tree["Attributes"] == {}
-    assert raw_tree["Table"] == {}
-    assert raw_tree["Nodes"]["path-to-nta"]["Attributes"] == {}
-    assert raw_tree["Nodes"]["path-to-nta"]["Table"] == {}
+    assert not raw_tree["Attributes"]
+    assert not raw_tree["Table"]
+    assert not raw_tree["Nodes"]["path-to-nta"]["Attributes"]
+    assert not raw_tree["Nodes"]["path-to-nta"]["Table"]
 
     assert raw_tree["Nodes"]["path-to-nta"]["Nodes"]["na"]["Attributes"]["Pairs"] == {
         "na0": "NA 0",
         "na1": "NA 1",
     }
-    assert raw_tree["Nodes"]["path-to-nta"]["Nodes"]["na"]["Table"] == {}
-    assert raw_tree["Nodes"]["path-to-nta"]["Nodes"]["na"]["Nodes"] == {}
+    assert not raw_tree["Nodes"]["path-to-nta"]["Nodes"]["na"]["Table"]
+    assert not raw_tree["Nodes"]["path-to-nta"]["Nodes"]["na"]["Nodes"]
 
-    assert raw_tree["Nodes"]["path-to-nta"]["Nodes"]["nt"]["Attributes"] == {}
+    assert not raw_tree["Nodes"]["path-to-nta"]["Nodes"]["nt"]["Attributes"]
     assert raw_tree["Nodes"]["path-to-nta"]["Nodes"]["nt"]["Table"]["KeyColumns"] == ["nt0"]
     nt_rows = raw_tree["Nodes"]["path-to-nta"]["Nodes"]["nt"]["Table"]["Rows"]
     assert len(nt_rows) == 2
@@ -101,7 +101,7 @@ def test_serialize_filled_mut_tree() -> None:
         {"nt0": "NT 10", "nt1": "NT 11"},
     ]:
         assert row in nt_rows
-    assert raw_tree["Nodes"]["path-to-nta"]["Nodes"]["nt"]["Nodes"] == {}
+    assert not raw_tree["Nodes"]["path-to-nta"]["Nodes"]["nt"]["Nodes"]
 
     assert raw_tree["Nodes"]["path-to-nta"]["Nodes"]["ta"]["Attributes"]["Pairs"] == {
         "ta0": "TA 0",
@@ -115,7 +115,7 @@ def test_serialize_filled_mut_tree() -> None:
         {"ta0": "TA 10", "ta1": "TA 11"},
     ]:
         assert row in ta_rows
-    assert raw_tree["Nodes"]["path-to-nta"]["Nodes"]["ta"]["Nodes"] == {}
+    assert not raw_tree["Nodes"]["path-to-nta"]["Nodes"]["ta"]["Nodes"]
 
 
 def test_deserialize_empty_imm_tree() -> None:
@@ -179,19 +179,19 @@ def test_serialize_empty_delta_tree() -> None:
 
 def test_serialize_filled_delta_tree() -> None:
     raw_tree = _create_empty_imm_tree().difference(_create_filled_imm_tree()).serialize()
-    assert raw_tree["Attributes"] == {}
-    assert raw_tree["Table"] == {}
-    assert raw_tree["Nodes"]["path-to-nta"]["Attributes"] == {}
-    assert raw_tree["Nodes"]["path-to-nta"]["Table"] == {}
+    assert not raw_tree["Attributes"]
+    assert not raw_tree["Table"]
+    assert not raw_tree["Nodes"]["path-to-nta"]["Attributes"]
+    assert not raw_tree["Nodes"]["path-to-nta"]["Table"]
 
     assert raw_tree["Nodes"]["path-to-nta"]["Nodes"]["na"]["Attributes"]["Pairs"] == {
         "na0": ("NA 0", None),
         "na1": ("NA 1", None),
     }
-    assert raw_tree["Nodes"]["path-to-nta"]["Nodes"]["na"]["Table"] == {}
-    assert raw_tree["Nodes"]["path-to-nta"]["Nodes"]["na"]["Nodes"] == {}
+    assert not raw_tree["Nodes"]["path-to-nta"]["Nodes"]["na"]["Table"]
+    assert not raw_tree["Nodes"]["path-to-nta"]["Nodes"]["na"]["Nodes"]
 
-    assert raw_tree["Nodes"]["path-to-nta"]["Nodes"]["nt"]["Attributes"] == {}
+    assert not raw_tree["Nodes"]["path-to-nta"]["Nodes"]["nt"]["Attributes"]
     assert raw_tree["Nodes"]["path-to-nta"]["Nodes"]["nt"]["Table"]["KeyColumns"] == ["nt0"]
     nt_rows = raw_tree["Nodes"]["path-to-nta"]["Nodes"]["nt"]["Table"]["Rows"]
     assert len(nt_rows) == 2
@@ -200,7 +200,7 @@ def test_serialize_filled_delta_tree() -> None:
         {"nt0": ("NT 10", None), "nt1": ("NT 11", None)},
     ]:
         assert row in nt_rows
-    assert raw_tree["Nodes"]["path-to-nta"]["Nodes"]["nt"]["Nodes"] == {}
+    assert not raw_tree["Nodes"]["path-to-nta"]["Nodes"]["nt"]["Nodes"]
 
     assert raw_tree["Nodes"]["path-to-nta"]["Nodes"]["ta"]["Attributes"]["Pairs"] == {
         "ta0": ("TA 0", None),
@@ -214,7 +214,7 @@ def test_serialize_filled_delta_tree() -> None:
         {"ta0": ("TA 10", None), "ta1": ("TA 11", None)},
     ]:
         assert row in ta_rows
-    assert raw_tree["Nodes"]["path-to-nta"]["Nodes"]["ta"]["Nodes"] == {}
+    assert not raw_tree["Nodes"]["path-to-nta"]["Nodes"]["ta"]["Nodes"]
 
 
 def test_deserialize_empty_delta_tree() -> None:
@@ -389,7 +389,7 @@ def test_filter_delta_tree_nt() -> None:
     filtered_child = filtered.get_tree(("path-to-nta", "nt"))
     assert len(filtered_child) == 2
     assert filtered_child.path == ("path-to-nta", "nt")
-    assert filtered_child.attributes.pairs == {}
+    assert not filtered_child.attributes.pairs
     assert len(filtered_child.table.rows) == 2
     for row in (
         {"nt1": (None, "NT 01")},
@@ -479,7 +479,7 @@ def test_filter_delta_tree_nta_ta() -> None:
 
     nta = filtered.get_tree(("path-to-nta",))
     assert len(nta) == 5
-    assert nta.attributes.pairs == {}
+    assert not nta.attributes.pairs
     assert nta.table.rows == []
 
     assert len(filtered.get_tree(("path-to-nta", "nt"))) == 0
@@ -1355,7 +1355,7 @@ def test_legacy_tree() -> None:
     idx_node_attr = tree.get_tree(("path-to", "idx-node", "0"))
     assert len(idx_node_attr) > 0
     assert idx_node_attr.attributes.pairs == {"idx-attr": "value", "idx-enum": "v1, 1.0, 2"}
-    assert idx_node_attr.table.rows_by_ident == {}
+    assert not idx_node_attr.table.rows_by_ident
     assert not idx_node_attr.table.rows
 
     idx_sub_idx_node_attr = tree.get_tree(
@@ -1363,30 +1363,30 @@ def test_legacy_tree() -> None:
     )
     assert len(idx_sub_idx_node_attr) > 0
     assert idx_sub_idx_node_attr.attributes.pairs == {"bar-attr": "value"}
-    assert idx_sub_idx_node_attr.table.rows_by_ident == {}
+    assert not idx_sub_idx_node_attr.table.rows_by_ident
     assert not idx_sub_idx_node_attr.table.rows
 
     idx_sub_node_attr = tree.get_tree(("path-to", "idx-node", "0", "idx-sub-node", "foo-node"))
     assert len(idx_sub_node_attr) > 0
     assert idx_sub_node_attr.attributes.pairs == {"foo-attr": "value"}
-    assert idx_sub_node_attr.table.rows_by_ident == {}
+    assert not idx_sub_node_attr.table.rows_by_ident
     assert not idx_sub_node_attr.table.rows
 
     idx_table = tree.get_tree(("path-to", "idx-node", "0", "idx-table"))
     assert len(idx_table) > 0
-    assert idx_table.attributes.pairs == {}
+    assert not idx_table.attributes.pairs
     assert idx_table.table.rows_by_ident == {("value",): {"idx-col": "value"}}
     assert idx_table.table.rows == [{"idx-col": "value"}]
 
     attr_node = tree.get_tree(("path-to", "node"))
     assert len(attr_node) > 0
     assert attr_node.attributes.pairs == {"attr": "value"}
-    assert attr_node.table.rows_by_ident == {}
+    assert not attr_node.table.rows_by_ident
     assert not attr_node.table.rows
 
     table_node = tree.get_tree(("path-to", "table"))
     assert len(table_node) > 0
-    assert table_node.attributes.pairs == {}
+    assert not table_node.attributes.pairs
     assert table_node.table.rows_by_ident == {("value",): {"col": "value"}}
     assert table_node.table.rows == [{"col": "value"}]
 

@@ -45,7 +45,7 @@ test_basic_function() {
 real	0mRUNTIMEs
 user	0mRUNTIMEs
 sys	0mRUNTIMEs
-runtime RUNTIME" "$(sed 's/0[.,][0-9]\+/RUNTIME/' "$(profiling_dir)/echo_some_string_.log")"
+runtime RUNTIME" "$(sed 's/0[.,][0-9]\+/RUNTIME/' "$(profiling_dir)/echo_some_string.log")"
 
 }
 

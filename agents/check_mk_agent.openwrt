@@ -194,7 +194,7 @@ set_up_profiling() {
         MK_DEFINE_LOG_SECTION_TIME='_log_section_time() {
             section_func="$@"
 
-            base_name=$(echo "${section_func}" | tr -c "A-Za-z0-9.-" _)
+            base_name=$(echo "${section_func}" | sed "s/[^A-Za-z0-9.-]/_/g")
             profiling_logfile="'"${PROFILING_LOGFILE_DIR}"'/${base_name}.log"
 
             start="$(perl -MTime::HiRes=time -le "print time()")"

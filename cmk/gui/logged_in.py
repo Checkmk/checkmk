@@ -16,7 +16,7 @@ from livestatus import SiteConfigurations, SiteId
 
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.type_defs import ContactgroupName
+from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.user import UserId
 from cmk.utils.version import __version__, Version
 

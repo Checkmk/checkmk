@@ -188,6 +188,8 @@ pysaml2 = "==7.2.1"  # used by SSO via SAML2.0
 azure-storage-blob = "==12.14.1"  # used for backups to Azure Blob Storage
 azure-identity = "==1.12.0"  # used for backups to Azure Blob Storage
 markdown = "==3.4.1"  # used for werk parsing
+icalendar = "==5.0.7"  # used for importing .ical files
+recurring_ical_events = "==2.0.2"  # used for parsing recurring events in icalendar objects
 
 [requires]
 # As pipenv {sync,lock} does currently not support env variable expansion in and out Pipfile.lock,

@@ -8,8 +8,7 @@ from collections.abc import Iterable, Iterator, Sequence
 from cmk.utils import pnp_cleanup
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
-
-from cmk.checkengine.checking import ServiceName
+from cmk.utils.type_defs import ServiceName
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _

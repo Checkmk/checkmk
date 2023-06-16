@@ -10,8 +10,7 @@ import pytest
 from tests.unit.cmk.gui.conftest import SetConfig
 
 from cmk.utils.exceptions import MKGeneralException
-
-from cmk.checkengine.checking import MetricName
+from cmk.utils.type_defs import MetricName
 
 import cmk.gui.metrics as metrics
 from cmk.gui.config import active_config

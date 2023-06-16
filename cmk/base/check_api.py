@@ -43,10 +43,10 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
 from cmk.utils.sectionname import SectionName as _SectionName
+from cmk.utils.type_defs import MetricName
 
 from cmk.snmplib.type_defs import SpecialColumn as _SpecialColumn
 
-from cmk.checkengine.checking import MetricName
 from cmk.checkengine.checkresults import state_markers
 from cmk.checkengine.plugin_contexts import check_type
 from cmk.checkengine.plugin_contexts import (

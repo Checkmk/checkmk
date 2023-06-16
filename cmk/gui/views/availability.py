@@ -14,8 +14,7 @@ from livestatus import SiteId
 import cmk.utils.version as cmk_version
 from cmk.utils.defines import host_state_name, service_state_name
 from cmk.utils.hostaddress import HostName
-
-from cmk.checkengine.checking import ServiceName
+from cmk.utils.type_defs import ServiceName
 
 import cmk.gui.availability as availability
 import cmk.gui.bi as bi

@@ -19,10 +19,10 @@ from cmk.utils.labels import HostLabel, HostLabelValueDict, Labels
 from cmk.utils.notify_types import NotifyAnalysisInfo, NotifyBulks
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.rulesets.ruleset_matcher import LabelSources, RulesetName
+from cmk.utils.type_defs import CheckPluginNameStr, Item, ServiceName
 
 from cmk.snmplib.type_defs import AgentRawData  # pylint: disable=cmk-module-layer-violation
 
-from cmk.checkengine.checking import CheckPluginNameStr, Item, ServiceName
 from cmk.checkengine.checkresults import MetricTuple
 from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
 from cmk.checkengine.legacy import LegacyCheckParameters

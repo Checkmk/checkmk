@@ -9,10 +9,9 @@ modified via rules."""
 from collections.abc import Collection, Iterator
 
 from cmk.utils.hostaddress import HostName
+from cmk.utils.type_defs import Item
 
 from cmk.automations.results import AnalyseServiceResult
-
-from cmk.checkengine.checking import Item
 
 import cmk.gui.forms as forms
 import cmk.gui.view_utils

@@ -15,8 +15,7 @@ from typing import Any, overload
 
 import cmk.utils.man_pages as man_pages
 from cmk.utils.man_pages import ManPageCatalogPath
-
-from cmk.checkengine.checking import CheckPluginNameStr
+from cmk.utils.type_defs import CheckPluginNameStr
 
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.exceptions import MKUserError

@@ -19,6 +19,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionName
+from cmk.utils.type_defs import Item, ServiceName
 
 from cmk.checkengine import (
     DiscoveryPlugin,
@@ -29,7 +30,7 @@ from cmk.checkengine import (
     SummarizerFunction,
 )
 from cmk.checkengine.check_table import ServiceID
-from cmk.checkengine.checking import CheckPluginName, Item, ServiceName
+from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import (
     AutocheckEntry,
     AutocheckServiceWithNodes,

@@ -23,6 +23,7 @@ from cmk.utils.resulttype import Result
 from cmk.utils.sectionname import SectionName
 from cmk.utils.structured_data import TreeStore
 from cmk.utils.timeperiod import check_timeperiod, timeperiod_active, TimeperiodName
+from cmk.utils.type_defs import ServiceName
 
 from cmk.snmplib.type_defs import AgentRawData, SNMPRawData
 
@@ -41,7 +42,7 @@ from cmk.checkengine import (
     SummarizerFunction,
 )
 from cmk.checkengine.check_table import ConfiguredService
-from cmk.checkengine.checking import CheckPluginName, ServiceName
+from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.checkresults import (
     ActiveCheckResult,
     MetricTuple,

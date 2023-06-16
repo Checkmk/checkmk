@@ -7,7 +7,7 @@ from collections.abc import Callable
 from typing import Any, NamedTuple
 
 from cmk.utils.regex import regex
-from cmk.utils.type_defs import ServiceName
+from cmk.utils.servicename import ServiceName
 
 ServiceFilter = Callable[[ServiceName], bool]
 

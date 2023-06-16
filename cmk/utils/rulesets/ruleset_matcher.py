@@ -21,8 +21,8 @@ from cmk.utils.rulesets.tuple_rulesets import (
     NEGATE,
     PHYSICAL_HOSTS,
 )
+from cmk.utils.servicename import ServiceName
 from cmk.utils.tags import TagConfig, TagGroupID, TagID
-from cmk.utils.type_defs import ServiceName
 
 from .conditions import HostOrServiceConditions, HostOrServiceConditionsSimple
 

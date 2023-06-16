@@ -22,7 +22,6 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel, HostLabelValueDict
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.rulesets.conditions import HostOrServiceConditions
-from cmk.utils.type_defs import Item
 from cmk.utils.version import Version
 
 from cmk.automations.results import (
@@ -30,6 +29,8 @@ from cmk.automations.results import (
     ServiceDiscoveryPreviewResult,
     SetAutochecksTable,
 )
+
+from cmk.checkengine.checking import Item
 
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.background_job import (

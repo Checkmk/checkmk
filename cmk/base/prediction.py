@@ -18,6 +18,7 @@ import cmk.utils.defines as defines
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
+from cmk.utils.metrics import MetricName
 from cmk.utils.prediction import (
     ConsolidationFunctionName,
     DataStats,
@@ -35,7 +36,7 @@ from cmk.utils.prediction import (
     Timestamp,
     TimeWindow,
 )
-from cmk.utils.type_defs import MetricName, ServiceName
+from cmk.utils.servicename import ServiceName
 
 logger = logging.getLogger("cmk.prediction")
 

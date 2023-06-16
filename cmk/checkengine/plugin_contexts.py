@@ -12,7 +12,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.type_defs import ServiceName
+from cmk.utils.servicename import ServiceName
 
 from cmk.checkengine.checking import CheckPluginName
 

@@ -23,10 +23,10 @@ import cmk.utils.debug
 from cmk.utils.hostaddress import HostName
 from cmk.utils.notify_types import EventContext, EventRule
 from cmk.utils.regex import regex
+from cmk.utils.servicename import ServiceName
 from cmk.utils.site import omd_site
 from cmk.utils.tags import TagID
 from cmk.utils.timeperiod import check_timeperiod, cleanup_timeperiod_caches
-from cmk.utils.type_defs import ServiceName
 
 import cmk.base.config as config
 import cmk.base.core

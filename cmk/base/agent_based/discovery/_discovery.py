@@ -10,14 +10,15 @@ from typing import Literal
 
 import cmk.utils.paths
 import cmk.utils.resulttype as result
+from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.sectionname import SectionName
-from cmk.utils.type_defs import Item, ServiceName
+from cmk.utils.servicename import ServiceName
 
-from cmk.snmplib.type_defs import AgentRawData, SNMPRawData
+from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.checkengine import (
     DiscoveryPlugin,
@@ -26,7 +27,7 @@ from cmk.checkengine import (
     SourceInfo,
     SummarizerFunction,
 )
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName, Item
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import (
     analyse_cluster_labels,

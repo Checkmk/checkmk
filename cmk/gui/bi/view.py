@@ -13,7 +13,7 @@ from cmk.utils import store
 from cmk.utils.defines import short_service_state_name
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
-from cmk.utils.type_defs import ServiceName
+from cmk.utils.servicename import ServiceName
 
 from cmk.gui.bi.bi_manager import BIManager
 from cmk.gui.bi.foldable_tree_renderer import (

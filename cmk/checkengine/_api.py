@@ -9,11 +9,12 @@ from functools import partial
 from typing import Protocol
 
 import cmk.utils.resulttype as result
+from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.rulesets import RuleSetName
 
-from cmk.snmplib.type_defs import AgentRawData, SNMPRawData, SNMPRawDataSection
+from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
 
 from ._parser import Parser
 from ._typedefs import Parameters, SourceInfo

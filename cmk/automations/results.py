@@ -12,6 +12,7 @@ from dataclasses import asdict, astuple, dataclass
 from typing import Any, TypeAlias, TypedDict, TypeVar
 
 from cmk.utils import version as cmk_version
+from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.config_warnings import ConfigurationWarnings
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -19,10 +20,9 @@ from cmk.utils.labels import HostLabel, HostLabelValueDict, Labels
 from cmk.utils.notify_types import NotifyAnalysisInfo, NotifyBulks
 from cmk.utils.plugin_registry import Registry
 from cmk.utils.rulesets.ruleset_matcher import LabelSources, RulesetName
-from cmk.utils.type_defs import CheckPluginNameStr, Item, ServiceName
+from cmk.utils.servicename import ServiceName
 
-from cmk.snmplib.type_defs import AgentRawData  # pylint: disable=cmk-module-layer-violation
-
+from cmk.checkengine.checking import CheckPluginNameStr, Item
 from cmk.checkengine.checkresults import MetricTuple
 from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
 from cmk.checkengine.legacy import LegacyCheckParameters

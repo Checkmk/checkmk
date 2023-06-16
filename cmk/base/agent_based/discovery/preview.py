@@ -13,8 +13,8 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, ServiceLabel
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionName
+from cmk.utils.servicename import ServiceName
 from cmk.utils.timeperiod import timeperiod_active
-from cmk.utils.type_defs import Item, ServiceName
 
 from cmk.automations.results import CheckPreviewEntry
 
@@ -28,7 +28,7 @@ from cmk.checkengine import (
     SummarizerFunction,
 )
 from cmk.checkengine.check_table import ConfiguredService
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName, Item
 from cmk.checkengine.checkresults import ActiveCheckResult, ServiceCheckResult
 from cmk.checkengine.discovery import (
     analyse_cluster_labels,

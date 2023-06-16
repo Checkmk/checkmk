@@ -89,6 +89,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     RuleSpec,
 )
 from cmk.utils.sectionname import SectionName
+from cmk.utils.servicename import ServiceName
 from cmk.utils.site import omd_site
 from cmk.utils.store.host_storage import (
     apply_hosts_file_to_object,
@@ -98,7 +99,6 @@ from cmk.utils.store.host_storage import (
 from cmk.utils.structured_data import RawIntervalsFromConfig
 from cmk.utils.tags import ComputedDataSources, TagGroupID, TagID
 from cmk.utils.timeperiod import TimeperiodName
-from cmk.utils.type_defs import CheckPluginNameStr, Item, ServiceName
 
 from cmk.automations.results import CheckPreviewEntry
 
@@ -125,7 +125,7 @@ from cmk.fetchers.filecache import MaxAge
 
 from cmk.checkengine import AgentParser, CheckPlugin, DiscoveryPlugin, Parameters, SourceType
 from cmk.checkengine.check_table import ConfiguredService, FilterMode, HostCheckTable, ServiceID
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr, Item
 from cmk.checkengine.discovery import AutocheckServiceWithNodes
 from cmk.checkengine.error_handling import ExitSpec
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin

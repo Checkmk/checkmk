@@ -8,8 +8,9 @@ import copy
 import enum
 import logging
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import Any, cast, Literal, NamedTuple, NewType, TypeVar, Union
+from typing import Any, cast, Literal, NamedTuple, TypeVar, Union
 
+from cmk.utils.agentdatatype import AgentRawData as _AgentRawData
 from cmk.utils.hostaddress import HostAddress as _HostAddress
 from cmk.utils.hostaddress import HostName as _HostName
 from cmk.utils.sectionname import SectionName as _SectionName
@@ -65,12 +66,7 @@ SNMPTiming = dict
 
 SNMPDetectAtom = tuple[str, str, bool]  # (oid, regex_pattern, expected_match)
 
-# TODO(ml): The `Agent*` types have obviously nothing to do here.  We need
-#           to clarify the layering between fetchers and checkengine and
-#           then move them in one of these packages.
-AgentRawData = NewType("AgentRawData", bytes)
-AbstractRawData = AgentRawData | SNMPRawData
-TRawData = TypeVar("TRawData", bound=AbstractRawData)
+TRawData = TypeVar("TRawData", _AgentRawData, SNMPRawData)
 
 
 class SNMPBackendEnum(enum.Enum):

@@ -11,7 +11,7 @@ import livestatus
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.render import SecondsRenderer
-from cmk.utils.type_defs import ServiceName
+from cmk.utils.servicename import ServiceName
 
 import cmk.gui.sites as sites
 import cmk.gui.utils as utils

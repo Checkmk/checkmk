@@ -19,7 +19,8 @@ import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
-from cmk.utils.type_defs import MetricName, ServiceName
+from cmk.utils.metrics import MetricName
+from cmk.utils.servicename import ServiceName
 
 logger = logging.getLogger("cmk.prediction")
 

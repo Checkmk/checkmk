@@ -12,6 +12,7 @@ from typing import DefaultDict, NamedTuple
 
 import cmk.utils.debug
 import cmk.utils.paths
+from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.check_utils import wrap_parameters
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.everythingtype import EVERYTHING
@@ -21,11 +22,11 @@ from cmk.utils.log import console
 from cmk.utils.regex import regex
 from cmk.utils.resulttype import Result
 from cmk.utils.sectionname import SectionName
+from cmk.utils.servicename import ServiceName
 from cmk.utils.structured_data import TreeStore
 from cmk.utils.timeperiod import check_timeperiod, timeperiod_active, TimeperiodName
-from cmk.utils.type_defs import ServiceName
 
-from cmk.snmplib.type_defs import AgentRawData, SNMPRawData
+from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.fetchers import FetcherType
 

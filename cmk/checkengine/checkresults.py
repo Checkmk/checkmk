@@ -10,7 +10,7 @@ from collections.abc import Sequence
 
 from cmk.utils.check_utils import worst_service_state
 from cmk.utils.hostaddress import HostName
-from cmk.utils.type_defs import MetricName
+from cmk.utils.metrics import MetricName
 
 __all__ = ["ActiveCheckResult", "MetricTuple", "ServiceCheckResult", "state_markers"]
 

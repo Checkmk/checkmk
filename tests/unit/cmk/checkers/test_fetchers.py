@@ -22,6 +22,7 @@ from pytest import MonkeyPatch
 
 import cmk.utils.resulttype as result
 import cmk.utils.version as cmk_version
+from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.encryption import TransportProtocol
 from cmk.utils.exceptions import MKFetcherError, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -29,7 +30,6 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import snmp_table
 from cmk.snmplib.type_defs import (
-    AgentRawData,
     BackendOIDSpec,
     BackendSNMPTree,
     SNMPBackendEnum,

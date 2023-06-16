@@ -9,7 +9,7 @@ from livestatus import SiteId
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.prediction import livestatus_lql
-from cmk.utils.type_defs import ServiceName
+from cmk.utils.servicename import ServiceName
 
 import cmk.gui.sites as sites
 from cmk.gui.display_options import display_options

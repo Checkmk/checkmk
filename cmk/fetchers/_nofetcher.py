@@ -10,9 +10,8 @@ import logging
 from collections.abc import Mapping
 from typing import Final, NoReturn
 
+from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.exceptions import MKFetcherError
-
-from cmk.snmplib.type_defs import AgentRawData
 
 from cmk.fetchers import Fetcher, Mode
 

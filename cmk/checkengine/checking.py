@@ -10,6 +10,11 @@ from typing import Final
 
 from cmk.utils.validatedstr import ValidatedString
 
+__all__ = ["CheckPluginName", "CheckPluginNameStr", "Item"]
+
+CheckPluginNameStr = str
+Item = str | None
+
 
 class CheckPluginName(ValidatedString):
     MANAGEMENT_PREFIX: Final = "mgmt_"

@@ -41,9 +41,9 @@ import cmk.utils.paths as _paths
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
+from cmk.utils.metrics import MetricName
 from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
 from cmk.utils.sectionname import SectionName as _SectionName
-from cmk.utils.type_defs import MetricName
 
 from cmk.snmplib.type_defs import SpecialColumn as _SpecialColumn
 

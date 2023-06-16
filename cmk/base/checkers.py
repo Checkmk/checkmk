@@ -15,6 +15,7 @@ from typing import Final
 
 import cmk.utils.resulttype as result
 import cmk.utils.tty as tty
+from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -22,7 +23,7 @@ from cmk.utils.log import console
 from cmk.utils.piggyback import PiggybackTimeSettings
 from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib.type_defs import AgentRawData, SNMPRawData
+from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.fetchers import Fetcher, get_raw_data, Mode
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge

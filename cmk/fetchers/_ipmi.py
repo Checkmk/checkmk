@@ -21,11 +21,10 @@ if TYPE_CHECKING:
 
 from six import ensure_binary
 
+from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.hostaddress import HostAddress
 from cmk.utils.log import VERBOSE
-
-from cmk.snmplib.type_defs import AgentRawData
 
 from cmk.fetchers import Fetcher, Mode
 

@@ -9,10 +9,9 @@ import logging
 from collections.abc import Mapping, Sequence
 from typing import Any, Final
 
+from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.piggyback import get_piggyback_raw_data, PiggybackRawDataInfo, PiggybackTimeSettings
-
-from cmk.snmplib.type_defs import AgentRawData
 
 from cmk.fetchers import Fetcher, Mode
 

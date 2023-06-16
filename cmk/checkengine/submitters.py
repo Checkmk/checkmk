@@ -18,8 +18,8 @@ import cmk.utils.tty as tty
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
+from cmk.utils.servicename import ServiceName
 from cmk.utils.timeout import Timeout
-from cmk.utils.type_defs import ServiceName
 
 from cmk.checkengine.checkresults import ServiceCheckResult
 

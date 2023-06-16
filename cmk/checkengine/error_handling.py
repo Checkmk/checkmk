@@ -17,13 +17,11 @@ from cmk.utils.exceptions import (
     MKTimeout,
 )
 from cmk.utils.hostaddress import HostName
-from cmk.utils.type_defs import CheckPluginNameStr, ServiceName
+from cmk.utils.type_defs import CheckPluginNameStr, ServiceName, ServiceState
 
 from cmk.snmplib.type_defs import SNMPBackendEnum
 
 from cmk.checkengine import crash_reporting
-
-from .submitters import ServiceState
 
 
 class ExitSpec(TypedDict, total=False):

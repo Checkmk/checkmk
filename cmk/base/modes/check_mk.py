@@ -49,6 +49,7 @@ from cmk.utils.structured_data import (
 )
 from cmk.utils.tags import TagID
 from cmk.utils.timeout import Timeout
+from cmk.utils.type_defs import ServiceState
 
 import cmk.snmplib.snmp_modes as snmp_modes
 
@@ -70,7 +71,7 @@ from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.error_handling import CheckResultErrorHandler
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin, InventoryPluginName
-from cmk.checkengine.submitters import get_submitter, ServiceState, Submitter
+from cmk.checkengine.submitters import get_submitter, Submitter
 from cmk.checkengine.summarize import summarize
 from cmk.checkengine.type_defs import NO_SELECTION, SectionNameCollection
 

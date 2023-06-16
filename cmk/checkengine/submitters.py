@@ -19,15 +19,11 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
 from cmk.utils.timeout import Timeout
-from cmk.utils.type_defs import ServiceName
+from cmk.utils.type_defs import ServiceDetails, ServiceName, ServiceState
 
 from cmk.checkengine.checkresults import ServiceCheckResult
 
 _CacheInfo = tuple[int, int]
-
-ServiceState = int
-ServiceDetails = str
-ServiceAdditionalDetails = str
 
 
 def _sanitize_perftext(

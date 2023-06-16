@@ -6,10 +6,11 @@
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Final, NamedTuple
 
+from cmk.utils.type_defs import ServiceState
+
 from ._typedefs import HostKey
 from .checkresults import ActiveCheckResult
 from .sectionparser import ParsedSectionContent, ParsedSectionName, Provider
-from .submitters import ServiceState
 
 _SectionKwargs = Mapping[str, ParsedSectionContent | None]
 

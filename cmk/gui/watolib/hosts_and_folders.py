@@ -1330,7 +1330,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         self.tree = tree
         self._name = name
         self._id = folder_id
-        self._path_existing_folder = folder_path
+        self._path = folder_path
         self._title = title
         self._attributes = attributes
         self._locked = locked
@@ -1677,8 +1677,8 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         return self.path()
 
     def path(self) -> str:
-        if may_use_redis() and self._path_existing_folder is not None:
-            return self._path_existing_folder
+        if may_use_redis() and self._path is not None:
+            return self._path
 
         if (parent := self.parent()) and not parent.is_root() and not self.is_root():
             return _ensure_trailing_slash(parent.path()) + self.name()

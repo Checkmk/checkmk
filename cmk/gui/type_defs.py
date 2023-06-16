@@ -29,8 +29,9 @@ from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.notify_types import DisabledNotificationsOptions, EventRule
+from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.structured_data import SDPath
-from cmk.utils.type_defs import ContactgroupName, MetricName, ServiceName
+from cmk.utils.type_defs import MetricName, ServiceName
 from cmk.utils.user import UserId
 
 from cmk.gui.exceptions import FinalizeRequest

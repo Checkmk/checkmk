@@ -68,9 +68,9 @@ from cmk.utils.notify_types import (
     UUIDs,
 )
 from cmk.utils.regex import regex
+from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.timeout import MKTimeout, Timeout
 from cmk.utils.timeperiod import timeperiod_active
-from cmk.utils.type_defs import ContactgroupName
 
 import cmk.base.config as config
 import cmk.base.core

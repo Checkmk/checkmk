@@ -1253,8 +1253,9 @@ class ABCFolderMode(WatoMode, abc.ABC):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
-    def __init__(self) -> None:
+    def __init__(self, is_new: bool) -> None:
         super().__init__()
+        self._is_new = is_new
         self._folder = self._init_folder()
 
     @abc.abstractmethod
@@ -1268,8 +1269,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
-        new = self._folder.name() is None
-        is_enabled = new or not folder_from_request().locked()
+        is_enabled = self._is_new or not folder_from_request().locked()
 
         # When backfolder is set, we have the special situation that we want to redirect the user
         # two breadcrumb layers up. This is a very specific case, so we realize this locally instead
@@ -1300,15 +1300,14 @@ class ABCFolderMode(WatoMode, abc.ABC):
         title = TextInput().from_html_vars("title")
         TextInput(allow_empty=False).validate_value(title, "title")
 
-        attributes = collect_attributes("folder", new=self._folder.name() is None)
+        attributes = collect_attributes("folder", new=self._is_new)
         self._save(title, attributes)
 
         return redirect(mode_url("folder", folder=folder.path()))
 
     # TODO: Clean this method up! Split new/edit handling to sub classes
     def page(self) -> None:
-        new = self._folder.name() is None
-
+        new = self._is_new
         folder = folder_from_request()
         folder.need_permission("read")
 
@@ -1374,6 +1373,9 @@ class ModeEditFolder(ABCFolderMode):
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts"]
 
+    def __init__(self) -> None:
+        super().__init__(is_new=False)
+
     def _init_folder(self):
         return folder_from_request()
 
@@ -1393,6 +1395,9 @@ class ModeCreateFolder(ABCFolderMode):
     @staticmethod
     def static_permissions() -> Collection[PermissionName]:
         return ["hosts", "manage_folders"]
+
+    def __init__(self) -> None:
+        super().__init__(is_new=True)
 
     def _init_folder(self):
         return folder_tree().root_folder()

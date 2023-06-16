@@ -6,16 +6,12 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, NewType, TypedDict
+from typing import Any, NewType
 
 __all__ = [
     "ServiceName",
     "ContactgroupName",
     "AgentRawData",
-    "HostOrServiceConditionRegex",
-    "HostOrServiceConditionsSimple",
-    "HostOrServiceConditionsNegated",
-    "HostOrServiceConditions",
     "CheckPluginNameStr",
     "Item",
     "Seconds",
@@ -35,20 +31,6 @@ ContactgroupName = str
 
 
 AgentRawData = NewType("AgentRawData", bytes)
-
-HostOrServiceConditionRegex = TypedDict(
-    "HostOrServiceConditionRegex",
-    {"$regex": str},
-)
-HostOrServiceConditionsSimple = list[HostOrServiceConditionRegex | str]
-HostOrServiceConditionsNegated = TypedDict(
-    "HostOrServiceConditionsNegated",
-    {"$nor": HostOrServiceConditionsSimple},
-)
-
-HostOrServiceConditions = (
-    HostOrServiceConditionsSimple | HostOrServiceConditionsNegated
-)  # TODO: refine type
 
 CheckPluginNameStr = str
 Item = str | None

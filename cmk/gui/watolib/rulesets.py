@@ -21,6 +21,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.labels import Labels
 from cmk.utils.object_diff import make_diff, make_diff_text
 from cmk.utils.regex import escape_regex_chars
+from cmk.utils.rulesets.conditions import HostOrServiceConditionRegex, HostOrServiceConditions
 from cmk.utils.rulesets.ruleset_matcher import (
     RuleConditionsSpec,
     RuleOptionsSpec,
@@ -30,7 +31,6 @@ from cmk.utils.rulesets.ruleset_matcher import (
     TagConditionNE,
 )
 from cmk.utils.tags import TagGroupID, TagID
-from cmk.utils.type_defs import HostOrServiceConditionRegex, HostOrServiceConditions
 
 # Tolerate this for 1.6. Should be cleaned up in future versions,
 # e.g. by trying to move the common code to a common place

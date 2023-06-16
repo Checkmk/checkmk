@@ -10,6 +10,11 @@ from typing import cast, Literal, TYPE_CHECKING, TypedDict
 import marshmallow_oneofschema
 from marshmallow import post_load, pre_dump, types, ValidationError
 
+from cmk.utils.rulesets.conditions import (
+    HostOrServiceConditions,
+    HostOrServiceConditionsNegated,
+    HostOrServiceConditionsSimple,
+)
 from cmk.utils.rulesets.ruleset_matcher import (
     TagCondition,
     TagConditionNE,
@@ -17,11 +22,6 @@ from cmk.utils.rulesets.ruleset_matcher import (
     TagConditionOR,
 )
 from cmk.utils.tags import TagID
-from cmk.utils.type_defs import (
-    HostOrServiceConditions,
-    HostOrServiceConditionsNegated,
-    HostOrServiceConditionsSimple,
-)
 
 from cmk.gui import fields as gui_fields
 from cmk.gui.fields import base

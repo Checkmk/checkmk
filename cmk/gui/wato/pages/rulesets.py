@@ -19,6 +19,7 @@ import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.regex import escape_regex_chars
+from cmk.utils.rulesets.conditions import HostOrServiceConditions, HostOrServiceConditionsSimple
 from cmk.utils.rulesets.ruleset_matcher import (
     TagCondition,
     TagConditionNE,
@@ -26,7 +27,7 @@ from cmk.utils.rulesets.ruleset_matcher import (
     TagConditionOR,
 )
 from cmk.utils.tags import GroupedTag, TagGroupID, TagID
-from cmk.utils.type_defs import HostOrServiceConditions, HostOrServiceConditionsSimple, ServiceName
+from cmk.utils.type_defs import ServiceName
 
 import cmk.gui.forms as forms
 import cmk.gui.view_utils

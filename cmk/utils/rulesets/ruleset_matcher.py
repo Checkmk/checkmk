@@ -22,7 +22,9 @@ from cmk.utils.rulesets.tuple_rulesets import (
     PHYSICAL_HOSTS,
 )
 from cmk.utils.tags import TagConfig, TagGroupID, TagID
-from cmk.utils.type_defs import HostOrServiceConditions, HostOrServiceConditionsSimple, ServiceName
+from cmk.utils.type_defs import ServiceName
+
+from .conditions import HostOrServiceConditions, HostOrServiceConditionsSimple
 
 RulesetName = str  # Could move to a less cluttered module as it is often used on its own.
 TRuleValue = TypeVar("TRuleValue")

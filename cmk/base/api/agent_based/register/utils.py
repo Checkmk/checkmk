@@ -9,6 +9,7 @@ import sys
 from collections.abc import Callable, Mapping, Sequence
 from typing import Final, get_args, Literal, NoReturn
 
+from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.paths import agent_based_plugins_dir
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.version import Edition
@@ -18,7 +19,6 @@ from cmk.checkengine.inventory import InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
-from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
 
 TypeLabel = Literal["check", "cluster_check", "discovery", "host_label", "inventory"]
 

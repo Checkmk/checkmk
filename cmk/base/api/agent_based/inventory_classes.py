@@ -8,13 +8,12 @@ import string
 from collections.abc import Callable, Iterable, Mapping
 from typing import get_args, NamedTuple, NoReturn, Union
 
+from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.structured_data import MutableTree, SDKey, SDValue
 
 from cmk.checkengine.inventory import InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
-
-from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
 
 AttrDict = Mapping[SDKey, SDValue]
 

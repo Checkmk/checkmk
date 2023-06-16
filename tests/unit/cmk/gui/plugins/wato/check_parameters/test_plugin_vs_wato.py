@@ -6,9 +6,10 @@
 import abc
 import typing as t
 
+from cmk.utils.check_utils import ParametersTypeAlias
+
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.inventory_classes import InventoryPlugin
-from cmk.base.api.agent_based.type_defs import ParametersTypeAlias
 
 from cmk.gui.plugins.wato.inventory import RulespecGroupInventory
 from cmk.gui.plugins.wato.utils import RulespecGroupCheckParametersDiscovery

@@ -7,7 +7,7 @@ from datetime import timedelta
 
 import pytest
 
-from cmk.utils.type_defs import ParametersTypeAlias
+from cmk.utils.check_utils import ParametersTypeAlias
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
 from cmk.base.plugins.agent_based.systemd_units import (

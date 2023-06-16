@@ -5,8 +5,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-from typing import Any, NewType
+from typing import NewType
 
 __all__ = [
     "ServiceName",
@@ -21,7 +20,6 @@ __all__ = [
     "ServiceDetails",
     "ServiceAdditionalDetails",
     "MetricName",
-    "ParametersTypeAlias",
 ]
 
 ServiceName = str
@@ -43,5 +41,3 @@ ServiceDetails = str
 ServiceAdditionalDetails = str
 
 MetricName = str
-
-ParametersTypeAlias = Mapping[str, Any]  # Modification may result in an incompatible API change.

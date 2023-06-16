@@ -8,6 +8,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
+ParametersTypeAlias = Mapping[str, Any]  # Modification may result in an incompatible API change.
+
 
 def worst_service_state(*states: int, default: int) -> int:
     """Return the 'worst' aggregation of all states
@@ -78,16 +80,14 @@ def maincheckify(subcheck_name: str) -> str:
 _PARAMS_WRAPPER_KEY = "auto-migration-wrapper-key"
 
 
-# keep return type in sync with ParametersTypeAlias
-def wrap_parameters(parameters: Any) -> Mapping[str, Any]:
+def wrap_parameters(parameters: Any) -> ParametersTypeAlias:
     """wrap the passed data structure in a dictionary, if it isn't one itself"""
     if isinstance(parameters, dict):
         return parameters
     return {_PARAMS_WRAPPER_KEY: parameters}
 
 
-# keep argument parameters in sync with ParametersTypeAlias
-def unwrap_parameters(parameters: Mapping[str, Any]) -> Any:
+def unwrap_parameters(parameters: ParametersTypeAlias) -> Any:
     if set(parameters) == {_PARAMS_WRAPPER_KEY}:
         return parameters[_PARAMS_WRAPPER_KEY]
     # Note: having *both* the wrapper key and other keys can only happen, if we

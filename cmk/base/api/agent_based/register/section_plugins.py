@@ -11,6 +11,7 @@ import types
 from collections.abc import Generator
 from typing import Any, List
 
+from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.regex import regex
 from cmk.utils.rulesets import RuleSetName
@@ -32,7 +33,6 @@ from cmk.base.api.agent_based.type_defs import (
     AgentSectionPlugin,
     HostLabel,
     HostLabelFunction,
-    ParametersTypeAlias,
     SimpleSNMPParseFunction,
     SNMPParseFunction,
     SNMPSectionPlugin,

@@ -65,7 +65,12 @@ import cmk.utils.translations
 import cmk.utils.version as cmk_version
 from cmk.utils.agent_registration import connection_mode_from_host_config, HostAgentConnectionMode
 from cmk.utils.caching import config_cache as _config_cache
-from cmk.utils.check_utils import maincheckify, section_name_of, unwrap_parameters
+from cmk.utils.check_utils import (
+    maincheckify,
+    ParametersTypeAlias,
+    section_name_of,
+    unwrap_parameters,
+)
 from cmk.utils.config_path import ConfigPath
 from cmk.utils.exceptions import MKGeneralException, MKIPAddressLookupError, MKTerminate, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -135,7 +140,7 @@ from cmk.base.api.agent_based.register.section_plugins_legacy import (
     create_snmp_section_plugin_from_legacy,
 )
 from cmk.base.api.agent_based.register.utils_legacy import LegacyCheckDefinition
-from cmk.base.api.agent_based.type_defs import ParametersTypeAlias, SNMPSectionPlugin
+from cmk.base.api.agent_based.type_defs import SNMPSectionPlugin
 from cmk.base.default_config import *  # pylint: disable=wildcard-import,unused-wildcard-import
 from cmk.base.ip_lookup import AddressFamily
 

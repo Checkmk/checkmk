@@ -13,7 +13,7 @@ from collections.abc import Callable, Iterable, Sequence
 from typing import NamedTuple, Optional, overload, Self, Union
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
-from cmk.utils.check_utils import unwrap_parameters
+from cmk.utils.check_utils import ParametersTypeAlias, unwrap_parameters
 from cmk.utils.rulesets import RuleSetName
 
 from cmk.checkengine.checking import CheckPluginName
@@ -21,7 +21,7 @@ from cmk.checkengine.checkresults import MetricTuple
 from cmk.checkengine.discovery import AutocheckEntry
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-from cmk.base.api.agent_based.type_defs import ParametersTypeAlias, RuleSetTypeName
+from cmk.base.api.agent_based.type_defs import RuleSetTypeName
 
 # we may have 0/None for min/max for instance.
 _OptionalPair = Optional[tuple[Optional[float], Optional[float]]]

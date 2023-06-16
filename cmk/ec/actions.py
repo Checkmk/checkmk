@@ -13,7 +13,7 @@ import cmk.utils.debug
 import cmk.utils.defines
 from cmk.utils.log import VERBOSE
 from cmk.utils.notify_types import ECEventContext
-from cmk.utils.store.host_storage import ContactgroupName
+from cmk.utils.type_defs import ContactgroupName
 
 from .config import Action, Config, EMailActionConfig, Rule, ScriptActionConfig
 from .core_queries import query_contactgroups_members, query_status_enable_notifications

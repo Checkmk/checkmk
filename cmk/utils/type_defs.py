@@ -5,10 +5,17 @@
 
 from __future__ import annotations
 
-__all__ = ["ServiceName", "CheckPluginNameStr", "Item", "MetricName"]
+__all__ = [
+    "ServiceName",
+    "ContactgroupName",
+    "CheckPluginNameStr",
+    "Item",
+    "MetricName",
+]
 
 ServiceName = str
 
+ContactgroupName = str
 
 CheckPluginNameStr = str
 Item = str | None

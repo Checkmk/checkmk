@@ -34,7 +34,6 @@ from cmk.utils.site import omd_site
 from cmk.utils.store.host_storage import (
     ABCHostsStorage,
     apply_hosts_file_to_object,
-    ContactgroupName,
     FolderAttributesForBase,
     get_all_storage_readers,
     get_host_storage_loaders,
@@ -49,6 +48,7 @@ from cmk.utils.store.host_storage import (
     StorageFormat,
 )
 from cmk.utils.tags import TagGroupID, TagID
+from cmk.utils.type_defs import ContactgroupName
 
 from cmk.automations.results import ABCAutomationResult
 

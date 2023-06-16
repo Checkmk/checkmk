@@ -10,8 +10,8 @@ from livestatus import LocalConnection
 
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.prediction import Timestamp
-from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.timeperiod import TimeperiodName
+from cmk.utils.type_defs import ContactgroupName
 from cmk.utils.user import UserId
 
 

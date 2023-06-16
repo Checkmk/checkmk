@@ -14,7 +14,7 @@ from typing import Any, TypedDict
 import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.store.host_storage import ContactgroupName
+from cmk.utils.type_defs import ContactgroupName
 
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _

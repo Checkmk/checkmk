@@ -17,7 +17,7 @@ from cmk.utils.notify_types import (
     NotificationContext,
     NotifyPluginParams,
 )
-from cmk.utils.store.host_storage import ContactgroupName
+from cmk.utils.type_defs import ContactgroupName
 
 from cmk.base import notify
 

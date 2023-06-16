@@ -1,4 +1,4 @@
-Title: mk_postgres: support Latin-1 server encoding
+Title: mk_postgres: support Latin-1 and SQL_ASCII server encodings
 Class: fix
 Compatible: compat
 Component: checks

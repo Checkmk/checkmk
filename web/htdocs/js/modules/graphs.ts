@@ -14,9 +14,9 @@ type Timestamp = number;
 type Seconds = number;
 type Label = [number, string | null, number];
 type TimeRange = [number, number];
-type TimeSeriesValue = number | null;
+export type TimeSeriesValue = number | null;
 type LazyString = string; // not sure how teal with this for the moment
-type HorizontalRule = [number, string, string, string | LazyString];
+export type HorizontalRule = [number, string, string, string | LazyString];
 type SizePT = number;
 
 interface DefaultGraphRenderOptions {
@@ -62,7 +62,7 @@ interface AjaxContext {
     display_id: string;
 }
 
-interface AjaxGraph {
+export interface AjaxGraph {
     html: string;
     graph: GraphArtwork;
     context: AjaxContext;
@@ -72,6 +72,7 @@ interface LayoutedCurveArea {
     type: "area";
     points: [TimeSeriesValue, TimeSeriesValue][];
     //dynamic
+    title?: string;
     dont_paint: [number, number];
     color: string;
 }
@@ -80,11 +81,12 @@ interface LayoutedCurveLine {
     type: "line";
     points: TimeSeriesValue[];
     //dynamic
+    title?: string;
     dont_paint: [number, number];
     color: string;
 }
 
-type LayoutedCurve = LayoutedCurveLine | LayoutedCurveArea;
+export type LayoutedCurve = LayoutedCurveLine | LayoutedCurveArea;
 
 interface TimeAxis {
     labels: Label[];
@@ -110,7 +112,7 @@ interface VerticalAxis {
 }
 
 //this type is from cmk/gui/plugins/metrics/artwork.py:82
-interface GraphArtwork {
+export interface GraphArtwork {
     //optional properties assigned dynamically in javascript
     id: string;
     canvas_obj: HTMLCanvasElement;

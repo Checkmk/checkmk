@@ -12,6 +12,12 @@
 
 import {FigureData} from "cmk_figures";
 
+export interface SubplotDataData {
+    x?: [Date | undefined, Date | undefined];
+    y?: [number, number | undefined];
+    data: TransformedData[];
+}
+
 //types from: cmk/gui/cee/plugins/dashboard/site_overview.py
 export interface ABCElement {
     type: string;
@@ -209,4 +215,18 @@ export interface AverageScatterplotDashletConfig extends FigureBaseDashletSpec {
     metric_color: string | null;
     avg_color: string | null;
     median_color: string | null;
+}
+
+export interface TransformedData {
+    label: any;
+    scaled_y: number;
+    scaled_x: number;
+    value: number;
+    unstacked_value: number;
+    timestamp: number;
+    date: Date;
+    ending_timestamp?: number;
+    url?: string;
+    last_value?: number;
+    tooltip?: string;
 }

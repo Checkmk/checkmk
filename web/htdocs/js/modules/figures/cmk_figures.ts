@@ -6,7 +6,7 @@
 
 import crossfilter, {Crossfilter} from "crossfilter2";
 import * as d3 from "d3";
-import {FigureBaseDashletSpec} from "figure_types";
+import {FigureBaseDashletSpec, TransformedData} from "figure_types";
 import {CMKAjaxReponse} from "types";
 
 import * as utils from "../utils";
@@ -730,7 +730,7 @@ export abstract class TextFigure<
     }
 }
 
-export function calculate_domain(data: {value: number}): [number, number] {
+export function calculate_domain(data: TransformedData): [number, number] {
     // @ts-ignore
     const [lower, upper] = d3.extent(data, d => d.value);
     // @ts-ignore

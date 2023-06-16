@@ -22,7 +22,6 @@ from cmk.utils.type_defs import (
     AgentRawData,
     CheckPluginNameStr,
     Item,
-    LegacyCheckParameters,
     ParametersTypeAlias,
     ServiceDetails,
     ServiceName,
@@ -31,6 +30,7 @@ from cmk.utils.type_defs import (
 
 from cmk.checkengine.checkresults import MetricTuple
 from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
+from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
 
 DiscoveredHostLabelsDict = dict[str, HostLabelValueDict]

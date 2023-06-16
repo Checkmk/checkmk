@@ -41,7 +41,7 @@ from cmk.checkengine import (
     SourceType,
     SummarizerFunction,
 )
-from cmk.checkengine.check_table import ConfiguredService, LegacyCheckParameters
+from cmk.checkengine.check_table import ConfiguredService
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.checkresults import (
     ActiveCheckResult,
@@ -56,6 +56,7 @@ from cmk.checkengine.inventory import (
     InventoryPlugin,
     InventoryPluginName,
 )
+from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.sectionparser import (
     filter_out_errors,

@@ -11,10 +11,10 @@ from pytest import MonkeyPatch
 from tests.testlib.base import Scenario
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.type_defs import LegacyCheckParameters
 
 from cmk.checkengine import HostKey, SourceType
 from cmk.checkengine.checkresults import ServiceCheckResult
+from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 
 import cmk.base.agent_based.checking._checking as checking

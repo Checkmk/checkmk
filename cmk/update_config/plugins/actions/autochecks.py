@@ -11,10 +11,10 @@ from cmk.utils import debug
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.paths import autochecks_dir
-from cmk.utils.type_defs import LegacyCheckParameters
 
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry, AutochecksStore
+from cmk.checkengine.legacy import LegacyCheckParameters
 
 from cmk.base.api.agent_based import register
 

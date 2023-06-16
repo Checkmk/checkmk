@@ -21,7 +21,6 @@ __all__ = [
     "ServiceDetails",
     "ServiceAdditionalDetails",
     "MetricName",
-    "LegacyCheckParameters",
     "ParametersTypeAlias",
 ]
 
@@ -45,5 +44,4 @@ ServiceAdditionalDetails = str
 
 MetricName = str
 
-LegacyCheckParameters = None | Mapping[Any, Any] | tuple[Any, ...] | list[Any] | str | int | bool
 ParametersTypeAlias = Mapping[str, Any]  # Modification may result in an incompatible API change.

@@ -15,9 +15,10 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import ServiceLabel
 from cmk.utils.type_defs import Item, ServiceName
 
-from cmk.checkengine.check_table import ConfiguredService, LegacyCheckParameters
+from cmk.checkengine.check_table import ConfiguredService
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry, AutocheckServiceWithNodes, AutochecksStore
+from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
 
 ComputeCheckParameters = Callable[

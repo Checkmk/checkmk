@@ -18,7 +18,7 @@ from cmk.fetchers import IPMIFetcher, PiggybackFetcher, ProgramFetcher, SNMPFetc
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.checkengine import SourceType
-from cmk.checkengine.check_table import LegacyCheckParameters
+from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
 
 import cmk.base.config as config

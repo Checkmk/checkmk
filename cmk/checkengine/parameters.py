@@ -12,7 +12,8 @@ from typing import Final, TypedDict
 import cmk.utils.debug
 from cmk.utils.parameters import boil_down_parameters
 from cmk.utils.timeperiod import TimeperiodName
-from cmk.utils.type_defs import LegacyCheckParameters
+
+from cmk.checkengine.legacy import LegacyCheckParameters
 
 _IsTimeperiodActiveCallback = Callable[[TimeperiodName], bool | None]
 

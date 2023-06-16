@@ -1,0 +1,22 @@
+Title: saml2: addition of option to map attribute value to specific contact groups
+Class: feature
+Compatible: compat
+Component: setup
+Date: 1686919855
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Prior to this werk, the contactgroup attribute value had to match an existing
+Checkmk contact group name in order for the user to be assigned to the respective
+group. This werk introduces the multiple options for the attribute value to be mapped to
+multiple contact groups in case of a name match. The user can choose from following options:
+
+* `No mapping`: The attribute value is not mapped to any contact group.
+* `Direct mapping`: Checkmk attempts to map the attribute value directly to a contact group with
+the same name.
+* `DN mapping`: Checkmk attemps to extract the CN name in the attribute value string and map it
+to a contact group
+same name
+* `Specific mapping`: The user can specify a mapping of attribute value to contact group name.

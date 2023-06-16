@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "4f96a844f8cbd5157ee505f9b582bfe6977fc552ada341fa8fcca124b8391865"
+            "sha256": "fd89258646adfb7a4d177911d6012fe7a4f38abf3b30fd54273b62b0784c579c"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -771,6 +771,14 @@
             ],
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==0.22.0"
+        },
+        "icalendar": {
+            "hashes": [
+                "sha256:18ad51f9d1741d33795ddaf5c886c59f6575f287d30e5a145c2d42ef72910c7f",
+                "sha256:e306014a64dc4dcf638da0acb2487ee4ada57b871b03a62ed7b513dfc135655c"
+            ],
+            "index": "pypi",
+            "version": "==5.0.7"
         },
         "idna": {
             "hashes": [
@@ -2026,6 +2034,14 @@
             "index": "pypi",
             "version": "==6.0"
         },
+        "recurring-ical-events": {
+            "hashes": [
+                "sha256:a618140129e2ff00afa6b7afc1a154c2cb2177166621a519941b7058d6f6c339",
+                "sha256:c4bc7d0d26fcda0ac3b773c9706fd1e271b7b0e0230ad0ee02ccab55e274ea11"
+            ],
+            "index": "pypi",
+            "version": "==2.0.2"
+        },
         "redis": {
             "hashes": [
                 "sha256:7b8c87d19c45d3f1271b124858d2a5c13160c4e74d4835e28273400fa34d5228",
@@ -2471,6 +2487,13 @@
             ],
             "index": "pypi",
             "version": "==1.14.1"
+        },
+        "x-wr-timezone": {
+            "hashes": [
+                "sha256:c05cb34b9b58a4607a788db086dcae5766728e4b94e0672870dc5593a6e13fe6",
+                "sha256:e438b27b96635f5f712a4fb5dda4c82597a53a412fe834c9fe8409fddb3fc2b1"
+            ],
+            "version": "==0.0.5"
         },
         "xmlschema": {
             "hashes": [

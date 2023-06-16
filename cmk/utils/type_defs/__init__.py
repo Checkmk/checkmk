@@ -26,12 +26,8 @@ __all__ = [
     "state_markers",
     "TimeRange",
     "Timestamp",
-    "HostName",
-    "HostAddress",
 ]
 
-
-from cmk.utils.hostaddress import HostAddress, HostName
 
 from ._misc import (
     AgentRawData,

@@ -20,11 +20,11 @@ def main(
     argv: Sequence[str] | None = None,
     smb_share: SMBShareDiskUsageProto | None = None,
 ) -> int:
-    exitcode, summary = _check_disk_usage_main(
+    exitcode, summary, perfdata = _check_disk_usage_main(
         argv or sys.argv[1:],
         smb_share or _SMBShareDiskUsage(),
     )
-    print(summary)
+    _output_check_result(summary, perfdata)
     return exitcode
 
 
@@ -42,6 +42,14 @@ class SMBShareDiskUsageProto(Protocol):
         configfile: str | None = None,
     ) -> ErrorResult | SMBShare:
         ...
+
+
+def _output_check_result(
+    summary: str, perfdata: tuple[str, str, float, float, int, int] | None
+) -> None:
+    print(
+        summary + (f""" | '{perfdata[0]}'={";".join(map(str, perfdata[1:]))}""" if perfdata else "")
+    )
 
 
 def parse_arguments(argv: Sequence[str]) -> argparse.Namespace:
@@ -307,13 +315,42 @@ def _check_smb_share(
     smb_share: ErrorResult | SMBShare,
     warn: float,
     crit: float,
-) -> tuple[int, str]:
+    share_name: str,
+) -> tuple[int, str, tuple[str, str, float, float, int, int] | None]:
     if isinstance(smb_share, ErrorResult):
-        return (smb_share.state, smb_share.summary)
-    return _check_disk_usage_threshold(smb_share, warn, crit)
+        return (smb_share.state, smb_share.summary, None)
+
+    return _check_disk_usage_threshold(smb_share, warn, crit) + (
+        _create_perfdata(
+            share_name=share_name,
+            total_bytes=smb_share.total_bytes,
+            available_bytes=smb_share.available_bytes,
+            warn=warn,
+            crit=crit,
+        ),
+    )
 
 
-def _check_disk_usage_threshold(smb_share: SMBShare, warn: float, crit: float) -> tuple[int, str]:
+def _create_perfdata(
+    *,
+    share_name: str,
+    total_bytes: int,
+    available_bytes: int,
+    warn: float,
+    crit: float,
+) -> tuple[str, str, float, float, int, int]:
+    occupied_bytes = f"{total_bytes - available_bytes}B"
+    warn_bytes = (warn / 100) * total_bytes
+    crit_bytes = (crit / 100) * total_bytes
+
+    return (share_name, occupied_bytes, warn_bytes, crit_bytes, 0, total_bytes)
+
+
+def _check_disk_usage_threshold(
+    smb_share: SMBShare,
+    warn: float,
+    crit: float,
+) -> tuple[int, str]:
     free_percentage = (smb_share.available_bytes / smb_share.total_bytes) * 100
     used_percentage = 100 - free_percentage
 
@@ -336,7 +373,7 @@ def _check_disk_usage_threshold(smb_share: SMBShare, warn: float, crit: float) -
 def _check_disk_usage_main(
     argv: Sequence[str],
     smb_share_disk_usage: SMBShareDiskUsageProto,
-) -> tuple[int, str]:
+) -> tuple[int, str, tuple[str, str, float, float, int, int] | None]:
     args = parse_arguments(argv=argv)
 
     return _check_smb_share(
@@ -352,4 +389,5 @@ def _check_disk_usage_main(
         ),
         warn=args.levels[0],
         crit=args.levels[1],
+        share_name=args.share,
     )

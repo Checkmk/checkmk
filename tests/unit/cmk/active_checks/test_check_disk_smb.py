@@ -53,7 +53,10 @@ def test_main_ok_state(capsys: pytest.CaptureFixture[str]) -> None:
         == 0
     )
     out, err = capsys.readouterr()
-    assert out == "Disk ok - 50.0 KiB (50.0%) free on \\\\hostname\\share\n"
+    assert (
+        out
+        == "Disk ok - 50.0 KiB (50.0%) free on \\\\hostname\\share | 'share'=51200B;81920.0;92160.0;0;102400\n"
+    )
     assert not err
 
 
@@ -66,7 +69,10 @@ def test_main_warn_state(capsys: pytest.CaptureFixture[str]) -> None:
         == 1
     )
     out, err = capsys.readouterr()
-    assert out == "WARNING: Only 19.5 KiB (19.53%) free on \\\\hostname\\share\n"
+    assert (
+        out
+        == "WARNING: Only 19.5 KiB (19.53%) free on \\\\hostname\\share | 'share'=82400B;81920.0;92160.0;0;102400\n"
+    )
     assert not err
 
 
@@ -79,7 +85,10 @@ def test_main_crit_state(capsys: pytest.CaptureFixture[str]) -> None:
         == 2
     )
     out, err = capsys.readouterr()
-    assert out == "CRITICAL: Only 5.5 KiB (5.47%) free on \\\\hostname\\share\n"
+    assert (
+        out
+        == "CRITICAL: Only 5.5 KiB (5.47%) free on \\\\hostname\\share | 'share'=96800B;81920.0;92160.0;0;102400\n"
+    )
     assert not err
 
 

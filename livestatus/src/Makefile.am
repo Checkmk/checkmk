@@ -161,7 +161,7 @@ documentation: compile_commands.json
 	PLANTUML_JAR_PATH=$(PLANTUML_JAR_PATH) $(DOXYGEN) doc/Doxyfile
 	$(RM) '$$depbase.Tpo'
 
-clang_format_with = FILES="$(FILES_TO_CHECK)"; find $${FILES:-src test include unixcat.cc} -type f \( -name "*.h" -o -name "*.cc" \) -print0 | \
+clang_format_with = FILES="$(FILES_TO_CHECK)"; find $${FILES:-src test include} -type f \( -name "*.h" -o -name "*.cc" \) -print0 | \
                         xargs --no-run-if-empty --null "clang-format-$(CLANG_VERSION)" -style=file $(1)
 
 check-format:

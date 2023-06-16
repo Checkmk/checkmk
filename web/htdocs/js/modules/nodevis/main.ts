@@ -34,6 +34,7 @@ import {LayeredNodesLayer} from "nodevis/layers";
 import {LayoutManagerLayer} from "nodevis/layout";
 import {LiveSearch, SearchFilters} from "nodevis/utils";
 import {LayoutStyleExampleGenerator} from "nodevis/example_generator";
+import {link_type_class_registry} from "nodevis/link_utils";
 
 //
 //  .--MainInstance--------------------------------------------------------.
@@ -465,5 +466,6 @@ export const example_generator = LayoutStyleExampleGenerator;
 export const registries = {
     layout_style_class_registry: layout_style_class_registry,
     node_type_class_registry: node_type_class_registry,
+    link_type_class_registry: link_type_class_registry,
     layer_class_registry: layer_class_registry,
 };

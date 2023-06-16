@@ -10,20 +10,14 @@ __all__ = [
     "ContactgroupName",
     "CheckPluginNameStr",
     "Item",
-    "ServiceState",
-    "ServiceDetails",
-    "ServiceAdditionalDetails",
     "MetricName",
 ]
 
 ServiceName = str
+
 ContactgroupName = str
 
 CheckPluginNameStr = str
 Item = str | None
-
-ServiceState = int
-ServiceDetails = str
-ServiceAdditionalDetails = str
 
 MetricName = str

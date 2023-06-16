@@ -71,7 +71,6 @@ def test_allowed_import_ok(component: Component) -> None:
         ("_nevermind_", "cmk.base.plugins.agent_based.utils.foo", "cmk.utils.debug", False),
         # `checkers` in `utils` is wrong but anywhere else is OK
         ("cmk/checkers", "cmk.checkengine.snmp", "cmk.utils", True),
-        ("cmk/utils", "cmk.utils.foo", "cmk.checkengine", False),
         ("cmk/base", "cmk.base.sources", "cmk.checkengine", True),
         # disallow import of `snmplib` in `utils`
         ("cmk/utils", "cmk.utils.foo", "cmk.snmplib", False),

@@ -9,7 +9,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from cmk.utils.type_defs import ServiceDetails, ServiceState
+from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
 import cmk.base.config as config
 from cmk.base import check_api

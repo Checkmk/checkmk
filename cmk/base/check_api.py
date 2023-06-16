@@ -43,7 +43,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
 from cmk.utils.sectionname import SectionName as _SectionName
-from cmk.utils.type_defs import MetricName, ServiceDetails, ServiceState
+from cmk.utils.type_defs import MetricName
 
 from cmk.snmplib.type_defs import SpecialColumn as _SpecialColumn
 
@@ -53,6 +53,7 @@ from cmk.checkengine.plugin_contexts import (
     host_name as _internal_host_name,  # pylint: disable=unused-import
 )
 from cmk.checkengine.plugin_contexts import service_description
+from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
 import cmk.base.api.agent_based.register as _agent_based_register
 import cmk.base.config as _config

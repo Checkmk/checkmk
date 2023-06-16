@@ -76,6 +76,8 @@ configure_make(
         py_install_dir="$BUILD_TMPDIR/{installPrefix}";
         bin_dir="$INSTALLDIR/bin";
         sysconfig_path="$INSTALLDIR/lib/python{pyMajMin}/_sysconfigdata__linux_x86_64-linux-gnu.py"
+        # omd_prefix must be fixed-up to the corresponding omd path (e.g. /omd/versions/2.2.0p2.cee)
+        omd_prefix="/replace-me"
 
         echo '### Compile and install sitecustomize.py ###';
         install -m 644 $EXT_BUILD_ROOT/packages/Python/sitecustomize.py $INSTALLDIR/lib/python{pyMajMin}/;
@@ -83,14 +85,14 @@ configure_make(
 
         echo '### Fix sysconfigdata ###';
         # For now 'OMD_VERSION' is not yet available in Bazel, therefore we use a well defined placeholder
-        sed -i "s|$py_install_dir|/replace-me|g" $sysconfig_path;
+        sed -i "s|$py_install_dir|$omd_prefix|g" $sysconfig_path;
 
         # include & lib of openssl are found under different paths...
-        sed -i "s|$EXT_BUILD_DEPS/openssl/include|/replace-me/include/openssl|g" $sysconfig_path;
-        sed -i "s|$EXT_BUILD_DEPS/openssl/lib|/replace-me/lib|g" $sysconfig_path;
+        sed -i "s|$EXT_BUILD_DEPS/openssl/include|$omd_prefix/include/openssl|g" $sysconfig_path;
+        sed -i "s|$EXT_BUILD_DEPS/openssl/lib|$omd_prefix/lib|g" $sysconfig_path;
 
         # This one is not really helpful... but we don't want to have bazel paths in _sysconfig
-        sed -i "s|$BUILD_TMPDIR|/replace-me|g" $sysconfig_path;
+        sed -i "s|$BUILD_TMPDIR|$omd_prefix|g" $sysconfig_path;
 
         # Fix shebang of scripts
 	cd $bin_dir && \

@@ -29,6 +29,7 @@ interface DelayedGraph {
     graph_data_range;
     graph_render_options;
     script_object: HTMLElement | SVGElement;
+    graph_display_id: string;
 }
 
 //#   .-Creation-----------------------------------------------------------.
@@ -54,7 +55,11 @@ function get_id_of_graph(ajax_context) {
                     g_graphs[graph_id].ajax_context.definition.specification
                 ) &&
             JSON.stringify(ajax_context.render_options) ==
-                JSON.stringify(g_graphs[graph_id].ajax_context.render_options)
+                JSON.stringify(
+                    g_graphs[graph_id].ajax_context.render_options
+                ) &&
+            ajax_context.display_id ==
+                g_graphs[graph_id].ajax_context.display_id
         ) {
             return graph_id;
         }
@@ -131,7 +136,8 @@ function get_current_script() {
 export function load_graph_content(
     graph_recipe,
     graph_data_range,
-    graph_render_options
+    graph_render_options,
+    graph_display_id: string
 ) {
     var script_object = get_current_script();
 
@@ -145,6 +151,7 @@ export function load_graph_content(
             graph_data_range: graph_data_range,
             graph_render_options: graph_render_options,
             script_object: script_object,
+            graph_display_id: graph_display_id,
         });
         return;
     } else {
@@ -152,7 +159,8 @@ export function load_graph_content(
             graph_recipe,
             graph_data_range,
             graph_render_options,
-            script_object
+            script_object,
+            graph_display_id
         );
     }
 }
@@ -178,7 +186,8 @@ function do_load_graph_content(
     graph_recipe,
     graph_data_range,
     graph_render_options,
-    script_object
+    script_object,
+    graph_display_id: string
 ) {
     var graph_load_container = script_object.previousSibling;
     update_graph_load_container(
@@ -194,6 +203,7 @@ function do_load_graph_content(
                 graph_recipe: graph_recipe,
                 graph_data_range: graph_data_range,
                 graph_render_options: graph_render_options,
+                graph_display_id: graph_display_id,
             })
         );
 
@@ -270,7 +280,8 @@ function delayed_graph_renderer() {
                 entry.graph_recipe,
                 entry.graph_data_range,
                 entry.graph_render_options,
-                entry.script_object
+                entry.script_object,
+                entry.graph_display_id
             );
             g_delayed_graphs.splice(i, 1);
         }

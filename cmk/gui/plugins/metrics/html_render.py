@@ -190,6 +190,7 @@ def graph_ajax_context(
         "definition": graph_artwork["definition"],
         "data_range": graph_data_range,
         "render_options": graph_render_options,
+        "display_id": graph_artwork["display_id"],
     }
 
 
@@ -714,6 +715,7 @@ def render_graphs_from_specification_html(
     ],
     *,
     render_async: bool = True,
+    graph_display_id: str = "",
 ) -> HTML:
 
     graph_recipes = resolve_graph_recipe_with_error_handling(graph_identification)
@@ -725,7 +727,8 @@ def render_graphs_from_specification_html(
         graph_data_range,
         graph_render_options,
         resolve_combined_single_metric_spec,
-        render_async,
+        render_async=render_async,
+        graph_display_id=graph_display_id,
     )
 
 
@@ -736,7 +739,9 @@ def render_graphs_from_definitions(
     resolve_combined_single_metric_spec: Callable[
         [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
     ],
+    *,
     render_async: bool = True,
+    graph_display_id: str = "",
 ) -> HTML:
     # Estimate step. Step is the number of seconds each fetched data point represents.
     # It does not make sense to fetch the data in *much* greater precision than our
@@ -749,7 +754,10 @@ def render_graphs_from_definitions(
     for graph_recipe in graph_recipes:
         if render_async:
             output += render_graph_container_html(
-                graph_recipe, graph_data_range, graph_render_options
+                graph_recipe,
+                graph_data_range,
+                graph_render_options,
+                graph_display_id=graph_display_id,
             )
         else:
             output += render_graph_content_html(
@@ -757,6 +765,7 @@ def render_graphs_from_definitions(
                 graph_data_range,
                 graph_render_options,
                 resolve_combined_single_metric_spec,
+                graph_display_id=graph_display_id,
             )
     return output
 
@@ -766,6 +775,8 @@ def render_graph_container_html(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
+    *,
+    graph_display_id: str,
 ) -> HTML:
     graph_render_options = artwork.add_default_render_options(graph_render_options)
 
@@ -786,11 +797,12 @@ def render_graph_container_html(
         class_="graph_load_container",
     )
     output += HTMLWriter.render_javascript(
-        "cmk.graphs.load_graph_content(%s, %s, %s)"
+        "cmk.graphs.load_graph_content(%s, %s, %s, %s)"
         % (
             json.dumps(graph_recipe),
             json.dumps(graph_data_range),
             json.dumps(graph_render_options),
+            json.dumps(graph_display_id),
         )
     )
 
@@ -817,6 +829,7 @@ def ajax_render_graph_content(
                 api_request["graph_data_range"],
                 api_request["graph_render_options"],
                 resolve_combined_single_metric_spec,
+                graph_display_id=api_request["graph_display_id"],
             ),
         }
     except Exception:
@@ -836,6 +849,8 @@ def render_graph_content_html(
     resolve_combined_single_metric_spec: Callable[
         [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
     ],
+    *,
+    graph_display_id: str = "",
 ) -> HTML:
     output = HTML()
     try:
@@ -844,6 +859,7 @@ def render_graph_content_html(
             graph_data_range,
             graph_render_options,
             resolve_combined_single_metric_spec,
+            graph_display_id=graph_display_id,
         )
         main_graph_html = render_graph_or_error_html(
             graph_artwork, graph_data_range, graph_render_options
@@ -860,6 +876,7 @@ def render_graph_content_html(
                     graph_recipe,
                     graph_render_options,
                     resolve_combined_single_metric_spec,
+                    graph_display_id=graph_display_id,
                 ),
                 class_="graph_with_timeranges",
             )
@@ -884,6 +901,8 @@ def render_time_range_selection(
     resolve_combined_single_metric_spec: Callable[
         [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
     ],
+    *,
+    graph_display_id: str,
 ) -> HTML:
     now = int(time.time())
     graph_render_options = copy.deepcopy(graph_render_options)
@@ -919,6 +938,7 @@ def render_time_range_selection(
             graph_data_range,
             graph_render_options,
             resolve_combined_single_metric_spec,
+            graph_display_id=graph_display_id,
         )
         rows.append(
             HTMLWriter.render_td(
@@ -1078,6 +1098,8 @@ def host_service_graph_dashlet_cmk(
     resolve_combined_single_metric_spec: Callable[
         [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
     ],
+    *,
+    graph_display_id: str = "",
 ) -> HTML | None:
     graph_render_options = {**default_dashlet_graph_render_options}
     graph_render_options = artwork.add_default_render_options(graph_render_options)
@@ -1142,6 +1164,7 @@ def host_service_graph_dashlet_cmk(
         graph_render_options,
         resolve_combined_single_metric_spec,
         render_async=False,
+        graph_display_id=graph_display_id,
     )
     html.write_html(html_code)
     return None

@@ -2237,12 +2237,7 @@ def _execute_active_check_inventory(
         )
 
     if result.no_data_or_files:
-        path = Path(cmk.utils.paths.autoinventory_dir)
-        path.mkdir(parents=True, exist_ok=True)
-        file_path = path / str(host_name)
-        if not file_path.exists():
-            # Why not always touch?  Then we'd have a one liner.
-            file_path.touch()
+        AutoQueue(cmk.utils.paths.autoinventory_dir).add(host_name)
 
     if not (result.processing_failed or result.no_data_or_files):
         save_tree_actions = _get_save_tree_actions(

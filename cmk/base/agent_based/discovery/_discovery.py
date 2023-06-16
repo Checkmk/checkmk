@@ -6,11 +6,11 @@
 import itertools
 from collections import Counter
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from pathlib import Path
 from typing import Literal
 
 import cmk.utils.paths
 import cmk.utils.resulttype as result
+from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
@@ -313,19 +313,12 @@ def _schedule_rediscovery(
     if not need_rediscovery:
         return ActiveCheckResult()
 
-    path = Path(cmk.utils.paths.autodiscovery_dir)
-    path.mkdir(parents=True, exist_ok=True)
-
+    autodiscovery_queue = AutoQueue(cmk.utils.paths.autodiscovery_dir)
     nodes = config_cache.nodes_of(host_name)
     if config_cache.is_cluster(host_name) and nodes:
         for nodename in nodes:
-            file_path = path / str(nodename)
-            if not file_path.exists():
-                # Why not always touch?  Then we'd have a one liner.
-                file_path.touch()
+            autodiscovery_queue.add(nodename)
     else:
-        file_path = path / str(host_name)
-        if not file_path.exists():
-            file_path.touch()
+        autodiscovery_queue.add(host_name)
 
     return ActiveCheckResult(0, "rediscovery scheduled")

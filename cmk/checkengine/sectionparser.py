@@ -14,7 +14,7 @@ import cmk.utils.resulttype as result
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionName
-from cmk.utils.type_defs.pluginname import ValidatedString
+from cmk.utils.validatedstr import ValidatedString
 
 from ._typedefs import HostKey, SourceInfo, SourceType
 from .crash_reporting import create_section_crash_dump

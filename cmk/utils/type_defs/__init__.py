@@ -5,7 +5,6 @@
 """Checkmk wide type definitions"""
 
 __all__ = [
-    "ValidatedString",
     "AgentRawData",
     "CheckPluginNameStr",
     "ContactgroupName",
@@ -49,4 +48,3 @@ from ._misc import (
     TimeRange,
     Timestamp,
 )
-from .pluginname import ValidatedString

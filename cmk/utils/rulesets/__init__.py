@@ -5,7 +5,7 @@
 
 from collections.abc import Container
 
-from cmk.utils.type_defs import ValidatedString
+from cmk.utils.validatedstr import ValidatedString
 
 
 class RuleSetName(ValidatedString):

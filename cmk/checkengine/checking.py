@@ -8,7 +8,7 @@ from __future__ import annotations
 from collections.abc import Container
 from typing import Final
 
-from cmk.utils.type_defs import ValidatedString
+from cmk.utils.validatedstr import ValidatedString
 
 
 class CheckPluginName(ValidatedString):

@@ -29,7 +29,7 @@ from cmk.utils.structured_data import (
     RetentionInterval,
     UpdateResult,
 )
-from cmk.utils.type_defs import ValidatedString
+from cmk.utils.validatedstr import ValidatedString
 
 from ._api import FetcherFunction, ParserFunction, SectionPlugin, SummarizerFunction
 from ._typedefs import HostKey, SourceType

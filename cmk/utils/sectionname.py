@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Container
 
-from cmk.utils.type_defs.pluginname import ValidatedString
+from cmk.utils.validatedstr import ValidatedString
 
 __all__ = ["SectionName"]
 

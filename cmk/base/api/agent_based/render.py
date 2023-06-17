@@ -104,7 +104,12 @@ def timespan(seconds: float) -> str:
         '100 years 0 days'
 
     """
-    ts = " ".join(_gen_timespan_chunks(float(seconds), nchunks=2))
+    if seconds >= 0:
+        ts = " ".join(_gen_timespan_chunks(float(seconds), nchunks=2))
+    else:
+        seconds = -1 * seconds
+        ts = " ".join(_gen_timespan_chunks(float(seconds), nchunks=2))
+        ts = "-%s" % ts
     if ts == "0 %s" % _TIME_UNITS[-1][0]:
         ts = "0 seconds"
     return ts

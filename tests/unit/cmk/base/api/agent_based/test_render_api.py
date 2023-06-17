@@ -55,9 +55,22 @@ def test_timespan(seconds: float, output: str) -> None:
     assert output == render.timespan(seconds=seconds)
 
 
-def test_timespan_negative() -> None:
-    with pytest.raises(ValueError):
-        _ = render.timespan(seconds=-1.0)
+@pytest.mark.parametrize(
+    "seconds, output",
+    [
+        (-0, "0 seconds"),
+        (-0.00000001, "-10 nanoseconds"),
+        (-5.3991e-05, "-54 microseconds"),
+        (-0.1, "-100 milliseconds"),
+        (-22, "-22 seconds"),
+        (-158, "-2 minutes 38 seconds"),
+        (-98, "-1 minute 38 seconds"),
+        (-1234567, "-14 days 6 hours"),
+        (-31536001, "-1 year 0 days"),
+    ],
+)
+def test_timespan_negative(seconds: float, output: str) -> None:
+    assert output == render.timespan(seconds=seconds)
 
 
 @pytest.mark.parametrize(

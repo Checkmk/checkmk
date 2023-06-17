@@ -432,7 +432,7 @@ def check_levels_predictive(
     if notice_only:
         yield Result(state=value_state, notice=info_text + levels_text)
     else:
-        yield Result(state=value_state, summary=info_text + levels_text)    
+        yield Result(state=value_state, summary=info_text + levels_text)
     yield Metric(metric_name, value, levels=levels_upper, boundaries=boundaries)
     if ref_value:
         yield Metric("predict_%s" % metric_name, ref_value)

@@ -357,6 +357,7 @@ def check_levels_predictive(
     render_func: Callable[[float], str] | None = None,
     label: str | None = None,
     boundaries: tuple[float | None, float | None] | None = None,
+    notice_only: bool = False,
 ) -> Generator[Result | Metric, None, None]:
     """Generic function for checking a value against levels.
 
@@ -375,6 +376,8 @@ def check_levels_predictive(
                       readable fashion
         label:        Label to prepend to the output.
         boundaries:   Minimum and maximum to add to the metric.
+        notice_only:  Only show up in service output if not OK (otherwise in details).
+                      See `notice` keyword of `Result` class.
 
     """
     if render_func is None:
@@ -426,7 +429,10 @@ def check_levels_predictive(
     else:
         info_text = f"{render_func(value)}{predictive_levels_msg}"
 
-    yield Result(state=value_state, summary=info_text + levels_text)
+    if notice_only:
+        yield Result(state=value_state, notice=info_text + levels_text)
+    else:
+        yield Result(state=value_state, summary=info_text + levels_text)    
     yield Metric(metric_name, value, levels=levels_upper, boundaries=boundaries)
     if ref_value:
         yield Metric("predict_%s" % metric_name, ref_value)

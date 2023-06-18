@@ -385,7 +385,7 @@ def test_reload_gui_without_gui_files(reload_apache: Mock) -> None:
         packaging.PackageName("ding"),
         version_packaged="3.14.0p15",
     )
-    packaging.execute_post_package_change_actions(package)
+    packaging.execute_post_package_change_actions([package])
     reload_apache.assert_not_called()
 
 
@@ -396,7 +396,7 @@ def test_reload_gui_with_gui_part(reload_apache: Mock) -> None:
         files={packaging.PackagePart.GUI: [Path("a")]},
     )
 
-    packaging.execute_post_package_change_actions(package)
+    packaging.execute_post_package_change_actions([package])
     reload_apache.assert_called_once()
 
 
@@ -407,7 +407,7 @@ def test_reload_gui_with_web_part(reload_apache: Mock) -> None:
         files={packaging.PackagePart.WEB: [Path("a")]},
     )
 
-    packaging.execute_post_package_change_actions(package)
+    packaging.execute_post_package_change_actions([package])
     reload_apache.assert_called_once()
 
 

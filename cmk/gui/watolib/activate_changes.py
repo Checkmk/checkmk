@@ -2165,7 +2165,7 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
         # configuration compatible with the local Checkmk version.
         if _need_to_update_mkps_after_sync():
             logger.debug("Updating active packages")
-            packaging.update_active_packages(
+            uninstalled, installed = packaging.update_active_packages(
                 packaging.Installer(paths.installed_packages_dir),
                 packaging.PathConfig(
                     agent_based_plugins_dir=paths.local_agent_based_plugins_dir,
@@ -2199,8 +2199,8 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
                     )
                 },
                 version.__version__,
-                packaging.execute_post_package_change_actions,
             )
+            packaging.execute_post_package_change_actions([*uninstalled, *installed])
         if _need_to_update_config_after_sync():
             logger.debug("Executing cmk-update-config")
             _execute_cmk_update_config()

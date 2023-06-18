@@ -5,7 +5,7 @@
 
 import logging
 import subprocess
-from collections.abc import Callable, Iterable, Iterator, Mapping
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from itertools import groupby
 from pathlib import Path
 from stat import filemode
@@ -210,13 +210,13 @@ def disable(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     package_id: PackageID,
-    post_package_change_actions: Callable[[Manifest | None], None],
+    post_package_change_actions: Callable[[Sequence[Manifest]], None],
 ) -> None:
     if (
         installed := installer.get_installed_manifest(package_id.name)
     ) is not None and installed.version == package_id.version:
         _uninstall(installer, path_config, callbacks, installed)
-        post_package_change_actions(installed)
+        post_package_change_actions([installed])
     package_store.remove_enabled_mark(package_id)
 
 
@@ -601,30 +601,29 @@ def update_active_packages(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     site_version: str,
-    post_package_change_actions: Callable[[Manifest | None], None],
-) -> None:
+) -> tuple[Sequence[Manifest], Sequence[Manifest]]:
     """Update which of the enabled packages are actually active (installed)"""
     package_store = PackageStore(
         shipped_dir=path_config.packages_shipped_dir,
         local_dir=path_config.packages_local_dir,
         enabled_dir=path_config.packages_enabled_dir,
     )
-    _deinstall_inapplicable_active_packages(
-        installer,
-        path_config,
-        callbacks,
-        post_package_change_actions=lambda m: None,
-        site_version=site_version,
+    # order matters here (deinstall, then install)!
+    return (
+        _deinstall_inapplicable_active_packages(
+            installer,
+            path_config,
+            callbacks,
+            site_version=site_version,
+        ),
+        _install_applicable_inactive_packages(
+            package_store,
+            installer,
+            path_config,
+            callbacks,
+            site_version=site_version,
+        ),
     )
-    _install_applicable_inactive_packages(
-        package_store,
-        installer,
-        path_config,
-        callbacks,
-        post_package_change_actions=lambda m: None,
-        site_version=site_version,
-    )
-    post_package_change_actions(None)
 
 
 def _deinstall_inapplicable_active_packages(
@@ -633,8 +632,8 @@ def _deinstall_inapplicable_active_packages(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
     site_version: str,
-    post_package_change_actions: Callable[[Manifest | None], None],
-) -> None:
+) -> Sequence[Manifest]:
+    uninstalled = []
     for manifest in installer.get_installed_manifests():
         try:
             _raise_for_installability(
@@ -653,9 +652,10 @@ def _deinstall_inapplicable_active_packages(
                 callbacks,
                 manifest,
             )
-            post_package_change_actions(manifest)
+            uninstalled.append(manifest)
         else:
             _logger.info("[%s %s]: Not uninstalling", manifest.name, manifest.version)
+    return uninstalled
 
 
 def _install_applicable_inactive_packages(
@@ -665,21 +665,22 @@ def _install_applicable_inactive_packages(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
     site_version: str,
-    post_package_change_actions: Callable[[Manifest | None], None],
-) -> None:
+) -> Sequence[Manifest]:
+    installed = []
     for name, manifests in _sort_enabled_packages_for_installation(package_store):
         for manifest in manifests:
             try:
-                installed = install(
-                    installer,
-                    package_store,
-                    manifest.id,
-                    path_config,
-                    callbacks,
-                    allow_outdated=False,
-                    site_version=site_version,
+                installed.append(
+                    install(
+                        installer,
+                        package_store,
+                        manifest.id,
+                        path_config,
+                        callbacks,
+                        allow_outdated=False,
+                        site_version=site_version,
+                    )
                 )
-                post_package_change_actions(installed)
             except PackageError as exc:
                 _logger.info("[%s %s]: Not installed: %s", name, manifest.version, exc)
             else:
@@ -688,6 +689,7 @@ def _install_applicable_inactive_packages(
                 # Do not try to install older versions, or the installation function will
                 # silently downgrade the package.
                 break
+    return installed
 
 
 def _sort_enabled_packages_for_installation(
@@ -713,7 +715,7 @@ def disable_outdated(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
     site_version: str,
-    post_package_change_actions: Callable[[Manifest | None], None],
+    post_package_change_actions: Callable[[Sequence[Manifest]], None],
 ) -> None:
     """Check installed packages and disables the outdated ones
 
@@ -742,8 +744,8 @@ def disable_outdated(
             _logger.info("[%s %s]: Not disabling", manifest.name, manifest.version)
 
 
-def execute_post_package_change_actions(package: Manifest | None) -> None:
-    if package is None or _package_contains_gui_files(package):
+def execute_post_package_change_actions(packages: Sequence[Manifest]) -> None:
+    if any("gui" in package.files or "web" in package.files for package in packages):
         _invalidate_visuals_cache()
         _reload_apache()
     request_index_rebuild()
@@ -753,10 +755,6 @@ def _invalidate_visuals_cache():
     """Invalidate visuals cache to use the current data"""
     for file in cmk.utils.paths.visuals_cache_dir.glob("last*"):
         file.unlink(missing_ok=True)
-
-
-def _package_contains_gui_files(package: Manifest) -> bool:
-    return "gui" in package.files or "web" in package.files
 
 
 def _reload_apache() -> None:

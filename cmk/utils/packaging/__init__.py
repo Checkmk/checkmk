@@ -5,7 +5,7 @@
 
 import logging
 import subprocess
-from collections.abc import Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from itertools import groupby
 from pathlib import Path
 from stat import filemode
@@ -15,7 +15,6 @@ from pydantic import BaseModel
 
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils.setup_search_index import request_index_rebuild
 from cmk.utils.version import is_daily_build_of_master, parse_check_mk_version
 
 from ._installed import Installer as Installer
@@ -744,20 +743,26 @@ def disable_outdated(
     return disabled
 
 
-def execute_post_package_change_actions(packages: Sequence[Manifest]) -> None:
-    if any("gui" in package.files or "web" in package.files for package in packages):
-        _invalidate_visuals_cache()
-        _reload_apache()
-    request_index_rebuild()
+def make_post_package_change_actions(
+    *callbacks: tuple[tuple[PackagePart, ...], Callable[[], object]],
+) -> Callable[[Sequence[Manifest]], None]:
+    def _execute_post_package_change_actions(
+        packages: Sequence[Manifest],
+    ) -> None:
+        for triggers, callback in callbacks:
+            if any(package.files.get(t) for t in triggers for package in packages):
+                callback()
+
+    return _execute_post_package_change_actions
 
 
-def _invalidate_visuals_cache():
+def invalidate_visuals_cache():
     """Invalidate visuals cache to use the current data"""
     for file in cmk.utils.paths.visuals_cache_dir.glob("last*"):
         file.unlink(missing_ok=True)
 
 
-def _reload_apache() -> None:
+def reload_apache() -> None:
     try:
         subprocess.run(["omd", "status", "apache"], capture_output=True, check=True)
     except subprocess.CalledProcessError:

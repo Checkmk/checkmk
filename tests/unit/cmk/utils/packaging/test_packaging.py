@@ -7,9 +7,10 @@ import ast
 import json
 import shutil
 import tarfile
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Iterable, Iterator
 from io import BytesIO
 from pathlib import Path
+from typing import NoReturn
 from unittest.mock import Mock
 
 import pytest
@@ -380,45 +381,32 @@ def test_get_stored_manifests(
     )
 
 
-def test_reload_gui_without_gui_files(reload_apache: Mock) -> None:
+def _raise_something() -> NoReturn:
+    raise RuntimeError()
+
+
+def test_reload_gui_without_gui_files() -> None:
     package = packaging.manifest_template(
         packaging.PackageName("ding"),
         version_packaged="3.14.0p15",
     )
-    packaging.execute_post_package_change_actions([package])
-    reload_apache.assert_not_called()
+
+    packaging.make_post_package_change_actions(((packaging.PackagePart.GUI,), _raise_something))(
+        [package]
+    )
 
 
-def test_reload_gui_with_gui_part(reload_apache: Mock) -> None:
+def test_reload_gui_with_gui_part() -> None:
     package = packaging.manifest_template(
         name=packaging.PackageName("ding"),
         version_packaged="3.14.0p15",
         files={packaging.PackagePart.GUI: [Path("a")]},
     )
 
-    packaging.execute_post_package_change_actions([package])
-    reload_apache.assert_called_once()
-
-
-def test_reload_gui_with_web_part(reload_apache: Mock) -> None:
-    package = packaging.manifest_template(
-        name=packaging.PackageName("ding"),
-        version_packaged="3.14.0p15",
-        files={packaging.PackagePart.WEB: [Path("a")]},
-    )
-
-    packaging.execute_post_package_change_actions([package])
-    reload_apache.assert_called_once()
-
-
-def _get_test_manifest(properties: Mapping) -> packaging.Manifest:
-    pi = packaging.manifest_template(
-        packaging.PackageName("test-package"),
-        version_packaged="3.14.0p15",
-    )
-    for k, v in properties.items():
-        setattr(pi, k, v)
-    return pi
+    with pytest.raises(RuntimeError):
+        packaging.make_post_package_change_actions(
+            ((packaging.PackagePart.GUI,), _raise_something)
+        )([package])
 
 
 @pytest.mark.parametrize(

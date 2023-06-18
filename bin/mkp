@@ -9,11 +9,14 @@ from typing import Final
 import cmk.utils.paths
 from cmk.utils.packaging import (
     cli,
-    execute_post_package_change_actions,
+    invalidate_visuals_cache,
+    make_post_package_change_actions,
     PackageOperationCallbacks,
     PackagePart,
     PathConfig,
+    reload_apache,
 )
+from cmk.utils.setup_search_index import request_index_rebuild
 from cmk.utils.version import __version__
 
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
@@ -59,6 +62,13 @@ if __name__ == "__main__":
             _PATH_CONFIG,
             _CALLBACKS,
             __version__,
-            execute_post_package_change_actions,
+            make_post_package_change_actions(
+                ((PackagePart.GUI, PackagePart.WEB), reload_apache),
+                ((PackagePart.GUI, PackagePart.WEB), invalidate_visuals_cache),
+                (
+                    (PackagePart.GUI, PackagePart.WEB, PackagePart.EC_RULE_PACKS),
+                    request_index_rebuild,
+                ),
+            ),
         )
     )

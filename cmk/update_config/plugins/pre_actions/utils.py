@@ -5,21 +5,25 @@
 
 import enum
 import sys
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Final
 
 from cmk.utils import paths
 from cmk.utils.packaging import (
     disable,
-    execute_post_package_change_actions,
     Installer,
+    invalidate_visuals_cache,
+    make_post_package_change_actions,
+    Manifest,
     PackageID,
     PackageOperationCallbacks,
     PackagePart,
     PackageStore,
     PathConfig,
+    reload_apache,
 )
+from cmk.utils.setup_search_index import request_index_rebuild
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
@@ -102,7 +106,7 @@ def disable_incomp_mkp(
                 package_id,
             )
         ) is not None:  # should not be None in this case.
-            execute_post_package_change_actions([disabled])
+            _make_post_change_actions()([disabled])
 
         sys.stdout.write(f"Disabled extension package: {package_id.name} {package_id.version}\n")
         return True
@@ -118,6 +122,24 @@ def _request_user_input_on_incompatible_file(
         "You can abort the update process (A) or disable the "
         "extension package (d) and continue the update process.\n"
         "Abort the update process? [A/d] \n"
+    )
+
+
+def _make_post_change_actions() -> Callable[[Sequence[Manifest]], None]:
+    return make_post_package_change_actions(
+        ((PackagePart.GUI, PackagePart.WEB), reload_apache),
+        (
+            (PackagePart.GUI, PackagePart.WEB),
+            invalidate_visuals_cache,
+        ),
+        (
+            (
+                PackagePart.GUI,
+                PackagePart.WEB,
+                PackagePart.EC_RULE_PACKS,
+            ),
+            request_index_rebuild,
+        ),
     )
 
 

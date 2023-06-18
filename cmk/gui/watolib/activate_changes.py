@@ -40,7 +40,15 @@ from typing_extensions import TypedDict
 
 from livestatus import SiteConfiguration, SiteId
 
-from cmk.utils import agent_registration, packaging, paths, render, store, version
+from cmk.utils import (
+    agent_registration,
+    packaging,
+    paths,
+    render,
+    setup_search_index,
+    store,
+    version,
+)
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.licensing.export import LicenseUsageExtensions
 from cmk.utils.licensing.registry import get_licensing_user_effect, is_free
@@ -2569,7 +2577,21 @@ def _execute_post_config_sync_actions(site_id: SiteId) -> None:
                 },
                 version.__version__,
             )
-            packaging.execute_post_package_change_actions([*uninstalled, *installed])
+            packaging.make_post_package_change_actions(
+                ((packaging.PackagePart.GUI, packaging.PackagePart.WEB), packaging.reload_apache),
+                (
+                    (packaging.PackagePart.GUI, packaging.PackagePart.WEB),
+                    packaging.invalidate_visuals_cache,
+                ),
+                (
+                    (
+                        packaging.PackagePart.GUI,
+                        packaging.PackagePart.WEB,
+                        packaging.PackagePart.EC_RULE_PACKS,
+                    ),
+                    setup_search_index.request_index_rebuild,
+                ),
+            )([*uninstalled, *installed])
         if _need_to_update_config_after_sync():
             logger.debug("Executing cmk-update-config")
             _execute_cmk_update_config()

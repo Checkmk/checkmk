@@ -92,14 +92,17 @@ def disable_incomp_mkp(
         and _request_user_input_on_incompatible_file(module_name, package_id, error).lower()
         in USER_INPUT_DISABLE
     ):
-        disable(
-            installer,
-            _PACKAGE_STORE,
-            _PATH_CONFIG,
-            _CALLBACKS,
-            package_id,
-            execute_post_package_change_actions,
-        )
+        if (
+            disabled := disable(
+                installer,
+                _PACKAGE_STORE,
+                _PATH_CONFIG,
+                _CALLBACKS,
+                package_id,
+            )
+        ) is not None:  # should not be None in this case.
+            execute_post_package_change_actions([disabled])
+
         sys.stdout.write(f"Disabled extension package: {package_id.name} {package_id.version}\n")
         return True
     return False

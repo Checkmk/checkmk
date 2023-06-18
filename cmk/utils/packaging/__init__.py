@@ -5,7 +5,7 @@
 
 import logging
 import subprocess
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from itertools import groupby
 from pathlib import Path
 from stat import filemode
@@ -210,14 +210,13 @@ def disable(
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     package_id: PackageID,
-    post_package_change_actions: Callable[[Sequence[Manifest]], None],
-) -> None:
+) -> Manifest | None:
     if (
         installed := installer.get_installed_manifest(package_id.name)
     ) is not None and installed.version == package_id.version:
         _uninstall(installer, path_config, callbacks, installed)
-        post_package_change_actions([installed])
     package_store.remove_enabled_mark(package_id)
+    return installed
 
 
 def create(
@@ -715,13 +714,13 @@ def disable_outdated(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
     site_version: str,
-    post_package_change_actions: Callable[[Sequence[Manifest]], None],
-) -> None:
+) -> Sequence[Manifest]:
     """Check installed packages and disables the outdated ones
 
     Packages that contain a valid version number in the "version.usable_until" field can be disabled
     using this function. Others are not disabled.
     """
+    disabled = []
     for manifest in installer.get_installed_manifests():
         try:
             _raise_for_too_new_cmk_version(manifest.version_usable_until, site_version)
@@ -732,16 +731,19 @@ def disable_outdated(
                 manifest.version,
                 exc,
             )
-            disable(
-                installer,
-                package_store,
-                path_config,
-                callbacks,
-                manifest.id,
-                post_package_change_actions,
-            )
+            if (
+                disabled_manifest := disable(
+                    installer,
+                    package_store,
+                    path_config,
+                    callbacks,
+                    manifest.id,
+                )
+            ) is not None:
+                disabled.append(disabled_manifest)
         else:
             _logger.info("[%s %s]: Not disabling", manifest.name, manifest.version)
+    return disabled
 
 
 def execute_post_package_change_actions(packages: Sequence[Manifest]) -> None:

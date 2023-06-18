@@ -404,7 +404,7 @@ def _command_disable_outdated(
     For all installed packages, this command compares that version with the Checkmk version.
     In case it is outdated, the package is disabled.
     """
-    disable_outdated(
+    disabled = disable_outdated(
         Installer(path_config.installed_packages_dir),
         PackageStore(
             shipped_dir=path_config.packages_shipped_dir,
@@ -414,8 +414,8 @@ def _command_disable_outdated(
         path_config,
         callbacks,
         site_version=this_version,
-        post_package_change_actions=post_package_change_actions,
     )
+    post_package_change_actions(disabled)
     return 0
 
 
@@ -500,14 +500,16 @@ def _command_disable(
         local_dir=path_config.packages_local_dir,
         enabled_dir=path_config.packages_enabled_dir,
     )
-    disable(
-        Installer(path_config.installed_packages_dir),
-        package_store,
-        path_config,
-        callbacks,
-        _get_package_id(args.name, args.version, package_store),
-        post_package_change_actions,
-    )
+    if (
+        disabled := disable(
+            Installer(path_config.installed_packages_dir),
+            package_store,
+            path_config,
+            callbacks,
+            _get_package_id(args.name, args.version, package_store),
+        )
+    ) is not None:
+        post_package_change_actions([disabled])
     return 0
 
 

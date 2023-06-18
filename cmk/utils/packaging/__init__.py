@@ -158,9 +158,7 @@ class PackageStore:
             return local_package_path
 
         # if we're on the remote site, we have to consider this one:
-        if (
-            enabled_package_path := cmk.utils.paths.local_enabled_packages_dir / base_name
-        ).exists():
+        if (enabled_package_path := self.enabled_packages / base_name).exists():
             return enabled_package_path
 
         if (shipped_package_path := self.shipped_packages / base_name).exists():

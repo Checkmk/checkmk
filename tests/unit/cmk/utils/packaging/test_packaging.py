@@ -97,7 +97,7 @@ def fixture_mkp_bytes(installer: packaging.Installer) -> bytes:
     mkp = packaging.create_mkp(manifest, _PATH_CONFIG.get_path, "3.14.0p15")
 
     # Remove files from local hierarchy
-    packaging.uninstall(installer, _PATH_CONFIG, _NO_CALLBACKS, manifest, lambda m: None)
+    packaging._uninstall(installer, _PATH_CONFIG, _NO_CALLBACKS, manifest)
     assert installer.is_installed(packaging.PackageName("aaa")) is False
 
     return mkp
@@ -250,7 +250,6 @@ def test_install(
         mkp_bytes,
         _PATH_CONFIG,
         _NO_CALLBACKS,
-        post_package_change_actions=lambda m: None,
         allow_outdated=False,
         site_version="3.14.0p15",
     )
@@ -299,7 +298,7 @@ def test_write_file(installer: packaging.Installer) -> None:
 
 def test_uninstall(installer: packaging.Installer) -> None:
     manifest = _create_simple_test_package(installer, packaging.PackageName("aaa"))
-    packaging.uninstall(installer, _PATH_CONFIG, _NO_CALLBACKS, manifest, lambda m: None)
+    packaging._uninstall(installer, _PATH_CONFIG, _NO_CALLBACKS, manifest)
     assert not installer.is_installed(packaging.PackageName("aaa"))
 
 

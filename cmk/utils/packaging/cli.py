@@ -474,15 +474,16 @@ def _command_enable(
         local_dir=path_config.packages_local_dir,
         enabled_dir=path_config.packages_enabled_dir,
     )
-    install(
+    installed = install(
         installer,
         package_store,
         _get_package_id(args.name, args.version, package_store),
         path_config,
         callbacks,
         site_version=this_version,
-        post_package_change_actions=post_package_change_actions,
     )
+    post_package_change_actions(installed)
+
     return 0
 
 
@@ -588,15 +589,15 @@ def _command_package(
         manifest = store.store(
             create_mkp(package, path_config.get_path, version_packaged=this_version)
         )
-        install(
+        installed = install(
             installer,
             store,
             manifest.id,
             path_config,
             callbacks,
             site_version=this_version,
-            post_package_change_actions=post_package_change_actions,
         )
+        post_package_change_actions(installed)
     except PackageError as exc:
         sys.stderr.write(f"{exc}\n")
         return 1

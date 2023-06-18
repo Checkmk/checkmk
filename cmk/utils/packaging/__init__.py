@@ -87,12 +87,11 @@ def release(
     installer.remove_installed_manifest(pacname)
 
 
-def uninstall(
+def _uninstall(
     installer: Installer,
     path_config: PathConfig,
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     manifest: Manifest,
-    post_package_change_actions: Callable[[Manifest | None], None],
 ) -> None:
     if err := list(_remove_files(manifest, keep_files={}, path_config=path_config)):
         raise PackageError(", ".join(err))
@@ -101,8 +100,6 @@ def uninstall(
         callbacks[part].uninstall(manifest.files[part])
 
     installer.remove_installed_manifest(manifest.name)
-
-    post_package_change_actions(manifest)
 
 
 class PackageStore:
@@ -218,7 +215,8 @@ def disable(
     if (
         installed := installer.get_installed_manifest(package_id.name)
     ) is not None and installed.version == package_id.version:
-        uninstall(installer, path_config, callbacks, installed, post_package_change_actions)
+        _uninstall(installer, path_config, callbacks, installed)
+        post_package_change_actions(installed)
     package_store.remove_enabled_mark(package_id)
 
 
@@ -305,7 +303,6 @@ def install(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     *,
     site_version: str,
-    post_package_change_actions: Callable[[Manifest], None],
     allow_outdated: bool = True,
 ) -> Manifest:
     try:
@@ -317,7 +314,6 @@ def install(
             callbacks,
             site_version=site_version,
             allow_outdated=allow_outdated,
-            post_package_change_actions=post_package_change_actions,
         )
     finally:
         # it is enabled, even if installing failed
@@ -337,7 +333,6 @@ def _install(
     #  b) users cannot even modify packages without installing them
     # Reconsider!
     allow_outdated: bool,
-    post_package_change_actions: Callable[[Manifest], None],
 ) -> Manifest:
     manifest = extract_manifest(mkp)
 
@@ -375,8 +370,6 @@ def _install(
 
     # Last but not least install package file
     installer.add_installed_manifest(manifest)
-
-    post_package_change_actions(manifest)
 
     return manifest
 
@@ -654,13 +647,13 @@ def _deinstall_inapplicable_active_packages(
             )
         except PackageError as exc:
             _logger.info("[%s %s]: Uninstalling: %s", manifest.name, manifest.version, exc)
-            uninstall(
+            _uninstall(
                 installer,
                 path_config,
                 callbacks,
                 manifest,
-                post_package_change_actions=post_package_change_actions,
             )
+            post_package_change_actions(manifest)
         else:
             _logger.info("[%s %s]: Not uninstalling", manifest.name, manifest.version)
 
@@ -677,16 +670,16 @@ def _install_applicable_inactive_packages(
     for name, manifests in _sort_enabled_packages_for_installation(package_store):
         for manifest in manifests:
             try:
-                install(
+                installed = install(
                     installer,
                     package_store,
                     manifest.id,
                     path_config,
                     callbacks,
                     allow_outdated=False,
-                    post_package_change_actions=post_package_change_actions,
                     site_version=site_version,
                 )
+                post_package_change_actions(installed)
             except PackageError as exc:
                 _logger.info("[%s %s]: Not installed: %s", name, manifest.version, exc)
             else:

@@ -96,7 +96,7 @@ set_up_get_epoch() {
 set_up_current_shell() {
     # Note the current shell may not be the same as what is specified in the
     # shebang, e.g. when reconfigured in the xinetd/systemd/whateverd config file
-    CURRENT_SHELL="$(ps -o args= -p $$ | cut -d' ' -f1)"
+    CURRENT_SHELL="$(waitmax -s 9 2 ps -o args= -p $$ | cut -d' ' -f1)"
 }
 
 #
@@ -583,7 +583,7 @@ section_systemd() {
         echo "[list-unit-files]"
         systemctl list-unit-files --full --no-legend --no-pager --plain --type service --type socket | tr -s ' '
         echo "[status]"
-        systemctl status --all --type service --type socket --no-pager --lines 0 | tr -s ' '
+        waitmax -s 9 5 systemctl status --all --type service --type socket --no-pager --lines 0 | tr -s ' ' || echo
         echo "[all]"
         systemctl --all --type service --type socket --full --no-legend --no-pager --plain | sed '/^$/q' | tr -s ' '
     fi
@@ -658,7 +658,7 @@ section_ps() {
         if [ -e /sys/fs/cgroup ]; then
             CGROUP="cgroup:512,"
         fi
-        echo "[header] $(ps ax -ww -o "${CGROUP}"user:32,vsz,rss,cputime,etime,pid,command | tr -s ' ')"
+        echo "[header] $(waitmax -s 9 5 ps ax -ww -o "${CGROUP}"user:32,vsz,rss,cputime,etime,pid,command | tr -s ' ' || echo)"
     fi
 }
 
@@ -944,7 +944,7 @@ section_drbd() {
 }
 
 section_heartbeat() {
-    if [ -S /var/run/heartbeat/crm/cib_ro ] || [ -S /var/run/crm/cib_ro ] || pgrep "^(crmd|pacemaker-contr)$" >/dev/null 2>&1; then
+    if [ -S /var/run/heartbeat/crm/cib_ro ] || [ -S /var/run/crm/cib_ro ] || waitmax -s 9 5 pgrep "^(crmd|pacemaker-contr)$" >/dev/null 2>&1; then
         echo '<<<heartbeat_crm>>>'
         TZ=UTC crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ s/^\s//; s/^\s/_/g'
     fi

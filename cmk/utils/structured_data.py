@@ -141,6 +141,10 @@ def parse_visible_raw_path(raw_path: str) -> SDPath:
     return tuple(part for part in raw_path.split(".") if part)
 
 
+def _make_row_ident(key_columns: Sequence[SDKey], row: Mapping[SDKey, SDValue]) -> SDRowIdent:
+    return tuple(row[k] for k in key_columns if k in row)
+
+
 #   .--filters-------------------------------------------------------------.
 #   |                       __ _ _ _                                       |
 #   |                      / _(_) | |_ ___ _ __ ___                        |
@@ -1252,10 +1256,7 @@ class Table:
 
     def add_rows(self, rows: Sequence[Mapping[SDKey, SDValue]]) -> None:
         for row in rows:
-            self.add_row(self._make_row_ident(row), row)
-
-    def _make_row_ident(self, row: Mapping[SDKey, SDValue]) -> SDRowIdent:
-        return tuple(row[k] for k in self.key_columns if k in row)
+            self.add_row(_make_row_ident(self.key_columns, row), row)
 
     def add_row(self, ident: SDRowIdent, row: Mapping[SDKey, SDValue]) -> None:
         if row:

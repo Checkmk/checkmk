@@ -14,24 +14,69 @@ from tests.testlib import cmk_path
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
+    Attributes,
+    ImmutableAttributes,
     ImmutableDeltaTree,
+    ImmutableTable,
     ImmutableTree,
     MutableTree,
+    Node,
     parse_visible_raw_path,
     RetentionInterval,
     SDFilter,
     SDNodeName,
     SDPath,
+    Table,
     TreeStore,
 )
 
 
 def _make_mutable_tree(tree: ImmutableTree) -> MutableTree:
-    return MutableTree(tree.node)
+    attributes = Attributes(retentions=tree.attributes.retentions)
+    attributes.add_pairs(tree.attributes.pairs)
+    table = Table(
+        key_columns=list(tree.table.key_columns),
+        retentions=tree.table.retentions,
+    )
+    for ident, row in tree.table.rows_by_ident.items():
+        table.add_row(ident, row)
+    return MutableTree(
+        Node(
+            path=tree.path,
+            attributes=attributes,
+            table=table,
+            nodes={
+                name: _make_mutable_tree(
+                    ImmutableTree(
+                        path=node.path,
+                        attributes=node.attributes,
+                        table=node.table,
+                        nodes_by_name=node.nodes_by_name,
+                    )
+                ).node
+                for name, node in tree.nodes_by_name.items()
+            },
+        )
+    )
 
 
 def _make_immutable_tree(tree: MutableTree) -> ImmutableTree:
-    return ImmutableTree(tree.node)
+    return ImmutableTree(
+        path=tree.node.path,
+        attributes=ImmutableAttributes(
+            pairs=tree.node.attributes.pairs,
+            retentions=tree.node.attributes.retentions,
+        ),
+        table=ImmutableTable(
+            key_columns=tree.node.table.key_columns,
+            rows_by_ident=tree.node.table.rows_by_ident,
+            retentions=tree.node.table.retentions,
+        ),
+        nodes_by_name={
+            name: _make_immutable_tree(MutableTree(node))
+            for name, node in tree.node.nodes_by_name.items()
+        },
+    )
 
 
 def _create_empty_mut_tree() -> MutableTree:

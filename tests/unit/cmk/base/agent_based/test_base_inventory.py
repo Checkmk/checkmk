@@ -14,7 +14,14 @@ from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
-from cmk.utils.structured_data import ImmutableTree, MutableTree, RetentionInterval, UpdateResult
+from cmk.utils.structured_data import (
+    ImmutableAttributes,
+    ImmutableTable,
+    ImmutableTree,
+    MutableTree,
+    RetentionInterval,
+    UpdateResult,
+)
 
 from cmk.snmplib.type_defs import SNMPRawData
 
@@ -38,7 +45,22 @@ from cmk.base.modes.check_mk import _get_save_tree_actions, _SaveTreeActions
 
 
 def _make_immutable_tree(tree: MutableTree) -> ImmutableTree:
-    return ImmutableTree(tree.node)
+    return ImmutableTree(
+        path=tree.node.path,
+        attributes=ImmutableAttributes(
+            pairs=tree.node.attributes.pairs,
+            retentions=tree.node.attributes.retentions,
+        ),
+        table=ImmutableTable(
+            key_columns=tree.node.table.key_columns,
+            rows_by_ident=tree.node.table.rows_by_ident,
+            retentions=tree.node.table.retentions,
+        ),
+        nodes_by_name={
+            name: _make_immutable_tree(MutableTree(node))
+            for name, node in tree.node.nodes_by_name.items()
+        },
+    )
 
 
 @pytest.mark.parametrize(

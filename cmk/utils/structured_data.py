@@ -242,7 +242,7 @@ class MutableTree:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, (MutableTree, ImmutableTree)):
             raise TypeError(type(other))
-        return self.node == other.node
+        return self.node == (other.node if isinstance(other, MutableTree) else other)
 
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
@@ -268,7 +268,7 @@ class MutableTree:
         return self.node.setdefault_node(path).attributes.update_pairs(
             now,
             path,
-            previous_tree.get_tree(path).node.attributes,
+            previous_tree.get_tree(path).attributes,
             filter_func,
             retention_interval,
         )
@@ -284,7 +284,7 @@ class MutableTree:
         return self.node.setdefault_node(path).table.update_rows(
             now,
             path,
-            previous_tree.get_tree(path).node.table,
+            previous_tree.get_tree(path).table,
             filter_func,
             retention_interval,
         )
@@ -322,27 +322,28 @@ class MutableTree:
 #   '----------------------------------------------------------------------'
 
 
-def _deserialize_legacy_attributes(raw_pairs: Mapping[SDKey, SDValue]) -> Attributes:
-    attributes = Attributes()
-    attributes.add_pairs(raw_pairs)
-    return attributes
+def _deserialize_legacy_attributes(raw_pairs: Mapping[SDKey, SDValue]) -> ImmutableAttributes:
+    return ImmutableAttributes(pairs=raw_pairs)
 
 
 def _get_default_key_columns(rows: Sequence[Mapping[SDKey, SDValue]]) -> Sequence[SDKey]:
     return sorted({k for r in rows for k in r})
 
 
-def _deserialize_legacy_table(raw_rows: Sequence[Mapping[SDKey, SDValue]]) -> Table:
-    table = Table(key_columns=list(_get_default_key_columns(raw_rows)))
-    table.add_rows(raw_rows)
-    return table
+def _deserialize_legacy_table(raw_rows: Sequence[Mapping[SDKey, SDValue]]) -> ImmutableTable:
+    key_columns = _get_default_key_columns(raw_rows)
+    rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
+    for row in raw_rows:
+        rows_by_ident.setdefault(_make_row_ident(key_columns, row), {}).update(row)
+
+    return ImmutableTable(key_columns=key_columns, rows_by_ident=rows_by_ident)
 
 
 def _deserialize_legacy_node(  # pylint: disable=too-many-branches
     path: SDPath,
     raw_tree: Mapping[str, object],
     raw_rows: Sequence[Mapping] | None = None,
-) -> Node:
+) -> ImmutableTree:
     raw_pairs: dict[SDKey, SDValue] = {}
     raw_tables: dict[SDNodeName, list[dict]] = {}
     raw_nodes: dict[SDNodeName, dict] = {}
@@ -386,11 +387,11 @@ def _deserialize_legacy_node(  # pylint: disable=too-many-branches
         else:
             raise TypeError(value)
 
-    return Node(
+    return ImmutableTree(
         path=path,
         attributes=_deserialize_legacy_attributes(raw_pairs),
-        table=_deserialize_legacy_table(raw_rows) if raw_rows else Table(),
-        nodes={
+        table=_deserialize_legacy_table(raw_rows) if raw_rows else ImmutableTable(),
+        nodes_by_name={
             **{
                 name: _deserialize_legacy_node(
                     path + (name,),
@@ -400,7 +401,7 @@ def _deserialize_legacy_node(  # pylint: disable=too-many-branches
                 for name, raw_node in raw_nodes.items()
             },
             **{
-                name: Node(
+                name: ImmutableTree(
                     path=path + (name,),
                     table=_deserialize_legacy_table(raw_rows),
                 )
@@ -411,83 +412,99 @@ def _deserialize_legacy_node(  # pylint: disable=too-many-branches
     )
 
 
-def _filter_attributes(attributes: Attributes, filter_funcs: Sequence[SDFilterFunc]) -> Attributes:
-    filtered = Attributes(retentions=attributes.retentions)
+def _filter_attributes(
+    attributes: ImmutableAttributes, filter_funcs: Sequence[SDFilterFunc]
+) -> ImmutableAttributes:
     if not filter_funcs:
-        filtered.add_pairs(attributes.pairs)
-        return filtered
+        return ImmutableAttributes(pairs=attributes.pairs)
 
+    filtered_pairs: dict[SDKey, SDValue] = {}
     for filter_func in filter_funcs:
-        filtered.add_pairs(_get_filtered_dict(attributes.pairs, filter_func))
-    return filtered
+        filtered_pairs.update(_get_filtered_dict(attributes.pairs, filter_func))
+    return ImmutableAttributes(pairs=filtered_pairs, retentions=attributes.retentions)
 
 
-def _filter_table(table: Table, filter_funcs: Sequence[SDFilterFunc]) -> Table:
-    filtered = Table(key_columns=table.key_columns, retentions=table.retentions)
+def _filter_table(table: ImmutableTable, filter_funcs: Sequence[SDFilterFunc]) -> ImmutableTable:
+    if not filter_funcs:
+        return ImmutableTable(
+            key_columns=table.key_columns,
+            rows_by_ident=table.rows_by_ident,
+            retentions=table.retentions,
+        )
+
+    filtered_rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
     for ident, row in table.rows_by_ident.items():
-        if not filter_funcs:
-            filtered.add_row(ident, row)
-            continue
-
         for filter_func in filter_funcs:
-            filtered.add_row(ident, _get_filtered_dict(row, filter_func))
-    return filtered
-
-
-def _filter_node(node: Node, filter_tree: _FilterTree) -> Node:
-    filtered_nodes: dict[SDNodeName, Node] = {}
-    for name in set(
-        name for name in node.nodes_by_name for f in filter_tree.filters if f.filter_nodes(name)
-    ).union(filter_tree.nodes):
-        if filtered_node := _filter_node(
-            node.nodes_by_name.get(name, Node(path=node.path + (name,))),
-            filter_tree.nodes.get(name, _FilterTree()),
-        ):
-            filtered_nodes.setdefault(name, filtered_node)
-
-    return Node(
-        path=node.path,
-        attributes=(
-            _filter_attributes(node.attributes, [f.filter_pairs for f in filter_tree.filters])
-        ),
-        table=_filter_table(node.table, [f.filter_columns for f in filter_tree.filters]),
-        nodes=filtered_nodes,
+            filtered_rows_by_ident.setdefault(ident, {}).update(
+                _get_filtered_dict(row, filter_func)
+            )
+    return ImmutableTable(
+        key_columns=table.key_columns,
+        rows_by_ident=filtered_rows_by_ident,
+        retentions=table.retentions,
     )
 
 
-def _merge_attributes(left: Attributes, right: Attributes) -> Attributes:
-    attributes = Attributes(retentions={**left.retentions, **right.retentions})
-    attributes.add_pairs(left.pairs)
-    attributes.add_pairs(right.pairs)
-    return attributes
+def _filter_tree(tree: ImmutableTree, filter_tree: _FilterTree) -> ImmutableTree:
+    filtered_nodes_by_name: dict[SDNodeName, ImmutableTree] = {}
+    for name in set(
+        name for name in tree.nodes_by_name for f in filter_tree.filters if f.filter_nodes(name)
+    ).union(filter_tree.nodes):
+        if filtered_node := _filter_tree(
+            tree.nodes_by_name.get(name, ImmutableTree(path=tree.path + (name,))),
+            filter_tree.nodes.get(name, _FilterTree()),
+        ):
+            filtered_nodes_by_name.setdefault(name, filtered_node)
+
+    return ImmutableTree(
+        path=tree.path,
+        attributes=(
+            _filter_attributes(tree.attributes, [f.filter_pairs for f in filter_tree.filters])
+        ),
+        table=_filter_table(tree.table, [f.filter_columns for f in filter_tree.filters]),
+        nodes_by_name=filtered_nodes_by_name,
+    )
 
 
-def _merge_tables_by_same_or_empty_key_columns(
-    key_columns: Sequence[SDKey], left: Table, right: Table
-) -> Table:
-    table = Table(
-        key_columns=list(key_columns),
+def _merge_attributes(left: ImmutableAttributes, right: ImmutableAttributes) -> ImmutableAttributes:
+    return ImmutableAttributes(
+        pairs={**left.pairs, **right.pairs},
         retentions={**left.retentions, **right.retentions},
     )
 
+
+def _merge_tables_by_same_or_empty_key_columns(
+    key_columns: Sequence[SDKey], left: ImmutableTable, right: ImmutableTable
+) -> ImmutableTable:
     compared_keys = _compare_dict_keys(
         left=set(right.rows_by_ident),
         right=set(left.rows_by_ident),
     )
 
-    for key in compared_keys.only_old:
-        table.add_row(key, right.rows_by_ident[key])
+    rows_by_ident: dict[SDRowIdent, Mapping[SDKey, SDValue]] = {}
+    for ident in compared_keys.only_old:
+        rows_by_ident.setdefault(ident, right.rows_by_ident[ident])
 
-    for key in compared_keys.both:
-        table.add_row(key, {**left.rows_by_ident[key], **right.rows_by_ident[key]})
+    for ident in compared_keys.both:
+        rows_by_ident.setdefault(
+            ident,
+            {
+                **left.rows_by_ident[ident],
+                **right.rows_by_ident[ident],
+            },
+        )
 
-    for key in compared_keys.only_new:
-        table.add_row(key, left.rows_by_ident[key])
+    for ident in compared_keys.only_new:
+        rows_by_ident.setdefault(ident, left.rows_by_ident[ident])
 
-    return table
+    return ImmutableTable(
+        key_columns=list(key_columns),
+        rows_by_ident=rows_by_ident,
+        retentions={**left.retentions, **right.retentions},
+    )
 
 
-def _merge_tables(left: Table, right: Table) -> Table:
+def _merge_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableTable:
     if left.key_columns and not right.key_columns:
         return _merge_tables_by_same_or_empty_key_columns(left.key_columns, left, right)
 
@@ -498,36 +515,41 @@ def _merge_tables(left: Table, right: Table) -> Table:
         return _merge_tables_by_same_or_empty_key_columns(left.key_columns, left, right)
 
     # Re-calculate row identifiers for legacy tables or inventory and status tables
-    table = Table(
-        key_columns=sorted(set(left.key_columns).intersection(right.key_columns)),
+    key_columns = sorted(set(left.key_columns).intersection(right.key_columns))
+    rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
+    for row in list(left.rows_by_ident.values()) + list(right.rows_by_ident.values()):
+        rows_by_ident.setdefault(_make_row_ident(key_columns, row), {}).update(row)
+
+    return ImmutableTable(
+        key_columns=key_columns,
+        rows_by_ident=rows_by_ident,
         retentions={**left.retentions, **right.retentions},
     )
-    table.add_rows(list(left.rows_by_ident.values()))
-    table.add_rows(list(right.rows_by_ident.values()))
-    return table
 
 
-def _merge_nodes(left: Node, right: Node) -> Node:
+def _merge_nodes(left: ImmutableTree, right: ImmutableTree) -> ImmutableTree:
     compared_keys = _compare_dict_keys(
         left=set(right.nodes_by_name),
         right=set(left.nodes_by_name),
     )
 
-    nodes: dict[SDNodeName, Node] = {}
-    for key in compared_keys.only_old:
-        nodes[key] = right.nodes_by_name[key]
+    nodes_by_name: dict[SDNodeName, ImmutableTree] = {}
+    for name in compared_keys.only_old:
+        nodes_by_name[name] = right.nodes_by_name[name]
 
-    for key in compared_keys.both:
-        nodes[key] = _merge_nodes(left=left.nodes_by_name[key], right=right.nodes_by_name[key])
+    for name in compared_keys.both:
+        nodes_by_name[name] = _merge_nodes(
+            left=left.nodes_by_name[name], right=right.nodes_by_name[name]
+        )
 
-    for key in compared_keys.only_new:
-        nodes[key] = left.nodes_by_name[key]
+    for name in compared_keys.only_new:
+        nodes_by_name[name] = left.nodes_by_name[name]
 
-    return Node(
+    return ImmutableTree(
         path=left.path,
         attributes=_merge_attributes(left.attributes, right.attributes),
         table=_merge_tables(left.table, right.table),
-        nodes=nodes,
+        nodes_by_name=nodes_by_name,
     )
 
 
@@ -574,7 +596,9 @@ def _compare_dicts(
     )
 
 
-def _compare_attributes(left: Attributes, right: Attributes) -> ImmutableDeltaAttributes:
+def _compare_attributes(
+    left: ImmutableAttributes, right: ImmutableAttributes
+) -> ImmutableDeltaAttributes:
     return ImmutableDeltaAttributes(
         pairs=_compare_dicts(
             left=right.pairs,
@@ -584,7 +608,7 @@ def _compare_attributes(left: Attributes, right: Attributes) -> ImmutableDeltaAt
     )
 
 
-def _compare_tables(left: Table, right: Table) -> ImmutableDeltaTable:
+def _compare_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableDeltaTable:
     compared_keys = _compare_dict_keys(
         left=set(right.rows_by_ident),
         right=set(left.rows_by_ident),
@@ -618,7 +642,7 @@ def _compare_tables(left: Table, right: Table) -> ImmutableDeltaTable:
     )
 
 
-def _compare_nodes(left: Node, right: Node) -> ImmutableDeltaTree:
+def _compare_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableDeltaTree:
     delta_nodes: dict[SDNodeName, ImmutableDeltaTree] = {}
 
     compared_keys = _compare_dict_keys(
@@ -637,7 +661,7 @@ def _compare_nodes(left: Node, right: Node) -> ImmutableDeltaTree:
         if (child_left := left.nodes_by_name[key]) == (child_right := right.nodes_by_name[key]):
             continue
 
-        delta_node = _compare_nodes(child_left, child_right)
+        delta_node = _compare_trees(child_left, child_right)
         if delta_node.get_stats():
             delta_nodes[key] = delta_node
 
@@ -666,6 +690,39 @@ class ImmutableAttributes:
         # if there are no pairs.
         return len(self.pairs)
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, (Attributes, ImmutableAttributes)):
+            raise TypeError(type(other))
+        return self.pairs == other.pairs
+
+    def __ne__(self, other: object) -> bool:
+        return not self.__eq__(other)
+
+    @classmethod
+    def deserialize(cls, raw_attributes: SDRawAttributes) -> ImmutableAttributes:
+        return ImmutableAttributes(
+            pairs=raw_attributes.get("Pairs", {}),
+            retentions={
+                key: RetentionInterval.deserialize(interval)
+                for key, interval in raw_attributes.get("Retentions", {}).items()
+            },
+        )
+
+    def serialize(self) -> SDRawAttributes:
+        raw_attributes: SDRawAttributes = {}
+        if self.pairs:
+            raw_attributes["Pairs"] = self.pairs
+
+        if self.retentions:
+            raw_attributes["Retentions"] = {
+                key: interval.serialize() for key, interval in self.retentions.items()
+            }
+        return raw_attributes
+
+    def to_raw(self) -> Mapping:
+        # Useful for debugging; no restrictions
+        return {"Pairs": self.pairs, "Retentions": self.retentions}
+
 
 @dataclass(frozen=True, kw_only=True)
 class ImmutableTable:
@@ -678,56 +735,136 @@ class ImmutableTable:
         # have no impact if there are no rows.
         return sum(map(len, self.rows_by_ident.values()))
 
-    @property
-    def rows(self) -> Sequence[Mapping[SDKey, SDValue]]:
-        return list(self.rows_by_ident.values())
-
-
-class ImmutableTree:
-    def __init__(self, node: Node | None = None) -> None:
-        self.attributes: Final = (
-            ImmutableAttributes()
-            if node is None
-            else ImmutableAttributes(
-                pairs=node.attributes.pairs,
-                retentions=node.attributes.retentions,
-            )
-        )
-        self.table: Final = (
-            ImmutableTable()
-            if node is None
-            else ImmutableTable(
-                key_columns=node.table.key_columns,
-                rows_by_ident=node.table.rows_by_ident,
-                retentions=node.table.retentions,
-            )
-        )
-        self.node: Final[Node] = Node() if node is None else node
-        self.path: Final = () if node is None else node.path
-
-    def __len__(self) -> int:
-        return len(self.node)
-
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, (MutableTree, ImmutableTree)):
+        if not isinstance(other, (Table, ImmutableTable)):
             raise TypeError(type(other))
-        return self.node == other.node
+
+        compared_keys = _compare_dict_keys(
+            left=set(self.rows_by_ident),
+            right=set(other.rows_by_ident),
+        )
+        if compared_keys.only_old or compared_keys.only_new:
+            return False
+
+        for key in compared_keys.both:
+            if self.rows_by_ident[key] != other.rows_by_ident[key]:
+                return False
+
+        return True
 
     def __ne__(self, other: object) -> bool:
         return not self.__eq__(other)
 
     @property
-    def nodes_by_name(self) -> Mapping[SDNodeName, ImmutableTree]:
-        return {name: ImmutableTree(node) for name, node in self.node.nodes_by_name.items()}
+    def rows(self) -> Sequence[Mapping[SDKey, SDValue]]:
+        return list(self.rows_by_ident.values())
+
+    @classmethod
+    def deserialize(cls, raw_table: SDRawTable) -> ImmutableTable:
+        rows = raw_table.get("Rows", [])
+        if "KeyColumns" in raw_table:
+            key_columns = raw_table["KeyColumns"]
+        else:
+            key_columns = _get_default_key_columns(rows)
+
+        rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
+        for row in rows:
+            rows_by_ident.setdefault(_make_row_ident(key_columns, row), {}).update(row)
+
+        return ImmutableTable(
+            key_columns=list(key_columns),
+            rows_by_ident=rows_by_ident,
+            retentions={
+                ident: {
+                    key: RetentionInterval.deserialize(interval)
+                    for key, interval in raw_intervals_by_key.items()
+                }
+                for ident, raw_intervals_by_key in raw_table.get("Retentions", {}).items()
+            },
+        )
+
+    def serialize(self) -> SDRawTable:
+        raw_table: SDRawTable = {}
+        if self.rows_by_ident:
+            raw_table.update(
+                {
+                    "KeyColumns": self.key_columns,
+                    "Rows": list(self.rows_by_ident.values()),
+                }
+            )
+
+        if self.retentions:
+            raw_table["Retentions"] = {
+                ident: {key: interval.serialize() for key, interval in intervals_by_key.items()}
+                for ident, intervals_by_key in self.retentions.items()
+            }
+        return raw_table
+
+    def to_raw(self) -> Mapping:
+        # Useful for debugging; no restrictions
+        return {
+            "KeyColumns": self.key_columns,
+            "RowsByIdent": self.rows_by_ident,
+            "Retentions": self.retentions,
+        }
+
+
+@dataclass(frozen=True, kw_only=True)
+class ImmutableTree:
+    path: SDPath = ()
+    attributes: ImmutableAttributes = ImmutableAttributes()
+    table: ImmutableTable = ImmutableTable()
+    nodes_by_name: Mapping[SDNodeName, ImmutableTree] = field(default_factory=dict)
+
+    def __len__(self) -> int:
+        return sum(
+            [
+                len(self.attributes),
+                len(self.table),
+            ]
+            + [len(node) for node in self.nodes_by_name.values()]
+        )
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, (MutableTree, ImmutableTree)):
+            raise TypeError(type(other))
+
+        if self.attributes != (
+            other.node.attributes if isinstance(other, MutableTree) else other.attributes
+        ) or self.table != (other.node.table if isinstance(other, MutableTree) else other.table):
+            return False
+
+        other_nodes_by_name = (
+            other.node.nodes_by_name if isinstance(other, MutableTree) else other.nodes_by_name
+        )
+        compared_keys = _compare_dict_keys(
+            left=set(self.nodes_by_name),
+            right=set(other_nodes_by_name),
+        )
+        if compared_keys.only_old or compared_keys.only_new:
+            return False
+
+        for name in compared_keys.both:
+            if self.nodes_by_name[name] != (
+                MutableTree(child)
+                if isinstance(child := other_nodes_by_name[name], Node)
+                else child
+            ):
+                return False
+
+        return True
+
+    def __ne__(self, other: object) -> bool:
+        return not self.__eq__(other)
 
     def filter(self, filters: Iterable[SDFilter]) -> ImmutableTree:
-        return ImmutableTree(_filter_node(self.node, _make_filter_tree(filters)))
+        return _filter_tree(self, _make_filter_tree(filters))
 
     def merge(self, rhs: ImmutableTree) -> ImmutableTree:
-        return ImmutableTree(_merge_nodes(self.node, rhs.node))
+        return _merge_nodes(self, rhs)
 
     def difference(self, rhs: ImmutableTree) -> ImmutableDeltaTree:
-        return _compare_nodes(self.node, rhs.node)
+        return _compare_trees(self, rhs)
 
     def get_attribute(self, path: SDPath, key: SDKey) -> SDValue:
         return self.get_tree(path).attributes.pairs.get(key)
@@ -736,7 +873,13 @@ class ImmutableTree:
         return self.get_tree(path).table.rows
 
     def get_tree(self, path: SDPath) -> ImmutableTree:
-        return ImmutableTree(self.node.get_node(path))
+        if not path:
+            return self
+        return (
+            ImmutableTree()
+            if (node := self.nodes_by_name.get(path[0])) is None
+            else node.get_tree(path[1:])
+        )
 
     @classmethod
     def deserialize(cls, raw_tree: Mapping) -> ImmutableTree:
@@ -745,22 +888,57 @@ class ImmutableTree:
             raw_table = raw_tree["Table"]
             raw_nodes = raw_tree["Nodes"]
         except KeyError:
-            return cls(_deserialize_legacy_node(path=tuple(), raw_tree=raw_tree))
+            return _deserialize_legacy_node(path=tuple(), raw_tree=raw_tree)
 
+        return ImmutableTree._deserialize(
+            path=tuple(),
+            raw_attributes=raw_attributes,
+            raw_table=raw_table,
+            raw_nodes=raw_nodes,
+        )
+
+    @classmethod
+    def _deserialize(
+        cls,
+        *,
+        path: SDPath,
+        raw_attributes: SDRawAttributes,
+        raw_table: SDRawTable,
+        raw_nodes: Mapping[SDNodeName, SDRawTree],
+    ) -> ImmutableTree:
         return cls(
-            node=Node.deserialize(
-                path=tuple(),
-                raw_attributes=raw_attributes,
-                raw_table=raw_table,
-                raw_nodes=raw_nodes,
-            )
+            path=path,
+            attributes=ImmutableAttributes.deserialize(raw_attributes),
+            table=ImmutableTable.deserialize(raw_table),
+            nodes_by_name={
+                name: cls._deserialize(
+                    path=path + (name,),
+                    raw_attributes=raw_node["Attributes"],
+                    raw_table=raw_node["Table"],
+                    raw_nodes=raw_node["Nodes"],
+                )
+                for name, raw_node in raw_nodes.items()
+            },
         )
 
     def serialize(self) -> SDRawTree:
-        return self.node.serialize()
+        return {
+            "Attributes": self.attributes.serialize(),
+            "Table": self.table.serialize(),
+            "Nodes": {name: node.serialize() for name, node in self.nodes_by_name.items() if node},
+        }
+
+    def to_raw(self) -> Mapping:
+        # Useful for debugging; no restrictions
+        return {
+            "Path": self.path,
+            "Attributes": self.attributes.to_raw(),
+            "Table": self.table.to_raw(),
+            "Nodes": {name: node.to_raw() for name, node in self.nodes_by_name.items()},
+        }
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({pprint.pformat(self.node.to_raw())})"
+        return f"{self.__class__.__name__}({pprint.pformat(self.to_raw())})"
 
 
 # .
@@ -864,7 +1042,7 @@ class ImmutableDeltaAttributes:
 
     @classmethod
     def from_attributes(
-        cls, *, attributes: Attributes, encode_as: _SDEncodeAs
+        cls, *, attributes: ImmutableAttributes, encode_as: _SDEncodeAs
     ) -> ImmutableDeltaAttributes:
         return cls(pairs={key: encode_as(value) for key, value in attributes.pairs.items()})
 
@@ -892,7 +1070,7 @@ class ImmutableDeltaTable:
         return sum(map(len, self.rows))
 
     @classmethod
-    def from_table(cls, *, table: Table, encode_as: _SDEncodeAs) -> ImmutableDeltaTable:
+    def from_table(cls, *, table: ImmutableTable, encode_as: _SDEncodeAs) -> ImmutableDeltaTable:
         return cls(
             key_columns=table.key_columns,
             rows=[{key: encode_as(value) for key, value in row.items()} for row in table.rows],
@@ -933,7 +1111,7 @@ class ImmutableDeltaTree:
         )
 
     @classmethod
-    def from_tree(cls, *, tree: Node, encode_as: _SDEncodeAs) -> ImmutableDeltaTree:
+    def from_tree(cls, *, tree: ImmutableTree, encode_as: _SDEncodeAs) -> ImmutableDeltaTree:
         return cls(
             path=tree.path,
             attributes=ImmutableDeltaAttributes.from_attributes(
@@ -1142,7 +1320,7 @@ class Attributes:
         self,
         now: int,
         path: SDPath,
-        other: Attributes,
+        other: ImmutableAttributes,
         filter_func: SDFilterFunc,
         retention_interval: RetentionInterval,
     ) -> UpdateResult:
@@ -1270,7 +1448,7 @@ class Table:
         self,
         now: int,
         path: SDPath,
-        other: Table,
+        other: ImmutableTable,
         filter_func: SDFilterFunc,
         retention_interval: RetentionInterval,
     ) -> UpdateResult:
@@ -1278,7 +1456,7 @@ class Table:
 
         old_filtered_rows = {
             ident: filtered_row
-            for ident, row in other._rows_by_ident.items()
+            for ident, row in other.rows_by_ident.items()
             if (
                 filtered_row := _get_filtered_dict(
                     row,
@@ -1292,7 +1470,7 @@ class Table:
         }
         self_filtered_rows = {
             ident: filtered_row
-            for ident, row in self._rows_by_ident.items()
+            for ident, row in self.rows_by_ident.items()
             if (filtered_row := _get_filtered_dict(row, filter_func))
         }
         compared_filtered_idents = _compare_dict_keys(
@@ -1310,7 +1488,7 @@ class Table:
 
             if old_row:
                 # Update row with key column entries
-                old_row.update({k: other._rows_by_ident[ident][k] for k in other.key_columns})
+                old_row.update({k: other.rows_by_ident[ident][k] for k in other.key_columns})
                 self.add_row(ident, old_row)
                 update_result.add_row_reason(path, ident, "row", old_row)
 
@@ -1321,7 +1499,7 @@ class Table:
             )
             row: dict[SDKey, SDValue] = {}
             for key in compared_filtered_keys.only_old:
-                row.setdefault(key, other._rows_by_ident[ident][key])
+                row.setdefault(key, other.rows_by_ident[ident][key])
                 retentions.setdefault(ident, {})[key] = other.retentions[ident][key]
 
             for key in compared_filtered_keys.both.union(compared_filtered_keys.only_new):
@@ -1331,8 +1509,8 @@ class Table:
                 # Update row with key column entries
                 row.update(
                     {
-                        **{k: other._rows_by_ident[ident][k] for k in other.key_columns},
-                        **{k: self._rows_by_ident[ident][k] for k in self.key_columns},
+                        **{k: other.rows_by_ident[ident][k] for k in other.key_columns},
+                        **{k: self.rows_by_ident[ident][k] for k in self.key_columns},
                     }
                 )
                 self.add_row(ident, row)

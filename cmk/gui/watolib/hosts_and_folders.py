@@ -27,6 +27,7 @@ from cmk.utils import store
 from cmk.utils.datastructures import deep_update
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
+from cmk.utils.labels import Labels
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.redis import get_redis_client, Pipeline, redis_enabled, redis_server_reachable
 from cmk.utils.regex import regex, WATO_FOLDER_PATH_NAME_CHARS, WATO_FOLDER_PATH_NAME_REGEX
@@ -3100,7 +3101,7 @@ class CREHost(WithPermissions, WithAttributes):
     def __repr__(self) -> str:
         return "Host(%r)" % (self._name)
 
-    def drop_caches(self):
+    def drop_caches(self) -> None:
         super().drop_caches()
         self._cached_host_tags = None
 
@@ -3108,7 +3109,7 @@ class CREHost(WithPermissions, WithAttributes):
     # | ELEMENT ACCESS                                                     |
     # '--------------------------------------------------------------------'
 
-    def id(self):
+    def id(self) -> HostName:
         return self.name()
 
     def ident(self) -> str:
@@ -3117,7 +3118,7 @@ class CREHost(WithPermissions, WithAttributes):
     def name(self) -> HostName:
         return self._name
 
-    def alias(self):
+    def alias(self) -> str | None:
         # Alias cannot be inherited, so no need to use effective_attributes()
         return self.attributes().get("alias")
 
@@ -3127,11 +3128,11 @@ class CREHost(WithPermissions, WithAttributes):
     def object_ref(self) -> ObjectRef:
         return ObjectRef(ObjectRefType.Host, self.name())
 
-    def locked(self):
+    def locked(self) -> bool | str:
         return self.folder().locked_hosts()
 
-    def need_unlocked(self):
-        return self.folder().need_unlocked_hosts()
+    def need_unlocked(self) -> None:
+        self.folder().need_unlocked_hosts()
 
     def is_cluster(self) -> bool:
         return self._cluster_nodes is not None
@@ -3140,12 +3141,12 @@ class CREHost(WithPermissions, WithAttributes):
         return self._cluster_nodes
 
     def is_offline(self) -> bool:
-        return self.tag("criticality") == "offline"
+        return self.tag(TagGroupID("criticality")) == "offline"
 
-    def site_id(self):
+    def site_id(self) -> SiteId:
         return self._attributes.get("site") or self.folder().site_id()
 
-    def parents(self):
+    def parents(self) -> list[HostName]:
         return self.effective_attribute("parents", [])
 
     def tag_groups(self) -> Mapping[TagGroupID, TagID]:
@@ -3209,15 +3210,15 @@ class CREHost(WithPermissions, WithAttributes):
     def is_ping_host(self) -> bool:
         return self.tag_groups().get(TagGroupID("ping")) == TagID("ping")
 
-    def tag(self, taggroup_name):
+    def tag(self, taggroup_name: TagGroupID) -> TagID | None:
         effective = self.effective_attributes()
         attribute_name = "tag_" + taggroup_name
         return effective.get(attribute_name)
 
-    def discovery_failed(self):
+    def discovery_failed(self) -> bool:
         return self.attributes().get("inventory_failed", False)
 
-    def validation_errors(self):
+    def validation_errors(self) -> list[str]:
         if hooks.registered("validate-host"):
             errors = []
             for hook in hooks.get("validate-host"):
@@ -3239,7 +3240,7 @@ class CREHost(WithPermissions, WithAttributes):
         self._cache_effective_attributes(effective)
         return effective
 
-    def labels(self):
+    def labels(self) -> Labels:
         """Returns the aggregated labels for the current host
 
         The labels of all parent folders and the host are added together. When multiple
@@ -3250,7 +3251,7 @@ class CREHost(WithPermissions, WithAttributes):
         labels.update(self.attributes().get("labels", {}).items())
         return labels
 
-    def groups(self):
+    def groups(self) -> tuple[set[ContactgroupName], set[ContactgroupName], bool]:
         return self.folder().groups(self)
 
     def _user_needs_permission(self, how: Literal["read", "write"]) -> None:
@@ -3363,12 +3364,12 @@ class CREHost(WithPermissions, WithAttributes):
             domain_settings=_generate_domain_settings("check_mk", [self.name()]),
         )
 
-    def update_attributes(self, changed_attributes):
+    def update_attributes(self, changed_attributes: Mapping[str, object]) -> None:
         new_attributes = self.attributes().copy()
         new_attributes.update(changed_attributes)
         self.edit(new_attributes, self._cluster_nodes)
 
-    def clean_attributes(self, attrnames_to_clean):
+    def clean_attributes(self, attrnames_to_clean: Sequence[str]) -> None:
         # 1. Check preconditions
         if "contactgroups" in attrnames_to_clean:
             self._need_folder_write_permissions()
@@ -3393,7 +3394,7 @@ class CREHost(WithPermissions, WithAttributes):
             ),
         )
 
-    def _need_folder_write_permissions(self):
+    def _need_folder_write_permissions(self) -> None:
         if not self.folder().may("write"):
             raise MKAuthException(
                 _(
@@ -3402,7 +3403,7 @@ class CREHost(WithPermissions, WithAttributes):
                 )
             )
 
-    def clear_discovery_failed(self):
+    def clear_discovery_failed(self) -> None:
         # 1. Check preconditions
         # We do not check permissions. They are checked during the discovery.
         self.need_unlocked()
@@ -3410,7 +3411,7 @@ class CREHost(WithPermissions, WithAttributes):
         # 2. Actual modification
         self.set_discovery_failed(False)
 
-    def set_discovery_failed(self, how=True):
+    def set_discovery_failed(self, how: bool = True) -> None:
         # 1. Check preconditions
         # We do not check permissions. They are checked during the discovery.
         self.need_unlocked()

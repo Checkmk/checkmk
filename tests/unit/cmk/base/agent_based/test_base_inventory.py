@@ -46,19 +46,18 @@ from cmk.base.modes.check_mk import _get_save_tree_actions, _SaveTreeActions
 
 def _make_immutable_tree(tree: MutableTree) -> ImmutableTree:
     return ImmutableTree(
-        path=tree.node.path,
+        path=tree.path,
         attributes=ImmutableAttributes(
-            pairs=tree.node.attributes.pairs,
-            retentions=tree.node.attributes.retentions,
+            pairs=tree.attributes.pairs,
+            retentions=tree.attributes.retentions,
         ),
         table=ImmutableTable(
-            key_columns=tree.node.table.key_columns,
-            rows_by_ident=tree.node.table.rows_by_ident,
-            retentions=tree.node.table.retentions,
+            key_columns=tree.table.key_columns,
+            rows_by_ident=tree.table.rows_by_ident,
+            retentions=tree.table.retentions,
         ),
         nodes_by_name={
-            name: _make_immutable_tree(MutableTree(node))
-            for name, node in tree.node.nodes_by_name.items()
+            name: _make_immutable_tree(node) for name, node in tree.nodes_by_name.items()
         },
     )
 

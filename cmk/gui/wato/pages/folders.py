@@ -558,7 +558,7 @@ class ModeFolder(WatoMode):
             if isinstance(self._folder, SearchFolder):
                 raise MKUserError(None, _("This action can not be performed on search results"))
             if transactions.check_transaction():
-                self._folder.delete_subfolder(request.var("_delete_folder"))
+                self._folder.delete_subfolder(request.get_ascii_input_mandatory("_delete_folder"))
             return redirect(folder_url)
 
         if request.has_var("_move_folder_to"):

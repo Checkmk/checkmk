@@ -56,7 +56,6 @@ def test_rewrite_folder_explicit_site() -> None:
     )
 
     folder = folder_tree().root_folder()
-    folder.load_instance()
     assert folder.attribute("site") == "stable"
 
     update_hosts_and_folders(SiteId("stable"), SiteId("dingdong"), logger)

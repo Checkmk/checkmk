@@ -1610,7 +1610,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
     def rules_file_path(self) -> str:
         return self.filesystem_path() + "/rules.mk"
 
-    def add_to_dictionary(self, dictionary):
+    def add_to_dictionary(self, dictionary: dict[PathWithoutSlash, CREFolder]) -> None:
         dictionary[self.path()] = self
         for subfolder in self._subfolders.values():
             subfolder.add_to_dictionary(dictionary)
@@ -1650,15 +1650,6 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         self.wato_info_storage_manager().write(Path(self.wato_info_path()), self.serialize())
         if may_use_redis():
             get_wato_redis_client(self.tree).save_folder_info(self)
-
-    def load_instance(self) -> None:
-        """Load the data of this instance and return it.
-
-        The internal state of the object will not be changed.
-
-        Returns:
-            The loaded data.
-        """
 
     # .-----------------------------------------------------------------------.
     # | ELEMENT ACCESS                                                        |
@@ -1789,7 +1780,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
     def has_subfolders(self) -> bool:
         return len(self._subfolders) > 0
 
-    def subfolder_choices(self):
+    def subfolder_choices(self) -> list[tuple[str, str]]:
         choices = []
         for subfolder in sorted(
             self.subfolders(only_visible=True), key=operator.methodcaller("title")
@@ -1930,7 +1921,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
             return [self.title()]
         return self.title_path()[1:]
 
-    def alias_path(self, show_main=True):
+    def alias_path(self, show_main: bool = True) -> str:
         tp = self.title_path() if show_main else self.title_path_without_root()
         return " / ".join(str(p) for p in tp)
 
@@ -1954,7 +1945,9 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         self._cache_effective_attributes(effective)
         return effective
 
-    def groups(self, host=None):
+    def groups(
+        self, host: CREHost | None = None
+    ) -> tuple[set[ContactgroupName], set[ContactgroupName], bool]:
         # CLEANUP: this method is also used for determining host permission
         # in behalv of Host::groups(). Not nice but was done for avoiding
         # code duplication
@@ -2207,17 +2200,8 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
     # | This is the task of the actual Setup modes or the API.                 |
     # '-----------------------------------------------------------------------'
 
-    def create_subfolder(self, name, title, attributes):
-        """Create a subfolder of the current folder
-
-        Args:
-            name: The filename of the folder to be created.
-            title: The title.
-            attributes: The attributes.
-
-        Returns:
-            Created Folder instance.
-        """
+    def create_subfolder(self, name: str, title: str, attributes: HostAttributes) -> CREFolder:
+        """Create a subfolder of the current folder"""
         # 1. Check preconditions
         user.need_permission("wato.manage_folders")
         self.need_permission("write")
@@ -2247,7 +2231,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         need_sidebar_reload()
         return new_subfolder
 
-    def delete_subfolder(self, name):
+    def delete_subfolder(self, name: str) -> None:
         # 1. Check preconditions
         user.need_permission("wato.manage_folders")
         self.need_permission("write")
@@ -2285,7 +2269,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         need_sidebar_reload()
         folder_lookup_cache().delete()
 
-    def move_subfolder_to(self, subfolder, target_folder):
+    def move_subfolder_to(self, subfolder: CREFolder, target_folder: CREFolder) -> None:
         # 1. Check preconditions
         user.need_permission("wato.manage_folders")
         self.need_permission("write")
@@ -2353,7 +2337,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         need_sidebar_reload()
         folder_lookup_cache().delete()
 
-    def edit(self, new_title, new_attributes):
+    def edit(self, new_title: str, new_attributes: dict[str, object]) -> None:
         # 1. Check preconditions
         user.need_permission("wato.edit_folders")
         self.need_permission("write")

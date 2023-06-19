@@ -225,7 +225,6 @@ def test_eq_operation(request_context: None) -> None:
         folder1.persist_instance()
 
         folder1_new = hosts_and_folders.Folder.load(tree=tree, name="folder1", parent_folder=root)
-        folder1_new.load_instance()
 
         assert folder1 == folder1_new
         assert id(folder1) != id(folder1_new)

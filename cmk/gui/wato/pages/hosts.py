@@ -40,7 +40,7 @@ from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeactionuri
-from cmk.gui.valuespec import FixedValue, Hostname, ListOfStrings
+from cmk.gui.valuespec import FixedValue, Hostname, ListOfStrings, ValueSpec
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
@@ -246,19 +246,20 @@ class ABCHostMode(WatoMode, abc.ABC):
         html.begin_form("edit_host", method="POST")
         html.prevent_password_auto_completion()
 
-        basic_attributes = [
+        basic_attributes: list[tuple[str, ValueSpec, object]] = [
             # attribute name, valuepec, default value
             ("host", self._vs_host_name(), self._host.name()),
         ]
 
         if self._is_cluster():
+            if self._host:
+                nodes = self._host.cluster_nodes()
+                assert nodes is not None
+            else:
+                nodes = []
             basic_attributes += [
                 # attribute name, valuepec, default value
-                (
-                    "nodes",
-                    self._vs_cluster_nodes(),
-                    self._host.cluster_nodes() if self._host else [],
-                ),
+                ("nodes", self._vs_cluster_nodes(), nodes if self._host else []),
             ]
 
         configure_attributes(

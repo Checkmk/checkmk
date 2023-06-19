@@ -954,7 +954,7 @@ class BaseFolder:
 
     def create_hosts(
         self,
-        entries: Iterable[tuple[HostName, HostAttributes, object]],
+        entries: Iterable[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
     ) -> None:
         raise NotImplementedError()
 
@@ -1428,7 +1428,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
             return
 
         all_hosts: list[HostName] = []
-        clusters: dict[HostName, list[str]] = {}
+        clusters: dict[HostName, Sequence[HostName]] = {}
         # collect value for attributes that are to be present in Nagios
         custom_macros: dict[str, dict[HostName, str]] = {}
         # collect value for attributes that are explicitly set for one host
@@ -1461,7 +1461,9 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
                 host_labels[hostname] = labels
 
             if host.is_cluster():
-                clusters[hostname] = host.cluster_nodes()
+                nodes = host.cluster_nodes()
+                assert nodes is not None
+                clusters[hostname] = nodes
             else:
                 all_hosts.append(hostname)
 
@@ -2396,7 +2398,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
 
     def create_hosts(
         self,
-        entries: Iterable[tuple[HostName, HostAttributes, object]],
+        entries: Iterable[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
     ) -> None:
         # 1. Check preconditions
         self.prepare_create_hosts()
@@ -2417,7 +2419,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
 
     def create_validated_hosts(
         self,
-        entries: Collection[tuple[HostName, HostAttributes, object]],
+        entries: Collection[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
     ) -> None:
         # 2. Actual modification
         self._load_hosts_on_demand()
@@ -2443,7 +2445,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         self,
         host_name: HostName,
         attributes: object,
-        cluster_nodes: object,
+        cluster_nodes: Sequence[HostName] | None,
     ) -> None:
         host = Host(self, host_name, attributes, cluster_nodes)
         assert self._hosts is not None
@@ -3082,7 +3084,11 @@ class CREHost(WithPermissions, WithAttributes):
     # '--------------------------------------------------------------------'
 
     def __init__(  # type: ignore[no-untyped-def]
-        self, folder, host_name, attributes, cluster_nodes
+        self,
+        folder,
+        host_name,
+        attributes,
+        cluster_nodes: Sequence[HostName] | None,
     ) -> None:
         super().__init__()
         self._folder = folder
@@ -3130,7 +3136,7 @@ class CREHost(WithPermissions, WithAttributes):
     def is_cluster(self) -> bool:
         return self._cluster_nodes is not None
 
-    def cluster_nodes(self):
+    def cluster_nodes(self) -> Sequence[HostName] | None:
         return self._cluster_nodes
 
     def is_offline(self) -> bool:
@@ -3327,7 +3333,7 @@ class CREHost(WithPermissions, WithAttributes):
     # | want to modify hosts. See details at the comment header in Folder. |
     # '--------------------------------------------------------------------'
 
-    def edit(self, attributes: dict[str, Any], cluster_nodes: object) -> None:
+    def edit(self, attributes: dict[str, object], cluster_nodes: Sequence[HostName] | None) -> None:
         # 1. Check preconditions
         if attributes.get("contactgroups") != self._attributes.get("contactgroups"):
             self._need_folder_write_permissions()
@@ -3419,14 +3425,19 @@ class CREHost(WithPermissions, WithAttributes):
                 del self._attributes["inventory_failed"]
                 self.folder().save_hosts()
 
-    def rename_cluster_node(self, oldname, newname):
+    def rename_cluster_node(self, oldname: HostName, newname: HostName) -> bool:
         # We must not check permissions here. Permissions
         # on the renamed host must be sufficient. If we would
         # fail here we would leave an inconsistent state
-        changed = rename_host_in_list(self._cluster_nodes, oldname, newname)
+        if self._cluster_nodes is None:
+            return False
+
+        new_cluster_nodes = [str(e) for e in self._cluster_nodes]
+        changed = rename_host_in_list(new_cluster_nodes, oldname, newname)
         if not changed:
             return False
 
+        self._cluster_nodes = [HostName(h) for h in new_cluster_nodes]
         add_change(
             "rename-node",
             _l("Renamed cluster node from %s into %s.") % (oldname, newname),
@@ -3436,7 +3447,7 @@ class CREHost(WithPermissions, WithAttributes):
         self.folder().save_hosts()
         return True
 
-    def rename_parent(self, oldname, newname):
+    def rename_parent(self, oldname: HostName, newname: HostName) -> bool:
         # Same is with rename_cluster_node()
         changed = rename_host_in_list(self._attributes["parents"], oldname, newname)
         if not changed:
@@ -3461,18 +3472,20 @@ class CREHost(WithPermissions, WithAttributes):
         self._name = new_name
 
 
-def make_host_audit_log_object(attributes, cluster_nodes):
+def make_host_audit_log_object(
+    attributes: Mapping[str, object], cluster_nodes: Sequence[HostName] | None
+) -> dict[str, object]:
     """The resulting object is used for building object diffs"""
-    obj = attributes.copy()
+    obj = {**attributes}
     if cluster_nodes:
         obj["nodes"] = cluster_nodes
     obj.pop("meta_data", None)
     return obj
 
 
-def make_folder_audit_log_object(attributes):
+def make_folder_audit_log_object(attributes: Mapping[str, object]) -> dict[str, object]:
     """The resulting object is used for building object diffs"""
-    obj = attributes.copy()
+    obj = {**attributes}
     obj.pop("meta_data", None)
     return obj
 
@@ -3668,7 +3681,7 @@ class CMEFolder(CREFolder):
 
     def create_hosts(
         self,
-        entries: Iterable[tuple[HostName, HostAttributes, object]],
+        entries: Iterable[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
     ) -> None:
         customer_id = self._get_customer_id()
         if customer_id != managed.default_customer_id():
@@ -3766,7 +3779,7 @@ class CMEFolder(CREFolder):
 
 
 class CMEHost(CREHost):
-    def edit(self, attributes, cluster_nodes):
+    def edit(self, attributes: dict[str, object], cluster_nodes: Sequence[HostName] | None) -> None:
         f = self.folder()
         if isinstance(f, CMEFolder):
             f.check_modify_host(self.name(), attributes)

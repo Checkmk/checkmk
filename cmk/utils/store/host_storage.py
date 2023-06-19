@@ -11,7 +11,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
 from functools import cache, lru_cache
 from pathlib import Path
-from typing import Any, Generic, TypedDict, TypeVar
+from typing import Any, Generic, Sequence, TypedDict, TypeVar
 
 from cmk.utils import store
 from cmk.utils.hostaddress import HostName
@@ -81,7 +81,7 @@ class ContactGroupsField(TypedDict):
 class HostsStorageData:
     locked_hosts: bool
     all_hosts: list[HostName]
-    clusters: dict[HostName, list[str]]
+    clusters: dict[HostName, Sequence[HostName]]
     attributes: dict[str, Any]
     custom_macros: dict[str, Any]
     host_tags: dict[HostName, Mapping[TagGroupID, TagID]]

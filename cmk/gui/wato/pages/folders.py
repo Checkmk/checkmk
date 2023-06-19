@@ -991,9 +991,9 @@ class ModeFolder(WatoMode):
             html.nbsp()
 
         if host.is_cluster():
-            html.icon(
-                "cluster", _("This host is a cluster of %s") % ", ".join(host.cluster_nodes())
-            )
+            nodes = host.cluster_nodes()
+            assert nodes is not None
+            html.icon("cluster", _("This host is a cluster of %s") % ", ".join(nodes))
             html.nbsp()
 
         html.a(hostname, href=host.edit_url())

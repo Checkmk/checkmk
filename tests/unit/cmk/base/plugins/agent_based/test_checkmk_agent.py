@@ -22,9 +22,11 @@ from cmk.base.plugins.agent_based.checkmk_agent import (
     _check_python_plugins,
     _check_transport,
     _check_version,
-    check_checkmk_agent,
-    discover_checkmk_agent,
 )
+from cmk.base.plugins.agent_based.checkmk_agent import (
+    _normalize_ip_addresses as normalize_ip_addresses,
+)
+from cmk.base.plugins.agent_based.checkmk_agent import check_checkmk_agent, discover_checkmk_agent
 from cmk.base.plugins.agent_based.cmk_update_agent_status import _parse_cmk_update_agent_status
 from cmk.base.plugins.agent_based.utils.checkmk import (
     CertInfoController,
@@ -1118,3 +1120,9 @@ def test_certificate_validity(
         assert (
             list(check_checkmk_agent({}, None, None, controller_section, None)) == expected_result
         )
+
+
+def test_normalize_ip() -> None:
+    assert normalize_ip_addresses("1.2.{3,4,5}.6") == ["1.2.3.6", "1.2.4.6", "1.2.5.6"]
+    assert normalize_ip_addresses(["0.0.0.0", "1.1.1.1/32"]) == ["0.0.0.0", "1.1.1.1/32"]
+    assert normalize_ip_addresses("0.0.0.0 1.1.1.1/32") == ["0.0.0.0", "1.1.1.1/32"]

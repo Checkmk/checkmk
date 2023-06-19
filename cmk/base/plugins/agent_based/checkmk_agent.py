@@ -8,10 +8,10 @@ import time
 from datetime import datetime
 from typing import Any, Iterable, Mapping, Optional, Sequence, Union
 
-from cmk.utils.hostaddress import HostName  # pylint: disable=cmk-module-layer-violation
-from cmk.utils.misc import (  # pylint: disable=cmk-module-layer-violation
-    is_daily_build_version,
-    normalize_ip_addresses,
+from cmk.utils.exceptions import MKGeneralException  # pylint: disable=cmk-module-layer-violation
+from cmk.utils.hostaddress import (  # pylint: disable=cmk-module-layer-violation
+    HostAddress,
+    HostName,
 )
 
 # The only reasonable thing to do here is use our own version parsing. It's to big to duplicate.
@@ -36,6 +36,31 @@ from .utils.checkmk import (
     Plugin,
     PluginSection,
 )
+
+
+def _normalize_ip_addresses(ip_addresses: str | Sequence[str]) -> list[HostAddress]:
+    """Expand 10.0.0.{1,2,3}."""
+    if isinstance(ip_addresses, str):
+        ip_addresses = ip_addresses.split()
+
+    expanded = [HostAddress(word) for word in ip_addresses if "{" not in word]
+    for word in ip_addresses:
+        if word in expanded:
+            continue
+
+        try:
+            prefix, tmp = word.split("{")
+            curly, suffix = tmp.split("}")
+        except ValueError:
+            raise MKGeneralException(f"could not expand {word!r}")
+        expanded.extend(HostAddress(f"{prefix}{i}{suffix}") for i in curly.split(","))
+
+    return expanded
+
+
+# Works with Checkmk version (without tailing .cee and/or .demo)
+def _is_daily_build_version(v: str) -> bool:
+    return len(v) == 10 or "-" in v
 
 
 def _get_configured_only_from() -> Union[None, str, list[str]]:
@@ -117,7 +142,7 @@ def _render_agent_version_mismatch(
         return "" if literal == agent_version else f" (expected {literal})"
 
     # spec_type == "at_least"
-    if is_daily_build_version(agent_version) and (at_least := spec.get("daily_build")) is not None:
+    if _is_daily_build_version(agent_version) and (at_least := spec.get("daily_build")) is not None:
         if int(agent_version.split("-")[-1].replace(".", "")) < int(at_least.replace(".", "")):
             return f" (expected at least {at_least})"
 
@@ -126,7 +151,7 @@ def _render_agent_version_mismatch(
 
     return (
         f" (expected at least {at_least})"
-        if is_daily_build_version(agent_version)
+        if _is_daily_build_version(agent_version)
         or (parse_check_mk_version(agent_version) < parse_check_mk_version(at_least))
         else ""
     )
@@ -140,9 +165,9 @@ def _check_only_from(
     if agent_only_from is None or config_only_from is None:
         return
 
-    # do we really need 'normalize_ip_addresses'? It deals with '{' expansion.
-    allowed_nets = set(normalize_ip_addresses(agent_only_from))
-    expected_nets = set(normalize_ip_addresses(config_only_from))
+    # do we really need '_normalize_ip_addresses'? It deals with '{' expansion.
+    allowed_nets = set(_normalize_ip_addresses(agent_only_from))
+    expected_nets = set(_normalize_ip_addresses(config_only_from))
     if allowed_nets == expected_nets:
         yield Result(
             state=State.OK,

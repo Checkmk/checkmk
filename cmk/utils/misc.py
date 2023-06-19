@@ -10,12 +10,9 @@ Please try to find a better place for the things you want to put here."""
 import itertools
 import sys
 import time
-from collections.abc import Callable, Iterator, Mapping, MutableMapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, MutableMapping
 from pathlib import Path
 from typing import Any
-
-from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.hostaddress import HostAddress
 
 
 # TODO: Change to better name like: quote_pnp_string()
@@ -86,18 +83,6 @@ def total_size(
     return sizeof(o)
 
 
-# Works with Checkmk version (without tailing .cee and/or .demo)
-def is_daily_build_version(v: str) -> bool:
-    return len(v) == 10 or "-" in v
-
-
-# Works with Checkmk version (without tailing .cee and/or .demo)
-def branch_of_daily_build(v: str) -> str:
-    if len(v) == 10:
-        return "master"
-    return v.split("-")[0]
-
-
 def cachefile_age(path: Path | str) -> float:
     """Return the time difference between the last modification and now.
 
@@ -109,26 +94,6 @@ def cachefile_age(path: Path | str) -> float:
         path = Path(path)
 
     return time.time() - path.stat().st_mtime
-
-
-def normalize_ip_addresses(ip_addresses: str | Sequence[str]) -> list[HostAddress]:
-    """Expand 10.0.0.{1,2,3}."""
-    if isinstance(ip_addresses, str):
-        ip_addresses = ip_addresses.split()
-
-    expanded = [HostAddress(word) for word in ip_addresses if "{" not in word]
-    for word in ip_addresses:
-        if word in expanded:
-            continue
-
-        try:
-            prefix, tmp = word.split("{")
-            curly, suffix = tmp.split("}")
-        except ValueError:
-            raise MKGeneralException(f"could not expand {word!r}")
-        expanded.extend(HostAddress(f"{prefix}{i}{suffix}") for i in curly.split(","))
-
-    return expanded
 
 
 def typeshed_issue_7724(x: Mapping[str, str] | None) -> MutableMapping[str, str] | None:

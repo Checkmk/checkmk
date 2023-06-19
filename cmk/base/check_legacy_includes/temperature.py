@@ -347,17 +347,8 @@ def check_temperature(  # pylint: disable=too-many-branches
         effective_levels,
     )
 
-    if dev_status is not None:
-        if dlh == "best":
-            status = min(status, dev_status)
-        else:
-            status = max(status, dev_status)
-
     # Render actual temperature, e.g. "17.8 °F"
     infotext = f"{render_temp(temp, output_unit)} {temp_unitsym[output_unit]}"
-
-    if dev_status is not None and dev_status != 0 and dev_status_name:  # omit status in OK case
-        infotext += ", %s" % dev_status_name  # type: ignore[str-bytes-safe]
 
     # In case of a non-OK status output the information about the levels
     if status != 0:
@@ -419,6 +410,15 @@ def check_temperature(  # pylint: disable=too-many-branches
                 infotext += dev_levelstext
             if not usr_levels_lower:
                 infotext += dev_levelstext_lower
+
+    if dev_status is not None:
+        if dlh == "best":
+            status = min(status, dev_status)
+        else:
+            status = max(status, dev_status)
+
+    if dev_status is not None and dev_status != 0 and dev_status_name:  # omit status in OK case
+        infotext += ", State on device: %s" % dev_status_name  # type: ignore[str-bytes-safe]
 
     # all checks specify a unique_name but when multiple sensors are handled through
     #   check_temperature_list, trend is only calculated for the average and then the individual

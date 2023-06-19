@@ -56,6 +56,7 @@ def main() {
     // TODO: re-activate triggering int and comp tests for saas as soon as the work
     def run_int_and_comp_tests = edition != "saas";
     def run_image_tests = true;
+    def run_update_tests = (edition in ["enterprise"]);
 
     print(
         """
@@ -66,6 +67,7 @@ def main() {
         |build_cloud_images:.... │${build_cloud_images}│
         |run_int_and_comp_tests:. │${run_int_and_comp_tests}│
         |run_image_tests:....... │${run_image_tests}│
+        |run_update_tests:...... │${run_update_tests}│
         |===================================================
         """.stripMargin());
 
@@ -114,6 +116,13 @@ def main() {
             condition: run_int_and_comp_tests,
             raiseOnError: false) {
         build(job: "${base_folder}/test-integration-packages", parameters: job_parameters);
+    }
+
+    success &= smart_stage(
+            name: "Update Test",
+            condition: run_update_tests,
+            raiseOnError: false) {
+        build(job: "${base_folder}/test-update", parameters: job_parameters);
     }
 
     currentBuild.result = success ? "SUCCESS" : "FAILURE";

@@ -11,7 +11,12 @@ from cmk.utils.type_defs import Timestamp
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.metrics.artwork import GraphArtwork, LayoutedCurve, LayoutedCurveArea
+from cmk.gui.plugins.metrics.artwork import (
+    graph_curves_to_be_painted,
+    GraphArtwork,
+    LayoutedCurve,
+    LayoutedCurveArea,
+)
 from cmk.gui.plugins.metrics.utils import (
     darken_color,
     GraphDataRange,
@@ -167,10 +172,7 @@ def render_graph_pdf(  # type:ignore[no-untyped-def] # pylint: disable=too-many-
     pdf_document.save_state()
     pdf_document.add_clip_rect(t_orig, v_orig, t_mm, v_mm)
     step = graph_artwork["step"] // 2
-    for curve in graph_artwork["curves"]:
-        if curve.get("dont_paint"):
-            continue
-
+    for curve in graph_curves_to_be_painted(graph_artwork["curves"]):
         t = graph_artwork["start_time"]
         color = parse_color(curve["color"])
 
@@ -525,11 +527,11 @@ def graph_legend_height(
     legend_lineskip = get_graph_legend_lineskip(graph_render_options)
     legend_top_margin = _graph_legend_top_margin()
 
-    num_painted_curves = 0
-    for curve in graph_artwork["curves"]:
-        if not curve.get("dont_paint"):
-            num_painted_curves += 1
-
     return legend_top_margin + (
-        legend_lineskip * (1 + num_painted_curves + len(graph_artwork["horizontal_rules"]))
+        legend_lineskip
+        * (
+            1
+            + len(list(graph_curves_to_be_painted(graph_artwork["curves"])))
+            + len(graph_artwork["horizontal_rules"])
+        )
     )

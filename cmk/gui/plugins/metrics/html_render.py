@@ -25,7 +25,7 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.metrics import artwork
-from cmk.gui.plugins.metrics.artwork import GraphArtwork, LayoutedCurve
+from cmk.gui.plugins.metrics.artwork import graph_curves_to_be_painted, GraphArtwork
 from cmk.gui.plugins.metrics.identification import graph_identification_types
 from cmk.gui.plugins.metrics.utils import (
     CombinedGraphMetricSpec,
@@ -425,14 +425,6 @@ def get_scalars(
     return scalars
 
 
-def graph_curves(graph_artwork: GraphArtwork) -> list[LayoutedCurve]:
-    curves = []
-    for curve in graph_artwork["curves"][::-1]:
-        if not curve.get("dont_paint"):
-            curves.append(curve)
-    return curves
-
-
 def _show_graph_legend(  # pylint: disable=too-many-branches
     graph_artwork: GraphArtwork, graph_render_options: GraphRenderOptions
 ) -> None:
@@ -497,7 +489,7 @@ def _show_graph_legend(  # pylint: disable=too-many-branches
     html.close_tr()
 
     # Render the curve related rows
-    for curve in graph_curves(graph_artwork):
+    for curve in graph_curves_to_be_painted(graph_artwork["curves"][::-1]):
         html.open_tr()
         html.open_td(style=font_size_style)
         html.write_html(render_color_icon(curve["color"]))
@@ -1024,7 +1016,9 @@ def render_ajax_graph_hover(
         resolve_combined_single_metric_spec,
     )
 
-    curve_values = artwork._compute_curve_values_at_timestamp(graph_recipe, curves, hover_time)
+    curve_values = artwork.compute_curve_values_at_timestamp(
+        graph_curves_to_be_painted(curves), graph_recipe["unit"], hover_time
+    )
 
     return {
         "rendered_hover_time": cmk.utils.render.date_and_time(hover_time),
@@ -1042,7 +1036,14 @@ def graph_legend_height_ex(
     if not _graph_legend_enabled(graph_render_options, graph_artwork):
         return 0.0
     # Add header line + spacing: '3.0'
-    return 3.0 + (len(graph_curves(graph_artwork)) + len(graph_artwork["horizontal_rules"])) * 1.3
+    return (
+        3.0
+        + (
+            len(list(graph_curves_to_be_painted(graph_artwork["curves"])))
+            + len(graph_artwork["horizontal_rules"])
+        )
+        * 1.3
+    )
 
 
 # .

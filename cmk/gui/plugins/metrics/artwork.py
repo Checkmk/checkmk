@@ -9,7 +9,7 @@ from collections.abc import Callable, Iterable, Iterator, Sequence
 from datetime import datetime
 from functools import partial
 from itertools import zip_longest
-from typing import Literal, TypedDict
+from typing import Literal, TypedDict, TypeVar
 
 from dateutil.relativedelta import relativedelta
 
@@ -230,11 +230,12 @@ def compute_graph_artwork(
         graph_data_range,
         resolve_combined_single_metric_spec,
     )
+    curves_to_paint = list(graph_curves_to_be_painted(curves))
 
     pin_time = load_graph_pin()
-    _compute_scalars(graph_recipe, curves, pin_time)
+    _compute_scalars(graph_recipe, curves_to_paint, pin_time)
 
-    layouted_curves, mirrored = layout_graph_curves(curves)  # do stacking, mirroring
+    layouted_curves, mirrored = _layout_graph_curves(curves_to_paint)  # do stacking, mirroring
 
     width, height = graph_render_options["size"]
 
@@ -290,7 +291,7 @@ def compute_graph_artwork(
 # Compute the location of the curves of the graph, implement
 # stacking and mirroring (displaying positive values in negative
 # direction).
-def layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], bool]:
+def _layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], bool]:
     mirrored = False  # True if negative area shows positive values
 
     # Build positive and optional negative stack.
@@ -308,9 +309,6 @@ def layout_graph_curves(curves: Sequence[Curve]) -> tuple[list[LayoutedCurve], b
 
     layouted_curves = []
     for curve in curves:
-        if curve.get("dont_paint"):
-            continue
-
         line_type = curve["line_type"]
         raw_points = halfstep_interpolation(curve["rrddata"])
 
@@ -432,6 +430,13 @@ def halfstep_interpolation(rrddata: TimeSeries) -> list[TimeSeriesValue]:
     return points
 
 
+_TCurveType = TypeVar("_TCurveType", Curve, LayoutedCurve)
+
+
+def graph_curves_to_be_painted(curves: Iterable[_TCurveType]) -> Iterator[_TCurveType]:
+    yield from (curve for curve in curves if not curve.get("dont_paint"))
+
+
 # .
 #   .--Scalars-------------------------------------------------------------.
 #   |                  ____            _                                   |
@@ -447,14 +452,11 @@ def halfstep_interpolation(rrddata: TimeSeries) -> list[TimeSeriesValue]:
 
 
 def _compute_scalars(
-    graph_recipe: GraphRecipe, curves: Sequence[Curve], pin_time: int | None
+    graph_recipe: GraphRecipe, curves: Iterable[Curve], pin_time: int | None
 ) -> None:
     unit = unit_info[graph_recipe["unit"]]
 
     for curve in curves:
-        if curve.get("dont_paint"):
-            continue
-
         rrddata = curve["rrddata"]
 
         pin = None
@@ -479,16 +481,13 @@ def _compute_scalars(
             curve["scalars"][key] = _render_scalar_value(value, unit)
 
 
-def _compute_curve_values_at_timestamp(
-    graph_recipe: GraphRecipe, curves: Sequence[Curve], hover_time: int
+def compute_curve_values_at_timestamp(
+    curves: Iterable[Curve], unit_id: str, hover_time: int
 ) -> list[CurveValue]:
-    unit = unit_info[graph_recipe["unit"]]
+    unit = unit_info[unit_id]
 
     curve_values = []
-    for curve in reversed(curves):
-        if curve.get("dont_paint"):
-            continue
-
+    for curve in reversed(list(curves)):
         rrddata = curve["rrddata"]
 
         value = _get_value_at_timestamp(hover_time, rrddata)

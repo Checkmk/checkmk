@@ -624,8 +624,8 @@ def _compare_nodes(left: Node, right: Node) -> ImmutableDeltaTree:
 
     for key in compared_keys.only_new:
         if child_left := left.nodes_by_name[key]:
-            delta_nodes[key] = ImmutableDeltaTree.make_from_node(
-                node=child_left,
+            delta_nodes[key] = ImmutableDeltaTree.from_tree(
+                tree=child_left,
                 encode_as=_encode_as_new,
             )
 
@@ -639,8 +639,8 @@ def _compare_nodes(left: Node, right: Node) -> ImmutableDeltaTree:
 
     for key in compared_keys.only_old:
         if child_right := right.nodes_by_name[key]:
-            delta_nodes[key] = ImmutableDeltaTree.make_from_node(
-                node=child_right,
+            delta_nodes[key] = ImmutableDeltaTree.from_tree(
+                tree=child_right,
                 encode_as=_encode_as_removed,
             )
 
@@ -861,7 +861,7 @@ class ImmutableDeltaAttributes:
         return len(self.pairs)
 
     @classmethod
-    def make_from_attributes(
+    def from_attributes(
         cls, *, attributes: Attributes, encode_as: _SDEncodeAs
     ) -> ImmutableDeltaAttributes:
         return cls(pairs={key: encode_as(value) for key, value in attributes.pairs.items()})
@@ -890,7 +890,7 @@ class ImmutableDeltaTable:
         return sum(map(len, self.rows))
 
     @classmethod
-    def make_from_table(cls, *, table: Table, encode_as: _SDEncodeAs) -> ImmutableDeltaTable:
+    def from_table(cls, *, table: Table, encode_as: _SDEncodeAs) -> ImmutableDeltaTable:
         return cls(
             key_columns=table.key_columns,
             rows=[{key: encode_as(value) for key, value in row.items()} for row in table.rows],
@@ -931,23 +931,23 @@ class ImmutableDeltaTree:
         )
 
     @classmethod
-    def make_from_node(cls, *, node: Node, encode_as: _SDEncodeAs) -> ImmutableDeltaTree:
+    def from_tree(cls, *, tree: Node, encode_as: _SDEncodeAs) -> ImmutableDeltaTree:
         return cls(
-            path=node.path,
-            attributes=ImmutableDeltaAttributes.make_from_attributes(
-                attributes=node.attributes,
+            path=tree.path,
+            attributes=ImmutableDeltaAttributes.from_attributes(
+                attributes=tree.attributes,
                 encode_as=encode_as,
             ),
-            table=ImmutableDeltaTable.make_from_table(
-                table=node.table,
+            table=ImmutableDeltaTable.from_table(
+                table=tree.table,
                 encode_as=encode_as,
             ),
             nodes_by_name={
-                name: cls.make_from_node(
-                    node=child,
+                name: cls.from_tree(
+                    tree=child,
                     encode_as=encode_as,
                 )
-                for name, child in node.nodes_by_name.items()
+                for name, child in tree.nodes_by_name.items()
             },
         )
 

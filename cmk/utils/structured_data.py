@@ -286,9 +286,7 @@ class MutableTree:
         )
 
     def get_attribute(self, path: SDPath, key: SDKey) -> SDValue:
-        return (
-            None if (node := self.node.get_node(path)) is None else node.attributes.pairs.get(key)
-        )
+        return self.get_tree(path).node.attributes.pairs.get(key)
 
     def get_tree(self, path: SDPath) -> MutableTree:
         return MutableTree(self.node.get_node(path))
@@ -726,12 +724,10 @@ class ImmutableTree:
         return _compare_nodes(self.node, rhs.node)
 
     def get_attribute(self, path: SDPath, key: SDKey) -> SDValue:
-        return (
-            None if (node := self.node.get_node(path)) is None else node.attributes.pairs.get(key)
-        )
+        return self.get_tree(path).attributes.pairs.get(key)
 
     def get_rows(self, path: SDPath) -> Sequence[Mapping[SDKey, SDValue]]:
-        return [] if (node := self.node.get_node(path)) is None else node.table.rows
+        return self.get_tree(path).table.rows
 
     def get_tree(self, path: SDPath) -> ImmutableTree:
         return ImmutableTree(self.node.get_node(path))

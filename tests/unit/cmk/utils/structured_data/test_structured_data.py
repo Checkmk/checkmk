@@ -305,7 +305,7 @@ def test_get_tree_not_empty() -> None:
     assert root.get_attribute(("path-to-nta", "na"), "na0") == "NA 0"
     assert root.get_attribute(("path-to-nta", "na"), "na1") == "NA 1"
     assert root.get_attribute(("path-to-nta", "na"), "foo") is None
-    assert root.get_rows(("path-to-nta", "na")) == []
+    assert not root.get_rows(("path-to-nta", "na"))
 
     assert ta.path == ("path-to-nta", "ta")
     assert root.get_attribute(("path-to-nta", "ta"), "ta0") == "TA 0"

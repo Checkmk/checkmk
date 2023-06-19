@@ -17,8 +17,10 @@ import pytest
 from pytest_mock import MockerFixture
 
 import cmk.utils.packaging as packaging
-import cmk.utils.packaging._installed
 import cmk.utils.paths
+from cmk.utils.packaging import _mkp as mkp
+from cmk.utils.packaging import _reporter as reporter
+from cmk.utils.packaging import _unsorted as packaging_unsorted
 
 import cmk.ec.export as ec
 
@@ -95,13 +97,13 @@ def fixture_mkp_bytes(installer: packaging.Installer) -> bytes:
     manifest = _read_manifest(installer, packaging.PackageName("aaa"))
 
     # Build MKP in memory
-    mkp = packaging.create_mkp(manifest, _PATH_CONFIG.get_path, "3.14.0p15")
+    mkp_bytes = mkp.create_mkp(manifest, _PATH_CONFIG.get_path, "3.14.0p15")
 
     # Remove files from local hierarchy
-    packaging._uninstall(installer, _PATH_CONFIG, _NO_CALLBACKS, manifest)
+    packaging_unsorted._uninstall(installer, _PATH_CONFIG, _NO_CALLBACKS, manifest)
     assert installer.is_installed(packaging.PackageName("aaa")) is False
 
-    return mkp
+    return mkp_bytes
 
 
 @pytest.fixture(name="reload_apache")
@@ -122,14 +124,14 @@ def fixture_reload_apache(mocker: MockerFixture) -> Mock:
     ],
 )
 def test_get_permissions(part: packaging.PackagePart, file: Path, expected: int) -> None:
-    assert packaging._get_permissions(part, file) == expected
+    assert packaging_unsorted._get_permissions(part, file) == expected
 
 
 def _create_simple_test_package(
     installer: packaging.Installer, pacname: packaging.PackageName
 ) -> packaging.Manifest:
     _create_test_file(pacname)
-    manifest = packaging.manifest_template(
+    manifest = mkp.manifest_template(
         name=pacname,
         version_packaged="3.14.0p15",
         files={
@@ -162,7 +164,7 @@ def test_create_twice(installer: packaging.Installer) -> None:
 
 
 def test_edit_not_existing(installer: packaging.Installer) -> None:
-    new_manifest = packaging.manifest_template(
+    new_manifest = mkp.manifest_template(
         name=packaging.PackageName("aaa"),
         version_packaged="3.14.0p15",
         version=packaging.PackageVersion("2.0.0"),
@@ -179,7 +181,7 @@ def test_edit_not_existing(installer: packaging.Installer) -> None:
 
 
 def test_edit(installer: packaging.Installer) -> None:
-    new_manifest = packaging.manifest_template(
+    new_manifest = mkp.manifest_template(
         name=packaging.PackageName("aaa"),
         version_packaged="3.14.0p15",
         version=packaging.PackageVersion("2.0.0"),
@@ -202,7 +204,7 @@ def test_edit(installer: packaging.Installer) -> None:
 
 
 def test_edit_rename(installer: packaging.Installer) -> None:
-    new_manifest = packaging.manifest_template(
+    new_manifest = mkp.manifest_template(
         packaging.PackageName("bbb"),
         version_packaged="3.14.0p15",
     )
@@ -224,7 +226,7 @@ def test_edit_rename(installer: packaging.Installer) -> None:
 
 
 def test_edit_rename_conflict(installer: packaging.Installer) -> None:
-    new_manifest = packaging.manifest_template(
+    new_manifest = mkp.manifest_template(
         packaging.PackageName("bbb"),
         version_packaged="3.14.0p15",
     )
@@ -245,7 +247,7 @@ def test_install(
     mkp_bytes: bytes,
     installer: packaging.Installer,
 ) -> None:
-    packaging._install(
+    packaging_unsorted._install(
         installer,
         _PACKAGE_STORE,
         mkp_bytes,
@@ -280,9 +282,9 @@ def test_release(installer: packaging.Installer) -> None:
 def test_write_file(installer: packaging.Installer) -> None:
     manifest = _create_simple_test_package(installer, packaging.PackageName("aaa"))
 
-    mkp = packaging.create_mkp(manifest, _PATH_CONFIG.get_path, "3.14.0p15")
+    mkp_bytes = mkp.create_mkp(manifest, _PATH_CONFIG.get_path, "3.14.0p15")
 
-    with tarfile.open(fileobj=BytesIO(mkp), mode="r:gz") as tar:
+    with tarfile.open(fileobj=BytesIO(mkp_bytes), mode="r:gz") as tar:
         assert sorted(tar.getnames()) == sorted(["info", "info.json", "checks.tar"])
 
         info_file = tar.extractfile("info")
@@ -299,7 +301,7 @@ def test_write_file(installer: packaging.Installer) -> None:
 
 def test_uninstall(installer: packaging.Installer) -> None:
     manifest = _create_simple_test_package(installer, packaging.PackageName("aaa"))
-    packaging._uninstall(installer, _PATH_CONFIG, _NO_CALLBACKS, manifest)
+    packaging_unsorted._uninstall(installer, _PATH_CONFIG, _NO_CALLBACKS, manifest)
     assert not installer.is_installed(packaging.PackageName("aaa"))
 
 
@@ -375,7 +377,7 @@ def test_get_stored_manifests(
     _create_simple_test_package(installer, packaging.PackageName("optional"))
     expected_manifest = _read_manifest(installer, packaging.PackageName("optional"))
 
-    assert packaging.get_stored_manifests(_PACKAGE_STORE) == packaging.StoredManifests(
+    assert packaging.get_stored_manifests(_PACKAGE_STORE) == packaging_unsorted.StoredManifests(
         local=[expected_manifest],
         shipped=[],
     )
@@ -386,7 +388,7 @@ def _raise_something() -> NoReturn:
 
 
 def test_reload_gui_without_gui_files() -> None:
-    package = packaging.manifest_template(
+    package = mkp.manifest_template(
         packaging.PackageName("ding"),
         version_packaged="3.14.0p15",
     )
@@ -397,7 +399,7 @@ def test_reload_gui_without_gui_files() -> None:
 
 
 def test_reload_gui_with_gui_part() -> None:
-    package = packaging.manifest_template(
+    package = mkp.manifest_template(
         name=packaging.PackageName("ding"),
         version_packaged="3.14.0p15",
         files={packaging.PackagePart.GUI: [Path("a")]},
@@ -420,7 +422,7 @@ def test_reload_gui_with_gui_part() -> None:
 )
 def test_raise_for_too_new_cmk_version_raises(until_version: str | None, site_version: str) -> None:
     with pytest.raises(packaging.PackageError):
-        packaging._raise_for_too_new_cmk_version(until_version, site_version)
+        packaging_unsorted._raise_for_too_new_cmk_version(until_version, site_version)
 
 
 @pytest.mark.parametrize(
@@ -435,7 +437,7 @@ def test_raise_for_too_new_cmk_version_raises(until_version: str | None, site_ve
     ],
 )
 def test_raise_for_too_new_cmk_version_ok(until_version: str | None, site_version: str) -> None:
-    packaging._raise_for_too_new_cmk_version(until_version, site_version)
+    packaging_unsorted._raise_for_too_new_cmk_version(until_version, site_version)
 
 
 def _setup_local_files_structure() -> None:
@@ -467,4 +469,4 @@ def test_get_local_files_by_part() -> None:
             cmk.utils.paths.local_root / "some" / "other" / "file.sh",
         },
     }
-    assert packaging.all_local_files(_PATH_CONFIG) == expected
+    assert reporter.all_local_files(_PATH_CONFIG) == expected

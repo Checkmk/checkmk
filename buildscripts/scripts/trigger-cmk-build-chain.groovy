@@ -53,7 +53,7 @@ def main() {
     def build_image = true;
     def build_cloud_images = edition == "cloud";
 
-    def run_integration_tests = true;
+    def run_int_and_comp_tests = true;
     def run_image_tests = true;
 
     print(
@@ -63,7 +63,7 @@ def main() {
         |base_folder:........... │${base_folder}│
         |build_image:........... │${build_image}│
         |build_cloud_images:.... │${build_cloud_images}│
-        |run_integration_tests:. │${run_integration_tests}│
+        |run_int_and_comp_tests:. │${run_int_and_comp_tests}│
         |run_image_tests:....... │${run_image_tests}│
         |===================================================
         """.stripMargin());
@@ -101,7 +101,7 @@ def main() {
         "Composition Test for Packages": {
             success &= smart_stage(
                     name: "Composition Test for Packages",
-                    condition: run_integration_tests,
+                    condition: run_int_and_comp_tests,
                     raiseOnError: false) {
                 build(job: "${base_folder}/test-composition", parameters: job_parameters);
             }
@@ -110,7 +110,7 @@ def main() {
 
     success &= smart_stage(
             name: "Integration Test for Packages",
-            condition: run_integration_tests,
+            condition: run_int_and_comp_tests,
             raiseOnError: false) {
         build(job: "${base_folder}/test-integration-packages", parameters: job_parameters);
     }

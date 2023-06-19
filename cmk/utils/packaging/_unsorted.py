@@ -18,7 +18,7 @@ from typing import Final
 from pydantic import BaseModel
 
 import cmk.utils.store as store
-from cmk.utils.version import is_daily_build_of_master, parse_check_mk_version
+from cmk.utils.version import parse_check_mk_version
 
 from ._installed import Installer
 from ._mkp import (
@@ -463,9 +463,6 @@ def _raise_for_too_old_cmk_version(min_version: str, site_version: str) -> None:
 
     If the sites version can not be parsed or is a daily build, the check is simply passing without error.
     """
-    if is_daily_build_of_master(min_version) or is_daily_build_of_master(site_version):
-        return  # can not check exact version
-
     try:
         too_old = parse_check_mk_version(site_version) < parse_check_mk_version(min_version)
     except Exception:
@@ -483,12 +480,8 @@ def _raise_for_too_new_cmk_version(until_version: str | None, site_version: str)
 
     If the sites version can not be parsed or is a daily build, the check is simply passing without error.
     """
-    if (
-        until_version is None
-        or is_daily_build_of_master(site_version)
-        or is_daily_build_of_master(until_version)
-    ):
-        return  # can not check exact version
+    if until_version is None:
+        return
 
     try:
         too_new = parse_check_mk_version(site_version) >= parse_check_mk_version(until_version)

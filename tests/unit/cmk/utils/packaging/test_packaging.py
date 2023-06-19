@@ -417,10 +417,11 @@ def test_reload_gui_with_gui_part() -> None:
         ("1.6.0", "2.0.0i1"),
         ("2.0.0i1", "2.0.0i2"),
         ("2.0.0", "2.0.0"),
+        ("2.0.0", "2010.02.01"),
         ("1.6.0", "1.6.0-2010.02.01"),
     ],
 )
-def test_raise_for_too_new_cmk_version_raises(until_version: str | None, site_version: str) -> None:
+def test_raise_for_too_new_cmk_version_raises(until_version: str, site_version: str) -> None:
     with pytest.raises(packaging.PackageError):
         packaging_unsorted._raise_for_too_new_cmk_version(until_version, site_version)
 
@@ -430,7 +431,6 @@ def test_raise_for_too_new_cmk_version_raises(until_version: str | None, site_ve
     [
         (None, "2.0.0i1"),
         ("2.0.0", "2.0.0i1"),
-        ("2.0.0", "2010.02.01"),
         ("", "1.6.0"),
         ("1.6.0", ""),
         ("1.6.0-2010.02.01", "1.6.0"),

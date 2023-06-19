@@ -2532,7 +2532,7 @@ class ConfigCache:
             if agent_based_register.is_registered_snmp_section_plugin(s)
         )
 
-    def invalidate_host_config(self, hostname: HostName) -> None:
+    def invalidate_host_config(self) -> None:
         self.__enforced_services_table.clear()
         self.__is_piggyback_host.clear()
         self.__snmp_config.clear()

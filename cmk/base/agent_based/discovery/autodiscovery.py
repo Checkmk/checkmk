@@ -6,12 +6,11 @@
 
 import time
 from collections.abc import Callable, Iterable, Mapping
-from typing import assert_never, Literal, TypeVar, Union
+from typing import Any, assert_never, Literal, TypeVar, Union
 
 import cmk.utils.cleanup
 import cmk.utils.debug
 import cmk.utils.paths
-import cmk.utils.tty as tty
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.exceptions import MKTimeout, OnError
@@ -306,19 +305,15 @@ def autodiscovery(
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     schedule_discovery_check: Callable[[HostName], object],
+    rediscovery_parameters: dict[str, Any],
+    invalidate_host_config: Callable[[], object],
     autodiscovery_queue: AutoQueue,
     reference_time: float,
     oldest_queued: float,
     on_error: OnError,
 ) -> tuple[DiscoveryResult | None, bool]:
-    console.verbose(f"{tty.bold}{host_name}{tty.normal}:\n")
-
-    if (params := config_cache.discovery_check_parameters(host_name)).commandline_only:
-        console.verbose("  failed: discovery check disabled\n")
-        return None, False
-
     reason = _may_rediscover(
-        rediscovery_parameters=params.rediscovery,
+        rediscovery_parameters=rediscovery_parameters,
         reference_time=reference_time,
         oldest_queued=oldest_queued,
     )
@@ -336,11 +331,11 @@ def autodiscovery(
         host_label_plugins=host_label_plugins,
         plugins=plugins,
         get_service_description=get_service_description,
-        mode=DiscoveryMode(params.rediscovery.get("mode")),
-        keep_clustered_vanished_services=params.rediscovery.get(
+        mode=DiscoveryMode(rediscovery_parameters.get("mode")),
+        keep_clustered_vanished_services=rediscovery_parameters.get(
             "keep_clustered_vanished_services", True
         ),
-        service_filters=_ServiceFilters.from_settings(params.rediscovery),
+        service_filters=_ServiceFilters.from_settings(rediscovery_parameters),
         on_error=on_error,
     )
     if result.error_text is not None:
@@ -375,10 +370,10 @@ def autodiscovery(
 
         # Note: Even if the actual mark-for-discovery flag may have been created by a cluster host,
         #       the activation decision is based on the discovery configuration of the node
-        activation_required = bool(params.rediscovery["activation"])
+        activation_required = bool(rediscovery_parameters["activation"])
 
         # Enforce base code creating a new host config object after this change
-        config_cache.invalidate_host_config(host_name)
+        invalidate_host_config()
 
         # Now ensure that the discovery service is updated right after the changes
         schedule_discovery_check(host_name)

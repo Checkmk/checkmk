@@ -29,6 +29,7 @@ import cmk.utils.debug
 import cmk.utils.log as log
 import cmk.utils.man_pages as man_pages
 import cmk.utils.password_store
+import cmk.utils.tty as tty
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.caching import config_cache as _config_cache
@@ -522,22 +523,32 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                     continue
 
                 hosts_processed.add(host_name)
-                discovery_result, activate_host = discovery.autodiscovery(
-                    host_name,
-                    config_cache=config_cache,
-                    parser=parser,
-                    fetcher=fetcher,
-                    summarizer=CMKSummarizer(config_cache, host_name, override_non_ok_state=None),
-                    section_plugins=section_plugins,
-                    host_label_plugins=host_label_plugins,
-                    plugins=plugins,
-                    get_service_description=get_service_description,
-                    schedule_discovery_check=_schedule_discovery_check,
-                    autodiscovery_queue=autodiscovery_queue,
-                    reference_time=rediscovery_reference_time,
-                    oldest_queued=oldest_queued,
-                    on_error=on_error,
-                )
+                console.verbose(f"{tty.bold}{host_name}{tty.normal}:\n")
+                params = config_cache.discovery_check_parameters(host_name)
+                if params.commandline_only:
+                    console.verbose("  failed: discovery check disabled\n")
+                    discovery_result, activate_host = None, False
+                else:
+                    discovery_result, activate_host = discovery.autodiscovery(
+                        host_name,
+                        config_cache=config_cache,
+                        parser=parser,
+                        fetcher=fetcher,
+                        summarizer=CMKSummarizer(
+                            config_cache, host_name, override_non_ok_state=None
+                        ),
+                        section_plugins=section_plugins,
+                        host_label_plugins=host_label_plugins,
+                        plugins=plugins,
+                        get_service_description=get_service_description,
+                        schedule_discovery_check=_schedule_discovery_check,
+                        rediscovery_parameters=params.rediscovery,
+                        invalidate_host_config=config_cache.invalidate_host_config,
+                        autodiscovery_queue=autodiscovery_queue,
+                        reference_time=rediscovery_reference_time,
+                        oldest_queued=oldest_queued,
+                        on_error=on_error,
+                    )
                 if discovery_result:
                     discovery_results[host_name] = discovery_result
                     activation_required |= activate_host

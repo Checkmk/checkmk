@@ -25,7 +25,11 @@ from cmk.gui.i18n import _, _u
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.metrics import artwork
-from cmk.gui.plugins.metrics.artwork import graph_curves_to_be_painted, GraphArtwork
+from cmk.gui.plugins.metrics.artwork import (
+    graph_curves_to_be_painted,
+    GraphArtwork,
+    order_graph_curves_for_legend_and_mouse_hover,
+)
 from cmk.gui.plugins.metrics.identification import graph_identification_types
 from cmk.gui.plugins.metrics.utils import (
     CombinedGraphMetricSpec,
@@ -489,7 +493,10 @@ def _show_graph_legend(  # pylint: disable=too-many-branches
     html.close_tr()
 
     # Render the curve related rows
-    for curve in graph_curves_to_be_painted(graph_artwork["curves"][::-1]):
+    for curve in order_graph_curves_for_legend_and_mouse_hover(
+        graph_artwork["definition"],
+        graph_curves_to_be_painted(graph_artwork["curves"]),
+    ):
         html.open_tr()
         html.open_td(style=font_size_style)
         html.write_html(render_color_icon(curve["color"]))
@@ -1006,7 +1013,7 @@ def render_ajax_graph_hover(
     resolve_combined_single_metric_spec: Callable[
         [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
     ],
-) -> dict[str, Any]:
+) -> dict[str, object]:
     graph_data_range = context["data_range"]
     graph_recipe = context["definition"]
 
@@ -1016,13 +1023,18 @@ def render_ajax_graph_hover(
         resolve_combined_single_metric_spec,
     )
 
-    curve_values = artwork.compute_curve_values_at_timestamp(
-        graph_curves_to_be_painted(curves), graph_recipe["unit"], hover_time
-    )
-
     return {
         "rendered_hover_time": cmk.utils.render.date_and_time(hover_time),
-        "curve_values": curve_values,
+        "curve_values": list(
+            artwork.compute_curve_values_at_timestamp(
+                order_graph_curves_for_legend_and_mouse_hover(
+                    graph_recipe,
+                    graph_curves_to_be_painted(curves),
+                ),
+                graph_recipe["unit"],
+                hover_time,
+            )
+        ),
     }
 
 

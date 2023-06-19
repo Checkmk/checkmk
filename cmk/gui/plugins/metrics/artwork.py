@@ -437,6 +437,14 @@ def graph_curves_to_be_painted(curves: Iterable[_TCurveType]) -> Iterator[_TCurv
     yield from (curve for curve in curves if not curve.get("dont_paint"))
 
 
+def order_graph_curves_for_legend_and_mouse_hover(
+    graph_recipe: GraphRecipe, curves: Iterable[_TCurveType]
+) -> Iterator[_TCurveType]:
+    yield from reversed(list(curves)) if any(
+        metric["line_type"] == "stack" for metric in graph_recipe.get("metrics", [])
+    ) else curves
+
+
 # .
 #   .--Scalars-------------------------------------------------------------.
 #   |                  ____            _                                   |
@@ -483,26 +491,20 @@ def _compute_scalars(
 
 def compute_curve_values_at_timestamp(
     curves: Iterable[Curve], unit_id: str, hover_time: int
-) -> list[CurveValue]:
+) -> Iterator[CurveValue]:
     unit = unit_info[unit_id]
-
-    curve_values = []
-    for curve in reversed(list(curves)):
-        rrddata = curve["rrddata"]
-
-        value = _get_value_at_timestamp(hover_time, rrddata)
-
-        curve_values.append(
-            CurveValue(
-                {
-                    "title": curve["title"],
-                    "color": curve["color"],
-                    "rendered_value": _render_scalar_value(value, unit),
-                }
-            )
+    yield from (
+        CurveValue(
+            {
+                "title": curve["title"],
+                "color": curve["color"],
+                "rendered_value": _render_scalar_value(
+                    _get_value_at_timestamp(hover_time, curve["rrddata"]), unit
+                ),
+            }
         )
-
-    return curve_values
+        for curve in curves
+    )
 
 
 def _render_scalar_value(value, unit) -> tuple[TimeSeriesValue, str]:  # type:ignore[no-untyped-def]

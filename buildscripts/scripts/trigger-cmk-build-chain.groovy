@@ -54,7 +54,8 @@ def main() {
     def build_cloud_images = edition == "cloud";
 
     // TODO: re-activate triggering int and comp tests for saas as soon as the work
-    def run_int_and_comp_tests = edition != "saas";
+    def run_int_tests = edition != "saas";
+    def run_comp_tests = edition != "saas";
     def run_image_tests = true;
     def run_update_tests = (edition in ["enterprise"]);
 
@@ -65,7 +66,8 @@ def main() {
         |base_folder:........... │${base_folder}│
         |build_image:........... │${build_image}│
         |build_cloud_images:.... │${build_cloud_images}│
-        |run_int_and_comp_tests:. │${run_int_and_comp_tests}│
+        |run_comp_tests:........ │${run_comp_tests}│
+        |run_int_tests:..........│${run_int_tests}│
         |run_image_tests:....... │${run_image_tests}│
         |run_update_tests:...... │${run_update_tests}│
         |===================================================
@@ -104,7 +106,7 @@ def main() {
         "Composition Test for Packages": {
             success &= smart_stage(
                     name: "Composition Test for Packages",
-                    condition: run_int_and_comp_tests,
+                    condition: run_comp_tests,
                     raiseOnError: false) {
                 build(job: "${base_folder}/test-composition", parameters: job_parameters);
             }
@@ -113,7 +115,7 @@ def main() {
 
     success &= smart_stage(
             name: "Integration Test for Packages",
-            condition: run_int_and_comp_tests,
+            condition: run_int_tests,
             raiseOnError: false) {
         build(job: "${base_folder}/test-integration-packages", parameters: job_parameters);
     }

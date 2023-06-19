@@ -170,9 +170,3 @@ def _run_cron() -> Iterator[None]:
     else:
         raise RuntimeError(f"No cron executable found (tried {','.join(cron_cmds)})")
     yield
-
-
-@pytest.fixture(name="skip_if_saas_edition")
-def _skip_if_saas_edition(version: CMKVersion) -> None:
-    if version.is_saas_edition():
-        pytest.skip("Skipping test for SaaS edition")

@@ -540,11 +540,13 @@ def _encode_as_removed(value: SDValue) -> tuple[SDValue, None]:
 
 
 class ComparedDictResult(NamedTuple):
-    result_dict: dict[SDKey, tuple[SDValue, SDValue]]
+    result_dict: Mapping[SDKey, tuple[SDValue, SDValue]]
     has_changes: bool
 
 
-def _compare_dicts(*, left: Mapping, right: Mapping, keep_identical: bool) -> ComparedDictResult:
+def _compare_dicts(
+    *, left: Mapping[SDKey, SDValue], right: Mapping[SDKey, SDValue], keep_identical: bool
+) -> ComparedDictResult:
     """
     Format of compared entries:
       new:          {k: (None, new_value), ...}
@@ -588,7 +590,7 @@ def _compare_tables(left: Table, right: Table) -> ImmutableDeltaTable:
         right=set(left.rows_by_ident),
     )
 
-    delta_rows: list[dict[SDKey, tuple[SDValue, SDValue]]] = []
+    delta_rows: list[Mapping[SDKey, tuple[SDValue, SDValue]]] = []
 
     for key in compared_keys.only_old:
         delta_rows.append({k: _encode_as_removed(v) for k, v in right.rows_by_ident[key].items()})

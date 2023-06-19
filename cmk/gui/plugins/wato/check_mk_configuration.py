@@ -2329,26 +2329,22 @@ class ConfigVariableLockOnLogonFailures(ConfigVariable):
         return "lock_on_logon_failures"
 
     def valuespec(self) -> ValueSpec:
-        return Migrate(
-            Optional(
-                valuespec=Integer(
-                    label=_("Number of logon failures to lock the account"),
-                    default_value=3,
-                    minvalue=1,
-                ),
-                title=_("Lock user accounts after N logon failures"),
-                label=_("Activate automatic locking of user accounts"),
-                help=_(
-                    "This options enables automatic locking of user accounts after "
-                    "the configured number of consecutive invalid login attempts. "
-                    "Once the account is locked only an admin user can unlock it. "
-                    "Beware: Also the admin users will be locked that way. You need "
-                    "to manually edit <tt>etc/htpasswd</tt> and remove the <tt>!</tt> "
-                    "in case you are locked out completely."
-                ),
+        return Optional(
+            valuespec=Integer(
+                label=_("Number of logon failures to lock the account"),
+                default_value=10,
+                minvalue=1,
             ),
-            # We accidentally used False instead of None in the past.
-            migrate=lambda x: None if x is False else x,
+            title=_("Lock user accounts after N logon failures"),
+            label=_("Activate automatic locking of user accounts"),
+            help=_(
+                "This options enables automatic locking of user accounts after "
+                "the configured number of consecutive invalid login attempts. "
+                "Once the account is locked only an admin user can unlock it. "
+                "Beware: Also the admin users will be locked that way. You need "
+                "to manually edit <tt>etc/htpasswd</tt> and remove the <tt>!</tt> "
+                "in case you are locked out completely."
+            ),
         )
 
 

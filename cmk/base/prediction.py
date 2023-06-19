@@ -13,8 +13,8 @@ from typing import Final, NamedTuple
 
 import livestatus
 
+import cmk.utils.dateutils as dateutils
 import cmk.utils.debug
-import cmk.utils.defines as defines
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
@@ -59,7 +59,7 @@ def _window_start(timestamp: int, span: int) -> int:
 
 def _group_by_wday(t: Timestamp) -> tuple[Timegroup, Timestamp]:
     wday = time.localtime(t).tm_wday
-    return Timegroup(defines.weekday_ids()[wday]), _window_start(t, 86400)
+    return Timegroup(dateutils.weekday_ids()[wday]), _window_start(t, 86400)
 
 
 def _group_by_day(t: Timestamp) -> tuple[Timegroup, Timestamp]:

@@ -8,7 +8,7 @@ import copy
 from typing import Any
 
 import cmk.utils.plugin_registry as plugin_registry
-from cmk.utils.defines import short_service_state_name
+from cmk.utils.statename import short_service_state_name
 
 import cmk.gui.userdb as userdb
 from cmk.gui.bi import get_cached_bi_packs

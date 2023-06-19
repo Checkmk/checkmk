@@ -5,7 +5,7 @@
 
 from typing import Literal
 
-from cmk.utils.defines import weekday_ids
+from cmk.utils.dateutils import weekday_ids
 
 from cmk.gui.fields.utils import BaseSchema
 from cmk.gui.watolib.groups import is_alias_used

@@ -12,10 +12,10 @@ from pathlib import Path
 import cmk.utils.man_pages as man_pages
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
-from cmk.utils.defines import short_host_state_name, short_service_state_name
 from cmk.utils.labels import Labels
 from cmk.utils.prediction import Timestamp
 from cmk.utils.render import approx_age
+from cmk.utils.statename import short_host_state_name, short_service_state_name
 
 import cmk.gui.metrics as metrics
 import cmk.gui.sites as sites

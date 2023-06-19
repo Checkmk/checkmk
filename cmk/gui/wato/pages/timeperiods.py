@@ -8,11 +8,10 @@ import time
 from collections.abc import Collection
 from typing import Any
 
-import cmk.utils.defines as defines
+import cmk.utils.dateutils as dateutils
 from cmk.utils.timeperiod import timeperiod_spec_alias
 
 import cmk.gui.forms as forms
-import cmk.gui.plugins.wato.utils
 import cmk.gui.watolib as watolib
 import cmk.gui.watolib.changes as _changes
 import cmk.gui.watolib.groups as groups
@@ -486,7 +485,7 @@ class ModeTimeperiodImportICal(WatoMode):
             "timeperiod_p_alias": data.get("descr", data.get("name", filename)),
         }
 
-        for day in defines.weekday_ids():
+        for day in dateutils.weekday_ids():
             get_vars["%s_0_from" % day] = ""
             get_vars["%s_0_until" % day] = ""
 
@@ -549,7 +548,7 @@ class ModeEditTimeperiod(WatoMode):
                 self._timeperiod = self._get_timeperiod(self._name)
             else:
                 # initialize with 24x7 config
-                self._timeperiod = {day: [("00:00", "24:00")] for day in defines.weekday_ids()}
+                self._timeperiod = {day: [("00:00", "24:00")] for day in dateutils.weekday_ids()}
         else:
             self._timeperiod = self._get_timeperiod(self._name)
 
@@ -654,7 +653,7 @@ class ModeEditTimeperiod(WatoMode):
 
     def _weekday_elements(self):
         elements = []
-        for tp_id, tp_title in cmk.utils.defines.weekdays_by_name():
+        for tp_id, tp_title in dateutils.weekdays_by_name():
             elements.append((tp_id, ListOfTimeRanges(title=tp_title)))
         return elements
 
@@ -685,7 +684,7 @@ class ModeEditTimeperiod(WatoMode):
         )
 
     def _validate_timeperiod_exception(self, value, varprefix):
-        if value in defines.weekday_ids():
+        if value in dateutils.weekday_ids():
             raise MKUserError(
                 varprefix, _("You cannot use weekday names (%s) in exceptions") % value
             )
@@ -795,7 +794,7 @@ class ModeEditTimeperiod(WatoMode):
 
         exceptions = []
         for exception_name, time_ranges in tp_spec.items():
-            if exception_name not in defines.weekday_ids() + ["alias", "exclude"]:
+            if exception_name not in dateutils.weekday_ids() + ["alias", "exclude"]:
                 exceptions.append((exception_name, self._time_ranges_to_valuespec(time_ranges)))
 
         vs_spec = {
@@ -817,7 +816,7 @@ class ModeEditTimeperiod(WatoMode):
             "day_specific",
             {
                 day: self._time_ranges_to_valuespec(tp_spec.get(day, []))
-                for day in defines.weekday_ids()
+                for day in dateutils.weekday_ids()
             },
         )
 
@@ -826,7 +825,7 @@ class ModeEditTimeperiod(WatoMode):
     ) -> bool:
         """Put the time ranges of all weekdays into a set to reduce the duplicates to see whether
         or not all days have the same time spec and return True if they have the same."""
-        unified_time_ranges = {tuple(tp_spec.get(day, [])) for day in defines.weekday_ids()}
+        unified_time_ranges = {tuple(tp_spec.get(day, [])) for day in dateutils.weekday_ids()}
         return len(unified_time_ranges) == 1
 
     def _time_ranges_to_valuespec(self, time_ranges):
@@ -870,7 +869,7 @@ class ModeEditTimeperiod(WatoMode):
 
         # produce a data structure equal to the "day_specific" structure
         if period_type == "whole_week":
-            time_exceptions = {day: exceptions_details for day in defines.weekday_ids()}
+            time_exceptions = {day: exceptions_details for day in dateutils.weekday_ids()}
         else:  # specific days
             time_exceptions = exceptions_details
 

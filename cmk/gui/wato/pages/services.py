@@ -14,12 +14,12 @@ from livestatus import SiteId
 
 import cmk.utils.render
 from cmk.utils.check_utils import worst_service_state
-from cmk.utils.defines import short_service_state_name
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.html import get_html_state_marker
 from cmk.utils.labels import HostLabelValueDict
 from cmk.utils.site import omd_site
+from cmk.utils.statename import short_service_state_name
 from cmk.utils.version import __version__, Version
 
 from cmk.automations.results import CheckPreviewEntry

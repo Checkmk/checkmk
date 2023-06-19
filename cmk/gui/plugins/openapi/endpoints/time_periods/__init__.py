@@ -18,7 +18,7 @@ from typing import Any
 
 from marshmallow.utils import from_iso_time
 
-import cmk.utils.defines as defines
+import cmk.utils.dateutils as dateutils
 from cmk.utils.timeperiod import TimeperiodSpec
 
 from cmk.gui.http import Response
@@ -248,13 +248,13 @@ def _to_api_format(  # type: ignore[no-untyped-def]
         time_period_readable["exclude"] = time_period.get("exclude", [])
 
     active_time_ranges = _active_time_ranges_readable(
-        {key: time_period[key] for key in time_period if key in defines.weekday_ids()}
+        {key: time_period[key] for key in time_period if key in dateutils.weekday_ids()}
     )
     exceptions = _exceptions_readable(
         {
             key: time_period[key]
             for key in time_period
-            if key not in ["alias", "exclude", *defines.weekday_ids()]
+            if key not in ["alias", "exclude", *dateutils.weekday_ids()]
         }
     )
 
@@ -285,7 +285,7 @@ def _daily_time_ranges(active_time_ranges: list[dict[str, Any]]) -> dict[str, li
 
     """
 
-    result: dict[str, list[TIME_RANGE]] = {day: [] for day in defines.weekday_ids()}
+    result: dict[str, list[TIME_RANGE]] = {day: [] for day in dateutils.weekday_ids()}
     for active_time_range in active_time_ranges:
         period = active_time_range["day"]  # weekday or week
         time_ranges = [

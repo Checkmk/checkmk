@@ -6,13 +6,12 @@
 import re
 from functools import partial
 
-import cmk.utils.defines as defines
-
 import cmk.gui.inventory as inventory
 import cmk.gui.query_filters as query_filters
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
+from cmk.gui.ifaceoper import interface_oper_states, interface_port_types
 from cmk.gui.num_split import cmp_version
 from cmk.gui.plugins.visuals.utils import (
     CheckboxRowFilter,
@@ -169,7 +168,7 @@ class FilterInvtableOperStatus(CheckboxRowFilter):
                 ident=ident,
                 options=[
                     (ident + "_" + str(state), title)
-                    for state, title in defines.interface_oper_states().items()
+                    for state, title in interface_oper_states().items()
                     # needed because of silly types
                     # skip artificial state 8 (degraded) and 9 (admin down)
                     if isinstance(state, int) and state < 8
@@ -220,10 +219,7 @@ class FilterInvtableAvailable(FilterOption):
 
 
 def port_types(info: str):  # type: ignore[no-untyped-def]
-    return [
-        (str(k), str(v))
-        for k, v in sorted(defines.interface_port_types().items(), key=lambda t: t[0])
-    ]
+    return [(str(k), str(v)) for k, v in sorted(interface_port_types().items(), key=lambda t: t[0])]
 
 
 class FilterInvtableInterfaceType(DualListFilter):

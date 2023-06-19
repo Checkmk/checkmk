@@ -64,7 +64,7 @@ from six import ensure_binary, ensure_str
 from livestatus import SiteId
 
 import cmk.utils.crypto.certificate as certificate
-import cmk.utils.defines as defines
+import cmk.utils.dateutils as dateutils
 import cmk.utils.log
 import cmk.utils.paths
 import cmk.utils.plugin_registry
@@ -4191,7 +4191,7 @@ def Weekday(  # type: ignore[no-untyped-def] # pylint: disable=redefined-builtin
     deprecated_choices: Sequence[str] = (),
 ):
     return DropdownChoice(
-        choices=_sorted(defines.weekdays().items()),
+        choices=_sorted(dateutils.weekdays().items()),
         sorted=sorted,
         label=label,
         help_separator=help_separator,
@@ -4247,14 +4247,14 @@ class RelativeDate(OptionalDropdownChoice[int]):
         weekday = time.localtime(_today()).tm_wday
         for w in range(2, 7):
             wd = (weekday + w) % 7
-            choices.append((w, defines.weekday_name(wd)))
+            choices.append((w, dateutils.weekday_name(wd)))
         for w in range(0, 7):
             wd = (weekday + w) % 7
             if w < 2:
                 title = _(" next week")
             else:
                 title = _(" in %d days") % (w + 7)
-            choices.append((w + 7, defines.weekday_name(wd) + title))
+            choices.append((w + 7, dateutils.weekday_name(wd) + title))
 
         super().__init__(
             explicit=Integer(),
@@ -5049,7 +5049,7 @@ class Timerange(CascadingDropdown):
             "d": (_("Today"), _("Yesterday")),
             "w": (_("This week"), _("Last week")),
             "y": (str(year), None),
-            "m": ("%s %d" % (defines.month_name(month - 1), year), None),
+            "m": ("%s %d" % (dateutils.month_name(month - 1), year), None),
         }[rangespec[0]]
 
         if rangespec[1] == "0":

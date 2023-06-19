@@ -2,116 +2,8 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-"""This module serves constants which are needed in several components
-of Check_MK."""
-
-from typing import Final
 
 from cmk.utils.i18n import _
-
-ALL_SITES_INFLUX_TAG: Final = "-all-sites"
-
-# TODO: Investigate Checkmk code for more defines and other places
-#       where similar strucures are defined and use the things from
-#       here or move new stuff to this module.
-
-
-# TODO: Rename to service_state_names()
-def core_state_names() -> dict[int, str]:
-    return {
-        -1: _("NODATA"),
-        0: _("OK"),
-        1: _("WARNING"),
-        2: _("CRITICAL"),
-        3: _("UNKNOWN"),
-    }
-
-
-def service_state_name(state_num: int, deflt: str = "") -> str:
-    return core_state_names().get(state_num, deflt)
-
-
-def short_service_state_names() -> dict[int, str]:
-    return {
-        -1: _("PEND"),
-        0: _("OK"),
-        1: _("WARN"),
-        2: _("CRIT"),
-        3: _("UNKN"),
-    }
-
-
-def short_service_state_name(state_num: int, deflt: str = "") -> str:
-    return short_service_state_names().get(state_num, deflt)
-
-
-def host_state_name(state_num: int, deflt: str = "") -> str:
-    states = {
-        0: _("UP"),
-        1: _("DOWN"),
-        2: _("UNREACHABLE"),
-    }
-    return states.get(state_num, deflt)
-
-
-def short_host_state_name(state_num: int, deflt: str = "") -> str:
-    states = {0: _("UP"), 1: _("DOWN"), 2: _("UNREACH")}
-    return states.get(state_num, deflt)
-
-
-def weekday_name(day_num: int) -> str:
-    """Returns the human readable day name of a given weekday number (starting with 0 at Monday)"""
-    return weekdays()[day_num]
-
-
-def weekday_ids() -> list[str]:
-    """Returns a list of the internal week day names"""
-    return [d[0] for d in weekdays_by_name()]
-
-
-def weekdays() -> dict[int, str]:
-    """Returns a map of weekday number (starting with 0 at Monday) to the human readable day name"""
-    return {
-        0: _("Monday"),
-        1: _("Tuesday"),
-        2: _("Wednesday"),
-        3: _("Thursday"),
-        4: _("Friday"),
-        5: _("Saturday"),
-        6: _("Sunday"),
-    }
-
-
-def weekdays_by_name() -> list[tuple[str, str]]:
-    """Returns a list of two element tuples containing the weekday ID and the human readable day name"""
-    return [
-        ("monday", _("Monday")),
-        ("tuesday", _("Tuesday")),
-        ("wednesday", _("Wednesday")),
-        ("thursday", _("Thursday")),
-        ("friday", _("Friday")),
-        ("saturday", _("Saturday")),
-        ("sunday", _("Sunday")),
-    ]
-
-
-def month_name(month_num: int) -> str:
-    """Returns the human readable month name of a given month number
-    (starting with 0 = January)"""
-    return [
-        _("January"),
-        _("February"),
-        _("March"),
-        _("April"),
-        _("May"),
-        _("June"),
-        _("July"),
-        _("August"),
-        _("September"),
-        _("October"),
-        _("November"),
-        _("December"),
-    ][month_num]
 
 
 def interface_oper_state_name(state_num: int, deflt: str = "") -> str:
@@ -119,7 +11,7 @@ def interface_oper_state_name(state_num: int, deflt: str = "") -> str:
 
 
 # TODO: Slightly funny return type to match ListChoiceChoices. We should
-# perhaps move the function to cmk.gui, so we can use the real type.
+# perhaps use the real type.
 def interface_oper_states() -> dict[str | int, str]:
     return {
         1: _("up"),
@@ -134,7 +26,7 @@ def interface_oper_states() -> dict[str | int, str]:
 
 
 # TODO: Slightly funny return type to match ListChoiceChoices. We should
-# perhaps move the function to cmk.gui, so we can use the real type.
+# perhaps use the real type.
 def interface_port_types() -> dict[str | int, str]:
     return {
         1: "other",

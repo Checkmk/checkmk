@@ -13,9 +13,9 @@ from marshmallow_oneofschema import OneOfSchema
 from livestatus import SiteId
 
 from cmk.utils.caching import instance_method_lru_cache
-from cmk.utils.defines import host_state_name, service_state_name
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
+from cmk.utils.statename import host_state_name, service_state_name
 
 from cmk.checkengine.submitters import ServiceState  # pylint: disable=cmk-module-layer-violation
 

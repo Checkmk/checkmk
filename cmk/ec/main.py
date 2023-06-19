@@ -38,12 +38,8 @@ from typing import Any, Literal, TypedDict
 from setproctitle import setthreadtitle
 
 import cmk.utils.daemon
-import cmk.utils.debug
-import cmk.utils.defines
 import cmk.utils.paths
 import cmk.utils.profile
-import cmk.utils.regex
-import cmk.utils.render
 import cmk.utils.version as cmk_version
 from cmk.utils import log, store
 from cmk.utils.exceptions import MKException

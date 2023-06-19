@@ -13,8 +13,8 @@ from typing import Any, assert_never, Self
 
 from livestatus import LocalConnection, SiteId
 
-import cmk.utils.defines
 from cmk.utils.site import omd_site
+from cmk.utils.statename import short_service_state_name
 
 import cmk.gui.sites
 import cmk.gui.utils.escaping as escaping
@@ -32,7 +32,7 @@ class ACResultState(enum.IntEnum):
 
     @property
     def short_name(self) -> str:
-        return cmk.utils.defines.short_service_state_name(self.value)
+        return short_service_state_name(self.value)
 
     @classmethod
     def worst(cls, states: Iterable[Self]) -> Self:

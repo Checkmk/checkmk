@@ -3,13 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import cmk.utils.dateutils as dateutils
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import defines, Dictionary, ListOfTimeRanges, TextInput
+from cmk.gui.valuespec import Dictionary, ListOfTimeRanges, TextInput
 
 
 def _item_spec_motion():
@@ -33,7 +35,7 @@ def _parameter_valuespec_motion():
                     ),
                     elements=[
                         (day_id, ListOfTimeRanges(title=day_str))
-                        for day_id, day_str in defines.weekdays_by_name()
+                        for day_id, day_str in dateutils.weekdays_by_name()
                     ],
                     optional_keys=[],
                 ),

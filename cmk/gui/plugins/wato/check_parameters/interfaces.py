@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
 
+import cmk.gui.ifaceoper as ifaceoper
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.check_parameters.interface_utils import vs_interface_traffic
@@ -18,7 +19,6 @@ from cmk.gui.plugins.wato.utils import (
 from cmk.gui.valuespec import (
     Alternative,
     CascadingDropdown,
-    defines,
     Dictionary,
     DictionaryEntry,
     DropdownChoice,
@@ -270,7 +270,7 @@ def _vs_matching_conditions():
                                     "Apply this rule only to interfaces whose port type is listed "
                                     "below."
                                 ),
-                                choices=defines.interface_port_types(),
+                                choices=ifaceoper.interface_port_types(),
                                 rows=40,
                                 default_value=[
                                     "6",
@@ -296,7 +296,7 @@ def _vs_matching_conditions():
                                     "Apply this rule only to interfaces whose port state is listed "
                                     "below."
                                 ),
-                                choices=defines.interface_oper_states(),
+                                choices=ifaceoper.interface_oper_states(),
                                 toggle_all=True,
                                 default_value=["1"],
                             ),
@@ -399,7 +399,7 @@ vs_elements_if_groups_matches: list[DictionaryEntry] = [
         Transform(
             valuespec=DropdownChoice[int](
                 title=_("Select interface port type"),
-                choices=ListChoice.dict_choices(defines.interface_port_types()),
+                choices=ListChoice.dict_choices(ifaceoper.interface_port_types()),
                 help=_(
                     "Only interfaces with the given port type are put into this group. "
                     "For example 53 (propVirtual)."
@@ -649,7 +649,7 @@ def _vs_state_mappings() -> CascadingDropdown:
                                     orientation="horizontal",
                                     elements=[
                                         ListChoice(
-                                            choices=defines.interface_oper_states(),
+                                            choices=ifaceoper.interface_oper_states(),
                                             allow_empty=False,
                                         ),
                                         MonitoringState(),
@@ -700,7 +700,7 @@ def _vs_state_mappings() -> CascadingDropdown:
                                         str(key),
                                         f"{key} - {value}",
                                     )
-                                    for key, value in defines.interface_oper_states().items()
+                                    for key, value in ifaceoper.interface_oper_states().items()
                                 ],
                                 title=_("Operational state"),
                             ),
@@ -792,7 +792,7 @@ def _parameter_valuespec_if() -> Dictionary:
                 Optional(
                     valuespec=ListChoice(
                         title=_("Allowed operational states:"),
-                        choices=defines.interface_oper_states(),
+                        choices=ifaceoper.interface_oper_states(),
                         allow_empty=False,
                     ),
                     title=_("Operational state"),

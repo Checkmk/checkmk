@@ -9,10 +9,9 @@ import time
 from collections.abc import Iterable
 from logging import Logger
 
-import cmk.utils.debug
-import cmk.utils.defines
 from cmk.utils.log import VERBOSE
 from cmk.utils.notify_types import ECEventContext
+from cmk.utils.statename import service_state_name
 from cmk.utils.store.host_storage import ContactgroupName
 
 from .config import Action, Config, EMailActionConfig, Rule, ScriptActionConfig
@@ -385,7 +384,7 @@ def _base_notification_context(
         SERVICEOUTPUT=event["text"],
         SERVICEPERFDATA="",
         SERVICEPROBLEMID="ec-id-" + str(event["id"]),
-        SERVICESTATE=cmk.utils.defines.service_state_name(event["state"]),
+        SERVICESTATE=service_state_name(event["state"]),
         SERVICESTATEID=str(event["state"]),
         SERVICE_EC_CONTACT=event.get("owner", ""),
         SERVICE_SL=str(event["sl"]),

@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.utils.defines as defines
 import cmk.utils.paths
 
+import cmk.gui.ifaceoper as ifaceoper
 from cmk.gui.i18n import _
 from cmk.gui.inventory import vs_element_inventory_visible_raw_path, vs_inventory_path_or_keys_help
 from cmk.gui.plugins.wato.utils import (
@@ -210,7 +210,7 @@ def _valuespec_inv_parameters_inv_if():
                 "usage_port_types",
                 DualListChoice(
                     title=_("Port types to include in usage statistics"),
-                    choices=defines.interface_port_types(),
+                    choices=ifaceoper.interface_port_types(),
                     autoheight=False,
                     rows=40,
                     enlarge_active=False,

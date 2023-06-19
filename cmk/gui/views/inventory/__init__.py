@@ -15,7 +15,6 @@ from typing import Any, Literal, NamedTuple, overload, Protocol, TypeVar
 
 from livestatus import LivestatusResponse, OnlySites, SiteId
 
-import cmk.utils.defines as defines
 import cmk.utils.render
 from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
@@ -47,6 +46,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
+from cmk.gui.ifaceoper import interface_oper_state_name, interface_port_types
 from cmk.gui.painter.v0.base import Cell, Painter, painter_registry, register_painter
 from cmk.gui.painter_options import (
     paint_age,
@@ -393,7 +393,7 @@ def inv_paint_if_oper_status(oper_status: int) -> PaintResult:
     else:
         css_class = "if_state_other"
 
-    return "if_state " + css_class, defines.interface_oper_state_name(
+    return "if_state " + css_class, interface_oper_state_name(
         oper_status, "%s" % oper_status
     ).replace(" ", "&nbsp;")
 
@@ -406,7 +406,7 @@ def inv_paint_if_admin_status(admin_status: int) -> PaintResult:
 
 @decorate_inv_paint()
 def inv_paint_if_port_type(port_type: int) -> PaintResult:
-    type_name = defines.interface_port_types().get(port_type, _("unknown"))
+    type_name = interface_port_types().get(port_type, _("unknown"))
     return "", "%d - %s" % (port_type, type_name)
 
 

@@ -11,10 +11,10 @@ from typing import get_args, Literal
 
 from livestatus import MultiSiteConnection, SiteId
 
-from cmk.utils.defines import core_state_names
 from cmk.utils.livestatus_helpers.expressions import Or, QueryExpression
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables.eventconsoleevents import Eventconsoleevents
+from cmk.utils.statename import core_state_names
 
 from cmk.ec.export import (  # pylint: disable=cmk-module-layer-violation
     SyslogFacility,

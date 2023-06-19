@@ -14,7 +14,7 @@ from typing import Final, Literal, NewType, TypedDict
 
 import livestatus
 
-import cmk.utils.defines
+import cmk.utils.statename as statename
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
@@ -55,7 +55,7 @@ class NotificationViaPlugin(TypedDict):
 
 
 def _state_for(exit_code: NotificationResultCode) -> str:
-    return cmk.utils.defines.service_state_name(exit_code, "UNKNOWN")
+    return statename.service_state_name(exit_code, "UNKNOWN")
 
 
 def find_wato_folder(context: NotificationContext) -> str:

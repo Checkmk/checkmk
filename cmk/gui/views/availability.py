@@ -12,9 +12,9 @@ from collections.abc import Iterator
 from livestatus import SiteId
 
 import cmk.utils.version as cmk_version
-from cmk.utils.defines import host_state_name, service_state_name
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
+from cmk.utils.statename import host_state_name, service_state_name
 
 import cmk.gui.availability as availability
 import cmk.gui.bi as bi

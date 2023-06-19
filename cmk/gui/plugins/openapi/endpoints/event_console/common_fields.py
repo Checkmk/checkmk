@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.utils.defines import core_state_names
+from cmk.utils.statename import core_state_names
 
 from cmk.gui import fields as gui_fields
 

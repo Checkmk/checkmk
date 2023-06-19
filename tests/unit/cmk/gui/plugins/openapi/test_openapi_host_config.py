@@ -17,6 +17,7 @@ from tests.testlib.rest_api_client import ClientRegistry
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils import version
+from cmk.utils.hostaddress import HostName
 
 from cmk.automations.results import DeleteHostsResult, RenameHostsResult
 
@@ -1148,7 +1149,7 @@ def test_openapi_all_hosts_with_non_existing_site(
         return {
             "foo": CREHost(
                 folder=folder_tree().root_folder(),
-                host_name="foo",
+                host_name=HostName("foo"),
                 attributes={"site": "a_non_existing_site"},
                 cluster_nodes=None,
             )
@@ -1171,7 +1172,7 @@ def test_openapi_host_with_non_existing_site(
     def mock_host(_hostname):
         return CREHost(
             folder=folder_tree().root_folder(),
-            host_name="foo",
+            host_name=HostName("foo"),
             attributes={"site": "a_non_existing_site"},
             cluster_nodes=None,
         )

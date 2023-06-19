@@ -1199,9 +1199,9 @@ def folder_from_request() -> CREFolder:
     else:
         folder = folder_tree().root_folder()
         if (
-            host_name := request.var("host")
+            host_name := request.get_ascii_input("host")
         ) is not None:  # find host with full scan. Expensive operation
-            host = Host.host(host_name)
+            host = Host.host(HostName(host_name))
             if host:
                 folder = host.folder()
 
@@ -2420,7 +2420,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
 
     def create_validated_hosts(
         self,
-        entries: Collection[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
+        entries: Collection[tuple[HostName, dict[str, object], Sequence[HostName] | None]],
     ) -> None:
         # 2. Actual modification
         self._load_hosts_on_demand()
@@ -2436,7 +2436,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
     @staticmethod
     def verify_and_update_host_details(
         name: HostName, attributes: HostAttributes
-    ) -> HostAttributes:
+    ) -> dict[str, object]:
         # MKAuthException, MKUserError
         _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"])
         validate_host_uniqueness("host", name)
@@ -2445,7 +2445,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
     def propagate_hosts_changes(
         self,
         host_name: HostName,
-        attributes: object,
+        attributes: dict[str, object],
         cluster_nodes: Sequence[HostName] | None,
     ) -> None:
         host = Host(self, host_name, attributes, cluster_nodes)
@@ -3062,14 +3062,14 @@ class CREHost(WithPermissions, WithAttributes):
     # '--------------------------------------------------------------------'
 
     @staticmethod
-    def load_host(host_name: str) -> CREHost:
+    def load_host(host_name: HostName) -> CREHost:
         host = Host.host(host_name)
         if host is None:
             raise MKUserError(None, "Host could not be found.", status=404)
         return host
 
     @staticmethod
-    def host(host_name) -> CREHost | None:  # type: ignore[no-untyped-def]
+    def host(host_name: HostName) -> CREHost | None:
         return folder_lookup_cache().get(host_name)
 
     @staticmethod
@@ -3077,18 +3077,18 @@ class CREHost(WithPermissions, WithAttributes):
         return folder_tree().root_folder().all_hosts_recursively()
 
     @staticmethod
-    def host_exists(host_name) -> bool:  # type: ignore[no-untyped-def]
+    def host_exists(host_name: HostName) -> bool:
         return Host.host(host_name) is not None
 
     # .--------------------------------------------------------------------.
     # | CONSTRUCTION, LOADING & SAVING                                     |
     # '--------------------------------------------------------------------'
 
-    def __init__(  # type: ignore[no-untyped-def]
+    def __init__(
         self,
-        folder,
-        host_name,
-        attributes,
+        folder: CREFolder,
+        host_name: HostName,
+        attributes: dict[str, object],
         cluster_nodes: Sequence[HostName] | None,
     ) -> None:
         super().__init__()

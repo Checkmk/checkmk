@@ -116,7 +116,7 @@ def fake_start_bake_agents(monkeypatch: MonkeyPatch) -> None:
 )
 def test_host_tags(attributes: dict, expected_tags: dict[str, str]) -> None:
     folder = folder_tree().root_folder()
-    host = hosts_and_folders.Host(folder, "test-host", attributes, cluster_nodes=None)
+    host = hosts_and_folders.Host(folder, HostName("test-host"), attributes, cluster_nodes=None)
 
     assert host.tag_groups() == expected_tags
 
@@ -148,9 +148,9 @@ def test_host_tags(attributes: dict, expected_tags: dict[str, str]) -> None:
         ),
     ],
 )
-def test_host_is_ping_host(attributes: dict[str, str], result: bool) -> None:
+def test_host_is_ping_host(attributes: dict[str, object], result: bool) -> None:
     folder = folder_tree().root_folder()
-    host = hosts_and_folders.Host(folder, "test-host", attributes, cluster_nodes=None)
+    host = hosts_and_folders.Host(folder, HostName("test-host"), attributes, cluster_nodes=None)
 
     assert host.is_ping_host() == result
 

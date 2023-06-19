@@ -1234,7 +1234,7 @@ class ModeAjaxPopupMoveToFolder(AjaxPage):
         ]
 
         if self._what == "host" and self._ident is not None:
-            host = Host.host(self._ident)
+            host = Host.host(HostName(self._ident))
             if host is not None:
                 choices += host.folder().choices_for_moving_host()
 

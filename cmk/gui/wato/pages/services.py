@@ -197,10 +197,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
     def get_request(self) -> StartDiscoveryRequest:
         user.need_permission("wato.hosts")
 
-        host_name = request.get_ascii_input("host_name")
-        if host_name is None:
-            raise MKGeneralException(_("Host is missing"))
-        host = Host.host(host_name)
+        host = Host.host(host_name := HostName(request.get_ascii_input_mandatory("host_name")))
         if host is None:
             raise MKGeneralException(
                 _(

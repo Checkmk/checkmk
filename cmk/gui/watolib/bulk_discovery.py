@@ -9,6 +9,7 @@ from typing import NamedTuple, NewType, TypedDict
 from livestatus import SiteId
 
 import cmk.utils.store as store
+from cmk.utils.hostaddress import HostName
 
 from cmk.automations.results import ServiceDiscoveryResult as AutomationDiscoveryResult
 
@@ -291,7 +292,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
 def prepare_hosts_for_discovery(hostnames: Sequence[str]) -> list[DiscoveryHost]:
     hosts_to_discover = []
     for host_name in hostnames:
-        host = Host.host(host_name)
+        host = Host.host(HostName(host_name))
         if host is None:
             raise MKUserError(None, _("The host '%s' does not exist") % host_name)
         host.need_permission("write")

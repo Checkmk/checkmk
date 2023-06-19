@@ -23,6 +23,7 @@ from marshmallow_oneofschema import OneOfSchema
 
 import cmk.utils.version as version
 from cmk.utils.exceptions import MKException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.expressions import NothingExpression, QueryExpression
 from cmk.utils.livestatus_helpers.queries import Query
 from cmk.utils.livestatus_helpers.tables import Hostgroups, Hosts, Servicegroups
@@ -774,7 +775,7 @@ class HostnameOrIP(base.String):
     def _validate_hostname(self, value: str) -> ValidationError | Literal["pass"]:
         try:
             if self.presence != "ignore" or self.should_be_cluster or self.should_be_monitored:
-                if host := Host.host(value):
+                if host := Host.host(HostName(value)):
                     if self.presence == "should_not_exist":
                         raise self.make_error("should_not_exist", host_name=value)
 

@@ -19,6 +19,7 @@ from six import ensure_str
 from livestatus import SiteConfiguration, SiteId
 
 import cmk.utils.render as render
+from cmk.utils.hostaddress import HostName
 from cmk.utils.licensing.registry import get_licensing_user_effect
 from cmk.utils.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
 from cmk.utils.setup_search_index import request_index_rebuild
@@ -681,7 +682,7 @@ def _get_object_reference(object_ref: ObjectRef | None) -> tuple[str | None, str
         return None, None
 
     if object_ref.object_type is ObjectRefType.Host:
-        host = Host.host(object_ref.ident)
+        host = Host.host(HostName(object_ref.ident))
         if host:
             return host.edit_url(), host.name()
         return None, object_ref.ident

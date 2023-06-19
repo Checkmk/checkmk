@@ -10,6 +10,7 @@ from pathlib import Path
 
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.site import omd_site
 
 from cmk.gui.background_job import (
@@ -62,7 +63,7 @@ class FetchAgentOutputRequest:
     @classmethod
     def deserialize(cls, serialized: dict[str, str]) -> "FetchAgentOutputRequest":
         host_name = serialized["host_name"]
-        host = Host.host(host_name)
+        host = Host.host(HostName(host_name))
         if host is None:
             raise MKGeneralException(
                 _(

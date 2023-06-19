@@ -1,0 +1,16 @@
+Title: Graph legends & mouse hovers: Respect order of curves in graph definitions
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1687164911
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+In graph legends and mouse hovers which show the current values at a given point in time, the order
+of the curves was reversed with respect to the graph definition. This affected for example the
+bandwidth graph of interface services.
+
+Note that in case the graph contains stacked metrics, we stick to the reversed order, as before.
+This aligns the order of the curves in the legend and mouse hover with the order in the graph.

@@ -814,6 +814,12 @@ msgstr "Estado 'Menor'"
 msgid "'Warning' state"
 msgstr "Estado de \"Advertência"
 
+msgid ""
+"'git' command was not found on this system, but it is requried for "
+"versioning the configuration.Please either install 'git' or disable git "
+"configuration tracking in WATO."
+msgstr ""
+
 msgid "(0 is current period)"
 msgstr "(0 é o período atual)"
 
@@ -4593,6 +4599,10 @@ msgstr "Agente %s bem sucedido"
 msgid "Agent Certificates"
 msgstr "Certificados de agente"
 
+#, fuzzy
+msgid "Agent Controller"
+msgstr "Controlador de agentes"
+
 msgid "Agent Deployment: Downloaded Agent Hash"
 msgstr "Agente Deployment: Download do Agente Hash"
 
@@ -4677,6 +4687,10 @@ msgstr ""
 
 msgid "Agent deployment status"
 msgstr "Status de implantação do agente"
+
+#, fuzzy
+msgid "Agent directory"
+msgstr "Diretório principal"
 
 #, python-format
 msgid "Agent for %s (%s)"
@@ -6162,6 +6176,10 @@ msgstr "Aplicação (expressão regular)"
 msgid "Application / Syslog-Tag"
 msgstr "Aplicação / Syslog-Tag"
 
+#, fuzzy
+msgid "Application / Syslog-Tag (regex)"
+msgstr "Aplicação / Syslog-Tag"
+
 msgid "Application Gateway"
 msgstr "Gateway de aplicação"
 
@@ -6394,18 +6412,26 @@ msgstr ""
 msgid "As server"
 msgstr "Como servidor"
 
+#, fuzzy
 msgid ""
 "As soon as you add your Checkmk server to the monitoring, a graph showing "
-"the history of your host problems will appear here. "
+"the history of your host problems will appear here.\n"
+"Please also be aware that you might see this message might appear as a "
+"result of a filtered dashboard.This dashlet currently only supports "
+"filtering for sites."
 msgstr ""
-"Assim que você adicionar o seu servidor Checkmk ao monitoramento, um gráfico "
-"mostrando o histórico de seus problemas com o host aparecerá aqui. "
+"Assim que você adicionar seu(s) servidor(es) Checkmk ao monitoramento, um "
+"gráfico mostrando o histórico de seus problemas com o host aparecerá aqui. "
+"Atualmente os seguintes sites Checkmk não são monitorados: %s. "
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
 "As soon as you add your Checkmk server(s) to the monitoring, a graph showing "
 "the history of your host problems will appear here. Currently the following "
-"Checkmk sites are not monitored: %s. "
+"Checkmk sites are not monitored: %s.\n"
+"Please also be aware that you might see this message might appear as a "
+"result of a filtered dashboard.This dashlet currently only supports "
+"filtering for sites."
 msgstr ""
 "Assim que você adicionar seu(s) servidor(es) Checkmk ao monitoramento, um "
 "gráfico mostrando o histórico de seus problemas com o host aparecerá aqui. "
@@ -6742,7 +6768,8 @@ msgstr "Método Authmethod"
 msgid "Author"
 msgstr "Autor"
 
-msgid "Author comment"
+#, fuzzy
+msgid "Author comment (regex)"
 msgstr "Comentário do autor"
 
 msgid "Authorization"
@@ -9995,6 +10022,30 @@ msgstr "Parâmetro de verificação"
 msgid "Check Plugin"
 msgstr "Verificar Plugin"
 
+#, fuzzy
+msgid "Check Point Firewall Connections"
+msgstr "Conexões de Firewall Checkpoint"
+
+#, fuzzy
+msgid "Check Point Firewall Packet Rates"
+msgstr "Taxas de pacotes de Firewall Checkpoint"
+
+#, fuzzy
+msgid "Check Point Tunnel Status"
+msgstr "Estado do túnel do ponto de verificação"
+
+#, fuzzy
+msgid "Check Point VSID connections"
+msgstr "Ligações VSID do ponto de verificação"
+
+#, fuzzy
+msgid "Check Point VSID packet rate"
+msgstr "Taxa de pacotes VSID do ponto de verificação"
+
+#, fuzzy
+msgid "Check Point VSID traffic rate"
+msgstr "Taxa de tráfego VSID do ponto de verificação"
+
 msgid "Check SFTP Service"
 msgstr "Verificar serviço SFTP"
 
@@ -10587,24 +10638,6 @@ msgstr "Checkmk: WATO"
 #, python-format
 msgid "Checkmk: Your license expires %s"
 msgstr "Checkmk: A sua licença expira %s"
-
-msgid "Checkpoint Firewall Connections"
-msgstr "Conexões de Firewall Checkpoint"
-
-msgid "Checkpoint Firewall Packet Rates"
-msgstr "Taxas de pacotes de Firewall Checkpoint"
-
-msgid "Checkpoint Tunnel Status"
-msgstr "Estado do túnel do ponto de verificação"
-
-msgid "Checkpoint VSID connections"
-msgstr "Ligações VSID do ponto de verificação"
-
-msgid "Checkpoint VSID packet rate"
-msgstr "Taxa de pacotes VSID do ponto de verificação"
-
-msgid "Checkpoint VSID traffic rate"
-msgstr "Taxa de tráfego VSID do ponto de verificação"
 
 msgid "Checks & agents"
 msgstr "Cheques e agentes"
@@ -11588,6 +11621,10 @@ msgstr "Comente"
 msgid "Comment (optional)"
 msgstr "Comentário (opcional)"
 
+#, fuzzy
+msgid "Comment (regex)"
+msgstr "Comentar texto"
+
 msgid "Comment ID"
 msgstr "Identificação do Comentário"
 
@@ -11616,6 +11653,10 @@ msgid "Comment text"
 msgstr "Comentar texto"
 
 msgid "Comment to the event"
+msgstr "Comentário ao evento"
+
+#, fuzzy
+msgid "Comment to the event (regex)"
 msgstr "Comentário ao evento"
 
 msgid "Comment type"
@@ -12609,9 +12650,6 @@ msgstr "Grupos de contato"
 msgid "Contact Name"
 msgstr "Nome para contato"
 
-msgid "Contact Person"
-msgstr "Pessoa de contacto"
-
 msgid "Contact group (effective)"
 msgstr "Grupo de contato (efetivo)"
 
@@ -12656,6 +12694,10 @@ msgid "Contact information"
 msgstr "Informações de contato"
 
 msgid "Contact person"
+msgstr "Pessoa de contacto"
+
+#, fuzzy
+msgid "Contact person (regex)"
 msgstr "Pessoa de contacto"
 
 msgid "Contact selection"
@@ -14514,6 +14556,10 @@ msgstr ""
 
 msgid "Data"
 msgstr "Dados"
+
+#, fuzzy
+msgid "Data directory"
+msgstr "Diretório principal"
 
 msgid "Data engress"
 msgstr "Entrada de dados"
@@ -17100,7 +17146,8 @@ msgstr "Fazer inventário e configuração de serviços nos hosts existentes."
 msgid "Do not activate changes"
 msgstr "Não ativar mudanças"
 
-msgid "Do not add a link to this page in sidebar"
+#, fuzzy
+msgid "Do not add a link to this page in sidebar and in monitor menu."
 msgstr "Não adicionar um link para esta página na barra lateral"
 
 msgid "Do not add column headers"
@@ -17782,13 +17829,25 @@ msgstr "Tempo de inactividade"
 msgid "Downtime ID"
 msgstr "Identificação do tempo de inatividade"
 
+#, fuzzy
+msgid "Downtime ID (exact match)"
+msgstr "Nome do anfitrião (correspondência exacta)"
+
 msgid "Downtime active or pending"
 msgstr "Tempo de inactividade activo ou pendente"
 
 msgid "Downtime author"
 msgstr "Autor de paragens"
 
+#, fuzzy
+msgid "Downtime author (regex)"
+msgstr "Autor de paragens"
+
 msgid "Downtime comment"
+msgstr "Comentário sobre o tempo de inactividade"
+
+#, fuzzy
+msgid "Downtime comment (regex)"
 msgstr "Comentário sobre o tempo de inactividade"
 
 msgid "Downtime duration (if flexible)"
@@ -17841,6 +17900,10 @@ msgstr "Tempos de inactividade do anfitrião"
 
 msgid "Downtimes of service"
 msgstr "Tempos de paragem do serviço"
+
+#, fuzzy
+msgid "Drive"
+msgstr "Motorista"
 
 msgid "Driver"
 msgstr "Motorista"
@@ -19567,6 +19630,10 @@ msgstr "Histórico de eventos"
 
 msgid "Event ID"
 msgstr "Identificação do evento"
+
+#, fuzzy
+msgid "Event ID (exact match)"
+msgstr "Serviço (correspondência exacta)"
 
 msgid "Event Log"
 msgstr "Diário de eventos"
@@ -24357,9 +24424,6 @@ msgstr "Comando Host Check"
 msgid "Host Contact"
 msgstr "Contacto do anfitrião"
 
-msgid "Host Contact (Regex)"
-msgstr "Contacto do anfitrião (Regex)"
-
 msgid "Host Contact Group"
 msgstr "Grupo de contactos do anfitrião"
 
@@ -24519,6 +24583,10 @@ msgstr "Comentários do anfitrião"
 msgid "Host configuration"
 msgstr "Configuração do anfitrião"
 
+#, fuzzy
+msgid "Host contact (regex)"
+msgstr "Contacto do anfitrião (Regex)"
+
 msgid "Host contact groups"
 msgstr "Grupos de contato anfitriões"
 
@@ -24532,6 +24600,10 @@ msgid "Host creation"
 msgstr "Criação do anfitrião"
 
 msgid "Host custom attribute"
+msgstr "Atributo personalizado do anfitrião"
+
+#, fuzzy
+msgid "Host custom attribute (regex)"
 msgstr "Atributo personalizado do anfitrião"
 
 msgid "Host custom attributes"
@@ -24571,7 +24643,12 @@ msgstr "Hospedar gráficos"
 msgid "Host group"
 msgstr "Grupo de acolhimento"
 
-msgid "Host group (Regex)"
+#, fuzzy
+msgid "Host group (exact match)"
+msgstr "Nome do anfitrião (correspondência exacta)"
+
+#, fuzzy
+msgid "Host group (regex)"
 msgstr "Grupo de anfitriões (Regex)"
 
 msgid "Host group alias"
@@ -24922,11 +24999,19 @@ msgstr "Hostaddress"
 msgid "Hostalias"
 msgstr "Hostalias"
 
+#, fuzzy
+msgid "Hostalias (regex)"
+msgstr "Hostalias"
+
 msgid "Hostname"
 msgstr "Hostname"
 
 msgid "Hostname (exact match)"
 msgstr "Nome do anfitrião (correspondência exacta)"
+
+#, fuzzy
+msgid "Hostname (regex)"
+msgstr "Contacto do anfitrião (Regex)"
 
 msgid "Hostname / IP address"
 msgstr "Nome do anfitrião / endereço IP"
@@ -24950,20 +25035,23 @@ msgstr "O nome do anfitrião contém caracteres ilegais: %s"
 msgid "Hostname matching"
 msgstr "Correspondência de nomes de anfitriões"
 
-msgid "Hostname of event, exact match"
+#, fuzzy
+msgid "Hostname of event (exact match)"
 msgstr "Nome do anfitrião do evento, correspondência exacta"
 
-msgid "Hostname of original event"
+#, fuzzy
+msgid "Hostname of original event (regex)"
 msgstr "Nome do anfitrião do evento original"
 
 msgid "Hostname of the Device"
 msgstr "Hostname do Dispositivo"
 
-msgid "Hostname or Alias"
-msgstr "Nome de anfitrião ou pseudónimo"
-
 msgid "Hostname or IPv4 address for listener"
 msgstr "Hostname ou endereço IPv4 para o ouvinte"
+
+#, fuzzy
+msgid "Hostname or alias (regex)"
+msgstr "Nome de anfitrião ou pseudónimo"
 
 msgid "Hostname template"
 msgstr "Modelo de nome de anfitrião"
@@ -25400,8 +25488,9 @@ msgstr "tamanho do cache de identificação"
 msgid "ID of phase"
 msgstr "identificação de fase"
 
-msgid "ID of rule"
-msgstr "ID da regra"
+#, fuzzy
+msgid "ID of rule (exact match)"
+msgstr "Serviço (correspondência exacta)"
 
 msgid "ID of the Entry"
 msgstr "Identificação da Entrada"
@@ -27763,12 +27852,16 @@ msgstr ""
 "de verificação seleccionados"
 
 msgid ""
-"In order to monitor S3 request metrics you have to enable request metric "
-"monitoring in the AWS/S3 console. This is a paid feature"
+"In order to monitor S3 request metrics, you have to enable request metrics "
+"in the AWS/S3 console, see the <a href='https://docs.aws.amazon.com/AmazonS3/"
+"latest/userguide/metrics-configurations.html'>AWS/S3 documentation</a>. This "
+"is a paid feature. Note that the filter name has to be set to "
+"<tt>EntireBucket</tt>, as is recommended in the <a href='https://docs.aws."
+"amazon.com/AmazonS3/latest/userguide/configure-request-metrics-bucket."
+"html'>documentation for a filter that applies to all objects</a>. The "
+"special agent will use this filter name to query S3 request metrics from the "
+"AWS API."
 msgstr ""
-"Para monitorizar as métricas de solicitação S3, é necessário activar a "
-"monitorização das métricas de solicitação na consola AWS/S3. Esta é uma "
-"funcionalidade paga"
 
 msgid ""
 "In order to monitor docker containers the plugin <tt>mk_docker.py</tt> "
@@ -28067,6 +28160,9 @@ msgstr "Chamadas Incompletas"
 
 msgid "Incomplete report"
 msgstr "Relatório incompleto"
+
+msgid "Incorrect username or password. Please try again."
+msgstr ""
 
 msgid ""
 "Increase this value if WMI-based services are switching constantly into "
@@ -28822,9 +28918,6 @@ msgstr "Ident inválido"
 msgid "Invalid ident: %s"
 msgstr "Ident inválido: %s"
 
-msgid "Invalid login"
-msgstr "Início de sessão inválido"
-
 msgid "Invalid login credentials."
 msgstr "Credenciais de login inválidas."
 
@@ -28970,9 +29063,6 @@ msgstr "Transação inválida"
 
 msgid "Invalid type specified."
 msgstr "Tipo inválido especificado."
-
-msgid "Invalid user authentication"
-msgstr "Autenticação de usuário inválida"
 
 #, python-format
 msgid "Invalid user connection: %s"
@@ -29982,9 +30072,6 @@ msgstr "Última alteração de estado do anfitrião"
 
 msgid "Last known details"
 msgstr "Últimos detalhes conhecidos"
-
-msgid "Last known summary"
-msgstr "Último resumo conhecido"
 
 msgid "Last log"
 msgstr "Último registo"
@@ -31001,7 +31088,8 @@ msgstr "Linha"
 msgid "Line Mean Apparent Power"
 msgstr "Linha Média de Potência Aparente"
 
-msgid "Line number in history logfile"
+#, fuzzy
+msgid "Line number in history logfile (exact match)"
 msgstr "Número de linha no ficheiro de registo histórico"
 
 msgid "Line number in log file"
@@ -31512,6 +31600,10 @@ msgstr "Pedidos de contagem local"
 msgid "Local destination"
 msgstr "Destino local"
 
+#, fuzzy
+msgid "Local directory"
+msgstr "Diretório principal"
+
 msgid "Local file"
 msgstr "Arquivo local"
 
@@ -31735,7 +31827,8 @@ msgstr "Diário de bordo: Informação do Estado"
 msgid "Log: Summary"
 msgstr "Diário de bordo: Sumário"
 
-msgid "Log: command"
+#, fuzzy
+msgid "Log: command (regex)"
 msgstr "Registo: comando"
 
 msgid "Log: command/plugin"
@@ -31752,6 +31845,10 @@ msgstr "Log: nome do contato"
 
 msgid "Log: contact name (exact match)"
 msgstr "Registo: nome do contacto (correspondência exacta)"
+
+#, fuzzy
+msgid "Log: contact name (regex)"
+msgstr "Log: nome do contato"
 
 msgid "Log: day of entry"
 msgstr "Log: dia de entrada"
@@ -31774,22 +31871,29 @@ msgstr "Log: parte informativa da mensagem"
 msgid "Log: line number in log file"
 msgstr "Log: número de linha no arquivo de log"
 
-msgid "Log: message type"
+#, fuzzy
+msgid "Log: message type (regex)"
 msgstr "Registo: tipo de mensagem"
 
 msgid "Log: number of check attempt"
 msgstr "Log: número da tentativa de verificação"
 
-msgid "Log: plugin output"
+#, fuzzy
+msgid "Log: plugin output (regex)"
 msgstr "Registo: saída do plugin"
 
-msgid "Log: state information"
+#, fuzzy
+msgid "Log: state information (regex)"
 msgstr "Diário de bordo: Informação do Estado"
 
 msgid "Log: state of host/service at log time"
 msgstr "Log: estado do anfitrião/serviço no momento do log"
 
 msgid "Log: state type (DEPRECATED: Use \"state information\")"
+msgstr "Log: tipo de estado (DEPRECADO: Usar \"informações de estado\")"
+
+#, fuzzy
+msgid "Log: state type (DEPRECATED: Use \"state information\") (regex)"
 msgstr "Log: tipo de estado (DEPRECADO: Usar \"informações de estado\")"
 
 msgid "Logentry class"
@@ -33647,7 +33751,7 @@ msgstr ""
 msgid "Measure the CPU and Memory efficiency of your Windows servers\n"
 msgstr ""
 
-msgid "Measure the Filesystem efficiency of your Linux servers\n"
+msgid "Measure the Filesystem efficiency of your Linux servers.\n"
 msgstr ""
 
 msgid "Measure the Filesystem efficiency of your VMware ESXi servers\n"
@@ -33955,7 +34059,8 @@ msgstr "Texto da mensagem"
 msgid "Message when rule result is %s"
 msgstr "Mensagem quando o resultado da regra é %s"
 
-msgid "Message/Text of event"
+#, fuzzy
+msgid "Message/Text of event (regex)"
 msgstr "Mensagem/Texto do evento"
 
 msgid "Messages"
@@ -34357,9 +34462,6 @@ msgstr "Parâmetro de especificação em falta"
 msgid "Missing test host name"
 msgstr "Nome do anfitrião do teste em falta"
 
-msgid "Missing username"
-msgstr "Nome de utilizador em falta"
-
 msgid "Missing variable siteid"
 msgstr "Siteid variável em falta"
 
@@ -34668,8 +34770,8 @@ msgstr "Monitorar espaços de nomes correspondentes"
 msgid "Monitor other than Android or iOS devices"
 msgstr "Monitorizar dispositivos que não sejam Android ou iOS"
 
-msgid "Monitor request metrics"
-msgstr "Métricas de solicitação de monitoramento"
+msgid "Monitor request metrics using the filter <tt>EntireBucket</tt>"
+msgstr ""
 
 msgid "Monitor service limits"
 msgstr "Monitorar limites de serviço"
@@ -36145,6 +36247,9 @@ msgstr "Não é necessário sincronizar sítios"
 msgid "No object type"
 msgstr "Nenhum tipo de objeto"
 
+msgid "No password entered. Please enter a password."
+msgstr ""
+
 msgid "No pending changes"
 msgstr "Sem alterações pendentes"
 
@@ -36244,6 +36349,10 @@ msgstr ""
 "Não foram encontrados ficheiros não desempacotados. Se você quer criar novos "
 "pacotes de extensão então você precisa criar arquivos abaixo do diretório "
 "<tt>%s/local</tt> da sua instância Check_MK."
+
+#, fuzzy
+msgid "No username entered. Please enter a username."
+msgstr "Por favor, introduza um nome de ficheiro."
 
 msgid "No users are defined yet."
 msgstr "Nenhum usuário está definido ainda."
@@ -36891,9 +37000,6 @@ msgstr "N.º de itens"
 msgid "Ntop"
 msgstr "Ntop"
 
-msgid "Ntop Hosts"
-msgstr "Ntop Hosts"
-
 msgid "Ntop host"
 msgstr "Anfitrião Ntop"
 
@@ -36920,9 +37026,6 @@ msgstr "Ntop: Alertas"
 
 msgid "Ntopng (chargeable add-on)"
 msgstr "Ntopng (add-on cobrável)"
-
-msgid "Ntopng Connection Parameters (chargeable add-on)"
-msgstr "Parâmetros de Conexão Ntopng (add-on recarregável)"
 
 msgid "Ntopng integration"
 msgstr "Integração total"
@@ -38603,11 +38706,12 @@ msgstr "Origem"
 msgid "Original %s"
 msgstr "Original %s"
 
-msgid "Original IP Address of event"
-msgstr "Endereço IP original do evento"
-
 msgid "Original IP address"
 msgstr "Endereço IP original"
+
+#, fuzzy
+msgid "Original IP address of event (regex)"
+msgstr "Endereço IP original do evento"
 
 msgid "Original IP address the event was received from"
 msgstr "Endereço IP original que o evento foi recebido de"
@@ -38959,6 +39063,10 @@ msgid "Owner"
 msgstr "Proprietário"
 
 msgid "Owner of event"
+msgstr "Proprietário do evento"
+
+#, fuzzy
+msgid "Owner of event (regex)"
 msgstr "Proprietário do evento"
 
 msgid "Owner of the event"
@@ -40944,6 +41052,10 @@ msgstr "Parâmetros de Plugin"
 
 msgid "Plugins"
 msgstr "Plugins"
+
+#, fuzzy
+msgid "Plugins directory"
+msgstr "Diretório principal"
 
 msgid ""
 "Plugins for local agent extensions or communication with the agent in general"
@@ -46099,6 +46211,10 @@ msgstr "Serviço %s"
 msgid "Service (exact match)"
 msgstr "Serviço (correspondência exacta)"
 
+#, fuzzy
+msgid "Service (regex)"
+msgstr "Serviço Regex"
+
 msgid "Service Availability"
 msgstr "Disponibilidade do Serviço"
 
@@ -46110,9 +46226,6 @@ msgstr "Comentários de serviço"
 
 msgid "Service Contact"
 msgstr "Contacto de serviço"
-
-msgid "Service Contact (Regex)"
-msgstr "Contacto de serviço (Regex)"
 
 msgid "Service Contact Group"
 msgstr "Grupo de contactos de serviços"
@@ -46195,6 +46308,10 @@ msgstr "Alerta de serviço"
 msgid "Service alternative display name"
 msgstr "Serviço nome de exibição alternativa"
 
+#, fuzzy
+msgid "Service alternative display name (regex)"
+msgstr "Serviço nome de exibição alternativa"
+
 msgid "Service check command"
 msgstr "Comando de verificação de serviço"
 
@@ -46228,6 +46345,10 @@ msgstr "Tipo de verificação de serviço"
 msgid "Service checks"
 msgstr "Verificações de serviço"
 
+#, fuzzy
+msgid "Service contact (regex)"
+msgstr "Contacto de serviço (Regex)"
+
 msgid "Service contact groups"
 msgstr "Grupos de contato de serviços"
 
@@ -46247,6 +46368,10 @@ msgid "Service criticality"
 msgstr "Criticidade do serviço"
 
 msgid "Service custom attribute"
+msgstr "Atributo de serviço personalizado"
+
+#, fuzzy
+msgid "Service custom attribute (regex)"
 msgstr "Atributo de serviço personalizado"
 
 msgid "Service custom attributes"
@@ -46324,6 +46449,10 @@ msgstr "Grupo de serviços"
 
 msgid "Service group (enforced)"
 msgstr "Grupo de serviços (imposto)"
+
+#, fuzzy
+msgid "Service group (exact match)"
+msgstr "Serviço (correspondência exacta)"
 
 msgid "Service group (regex)"
 msgstr "Grupo de serviços (regex)"
@@ -48561,21 +48690,23 @@ msgstr ""
 "não é membro desse grupo. Os seus grupos são: <b>%s</b>"
 
 #, python-format
-msgid ""
-"Sorry, you cannot create combined graphs for more than %d objects. Please "
-"add more filters to match on less hosts/services."
-msgstr ""
-"Lamentamos, mas não é possível criar gráficos combinados para mais de %d "
-"objectos. Adicione mais filtros para corresponder a menos hosts/serviços."
-
-#, python-format
 msgid "Sorry, you cannot edit the folder %s. It is locked."
 msgstr "Desculpe, você não pode editar a pasta %s. Está bloqueada."
 
-#, python-format
+#, fuzzy, python-format
 msgid ""
-"Sorry, you cannot have more than %d metrics in a combined graph. Please add "
+"Sorry, you cannot have more than %d metrics in a combined graph. This is not "
+"a bug, but a deliberate limitation to avoid performance issues. Please add "
 "more filters to match on less metrics."
+msgstr ""
+"Desculpe, mas não é possível ter mais de %d métricas em um gráfico "
+"combinado. Adicione mais filtros para corresponder a menos métricas."
+
+#, fuzzy, python-format
+msgid ""
+"Sorry, you cannot have more than %d objects in a combined graph. This is not "
+"a bug, but a deliberate limitation to avoid performance issues. Please add "
+"more filters to match on less hosts/services."
 msgstr ""
 "Desculpe, mas não é possível ter mais de %d métricas em um gráfico "
 "combinado. Adicione mais filtros para corresponder a menos métricas."
@@ -49406,6 +49537,10 @@ msgstr ""
 
 msgid "Splunk instance to query."
 msgstr "Exemplo de consulta."
+
+#, fuzzy
+msgid "Spool directory"
+msgstr "Diretório principal"
 
 msgid "Spool files of PNP4Nagios"
 msgstr "Arquivos Spool do PNP4Nagios"
@@ -50807,12 +50942,17 @@ msgstr "Dados resumidos de todos os protocolos"
 msgid "Summary"
 msgstr "Sumário"
 
-msgid "Summary (Plugin output)"
-msgstr "Resumo (saída do plugin)"
-
 msgid "Summary (Previously named: Status details or plugin output)"
 msgstr ""
 "Resumo (Anteriormente designado: Detalhes de status ou saída do plugin)"
+
+#, fuzzy
+msgid "Summary (plugin output) (regex)"
+msgstr "Resumo (saída do plugin)"
+
+#, fuzzy
+msgid "Summary at last status change"
+msgstr "Última alteração de estado do anfitrião"
 
 msgid "Summary for host notifications"
 msgstr "Resumo das notificações do anfitrião"
@@ -51035,6 +51175,10 @@ msgstr "Atualizações de Sinologia"
 
 msgid "Syslog Facility"
 msgstr "Facilidade Syslog"
+
+#, fuzzy
+msgid "Syslog Facility (exact match)"
+msgstr "Facilidade Syslog a utilizar"
 
 msgid "Syslog Facility to use"
 msgstr "Facilidade Syslog a utilizar"
@@ -52159,9 +52303,11 @@ msgid ""
 msgstr ""
 "A identificação da agregação deve ser um texto único. Será como um ID único."
 
+#, fuzzy
 msgid ""
-"The ID of the connection must be a unique text. It will be used as an "
-"internal key when objects refer to the connection."
+"The ID of the connection must be a unique text, with the same requirements "
+"as an user id. It will be used as an internal key when objects refer to the "
+"connection."
 msgstr ""
 "O ID da conexão deve ser um texto único. Ele será usado como uma chave "
 "interna quando os objetos se referirem à conexão."
@@ -53729,10 +53875,10 @@ msgstr ""
 "(http ou https) e a porta. Dependendo da configuração implementada do "
 "serviço, esta pode ser a NodePort ou o ponto de extremidade Ingress."
 
+#, fuzzy
 msgid ""
 "The full URL to the Kubernetes API server including the protocol (http or "
-"https) and the port. Be aware that a trailing slash at the end of the URL is "
-"likely to result in an error."
+"https) and the port. One trailing slash (if present) will be removed."
 msgstr ""
 "O URL completo para o servidor da API do Kubernetes, incluindo o protocolo "
 "(http ou https) e a porta. Esteja ciente de que uma barra no final do URL "
@@ -55046,17 +55192,18 @@ msgstr ""
 "no Linux."
 
 msgid ""
-"The plugin <tt>mailman_lists</tt> allows monitoring mailing lists of mailman."
-msgstr ""
-"O plugin <tt>mailman_lists</tt> permite monitorizar as listas de correio do "
-"mailman."
-
-msgid ""
 "The plugin will process anything that is matched by this globbing pattern. "
 "If it's a directory, recursively process all of its content."
 msgstr ""
 "O plugin processará qualquer coisa que seja igualado por este padrão de "
 "globbing. Se for um diretório, processe recursivamente todo o seu conteúdo."
+
+msgid ""
+"The plugins <tt>mailman2_lists</tt> (Mailman 2) and <tt>mailman3_lists</tt> "
+"(Mailman 3) monitor Mailman mailing lists. If enabled, both plugins will be "
+"deployed, since only one of them will produce data, depending on the install "
+"Mailman version."
+msgstr ""
 
 msgid ""
 "The plugins in this list will be called such that they will create real-time "
@@ -57184,24 +57331,6 @@ msgstr ""
 "geridos através da Configuração e que estão contidos nesta pasta - "
 "directamente ou numa das suas subpastas."
 
-msgid ""
-"This configures how many datapoints will be stored of the performance values "
-"of hosts. Note: hosts checked via Smart PING do not create any performance "
-"data."
-msgstr ""
-"Isto configura quantos datapoints serão armazenados dos valores de "
-"desempenho dos hosts. Nota: os hosts verificados via Smart PING não criam "
-"nenhum dado de desempenho."
-
-msgid ""
-"This configures how many datapoints will be stored of the performance values "
-"of services. Please note, that these settings only apply for <i>new</i> "
-"services. Existing RRDs cannot be changed."
-msgstr ""
-"Isto configura quantos datapoints serão armazenados dos valores de "
-"desempenho dos serviços. Note que estas configurações só se aplicam a "
-"serviços <i>new</i>. Os RRDs existentes não podem ser alterados."
-
 msgid "This connection"
 msgstr "Esta ligação"
 
@@ -58765,9 +58894,12 @@ msgstr ""
 msgid "This regex must match the <i>beginning</i> of the task"
 msgstr "Este regex deve corresponder ao <i>beginning</i> da tarefa"
 
+#, fuzzy
 msgid ""
 "This regular expression is used to match the services to be put into this "
-"group. This is a prefix match regular expression."
+"group. You can use prefix match regular expressions here. In the regular "
+"expressions, you can use match groups. Matched services with the same match "
+"groups will be put in the same group."
 msgstr ""
 "Esta expressão regular é usada para combinar os serviços a serem colocados "
 "neste grupo. Este é um prefixo que corresponde a uma expressão regular."
@@ -59185,6 +59317,22 @@ msgstr ""
 "ao número total de CPUs. "
 
 msgid ""
+"This rule configures the storage scheme of historic metric data for hosts. "
+"Please note that these settings only apply to <i>new</i> hosts. Existing "
+"RRDs can be changed via the command line, see the <a href='https://docs."
+"checkmk.com/latest/en/graphing.html#customise_rrds'>user manual</a>. "
+"Furthermore, please note that hosts checked via Smart PING do not create any "
+"metrics."
+msgstr ""
+
+msgid ""
+"This rule configures the storage scheme of historic metric data for "
+"services. Please note that these settings only apply to <i>new</i> services. "
+"Existing RRDs can be changed via the command line, see the <a href='https://"
+"docs.checkmk.com/latest/en/graphing.html#customise_rrds'>user manual</a>."
+msgstr ""
+
+msgid ""
 "This rule controls the discovery of tasks on Lotus Domino systems. Any "
 "changes later on require a host re-discovery"
 msgstr ""
@@ -59531,9 +59679,10 @@ msgstr ""
 "Appliances em vez do agente Checkmk normal e permite a monitorização através "
 "da API REST v4.x ou superior. "
 
+#, fuzzy
 msgid ""
-"This rule sets limits to the current number of connections through a "
-"Checkpoint firewall."
+"This rule sets limits to the current number of connections through a Check "
+"Point firewall."
 msgstr ""
 "Esta regra estabelece limites para o número atual de conexões através de um "
 "firewall Checkpoint."
@@ -63992,6 +64141,10 @@ msgstr "Utilizar todas as rotações do mapa"
 msgid "Use alternative display name for services"
 msgstr "Usar nome de exibição alternativo para serviços"
 
+#, fuzzy
+msgid "Use any network address"
+msgstr "Endereço da rede"
+
 msgid "Use backup code"
 msgstr "Utilizar o código de salvaguarda"
 
@@ -64845,7 +64998,8 @@ msgstr "Sincronização do usuário"
 msgid "User synchronization currently running: "
 msgstr "Sincronização do usuário atualmente em execução: "
 
-msgid "User that performed action"
+#, fuzzy
+msgid "User that performed action (regex)"
 msgstr "Utilizador que executou a acção"
 
 msgid "User to run handler as"
@@ -70733,8 +70887,11 @@ msgstr "Os anfitriões estão a postos mas têm os serviços em estado de alerta
 msgid "hosts in total"
 msgstr "anfitriões no total"
 
+#, fuzzy
 msgid "hour"
-msgstr "hora"
+msgid_plural "hours"
+msgstr[0] "hora"
+msgstr[1] "hora"
 
 msgid "hours"
 msgstr "horário"
@@ -71197,6 +71354,14 @@ msgstr "notificações em último"
 
 msgid "ntopng Admin User"
 msgstr "ntopng Usuário Admin"
+
+#, fuzzy
+msgid "ntopng Connection Parameters (chargeable add-on)"
+msgstr "Parâmetros de Conexão Ntopng (add-on recarregável)"
+
+#, fuzzy
+msgid "ntopng Hosts"
+msgstr "Ntop Hosts"
 
 msgid "ntopng Username"
 msgstr "ntopng Nome de usuário"
@@ -71983,6 +72148,81 @@ msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#, python-format
+#~ msgid ""
+#~ "Sorry, you cannot create combined graphs for more than %d objects. Please "
+#~ "add more filters to match on less hosts/services."
+#~ msgstr ""
+#~ "Lamentamos, mas não é possível criar gráficos combinados para mais de %d "
+#~ "objectos. Adicione mais filtros para corresponder a menos hosts/serviços."
+
+#~ msgid ""
+#~ "This configures how many datapoints will be stored of the performance "
+#~ "values of hosts. Note: hosts checked via Smart PING do not create any "
+#~ "performance data."
+#~ msgstr ""
+#~ "Isto configura quantos datapoints serão armazenados dos valores de "
+#~ "desempenho dos hosts. Nota: os hosts verificados via Smart PING não criam "
+#~ "nenhum dado de desempenho."
+
+#~ msgid ""
+#~ "This configures how many datapoints will be stored of the performance "
+#~ "values of services. Please note, that these settings only apply for "
+#~ "<i>new</i> services. Existing RRDs cannot be changed."
+#~ msgstr ""
+#~ "Isto configura quantos datapoints serão armazenados dos valores de "
+#~ "desempenho dos serviços. Note que estas configurações só se aplicam a "
+#~ "serviços <i>new</i>. Os RRDs existentes não podem ser alterados."
+
+#~ msgid "Last known summary"
+#~ msgstr "Último resumo conhecido"
+
+#~ msgid ""
+#~ "As soon as you add your Checkmk server to the monitoring, a graph showing "
+#~ "the history of your host problems will appear here. "
+#~ msgstr ""
+#~ "Assim que você adicionar o seu servidor Checkmk ao monitoramento, um "
+#~ "gráfico mostrando o histórico de seus problemas com o host aparecerá "
+#~ "aqui. "
+
+#~ msgid "Contact Person"
+#~ msgstr "Pessoa de contacto"
+
+#~ msgid "ID of rule"
+#~ msgstr "ID da regra"
+
+#~ msgid "Invalid login"
+#~ msgstr "Início de sessão inválido"
+
+#, fuzzy
+#~| msgid "Bind password"
+#~ msgid "Missing password"
+#~ msgstr "Senha de encadernação"
+
+#~ msgid "Missing username"
+#~ msgstr "Nome de utilizador em falta"
+
+#~ msgid ""
+#~ "In order to monitor S3 request metrics you have to enable request metric "
+#~ "monitoring in the AWS/S3 console. This is a paid feature"
+#~ msgstr ""
+#~ "Para monitorizar as métricas de solicitação S3, é necessário activar a "
+#~ "monitorização das métricas de solicitação na consola AWS/S3. Esta é uma "
+#~ "funcionalidade paga"
+
+#~ msgid "Monitor request metrics"
+#~ msgstr "Métricas de solicitação de monitoramento"
+
+#~ msgid "Invalid user authentication"
+#~ msgstr "Autenticação de usuário inválida"
+
+#~ msgid ""
+#~ "The plugin <tt>mailman_lists</tt> allows monitoring mailing lists of "
+#~ "mailman."
+#~ msgstr ""
+#~ "O plugin <tt>mailman_lists</tt> permite monitorizar as listas de correio "
+#~ "do mailman."
 
 #, fuzzy, python-format
 #~| msgid "Minimum Required Checkmk version"
@@ -74175,11 +74415,6 @@ msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
 #~ msgid "99th percentile request latency"
 #~ msgstr "Níveis superiores na latência total de pedidos"
 
-#, fuzzy
-#~| msgid "Bind password"
-#~ msgid "Missing password"
-#~ msgstr "Senha de encadernação"
-
 #~ msgid "Invalid or no package type specified"
 #~ msgstr "Tipo de pacote inválido ou não especificado"
 
@@ -76091,9 +76326,6 @@ msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
 
 #~ msgid "Parameters of"
 #~ msgstr "Parâmetros de"
-
-#~ msgid "Main directory"
-#~ msgstr "Diretório principal"
 
 #~ msgid "Label with status color"
 #~ msgstr "Rótulo com cor de status"

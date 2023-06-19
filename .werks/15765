@@ -1,0 +1,19 @@
+Title: check_temperature: Fix misleading service details in temperature checks
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1687189660
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+In case the state from the device wasn't OK, thresholds from the device were
+appended to the service details, e.g. '46 °C, warning (device warn/crit at 56/56 °C)'.
+This suggests that the temperature value exceeds the threshold, which isn't the case.
+
+To make it clearer, the service details are changed to: '46 °C, State on device: warning'
+in this case.
+
+

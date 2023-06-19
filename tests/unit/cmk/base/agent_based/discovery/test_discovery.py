@@ -7,7 +7,7 @@
 
 import logging
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, NamedTuple
+from typing import NamedTuple
 
 import pytest
 from pytest import MonkeyPatch
@@ -41,6 +41,7 @@ from cmk.checkengine.discovery import (
     DiscoveryResult,
     QualifiedDiscovery,
 )
+from cmk.checkengine.discovery.filters import RediscoveryParameters
 from cmk.checkengine.host_sections import HostSections
 from cmk.checkengine.sectionparser import (
     ParsedSectionName,
@@ -381,7 +382,7 @@ def test__group_by_transition(
 def test__get_post_discovery_services(
     grouped_services: ServicesByTransition,
     mode: DiscoveryMode,
-    parameters_rediscovery: dict[str, list[str]],
+    parameters_rediscovery: RediscoveryParameters,
     result_new_item_names: list[str],
     result_counts: tuple[int, int, int],
 ) -> None:
@@ -410,7 +411,7 @@ def test__get_post_discovery_services(
     assert result.self_removed == count_removed
 
 
-def _get_params(rediscovery: dict[str, Any]) -> config.DiscoveryCheckParameters:
+def _get_params(rediscovery: RediscoveryParameters) -> config.DiscoveryCheckParameters:
     return config.DiscoveryCheckParameters(
         commandline_only=False,
         check_interval=60,

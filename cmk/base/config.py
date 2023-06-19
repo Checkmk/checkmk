@@ -127,6 +127,7 @@ from cmk.checkengine import AgentParser, CheckPlugin, DiscoveryPlugin, Parameter
 from cmk.checkengine.check_table import ConfiguredService, FilterMode, HostCheckTable, ServiceID
 from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr, Item
 from cmk.checkengine.discovery import AutocheckServiceWithNodes
+from cmk.checkengine.discovery.filters import RediscoveryParameters
 from cmk.checkengine.error_handling import ExitSpec
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin
 from cmk.checkengine.legacy import LegacyCheckParameters
@@ -446,7 +447,7 @@ class DiscoveryCheckParameters(NamedTuple):
     severity_new_services: int
     severity_vanished_services: int
     severity_new_host_labels: int
-    rediscovery: dict[str, Any]  # TODO: improve this
+    rediscovery: RediscoveryParameters
 
     @classmethod
     def commandline_only_defaults(cls) -> DiscoveryCheckParameters:

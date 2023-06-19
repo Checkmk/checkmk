@@ -6,7 +6,7 @@
 
 import time
 from collections.abc import Callable, Iterable, Mapping
-from typing import Any, assert_never, Literal, TypeVar, Union
+from typing import assert_never, Literal, TypeVar, Union
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -39,6 +39,7 @@ from cmk.checkengine.discovery import (
     HostLabelPlugin,
     QualifiedDiscovery,
 )
+from cmk.checkengine.discovery.filters import RediscoveryParameters
 from cmk.checkengine.discovery.filters import ServiceFilters as _ServiceFilters
 from cmk.checkengine.sectionparser import (
     filter_out_errors,
@@ -305,7 +306,7 @@ def autodiscovery(
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     schedule_discovery_check: Callable[[HostName], object],
-    rediscovery_parameters: dict[str, Any],
+    rediscovery_parameters: RediscoveryParameters,
     invalidate_host_config: Callable[[], object],
     autodiscovery_queue: AutoQueue,
     reference_time: float,
@@ -384,7 +385,7 @@ def autodiscovery(
 
 
 def _may_rediscover(
-    rediscovery_parameters: Mapping,  # TODO
+    rediscovery_parameters: RediscoveryParameters,
     reference_time: float,
     oldest_queued: float,
 ) -> str:

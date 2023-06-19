@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Callable
-from typing import Any, NamedTuple
+from collections.abc import Callable, Sequence
+from typing import Literal, NamedTuple, TypedDict
 
 from cmk.utils.regex import regex
 from cmk.utils.servicename import ServiceName
+
+from ._utils import DiscoveryMode
 
 ServiceFilter = Callable[[ServiceName], bool]
 
@@ -16,11 +18,29 @@ _MATCH_EVERYTHING = regex("(.*)")
 _MATCH_NOTHING = regex("((?!x)x)")
 
 
+class ServiceFiltersDedicated(TypedDict, total=False):
+    service_whitelist: Sequence[str]  # combined + dedicated
+    service_blacklist: Sequence[str]  # combined + dedicated
+    vanished_service_whitelist: Sequence[str]  # dedicated only
+    vanished_service_blacklist: Sequence[str]  # dedicated only
+
+
+class RediscoveryParameters(TypedDict, total=False):
+    activation: bool  # not sure about the type
+    excluded_time: Sequence[tuple[tuple[int, int], tuple[int, int]]]
+    keep_clustered_vanished_services: bool
+    group_time: int
+    mode: DiscoveryMode
+    service_whitelist: Sequence[str]
+    service_blacklist: Sequence[str]
+    service_filters: tuple[Literal["combined", "dedicated"], ServiceFiltersDedicated]
+
+
 class _ServiceFilterLists(NamedTuple):
-    new_whitelist: list[str] | None
-    new_blacklist: list[str] | None
-    vanished_whitelist: list[str] | None
-    vanished_blacklist: list[str] | None
+    new_whitelist: Sequence[str] | None
+    new_blacklist: Sequence[str] | None
+    vanished_whitelist: Sequence[str] | None
+    vanished_blacklist: Sequence[str] | None
 
 
 class ServiceFilters(NamedTuple):
@@ -32,7 +52,7 @@ class ServiceFilters(NamedTuple):
         return cls(_accept_all_services, _accept_all_services)
 
     @classmethod
-    def from_settings(cls, rediscovery_parameters: dict[str, Any]) -> "ServiceFilters":
+    def from_settings(cls, rediscovery_parameters: RediscoveryParameters) -> "ServiceFilters":
         service_filter_lists = _get_service_filter_lists(rediscovery_parameters)
 
         new_services_filter = _get_service_filter_func(
@@ -48,7 +68,7 @@ class ServiceFilters(NamedTuple):
         return cls(new_services_filter, vanished_services_filter)
 
 
-def _get_service_filter_lists(rediscovery_parameters: dict[str, Any]) -> _ServiceFilterLists:
+def _get_service_filter_lists(rediscovery_parameters: RediscoveryParameters) -> _ServiceFilterLists:
     if "service_filters" not in rediscovery_parameters:
         # Be compatible to pre 1.7.0 versions; There were only two general pattern lists
         # which were used for new AND vanished services:
@@ -112,8 +132,8 @@ def _get_service_filter_lists(rediscovery_parameters: dict[str, Any]) -> _Servic
 
 
 def _get_service_filter_func(
-    service_whitelist: list[str] | None,
-    service_blacklist: list[str] | None,
+    service_whitelist: Sequence[str] | None,
+    service_blacklist: Sequence[str] | None,
 ) -> ServiceFilter:
     if not service_whitelist and not service_blacklist:
         return _accept_all_services

@@ -37,7 +37,7 @@ from cmk.checkengine.discovery import filters as _filters
     ],
 )
 def test__get_service_filter_func_no_lists(
-    parameters_rediscovery: dict[str, Sequence[object]],
+    parameters_rediscovery: _filters.RediscoveryParameters,
 ) -> None:
     service_filters = _filters.ServiceFilters.from_settings(parameters_rediscovery)
     assert service_filters.new is _filters._accept_all_services
@@ -116,8 +116,7 @@ def test__get_service_filter_func_same_lists(
     ],
 )
 def test__get_service_filter_func(
-    monkeypatch: pytest.MonkeyPatch,
-    parameters_rediscovery: dict[str, Sequence[str]],
+    parameters_rediscovery: _filters.RediscoveryParameters,
     result: bool,
 ) -> None:
     service_filters = _filters.ServiceFilters.from_settings(parameters_rediscovery)

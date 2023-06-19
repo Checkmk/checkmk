@@ -17,7 +17,6 @@ from typing import Final
 
 from pydantic import BaseModel
 
-import cmk.utils.store as store  # pylint: disable=cmk-module-layer-violation
 from cmk.utils.version import parse_check_mk_version  # pylint: disable=cmk-module-layer-violation
 
 from ._installed import Installer
@@ -96,7 +95,12 @@ class PackageStore:
         self.local_packages: Final = local_dir
         self.enabled_packages: Final = enabled_dir
 
-    def store(self, file_content: bytes, overwrite: bool = False) -> Manifest:
+    def store(
+        self,
+        file_content: bytes,
+        persisting_function: Callable[[str, bytes], None],
+        overwrite: bool = False,
+    ) -> Manifest:
         package = extract_manifest(file_content)
 
         base_name = format_file_name(package.id)
@@ -107,7 +111,7 @@ class PackageStore:
             raise PackageError(f"Package {package.name} {package.version} exists on the site!")
 
         local_package_path.parent.mkdir(parents=True, exist_ok=True)
-        store.save_bytes_to_file(str(local_package_path), file_content)
+        persisting_function(str(local_package_path), file_content)
 
         return package
 
@@ -201,7 +205,12 @@ def disable(
 
 
 def create(
-    installer: Installer, manifest: Manifest, path_config: PathConfig, *, version_packaged: str
+    installer: Installer,
+    manifest: Manifest,
+    path_config: PathConfig,
+    persisting_function: Callable[[str, bytes], None],
+    *,
+    version_packaged: str,
 ) -> None:
     if installer.is_installed(manifest.name):
         raise PackageError("Package already exists.")
@@ -216,7 +225,7 @@ def create(
     _validate_package_files(manifest, installer)
     installer.add_installed_manifest(manifest)
     _create_enabled_mkp_from_installed_package(
-        package_store, manifest, path_config, version_packaged=version_packaged
+        package_store, manifest, path_config, persisting_function, version_packaged=version_packaged
     )
 
 
@@ -225,6 +234,7 @@ def edit(
     pacname: PackageName,
     new_manifest: Manifest,
     path_config: PathConfig,
+    persisting_function: Callable[[str, bytes], None],
     *,
     version_packaged: str,
 ) -> None:
@@ -245,7 +255,11 @@ def edit(
     _validate_package_files(new_manifest, installer)
 
     _create_enabled_mkp_from_installed_package(
-        package_store, new_manifest, path_config, version_packaged=version_packaged
+        package_store,
+        new_manifest,
+        path_config,
+        persisting_function,
+        version_packaged=version_packaged,
     )
     installer.remove_installed_manifest(pacname)
     installer.add_installed_manifest(new_manifest)
@@ -262,6 +276,7 @@ def _create_enabled_mkp_from_installed_package(
     package_store: PackageStore,
     manifest: Manifest,
     path_config: PathConfig,
+    persisting_function: Callable[[str, bytes], None],
     *,
     version_packaged: str,
 ) -> None:
@@ -271,7 +286,7 @@ def _create_enabled_mkp_from_installed_package(
     an MKP, just like the uploaded ones.
     """
     mkp = create_mkp(manifest, path_config.get_path, version_packaged)
-    package_store.store(mkp, overwrite=True)
+    package_store.store(mkp, persisting_function, overwrite=True)
     package_store.mark_as_enabled(manifest.id)
 
 

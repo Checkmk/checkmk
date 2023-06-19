@@ -101,6 +101,7 @@ def _command_find(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
     post_package_change_actions: Callable[[Sequence[Manifest]], None],
+    persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Show information about local files"""
     installer = Installer(path_config.installed_packages_dir)
@@ -135,6 +136,7 @@ def _command_inspect(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
     post_package_change_actions: Callable[[Sequence[Manifest]], None],
+    persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Show manifest of an MKP file"""
     file_path: Path = args.file
@@ -161,6 +163,7 @@ def _command_show_all(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
     post_package_change_actions: Callable[[Sequence[Manifest]], None],
+    persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Show all manifests"""
     stored_manifests = get_stored_manifests(
@@ -196,6 +199,7 @@ def _command_show(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
     post_package_change_actions: Callable[[Sequence[Manifest]], None],
+    persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Show manifest of a stored package"""
     package_store = PackageStore(
@@ -216,6 +220,7 @@ def _command_files(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
     post_package_change_actions: Callable[[Sequence[Manifest]], None],
+    persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Show all files beloning to a package"""
     package_store = PackageStore(
@@ -248,6 +253,7 @@ def _command_list(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
     post_package_change_actions: Callable[[Sequence[Manifest]], None],
+    persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Show a table of all known files, including the deployment state"""
     installer = Installer(path_config.installed_packages_dir)
@@ -310,6 +316,7 @@ def _command_install_deprecated(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
     post_package_change_actions: Callable[[Sequence[Manifest]], None],
+    persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """This command is deprecated. Please use the `add` and `enable` commands."""
     sys.stderr.write(f"{_command_install_deprecated.__doc__}\n")
@@ -328,6 +335,7 @@ def _command_add(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
     post_package_change_actions: Callable[[Sequence[Manifest]], None],
+    persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Add an MKP to the collection of managed MKPs"""
     file_path: Path = args.file
@@ -340,7 +348,7 @@ def _command_add(
         shipped_dir=path_config.packages_shipped_dir,
         local_dir=path_config.packages_local_dir,
         enabled_dir=path_config.packages_enabled_dir,
-    ).store(file_content)
+    ).store(file_content, persisting_function)
 
     # these are the required arguments for `mkp enable`!
     sys.stdout.write(f"{manifest.name} {manifest.version}\n")
@@ -363,6 +371,7 @@ def _command_release(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
     post_package_change_actions: Callable[[Sequence[Manifest]], None],
+    persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Remove the package and leave its contained files as unpackaged files behind."""
     release(Installer(path_config.installed_packages_dir), args.name, callbacks)
@@ -375,6 +384,7 @@ def _command_remove(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
     post_package_change_actions: Callable[[Sequence[Manifest]], None],
+    persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Remove a package from the site"""
     package_store = PackageStore(
@@ -398,6 +408,7 @@ def _command_disable_outdated(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
     post_package_change_actions: Callable[[Sequence[Manifest]], None],
+    persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Disable MKP packages that are declared to be outdated with the new version.
 
@@ -426,6 +437,7 @@ def _command_update_active(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
     post_package_change_actions: Callable[[Sequence[Manifest]], None],
+    persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Disable MKP packages that are not suitable for this version, and enable others.
 
@@ -467,6 +479,7 @@ def _command_enable(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
     post_package_change_actions: Callable[[Sequence[Manifest]], None],
+    persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Enable a disabled package"""
     installer = Installer(path_config.installed_packages_dir)
@@ -494,6 +507,7 @@ def _command_disable(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
     post_package_change_actions: Callable[[Sequence[Manifest]], None],
+    persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Disable an enabled package"""
     package_store = PackageStore(
@@ -530,6 +544,7 @@ def _command_template(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
     post_package_change_actions: Callable[[Sequence[Manifest]], None],
+    persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Create a template of a package manifest"""
     installer = Installer(path_config.installed_packages_dir)
@@ -568,6 +583,7 @@ def _command_package(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
     post_package_change_actions: Callable[[Sequence[Manifest]], None],
+    persisting_function: Callable[[str, bytes], None],
 ) -> int:
     """Create an .mkp file from the provided manifest.
 
@@ -590,7 +606,8 @@ def _command_package(
     installer = Installer(path_config.installed_packages_dir)
     try:
         manifest = store.store(
-            create_mkp(package, path_config.get_path, version_packaged=this_version)
+            create_mkp(package, path_config.get_path, version_packaged=this_version),
+            persisting_function,
         )
         installed = install(
             installer,
@@ -678,6 +695,7 @@ def _add_command(
             Mapping[PackagePart, PackageOperationCallbacks],
             str,
             Callable[[Sequence[Manifest]], None],
+            Callable[[str, bytes], None],
         ],
         int,
     ],
@@ -700,11 +718,19 @@ def main(
     callbacks: Mapping[PackagePart, PackageOperationCallbacks],
     this_version: str,
     post_package_change_actions: Callable[[Sequence[Manifest]], None],
+    persisting_function: Callable[[str, bytes], None],
 ) -> int:
     args = _parse_arguments(argv)
     set_up_logging(args.verbose)
     try:
-        return args.handler(args, path_config, callbacks, this_version, post_package_change_actions)
+        return args.handler(
+            args,
+            path_config,
+            callbacks,
+            this_version,
+            post_package_change_actions,
+            persisting_function,
+        )
     except PackageError as exc:
         if args.debug:
             raise

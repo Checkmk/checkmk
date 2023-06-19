@@ -18,6 +18,7 @@ from pytest_mock import MockerFixture
 
 import cmk.utils.packaging as packaging
 import cmk.utils.paths
+from cmk.utils import store
 from cmk.utils.packaging import _mkp as mkp
 from cmk.utils.packaging import _reporter as reporter
 from cmk.utils.packaging import _unsorted as packaging_unsorted
@@ -139,7 +140,9 @@ def _create_simple_test_package(
         },
     )
 
-    packaging.create(installer, manifest, _PATH_CONFIG, version_packaged="3.14.0p15")
+    packaging.create(
+        installer, manifest, _PATH_CONFIG, store.save_bytes_to_file, version_packaged="3.14.0p15"
+    )
     return _read_manifest(installer, pacname)
 
 
@@ -176,6 +179,7 @@ def test_edit_not_existing(installer: packaging.Installer) -> None:
             packaging.PackageName("aaa"),
             new_manifest,
             _PATH_CONFIG,
+            store.save_bytes_to_file,
             version_packaged="3.14.0p15",
         )
 
@@ -195,6 +199,7 @@ def test_edit(installer: packaging.Installer) -> None:
         packaging.PackageName("aaa"),
         new_manifest,
         _PATH_CONFIG,
+        store.save_bytes_to_file,
         version_packaged="3.14.0p15",
     )
 
@@ -216,6 +221,7 @@ def test_edit_rename(installer: packaging.Installer) -> None:
         packaging.PackageName("aaa"),
         new_manifest,
         _PATH_CONFIG,
+        store.save_bytes_to_file,
         version_packaged="3.14.0p15",
     )
 
@@ -239,6 +245,7 @@ def test_edit_rename_conflict(installer: packaging.Installer) -> None:
             packaging.PackageName("aaa"),
             new_manifest,
             _PATH_CONFIG,
+            store.save_bytes_to_file,
             version_packaged="3.14.0p15",
         )
 

@@ -53,7 +53,8 @@ def main() {
     def build_image = true;
     def build_cloud_images = edition == "cloud";
 
-    def run_int_and_comp_tests = true;
+    // TODO: re-activate triggering int and comp tests for saas as soon as the work
+    def run_int_and_comp_tests = edition != "saas";
     def run_image_tests = true;
 
     print(

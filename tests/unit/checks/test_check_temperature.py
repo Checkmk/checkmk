@@ -58,7 +58,7 @@ from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state
         # First, the device says it's borked.
         ((5, {}, "Foo"),
          {'dev_status': 1, 'dev_status_name': 'Borked'},
-         (1, u'5 \xb0C, Borked', [('temp', 5, None, None)])),
+         (1, u'5 \xb0C, State on device: Borked', [('temp', 5, None, None)])),
 
         # Then the device says its borked but in a different mode.
         ((5,
@@ -113,6 +113,10 @@ from .checktestlib import assertCheckResultsEqual, CheckResult, mock_item_state
           }, "Foo"),
          {'dev_status': 1, 'dev_levels': (4, 4), 'dev_levels_lower': (4, 4)},
          (1, u'5 \xb0C (warn/crit at 5/6 \xb0C) (warn/crit below 4/4 \xb0C)', [('temp', 5, 5, 6)])),
+
+         ((3,{}, "Foo"),
+         {'dev_status': 2, 'dev_levels': (4, 4), 'dev_status_name': 'warning'},
+         (2, u'3 \xb0C, State on device: warning', [('temp', 3, 4, 4)])),
 
 
         ((5,

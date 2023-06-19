@@ -62,6 +62,20 @@ DATA_NO_DESCRIPTION: StringByteTable = [
     ]
 ]
 
+DATA_CISCO_PEER_2: StringByteTable = [
+    [
+        [10, 255, 0, 8],
+        "172.22.254.252",
+        "65030",
+        "10.30.253.243",
+        "2",
+        "6",
+        "Connection Collision Resolution",
+        "904312",
+        "1.4.10.255.0.1",
+    ],
+]
+
 
 @pytest.mark.parametrize(
     "data, result",
@@ -110,6 +124,32 @@ def test_bgp_peer_parse(data: StringByteTable, result: bgp_peer.Section) -> None
     "data, result",
     [
         (
+            DATA_CISCO_PEER_2,
+            {
+                "10.255.0.1": bgp_peer.BGPData(
+                    local_address="10.255.0.8",
+                    local_identifier="172.22.254.252",
+                    remote_as_number=65030,
+                    remote_identifier="10.30.253.243",
+                    admin_state="running",
+                    peer_state="established",
+                    last_received_error="Connection Collision Resolution",
+                    established_time=904312,
+                    description="n/a",
+                    bgp_version=4,
+                )
+            },
+        ),
+    ],
+)
+def test_bgp_peer_parse_cisco_2(data: StringByteTable, result: bgp_peer.Section) -> None:
+    assert bgp_peer.parse_bgp_peer_cisco_2([data]) == result
+
+
+@pytest.mark.parametrize(
+    "data, result",
+    [
+        (
             DATA_SIMPLE,
             [
                 Service(item="192.168.1.2", labels=[ServiceLabel("cmk/bgp/description", "Foo")]),
@@ -128,11 +168,11 @@ def test_bgp_peer_discover(data: StringByteTable, result: DiscoveryResult) -> No
 
 
 @pytest.mark.parametrize(
-    "item, data, result",
+    "item, section, result",
     [
         (
             "192.168.1.2",
-            DATA_SIMPLE,
+            bgp_peer.parse_bgp_peer([DATA_SIMPLE]),
             [
                 Result(state=State.OK, summary="Description: 'Foo'"),
                 Result(state=State.OK, summary="Local address: '192.168.1.1'"),
@@ -150,14 +190,27 @@ def test_bgp_peer_discover(data: StringByteTable, result: DiscoveryResult) -> No
                 Metric("uptime", 100),
             ],
         ),
+        (
+            "10.255.0.1",
+            bgp_peer.parse_bgp_peer_cisco_2([DATA_CISCO_PEER_2]),
+            [
+                Result(state=State.OK, summary="Description: 'n/a'"),
+                Result(state=State.OK, summary="Local address: '10.255.0.8'"),
+                Result(state=State.OK, summary="Admin state: 'running'"),
+                Result(state=State.OK, summary="Peer state: 'established'"),
+                Result(state=State.OK, summary="Established time: 10 days 11 hours"),
+                Result(state=State.OK, notice="Local identifier: '172.22.254.252'"),
+                Result(state=State.OK, notice="Remote identifier: '10.30.253.243'"),
+                Result(state=State.OK, notice="Remote AS number: 65030"),
+                Result(
+                    state=State.OK, notice="Last received error: 'Connection Collision Resolution'"
+                ),
+                Result(state=State.OK, notice="BGP version: 4"),
+                Result(state=State.OK, notice="Remote address: '10.255.0.1'"),
+                Metric("uptime", 904312.0),
+            ],
+        ),
     ],
 )
-def test_bgp_peer_check(item: str, data: StringByteTable, result: CheckResult) -> None:
-    assert (
-        list(
-            bgp_peer.check_bgp_peer(
-                item, bgp_peer.DEFAULT_BGP_PEER_PARAMS, bgp_peer.parse_bgp_peer([data])
-            )
-        )
-        == result
-    )
+def test_bgp_peer_check(item: str, section: bgp_peer.Section, result: CheckResult) -> None:
+    assert list(bgp_peer.check_bgp_peer(item, bgp_peer.DEFAULT_BGP_PEER_PARAMS, section)) == result

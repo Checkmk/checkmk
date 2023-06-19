@@ -1,0 +1,13 @@
+Title: <tt>bgp_peer</tt>: Expand Support for Cisco Devices
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1687177000
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0p5
+
+Previously, the plugin <tt>bgp_peer</tt> would only discover services for the device Catalyst C8500.
+With this Werk, the support is extended to Cisco devices which implement CISCO-BPG4-MIB.

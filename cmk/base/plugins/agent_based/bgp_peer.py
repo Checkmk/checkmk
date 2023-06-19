@@ -93,7 +93,7 @@ This is the data we can extract
 
 """
 
-from typing import List, Mapping, NamedTuple, TypedDict
+from typing import List, Mapping, NamedTuple, Sequence, TypedDict
 
 from .agent_based_api.v1 import (
     all_of,
@@ -157,45 +157,59 @@ DEFAULT_BGP_PEER_PARAMS = BGPPeerParams(
 )
 
 
+def _convert_address(value: str | list[int]) -> str:
+    if not value:
+        return "empty()"
+    if isinstance(value, list):
+        return clean_v4_address(value) if len(value) == 4 else clean_v6_address(value)
+    split_value = value.split(".")
+    return clean_v4_address(split_value) if len(split_value) == 4 else clean_v6_address(split_value)
+
+
+def _create_item_data(entry: list[str | list[int]]) -> BGPData:
+    return BGPData(
+        local_address=_convert_address(entry[0]),
+        local_identifier=_convert_address(entry[1]),
+        remote_as_number=int(entry[2]) if isinstance(entry[2], str) else 0,
+        remote_identifier=_convert_address(entry[3]),
+        admin_state={
+            "1": "halted",
+            "2": "running",
+        }.get(entry[4] if isinstance(entry[4], str) else "0", "unknown(%r)" % entry[4]),
+        peer_state={
+            "1": "idle",
+            "2": "connect",
+            "3": "active",
+            "4": "opensent",
+            "5": "openconfirm",
+            "6": "established",
+        }.get(entry[5] if isinstance(entry[5], str) else "0", "unknown(%r)" % entry[5]),
+        last_received_error=entry[6] if isinstance(entry[6], str) else "unknown(%r)" % entry[6],
+        established_time=int(entry[7]) if isinstance(entry[7], str) else 0,
+        description=(entry[-2] if isinstance(entry[-2], str) else "unknown(%r)" % entry[-2])
+        if len(entry) > len(BGPData.__annotations__) - 1
+        else "n/a",
+        bgp_version=4,
+    )
+
+
+def _check_string_table(string_table: list[StringByteTable]) -> None:
+    assert all(
+        len(entry) >= len(BGPData.__annotations__) - 1 for entry in string_table[0]
+    ), "Not all info elements have the size guessed from known names %d: %r" % (
+        len(BGPData.__annotations__),
+        [len(entry) for entry in string_table[0]],
+    )
+
+
+def _clean_address(address_as_oids: Sequence[str]) -> str:
+    addr_type = int(address_as_oids[0])
+    addr_len = int(address_as_oids[1])
+    addr_elements = address_as_oids[2 : 2 + addr_len]
+    return clean_v4_address(addr_elements) if addr_type == 1 else clean_v6_address(addr_elements)
+
+
 def parse_bgp_peer(string_table: List[StringByteTable]) -> Section:
-    def convert_address(value: str | list[int]) -> str:
-        if not value:
-            return "empty()"
-        if isinstance(value, list):
-            return clean_v4_address(value) if len(value) == 4 else clean_v6_address(value)
-        split_value = value.split(".")
-        return (
-            clean_v4_address(split_value)
-            if len(split_value) == 4
-            else clean_v6_address(split_value)
-        )
-
-    def create_item_data(entry: list[str | list[int]]) -> BGPData:
-        return BGPData(
-            local_address=convert_address(entry[0]),
-            local_identifier=convert_address(entry[1]),
-            remote_as_number=int(entry[2]) if isinstance(entry[2], str) else 0,
-            remote_identifier=convert_address(entry[3]),
-            admin_state={
-                "1": "halted",
-                "2": "running",
-            }.get(entry[4] if isinstance(entry[4], str) else "0", "unknown(%r)" % entry[4]),
-            peer_state={
-                "1": "idle",
-                "2": "connect",
-                "3": "active",
-                "4": "opensent",
-                "5": "openconfirm",
-                "6": "established",
-            }.get(entry[5] if isinstance(entry[5], str) else "0", "unknown(%r)" % entry[5]),
-            last_received_error=entry[6] if isinstance(entry[6], str) else "unknown(%r)" % entry[6],
-            established_time=int(entry[7]) if isinstance(entry[7], str) else 0,
-            description=(entry[-2] if isinstance(entry[-2], str) else "unknown(%r)" % entry[-2])
-            if len(entry) > len(BGPData.__annotations__) - 1
-            else "n/a",
-            bgp_version=4,
-        )
-
     def remote_addr(oid_end: str) -> str:
         """Extracts data from OID_END (currently only RemoteAddr), format is:
         aristaBgp4V2PrefixGaugesEntry:
@@ -206,21 +220,39 @@ def parse_bgp_peer(string_table: List[StringByteTable]) -> Section:
             aristaBgp4V2PrefixGaugesSafi:    not provided in our case
         """
         oid_elements = oid_end.split(".")
-        addr_type = int(oid_elements[1])
-        addr_len = int(oid_elements[2])
-        assert len(oid_elements) == 3 + addr_len
-        addr_elements = oid_elements[3 : 3 + addr_len]
-        return (
-            clean_v4_address(addr_elements) if addr_type == 1 else clean_v6_address(addr_elements)
-        )
+        return _clean_address(oid_elements[1:])
 
-    assert all(
-        len(entry) >= len(BGPData.__annotations__) - 1 for entry in string_table[0]
-    ), "Not all info elements have the size guessed from known names %d: %r" % (
-        len(BGPData.__annotations__),
-        [len(entry) for entry in string_table[0]],
-    )
-    return {remote_addr(str(entry[-1])): create_item_data(entry) for entry in string_table[0]}
+    _check_string_table(string_table)
+    return {remote_addr(str(entry[-1])): _create_item_data(entry) for entry in string_table[0]}
+
+
+def parse_bgp_peer_cisco_2(string_table: List[StringByteTable]) -> Section:
+    def remote_addr(oid_end: str) -> str:
+        """Extracts data from OID_END (currently only RemoteAddr), format is:
+        cbgpPeer2Entry:
+            cbgpPeer2Type:       InetAddressType
+            cbgpPeer2RemoteAddr: InetAddress
+        """
+        oid_elements = oid_end.split(".")
+        return _clean_address(oid_elements)
+
+    _check_string_table(string_table)
+    return {remote_addr(str(entry[-1])): _create_item_data(entry) for entry in string_table[0]}
+
+
+def parse_bgp_peer_cisco_3(string_table: List[StringByteTable]) -> Section:
+    def remote_addr(oid_end: str) -> str:
+        """Extracts data from OID_END (currently only RemoteAddr), format is:
+        cbgpPeer3Entry:
+            cbgpPeer3VrfId:      Unsigned32
+            cbgpPeer3Type:       InetAddressType
+            cbgpPeer3RemoteAddr: InetAddress
+        """
+        oid_elements = oid_end.split(".")
+        return _clean_address(oid_elements[1:])
+
+    _check_string_table(string_table)
+    return {remote_addr(str(entry[-1])): _create_item_data(entry) for entry in string_table[0]}
 
 
 def discover_bgp_peer(section: Section) -> DiscoveryResult:
@@ -291,7 +323,7 @@ register.snmp_section(
 
 register.snmp_section(
     name="cisco_bgp_peerv2",
-    parse_function=parse_bgp_peer,
+    parse_function=parse_bgp_peer_cisco_2,
     parsed_section_name="bgp_peer",
     fetch=[
         SNMPTree(
@@ -310,13 +342,13 @@ register.snmp_section(
         )
     ],
     detect=all_of(
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2818"),
+        startswith(".1.3.6.1.2.1.1.2.0", "1.3.6.1.4.1.9.1"),
         exists(".1.3.6.1.4.1.9.9.187.1.2.5.1.*"),
     ),
 )
 register.snmp_section(
     name="cisco_bgp_peerv3",
-    parse_function=parse_bgp_peer,
+    parse_function=parse_bgp_peer_cisco_3,
     parsed_section_name="bgp_peer",
     fetch=[
         SNMPTree(
@@ -336,7 +368,7 @@ register.snmp_section(
         )
     ],
     detect=all_of(
-        startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.2818"),
+        startswith(".1.3.6.1.2.1.1.2.0", "1.3.6.1.4.1.9.1"),
         exists(".1.3.6.1.4.1.9.9.187.1.2.9.1.*"),
     ),
 )

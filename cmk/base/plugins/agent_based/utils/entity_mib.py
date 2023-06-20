@@ -25,7 +25,7 @@ class PhysicalClasses(Enum):
     @classmethod
     def parse_cisco(cls, raw_phys_class: str) -> "PhysicalClasses":
         match raw_phys_class:
-            case "0" | "":
+            case "0" | "" | "14":
                 return cls.unknown
             case _:
                 return cls(raw_phys_class)

@@ -20,8 +20,8 @@ class Mode(Enum):
 
 
 class Family(Enum):
-    enforce_v4 = "enforce_v4"  # -4
-    enforce_v6 = "ipv6"  # -6
+    enforce_ipv4 = "ipv4_enforced"  # -4
+    enforce_ipv6 = "ipv6"  # -6
     allow_either = "ipv4"  # no argument
 
 
@@ -43,7 +43,7 @@ class HostSettings:
 
     @property
     def fallback_address(self) -> str:
-        suffix = "6" if self.family is Family.enforce_v6 else "4"
+        suffix = "6" if self.family is Family.enforce_ipv6 else "4"
         return "$_HOSTADDRESS_%s$" % suffix
 
 
@@ -243,9 +243,9 @@ def _common_args(
 ) -> list[object]:
     args: list[object] = []
 
-    if host.settings.family is Family.enforce_v6:
+    if host.settings.family is Family.enforce_ipv6:
         args.append("-6")
-    if host.settings.family == Family.enforce_v4:
+    if host.settings.family == Family.enforce_ipv4:
         args.append("-4")
 
     if not params.get("disable_sni"):

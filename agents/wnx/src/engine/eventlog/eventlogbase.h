@@ -45,7 +45,7 @@ public:
     [[nodiscard]] virtual std::wstring makeMessage() const = 0;
 
     [[nodiscard]] std::string stringize(cfg::EventLevels required,
-                                        bool hide_trash) const;
+                                        cfg::EventContext) const;
 
     [[nodiscard]] char getEventSymbol(cfg::EventLevels required) const;
     /// decode windows level to universal
@@ -108,7 +108,7 @@ using EvlProcessor = std::function<bool(const std::string &)>;
 
 // third call
 uint64_t PrintEventLog(EventLogBase &log, uint64_t from_pos,
-                       cfg::EventLevels level, bool hide_context,
+                       cfg::EventLevels level, cfg::EventContext verbose,
                        SkipDuplicatedRecords skip,
                        const EvlProcessor &processor);
 // internal

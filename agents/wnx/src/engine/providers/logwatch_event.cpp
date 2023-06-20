@@ -51,7 +51,7 @@ cfg::EventLevels LabelToEventLevel(std::string_view required_level) {
 }
 
 void LogWatchEntry::init(std::string_view name, std::string_view level_value,
-                         LogWatchContext context) {
+                         cfg::EventContext context) {
     name_ = name;
     context_ = context;
     level_ = LabelToEventLevel(level_value);
@@ -121,7 +121,7 @@ bool LogWatchEntry::loadFrom(std::string_view line) {
     }
 
     try {
-        auto context = LogWatchContext::hide;
+        auto context = cfg::EventContext::hide;
         auto [name, body] = ParseLine(line);
         if (name.empty()) {
             return false;
@@ -136,8 +136,8 @@ bool LogWatchEntry::loadFrom(std::string_view line) {
                 auto context_value = table[1];
                 tools::AllTrim(context_value);
                 context = tools::IsEqual(context_value, "context")
-                              ? LogWatchContext::with
-                              : LogWatchContext::hide;
+                              ? cfg::EventContext::with
+                              : cfg::EventContext::hide;
             }
         } else {
             XLOG::d("logwatch entry '{}' has no data, this is not normal",
@@ -273,7 +273,7 @@ void LogWatchEvent::setupDefaultEntry() {
 
 size_t LogWatchEvent::addDefaultEntry() {
     entries_.emplace_back(LogWatchEntry());
-    entries_.back().init("*", "off", LogWatchContext::hide);
+    entries_.back().init("*", "off", cfg::EventContext::hide);
     return entries_.size() - 1;
 }
 
@@ -394,7 +394,7 @@ void AddConfigEntry(StateVector &states, const LogWatchEntry &log_entry,
     if (found != states.end()) {
         XLOG::t("Old event log '{}' found", log_entry.name());
         found->setDefaults();
-        found->hide_context_ = log_entry.context() == LogWatchContext::hide;
+        found->context_ = log_entry.context();
         found->level_ = log_entry.level();
         found->in_config_ = true;
         found->presented_ = true;
@@ -406,7 +406,7 @@ void AddConfigEntry(StateVector &states, const LogWatchEntry &log_entry,
     states.emplace_back(log_entry.name(), pos, true);
     states.back().in_config_ = true;
     states.back().level_ = log_entry.level();
-    states.back().hide_context_ = log_entry.context() == LogWatchContext::hide;
+    states.back().context_ = log_entry.context();
     XLOG::t("New event log '{}' added with pos {}", log_entry.name(), pos);
 }
 
@@ -453,7 +453,7 @@ std::pair<uint64_t, std::string> DumpEventLog(evl::EventLogBase &log,
     int64_t count = 0;
     auto start = std::chrono::steady_clock::now();
     auto pos = evl::PrintEventLog(
-        log, state.pos_, state.level_, state.hide_context_, lwl.skip,
+        log, state.pos_, state.level_, state.context_, lwl.skip,
         [&out, lwl, &count, start](const std::string &str) {
             if (lwl.max_line_length > 0 &&
                 static_cast<int64_t>(str.length()) >= lwl.max_line_length) {
@@ -474,7 +474,9 @@ std::pair<uint64_t, std::string> DumpEventLog(evl::EventLogBase &log,
                 auto p = std::chrono::steady_clock::now();
                 auto span =
                     std::chrono::duration_cast<std::chrono::seconds>(p - start);
-                if (span.count() > lwl.timeout) return false;
+                if (span.count() > lwl.timeout) {
+                    return false;
+                }
             }
             return true;
         }
@@ -533,8 +535,7 @@ LogWatchEntry GenerateDefaultValue() { return LogWatchEntry().withDefault(); }
 bool UpdateState(State &state, const LogWatchEntryVector &entries) noexcept {
     for (const auto &config_entry : entries) {
         if (tools::IsEqual(state.name_, config_entry.name())) {
-            state.hide_context_ =
-                config_entry.context() == LogWatchContext::hide;
+            state.context_ = config_entry.context();
             state.level_ = config_entry.level();
             state.in_config_ = true;
             return true;
@@ -556,7 +557,7 @@ void UpdateStates(StateVector &states, const LogWatchEntryVector &entries,
         }
 
         // not found - attempting to load default value
-        s.hide_context_ = default_entry.context() == LogWatchContext::hide;
+        s.context_ = default_entry.context();
         s.level_ = default_entry.level();
 
         // if default level isn't off, then we set entry as configured

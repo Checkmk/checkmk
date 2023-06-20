@@ -196,13 +196,12 @@ TEST(CvtTest, LogWatchSection) {
 
     ASSERT_TRUE(logwatch[vars::kLogWatchEventLogFile].size() == 4);
     auto logfiles = logwatch[vars::kLogWatchEventLogFile];
-    constexpr provider::RawLogWatchData base[4] = {
-        {true, "application", EventLevels::kCrit,
-         provider::LogWatchContext::with},
-        {true, "system", EventLevels::kWarn, provider::LogWatchContext::hide},
-        {true, "*", EventLevels::kOff, provider::LogWatchContext::with},
+    const provider::RawLogWatchData base[4] = {
+        {true, "application", EventLevels::kCrit, EventContext::with},
+        {true, "system", EventLevels::kWarn, EventContext::hide},
+        {true, "*", EventLevels::kOff, EventContext::with},
         {true, "microsoft-windows-grouppolicy/operational", EventLevels::kWarn,
-         provider::LogWatchContext::with},
+         EventContext::with},
     };
 
     for (int i = 0; i < 4; ++i) {

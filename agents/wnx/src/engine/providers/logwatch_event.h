@@ -32,8 +32,6 @@ struct LogWatchLimits {
     evl::SkipDuplicatedRecords skip;
 };
 
-enum class LogWatchContext { with, hide };
-
 struct State {
     State(std::string name, uint64_t pos, bool new_found)
         : name_(std::move(name)), pos_(pos), presented_(new_found) {
@@ -44,8 +42,8 @@ struct State {
 
     // #IMPORTANT default set of the level and context set MINIMAL
     void setDefaults() {
-        level_ = cfg::EventLevels::kCrit;  // #IMPORTANT
-        hide_context_ = true;              // #IMPORTANT
+        level_ = cfg::EventLevels::kCrit;    // #IMPORTANT
+        context_ = cfg::EventContext::hide;  // #IMPORTANT
     }
     std::string name_;
     uint64_t pos_{0};
@@ -53,7 +51,7 @@ struct State {
     bool in_config_{false};  // config described
 
     cfg::EventLevels level_{cfg::EventLevels::kAll};
-    bool hide_context_{false};
+    cfg::EventContext context_{cfg::EventContext::with};
 };
 
 using StateVector = std::vector<State>;
@@ -63,24 +61,26 @@ public:
     bool loadFromMapNode(const YAML::Node &node);
     bool loadFrom(std::string_view line);
     void init(std::string_view name, std::string_view level_value,
-              LogWatchContext context);
+              cfg::EventContext context);
     LogWatchEntry &withDefault() {
         init("*", ConvertLogWatchLevelToString(cfg::EventLevels::kWarn),
-             LogWatchContext::with);
+             cfg::EventContext::with);
         return *this;
     }
 
     [[nodiscard]] std::string name() const noexcept {
         return loaded_ ? name_ : std::string{};
     }
-    [[nodiscard]] LogWatchContext context() const noexcept { return context_; }
+    [[nodiscard]] cfg::EventContext context() const noexcept {
+        return context_;
+    }
     [[nodiscard]] bool loaded() const noexcept { return loaded_; }
     [[nodiscard]] cfg::EventLevels level() const noexcept { return level_; }
 
 private:
     std::string name_;
     cfg::EventLevels level_{cfg::EventLevels::kOff};
-    LogWatchContext context_{LogWatchContext::hide};
+    cfg::EventContext context_{cfg::EventContext::hide};
     bool loaded_{false};
 };
 
@@ -188,7 +188,7 @@ struct RawLogWatchData {
     bool loaded_;
     std::string_view name_;
     cfg::EventLevels level_;
-    LogWatchContext context_;
+    cfg::EventContext context_;
 };
 
 }  // namespace cma::provider

@@ -70,7 +70,7 @@ bool operator==(const EventLogRecordBase::ptr &lhs,
 ///
 /// returns last scanned pos where processor returns false
 uint64_t PrintEventLog(EventLogBase &log, uint64_t from_pos,
-                       cfg::EventLevels level, bool hide_context,
+                       cfg::EventLevels level, cfg::EventContext context,
                        SkipDuplicatedRecords skip,
                        const EvlProcessor &processor) {
     // we must seek past the previously read event - if there was one
@@ -99,14 +99,14 @@ uint64_t PrintEventLog(EventLogBase &log, uint64_t from_pos,
                 processor(fmt::format(kSkippedMessageFormat, duplicated_count));
                 duplicated_count = 0;
             }
-            auto str = record->stringize(level, hide_context);
+            auto str = record->stringize(level, context);
             if (!str.empty() && !processor(str)) {
                 // processor request to stop scanning
                 break;
             }
             previous = std::move(record);
         } else {
-            auto str = record->stringize(level, hide_context);
+            auto str = record->stringize(level, context);
             if (!str.empty() && !processor(str)) {
                 // processor request to stop scanning
                 break;
@@ -118,10 +118,10 @@ uint64_t PrintEventLog(EventLogBase &log, uint64_t from_pos,
 }
 
 std::string EventLogRecordBase::stringize(cfg::EventLevels required,
-                                          bool hide_trash) const {
+                                          cfg::EventContext context) const {
     // convert UNIX timestamp to local time
     auto ch = getEventSymbol(required);
-    if (hide_trash && ch == '.') {
+    if (context == cfg::EventContext::hide && ch == '.') {
         return {};
     }
 

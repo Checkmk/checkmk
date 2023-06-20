@@ -181,8 +181,11 @@ constexpr std::string_view kMkMsiPathName{"MK_MSI_PATH"};
 
 }  // namespace envs
 
-// internal and stable representation of the [logwatch] event levels
+/// internal and stable representation of the [logwatch] event levels
 enum class EventLevels { kIgnore = -2, kOff = -1, kAll = 0, kWarn, kCrit };
+
+/// display or not event context
+enum class EventContext { with, hide };
 
 // converts from internal and stable representation
 // to key word in logwatch section of the YAML config file

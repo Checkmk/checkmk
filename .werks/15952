@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0p5
+Version: 2.2.0p4
 
 In graph legends and mouse hovers which show the current values at a given point in time, the order
 of the curves was reversed with respect to the graph definition. This affected for example the

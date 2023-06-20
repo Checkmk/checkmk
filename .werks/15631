@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0p5
+Version: 2.2.0p4
 
 Previously, the plugin <tt>bgp_peer</tt> would only discover services for the device Catalyst C8500.
 With this Werk, the support is extended to Cisco devices which implement CISCO-BPG4-MIB.

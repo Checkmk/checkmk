@@ -56,7 +56,6 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     FixedValue,
     Float,
-    ID,
     Integer,
     LDAPDistinguishedName,
     ListOfStrings,
@@ -71,6 +70,7 @@ from cmk.gui.wato.pages.userdb_common import (
     connection_actions,
     get_affected_sites,
     render_connections_page,
+    validate_connection_id,
 )
 
 if cmk_version.is_managed_edition():
@@ -145,13 +145,15 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
         if self._new:
             id_element: DictionaryEntry = (
                 "id",
-                ID(
+                TextInput(
                     title=_("ID"),
                     help=_(
-                        "The ID of the connection must be a unique text, with the same requirements as an user id. "
-                        "It will be used as an internal key when objects refer to the connection."
+                        "The ID of the connection must be a unique text. It will be used as an internal key "
+                        "when objects refer to the connection."
                     ),
+                    allow_empty=False,
                     size=12,
+                    validate=self._validate_ldap_connection_id,
                 ),
             )
         else:
@@ -626,6 +628,9 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
         ]
 
         return other_elements
+
+    def _validate_ldap_connection_id(self, value, varprefix):
+        validate_connection_id(value, varprefix)
 
     def _validate_ldap_connection(self, value, varprefix):
         for role_id, group_specs in value["active_plugins"].get("groups_to_roles", {}).items():

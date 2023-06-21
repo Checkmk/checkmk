@@ -49,6 +49,7 @@ def test_registered_pages() -> None:
         "ajax_switch_help",
         "ajax_ui_theme",
         "ajax_userdb_sync",
+        "ajax_validate_filter",
         "ajax_visual_filter_list_get_choice",
         "ajax_vs_autocomplete",
         "ajax_vs_unit_resolver",

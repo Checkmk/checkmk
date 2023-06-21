@@ -33,6 +33,7 @@ from cmk.gui.plugins.visuals.utils import (
 )
 from cmk.gui.type_defs import Choices, Sequence
 from cmk.gui.utils.labels import encode_label_for_livestatus, Label, LABEL_REGEX
+from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import autocompleter_registry, Labels
 from cmk.gui.watolib.hosts_and_folders import CREHost, folder_tree, Host
 
@@ -80,6 +81,11 @@ def monitored_hostname_autocompleter(value: str, params: dict) -> Choices:
     context["hostregex"] = {"host_regex": value or "."}
     query = livestatus_query_bare_string("host", context, ["host_name"], "reload")
 
+    # In case of user errors occuring within livestatus_query_bare_string() (filter validation) the
+    # livestatus query cannot be run -> return the given value
+    # Rendering of the error msgs is handled in JS
+    if user_errors:
+        return [(value, value)]
     return _sorted_unique_lq(query, 200, value, params)
 
 
@@ -164,8 +170,13 @@ def monitored_service_description_autocompleter(value: str, params: dict) -> Cho
     context.pop("service", None)
     context["serviceregex"] = {"service_regex": value or "."}
     query = livestatus_query_bare_string("service", context, ["service_description"], "reload")
-    result = _sorted_unique_lq(query, 200, value, params)
-    return result
+
+    # In case of user errors occuring within livestatus_query_bare_string() (filter validation) the
+    # livestatus query cannot be run -> return the given value
+    # Rendering of the error msgs is handled in JS
+    if user_errors:
+        return [(value, value)]
+    return _sorted_unique_lq(query, 200, value, params)
 
 
 @autocompleter_registry.register_expression("wato_folder_choices")

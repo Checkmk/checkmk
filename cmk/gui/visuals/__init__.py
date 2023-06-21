@@ -2238,6 +2238,7 @@ def show_filter_form(
     html.final_javascript(
         "cmk.page_menu.register_on_open_handler('popup_filters', cmk.page_menu.on_filter_popup_open);"
         "cmk.page_menu.register_on_close_handler('popup_filters', cmk.page_menu.on_filter_popup_close);"
+        f"cmk.forms.add_filter_form_error_listener('{filter_list_selected_id}');"
     )
 
 

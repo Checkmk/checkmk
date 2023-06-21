@@ -60,7 +60,7 @@ from cmk.gui.plugins.visuals.utils import (
 )
 
 
-class RegExpFilter(InputTextFilter):
+class RegexFilter(InputTextFilter):
     def validate_value(self, value: FilterHTTPVariables) -> None:
         htmlvar = self.htmlvars[0]
         validate_regex(value.get(htmlvar, ""), htmlvar)
@@ -183,7 +183,7 @@ class PageValidateFilter(AjaxPage):
 # submission) and RegexFilter (after form submission). In general we should validate all input - if
 # possible before form submission. That's not yet implemented.
 filter_registry.register(
-    AjaxDropdownFilter(
+    RegexAjaxDropdownFilter(
         title=_l("Hostname (regex)"),
         sort_index=100,
         info="host",
@@ -217,7 +217,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    InputTextFilter(
+    RegexFilter(
         title=_l("Hostalias (regex)"),
         sort_index=102,
         info="host",
@@ -230,7 +230,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    AjaxDropdownFilter(
+    RegexAjaxDropdownFilter(
         title=_l("Service (regex)"),
         sort_index=200,
         info="service",
@@ -263,7 +263,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    RegExpFilter(
+    RegexFilter(
         title=_l("Service alternative display name (regex)"),
         sort_index=202,
         description=_l("Alternative display name of the service, regex match"),
@@ -277,7 +277,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    InputTextFilter(
+    RegexFilter(
         title=_l("Summary (plugin output) (regex)"),
         sort_index=202,
         info="service",
@@ -292,7 +292,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    InputTextFilter(
+    RegexFilter(
         title=_l("Hostname or alias (regex)"),  # HostnameOrAliasQuery implements a regex match
         sort_index=102,
         info="host",
@@ -573,7 +573,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    RegExpFilter(
+    RegexFilter(
         title=_l("Host contact (regex)"),
         sort_index=107,
         info="host",
@@ -597,7 +597,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    RegExpFilter(
+    RegexFilter(
         title=_l("Service contact (regex)"),
         sort_index=207,
         info="service",
@@ -643,7 +643,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    RegExpFilter(
+    RegexFilter(
         title=_l("Host group (regex)"),
         sort_index=101,
         description=_l(
@@ -660,7 +660,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    RegExpFilter(
+    RegexFilter(
         title=_l("Service group (regex)"),
         sort_index=101,
         description=_l("Search field allowing regular expression and partial matches"),
@@ -1208,7 +1208,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    InputTextFilter(
+    RegexFilter(
         title=_l("Comment (regex)"),
         sort_index=258,
         info="comment",
@@ -1221,7 +1221,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    InputTextFilter(
+    RegexFilter(
         title=_l("Author comment (regex)"),
         sort_index=259,
         info="comment",
@@ -1243,7 +1243,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    InputTextFilter(
+    RegexFilter(
         title=_l("Downtime comment (regex)"),
         sort_index=254,
         info="downtime",
@@ -1261,7 +1261,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    InputTextFilter(
+    RegexFilter(
         title=_l("Downtime author (regex)"),
         sort_index=256,
         info="downtime",
@@ -1293,7 +1293,7 @@ filter_registry.register(
 
 
 filter_registry.register(
-    InputTextFilter(
+    RegexFilter(
         title=_l("Log: plugin output (regex)"),
         sort_index=202,
         info="log",
@@ -1305,7 +1305,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    InputTextFilter(
+    RegexFilter(
         title=_l("Log: message type (regex)"),
         sort_index=203,
         info="log",
@@ -1315,7 +1315,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    InputTextFilter(
+    RegexFilter(
         title=_l('Log: state type (DEPRECATED: Use "state information") (regex)'),
         sort_index=204,
         info="log",
@@ -1324,7 +1324,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    InputTextFilter(
+    RegexFilter(
         title=_l("Log: state information (regex)"),
         sort_index=204,
         info="log",
@@ -1356,7 +1356,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    RegExpFilter(
+    RegexFilter(
         title=_l("Log: contact name (regex)"),
         sort_index=261,
         info="log",
@@ -1370,7 +1370,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    RegExpFilter(
+    RegexFilter(
         title=_l("Log: command (regex)"),
         sort_index=262,
         info="log",
@@ -2346,7 +2346,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    InputTextFilter(
+    RegexFilter(
         title=_l("Message/Text of event (regex)"),
         sort_index=201,
         info="event",
@@ -2355,7 +2355,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    InputTextFilter(
+    RegexFilter(
         title=_l("Application / Syslog-Tag (regex)"),
         sort_index=201,
         info="event",
@@ -2367,7 +2367,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    InputTextFilter(
+    RegexFilter(
         title=_l("Contact person (regex)"),
         sort_index=201,
         info="event",
@@ -2376,7 +2376,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    InputTextFilter(
+    RegexFilter(
         title=_l("Comment to the event (regex)"),
         sort_index=201,
         info="event",
@@ -2385,7 +2385,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    RegExpFilter(
+    RegexFilter(
         title=_l("Hostname of original event (regex)"),
         sort_index=201,
         info="event",
@@ -2405,7 +2405,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    InputTextFilter(
+    RegexFilter(
         title=_l("Original IP address of event (regex)"),
         sort_index=201,
         info="event",
@@ -2414,7 +2414,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    InputTextFilter(
+    RegexFilter(
         title=_l("Owner of event (regex)"),
         sort_index=201,
         info="event",
@@ -2423,7 +2423,7 @@ filter_registry.register(
 )
 
 filter_registry.register(
-    InputTextFilter(
+    RegexFilter(
         title=_l("User that performed action (regex)"),
         sort_index=221,
         info="history",

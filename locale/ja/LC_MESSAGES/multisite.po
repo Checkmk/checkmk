@@ -51566,12 +51566,11 @@ msgstr "集計のIDは一意のテキストである必要があります。一�
 
 #, fuzzy
 msgid ""
-"The ID of the connection must be a unique text, with the same requirements "
-"as an user id. It will be used as an internal key when objects refer to the "
-"connection."
+"The ID of the connection must be a unique text. It will be used as an "
+"internal key when objects refer to the connection."
 msgstr ""
-"接続のIDは一意のテキストである必要があります。オブジェクトが接続を参照すると"
-"きに、内部キーとして使用されます。"
+"ジョブのIDは一意のテキストである必要があります。オブジェクトがジョブを参照す"
+"るときに内部キーとして使用されます。"
 
 msgid ""
 "The ID of the job must be a unique text. It will be used as an internal key "
@@ -70675,6 +70674,18 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid ""
+#~| "The ID of the connection must be a unique text. It will be used as an "
+#~| "internal key when objects refer to the connection."
+#~ msgid ""
+#~ "The ID of the connection must be a unique text, with the same "
+#~ "requirements as an user id. It will be used as an internal key when "
+#~ "objects refer to the connection."
+#~ msgstr ""
+#~ "接続のIDは一意のテキストである必要があります。オブジェクトが接続を参照する"
+#~ "ときに、内部キーとして使用されます。"
 
 #, fuzzy, python-format
 #~| msgid "Sorry, you cannot create combined graphs for more than %d objects"

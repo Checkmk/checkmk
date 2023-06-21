@@ -52160,12 +52160,11 @@ msgstr ""
 
 #, fuzzy
 msgid ""
-"The ID of the connection must be a unique text, with the same requirements "
-"as an user id. It will be used as an internal key when objects refer to the "
-"connection."
+"The ID of the connection must be a unique text. It will be used as an "
+"internal key when objects refer to the connection."
 msgstr ""
-"De ID van de verbinding moet een unieke tekst zijn. Het zal worden gebruikt "
-"als een interne sleutel wanneer objecten naar de verbinding verwijzen."
+"De ID van de taak moet een unieke tekst zijn. Het zal worden gebruikt als "
+"een interne sleutel wanneer objecten naar de taak verwijzen."
 
 msgid ""
 "The ID of the job must be a unique text. It will be used as an internal key "
@@ -72074,6 +72073,19 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~| msgid ""
+#~| "The ID of the connection must be a unique text. It will be used as an "
+#~| "internal key when objects refer to the connection."
+#~ msgid ""
+#~ "The ID of the connection must be a unique text, with the same "
+#~ "requirements as an user id. It will be used as an internal key when "
+#~ "objects refer to the connection."
+#~ msgstr ""
+#~ "De ID van de verbinding moet een unieke tekst zijn. Het zal worden "
+#~ "gebruikt als een interne sleutel wanneer objecten naar de verbinding "
+#~ "verwijzen."
 
 #, python-format
 #~ msgid ""

@@ -6,13 +6,7 @@
 
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    get_nic_speed_human_readable,
-    get_rate,
-    LegacyCheckDefinition,
-    RAISE,
-)
+from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition, RAISE
 from cmk.base.check_legacy_includes.netapp_api import (
     get_and_try_cast_to_int,
     netapp_api_parse_lines,
@@ -82,10 +76,10 @@ def check_netapp_api_fcp(item, params, parsed):
 
 def _speed_result(params, fcp_if):
     speed = fcp_if.get("speed")
-    speed_str = None if speed is None else get_nic_speed_human_readable(speed)
+    speed_str = None if speed is None else render.nicspeed(float(speed) / 8.0)
     expected_speed = params.get("speed", params.get("inv_speed"))
     expected_speed_str = (
-        None if expected_speed is None else get_nic_speed_human_readable(expected_speed)
+        None if expected_speed is None else render.nicspeed(float(expected_speed) / 8.0)
     )
 
     if speed is None:

@@ -175,10 +175,6 @@ def get_bytes_human_readable(
     return renderer(bytes_)[:-1] + unit
 
 
-def get_nic_speed_human_readable(bits_per_sec: float | str) -> str:
-    return _render.nicspeed(float(bits_per_sec) / 8)
-
-
 def get_number_with_precision(
     v: float,
     base: object = None,  # for legacy compatibility

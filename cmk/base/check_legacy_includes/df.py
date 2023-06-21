@@ -5,10 +5,9 @@
 
 # pylint: disable=chained-comparison,unused-import
 
-from typing import Any
-
 from cmk.base.api.agent_based.checking_classes import Metric, Result, State
-from cmk.base.check_api import get_bytes_human_readable, get_percent_human_readable
+from cmk.base.check_api import get_bytes_human_readable
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 from cmk.base.plugins.agent_based.utils.df import (  # noqa: F401
     check_filesystem_levels,
     check_inodes,
@@ -171,7 +170,7 @@ def df_check_filesystem_single_coroutine(  # pylint: disable=too-many-branches
     perfdata.append(("fs_size", size_mb, None, None, 0, None))
 
     if show_reserved:
-        reserved_perc_hr = get_percent_human_readable(100.0 * reserved_mb / size_mb)
+        reserved_perc_hr = render.percent(100.0 * reserved_mb / size_mb)
         reserved_hr = get_bytes_human_readable(reserved_mb * 1024**2)
         infotext.append(
             "additionally reserved for root: %s" % reserved_hr  #

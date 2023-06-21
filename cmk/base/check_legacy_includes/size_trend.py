@@ -8,14 +8,8 @@
 import time
 from collections.abc import Callable
 
-from cmk.base.check_api import (
-    get_average,
-    get_bytes_human_readable,
-    get_percent_human_readable,
-    get_rate,
-    RAISE,
-)
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+from cmk.base.check_api import get_average, get_bytes_human_readable, get_rate, RAISE
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 
 # ==================================================================================================
 # THESE FUNCTIONS DEFINED HERE ARE IN THE PROCESS OF OR HAVE ALREADY BEEN MIGRATED TO
@@ -191,8 +185,8 @@ def size_trend(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branc
             problems.append(
                 "growing too fast (warn/crit at %s/%s per %.1f h)(!"
                 % (
-                    get_percent_human_readable(wa_perc),
-                    get_percent_human_readable(cr_perc),
+                    render.percent(wa_perc),
+                    render.percent(cr_perc),
                     range_hours,
                 )
             )
@@ -206,7 +200,7 @@ def size_trend(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branc
         100 * trend / size_mb,
         levels.get("trend_shrinking_perc"),
         range_hours,
-        get_percent_human_readable,
+        render.percent,
     )
     if tmp_state > 0:
         state = max(state, tmp_state)

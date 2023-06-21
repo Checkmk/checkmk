@@ -57,13 +57,6 @@ def test_boundaries(
     "value, dsname, params, kwargs, result",
     [
         (
-            5,
-            "battery",
-            None,
-            {"human_readable_func": check_api.get_percent_human_readable},
-            (0, "5.00%", [("battery", 5, None, None)]),
-        ),
-        (
             6,
             "disk",
             (4, 8),

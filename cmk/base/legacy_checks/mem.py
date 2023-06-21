@@ -13,11 +13,11 @@ from cmk.base.check_api import (
     check_levels,
     get_average,
     get_bytes_human_readable,
-    get_percent_human_readable,
     LegacyCheckDefinition,
 )
 from cmk.base.check_legacy_includes.mem import check_memory_dict, check_memory_element
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 #   .--mem.linux-----------------------------------------------------------.
 #   |                                      _ _                             |
@@ -246,7 +246,7 @@ def _do_averaging(
         "%d min average: %s (%s)"
         % (
             average_horizon_min,
-            get_percent_human_readable(100.0 * used_avg / total),
+            render.percent(100.0 * used_avg / total),
             get_bytes_human_readable(used_avg),
         ),
     )

@@ -7,14 +7,10 @@
 # mypy: disable-error-code="arg-type"
 
 import cmk.base.plugins.agent_based.utils.db
-from cmk.base.check_api import (
-    get_bytes_human_readable,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.db2 import parse_db2_dbs
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 
 # No used space check for Tablsspaces with CONTENTS in ('TEMPORARY','UNDO')
 # It is impossible to check the used space in UNDO and TEMPORARY Tablespaces
@@ -89,14 +85,14 @@ def check_db2_tablespaces(item, params, parsed):
     abs_free = usable - used
 
     state = 0
-    infotext = "%s free" % get_percent_human_readable(perc_free)
+    infotext = "%s free" % render.percent(perc_free)
     if crit is not None and abs_free <= crit:
         state = 2
     elif warn is not None and abs_free <= warn:
         state = 1
     if state:
         if as_perc:
-            value_str = get_percent_human_readable(perc_free)
+            value_str = render.percent(perc_free)
         else:
             value_str = get_bytes_human_readable(abs_free)
         infotext = "only %s left %s" % (value_str, levels_text)

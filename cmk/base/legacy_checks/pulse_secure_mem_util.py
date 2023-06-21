@@ -6,9 +6,9 @@
 from collections.abc import Iterable, Mapping
 
 import cmk.base.plugins.agent_based.utils.pulse_secure as pulse_secure
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 Section = Mapping[str, int]
@@ -39,7 +39,7 @@ def check_pulse_secure_mem(item, params, parsed):
                 metric,
                 params.get(metric),
                 infoname=info_name,
-                human_readable_func=get_percent_human_readable,
+                human_readable_func=render.percent,
             )
 
 

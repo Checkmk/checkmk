@@ -4,12 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import (
     aws_get_bytes_rate_human_readable,
     aws_get_counts_rate_human_readable,
@@ -19,7 +14,7 @@ from cmk.base.check_legacy_includes.aws import (
     inventory_aws_generic,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
 
 
@@ -89,7 +84,7 @@ def check_aws_s3_requests(item, params, metrics):
             requests_perc,
             "%s_perc" % perf_key,
             params.get("%s_perc" % perf_key),
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
             infoname="%s of total requests" % title,
         )
 

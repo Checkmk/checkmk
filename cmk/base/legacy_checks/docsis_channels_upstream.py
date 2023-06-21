@@ -6,9 +6,9 @@
 
 import time
 
-from cmk.base.check_api import get_percent_human_readable, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, OIDEnd, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, OIDEnd, render, SNMPTree
 
 # Old comments:
 # Strange: Channel IDs seem to be not unique. But the second
@@ -146,7 +146,7 @@ def check_docsis_channels_upstream(item, params, parsed):
                 ratio = rates[what] / total_rate  # fixed: true-division
                 perc = 100.0 * ratio
                 warn, crit = params[what]
-                infotext = "%s %s" % (get_percent_human_readable(perc), title)
+                infotext = "%s %s" % (render.percent(perc), title)
 
                 if perc >= crit:
                     state = 2

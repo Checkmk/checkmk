@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
 from cmk.base.plugins.agent_based.utils.tplink import DETECT_TPLINK
 
 
@@ -34,7 +34,7 @@ def check_tplink_mem(_no_item, params, info):
         "mem_used_percent",
         params.get("levels", (None, None)),
         infoname="Usage",
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
     )
 
 

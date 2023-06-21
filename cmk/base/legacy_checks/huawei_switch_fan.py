@@ -6,12 +6,12 @@
 
 import collections
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.huawei_switch import huawei_item_dict_from_entities
 from cmk.base.config import check_info
 
 # mypy: disable-error-code="var-annotated"
-from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, render, SNMPTree
 from cmk.base.plugins.agent_based.utils.huawei import DETECT_HUAWEI_SWITCH
 
 HuaweiFanData = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
@@ -47,9 +47,7 @@ def check_huawei_switch_fan(item, params, parsed):
     if not (item_data := parsed.get(item)):
         return
     levels = params.get("levels", (None, None)) + params.get("levels_lower", (None, None))
-    yield check_levels(
-        item_data.fan_speed, "fan_perc", levels, human_readable_func=get_percent_human_readable
-    )
+    yield check_levels(item_data.fan_speed, "fan_perc", levels, human_readable_func=render.percent)
 
 
 check_info["huawei_switch_fan"] = LegacyCheckDefinition(

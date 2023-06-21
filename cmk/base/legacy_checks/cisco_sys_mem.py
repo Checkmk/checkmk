@@ -7,9 +7,9 @@
 #
 
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree, startswith
 
 cisco_sys_mem_default_levels = (80.0, 90.0)
 
@@ -27,7 +27,7 @@ def check_cisco_sys_mem(_no_item, params, info):
             mem_used_percent,
             "mem_used_percent",
             params,
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
             infoname="Supervisor Memory used",
             boundaries=(0, 100),
         )

@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.base.check_api import check_levels, get_percent_human_readable
-from cmk.base.plugins.agent_based.agent_based_api.v1 import startswith
+from cmk.base.check_api import check_levels
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render, startswith
 
 DETECT = startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.318.1.3")
 
@@ -30,6 +30,6 @@ def check_humidity(humidity, params):
         humidity,
         "humidity",
         levels,
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         boundaries=(0, 100),
     )

@@ -7,13 +7,9 @@
 import time
 from collections.abc import Iterable
 
-from cmk.base.check_api import (
-    check_levels,
-    get_percent_human_readable,
-    get_rate,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines, Section
 
 DiscoveryResult = Iterable[tuple[str, dict]]
@@ -51,7 +47,7 @@ def check_couchbase_nodes_cache(item, params, parsed):
         hit_perc,
         "cache_hit_ratio",
         (None, None) + params.get("cache_hits", (None, None)),
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="Cache hits",
         boundaries=(0, 100),
     )

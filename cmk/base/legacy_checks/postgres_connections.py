@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 from cmk.base.plugins.agent_based.utils import postgres
 
 # OLD FORMAT - with idle filter
@@ -117,7 +117,7 @@ def check_postgres_connections(item, params, parsed):
             used_perc,
             None,
             (warn, crit),
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
             infoname="Used %s percentage" % connection_type,
         )
 

@@ -7,8 +7,9 @@
 import json
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 Section = Mapping[str, float]
 
@@ -37,21 +38,19 @@ def check_cadvisor_cpu(_item, params, parsed):
     cpu_system = parsed["cpu_system"]
     cpu_total = cpu_user + cpu_system
 
-    yield check_levels(
-        cpu_user, "user", None, human_readable_func=get_percent_human_readable, infoname="User"
-    )
+    yield check_levels(cpu_user, "user", None, human_readable_func=render.percent, infoname="User")
     yield check_levels(
         cpu_system,
         "system",
         None,
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="System",
     )
     yield check_levels(
         cpu_total,
         "util",
         params.get("util"),
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="Total CPU",
     )
 

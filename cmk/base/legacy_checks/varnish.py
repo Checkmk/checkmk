@@ -8,14 +8,10 @@
 
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    get_percent_human_readable,
-    get_rate,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 
 # Special thanks to Rene Stolle (r.stolle@funkemedien.de)
@@ -368,7 +364,7 @@ def check_varnish_ratio(_no_item, params, parsed, ratio_keys):
         ratio = 100.0 * reference_value / total
     warn, crit = params["levels_lower"]
     return check_levels(
-        ratio, perf_key, (None, None, warn, crit), human_readable_func=get_percent_human_readable
+        ratio, perf_key, (None, None, warn, crit), human_readable_func=render.percent
     )
 
 
@@ -678,7 +674,7 @@ def check_varnish_worker_thread_ratio(_no_item, params, parsed):
         ratio,
         "varnish_worker_thread_ratio",
         (None, None, warn, crit),
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
     )
 
 

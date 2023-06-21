@@ -6,10 +6,11 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_list, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.check_legacy_includes.ibm_svc import parse_ibm_svc_with_header
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 # Example output from agent:
 # <<<ibm_svc_mdiskgrp:sep(58)>>>
@@ -127,7 +128,7 @@ def check_ibm_svc_mdiskgrp(item, params, parsed):
         return  # provisioning does not make sense when capacity is 0
 
     provisioning = 100.0 * virtual_capacity / capacity
-    infotext = "Provisioning: %s" % get_percent_human_readable(provisioning)
+    infotext = "Provisioning: %s" % render.percent(provisioning)
     state = 0
     if "provisioning_levels" in params:
         warn, crit = params["provisioning_levels"]
@@ -137,8 +138,8 @@ def check_ibm_svc_mdiskgrp(item, params, parsed):
             state = 1
         if state:
             infotext += " (warn/crit at %s/%s)" % (
-                get_percent_human_readable(warn),
-                get_percent_human_readable(crit),
+                render.percent(warn),
+                render.percent(crit),
             )
         warn_mb = capacity * mb * warn / 100
         crit_mb = capacity * mb * crit / 100

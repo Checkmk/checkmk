@@ -4,14 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import (
-    check_levels,
-    get_percent_human_readable,
-    get_rate,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 
 
 def inventory_win_cpuusage(info):
@@ -61,7 +56,7 @@ def check_win_cpuusage(item, params, info):
                 used_perc,
                 "cpuusage",
                 levels,
-                human_readable_func=get_percent_human_readable,
+                human_readable_func=render.percent,
                 infoname="Used%s" % num_txt,
                 boundaries=(0, 100),
             )

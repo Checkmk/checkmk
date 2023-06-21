@@ -6,17 +6,13 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import (
-    check_levels,
-    get_bytes_human_readable,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.jolokia import (
     jolokia_mbean_attribute,
     parse_jolokia_json_output,
 )
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 
 def parse_jolokia_jvm_memory(info):
@@ -49,7 +45,7 @@ def _jolokia_check_abs_and_perc(mem_type, value, value_max, params):
         perc_val,
         None,
         params.get("perc_%s" % mem_type),
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         boundaries=(0, 100),
     )
 

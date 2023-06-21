@@ -6,14 +6,10 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import (
-    check_levels,
-    get_bytes_human_readable,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.df import df_check_filesystem_single, FILESYSTEM_DEFAULT_PARAMS
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 # Example output from agent:
 # [zmucvm99-lds]
@@ -79,13 +75,13 @@ def check_esx_vsphere_datastores(item, params, parsed):
         prov_percent,
         None,
         (warn, crit),
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="Provisioning",
     )
 
     if prov_bytes > size_bytes:
         prov_used = used_bytes / prov_bytes * 100.0
-        yield 0, f"{get_percent_human_readable(prov_used)} provisioned space used"
+        yield 0, f"{render.percent(prov_used)} provisioned space used"
 
     if warn is not None:
         # convert percent to abs MiB

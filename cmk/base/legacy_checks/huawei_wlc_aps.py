@@ -6,10 +6,10 @@
 
 from typing import NamedTuple
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, render, SNMPTree
 
 
 class StateTemplate(NamedTuple):
@@ -143,7 +143,7 @@ def check_huawei_wlc_aps_status(item, params, parsed):
             ch_usage,
             "channel_utilization_%s" % metric,
             ch_usage_lev,
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
             infoname="Channel usage [%s]" % band,
         )
 
@@ -169,7 +169,7 @@ def check_huawei_wlc_aps_cpu(item, params, parsed):
     lev = params["levels"]
     val = data["cpu_percent"]
     yield check_levels(
-        val, "cpu_percent", lev, human_readable_func=get_percent_human_readable, infoname="Usage"
+        val, "cpu_percent", lev, human_readable_func=render.percent, infoname="Usage"
     )
 
 
@@ -197,7 +197,7 @@ def check_huawei_wlc_aps_mem(item, params, parsed):
         val,
         "mem_used_percent",
         lev,
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="Used",
     )
 

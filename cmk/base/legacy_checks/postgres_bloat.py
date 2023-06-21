@@ -6,13 +6,9 @@
 
 # mypy: disable-error-code="index"
 
-from cmk.base.check_api import (
-    get_bytes_human_readable,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 from cmk.base.plugins.agent_based.utils import postgres
 
 # <<<postgres_bloat>>>
@@ -130,7 +126,7 @@ def check_postgres_bloat(item, params, parsed):  # pylint: disable=too-many-bran
             yield 0, "Maximum %s bloat at %s: %s" % (
                 what,
                 perc_max["tablename"],
-                get_percent_human_readable(float(perc_max["%sbloat" % what[0]])),
+                render.percent(float(perc_max["%sbloat" % what[0]])),
             )
             yield 0, "Maximum wasted %sspace at %s: %s" % (
                 what,

@@ -4,9 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, contains, exists, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    all_of,
+    contains,
+    exists,
+    render,
+    SNMPTree,
+)
 
 fortigate_memory_default_levels = (70, 80)
 
@@ -52,7 +58,7 @@ def check_fortigate_memory(item, params, current_reading):
         "mem_usage",
         (warn, crit),
         infoname="Usage",
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
     )
 
 

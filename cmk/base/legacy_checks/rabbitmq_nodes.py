@@ -27,12 +27,7 @@
 import json
 from collections.abc import Callable, Iterable, Mapping, Sequence
 
-from cmk.base.check_api import (
-    check_levels,
-    get_bytes_human_readable,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_element
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 from cmk.base.config import check_info
@@ -383,8 +378,8 @@ def _handle_output(params, value, total, info_text, perf_key):
         warn_abs: int | None = int((warn / 100.0) * total)
         crit_abs: int | None = int((crit / 100.0) * total)
         level_msg = " (warn/crit at %s/%s)" % (
-            get_percent_human_readable(warn),
-            get_percent_human_readable(crit),
+            render.percent(warn),
+            render.percent(crit),
         )
     else:
         value_check = value
@@ -402,7 +397,7 @@ def _handle_output(params, value, total, info_text, perf_key):
         info_text,
         value,
         total,
-        get_percent_human_readable(perc_value),
+        render.percent(perc_value),
     )
 
     if state:

@@ -4,18 +4,13 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import (
     aws_get_float_human_readable,
     inventory_aws_generic_single,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
 
 
@@ -113,7 +108,7 @@ def _check_aws_dynamodb_capacity(params, parsed, capacity_units_to_check):
             metric_name + "_perc",
             _capacity_params_to_levels(params_avg),
             infoname="Usage",
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
         )
 
     for result in _check_capacity_minmax_metrics(params, parsed, capacity_units_to_check):

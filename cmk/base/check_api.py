@@ -179,13 +179,6 @@ def get_nic_speed_human_readable(bits_per_sec: float | str) -> str:
     return _render.nicspeed(float(bits_per_sec) / 8)
 
 
-def get_percent_human_readable(
-    percentage: float,
-    scientific_notation: object = None,  # for legacy compatibility
-) -> str:
-    return _render.percent(percentage)
-
-
 def get_number_with_precision(
     v: float,
     base: object = None,  # for legacy compatibility

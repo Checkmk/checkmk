@@ -9,12 +9,7 @@
 import time
 from collections.abc import Callable
 
-from cmk.base.check_api import (
-    check_levels,
-    get_percent_human_readable,
-    get_rate,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
 from cmk.base.plugins.agent_based.utils.detection import DETECT_NEVER
@@ -194,7 +189,7 @@ def check_checkpoint_vsx_connections(item, params, parsed):
             100.0 * conn_total / conn_limit,
             None,
             params.get("levels_perc"),
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
             infoname="Used percentage",
         )
 

@@ -4,10 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.check_legacy_includes.transforms import transform_cpu_iowait
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 # Example output from agent:
 # <<<vms_cpu>>>
@@ -41,17 +42,15 @@ def check_vms_cpu(_no_item, params, parsed):
     util = 100.0 - parsed["idle"]
     system = util - user - wait
 
+    yield check_levels(user, "user", None, human_readable_func=render.percent, infoname="User")
     yield check_levels(
-        user, "user", None, human_readable_func=get_percent_human_readable, infoname="User"
-    )
-    yield check_levels(
-        system, "system", None, human_readable_func=get_percent_human_readable, infoname="System"
+        system, "system", None, human_readable_func=render.percent, infoname="System"
     )
     yield check_levels(
         wait,
         "wait",
         params.get("iowait"),
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="Wait",
     )
 

@@ -6,9 +6,9 @@
 from collections.abc import Iterable, Mapping
 
 import cmk.base.plugins.agent_based.utils.pulse_secure as pulse_secure
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 Section = Mapping[str, int]
@@ -34,7 +34,7 @@ def check_pulse_secure_disk_util(item, params, parsed):
         METRIC_PULSE_SECURE_DISK,
         params.get("upper_levels"),
         infoname="Percentage of disk space used",
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
     )
     return None
 

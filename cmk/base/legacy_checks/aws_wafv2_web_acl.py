@@ -6,13 +6,13 @@
 
 import re
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.aws import (
     aws_get_counts_rate_human_readable,
     inventory_aws_generic_single,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
 
 
@@ -63,7 +63,7 @@ def check_aws_wafv2_web_acl(item, params, parsed):
             "aws_wafv2_%s_perc" % "_".join(metric_id_split),
             params.get("%s_perc" % "_".join(metric_id_split)),
             infoname="Percentage %s" % " ".join(metric_id_split),
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
         )
 
 

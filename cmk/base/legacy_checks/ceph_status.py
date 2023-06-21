@@ -11,12 +11,12 @@ from cmk.base.check_api import (
     check_levels,
     get_age_human_readable,
     get_average,
-    get_percent_human_readable,
     get_rate,
     LegacyCheckDefinition,
     state_markers,
 )
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 
 def parse_ceph_status(info):
@@ -148,7 +148,7 @@ def check_ceph_status_osds(_no_item, params, parsed):
         state = 0
         value = num_osds - data[ds]
         value_perc = 100 * float(value) / num_osds
-        infotext = "%s: %s, %s" % (title, value, get_percent_human_readable(value_perc))
+        infotext = "%s: %s, %s" % (title, value, render.percent(value_perc))
         if params.get(param_key):
             warn, crit = params[param_key]
             if value_perc >= crit:
@@ -157,8 +157,8 @@ def check_ceph_status_osds(_no_item, params, parsed):
                 state = 1
             if state > 0:
                 infotext += " (warn/crit at %s/%s)" % (
-                    get_percent_human_readable(warn),
-                    get_percent_human_readable(crit),
+                    render.percent(warn),
+                    render.percent(crit),
                 )
 
         yield state, infotext

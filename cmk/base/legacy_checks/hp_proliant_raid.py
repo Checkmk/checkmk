@@ -8,13 +8,9 @@
 
 import typing
 
-from cmk.base.check_api import (
-    get_bytes_human_readable,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
 from cmk.base.plugins.agent_based.utils.hp_proliant import DETECT
 
 
@@ -87,7 +83,7 @@ def check_hp_proliant_raid(item, _no_params, parsed):
         yield 0, "Rebuild: undetermined"
         return
 
-    yield 0, f"Rebuild: {get_percent_human_readable(raid_stats.rebuild_percent)}"
+    yield 0, f"Rebuild: {render.percent(raid_stats.rebuild_percent)}"
 
 
 check_info["hp_proliant_raid"] = LegacyCheckDefinition(

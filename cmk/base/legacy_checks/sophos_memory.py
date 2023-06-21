@@ -4,9 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
 from cmk.base.plugins.agent_based.utils.sophos import DETECT_SOPHOS
 
 
@@ -23,7 +23,7 @@ def check_sophos_memory(_item, params, parsed):
         "memory_util",
         params.get("memory_levels", (None, None)),
         infoname="Usage",
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
     )
 
 

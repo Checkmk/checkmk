@@ -13,13 +13,9 @@
 
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    get_percent_human_readable,
-    get_rate,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 
 def inventory_mongodb_connections(info):
@@ -49,7 +45,7 @@ def check_mongodb_connections(item, params, info):
         used_perc,
         None,
         params.get("levels_perc"),
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="Used percentage",
     )
 

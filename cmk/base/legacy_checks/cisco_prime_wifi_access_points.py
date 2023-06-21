@@ -12,9 +12,10 @@ see https://solutionpartner.cisco.com/media/prime-infrastructure/api-reference/
 import collections
 from collections.abc import Iterable, Mapping
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cisco_prime import parse_cisco_prime
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 Section = Mapping
@@ -39,7 +40,7 @@ def check_cisco_prime_wifi_access_points(item, params, parsed):
         critical_percent,
         "ap_devices_percent_unhealthy",
         params.get("levels", (None, None)),
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="Percent Critical",
     )
     for k, v in counts.items():

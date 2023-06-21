@@ -12,10 +12,9 @@ from cmk.base.check_api import (
     get_age_human_readable,
     get_average,
     get_item_state,
-    get_percent_human_readable,
     set_item_state,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 
 # Common file for all (modern) checks that check CPU utilization (not load!)
 
@@ -94,7 +93,7 @@ def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
             util_avg,
             "util_average",
             levels,
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
             infoname="Total CPU (%dmin average)" % params["average"],
         )
     else:
@@ -102,7 +101,7 @@ def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
             util,
             "util",
             levels,
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
             infoname="Total CPU",
         )
 
@@ -152,21 +151,19 @@ def check_cpu_util_unix(  # type: ignore[no-untyped-def]
         guest_perc = values.guest
         util_total_perc = values.util_total
 
-    yield check_levels(
-        user_perc, "user", None, human_readable_func=get_percent_human_readable, infoname="User"
-    )
+    yield check_levels(user_perc, "user", None, human_readable_func=render.percent, infoname="User")
     yield check_levels(
         system_perc,
         "system",
         None,
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="System",
     )
     yield check_levels(
         wait_perc,
         "wait",
         params.get("iowait"),
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="Wait",
     )
 
@@ -179,7 +176,7 @@ def check_cpu_util_unix(  # type: ignore[no-untyped-def]
             steal_perc,
             "steal",
             params.get("steal"),
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
             infoname="Steal",
         )
 
@@ -188,7 +185,7 @@ def check_cpu_util_unix(  # type: ignore[no-untyped-def]
             guest_perc,
             "guest",
             None,
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
             infoname="Guest",
         )
 
@@ -211,7 +208,7 @@ def _check_single_core_util(util, metric, levels, infoname):
         util,
         metric,
         levels,
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname=infoname,
     )
     if not state:

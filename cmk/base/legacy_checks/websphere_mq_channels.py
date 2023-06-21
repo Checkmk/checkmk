@@ -17,8 +17,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 
 def parse_websphere_mq_channels(info):
@@ -89,7 +90,7 @@ def check_websphere_mq_channels(item, params, parsed):
         if params.get("message_count_perc") and max_messages > 0:
             warn, crit = params["message_count_perc"]
             messages_perc = 1.0 * messages / max_messages
-            infotext = get_percent_human_readable(messages_perc)
+            infotext = render.percent(messages_perc)
             state = 0
 
             if messages_perc >= crit:
@@ -98,8 +99,8 @@ def check_websphere_mq_channels(item, params, parsed):
                 state = 1
             if state > 0:
                 infotext += " (warn/crit at %s/%s)" % (
-                    get_percent_human_readable(warn),
-                    get_percent_human_readable(crit),
+                    render.percent(warn),
+                    render.percent(crit),
                 )
 
             yield state, infotext

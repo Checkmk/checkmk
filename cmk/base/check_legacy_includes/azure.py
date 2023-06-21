@@ -7,12 +7,7 @@ import functools
 import json  # pylint: disable=unused-import  # noqa: F401
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    get_bytes_human_readable,
-    get_percent_human_readable,
-    get_rate,
-)
+from cmk.base.check_api import check_levels, get_bytes_human_readable, get_rate
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 from cmk.base.plugins.agent_based.utils.azure import (  # pylint: disable=unused-import  # noqa: F401
     AZURE_AGENT_SEPARATOR,
@@ -22,7 +17,7 @@ from cmk.base.plugins.agent_based.utils.azure import (  # pylint: disable=unused
 
 _AZURE_METRIC_FMT = {
     "count": lambda n: "%d" % n,
-    "percent": get_percent_human_readable,
+    "percent": render.percent,
     "bytes": get_bytes_human_readable,
     "bytes_per_second": render.iobandwidth,
     "seconds": lambda s: "%.2f s" % s,

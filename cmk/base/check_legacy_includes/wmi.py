@@ -6,13 +6,8 @@
 from collections.abc import Callable, Generator, Iterable
 from math import ceil
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    get_percent_human_readable,
-    get_rate,
-)
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+from cmk.base.check_api import check_levels, get_age_human_readable, get_rate
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 from cmk.base.plugins.agent_based.utils.wmi import get_wmi_time
 from cmk.base.plugins.agent_based.utils.wmi import parse_wmi_table as parse_wmi_table_migrated
 from cmk.base.plugins.agent_based.utils.wmi import (
@@ -373,7 +368,7 @@ def wmi_yield_raw_fraction(  # type: ignore[no-untyped-def]
         perfvar,
         get_levels_quadruple(levels),
         infoname=infoname,
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         boundaries=(0, 100),
     )
 

@@ -20,8 +20,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 
 def parse_msoffice_licenses(info):
@@ -79,7 +80,7 @@ def check_msoffice_licenses(item, params, parsed):
             usage,
             "license_percentage",
             (warn_perc, crit_perc),
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
             infoname="Usage",
             boundaries=(0, 100),
         )

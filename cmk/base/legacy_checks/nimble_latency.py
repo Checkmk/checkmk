@@ -8,9 +8,9 @@
 
 import collections
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree, startswith
 
 # Default levels: issue a WARN/CRIT if 1%/2% of read or write IO
 # operations have a latency of 10-20 ms or above.
@@ -91,7 +91,7 @@ def _check_nimble_latency(item, params, data, ty):
                 value=percent_value,
                 dsname=metric_name,
                 params=None,
-                human_readable_func=get_percent_human_readable,
+                human_readable_func=render.percent,
                 infoname=title,
             )
         )
@@ -100,7 +100,7 @@ def _check_nimble_latency(item, params, data, ty):
         value=running_total_percent,
         dsname=None,
         params=params[ty],
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="At or above %s" % ty_data["ranges"][params["range_reference"]][0],
     )
 

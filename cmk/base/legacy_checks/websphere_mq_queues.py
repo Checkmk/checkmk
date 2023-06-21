@@ -38,14 +38,9 @@
 
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    get_percent_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 
 websphere_mq_queues_default_levels = {
     "message_count": (1000, 1200),
@@ -121,7 +116,7 @@ def check_websphere_mq_queues(item, params, parsed):
             used_perc,
             None,
             params.get("message_count_perc", (None, None)),
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
             infoname="Of max. %d messages" % max_depth,
         )
 

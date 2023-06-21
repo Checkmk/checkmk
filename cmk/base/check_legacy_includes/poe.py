@@ -6,7 +6,8 @@
 import enum
 from typing import NamedTuple
 
-from cmk.base.check_api import check_levels, get_percent_human_readable
+from cmk.base.check_api import check_levels
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 poe_default_levels = (90.0, 95.0)
 
@@ -52,7 +53,7 @@ def check_poe_data(params, poe_data):
             poe_used_percentage,
             "power_usage_percentage",
             params.get("levels", poe_default_levels),
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
             infoname=f"POE usage ({poe_data.poe_used}W/{poe_data.poe_max}W): ",
         )
 

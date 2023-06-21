@@ -8,8 +8,9 @@
 
 import collections
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 LvmLvsEntry = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
     "LvmLvsEntry", ["data", "meta"]
@@ -40,14 +41,14 @@ def check_lvm_lvs(item, params, parsed):
         entry.data,
         "data_usage",
         params["levels_data"],
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="Data usage",
     )
     yield check_levels(
         entry.meta,
         "meta_usage",
         params["levels_meta"],
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="Meta usage",
     )
 

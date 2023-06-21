@@ -10,10 +10,10 @@ from cmk.base.check_api import (
     check_levels,
     get_age_human_readable,
     get_bytes_human_readable,
-    get_percent_human_readable,
     LegacyCheckDefinition,
 )
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 
 def parse_emcvnx_storage_pools(info):
@@ -105,7 +105,7 @@ def check_emcvnx_storage_pools(item, params, parsed):
         )
 
         state = 0
-        infotext = "Percent full: %s" % get_percent_human_readable(percent_full)
+        infotext = "Percent full: %s" % render.percent(percent_full)
         if "percent_full" in params:
             perc_full_warn, perc_full_crit = params["percent_full"]
             if percent_full >= perc_full_crit:
@@ -123,7 +123,7 @@ def check_emcvnx_storage_pools(item, params, parsed):
             "[Virt. capacity] Percent subscribed: %s, Oversubscribed by: %s, "
             + "Total subscribed capacity: %s"
         ) % (
-            get_percent_human_readable(percent_subscribed),
+            render.percent(percent_subscribed),
             get_bytes_human_readable(over_subscribed),
             get_bytes_human_readable(total_subscribed_capacity),
         ), [
@@ -299,7 +299,7 @@ def check_emcvnx_storage_pools_tieringtypes(item, params, parsed):
             "emcvnx_perc_subscribed",
             None,
             infoname="Percent subscribed",
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
         )
 
     for direction in ("for Higher", "for Lower", "Within"):
@@ -360,7 +360,7 @@ def check_emcvnx_storage_pools_deduplication(item, _no_params, parsed):
         data,
         "Deduplication Percent Completed",
         "emcvnx_dedupl_perc_completed",
-        format_func=get_percent_human_readable,
+        format_func=render.percent,
         factor=1.0,
     )
     yield 0, "Percent completed: %s" % txt, perf

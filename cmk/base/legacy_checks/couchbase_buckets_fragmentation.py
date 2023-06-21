@@ -6,8 +6,9 @@
 
 from collections.abc import Iterable
 
-from cmk.base.check_api import check_levels, get_percent_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines, Section
 
 DiscoveryResult = Iterable[tuple[str, dict]]
@@ -27,7 +28,7 @@ def check_couchbase_buckets_fragmentation(item, params, parsed):
             "docs_fragmentation",
             params.get("docs"),
             infoname="Documents fragmentation",
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
         )
 
     views_fragmentation = data.get("couch_views_fragmentation")
@@ -37,7 +38,7 @@ def check_couchbase_buckets_fragmentation(item, params, parsed):
             "views_fragmentation",
             params.get("views"),
             infoname="Views fragmentation",
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
         )
 
 

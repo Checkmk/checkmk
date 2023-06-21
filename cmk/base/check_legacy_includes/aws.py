@@ -11,7 +11,6 @@ import cmk.utils.aws_constants as agent_aws_types
 from cmk.base.check_api import (
     check_levels,
     get_number_with_precision,
-    get_percent_human_readable,
     ServiceCheckResult,
     state_markers,
 )
@@ -108,7 +107,7 @@ def check_aws_limits(aws_service, params, parsed_region_data):
             100.0 * amount / limit_ref,
             None,
             (warn, crit),
-            human_readable_func=get_percent_human_readable,
+            human_readable_func=render.percent,
             infoname="Usage",
         )
 
@@ -165,7 +164,7 @@ def check_aws_error_rate(
         errors_perc,
         metric_name_perc,
         levels,
-        human_readable_func=get_percent_human_readable,
+        human_readable_func=render.percent,
         infoname="%s of total requests" % display_text,
     )
 

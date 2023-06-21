@@ -8,12 +8,7 @@ from collections.abc import Callable, Iterable
 
 import cmk.utils.aws_constants as agent_aws_types
 
-from cmk.base.check_api import (
-    check_levels,
-    get_number_with_precision,
-    ServiceCheckResult,
-    state_markers,
-)
+from cmk.base.check_api import check_levels, ServiceCheckResult, state_markers
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
 from cmk.base.plugins.agent_based.utils import aws
 
@@ -126,8 +121,9 @@ def check_aws_limits(aws_service, params, parsed_region_data):
         yield 0, "\n%s" % "\n".join(sorted(long_output))
 
 
-def aws_get_float_human_readable(f, unit=""):
-    return get_number_with_precision(f, unit=unit, precision=3)
+def aws_get_float_human_readable(value: float, unit: str = "") -> str:
+    value_str = "%.3f" % value
+    return f"{value_str} {unit}" if unit else value_str
 
 
 def aws_get_counts_rate_human_readable(rate):

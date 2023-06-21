@@ -841,50 +841,51 @@ def _encode_as_removed(value: SDValue) -> tuple[SDValue, None]:
     return (value, None)
 
 
-class ComparedDictResult(NamedTuple):
-    result_dict: Mapping[SDKey, tuple[SDValue, SDValue]]
+@dataclass(frozen=True, kw_only=True)
+class _DeltaDict:
+    result: Mapping[SDKey, tuple[SDValue, SDValue]]
     has_changes: bool
 
+    @classmethod
+    def compare(
+        cls, *, left: Mapping[SDKey, SDValue], right: Mapping[SDKey, SDValue], keep_identical: bool
+    ) -> Self:
+        """
+        Format of compared entries:
+          new:          {k: (None, new_value), ...}
+          changed:      {k: (old_value, new_value), ...}
+          removed:      {k: (old_value, None), ...}
+          identical:    {k: (value, value), ...}
+        """
+        compared_keys = _DictKeys.compare(left=set(left), right=set(right))
+        compared_dict: dict[SDKey, tuple[SDValue, SDValue]] = {}
 
-def _compare_dicts(
-    *, left: Mapping[SDKey, SDValue], right: Mapping[SDKey, SDValue], keep_identical: bool
-) -> ComparedDictResult:
-    """
-    Format of compared entries:
-      new:          {k: (None, new_value), ...}
-      changed:      {k: (old_value, new_value), ...}
-      removed:      {k: (old_value, None), ...}
-      identical:    {k: (value, value), ...}
-    """
-    compared_keys = _DictKeys.compare(left=set(left), right=set(right))
-    compared_dict: dict[SDKey, tuple[SDValue, SDValue]] = {}
+        has_changes = False
+        for key in compared_keys.both:
+            if (new_value := right[key]) != (old_value := left[key]):
+                compared_dict.setdefault(key, (old_value, new_value))
+                has_changes = True
+            elif keep_identical:
+                compared_dict.setdefault(key, (old_value, old_value))
 
-    has_changes = False
-    for key in compared_keys.both:
-        if (new_value := right[key]) != (old_value := left[key]):
-            compared_dict.setdefault(key, (old_value, new_value))
-            has_changes = True
-        elif keep_identical:
-            compared_dict.setdefault(key, (old_value, old_value))
+        compared_dict.update({k: _encode_as_new(right[k]) for k in compared_keys.only_new})
+        compared_dict.update({k: _encode_as_removed(left[k]) for k in compared_keys.only_old})
 
-    compared_dict.update({k: _encode_as_new(right[k]) for k in compared_keys.only_new})
-    compared_dict.update({k: _encode_as_removed(left[k]) for k in compared_keys.only_old})
-
-    return ComparedDictResult(
-        result_dict=compared_dict,
-        has_changes=bool(has_changes or compared_keys.only_new or compared_keys.only_old),
-    )
+        return cls(
+            result=compared_dict,
+            has_changes=bool(has_changes or compared_keys.only_new or compared_keys.only_old),
+        )
 
 
 def _compare_attributes(
     left: ImmutableAttributes, right: ImmutableAttributes
 ) -> ImmutableDeltaAttributes:
     return ImmutableDeltaAttributes(
-        pairs=_compare_dicts(
+        pairs=_DeltaDict.compare(
             left=right.pairs,
             right=left.pairs,
             keep_identical=False,
-        ).result_dict,
+        ).result,
     )
 
 
@@ -905,13 +906,13 @@ def _compare_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableDel
         # If the version of a package (below "Software > Packages") has changed from 1.0 to 2.0
         # then it would be very annoying if the rest of the row is not shown.
         if (
-            compared_dict_result := _compare_dicts(
+            compared_dict_result := _DeltaDict.compare(
                 left=right.rows_by_ident[ident],
                 right=left.rows_by_ident[ident],
                 keep_identical=True,
             )
         ).has_changes:
-            delta_rows.append(compared_dict_result.result_dict)
+            delta_rows.append(compared_dict_result.result)
 
     for ident in compared_row_idents.only_new:
         delta_rows.append({k: _encode_as_new(v) for k, v in left.rows_by_ident[ident].items()})

@@ -1576,12 +1576,16 @@ class html(ABCHTMLGenerator):
     def show_user_errors(self) -> None:
         """Show all previously created user errors"""
         if user_errors:
-            self.show_error(
-                self.render_br().join(
-                    escaping.escape_to_html_permissive(s, escape_links=False)
-                    for s in user_errors.values()
-                )
+            self.write_html(self.render_user_errors())
+
+    def render_user_errors(self) -> HTML:
+        """Render all previously created user errors"""
+        return self.render_error(
+            self.render_br().join(
+                escaping.escape_to_html_permissive(s, escape_links=False)
+                for s in user_errors.values()
             )
+        )
 
     # TODO: Try and thin out this method's list of parameters - remove unused ones
     def text_input(

@@ -997,3 +997,40 @@ export function fetch_ca_from_server(varprefix) {
         }
     );
 }
+
+export function init_on_change_validation(varname, filter_ident) {
+    const select = document.getElementById(varname);
+    if (!select) return;
+
+    $(select).on("change", () => {
+        const request = {
+            filter_ident: filter_ident,
+            value: select.value,
+            varname: varname,
+        };
+        const post_data = "request=" + encodeURIComponent(JSON.stringify(request));
+        ajax.call_ajax("ajax_validate_filter.py", {
+            method: "POST",
+            post_data: post_data,
+            handler_data: {select: select},
+            response_handler: (handler_data, ajax_response) => {
+                const resp = JSON.parse(ajax_response);
+                const parent = handler_data.select.parentElement;
+
+                // Remove old error msgs
+                const errors = parent.getElementsByClassName("error");
+                for (const e of errors) {
+                    e.remove();
+                }
+
+                // Show current error
+                const error_html = resp.result.error_html;
+                if (error_html) {
+                    const error_div = document.createElement("div");
+                    parent.insertBefore(error_div, select);
+                    error_div.outerHTML = resp.result.error_html;
+                }
+            },
+        });
+    });
+}

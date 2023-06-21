@@ -17,7 +17,7 @@ import cmk.gui.mkeventd as mkeventd
 import cmk.gui.sites as sites
 import cmk.gui.watolib as watolib
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.globals import config
+from cmk.gui.globals import config, user_errors
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, page_registry
 from cmk.gui.plugins.metrics.utils import (
@@ -80,19 +80,26 @@ def _matches_id_or_title(ident: str, choice: tuple[Optional[str], str]) -> bool:
 @autocompleter_registry.register_expression("monitored_hostname")
 def monitored_hostname_autocompleter(value: str, params: Dict) -> Choices:
     """Return the matching list of dropdown choices
-    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+    Called by the webservice with the current input field value and the completions_params to get the list of choices
+    """
     context = params.get("context", {})
     context.pop("host", None)
     context["hostregex"] = {"host_regex": value or "."}
     query = livestatus_query_bare_string("host", context, ["host_name"], "reload")
 
+    # In case of user errors occuring within livestatus_query_bare_string() (filter validation) the
+    # livestatus query cannot be run -> return the given value
+    # Rendering of the error msgs is handled in JS
+    if user_errors:
+        return [(value, value)]
     return _sorted_unique_lq(query, 200, value, params)
 
 
 @autocompleter_registry.register_expression("config_hostname")
 def config_hostname_autocompleter(value: str, params: Dict) -> Choices:
     """Return the matching list of dropdown choices
-    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+    Called by the webservice with the current input field value and the completions_params to get the list of choices
+    """
     all_hosts: Dict[str, watolib.CREHost] = watolib.Host.all()
     match_pattern = re.compile(value, re.IGNORECASE)
     match_list: Choices = []
@@ -109,7 +116,8 @@ def config_hostname_autocompleter(value: str, params: Dict) -> Choices:
 @autocompleter_registry.register_expression("sites")
 def sites_autocompleter(value: str, params: Dict) -> Choices:
     """Return the matching list of dropdown choices
-    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+    Called by the webservice with the current input field value and the completions_params to get the list of choices
+    """
 
     choices: Choices = sorted(
         (v for v in sites_options() if _matches_id_or_title(value, v)),
@@ -126,7 +134,8 @@ def sites_autocompleter(value: str, params: Dict) -> Choices:
 @autocompleter_registry.register_expression("allgroups")
 def hostgroup_autocompleter(value: str, params: Dict) -> Choices:
     """Return the matching list of dropdown choices
-    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+    Called by the webservice with the current input field value and the completions_params to get the list of choices
+    """
     group_type = params["group_type"]
     choices: Choices = sorted(
         (v for v in sites.all_groups(group_type) if _matches_id_or_title(value, v)),
@@ -142,7 +151,8 @@ def hostgroup_autocompleter(value: str, params: Dict) -> Choices:
 @autocompleter_registry.register_expression("check_cmd")
 def check_command_autocompleter(value: str, params: Dict) -> Choices:
     """Return the matching list of dropdown choices
-    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+    Called by the webservice with the current input field value and the completions_params to get the list of choices
+    """
     choices: Choices = [
         (x, x)
         for x in sites.live().query_column_unique("GET commands\nCache: reload\nColumns: name\n")
@@ -155,7 +165,8 @@ def check_command_autocompleter(value: str, params: Dict) -> Choices:
 @autocompleter_registry.register_expression("service_levels")
 def service_levels_autocompleter(value: str, params: Dict) -> Choices:
     """Return the matching list of dropdown choices
-    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+    Called by the webservice with the current input field value and the completions_params to get the list of choices
+    """
     choices: Choices = mkeventd.service_levels()
     empty_choices: Choices = [("", "")]
     return empty_choices + _filter_choices(value, choices)
@@ -164,7 +175,8 @@ def service_levels_autocompleter(value: str, params: Dict) -> Choices:
 @autocompleter_registry.register_expression("syslog_facilities")
 def syslog_facilities_autocompleter(value: str, params: Dict) -> Choices:
     """Return the matching list of dropdown choices
-    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+    Called by the webservice with the current input field value and the completions_params to get the list of choices
+    """
     choices: Choices = [(str(v), title) for v, title in mkeventd.syslog_facilities]
     empty_choices: Choices = [("", "")]
     return empty_choices + _filter_choices(value, choices)
@@ -173,7 +185,8 @@ def syslog_facilities_autocompleter(value: str, params: Dict) -> Choices:
 @autocompleter_registry.register_expression("monitored_service_description")
 def monitored_service_description_autocompleter(value: str, params: Dict) -> Choices:
     """Return the matching list of dropdown choices
-    Called by the webservice with the current input field value and the completions_params to get the list of choices"""
+    Called by the webservice with the current input field value and the completions_params to get the list of choices
+    """
     context = params.get("context", {})
     if not any((context.get("host", {}).get("host"), context.get("hostregex"))) and not params.get(
         "show_independent_of_context", True
@@ -182,8 +195,13 @@ def monitored_service_description_autocompleter(value: str, params: Dict) -> Cho
     context.pop("service", None)
     context["serviceregex"] = {"service_regex": value or "."}
     query = livestatus_query_bare_string("service", context, ["service_description"], "reload")
-    result = _sorted_unique_lq(query, 200, value, params)
-    return result
+
+    # In case of user errors occuring within livestatus_query_bare_string() (filter validation) the
+    # livestatus query cannot be run -> return the given value
+    # Rendering of the error msgs is handled in JS
+    if user_errors:
+        return [(value, value)]
+    return _sorted_unique_lq(query, 200, value, params)
 
 
 @autocompleter_registry.register_expression("wato_folder_choices")

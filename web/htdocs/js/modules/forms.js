@@ -305,3 +305,17 @@ export function confirm_link(url, message) {
         location.href = url;
     });
 }
+
+export function add_filter_form_error_listener(elem_id) {
+    const elem = document.getElementById(elem_id);
+    if (!elem) return;
+
+    const observer = new MutationObserver(() => {
+        // Disable the form submit button if there are any errors
+        const errors = elem.getElementsByClassName("error");
+        const submit_button = document.getElementById("_apply");
+        submit_button.disabled = errors.length > 0;
+    });
+
+    observer.observe(elem, {childList: true, subtree: true});
+}

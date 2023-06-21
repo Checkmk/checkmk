@@ -48,6 +48,8 @@ load(
     "LCAB_VERSION",
     "LIBGSF_SHA256",
     "LIBGSF_VERSION",
+    "MOD_FCGID_SHA256",
+    "MOD_FCGID_VERSION",
     "MONITORING_PLUGINS_SHA256",
     "MONITORING_PLUGINS_VERSION",
     "MSITOOLS_SHA256",
@@ -210,4 +212,11 @@ load("//packages/nagios:nagios_http.bzl", "nagios")
 nagios(
     sha256 = NAGIOS_SHA256,
     version_str = NAGIOS_VERSION,
+)
+
+load("//packages/mod_fcgid:mod_fcgid_http.bzl", "mod_fcgid")
+
+mod_fcgid(
+    sha256 = MOD_FCGID_SHA256,
+    version_str = MOD_FCGID_VERSION,
 )

@@ -1,0 +1,50 @@
+load("@rules_foreign_cc//foreign_cc:defs.bzl", "configure_make")
+
+filegroup(
+    name = "all_srcs",
+    srcs = glob(
+        ["**/*"],
+        exclude = ["bazel-*"],
+    ),
+)
+
+configure_make(
+    name = "mod_fcgid",
+    args = ["-j4"],
+    configure_command = "configure.apxs",
+    configure_in_place = True,
+    copts = [
+        "-Wl,--rpath,$ORIGIN_VAR/../lib",
+    ],
+    env = {
+        "ORIGIN_VAR": "\\\\$$\\$$ORIGIN",
+        "APXS": "$$(which apxs2 || which apxs)",
+        "CPATH": "/usr/include/apache2-worker",
+    },
+    lib_source = ":all_srcs",
+    out_shared_libs = [
+        "mod_fcgid.so",
+    ],
+    postfix_script = """
+        cp modules/fcgid/.libs/mod_fcgid.so $INSTALLDIR/lib
+    """,
+    targets = [""],
+)
+
+genrule(
+    name = "skel",
+    srcs = [
+        "@omd_packages//packages/stunnel/skel",
+        "@omd_packages//packages/stunnel/skel:skel_root",
+    ],
+    outs = [
+        "skel/etc/init.d/stunnel",
+        "skel/etc/logrotate.d/stunnel",
+        "skel/etc/rc.d/85-stunnel",
+        "skel/etc/stunnel/server.conf",
+        "skel/etc/stunnel/conf.d",
+    ],
+    cmd = """
+        cp -r --dereference $$(dirname $(execpath @omd_packages//packages/stunnel/skel:skel_root)) $$(realpath $(RULEDIR))
+    """,
+)

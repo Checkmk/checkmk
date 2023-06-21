@@ -16,7 +16,7 @@ from collections import Counter
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal, NamedTuple, overload, TypedDict
+from typing import Generic, Literal, NamedTuple, Self, TypedDict, TypeVar
 
 from cmk.utils import store
 from cmk.utils.hostaddress import HostName
@@ -258,7 +258,7 @@ class _MutableAttributes:
         filter_func: SDFilterFunc,
         retention_interval: RetentionInterval,
     ) -> UpdateResult:
-        compared_filtered_keys = _compare_dict_keys(
+        compared_filtered_keys = _DictKeys.compare(
             left=set(
                 _get_filtered_dict(
                     other.pairs,
@@ -323,7 +323,7 @@ class _MutableTable:
         if not isinstance(other, (_MutableTable, ImmutableTable)):
             return NotImplemented
 
-        compared_keys = _compare_dict_keys(
+        compared_keys = _DictKeys.compare(
             left=set(self.rows_by_ident),
             right=set(other.rows_by_ident),
         )
@@ -378,7 +378,7 @@ class _MutableTable:
             for ident, row in self.rows_by_ident.items()
             if (filtered_row := _get_filtered_dict(row, filter_func))
         }
-        compared_filtered_idents = _compare_dict_keys(
+        compared_filtered_idents = _DictKeys.compare(
             left=set(old_filtered_rows),
             right=set(self_filtered_rows),
         )
@@ -398,7 +398,7 @@ class _MutableTable:
                 update_result.add_row_reason(path, ident, "row", old_row)
 
         for ident in compared_filtered_idents.both:
-            compared_filtered_keys = _compare_dict_keys(
+            compared_filtered_keys = _DictKeys.compare(
                 left=set(old_filtered_rows[ident]),
                 right=set(self_filtered_rows[ident]),
             )
@@ -485,7 +485,7 @@ class MutableTree:
         if self.attributes != other.attributes or self.table != other.table:
             return False
 
-        compared_keys = _compare_dict_keys(
+        compared_keys = _DictKeys.compare(
             left=set(self.nodes_by_name),
             right=set(other.nodes_by_name),
         )
@@ -752,7 +752,7 @@ def _merge_attributes(left: ImmutableAttributes, right: ImmutableAttributes) -> 
 def _merge_tables_by_same_or_empty_key_columns(
     key_columns: Sequence[SDKey], left: ImmutableTable, right: ImmutableTable
 ) -> ImmutableTable:
-    compared_keys = _compare_dict_keys(
+    compared_keys = _DictKeys.compare(
         left=set(right.rows_by_ident),
         right=set(left.rows_by_ident),
     )
@@ -804,7 +804,7 @@ def _merge_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableTable
 
 
 def _merge_nodes(left: ImmutableTree, right: ImmutableTree) -> ImmutableTree:
-    compared_keys = _compare_dict_keys(
+    compared_keys = _DictKeys.compare(
         left=set(right.nodes_by_name),
         right=set(left.nodes_by_name),
     )
@@ -852,7 +852,7 @@ def _compare_dicts(
       removed:      {k: (old_value, None), ...}
       identical:    {k: (value, value), ...}
     """
-    compared_keys = _compare_dict_keys(left=set(left), right=set(right))
+    compared_keys = _DictKeys.compare(left=set(left), right=set(right))
     compared_dict: dict[SDKey, tuple[SDValue, SDValue]] = {}
 
     has_changes = False
@@ -885,7 +885,7 @@ def _compare_attributes(
 
 
 def _compare_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableDeltaTable:
-    compared_keys = _compare_dict_keys(
+    compared_keys = _DictKeys.compare(
         left=set(right.rows_by_ident),
         right=set(left.rows_by_ident),
     )
@@ -921,7 +921,7 @@ def _compare_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableDel
 def _compare_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableDeltaTree:
     delta_nodes: dict[SDNodeName, ImmutableDeltaTree] = {}
 
-    compared_keys = _compare_dict_keys(
+    compared_keys = _DictKeys.compare(
         left=set(right.nodes_by_name),
         right=set(left.nodes_by_name),
     )
@@ -1012,7 +1012,7 @@ class ImmutableTable:
         if not isinstance(other, (_MutableTable, ImmutableTable)):
             return NotImplemented
 
-        compared_keys = _compare_dict_keys(
+        compared_keys = _DictKeys.compare(
             left=set(self.rows_by_ident),
             right=set(other.rows_by_ident),
         )
@@ -1097,7 +1097,7 @@ class ImmutableTree:
         if self.attributes != other.attributes or self.table != other.table:
             return False
 
-        compared_keys = _compare_dict_keys(
+        compared_keys = _DictKeys.compare(
             left=set(self.nodes_by_name),
             right=set(other.nodes_by_name),
         )
@@ -1534,41 +1534,28 @@ class TreeOrArchiveStore(TreeStore):
 #   |                              |_|                                     |
 #   '----------------------------------------------------------------------'
 
-
-class ComparedDictKeys(NamedTuple):
-    only_old: set[SDKey]
-    both: set[SDKey]
-    only_new: set[SDKey]
+T = TypeVar("T")
 
 
-class ComparedRowIdents(NamedTuple):
-    only_old: set[SDRowIdent]
-    both: set[SDRowIdent]
-    only_new: set[SDRowIdent]
+@dataclass(frozen=True, kw_only=True)
+class _DictKeys(Generic[T]):
+    only_old: set[T]
+    both: set[T]
+    only_new: set[T]
 
-
-@overload
-def _compare_dict_keys(*, left: set[SDKey], right: set[SDKey]) -> ComparedDictKeys:
-    ...
-
-
-@overload
-def _compare_dict_keys(*, left: set[SDRowIdent], right: set[SDRowIdent]) -> ComparedRowIdents:
-    ...
-
-
-def _compare_dict_keys(*, left, right):
-    """
-    Returns the set relationships of the keys between two dictionaries:
-    - relative complement of right in left
-    - intersection of both
-    - relative complement of left in right
-    """
-    return ComparedDictKeys(
-        only_old=left - right,
-        both=left.intersection(right),
-        only_new=right - left,
-    )
+    @classmethod
+    def compare(cls, *, left: set[T], right: set[T]) -> Self:
+        """
+        Returns the set relationships of the keys between two dictionaries:
+        - relative complement of right in left
+        - intersection of both
+        - relative complement of left in right
+        """
+        return cls(
+            only_old=left - right,
+            both=left.intersection(right),
+            only_new=right - left,
+        )
 
 
 def _make_retentions_filter_func(

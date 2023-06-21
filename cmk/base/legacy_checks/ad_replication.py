@@ -16,10 +16,20 @@
 
 import time
 
-from cmk.base.check_api import get_relative_date_human_readable, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 ad_replication_default_params = (15, 20)
+
+
+def _get_relative_date_human_readable(timestamp: float) -> str:
+    """Formats the given timestamp for humans "in ..." for future times
+    or "... ago" for past timestamps."""
+    seconds = timestamp - time.time()
+    if seconds > 0:
+        return "in " + render.timespan(seconds)
+    return render.timespan(-seconds) + " ago"
 
 
 def parse_ad_replication_dates(s):
@@ -27,8 +37,7 @@ def parse_ad_replication_dates(s):
         return None, "unknown"
 
     s_val = time.mktime(time.strptime(s, "%Y-%m-%d %H:%M:%S"))
-    s_txt = get_relative_date_human_readable(s_val)
-    return s_val, s_txt
+    return s_val, _get_relative_date_human_readable(s_val)
 
 
 def parse_ad_replication_info(info):

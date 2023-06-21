@@ -215,15 +215,6 @@ def get_timestamp_human_readable(timestamp: float) -> str:
     return "never"
 
 
-def get_relative_date_human_readable(timestamp: float) -> str:
-    """Formats the given timestamp for humans "in ..." for future times
-    or "... ago" for past timestamps."""
-    now = time.time()
-    if timestamp > now:
-        return "in " + get_age_human_readable(timestamp - now)
-    return get_age_human_readable(now - timestamp) + " ago"
-
-
 #
 # Counter handling
 #

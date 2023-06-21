@@ -258,7 +258,7 @@ class _MutableAttributes:
         filter_func: SDFilterFunc,
         retention_interval: RetentionInterval,
     ) -> UpdateResult:
-        compared_filtered_keys = _DictKeys.compare(
+        compared_keys = _DictKeys.compare(
             left=set(
                 _get_filtered_dict(
                     other.pairs,
@@ -274,11 +274,11 @@ class _MutableAttributes:
 
         pairs: dict[SDKey, SDValue] = {}
         retentions: dict[SDKey, RetentionInterval] = {}
-        for key in compared_filtered_keys.only_old:
+        for key in compared_keys.only_old:
             pairs.setdefault(key, other.pairs[key])
             retentions[key] = other.retentions[key]
 
-        for key in compared_filtered_keys.both.union(compared_filtered_keys.only_new):
+        for key in compared_keys.both.union(compared_keys.only_new):
             retentions[key] = retention_interval
 
         update_result = UpdateResult()
@@ -323,13 +323,15 @@ class _MutableTable:
         if not isinstance(other, (_MutableTable, ImmutableTable)):
             return NotImplemented
 
-        compared_keys = _DictKeys.compare(
+        compared_row_idents = _DictKeys.compare(
             left=set(self.rows_by_ident),
             right=set(other.rows_by_ident),
         )
-        if compared_keys.only_old or compared_keys.only_new:
+        if compared_row_idents.only_old or compared_row_idents.only_new:
             return False
-        return all(self.rows_by_ident[k] == other.rows_by_ident[k] for k in compared_keys.both)
+        return all(
+            self.rows_by_ident[i] == other.rows_by_ident[i] for i in compared_row_idents.both
+        )
 
     def add_key_columns(self, key_columns: Iterable[SDKey]) -> None:
         for key in sorted(key_columns):
@@ -378,14 +380,14 @@ class _MutableTable:
             for ident, row in self.rows_by_ident.items()
             if (filtered_row := _get_filtered_dict(row, filter_func))
         }
-        compared_filtered_idents = _DictKeys.compare(
+        compared_row_idents = _DictKeys.compare(
             left=set(old_filtered_rows),
             right=set(self_filtered_rows),
         )
 
         retentions: dict[SDRowIdent, dict[SDKey, RetentionInterval]] = {}
         update_result = UpdateResult()
-        for ident in compared_filtered_idents.only_old:
+        for ident in compared_row_idents.only_old:
             old_row: dict[SDKey, SDValue] = {}
             for key, value in old_filtered_rows[ident].items():
                 old_row.setdefault(key, value)
@@ -397,17 +399,17 @@ class _MutableTable:
                 self._add_row(ident, old_row)
                 update_result.add_row_reason(path, ident, "row", old_row)
 
-        for ident in compared_filtered_idents.both:
-            compared_filtered_keys = _DictKeys.compare(
+        for ident in compared_row_idents.both:
+            compared_keys = _DictKeys.compare(
                 left=set(old_filtered_rows[ident]),
                 right=set(self_filtered_rows[ident]),
             )
             row: dict[SDKey, SDValue] = {}
-            for key in compared_filtered_keys.only_old:
+            for key in compared_keys.only_old:
                 row.setdefault(key, other.rows_by_ident[ident][key])
                 retentions.setdefault(ident, {})[key] = other.retentions[ident][key]
 
-            for key in compared_filtered_keys.both.union(compared_filtered_keys.only_new):
+            for key in compared_keys.both.union(compared_keys.only_new):
                 retentions.setdefault(ident, {})[key] = retention_interval
 
             if row:
@@ -421,7 +423,7 @@ class _MutableTable:
                 self._add_row(ident, row)
                 update_result.add_row_reason(path, ident, "row", row)
 
-        for ident in compared_filtered_idents.only_new:
+        for ident in compared_row_idents.only_new:
             for key in self_filtered_rows[ident]:
                 retentions.setdefault(ident, {})[key] = retention_interval
 
@@ -485,13 +487,15 @@ class MutableTree:
         if self.attributes != other.attributes or self.table != other.table:
             return False
 
-        compared_keys = _DictKeys.compare(
+        compared_node_names = _DictKeys.compare(
             left=set(self.nodes_by_name),
             right=set(other.nodes_by_name),
         )
-        if compared_keys.only_old or compared_keys.only_new:
+        if compared_node_names.only_old or compared_node_names.only_new:
             return False
-        return all(self.nodes_by_name[n] == other.nodes_by_name[n] for n in compared_keys.both)
+        return all(
+            self.nodes_by_name[n] == other.nodes_by_name[n] for n in compared_node_names.both
+        )
 
     def add_pairs(self, *, path: SDPath, pairs: Mapping[SDKey, SDValue]) -> None:
         node = self.setdefault_node(path)
@@ -752,16 +756,16 @@ def _merge_attributes(left: ImmutableAttributes, right: ImmutableAttributes) -> 
 def _merge_tables_by_same_or_empty_key_columns(
     key_columns: Sequence[SDKey], left: ImmutableTable, right: ImmutableTable
 ) -> ImmutableTable:
-    compared_keys = _DictKeys.compare(
+    compared_row_idents = _DictKeys.compare(
         left=set(right.rows_by_ident),
         right=set(left.rows_by_ident),
     )
 
     rows_by_ident: dict[SDRowIdent, Mapping[SDKey, SDValue]] = {}
-    for ident in compared_keys.only_old:
+    for ident in compared_row_idents.only_old:
         rows_by_ident.setdefault(ident, right.rows_by_ident[ident])
 
-    for ident in compared_keys.both:
+    for ident in compared_row_idents.both:
         rows_by_ident.setdefault(
             ident,
             {
@@ -770,7 +774,7 @@ def _merge_tables_by_same_or_empty_key_columns(
             },
         )
 
-    for ident in compared_keys.only_new:
+    for ident in compared_row_idents.only_new:
         rows_by_ident.setdefault(ident, left.rows_by_ident[ident])
 
     return ImmutableTable(
@@ -804,21 +808,21 @@ def _merge_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableTable
 
 
 def _merge_nodes(left: ImmutableTree, right: ImmutableTree) -> ImmutableTree:
-    compared_keys = _DictKeys.compare(
+    compared_node_names = _DictKeys.compare(
         left=set(right.nodes_by_name),
         right=set(left.nodes_by_name),
     )
 
     nodes_by_name: dict[SDNodeName, ImmutableTree] = {}
-    for name in compared_keys.only_old:
+    for name in compared_node_names.only_old:
         nodes_by_name[name] = right.nodes_by_name[name]
 
-    for name in compared_keys.both:
+    for name in compared_node_names.both:
         nodes_by_name[name] = _merge_nodes(
             left=left.nodes_by_name[name], right=right.nodes_by_name[name]
         )
 
-    for name in compared_keys.only_new:
+    for name in compared_node_names.only_new:
         nodes_by_name[name] = left.nodes_by_name[name]
 
     return ImmutableTree(
@@ -856,12 +860,12 @@ def _compare_dicts(
     compared_dict: dict[SDKey, tuple[SDValue, SDValue]] = {}
 
     has_changes = False
-    for k in compared_keys.both:
-        if (new_value := right[k]) != (old_value := left[k]):
-            compared_dict.setdefault(k, (old_value, new_value))
+    for key in compared_keys.both:
+        if (new_value := right[key]) != (old_value := left[key]):
+            compared_dict.setdefault(key, (old_value, new_value))
             has_changes = True
         elif keep_identical:
-            compared_dict.setdefault(k, (old_value, old_value))
+            compared_dict.setdefault(key, (old_value, old_value))
 
     compared_dict.update({k: _encode_as_new(right[k]) for k in compared_keys.only_new})
     compared_dict.update({k: _encode_as_removed(left[k]) for k in compared_keys.only_old})
@@ -885,32 +889,32 @@ def _compare_attributes(
 
 
 def _compare_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableDeltaTable:
-    compared_keys = _DictKeys.compare(
+    compared_row_idents = _DictKeys.compare(
         left=set(right.rows_by_ident),
         right=set(left.rows_by_ident),
     )
 
     delta_rows: list[Mapping[SDKey, tuple[SDValue, SDValue]]] = []
 
-    for key in compared_keys.only_old:
-        delta_rows.append({k: _encode_as_removed(v) for k, v in right.rows_by_ident[key].items()})
+    for ident in compared_row_idents.only_old:
+        delta_rows.append({k: _encode_as_removed(v) for k, v in right.rows_by_ident[ident].items()})
 
-    for key in compared_keys.both:
+    for ident in compared_row_idents.both:
         # Note: Rows which have at least one change also provide all table fields.
         # Example:
         # If the version of a package (below "Software > Packages") has changed from 1.0 to 2.0
         # then it would be very annoying if the rest of the row is not shown.
         if (
             compared_dict_result := _compare_dicts(
-                left=right.rows_by_ident[key],
-                right=left.rows_by_ident[key],
+                left=right.rows_by_ident[ident],
+                right=left.rows_by_ident[ident],
                 keep_identical=True,
             )
         ).has_changes:
             delta_rows.append(compared_dict_result.result_dict)
 
-    for key in compared_keys.only_new:
-        delta_rows.append({k: _encode_as_new(v) for k, v in left.rows_by_ident[key].items()})
+    for ident in compared_row_idents.only_new:
+        delta_rows.append({k: _encode_as_new(v) for k, v in left.rows_by_ident[ident].items()})
 
     return ImmutableDeltaTable(
         key_columns=sorted(set(left.key_columns).union(right.key_columns)),
@@ -921,29 +925,29 @@ def _compare_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableDel
 def _compare_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableDeltaTree:
     delta_nodes: dict[SDNodeName, ImmutableDeltaTree] = {}
 
-    compared_keys = _DictKeys.compare(
+    compared_node_names = _DictKeys.compare(
         left=set(right.nodes_by_name),
         right=set(left.nodes_by_name),
     )
 
-    for key in compared_keys.only_new:
-        if child_left := left.nodes_by_name[key]:
-            delta_nodes[key] = ImmutableDeltaTree.from_tree(
+    for name in compared_node_names.only_new:
+        if child_left := left.nodes_by_name[name]:
+            delta_nodes[name] = ImmutableDeltaTree.from_tree(
                 tree=child_left,
                 encode_as=_encode_as_new,
             )
 
-    for key in compared_keys.both:
-        if (child_left := left.nodes_by_name[key]) == (child_right := right.nodes_by_name[key]):
+    for name in compared_node_names.both:
+        if (child_left := left.nodes_by_name[name]) == (child_right := right.nodes_by_name[name]):
             continue
 
         delta_node = _compare_trees(child_left, child_right)
         if delta_node.get_stats():
-            delta_nodes[key] = delta_node
+            delta_nodes[name] = delta_node
 
-    for key in compared_keys.only_old:
-        if child_right := right.nodes_by_name[key]:
-            delta_nodes[key] = ImmutableDeltaTree.from_tree(
+    for name in compared_node_names.only_old:
+        if child_right := right.nodes_by_name[name]:
+            delta_nodes[name] = ImmutableDeltaTree.from_tree(
                 tree=child_right,
                 encode_as=_encode_as_removed,
             )
@@ -1012,13 +1016,15 @@ class ImmutableTable:
         if not isinstance(other, (_MutableTable, ImmutableTable)):
             return NotImplemented
 
-        compared_keys = _DictKeys.compare(
+        compared_row_idents = _DictKeys.compare(
             left=set(self.rows_by_ident),
             right=set(other.rows_by_ident),
         )
-        if compared_keys.only_old or compared_keys.only_new:
+        if compared_row_idents.only_old or compared_row_idents.only_new:
             return False
-        return all(self.rows_by_ident[i] == other.rows_by_ident[i] for i in compared_keys.both)
+        return all(
+            self.rows_by_ident[i] == other.rows_by_ident[i] for i in compared_row_idents.both
+        )
 
     @property
     def rows(self) -> Sequence[Mapping[SDKey, SDValue]]:
@@ -1097,13 +1103,15 @@ class ImmutableTree:
         if self.attributes != other.attributes or self.table != other.table:
             return False
 
-        compared_keys = _DictKeys.compare(
+        compared_node_names = _DictKeys.compare(
             left=set(self.nodes_by_name),
             right=set(other.nodes_by_name),
         )
-        if compared_keys.only_old or compared_keys.only_new:
+        if compared_node_names.only_old or compared_node_names.only_new:
             return False
-        return all(self.nodes_by_name[n] == other.nodes_by_name[n] for n in compared_keys.both)
+        return all(
+            self.nodes_by_name[n] == other.nodes_by_name[n] for n in compared_node_names.both
+        )
 
     def filter(self, filters: Iterable[SDFilter]) -> ImmutableTree:
         return _filter_tree(self, _make_filter_tree(filters))

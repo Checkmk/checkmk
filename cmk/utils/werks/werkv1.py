@@ -47,7 +47,7 @@ class RawWerkV1(BaseModel, RawWerk):
             version=self.version,
             title=self.title,
             id=self.id,
-            date=datetime.datetime.fromtimestamp(self.date),
+            date=datetime.datetime.fromtimestamp(self.date, tz=datetime.timezone.utc),
             description=NoWiki(self.description),
             level=Level(self.level),
             class_=Class(self.class_),

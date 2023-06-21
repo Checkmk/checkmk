@@ -1334,3 +1334,49 @@ export function label_group_delete(
     listof_delete(varprefix, index);
     forms.enable_dynamic_form_elements(tbody);
 }
+
+export function init_on_change_validation(
+    varname: string,
+    filter_ident: string
+) {
+    const select = document.getElementById(varname) as HTMLSelectElement;
+    if (!select) return;
+
+    $(select).on("change", () => {
+        const request: Record<string, string> = {
+            filter_ident: filter_ident,
+            value: select.value!,
+            varname: varname,
+        };
+        const post_data =
+            "request=" + encodeURIComponent(JSON.stringify(request));
+        ajax.call_ajax("ajax_validate_filter.py", {
+            method: "POST",
+            post_data: post_data,
+            handler_data: {select: select},
+            response_handler: function (
+                handler_data: {select: HTMLSelectElement},
+                ajax_response: string
+            ) {
+                const resp = JSON.parse(ajax_response);
+                const parent = handler_data.select
+                    .parentElement! as HTMLElement;
+
+                // Remove old error msgs
+                const errors: HTMLCollection =
+                    parent.getElementsByClassName("error");
+                for (const e of errors) {
+                    e.remove();
+                }
+
+                // Show current error
+                const error_html: string = resp.result.error_html;
+                if (error_html) {
+                    const error_div = document.createElement("div");
+                    parent.insertBefore(error_div, select);
+                    error_div.outerHTML = resp.result.error_html;
+                }
+            },
+        });
+    });
+}

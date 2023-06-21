@@ -393,3 +393,23 @@ export function replace_error_msg_with_confirm_dialog() {
     error_msg.replaceWith(dialog);
     utils.remove_class(dialog, "hidden");
 }
+
+export function add_filter_form_error_listener(elem_id: string) {
+    const elem = document.getElementById(elem_id) as HTMLElement;
+    if (!elem) return;
+
+    const observer = new MutationObserver(() => {
+        // Disable the form submit button if there are any errors
+        const errors: HTMLCollection = elem.getElementsByClassName("error");
+        const submit_button = document.getElementById(
+            "_apply"
+        )! as HTMLInputElement;
+        if (errors.length > 0) {
+            submit_button.disabled = true;
+        } else {
+            submit_button.disabled = false;
+        }
+    });
+
+    observer.observe(elem, {childList: true, subtree: true});
+}

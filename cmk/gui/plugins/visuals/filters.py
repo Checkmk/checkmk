@@ -21,6 +21,7 @@ from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
+from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.type_defs import (
     Choices,
     ColumnName,
@@ -79,9 +80,11 @@ class AjaxDropdownFilter(Filter):
         link_columns: list[ColumnName] | None = None,
         description: None | str | LazyString = None,
         is_show_more: bool = False,
+        validate_value: Callable[[str, str], None] | None = None,
     ) -> None:
         self.query_filter = query_filter
         self.autocompleter = autocompleter
+        self._validate_value = validate_value
 
         super().__init__(
             ident=self.query_filter.ident,
@@ -106,9 +109,10 @@ class AjaxDropdownFilter(Filter):
     def display(self, value: FilterHTTPVariables) -> None:
         current_value = value.get(self.query_filter.request_vars[0], "")
         choices = [(current_value, current_value)] if current_value else []
+        varname = self.query_filter.request_vars[0]
 
         html.dropdown(
-            self.query_filter.request_vars[0],
+            varname,
             choices,
             current_value,
             style="width: 250px;",
@@ -119,11 +123,65 @@ class AjaxDropdownFilter(Filter):
         if self.query_filter.negateable:
             checkbox_component(self.query_filter.request_vars[1], value, _("negate"))
 
+        if self._validate_value:
+            html.javascript(
+                f"cmk.valuespecs.init_on_change_validation('{varname}', '{self.ident}');"
+            )
 
-# TODO: Dare for the moment not to validate the regex, because user can only
-# select what comes back. In general we should validate all input although that
-# is not yet implemented. Only the regex had a control, and the dropdown display
-# was a hack
+    def validate_value(self, value: FilterHTTPVariables) -> None:
+        if self._validate_value:
+            htmlvar = self.htmlvars[0]
+            self._validate_value(value.get(htmlvar, ""), htmlvar)
+
+
+class RegexAjaxDropdownFilter(AjaxDropdownFilter):
+    "Select from dropdown with dynamic option query and regex validation"
+
+    def __init__(
+        self,
+        *,
+        title: str | LazyString,
+        sort_index: int,
+        info: str,
+        autocompleter: AutocompleterConfig,
+        query_filter: query_filters.TextQuery | query_filters.KubernetesQuery,
+        link_columns: list[ColumnName] | None = None,
+        description: None | str | LazyString = None,
+        is_show_more: bool = False,
+    ) -> None:
+        super().__init__(
+            title=title,
+            sort_index=sort_index,
+            info=info,
+            autocompleter=autocompleter,
+            query_filter=query_filter,
+            link_columns=link_columns,
+            description=description,
+            is_show_more=is_show_more,
+            validate_value=validate_regex,
+        )
+
+
+@page_registry.register_page("ajax_validate_filter")
+class PageValidateFilter(AjaxPage):
+    def page(self) -> PageResult:
+        api_request = self.webapi_request()
+        varname = str(api_request.get("varname"))
+        value = str(api_request.get("value"))
+        filter_ident = str(api_request.get("filter_ident"))
+        filt = filter_registry.get(filter_ident)
+        if filt:
+            try:
+                filt.validate_value({varname: value})
+            except MKUserError as e:
+                user_errors.add(e)
+
+        return {"error_html": html.render_user_errors() if user_errors else ""}
+
+
+# TODO: Currently, we only validate the input for instances of RegexAjaxDropdownFilter (before form
+# submission) and RegexFilter (after form submission). In general we should validate all input - if
+# possible before form submission. That's not yet implemented.
 filter_registry.register(
     AjaxDropdownFilter(
         title=_l("Hostname (regex)"),

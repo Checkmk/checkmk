@@ -130,7 +130,9 @@ def load_werk_v2(content: str, werk_id: str) -> RawWerkV2:
         "id": werk_id,
     }
     result = markdown.markdown(
-        content, extensions=["tables", WerkExtractorExtension(werk)], output_format="html"
+        content,
+        extensions=["tables", "fenced_code", WerkExtractorExtension(werk)],
+        output_format="html",
     )
 
     # werk was passed by reference into WerkExtractorExtension which got passed

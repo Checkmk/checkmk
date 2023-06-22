@@ -62,6 +62,11 @@ def html_to_nowiki(content: str) -> str:
             elif element.tag == "h2":
                 yield f"H2: {element.text}"
                 yield ""
+            elif element.tag == "pre":
+                yield "C+:"
+                # text already contains closing \n
+                yield f"{element[0].text}C-:"
+                yield ""
             else:
                 raise NotImplementedError(f"can not handle tag {element.tag}")
 

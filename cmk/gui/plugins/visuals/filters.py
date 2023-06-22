@@ -1676,7 +1676,7 @@ filter_kubernetes_register(_("Kubernetes DaemonSet"), "daemonset")
 filter_kubernetes_register(_("Kubernetes StatefulSet"), "statefulset")
 
 
-class FilterCustomAttribute(Filter):
+class CustomAttributeFilter(Filter):
     def __init__(
         self,
         *,
@@ -1737,6 +1737,10 @@ class FilterCustomAttribute(Filter):
             livestatus.lqencode(val),
         )
 
+    def validate_value(self, value: FilterHTTPVariables) -> None:
+        htmlvar = self.value_varname(self.ident)
+        validate_regex(value.get(htmlvar, ""), htmlvar)
+
 
 def _service_attribute_choices() -> Choices:
     choices: Choices = []
@@ -1746,7 +1750,7 @@ def _service_attribute_choices() -> Choices:
 
 
 filter_registry.register(
-    FilterCustomAttribute(
+    CustomAttributeFilter(
         ident="service_custom_variable",
         title=_l("Service custom attribute"),
         info="service",
@@ -1763,7 +1767,7 @@ def _host_attribute_choices() -> Choices:
 
 
 filter_registry.register(
-    FilterCustomAttribute(
+    CustomAttributeFilter(
         ident="host_custom_variable",
         title=_l("Host custom attribute"),
         info="host",

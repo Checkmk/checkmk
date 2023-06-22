@@ -11,18 +11,18 @@ When executing "omd update" as site user to update a site from 1.4.0p17
 or older an error could occur blocking the update. The message looks like
 this:
 
-<pre>
+C+:
 Traceback (most recent call last):
-  File "/omd/versions/1.4.0p17.cee/bin/omd", line 52, in <module>
+  File "/omd/versions/1.4.0p17.cee/bin/omd", line 52, in &lt;module&gt;
     import tarfile, fnmatch
-  File "/omd/versions/1.4.0p17.cee/lib/python2.7/tarfile.py", line 52, in <module>
+  File "/omd/versions/1.4.0p17.cee/lib/python2.7/tarfile.py", line 52, in &lt;module&gt;
     import copy
-  File "/omd/versions/1.4.0p17.cee/lib/python2.7/copy.py", line 52, in <module>
+  File "/omd/versions/1.4.0p17.cee/lib/python2.7/copy.py", line 52, in &lt;module&gt;
     import weakref
-  File "/omd/versions/1.4.0p17.cee/lib/python2.7/weakref.py", line 14, in <module>
+  File "/omd/versions/1.4.0p17.cee/lib/python2.7/weakref.py", line 14, in &lt;module&gt;
     from _weakref import (
 ImportError: cannot import name _remove_dead_weakref
-</pre>
+C-:
 
 This issue was caused by a mixup of python versions during the update which has
 been fixed now by using the correct libraries during the update.

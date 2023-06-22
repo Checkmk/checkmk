@@ -13,7 +13,7 @@ cpu_time_user: See
 https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/tree/kernel/sched/cputime.c
 for more information:
 
-<pre><code>
+C+:
 /*
  * Account guest CPU time to a process.
  * @p: the process that the CPU time gets accounted to
@@ -37,4 +37,4 @@ void account_guest_time(struct task_struct *p, u64 cputime)
 		cpustat[CPUTIME_GUEST] += cputime;
 	}
 }
-</code></pre>
+C-:

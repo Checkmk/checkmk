@@ -22,17 +22,17 @@ The default behaviour is unchanged, only the root folders package will be create
 
 As a side effect, the names on the download pages are changed from
 
-<pre>
+C+:
   GENERIC, VANILLA, MyHost1, MyHost2
-</pre>
+C-:
 
 to
 
-<pre>
+C+:
   Vanilla (factory settings)
   Folders: / (root folder)
   Hosts: MyHost1, MyHost2
-</pre>
+C-:
 
 In the REST API users can download these generic agents by setting <tt>agent_type='generic'</tt> and adding the <i>folder_name</i> field to the request.
 Omiting the <i>folder_name</i> will default to the generic agent of the root folder, to provide compatibility.

@@ -10,6 +10,7 @@ Date: 1455540745
 Fixed an exception which could occur during automation calls between distributed
 sites:
 
+C+:
 2016-02-15 13:49:14 [3] [13761] /heute/check_mk/wato.py Internal error: Traceback (most recent call last):
   File "/omd/sites/heute/share/check_mk/web/htdocs/index.py", line 131, in handler
     handler()
@@ -24,8 +25,8 @@ sites:
   File "/omd/sites/heute/share/check_mk/web/htdocs/watolib.py", line 3072, in check_mk_remote_automation
     ("timeout",    mk_repr(indata)),     # The timeout
   File "/omd/sites/heute/share/check_mk/web/htdocs/watolib.py", line 3099, in do_remote_automation
-    raise MKAutomationException("<pre>%s</pre>" % response)
-MKAutomationException: <pre>%d format: a number is required, not dictTraceback (most recent call last):
+    raise MKAutomationException("&lt;pre&gt;%s&lt;/pre&gt; % response)
+MKAutomationException: &lt;pre&gt;d format: a number is required, not dictTraceback (most recent call last):
   File &quot;/omd/sites/slave/share/check_mk/web/htdocs/index.py&quot;, line 63, in handler
     handler()
   File &quot;/omd/sites/slave/share/check_mk/web/htdocs/wato.py&quot;, line 9515, in page_automation
@@ -33,3 +34,4 @@ MKAutomationException: <pre>%d format: a number is required, not dictTraceback (
   File &quot;/omd/sites/slave/share/check_mk/web/htdocs/watolib.py&quot;, line 3883, in check_mk_local_automation
     args = [ &quot;--timeout&quot;, &quot;%d&quot; % timeout ] + args
 TypeError: %d format: a number is required, not dic
+C-:

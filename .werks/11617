@@ -18,8 +18,8 @@ Leaving the user with the question why his changes were not activated. To be mor
 consistent, the situation is now detected and an error is raised, explaining the
 situation to the user:
 
-<pre>There are changes to activate, but no site can be activated (The sites A,
-B, C have changes, but may be offline or not logged in).</pre>
+There are changes to activate, but no site can be activated (The sites A,
+B, C have changes, but may be offline or not logged in).
 
 The caller needs wait and retry the operation at a later time once the sites in
 question are reachable again.

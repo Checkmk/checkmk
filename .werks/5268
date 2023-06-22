@@ -10,9 +10,11 @@ Class: fix
 Due to an inconsistent exception handling in cmk-update-agent program flow, the running program could exit before releasing its lock file.
 
 This could result in an error message
-<pre>
+
+C+:
 ERROR An instance of cmk_update_agent.py is already running on this system. Aborting...
-</pre>
+C-:
+
 when running cmk-update-agent again.
 
 If you are affected by this error, please delete the lock file "cmk-update-agent.pid", located at your system's or user's temp-dir, once manually.

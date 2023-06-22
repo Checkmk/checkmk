@@ -13,7 +13,7 @@ The removal of illegal characters from interface descriptions and aliases is now
 Some services may go to UNKNOWN for users who have configured the use of descriptions or aliases in
 the service description.
 This will only happen if the interface desription or alias did indeed contain one of the
-characters <pre>`;~!$%^&*|\'"<>?,()=</pre>.
+characters <tt>`;~!$%^&*|\'"&lt;&gt;?,()=</tt>.
 
 If this is the case, please perform a rediscovery. For every affected interface you will be informed
 of one vanished an one new service by the same name. Performance data will not be lost.

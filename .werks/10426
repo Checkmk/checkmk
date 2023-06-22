@@ -10,7 +10,9 @@ Version: 2.0.0i1
 
 Prevously, an insecure HTTPS setup for the Agent Updater would lead to multiple warnings like
 
-<pre> InsecureRequestWarning: Unverified HTTPS request is being made. Adding certificate verification
-is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#ssl-warnings </pre>
+C+:
+InsecureRequestWarning: Unverified HTTPS request is being made. Adding certificate verification
+is strongly advised. See: https://urllib3.readthedocs.io/en/latest/advanced-usage.html#ssl-warnings
+C-:
 
 This is now replaced with a warning that is evoked only once and that is more informative.

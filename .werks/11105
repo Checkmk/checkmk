@@ -20,17 +20,16 @@ the omd configuration.
 
 To overwrite instance names by preconfigured values, use CUSTOM_ADDRESS_OVERWRITE
 in apache_status.cfg. Use hostname/IP:Port as key, the new name as the value:
-<pre>
 
+C+:
     CUSTOM_ADDRESS_OVERWRITE = {
         '127.0.0.1:5000' : "omd_site_mon",
     }
-
-</pre>
+C-:
 
 In custom server configurations use the key 'instance' to set a custom name
-<pre>
 
+C+:
     servers = [
         {
             'protocol' : 'http',
@@ -39,5 +38,4 @@ In custom server configurations use the key 'instance' to set a custom name
             'instance' : "my-webserver"
         },
     ]
-
-</pre>
+C-:

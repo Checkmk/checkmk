@@ -9,7 +9,10 @@ Class: fix
 
 It has been observed recently that the agent updater might crash
 with an error message  like
-<pre>IDNAError: The label ... is not a valid A-label</pre>
+
+C+:
+IDNAError: The label ... is not a valid A-label
+C-:
 
 The cause for this behavior is a bug in the underlying urllib3
 python module. However, this has been fixed in a newer urrllib-version

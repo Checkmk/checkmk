@@ -13,7 +13,7 @@ You can now manage htpasswd users with automation calls.
 The following (not very fleshed out) examples provide a quick overview.
 A more elaborate version will be written later on in our official manual.
 
-<pre>
+C+:
 Common url prefix:
 http://localhost/heute/check_mk/webapi.py?_username=automation&_secret=1122...
 
@@ -29,4 +29,4 @@ curl {common_prefix}&action=edit_users -d 'request={"users": {"klaus": {"set_att
 
 Delete users:
 curl {common_prefix}&action=delete_users -d 'request={"users": ["klaus", "guest12", "guest2332"]}'
-</pre>
+C-:

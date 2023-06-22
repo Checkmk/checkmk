@@ -10,7 +10,7 @@ import os
 import re
 import subprocess
 from pathlib import Path
-from typing import NamedTuple, NewType
+from typing import Iterable, NamedTuple, NewType
 
 import pkg_resources as pkg
 import pytest
@@ -104,7 +104,7 @@ def _get_import_names_from_dist_name(dist_name: str) -> list[ImportName]:
         ]
 
 
-def _get_import_names_from_pipfile() -> list[ImportName]:
+def _get_import_names_from_pipfile() -> Iterable[ImportName]:
     # TODO: There are packages which are currently missing the top_level.txt,
     # so we need to hardcode the import names for those packages.
     # We couldn't find a better way to get from Pipfile package name to import name.
@@ -127,14 +127,11 @@ def _get_import_names_from_pipfile() -> list[ImportName]:
         "pysaml2": "saml2",
     }
 
-    import_names = []
     for dist_name in _load_pipfile_data()["default"].keys():
         if dist_name in packagename_to_importname:
-            import_names.append(ImportName(packagename_to_importname[dist_name]))
+            yield ImportName(packagename_to_importname[dist_name])
             continue
-        import_names.extend(_get_import_names_from_dist_name(dist_name))
-    assert import_names
-    return import_names
+        yield from _get_import_names_from_dist_name(dist_name)
 
 
 def test_01_python_interpreter_exists(site: Site) -> None:
@@ -232,19 +229,16 @@ def test_05_pip_user_can_install_wheel_packages(site: Site, pip_cmd: PipCommand)
 
 @pytest.mark.skip(
     """
-    Test relies on deprectated top_level.txt mechanism and yields too many false positives.
-    TODO: We need a general rework of this test.
-    """
+   Test relies on deprectated top_level.txt mechanism and yields too many false positives.
+   TODO: We need a general rework of this test.
+   """
 )
-@pytest.mark.parametrize("import_name", _get_import_names_from_pipfile())
-def test_import_python_packages_which_are_defined_in_pipfile(
-    site: Site,
-    import_name: ImportName,
-) -> None:
-    module_file = import_module_and_get_file_path(site, import_name)
-    # Skip namespace modules, they don't have __file__
-    if module_file:
-        assert module_file.startswith(site.root)
+def test_import_python_packages_which_are_defined_in_pipfile(site: Site) -> None:
+    for import_name in _get_import_names_from_pipfile():
+        module_file = import_module_and_get_file_path(site, import_name)
+        # Skip namespace modules, they don't have __file__
+        if module_file:
+            assert module_file.startswith(site.root)
 
 
 def import_module_and_get_file_path(site: Site, import_name: str) -> str:

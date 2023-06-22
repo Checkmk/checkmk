@@ -47,4 +47,4 @@ you about all rules referring to them. You'll now have to clean them up.</li>
 <li>"Legacy: SNMP ..." needs to be converted to "SNMP -> SNMP v2 or v3" and "Agent: No Agent"</li>
 <li>"Legacy: Dual: ..." needs to be converted to "SNMP -> SNMP v2 or v3" and "Agent: Contact either Check_MK Agent or use datasource program"</li>
 <li>After cleaning up all refereces, you can delete the legacy tags.</li>
-<ul>
+</ul>

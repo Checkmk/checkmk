@@ -19,5 +19,7 @@ Cloudwatch metric OldestReplicationSlotLag, which wasn't the case before due to 
 the AWS special agent.</li>
 <li>The rule "AWS/RDS Replica lag" for the check aws_rds.replica_lag has been adjusted to
 allow for setting levels smaller than one second on the replication lag.</li>
+</ul>
+
 This werk is incompatible. Depending on the used configuration, users should delete and
 re-create the rules "AWS/RDS Replica lag".

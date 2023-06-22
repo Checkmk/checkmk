@@ -19,4 +19,5 @@ api calls are resolved.
 However, the agent is now built with dwarf-2 debugging symbols (outdated but better
 tool support) and stripped of symbols in a separate build step. With the correct
 unstripped exe the adresses can still be resolved using addr2line:
-addr2line -e check_mk_agent-64.unstripped.exe <address>
+
+addr2line -e check_mk_agent-64.unstripped.exe &lt;address&gt;

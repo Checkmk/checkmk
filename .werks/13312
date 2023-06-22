@@ -41,6 +41,7 @@ Technical details:
   configuration updates</li>
 <li>It can also detect some situations it can not solve on it's own
   and warns the user about potential manual steps to do afterwards.</li>
+</ul>
 
 The migration steps are realized in so called rename action plugins.
 Examples can be found in the Checkmk git below

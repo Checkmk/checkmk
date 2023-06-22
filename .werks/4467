@@ -14,4 +14,4 @@ Furthermore a race condition has been fixed, which was likely to happen when all
 <li>there were several dozens BI requests per minute, e.g. from multiple web browsers</li>
 <li>a distributed montitoring setup started to deploy new configurations</li>
 <li>there were lots (>100) of BI aggregations configured</li>
-<ul>
+</ul>

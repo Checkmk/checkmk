@@ -34,7 +34,7 @@ interval for service checks".</li>
 <li>Value: 1 day</li>
 <li>Services: <tt>Check_MK HW/SW Inventory$</tt></li>
 <li>Activate the changes via WATO</li>
-<li>
+</ul>
 
 After this you should check the service detail page again and see the 86400s interval.
 

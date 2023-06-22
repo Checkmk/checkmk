@@ -27,6 +27,7 @@ inventory" &rarr; "Create rule in folder":
 <ul>
 <li>"Status data inventory" &rarr; "Do status data inventory"</li>
 <li>"Host labels" &rarr; "has" &rarr; "cmk/kubernetes:yes"</li>
+</ul>
 
 &rarr; Save
 

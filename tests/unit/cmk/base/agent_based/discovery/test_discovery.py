@@ -39,8 +39,10 @@ from cmk.checkengine.discovery import (
     discover_host_labels,
     DiscoveryMode,
     DiscoveryResult,
+    find_plugins,
     QualifiedDiscovery,
 )
+from cmk.checkengine.discovery._services import _find_host_plugins, _find_mgmt_plugins
 from cmk.checkengine.discovery.filters import RediscoveryParameters
 from cmk.checkengine.host_sections import HostSections
 from cmk.checkengine.sectionparser import (
@@ -844,7 +846,7 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
 
     resolved = tuple(__iter(parsed_sections_of_interest, providers))
 
-    assert discovery._discovered_services._find_host_candidates(
+    assert _find_host_plugins(
         ((p.name, p.sections) for p in preliminary_candidates),
         frozenset(
             section_name
@@ -859,7 +861,7 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
         CheckPluginName("uptime"),
     }
 
-    assert discovery._discovered_services._find_mgmt_candidates(
+    assert _find_mgmt_plugins(
         ((p.name, p.sections) for p in preliminary_candidates),
         frozenset(
             section_name
@@ -872,7 +874,7 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
         CheckPluginName("mgmt_uptime"),
     }
 
-    assert discovery._discovered_services._find_candidates(
+    assert find_plugins(
         providers,
         [
             (name, p.sections)

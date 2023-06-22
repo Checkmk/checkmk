@@ -23,7 +23,6 @@
         "./enterprise/web/htdocs/js/modules/figures/cmk_dc_table.ts",
         "./enterprise/web/htdocs/js/modules/figures/cmk_alert_overview.ts",
         "./enterprise/web/htdocs/js/modules/figures/cmk_timeseries.ts",
-        "./enterprise/web/htdocs/js/modules/ntop/ntop_host_details.ts",
         "web/htdocs/js/modules/nodevis/**/*",
         "node_modules"
     ]

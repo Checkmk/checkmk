@@ -4,47 +4,42 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from typing import Any, Dict, List, Mapping, NamedTuple
+from collections import Counter
+from typing import Any, Mapping, NamedTuple
 
 from .agent_based_api.v1 import register, Result, Service, State, type_defs
 from .agent_based_api.v1.type_defs import CheckResult
 
 
 class ZypperUpdates(NamedTuple):
-    patch_types: Dict[str, int] = {}
-    updates: int = 0
-    locks: List[str] = []
-    error: str = ""
+    patch_types: list[str]
+    locks: list[str] = []
 
 
-Section = ZypperUpdates
+class Error(str):
+    pass
+
+
+Section = ZypperUpdates | Error
 
 
 def parse_zypper(string_table: type_defs.StringTable) -> Section:
-    patch_types: Dict[str, int] = {}
-    updates: int = 0
-    locks: List[str] = []
+    patch_types = []
+    locks = []
 
     firstline = " ".join(string_table[0]) if string_table else ""
     if re.match("ERROR:", firstline):
-        return Section(error=firstline)
+        return Error(firstline)
 
     for line in string_table:
-        # 5 patches needed (2 security patches)
-        if len(line) >= 5:
-            patch_type = None
-            if len(line) >= 7 and line[5].lower().strip() == "needed":  # since SLES12
-                patch_type = line[2].strip()
-            elif line[4].lower().strip() == "needed":
-                patch_type = line[3].strip()
-            if patch_type:
-                patch_types.setdefault(patch_type, 0)
-                patch_types[patch_type] += 1
-                updates += 1
-        elif len(line) == 4:
-            locks.append(line[1])
+        match line:
+            case [_, _, _, pt, n] | [_, _, _, pt, n, _] | [_, _, pt, _, _, n, *_]:
+                if (patch_type := pt.strip()) and n.lower().strip() == "needed":
+                    patch_types.append(patch_type)
+            case [_, lock, _, _]:
+                locks.append(lock)
 
-    return Section(patch_types=patch_types, updates=updates, locks=locks)
+    return ZypperUpdates(patch_types=patch_types, locks=locks)
 
 
 def discover_zypper(section: Section) -> type_defs.DiscoveryResult:
@@ -52,11 +47,11 @@ def discover_zypper(section: Section) -> type_defs.DiscoveryResult:
 
 
 def check_zypper(params: Mapping[str, Any], section: Section) -> CheckResult:
-    if section.error:
-        yield Result(state=State.UNKNOWN, summary=section.error)
+    if isinstance(section, Error):
+        yield Result(state=State.UNKNOWN, summary=section)
         return
 
-    yield Result(state=State.OK, summary=f"{section.updates} updates")
+    yield Result(state=State.OK, summary=f"{len(section.patch_types)} updates")
     if section.locks:
         lock_count = len(section.locks)
         yield Result(state=State.WARN, summary=f"{lock_count} locks")
@@ -65,10 +60,8 @@ def check_zypper(params: Mapping[str, Any], section: Section) -> CheckResult:
         "security": State.CRIT,
         "recommended": State.WARN,
     }
-    if section.updates:
-        patch_items = sorted(section.patch_types.items())
-        for type_, count in patch_items:
-            yield Result(state=state_map.get(type_, State.OK), notice=f"{type_}: {count}")
+    for type_, count in sorted(Counter(section.patch_types).items(), key=lambda item: item[0]):
+        yield Result(state=state_map.get(type_, State.OK), notice=f"{type_}: {count}")
 
 
 register.agent_section(

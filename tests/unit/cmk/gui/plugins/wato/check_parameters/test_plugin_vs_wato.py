@@ -328,7 +328,6 @@ class ErrorReporter:
         ("check", "zerto_vpg_rpo", "zerto_vpg_rpo"),
         ("check", "zertificon_mail_queues", "zertificon_mail_queues"),
         ("check", "zpool_status", "zpool_status"),
-        ("check", "zypper", "zypper"),
         ("discovery", "fileinfo", "fileinfo_groups"),
         ("discovery", "fileinfo_groups", "fileinfo_groups"),
         ("discovery", "sap_hana_fileinfo", "fileinfo_groups"),

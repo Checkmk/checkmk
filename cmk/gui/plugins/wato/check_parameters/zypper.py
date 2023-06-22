@@ -5,15 +5,59 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
-    ManualCheckParameterRulespec,
+    CheckParameterRulespecWithoutItem,
     rulespec_registry,
-    RulespecGroupEnforcedServicesOperatingSystem,
+    RulespecGroupCheckParametersOperatingSystem,
 )
+from cmk.gui.valuespec import Dictionary, Migrate, MonitoringState
+
+
+def _parameter_valuespec():
+    return Migrate(
+        valuespec=Dictionary(
+            elements=[
+                (
+                    "security",
+                    MonitoringState(
+                        title=_("State when security updates are pending"),
+                        default_value=2,
+                    ),
+                ),
+                (
+                    "recommended",
+                    MonitoringState(
+                        title=_("State when recommended updates are pending"),
+                        default_value=1,
+                    ),
+                ),
+                (
+                    "other",
+                    MonitoringState(
+                        title=_(
+                            "State when updates are pending, which are neither recommended or a security update"
+                        ),
+                        default_value=0,
+                    ),
+                ),
+                (
+                    "locks",
+                    MonitoringState(
+                        title=_("State when packages are locked"),
+                        default_value=1,
+                    ),
+                ),
+            ],
+        ),
+        migrate=lambda v: v or {},
+    )
+
 
 rulespec_registry.register(
-    ManualCheckParameterRulespec(
+    CheckParameterRulespecWithoutItem(
         check_group_name="zypper",
-        group=RulespecGroupEnforcedServicesOperatingSystem,
+        group=RulespecGroupCheckParametersOperatingSystem,
+        match_type="dict",
+        parameter_valuespec=_parameter_valuespec,
         title=lambda: _("Zypper Updates"),
     )
 )

@@ -5,10 +5,17 @@
 
 import re
 from collections import Counter
-from typing import Any, Mapping, NamedTuple
+from typing import NamedTuple, TypedDict
 
 from .agent_based_api.v1 import register, Result, Service, State, type_defs
 from .agent_based_api.v1.type_defs import CheckResult
+
+
+class Param(TypedDict):
+    locks: int
+    security: int
+    recommended: int
+    other: int
 
 
 class ZypperUpdates(NamedTuple):
@@ -21,6 +28,13 @@ class Error(str):
 
 
 Section = ZypperUpdates | Error
+
+DEFAULT_PARAMS = Param(
+    locks=int(State.WARN),
+    security=int(State.CRIT),
+    recommended=int(State.WARN),
+    other=int(State.OK),
+)
 
 
 def parse_zypper(string_table: type_defs.StringTable) -> Section:
@@ -46,22 +60,17 @@ def discover_zypper(section: Section) -> type_defs.DiscoveryResult:
     yield Service()
 
 
-def check_zypper(params: Mapping[str, Any], section: Section) -> CheckResult:
+def check_zypper(params: Param, section: Section) -> CheckResult:
     if isinstance(section, Error):
         yield Result(state=State.UNKNOWN, summary=section)
         return
 
     yield Result(state=State.OK, summary=f"{len(section.patch_types)} updates")
     if section.locks:
-        lock_count = len(section.locks)
-        yield Result(state=State.WARN, summary=f"{lock_count} locks")
+        yield Result(state=State(params["locks"]), summary=f"{len(section.locks)} locks")
 
-    state_map = {
-        "security": State.CRIT,
-        "recommended": State.WARN,
-    }
     for type_, count in sorted(Counter(section.patch_types).items(), key=lambda item: item[0]):
-        yield Result(state=state_map.get(type_, State.OK), notice=f"{type_}: {count}")
+        yield Result(state=State(params.get(type_, params["other"])), notice=f"{type_}: {count}")
 
 
 register.agent_section(
@@ -75,5 +84,5 @@ register.check_plugin(
     discovery_function=discover_zypper,
     check_function=check_zypper,
     check_ruleset_name="zypper",
-    check_default_parameters={},
+    check_default_parameters=DEFAULT_PARAMS,
 )

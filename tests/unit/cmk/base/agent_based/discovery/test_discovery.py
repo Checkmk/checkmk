@@ -1281,7 +1281,7 @@ def test__discovery_considers_host_labels(
 
     assert {
         entry.id()
-        for entry in discovery._discovered_services._discover_services(
+        for entry in discovery._discovered_services.discover_services(
             realhost_scenario.config_cache,
             realhost_scenario.hostname,
             providers=realhost_scenario.providers,
@@ -1429,7 +1429,7 @@ def test__discover_host_labels_and_services_on_realhost(
 
     scenario = realhost_scenario
 
-    discovered_services = discovery._discovered_services._discover_services(
+    discovered_services = discovery._discovered_services.discover_services(
         scenario.config_cache,
         scenario.hostname,
         providers=scenario.providers,

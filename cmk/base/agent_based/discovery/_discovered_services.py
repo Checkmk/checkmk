@@ -16,7 +16,7 @@ from cmk.utils.log import console, section
 from cmk.checkengine import DiscoveryPlugin, HostKey, plugin_contexts, SourceType
 from cmk.checkengine.check_table import ServiceID
 from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.discovery import AutocheckEntry, AutochecksStore, QualifiedDiscovery
+from cmk.checkengine.discovery import AutocheckEntry, QualifiedDiscovery
 from cmk.checkengine.sectionparser import ParsedSectionName, Provider
 from cmk.checkengine.sectionparserutils import get_section_kwargs
 
@@ -24,33 +24,6 @@ from cmk.base.config import ConfigCache
 
 
 def analyse_discovered_services(
-    config_cache: ConfigCache,
-    host_name: HostName,
-    *,
-    providers: Mapping[HostKey, Provider],
-    plugins: Mapping[CheckPluginName, DiscoveryPlugin],
-    run_plugin_names: Container[CheckPluginName],
-    forget_existing: bool,
-    keep_vanished: bool,
-    on_error: OnError,
-) -> QualifiedDiscovery[AutocheckEntry]:
-    return _analyse_discovered_services(
-        existing_services=AutochecksStore(host_name).read(),
-        discovered_services=_discover_services(
-            config_cache,
-            host_name,
-            providers=providers,
-            plugins=plugins,
-            run_plugin_names=run_plugin_names,
-            on_error=on_error,
-        ),
-        run_plugin_names=run_plugin_names,
-        forget_existing=forget_existing,
-        keep_vanished=keep_vanished,
-    )
-
-
-def _analyse_discovered_services(
     *,
     existing_services: Sequence[AutocheckEntry],
     discovered_services: Iterable[AutocheckEntry],
@@ -119,7 +92,7 @@ def _drop_plugins_services(
     return (s for s in services if s.check_plugin_name not in plugin_names)
 
 
-def _discover_services(
+def discover_services(
     config_cache: ConfigCache,
     host_name: HostName,
     *,

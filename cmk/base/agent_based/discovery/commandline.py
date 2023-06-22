@@ -36,7 +36,7 @@ from cmk.checkengine.sectionparserutils import check_parsing_errors
 
 from cmk.base.config import ConfigCache
 
-from ._discovered_services import analyse_discovered_services
+from ._discovered_services import analyse_discovered_services, discover_services
 
 __all__ = ["commandline_discovery"]
 
@@ -164,18 +164,23 @@ def _commandline_discovery_on_host(
 
     section.section_step("Analyse discovered services")
 
-    service_result = analyse_discovered_services(
+    autocheck_store = AutochecksStore(real_host_name)
+    discovered_services = discover_services(
         config_cache,
         real_host_name,
         providers=providers,
         plugins=plugins,
         run_plugin_names=run_plugin_names,
-        forget_existing=not only_new,
-        keep_vanished=only_new,
         on_error=on_error,
     )
-
-    AutochecksStore(real_host_name).write(service_result.present)
+    service_result = analyse_discovered_services(
+        existing_services=autocheck_store.read(),
+        discovered_services=discovered_services,
+        run_plugin_names=run_plugin_names,
+        forget_existing=not only_new,
+        keep_vanished=only_new,
+    )
+    autocheck_store.write(service_result.present)
 
     new_per_plugin = Counter(s.check_plugin_name for s in service_result.new)
     for name, count in sorted(new_per_plugin.items()):

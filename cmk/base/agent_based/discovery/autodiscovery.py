@@ -33,6 +33,7 @@ from cmk.checkengine.checking import CheckPluginName, Item
 from cmk.checkengine.discovery import (
     AutocheckEntry,
     AutocheckServiceWithNodes,
+    AutochecksStore,
     discover_host_labels,
     DiscoveryMode,
     DiscoveryResult,
@@ -50,7 +51,7 @@ from cmk.checkengine.sectionparser import (
 
 from cmk.base.config import ConfigCache
 
-from ._discovered_services import analyse_discovered_services
+from ._discovered_services import analyse_discovered_services, discover_services
 
 __all__ = ["get_host_services"]
 
@@ -497,15 +498,21 @@ def _get_node_services(
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> ServicesTable[_Transition]:
-    service_result = analyse_discovered_services(
+    autocheck_store = AutochecksStore(host_name)
+    discovered_services = discover_services(
         config_cache,
         host_name,
         providers=providers,
         plugins=plugins,
         run_plugin_names=EVERYTHING,
+        on_error=on_error,
+    )
+    service_result = analyse_discovered_services(
+        existing_services=autocheck_store.read(),
+        discovered_services=discovered_services,
+        run_plugin_names=EVERYTHING,
         forget_existing=False,
         keep_vanished=False,
-        on_error=on_error,
     )
     return make_table(
         config_cache,
@@ -613,17 +620,24 @@ def _get_cluster_services(
     # Get services of the nodes. We are only interested in "old", "new" and "vanished"
     # From the states and parameters of these we construct the final state per service.
     for node in nodes:
-        entries = analyse_discovered_services(
+        autocheck_store = AutochecksStore(node)
+        discovered_services = discover_services(
             config_cache,
             node,
-            plugins=plugins,
             providers=providers,
+            plugins=plugins,
+            run_plugin_names=EVERYTHING,
+            on_error=on_error,
+        )
+        entries = analyse_discovered_services(
+            # This call doesn't depend on `node`, so it doesn't need
+            # to be in the for-loop.
+            existing_services=autocheck_store.read(),
+            discovered_services=discovered_services,
             run_plugin_names=EVERYTHING,
             forget_existing=False,
             keep_vanished=False,
-            on_error=on_error,
         )
-
         for check_source, entry in entries.chain_with_qualifier():
             cluster_items.update(
                 _cluster_service_entry(

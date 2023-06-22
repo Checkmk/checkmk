@@ -53,22 +53,28 @@ def analyse_discovered_services(
 def _analyse_discovered_services(
     *,
     existing_services: Sequence[AutocheckEntry],
-    discovered_services: list[AutocheckEntry],
+    discovered_services: Iterable[AutocheckEntry],
     run_plugin_names: Container[CheckPluginName],
     forget_existing: bool,
     keep_vanished: bool,
 ) -> QualifiedDiscovery[AutocheckEntry]:
     return QualifiedDiscovery(
-        preexisting=_services_to_remember(
-            choose_from=existing_services,
-            run_plugin_names=run_plugin_names,
-            forget_existing=forget_existing,
+        preexisting=list(
+            _services_to_remember(
+                choose_from=existing_services,
+                run_plugin_names=run_plugin_names,
+                forget_existing=forget_existing,
+            )
         ),
-        current=discovered_services
-        + _services_to_keep(
-            choose_from=existing_services,
-            run_plugin_names=run_plugin_names,
-            keep_vanished=keep_vanished,
+        current=list(
+            itertools.chain(
+                discovered_services,
+                _services_to_keep(
+                    choose_from=existing_services,
+                    run_plugin_names=run_plugin_names,
+                    keep_vanished=keep_vanished,
+                ),
+            )
         ),
     )
 
@@ -78,7 +84,7 @@ def _services_to_remember(
     choose_from: Sequence[AutocheckEntry],
     run_plugin_names: Container[CheckPluginName],
     forget_existing: bool,
-) -> Sequence[AutocheckEntry]:
+) -> Iterable[AutocheckEntry]:
     """Compile a list of services to regard as being the last known state
 
     This list is used to classify services into new/old/vanished.
@@ -93,7 +99,7 @@ def _services_to_keep(
     choose_from: Sequence[AutocheckEntry],
     run_plugin_names: Container[CheckPluginName],
     keep_vanished: bool,
-) -> list[AutocheckEntry]:
+) -> Iterable[AutocheckEntry]:
     """Compile a list of services to keep in addition to the discovered ones
 
     These services are considered to be currently present (even if they are not discovered).
@@ -109,8 +115,8 @@ def _services_to_keep(
 def _drop_plugins_services(
     services: Sequence[AutocheckEntry],
     plugin_names: Container[CheckPluginName],
-) -> list[AutocheckEntry]:
-    return [s for s in services if s.check_plugin_name not in plugin_names]
+) -> Iterable[AutocheckEntry]:
+    return (s for s in services if s.check_plugin_name not in plugin_names)
 
 
 def _discover_services(
@@ -121,7 +127,7 @@ def _discover_services(
     run_plugin_names: Container[CheckPluginName],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     on_error: OnError,
-) -> list[AutocheckEntry]:
+) -> Iterable[AutocheckEntry]:
     # find out which plugins we need to discover
     plugin_candidates = _find_candidates(
         providers,
@@ -169,7 +175,7 @@ def _discover_services(
                     if on_error is OnError.WARN:
                         console.error(f"Discovery of '{check_plugin_name}' failed: {e}\n")
 
-            return list(service_table.values())
+            return service_table.values()
 
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")

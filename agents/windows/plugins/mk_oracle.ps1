@@ -2260,7 +2260,8 @@ if ($the_count -gt 0) {
                               # if used, then we at first presume that we do not want to skip this section
                               $SKIP_SECTION = 0
                               # if this SECTION is in our ONLY_SIDS then it will be skipped
-                              if (((get-variable "EXCLUDE_$inst_name").value -contains "ALL") -or ((get-variable "EXCLUDE_$inst_name").value -contains $the_section)) {
+                              $instance_exclude = (get-variable "EXCLUDE_$inst_name").value
+                              if (($instance_exclude -contains "ALL") -or ($instance_exclude -contains $the_section)) {
                                    $SKIP_SECTION = 1
                               }
                          }
@@ -2300,7 +2301,8 @@ if ($the_count -gt 0) {
                                    # "dynamic variables" are not supported in powershell. For example, $inst_name holds the value of the oracle_sid, let's say "ORCL"
                                    # in powershell, I need to find the value of the variable EXCLUDE_ORCL, I cannot use "EXCLUDE_$inst_name" to reference that
                                    # and so I built the following workaround...
-                                   if (((get-variable "EXCLUDE_$inst_name").value -contains "ALL") -or ((get-variable "EXCLUDE_$inst_name").value -contains $the_section)) {
+                                   $instance_exclude = (get-variable "EXCLUDE_$inst_name").value
+                                   if (($instance_exclude -contains "ALL") -or ($instance_exclude -contains $the_section)) {
                                         $SKIP_SECTION = 1
                                    }
                               }

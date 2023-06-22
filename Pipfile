@@ -175,7 +175,7 @@ marshmallow = "==3.19.0"  # direct dependency
 marshmallow-oneofschema = "==3.0.1"  # direct dependency
 mypy-extensions = "==1.0.0" # direct dependency, NOTE: This should really be unpinned, because it must work with the unpinned mypy version! Otherwise e.g. the mypy LSP integration can break silently etc. But we have a silly test enforcing the pinning here... :-P * * *
 apispec-oneofschema = "==3.0.0"  # direct dependency
-pydantic = "==1.10.7"
+pydantic = "==1.10.9"
 paho-mqtt = "==1.6.1"  # needed for MQTT special agent
 python-active-directory = "==2.0.1"
 rrdtool = "==0.1.16"  # Actually we ship the binding which comes with rrdtool itself...

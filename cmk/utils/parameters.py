@@ -36,6 +36,6 @@ def boil_down_parameters(
     try:
         # TODO: We could get rid of the suppression if we used a "isinstance(default, Mapping)"
         # guard, but it's a bit unclear how this affects performance.
-        return {**default, **merged}  # type: ignore[list-item]
+        return {**default, **merged}  # type: ignore[dict-item]
     except TypeError:
         return merged or default

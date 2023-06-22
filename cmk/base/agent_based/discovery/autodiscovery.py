@@ -507,7 +507,23 @@ def _get_node_services(
         keep_vanished=False,
         on_error=on_error,
     )
+    return make_table(
+        config_cache,
+        host_name,
+        service_result,
+        get_effective_host=get_effective_host,
+        get_service_description=get_service_description,
+    )
 
+
+def make_table(
+    config_cache: ConfigCache,
+    host_name: HostName,
+    entries: QualifiedDiscovery[AutocheckEntry],
+    *,
+    get_effective_host: Callable[[HostName, ServiceName], HostName],
+    get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+) -> ServicesTable[_Transition]:
     return {
         entry.id(): (
             _node_service_source(
@@ -521,7 +537,7 @@ def _get_node_services(
             entry,
             [host_name],
         )
-        for check_source, entry in service_result.chain_with_qualifier()
+        for check_source, entry in entries.chain_with_qualifier()
         if (service_name := get_service_description(host_name, *entry.id()))
     }
 

@@ -54,15 +54,14 @@ from cmk.checkengine.type_defs import AgentRawDataSection, NO_SELECTION
 import cmk.base.agent_based.discovery as discovery
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
-from cmk.base.agent_based.discovery import _discovered_services
 from cmk.base.agent_based.discovery._discovery import _check_host_labels, _check_service_lists
 from cmk.base.agent_based.discovery.autodiscovery import (
     _get_cluster_services,
-    _get_node_services,
     _get_post_discovery_autocheck_services,
     _group_by_transition,
     _make_diff,
     _ServiceFilters,
+    make_table,
     ServicesByTransition,
     ServicesTable,
 )
@@ -1539,54 +1538,56 @@ def test__perform_host_label_discovery_on_cluster(
 
 
 def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
-    entries: Mapping[str, AutocheckEntry] = {
-        discovery_status: AutocheckEntry(
-            CheckPluginName(f"plugin_{discovery_status}"),
-            None,
-            {},
-            {},
-        )
-        for discovery_status in (
-            "old",
-            "vanished",
-            "new",
-        )
-    }
-
-    monkeypatch.setattr(
-        AutochecksStore,
-        "read",
-        lambda *args, **kwargs: [
-            entries["old"],
-            entries["vanished"],
+    host_name = HostName("horst")
+    entries = QualifiedDiscovery[AutocheckEntry](
+        preexisting=[
+            AutocheckEntry(
+                CheckPluginName(f"plugin_{discovery_status}"),
+                item=None,
+                parameters={},
+                service_labels={},
+            )
+            for discovery_status in ("old", "vanished")
+        ],
+        current=[
+            AutocheckEntry(
+                CheckPluginName(f"plugin_{discovery_status}"),
+                item=None,
+                parameters={},
+                service_labels={},
+            )
+            for discovery_status in ("old", "new")
         ],
     )
-
-    monkeypatch.setattr(
-        _discovered_services,
-        "_discover_services",
-        lambda *args, **kwargs: [
-            entries["old"],
-            entries["new"],
-        ],
-    )
-
     config_cache = Scenario().apply(monkeypatch)
-    assert _get_node_services(
+    assert make_table(
         config_cache,
-        HostName("horst"),
-        providers={},
-        plugins={},
-        get_service_description=lambda *_args: "desc",
+        host_name,
+        entries,
         get_effective_host=lambda hn, _svcdescr: hn,
-        on_error=OnError.RAISE,
+        get_service_description=lambda *_args: "desc",
     ) == {
-        entry.id(): (
-            discovery_status,
-            entry,
-            [HostName("horst")],
-        )
-        for discovery_status, entry in entries.items()
+        ServiceID(CheckPluginName("plugin_vanished"), item=None): (
+            "vanished",
+            AutocheckEntry(
+                CheckPluginName("plugin_vanished"), item=None, parameters={}, service_labels={}
+            ),
+            [host_name],
+        ),
+        ServiceID(CheckPluginName("plugin_old"), item=None): (
+            "old",
+            AutocheckEntry(
+                CheckPluginName("plugin_old"), item=None, parameters={}, service_labels={}
+            ),
+            [host_name],
+        ),
+        ServiceID(CheckPluginName("plugin_new"), item=None): (
+            "new",
+            AutocheckEntry(
+                CheckPluginName("plugin_new"), item=None, parameters={}, service_labels={}
+            ),
+            [host_name],
+        ),
     }
 
 

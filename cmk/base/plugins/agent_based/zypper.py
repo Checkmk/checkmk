@@ -56,22 +56,19 @@ def check_zypper(params: Mapping[str, Any], section: Section) -> CheckResult:
         yield Result(state=State.UNKNOWN, summary=section.error)
         return
 
+    yield Result(state=State.OK, summary=f"{section.updates} updates")
     if section.locks:
-        infotext = "%d updates, %d locks" % (section.updates, len(section.locks))
-        yield Result(state=State.WARN, summary=infotext)
-    else:
-        yield Result(state=State.OK, summary="%d updates" % section.updates)
+        lock_count = len(section.locks)
+        yield Result(state=State.WARN, summary=f"{lock_count} locks")
 
+    state_map = {
+        "security": State.CRIT,
+        "recommended": State.WARN,
+    }
     if section.updates:
         patch_items = sorted(section.patch_types.items())
-        for t, c in patch_items:
-            infotext = "%s: %d" % (t, c)
-            if t == "security":
-                yield Result(state=State.CRIT, notice=infotext)
-            elif t == "recommended":
-                yield Result(state=State.WARN, notice=infotext)
-            else:
-                yield Result(state=State.OK, notice=infotext)
+        for type_, count in patch_items:
+            yield Result(state=state_map.get(type_, State.OK), notice=f"{type_}: {count}")
 
 
 register.agent_section(

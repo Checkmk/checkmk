@@ -60,7 +60,8 @@ def test_zypper_discover(string_table: zypper.Section) -> None:
                 ],
             ],
             [
-                Result(state=State.WARN, summary="1 updates, 2 locks"),
+                Result(state=State.OK, summary="1 updates"),
+                Result(state=State.WARN, summary="2 locks"),
                 Result(state=State.WARN, notice="recommended: 1"),
             ],
         ),

@@ -125,7 +125,8 @@ def _get_import_names_from_pipfile() -> list[ImportName]:
         "ordered-set": "ordered_set",
         "openapi-spec-validator": "openapi_spec_validator",
         "pysaml2": "saml2",
-        "pysmi-lextudio": "pysmi-lextudio",
+        "pysmi-lextudio": "pysmi",
+        "pysnmp-lextudio": "pysnmp",
     }
 
     import_names = []

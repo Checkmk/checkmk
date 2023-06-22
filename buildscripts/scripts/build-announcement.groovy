@@ -18,15 +18,10 @@ def main() {
             dir("${checkout_dir}") {
                 def announce_file = sh(script: 'make print-CHECK_MK_ANNOUNCE_TAR_FILE', returnStdout: true).trim();
                 sh(script: "make announcement")
-            }
-    }
-
-    stage("Archive artifacts") {
-        dir("${checkout_dir}") {
-            archiveArtifacts(
-                artifacts: announce_file,
-                fingerprint: true,
-                );
+                archiveArtifacts(
+                    artifacts: announce_file,
+                    fingerprint: true,
+                )
             }
         }
     }

@@ -143,4 +143,25 @@ def test_zypper_discover(string_table: zypper.Section) -> None:
 )
 def test_zypper_check(string_table: StringTable, expected_result: CheckResult) -> None:
     section = zypper.parse_zypper(string_table)
-    assert list(zypper.check_zypper({}, section)) == expected_result
+    assert list(zypper.check_zypper(zypper.DEFAULT_PARAMS, section)) == expected_result
+
+
+def test_zypper_check_remapping() -> None:
+    # Assemble
+    section = zypper.ZypperUpdates(
+        patch_types=["security", "recommended", "not relevant"],
+        locks=["a lock"],
+    )
+    params = zypper.Param(
+        locks=int(State.OK),
+        security=int(State.OK),
+        recommended=int(State.OK),
+        other=int(State.CRIT),
+    )
+    # Act
+    results = [r for r in zypper.check_zypper(params, section) if isinstance(r, Result)]
+    # Assert
+    for type_ in ("security", "recommended", "locks"):
+        patch_states = [r.state for r in results if type_ in r.details]
+        assert patch_states == [State.OK]
+    assert [r.state for r in results if "not relevant" in r.details] == [State.CRIT]

@@ -41,21 +41,29 @@ def discover_services(
             if plugin_name in run_plugin_names
         ],
     )
+    skip = {
+        plugin_name
+        for plugin_name in plugin_candidates
+        if config_cache.check_plugin_ignored(host_name, plugin_name)
+    }
+
     section.section_step("Executing discovery plugins (%d)" % len(plugin_candidates))
     console.vverbose("  Trying discovery with: %s\n" % ", ".join(str(n) for n in plugin_candidates))
     # The host name must be set for the host_name() calls commonly used to determine the
     # host name for host_extra_conf{_merged,} calls in the legacy checks.
 
+    for plugin_name in skip:
+        console.vverbose(f"  Skip ignored check plugin name {plugin_name!r}\n")
+
     service_table: MutableMapping[ServiceID, AutocheckEntry] = {}
     try:
         with plugin_contexts.current_host(host_name):
-            for check_plugin_name in plugin_candidates:
+            for check_plugin_name in plugin_candidates - skip:
                 try:
                     service_table.update(
                         {
                             entry.id(): entry
                             for entry in _discover_plugins_services(
-                                config_cache,
                                 check_plugin_name=check_plugin_name,
                                 plugins=plugins,
                                 host_key=HostKey(
@@ -169,7 +177,6 @@ def _find_mgmt_candidates(
 
 
 def _discover_plugins_services(
-    config_cache: ConfigCache,
     *,
     check_plugin_name: CheckPluginName,
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
@@ -177,11 +184,6 @@ def _discover_plugins_services(
     providers: Mapping[HostKey, Provider],
     on_error: OnError,
 ) -> Iterator[AutocheckEntry]:
-    # Skip this check type if is ignored for that host
-    if config_cache.check_plugin_ignored(host_key.hostname, check_plugin_name):
-        console.vverbose("  Skip ignored check plugin name '%s'\n" % check_plugin_name)
-        return
-
     try:
         plugin = plugins[check_plugin_name]
     except KeyError:

@@ -127,6 +127,7 @@ def _get_import_names_from_pipfile() -> list[ImportName]:
         "pysaml2": "saml2",
         "pysmi-lextudio": "pysmi",
         "pysnmp-lextudio": "pysnmp",
+        "snmpsim-lextudio": "snmpsim",
     }
 
     import_names = []

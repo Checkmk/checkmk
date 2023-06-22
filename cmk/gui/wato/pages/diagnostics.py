@@ -9,6 +9,8 @@ import uuid
 from pathlib import Path
 from typing import List, Optional, Tuple
 
+from livestatus import SiteId
+
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.diagnostics import (
@@ -56,7 +58,14 @@ from cmk.gui.plugins.wato.utils import mode_registry, redirect, WatoMode
 from cmk.gui.sites import get_site_config, site_is_local
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
-from cmk.gui.valuespec import CascadingDropdown, Dictionary, DualListChoice, FixedValue, ValueSpec
+from cmk.gui.valuespec import (
+    CascadingDropdown,
+    Dictionary,
+    DualListChoice,
+    FixedValue,
+    SetupSiteChoice,
+    ValueSpec,
+)
 from cmk.gui.watolib import automation_command_registry, AutomationCommand, do_remote_automation
 from cmk.gui.watolib.check_mk_automations import create_diagnostics_dump
 from cmk.gui.watolib.wato_background_job import WatoBackgroundJob
@@ -164,19 +173,7 @@ class ModeDiagnostics(WatoMode):
             elements=[
                 (
                     "site",
-                    FixedValue(
-                        value=True,
-                        title=_("Site"),
-                        totext=omd_site(),
-                        help=_("Collect diagnostics data from the local site."),
-                    ),
-                    # TODO: Collecting dumps from a remote site often fails, depending on
-                    # the amount of data. See CMK-11374. Once, that's solved, reactivate
-                    # this dropdown, again:
-                    # DropdownChoice(
-                    #    title=_("Site"),
-                    #    choices=get_activation_site_choices(),
-                    # ),
+                    SetupSiteChoice(),
                 ),
                 # TODO: provide the possibility to chose multiple sites
                 # (
@@ -582,9 +579,13 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
         #        results.append(chunk_result)
 
         if len(results) > 1:
-            result = _merge_results(results)
+            result = _merge_results(site, results)
+            # The remote tarfiles will be downloaded and the link will point to the local site.
+            download_site_id = omd_site()
         elif len(results) == 1:
             result = results[0]
+            # When there is only one chunk, the download link will point to the remote site.
+            download_site_id = site
         else:
             job_interface.send_result_message(_("Got no result to create dump file"))
             return
@@ -595,7 +596,7 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
             tarfile_path = result.tarfile_path
             download_url = makeuri_contextless(
                 request,
-                [("site", site), ("tarfile_name", str(Path(tarfile_path).name))],
+                [("site", download_site_id), ("tarfile_name", str(Path(tarfile_path).name))],
                 filename="download_diagnostics_dump.py",
             )
             button = html.render_icon_button(download_url, _("Download"), "diagnostics_dump_file")
@@ -607,7 +608,7 @@ class DiagnosticsDumpBackgroundJob(WatoBackgroundJob):
             job_interface.send_result_message(_("Creating dump file failed"))
 
 
-def _merge_results(results) -> CreateDiagnosticsDumpResult:
+def _merge_results(site, results) -> CreateDiagnosticsDumpResult:  # type: ignore[no-untyped-def]
     output: str = ""
     tarfile_created: bool = False
     tarfile_paths: List[str] = []
@@ -615,7 +616,14 @@ def _merge_results(results) -> CreateDiagnosticsDumpResult:
         output += result.output
         if result.tarfile_created:
             tarfile_created = True
-            tarfile_paths.append(result.tarfile_path)
+            if site_is_local(site):
+                tarfile_localpath = result.tarfile_path
+            else:
+                tarfile_localpath = _get_tarfile_from_remotesite(
+                    SiteId(site),
+                    Path(result.tarfile_path).name,
+                )
+            tarfile_paths.append(tarfile_localpath)
 
     return CreateDiagnosticsDumpResult(
         output=output,
@@ -624,12 +632,15 @@ def _merge_results(results) -> CreateDiagnosticsDumpResult:
     )
 
 
-def _join_sub_tars(tarfile_paths: List[str]) -> str:
-    tarfile_path = str(
-        cmk.utils.paths.diagnostics_dir.joinpath("sddump_%s" % str(uuid.uuid4())).with_suffix(
-            ".tar.gz"
-        )
-    )
+def _get_tarfile_from_remotesite(site: SiteId, tarfile_name: str) -> str:
+    tarfile_localpath = _create_file_path()
+    with open(tarfile_localpath, "wb") as file:
+        file.write(_get_diagnostics_dump_file(site, tarfile_name))
+    return tarfile_localpath
+
+
+def _join_sub_tars(tarfile_paths: list[str]) -> str:
+    tarfile_path = _create_file_path()
     with tarfile.open(name=tarfile_path, mode="w:gz") as dest:
         for filepath in tarfile_paths:
             with tarfile.open(name=filepath, mode="r:gz") as sub_tar:
@@ -641,6 +652,14 @@ def _join_sub_tars(tarfile_paths: List[str]) -> str:
     return tarfile_path
 
 
+def _create_file_path() -> str:
+    return str(
+        cmk.utils.paths.diagnostics_dir.joinpath("sddump_" + str(uuid.uuid4())).with_suffix(
+            ".tar.gz"
+        )
+    )
+
+
 @page_registry.register_page("download_diagnostics_dump")
 class PageDownloadDiagnosticsDump(Page):
     def page(self) -> None:
@@ -649,25 +668,13 @@ class PageDownloadDiagnosticsDump(Page):
                 _("Sorry, you lack the permission for downloading diagnostics dumps.")
             )
 
-        site = request.get_ascii_input_mandatory("site")
+        site = SiteId(request.get_ascii_input_mandatory("site"))
         tarfile_name = request.get_ascii_input_mandatory("tarfile_name")
-        file_content = self._get_diagnostics_dump_file(site, tarfile_name)
+        file_content = _get_diagnostics_dump_file(site, tarfile_name)
 
         response.set_content_type("application/x-tgz")
         response.headers["Content-Disposition"] = "Attachment; filename=%s" % tarfile_name
         response.set_data(file_content)
-
-    def _get_diagnostics_dump_file(self, site: str, tarfile_name: str) -> bytes:
-        if site_is_local(site):
-            return _get_diagnostics_dump_file(tarfile_name)
-
-        return do_remote_automation(
-            get_site_config(site),
-            "diagnostics-dump-get-file",
-            [
-                ("tarfile_name", tarfile_name),
-            ],
-        )
 
 
 @automation_command_registry.register
@@ -676,13 +683,28 @@ class AutomationDiagnosticsDumpGetFile(AutomationCommand):
         return "diagnostics-dump-get-file"
 
     def execute(self, api_request: str) -> bytes:
-        return _get_diagnostics_dump_file(api_request)
+        return _get_local_diagnostics_dump_file(api_request)
 
     def get_request(self) -> str:
         return request.get_ascii_input_mandatory("tarfile_name")
 
 
-def _get_diagnostics_dump_file(tarfile_name: str) -> bytes:
+def _get_diagnostics_dump_file(site: SiteId, tarfile_name: str) -> bytes:
+    if site_is_local(site):
+        return _get_local_diagnostics_dump_file(tarfile_name)
+
+    raw_response = do_remote_automation(
+        get_site_config(site),
+        "diagnostics-dump-get-file",
+        [
+            ("tarfile_name", tarfile_name),
+        ],
+    )
+    assert isinstance(raw_response, bytes)
+    return raw_response
+
+
+def _get_local_diagnostics_dump_file(tarfile_name: str) -> bytes:
     _validate_diagnostics_dump_tarfile_name(tarfile_name)
     tarfile_path = cmk.utils.paths.diagnostics_dir.joinpath(tarfile_name)
     with tarfile_path.open("rb") as f:

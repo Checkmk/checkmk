@@ -191,7 +191,7 @@ set echo on
 $LESS_THAN = '<'
 
 Function should_exclude($exclude, $section) {
-    return (($exclude -contains "ALL") -or ($exclude -contains $section))
+    return (($exclude -Match "ALL") -or ($exclude -Match $section))
 }
 
 Function get_dbversion_database ($ORACLE_HOME) {
@@ -2263,7 +2263,7 @@ if ($the_count -gt 0) {
                               # if used, then we at first presume that we do not want to skip this section
                               # if this SECTION is in our ONLY_SIDS then it will be skipped
                               $instance_exclude = (get-variable "EXCLUDE_$inst_name").value
-                              $SKIP_SECTION = should_exclude $instance_exclude $the_section
+                              $SKIP_SECTION = should_exclude $instance_exclude $section
                          }
                          # now we set our action on error back to our normal value
                          $ErrorActionPreference = $NORMAL_ACTION_PREFERENCE
@@ -2301,7 +2301,7 @@ if ($the_count -gt 0) {
                                    # in powershell, I need to find the value of the variable EXCLUDE_ORCL, I cannot use "EXCLUDE_$inst_name" to reference that
                                    # and so I built the following workaround...
                                    $instance_exclude = (get-variable "EXCLUDE_$inst_name").value
-                                   $SKIP_SECTION = should_exclude $instance_exclude $the_section
+                                   $SKIP_SECTION = should_exclude $instance_exclude $section
                               }
                               # now we set our action on error back to our normal value
                               $ErrorActionPreference = $NORMAL_ACTION_PREFERENCE

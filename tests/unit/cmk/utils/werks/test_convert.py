@@ -93,7 +93,7 @@ The effective settings of rulesets could be displayed with a wrong value.
 
 ```
 {
-...
+   ...
 }
 ```
 

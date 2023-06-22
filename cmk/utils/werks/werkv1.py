@@ -65,8 +65,7 @@ def load_werk_v1(content: str, werk_id: int) -> RawWerkV1:
     }
     in_header = True
     for line in content.split("\n"):
-        line = line.strip()
-        if in_header and not line:
+        if in_header and not line.strip():
             in_header = False
         elif in_header:
             key, text = line.split(":", 1)

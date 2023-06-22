@@ -191,10 +191,7 @@ set echo on
 $LESS_THAN = '<'
 
 Function should_exclude($exclude, $section) {
-    if (($exclude -contains "ALL") -or ($exclude -contains $section)) {
-        return 1
-    }
-    return 0
+    return (($exclude -contains "ALL") -or ($exclude -contains $section))
 }
 
 Function get_dbversion_database ($ORACLE_HOME) {
@@ -2271,7 +2268,7 @@ if ($the_count -gt 0) {
                          # now we set our action on error back to our normal value
                          $ErrorActionPreference = $NORMAL_ACTION_PREFERENCE
                          debug_echo "value of the_section = ${the_section}"
-                         if ($SKIP_SECTION -eq 0) {
+                         if (-Not ($SKIP_SECTION)) {
                               $THE_NEW_SQL = invoke-expression "${the_section}"
                               $THE_SQL = $THE_SQL + $THE_NEW_SQL
                          }
@@ -2308,7 +2305,7 @@ if ($the_count -gt 0) {
                               }
                               # now we set our action on error back to our normal value
                               $ErrorActionPreference = $NORMAL_ACTION_PREFERENCE
-                              if ($SKIP_SECTION -eq 0) {
+                              if (-Not ($SKIP_SECTION)) {
                                    $THE_NEW_SQL = invoke-expression "$the_section"
                                    $THE_SQL = $THE_SQL + $THE_NEW_SQL
                               }

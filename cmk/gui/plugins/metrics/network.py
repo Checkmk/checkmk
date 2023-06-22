@@ -1688,8 +1688,8 @@ metric_info["used_snat_ports"] = {
 graph_info["bandwidth_translated"] = {
     "title": _("Bandwidth"),
     "metrics": [
-        ("if_out_octets,8,*@bits/s", "area", _("Input bandwidth")),
-        ("if_in_octets,8,*@bits/s", "-area", _("Output bandwidth")),
+        ("if_out_octets,8,*@bits/s", "area", _("Output bandwidth")),
+        ("if_in_octets,8,*@bits/s", "-area", _("Input bandwidth")),
     ],
     "scalars": [
         ("if_in_octets:warn", _("Warning (In)")),

@@ -6,10 +6,11 @@
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
+    Levels,
     rulespec_registry,
     RulespecGroupCheckParametersApplications,
+    simple_levels,
 )
-from cmk.gui.plugins.wato.utils.simple_levels import SimpleLevels
 from cmk.gui.valuespec import Dictionary, Integer
 
 
@@ -18,7 +19,7 @@ def _parameter_valuespec_mcafee_web_gateway_misc():
         elements=[
             (
                 "clients",
-                SimpleLevels(
+                simple_levels.SimpleLevels(
                     Integer,
                     title=_("Upper levels for clients"),
                     default_levels=(0, 0),
@@ -27,7 +28,7 @@ def _parameter_valuespec_mcafee_web_gateway_misc():
             ),
             (
                 "network_sockets",
-                SimpleLevels(
+                simple_levels.SimpleLevels(
                     Integer,
                     title=_("Upper levels for open network sockets"),
                     default_levels=(0, 0),
@@ -36,7 +37,7 @@ def _parameter_valuespec_mcafee_web_gateway_misc():
             ),
             (
                 "time_to_resolve_dns",
-                SimpleLevels(
+                simple_levels.SimpleLevels(
                     Integer,
                     title=_("Upper levels for time to resolve DNS"),
                     default_levels=(1500, 2000),
@@ -46,7 +47,7 @@ def _parameter_valuespec_mcafee_web_gateway_misc():
             ),
             (
                 "time_consumed_by_rule_engine",
-                SimpleLevels(
+                simple_levels.SimpleLevels(
                     Integer,
                     title=_("Upper levels for time consumed by rule engine"),
                     default_levels=(1500, 2000),
@@ -56,32 +57,32 @@ def _parameter_valuespec_mcafee_web_gateway_misc():
             ),
             (
                 "client_requests_http",
-                SimpleLevels(
-                    Integer,
+                Levels(
                     title=_("Upper levels for the number of http request per second"),
-                    default_levels=(1500, 2000),
-                    default_value=(1500, 2000),
-                    unit="/s",
+                    default_levels=(500.0, 1000.0),
+                    default_value=(500.0, 1000.0),
+                    default_difference=(10.0, 20.0),
+                    unit="per second",
                 ),
             ),
             (
                 "client_requests_https",
-                SimpleLevels(
-                    Integer,
+                Levels(
                     title=_("Upper levels for the number of https request per second"),
-                    default_levels=(1500, 2000),
-                    default_value=(1500, 2000),
-                    unit="/s",
+                    default_levels=(500.0, 1000.0),
+                    default_value=(500.0, 1000.0),
+                    default_difference=(10.0, 20.0),
+                    unit="per second",
                 ),
             ),
             (
                 "client_requests_httpv2",
-                SimpleLevels(
-                    Integer,
+                Levels(
                     title=_("Upper levels for the number of httpv2 request per second"),
-                    default_levels=(1500, 2000),
-                    default_value=(1500, 2000),
-                    unit="/s",
+                    default_levels=(500.0, 1000.0),
+                    default_value=(500.0, 1000.0),
+                    default_difference=(10.0, 20.0),
+                    unit="per second",
                 ),
             ),
         ],

@@ -46,7 +46,7 @@ def _check_mcafee_webgateway(
         value_store=value_store,
         value=section.infections,
         metric_name="infections_rate",
-        levels_upper=params.get("infections"),
+        levels=params.get("infections"),
         key="check_mcafee_webgateway.infections",
         label="Infections",
     )
@@ -55,7 +55,7 @@ def _check_mcafee_webgateway(
         value_store=value_store,
         value=section.connections_blocked,
         metric_name="connections_blocked_rate",
-        levels_upper=params.get("connections_blocked"),
+        levels=params.get("connections_blocked"),
         key="check_mcafee_webgateway.connections_blocked",
         label="Connections blocked",
     )

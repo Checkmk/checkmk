@@ -14,15 +14,17 @@ DETECT_WEB_GATEWAY = v1.contains(".1.3.6.1.2.1.1.1.0", "mcafee web gateway")
 
 ValueStore = typing.MutableMapping[str, typing.Any]
 
+PredictiveLevels = dict[str, object] | tuple[float, float] | None
+
 
 class MiscParams(typing.TypedDict, total=True):
     clients: typing.Optional[typing.Tuple[int, int]]
     network_sockets: typing.Optional[typing.Tuple[int, int]]
     time_to_resolve_dns: typing.Optional[typing.Tuple[int, int]]
     time_consumed_by_rule_engine: typing.Optional[typing.Tuple[int, int]]
-    client_requests_http: tuple[int, int] | None
-    client_requests_httpv2: tuple[int, int] | None
-    client_requests_https: tuple[int, int] | None
+    client_requests_http: PredictiveLevels
+    client_requests_httpv2: PredictiveLevels
+    client_requests_https: PredictiveLevels
 
 
 MISC_DEFAULT_PARAMS = MiscParams(
@@ -30,9 +32,9 @@ MISC_DEFAULT_PARAMS = MiscParams(
     network_sockets=None,
     time_to_resolve_dns=(1500, 2000),
     time_consumed_by_rule_engine=(1500, 2000),
-    client_requests_http=None,
-    client_requests_httpv2=None,
-    client_requests_https=None,
+    client_requests_http=(500, 1000),
+    client_requests_httpv2=(500, 1000),
+    client_requests_https=(500, 1000),
 )
 
 
@@ -62,7 +64,7 @@ def compute_rate(
     value_store: ValueStore,
     value: int | None,
     metric_name: str,
-    levels_upper: tuple[float, float] | None,
+    levels: PredictiveLevels,
     key: str,
     label: str | None = None,
 ) -> v1.type_defs.CheckResult:
@@ -73,10 +75,19 @@ def compute_rate(
     except v1.GetRateError:
         yield v1.Result(state=v1.State.OK, summary="Can't compute rate.")
         return
-    yield from v1.check_levels(
-        rate,
-        metric_name=metric_name,
-        levels_upper=levels_upper,
-        render_func=lambda f: "%.1f/s" % f,
-        label=label,
-    )
+    if isinstance(levels, dict):
+        yield from v1.check_levels_predictive(
+            rate,
+            metric_name=metric_name,
+            levels=levels,
+            render_func=lambda f: "%.1f/s" % f,
+            label=label,
+        )
+    else:
+        yield from v1.check_levels(
+            rate,
+            metric_name=metric_name,
+            levels_upper=levels,
+            render_func=lambda f: "%.1f/s" % f,
+            label=label,
+        )

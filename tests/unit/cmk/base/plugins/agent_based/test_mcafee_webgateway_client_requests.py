@@ -67,7 +67,7 @@ def test_discovery(
     [
         pytest.param(
             WALK,
-            plugin.MISC_DEFAULT_PARAMS,
+            plugin.MISC_DEFAULT_PARAMS | {"client_requests_https": None},
             [
                 v1.Result(state=v1.State.OK, summary="2.0/s"),
                 v1.Metric("requests_per_second", 2.0),
@@ -110,7 +110,7 @@ def test_check_https(
     [
         pytest.param(
             WALK,
-            plugin.MISC_DEFAULT_PARAMS,
+            plugin.MISC_DEFAULT_PARAMS | {"client_requests_httpv2": None},
             [
                 v1.Result(state=v1.State.OK, summary="2.0/s"),
                 v1.Metric("requests_per_second", 2.0),
@@ -153,7 +153,7 @@ def test_check_httpv2(
     [
         pytest.param(
             WALK,
-            plugin.MISC_DEFAULT_PARAMS,
+            plugin.MISC_DEFAULT_PARAMS | {"client_requests_http": None},
             [
                 v1.Result(state=v1.State.OK, summary="2.0/s"),
                 v1.Metric("requests_per_second", 2.0),

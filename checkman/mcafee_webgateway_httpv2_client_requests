@@ -7,7 +7,8 @@ description:
  This check monitors the number of HTTPv2 request per second of McAfee Web
  Gateway devices which support the MCAFEE-MWG MIB.
 
- No default levels are set. Upper levels are configurable.
+ Upper levels are configurable. By default, levels are set at 500/1000 requests
+ per second for {warn}/{crit} respectively.
 
 discovery:
  One service is created (provided the data is available).

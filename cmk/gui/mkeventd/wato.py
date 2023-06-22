@@ -39,6 +39,7 @@ import cmk.utils.store as store
 import cmk.utils.translations
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostName
 from cmk.utils.site import omd_site
 
 # It's OK to import centralized config load logic
@@ -163,7 +164,7 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.global_settings import load_configuration_settings, save_global_settings
-from cmk.gui.watolib.hosts_and_folders import HostsWithAttributes, make_action_link
+from cmk.gui.watolib.hosts_and_folders import HostAttributes, make_action_link
 from cmk.gui.watolib.main_menu import MainModuleRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 from cmk.gui.watolib.search import (
@@ -5063,7 +5064,7 @@ ExtraServiceConfECContact = ServiceRulespec(
 #   +----------------------------------------------------------------------+
 #   | Stuff for sending monitoring notifications into the event console.   |
 #   '----------------------------------------------------------------------'
-def mkeventd_update_notification_configuration(hosts: HostsWithAttributes) -> None:
+def mkeventd_update_notification_configuration(hosts: Mapping[HostName, HostAttributes]) -> None:
     contactgroup = active_config.mkeventd_notify_contactgroup
     remote_console = active_config.mkeventd_notify_remotehost
 

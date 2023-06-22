@@ -103,8 +103,6 @@ if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 HostAttributes = Mapping[str, Any]
-HostsWithAttributes = Mapping[HostName, HostAttributes]
-AttributeType = tuple[str, str, dict[str, Any], str]  # host attr, cmk.base var name, value, title
 
 
 class WATOFolderInfo(TypedDict, total=False):
@@ -738,7 +736,7 @@ class WithAttributes:
     def __init__(self, *args, **kw) -> None:  # type: ignore[no-untyped-def]
         super().__init__(*args, **kw)
         self._attributes: dict[str, Any] = {"meta_data": {}}
-        self._effective_attributes = None
+        self._effective_attributes: dict[str, Any] | None = None
 
     # .--------------------------------------------------------------------.
     # | ATTRIBUTES                                                         |
@@ -747,16 +745,16 @@ class WithAttributes:
     def attributes(self) -> dict[str, Any]:
         return self._attributes
 
-    def attribute(self, attrname: str, default_value: Any = None) -> Any:
+    def attribute(self, attrname: str, default_value: object | None = None) -> Any:
         return self.attributes().get(attrname, default_value)
 
-    def set_attribute(self, attrname: str, value: Any) -> None:
+    def set_attribute(self, attrname: str, value: object) -> None:
         self._attributes[attrname] = value
 
-    def has_explicit_attribute(self, attrname) -> bool:  # type: ignore[no-untyped-def]
+    def has_explicit_attribute(self, attrname: str) -> bool:
         return attrname in self.attributes()
 
-    def effective_attributes(self):
+    def effective_attributes(self) -> dict[str, object]:
         raise NotImplementedError()
 
     def effective_attribute(self, attrname, default_value=None):
@@ -765,17 +763,17 @@ class WithAttributes:
     def remove_attribute(self, attrname: str) -> None:
         del self.attributes()[attrname]
 
-    def drop_caches(self):
+    def drop_caches(self) -> None:
         self._effective_attributes = None
 
-    def updated_at(self):
+    def updated_at(self) -> float | None:
         md = self._attributes.get("meta_data", {})
         return md.get("updated_at")
 
-    def _cache_effective_attributes(self, effective):
+    def _cache_effective_attributes(self, effective: dict[str, object]) -> None:
         self._effective_attributes = effective.copy()
 
-    def _get_cached_effective_attributes(self):
+    def _get_cached_effective_attributes(self) -> dict[str, object]:
         if self._effective_attributes is None:
             raise KeyError("Not cached")
         return self._effective_attributes.copy()
@@ -1928,7 +1926,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         tp = self.title_path() if show_main else self.title_path_without_root()
         return " / ".join(str(p) for p in tp)
 
-    def effective_attributes(self):
+    def effective_attributes(self) -> dict[str, object]:
         try:
             return self._get_cached_effective_attributes()  # cached :-)
         except KeyError:
@@ -3213,7 +3211,10 @@ class CREHost(WithPermissions, WithAttributes):
     def tag(self, taggroup_name: TagGroupID) -> TagID | None:
         effective = self.effective_attributes()
         attribute_name = "tag_" + taggroup_name
-        return effective.get(attribute_name)
+        value = effective.get(attribute_name)
+        if isinstance(value, str):
+            return TagID(value)
+        return None
 
     def discovery_failed(self) -> bool:
         return self.attributes().get("inventory_failed", False)
@@ -3229,7 +3230,7 @@ class CREHost(WithPermissions, WithAttributes):
             return errors
         return []
 
-    def effective_attributes(self):
+    def effective_attributes(self) -> dict[str, object]:
         try:
             return self._get_cached_effective_attributes()  # cached :-)
         except KeyError:
@@ -3836,11 +3837,11 @@ def validate_all_hosts(  # type: ignore[no-untyped-def]
     return {}
 
 
-def collect_all_hosts() -> HostsWithAttributes:
+def collect_all_hosts() -> Mapping[HostName, HostAttributes]:
     return _collect_hosts(folder_tree().root_folder())
 
 
-def _collect_hosts(folder: CREFolder) -> HostsWithAttributes:
+def _collect_hosts(folder: CREFolder) -> Mapping[HostName, HostAttributes]:
     hosts_attributes = {}
     for host_name, host in folder.all_hosts_recursively().items():
         hosts_attributes[host_name] = host.effective_attributes()
@@ -3919,7 +3920,7 @@ class MatchItemGeneratorHosts(ABCMatchItemGenerator):
     def __init__(
         self,
         name: str,
-        host_collector: Callable[[], HostsWithAttributes],
+        host_collector: Callable[[], Mapping[HostName, HostAttributes]],
     ) -> None:
         super().__init__(name)
         self._host_collector = host_collector

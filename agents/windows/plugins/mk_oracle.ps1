@@ -190,6 +190,12 @@ set echo on
 # use this workaround to avoid the message that the "<" symbol is reserved for future use
 $LESS_THAN = '<'
 
+Function should_exclude($exclude, $section) {
+    if (($exclude -contains "ALL") -or ($exclude -contains $section)) {
+        return 1
+    }
+    return 0
+}
 
 Function get_dbversion_database ($ORACLE_HOME) {
      # The output of this command contains -- among others -- the version
@@ -2258,12 +2264,9 @@ if ($the_count -gt 0) {
                          # check if $EXCLUDE_SID is used
                          if ("$EXCLUDE_$inst_name" -ne $null) {
                               # if used, then we at first presume that we do not want to skip this section
-                              $SKIP_SECTION = 0
                               # if this SECTION is in our ONLY_SIDS then it will be skipped
                               $instance_exclude = (get-variable "EXCLUDE_$inst_name").value
-                              if (($instance_exclude -contains "ALL") -or ($instance_exclude -contains $the_section)) {
-                                   $SKIP_SECTION = 1
-                              }
+                              $SKIP_SECTION = should_exclude $instance_exclude $the_section
                          }
                          # now we set our action on error back to our normal value
                          $ErrorActionPreference = $NORMAL_ACTION_PREFERENCE
@@ -2296,15 +2299,12 @@ if ($the_count -gt 0) {
                               # check if $EXCLUDE_SID is used
                               if ("$EXCLUDE_$inst_name" -ne $null) {
                                    # if used, then we at first presume that we do not want to skip this section
-                                   $SKIP_SECTION = 0
                                    # if this SECTION is in our ONLY_SIDS then it will be skipped
                                    # "dynamic variables" are not supported in powershell. For example, $inst_name holds the value of the oracle_sid, let's say "ORCL"
                                    # in powershell, I need to find the value of the variable EXCLUDE_ORCL, I cannot use "EXCLUDE_$inst_name" to reference that
                                    # and so I built the following workaround...
                                    $instance_exclude = (get-variable "EXCLUDE_$inst_name").value
-                                   if (($instance_exclude -contains "ALL") -or ($instance_exclude -contains $the_section)) {
-                                        $SKIP_SECTION = 1
-                                   }
+                                   $SKIP_SECTION = should_exclude $instance_exclude $the_section
                               }
                               # now we set our action on error back to our normal value
                               $ErrorActionPreference = $NORMAL_ACTION_PREFERENCE

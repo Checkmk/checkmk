@@ -75,7 +75,7 @@ ifneq ("$(wildcard $(PY_PATH))","")
   PY_VIRT_MAJ_MIN := $(shell "${PY_PATH}" -c "from sys import version_info as v; print(f'{v.major}.{v.minor}')")
 endif
 
-.PHONY: all analyze build check check-binaries check-permissions check-version \
+.PHONY: announcement all analyze build check check-binaries check-permissions check-version \
         clean compile-neb-cmc compile-neb-cmc-docker css dist documentation \
         documentation-quick format format-c test-format-c format-python format-shell \
         format-js GTAGS help install iwyu mrproper mrclean optimize-images \
@@ -179,19 +179,11 @@ $(CHECK_MK_RAW_PRECOMPILED_WERKS): $(WERKS)
 $(REPO_PATH)/ChangeLog: $(CHECK_MK_RAW_PRECOMPILED_WERKS)
 	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks changelog ChangeLog .werks/werks
 
-
-$(CHECK_MK_ANNOUNCE_FOLDER):
+announcement:
 	mkdir -p $(CHECK_MK_ANNOUNCE_FOLDER)
-
-$(CHECK_MK_ANNOUNCE_MD): $(CHECK_MK_ANNOUNCE_FOLDER)
 	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks announce .werks $(VERSION) --format=md > $(CHECK_MK_ANNOUNCE_MD)
-
-$(CHECK_MK_ANNOUNCE_TXT): $(CHECK_MK_ANNOUNCE_FOLDER)
 	PYTHONPATH=${PYTHONPATH}:$(REPO_PATH) $(PIPENV) run python -m cmk.utils.werks announce .werks $(VERSION) --format=txt > $(CHECK_MK_ANNOUNCE_TXT)
-
-$(CHECK_MK_ANNOUNCE_TAR): $(CHECK_MK_ANNOUNCE_TXT) $(CHECK_MK_ANNOUNCE_MD)
 	tar -czf $(CHECK_MK_ANNOUNCE_TAR) -C $(CHECK_MK_ANNOUNCE_FOLDER) .
-
 
 packages:
 	$(MAKE) -C agents packages
@@ -327,7 +319,8 @@ clean:
 	       precompiled cache web/htdocs/js/*_min.js \
 	       web/htdocs/themes/*/theme.css \
 	       .werks/werks \
-	       ChangeLog
+	       ChangeLog \
+	       announce*
 
 css: .ran-webpack
 

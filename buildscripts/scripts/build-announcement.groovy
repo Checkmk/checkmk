@@ -7,27 +7,24 @@
 
 
 def main() {
+    stage("Clean workspace") {
+        dir("${checkout_dir}") {
+            // We don't want to fill up the workspace with old annoucement files
+            sh(script: "make clean")
+        }
+    }
     stage("Build announcement") {
         docker_image_from_alias("IMAGE_TESTING").inside() {
             dir("${checkout_dir}") {
-
-                def checkmk_version = sh(script: 'make print-VERSION', returnStdout: true).trim();
-                print(
-                    """
-                |===== CONFIGURATION ===============================
-                |checkmk_version:.......... |${checkmk_version}|
-                |===================================================
-                """.stripMargin()
-                );
-                ARTIFACT_NAME = "announce-" + checkmk_version + ".tar.gz"
-                sh(script: "make `pwd`/${ARTIFACT_NAME}")
+                def announce_file = sh(script: 'make print-CHECK_MK_ANNOUNCE_TAR_FILE', returnStdout: true).trim();
+                sh(script: "make announcement")
             }
     }
 
     stage("Archive artifacts") {
         dir("${checkout_dir}") {
             archiveArtifacts(
-                artifacts: ARTIFACT_NAME,
+                artifacts: announce_file,
                 fingerprint: true,
                 );
             }

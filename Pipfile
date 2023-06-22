@@ -115,9 +115,9 @@ paramiko = "==2.10.3"
 pyasn1 = "==0.4.8"  # needed by pysnmp
 pyasn1-modules = "==0.2.8"  # needed by kubernetes
 ply = "==3.11"  # needed by pysmi, python-active-directory
-pysmi-lextudio = "==1.1.13"  # needed by pysnmp
-pysnmp-lextudio = "==5.0.28"  # needed by Event Console
-snmpsim-lextudio = "==1.0.0"  # needed by SNMP integration tests
+pysmi = "==0.3.4"  # needed by pysnmp
+pysnmp = "==4.4.12"  # needed by Event Console
+snmpsim = "==0.4.7"  # needed by SNMP integration tests
 certifi = "*"  # needed by requests
 chardet = "==5.1.0"  # needed by requests
 urllib3 = "==1.26.15"  # needed by requests

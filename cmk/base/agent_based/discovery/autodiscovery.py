@@ -31,6 +31,7 @@ from cmk.checkengine import (
 from cmk.checkengine.check_table import ServiceID
 from cmk.checkengine.checking import CheckPluginName, Item
 from cmk.checkengine.discovery import (
+    analyse_services,
     AutocheckEntry,
     AutocheckServiceWithNodes,
     AutochecksStore,
@@ -51,7 +52,7 @@ from cmk.checkengine.sectionparser import (
 
 from cmk.base.config import ConfigCache
 
-from ._discovered_services import analyse_discovered_services, discover_services
+from ._discovered_services import discover_services
 
 __all__ = ["get_host_services"]
 
@@ -507,7 +508,7 @@ def _get_node_services(
         run_plugin_names=EVERYTHING,
         on_error=on_error,
     )
-    service_result = analyse_discovered_services(
+    service_result = analyse_services(
         existing_services=autocheck_store.read(),
         discovered_services=discovered_services,
         run_plugin_names=EVERYTHING,
@@ -629,7 +630,7 @@ def _get_cluster_services(
             run_plugin_names=EVERYTHING,
             on_error=on_error,
         )
-        entries = analyse_discovered_services(
+        entries = analyse_services(
             # This call doesn't depend on `node`, so it doesn't need
             # to be in the for-loop.
             existing_services=autocheck_store.read(),

@@ -6,9 +6,7 @@
 from cmk.utils.everythingtype import EVERYTHING
 
 from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.discovery import AutocheckEntry
-
-from cmk.base.agent_based.discovery._discovered_services import analyse_discovered_services
+from cmk.checkengine.discovery import analyse_services, AutocheckEntry
 
 
 def _service(plugin_name: str, item: str) -> AutocheckEntry:
@@ -16,7 +14,7 @@ def _service(plugin_name: str, item: str) -> AutocheckEntry:
 
 
 def test_discover_keep_vanished_and_remember() -> None:
-    result = analyse_discovered_services(
+    result = analyse_services(
         existing_services=[_service("A", "1")],
         discovered_services=[_service("B", "1")],
         run_plugin_names=EVERYTHING,
@@ -30,7 +28,7 @@ def test_discover_keep_vanished_and_remember() -> None:
 
 
 def test_discover_drop_vanished_but_remember() -> None:
-    result = analyse_discovered_services(
+    result = analyse_services(
         existing_services=[_service("A", "1")],
         discovered_services=[_service("B", "1")],
         run_plugin_names=EVERYTHING,
@@ -44,7 +42,7 @@ def test_discover_drop_vanished_but_remember() -> None:
 
 
 def test_discover_forget_everything_but_keep_it() -> None:
-    result = analyse_discovered_services(
+    result = analyse_services(
         existing_services=[_service("A", "1")],
         discovered_services=[_service("B", "1")],
         run_plugin_names=EVERYTHING,
@@ -58,7 +56,7 @@ def test_discover_forget_everything_but_keep_it() -> None:
 
 
 def test_discover_forget_everything_and_clear() -> None:  # a.k.a. "tabula rasa"
-    result = analyse_discovered_services(
+    result = analyse_services(
         existing_services=[_service("A", "1")],
         discovered_services=[_service("B", "1")],
         run_plugin_names=EVERYTHING,
@@ -73,7 +71,7 @@ def test_discover_forget_everything_and_clear() -> None:  # a.k.a. "tabula rasa"
 
 
 def test_discover_run_plugin_names() -> None:
-    result = analyse_discovered_services(
+    result = analyse_services(
         existing_services=[_service("A", "1"), _service("B", "1")],
         discovered_services=[_service("B", "2")],
         run_plugin_names={CheckPluginName("B")},
@@ -88,7 +86,7 @@ def test_discover_run_plugin_names() -> None:
 
 def test_discover_run_plugin_names_forget() -> None:
     # this combination does not really make sense, but this is what we'd expect to happen.
-    result = analyse_discovered_services(
+    result = analyse_services(
         existing_services=[_service("A", "1"), _service("B", "1")],
         discovered_services=[_service("B", "2")],
         run_plugin_names={CheckPluginName("B")},

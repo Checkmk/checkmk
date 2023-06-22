@@ -16,80 +16,11 @@ from cmk.utils.log import console, section
 from cmk.checkengine import DiscoveryPlugin, HostKey, plugin_contexts, SourceType
 from cmk.checkengine.check_table import ServiceID
 from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.discovery import AutocheckEntry, QualifiedDiscovery
+from cmk.checkengine.discovery import AutocheckEntry
 from cmk.checkengine.sectionparser import ParsedSectionName, Provider
 from cmk.checkengine.sectionparserutils import get_section_kwargs
 
 from cmk.base.config import ConfigCache
-
-
-def analyse_discovered_services(
-    *,
-    existing_services: Sequence[AutocheckEntry],
-    discovered_services: Iterable[AutocheckEntry],
-    run_plugin_names: Container[CheckPluginName],
-    forget_existing: bool,
-    keep_vanished: bool,
-) -> QualifiedDiscovery[AutocheckEntry]:
-    return QualifiedDiscovery(
-        preexisting=list(
-            _services_to_remember(
-                choose_from=existing_services,
-                run_plugin_names=run_plugin_names,
-                forget_existing=forget_existing,
-            )
-        ),
-        current=list(
-            itertools.chain(
-                discovered_services,
-                _services_to_keep(
-                    choose_from=existing_services,
-                    run_plugin_names=run_plugin_names,
-                    keep_vanished=keep_vanished,
-                ),
-            )
-        ),
-    )
-
-
-def _services_to_remember(
-    *,
-    choose_from: Sequence[AutocheckEntry],
-    run_plugin_names: Container[CheckPluginName],
-    forget_existing: bool,
-) -> Iterable[AutocheckEntry]:
-    """Compile a list of services to regard as being the last known state
-
-    This list is used to classify services into new/old/vanished.
-    Remembering is not the same as keeping!
-    Always remember the services of plugins that are not being run.
-    """
-    return _drop_plugins_services(choose_from, run_plugin_names) if forget_existing else choose_from
-
-
-def _services_to_keep(
-    *,
-    choose_from: Sequence[AutocheckEntry],
-    run_plugin_names: Container[CheckPluginName],
-    keep_vanished: bool,
-) -> Iterable[AutocheckEntry]:
-    """Compile a list of services to keep in addition to the discovered ones
-
-    These services are considered to be currently present (even if they are not discovered).
-    Always keep the services of plugins that are not being run.
-    """
-    return (
-        list(choose_from)
-        if keep_vanished
-        else _drop_plugins_services(choose_from, run_plugin_names)
-    )
-
-
-def _drop_plugins_services(
-    services: Sequence[AutocheckEntry],
-    plugin_names: Container[CheckPluginName],
-) -> Iterable[AutocheckEntry]:
-    return (s for s in services if s.check_plugin_name not in plugin_names)
 
 
 def discover_services(

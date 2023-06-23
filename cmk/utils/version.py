@@ -141,6 +141,9 @@ class _Release:
             return f"-{self.value}"
         return f"{self.r_type.name}{self.value}"
 
+    def is_unspecified(self) -> bool:
+        return self.r_type is RType.na
+
     @classmethod
     def unspecified(cls) -> Self:
         return cls(RType.na, 0)

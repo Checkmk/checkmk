@@ -48,7 +48,16 @@ def test_managed_werks(site: Site, werks: dict[int, Werk]) -> None:
 def test_cloud_werks(site: Site, werks: dict[int, Werk]) -> None:
     cloud_werks = [werk for werk in werks.values() if werk.edition == Edition.CCE]
 
-    if site.version.is_cloud_edition():
+    if site.version.is_cloud_edition() or site.version.is_saas_edition():
         assert cloud_werks
     else:
         assert not cloud_werks
+
+
+def test_saas_werks(site: Site, werks: dict[int, Werk]) -> None:
+    saas_werks = [werk for werk in werks.values() if werk.edition == Edition.CSE]
+
+    if site.version.is_saas_edition():
+        assert saas_werks
+    else:
+        assert not saas_werks

@@ -668,8 +668,6 @@ def _get_cluster_services(
             on_error=on_error,
         )
         entries = analyse_services(
-            # This call doesn't depend on `node`, so it doesn't need
-            # to be in the for-loop.
             existing_services=autocheck_store.read(),
             discovered_services=discovered_services,
             run_plugin_names=EVERYTHING,

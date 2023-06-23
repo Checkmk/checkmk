@@ -718,9 +718,16 @@ class Site:
                     raise
                 logger.info("Executing .f12 in '%s' ... DONE", path)
 
-        assert (
-            self.execute(["cmk-update-config"]).wait() == 0
-        ), "Failed to execute cmk-update-config"
+        logger.info("Executing cmk-update-config ...")
+        try:
+            self.check_output(["cmk-update-config"])
+        except subprocess.CalledProcessError as exc:
+            logger.error(
+                "Executing cmk-update-config ... FAILED:\nstdout: %s\nstderr: %s\n",
+                exc.output,
+                exc.stderr,
+            )
+            raise
 
     def _update_cmk_core_config(self) -> None:
         logger.info("Updating core configuration...")

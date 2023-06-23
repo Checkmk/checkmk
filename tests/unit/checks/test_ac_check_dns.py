@@ -7,7 +7,7 @@ from collections.abc import Mapping, Sequence
 
 import pytest
 
-from tests.testlib import ActiveCheck
+from cmk.base.legacy_checks import check_dns
 
 
 @pytest.mark.parametrize(
@@ -79,5 +79,4 @@ from tests.testlib import ActiveCheck
 def test_ac_check_dns_expected_addresses(
     params: Mapping[str, object], result: Sequence[object]
 ) -> None:
-    active_check = ActiveCheck("check_dns")
-    assert active_check.run_argument_function(params) == result
+    assert check_dns.check_dns_arguments(params) == result

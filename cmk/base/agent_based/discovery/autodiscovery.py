@@ -16,7 +16,7 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
-from cmk.utils.log import console
+from cmk.utils.log import console, section
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import ServiceName
 
@@ -38,6 +38,7 @@ from cmk.checkengine.discovery import (
     discover_host_labels,
     DiscoveryMode,
     DiscoveryResult,
+    find_plugins,
     HostLabelPlugin,
     QualifiedDiscovery,
 )
@@ -499,14 +500,27 @@ def _get_node_services(
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> ServicesTable[_Transition]:
+    candidates = find_plugins(
+        providers,
+        [(plugin_name, plugin.sections) for plugin_name, plugin in plugins.items()],
+    )
+    skip = {
+        plugin_name
+        for plugin_name in candidates
+        if config_cache.check_plugin_ignored(host_name, plugin_name)
+    }
+
+    section.section_step("Executing discovery plugins (%d)" % len(candidates))
+    console.vverbose("  Trying discovery with: %s\n" % ", ".join(str(n) for n in candidates))
+    # The host name must be set for the host_name() calls commonly used to determine the
+    # host name for host_extra_conf{_merged,} calls in the legacy checks.
+
+    for plugin_name in skip:
+        console.vverbose(f"  Skip ignored check plugin name {plugin_name!r}\n")
+
     autocheck_store = AutochecksStore(host_name)
     discovered_services = discover_services(
-        config_cache,
-        host_name,
-        providers=providers,
-        plugins=plugins,
-        run_plugin_names=EVERYTHING,
-        on_error=on_error,
+        host_name, candidates - skip, providers=providers, plugins=plugins, on_error=on_error
     )
     service_result = analyse_services(
         existing_services=autocheck_store.read(),
@@ -621,13 +635,32 @@ def _get_cluster_services(
     # Get services of the nodes. We are only interested in "old", "new" and "vanished"
     # From the states and parameters of these we construct the final state per service.
     for node in nodes:
+        candidates = find_plugins(
+            # This call doesn't seem to depend on `node` so we could
+            # probably take it out of the loop to improve readability
+            # and performance.
+            providers,
+            [(plugin_name, plugin.sections) for plugin_name, plugin in plugins.items()],
+        )
+        skip = {
+            plugin_name
+            for plugin_name in candidates
+            if config_cache.check_plugin_ignored(host_name, plugin_name)
+        }
+        section.section_step("Executing discovery plugins (%d)" % len(candidates))
+        console.vverbose("  Trying discovery with: %s\n" % ", ".join(str(n) for n in candidates))
+        # The host name must be set for the host_name() calls commonly used to determine the
+        # host name for host_extra_conf{_merged,} calls in the legacy checks.
+
+        for plugin_name in skip:
+            console.vverbose(f"  Skip ignored check plugin name {plugin_name!r}\n")
+
         autocheck_store = AutochecksStore(node)
         discovered_services = discover_services(
-            config_cache,
             node,
+            candidates - skip,
             providers=providers,
             plugins=plugins,
-            run_plugin_names=EVERYTHING,
             on_error=on_error,
         )
         entries = analyse_services(

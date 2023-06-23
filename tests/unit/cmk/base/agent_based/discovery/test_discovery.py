@@ -1281,15 +1281,22 @@ def test__discovery_considers_host_labels(
     # this takes the detour via ruleset matcher :-(
     DiscoveredHostLabelsStore(realhost_scenario.hostname).save(host_labels)
 
+    # unpack for readability
+    host_name = realhost_scenario.hostname
+    config_cache = realhost_scenario.config_cache
+    providers = realhost_scenario.providers
+
+    # arrange
+    plugins = DiscoveryPluginMapper(config_cache=config_cache)
+    plugin_names = find_plugins(
+        providers,
+        [(plugin_name, plugin.sections) for plugin_name, plugin in plugins.items()],
+    )
+
     assert {
         entry.id()
         for entry in discovery._discovered_services.discover_services(
-            realhost_scenario.config_cache,
-            realhost_scenario.hostname,
-            providers=realhost_scenario.providers,
-            plugins=DiscoveryPluginMapper(config_cache=realhost_scenario.config_cache),
-            on_error=OnError.RAISE,
-            run_plugin_names=EVERYTHING,
+            host_name, plugin_names, providers=providers, plugins=plugins, on_error=OnError.RAISE
         )
     } == expected_services
 
@@ -1429,15 +1436,20 @@ def test__discover_host_labels_and_services_on_realhost(
         assert not discovery_test_case.expected_services
         return
 
-    scenario = realhost_scenario
+    # unpack for readability
+    host_name = realhost_scenario.hostname
+    config_cache = realhost_scenario.config_cache
+    providers = realhost_scenario.providers
+
+    # arrange
+    plugins = DiscoveryPluginMapper(config_cache=config_cache)
+    plugin_names = find_plugins(
+        providers,
+        [(plugin_name, plugin.sections) for plugin_name, plugin in plugins.items()],
+    )
 
     discovered_services = discovery._discovered_services.discover_services(
-        scenario.config_cache,
-        scenario.hostname,
-        providers=scenario.providers,
-        plugins=DiscoveryPluginMapper(config_cache=scenario.config_cache),
-        on_error=OnError.RAISE,
-        run_plugin_names=EVERYTHING,
+        host_name, plugin_names, providers=providers, plugins=plugins, on_error=OnError.RAISE
     )
 
     services = {s.id() for s in discovered_services}

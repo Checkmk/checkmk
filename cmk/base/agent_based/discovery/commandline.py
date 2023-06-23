@@ -24,6 +24,7 @@ from cmk.checkengine.discovery import (
     analyse_services,
     AutochecksStore,
     discover_host_labels,
+    find_plugins,
     HostLabelPlugin,
     QualifiedDiscovery,
 )
@@ -166,12 +167,33 @@ def _commandline_discovery_on_host(
     section.section_step("Analyse discovered services")
 
     autocheck_store = AutochecksStore(real_host_name)
+    candidates = find_plugins(
+        providers,
+        [
+            (plugin_name, plugin.sections)
+            for plugin_name, plugin in plugins.items()
+            if plugin_name in run_plugin_names
+        ],
+    )
+    skip = {
+        plugin_name
+        for plugin_name in candidates
+        if config_cache.check_plugin_ignored(real_host_name, plugin_name)
+    }
+
+    section.section_step("Executing discovery plugins (%d)" % len(candidates))
+    console.vverbose("  Trying discovery with: %s\n" % ", ".join(str(n) for n in candidates))
+    # The host name must be set for the host_name() calls commonly used to determine the
+    # host name for host_extra_conf{_merged,} calls in the legacy checks.
+
+    for plugin_name in skip:
+        console.vverbose(f"  Skip ignored check plugin name {plugin_name!r}\n")
+
     discovered_services = discover_services(
-        config_cache,
         real_host_name,
+        candidates - skip,
         providers=providers,
         plugins=plugins,
-        run_plugin_names=run_plugin_names,
         on_error=on_error,
     )
     service_result = analyse_services(

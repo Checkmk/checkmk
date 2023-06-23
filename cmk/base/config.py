@@ -123,10 +123,10 @@ from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
-from cmk.checkengine import AgentParser, CheckPlugin, DiscoveryPlugin, Parameters, SourceType
+from cmk.checkengine import AgentParser, CheckPlugin, Parameters, SourceType
 from cmk.checkengine.check_table import ConfiguredService, FilterMode, HostCheckTable, ServiceID
 from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr, Item
-from cmk.checkengine.discovery import AutocheckServiceWithNodes
+from cmk.checkengine.discovery import AutocheckServiceWithNodes, DiscoveryPlugin
 from cmk.checkengine.discovery.filters import RediscoveryParameters
 from cmk.checkengine.error_handling import ExitSpec
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin

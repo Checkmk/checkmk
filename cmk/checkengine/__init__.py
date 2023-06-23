@@ -30,9 +30,7 @@ See Also:
 from . import checking, inventory
 from ._api import (
     CheckPlugin,
-    DiscoveryPlugin,
     FetcherFunction,
-    Parameters,
     parse_raw_data,
     ParserFunction,
     SectionPlugin,
@@ -42,7 +40,7 @@ from ._markers import PiggybackMarker, SectionMarker
 from ._parser import Parser
 from ._parseragent import AgentParser
 from ._parsersnmp import SNMPParser
-from ._typedefs import HostKey, SourceInfo, SourceType
+from ._typedefs import HostKey, Parameters, SourceInfo, SourceType
 from .summarize import summarize
 
 __all__ = [
@@ -56,7 +54,6 @@ __all__ = [
     "Parser",
     "ParserFunction",
     "CheckPlugin",
-    "DiscoveryPlugin",
     "PiggybackMarker",
     "SectionPlugin",
     "SectionMarker",

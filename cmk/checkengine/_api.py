@@ -17,10 +17,8 @@ from cmk.utils.rulesets import RuleSetName
 from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
 
 from ._parser import Parser
-from ._typedefs import Parameters, SourceInfo
-from .checking import CheckPluginName
+from ._typedefs import SourceInfo
 from .checkresults import ActiveCheckResult
-from .discovery import AutocheckEntry
 from .host_sections import HostSections
 from .sectionparser import ParsedSectionName, SectionPlugin
 from .type_defs import AgentRawDataSection, SectionNameCollection
@@ -29,7 +27,6 @@ __all__ = [
     "parse_raw_data",
     "ParserFunction",
     "CheckPlugin",
-    "DiscoveryPlugin",
     "SectionPlugin",
     "SummarizerFunction",
 ]
@@ -60,11 +57,6 @@ class SummarizerFunction(Protocol):
         ...
 
 
-class PService(Protocol):
-    def as_autocheck_entry(self, name: CheckPluginName) -> AutocheckEntry:
-        ...
-
-
 @dataclass(frozen=True)
 class CheckPlugin:
     sections: Sequence[ParsedSectionName]
@@ -72,17 +64,6 @@ class CheckPlugin:
     cluster_function: Callable[..., Iterable[object]] | None
     default_parameters: Mapping[str, object] | None
     ruleset_name: RuleSetName | None
-
-
-@dataclass(frozen=True)
-class DiscoveryPlugin:
-    sections: Sequence[ParsedSectionName]
-    # There is a single user of the `service_name` attribute.  Is it
-    # *really* needed?  Does it *really* belong to the check plugin?
-    # This doesn't feel right.
-    service_name: str
-    function: Callable[..., Iterable[PService]]
-    parameters: Callable[[HostName], Sequence[Parameters] | Parameters | None]
 
 
 def parse_raw_data(

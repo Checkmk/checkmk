@@ -21,7 +21,6 @@ from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import ServiceName
 
 from cmk.checkengine import (
-    DiscoveryPlugin,
     FetcherFunction,
     HostKey,
     ParserFunction,
@@ -37,6 +36,7 @@ from cmk.checkengine.discovery import (
     AutochecksStore,
     discover_host_labels,
     DiscoveryMode,
+    DiscoveryPlugin,
     DiscoveryResult,
     find_plugins,
     HostLabelPlugin,

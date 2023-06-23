@@ -20,19 +20,14 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from cmk.checkengine import (
-    DiscoveryPlugin,
-    ParserFunction,
-    SectionPlugin,
-    SourceInfo,
-    SummarizerFunction,
-)
+from cmk.checkengine import ParserFunction, SectionPlugin, SourceInfo, SummarizerFunction
 from cmk.checkengine.checking import CheckPluginName, Item
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import (
     analyse_cluster_labels,
     discover_host_labels,
     DiscoveryMode,
+    DiscoveryPlugin,
     HostLabelPlugin,
     QualifiedDiscovery,
 )

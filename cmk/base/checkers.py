@@ -28,10 +28,10 @@ from cmk.snmplib.type_defs import SNMPRawData
 from cmk.fetchers import Fetcher, get_raw_data, Mode
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
-from cmk.checkengine import CheckPlugin, DiscoveryPlugin, parse_raw_data, SectionPlugin, SourceInfo
+from cmk.checkengine import CheckPlugin, parse_raw_data, SectionPlugin, SourceInfo
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.checkresults import ActiveCheckResult
-from cmk.checkengine.discovery import HostLabelPlugin
+from cmk.checkengine.discovery import DiscoveryPlugin, HostLabelPlugin
 from cmk.checkengine.error_handling import ExitSpec
 from cmk.checkengine.host_sections import HostSections
 from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName

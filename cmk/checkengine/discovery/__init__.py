@@ -5,6 +5,7 @@
 
 from ._autochecks import AutocheckEntry, AutocheckServiceWithNodes, AutochecksStore
 from ._autodiscovery import DiscoveryResult
+from ._discovery import DiscoveryPlugin
 from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabel, HostLabelPlugin
 from ._services import analyse_services, find_plugins
 from ._utils import DiscoveryMode, QualifiedDiscovery
@@ -18,6 +19,7 @@ __all__ = [
     "discover_host_labels",
     "DiscoveryMode",
     "DiscoveryResult",
+    "DiscoveryPlugin",
     "find_plugins",
     "HostLabel",
     "HostLabelPlugin",

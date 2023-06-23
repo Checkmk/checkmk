@@ -18,12 +18,13 @@ from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
 from cmk.utils.sectionname import SectionName
 
-from cmk.checkengine import DiscoveryPlugin, FetcherFunction, HostKey, ParserFunction, SectionPlugin
+from cmk.checkengine import FetcherFunction, HostKey, ParserFunction, SectionPlugin
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import (
     analyse_services,
     AutochecksStore,
     discover_host_labels,
+    DiscoveryPlugin,
     find_plugins,
     HostLabelPlugin,
     QualifiedDiscovery,

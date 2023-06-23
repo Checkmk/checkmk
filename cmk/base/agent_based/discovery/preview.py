@@ -20,7 +20,6 @@ from cmk.automations.results import CheckPreviewEntry
 
 from cmk.checkengine import (
     CheckPlugin,
-    DiscoveryPlugin,
     FetcherFunction,
     HostKey,
     ParserFunction,
@@ -34,6 +33,7 @@ from cmk.checkengine.discovery import (
     analyse_cluster_labels,
     AutocheckEntry,
     discover_host_labels,
+    DiscoveryPlugin,
     HostLabelPlugin,
     QualifiedDiscovery,
 )

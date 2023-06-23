@@ -12,6 +12,7 @@ from enum import Enum
 
 import cmk.utils.paths
 from cmk.utils.jsontype import JsonSerializable
+from cmk.utils.log import init_dedicated_logging
 
 
 @dataclass
@@ -28,8 +29,16 @@ class SecurityEvent:
 def log_security_event(event: SecurityEvent) -> None:
     """Log a security event"""
 
-    logger = _init_security_logging(event.domain.name)
-    logger.info(
+    # initialize if not already initialized
+    if not _root_logger().handlers:
+        init_dedicated_logging(
+            logging.INFO,
+            target_logger=_root_logger(),
+            log_file=cmk.utils.paths.security_log_file,
+            formatter=logging.Formatter("%(asctime)s [%(name)s %(process)d] %(message)s"),
+        )
+
+    _root_logger().getChild(event.domain.name).info(
         json.dumps(
             {
                 "summary": event.summary,
@@ -41,19 +50,3 @@ def log_security_event(event: SecurityEvent) -> None:
 
 def _root_logger() -> logging.Logger:
     return logging.getLogger("cmk_security")
-
-
-def _init_security_logging(name: str) -> logging.Logger:
-    """Return the logger with the appropriate handler attached"""
-
-    root_logger = _root_logger()
-
-    # initialize if not already initialized
-    if not root_logger.handlers:
-        handler = logging.FileHandler(cmk.utils.paths.security_log_file, encoding="utf-8")
-        handler.setFormatter(logging.Formatter("%(asctime)s [%(name)s %(process)d] %(message)s"))
-
-        root_logger.setLevel(logging.INFO)
-        root_logger.addHandler(handler)
-
-    return root_logger.getChild(name)

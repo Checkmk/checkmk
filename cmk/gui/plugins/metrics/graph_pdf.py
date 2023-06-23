@@ -20,12 +20,11 @@ from cmk.gui.plugins.metrics.artwork import (
 from cmk.gui.plugins.metrics.utils import (
     darken_color,
     GraphDataRange,
-    GraphRenderOptions,
     lighten_color,
     parse_color,
     RGBColor,
 )
-from cmk.gui.type_defs import SizeMM
+from cmk.gui.type_defs import GraphRenderOptions, SizeMM
 
 
 def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches

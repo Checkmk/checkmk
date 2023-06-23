@@ -281,6 +281,9 @@ class PainterParameters(TypedDict, total=False):
     # From historic metric painters
     rrd_consolidation: Literal["average", "min", "max"]
     time_range: tuple[str, int]
+    # From graph painters
+    graph_render_options: GraphRenderOptions
+    set_default_time_range: int
 
 
 def _make_default_painter_parameters() -> PainterParameters:
@@ -713,6 +716,8 @@ GraphIdentifier = Union[
     ExplicitGraphIdentifier,
     SingleTimeseriesGraphIdentifier,
 ]
+
+GraphRenderOptions = dict[str, Any]
 
 
 class RenderableRecipe(NamedTuple):

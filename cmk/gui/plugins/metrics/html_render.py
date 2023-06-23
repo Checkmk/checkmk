@@ -35,14 +35,18 @@ from cmk.gui.plugins.metrics.utils import (
     CombinedGraphMetricSpec,
     GraphDataRange,
     GraphRecipe,
-    GraphRenderOptions,
     render_color_icon,
     Scalar,
     SizeEx,
 )
 from cmk.gui.plugins.metrics.valuespecs import migrate_graph_render_options_title_format
 from cmk.gui.sites import get_alias_of_host
-from cmk.gui.type_defs import CombinedGraphSpec, GraphIdentifier, TemplateGraphSpec
+from cmk.gui.type_defs import (
+    CombinedGraphSpec,
+    GraphIdentifier,
+    GraphRenderOptions,
+    TemplateGraphSpec,
+)
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax

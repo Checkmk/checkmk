@@ -27,6 +27,8 @@ from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
     CombinedGraphSpec,
+    GraphRenderOptions,
+    PainterParameters,
     Row,
     TemplateGraphSpec,
     VisualLinkSpec,
@@ -136,15 +138,15 @@ multisite_builtin_views.update(
 )
 
 
-def paint_time_graph_cmk(  # type: ignore[no-untyped-def]
-    row,
-    cell,
+def paint_time_graph_cmk(
+    row: Row,
+    cell: Cell,
     resolve_combined_single_metric_spec: Callable[
         [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
     ],
     *,
-    override_graph_render_options=None,
-):
+    override_graph_render_options: GraphRenderOptions | None = None,
+) -> tuple[Literal[""], HTML | str]:
     graph_identification: tuple[Literal["template"], TemplateGraphSpec] = (
         "template",
         TemplateGraphSpec(
@@ -222,13 +224,13 @@ def paint_time_graph_cmk(  # type: ignore[no-untyped-def]
     )
 
 
-def paint_cmk_graphs_with_timeranges(  # type: ignore[no-untyped-def]
-    row,
-    cell,
+def paint_cmk_graphs_with_timeranges(
+    row: Row,
+    cell: Cell,
     resolve_combined_single_metric_spec: Callable[
         [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
     ],
-):
+) -> tuple[Literal[""], HTML | str]:
     return paint_time_graph_cmk(
         row,
         cell,
@@ -260,7 +262,7 @@ def cmk_time_graph_params():
     )
 
 
-def _migrate_old_graph_render_options(value):
+def _migrate_old_graph_render_options(value: PainterParameters | None) -> PainterParameters:
     if value is None:
         value = {}
 
@@ -268,9 +270,9 @@ def _migrate_old_graph_render_options(value):
     if "graph_render_options" not in value:
         value = copy.deepcopy(value)
         value["graph_render_options"] = {
-            "show_legend": value.pop("show_legend", True),
-            "show_controls": value.pop("show_controls", True),
-            "show_time_range_previews": value.pop("show_time_range_previews", True),
+            "show_legend": value.pop("show_legend", True),  # type: ignore[typeddict-item]
+            "show_controls": value.pop("show_controls", True),  # type: ignore[typeddict-item]
+            "show_time_range_previews": value.pop("show_time_range_previews", True),  # type: ignore[typeddict-item]
         }
     return value
 

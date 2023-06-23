@@ -98,7 +98,6 @@ class Curve(_CurveMandatory, total=False):
 
 
 Scalar = tuple[str, str, bool]
-GraphRenderOptions = dict[str, Any]
 
 
 class _GraphDataRangeMandatory(TypedDict):

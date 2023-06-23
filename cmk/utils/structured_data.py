@@ -1044,7 +1044,7 @@ class ImmutableTable:
             rows_by_ident.setdefault(_make_row_ident(key_columns, row), {}).update(row)
 
         return ImmutableTable(
-            key_columns=list(key_columns),
+            key_columns=key_columns,
             rows_by_ident=rows_by_ident,
             retentions={
                 ident: {

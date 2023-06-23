@@ -15,10 +15,8 @@ from cmk.utils.structured_data import MutableTree, SDKey, SDValue
 from cmk.checkengine.inventory import InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
-AttrDict = Mapping[SDKey, SDValue]
-
 # get allowed value types back as a tuple to guarantee consistency
-_ATTR_DICT_VAL_TYPES = get_args(get_args(AttrDict)[1])
+_ATTR_DICT_VAL_TYPES = get_args(get_args(Mapping[SDKey, SDValue])[1])
 
 _VALID_CHARACTERS = set(string.ascii_letters + string.digits + "_-")
 
@@ -32,7 +30,7 @@ def _parse_valid_path(path: list[str]) -> list[str]:
     return path
 
 
-def _raise_invalid_attr_dict(kwarg_name: str, dict_: AttrDict) -> NoReturn:
+def _raise_invalid_attr_dict(kwarg_name: str, dict_: Mapping[SDKey, SDValue]) -> NoReturn:
     value_types = ", ".join(t.__name__ for t in _ATTR_DICT_VAL_TYPES)
     raise TypeError(
         f"{kwarg_name} must be a dict with keys of type {SDKey.__name__}"
@@ -40,7 +38,9 @@ def _raise_invalid_attr_dict(kwarg_name: str, dict_: AttrDict) -> NoReturn:
     )
 
 
-def _parse_valid_dict(kwarg_name: str, dict_: AttrDict | None) -> AttrDict:
+def _parse_valid_dict(
+    kwarg_name: str, dict_: Mapping[SDKey, SDValue] | None
+) -> Mapping[SDKey, SDValue]:
     if dict_ is None:
         return {}
     if not isinstance(dict_, dict):
@@ -56,9 +56,9 @@ class Attributes(
     NamedTuple(  # pylint: disable=typing-namedtuple-call
         "_AttributesTuple",
         [
-            ("path", list[str]),
-            ("inventory_attributes", AttrDict),
-            ("status_attributes", AttrDict),
+            ("path", list[SDKey]),
+            ("inventory_attributes", Mapping[SDKey, SDValue]),
+            ("status_attributes", Mapping[SDKey, SDValue]),
         ],
     )
 ):
@@ -68,8 +68,8 @@ class Attributes(
         cls,
         *,
         path: list[str],
-        inventory_attributes: AttrDict | None = None,
-        status_attributes: AttrDict | None = None,
+        inventory_attributes: Mapping[SDKey, SDValue] | None = None,
+        status_attributes: Mapping[SDKey, SDValue] | None = None,
     ) -> "Attributes":
         """
 
@@ -115,10 +115,10 @@ class TableRow(
     NamedTuple(  # pylint: disable=typing-namedtuple-call
         "_TableRowTuple",
         [
-            ("path", list[str]),
-            ("key_columns", AttrDict),
-            ("inventory_columns", AttrDict),
-            ("status_columns", AttrDict),
+            ("path", list[SDKey]),
+            ("key_columns", Mapping[SDKey, SDValue]),
+            ("inventory_columns", Mapping[SDKey, SDValue]),
+            ("status_columns", Mapping[SDKey, SDValue]),
         ],
     )
 ):
@@ -128,9 +128,9 @@ class TableRow(
         cls,
         *,
         path: list[str],
-        key_columns: AttrDict,
-        inventory_columns: AttrDict | None = None,
-        status_columns: AttrDict | None = None,
+        key_columns: Mapping[SDKey, SDValue],
+        inventory_columns: Mapping[SDKey, SDValue] | None = None,
+        status_columns: Mapping[SDKey, SDValue] | None = None,
     ) -> "TableRow":
         """
 

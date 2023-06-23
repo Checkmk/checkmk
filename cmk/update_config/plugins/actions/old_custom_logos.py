@@ -24,7 +24,7 @@ from cmk.update_config.update_state import UpdateActionState
 
 class RemoveOldCustomLogos(UpdateAction):
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
-        """Remove old custom logo occurences, i.e. local image files "mk-logo.png" and customer
+        """Remove old custom logo occurrences, i.e. local image files "mk-logo.png" and customer
         config "globals" entries with key "logo"."""
         if not version.is_managed_edition():
             return

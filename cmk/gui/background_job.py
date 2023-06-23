@@ -169,7 +169,7 @@ class BackgroundProcessInterface:
         return self._logger
 
     def send_progress_update(self, info: str, with_timestamp: bool = False) -> None:
-        """The progress update is written to stdout and will be catched by the threads counterpart"""
+        """The progress update is written to stdout and will be caught by the threads counterpart"""
         message = info
         if with_timestamp:
             message = f"{render.time_of_day(time.time())} {message}"

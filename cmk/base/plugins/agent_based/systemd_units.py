@@ -398,7 +398,7 @@ def check_systemd_units(item: str, params: Mapping[str, Any], units: Units) -> C
         yield Result(state=State(params["else"]), summary="Service not found")
         return
     unit = units[item]
-    # TODO: this defaults unkown states to CRIT with the default params
+    # TODO: this defaults unknown states to CRIT with the default params
     state = params["states"].get(unit.active_status, params["states_default"])
     yield Result(state=State(state), summary=f"Status: {unit.active_status}")
     yield Result(state=State.OK, summary=unit.description)
@@ -411,7 +411,7 @@ CHECK_DEFAULT_PARAMETERS = {
         "failed": 2,
     },
     "states_default": 2,
-    "else": 2,  # missleading name, used if service vanishes
+    "else": 2,  # misleading name, used if service vanishes
 }
 
 DISCOVERY_DEFAULT_PARAMETERS = {"names": ["(never discover)^"]}

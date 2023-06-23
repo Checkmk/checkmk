@@ -739,7 +739,7 @@ class ConfigVariableBIDefaultLayout(ConfigVariable):
                         title=_("Default layout"),
                         help=_(
                             "Specifies the default layout to be used when an aggregation "
-                            "has no explict layout assinged"
+                            "has no explicit layout assigned"
                         ),
                         choices=self.get_layout_style_choices(),
                     ),
@@ -961,7 +961,7 @@ class ConfigVariableVirtualHostTrees(ConfigVariable):
                         varprefix,
                         _(
                             "Found '%s' a second time in tree '%s'. Each element can only be "
-                            "choosen once."
+                            "chosen once."
                         )
                         % (element, tree["id"]),
                     )
@@ -1993,7 +1993,7 @@ class ConfigVariableActivateChangesConcurrency(ConfigVariable):
                 (
                     "auto",
                     # xgettext: no-python-format
-                    _("Start new activations untils 90% of RAM is used"),
+                    _("Start new activations until 90% of RAM is used"),
                 ),
                 (
                     "maximum",
@@ -2430,7 +2430,7 @@ class ConfigVariableUserIdleTimeout(ConfigVariable):
                 "to login sessions which is applied when the user stops interacting with "
                 "the GUI for a given amount of time. When a user is exceeding the configured "
                 "maximum idle time, the user will be logged out and redirected to the login "
-                "screen to renew the login session. This setting can be overriden for each "
+                "screen to renew the login session. This setting can be overridden for each "
                 "user individually in the profile of the users."
             ),
         )
@@ -2514,7 +2514,7 @@ class ConfigVariableDefaultUserProfile(ConfigVariable):
                     Checkbox(
                         title=_("Visibility of hosts/services"),
                         label=_("Only show hosts and services the user is a contact for"),
-                        help=_("Specifiy the initial setting for an automatically created user."),
+                        help=_("Specify the initial setting for an automatically created user."),
                         default_value=False,
                     ),
                 ),
@@ -2756,9 +2756,9 @@ class ConfigVariableRestartLocking(ConfigVariable):
 
     def valuespec(self) -> ValueSpec:
         return DropdownChoice(
-            title=_("Simultanous activation of changes"),
+            title=_("Simultaneous activation of changes"),
             help=_(
-                "When two users simultanously try to activate the changes then "
+                "When two users simultaneously try to activate the changes then "
                 "you can decide to abort with an error (default) or have the requests "
                 "serialized. It is also possible - but not recommended - to turn "
                 "off locking altogether."
@@ -3402,7 +3402,7 @@ def _valuespec_extra_service_conf_passive_checks_enabled():
     return DropdownChoice(
         title=_("Enable/disable passive checks for services"),
         help=_(
-            "This setting allows you to disable the processing of passiv check results for a "
+            "This setting allows you to disable the processing of passive check results for a "
             "service."
         ),
         choices=[
@@ -3474,7 +3474,7 @@ def _valuespec_extra_host_conf_check_interval():
             "The default interval is set to 6 seconds for smart ping and one minute for all other. Here you can specify a larger "
             "interval. The host is contacted in this interval on a regular base. The host "
             "check is also being executed when a problematic service state is detected to check "
-            "wether or not the service problem is resulting from a host problem."
+            "whether or not the service problem is resulting from a host problem."
         ),
     )
 
@@ -4139,10 +4139,10 @@ def _valuespec_automatic_rediscover_parameters() -> Dictionary:
                     help=_(
                         "By default we keep a record of vanished services on the node if they are assigned to a cluster."
                         " When a clustered service switches from one node to another, it might not be seen on either node for one check cycle."
-                        " Keeping clustered services indefinitely keeps us from loosing them in this case."
-                        " However this means that truly vanished clustered servces will never be removed from the cluster."
+                        " Keeping clustered services indefinitely keeps us from losing them in this case."
+                        " However this means that truly vanished clustered services will never be removed from the cluster."
                         " If you choose to include clustered service in the removal operation, vanished services will be removed from clusters,"
-                        " at the risk of loosing services due to the described race condition."
+                        " at the risk of losing services due to the described race condition."
                     ),
                     choices=[
                         (True, _("Always keep vanished clustered services")),
@@ -4465,7 +4465,7 @@ def _valuespec_clustered_services_mapping():
             "<i>Clustered services</i> is not sufficient since it would not be clear "
             "to which of the several possible clusters a service found on such a shared "
             "node should be assigned to. With this ruleset you can assign services and "
-            "explicitely specify which cluster assign them to."
+            "explicitly specify which cluster assign them to."
         ),
     )
 
@@ -5199,8 +5199,8 @@ def _help_snmp_backend():
 
 
 def transform_snmp_backend_hosts_to_valuespec(backend):
-    # During 2.0.0 Beta you could configure inline_legacy backend thats why
-    # we need to accept this as value aswell.
+    # During 2.0.0 Beta you could configure inline_legacy backend that's why
+    # we need to accept this as value as well.
     if backend in [False, "inline", "inline_legacy"]:
         return SNMPBackendEnum.INLINE
     if backend in [True, "classic", "pysnmp"]:
@@ -5942,7 +5942,7 @@ def _valuespec_piggybacked_host_files():
         help=_(
             "We assume that a source host is sending piggyback data every check interval "
             "by default. If this is not the case for some source hosts then the <b>Check_MK</b> "
-            "and <b>Check_MK Disovery</b> services of the piggybacked hosts report "
+            "and <b>Check_MK Discovery</b> services of the piggybacked hosts report "
             "<b>Got no information from host</b> resp. <b>vanished services</b> if the piggybacked "
             "data is missing within a check interval. "
             "This rule helps you to get more control over the piggybacked host data handling. "

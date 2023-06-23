@@ -63,7 +63,7 @@ def _valuespec_custom_checks() -> MigrateNotUpdated:
                             "Freshness checking is only useful for passive checks when the staleness feature "
                             "is not enough for you. It changes the state of a check to a configurable other state "
                             "when the check results are not arriving in time. Staleness will still grey out the "
-                            "test after the corrsponding interval. If you don't want that, you might want to adjust "
+                            "test after the corresponding interval. If you don't want that, you might want to adjust "
                             "the staleness interval as well. The staleness interval is calculated from the normal "
                             "check interval multiplied by the staleness value in the <tt>Global Settings</tt>. "
                             "The normal check interval can be configured in a separate rule for your check."

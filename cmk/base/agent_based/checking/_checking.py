@@ -234,7 +234,7 @@ def _check_plugins_missing_data(
 
     # NOTE:
     # The keys used here are 'missing_sections' and 'specific_missing_sections'.
-    # They are from a time where the distiction between section and plugin was unclear.
+    # They are from a time where the distinction between section and plugin was unclear.
     # They are kept for compatibility.
     missing_status = exit_spec.get("missing_sections", 1)
     specific_plugins_missing_data_spec = exit_spec.get("specific_missing_sections", [])

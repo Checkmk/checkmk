@@ -240,7 +240,7 @@ class VisualLinkSpec(NamedTuple):
     @classmethod
     def from_raw(cls, value: VisualName | tuple[VisualTypeName, VisualName]) -> VisualLinkSpec:
         # With Checkmk 2.0 we introduced the option to link to dashboards. Now the link_view is not
-        # only a string (view_name) anymore, but a tuple of two elemets: ('<visual_type_name>',
+        # only a string (view_name) anymore, but a tuple of two elements: ('<visual_type_name>',
         # '<visual_name>'). Transform the old value to the new format.
         if isinstance(value, tuple):
             return cls(value[0], value[1])

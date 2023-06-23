@@ -29,8 +29,8 @@ registered_inventory_plugins: dict[InventoryPluginName, InventoryPlugin] = {}
 # N O T E: This currently contains discovery *and* host_label rulesets.
 # The rules are deliberately put the same dictionary, as we allow for
 # the host_label_function and the discovery_function to share a ruleset.
-# We provide seperate API functions however, should the need arise to
-# seperate them.
+# We provide separate API functions however, should the need arise to
+# separate them.
 stored_rulesets: dict[RuleSetName, Sequence[RuleSpec]] = {}
 
 # Lookup table for optimizing validate_check_ruleset_item_consistency()

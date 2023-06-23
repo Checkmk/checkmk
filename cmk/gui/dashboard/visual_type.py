@@ -124,7 +124,7 @@ class VisualTypeDashboards(VisualType):
             else:
                 raise MKGeneralException(
                     _(
-                        "Graph specification '%s' is insuficient for Dashboard. "
+                        "Graph specification '%s' is insufficient for Dashboard. "
                         "Please save your graph as a custom graph first, then "
                         "add that one to the dashboard."
                     )
@@ -156,7 +156,7 @@ class VisualTypeDashboards(VisualType):
             # We don't know if what we get as parameters actually fits a DashletConfig.
             dashlet_spec.update(parameters)  # type: ignore[typeddict-item]
 
-        # When a view shal be added to the dashboard, load the view and put it into the dashlet
+        # When a view shall be added to the dashboard, load the view and put it into the dashlet
         # FIXME: Move this to the dashlet plugins
         if add_type == "view":
             dashlet_spec = cast(ViewDashletConfig, dashlet_spec)

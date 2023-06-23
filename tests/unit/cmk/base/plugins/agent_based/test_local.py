@@ -35,69 +35,12 @@ def test_invalid_metric_name_does_not_crash() -> None:
         ]
 
 
-@pytest.mark.parametrize('line,expected_output', [
-    (
-        'service_name some rest',
-        ('service_name', ['some', 'rest'], None),
-    ),
-    (
-        '"space separated service name" some rest',
-        ('space separated service name', ['some', 'rest'], None),
-    ),
-    (
-        "'space separated service name' some rest",
-        ('space separated service name', ['some', 'rest'], None),
-    ),
-    (
-        '',
-        (None, None, "too many spaces or missing line content"),
-    ),
-    (
-        ' ',
-        (None, None, "too many spaces or missing line content"),
-    ),
-    (
-        ' "space separated service name" some rest',
-        (None, None, "too many spaces or missing line content"),
-    ),
-    (
-        '"space separated service name\' some rest',
-        (None, None, "missing closing quote character"),
-    ),
-])
-def test_extract_service_name(line, expected_output):
-    assert local._extract_service_name(line.split(' ')) == expected_output
-
-
-@pytest.mark.parametrize('string_table,exception_reason', [
-    (
-        [['node_1', 'cached(1556005301,300)', 'foo']],
-        ("Invalid line in agent section <<<local>>>. "
-         "Reason: Received wrong format of local check output. "
-         "Please read the documentation regarding the correct format: "
-         "https://docs.checkmk.com/2.0.0/de/localchecks.html  "
-         "First offending line: \"node_1 cached(1556005301,300) foo\""),
-    ),
-    (
-        [[]],
-        ("Invalid line in agent section <<<local>>>. Reason: Received empty line. "
-         "Did any of your local checks returned a superfluous newline character? "
-         "First offending line: \"\""),
-    ),
-])
-def test_local_format_error(string_table, exception_reason):
-
-    with pytest.raises(ValueError) as e:
-        list(local.discover_local(local.parse_local(string_table)))
-    assert str(e.value) == exception_reason
-
-
 @pytest.mark.parametrize(
     "string_table_row,expected_parsed_data",
     [
         (
             ['0', 'Service_FOO', 'V=1', 'This', 'Check', 'is', 'OK'],
-            local.LocalSection(errors=[],
+            local.LocalSection(errors={},
                                data={
                                    "Service_FOO": local.LocalResult(
                                        cached=None,
@@ -117,7 +60,7 @@ def test_local_format_error(string_table, exception_reason):
         ),
         (
             ['0 "Service FOO" V=1 This Check is OK'],  # 1.7: sep(0) + shlex
-            local.LocalSection(errors=[],
+            local.LocalSection(errors={},
                                data={
                                    "Service FOO": local.LocalResult(
                                        cached=None,
@@ -137,7 +80,7 @@ def test_local_format_error(string_table, exception_reason):
         ),
         (
             ['1', 'Bar_Service', '-', 'This', 'is', 'WARNING', 'and', 'has', 'no', 'metrics'],
-            local.LocalSection(errors=[],
+            local.LocalSection(errors={},
                                data={
                                    "Bar_Service": local.LocalResult(
                                        cached=None,
@@ -150,7 +93,7 @@ def test_local_format_error(string_table, exception_reason):
         ),
         (
             ['2', 'NotGood', 'V=120;50;100;0;1000', 'A', 'critical', 'check'],
-            local.LocalSection(errors=[],
+            local.LocalSection(errors={},
                                data={
                                    "NotGood": local.LocalResult(
                                        cached=None,
@@ -173,7 +116,7 @@ def test_local_format_error(string_table, exception_reason):
                 'P', 'Some_other_Service', 'value1=10;30;50|value2=20;10:20;0:50;0;100', 'Result',
                 'is', 'computed', 'from', 'two', 'values'
             ],
-            local.LocalSection(errors=[],
+            local.LocalSection(errors={},
                                data={
                                    "Some_other_Service": local.LocalResult(
                                        cached=None,
@@ -199,7 +142,7 @@ def test_local_format_error(string_table, exception_reason):
         ),
         (
             ['P', 'No-Text', 'hirn=-8;-20'],
-            local.LocalSection(errors=[],
+            local.LocalSection(errors={},
                                data={
                                    "No-Text": local.LocalResult(
                                        cached=None,
@@ -218,47 +161,23 @@ def test_local_format_error(string_table, exception_reason):
                                }),
         ),
         (
-            ['P', "D'oh!", 'this is an invalid metric|isotopes=0', 'I', 'messed', 'up!'],
-            local.LocalSection(
-                errors=[],
-                data={
-                    "D'oh!": local.LocalResult(
-                        cached=None,
-                        item="D'oh!",
-                        state=3,
-                        text=
-                        "Invalid performance data: 'this is an invalid metric'. Output is: I messed up!",
-                        perfdata=[
-                            local.Perfdata(
-                                name="isotopes",
-                                value=0,
-                                levels=(None, None, None, None),
-                                tuple=("isotopes", 0, None, None, None, None),
-                            )
-                        ],
-                    )
-                }),
+            ['P', "D’oh!", 'this is an invalid metric|isotopes=0', 'I', 'messed', 'up!'],
+            local.LocalSection(errors={
+                "D’oh!": local.LocalError(
+                    output="P D’oh! this is an invalid metric|isotopes=0 I messed up!",
+                    reason="Invalid performance data: 'this'. ",
+                )
+            },
+                               data={}),
         ),
-        (['P  "item name" too many spaces'],
-         local.LocalSection(
-             errors=[
-                 local.LocalError(
-                     output='P  "item name" too many spaces',
-                     reason='Could not extract service name: too many spaces or missing line content'
-                 ),
-             ],
-             data={},
-         )),
-        (['P  "item name - missing quote'],
-         local.LocalSection(
-             errors=[
-                 local.LocalError(
-                     output='P  "item name - missing quote',
-                     reason='Could not extract service name: too many spaces or missing line content'
-                 ),
-             ],
-             data={},
-         )),
+        (['P  "item name" too many spaces'], local.LocalSection(
+            errors={},
+            data={},
+        )),
+        (['P  "item name - missing quote'], local.LocalSection(
+            errors={},
+            data={},
+        )),
     ])
 def test_parse(string_table_row, expected_parsed_data):
     assert local.parse_local([string_table_row]) == expected_parsed_data
@@ -282,7 +201,7 @@ def test_fix_state():
 
     assert list(
         local.check_local("NotGood", {},
-                          local.LocalSection(errors=[], data={"NotGood": local_result}))) == [
+                          local.LocalSection(errors={}, data={"NotGood": local_result}))) == [
                               Result(state=state.CRIT, summary="A critical check"),
                               Result(state=state.OK, summary="V: 120.00"),
                               Metric("V", 120, boundaries=(0, 1000)),
@@ -299,7 +218,7 @@ def test_cached(value_store):
     )
 
     assert list(local.check_local("", {},
-                                  local.LocalSection(errors=[], data={"": local_result}))) == [
+                                  local.LocalSection(errors={}, data={"": local_result}))) == [
                                       Result(state=state.OK, summary="A cached data service"),
                                       Result(
                                           state=state.OK,
@@ -324,7 +243,7 @@ def test_cached_stale(value_store):
                 local.check_local(
                     "",
                     {},
-                    local.LocalSection(errors=[], data={"": local_result}),
+                    local.LocalSection(errors={}, data={"": local_result}),
                 ))
 
     # we got current data, we see relative caching info
@@ -388,7 +307,7 @@ def test_compute_state():
     )
 
     assert list(local.check_local("", {},
-                                  local.LocalSection(errors=[], data={"": local_result}))) == [
+                                  local.LocalSection(errors={}, data={"": local_result}))) == [
                                       Result(state=state.OK,
                                              summary="Result is computed from two values"),
                                       Result(state=state.OK, summary="value1: 10.00"),
@@ -401,7 +320,7 @@ def test_compute_state():
 
 def test_cluster():
     section: Dict[str, local.LocalSection] = {
-        "node0": local.LocalSection(errors=[],
+        "node0": local.LocalSection(errors={},
                                     data={
                                         "item": local.LocalResult(
                                             cached=None,
@@ -411,7 +330,7 @@ def test_cluster():
                                             perfdata=[],
                                         )
                                     }),
-        "node1": local.LocalSection(errors=[],
+        "node1": local.LocalSection(errors={},
                                     data={
                                         "item": local.LocalResult(
                                             cached=None,
@@ -421,7 +340,7 @@ def test_cluster():
                                             perfdata=[],
                                         )
                                     }),
-        "node2": local.LocalSection(errors=[],
+        "node2": local.LocalSection(errors={},
                                     data={
                                         "item": local.LocalResult(
                                             cached=None,
@@ -451,7 +370,7 @@ def test_cluster():
 def test_cluster_cached(value_store):
     section: Dict[str, local.LocalSection] = {
         "node0": local.LocalSection(
-            errors=[],
+            errors={},
             data={
                 "item": local.LocalResult(
                     cached=None,
@@ -463,7 +382,7 @@ def test_cluster_cached(value_store):
             },
         ),
         "node1": local.LocalSection(
-            errors=[],
+            errors={},
             data={
                 "item": local.LocalResult(
                     cached=CacheInfo(age=400, cache_interval=120),
@@ -493,7 +412,7 @@ def test_cluster_cached(value_store):
 
 def test_cluster_missing_item():
     section: Dict[str, local.LocalSection] = {
-        "node0": local.LocalSection(errors=[],
+        "node0": local.LocalSection(errors={},
                                     data={
                                         "item": local.LocalResult(
                                             cached=None,
@@ -503,7 +422,7 @@ def test_cluster_missing_item():
                                             perfdata=[],
                                         )
                                     }),
-        "node1": local.LocalSection(errors=[], data={}),
+        "node1": local.LocalSection(errors={}, data={}),
     }
 
     worst = local.cluster_check_local("item", {}, section)

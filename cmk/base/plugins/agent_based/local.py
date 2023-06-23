@@ -14,6 +14,7 @@
 # P Has-no-var - This has no variable
 # P No-Text hirn=-8;-20
 import time
+import re
 from typing import (
     Any,
     Dict,
@@ -67,7 +68,7 @@ class LocalError(NamedTuple):
 
 
 class LocalSection(NamedTuple):
-    errors: List[LocalError]
+    errors: Mapping[str, LocalError]
     data: Mapping[str, LocalResult]
 
 
@@ -88,30 +89,48 @@ def _try_convert_to_float(value):
         return None
 
 
-def _parse_cache(line, now):
+def _parse_cache(cache_raw, now):
     """add cache info, if found"""
-    if not line or not line[0].startswith("cached("):
-        return None, line
+    if not cache_raw:
+        return None
 
-    cache_raw, stripped_line = line[0], line[1:]
     creation_time, interval = (float(v) for v in cache_raw[7:-1].split(',', 1))
     age = now - creation_time
 
     # make sure max(..) will give the oldest/most outdated case
-    return CacheInfo(age=age, cache_interval=interval), stripped_line
+    return CacheInfo(age=age, cache_interval=interval)
 
 
-def _is_valid_line(line):
-    return len(line) >= 4 or (len(line) == 3 and line[0] == 'P')
+def _split_check_result(line: str):
+    """Parse the output of a local check and return the individual components
+    Note: this regex does not check the validity of each component. E.g. the state component
+          could be 'NOK' (which is not a valid state) but would be complained later
 
+    >>> _split_check_result('0 "Service Name" temp=37.2;30|humidity=28;50:100 Some text')
+    ('0', 'Service Name', 'temp=37.2;30|humidity=28;50:100', 'Some text')
 
-def _get_violation_reason(line):
-    if len(line) == 0:
-        return "Received empty line. Did any of your local checks returned a superfluous newline character?"
-    if len(line) < 4 and not (len(line) == 3 and line[0] == 'P'):
-        return ("Received wrong format of local check output. "
-                "Please read the documentation regarding the correct format: "
-                "https://docs.checkmk.com/2.0.0/de/localchecks.html ")
+    >>> _split_check_result("0 'Service Name' - Some text")
+    ('0', 'Service Name', '-', 'Some text')
+
+    >>> _split_check_result('NOK Service_name -')
+    ('NOK', 'Service_name', '-', None)
+    """
+    forbidden_service_name_characters = r"\"\'"
+    match = re.match(
+        r"^"
+        r"([^ ]+) "  # -                                   - service state (permissive)
+        r"((\"([^%s]+)\")|(\'([^%s]+)\')|([^ %s]+)) "  # - - optionally quoted service name
+        r"([^ ]+)"  # -                                    - perf data
+        r"( +(.*))?"  # -                                  - service string
+        r"$" % ((forbidden_service_name_characters,) * 3),
+        line,
+    )
+    return (None if match is None else (
+        match.groups()[0] or "",
+        match.groups()[5] or match.groups()[3] or match.groups()[1] or "",
+        match.groups()[7] or "",
+        match.groups()[9],
+    ))
 
 
 def _sanitize_state(raw_state):
@@ -195,64 +214,50 @@ def _parse_perftxt(string):
     return perfdata, ""
 
 
-def _extract_service_name(line):
-    """
-    >>> _extract_service_name('item_name some rest'.split(' '))
-    ('item_name', ['some', 'rest'], None)
-    >>> _extract_service_name('"space separated item name" some rest'.split(' '))
-    ('space separated item name', ['some', 'rest'], None)
-    >>> _extract_service_name("'space separated item name' some rest".split(' '))
-    ('space separated item name', ['some', 'rest'], None)
-    """
-    try:
-        quote_char = line[0][0]
-        if quote_char in {"'", '"'}:
-            try:
-                close_index = next(i for i, x in enumerate(line) if x[-1] == quote_char)
-            except StopIteration:
-                return (None, None, "missing closing quote character")
-            return " ".join(line[0:close_index + 1])[1:-1], line[close_index + 1:], None
-        return line[0], line[1:], None
-    except IndexError:
-        return (None, None, "too many spaces or missing line content")
-
-
 def parse_local(string_table):
     now = time.time()
-    errors = []
+    errors = {}
     data = {}
-    for line in (l[0].split(" ") if len(l) == 1 else l for l in string_table):
-        cached, stripped_line = _parse_cache(line, now)
-        if not _is_valid_line(stripped_line):
-            # just pass on the line and reason, to report the offending ouput
-            errors.append(
-                LocalError(
-                    output=" ".join(line),
-                    reason=_get_violation_reason(stripped_line),
-                ))
+    for line in (l[0] if len(l) == 1 else " ".join(l) for l in string_table):
+        # divide optional cache-info and whitespace-stripped rest
+        split_cache_match = re.match(r"^(cached\(\d+,\d+\))? *(.*) *$", line)
+        assert split_cache_match
+        raw_cached, raw_result = split_cache_match.groups()
+
+        if not raw_result:
             continue
 
-        raw_state, state_msg = _sanitize_state(stripped_line[0])
-
-        service, stripped_line, item_msg = _extract_service_name(stripped_line[1:])
-        if item_msg:
-            errors.append(
-                LocalError(
-                    output=" ".join(line),
-                    reason=f"Could not extract service name: {item_msg}",
-                ))
+        raw_components = _split_check_result(raw_result)
+        if not raw_components:
             continue
 
-        perfdata, perf_msg = _parse_perftxt(stripped_line[0])
+        # these are raw components - not checked for validity yet
+        raw_state, raw_item, raw_perf, raw_info = raw_components
+
+        item = raw_item
+
+        raw_state, state_msg = _sanitize_state(raw_state)
+        if state_msg:
+            errors[item] = LocalError(output=line, reason=state_msg)
+            continue
+
+        perfdata, perf_msg = _parse_perftxt(raw_perf)
+        if perf_msg:
+            errors[item] = LocalError(output=line, reason=perf_msg)
+            continue
+
         # convert escaped newline chars
         # (will be converted back later individually for the different cores)
-        text = " ".join(stripped_line[1:]).replace("\\n", "\n")
+        # convert escaped newline chars
+        # (will be converted back later individually for the different cores)
+        text = (raw_info or "").replace("\\n", "\n")
         if state_msg or perf_msg:
             raw_state = 3
             text = "%s%sOutput is: %s" % (state_msg, perf_msg, text)
-        data[service] = LocalResult(
-            cached=cached,
-            item=service,
+
+        data[item] = LocalResult(
+            cached=_parse_cache(raw_cached, now),
+            item=item,
             state=raw_state,
             text=text,
             perfdata=perfdata,
@@ -302,17 +307,19 @@ def local_compute_state(perfdata, ignore_levels=False):
 
 
 def discover_local(section):
-    if section.errors:
-        output = section.errors[0].output
-        reason = section.errors[0].reason
-        raise ValueError(("Invalid line in agent section <<<local>>>. "
-                          "Reason: %s First offending line: \"%s\"" % (reason, output)))
-
     for key in section.data:
+        yield Service(item=key)
+
+    for key in section.errors:
         yield Service(item=key)
 
 
 def check_local(item: str, params: Mapping[str, Any], section: LocalSection) -> CheckResult:
+    local_error = section.errors.get(item)
+    if local_error is not None:
+        raise ValueError(
+            (f'Invalid local check line: "{local_error.output}". Reason: {local_error.reason}'))
+
     local_result = section.data.get(item)
     if local_result is None:
         return

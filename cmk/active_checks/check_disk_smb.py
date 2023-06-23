@@ -175,10 +175,10 @@ class _SMBShareDiskUsage:
                 hostname=hostname,
                 user=user,
                 password=password,
-                workgroup=workgroup if workgroup else None,
-                port=port if port else None,
-                ip_address=ip_address if ip_address else None,
-                configfile=configfile if configfile else None,
+                workgroup=workgroup or None,
+                port=port or None,
+                ip_address=ip_address or None,
+                configfile=configfile or None,
             ),
             hostname,
             share,
@@ -199,10 +199,10 @@ class _SMBShareDiskUsage:
         smbclient = shutil.which("smbclient")
 
         cmd = [
-            smbclient if smbclient else "/usr/bin/smbclient",
-            "//{}/{}".format(hostname, share),
+            smbclient or "/usr/bin/smbclient",
+            f"//{hostname}/{share}",
             "-U",
-            "{}%{}".format(user, password),
+            f"{user}%{password}",
             "-c",
             "du",
         ]
@@ -225,7 +225,7 @@ class _SMBShareDiskUsage:
             ).stdout
 
         except subprocess.CalledProcessError as e:
-            return e.stderr if e.stderr else e.stdout
+            return e.stderr or e.stdout
 
     def _analyse_completed_result(
         self, completed_result: str, hostname: str, share: str
@@ -233,13 +233,14 @@ class _SMBShareDiskUsage:
         result_lines = self._cleanup_result(completed_result)
 
         for line in result_lines:
-            disk_usage = re.search(r"\s*(\d*) blocks of size (\d*)\. (\d*) blocks available", line)
-            if disk_usage:
+            if disk_usage := re.search(
+                r"\s*(\d*) blocks of size (\d*)\. (\d*) blocks available", line
+            ):
                 # The line matches the regex
                 return self._extract_data_from_matching_line(
-                    block_count=int(disk_usage.group(1)),
-                    block_size=int(disk_usage.group(2)),
-                    available_blocks=int(disk_usage.group(3)),
+                    block_count=int(disk_usage[1]),
+                    block_size=int(disk_usage[2]),
+                    available_blocks=int(disk_usage[3]),
                     hostname=hostname,
                     share=share,
                 )
@@ -302,7 +303,7 @@ class _SMBShareDiskUsage:
 
             # unknown host or connection failure
             if (error := re.search(r"(Unknown host \w*|Connection.*failed)", line)) is not None:
-                return ErrorResult(2, error.group(0))
+                return ErrorResult(2, error[0])
 
             # invalid share name
             if re.search(r"(You specified an invalid share name|NT_STATUS_BAD_NETWORK_NAME)", line):
@@ -382,10 +383,10 @@ def _check_disk_usage_main(
             hostname=args.hostname,
             user=args.user,
             password=args.password,
-            workgroup=args.workgroup if args.workgroup else None,
-            port=args.port if args.port else None,
-            ip_address=args.address if args.address else None,
-            configfile=args.configfile if args.configfile else None,
+            workgroup=args.workgroup or None,
+            port=args.port or None,
+            ip_address=args.address or None,
+            configfile=args.configfile or None,
         ),
         warn=args.levels[0],
         crit=args.levels[1],

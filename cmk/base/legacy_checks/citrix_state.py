@@ -16,32 +16,8 @@
 # AgentVersion 7.6.0.5026
 
 
-from typing import Any
-
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-
-
-def parse_citrix_state(info):
-    parsed: dict[str, Any] = {
-        "instance": {},
-    }
-    for line in info:
-        if line[0] == "Controller":
-            parsed["controller"] = " ".join(line[1:])
-        elif line[0] == "HostingServer":
-            parsed["hosting_server"] = " ".join(line[1:])
-        elif line[0] in [
-            "FaultState",
-            "MaintenanceMode",
-            "PowerState",
-            "RegistrationState",
-            "VMToolsState",
-        ]:
-            parsed["instance"][line[0]] = line[1]
-
-    return parsed
-
 
 #   .--Controller----------------------------------------------------------.
 #   |             ____            _             _ _                        |
@@ -157,7 +133,6 @@ def check_citrix_state(_no_item, params, parsed):
 
 
 check_info["citrix_state"] = LegacyCheckDefinition(
-    parse_function=parse_citrix_state,
     discovery_function=inventory_citrix_state,
     check_function=check_citrix_state,
     service_name="Citrix Instance State",

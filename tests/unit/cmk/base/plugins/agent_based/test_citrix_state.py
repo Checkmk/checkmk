@@ -52,19 +52,19 @@ def test_inventory_citrix_state() -> None:
 
 
 def test_check_citrix_state_controller() -> None:
-    section = legacy.parse_citrix_state(STRING_TABLE)
+    section = parse_citrix_state(STRING_TABLE)
     expected = [0, "rz1cdc02.intern.kasse"]
     assert list(legacy.check_citrix_state_controller(None, None, section)) == expected
 
 
 def test_check_citrix_state_hosting_server() -> None:
-    section = legacy.parse_citrix_state(STRING_TABLE)
+    section = parse_citrix_state(STRING_TABLE)
     expected = [0, "rz1xen03.intern.kasse"]
     assert list(legacy.check_citrix_state_hosting_server(None, None, section)) == expected
 
 
 def test_check_citrix_state_() -> None:
-    section = legacy.parse_citrix_state(STRING_TABLE)
+    section = parse_citrix_state(STRING_TABLE)
     expected = [
         (0, "FaultState: None"),
         (0, "MaintenanceMode: False"),

@@ -281,10 +281,10 @@ class _MutableAttributes:
             return NotImplemented
         return self.pairs == other.pairs
 
-    def add_pairs(self, pairs: Mapping[SDKey, SDValue]) -> None:
+    def add(self, pairs: Mapping[SDKey, SDValue]) -> None:
         self.pairs.update(pairs)
 
-    def update_pairs(
+    def update(
         self,
         now: int,
         path: SDPath,
@@ -373,7 +373,7 @@ class _MutableTable:
             if key not in self.key_columns:
                 self.key_columns.append(key)
 
-    def add_rows(
+    def add(
         self,
         key_columns: Iterable[SDKey],
         rows: Sequence[Mapping[SDKey, SDValue]],
@@ -386,7 +386,7 @@ class _MutableTable:
         if row:
             self.rows_by_ident.setdefault(ident, {}).update(row)
 
-    def update_rows(  # pylint: disable=too-many-branches
+    def update(  # pylint: disable=too-many-branches
         self,
         now: int,
         path: SDPath,
@@ -535,7 +535,7 @@ class MutableTree:
 
     def add_pairs(self, *, path: SDPath, pairs: Mapping[SDKey, SDValue]) -> None:
         node = self.setdefault_node(path)
-        node.attributes.add_pairs(pairs)
+        node.attributes.add(pairs)
 
     def add_rows(
         self,
@@ -544,7 +544,7 @@ class MutableTree:
         key_columns: Sequence[SDKey],
         rows: Sequence[Mapping[SDKey, SDValue]],
     ) -> None:
-        self.setdefault_node(path).table.add_rows(key_columns, rows)
+        self.setdefault_node(path).table.add(key_columns, rows)
 
     def update_pairs(
         self,
@@ -554,7 +554,7 @@ class MutableTree:
         filter_func: SDFilterFunc,
         retention_interval: RetentionInterval,
     ) -> UpdateResult:
-        return self.setdefault_node(path).attributes.update_pairs(
+        return self.setdefault_node(path).attributes.update(
             now,
             path,
             previous_tree.get_tree(path).attributes,
@@ -570,7 +570,7 @@ class MutableTree:
         filter_func: SDFilterFunc,
         retention_interval: RetentionInterval,
     ) -> UpdateResult:
-        return self.setdefault_node(path).table.update_rows(
+        return self.setdefault_node(path).table.update(
             now,
             path,
             previous_tree.get_tree(path).table,

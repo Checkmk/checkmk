@@ -118,6 +118,10 @@ def discover_services(
     on_error: OnError,
 ) -> Iterable[AutocheckEntry]:
     service_table: MutableMapping[ServiceID, AutocheckEntry] = {}
+
+    # The host name must at least (!) be set for
+    # * the host_name() calls commonly used in the legacy checks
+    # * predictive levels
     with plugin_contexts.current_host(host_name):
         for check_plugin_name in plugin_names:
             try:

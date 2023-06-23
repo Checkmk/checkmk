@@ -652,8 +652,6 @@ def _get_cluster_services(
         }
         section.section_step("Executing discovery plugins (%d)" % len(candidates))
         console.vverbose("  Trying discovery with: %s\n" % ", ".join(str(n) for n in candidates))
-        # The host name must be set for the host_name() calls commonly used to determine the
-        # host name for host_extra_conf{_merged,} calls in the legacy checks.
 
         for plugin_name in skip:
             console.vverbose(f"  Skip ignored check plugin name {plugin_name!r}\n")

@@ -895,10 +895,10 @@ def _compare_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableDel
         right=set(left.rows_by_ident),
     )
 
-    delta_rows: list[Mapping[SDKey, tuple[SDValue, SDValue]]] = []
+    rows: list[Mapping[SDKey, tuple[SDValue, SDValue]]] = []
 
     for ident in compared_row_idents.only_old:
-        delta_rows.append({k: _encode_as_removed(v) for k, v in right.rows_by_ident[ident].items()})
+        rows.append({k: _encode_as_removed(v) for k, v in right.rows_by_ident[ident].items()})
 
     for ident in compared_row_idents.both:
         # Note: Rows which have at least one change also provide all table fields.
@@ -912,19 +912,19 @@ def _compare_tables(left: ImmutableTable, right: ImmutableTable) -> ImmutableDel
                 keep_identical=True,
             )
         ).has_changes:
-            delta_rows.append(compared_dict_result.result)
+            rows.append(compared_dict_result.result)
 
     for ident in compared_row_idents.only_new:
-        delta_rows.append({k: _encode_as_new(v) for k, v in left.rows_by_ident[ident].items()})
+        rows.append({k: _encode_as_new(v) for k, v in left.rows_by_ident[ident].items()})
 
     return ImmutableDeltaTable(
         key_columns=sorted(set(left.key_columns).union(right.key_columns)),
-        rows=delta_rows,
+        rows=rows,
     )
 
 
 def _compare_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableDeltaTree:
-    delta_nodes: dict[SDNodeName, ImmutableDeltaTree] = {}
+    nodes: dict[SDNodeName, ImmutableDeltaTree] = {}
 
     compared_node_names = _DictKeys.compare(
         left=set(right.nodes_by_name),
@@ -933,7 +933,7 @@ def _compare_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableDeltaT
 
     for name in compared_node_names.only_new:
         if child_left := left.nodes_by_name[name]:
-            delta_nodes[name] = ImmutableDeltaTree.from_tree(
+            nodes[name] = ImmutableDeltaTree.from_tree(
                 tree=child_left,
                 encode_as=_encode_as_new,
             )
@@ -942,13 +942,12 @@ def _compare_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableDeltaT
         if (child_left := left.nodes_by_name[name]) == (child_right := right.nodes_by_name[name]):
             continue
 
-        delta_node = _compare_trees(child_left, child_right)
-        if delta_node.get_stats():
-            delta_nodes[name] = delta_node
+        if (node := _compare_trees(child_left, child_right)).get_stats():
+            nodes[name] = node
 
     for name in compared_node_names.only_old:
         if child_right := right.nodes_by_name[name]:
-            delta_nodes[name] = ImmutableDeltaTree.from_tree(
+            nodes[name] = ImmutableDeltaTree.from_tree(
                 tree=child_right,
                 encode_as=_encode_as_removed,
             )
@@ -957,7 +956,7 @@ def _compare_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableDeltaT
         path=left.path,
         attributes=_compare_attributes(left.attributes, right.attributes),
         table=_compare_tables(left.table, right.table),
-        nodes_by_name=delta_nodes,
+        nodes_by_name=nodes,
     )
 
 
@@ -1216,59 +1215,50 @@ class ImmutableTree:
 
 
 def _filter_delta_attributes(
-    delta_attributes: ImmutableDeltaAttributes, filter_funcs: Sequence[SDFilterFunc]
+    attributes: ImmutableDeltaAttributes, filter_funcs: Sequence[SDFilterFunc]
 ) -> ImmutableDeltaAttributes:
     if not filter_funcs:
-        return ImmutableDeltaAttributes(pairs=delta_attributes.pairs)
+        return ImmutableDeltaAttributes(pairs=attributes.pairs)
 
     filtered_pairs: dict[SDKey, tuple[SDValue, SDValue]] = {}
     for filter_func in filter_funcs:
-        filtered_pairs.update(_get_filtered_dict(delta_attributes.pairs, filter_func))
+        filtered_pairs.update(_get_filtered_dict(attributes.pairs, filter_func))
     return ImmutableDeltaAttributes(pairs=filtered_pairs)
 
 
 def _filter_delta_table(
-    delta_table: ImmutableDeltaTable, filter_funcs: Sequence[SDFilterFunc]
+    table: ImmutableDeltaTable, filter_funcs: Sequence[SDFilterFunc]
 ) -> ImmutableDeltaTable:
     if not filter_funcs:
-        return ImmutableDeltaTable(key_columns=delta_table.key_columns, rows=delta_table.rows)
+        return ImmutableDeltaTable(key_columns=table.key_columns, rows=table.rows)
 
     filtered_rows: list[dict[SDKey, tuple[SDValue, SDValue]]] = []
-    for row in delta_table.rows:
+    for row in table.rows:
         filtered_row: dict[SDKey, tuple[SDValue, SDValue]] = {}
         for filter_func in filter_funcs:
             filtered_row.update(_get_filtered_dict(row, filter_func))
         if filtered_row:
             filtered_rows.append(filtered_row)
-    return ImmutableDeltaTable(key_columns=delta_table.key_columns, rows=filtered_rows)
+    return ImmutableDeltaTable(key_columns=table.key_columns, rows=filtered_rows)
 
 
-def _filter_delta_tree(
-    delta_tree: ImmutableDeltaTree, filter_tree: _FilterTree
-) -> ImmutableDeltaTree:
+def _filter_delta_tree(tree: ImmutableDeltaTree, filter_tree: _FilterTree) -> ImmutableDeltaTree:
     filtered_nodes: dict[SDNodeName, ImmutableDeltaTree] = {}
     for name in set(
-        name
-        for name in delta_tree.nodes_by_name
-        for f in filter_tree.filters
-        if f.filter_nodes(name)
+        name for name in tree.nodes_by_name for f in filter_tree.filters if f.filter_nodes(name)
     ).union(filter_tree.nodes):
         if filtered_node := _filter_delta_tree(
-            delta_tree.nodes_by_name.get(name, ImmutableDeltaTree(path=delta_tree.path + (name,))),
+            tree.nodes_by_name.get(name, ImmutableDeltaTree(path=tree.path + (name,))),
             filter_tree.nodes.get(name, _FilterTree()),
         ):
             filtered_nodes.setdefault(name, filtered_node)
 
     return ImmutableDeltaTree(
-        path=delta_tree.path,
+        path=tree.path,
         attributes=(
-            _filter_delta_attributes(
-                delta_tree.attributes, [f.filter_pairs for f in filter_tree.filters]
-            )
+            _filter_delta_attributes(tree.attributes, [f.filter_pairs for f in filter_tree.filters])
         ),
-        table=_filter_delta_table(
-            delta_tree.table, [f.filter_columns for f in filter_tree.filters]
-        ),
+        table=_filter_delta_table(tree.table, [f.filter_columns for f in filter_tree.filters]),
         nodes_by_name=filtered_nodes,
     )
 

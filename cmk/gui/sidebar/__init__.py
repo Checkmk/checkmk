@@ -760,7 +760,7 @@ class CustomSpaninsSpec(pagetypes.OverridableSpec):
     custom_snapin: tuple[str, dict]
 
 
-class CustomSnapins(pagetypes.Overridable[CustomSpaninsSpec, "CustomSnapins"]):
+class CustomSnapins(pagetypes.Overridable[CustomSpaninsSpec]):
     @classmethod
     def type_name(cls) -> str:
         return "custom_snapin"

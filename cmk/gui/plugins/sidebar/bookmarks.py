@@ -52,7 +52,7 @@ class BookmarkListSpec(pagetypes.OverridableSpec):
     bookmarks: list[BookmarkSpec]
 
 
-class BookmarkList(pagetypes.Overridable[BookmarkListSpec, "BookmarkList"]):
+class BookmarkList(pagetypes.Overridable[BookmarkListSpec]):
     @classmethod
     def type_name(cls) -> str:
         return "bookmark_list"

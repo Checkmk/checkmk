@@ -1,0 +1,14 @@
+Title: Support same graph multiple times in views
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1687528963
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0p5
+
+Before this werk, when adding the same graph multiple times to a view, only one of the graphs was
+actually rendered. The other ones were displayed as empty frames.
+

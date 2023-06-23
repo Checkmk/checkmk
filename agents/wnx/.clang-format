@@ -1,0 +1,15 @@
+---
+Language: Cpp
+BasedOnStyle: Google
+AccessModifierOffset: -4
+BreakConstructorInitializersBeforeComma: true
+BreakStringLiterals: false
+DerivePointerAlignment: false
+IncludeCategories:
+  - Regex:           'pch.h|stdafx.h'
+    Priority:        -1
+    SortPriority:    -1
+    CaseSensitive:   false
+IndentWidth: 4
+PointerAlignment: Right
+...

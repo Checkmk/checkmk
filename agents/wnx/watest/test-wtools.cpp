@@ -2,6 +2,7 @@
 // windows mostly
 
 #include "pch.h"
+// this file is fixed
 
 #include <fmt/format.h>
 #include <fmt/xchar.h>
@@ -105,7 +106,8 @@ protected:
         fs::remove_all(test_dir_, ec);
         if (ec) {
             std::cerr << fmt::format(
-                "Attention: remove_all failed, some of temporary processes are busy. Exception: '{}' [{}]\n",
+                "Attention: remove_all failed, some of temporary processes are busy. "
+                "Exception: '{}' [{}]\n",
                 ec.message(), ec.value());
         }
     }
@@ -262,7 +264,9 @@ TEST_F(WtoolsKillProcessTreeFixture, Component) {
     EXPECT_TRUE(proc_name == L"cmd.exe");
     EXPECT_EQ(parent_process_id, ::GetCurrentProcessId());
 
-    EXPECT_TRUE(findProcessByParentPid(proc_id)) << "child process absent";
+    ASSERT_TRUE(tst::WaitForSuccessSilent(2000ms, [&]() {
+        return findProcessByParentPid(proc_id);
+    })) << "child process absent";
 
     // killing
     KillProcessTree(proc_id);

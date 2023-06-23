@@ -96,7 +96,7 @@ from cmk.utils.store.host_storage import (
     ContactgroupName,
     get_host_storage_loaders,
 )
-from cmk.utils.structured_data import RawIntervalsFromConfig
+from cmk.utils.structured_data import RawIntervalFromConfig
 from cmk.utils.tags import ComputedDataSources, TagGroupID, TagID
 from cmk.utils.timeperiod import TimeperiodName
 
@@ -3417,7 +3417,7 @@ class ConfigCache:
             for node in nodes
         )
 
-    def inv_retention_intervals(self, hostname: HostName) -> RawIntervalsFromConfig:
+    def inv_retention_intervals(self, hostname: HostName) -> Sequence[RawIntervalFromConfig]:
         entries = self.host_extra_conf(hostname, inv_retention_intervals)
         return entries[0] if entries else []
 

@@ -43,7 +43,7 @@ from cmk.utils.structured_data import (
     ImmutableTree,
     load_tree,
     MutableTree,
-    RawIntervalsFromConfig,
+    RawIntervalFromConfig,
     TreeOrArchiveStore,
     UpdateResult,
 )
@@ -2206,7 +2206,7 @@ def _execute_active_check_inventory(
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
     parameters: HWSWInventoryParameters,
-    raw_intervals_from_config: RawIntervalsFromConfig,
+    raw_intervals_from_config: Sequence[RawIntervalFromConfig],
 ) -> ActiveCheckResult:
     tree_or_archive_store = TreeOrArchiveStore(
         cmk.utils.paths.inventory_output_dir,

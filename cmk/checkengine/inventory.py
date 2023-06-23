@@ -25,7 +25,7 @@ from cmk.utils.structured_data import (
     make_filter_func,
     MutableTree,
     parse_visible_raw_path,
-    RawIntervalsFromConfig,
+    RawIntervalFromConfig,
     RetentionInterval,
     UpdateResult,
 )
@@ -124,7 +124,7 @@ def inventorize_host(
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
     parameters: HWSWInventoryParameters,
-    raw_intervals_from_config: RawIntervalsFromConfig,
+    raw_intervals_from_config: Sequence[RawIntervalFromConfig],
     previous_tree: ImmutableTree,
 ) -> CheckInventoryTreeResult:
     fetched = fetcher(host_name, ip_address=None)
@@ -242,7 +242,7 @@ def _inventorize_real_host(
     *,
     now: int,
     items_of_inventory_plugins: Collection[ItemsOfInventoryPlugin],
-    raw_intervals_from_config: RawIntervalsFromConfig,
+    raw_intervals_from_config: Sequence[RawIntervalFromConfig],
     previous_tree: ImmutableTree,
 ) -> tuple[MutableTrees, UpdateResult]:
     section.section_step("Create inventory or status data tree")
@@ -430,7 +430,7 @@ def _may_update(
     *,
     now: int,
     items_of_inventory_plugins: Collection[ItemsOfInventoryPlugin],
-    raw_intervals_from_config: RawIntervalsFromConfig,
+    raw_intervals_from_config: Sequence[RawIntervalFromConfig],
     inventory_tree: MutableTree,
     previous_tree: ImmutableTree,
 ) -> UpdateResult:

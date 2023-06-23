@@ -103,12 +103,9 @@ class _RawIntervalFromConfigMandatory(TypedDict):
     visible_raw_path: str
 
 
-class _RawIntervalFromConfig(_RawIntervalFromConfigMandatory, total=False):
+class RawIntervalFromConfig(_RawIntervalFromConfigMandatory, total=False):
     attributes: Literal["all"] | tuple[str, list[str]]
     columns: Literal["all"] | tuple[str, list[str]]
-
-
-RawIntervalsFromConfig = Sequence[_RawIntervalFromConfig]
 
 
 class RetentionInterval(NamedTuple):

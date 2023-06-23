@@ -37,6 +37,7 @@ from cmk.checkengine.discovery import (
     AutocheckServiceWithNodes,
     AutochecksStore,
     discover_host_labels,
+    discover_services,
     DiscoveryMode,
     DiscoveryResult,
     find_plugins,
@@ -1295,7 +1296,7 @@ def test__discovery_considers_host_labels(
 
     assert {
         entry.id()
-        for entry in discovery._discovered_services.discover_services(
+        for entry in discover_services(
             host_name, plugin_names, providers=providers, plugins=plugins, on_error=OnError.RAISE
         )
     } == expected_services
@@ -1448,7 +1449,7 @@ def test__discover_host_labels_and_services_on_realhost(
         [(plugin_name, plugin.sections) for plugin_name, plugin in plugins.items()],
     )
 
-    discovered_services = discovery._discovered_services.discover_services(
+    discovered_services = discover_services(
         host_name, plugin_names, providers=providers, plugins=plugins, on_error=OnError.RAISE
     )
 

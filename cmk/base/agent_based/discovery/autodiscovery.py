@@ -35,6 +35,7 @@ from cmk.checkengine.discovery import (
     AutocheckServiceWithNodes,
     AutochecksStore,
     discover_host_labels,
+    discover_services,
     DiscoveryMode,
     DiscoveryPlugin,
     DiscoveryResult,
@@ -52,8 +53,6 @@ from cmk.checkengine.sectionparser import (
 )
 
 from cmk.base.config import ConfigCache
-
-from ._discovered_services import discover_services
 
 __all__ = ["get_host_services"]
 

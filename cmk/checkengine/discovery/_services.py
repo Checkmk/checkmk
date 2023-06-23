@@ -4,16 +4,26 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import itertools
-from collections.abc import Container, Iterable, Mapping, Sequence
+from collections.abc import Container, Iterable, Iterator, Mapping, MutableMapping, Sequence
 
-from cmk.checkengine._typedefs import HostKey, SourceType
+import cmk.utils.debug
+import cmk.utils.misc
+import cmk.utils.paths
+from cmk.utils.exceptions import MKTimeout, OnError
+from cmk.utils.hostaddress import HostName
+from cmk.utils.log import console
+
+from cmk.checkengine import HostKey, plugin_contexts, SourceType
+from cmk.checkengine.check_table import ServiceID
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName, Provider
+from cmk.checkengine.sectionparserutils import get_section_kwargs
 
 from ._autochecks import AutocheckEntry
+from ._discovery import DiscoveryPlugin
 from ._utils import QualifiedDiscovery
 
-__all__ = ["analyse_services", "find_plugins"]
+__all__ = ["analyse_services", "discover_services", "find_plugins"]
 
 
 def find_plugins(
@@ -97,6 +107,93 @@ def _find_mgmt_plugins(
         for (name, sections) in preliminary_candidates
         if any(section in available_parsed_sections for section in sections)
     }
+
+
+def discover_services(
+    host_name: HostName,
+    plugin_names: Iterable[CheckPluginName],
+    *,
+    providers: Mapping[HostKey, Provider],
+    plugins: Mapping[CheckPluginName, DiscoveryPlugin],
+    on_error: OnError,
+) -> Iterable[AutocheckEntry]:
+    service_table: MutableMapping[ServiceID, AutocheckEntry] = {}
+    with plugin_contexts.current_host(host_name):
+        for check_plugin_name in plugin_names:
+            try:
+                service_table.update(
+                    {
+                        entry.id(): entry
+                        for entry in _discover_plugins_services(
+                            check_plugin_name=check_plugin_name,
+                            plugins=plugins,
+                            host_key=HostKey(
+                                host_name,
+                                (
+                                    SourceType.MANAGEMENT
+                                    if check_plugin_name.is_management_name()
+                                    else SourceType.HOST
+                                ),
+                            ),
+                            providers=providers,
+                            on_error=on_error,
+                        )
+                    }
+                )
+            except (KeyboardInterrupt, MKTimeout):
+                raise
+            except Exception as e:
+                if on_error is OnError.RAISE:
+                    raise
+                if on_error is OnError.WARN:
+                    console.error(f"Discovery of '{check_plugin_name}' failed: {e}\n")
+
+    # TODO: Building a dict to discard its keys isn't efficient.
+    return service_table.values()
+
+
+def _discover_plugins_services(
+    *,
+    check_plugin_name: CheckPluginName,
+    plugins: Mapping[CheckPluginName, DiscoveryPlugin],
+    host_key: HostKey,
+    providers: Mapping[HostKey, Provider],
+    on_error: OnError,
+) -> Iterator[AutocheckEntry]:
+    try:
+        plugin = plugins[check_plugin_name]
+    except KeyError:
+        console.warning("  Missing check plugin: '%s'\n" % check_plugin_name)
+        return
+
+    try:
+        kwargs = get_section_kwargs(providers, host_key, plugin.sections)
+    except Exception as exc:
+        if cmk.utils.debug.enabled() or on_error is OnError.RAISE:
+            raise
+        if on_error is OnError.WARN:
+            console.warning("  Exception while parsing agent section: %s\n" % exc)
+        return
+
+    if not kwargs:
+        return
+
+    disco_params = plugin.parameters(host_key.hostname)
+    if disco_params is not None:
+        kwargs = {**kwargs, "params": disco_params}
+
+    try:
+        yield from (
+            service.as_autocheck_entry(check_plugin_name) for service in plugin.function(**kwargs)
+        )
+    except Exception as e:
+        if on_error is OnError.RAISE:
+            raise
+        if on_error is OnError.WARN:
+            console.warning(
+                "  Exception in discovery function of check plugin '%s': %s"
+                % (check_plugin_name, e)
+            )
 
 
 def analyse_services(

@@ -24,6 +24,7 @@ from cmk.checkengine.discovery import (
     analyse_services,
     AutochecksStore,
     discover_host_labels,
+    discover_services,
     DiscoveryPlugin,
     find_plugins,
     HostLabelPlugin,
@@ -38,8 +39,6 @@ from cmk.checkengine.sectionparser import (
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 
 from cmk.base.config import ConfigCache
-
-from ._discovered_services import discover_services
 
 __all__ = ["commandline_discovery"]
 

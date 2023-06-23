@@ -3,16 +3,36 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Mapping
+from typing import Any, Mapping
 
 from .agent_based_api.v1 import Attributes, register
 from .agent_based_api.v1.type_defs import InventoryResult, StringTable
 
-Section = Mapping[str, str]
+Section = Mapping[str, Any]
 
 
 def parse_citrix_state(string_table: StringTable) -> Section:
-    return {key: " ".join(rest) for key, *rest in string_table}
+    parsed: dict[str, Any] = {
+        "instance": {},
+    }
+    for line in string_table:
+        if line[0] == "Controller":
+            parsed["controller"] = " ".join(line[1:])
+        elif line[0] == "HostingServer":
+            parsed["hosting_server"] = " ".join(line[1:])
+        elif line[0] in [
+            "FaultState",
+            "MaintenanceMode",
+            "PowerState",
+            "RegistrationState",
+            "VMToolsState",
+            "AgentVersion",
+            "Catalog",
+            "DesktopGroupName",
+        ]:
+            parsed["instance"][line[0]] = " ".join(line[1:])
+
+    return parsed
 
 
 register.agent_section(
@@ -31,7 +51,7 @@ def inventory_citrix_state(section: Section) -> InventoryResult:
                 ("catalog", "Catalog"),
                 ("agent_version", "AgentVersion"),
             )
-            if (v := section.get(kp)) is not None
+            if (v := section["instance"].get(kp)) is not None
         },
     )
 

@@ -86,6 +86,10 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep -e '^livestatus' -e '^enterprise/core' || true"
       REPLACE_NEWLINES: true
 
+    - NAME: CHANGED_UNIXCAT_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/unixcat/' || true"
+      REPLACE_NEWLINES: true
+
     - NAME: CHANGED_LIVESTATUS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/livestatus/' || true"
       REPLACE_NEWLINES: true
@@ -320,6 +324,14 @@ STAGES:
       TEXT_ON_SKIP: 'No Livestatus files changed'
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/livestatus.txt"
+
+    - NAME: 'Test - unixcat'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_LIVESTATUS_FILES,CHANGED_UNIXCAT_FILES
+      DIR: 'packages/unixcat'
+      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/unixcat.txt"
+      TEXT_ON_SKIP: 'No unixcat files changed'
+      RESULT_CHECK_TYPE: "GCC"
+      RESULT_CHECK_FILE_PATTERN: "results/unixcat.txt"
 
     - NAME: 'NEB/CMC Compile'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES

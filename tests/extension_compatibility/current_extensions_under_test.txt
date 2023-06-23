@@ -7,4 +7,4 @@ https://exchange.checkmk.com/api/packages/download/309/ceph-11.17.2.mkp
 https://exchange.checkmk.com/api/packages/download/362/yum-2.4.2.mkp
 https://exchange.checkmk.com/api/packages/download/244/rspamd-1.4.1.mkp
 https://exchange.checkmk.com/api/packages/download/503/cve_2021_44228_log4j_cmk20.mkp
-https://exchange.checkmk.com/api/packages/download/370/wireguard-1.5.1.mkp
+https://exchange.checkmk.com/api/packages/download/161/kentix_devices-3.0.1.mkp

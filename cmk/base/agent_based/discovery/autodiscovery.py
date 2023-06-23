@@ -13,7 +13,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.everythingtype import EVERYTHING
-from cmk.utils.exceptions import MKTimeout, OnError
+from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
@@ -519,9 +519,13 @@ def _get_node_services(
         console.vverbose(f"  Skip ignored check plugin name {plugin_name!r}\n")
 
     autocheck_store = AutochecksStore(host_name)
-    discovered_services = discover_services(
-        host_name, candidates - skip, providers=providers, plugins=plugins, on_error=on_error
-    )
+    try:
+        discovered_services = discover_services(
+            host_name, candidates - skip, providers=providers, plugins=plugins, on_error=on_error
+        )
+    except KeyboardInterrupt:
+        raise MKGeneralException("Interrupted by Ctrl-C.")
+
     service_result = analyse_services(
         existing_services=autocheck_store.read(),
         discovered_services=discovered_services,

@@ -8,7 +8,7 @@ from collections.abc import Iterable, Iterator, Mapping, MutableMapping
 import cmk.utils.debug
 import cmk.utils.misc
 import cmk.utils.paths
-from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
+from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
 
@@ -29,41 +29,38 @@ def discover_services(
     on_error: OnError,
 ) -> Iterable[AutocheckEntry]:
     service_table: MutableMapping[ServiceID, AutocheckEntry] = {}
-    try:
-        with plugin_contexts.current_host(host_name):
-            for check_plugin_name in plugin_names:
-                try:
-                    service_table.update(
-                        {
-                            entry.id(): entry
-                            for entry in _discover_plugins_services(
-                                check_plugin_name=check_plugin_name,
-                                plugins=plugins,
-                                host_key=HostKey(
-                                    host_name,
-                                    (
-                                        SourceType.MANAGEMENT
-                                        if check_plugin_name.is_management_name()
-                                        else SourceType.HOST
-                                    ),
+    with plugin_contexts.current_host(host_name):
+        for check_plugin_name in plugin_names:
+            try:
+                service_table.update(
+                    {
+                        entry.id(): entry
+                        for entry in _discover_plugins_services(
+                            check_plugin_name=check_plugin_name,
+                            plugins=plugins,
+                            host_key=HostKey(
+                                host_name,
+                                (
+                                    SourceType.MANAGEMENT
+                                    if check_plugin_name.is_management_name()
+                                    else SourceType.HOST
                                 ),
-                                providers=providers,
-                                on_error=on_error,
-                            )
-                        }
-                    )
-                except (KeyboardInterrupt, MKTimeout):
+                            ),
+                            providers=providers,
+                            on_error=on_error,
+                        )
+                    }
+                )
+            except (KeyboardInterrupt, MKTimeout):
+                raise
+            except Exception as e:
+                if on_error is OnError.RAISE:
                     raise
-                except Exception as e:
-                    if on_error is OnError.RAISE:
-                        raise
-                    if on_error is OnError.WARN:
-                        console.error(f"Discovery of '{check_plugin_name}' failed: {e}\n")
+                if on_error is OnError.WARN:
+                    console.error(f"Discovery of '{check_plugin_name}' failed: {e}\n")
 
-            return service_table.values()
-
-    except KeyboardInterrupt:
-        raise MKGeneralException("Interrupted by Ctrl-C.")
+    # TODO: Building a dict to discard its keys isn't efficient.
+    return service_table.values()
 
 
 def _discover_plugins_services(

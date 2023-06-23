@@ -189,13 +189,17 @@ def _commandline_discovery_on_host(
     for plugin_name in skip:
         console.vverbose(f"  Skip ignored check plugin name {plugin_name!r}\n")
 
-    discovered_services = discover_services(
-        real_host_name,
-        candidates - skip,
-        providers=providers,
-        plugins=plugins,
-        on_error=on_error,
-    )
+    try:
+        discovered_services = discover_services(
+            real_host_name,
+            candidates - skip,
+            providers=providers,
+            plugins=plugins,
+            on_error=on_error,
+        )
+    except KeyboardInterrupt:
+        raise MKGeneralException("Interrupted by Ctrl-C.")
+
     service_result = analyse_services(
         existing_services=autocheck_store.read(),
         discovered_services=discovered_services,

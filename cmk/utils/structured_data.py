@@ -175,10 +175,45 @@ def parse_visible_raw_path(raw_path: str) -> SDPath:
     return tuple(part for part in raw_path.split(".") if part)
 
 
+#   .--helpers-------------------------------------------------------------.
+#   |                  _          _                                        |
+#   |                 | |__   ___| |_ __   ___ _ __ ___                    |
+#   |                 | '_ \ / _ \ | '_ \ / _ \ '__/ __|                   |
+#   |                 | | | |  __/ | |_) |  __/ |  \__ \                   |
+#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
+#   |                              |_|                                     |
+#   '----------------------------------------------------------------------'
+
+
 def _make_row_ident(key_columns: Sequence[SDKey], row: Mapping[SDKey, SDValue]) -> SDRowIdent:
     return tuple(row[k] for k in key_columns if k in row)
 
 
+T = TypeVar("T")
+
+
+@dataclass(frozen=True, kw_only=True)
+class _DictKeys(Generic[T]):
+    only_old: set[T]
+    both: set[T]
+    only_new: set[T]
+
+    @classmethod
+    def compare(cls, *, left: set[T], right: set[T]) -> Self:
+        """
+        Returns the set relationships of the keys between two dictionaries:
+        - relative complement of right in left
+        - intersection of both
+        - relative complement of left in right
+        """
+        return cls(
+            only_old=left - right,
+            both=left.intersection(right),
+            only_new=right - left,
+        )
+
+
+# .
 #   .--filters-------------------------------------------------------------.
 #   |                       __ _ _ _                                       |
 #   |                      / _(_) | |_ ___ _ __ ___                        |
@@ -253,6 +288,24 @@ def _make_filter_tree(filters: Iterable[SDFilter]) -> _FilterTree:
 
         node.filters.append(f)
     return filter_tree
+
+
+def _make_retentions_filter_func(
+    *,
+    filter_func: SDFilterFunc,
+    intervals_by_key: Mapping[SDKey, RetentionInterval] | None,
+    now: int,
+) -> SDFilterFunc:
+    return lambda k: bool(
+        filter_func(k)
+        and intervals_by_key
+        and (interval := intervals_by_key.get(k))
+        and now <= interval.keep_until
+    )
+
+
+def _get_filtered_dict(dict_: Mapping, filter_func: SDFilterFunc) -> Mapping:
+    return {k: v for k, v in dict_.items() if filter_func(k)}
 
 
 # .
@@ -1575,52 +1628,3 @@ class TreeOrArchiveStore(TreeStore):
 
 
 # .
-#   .--helpers-------------------------------------------------------------.
-#   |                  _          _                                        |
-#   |                 | |__   ___| |_ __   ___ _ __ ___                    |
-#   |                 | '_ \ / _ \ | '_ \ / _ \ '__/ __|                   |
-#   |                 | | | |  __/ | |_) |  __/ |  \__ \                   |
-#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
-#   |                              |_|                                     |
-#   '----------------------------------------------------------------------'
-
-T = TypeVar("T")
-
-
-@dataclass(frozen=True, kw_only=True)
-class _DictKeys(Generic[T]):
-    only_old: set[T]
-    both: set[T]
-    only_new: set[T]
-
-    @classmethod
-    def compare(cls, *, left: set[T], right: set[T]) -> Self:
-        """
-        Returns the set relationships of the keys between two dictionaries:
-        - relative complement of right in left
-        - intersection of both
-        - relative complement of left in right
-        """
-        return cls(
-            only_old=left - right,
-            both=left.intersection(right),
-            only_new=right - left,
-        )
-
-
-def _make_retentions_filter_func(
-    *,
-    filter_func: SDFilterFunc,
-    intervals_by_key: Mapping[SDKey, RetentionInterval] | None,
-    now: int,
-) -> SDFilterFunc:
-    return lambda k: bool(
-        filter_func(k)
-        and intervals_by_key
-        and (interval := intervals_by_key.get(k))
-        and now <= interval.keep_until
-    )
-
-
-def _get_filtered_dict(dict_: Mapping, filter_func: SDFilterFunc) -> Mapping:
-    return {k: v for k, v in dict_.items() if filter_func(k)}

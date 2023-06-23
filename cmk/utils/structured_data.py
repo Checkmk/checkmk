@@ -37,9 +37,20 @@ class SDRawAttributes(TypedDict, total=False):
     Retentions: Mapping[SDKey, tuple[int, int, int]]
 
 
+class SDBareAttributes(TypedDict):
+    Pairs: Mapping[SDKey, SDValue]
+    Retentions: Mapping[SDKey, tuple[int, int, int]]
+
+
 class SDRawTable(TypedDict, total=False):
     KeyColumns: Sequence[SDKey]
     Rows: Sequence[Mapping[SDKey, SDValue]]
+    Retentions: Mapping[SDRowIdent, Mapping[SDKey, tuple[int, int, int]]]
+
+
+class SDBareTable(TypedDict):
+    KeyColumns: Sequence[SDKey]
+    RowsByIdent: Mapping[SDRowIdent, Mapping[SDKey, SDValue]]
     Retentions: Mapping[SDRowIdent, Mapping[SDKey, tuple[int, int, int]]]
 
 
@@ -49,7 +60,18 @@ class SDRawTree(TypedDict):
     Nodes: Mapping[SDNodeName, SDRawTree]
 
 
+class SDBareTree(TypedDict):
+    Path: SDPath
+    Attributes: SDBareAttributes
+    Table: SDBareTable
+    Nodes: Mapping[SDNodeName, SDBareTree]
+
+
 class SDRawDeltaAttributes(TypedDict, total=False):
+    Pairs: Mapping[SDKey, tuple[SDValue, SDValue]]
+
+
+class SDBareDeltaAttributes(TypedDict):
     Pairs: Mapping[SDKey, tuple[SDValue, SDValue]]
 
 
@@ -58,10 +80,22 @@ class SDRawDeltaTable(TypedDict, total=False):
     Rows: Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]]
 
 
+class SDBareDeltaTable(TypedDict, total=False):
+    KeyColumns: Sequence[SDKey]
+    Rows: Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]]
+
+
 class SDRawDeltaTree(TypedDict):
     Attributes: SDRawDeltaAttributes
     Table: SDRawDeltaTable
     Nodes: Mapping[SDNodeName, SDRawDeltaTree]
+
+
+class SDBareDeltaTree(TypedDict):
+    Path: SDPath
+    Attributes: SDBareDeltaAttributes
+    Table: SDBareDeltaTable
+    Nodes: Mapping[SDNodeName, SDBareDeltaTree]
 
 
 class _RawIntervalFromConfigMandatory(TypedDict):
@@ -303,7 +337,8 @@ class _MutableAttributes:
             }
         return raw_attributes
 
-    def to_raw(self) -> Mapping:
+    @property
+    def bare(self) -> SDBareAttributes:
         # Useful for debugging; no restrictions
         return {"Pairs": self.pairs, "Retentions": self.retentions}
 
@@ -451,7 +486,8 @@ class _MutableTable:
             }
         return raw_table
 
-    def to_raw(self) -> Mapping:
+    @property
+    def bare(self) -> SDBareTable:
         # Useful for debugging; no restrictions
         return {
             "KeyColumns": self.key_columns,
@@ -572,17 +608,18 @@ class MutableTree:
             "Nodes": {name: node.serialize() for name, node in self.nodes_by_name.items() if node},
         }
 
-    def to_raw(self) -> Mapping:
+    @property
+    def bare(self) -> SDBareTree:
         # Useful for debugging; no restrictions
         return {
             "Path": self.path,
-            "Attributes": self.attributes.to_raw(),
-            "Table": self.table.to_raw(),
-            "Nodes": {name: node.to_raw() for name, node in self.nodes_by_name.items()},
+            "Attributes": self.attributes.bare,
+            "Table": self.table.bare,
+            "Nodes": {name: node.bare for name, node in self.nodes_by_name.items()},
         }
 
     def __str__(self) -> str:
-        return f"{self.__class__.__name__}({pprint.pformat(self.to_raw())})"
+        return f"{self.__class__.__name__}({pprint.pformat(self.bare)})"
 
 
 # .
@@ -996,7 +1033,8 @@ class ImmutableAttributes:
             }
         return raw_attributes
 
-    def to_raw(self) -> Mapping:
+    @property
+    def bare(self) -> SDBareAttributes:
         # Useful for debugging; no restrictions
         return {"Pairs": self.pairs, "Retentions": self.retentions}
 
@@ -1071,7 +1109,8 @@ class ImmutableTable:
             }
         return raw_table
 
-    def to_raw(self) -> Mapping:
+    @property
+    def bare(self) -> SDBareTable:
         # Useful for debugging; no restrictions
         return {
             "KeyColumns": self.key_columns,
@@ -1184,17 +1223,18 @@ class ImmutableTree:
             "Nodes": {name: node.serialize() for name, node in self.nodes_by_name.items() if node},
         }
 
-    def to_raw(self) -> Mapping:
+    @property
+    def bare(self) -> SDBareTree:
         # Useful for debugging; no restrictions
         return {
             "Path": self.path,
-            "Attributes": self.attributes.to_raw(),
-            "Table": self.table.to_raw(),
-            "Nodes": {name: node.to_raw() for name, node in self.nodes_by_name.items()},
+            "Attributes": self.attributes.bare,
+            "Table": self.table.bare,
+            "Nodes": {name: node.bare for name, node in self.nodes_by_name.items()},
         }
 
     def __str__(self) -> str:
-        return f"{self.__class__.__name__}({pprint.pformat(self.to_raw())})"
+        return f"{self.__class__.__name__}({pprint.pformat(self.bare)})"
 
 
 # .
@@ -1303,7 +1343,8 @@ class ImmutableDeltaAttributes:
     def serialize(self) -> SDRawDeltaAttributes:
         return {"Pairs": self.pairs} if self.pairs else {}
 
-    def to_raw(self) -> Mapping:
+    @property
+    def bare(self) -> SDBareDeltaAttributes:
         # Useful for debugging; no restrictions
         return {"Pairs": self.pairs}
 
@@ -1336,7 +1377,8 @@ class ImmutableDeltaTable:
     def serialize(self) -> SDRawDeltaTable:
         return {"KeyColumns": self.key_columns, "Rows": self.rows} if self.rows else {}
 
-    def to_raw(self) -> Mapping:
+    @property
+    def bare(self) -> SDBareDeltaTable:
         # Useful for debugging; no restrictions
         return {"KeyColumns": self.key_columns, "Rows": self.rows}
 
@@ -1421,17 +1463,18 @@ class ImmutableDeltaTree:
             "Nodes": {edge: node.serialize() for edge, node in self.nodes_by_name.items() if node},
         }
 
-    def to_raw(self) -> Mapping:
+    @property
+    def bare(self) -> SDBareDeltaTree:
         # Useful for debugging; no restrictions
         return {
             "Path": self.path,
-            "Attributes": self.attributes.to_raw(),
-            "Table": self.table.to_raw(),
-            "Nodes": {edge: node.to_raw() for edge, node in self.nodes_by_name.items()},
+            "Attributes": self.attributes.bare,
+            "Table": self.table.bare,
+            "Nodes": {edge: node.bare for edge, node in self.nodes_by_name.items()},
         }
 
     def __str__(self) -> str:
-        return f"{self.__class__.__name__}({pprint.pformat(self.to_raw())})"
+        return f"{self.__class__.__name__}({pprint.pformat(self.bare)})"
 
 
 # .

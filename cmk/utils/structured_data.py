@@ -815,7 +815,7 @@ def _merge_tables_by_same_or_empty_key_columns(
         rows_by_ident.setdefault(ident, left.rows_by_ident[ident])
 
     return ImmutableTable(
-        key_columns=list(key_columns),
+        key_columns=key_columns,
         rows_by_ident=rows_by_ident,
         retentions={**left.retentions, **right.retentions},
     )
@@ -1614,5 +1614,5 @@ def _make_retentions_filter_func(
     )
 
 
-def _get_filtered_dict(dict_: Mapping, filter_func: SDFilterFunc) -> dict:
+def _get_filtered_dict(dict_: Mapping, filter_func: SDFilterFunc) -> Mapping:
     return {k: v for k, v in dict_.items() if filter_func(k)}

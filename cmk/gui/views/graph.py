@@ -7,6 +7,7 @@ import copy
 import time
 from collections.abc import Callable, Sequence
 from typing import Literal
+from uuid import uuid4
 
 from cmk.utils.user import UserId
 
@@ -221,6 +222,14 @@ def paint_time_graph_cmk(
         graph_data_range,
         graph_render_options,
         resolve_combined_single_metric_spec,
+        # Ideally, we would use 2-dim. coordinates: (row_idx, col_idx).
+        # Unfortunately, we have no access to this information here. Regarding the rows, we could
+        # use (site, host, service) as identifier, but for the columns, there does not seem to be
+        # any unique information. The view rendering is designed st. individuals cells are rendered
+        # completely independently of each other, based solely on the livestatus data and on the
+        # painter settings (which makes sense). The caching in graph.ts breaks this assumption. So
+        # for now, we randomize. See also CMK-13840.
+        graph_display_id=str(uuid4()),
     )
 
 

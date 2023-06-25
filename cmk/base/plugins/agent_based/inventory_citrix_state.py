@@ -3,37 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, Mapping
+
+from cmk.base.plugins.agent_based.utils.citrix_state import parse_citrix_state, Section
 
 from .agent_based_api.v1 import Attributes, register
-from .agent_based_api.v1.type_defs import InventoryResult, StringTable
-
-Section = Mapping[str, Any]
-
-
-def parse_citrix_state(string_table: StringTable) -> Section:
-    parsed: dict[str, Any] = {
-        "instance": {},
-    }
-    for line in string_table:
-        if line[0] == "Controller":
-            parsed["controller"] = " ".join(line[1:])
-        elif line[0] == "HostingServer":
-            parsed["hosting_server"] = " ".join(line[1:])
-        elif line[0] in [
-            "FaultState",
-            "MaintenanceMode",
-            "PowerState",
-            "RegistrationState",
-            "VMToolsState",
-            "AgentVersion",
-            "Catalog",
-            "DesktopGroupName",
-        ]:
-            parsed["instance"][line[0]] = " ".join(line[1:])
-
-    return parsed
-
+from .agent_based_api.v1.type_defs import InventoryResult
 
 register.agent_section(
     name="citrix_state",

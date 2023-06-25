@@ -4,12 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.legacy_checks import citrix_state as legacy
 from cmk.base.plugins.agent_based.agent_based_api import v1
-from cmk.base.plugins.agent_based.inventory_citrix_state import (
-    inventory_citrix_state,
-    parse_citrix_state,
+from cmk.base.plugins.agent_based.citrix_state import (
+    check_citrix_state,
+    check_citrix_state_controller,
+    check_citrix_state_hosting_server,
+    DEFAULT_PARAMS,
 )
+from cmk.base.plugins.agent_based.inventory_citrix_state import inventory_citrix_state
+from cmk.base.plugins.agent_based.utils.citrix_state import parse_citrix_state
 
 from .utils_inventory import sort_inventory_result
 
@@ -53,23 +56,23 @@ def test_inventory_citrix_state() -> None:
 
 def test_check_citrix_state_controller() -> None:
     section = parse_citrix_state(STRING_TABLE)
-    expected = [0, "rz1cdc02.intern.kasse"]
-    assert list(legacy.check_citrix_state_controller(None, None, section)) == expected
+    expected = [v1.Result(state=v1.State.OK, summary="rz1cdc02.intern.kasse")]
+    assert list(check_citrix_state_controller(section)) == expected
 
 
 def test_check_citrix_state_hosting_server() -> None:
     section = parse_citrix_state(STRING_TABLE)
-    expected = [0, "rz1xen03.intern.kasse"]
-    assert list(legacy.check_citrix_state_hosting_server(None, None, section)) == expected
+    expected = [v1.Result(state=v1.State.OK, summary="rz1xen03.intern.kasse")]
+    assert list(check_citrix_state_hosting_server(section)) == expected
 
 
 def test_check_citrix_state_() -> None:
     section = parse_citrix_state(STRING_TABLE)
     expected = [
-        (0, "FaultState: None"),
-        (0, "MaintenanceMode: False"),
-        (0, "PowerState: On"),
-        (0, "RegistrationState: Registered"),
-        (0, "VMToolsState: Running"),
+        v1.Result(state=v1.State.OK, summary="FaultState None"),
+        v1.Result(state=v1.State.OK, summary="MaintenanceMode False"),
+        v1.Result(state=v1.State.OK, summary="PowerState On"),
+        v1.Result(state=v1.State.OK, summary="RegistrationState Registered"),
+        v1.Result(state=v1.State.OK, summary="VMToolsState Running"),
     ]
-    assert list(legacy.check_citrix_state(None, {}, section)) == expected
+    assert list(check_citrix_state(DEFAULT_PARAMS, section)) == expected

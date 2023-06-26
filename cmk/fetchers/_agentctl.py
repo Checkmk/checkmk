@@ -5,16 +5,24 @@
 
 from __future__ import annotations
 
+import enum
 import hashlib
 import zlib
 from collections.abc import Callable, Iterator
 from enum import Enum
-from typing import Final
+from typing import assert_never, Final, Self
 
 from cmk.utils.crypto.deprecated import AesCbcCipher
+from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.serializertype import Deserializer, Serializer
 
 OPENSSL_SALTED_MARKER = "Salted__"
+
+
+class TCPEncryptionHandling(enum.Enum):
+    TLS_ENCRYPTED_ONLY = enum.auto()
+    ANY_ENCRYPTED = enum.auto()
+    ANY_AND_PLAIN = enum.auto()
 
 
 class TransportProtocol(Enum):
@@ -24,6 +32,10 @@ class TransportProtocol(Enum):
     PBKDF2 = b"03"
     TLS = b"16"
     NONE = b"99"
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> Self:
+        return cls(data[:2])
 
 
 class Version(Enum):
@@ -162,6 +174,29 @@ def _decompress(
         except zlib.error as e:
             raise ValueError(f"Decompression with zlib failed: {e!r}") from e
     return data
+
+
+def validate_agent_protocol(
+    protocol: TransportProtocol, encryption_handling: TCPEncryptionHandling, is_registered: bool
+) -> None:
+    if protocol is TransportProtocol.TLS:
+        return
+
+    if is_registered:
+        raise MKFetcherError("Refused: Host is registered for TLS but not using it")
+
+    match encryption_handling:
+        case TCPEncryptionHandling.TLS_ENCRYPTED_ONLY:
+            raise MKFetcherError("Refused: TLS is enforced but host is not using it")
+        case TCPEncryptionHandling.ANY_ENCRYPTED:
+            if protocol is TransportProtocol.PLAIN:
+                raise MKFetcherError(
+                    "Refused: Encryption is enforced but agent output is plaintext"
+                )
+        case TCPEncryptionHandling.ANY_AND_PLAIN:
+            pass
+        case never:
+            assert_never(never)
 
 
 def decrypt_by_agent_protocol(

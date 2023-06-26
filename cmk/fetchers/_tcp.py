@@ -4,12 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
-import enum
 import logging
 import socket
 import ssl
 from collections.abc import Mapping, Sized
-from typing import Any, assert_never, Final
+from typing import Any, Final
 
 import cmk.utils.debug
 from cmk.utils import paths
@@ -21,9 +20,15 @@ from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.fetchers import Fetcher, Mode
 
-from ._agentctl import AgentCtlMessage, decrypt_by_agent_protocol, TransportProtocol
+from ._agentctl import (
+    AgentCtlMessage,
+    decrypt_by_agent_protocol,
+    TCPEncryptionHandling,
+    TransportProtocol,
+    validate_agent_protocol,
+)
 
-__all__ = ["TCPEncryptionHandling", "TCPFetcher"]
+__all__ = ["TCPFetcher"]
 
 
 def recvall(sock: socket.socket, flags: int = 0) -> bytes:
@@ -53,12 +58,6 @@ def wrap_tls(sock: socket.socket, server_hostname: str) -> ssl.SSLSocket:
         return ctx.wrap_socket(sock, server_hostname=server_hostname)
     except ssl.SSLError as e:
         raise MKFetcherError("Error establishing TLS connection") from e
-
-
-class TCPEncryptionHandling(enum.Enum):
-    TLS_ENCRYPTED_ONLY = enum.auto()
-    ANY_ENCRYPTED = enum.auto()
-    ANY_AND_PLAIN = enum.auto()
 
 
 class TCPFetcher(Fetcher[AgentRawData]):
@@ -178,9 +177,13 @@ class TCPFetcher(Fetcher[AgentRawData]):
         if not raw_protocol:
             raise MKFetcherError("Empty output from host %s:%d" % self.address)
 
-        protocol = TCPFetcher._detect_transport_protocol(raw_protocol)
+        try:
+            protocol = TransportProtocol.from_bytes(raw_protocol)
+        except ValueError:
+            raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
+
         self._logger.debug(f"Detected transport protocol: {protocol} ({raw_protocol!r})")
-        TCPFetcher._validate_protocol(
+        validate_agent_protocol(
             protocol, self.encryption_handling, is_registered=server_hostname is not None
         )
 
@@ -201,45 +204,16 @@ class TCPFetcher(Fetcher[AgentRawData]):
                 raise MKFetcherError("Empty payload from controller at %s:%d" % self.address)
 
             raw_protocol = agent_data[:2]
-            protocol = TCPFetcher._detect_transport_protocol(raw_protocol)
+            try:
+                protocol = TransportProtocol.from_bytes(raw_protocol)
+            except ValueError:
+                raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
+
             self._logger.debug(f"Detected transport protocol: {protocol} ({raw_protocol!r})")
             return agent_data[2:], protocol
 
         self._logger.debug("Reading data from agent")
         return recvall(self._socket, socket.MSG_WAITALL), protocol
-
-    @staticmethod
-    def _detect_transport_protocol(raw_protocol: bytes) -> TransportProtocol:
-        assert raw_protocol
-
-        try:
-            protocol = TransportProtocol(raw_protocol)
-            return protocol
-        except ValueError:
-            raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
-
-    @staticmethod
-    def _validate_protocol(
-        protocol: TransportProtocol, encryption_handling: TCPEncryptionHandling, is_registered: bool
-    ) -> None:
-        if protocol is TransportProtocol.TLS:
-            return
-
-        if is_registered:
-            raise MKFetcherError("Refused: Host is registered for TLS but not using it")
-
-        match encryption_handling:
-            case TCPEncryptionHandling.TLS_ENCRYPTED_ONLY:
-                raise MKFetcherError("Refused: TLS is enforced but host is not using it")
-            case TCPEncryptionHandling.ANY_ENCRYPTED:
-                if protocol is TransportProtocol.PLAIN:
-                    raise MKFetcherError(
-                        "Refused: Encryption is enforced but agent output is plaintext"
-                    )
-            case TCPEncryptionHandling.ANY_AND_PLAIN:
-                pass
-            case never:
-                assert_never(never)
 
     def _decrypt(self, protocol: TransportProtocol, output: bytes) -> bytes:
         if not output:

@@ -4,9 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from binascii import unhexlify
+from itertools import product as cartesian_product
 from zlib import compress
 
 import pytest
+
+from cmk.utils.exceptions import MKFetcherError
 
 from cmk.fetchers._agentctl import (
     AgentCtlMessage,
@@ -14,7 +17,9 @@ from cmk.fetchers._agentctl import (
     decrypt_by_agent_protocol,
     HeaderV1,
     MessageV1,
+    TCPEncryptionHandling,
     TransportProtocol,
+    validate_agent_protocol,
     Version,
 )
 
@@ -226,3 +231,46 @@ class TestMessageV1:
 def test_characterization_legacy_encryption(protocol: TransportProtocol, encrypted: bytes) -> None:
     """A characterization test to ensure we can still decrypt the deprecated encrypted agent output"""
     assert decrypt_by_agent_protocol("cmk", protocol, unhexlify(encrypted)) == b"<<<cmk_test>>>"
+
+
+class TestValidateAgentProtocol:
+    def test_validate_protocol_plaintext_with_enforce_raises(self) -> None:
+        with pytest.raises(MKFetcherError):
+            validate_agent_protocol(
+                TransportProtocol.PLAIN, TCPEncryptionHandling.ANY_ENCRYPTED, is_registered=False
+            )
+
+    def test_validate_protocol_no_tls_with_registered_host_raises(self) -> None:
+        for p in TransportProtocol:
+            if p is TransportProtocol.TLS:
+                continue
+            with pytest.raises(MKFetcherError):
+                validate_agent_protocol(p, TCPEncryptionHandling.ANY_AND_PLAIN, is_registered=True)
+
+    def test_validate_protocol_tls_always_ok(self) -> None:
+        for encryption_handling, is_registered in cartesian_product(
+            TCPEncryptionHandling, (True, False)
+        ):
+            validate_agent_protocol(
+                TransportProtocol.TLS,
+                encryption_handling,
+                is_registered=is_registered,
+            )
+
+    def test_validate_protocol_tls_required(self) -> None:
+        for p in TransportProtocol:
+            if p is TransportProtocol.TLS:
+                continue
+            with pytest.raises(MKFetcherError, match="TLS"):
+                validate_agent_protocol(
+                    p,
+                    TCPEncryptionHandling.TLS_ENCRYPTED_ONLY,
+                    is_registered=False,
+                )
+
+
+class TestTransportProtocol:
+    @pytest.mark.parametrize("bad_payload", [b"abc", b""])
+    def test_detect_transport_protocol_error(self, bad_payload) -> None:
+        with pytest.raises(ValueError):
+            TransportProtocol(bad_payload)

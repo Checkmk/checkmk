@@ -9,7 +9,6 @@ import json
 import os
 import socket
 from collections.abc import Sequence
-from itertools import product as cartesian_product
 from pathlib import Path
 from types import TracebackType
 from typing import Any, Literal, NamedTuple
@@ -920,46 +919,6 @@ class TestTCPFetcher:
         )
         assert fetcher._decrypt(TransportProtocol(output[:2]), AgentRawData(output[2:])) == output
 
-    def test_validate_protocol_plaintext_with_enforce_raises(self) -> None:
-        with pytest.raises(MKFetcherError):
-            TCPFetcher._validate_protocol(
-                TransportProtocol.PLAIN,
-                TCPEncryptionHandling.ANY_ENCRYPTED,
-                is_registered=False,
-            )
-
-    def test_validate_protocol_no_tls_with_registered_host_raises(self) -> None:
-        for p in TransportProtocol:
-            if p is TransportProtocol.TLS:
-                continue
-            with pytest.raises(MKFetcherError):
-                TCPFetcher._validate_protocol(
-                    p,
-                    TCPEncryptionHandling.ANY_AND_PLAIN,
-                    is_registered=True,
-                )
-
-    def test_validate_protocol_tls_always_ok(self) -> None:
-        for encryption_handling, is_registered in cartesian_product(
-            TCPEncryptionHandling, (True, False)
-        ):
-            TCPFetcher._validate_protocol(
-                TransportProtocol.TLS,
-                encryption_handling,
-                is_registered=is_registered,
-            )
-
-    def test_validate_protocol_tls_required(self) -> None:
-        for p in TransportProtocol:
-            if p is TransportProtocol.TLS:
-                continue
-            with pytest.raises(MKFetcherError, match="TLS"):
-                TCPFetcher._validate_protocol(
-                    p,
-                    TCPEncryptionHandling.TLS_ENCRYPTED_ONLY,
-                    is_registered=False,
-                )
-
     def test_get_agent_data_without_tls(
         self, monkeypatch: MonkeyPatch, fetcher: TCPFetcher
     ) -> None:
@@ -987,17 +946,6 @@ class TestTCPFetcher:
         agent_data, protocol = fetcher._get_agent_data("server")
         assert agent_data == mock_data[2:]
         assert protocol == TransportProtocol.PLAIN
-
-    def test_detect_transport_protocol(self, fetcher: TCPFetcher) -> None:
-        assert fetcher._detect_transport_protocol(b"02") == TransportProtocol.SHA256
-
-    def test_detect_transport_protocol_error(self, fetcher: TCPFetcher) -> None:
-        with pytest.raises(MKFetcherError, match="Unknown transport protocol: b'abc'"):
-            fetcher._detect_transport_protocol(b"abc")
-
-    def test_detect_transport_protocol_empty_error(self, fetcher: TCPFetcher) -> None:
-        with pytest.raises(AssertionError):
-            fetcher._detect_transport_protocol(b"")
 
 
 class TestFetcherCaching:

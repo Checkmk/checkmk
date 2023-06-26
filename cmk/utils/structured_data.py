@@ -367,7 +367,7 @@ class _MutableAttributes:
 
         update_result = UpdateResult()
         if pairs:
-            self.pairs.update(pairs)
+            self.add(pairs)
             update_result.add_attr_reason(path, "pairs", pairs)
 
         if retentions:

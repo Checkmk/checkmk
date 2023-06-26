@@ -243,7 +243,7 @@ def _check_oracle_memory_info(data, params, sticky_fields, fields):
         state, infotext, perf = check_levels(
             value, ga_field.metric, metric_params, human_readable_func=get_bytes_human_readable
         )
-        if ga_field.name in sticky_fields:
+        if ga_field.name in sticky_fields or state != 0:
             results.append((state, "%s: %s" % (ga_field.name, infotext), perf))
         else:
             results.append((0, "", perf))

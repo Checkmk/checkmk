@@ -8,7 +8,7 @@ import enum
 import logging
 import socket
 import ssl
-from collections.abc import Mapping
+from collections.abc import Mapping, Sized
 from typing import Any, assert_never, Final
 from uuid import UUID
 
@@ -138,9 +138,10 @@ class TCPFetcher(Fetcher[AgentRawData]):
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         agent_data, protocol = self._get_agent_data()
-        return self._validate_decrypted_data(self._decrypt(protocol, agent_data))
+        self._validate_decrypted_data(self._decrypt(protocol, agent_data))
+        return AgentRawData(agent_data)
 
-    def _get_agent_data(self) -> tuple[AgentRawData, TransportProtocol]:
+    def _get_agent_data(self) -> tuple[bytes, TransportProtocol]:
         try:
             raw_protocol = self._socket.recv(2, socket.MSG_WAITALL)
         except OSError as e:
@@ -160,11 +161,11 @@ class TCPFetcher(Fetcher[AgentRawData]):
                 agent_data = AgentCtlMessage.from_bytes(raw_agent_data).payload
             except ValueError as e:
                 raise MKFetcherError(f"Failed to deserialize versioned agent data: {e!r}") from e
-            return AgentRawData(agent_data[2:]), self._detect_transport_protocol(
+            return agent_data[2:], self._detect_transport_protocol(
                 agent_data[:2], empty_msg="Empty payload from controller at %s:%d" % self.address
             )
 
-        return AgentRawData(self._recvall(self._socket, socket.MSG_WAITALL)), protocol
+        return self._recvall(self._socket, socket.MSG_WAITALL), protocol
 
     def _detect_transport_protocol(self, raw_protocol: bytes, empty_msg: str) -> TransportProtocol:
         try:
@@ -228,7 +229,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
 
         return b"".join(buffer)
 
-    def _decrypt(self, protocol: TransportProtocol, output: AgentRawData) -> AgentRawData:
+    def _decrypt(self, protocol: TransportProtocol, output: bytes) -> bytes:
         if not output:
             return output  # nothing to to, validation will fail
 
@@ -240,13 +241,12 @@ class TCPFetcher(Fetcher[AgentRawData]):
 
         self._logger.debug("Try to decrypt output")
         try:
-            return AgentRawData(decrypt_by_agent_protocol(secret, protocol, output))
+            return decrypt_by_agent_protocol(secret, protocol, output)
         except Exception as e:
             raise MKFetcherError("Failed to decrypt agent output: %s" % e) from e
 
-    def _validate_decrypted_data(self, output: AgentRawData) -> AgentRawData:
+    def _validate_decrypted_data(self, output: Sized) -> None:
         if len(output) < 16:
             raise MKFetcherError(
                 f"Too short payload from agent at {self.address[0]}:{self.address[1]}: {output!r}"
             )
-        return output

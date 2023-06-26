@@ -41,6 +41,7 @@ from cmk.snmplib.type_defs import (
 )
 
 import cmk.fetchers._snmp as snmp
+import cmk.fetchers._tcp as tcp
 from cmk.fetchers import (
     get_raw_data,
     IPMIFetcher,
@@ -981,24 +982,25 @@ class TestTCPFetcher:
         mock_sock = _MockSock(b"<<<section:sep(0)>>>\nbody\n")
         monkeypatch.setattr(fetcher, "_opt_socket", mock_sock)
 
-        agent_data, protocol = fetcher._get_agent_data()
+        agent_data, protocol = fetcher._get_agent_data(None)
         assert agent_data == mock_sock.data[2:]
         assert protocol == TransportProtocol.PLAIN
 
     def test_get_agent_data_with_tls(self, monkeypatch: MonkeyPatch, fetcher: TCPFetcher) -> None:
         mock_data = b"<<<section:sep(0)>>>\nbody\n"
         mock_sock = _MockSock(
-            b"16%b%b%b"
+            b"%b%b%b%b"
             % (
+                TransportProtocol.TLS.value,
                 bytes(Version.V1),
                 bytes(HeaderV1(CompressionType.ZLIB)),
                 compress(mock_data),
             )
         )
         monkeypatch.setattr(fetcher, "_opt_socket", mock_sock)
-        monkeypatch.setattr(fetcher, "_wrap_tls", lambda _uuid: mock_sock)
+        monkeypatch.setattr(tcp, "wrap_tls", lambda *args: mock_sock)
 
-        agent_data, protocol = fetcher._get_agent_data()
+        agent_data, protocol = fetcher._get_agent_data("server")
         assert agent_data == mock_data[2:]
         assert protocol == TransportProtocol.PLAIN
 
@@ -1096,10 +1098,10 @@ def test_tcp_fetcher_dead_connection_timeout(
         if exc_type is not None:
             with pytest.raises(exc_type):
                 fetcher.open()
-                fetcher._get_agent_data()
+                fetcher._get_agent_data(None)
         else:
             fetcher.open()
-            fetcher._get_agent_data()
+            fetcher._get_agent_data(None)
 
 
 class FakeSocket:

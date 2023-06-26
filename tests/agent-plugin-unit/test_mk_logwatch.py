@@ -105,15 +105,11 @@ def _get_parsed_config():
 
 
 def text_type():
-    if sys.version_info[0] == 2:
-        return unicode  # pylint: disable=undefined-variable  # noqa: F821
-    return str
+    return unicode if sys.version_info[0] == 2 else str
 
 
 def binary_type():
-    if sys.version_info[0] == 2:
-        return str  # pylint: disable=undefined-variable
-    return bytes
+    return str if sys.version_info[0] == 2 else bytes
 
 
 def ensure_text(s, encoding='utf-8', errors='strict'):
@@ -430,7 +426,7 @@ STAR_FILES = [
 def _fix_for_os(pairs):
     # type: (Sequence[tuple[bytes, str]])  -> list[tuple[bytes, str]]
     def symlink_in_windows(s: str) -> bool:
-        return os.name == "nt" and s.find("symlink") != -1
+        return os.name == "nt" and "symlink" in s
 
     return [(os.sep.encode() + b, os.sep + s) for b, s in pairs if not symlink_in_windows(s)]
 

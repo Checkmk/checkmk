@@ -3,13 +3,15 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Mapping, Union
+
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithItem,
     rulespec_registry,
     RulespecGroupCheckParametersEnvironment,
 )
-from cmk.gui.valuespec import Age, Dictionary, TextInput, Tuple
+from cmk.gui.valuespec import Dictionary, Float, Migrate, TextInput, Tuple
 
 
 def _item_spec_siemens_plc_duration():
@@ -23,29 +25,38 @@ def _item_spec_siemens_plc_duration():
     )
 
 
+def migrate_duration_to_float(
+    params: dict[str, tuple[Union[int, float], Union[int, float]]]
+) -> Mapping[str, tuple[float, float]]:
+    if params and "duration" in params:
+        duration = params["duration"]
+        params["duration"] = (float(duration[0]), float(duration[1]))
+
+    return params
+
+
 def _parameter_valuespec_siemens_plc_duration():
-    return Dictionary(
-        elements=[
-            (
-                "duration",
-                Tuple(
-                    title=_("Duration"),
-                    elements=[
-                        Age(
-                            title=_("Warning at"),
-                        ),
-                        Age(
-                            title=_("Critical at"),
-                        ),
-                    ],
+    return Migrate(
+        Dictionary(
+            elements=[
+                (
+                    "duration",
+                    Tuple(
+                        title=_("Duration"),
+                        elements=[
+                            Float(title=_("Warning at"), unit="s"),
+                            Float(title=_("Critical at"), unit="s"),
+                        ],
+                    ),
                 ),
+            ],
+            help=_(
+                "This rule is used to configure thresholds for duration values read from "
+                "Siemens PLC devices."
             ),
-        ],
-        help=_(
-            "This rule is used to configure thresholds for duration values read from "
-            "Siemens PLC devices."
+            title=_("Duration levels"),
         ),
-        title=_("Duration levels"),
+        migrate=migrate_duration_to_float,
     )
 
 

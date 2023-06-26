@@ -54,11 +54,11 @@ def test_cloud_werks(site: Site, werks: dict[int, Werk]) -> None:
         assert not cloud_werks
 
 
-@pytest.mark.xfail(reason="TODO: implement", strict=True)
 def test_saas_werks(site: Site, werks: dict[int, Werk]) -> None:
     saas_werks = [werk for werk in werks.values() if werk.edition == Edition.CSE]
 
     if site.version.is_saas_edition():
+        pytest.xfail(reason="TODO: implement")
         assert saas_werks
     else:
         assert not saas_werks

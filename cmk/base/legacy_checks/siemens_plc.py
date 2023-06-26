@@ -134,9 +134,9 @@ def check_siemens_plc_duration(item, params, info):
             2
         ] == item:
             if line[1].startswith("hours"):
-                seconds = int(line[-1]) * 3600
+                seconds = float(line[-1]) * 3600
             else:
-                seconds = int(line[-1])
+                seconds = float(line[-1])
 
             perfdata = [(line[1], seconds)]
 

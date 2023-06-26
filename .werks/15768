@@ -1,0 +1,20 @@
+Title: siemens_plc_duration: Fix crash if duration is smaller than a second
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1687955892
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+Previously, siemens_plc_duration check would crash if duration was smaller
+than a second with an error:
+C+:
+ValueError (invalid literal for int() with base 10: '0.05000000074505806')
+C-:
+
+Now, the check doesn't crash anymore and it's possible to input thresholds
+smaller than a second in the "Siemens PLC Duration" monitoring rule.
+

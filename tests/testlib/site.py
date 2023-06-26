@@ -877,6 +877,7 @@ class Site:
 
     def start(self) -> None:
         if not self.is_running():
+            logger.info("Starting site")
             assert self.omd("start") == 0
             # print("= BEGIN PROCESSES AFTER START ==============================")
             # self.execute(["ps", "aux"]).wait()
@@ -896,6 +897,8 @@ class Site:
                 time.sleep(0.2)
 
             self.ensure_running()
+        else:
+            logger.info("Site is already running")
 
         assert os.path.ismount(
             self.path("tmp")
@@ -904,6 +907,7 @@ class Site:
     def stop(self) -> None:
         if self.is_stopped():
             return  # Nothing to do
+        logger.info("Stopping site")
 
         # logger.debug("= BEGIN PROCESSES BEFORE =======================================")
         # os.system("ps -fwwu %s" % self.id)  # nosec
@@ -938,10 +942,15 @@ class Site:
             )
 
     def is_running(self) -> bool:
-        return (
-            self.execute(["/usr/bin/omd", "status", "--bare"], stdout=subprocess.DEVNULL).wait()
-            == 0
-        )
+        def _fmt_output(msg: str) -> str:
+            return ("\n> " + "\n> ".join(msg.splitlines())) if msg else "-"
+
+        try:
+            self.check_output(["/usr/bin/omd", "status", "--bare"])
+            return True
+        except subprocess.CalledProcessError as e:
+            logger.info("%s Output:%sSTDERR:%s", e, _fmt_output(e.output), _fmt_output(e.stderr))
+            return False
 
     def is_stopped(self) -> bool:
         # 0 -> fully running
@@ -1008,6 +1017,7 @@ class Site:
         assert p.returncode == 0, "Failed to execute 'cmk -U': %s" % stdout
 
     def prepare_for_tests(self) -> None:
+        logger.info("Prepare for tests")
         self.verify_cmk()
 
         if self.enforce_english_gui:
@@ -1047,8 +1057,10 @@ class Site:
         """This opens a currently free TCP port and remembers it in the object for later use
         Not free of races, but should be sufficient."""
         start_again = False
+        logger.info("Opening Livestatus TCP port")
 
         if not self.is_stopped():
+            logger.info("Site was running, stopping...")
             start_again = True
             self.stop()
 
@@ -1058,6 +1070,7 @@ class Site:
         self.set_config("LIVESTATUS_TCP_TLS", "on" if encrypted else "off")
 
         if start_again:
+            logger.info("Starting site again...")
             self.start()
 
     def set_livestatus_port_from_config(self) -> None:
@@ -1135,6 +1148,7 @@ class Site:
     def activate_changes_and_wait_for_core_reload(
         self, allow_foreign_changes: bool = False, remote_site: Site | None = None
     ) -> None:
+        logger.info("Activate changes and wait for reload...")
         self.ensure_running()
         try:
             site = remote_site or self
@@ -1309,7 +1323,7 @@ class SiteFactory:
         site.prepare_for_tests()
         # There seem to be still some changes that want to be activated
         site.activate_changes_and_wait_for_core_reload()
-        logger.debug("Created site %s", site.id)
+        logger.info("Created site %s", site.id)
         return site
 
     def save_results(self) -> None:

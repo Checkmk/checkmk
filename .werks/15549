@@ -1,0 +1,20 @@
+Title: Crash: mssql_blocked_sessions using pre-1.6 MSSQL agent plugin
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1687778645
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0p5
+
+When using a pre-1.6 MSSQL agent plugin the {{mssql_blocked_sessions}}
+check plugins would crash during discovery.
+
+The pre-1.6 MSSQL agent plugins are now deprecated and can no longer be used.
+Old still existing services will go to {{UNKNOWN}} and encourage you to update to a newer agent plugin version.
+After a rediscovery the old services will vanish and new services will not be discovered.
+
+Therefore an upgrade as described in <a href="https://checkmk.com/de/werk/6140">Werk #6140</a> is necessary.
+

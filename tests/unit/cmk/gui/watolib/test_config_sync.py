@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import time
-from collections.abc import Iterable, Iterator
+from collections.abc import Callable, Iterable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -554,6 +554,8 @@ def test_synchronize_site(
 
     monkeypatch.setattr(cmk_version, "edition", lambda: edition)
 
+    file_filter_func = None
+    site_id = SiteId("unit_remote_1")
     with _get_activation_manager(monkeypatch, SiteId("unit_remote_1")) as activation_manager:
         assert activation_manager._activation_id is not None
         with _create_sync_snapshot(
@@ -563,12 +565,47 @@ def test_synchronize_site(
             remote_site=SiteId("unit_remote_1"),
             edition=edition,
         ) as snapshot_settings:
-            site_activation = activate_changes.ActivateChangesSite(
-                SiteId("unit_remote_1"),
-                snapshot_settings,
-                activation_manager._activation_id,
-                prevent_activate=True,
-            )
+            _synchronize_site(activation_manager, site_id, snapshot_settings, file_filter_func)
 
-            site_activation._time_started = time.time()
-            site_activation._synchronize_site()
+
+def _synchronize_site(
+    activation_manager: activate_changes.ActivateChangesManager,
+    site_id: SiteId,
+    snapshot_settings: config_sync.SnapshotSettings,
+    file_filter_func: Callable[[str], bool] | None,
+) -> None:
+    assert activation_manager._activation_id is not None
+    site_activation_state = activate_changes._initialize_site_activation_state(
+        site_id, activation_manager._activation_id, activation_manager, time.time()
+    )
+
+    fetch_state_result = activate_changes.fetch_sync_state(
+        snapshot_settings.snapshot_components,
+        Path(snapshot_settings.work_dir),
+        site_activation_state,
+    )
+
+    assert fetch_state_result is not None
+    (
+        sync_state,
+        site_activation_state,
+        sync_start,
+    ) = fetch_state_result
+
+    calc_delta_result = activate_changes.calc_sync_delta(
+        sync_state,
+        file_filter_func,
+        site_activation_state,
+        sync_start,
+    )
+    assert calc_delta_result is not None
+    sync_delta, site_activation_state, sync_start = calc_delta_result
+
+    sync_result = activate_changes.synchronize_files(
+        sync_delta,
+        sync_state.remote_config_generation,
+        Path(snapshot_settings.work_dir),
+        site_activation_state,
+        sync_start,
+    )
+    assert sync_result is not None

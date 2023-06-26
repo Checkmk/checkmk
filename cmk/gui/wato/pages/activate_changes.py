@@ -520,7 +520,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
                 if not is_online or not is_logged_in:
                     can_activate_all = False
 
-                need_restart = self._is_activate_needed(site_id)
+                need_restart = self.is_activate_needed(site_id)
                 need_sync = self.is_sync_needed(site_id)
                 need_action = need_restart or need_sync
                 nr_changes = len(self._changes_of_site(site_id))

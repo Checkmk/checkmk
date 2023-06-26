@@ -32,6 +32,7 @@ from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.host_sections import HostSections
 from cmk.checkengine.inventory import (
     _check_fetched_data_or_trees,
+    _create_trees_from_inventory_plugin_items,
     _inventorize_real_host,
     _parse_inventory_plugin_item,
     HWSWInventoryParameters,
@@ -1385,3 +1386,62 @@ def test_save_tree_actions(
         )
         == expected_save_tree_actions
     )
+
+
+def test_add_rows_with_different_key_columns() -> None:
+    trees = _create_trees_from_inventory_plugin_items(
+        [
+            ItemsOfInventoryPlugin(
+                items=[
+                    TableRow(
+                        path=["path-to-node"],
+                        key_columns={
+                            "ident": "Ident 1",
+                        },
+                        inventory_columns={
+                            "key": "Key 1",
+                        },
+                    ),
+                    TableRow(
+                        path=["path-to-node"],
+                        key_columns={
+                            "another-ident": "Another ident 2",
+                        },
+                        inventory_columns={
+                            "key": "Key 2",
+                        },
+                    ),
+                    TableRow(
+                        path=["path-to-node"],
+                        key_columns={
+                            "ident": "Ident 3",
+                            "another-ident": "Another ident 3",
+                        },
+                        inventory_columns={
+                            "key": "Key 3",
+                        },
+                    ),
+                    TableRow(
+                        path=["path-to-node"],
+                        key_columns={
+                            "ident": "Ident 1",
+                        },
+                        inventory_columns={
+                            "another-key": "Another key 1",
+                        },
+                    ),
+                ],
+                raw_cache_info=(1, 2),
+            ),
+        ]
+    )
+    tree_from_fs = ImmutableTree.deserialize(trees.inventory.serialize())
+    assert tree_from_fs == trees.inventory
+    rows = tree_from_fs.get_rows(("path-to-node",))
+    assert len(rows) == 3
+    for row in [
+        {"ident": "Ident 1", "key": "Key 1", "another-key": "Another key 1"},
+        {"another-ident": "Another ident 2", "key": "Key 2"},
+        {"another-ident": "Another ident 3", "ident": "Ident 3", "key": "Key 3"},
+    ]:
+        assert row in rows

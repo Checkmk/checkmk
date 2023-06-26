@@ -16,13 +16,12 @@ from cmk.utils import paths
 from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.certs import write_cert_store
-from cmk.utils.encryption import decrypt_by_agent_protocol, TransportProtocol
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.fetchers import Fetcher, Mode
 
-from ._agentctl import AgentCtlMessage
+from ._agentctl import AgentCtlMessage, decrypt_by_agent_protocol, TransportProtocol
 
 __all__ = ["TCPEncryptionHandling", "TCPFetcher"]
 

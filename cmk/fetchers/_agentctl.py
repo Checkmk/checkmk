@@ -5,12 +5,25 @@
 
 from __future__ import annotations
 
+import hashlib
 import zlib
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from enum import Enum
 from typing import Final
 
+from cmk.utils.crypto.deprecated import AesCbcCipher
 from cmk.utils.serializertype import Deserializer, Serializer
+
+OPENSSL_SALTED_MARKER = "Salted__"
+
+
+class TransportProtocol(Enum):
+    PLAIN = b"<<"
+    MD5 = b"00"
+    SHA256 = b"02"
+    PBKDF2 = b"03"
+    TLS = b"16"
+    NONE = b"99"
 
 
 class Version(Enum):
@@ -149,3 +162,102 @@ def _decompress(
         except zlib.error as e:
             raise ValueError(f"Decompression with zlib failed: {e!r}") from e
     return data
+
+
+def decrypt_by_agent_protocol(
+    password: str,
+    protocol: TransportProtocol,
+    encrypted_pkg: bytes,
+) -> bytes:
+    """select the decryption algorithm based on the agent header
+
+    Support encrypted agent data with "99" header.
+    This was not intended, but the Windows agent accidentally sent this header
+    instead of "00" up to 2.0.0p1, so we keep this for a while.
+
+    Warning:
+        "99" for real-time check data means "unencrypted"!
+    """
+
+    if protocol is TransportProtocol.PBKDF2:
+        return _decrypt_aes_256_cbc_pbkdf2(
+            ciphertext=encrypted_pkg[len(OPENSSL_SALTED_MARKER) :],
+            password=password,
+        )
+
+    if protocol is TransportProtocol.SHA256:
+        return _decrypt_aes_256_cbc_legacy(
+            ciphertext=encrypted_pkg,
+            password=password,
+            digest=hashlib.sha256,
+        )
+
+    return _decrypt_aes_256_cbc_legacy(
+        ciphertext=encrypted_pkg,
+        password=password,
+        digest=hashlib.md5,
+    )
+
+
+def _decrypt_aes_256_cbc_pbkdf2(
+    ciphertext: bytes,
+    password: str,
+) -> bytes:
+    """Decrypt an openssl encrypted bytestring:
+    Cipher: AES256-CBC
+    Salted: yes
+    Key Derivation: PKBDF2, with SHA256 digest, 10000 cycles
+    """
+    SALT_LENGTH = 8
+    KEY_LENGTH = 32
+    IV_LENGTH = 16
+    PBKDF2_CYCLES = 10_000
+
+    key_iv = hashlib.pbkdf2_hmac(
+        "sha256",
+        password.encode("utf-8"),
+        ciphertext[:SALT_LENGTH],
+        PBKDF2_CYCLES,
+        KEY_LENGTH + IV_LENGTH,
+    )
+    key, iv = key_iv[:KEY_LENGTH], key_iv[KEY_LENGTH:]
+
+    cipher = AesCbcCipher("decrypt", key, iv)
+    decrypted = cipher.update(ciphertext[SALT_LENGTH:]) + cipher.finalize()
+
+    return AesCbcCipher.unpad_block(decrypted)
+
+
+def _decrypt_aes_256_cbc_legacy(
+    ciphertext: bytes,
+    password: str,
+    digest: Callable[..., hashlib._Hash],
+) -> bytes:
+    """Decrypt an openssl encrypted bytesting:
+    Cipher: AES256-CBC
+    Salted: no
+    Key derivation: Simple OpenSSL Key derivation
+    """
+    KEY_LENGTH = 32
+    IV_LENGTH = 16
+
+    key, iv = _derive_openssl_key_and_iv(password.encode("utf-8"), digest, KEY_LENGTH, IV_LENGTH)
+
+    cipher = AesCbcCipher("decrypt", key, iv)
+    decrypted = cipher.update(ciphertext) + cipher.finalize()
+
+    return AesCbcCipher.unpad_block(decrypted)
+
+
+def _derive_openssl_key_and_iv(
+    password: bytes,
+    digest: Callable[..., hashlib._Hash],
+    key_length: int,
+    iv_length: int,
+) -> tuple[bytes, bytes]:
+    """Simple and completely insecure OpenSSL Key derivation function"""
+    d = d_i = b""
+    while len(d) < key_length + iv_length:
+        d_i = digest(d_i + password).digest()
+        d += d_i
+    return d[:key_length], d[key_length : key_length + iv_length]

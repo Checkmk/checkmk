@@ -13,6 +13,7 @@ from collections.abc import Mapping
 from typing import Any, assert_never
 
 from ._abstract import Fetcher, Mode
+from ._agentctl import decrypt_by_agent_protocol, TransportProtocol
 from ._api import get_raw_data
 from ._ipmi import IPMICredentials, IPMIFetcher
 from ._nofetcher import NoFetcher, NoFetcherError
@@ -23,6 +24,7 @@ from ._tcp import TCPEncryptionHandling, TCPFetcher
 from ._typedefs import FetcherType
 
 __all__ = [
+    "decrypt_by_agent_protocol",
     "NoFetcherError",
     "Fetcher",
     "FetcherFactory",
@@ -38,6 +40,7 @@ __all__ = [
     "SNMPSectionMeta",
     "TCPEncryptionHandling",
     "TCPFetcher",
+    "TransportProtocol",
 ]
 
 

@@ -23,7 +23,6 @@ from pytest import MonkeyPatch
 import cmk.utils.resulttype as result
 import cmk.utils.version as cmk_version
 from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.encryption import TransportProtocol
 from cmk.utils.exceptions import MKFetcherError, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
@@ -52,6 +51,7 @@ from cmk.fetchers import (
     SNMPSectionMeta,
     TCPEncryptionHandling,
     TCPFetcher,
+    TransportProtocol,
 )
 from cmk.fetchers._agentctl import CompressionType, HeaderV1, Version
 from cmk.fetchers._ipmi import IPMISensor

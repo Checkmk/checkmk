@@ -28,7 +28,7 @@ def main() {
         env.DOCKER_TAG,  // FIXME
         env.DOCKER_TAG_DEFAULT);
 
-    currentBuild.description = (
+    currentBuild.description += (
         """
         |Run integration tests for packages<br>
         |VERSION: ${VERSION}<br>
@@ -60,4 +60,5 @@ def main() {
         )
     }
 }
+
 return this;

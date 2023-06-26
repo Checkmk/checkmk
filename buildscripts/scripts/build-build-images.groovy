@@ -41,7 +41,7 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    currentBuild.description = (
+    currentBuild.description += (
         """
         |Building for the following Distros:
         |${distros}
@@ -104,4 +104,5 @@ def main() {
         }
     }
 }
+
 return this;

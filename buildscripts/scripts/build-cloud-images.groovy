@@ -33,7 +33,7 @@ def main() {
     def env_secret_map = build_env_secret_map(cmk_version, version_suffix)
     def cloud_targets = ["amazon-ebs", "azure-arm"]
 
-    currentBuild.description = (
+    currentBuild.description += (
         """
         |Building the Cloud images
         |""".stripMargin())

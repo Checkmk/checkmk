@@ -26,7 +26,7 @@ def main() {
 
     def branch_name = versioning.safe_branch_name(scm);
 
-    currentBuild.description = (
+    currentBuild.description += (
         """
         |Run composition tests for<br>
         |VERSION: ${VERSION}<br>
@@ -58,4 +58,5 @@ def main() {
         )
     }
 }
+
 return this;

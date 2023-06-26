@@ -68,7 +68,8 @@ def create_stage(Map args, time_stage_started) {
 }
 
 def desc_init() {
-    currentBuild.description = "";
+    // add new content to next line, but do not overwrite existing content
+    currentBuild.description += "<br>";
 }
 
 def desc_add_line(TEXT) {

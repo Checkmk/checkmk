@@ -100,7 +100,7 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    currentBuild.description = (
+    currentBuild.description += (
         """
         |Building for the following distros:<br>
         |${distros}<br>
@@ -315,7 +315,7 @@ def main() {
     parallel package_builds;
 
     stage("Upload") {
-        currentBuild.description = (
+        currentBuild.description += (
             """ |${currentBuild.description}<br>
                 |<p><a href='${INTERNAL_DEPLOY_URL}/${upload_path_suffix}${cmk_version}'>Download Artifacts</a></p>
                 |""".stripMargin());
@@ -335,13 +335,11 @@ def main() {
     }
 }
 
-
 def get_agent_list(edition) {
     return (edition == "raw" ?
         ["windows"] :
         ["au-linux-64bit", "au-linux-32bit", "windows"]);
 }
-
 
 def build_linux_agent_updater(agent, edition, branch_version, registry) {
     print("FN build_linux_agent_updater(agent=${agent}, edition=${edition}, branch_version=${branch_version}, registry=${registry})");

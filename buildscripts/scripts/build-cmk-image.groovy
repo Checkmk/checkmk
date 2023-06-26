@@ -54,7 +54,7 @@ def main() {
         |===================================================
         """.stripMargin());
 
-    currentBuild.description = (
+    currentBuild.description += (
         """
         |Building the CMK docker image
         """.stripMargin());

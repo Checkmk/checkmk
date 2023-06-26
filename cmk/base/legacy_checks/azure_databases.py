@@ -7,6 +7,7 @@
 from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.azure import (
     check_azure_metric,
+    discover_azure_by_metrics,
     get_data_or_go_stale,
     iter_resource_attributes,
     parse_resources,
@@ -32,12 +33,8 @@ def check_azure_databases_storage(_item, params, resource):
         yield state, text, perf
 
 
-def discover_azure_databases_storage(section):
-    yield from ((item, {}) for item in section)
-
-
 check_info["azure_databases.storage"] = LegacyCheckDefinition(
-    discovery_function=discover_azure_databases_storage,
+    discovery_function=discover_azure_by_metrics("average_storage_percent"),
     check_function=check_azure_databases_storage,
     service_name="DB %s Storage",
     check_ruleset_name="azure_databases",
@@ -58,12 +55,8 @@ def check_azure_databases_deadlock(_item, params, resource):
         yield mcheck
 
 
-def discover_azure_databases_deadlock(section):
-    yield from ((item, {}) for item in section)
-
-
 check_info["azure_databases.deadlock"] = LegacyCheckDefinition(
-    discovery_function=discover_azure_databases_deadlock,
+    discovery_function=discover_azure_by_metrics("average_deadlock"),
     check_function=check_azure_databases_deadlock,
     service_name="DB %s Deadlocks",
     check_ruleset_name="azure_databases",
@@ -88,12 +81,8 @@ def check_azure_databases_cpu(_item, params, resource):
             yield y
 
 
-def discover_azure_databases_cpu(section):
-    yield from ((item, {}) for item in section)
-
-
 check_info["azure_databases.cpu"] = LegacyCheckDefinition(
-    discovery_function=discover_azure_databases_cpu,
+    discovery_function=discover_azure_by_metrics("average_cpu_percent"),
     check_function=check_azure_databases_cpu,
     service_name="DB %s CPU",
     check_ruleset_name="azure_databases",
@@ -120,12 +109,8 @@ def check_azure_databases_dtu(_item, params, resource):
         yield mcheck
 
 
-def discover_azure_databases_dtu(section):
-    yield from ((item, {}) for item in section)
-
-
 check_info["azure_databases.dtu"] = LegacyCheckDefinition(
-    discovery_function=discover_azure_databases_dtu,
+    discovery_function=discover_azure_by_metrics("average_dtu_consumption_percent"),
     check_function=check_azure_databases_dtu,
     service_name="DB %s DTU",
     check_ruleset_name="azure_databases",
@@ -152,12 +137,10 @@ def check_azure_databases_connections(_item, params, resource):
             yield mcheck
 
 
-def discover_azure_databases_connections(section):
-    yield from ((item, {}) for item in section)
-
-
 check_info["azure_databases.connections"] = LegacyCheckDefinition(
-    discovery_function=discover_azure_databases_connections,
+    discovery_function=discover_azure_by_metrics(
+        "average_connection_successful", "average_connection_failed"
+    ),
     check_function=check_azure_databases_connections,
     service_name="DB %s Connections",
     check_ruleset_name="azure_databases",

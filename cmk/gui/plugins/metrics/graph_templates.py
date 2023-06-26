@@ -4,6 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable, Iterator, Sequence
+from typing import Final
+
+from livestatus import SiteId
 
 from cmk.utils import pnp_cleanup
 from cmk.utils.exceptions import MKGeneralException
@@ -41,6 +44,91 @@ from cmk.gui.type_defs import (
     TemplateGraphSpec,
     TranslatedMetrics,
 )
+from cmk.gui.utils.graph_specification import TemplateGraphSpecification
+
+from .graph_recipe_builder import graph_recipe_builder_registry
+
+
+class TemplateGraphRecipeBuilder:
+    def __init__(self) -> None:
+        self.graph_type: Final = "template"
+
+    def __call__(self, spec: TemplateGraphSpecification) -> list[TemplateGraphRecipe]:
+        row = get_graph_data_from_livestatus(spec.site, spec.host_name, spec.service_description)
+        translated_metrics = translated_metrics_from_row(row)
+        return [
+            recipe
+            for index, graph_template in matching_graph_templates(
+                spec.to_legacy_format(),
+                translated_metrics,
+            )
+            if (
+                recipe := self._build_recipe_from_template(
+                    spec=spec,
+                    graph_template=graph_template,
+                    row=row,
+                    translated_metrics=translated_metrics,
+                    index=index,
+                )
+            )
+        ]
+
+    def _build_recipe_from_template(
+        self,
+        *,
+        spec: TemplateGraphSpecification,
+        graph_template: GraphTemplate,
+        row: Row,
+        translated_metrics: TranslatedMetrics,
+        index: int,
+    ) -> TemplateGraphRecipe | None:
+        if not (
+            graph_template_tuned := self._template_tuning(
+                graph_template,
+                site=spec.site,
+                host_name=spec.host_name,
+                service_description=spec.service_description,
+                destination=spec.destination,
+            )
+        ):
+            return None
+
+        graph_recipe = create_graph_recipe_from_template(
+            graph_template_tuned,
+            translated_metrics,
+            row,
+        )
+
+        spec_info = spec.to_legacy_format()
+        # Performance graph dashlets already use graph_id, but for example in reports, we still
+        # use graph_index. We should switch to graph_id everywhere (CMK-7308). Once this is
+        # done, we can remove the line below.
+        spec_info["graph_index"] = index
+        spec_info["graph_id"] = graph_template_tuned["id"]
+
+        return TemplateGraphRecipe(
+            title=graph_recipe["title"],
+            metrics=graph_recipe["metrics"],
+            unit=graph_recipe["unit"],
+            explicit_vertical_range=graph_recipe["explicit_vertical_range"],
+            horizontal_rules=graph_recipe["horizontal_rules"],
+            omit_zero_metrics=graph_recipe["omit_zero_metrics"],
+            consolidation_function=graph_recipe["consolidation_function"],
+            specification=("template", spec_info),
+        )
+
+    @staticmethod
+    def _template_tuning(
+        graph_template: GraphTemplate,
+        site: SiteId | None,
+        host_name: HostName | None,
+        service_description: ServiceName | None,
+        destination: str | None,
+    ) -> GraphTemplate | None:
+        return graph_template
+
+
+graph_recipe_builder_registry.register(TemplateGraphRecipeBuilder())
 
 
 # Performance graph dashlets already use graph_id, but for example in reports, we still use

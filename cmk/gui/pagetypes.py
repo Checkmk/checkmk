@@ -801,7 +801,6 @@ class Overridable(Base[_T_OverridableSpec]):
 
         # First load builtin pages. Set username to ''
         for name, page_dict in cls.builtin_pages().items():
-            page_dict = cls._transform_old_spec(dict(page_dict))
             new_page = cls(page_dict)
             instances.add_instance((page_dict["owner"], name), new_page)
 
@@ -826,8 +825,6 @@ class Overridable(Base[_T_OverridableSpec]):
                     for name, page_dict in user_pages.items():
                         page_dict["owner"] = user_id
                         page_dict["name"] = name
-                        page_dict = cls._transform_old_spec(dict(page_dict))
-
                         instances.add_instance((user_id, name), cls(page_dict))
 
                 except SyntaxError as e:
@@ -844,11 +841,6 @@ class Overridable(Base[_T_OverridableSpec]):
     def _load(cls, instances: OverridableInstances[Self]) -> None:
         """Custom method to load e.g. old configs
         after performing the loading of the regular files."""
-
-    @classmethod
-    def _transform_old_spec(cls, spec: dict[str, object]) -> _T_OverridableSpec:
-        """May be used to transform old persisted data structures"""
-        return spec  # type: ignore[return-value]  # will be nuked soon anyway
 
     @classmethod
     def _declare_instance_permissions(cls, instances: OverridableInstances[Self]) -> None:
@@ -1791,12 +1783,6 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec]):
         ]
 
         return parameters
-
-    @classmethod
-    def _transform_old_spec(cls, spec: dict[str, object]) -> _T_PageRendererSpec:
-        spec.setdefault("sort_index", 99)
-        spec.setdefault("is_show_more", False)
-        return spec  # type: ignore[return-value]  # will be removed soon
 
     @classmethod
     def page_handlers(cls) -> dict[str, cmk.gui.pages.PageHandlerFunc]:

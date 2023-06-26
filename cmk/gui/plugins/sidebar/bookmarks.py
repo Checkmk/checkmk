@@ -9,8 +9,8 @@ import urllib.parse
 from collections.abc import Callable
 from typing import Any, TypedDict
 
-import cmk.utils.store as store
 from cmk.utils.urls import is_allowed_url
+from cmk.utils.user import UserId
 
 import cmk.gui.pagetypes as pagetypes
 from cmk.gui.exceptions import MKUserError
@@ -194,18 +194,16 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec]):
         raise MKUserError(varprefix, _("This URL ist not allowed to be used as bookmark"))
 
     @classmethod
-    def _load(cls, instances: pagetypes.OverridableInstances[BookmarkList]) -> None:
-        cls.load_legacy_bookmarks(instances)
-
-    @classmethod
     def add_default_bookmark_list(
-        cls, instances: pagetypes.OverridableInstances[BookmarkList]
+        cls,
+        instances: pagetypes.OverridableInstances[BookmarkList],
+        user_id: UserId,
     ) -> None:
         attrs = BookmarkListSpec(
             {
                 "title": "My Bookmarks",
                 "public": False,
-                "owner": user.ident,
+                "owner": user_id,
                 "name": "my_bookmarks",
                 "description": "Your personal bookmarks",
                 "default_topic": "My Bookmarks",
@@ -213,35 +211,7 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec]):
             }
         )
 
-        instances.add_instance((user.ident, "my_bookmarks"), cls(attrs))
-
-    @classmethod
-    def load_legacy_bookmarks(cls, instances: pagetypes.OverridableInstances[BookmarkList]) -> None:
-        # Don't load the bookmarks when there is no user logged in
-        if user.id is None:
-            return
-
-        # Don't load the legacy bookmarks when there is already a my_bookmarks list
-        if instances.has_instance((user.id, "my_bookmarks")):
-            return
-
-        # Also don't load them when the user has at least one bookmark list
-        for user_id, _name in instances.instances_dict():
-            if user_id == user.id:
-                return
-
-        cls.add_default_bookmark_list(instances)
-        bookmark_list = instances.instance((user.id, "my_bookmarks"))
-
-        for title, url in cls._do_load_legacy_bookmarks():
-            bookmark_list.add_bookmark(title, url)
-
-    @classmethod
-    def _do_load_legacy_bookmarks(cls) -> list[tuple[str, str]]:
-        if user.confdir is None:
-            raise Exception("user confdir is None")
-        path = user.confdir + "/bookmarks.mk"
-        return store.load_object_from_file(path, default=[])
+        instances.add_instance((user_id, "my_bookmarks"), cls(attrs))
 
     @classmethod
     def new_bookmark(cls, title: str, url: str) -> BookmarkSpec:
@@ -263,7 +233,7 @@ class BookmarkList(pagetypes.Overridable[BookmarkListSpec]):
             topic.append(bookmark)
         return sorted(topics.items())
 
-    def add_bookmark(self, title, url):
+    def add_bookmark(self, title: str, url: str) -> None:
         self._["bookmarks"].append(BookmarkList.new_bookmark(title, url))
 
 
@@ -339,7 +309,7 @@ class Bookmarks(SidebarSnapin):
         instances = BookmarkList.load()
 
         if not instances.has_instance((user.id, "my_bookmarks")):
-            BookmarkList.add_default_bookmark_list(instances)
+            BookmarkList.add_default_bookmark_list(instances, user.ident)
 
         bookmarks = instances.instance((user.id, "my_bookmarks"))
         bookmarks.add_bookmark(title, self._try_shorten_url(url))

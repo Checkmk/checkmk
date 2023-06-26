@@ -832,15 +832,8 @@ class Overridable(Base[_T_OverridableSpec]):
                         _("Cannot load %s from %s: %s") % (cls.type_name(), path, e)
                     )
 
-        cls._load(instances)
         cls._declare_instance_permissions(instances)
         return instances
-
-    # TODO: Clean this up
-    @classmethod
-    def _load(cls, instances: OverridableInstances[Self]) -> None:
-        """Custom method to load e.g. old configs
-        after performing the loading of the regular files."""
 
     @classmethod
     def _declare_instance_permissions(cls, instances: OverridableInstances[Self]) -> None:

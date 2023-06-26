@@ -6,6 +6,7 @@
 # This file initializes the pytest environment
 # pylint: disable=redefined-outer-name,wrong-import-order
 
+import logging
 import os
 import shutil
 from pathlib import Path
@@ -39,6 +40,12 @@ collect_ignore = ["openapi"]
 # TODO Hack: Exclude cee tests in cre repo
 if not Path(testlib.utils.cmc_path()).exists():
     collect_ignore_glob = ["*/cee/*"]
+
+# Faker creates a bunch of annoying DEBUG level log entries, which clutter the output of test
+# runs and prevent us from spot the important messages easily. Reduce the Reduce the log level
+# selectively.
+# See also https://github.com/joke2k/faker/issues/753
+logging.getLogger("faker").setLevel(logging.ERROR)
 
 #
 # Each test is of one of the following types.

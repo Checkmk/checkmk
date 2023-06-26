@@ -179,8 +179,11 @@ class TCPFetcher(Fetcher[AgentRawData]):
         if not raw_protocol:
             raise MKFetcherError("Empty output from host %s:%d" % self.address)
 
-        protocol = self._detect_transport_protocol(raw_protocol)
-        self._validate_protocol(protocol, is_registered=server_hostname is not None)
+        protocol = TCPFetcher._detect_transport_protocol(raw_protocol)
+        self._logger.debug(f"Detected transport protocol: {protocol} ({raw_protocol!r})")
+        TCPFetcher._validate_protocol(
+            protocol, self.encryption_handling, is_registered=server_hostname is not None
+        )
 
         if protocol is TransportProtocol.TLS:
             if server_hostname is None:
@@ -198,29 +201,35 @@ class TCPFetcher(Fetcher[AgentRawData]):
             if len(agent_data) <= 2:
                 raise MKFetcherError("Empty payload from controller at %s:%d" % self.address)
 
-            return agent_data[2:], self._detect_transport_protocol(agent_data[:2])
+            raw_protocol = agent_data[:2]
+            protocol = TCPFetcher._detect_transport_protocol(raw_protocol)
+            self._logger.debug(f"Detected transport protocol: {protocol} ({raw_protocol!r})")
+            return agent_data[2:], protocol
 
         self._logger.debug("Reading data from agent")
         return recvall(self._socket, socket.MSG_WAITALL), protocol
 
-    def _detect_transport_protocol(self, raw_protocol: bytes) -> TransportProtocol:
+    @staticmethod
+    def _detect_transport_protocol(raw_protocol: bytes) -> TransportProtocol:
         assert raw_protocol
 
         try:
             protocol = TransportProtocol(raw_protocol)
-            self._logger.debug(f"Detected transport protocol: {protocol} ({raw_protocol!r})")
             return protocol
         except ValueError:
             raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
 
-    def _validate_protocol(self, protocol: TransportProtocol, is_registered: bool) -> None:
+    @staticmethod
+    def _validate_protocol(
+        protocol: TransportProtocol, encryption_handling: TCPEncryptionHandling, is_registered: bool
+    ) -> None:
         if protocol is TransportProtocol.TLS:
             return
 
         if is_registered:
             raise MKFetcherError("Refused: Host is registered for TLS but not using it")
 
-        match self.encryption_handling:
+        match encryption_handling:
             case TCPEncryptionHandling.TLS_ENCRYPTED_ONLY:
                 raise MKFetcherError("Refused: TLS is enforced but host is not using it")
             case TCPEncryptionHandling.ANY_ENCRYPTED:

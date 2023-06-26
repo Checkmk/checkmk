@@ -921,60 +921,44 @@ class TestTCPFetcher:
         assert fetcher._decrypt(TransportProtocol(output[:2]), AgentRawData(output[2:])) == output
 
     def test_validate_protocol_plaintext_with_enforce_raises(self) -> None:
-        fetcher = TCPFetcher(
-            family=socket.AF_INET,
-            address=(HostAddress("1.2.3.4"), 0),
-            host_name=HostName("irrelevant_for_this_test"),
-            timeout=0.0,
-            encryption_handling=TCPEncryptionHandling.ANY_ENCRYPTED,
-            pre_shared_secret=None,
-        )
-
         with pytest.raises(MKFetcherError):
-            fetcher._validate_protocol(TransportProtocol.PLAIN, is_registered=False)
+            TCPFetcher._validate_protocol(
+                TransportProtocol.PLAIN,
+                TCPEncryptionHandling.ANY_ENCRYPTED,
+                is_registered=False,
+            )
 
     def test_validate_protocol_no_tls_with_registered_host_raises(self) -> None:
-        fetcher = TCPFetcher(
-            family=socket.AF_INET,
-            address=(HostAddress("1.2.3.4"), 0),
-            host_name=HostName("irrelevant_for_this_test"),
-            timeout=0.0,
-            encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,  # not relevant for this test
-            pre_shared_secret=None,
-        )
         for p in TransportProtocol:
             if p is TransportProtocol.TLS:
                 continue
             with pytest.raises(MKFetcherError):
-                fetcher._validate_protocol(p, is_registered=True)
+                TCPFetcher._validate_protocol(
+                    p,
+                    TCPEncryptionHandling.ANY_AND_PLAIN,
+                    is_registered=True,
+                )
 
     def test_validate_protocol_tls_always_ok(self) -> None:
         for encryption_handling, is_registered in cartesian_product(
             TCPEncryptionHandling, (True, False)
         ):
-            TCPFetcher(
-                family=socket.AF_INET,
-                address=(HostAddress("1.2.3.4"), 0),
-                host_name=HostName("irrelevant_for_this_test"),
-                timeout=0.0,
-                encryption_handling=encryption_handling,
-                pre_shared_secret=None,
-            )._validate_protocol(TransportProtocol.TLS, is_registered=is_registered)
+            TCPFetcher._validate_protocol(
+                TransportProtocol.TLS,
+                encryption_handling,
+                is_registered=is_registered,
+            )
 
     def test_validate_protocol_tls_required(self) -> None:
-        fetcher = TCPFetcher(
-            family=socket.AF_INET,
-            address=(HostAddress("1.2.3.4"), 0),
-            host_name=HostName("irrelevant_for_this_test"),
-            timeout=0.0,
-            encryption_handling=TCPEncryptionHandling.TLS_ENCRYPTED_ONLY,
-            pre_shared_secret=None,
-        )
         for p in TransportProtocol:
             if p is TransportProtocol.TLS:
                 continue
             with pytest.raises(MKFetcherError, match="TLS"):
-                fetcher._validate_protocol(p, is_registered=False)
+                TCPFetcher._validate_protocol(
+                    p,
+                    TCPEncryptionHandling.TLS_ENCRYPTED_ONLY,
+                    is_registered=False,
+                )
 
     def test_get_agent_data_without_tls(
         self, monkeypatch: MonkeyPatch, fetcher: TCPFetcher

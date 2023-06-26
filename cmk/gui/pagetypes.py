@@ -82,6 +82,7 @@ from cmk.gui.type_defs import (
     PermissionName,
     TopicMenuItem,
     TopicMenuTopic,
+    Visual,
 )
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
@@ -1795,10 +1796,6 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec]):
     def _transform_old_spec(cls, spec: dict[str, object]) -> _T_PageRendererSpec:
         spec.setdefault("sort_index", 99)
         spec.setdefault("is_show_more", False)
-
-        spec.setdefault("context", {})
-        spec.setdefault("add_context_to_title", False)
-
         return spec  # type: ignore[return-value]  # will be removed soon
 
     @classmethod
@@ -1859,6 +1856,26 @@ class PageRenderer(OverridableContainer[_T_PageRendererSpec]):
         if self._can_be_linked(instances):
             return HTMLWriter.render_a(self.title(), href=self.page_url())
         return super().render_title(instances)
+
+    def to_visual(self) -> Visual:
+        return {
+            "owner": self._["owner"],
+            "name": self._["name"],
+            "context": {},
+            "single_infos": [],
+            "add_context_to_title": False,
+            "title": self._["title"],
+            "description": self._["description"],
+            "topic": self._["topic"],
+            "sort_index": self._["sort_index"],
+            "is_show_more": self._["is_show_more"],
+            "icon": None,
+            "hidden": self._["hidden"],
+            "hidebutton": False,
+            "public": self._["public"],
+            "packaged": False,
+            "link_from": {},
+        }
 
 
 # .

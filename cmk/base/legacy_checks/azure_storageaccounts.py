@@ -9,6 +9,7 @@
 from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.azure import (
     check_azure_metric,
+    discover_azure_by_metrics,
     get_data_or_go_stale,
     iter_resource_attributes,
     parse_resources,
@@ -75,12 +76,10 @@ def check_azure_storageaccounts_flow(_item, params, resource):
             yield mcheck
 
 
-def discover_azure_storageaccounts_flow(section):
-    yield from ((item, {}) for item in section)
-
-
 check_info["azure_storageaccounts.flow"] = LegacyCheckDefinition(
-    discovery_function=discover_azure_storageaccounts_flow,
+    discovery_function=discover_azure_by_metrics(
+        "total_Ingress", "total_Egress", "total_Transactions"
+    ),
     check_function=check_azure_storageaccounts_flow,
     service_name="Storage %s flow",
     check_ruleset_name="azure_storageaccounts",
@@ -115,12 +114,10 @@ def check_azure_storageaccounts_performance(_item, params, resource):
             yield mcheck
 
 
-def discover_azure_storageaccounts_performance(section):
-    yield from ((item, {}) for item in section)
-
-
 check_info["azure_storageaccounts.performance"] = LegacyCheckDefinition(
-    discovery_function=discover_azure_storageaccounts_performance,
+    discovery_function=discover_azure_by_metrics(
+        "average_SuccessServerLatency", "average_SuccessE2ELatency", "average_Availability"
+    ),
     check_function=check_azure_storageaccounts_performance,
     service_name="Storage %s performance",
     check_ruleset_name="azure_storageaccounts",

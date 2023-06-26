@@ -1005,15 +1005,15 @@ class TestTCPFetcher:
         assert protocol == TransportProtocol.PLAIN
 
     def test_detect_transport_protocol(self, fetcher: TCPFetcher) -> None:
-        assert fetcher._detect_transport_protocol(b"02", "Unused") == TransportProtocol.SHA256
+        assert fetcher._detect_transport_protocol(b"02") == TransportProtocol.SHA256
 
     def test_detect_transport_protocol_error(self, fetcher: TCPFetcher) -> None:
         with pytest.raises(MKFetcherError, match="Unknown transport protocol: b'abc'"):
-            fetcher._detect_transport_protocol(b"abc", "unused")
+            fetcher._detect_transport_protocol(b"abc")
 
     def test_detect_transport_protocol_empty_error(self, fetcher: TCPFetcher) -> None:
-        with pytest.raises(MKFetcherError, match="Passed error message"):
-            fetcher._detect_transport_protocol(b"", "Passed error message")
+        with pytest.raises(AssertionError):
+            fetcher._detect_transport_protocol(b"")
 
 
 class TestFetcherCaching:

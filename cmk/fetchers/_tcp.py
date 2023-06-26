@@ -178,10 +178,10 @@ class TCPFetcher(Fetcher[AgentRawData]):
         except OSError as e:
             raise MKFetcherError(f"Communication failed: {e}") from e
 
-        protocol = self._detect_transport_protocol(
-            raw_protocol, empty_msg="Empty output from host %s:%d" % self.address
-        )
+        if not raw_protocol:
+            raise MKFetcherError("Empty output from host %s:%d" % self.address)
 
+        protocol = self._detect_transport_protocol(raw_protocol)
         self._validate_protocol(protocol, is_registered=server_hostname is not None)
 
         if protocol is TransportProtocol.TLS:
@@ -196,22 +196,24 @@ class TCPFetcher(Fetcher[AgentRawData]):
                 agent_data = AgentCtlMessage.from_bytes(raw_agent_data).payload
             except ValueError as e:
                 raise MKFetcherError(f"Failed to deserialize versioned agent data: {e!r}") from e
-            return agent_data[2:], self._detect_transport_protocol(
-                agent_data[:2], empty_msg="Empty payload from controller at %s:%d" % self.address
-            )
+
+            if len(agent_data) <= 2:
+                raise MKFetcherError("Empty payload from controller at %s:%d" % self.address)
+
+            return agent_data[2:], self._detect_transport_protocol(agent_data[:2])
 
         self._logger.debug("Reading data from agent")
         return recvall(self._socket, socket.MSG_WAITALL), protocol
 
-    def _detect_transport_protocol(self, raw_protocol: bytes, empty_msg: str) -> TransportProtocol:
+    def _detect_transport_protocol(self, raw_protocol: bytes) -> TransportProtocol:
+        assert raw_protocol
+
         try:
             protocol = TransportProtocol(raw_protocol)
             self._logger.debug(f"Detected transport protocol: {protocol} ({raw_protocol!r})")
             return protocol
         except ValueError:
-            if raw_protocol:
-                raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
-            raise MKFetcherError(empty_msg)
+            raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
 
     def _validate_protocol(self, protocol: TransportProtocol, is_registered: bool) -> None:
         if protocol is TransportProtocol.TLS:

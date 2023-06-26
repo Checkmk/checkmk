@@ -942,24 +942,24 @@ class Site:
             )
 
     def is_running(self) -> bool:
-        def _fmt_output(msg: str) -> str:
-            return ("\n> " + "\n> ".join(msg.splitlines())) if msg else "-"
-
-        try:
-            self.check_output(["/usr/bin/omd", "status", "--bare"])
-            return True
-        except subprocess.CalledProcessError as e:
-            logger.info("%s Output:%sSTDERR:%s", e, _fmt_output(e.output), _fmt_output(e.stderr))
-            return False
+        return self._omd_status() == 0
 
     def is_stopped(self) -> bool:
         # 0 -> fully running
         # 1 -> fully stopped
         # 2 -> partially running
-        return (
-            self.execute(["/usr/bin/omd", "status", "--bare"], stdout=subprocess.DEVNULL).wait()
-            == 1
-        )
+        return self._omd_status() == 1
+
+    def _omd_status(self) -> int:
+        def _fmt_output(msg: str) -> str:
+            return ("\n> " + "\n> ".join(msg.splitlines()) + "\n") if msg else "-"
+
+        try:
+            self.check_output(["/usr/bin/omd", "status", "--bare"])
+            return 0
+        except subprocess.CalledProcessError as e:
+            logger.info("%s Output: %sSTDERR: %s", e, _fmt_output(e.output), _fmt_output(e.stderr))
+            return e.returncode
 
     def set_config(self, key: str, val: str, with_restart: bool = False) -> None:
         if self.get_config(key) == val:

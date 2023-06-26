@@ -1,0 +1,15 @@
+Title: Crash: Changing BGP Peer State Mapping ruleset from effective parameters
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1687765319
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+When changing the BGP Peer State Mapping ruleset from the effective parameters view,
+the view would crash not displaying the wanted ruleset.
+
+Now this is fixed and the corresponding ruleset is being displayed
+

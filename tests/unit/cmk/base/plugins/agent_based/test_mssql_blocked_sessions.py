@@ -25,14 +25,16 @@ from cmk.base.plugins.agent_based.mssql_blocked_sessions import (
 )
 
 INFO_0 = [
-    ["Blocked _Sessions"],
+    ["INST_ID0", "Blocked _Sessions"],
     [
+        "INST_ID1",
         "119",
         "232292187",
         "LCK_M_U",
         "75",
     ],
     [
+        "INST_ID1",
         "76",
         "221526672",
         "LCK_M_U",
@@ -69,7 +71,7 @@ def test_mssql_blocked_sessions_default(
     assert list(
         plugin.check_function(
             params=DEFAULT_PARAMETERS,
-            item="",
+            item="INST_ID1",
             section=parse_function(INFO_0),
         )
     ) == [
@@ -107,10 +109,10 @@ def test_mssql_blocked_sessions_no_blocking_sessions(
 def test_mssql_blocked_sessions_waittime(fix_register: FixRegister) -> None:
     assert list(
         check_mssql_blocked_sessions(
-            item="",
+            item="INST_ID1",
             params=default_parameters(waittime=(10, 100)),
             section={
-                "": [
+                "INST_ID1": [
                     DBInstance(
                         session_id="sid",
                         wait_type="smth1",
@@ -132,10 +134,10 @@ def test_mssql_blocked_sessions_waittime(fix_register: FixRegister) -> None:
 def test_mssql_blocked_sessions_ignore_waittype(fix_register: FixRegister) -> None:
     assert list(
         check_mssql_blocked_sessions(
-            item="",
+            item="INST_ID1",
             params=default_parameters(ignore_waittypes=["smth1"]),
             section={
-                "": [
+                "INST_ID1": [
                     DBInstance(
                         session_id="sid",
                         wait_type="smth1",
@@ -156,10 +158,10 @@ def test_mssql_blocked_sessions_ignore_waittype(fix_register: FixRegister) -> No
 
 def test_mssql_blocked_sessions_parsing(fix_register: FixRegister) -> None:
     assert parse_mssql_blocked_sessions([["ERROR: asd"]]) == {}
-    assert parse_mssql_blocked_sessions([["No blocking sessions"]]) == {"": []}
+    assert parse_mssql_blocked_sessions([["INST_ID1", "No blocking sessions"]]) == {"INST_ID1": []}
     assert parse_mssql_blocked_sessions(
         [
-            ["Blocked _Sessions"],
+            ["INST_ID0", "Blocked _Sessions"],
             ["INST_ID1", "119", "232292187", "LCK_M_U", "75"],
             ["INST_ID2", "76", "221526672", "LCK_M_U", "115"],
         ]
@@ -277,12 +279,12 @@ DATA_GENERIC_1 = [
         ),
         (
             [
-                ["1", "232292187", "Foo", "2"],
-                ["3", "232292187", "Foo", "4"],
-                ["5", "232292187", "Bar", "6"],
-                ["7", "232292187", "Bar", "8"],
+                ["INST_ID1", "1", "232292187", "Foo", "2"],
+                ["INST_ID1", "3", "232292187", "Foo", "4"],
+                ["INST_ID1", "5", "232292187", "Bar", "6"],
+                ["INST_ID1", "7", "232292187", "Bar", "8"],
             ],
-            "",
+            "INST_ID1",
             {"state": 2},
             [
                 Result(

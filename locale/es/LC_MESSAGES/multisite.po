@@ -50651,8 +50651,16 @@ msgstr "Estado cuando las actualizaciones normales están pendientes"
 msgid "State when one of the streams is in state disabled"
 msgstr "Estado cuando uno de los flujos está en estado desactivado"
 
+#, fuzzy
+msgid "State when packages are locked"
+msgstr "Estado cuando se detectan cambios en el hardware"
+
 msgid "State when rebuildung enclosure"
 msgstr "Estado al reconstruir el recinto"
+
+#, fuzzy
+msgid "State when recommended updates are pending"
+msgstr "Estado cuando las actualizaciones normales están pendientes"
 
 msgid "State when removals are pending"
 msgstr "Estado en el que están pendientes las expulsiones"
@@ -50680,6 +50688,11 @@ msgstr "Estado cuando se detectan cambios en el software"
 
 msgid "State when software packages info is missing"
 msgstr "Estado cuando falta la información de los paquetes de software"
+
+msgid ""
+"State when updates are pending, which are neither recommended or a security "
+"update"
+msgstr ""
 
 msgid "State, if BI aggregate is acknowledged"
 msgstr "Estado, si se reconoce el agregado BI"

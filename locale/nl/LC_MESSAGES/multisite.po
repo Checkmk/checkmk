@@ -50194,8 +50194,16 @@ msgstr "Staat wanneer normale updates in afwachting zijn"
 msgid "State when one of the streams is in state disabled"
 msgstr "Toestand wanneer een van de stromen in de status uitgeschakeld is"
 
+#, fuzzy
+msgid "State when packages are locked"
+msgstr "Toestand wanneer hardwarewijzigingen worden gedetecteerd"
+
 msgid "State when rebuildung enclosure"
 msgstr "Staat bij heropbouw behuizing"
+
+#, fuzzy
+msgid "State when recommended updates are pending"
+msgstr "Staat wanneer normale updates in afwachting zijn"
 
 msgid "State when removals are pending"
 msgstr "Staat wanneer uitzettingen in behandeling zijn"
@@ -50223,6 +50231,11 @@ msgstr "Toestand wanneer softwarewijzigingen worden gedetecteerd"
 
 msgid "State when software packages info is missing"
 msgstr "Staat wanneer informatie over softwarepakketten ontbreekt"
+
+msgid ""
+"State when updates are pending, which are neither recommended or a security "
+"update"
+msgstr ""
 
 msgid "State, if BI aggregate is acknowledged"
 msgstr "Staat, als BI aggregaat wordt erkend"

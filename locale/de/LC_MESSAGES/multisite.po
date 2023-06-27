@@ -5,7 +5,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
+"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
 "PO-Revision-Date: 2023-06-23 06:43+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
@@ -50327,8 +50327,16 @@ msgstr "Status, wenn normale Updates ausstehen"
 msgid "State when one of the streams is in state disabled"
 msgstr "Zustand, wenn einer der Ströme im Zustand disabled ist"
 
+#, fuzzy
+msgid "State when packages are locked"
+msgstr "Zustand beim Erkennen von Hardwareänderungen"
+
 msgid "State when rebuildung enclosure"
 msgstr "Status beim Wiederaufbau der Enclosure"
+
+#, fuzzy
+msgid "State when recommended updates are pending"
+msgstr "Status, wenn normale Updates ausstehen"
 
 msgid "State when removals are pending"
 msgstr "Status, wenn Pakete zur Entfernung anstehen"
@@ -50356,6 +50364,11 @@ msgstr "Status, wenn Softwareänderungen gefunden wurden"
 
 msgid "State when software packages info is missing"
 msgstr "Zustand, wenn die Information über die Softwarepakete fehlt"
+
+msgid ""
+"State when updates are pending, which are neither recommended or a security "
+"update"
+msgstr ""
 
 msgid "State, if BI aggregate is acknowledged"
 msgstr "Status, wenn BI-Aggregation quittiert ist"

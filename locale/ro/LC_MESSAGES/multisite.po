@@ -50703,8 +50703,16 @@ msgstr "Stare atunci când actualizările normale sunt în așteptare"
 msgid "State when one of the streams is in state disabled"
 msgstr "Stare atunci când unul dintre fluxuri este în stare dezactivată"
 
+#, fuzzy
+msgid "State when packages are locked"
+msgstr "Stare atunci când sunt detectate modificări hardware"
+
 msgid "State when rebuildung enclosure"
 msgstr "Stare la reconstrucția incintei"
+
+#, fuzzy
+msgid "State when recommended updates are pending"
+msgstr "Stare atunci când actualizările normale sunt în așteptare"
 
 msgid "State when removals are pending"
 msgstr "Statul în care se află în curs de îndepărtare"
@@ -50732,6 +50740,11 @@ msgstr "Starea în care sunt detectate modificările software"
 
 msgid "State when software packages info is missing"
 msgstr "Starea când lipsesc informațiile despre pachetele software"
+
+msgid ""
+"State when updates are pending, which are neither recommended or a security "
+"update"
+msgstr ""
 
 msgid "State, if BI aggregate is acknowledged"
 msgstr "Statul, în cazul în care agregatul BI este recunoscut"

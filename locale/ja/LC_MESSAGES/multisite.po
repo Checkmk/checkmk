@@ -49634,8 +49634,16 @@ msgstr "通常の更新が保留中の状態"
 msgid "State when one of the streams is in state disabled"
 msgstr "ストリームの1つが無効状態にあるときの状態"
 
+#, fuzzy
+msgid "State when packages are locked"
+msgstr "ハードウェアの変更が検出されたときの状態"
+
 msgid "State when rebuildung enclosure"
 msgstr "エンクロージャーを再構築するときの状態"
+
+#, fuzzy
+msgid "State when recommended updates are pending"
+msgstr "通常の更新が保留中の状態"
 
 msgid "State when removals are pending"
 msgstr "削除が保留中の状態"
@@ -49663,6 +49671,11 @@ msgstr "ソフトウェアの変更が検出されたときの状態"
 
 msgid "State when software packages info is missing"
 msgstr "ソフトウェアパッケージ情報が欠落している場合の状態"
+
+msgid ""
+"State when updates are pending, which are neither recommended or a security "
+"update"
+msgstr ""
 
 msgid "State, if BI aggregate is acknowledged"
 msgstr "状態、BIアグリゲートが確認された場合"

@@ -239,7 +239,6 @@ def get_undeclared_dependencies() -> Iterable[ImportName]:
 
 CEE_UNUSED_PACKAGES = [
     "Cython",
-    "MarkupSafe",
     "PyMySQL",
     "PyNaCl",
     "attrs",
@@ -255,7 +254,6 @@ CEE_UNUSED_PACKAGES = [
     "gunicorn",
     "idna",
     "importlib_metadata",
-    "itsdangerous",
     "jmespath",
     "more-itertools",
     "multidict",

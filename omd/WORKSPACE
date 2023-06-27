@@ -70,6 +70,8 @@ load(
     "SNAP7_VERSION",
     "STUNNEL_SHA256",
     "STUNNEL_VERSION",
+    "XINETD_SHA256",
+    "XINETD_VERSION",
     "XMLSEC1_SHA256",
     "XMLSEC1_VERSION",
 )
@@ -219,4 +221,11 @@ load("//packages/mod_fcgid:mod_fcgid_http.bzl", "mod_fcgid")
 mod_fcgid(
     sha256 = MOD_FCGID_SHA256,
     version_str = MOD_FCGID_VERSION,
+)
+
+load("//packages/xinetd:xinetd_http.bzl", "xinetd")
+
+xinetd(
+    sha256 = XINETD_SHA256,
+    version_str = XINETD_VERSION,
 )

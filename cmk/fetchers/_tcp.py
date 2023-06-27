@@ -182,7 +182,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
         except ValueError:
             raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
 
-        self._logger.debug(f"Detected transport protocol: {protocol} ({raw_protocol!r})")
+        self._logger.debug("Detected transport protocol: %r", protocol)
         validate_agent_protocol(
             protocol, self.encryption_handling, is_registered=server_hostname is not None
         )
@@ -203,14 +203,13 @@ class TCPFetcher(Fetcher[AgentRawData]):
             if len(agent_data) <= 2:
                 raise MKFetcherError("Empty payload from controller at %s:%d" % self.address)
 
-            raw_protocol = agent_data[:2]
             try:
-                protocol = TransportProtocol.from_bytes(raw_protocol)
+                protocol = TransportProtocol.from_bytes(agent_data)
             except ValueError:
-                raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
+                raise MKFetcherError(f"Unknown transport protocol: {agent_data!r}")
 
-            self._logger.debug(f"Detected transport protocol: {protocol} ({raw_protocol!r})")
-            return agent_data[2:], protocol
+            self._logger.debug("Detected transport protocol: %r", protocol)
+            return memoryview(agent_data)[2:], protocol
 
         self._logger.debug("Reading data from agent")
         return recvall(self._socket, socket.MSG_WAITALL), protocol

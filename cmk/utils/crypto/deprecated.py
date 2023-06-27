@@ -5,13 +5,15 @@
 
 """Deprecated crypto utilities that should not be used in new code"""
 
-from typing import Literal
+from typing import Literal, TypeAlias
 
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.ciphers import algorithms, Cipher, modes
 
 import cmk.utils.crypto.certificate as certificate
 from cmk.utils.crypto import HashAlgorithm
+
+_Buffer: TypeAlias = bytes | bytearray | memoryview
 
 
 class AesCbcCipher:
@@ -45,9 +47,9 @@ class AesCbcCipher:
         return block + padding_length * bytes((padding_length,))
 
     @staticmethod
-    def unpad_block(block: bytes) -> bytes:
+    def unpad_block(block: _Buffer) -> _Buffer:
         """Strip PKCS#7 padding from the block."""
-        return block[: -block[-1]]
+        return memoryview(block)[: -block[-1]]
 
 
 def encrypt_for_rsa_key(recipient_key: certificate.RsaPublicKey, data: bytes) -> bytes:

@@ -10,13 +10,15 @@ import hashlib
 import zlib
 from collections.abc import Callable, Iterator
 from enum import Enum
-from typing import assert_never, Final, Self
+from typing import assert_never, Final, Self, TypeAlias
 
 from cmk.utils.crypto.deprecated import AesCbcCipher
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.serializertype import Deserializer, Serializer
 
 OPENSSL_SALTED_MARKER = "Salted__"
+
+_Buffer: TypeAlias = bytes | bytearray | memoryview
 
 
 class TCPEncryptionHandling(enum.Enum):
@@ -34,8 +36,8 @@ class TransportProtocol(Enum):
     NONE = b"99"
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> Self:
-        return cls(data[:2])
+    def from_bytes(cls, data: _Buffer) -> Self:
+        return cls(memoryview(data)[:2])
 
 
 class Version(Enum):
@@ -45,8 +47,8 @@ class Version(Enum):
         return self.value.to_bytes(self._length(), "big")
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> Version:
-        return cls(int.from_bytes(data[: cls._length()], "big"))
+    def from_bytes(cls, data: _Buffer) -> Version:
+        return cls(int.from_bytes(memoryview(data)[: cls._length()], "big"))
 
     @staticmethod
     def _length() -> int:
@@ -61,8 +63,8 @@ class CompressionType(Enum):
         return self.value.to_bytes(self._length(), "big")
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> CompressionType:
-        return cls(int.from_bytes(data[: cls._length()], "big"))
+    def from_bytes(cls, data: _Buffer) -> CompressionType:
+        return cls(int.from_bytes(memoryview(data)[: cls._length()], "big"))
 
     @staticmethod
     def _length() -> int:
@@ -81,10 +83,10 @@ class AgentCtlMessage(Deserializer):
     @classmethod
     def from_bytes(
         cls,
-        data: bytes,
+        data: _Buffer,
     ) -> AgentCtlMessage:
         version = Version.from_bytes(data)
-        remaining_data = data[len(bytes(version)) :]
+        remaining_data = memoryview(data)[len(bytes(version)) :]
         if version is Version.V1:
             return cls(
                 version,
@@ -123,7 +125,7 @@ class HeaderV1(Serializer, Deserializer):
     @classmethod
     def from_bytes(
         cls,
-        data: bytes,
+        data: _Buffer,
     ) -> HeaderV1:
         return cls(CompressionType.from_bytes(data))
 
@@ -138,12 +140,12 @@ class MessageV1(Deserializer):
         self.payload: Final = payload
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> MessageV1:
+    def from_bytes(cls, data: _Buffer) -> MessageV1:
         return cls(
             header := HeaderV1.from_bytes(data),
             _decompress(
                 header.compression_type,
-                data[len(header) :],
+                memoryview(data)[len(header) :],
             ),
         )
 
@@ -166,8 +168,8 @@ class MessageV1(Deserializer):
 
 def _decompress(
     compression_type: CompressionType,
-    data: bytes,
-) -> bytes:
+    data: _Buffer,
+) -> _Buffer:
     if compression_type is CompressionType.ZLIB:
         try:
             return zlib.decompress(data)
@@ -202,7 +204,7 @@ def validate_agent_protocol(
 def decrypt_by_agent_protocol(
     password: str,
     protocol: TransportProtocol,
-    encrypted_pkg: bytes,
+    encrypted_pkg: _Buffer,
 ) -> bytes:
     """select the decryption algorithm based on the agent header
 
@@ -216,7 +218,7 @@ def decrypt_by_agent_protocol(
 
     if protocol is TransportProtocol.PBKDF2:
         return _decrypt_aes_256_cbc_pbkdf2(
-            ciphertext=encrypted_pkg[len(OPENSSL_SALTED_MARKER) :],
+            ciphertext=memoryview(encrypted_pkg)[len(OPENSSL_SALTED_MARKER) :],
             password=password,
         )
 
@@ -235,7 +237,7 @@ def decrypt_by_agent_protocol(
 
 
 def _decrypt_aes_256_cbc_pbkdf2(
-    ciphertext: bytes,
+    ciphertext: _Buffer,
     password: str,
 ) -> bytes:
     """Decrypt an openssl encrypted bytestring:
@@ -251,20 +253,20 @@ def _decrypt_aes_256_cbc_pbkdf2(
     key_iv = hashlib.pbkdf2_hmac(
         "sha256",
         password.encode("utf-8"),
-        ciphertext[:SALT_LENGTH],
+        memoryview(ciphertext)[:SALT_LENGTH],
         PBKDF2_CYCLES,
         KEY_LENGTH + IV_LENGTH,
     )
-    key, iv = key_iv[:KEY_LENGTH], key_iv[KEY_LENGTH:]
+    key, iv = memoryview(key_iv)[:KEY_LENGTH], memoryview(key_iv)[KEY_LENGTH:]
 
     cipher = AesCbcCipher("decrypt", key, iv)
-    decrypted = cipher.update(ciphertext[SALT_LENGTH:]) + cipher.finalize()
+    decrypted = cipher.update(memoryview(ciphertext)[SALT_LENGTH:]) + cipher.finalize()
 
     return AesCbcCipher.unpad_block(decrypted)
 
 
 def _decrypt_aes_256_cbc_legacy(
-    ciphertext: bytes,
+    ciphertext: _Buffer,
     password: str,
     digest: Callable[..., hashlib._Hash],
 ) -> bytes:
@@ -289,10 +291,10 @@ def _derive_openssl_key_and_iv(
     digest: Callable[..., hashlib._Hash],
     key_length: int,
     iv_length: int,
-) -> tuple[bytes, bytes]:
+) -> tuple[_Buffer, _Buffer]:
     """Simple and completely insecure OpenSSL Key derivation function"""
     d = d_i = b""
     while len(d) < key_length + iv_length:
         d_i = digest(d_i + password).digest()
         d += d_i
-    return d[:key_length], d[key_length : key_length + iv_length]
+    return memoryview(d)[:key_length], memoryview(d)[key_length : key_length + iv_length]

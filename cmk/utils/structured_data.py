@@ -269,21 +269,27 @@ class SDFilter(NamedTuple):
 @dataclass(frozen=True, kw_only=True)
 class _FilterTree:
     nodes: dict[SDNodeName, _FilterTree] = field(default_factory=dict)
-    filters: list[SDFilter] = field(default_factory=list)
+    filters_pairs: list[SDFilterFunc] = field(default_factory=list)
+    filters_columns: list[SDFilterFunc] = field(default_factory=list)
+    filters_nodes: list[SDFilterFunc] = field(default_factory=list)
 
 
 def _make_filter_tree(filters: Iterable[SDFilter]) -> _FilterTree:
     filter_tree = _FilterTree()
     for f in filters:
         if not f.path:
-            filter_tree.filters.append(f)
+            filter_tree.filters_pairs.append(f.filter_pairs)
+            filter_tree.filters_columns.append(f.filter_columns)
+            filter_tree.filters_nodes.append(f.filter_nodes)
             continue
 
         node = filter_tree.nodes.setdefault(f.path[0], _FilterTree())
         for name in f.path[1:]:
             node = node.nodes.setdefault(name, _FilterTree())
 
-        node.filters.append(f)
+        node.filters_pairs.append(f.filter_pairs)
+        node.filters_columns.append(f.filter_columns)
+        node.filters_nodes.append(f.filter_nodes)
     return filter_tree
 
 
@@ -810,7 +816,7 @@ def _filter_table(table: ImmutableTable, filter_funcs: Sequence[SDFilterFunc]) -
 def _filter_tree(tree: ImmutableTree, filter_tree: _FilterTree) -> ImmutableTree:
     filtered_nodes_by_name: dict[SDNodeName, ImmutableTree] = {}
     for name in set(
-        name for name in tree.nodes_by_name for f in filter_tree.filters if f.filter_nodes(name)
+        name for name in tree.nodes_by_name for f in filter_tree.filters_nodes if f(name)
     ).union(filter_tree.nodes):
         if filtered_node := _filter_tree(
             tree.nodes_by_name.get(name, ImmutableTree(path=tree.path + (name,))),
@@ -820,10 +826,8 @@ def _filter_tree(tree: ImmutableTree, filter_tree: _FilterTree) -> ImmutableTree
 
     return ImmutableTree(
         path=tree.path,
-        attributes=(
-            _filter_attributes(tree.attributes, [f.filter_pairs for f in filter_tree.filters])
-        ),
-        table=_filter_table(tree.table, [f.filter_columns for f in filter_tree.filters]),
+        attributes=(_filter_attributes(tree.attributes, filter_tree.filters_pairs)),
+        table=_filter_table(tree.table, filter_tree.filters_columns),
         nodes_by_name=filtered_nodes_by_name,
     )
 
@@ -1331,7 +1335,7 @@ def _filter_delta_table(
 def _filter_delta_tree(tree: ImmutableDeltaTree, filter_tree: _FilterTree) -> ImmutableDeltaTree:
     filtered_nodes: dict[SDNodeName, ImmutableDeltaTree] = {}
     for name in set(
-        name for name in tree.nodes_by_name for f in filter_tree.filters if f.filter_nodes(name)
+        name for name in tree.nodes_by_name for f in filter_tree.filters_nodes if f(name)
     ).union(filter_tree.nodes):
         if filtered_node := _filter_delta_tree(
             tree.nodes_by_name.get(name, ImmutableDeltaTree(path=tree.path + (name,))),
@@ -1341,10 +1345,8 @@ def _filter_delta_tree(tree: ImmutableDeltaTree, filter_tree: _FilterTree) -> Im
 
     return ImmutableDeltaTree(
         path=tree.path,
-        attributes=(
-            _filter_delta_attributes(tree.attributes, [f.filter_pairs for f in filter_tree.filters])
-        ),
-        table=_filter_delta_table(tree.table, [f.filter_columns for f in filter_tree.filters]),
+        attributes=(_filter_delta_attributes(tree.attributes, filter_tree.filters_pairs)),
+        table=_filter_delta_table(tree.table, filter_tree.filters_columns),
         nodes_by_name=filtered_nodes,
     )
 

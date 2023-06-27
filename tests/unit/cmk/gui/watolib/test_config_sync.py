@@ -583,6 +583,7 @@ def _synchronize_site(
         snapshot_settings.snapshot_components,
         Path(snapshot_settings.work_dir),
         site_activation_state,
+        {},
     )
 
     assert fetch_state_result is not None

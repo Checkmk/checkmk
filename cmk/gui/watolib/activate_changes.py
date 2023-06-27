@@ -666,6 +666,7 @@ def fetch_sync_state(
     replication_paths: list[ReplicationPath],
     site_config_dir: Path,
     site_activation_state: SiteActivationState,
+    config_sync_file_infos_per_inode: Mapping[int, ConfigSyncFileInfo],
 ) -> tuple[SyncState, SiteActivationState, float] | None:
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
@@ -685,7 +686,9 @@ def fetch_sync_state(
         # In case we experience performance issues here, we could postpone the hashing of the
         # central files to only be done ad-hoc in get_file_names_to_sync when the other attributes
         # are not enough to detect a differing file.
-        central_file_infos = _get_config_sync_file_infos(replication_paths, site_config_dir)
+        central_file_infos = _get_config_sync_file_infos(
+            replication_paths, site_config_dir, config_sync_file_infos_per_inode
+        )
         site_logger.debug("Got %d file infos from %s", len(remote_file_infos), site_config_dir)
 
         return (
@@ -1968,6 +1971,32 @@ def _initialize_site_activation_state(
     return site_activation_state
 
 
+def _get_config_sync_file_infos_per_inode(root_dir: str) -> Mapping[int, ConfigSyncFileInfo]:
+    general_dir_exclude = "__pycache__"
+
+    inode_sync_states = {}
+    # Use os functionality instead of pathlib since it is faster
+    for root, dir_names, file_names in os.walk(root_dir):
+        root_name = os.path.basename(root)
+        if root_name == general_dir_exclude:
+            pass
+
+        for dir_name in dir_names:
+            dir_path = os.path.join(root, dir_name)
+            if (
+                os.path.exists(dir_path)
+                and os.path.islink(dir_path)
+                and not dir_name == general_dir_exclude
+            ):
+                inode_sync_states[os.stat(dir_path).st_ino] = _get_config_sync_file_info(dir_path)
+
+        for file_name in file_names:
+            file_path = os.path.join(root, file_name)
+            if os.path.exists(file_path):
+                inode_sync_states[os.stat(file_path).st_ino] = _get_config_sync_file_info(file_path)
+    return inode_sync_states
+
+
 def _initialize_tasks(
     activation_id: ActivationId,
     activate_changes: ActivateChanges,
@@ -1975,6 +2004,10 @@ def _initialize_tasks(
     site_snapshot_settings: Mapping[SiteId, SnapshotSettings],
     time_started: float,
 ) -> tuple[Sequence[SiteId], list, list]:
+    config_sync_file_infos_per_inode = _get_config_sync_file_infos_per_inode(
+        site_snapshot_settings[list(site_snapshot_settings.keys())[0]].work_dir
+    )
+
     activation_remote_changes_pool_args = []
     fetch_sync_state_pool_args = []
     locked_sites = []
@@ -1996,6 +2029,7 @@ def _initialize_tasks(
                     snapshot_settings.snapshot_components,
                     Path(snapshot_settings.work_dir),
                     site_activation_state,
+                    config_sync_file_infos_per_inode,
                 )
             )
         else:
@@ -2700,17 +2734,50 @@ class AutomationGetConfigSyncState(AutomationCommand):
             return (transport_file_infos, _get_current_config_generation())
 
 
+def _get_config_sync_paths(
+    root_path: str,
+    dir_names: Sequence[str],
+    file_names: Sequence[str],
+    general_dir_exclude: str,
+    replication_path_excludes: list[str],
+) -> Sequence[str]:
+    valid_entries = []
+
+    for dir_name in dir_names:
+        dir_path = os.path.join(root_path, dir_name)
+        if (
+            os.path.islink(dir_path)
+            and not dir_name == general_dir_exclude
+            and dir_name not in replication_path_excludes
+        ):
+            valid_entries.append(dir_path)
+
+    for file_name in file_names:
+        file_path = os.path.join(root_path, file_name)
+        if os.path.basename(os.path.dirname(file_path)) not in replication_path_excludes:
+            valid_entries.append(file_path)
+
+    return valid_entries
+
+
 def _get_config_sync_file_infos(
-    replication_paths: list[ReplicationPath], base_dir: Path
+    replication_paths: list[ReplicationPath],
+    base_dir: Path,
+    config_sync_file_infos_per_inode: Mapping[int, ConfigSyncFileInfo] | None = None,
 ) -> ConfigSyncFileInfos:
     """Scans the given replication paths for the information needed for the config sync
 
     It produces a dictionary of sync file infos. One entry is created for each file.  Directories
-    are not added to the dictionary.
+    are not added to the dictionary unless it is a symlink.
+    Since files to be synced for different site are copied as hardlink, the sync file infos can be
+    precomputed and the relevant info then identified via the files inode
     """
-    infos = {}
-    general_dir_excludes = ["__pycache__"]
+    if config_sync_file_infos_per_inode is None:
+        config_sync_file_infos_per_inode = {}
 
+    general_dir_exclude = "__pycache__"
+
+    infos = {}
     for replication_path in replication_paths:
         path = base_dir.joinpath(replication_path.site_path)
 
@@ -2718,31 +2785,41 @@ def _get_config_sync_file_infos(
             continue  # Only report back existing things
 
         if replication_path.ty == "file":
-            infos[replication_path.site_path] = _get_config_sync_file_info(path)
+            infos[replication_path.site_path] = _get_config_sync_file_info(str(path))
 
         elif replication_path.ty == "dir":
-            for entry in path.glob("**/*"):
-                if entry.is_dir() and not entry.is_symlink():
-                    continue  # Do not add directories at all
+            # Use os functionality instead of pathlib since it is faster
+            for root, dir_names, file_names in os.walk(path):
+                root_name = os.path.basename(root)
 
-                if (
-                    entry.parent.name in general_dir_excludes
-                    or entry.parent.name in replication_path.excludes
-                    or entry.name in replication_path.excludes
-                ):
+                if root_name == general_dir_exclude or root_name in replication_path.excludes:
                     continue
 
-                entry_site_path = entry.relative_to(base_dir)
-                infos[str(entry_site_path)] = _get_config_sync_file_info(entry)
+                get_config_sync_paths = _get_config_sync_paths(
+                    root, dir_names, file_names, general_dir_exclude, replication_path.excludes
+                )
 
+                for get_config_sync_path in get_config_sync_paths:
+                    valid_site_path = os.path.relpath(get_config_sync_path, base_dir)
+                    try:
+                        if sync_file_info := config_sync_file_infos_per_inode.get(
+                            os.stat(get_config_sync_path).st_ino, None
+                        ):
+                            infos[valid_site_path] = sync_file_info
+                        else:
+                            infos[valid_site_path] = _get_config_sync_file_info(
+                                get_config_sync_path
+                            )
+                    except FileNotFoundError:  # e.g. broken symlinks
+                        infos[valid_site_path] = _get_config_sync_file_info(get_config_sync_path)
         else:
             raise NotImplementedError()
     return infos
 
 
-def _get_config_sync_file_info(file_path: Path) -> ConfigSyncFileInfo:
-    stat = file_path.lstat()
-    is_symlink = file_path.is_symlink()
+def _get_config_sync_file_info(file_path: str) -> ConfigSyncFileInfo:
+    stat = os.lstat(file_path)
+    is_symlink = os.path.islink(file_path)
     return ConfigSyncFileInfo(
         stat.st_mode,
         stat.st_size,
@@ -2751,9 +2828,9 @@ def _get_config_sync_file_info(file_path: Path) -> ConfigSyncFileInfo:
     )
 
 
-def _create_config_sync_file_hash(file_path: Path) -> str:
+def _create_config_sync_file_hash(file_path: str) -> str:
     sha256 = hashlib.sha256()
-    with file_path.open("rb") as f:
+    with open(file_path, "rb") as f:
         while True:
             chunk = f.read(65536)
             if not chunk:

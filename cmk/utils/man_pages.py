@@ -363,7 +363,7 @@ def print_man_page_table() -> None:
         try:
             table.append([name, get_title_from_man_page(Path(path))])
         except MKGeneralException as e:
-            sys.stderr.write(str("ERROR: %s" % e))
+            sys.stderr.write(str(f"ERROR: {e}"))
 
     tty.print_table(["Check type", "Title"], [tty.bold, tty.normal], table)
 
@@ -411,20 +411,16 @@ def print_man_page_browser(cat: ManPageCatalogPath = ()) -> None:
 def _manpage_catalog_subtree_names(
     catalog: ManPageCatalog, category: ManPageCatalogPath
 ) -> list[str]:
-    subtrees = set()
-    for this_category in catalog.keys():
-        if this_category[: len(category)] == category and len(this_category) > len(category):
-            subtrees.add(this_category[len(category)])
-
+    subtrees = {
+        this_category[len(category)]
+        for this_category in catalog.keys()
+        if this_category[: len(category)] == category and len(this_category) > len(category)
+    }
     return list(subtrees)
 
 
 def _manpage_num_entries(catalog: ManPageCatalog, cat: ManPageCatalogPath) -> int:
-    num = 0
-    for c, e in catalog.items():
-        if c[: len(cat)] == cat:
-            num += len(e)
-    return num
+    return sum(len(e) for c, e in catalog.items() if c[: len(cat)] == cat)
 
 
 def _manpage_browser_folder(
@@ -433,8 +429,7 @@ def _manpage_browser_folder(
     titles = []
     for e in subtrees:
         title = CATALOG_TITLES.get(e, e)
-        count = _manpage_num_entries(catalog, cat + (e,))
-        if count:
+        if count := _manpage_num_entries(catalog, cat + (e,)):
             title += " (%d)" % count
         titles.append((title, e))
     titles.sort()
@@ -459,9 +454,7 @@ def _manpage_browser_folder(
 
 
 def _manpage_browse_entries(cat: Iterable[str], entries: Iterable[ManPage]) -> None:
-    checks: list[tuple[str, str]] = []
-    for e in entries:
-        checks.append((e.title, e.name))
+    checks = [(e.title, e.name) for e in entries]
     checks.sort()
 
     choices = [(str(n + 1), c[0]) for n, c in enumerate(checks)]
@@ -547,10 +540,7 @@ def _parse_man_page(name: str, path: Path) -> ManPage:
 # TODO: accepting the path here would make things a bit easier.
 def load_man_page(name: str, man_page_dirs: Iterable[Path] | None = None) -> ManPage | None:
     path = man_page_path(name, man_page_dirs)
-    if path is None:
-        return None
-
-    return _parse_man_page(name, path)
+    return None if path is None else _parse_man_page(name, path)
 
 
 def _parse_to_raw(path: Path, content: str) -> Mapping[str, str]:
@@ -576,11 +566,10 @@ def _parse_to_raw(path: Path, content: str) -> Mapping[str, str]:
 class ManPageRenderer:
     def __init__(self, name: str) -> None:
         self.name = name
-        man_page = load_man_page(name)
-        if not man_page:
+        if man_page := load_man_page(name):
+            self._page = man_page
+        else:
             raise MKGeneralException("No manpage for %s. Sorry.\n" % self.name)
-
-        self._page = man_page
 
     def paint(self) -> None:
         try:
@@ -719,13 +708,13 @@ class ConsoleManPageRenderer(ManPageRenderer):
             text = self._markup(line, attr)
             l = self._print_len(line)
 
-        self.__output.write(attr + " ")
+        self.__output.write(f"{attr} ")
         self.__output.write(text)
         self.__output.write(" " * (self.__width - 2 - l))
-        self.__output.write(" " + tty.normal + "\n")
+        self.__output.write(f" {tty.normal}\n")
 
     def _print_splitline(self, attr1: str, left: str, attr2: str, right: str) -> None:
-        self.__output.write(attr1 + " " + left)
+        self.__output.write(f"{attr1} {left}")
         self.__output.write(attr2)
         self.__output.write(self._markup(right, attr2))
         self.__output.write(" " * (self.__width - 1 - len(left) - self._print_len(right)))
@@ -741,14 +730,13 @@ class ConsoleManPageRenderer(ManPageRenderer):
         return len(netto)
 
     def _wrap_text(self, text: str, width: int, attr: str = tty.colorset(7, 4)) -> Sequence[str]:
-        wrapped = []
+        wrapped: list[str] = []
         line = ""
         col = 0
         for word in text.split():
             if word == "<br>":
                 if line != "":
-                    wrapped.append(self._fillup(line, width))
-                    wrapped.append(self._fillup("", width))
+                    wrapped.extend((self._fillup(line, width), self._fillup("", width)))
                     line = ""
                     col = 0
             else:
@@ -809,11 +797,7 @@ class NowikiManPageRenderer(ManPageRenderer):
         pass
 
     def index_entry(self) -> str:
-        return '<tr><td class="tt">{}</td><td>[check_{}|{}]</td></tr>\n'.format(
-            self.name,
-            self.name,
-            self._page.title,
-        )
+        return f'<tr><td class="tt">{self.name}</td><td>[check_{self.name}|{self._page.title}]</td></tr>\n'
 
     def render(self) -> str:
         self.paint()

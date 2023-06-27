@@ -33,11 +33,11 @@ class _Label:
     def __init__(self, name: str, value: str) -> None:
         if not isinstance(name, str):
             raise MKGeneralException("Invalid label name given: Only unicode strings are allowed")
-        self.name: Final = str(name)
+        self.name: Final = name
 
         if not isinstance(value, str):
             raise MKGeneralException("Invalid label value given: Only unicode strings are allowed")
-        self.value: Final = str(value)
+        self.value: Final = value
 
     @property
     def label(self) -> str:

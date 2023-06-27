@@ -55,12 +55,10 @@ def _unescape_link(escaped_str: str) -> str:
         if not is_allowed_url(href, cross_domain=True, schemes=["http", "https", "mailto"]):
             continue  # Do not unescape links containing disallowed URLs
 
-        target = a_href.group(2)
-
-        if target:
+        if target := a_href.group(2):
             unescaped_tag = f'<a href="{href}" target="{target}">'
         else:
-            unescaped_tag = '<a href="%s">' % href
+            unescaped_tag = f'<a href="{href}">'
 
         escaped_str = escaped_str.replace(a_href.group(0), unescaped_tag)
     return escaped_str

@@ -221,7 +221,7 @@ def verified_result(data: tuple[bytes | str, list[bytes | str]] | bytes) -> list
     if isinstance(data, tuple):
         if isinstance(data[0], str):
             assert isinstance(data[1], list)
-            if not data[0] in {"OK", "BYE"}:
+            if data[0] not in {"OK", "BYE"}:
                 raise RuntimeError(f"Server responded {data[0]!r}, {data[1]!r}")
             return data[1]
         if isinstance(data[0], bytes):
@@ -521,7 +521,7 @@ class Mailbox:
                 # Create maybe missing folder hierarchy
                 target = ""
                 for level in folder.split("/"):
-                    target += "%s/" % level
+                    target += f"{level}/"
                     self._connection.create(target)
 
                 # Copy the mail
@@ -631,12 +631,12 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str], allow_
 
     try:
         args = parser.parse_args(argv)
-    except SystemExit:
+    except SystemExit as e:
         # we have no efficient way to control the output on stderr but at least we can return
         # UNKNOWN
-        raise SystemExit(3)
+        raise SystemExit(3) from e
 
-    if not tuple(
+    if tuple(
         map(
             bool,
             (
@@ -647,7 +647,10 @@ def parse_arguments(parser: argparse.ArgumentParser, argv: Sequence[str], allow_
                 args.fetch_tenant_id,
             ),
         )
-    ) in {(True, True, False, False, False), (False, False, True, True, True)}:
+    ) not in {
+        (True, True, False, False, False),
+        (False, False, True, True, True),
+    }:
         raise RuntimeError(
             "Either Username/Passwort or ClientID/ClientSecret/TenantID have to be set"
         )
@@ -677,18 +680,17 @@ def _active_check_main_core(
     # todo argparse - exceptions?
     args = parse_arguments(argument_parser, argv, allow_ews)
     logging.basicConfig(
-        level=logging.CRITICAL
-        if not (args.debug or args.verbose > 0)
-        else {0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(args.verbose, logging.DEBUG)
+        level={0: logging.WARN, 1: logging.INFO, 2: logging.DEBUG}.get(args.verbose, logging.DEBUG)
+        if args.debug or args.verbose > 0
+        else logging.CRITICAL
     )
 
     # when we disable certificate validation intensionally we don't want to see warnings
     urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
     # disable anything that might write to stderr by default
-    if not (args.debug or args.verbose > 0):
-        if not sys.warnoptions:
-            warnings.simplefilter("ignore")
+    if not args.debug and args.verbose == 0 and not sys.warnoptions:
+        warnings.simplefilter("ignore")
 
     # Enable IMAP protocol messages on stderr
     if args.fetch_protocol == "IMAP":
@@ -723,12 +725,10 @@ def _output_check_result(text: str, perfdata: PerfData) -> None:
     >>> _output_check_result("Something strange", [("name", "value1", "value2")])
     Something strange | name=value1;value2
     """
-    sys.stdout.write("%s" % text)
+    sys.stdout.write(text)
     if perfdata:
         sys.stdout.write(" | ")
-        sys.stdout.write(
-            " ".join("{}={}".format(p[0], ";".join(map(str, p[1:]))) for p in perfdata)
-        )
+        sys.stdout.write(" ".join(f'{p[0]}={";".join(map(str, p[1:]))}' for p in perfdata))
     sys.stdout.write("\n")
 
 

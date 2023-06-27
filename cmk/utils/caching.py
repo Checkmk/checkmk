@@ -59,10 +59,7 @@ class CacheManager:
             cache.clear()
 
     def dump_sizes(self) -> dict[str, int]:
-        sizes = {}
-        for name, cache in self._caches.items():
-            sizes[name] = cmk.utils.misc.total_size(cache)
-        return sizes
+        return {name: cmk.utils.misc.total_size(cache) for name, cache in self._caches.items()}
 
 
 class DictCache(dict):

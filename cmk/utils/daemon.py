@@ -6,7 +6,7 @@
 import os
 import sys
 from collections.abc import Generator
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from pathlib import Path
 
 import cmk.utils.store as store
@@ -94,10 +94,8 @@ def _cleanup_locked_pid_file(path: Path) -> None:
 
     store.release_lock(str(path))
 
-    try:
+    with suppress(OSError):
         path.unlink()
-    except OSError:
-        pass
 
 
 @contextmanager

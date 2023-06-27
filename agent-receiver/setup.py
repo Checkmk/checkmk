@@ -9,5 +9,5 @@ setup(
     name="agent-receiver",
     packages=find_packages(),
     include_package_data=True,
-    install_requires=["fastapi==0.79.0", "python-multipart==0.0.*"],
+    install_requires=["fastapi==0.98.0", "python-multipart==0.0.*"],
 )

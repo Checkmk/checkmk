@@ -11,7 +11,6 @@ from uuid import uuid4
 from zlib import compress
 
 import pytest
-import requests
 from agent_receiver import site_context
 from agent_receiver.certs import serialize_to_pem
 from agent_receiver.checkmk_rest_api import CMKEdition, HostConfiguration, RegisterResponse
@@ -19,6 +18,7 @@ from agent_receiver.models import ConnectionMode, R4RStatus, RequestForRegistrat
 from agent_receiver.utils import R4R
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
+from httpx import Response
 from pydantic import UUID4
 from pytest_mock import MockerFixture
 
@@ -432,7 +432,7 @@ def _call_register_new_ongoing_cce(
     mocker: MockerFixture,
     client: TestClient,
     uuid: UUID4,
-) -> requests.Response:
+) -> Response:
     mocker.patch(
         "agent_receiver.endpoints.cmk_edition",
         return_value=CMKEdition.cce,

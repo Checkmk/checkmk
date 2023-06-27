@@ -365,6 +365,8 @@ check_results = [
             state=state.OK,
             summary="Running for: 1 day 3 hours",
         ),
+        Metric("age_youngest", 100779.0),
+        Metric("age_oldest", 100779.0),
         Result(
             state=state.OK,
             notice=(
@@ -394,6 +396,8 @@ check_results = [
         Metric("pcpu", 0.0),
         Result(state=state.OK, summary="CPU: 0%"),
         Result(state=state.OK, summary="Running for: 7 hours 24 minutes"),
+        Metric("age_youngest", 26655.0),
+        Metric("age_oldest", 26655.0),
         Result(
             state=state.OK,
             notice=(
@@ -413,6 +417,8 @@ check_results = [
         Metric("pcpu", 0.0),
         Result(state=state.OK, summary="CPU: 0%"),
         Result(state=state.OK, summary="Running for: 3 hours 54 minutes"),
+        Metric("age_youngest", 14050.0),
+        Metric("age_oldest", 14050.0),
         Result(
             state=state.OK,
             notice=(
@@ -456,6 +462,8 @@ check_results = [
         Metric("pcpu", 0.0),
         Result(state=state.OK, summary="CPU: 0%"),
         Result(state=state.OK, summary="Running for: 2 hours 37 minutes"),
+        Metric("age_youngest", 9459.0),
+        Metric("age_oldest", 9459.0),
         Result(
             state=state.OK,
             notice=(
@@ -475,6 +483,8 @@ check_results = [
         Metric("pcpu", 0.0),
         Result(state=state.OK, summary="CPU: 0%"),
         Result(state=state.OK, summary="Running for: 52 days 4 hours"),
+        Metric("age_youngest", 4510565.0),
+        Metric("age_oldest", 4510565.0),
     ],
     [
         Result(state=state.OK, summary="Processes: 1"),
@@ -482,6 +492,8 @@ check_results = [
         Metric("pcpu", 0.0),
         Result(state=state.OK, summary="CPU: 0%"),
         Result(state=state.OK, summary="Running for: 0 seconds"),
+        Metric("age_youngest", 0.0),
+        Metric("age_oldest", 0.0),
     ],
     [
         Result(state=state.OK, summary="Processes: 3"),
@@ -699,9 +711,7 @@ def test_check_ps_common_cpu(data):
         Result(state=state.OK, summary="physical: 30.0 KiB"),
         Metric("rss", 30),
     ]
-    assert output[8:] == [
-        Result(state=state.OK, summary="Running for: 3 hours 59 minutes"),
-    ]
+    assert output[8] == Result(state=state.OK, summary="Running for: 3 hours 59 minutes")
 
 
 @pytest.mark.parametrize(

@@ -28,15 +28,15 @@ CONFIGURE_DEPS     := $(M4_DEPS) aclocal.m4
 CONFIG_DEPS        := ar-lib compile config.guess config.sub install-sh missing depcomp configure
 DIST_DEPS          := $(CONFIG_DEPS)
 
-LIVESTATUS_SOURCES := Makefile.am standalone/config_files.m4 \
-                      api/c++/{Makefile,*.{h,cc}} \
+LIVESTATUS_API_SOURCES := api/c++/{Makefile,*.{h,cc}} \
                       api/perl/* \
-                      api/python/{README,*.py} \
-                      src/third_party/include/{nagios,nagios4}/{README,*.h} \
-                      src/Makefile.am \
-                      src/include/neb/*.h \
-                      src/src/*.cc \
-                      src/test/*.{cc,h}
+                      api/python/{README,*.py}
+
+LIVESTATUS_SOURCES := Makefile.am standalone/config_files.m4 \
+                      third_party/include/{nagios,nagios4}/{README,*.h} \
+                      include/neb/*.h \
+                      src/*.cc \
+                      test/*.{cc,h}
 
 WERKS              := $(wildcard .werks/[0-9]*)
 
@@ -143,7 +143,7 @@ dist: $(LIVESTATUS_INTERMEDIATE_ARCHIVE) config.h.in $(SOURCE_BUILT_AGENTS) $(SO
 	if [ -d .git ]; then \
 	    git rev-parse --short HEAD > COMMIT ; \
 	    for X in $$(git ls-files --directory --others -i --exclude-standard) ; do \
-	    if [[ $$X != aclocal.m4 && $$X != config.h.in  && ! "$(DIST_DEPS)" =~ (^|[[:space:]])$$X($$|[[:space:]]) && $$X != omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz && $$X != livestatus/* && $$X != enterprise/* ]]; then \
+	    if [[ $$X != aclocal.m4 && $$X != config.h.in  && ! "$(DIST_DEPS)" =~ (^|[[:space:]])$$X($$|[[:space:]]) && $$X != omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz && $$X != packages/neb/* && $$X != livestatus/* && $$X != enterprise/* ]]; then \
 		    EXCLUDES+=" --exclude $${X%*/}" ; \
 		fi ; \
 	    done ; \
@@ -194,7 +194,8 @@ packages:
 $(LIVESTATUS_INTERMEDIATE_ARCHIVE):
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)
-	set -o pipefail; tar chf - $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) ) | tar xf - -C mk-livestatus-$(VERSION)
+	set -o pipefail; tar chf - $(TAROPTS) -C packages/neb $$(cd packages/neb ; echo $(LIVESTATUS_SOURCES) )  | tar xf - -C mk-livestatus-$(VERSION)
+	set -o pipefail; tar chf - $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_API_SOURCES) )  | tar xf - -C mk-livestatus-$(VERSION)
 	set -o pipefail; tar chf - $(TAROPTS) --exclude=build packages/livestatus packages/unixcat third_party/re2 third_party/asio third_party/googletest third_party/rrdtool | tar xf - -C mk-livestatus-$(VERSION)
 	cp -a configure.ac defines.make m4 mk-livestatus-$(VERSION)
 	cd mk-livestatus-$(VERSION) && \
@@ -439,11 +440,15 @@ ar-lib compile config.guess config.sub install-sh missing depcomp: configure.ac
 	touch ar-lib compile config.guess config.sub install-sh missing depcomp
 
 # TODO(sp): We should really detect and use our own packages in a less hacky way...
+# NOTE: --recheck in some cases doesn't produce Makefile(see automake docu am->in->Makefile).
+# The precise reason is not known, because it happens only on CI in some cases(retrigger, for example).
+# This code will be removed in any case together with a automake. Alternative: investigation why CI in
+# some cases has no Makefile but have Makefile.in is complicated.
 config.status: $(CONFIG_DEPS)
 	@echo "Build $@ (newer targets: $?)"
 	@if test -f config.status; then \
-	  echo "update config.status by reconfiguring in the same conditions" ; \
-	  ./config.status --recheck; \
+	  echo "configure CXXFLAGS=\"$(CXX_FLAGS)\" \"$$RRD_OPT\"" ; \
+	  ./configure CXXFLAGS="$(CXX_FLAGS)" "$$RRD_OPT" ; \
 	else \
 	  if test -d "omd/rrdtool-$(RRDTOOL_VERS)/src/.libs"; then \
 	    RRD_OPT="LDFLAGS=-L$(realpath omd/rrdtool-$(RRDTOOL_VERS)/src/.libs)" ; \
@@ -487,7 +492,7 @@ GTAGS: config.h
 	$(MAKE) -C livestatus GTAGS
 
 compile-neb-cmc: config.status test-format-c
-	$(MAKE) -C livestatus -j4
+	$(MAKE) -C packages/neb -j4
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core -j4
 endif
@@ -496,13 +501,13 @@ compile-neb-cmc-docker:
 	scripts/run-in-docker.sh make compile-neb-cmc
 
 tidy: config.h
-	$(MAKE) -C livestatus/src tidy
+	$(MAKE) -C packages/neb tidy
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src tidy
 endif
 
 iwyu: config.status
-	$(MAKE) -C livestatus/src iwyu
+	$(MAKE) -C packages/neb iwyu
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src iwyu
 endif
@@ -512,7 +517,7 @@ format: format-python format-c format-shell format-js format-css format-bazel
 format-c:
 	packages/livestatus/run --format
 	packages/unixcat/run --format
-	$(MAKE) -C livestatus/src format
+	$(MAKE) -C packages/neb format
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src format
 endif
@@ -520,7 +525,7 @@ endif
 test-format-c:
 	packages/livestatus/run --check-format
 	packages/unixcat/run --check-format
-	$(MAKE) -C livestatus/src check-format
+	$(MAKE) -C packages/neb check-format
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src check-format
 endif
@@ -552,7 +557,7 @@ format-bazel:
 
 # Note: You need the doxygen and graphviz packages.
 documentation: config.h
-	$(MAKE) -C livestatus/src documentation
+	$(MAKE) -C packages/neb documentation
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src documentation
 endif

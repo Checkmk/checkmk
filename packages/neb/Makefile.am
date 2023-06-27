@@ -92,13 +92,15 @@ $(liblivestatusneb_a_SOURCES): $(ASIO_INCLUDE)
 # Called during packaging. Copied from Makefile.am "all-am" to exclude noinst* targets
 all-packaging-local: Makefile $(pkglib_LIBRARIES) all-local
 
-$(ASIO_INCLUDE): $(ASIO_VERSION)
+$(ASIO_INCLUDE): $(ASIO_VERSION)/Makefile.am
 	mkdir -p $@
-	rsync -a --delete --exclude="Makefile.*" --exclude=.gitignore $</include/ $@
+	rsync -a --delete --exclude="Makefile.*" --exclude=.gitignore $(ASIO_VERSION)/include/ $@
 	touch $@
 
-$(ASIO_VERSION): $(PACKAGE_ASIO)/$(ASIO_VERSION).tar.gz
-	$(RM) -r $@
+# TODO(sp): Fix it or remove it, dependency doesn't work in CI and only in CI in many cases
+# NOTE: Upon investigation CI may have actual dir $(ASIO_VERSION) but without content or with bad content
+$(ASIO_VERSION)/Makefile.am: $(PACKAGE_ASIO)/$(ASIO_VERSION).tar.gz
+	$(RM) -r $(ASIO_VERSION)
 	tar xzf $<
 	touch $@
 
@@ -121,6 +123,7 @@ $(GOOGLETEST_VERSION)/Makefile: $(GOOGLETEST_VERSION)/CMakeLists.txt
         .
 	touch $@
 
+# TODO(sp): Fix it or remove it, this always make untar
 $(GOOGLETEST_VERSION)/CMakeLists.txt: $(PACKAGE_GOOGLETEST)/$(GOOGLETEST_VERSION).tar.gz
 	$(RM) -r $(GOOGLETEST_VERSION)
 	tar xzf $<

@@ -341,7 +341,7 @@ STAGES:
 
     - NAME: 'Unit Test NEB'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
-      DIR: 'livestatus/src/test'
+      DIR: 'packages/neb/test'
       COMMAND: "./.f12 &> ${RESULTS}/neb-unit.txt"
       TEXT_ON_SKIP: 'No NEB files changed'
       RESULT_CHECK_TYPE: "GCC"

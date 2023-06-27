@@ -5,7 +5,7 @@
 def main() {
     dir("${checkout_dir}") {
         stage("Execute NEB Test") {
-            dir("livestatus/src/test") {
+            dir("packages/neb/test") {
                 sh("./.f12");
             }
         }
@@ -14,7 +14,7 @@ def main() {
                 sh("./.f12");
             }
         }
-        def results_livestatus="livestatus/src/test_detail_livestatus.xml"
+        def results_livestatus="packages/neb/test_detail_livestatus.xml"
         def results_core="enterprise/core/src/test_detail_core.xml"
 
         stage("Analyse Issues") {

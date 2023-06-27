@@ -450,7 +450,7 @@ def _expire_logfiles(
             logger.warning(f"Error expiring log files: {e}")
 
 
-# Please note: Keep this in sync with livestatus/src/TableEventConsole.cc.
+# Please note: Keep this in sync with packages/neb/src/TableEventConsole.cc.
 _GREPABLE_COLUMNS = {
     "event_id",
     "event_text",

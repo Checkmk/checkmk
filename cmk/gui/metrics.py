@@ -47,6 +47,7 @@ from cmk.gui.plugins.metrics.utils import (
     unit_info,
 )
 from cmk.gui.type_defs import MetricExpression, PerfometerSpec, TranslatedMetrics, UnitInfo
+from cmk.gui.utils.graph_specification import parse_raw_graph_specification
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 PerfometerExpression = str | int | float
@@ -790,7 +791,9 @@ def page_graph_dashlet(
     spec = request.var("spec")
     if not spec:
         raise MKUserError("spec", _("Missing spec parameter"))
-    graph_identification = json.loads(request.get_str_input_mandatory("spec"))
+    graph_specification = parse_raw_graph_specification(
+        json.loads(request.get_str_input_mandatory("spec"))
+    )
 
     render = request.var("render")
     if not render:
@@ -798,7 +801,7 @@ def page_graph_dashlet(
     custom_graph_render_options = json.loads(request.get_str_input_mandatory("render"))
 
     host_service_graph_dashlet_cmk(
-        graph_identification,
+        graph_specification,
         custom_graph_render_options,
         resolve_combined_single_metric_spec,
         graph_display_id=json.loads(request.get_str_input_mandatory("id")),

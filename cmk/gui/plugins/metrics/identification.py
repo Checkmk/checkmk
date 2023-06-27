@@ -58,8 +58,6 @@ class GraphIdentificationTypes:
         return type_cls().create_graph_recipes(spec_info, destination=destination)
 
 
-graph_identification_types = GraphIdentificationTypes()
-
 _TGraphSpec = TypeVar("_TGraphSpec", bound=GraphSpec | str)
 _TGraphRecipe = TypeVar("_TGraphRecipe", bound=GraphRecipe)
 
@@ -101,6 +99,3 @@ class GraphIdentificationExplicit(GraphIdentification[ExplicitGraphSpec, Explici
                 "specification": ("explicit", ident_info),
             }
         ]
-
-
-graph_identification_types.register(GraphIdentificationExplicit)

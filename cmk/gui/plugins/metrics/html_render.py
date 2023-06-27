@@ -8,7 +8,7 @@ import json
 import time
 import traceback
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import Any, Literal, NamedTuple
+from typing import Any, NamedTuple
 
 import livestatus
 
@@ -30,7 +30,6 @@ from cmk.gui.plugins.metrics.artwork import (
     GraphArtwork,
     order_graph_curves_for_legend_and_mouse_hover,
 )
-from cmk.gui.plugins.metrics.identification import graph_identification_types
 from cmk.gui.plugins.metrics.utils import (
     CombinedGraphMetricRecipe,
     CombinedSingleMetricSpec,
@@ -42,7 +41,8 @@ from cmk.gui.plugins.metrics.utils import (
 )
 from cmk.gui.plugins.metrics.valuespecs import migrate_graph_render_options_title_format
 from cmk.gui.sites import get_alias_of_host
-from cmk.gui.type_defs import GraphIdentifier, GraphRenderOptions, TemplateGraphSpec
+from cmk.gui.type_defs import GraphRenderOptions, TemplateGraphSpec
+from cmk.gui.utils.graph_specification import GraphSpecification, TemplateGraphSpecification
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
@@ -50,6 +50,8 @@ from cmk.gui.utils.rendering import text_with_links_to_user_translated_html
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import Timerange, TimerangeValue
+
+from .graph_recipe_builder import build_graph_recipes
 
 RenderOutput = HTML | str
 
@@ -104,20 +106,13 @@ def host_service_graph_popup_cmk(  # type: ignore[no-untyped-def]
         ((end_time := int(time.time())) - 8 * 3600, end_time), graph_render_options
     )
 
-    graph_identification: tuple[Literal["template"], TemplateGraphSpec] = (
-        "template",
-        TemplateGraphSpec(
-            {
-                "site": site,
-                "host_name": host_name,
-                "service_description": service_description,
-            }
-        ),
-    )
-
     html.write_html(
         render_graphs_from_specification_html(
-            graph_identification,
+            TemplateGraphSpecification(
+                site=site,
+                host_name=host_name,
+                service_description=service_description,
+            ),
             graph_data_range,
             graph_render_options,
             resolve_combined_single_metric_spec,
@@ -668,31 +663,18 @@ def forget_manual_vertical_zoom() -> None:
         save_user_graph_data_range(user_range)
 
 
-def resolve_graph_recipe(
-    graph_identification: GraphIdentifier, destination: str | None = None
-) -> Sequence[GraphRecipe]:
-    return graph_identification_types.create_graph_recipes(
-        graph_identification,
-        destination=destination,
-    )
-
-
 def resolve_graph_recipe_with_error_handling(
-    graph_identification: GraphIdentifier,
-    destination: str | None = None,
+    graph_specification: GraphSpecification,
 ) -> Sequence[GraphRecipe] | HTML:
     try:
-        return resolve_graph_recipe(
-            graph_identification,
-            destination=destination,
-        )
+        return build_graph_recipes(graph_specification)
     except livestatus.MKLivestatusNotFoundError:
         return render_graph_error_html(
             "%s\n\n%s: %r"
             % (
                 _("Cannot fetch data via Livestatus"),
                 _("The graph specification is"),
-                graph_identification,
+                graph_specification,
             ),
             _("Cannot calculate graph recipes"),
         )
@@ -701,7 +683,7 @@ def resolve_graph_recipe_with_error_handling(
 
 
 def render_graphs_from_specification_html(
-    graph_identification: GraphIdentifier,
+    graph_specification: GraphSpecification,
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
     resolve_combined_single_metric_spec: Callable[
@@ -711,7 +693,7 @@ def render_graphs_from_specification_html(
     render_async: bool = True,
     graph_display_id: str = "",
 ) -> HTML:
-    graph_recipes = resolve_graph_recipe_with_error_handling(graph_identification)
+    graph_recipes = resolve_graph_recipe_with_error_handling(graph_specification)
     if isinstance(graph_recipes, HTML):
         return graph_recipes  # This is to html.write the exception
 
@@ -1100,7 +1082,7 @@ default_dashlet_graph_render_options: Mapping[str, Any] = {
 
 
 def host_service_graph_dashlet_cmk(
-    graph_identification: GraphIdentifier,
+    graph_specification: GraphSpecification,
     custom_graph_render_options: GraphRenderOptions,
     resolve_combined_single_metric_spec: Callable[
         [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
@@ -1140,10 +1122,7 @@ def host_service_graph_dashlet_cmk(
 
     graph_data_range = make_graph_data_range((start_time, end_time), graph_render_options)
 
-    graph_recipes = resolve_graph_recipe_with_error_handling(
-        graph_identification,
-        destination=GraphDestinations.dashlet,
-    )
+    graph_recipes = resolve_graph_recipe_with_error_handling(graph_specification)
     if isinstance(graph_recipes, HTML):
         return graph_recipes  # This is to html.write the exception
     if graph_recipes:

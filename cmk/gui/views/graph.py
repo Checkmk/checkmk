@@ -30,9 +30,9 @@ from cmk.gui.type_defs import (
     GraphRenderOptions,
     PainterParameters,
     Row,
-    TemplateGraphSpec,
     VisualLinkSpec,
 )
+from cmk.gui.utils.graph_specification import TemplateGraphSpecification
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri_contextless
@@ -147,17 +147,6 @@ def paint_time_graph_cmk(
     *,
     override_graph_render_options: GraphRenderOptions | None = None,
 ) -> tuple[Literal[""], HTML | str]:
-    graph_identification: tuple[Literal["template"], TemplateGraphSpec] = (
-        "template",
-        TemplateGraphSpec(
-            {
-                "site": row["site"],
-                "host_name": row["host_name"],
-                "service_description": row.get("service_description", "_HOST_"),
-            }
-        ),
-    )
-
     # Load the graph render options from
     # a) the painter parameters configured in the view
     # b) the painter options set per user and view
@@ -217,7 +206,11 @@ def paint_time_graph_cmk(
         )
 
     return "", html_render.render_graphs_from_specification_html(
-        graph_identification,
+        TemplateGraphSpecification(
+            site=row["site"],
+            host_name=row["host_name"],
+            service_description=row.get("service_description", "_HOST_"),
+        ),
         graph_data_range,
         graph_render_options,
         resolve_combined_single_metric_spec,

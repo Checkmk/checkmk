@@ -163,10 +163,10 @@ def test_dashlet_refresh_intervals(
     if dashlet_type.has_context():
         dashlet_spec["context"] = {}
     if type_name in ["pnpgraph", "custom_graph"]:
-        monkeypatch.setattr(dashlet_type, "graph_identification", lambda s, c: ("template", {}))
+        monkeypatch.setattr(dashlet_type, "graph_specification", lambda s, c: None)
         monkeypatch.setattr(
-            "cmk.gui.plugins.metrics.html_render.resolve_graph_recipe",
-            lambda g, d: [{"title": "1"}],
+            "cmk.gui.plugins.metrics.graph_recipe_builder.build_graph_recipes",
+            lambda g: [{"title": "1"}],
         )
 
     monkeypatch.setattr(Dashlet, "_get_context", lambda s: {})

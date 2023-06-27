@@ -10,7 +10,7 @@ import json
 import time
 import traceback
 from collections.abc import Callable, Sequence
-from typing import Any, cast, Literal
+from typing import Any, cast
 
 import livestatus
 
@@ -32,7 +32,6 @@ from cmk.gui.plugins.metrics.graph_pdf import (
     graph_legend_height,
     render_graph_pdf,
 )
-from cmk.gui.plugins.metrics.identification import graph_identification_types
 from cmk.gui.plugins.metrics.utils import (
     CombinedGraphMetricRecipe,
     CombinedSingleMetricSpec,
@@ -40,7 +39,13 @@ from cmk.gui.plugins.metrics.utils import (
     GraphRecipe,
 )
 from cmk.gui.session import SuperUserContext
-from cmk.gui.type_defs import GraphConsoldiationFunction, GraphRenderOptions, TemplateGraphSpec
+from cmk.gui.type_defs import GraphConsoldiationFunction, GraphRenderOptions
+from cmk.gui.utils.graph_specification import (
+    parse_raw_graph_specification,
+    TemplateGraphSpecification,
+)
+
+from .graph_recipe_builder import build_graph_recipes
 
 
 # Provides a json list containing base64 encoded PNG images of the current 24h graphs
@@ -96,21 +101,15 @@ def _answer_graph_image_request(
 
         graph_render_options = graph_image_render_options()
 
-        graph_identification: tuple[Literal["template"], TemplateGraphSpec] = (
-            "template",
-            TemplateGraphSpec(
-                {
-                    "site": livestatus.SiteId(site) if site else None,
-                    "host_name": host_name,
-                    "service_description": service_description,
-                    "graph_index": None,  # all graphs
-                }
-            ),
-        )
-
         graph_data_range = graph_image_data_range(graph_render_options, start_time, end_time)
-        graph_recipes = graph_identification_types.create_graph_recipes(
-            graph_identification, destination=html_render.GraphDestinations.notification
+        graph_recipes = build_graph_recipes(
+            TemplateGraphSpecification(
+                site=livestatus.SiteId(site) if site else None,
+                host_name=host_name,
+                service_description=service_description,
+                graph_index=None,  # all graphs
+                destination=html_render.GraphDestinations.notification,
+            ),
         )
         num_graphs = request.get_integer_input("num_graphs") or len(graph_recipes)
 
@@ -219,14 +218,10 @@ def graph_recipes_for_api_request(
     api_request: dict[str, Any]
 ) -> tuple[GraphDataRange, Sequence[GraphRecipe]]:
     # Get and validate the specification
-    graph_identification = api_request.get("specification", [])
-    if not graph_identification:
+    if not (raw_graph_spec := api_request.get("specification")):
         raise MKUserError(None, _("The graph specification is missing"))
 
-    if len(graph_identification) != 2:
-        raise MKUserError(None, _("Invalid graph specification given"))
-
-    graph_identification_types.verify(graph_identification[0])
+    graph_specification = parse_raw_graph_specification(raw_graph_spec)
 
     # Default to 25h view
     default_time_range = ((now := int(time.time())) - (25 * 3600), now)
@@ -252,7 +247,7 @@ def graph_recipes_for_api_request(
     graph_data_range["step"] = 60
 
     try:
-        graph_recipes = graph_identification_types.create_graph_recipes(graph_identification)
+        graph_recipes = build_graph_recipes(graph_specification)
     except livestatus.MKLivestatusNotFoundError as e:
         raise MKUserError(None, _("Cannot calculate graph recipes: %s") % e)
 

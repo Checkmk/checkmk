@@ -18,6 +18,7 @@ from cmk.gui.plugins.openapi.endpoints.metric.common import (
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.plugins.openapi.utils import serve_json
 from cmk.gui.raw.plugins.main_modules.registration import resolve_combined_single_metric_spec
+from cmk.gui.utils.graph_specification import TemplateGraphSpecification
 
 
 # This is the only endpoint that is available in the raw edition
@@ -39,15 +40,13 @@ def get_graph(params):
 
     result = graph_spec_from_request(
         {
-            "specification": [
-                "template",
-                {
-                    "site": body.get("site", ""),
-                    "host_name": body["host_name"],
-                    "service_description": body["service_description"],
-                    "graph_id": graph_id_from_request(body),
-                },
-            ],
+            "specification": {
+                "graph_type": "template",
+                "site": body.get("site", ""),
+                "host_name": body["host_name"],
+                "service_description": body["service_description"],
+                "graph_id": graph_id_from_request(body),
+            },
             "data_range": reorganize_time_range(body["time_range"]),
             "consolidation_function": body["reduce"],
         },

@@ -16,7 +16,7 @@ from cmk.utils.servicename import ServiceName
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.plugins.metrics.identification import graph_identification_types, GraphIdentification
+from cmk.gui.plugins.metrics.identification import GraphIdentification
 from cmk.gui.plugins.metrics.utils import (
     evaluate,
     get_graph_data_from_livestatus,
@@ -234,9 +234,6 @@ class GraphIdentificationTemplate(GraphIdentification[TemplateGraphSpec, Templat
                 )
             )
         return graph_recipes
-
-
-graph_identification_types.register(GraphIdentificationTemplate)
 
 
 def create_graph_recipe_from_template(

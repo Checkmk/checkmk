@@ -9,7 +9,7 @@ PYTHON_DEPS := \
     $(REPO_PATH)/omd/packages/Python/sitecustomize.py
 
 # Increase the number before the "-" to enforce a recreation of the build cache
-PYTHON_BUILD_ID := $(call cache_pkg_build_id,5,$(PYTHON_DEPS))
+PYTHON_BUILD_ID := $(call cache_pkg_build_id,6,$(PYTHON_DEPS))
 
 PYTHON_UNPACK := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-unpack
 PYTHON_BUILD := $(BUILD_HELPER_DIR)/$(PYTHON_DIR)-build

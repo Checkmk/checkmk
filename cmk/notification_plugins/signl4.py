@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # SIGNL4 Alerting
 
-# (c) 2020 Derdack GmbH - License: GNU Public License v2
+# (c) 2023 Derdack GmbH - License: GNU Public License v2
 #          SIGNL4 <info@signl4.com>
-# Reliable team alerting using SIGNL4.
+# SIGNL4: Mobile alerting and incident response.
 
 from os import environ
+import base64
 
 from cmk.notification_plugins.utils import post_request, process_by_result_map
 from cmk.notification_plugins.utils import retrieve_from_passwordstore as passwords

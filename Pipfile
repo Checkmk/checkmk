@@ -33,7 +33,7 @@ types-simplejson = "==3.18.0.0"  # used for type checking
 types-PyMySQL = "==1.0.19.2"  # used for type checking
 types-pytz = "==2022.7.1.0"  # used for type checking
 types-cryptography = "==3.3.23.2"  # used for type checking
-types-redis = "==4.4.0.0"  # used for type checking
+types-redis = "*"  # used for type checking
 types-protobuf = "==4.21.0.5"  # used for type checking
 types-setuptools = "==67.2.0.0"  # used for type checking
 types-pyOpenSSL = "==23.0.0.0"  # used for type checking
@@ -61,7 +61,7 @@ sphinx-rtd-theme = "==0.5.1"  # used for the plugin API documentation
 sphinxcontrib-plantuml = "==0.24.1"  # used for the API and architecture
 sphinxcontrib-spelling = "==7.7.0"
 3to2 = "==1.1.1"  # used for converting agent plugins from py3 to 2
-fakeredis = {version = "==2.7.1", extras = ["lua"]}  # used for testing code which uses Redis (lua is needed for faking features like "lock")
+fakeredis = {version = "==2.10.3", extras = ["lua"]}  # used for testing code which uses Redis (lua is needed for faking features like "lock")
 python-lsp-server = "==1.7.1"  # Note: There are extras, but the default seems sensible.
 python-lsp-black = "==1.2.1"  # black plugin for python-lsp-server
 pyls-isort = "==0.2.2"  # isort plugin for python-lsp-server
@@ -164,7 +164,7 @@ repoze-profile = "==2.3"  # used for GUI/API profiling
 pyparsing = "==3.0.9"  # direct dependency
 ordered-set = "==4.1.0"  # needed by deepdiff
 deepdiff = "==6.2.2"  # used for recording setup audit log
-redis = "==4.4.0"  # needed by GUI (caching)
+redis = ">=4.5.3"  # needed by GUI (caching)
 fido2 = "==0.9.3"  # used for GUI 2fa webauthn
 tenacity = "==8.1.0"  # needed by opsgenie-sdk
 opsgenie-sdk = "==2.1.5"  # needed by opsgenie_issues

@@ -1,0 +1,17 @@
+Title: Prevent Windows agent service crash in some cases
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1687868876
+Edition: cre
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.3.0b1
+
+In some cases Windows may report non-valid path for a running process.
+This situation led to a crash of the Windows agent service.
+With this release, Windows agent is ignoring non-valid path, thus 
+eliminating the problem.
+
+

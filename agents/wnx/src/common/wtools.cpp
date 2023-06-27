@@ -128,6 +128,7 @@ std::wstring GetProcessPath(uint32_t pid) noexcept {
 /// \b returns count of killed processes, -1 if dir is bad
 int KillProcessesByDir(const fs::path &dir) noexcept {
     constexpr size_t minimum_path_len = 12;
+    XLOG::d.i("Processing dir '{}'", dir);
 
     if (dir.wstring().size() < minimum_path_len) {
         // safety: we do not want to kill as admin something important
@@ -144,8 +145,9 @@ int KillProcessesByDir(const fs::path &dir) noexcept {
         }
 
         fs::path p{exe};
-        const auto shift = fs::relative(p, dir).wstring();
-        if (!shift.empty() && shift[0] != L'.') {
+        std::error_code ec;
+        const auto shift = fs::relative(p, dir, ec).wstring();
+        if (!ec && !shift.empty() && shift[0] != L'.') {
             XLOG::d.i("Killing process '{}'", p);
             KillProcess(pid, 99);
             killed_count++;

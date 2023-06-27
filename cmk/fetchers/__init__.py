@@ -13,7 +13,7 @@ from collections.abc import Mapping
 from typing import Any, assert_never
 
 from ._abstract import Fetcher, Mode
-from ._agentctl import decrypt_by_agent_protocol, TCPEncryptionHandling, TransportProtocol
+from ._agentprtcl import decrypt_by_agent_protocol, TCPEncryptionHandling, TransportProtocol
 from ._api import get_raw_data
 from ._ipmi import IPMICredentials, IPMIFetcher
 from ._nofetcher import NoFetcher, NoFetcherError

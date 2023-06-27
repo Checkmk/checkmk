@@ -52,7 +52,7 @@ from cmk.fetchers import (
     TCPFetcher,
     TransportProtocol,
 )
-from cmk.fetchers._agentctl import CompressionType, HeaderV1, Version
+from cmk.fetchers._agentprtcl import CompressionType, HeaderV1, Version
 from cmk.fetchers._ipmi import IPMISensor
 from cmk.fetchers.filecache import (
     AgentFileCache,

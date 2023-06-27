@@ -20,7 +20,7 @@ from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.fetchers import Fetcher, Mode
 
-from ._agentctl import (
+from ._agentprtcl import (
     AgentCtlMessage,
     decrypt_by_agent_protocol,
     TCPEncryptionHandling,

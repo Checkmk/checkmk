@@ -11,7 +11,7 @@ import pytest
 
 from cmk.utils.exceptions import MKFetcherError
 
-from cmk.fetchers._agentctl import (
+from cmk.fetchers._agentprtcl import (
     AgentCtlMessage,
     CompressionType,
     decrypt_by_agent_protocol,
@@ -271,6 +271,6 @@ class TestValidateAgentProtocol:
 
 class TestTransportProtocol:
     @pytest.mark.parametrize("bad_payload", [b"abc", b""])
-    def test_detect_transport_protocol_error(self, bad_payload) -> None:
+    def test_detect_transport_protocol_error(self, bad_payload: bytes) -> None:
         with pytest.raises(ValueError):
             TransportProtocol(bad_payload)

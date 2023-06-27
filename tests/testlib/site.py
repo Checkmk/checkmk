@@ -717,6 +717,7 @@ class Site:
                     logger.info("Executing .f12 in '%s' ... FAILED:\n%s", path, exc.output)
                     raise
                 logger.info("Executing .f12 in '%s' ... DONE", path)
+        assert self.is_stopped()
 
         logger.info("Executing cmk-update-config ...")
         try:
@@ -728,6 +729,7 @@ class Site:
                 exc.stderr,
             )
             raise
+        assert self.is_stopped()
 
     def _update_cmk_core_config(self) -> None:
         logger.info("Updating core configuration...")

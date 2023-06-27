@@ -13,6 +13,8 @@ for F in ../*/diskspace; do
 done
 
 sudo cp skel/etc/cron.d/* $ROOT/etc/cron.d
-sudo omd restart $SITE crontab
 
-sudo omd restart $SITE apache
+if [ -z "$ONLY_COPY" ]; then
+    sudo omd restart $SITE crontab
+    sudo omd restart $SITE apache
+fi

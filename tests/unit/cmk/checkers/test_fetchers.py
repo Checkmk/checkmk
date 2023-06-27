@@ -925,9 +925,7 @@ class TestTCPFetcher:
         mock_sock = _MockSock(b"<<<section:sep(0)>>>\nbody\n")
         monkeypatch.setattr(fetcher, "_opt_socket", mock_sock)
 
-        agent_data, protocol = fetcher._get_agent_data(None)
-        assert agent_data == mock_sock.data[2:]
-        assert protocol == TransportProtocol.PLAIN
+        assert fetcher._get_agent_data(None) == mock_sock.data
 
     def test_get_agent_data_with_tls(self, monkeypatch: MonkeyPatch, fetcher: TCPFetcher) -> None:
         mock_data = b"<<<section:sep(0)>>>\nbody\n"
@@ -943,9 +941,7 @@ class TestTCPFetcher:
         monkeypatch.setattr(fetcher, "_opt_socket", mock_sock)
         monkeypatch.setattr(tcp, "wrap_tls", lambda *args: mock_sock)
 
-        agent_data, protocol = fetcher._get_agent_data("server")
-        assert agent_data == mock_data[2:]
-        assert protocol == TransportProtocol.PLAIN
+        assert fetcher._get_agent_data("server") == mock_data
 
 
 class TestFetcherCaching:

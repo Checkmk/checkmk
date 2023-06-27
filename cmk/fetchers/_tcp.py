@@ -164,13 +164,13 @@ class TCPFetcher(Fetcher[AgentRawData]):
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
         controller_uuid = get_uuid_link_manager().get_uuid(self.host_name)
-        agent_data, protocol = self._get_agent_data(
+        agent_data = self._get_agent_data(
             str(controller_uuid) if controller_uuid is not None else None
         )
-        self._validate_decrypted_data(self._decrypt(protocol, agent_data))
-        return AgentRawData(agent_data)
+        self._validate_decrypted_data(agent_data)
+        return agent_data
 
-    def _get_agent_data(self, server_hostname: str | None) -> tuple[bytes, TransportProtocol]:
+    def _get_agent_data(self, server_hostname: str | None) -> AgentRawData:
         try:
             raw_protocol = self._socket.recv(2, socket.MSG_WAITALL)
         except OSError as e:
@@ -212,24 +212,24 @@ class TCPFetcher(Fetcher[AgentRawData]):
                 raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
 
             self._logger.debug(f"Detected transport protocol: {protocol} ({raw_protocol!r})")
-            return agent_data[2:], protocol
+            return self._decrypt(protocol, agent_data[2:])
 
         self._logger.debug("Reading data from agent")
-        return recvall(self._socket, socket.MSG_WAITALL), protocol
+        return self._decrypt(protocol, recvall(self._socket, socket.MSG_WAITALL))
 
-    def _decrypt(self, protocol: TransportProtocol, output: bytes) -> bytes:
+    def _decrypt(self, protocol: TransportProtocol, output: bytes) -> AgentRawData:
         if not output:
-            return output  # nothing to to, validation will fail
+            return AgentRawData(output)  # nothing to to, validation will fail
 
         if protocol is TransportProtocol.PLAIN:
-            return protocol.value + output  # bring back stolen bytes
+            return AgentRawData(protocol.value + output)  # bring back stolen bytes
 
         if (secret := self.pre_shared_secret) is None:
             raise MKFetcherError("Data is encrypted but no secret is known")
 
         self._logger.debug("Try to decrypt output")
         try:
-            return decrypt_by_agent_protocol(secret, protocol, output)
+            return AgentRawData(decrypt_by_agent_protocol(secret, protocol, output))
         except Exception as e:
             raise MKFetcherError("Failed to decrypt agent output: %s" % e) from e
 

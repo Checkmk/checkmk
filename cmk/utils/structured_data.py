@@ -395,7 +395,7 @@ class _MutableAttributes:
 
 @dataclass(kw_only=True)
 class _MutableTable:
-    key_columns: list[SDKey] = field(default_factory=list)
+    key_columns: Sequence[SDKey] = field(default_factory=list)
     rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = field(default_factory=dict)
     retentions: Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]] = field(default_factory=dict)
 
@@ -420,17 +420,11 @@ class _MutableTable:
             )
         )
 
-    def add_key_columns(self, key_columns: Iterable[SDKey]) -> None:
-        for key in sorted(key_columns):
-            if key not in self.key_columns:
-                self.key_columns.append(key)
+    def _add_key_columns(self, key_columns: Iterable[SDKey]) -> None:
+        self.key_columns = sorted(set(self.key_columns).union(key_columns))
 
-    def add(
-        self,
-        key_columns: Iterable[SDKey],
-        rows: Sequence[Mapping[SDKey, SDValue]],
-    ) -> None:
-        self.add_key_columns(key_columns)
+    def add(self, key_columns: Iterable[SDKey], rows: Sequence[Mapping[SDKey, SDValue]]) -> None:
+        self._add_key_columns(key_columns)
         for row in rows:
             self._add_row(_make_row_ident(self.key_columns, row), row)
 
@@ -446,7 +440,7 @@ class _MutableTable:
         filter_func: SDFilterFunc,
         retention_interval: RetentionInterval,
     ) -> UpdateResult:
-        self.add_key_columns(other.key_columns)
+        self._add_key_columns(other.key_columns)
 
         old_filtered_rows = {
             ident: filtered_row
@@ -697,12 +691,8 @@ def _deserialize_legacy_attributes(raw_pairs: Mapping[SDKey, SDValue]) -> Immuta
     return ImmutableAttributes(pairs=raw_pairs)
 
 
-def _get_default_key_columns(rows: Sequence[Mapping[SDKey, SDValue]]) -> Sequence[SDKey]:
-    return sorted({k for r in rows for k in r})
-
-
 def _deserialize_legacy_table(raw_rows: Sequence[Mapping[SDKey, SDValue]]) -> ImmutableTable:
-    key_columns = _get_default_key_columns(raw_rows)
+    key_columns = sorted({k for r in raw_rows for k in r})
     rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
     for row in raw_rows:
         rows_by_ident.setdefault(_make_row_ident(key_columns, row), {}).update(row)
@@ -1127,10 +1117,7 @@ class ImmutableTable:
     @classmethod
     def deserialize(cls, raw_table: SDRawTable) -> ImmutableTable:
         rows = raw_table.get("Rows", [])
-        if "KeyColumns" in raw_table:
-            key_columns = raw_table["KeyColumns"]
-        else:
-            key_columns = _get_default_key_columns(rows)
+        key_columns = raw_table.get("KeyColumns", [])
 
         rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
         for row in rows:

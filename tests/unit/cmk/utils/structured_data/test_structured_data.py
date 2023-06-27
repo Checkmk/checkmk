@@ -38,7 +38,7 @@ def _make_mutable_tree(tree: ImmutableTree) -> MutableTree:
             retentions=tree.attributes.retentions,
         ),
         table=_MutableTable(
-            key_columns=list(tree.table.key_columns),
+            key_columns=tree.table.key_columns,
             rows_by_ident={ident: dict(row) for ident, row in tree.table.rows_by_ident.items()},
             retentions=tree.table.retentions,
         ),

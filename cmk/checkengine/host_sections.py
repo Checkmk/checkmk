@@ -6,9 +6,8 @@
 from __future__ import annotations
 
 import abc
-import copy
-from collections.abc import Mapping, MutableMapping, Sequence
-from typing import Final, Generic
+from collections.abc import Mapping, Sequence
+from typing import Final, Generic, no_type_check
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
@@ -42,33 +41,19 @@ class HostSections(Generic[TRawDataSection], abc.ABC):
             self.piggybacked_raw_data,
         )
 
+    @no_type_check
     def __add__(self, other: HostSections[TRawDataSection]) -> HostSections[TRawDataSection]:
-        new_sections = copy.deepcopy(dict(self.sections))
         for section_name, section_content in other.sections.items():
-            s = new_sections.get(section_name)
-            new_sections[section_name] = (
-                (list(s) + list(section_content)) if s else list(section_content)
-            )
-
-        new_piggybacked_raw_data: MutableMapping[HostName, list[bytes]] = {
-            k: list(v) for k, v in self.piggybacked_raw_data.items()
-        }
+            self.sections.setdefault(section_name, []).extend(section_content)
         for hostname, raw_lines in other.piggybacked_raw_data.items():
-            new_piggybacked_raw_data.setdefault(hostname, []).extend(raw_lines)
-
+            self.piggybacked_raw_data.setdefault(hostname, []).extend(raw_lines)
         # TODO: It should be supported that different sources produce equal sections.
         # this is handled for the self.sections data by simply concatenating the lines
         # of the sections, but for the self.cache_info this is not done. Why?
         # TODO: checking._execute_check() is using the oldest cached_at and the largest interval.
         #       Would this be correct here?
-        new_cache_info = dict(self.cache_info)
-        new_cache_info.update(other.cache_info)
-
-        return HostSections[TRawDataSection](
-            new_sections,
-            cache_info=new_cache_info,
-            piggybacked_raw_data=new_piggybacked_raw_data,
-        )
+        self.cache_info.update(other.cache_info)
+        return self
 
     def __bool__(self) -> bool:
         # This is needed in order to decide whether a host has inventory data or not, see:

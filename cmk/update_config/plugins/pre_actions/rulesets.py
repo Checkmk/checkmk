@@ -4,8 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """ Pre update checks, executed before any configuration is changed. """
 
-import traceback
-
 from cmk.utils.redis import disable_redis
 
 from cmk.gui.exceptions import MKUserError
@@ -27,12 +25,11 @@ class PreUpdateRulesets(PreUpdateAction):
             with disable_redis(), gui_context(), SuperUserContext():
                 set_global_vars()
                 rulesets = AllRulesets.load_all_rulesets()
-        except Exception:
+        except Exception as exc:
             if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
                 conflict_mode is ConflictMode.ASK
                 and input(
-                    "Unknown exception while trying to load rulesets.\n"
-                    f"Error: {traceback.format_exc()}\n\n"
+                    f"Exception while trying to load rulesets: {exc}\n\n"
                     "You can abort the update process (A) and try to fix "
                     "the incompatibilities or try to continue the update (c).\n"
                     "Abort update? [A/c]\n"

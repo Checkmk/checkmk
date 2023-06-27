@@ -840,6 +840,15 @@ def uptime_check(
             render_func=render.timespan,
             label="Running for",
         )
+        yield Metric(
+            name="age_youngest",
+            value=min_elapsed,
+        )
+        yield Metric(
+            name="age_oldest",
+            value=max_elapsed,
+            levels=params.get("max_age"),
+        )
     else:
         yield from check_levels(
             min_elapsed,

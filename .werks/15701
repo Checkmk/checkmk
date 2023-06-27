@@ -1,0 +1,18 @@
+Title: ps: Fill gaps in age metrics
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1687875155
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The <i>Process ...</i> Service records metrics for the oldest and the youngest process age among
+all matching processes and displays them in the graphs <i>Oldest age</i> and <i>Youngest age</i>.
+
+However, whenever there was only one matching process, or if all processes were of the exact same
+age, no oldest/youngest age was recorded, which lead to implausible gaps in the graphs.
+
+To mitigate this issue, the two graphs will now be continued with the single age, even
+if it's technically the same value.

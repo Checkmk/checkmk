@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import os
 import subprocess
 from collections.abc import Iterator
 from pathlib import Path
@@ -16,7 +15,7 @@ from tests.testlib.agent import (
     install_agent_package,
 )
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import current_branch_name, execute
+from tests.testlib.utils import current_branch_name, restart_httpd
 from tests.testlib.version import CMKVersion, version_from_env
 
 from tests.composition.utils import bake_agent, get_cre_agent_path, is_containerized
@@ -113,16 +112,8 @@ def _remote_site(central_site: Site, site_factory: SiteFactory) -> Site:
 
 
 def _create_site_and_restart_httpd(site_factory: SiteFactory, site_name: str) -> Site:
-    """On RHEL-based distros, such as CentOS and AlmaLinux, we have to manually restart httpd after
-    creating a new site. Otherwise, the site's REST API won't be reachable via port 80, preventing
-    eg. the controller from querying the agent receiver port.
-    Note: the mere presence of httpd is not enough to determine whether we have to restart or not,
-    see eg. sles-15sp4.
-    """
     site = site_factory.get_site(site_name)
-    # When executed locally and undockerized, the DISTRO may not be set
-    if os.environ.get("DISTRO") in {"centos-7", "centos-8", "almalinux-9"}:
-        execute(["sudo", "httpd", "-k", "restart"])
+    restart_httpd()
     return site
 
 

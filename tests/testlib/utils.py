@@ -346,3 +346,17 @@ def execute(args: Sequence[str], check: bool = True) -> subprocess.CompletedProc
             f"Subprocess terminated non-successfully. Stdout:\n{e.stdout}\nStderr:\n{e.stderr}"
         ) from e
     return proc
+
+
+def restart_httpd():
+    """On RHEL-based distros, such as CentOS and AlmaLinux, we have to manually restart httpd after
+    creating a new site. Otherwise, the site's REST API won't be reachable via port 80, preventing
+    e.g. the controller from querying the agent receiver port.
+
+    Note: the mere presence of httpd is not enough to determine whether we have to restart or not,
+    see eg. sles-15sp4.
+    """
+
+    # When executed locally and un-dockerized, DISTRO may not be set
+    if os.environ.get("DISTRO") in {"centos-7", "centos-8", "almalinux-9"}:
+        execute(["sudo", "httpd", "-k", "restart"])

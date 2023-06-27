@@ -622,11 +622,9 @@ RenderingExpression = tuple[Any, ...]
 TranslatedMetrics = dict[str, TranslatedMetric]
 MetricExpression = str
 LineType = str  # TODO: Literal["line", "area", "stack", "-line", "-area", "-stack"]
-# We still need "Union" because of https://github.com/python/mypy/issues/11098
-MetricDefinition = Union[
-    tuple[MetricExpression, LineType],
-    tuple[MetricExpression, LineType, str | LazyString],
-]
+MetricDefinitionWithoutTitle = tuple[MetricExpression, LineType]
+MetricDefinitionWithTitle = tuple[MetricExpression, LineType, str | LazyString]
+MetricDefinition = MetricDefinitionWithoutTitle | MetricDefinitionWithTitle
 PerfometerSpec = dict[str, Any]
 PerfdataTuple = tuple[str, float, str, float | None, float | None, float | None, float | None]
 Perfdata = list[PerfdataTuple]
@@ -642,7 +640,7 @@ class RowShading(TypedDict):
 
 RPNExpression = tuple  # TODO: Improve this type
 
-HorizontalRule = tuple[float, str, str, str | LazyString]
+HorizontalRule = tuple[float, str, str, str]
 
 
 class GraphMetric(TypedDict):
@@ -683,7 +681,7 @@ class CombinedGraphSpec(GraphSpec):
     single_infos: SingleInfos
     presentation: GraphPresentation
     context: VisualContext
-    selected_metric: NotRequired[MetricDefinition]
+    selected_metric: NotRequired[MetricDefinitionWithoutTitle]
     consolidation_function: NotRequired[GraphConsoldiationFunction]
     graph_template: NotRequired[str]
 

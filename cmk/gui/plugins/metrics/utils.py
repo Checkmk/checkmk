@@ -1199,7 +1199,7 @@ def horizontal_rules_from_thresholds(
                         value,
                         unit["render"](value),
                         color,
-                        title,
+                        str(title),
                     )
                 )
         # Scalar value like min and max are always optional. This makes configuration

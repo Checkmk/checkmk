@@ -307,8 +307,13 @@ def _make_retentions_filter_func(
     )
 
 
-def _get_filtered_dict(dict_: Mapping, filter_func: SDFilterFunc) -> Mapping:
-    return {k: v for k, v in dict_.items() if filter_func(k)}
+_VT_co = TypeVar("_VT_co", covariant=True)
+
+
+def _get_filtered_dict(
+    mapping: Mapping[SDKey, _VT_co], *filters: SDFilterFunc
+) -> Mapping[SDKey, _VT_co]:
+    return {k: v for k, v in mapping.items() if any(f(k) for f in filters)} if filters else mapping
 
 
 # .
@@ -781,34 +786,22 @@ def _deserialize_legacy_node(  # pylint: disable=too-many-branches
 
 
 def _filter_attributes(
-    attributes: ImmutableAttributes, filter_funcs: Sequence[SDFilterFunc]
+    attributes: ImmutableAttributes, filters: Sequence[SDFilterFunc]
 ) -> ImmutableAttributes:
-    if not filter_funcs:
-        return ImmutableAttributes(pairs=attributes.pairs)
-
-    filtered_pairs: dict[SDKey, SDValue] = {}
-    for filter_func in filter_funcs:
-        filtered_pairs.update(_get_filtered_dict(attributes.pairs, filter_func))
-    return ImmutableAttributes(pairs=filtered_pairs, retentions=attributes.retentions)
+    return ImmutableAttributes(
+        pairs=_get_filtered_dict(attributes.pairs, *filters),
+        retentions=attributes.retentions,
+    )
 
 
-def _filter_table(table: ImmutableTable, filter_funcs: Sequence[SDFilterFunc]) -> ImmutableTable:
-    if not filter_funcs:
-        return ImmutableTable(
-            key_columns=table.key_columns,
-            rows_by_ident=table.rows_by_ident,
-            retentions=table.retentions,
-        )
-
-    filtered_rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = {}
-    for ident, row in table.rows_by_ident.items():
-        for filter_func in filter_funcs:
-            filtered_rows_by_ident.setdefault(ident, {}).update(
-                _get_filtered_dict(row, filter_func)
-            )
+def _filter_table(table: ImmutableTable, filters: Sequence[SDFilterFunc]) -> ImmutableTable:
     return ImmutableTable(
         key_columns=table.key_columns,
-        rows_by_ident=filtered_rows_by_ident,
+        rows_by_ident={
+            ident: filtered_row
+            for ident, row in table.rows_by_ident.items()
+            if (filtered_row := _get_filtered_dict(row, *filters))
+        },
         retentions=table.retentions,
     )
 
@@ -1305,31 +1298,22 @@ class ImmutableTree:
 
 
 def _filter_delta_attributes(
-    attributes: ImmutableDeltaAttributes, filter_funcs: Sequence[SDFilterFunc]
+    attributes: ImmutableDeltaAttributes, filters: Sequence[SDFilterFunc]
 ) -> ImmutableDeltaAttributes:
-    if not filter_funcs:
-        return ImmutableDeltaAttributes(pairs=attributes.pairs)
-
-    filtered_pairs: dict[SDKey, tuple[SDValue, SDValue]] = {}
-    for filter_func in filter_funcs:
-        filtered_pairs.update(_get_filtered_dict(attributes.pairs, filter_func))
-    return ImmutableDeltaAttributes(pairs=filtered_pairs)
+    return ImmutableDeltaAttributes(pairs=_get_filtered_dict(attributes.pairs, *filters))
 
 
 def _filter_delta_table(
-    table: ImmutableDeltaTable, filter_funcs: Sequence[SDFilterFunc]
+    table: ImmutableDeltaTable, filters: Sequence[SDFilterFunc]
 ) -> ImmutableDeltaTable:
-    if not filter_funcs:
-        return ImmutableDeltaTable(key_columns=table.key_columns, rows=table.rows)
-
-    filtered_rows: list[dict[SDKey, tuple[SDValue, SDValue]]] = []
-    for row in table.rows:
-        filtered_row: dict[SDKey, tuple[SDValue, SDValue]] = {}
-        for filter_func in filter_funcs:
-            filtered_row.update(_get_filtered_dict(row, filter_func))
-        if filtered_row:
-            filtered_rows.append(filtered_row)
-    return ImmutableDeltaTable(key_columns=table.key_columns, rows=filtered_rows)
+    return ImmutableDeltaTable(
+        key_columns=table.key_columns,
+        rows=[
+            filtered_row
+            for row in table.rows
+            if (filtered_row := _get_filtered_dict(row, *filters))
+        ],
+    )
 
 
 def _filter_delta_tree(tree: ImmutableDeltaTree, filter_tree: _FilterTree) -> ImmutableDeltaTree:

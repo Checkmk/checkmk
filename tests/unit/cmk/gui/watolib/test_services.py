@@ -86,7 +86,7 @@ MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(
 @pytest.fixture(name="mock_discovery_preview")
 def fixture_mock_discovery_preview(mocker: MockerFixture) -> MagicMock:
     return mocker.patch(
-        "cmk.gui.watolib.services.discovery_preview", return_value=MOCK_DISCOVERY_RESULT
+        "cmk.gui.watolib.services.local_discovery_preview", return_value=MOCK_DISCOVERY_RESULT
     )
 
 
@@ -172,7 +172,7 @@ def test_perform_discovery_tabula_rasa_action_with_no_previous_discovery_result(
 
     mock_discovery_preview.assert_has_calls(
         [
-            call("NO_SITE", sample_host_name, prevent_fetching=True, raise_errors=False),
+            call(sample_host_name, prevent_fetching=True, raise_errors=False),
         ]
     )
     assert discovery_result.check_table == MOCK_DISCOVERY_RESULT.check_table
@@ -187,7 +187,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
 ) -> None:
     mocker.patch("cmk.gui.watolib.services.update_host_labels", return_value={})
     mock_discovery_preview = mocker.patch(
-        "cmk.gui.watolib.services.discovery_preview",
+        "cmk.gui.watolib.services.local_discovery_preview",
         return_value=ServiceDiscoveryPreviewResult(
             output="",
             check_table=[
@@ -346,7 +346,7 @@ def test_perform_discovery_single_update(
     mock_set_autochecks: MagicMock,
 ) -> None:
     mock_discovery_preview = mocker.patch(
-        "cmk.gui.watolib.services.discovery_preview",
+        "cmk.gui.watolib.services.local_discovery_preview",
         return_value=ServiceDiscoveryPreviewResult(
             output="",
             check_table=[
@@ -569,7 +569,7 @@ def test_perform_discovery_single_update(
         },
     )
     mock_discovery_preview.assert_called_with(
-        "NO_SITE", sample_host_name, prevent_fetching=True, raise_errors=False
+        sample_host_name, prevent_fetching=True, raise_errors=False
     )
     assert [
         entry.check_source
@@ -590,7 +590,7 @@ def test_perform_discovery_action_update_services(
     mock_set_autochecks: MagicMock,
 ) -> None:
     mock_discovery_preview = mocker.patch(
-        "cmk.gui.watolib.services.discovery_preview",
+        "cmk.gui.watolib.services.local_discovery_preview",
         return_value=ServiceDiscoveryPreviewResult(
             output="",
             check_table=[
@@ -762,7 +762,7 @@ def test_perform_discovery_action_update_services(
         },
     )
     mock_discovery_preview.assert_called_with(
-        "NO_SITE", sample_host_name, prevent_fetching=True, raise_errors=False
+        sample_host_name, prevent_fetching=True, raise_errors=False
     )
     assert [entry.check_source for entry in discovery_result.check_table] == ["old"]
 
@@ -782,7 +782,7 @@ def test_perform_discovery_action_update_host_labels(
         "cmk.gui.watolib.services.update_host_labels", return_value=None
     )
     mock_discovery_preview = mocker.patch(
-        "cmk.gui.watolib.services.discovery_preview",
+        "cmk.gui.watolib.services.local_discovery_preview",
         return_value=ServiceDiscoveryPreviewResult(
             output="",
             check_table=[],
@@ -865,7 +865,7 @@ def test_perform_discovery_action_update_host_labels(
     )
     mock_set_autochecks.assert_not_called()
     mock_discovery_preview.assert_called_with(
-        "NO_SITE", sample_host_name, prevent_fetching=True, raise_errors=False
+        sample_host_name, prevent_fetching=True, raise_errors=False
     )
     assert "cmk/check_mk_server" not in discovery_result.host_labels
 

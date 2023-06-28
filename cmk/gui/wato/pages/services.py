@@ -221,7 +221,11 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
 
     def execute(self, api_request: StartDiscoveryRequest) -> str:
         central_version = cmk_version_of_remote_automation_source(request)
-        return execute_discovery_job(api_request).serialize(central_version)
+        return execute_discovery_job(
+            api_request.host.name(),
+            api_request.options.action,
+            raise_errors=not api_request.options.ignore_errors,
+        ).serialize(central_version)
 
 
 @page_registry.register_page("ajax_service_discovery")

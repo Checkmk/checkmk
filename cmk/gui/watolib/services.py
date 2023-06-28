@@ -13,7 +13,7 @@ import time
 from collections.abc import Callable, Mapping, Sequence
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, assert_never, Literal, NamedTuple, TypedDict, TypeVar
+from typing import Any, assert_never, Final, Literal, NamedTuple, TypedDict, TypeVar
 
 from mypy_extensions import Arg, NamedArg
 
@@ -37,7 +37,6 @@ from cmk.checkengine.checking import Item
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.background_job import (
     BackgroundJob,
-    BackgroundProcessInterface,
     InitialStatusArgs,
     job_registry,
     JobStatusSpec,
@@ -50,9 +49,9 @@ from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automation
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import (
-    discovery,
-    discovery_preview,
     get_services_labels,
+    local_discovery,
+    local_discovery_preview,
     set_autochecks,
     update_host_labels,
 )
@@ -849,7 +848,11 @@ def get_check_table(discovery_request: StartDiscoveryRequest) -> DiscoveryResult
         )
 
     if site_is_local(discovery_request.host.site_id()):
-        return execute_discovery_job(discovery_request)
+        return execute_discovery_job(
+            discovery_request.host.name(),
+            discovery_request.options.action,
+            raise_errors=not discovery_request.options.ignore_errors,
+        )
 
     sync_changes_before_remote_automation(discovery_request.host.site_id())
 
@@ -867,21 +870,23 @@ def get_check_table(discovery_request: StartDiscoveryRequest) -> DiscoveryResult
     )
 
 
-def execute_discovery_job(api_request: StartDiscoveryRequest) -> DiscoveryResult:
+def execute_discovery_job(
+    host_name: HostName, action: DiscoveryAction, *, raise_errors: bool
+) -> DiscoveryResult:
     """Either execute the discovery job to scan the host or return the discovery result
     based on the currently cached data"""
-    job = ServiceDiscoveryBackgroundJob(api_request.host.name())
+    job = ServiceDiscoveryBackgroundJob(host_name)
 
-    if not job.is_active() and api_request.options.action in [
+    if not job.is_active() and action in [
         DiscoveryAction.REFRESH,
         DiscoveryAction.TABULA_RASA,
     ]:
-        job.start(lambda job_interface: job.discover(api_request, job_interface))
+        job.start(lambda job_interface: job.discover(action, raise_errors=raise_errors))
 
-    if job.is_active() and api_request.options.action == DiscoveryAction.STOP:
+    if job.is_active() and action == DiscoveryAction.STOP:
         job.stop()
 
-    return job.get_result(api_request)
+    return job.get_result()
 
 
 class ServiceDiscoveryBackgroundJob(BackgroundJob):
@@ -895,16 +900,17 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
     def gui_title(cls) -> str:
         return _("Service discovery")
 
-    def __init__(self, host_name: str) -> None:
+    def __init__(self, host_name: HostName) -> None:
         super().__init__(
             f"{self.job_prefix}-{host_name}",
             InitialStatusArgs(
                 title=_("Service discovery"),
                 stoppable=True,
-                host_name=host_name,
+                host_name=str(host_name),
                 estimated_duration=BackgroundJob(self.job_prefix).get_status().duration,
             ),
         )
+        self.host_name: Final = host_name
 
         self._preview_store = ObjectStore(
             Path(self.get_work_dir(), "check_table.mk"), serializer=TextSerializer()
@@ -939,46 +945,42 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         finally:
             self._preview_store.path.unlink(missing_ok=True)
 
-    def discover(
-        self, api_request: StartDiscoveryRequest, job_interface: BackgroundProcessInterface
-    ) -> None:
+    def discover(self, action: DiscoveryAction, *, raise_errors: bool) -> None:
         """Target function of the background job"""
         print("Starting job...")
-        self._pre_discovery_preview = self._get_discovery_preview(api_request)
+        self._pre_discovery_preview = self._get_discovery_preview()
 
-        if api_request.options.action == DiscoveryAction.REFRESH:
+        if action == DiscoveryAction.REFRESH:
             self._jobstatus_store.update({"title": _("Refresh")})
-            self._perform_service_scan(api_request)
+            self._perform_service_scan(raise_errors=raise_errors)
 
-        elif api_request.options.action == DiscoveryAction.TABULA_RASA:
+        elif action == DiscoveryAction.TABULA_RASA:
             self._jobstatus_store.update({"title": _("Tabula rasa")})
-            self._perform_automatic_refresh(api_request)
+            self._perform_automatic_refresh()
 
         else:
             raise NotImplementedError()
         print("Completed.")
 
-    def _perform_service_scan(self, api_request: StartDiscoveryRequest) -> None:
+    def _perform_service_scan(self, *, raise_errors: bool) -> None:
         """The try-inventory automation refreshes the Checkmk internal cache and makes the new
         information available to the next try-inventory call made by get_result()."""
-        result = discovery_preview(
-            api_request.host.site_id(),  # TODO: this is a local discovery always.
-            api_request.host.name(),
+        result = local_discovery_preview(
+            self.host_name,
             prevent_fetching=False,
-            raise_errors=not api_request.options.ignore_errors,
+            raise_errors=raise_errors,
         )
         self._store_last_preview(result)
         sys.stdout.write(result.output)
 
-    def _perform_automatic_refresh(self, api_request: StartDiscoveryRequest) -> None:
+    def _perform_automatic_refresh(self) -> None:
         # TODO: In distributed sites this must not add a change on the remote site. We need to build
         # the way back to the central site and show the information there.
-        discovery(
-            api_request.host.site_id(),  # TODO: this is a local discovery always.
+        local_discovery(
             "refresh",
-            [api_request.host.name()],
+            [self.host_name],
             scan=True,
-            raise_errors=False,  # why is api_request ignored here?
+            raise_errors=False,
             non_blocking_http=True,
         )
         # count_added, _count_removed, _count_kept, _count_new = counts[api_request.host.name()]
@@ -986,7 +988,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         #            (api_request.host.name(), count_added)
         # _changes.add_service_change(api_request.host, "refresh-autochecks", message)
 
-    def get_result(self, api_request: StartDiscoveryRequest) -> DiscoveryResult:
+    def get_result(self) -> DiscoveryResult:
         """Executed from the outer world to report about the job state"""
         job_status = self.get_status()
         job_status.is_active = self.is_active()
@@ -999,7 +1001,7 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         elif (last_result := self._load_last_preview()) is not None:
             check_table_created, result = last_result
         else:
-            check_table_created, result = self._get_discovery_preview(api_request)
+            check_table_created, result = self._get_discovery_preview()
 
         return DiscoveryResult(
             job_status=dict(job_status),
@@ -1013,18 +1015,10 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
             sources=result.source_results,
         )
 
-    @staticmethod
-    def _get_discovery_preview(
-        api_request: StartDiscoveryRequest,
-    ) -> tuple[int, ServiceDiscoveryPreviewResult]:
+    def _get_discovery_preview(self) -> tuple[int, ServiceDiscoveryPreviewResult]:
         return (
             int(time.time()),
-            discovery_preview(
-                api_request.host.site_id(),
-                api_request.host.name(),
-                prevent_fetching=True,
-                raise_errors=False,  # why is api_request ignored here?
-            ),
+            local_discovery_preview(self.host_name, prevent_fetching=True, raise_errors=False),
         )
 
     @staticmethod

@@ -117,8 +117,28 @@ def _deserialize(
         )
 
 
+def local_discovery(
+    mode: str,
+    host_names: Iterable[HostName],
+    *,
+    scan: bool,
+    raise_errors: bool,
+    timeout: int | None = None,
+    non_blocking_http: bool = False,
+) -> results.ServiceDiscoveryResult:
+    return discovery(
+        None,
+        mode,
+        host_names,
+        scan=scan,
+        raise_errors=raise_errors,
+        timeout=timeout,
+        non_blocking_http=non_blocking_http,
+    )
+
+
 def discovery(
-    site_id: SiteId,
+    site_id: SiteId | None,
     mode: str,
     host_names: Iterable[HostName],
     *,
@@ -144,8 +164,7 @@ def discovery(
     )
 
 
-def discovery_preview(
-    site_id: SiteId,
+def local_discovery_preview(
     host_name: HostName,
     *,
     prevent_fetching: bool,
@@ -154,7 +173,7 @@ def discovery_preview(
     return _deserialize(
         _automation_serialized(
             "service-discovery-preview",
-            siteid=site_id,
+            siteid=None,
             args=[
                 *(("@nofetch",) if prevent_fetching else ()),
                 *(("@raiseerrors",) if raise_errors else ()),

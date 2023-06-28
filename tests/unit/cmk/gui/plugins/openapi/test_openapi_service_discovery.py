@@ -799,13 +799,13 @@ mock_discovery_result = ServiceDiscoveryPreviewResult(
 @pytest.fixture(name="mock_discovery_preview")
 def fixture_mock_discovery_preview(mocker: MockerFixture) -> MagicMock:
     return mocker.patch(
-        "cmk.gui.watolib.services.discovery_preview", return_value=mock_discovery_result
+        "cmk.gui.watolib.services.local_discovery_preview", return_value=mock_discovery_result
     )
 
 
 @pytest.fixture(name="mock_discovery")
 def fixture_mock_discovery(mocker: MockerFixture) -> MagicMock:
-    return mocker.patch("cmk.gui.watolib.services.discovery", return_value=None)
+    return mocker.patch("cmk.gui.watolib.services.local_discovery", return_value=None)
 
 
 @pytest.fixture(name="mock_set_autochecks")
@@ -873,8 +873,8 @@ def test_openapi_discovery_refresh_services(
         == "http://localhost/NO_SITE/check_mk/api/1.0/objects/service_discovery_run/example.com/actions/wait-for-completion/invoke"
     )
     assert mock_discovery_preview.mock_calls == [
-        call("NO_SITE", "example.com", prevent_fetching=True, raise_errors=False),
-        call("NO_SITE", "example.com", prevent_fetching=False, raise_errors=False),
+        call("example.com", prevent_fetching=True, raise_errors=False),
+        call("example.com", prevent_fetching=False, raise_errors=False),
     ]
     mock_set_autochecks.assert_not_called()
 
@@ -898,7 +898,6 @@ def test_openapi_discovery_tabula_rasa(
     mock_set_autochecks.assert_not_called()
     assert mock_discovery.mock_calls == [
         call(
-            "NO_SITE",
             "refresh",
             ["example.com"],
             scan=True,
@@ -907,8 +906,8 @@ def test_openapi_discovery_tabula_rasa(
         )
     ]
     assert mock_discovery_preview.mock_calls == [
-        call("NO_SITE", "example.com", prevent_fetching=True, raise_errors=False),
-        call("NO_SITE", "example.com", prevent_fetching=True, raise_errors=False),
+        call("example.com", prevent_fetching=True, raise_errors=False),
+        call("example.com", prevent_fetching=True, raise_errors=False),
     ]
 
 

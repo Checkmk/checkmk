@@ -223,10 +223,7 @@ class _DictKeys(Generic[T]):
 # TODO filter table rows?
 
 
-SDFilterFunc = Callable[[SDKey], bool]
-
-
-def make_filter_func(choice: Literal["nothing", "all"] | Sequence[str]) -> SDFilterFunc:
+def make_filter_func(choice: Literal["nothing", "all"] | Sequence[str]) -> Callable[[SDKey], bool]:
     # TODO Improve:
     # For contact groups (via make_filter)
     #   - ('choices', ['some', 'keys'])
@@ -245,9 +242,10 @@ def make_filter_func(choice: Literal["nothing", "all"] | Sequence[str]) -> SDFil
 
 class SDFilter(NamedTuple):
     path: SDPath
-    filter_pairs: SDFilterFunc
-    filter_columns: SDFilterFunc
-    filter_nodes: SDFilterFunc
+    filter_pairs: Callable[[SDKey], bool]
+    filter_columns: Callable[[SDKey], bool]
+    # TODO Callable[[SDNodeName], bool]
+    filter_nodes: Callable[[SDKey], bool]
 
     @classmethod
     def from_choices(
@@ -269,9 +267,10 @@ class SDFilter(NamedTuple):
 @dataclass(frozen=True, kw_only=True)
 class _FilterTree:
     nodes: dict[SDNodeName, _FilterTree] = field(default_factory=dict)
-    filters_pairs: list[SDFilterFunc] = field(default_factory=list)
-    filters_columns: list[SDFilterFunc] = field(default_factory=list)
-    filters_nodes: list[SDFilterFunc] = field(default_factory=list)
+    filters_pairs: list[Callable[[SDKey], bool]] = field(default_factory=list)
+    filters_columns: list[Callable[[SDKey], bool]] = field(default_factory=list)
+    # TODO SDNodeName
+    filters_nodes: list[Callable[[SDKey], bool]] = field(default_factory=list)
 
 
 def _make_filter_tree(filters: Iterable[SDFilter]) -> _FilterTree:
@@ -295,10 +294,10 @@ def _make_filter_tree(filters: Iterable[SDFilter]) -> _FilterTree:
 
 def _make_retentions_filter_func(
     *,
-    filter_func: SDFilterFunc,
+    filter_func: Callable[[SDKey], bool],
     intervals_by_key: Mapping[SDKey, RetentionInterval] | None,
     now: int,
-) -> SDFilterFunc:
+) -> Callable[[SDKey], bool]:
     return lambda k: bool(
         filter_func(k)
         and intervals_by_key
@@ -311,7 +310,7 @@ _VT_co = TypeVar("_VT_co", covariant=True)
 
 
 def _get_filtered_dict(
-    mapping: Mapping[SDKey, _VT_co], *filters: SDFilterFunc
+    mapping: Mapping[SDKey, _VT_co], *filters: Callable[[SDKey], bool]
 ) -> Mapping[SDKey, _VT_co]:
     return {k: v for k, v in mapping.items() if any(f(k) for f in filters)} if filters else mapping
 
@@ -350,7 +349,7 @@ class _MutableAttributes:
         now: int,
         path: SDPath,
         other: ImmutableAttributes,
-        filter_func: SDFilterFunc,
+        filter_func: Callable[[SDKey], bool],
         retention_interval: RetentionInterval,
     ) -> UpdateResult:
         compared_keys = _DictKeys.compare(
@@ -448,7 +447,7 @@ class _MutableTable:
         now: int,
         path: SDPath,
         other: ImmutableTable,
-        filter_func: SDFilterFunc,
+        filter_func: Callable[[SDKey], bool],
         retention_interval: RetentionInterval,
     ) -> UpdateResult:
         self._add_key_columns(other.key_columns)
@@ -611,7 +610,7 @@ class MutableTree:
         now: int,
         path: SDPath,
         previous_tree: ImmutableTree,
-        filter_func: SDFilterFunc,
+        filter_func: Callable[[SDKey], bool],
         retention_interval: RetentionInterval,
     ) -> UpdateResult:
         return self.setdefault_node(path).attributes.update(
@@ -627,7 +626,7 @@ class MutableTree:
         now: int,
         path: SDPath,
         previous_tree: ImmutableTree,
-        filter_func: SDFilterFunc,
+        filter_func: Callable[[SDKey], bool],
         retention_interval: RetentionInterval,
     ) -> UpdateResult:
         return self.setdefault_node(path).table.update(
@@ -786,7 +785,7 @@ def _deserialize_legacy_node(  # pylint: disable=too-many-branches
 
 
 def _filter_attributes(
-    attributes: ImmutableAttributes, filters: Sequence[SDFilterFunc]
+    attributes: ImmutableAttributes, filters: Sequence[Callable[[SDKey], bool]]
 ) -> ImmutableAttributes:
     return ImmutableAttributes(
         pairs=_get_filtered_dict(attributes.pairs, *filters),
@@ -794,7 +793,9 @@ def _filter_attributes(
     )
 
 
-def _filter_table(table: ImmutableTable, filters: Sequence[SDFilterFunc]) -> ImmutableTable:
+def _filter_table(
+    table: ImmutableTable, filters: Sequence[Callable[[SDKey], bool]]
+) -> ImmutableTable:
     return ImmutableTable(
         key_columns=table.key_columns,
         rows_by_ident={
@@ -1298,13 +1299,13 @@ class ImmutableTree:
 
 
 def _filter_delta_attributes(
-    attributes: ImmutableDeltaAttributes, filters: Sequence[SDFilterFunc]
+    attributes: ImmutableDeltaAttributes, filters: Sequence[Callable[[SDKey], bool]]
 ) -> ImmutableDeltaAttributes:
     return ImmutableDeltaAttributes(pairs=_get_filtered_dict(attributes.pairs, *filters))
 
 
 def _filter_delta_table(
-    table: ImmutableDeltaTable, filters: Sequence[SDFilterFunc]
+    table: ImmutableDeltaTable, filters: Sequence[Callable[[SDKey], bool]]
 ) -> ImmutableDeltaTable:
     return ImmutableDeltaTable(
         key_columns=table.key_columns,

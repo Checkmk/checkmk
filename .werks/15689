@@ -1,0 +1,18 @@
+Title: Dependency updates
+Class: security
+Compatible: compat
+Component: core
+Date: 1687942826
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.2.0p5
+
+This Werk updates several dependencies such as openssl, various python dependencies, etc.
+
+To our knowledge among the vulnerabilities fixed in those dependencies only CVE-2023-32681 could be exploited.
+This vulnerability could cause a <tt>Proxy-Authorization</tt> header leakage.
+
+<b>Vulnerability Management</b>:
+We have rated the issue with a CVSS Score of 6.1 (Medium) with the following CVSS vector:
+<tt>CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:H/I:N/A:N</tt>.

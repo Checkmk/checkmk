@@ -19,9 +19,11 @@ RESULT_MAP = {
     (500, 599): StateInfo(1, "str", "Server-Error"),
 }
 
+
 def _signl4_url() -> str:
     password = passwords(environ["NOTIFY_PARAMETER_PASSWORD"])
     return f"https://connect.signl4.com/webhook/{password}"
+
 
 def _signl4_msg(context: dict[str, str]) -> dict[str, object]:
     host_name = context.get("HOSTNAME", "")
@@ -87,6 +89,7 @@ def _signl4_msg(context: dict[str, str]) -> dict[str, object]:
         + service_desc_id_part,
         "X-S4-Status": s4_status,
     }
+
 
 def main() -> int:
     return process_by_result_map(

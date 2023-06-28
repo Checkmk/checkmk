@@ -23,7 +23,7 @@ from cmk.utils.structured_data import (
     MutableTree,
     parse_visible_raw_path,
     RetentionInterval,
-    SDFilter,
+    SDFilterChoice,
     SDNodeName,
     SDPath,
     TreeStore,
@@ -403,11 +403,11 @@ def test_filter_delta_tree_nt() -> None:
         .difference(_create_empty_imm_tree())
         .filter(
             [
-                SDFilter(
+                SDFilterChoice(
                     path=("path-to-nta", "nt"),
-                    filter_pairs=lambda k: k in ["nt1"],
-                    filter_columns=lambda k: k in ["nt1"],
-                    filter_nodes=lambda n: False,
+                    choice_pairs=["nt1"],
+                    choice_columns=["nt1"],
+                    choice_nodes="nothing",
                 )
             ],
         )
@@ -434,11 +434,11 @@ def test_filter_delta_tree_na() -> None:
         .difference(_create_empty_imm_tree())
         .filter(
             [
-                SDFilter(
+                SDFilterChoice(
                     path=("path-to-nta", "na"),
-                    filter_pairs=lambda k: k in ["na1"],
-                    filter_columns=lambda k: k in ["na1"],
-                    filter_nodes=lambda n: False,
+                    choice_pairs=["na1"],
+                    choice_columns=["na1"],
+                    choice_nodes="nothing",
                 )
             ],
         )
@@ -460,11 +460,11 @@ def test_filter_delta_tree_ta() -> None:
         .difference(_create_empty_imm_tree())
         .filter(
             [
-                SDFilter(
+                SDFilterChoice(
                     path=("path-to-nta", "ta"),
-                    filter_pairs=lambda k: k in ["ta1"],
-                    filter_columns=lambda k: k in ["ta1"],
-                    filter_nodes=lambda n: False,
+                    choice_pairs=["ta1"],
+                    choice_columns=["ta1"],
+                    choice_nodes="nothing",
                 )
             ],
         )
@@ -491,17 +491,17 @@ def test_filter_delta_tree_nta_ta() -> None:
         .difference(_create_empty_imm_tree())
         .filter(
             [
-                SDFilter(
+                SDFilterChoice(
                     path=("path-to-nta", "ta"),
-                    filter_pairs=lambda k: k in ["ta0"],
-                    filter_columns=lambda k: k in ["ta0"],
-                    filter_nodes=lambda n: False,
+                    choice_pairs=["ta0"],
+                    choice_columns=["ta0"],
+                    choice_nodes="nothing",
                 ),
-                SDFilter(
+                SDFilterChoice(
                     path=("path-to-nta", "ta"),
-                    filter_pairs=lambda k: False,
-                    filter_columns=lambda k: k in ["ta1"],
-                    filter_nodes=lambda n: False,
+                    choice_pairs="nothing",
+                    choice_columns=["ta1"],
+                    choice_nodes="nothing",
                 ),
             ],
         )
@@ -684,11 +684,11 @@ def test_filter_tree_no_paths() -> None:
 def test_filter_tree_wrong_node() -> None:
     filled_root = _create_filled_imm_tree()
     filters = [
-        SDFilter(
+        SDFilterChoice(
             path=("path-to-nta", "ta"),
-            filter_pairs=lambda k: True,
-            filter_columns=lambda k: True,
-            filter_nodes=lambda k: True,
+            choice_pairs="all",
+            choice_columns="all",
+            choice_nodes="all",
         ),
     ]
     filtered = filled_root.filter(filters)
@@ -700,11 +700,11 @@ def test_filter_tree_wrong_node() -> None:
 def test_filter_tree_paths_no_keys() -> None:
     filled_root = _create_filled_imm_tree()
     filters = [
-        SDFilter(
+        SDFilterChoice(
             path=("path-to-nta", "ta"),
-            filter_pairs=lambda k: True,
-            filter_columns=lambda k: True,
-            filter_nodes=lambda k: True,
+            choice_pairs="all",
+            choice_columns="all",
+            choice_nodes="all",
         ),
     ]
     filtered_root = filled_root.filter(filters)
@@ -725,11 +725,11 @@ def test_filter_tree_paths_no_keys() -> None:
 def test_filter_tree_paths_and_keys() -> None:
     filled_root = _create_filled_imm_tree()
     filters = [
-        SDFilter(
+        SDFilterChoice(
             path=("path-to-nta", "ta"),
-            filter_pairs=lambda k: k in ["ta1"],
-            filter_columns=lambda k: k in ["ta1"],
-            filter_nodes=lambda k: True,
+            choice_pairs=["ta1"],
+            choice_columns=["ta1"],
+            choice_nodes="all",
         ),
     ]
     filtered_root = filled_root.filter(filters)
@@ -768,17 +768,17 @@ def test_filter_tree_mixed() -> None:
     )
 
     filters = [
-        SDFilter(
+        SDFilterChoice(
             path=("path-to", "another"),
-            filter_pairs=lambda k: True,
-            filter_columns=lambda k: True,
-            filter_nodes=lambda k: True,
+            choice_pairs="all",
+            choice_columns="all",
+            choice_nodes="all",
         ),
-        SDFilter(
+        SDFilterChoice(
             path=("path-to-nta", "ta"),
-            filter_pairs=lambda k: k in ["ta0"],
-            filter_columns=lambda k: k in ["ta0"],
-            filter_nodes=lambda k: True,
+            choice_pairs=["ta0"],
+            choice_columns=["ta0"],
+            choice_nodes="all",
         ),
     ]
     filtered_root = _make_immutable_tree(filled_root_).filter(filters)
@@ -1156,23 +1156,23 @@ def test_merge_trees_2() -> None:
         (
             # container                   table                    attributes
             [
-                SDFilter(
+                SDFilterChoice(
                     path=("hardware", "components"),
-                    filter_pairs=lambda k: True,
-                    filter_columns=lambda k: True,
-                    filter_nodes=lambda k: True,
+                    choice_pairs="all",
+                    choice_columns="all",
+                    choice_nodes="all",
                 ),
-                SDFilter(
+                SDFilterChoice(
                     path=("networking", "interfaces"),
-                    filter_pairs=lambda k: True,
-                    filter_columns=lambda k: True,
-                    filter_nodes=lambda k: True,
+                    choice_pairs="all",
+                    choice_columns="all",
+                    choice_nodes="all",
                 ),
-                SDFilter(
+                SDFilterChoice(
                     path=("software", "os"),
-                    filter_pairs=lambda k: True,
-                    filter_columns=lambda k: True,
-                    filter_nodes=lambda k: True,
+                    choice_pairs="all",
+                    choice_columns="all",
+                    choice_nodes="all",
                 ),
             ],
             [("hardware", "system"), ("software", "applications")],
@@ -1180,7 +1180,7 @@ def test_merge_trees_2() -> None:
     ],
 )
 def test_filter_real_tree(
-    filters: Sequence[SDFilter],
+    filters: Sequence[SDFilterChoice],
     unavail: Sequence[tuple[str, str]],
 ) -> None:
     tree = _get_tree_store().load(host_name=HostName("tree_new_interfaces"))
@@ -1196,83 +1196,81 @@ def test_filter_real_tree(
     [
         (
             [
-                SDFilter(
+                SDFilterChoice(
                     path=("networking",),
-                    filter_pairs=lambda k: True,
-                    filter_columns=lambda k: True,
-                    filter_nodes=lambda k: True,
+                    choice_pairs="all",
+                    choice_columns="all",
+                    choice_nodes="all",
                 )
             ],
             3178,
         ),
         (
             [
-                SDFilter(
+                SDFilterChoice(
                     path=("networking",),
-                    filter_pairs=(
-                        lambda k: k
-                        in ["total_interfaces", "total_ethernet_ports", "available_ethernet_ports"]
+                    choice_pairs=(
+                        ["total_interfaces", "total_ethernet_ports", "available_ethernet_ports"]
                     ),
-                    filter_columns=(
-                        lambda k: k
-                        in ["total_interfaces", "total_ethernet_ports", "available_ethernet_ports"]
+                    choice_columns=(
+                        ["total_interfaces", "total_ethernet_ports", "available_ethernet_ports"]
                     ),
-                    filter_nodes=lambda k: False,
+                    choice_nodes="nothing",
                 ),
             ],
             None,
         ),
         (
             [
-                SDFilter(
+                SDFilterChoice(
                     path=("networking", "interfaces"),
-                    filter_pairs=lambda k: True,
-                    filter_columns=lambda k: True,
-                    filter_nodes=lambda k: True,
+                    choice_pairs="all",
+                    choice_columns="all",
+                    choice_nodes="all",
                 ),
             ],
             3178,
         ),
         (
             [
-                SDFilter(
+                SDFilterChoice(
                     path=("networking", "interfaces"),
-                    filter_pairs=lambda k: k in ["admin_status"],
-                    filter_columns=lambda k: k in ["admin_status"],
-                    filter_nodes=lambda k: False,
+                    choice_pairs=["admin_status"],
+                    choice_columns=["admin_status"],
+                    choice_nodes="nothing",
                 ),
             ],
             326,
         ),
         (
             [
-                SDFilter(
+                SDFilterChoice(
                     path=("networking", "interfaces"),
-                    filter_pairs=lambda k: k in ["admin_status", "FOOBAR"],
-                    filter_columns=lambda k: k in ["admin_status", "FOOBAR"],
-                    filter_nodes=lambda k: False,
+                    choice_pairs=["admin_status", "FOOBAR"],
+                    choice_columns=["admin_status", "FOOBAR"],
+                    choice_nodes="nothing",
                 ),
             ],
             326,
         ),
         (
             [
-                SDFilter(
+                SDFilterChoice(
                     path=("networking", "interfaces"),
-                    filter_pairs=lambda k: k in ["admin_status", "oper_status"],
-                    filter_columns=lambda k: k in ["admin_status", "oper_status"],
-                    filter_nodes=lambda k: False,
+                    choice_pairs=["admin_status", "oper_status"],
+                    choice_columns=["admin_status", "oper_status"],
+                    choice_nodes="nothing",
                 ),
             ],
             652,
         ),
         (
             [
-                SDFilter(
+                SDFilterChoice(
                     path=("networking", "interfaces"),
-                    filter_pairs=lambda k: k in ["admin_status", "oper_status", "FOOBAR"],
-                    filter_columns=lambda k: k in ["admin_status", "oper_status", "FOOBAR"],
-                    filter_nodes=lambda k: False,
+                    choice_pairs=["admin_status", "oper_status", "FOOBAR"],
+                    choice_columns=["admin_status", "oper_status", "FOOBAR"],
+                    choice_nodes="nothing",
                 ),
             ],
             652,
@@ -1280,7 +1278,7 @@ def test_filter_real_tree(
     ],
 )
 def test_filter_networking_tree(
-    filters: Sequence[SDFilter],
+    filters: Sequence[SDFilterChoice],
     amount_if_entries: int,
 ) -> None:
     tree = _get_tree_store().load(host_name=HostName("tree_new_interfaces"))
@@ -1298,11 +1296,11 @@ def test_filter_networking_tree_empty() -> None:
     tree = _get_tree_store().load(host_name=HostName("tree_new_interfaces"))
     filtered = tree.filter(
         [
-            SDFilter(
+            SDFilterChoice(
                 path=("networking",),
-                filter_pairs=lambda k: False,
-                filter_columns=lambda k: False,
-                filter_nodes=lambda k: False,
+                choice_pairs="nothing",
+                choice_columns="nothing",
+                choice_nodes="nothing",
             ),
         ]
     )

@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from pathlib import Path
-from typing import NamedTuple
 
 import pytest
 from pytest import MonkeyPatch
@@ -12,12 +11,12 @@ from pytest import MonkeyPatch
 import cmk.utils
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
-from cmk.utils.structured_data import ImmutableTree, SDPath
+from cmk.utils.structured_data import ImmutableTree, SDFilterChoice
 
 import cmk.gui.inventory
 from cmk.gui.inventory import (
-    _make_filters_from_api_request_paths,
-    _make_filters_from_permitted_paths,
+    _make_filter_choices_from_api_request_paths,
+    _make_filter_choices_from_permitted_paths,
     InventoryPath,
     PermittedPath,
     TreeSource,
@@ -131,30 +130,18 @@ def test_parse_tree_path(
     assert inventory_path.node_name == expected_node_name
 
 
-class ExpectedFilterResults(NamedTuple):
-    nodes: bool
-    restricted_nodes: bool
-    attributes: bool
-    restricted_attributes: bool
-    columns: bool
-    restricted_columns: bool
-
-
 @pytest.mark.parametrize(
-    "entry, expected_path, expected_filter_results",
+    "entry, expected_filter_choice",
     [
         (
             {
                 "visible_raw_path": "path.to.node",
             },
-            ("path", "to", "node"),
-            ExpectedFilterResults(
-                nodes=True,
-                restricted_nodes=True,
-                attributes=True,
-                restricted_attributes=True,
-                columns=True,
-                restricted_columns=True,
+            SDFilterChoice(
+                path=("path", "to", "node"),
+                choice_pairs="all",
+                choice_columns="all",
+                choice_nodes="all",
             ),
         ),
         (
@@ -162,14 +149,11 @@ class ExpectedFilterResults(NamedTuple):
                 "visible_raw_path": "path.to.node",
                 "nodes": ("choices", ["node"]),
             },
-            ("path", "to", "node"),
-            ExpectedFilterResults(
-                nodes=True,
-                restricted_nodes=False,
-                attributes=True,
-                restricted_attributes=True,
-                columns=True,
-                restricted_columns=True,
+            SDFilterChoice(
+                path=("path", "to", "node"),
+                choice_pairs="all",
+                choice_columns="all",
+                choice_nodes=["node"],
             ),
         ),
         (
@@ -177,14 +161,11 @@ class ExpectedFilterResults(NamedTuple):
                 "visible_raw_path": "path.to.node",
                 "attributes": ("choices", ["key"]),
             },
-            ("path", "to", "node"),
-            ExpectedFilterResults(
-                nodes=True,
-                restricted_nodes=True,
-                attributes=True,
-                restricted_attributes=False,
-                columns=True,
-                restricted_columns=True,
+            SDFilterChoice(
+                path=("path", "to", "node"),
+                choice_pairs=["key"],
+                choice_columns="all",
+                choice_nodes="all",
             ),
         ),
         (
@@ -192,26 +173,23 @@ class ExpectedFilterResults(NamedTuple):
                 "visible_raw_path": "path.to.node",
                 "columns": ("choices", ["key"]),
             },
-            ("path", "to", "node"),
-            ExpectedFilterResults(
-                nodes=True,
-                restricted_nodes=True,
-                attributes=True,
-                restricted_attributes=True,
-                columns=True,
-                restricted_columns=False,
+            SDFilterChoice(
+                path=("path", "to", "node"),
+                choice_pairs="all",
+                choice_columns=["key"],
+                choice_nodes="all",
             ),
         ),
         (
-            {"visible_raw_path": "path.to.node", "nodes": "nothing"},
-            ("path", "to", "node"),
-            ExpectedFilterResults(
-                nodes=False,
-                restricted_nodes=False,
-                attributes=True,
-                restricted_attributes=True,
-                columns=True,
-                restricted_columns=True,
+            {
+                "visible_raw_path": "path.to.node",
+                "nodes": "nothing",
+            },
+            SDFilterChoice(
+                path=("path", "to", "node"),
+                choice_pairs="all",
+                choice_columns="all",
+                choice_nodes="nothing",
             ),
         ),
         (
@@ -219,14 +197,11 @@ class ExpectedFilterResults(NamedTuple):
                 "visible_raw_path": "path.to.node",
                 "attributes": "nothing",
             },
-            ("path", "to", "node"),
-            ExpectedFilterResults(
-                nodes=True,
-                restricted_nodes=True,
-                attributes=False,
-                restricted_attributes=False,
-                columns=True,
-                restricted_columns=True,
+            SDFilterChoice(
+                path=("path", "to", "node"),
+                choice_pairs="nothing",
+                choice_columns="all",
+                choice_nodes="all",
             ),
         ),
         (
@@ -234,108 +209,67 @@ class ExpectedFilterResults(NamedTuple):
                 "visible_raw_path": "path.to.node",
                 "columns": "nothing",
             },
-            ("path", "to", "node"),
-            ExpectedFilterResults(
-                nodes=True,
-                restricted_nodes=True,
-                attributes=True,
-                restricted_attributes=True,
-                columns=False,
-                restricted_columns=False,
+            SDFilterChoice(
+                path=("path", "to", "node"),
+                choice_pairs="all",
+                choice_columns="nothing",
+                choice_nodes="all",
             ),
         ),
     ],
 )
-def test__make_filters_from_permitted_paths(
-    entry: PermittedPath,
-    expected_path: SDPath,
-    expected_filter_results: ExpectedFilterResults,
+def test__make_filter_choices_from_permitted_paths(
+    entry: PermittedPath, expected_filter_choice: SDFilterChoice
 ) -> None:
-    f = _make_filters_from_permitted_paths([entry])[0]
-
-    assert f.path == expected_path
-
-    assert f.filter_pairs("key") is expected_filter_results.attributes
-    assert f.filter_pairs("other") is expected_filter_results.restricted_attributes
-
-    assert f.filter_columns("key") is expected_filter_results.columns
-    assert f.filter_columns("other") is expected_filter_results.restricted_columns
-
-    assert f.filter_nodes("node") is expected_filter_results.nodes
-    assert f.filter_nodes("other") is expected_filter_results.restricted_nodes
+    assert _make_filter_choices_from_permitted_paths([entry])[0] == expected_filter_choice
 
 
 @pytest.mark.parametrize(
-    "entry, expected_path, expected_filter_results",
+    "entry, expected_filter_choice",
     [
         # Tuple format
         (
             ".path.to.node.",
-            ("path", "to", "node"),
-            ExpectedFilterResults(
-                nodes=True,
-                restricted_nodes=True,
-                attributes=True,
-                restricted_attributes=True,
-                columns=True,
-                restricted_columns=True,
+            SDFilterChoice(
+                path=("path", "to", "node"),
+                choice_pairs="all",
+                choice_columns="all",
+                choice_nodes="all",
             ),
         ),
         (
             ".path.to.node:",
-            ("path", "to", "node"),
-            ExpectedFilterResults(
-                nodes=True,
-                restricted_nodes=True,
-                attributes=True,
-                restricted_attributes=True,
-                columns=True,
-                restricted_columns=True,
+            SDFilterChoice(
+                path=("path", "to", "node"),
+                choice_pairs="all",
+                choice_columns="all",
+                choice_nodes="all",
             ),
         ),
         (
             ".path.to.node:*.key",
-            ("path", "to", "node"),
-            ExpectedFilterResults(
-                nodes=False,
-                restricted_nodes=False,
-                attributes=True,
-                restricted_attributes=False,
-                columns=True,
-                restricted_columns=False,
+            SDFilterChoice(
+                path=("path", "to", "node"),
+                choice_pairs=["key"],
+                choice_columns=["key"],
+                choice_nodes="nothing",
             ),
         ),
         (
             ".path.to.node.key",
-            ("path", "to", "node"),
-            ExpectedFilterResults(
-                nodes=False,
-                restricted_nodes=False,
-                attributes=True,
-                restricted_attributes=False,
-                columns=True,
-                restricted_columns=False,
+            SDFilterChoice(
+                path=("path", "to", "node"),
+                choice_pairs=["key"],
+                choice_columns=["key"],
+                choice_nodes="nothing",
             ),
         ),
     ],
 )
-def test__make_filters_from_api_request_paths(
-    entry: str,
-    expected_path: SDPath,
-    expected_filter_results: ExpectedFilterResults,
+def test__make_filter_choices_from_api_request_paths(
+    entry: str, expected_filter_choice: SDFilterChoice
 ) -> None:
-    f = _make_filters_from_api_request_paths([entry])[0]
-
-    assert f.path == expected_path
-
-    assert f.filter_pairs("key") is expected_filter_results.attributes
-    assert f.filter_pairs("other") is expected_filter_results.restricted_attributes
-
-    assert f.filter_columns("key") is expected_filter_results.columns
-    assert f.filter_columns("other") is expected_filter_results.restricted_columns
-
-    assert f.filter_nodes("node") is expected_filter_results.nodes
-    assert f.filter_nodes("other") is expected_filter_results.restricted_nodes
+    assert _make_filter_choices_from_api_request_paths([entry])[0] == expected_filter_choice
 
 
 @pytest.mark.parametrize(

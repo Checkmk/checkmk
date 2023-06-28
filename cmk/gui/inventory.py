@@ -31,7 +31,7 @@ from cmk.utils.structured_data import (
     ImmutableTree,
     load_tree,
     parse_visible_raw_path,
-    SDFilter,
+    SDFilterChoice,
     SDKey,
     SDPath,
     SDRawTree,
@@ -126,11 +126,11 @@ class PermittedPath(_PermittedPath, total=False):
     nodes: Literal["nothing"] | tuple[str, Sequence[str]]
 
 
-def _make_filters_from_permitted_paths(
+def _make_filter_choices_from_permitted_paths(
     permitted_paths: Sequence[PermittedPath],
-) -> Sequence[SDFilter]:
+) -> Sequence[SDFilterChoice]:
     return [
-        SDFilter.from_choices(
+        SDFilterChoice(
             path=parse_visible_raw_path(entry["visible_raw_path"]),
             choice_pairs=a[-1] if isinstance(a := entry.get("attributes", "all"), tuple) else a,
             choice_columns=c[-1] if isinstance(c := entry.get("columns", "all"), tuple) else c,
@@ -155,7 +155,7 @@ def load_filtered_and_merged_tree(row: Row) -> ImmutableTree:
 
     merged_tree = inventory_tree.merge(status_data_tree)
     if isinstance(permitted_paths := _get_permitted_inventory_paths(), list):
-        return merged_tree.filter(_make_filters_from_permitted_paths(permitted_paths))
+        return merged_tree.filter(_make_filter_choices_from_permitted_paths(permitted_paths))
 
     return merged_tree
 
@@ -348,7 +348,7 @@ def _get_history(
     corrupted_history_files: set[Path] = set()
     history: list[HistoryEntry] = []
     filters = (
-        _make_filters_from_permitted_paths(permitted_paths)
+        _make_filter_choices_from_permitted_paths(permitted_paths)
         if isinstance(permitted_paths := _get_permitted_inventory_paths(), list)
         else None
     )
@@ -458,7 +458,7 @@ class _CachedDeltaTreeLoader:
     previous_timestamp: int | None
     current_timestamp: int
     # TODO Cleanup
-    filters: Sequence[SDFilter] | None
+    filters: Sequence[SDFilterChoice] | None
 
     @property
     def _path(self) -> Path:
@@ -675,23 +675,25 @@ def has_inventory(hostname: HostName) -> bool:
     )
 
 
-def _make_filters_from_api_request_paths(api_request_paths: Sequence[str]) -> Sequence[SDFilter]:
-    def _make_filter(inventory_path: InventoryPath) -> SDFilter:
+def _make_filter_choices_from_api_request_paths(
+    api_request_paths: Sequence[str],
+) -> Sequence[SDFilterChoice]:
+    def _make_filter_choice(inventory_path: InventoryPath) -> SDFilterChoice:
         if inventory_path.key is None:
-            return SDFilter.from_choices(
+            return SDFilterChoice(
                 path=inventory_path.path,
                 choice_pairs="all",
                 choice_columns="all",
                 choice_nodes="all",
             )
-        return SDFilter.from_choices(
+        return SDFilterChoice(
             path=inventory_path.path,
             choice_pairs=[inventory_path.key],
             choice_columns=[inventory_path.key],
             choice_nodes="nothing",
         )
 
-    return [_make_filter(InventoryPath.parse(raw_path)) for raw_path in api_request_paths]
+    return [_make_filter_choice(InventoryPath.parse(raw_path)) for raw_path in api_request_paths]
 
 
 def inventory_of_host(host_name: HostName, api_request) -> SDRawTree:  # type: ignore[no-untyped-def]
@@ -701,7 +703,9 @@ def inventory_of_host(host_name: HostName, api_request) -> SDRawTree:  # type: i
 
     tree = load_filtered_and_merged_tree(get_status_data_via_livestatus(site, host_name))
     if "paths" in api_request:
-        return tree.filter(_make_filters_from_api_request_paths(api_request["paths"])).serialize()
+        return tree.filter(
+            _make_filter_choices_from_api_request_paths(api_request["paths"])
+        ).serialize()
 
     return tree.serialize()
 

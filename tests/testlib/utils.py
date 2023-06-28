@@ -13,7 +13,7 @@ import re
 import subprocess
 import sys
 import textwrap
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
 
 import pexpect  # type: ignore[import]
@@ -334,3 +334,20 @@ def spawn_expect_process(
             rc = 3
 
     return rc
+
+
+def execute(command: Sequence[str]) -> subprocess.CompletedProcess:
+    try:
+        proc = subprocess.run(
+            command,
+            encoding="utf-8",
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            close_fds=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(
+            f"Subprocess terminated non-successfully. Stdout:\n{e.stdout}\nStderr:\n{e.stderr}"
+        ) from e
+    return proc

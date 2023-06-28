@@ -8,31 +8,14 @@ import logging
 import os
 import socketserver
 import subprocess
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator
 from multiprocessing import Process
 from pathlib import Path
 
 from tests.testlib.site import Site
+from tests.testlib.utils import execute
 
 logger = logging.getLogger(__name__)
-
-
-# TODO: move this function in a common utils module
-def execute(command: Sequence[str]) -> subprocess.CompletedProcess:
-    try:
-        proc = subprocess.run(
-            command,
-            encoding="utf-8",
-            stdin=subprocess.DEVNULL,
-            capture_output=True,
-            close_fds=True,
-            check=True,
-        )
-    except subprocess.CalledProcessError as e:
-        raise RuntimeError(
-            f"Subprocess terminated non-successfully. Stdout:\n{e.stdout}\nStderr:\n{e.stderr}"
-        ) from e
-    return proc
 
 
 def get_package_type() -> str:

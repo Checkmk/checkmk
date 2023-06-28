@@ -18,10 +18,14 @@ from tests.testlib.agent import (
     agent_controller_daemon,
     clean_agent_controller,
     download_and_install_agent_package,
-    execute,
 )
 from tests.testlib.site import Site, SiteFactory
-from tests.testlib.utils import current_base_branch_name, PExpectDialog, spawn_expect_process
+from tests.testlib.utils import (
+    current_base_branch_name,
+    execute,
+    PExpectDialog,
+    spawn_expect_process,
+)
 from tests.testlib.version import CMKVersion, version_gte
 
 from cmk.utils.version import Edition

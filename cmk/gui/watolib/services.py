@@ -882,7 +882,6 @@ def execute_discovery_job(api_request: StartDiscoveryRequest) -> DiscoveryResult
     return job.get_result(api_request)
 
 
-@job_registry.register
 class ServiceDiscoveryBackgroundJob(BackgroundJob):
     """The background job is always executed on the site where the host is located on"""
 
@@ -1030,3 +1029,6 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
 
     def _check_table_file_path(self):
         return os.path.join(self.get_work_dir(), "check_table.mk")
+
+
+job_registry.register(ServiceDiscoveryBackgroundJob)

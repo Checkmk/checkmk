@@ -243,10 +243,10 @@ class DiscoveryInfo(TypedDict):
 
 
 class Discovery:
-    def __init__(  # type: ignore[no-untyped-def]
+    def __init__(
         self,
-        host,
-        discovery_options,
+        host: CREHost,
+        discovery_options: DiscoveryOptions,
         update_target: str | None,
         update_services: list[str],
         update_source: str | None = None,

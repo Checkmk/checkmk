@@ -28,6 +28,22 @@ from ._agentctl import AgentCtlMessage
 __all__ = ["TCPEncryptionHandling", "TCPFetcher"]
 
 
+def recvall(sock: socket.socket, flags: int = 0) -> bytes:
+    buffer: list[bytes] = []
+    try:
+        while True:
+            data = sock.recv(4096, flags)
+            if not data:
+                break
+            buffer.append(data)
+    except OSError as e:
+        if cmk.utils.debug.enabled():
+            raise
+        raise MKFetcherError("Communication failed: %s" % e)
+
+    return b"".join(buffer)
+
+
 class TCPEncryptionHandling(enum.Enum):
     TLS_ENCRYPTED_ONLY = enum.auto()
     ANY_ENCRYPTED = enum.auto()
@@ -156,7 +172,8 @@ class TCPFetcher(Fetcher[AgentRawData]):
 
         if protocol is TransportProtocol.TLS:
             with self._wrap_tls(controller_uuid) as ssock:
-                raw_agent_data = self._recvall(ssock)
+                self._logger.debug("Reading data from agent")
+                raw_agent_data = recvall(ssock)
             try:
                 agent_data = AgentCtlMessage.from_bytes(raw_agent_data).payload
             except ValueError as e:
@@ -165,7 +182,8 @@ class TCPFetcher(Fetcher[AgentRawData]):
                 agent_data[:2], empty_msg="Empty payload from controller at %s:%d" % self.address
             )
 
-        return self._recvall(self._socket, socket.MSG_WAITALL), protocol
+        self._logger.debug("Reading data from agent")
+        return recvall(self._socket, socket.MSG_WAITALL), protocol
 
     def _detect_transport_protocol(self, raw_protocol: bytes, empty_msg: str) -> TransportProtocol:
         try:
@@ -212,22 +230,6 @@ class TCPFetcher(Fetcher[AgentRawData]):
             return ctx.wrap_socket(self._socket, server_hostname=str(controller_uuid))
         except ssl.SSLError as e:
             raise MKFetcherError("Error establishing TLS connection") from e
-
-    def _recvall(self, sock: socket.socket, flags: int = 0) -> bytes:
-        self._logger.debug("Reading data from agent")
-        buffer: list[bytes] = []
-        try:
-            while True:
-                data = sock.recv(4096, flags)
-                if not data:
-                    break
-                buffer.append(data)
-        except OSError as e:
-            if cmk.utils.debug.enabled():
-                raise
-            raise MKFetcherError("Communication failed: %s" % e)
-
-        return b"".join(buffer)
 
     def _decrypt(self, protocol: TransportProtocol, output: bytes) -> bytes:
         if not output:

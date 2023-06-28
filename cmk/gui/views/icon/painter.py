@@ -18,10 +18,12 @@ from cmk.gui.config import active_config
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import ColumnName, Row
+from cmk.gui.type_defs import ColumnName
+from cmk.gui.type_defs import Icon as IconSpec
+from cmk.gui.type_defs import Row
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
-from cmk.gui.view_utils import CellSpec
+from cmk.gui.view_utils import CellSpec, CSVExportError
 
 from ..painter.v0.base import Cell, Painter
 from ..painter.v0.helpers import replace_action_url_macros, transform_action_url
@@ -43,7 +45,7 @@ class LegacyIconEntry(ABCIconEntry):
 
 @dataclass
 class IconEntry(ABCIconEntry):
-    icon_name: str
+    icon_name: IconSpec
     title: str | None = None
     url_spec: None | tuple[str, str] | str = None
 
@@ -71,7 +73,13 @@ class PainterServiceIcons(Painter):
         return ("",)  # Do not account for in grouping
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_icons("service", row)
+        return _paint_icons("service", row, _get_row_icons("service", row))
+
+    def _compute_data(self, row: Row, cell: Cell) -> list[IconSpec]:
+        return [i.icon_name for i in _get_row_icons("service", row) if isinstance(i, IconEntry)]
+
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+        raise CSVExportError()
 
 
 class PainterHostIcons(Painter):
@@ -97,27 +105,22 @@ class PainterHostIcons(Painter):
         return ("",)  # Do not account for in grouping
 
     def render(self, row: Row, cell: Cell) -> CellSpec:
-        return _paint_icons("host", row)
+        return _paint_icons("host", row, _get_row_icons("host", row))
+
+    def _compute_data(self, row: Row, cell: Cell) -> list[IconSpec]:
+        return [i.icon_name for i in _get_row_icons("host", row) if isinstance(i, IconEntry)]
+
+    def export_for_csv(self, row: Row, cell: Cell) -> str | HTML:
+        raise CSVExportError()
 
 
-def _paint_icons(what: IconObjectType, row: Row) -> CellSpec:
+def _paint_icons(
+    what: IconObjectType, row: Row, toplevel_icons: Sequence[ABCIconEntry]
+) -> CellSpec:
     """Paint column with various icons
 
     The icons use a plugin based mechanism so it is possible to register own icon "handlers".
     """
-    # EC: In case of unrelated events also skip rendering this painter. All the icons
-    # that display a host state are useless in this case. Maybe we make this decision
-    # individually for the single icons one day.
-    if not row["host_name"] or row.get("event_is_unrelated"):
-        return "", ""  # Host probably does not exist
-
-    toplevel_icons = get_icons(what, row, toplevel=True)
-
-    # In case of non HTML output, just return the top level icon names
-    # as space separated string
-    if html.output_format != "html":
-        return "icons", " ".join(i.icon_name for i in toplevel_icons if isinstance(i, IconEntry))
-
     output = HTML()
     for icon in toplevel_icons:
         if isinstance(icon, IconEntry):
@@ -139,6 +142,16 @@ def _paint_icons(what: IconObjectType, row: Row) -> CellSpec:
             output += icon.code
 
     return "icons", output
+
+
+def _get_row_icons(what: IconObjectType, row: Row) -> list[ABCIconEntry]:
+    # EC: In case of unrelated events also skip rendering this painter. All the icons
+    # that display a host state are useless in this case. Maybe we make this decision
+    # individually for the single icons one day.
+    if not row["host_name"] or row.get("event_is_unrelated"):
+        return []  # Host probably does not exist
+
+    return get_icons(what, row, toplevel=True)
 
 
 def get_icons(what: IconObjectType, row: Row, toplevel: bool) -> list[ABCIconEntry]:
@@ -220,7 +233,6 @@ def _process_icon(  # pylint: disable=too-many-branches
     # b) single string - the icon name (without .png)
     # c) tuple         - icon, title
     # d) triple        - icon, title, url
-    result: None | str | HTML | tuple[str, str] | tuple[str, str, str]
     try:
         result = icon.render(what, row, tags, custom_vars)
     except Exception:
@@ -236,7 +248,7 @@ def _process_icon(  # pylint: disable=too-many-branches
         return
 
     title, url = None, None
-    icon_name: str = ""
+    icon_name: IconSpec = ""
     if isinstance(result, (str, HTML)):
         # TODO: This is handling the deprecated API with 1.2.7. Remove this one day. But there
         # are icons that still use this API. These need to be cleaned up before.

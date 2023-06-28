@@ -10,7 +10,9 @@ from collections.abc import Sequence
 
 from cmk.utils.tags import TagID
 
-from cmk.gui.type_defs import ColumnName, Row
+from cmk.gui.type_defs import ColumnName
+from cmk.gui.type_defs import Icon as IconSpec
+from cmk.gui.type_defs import Row
 from cmk.gui.utils.html import HTML
 
 
@@ -47,7 +49,7 @@ class Icon(abc.ABC):
         row: Row,
         tags: list[TagID],
         custom_vars: dict[str, str],
-    ) -> None | str | HTML | tuple[str, str] | tuple[str, str, str]:
+    ) -> None | IconSpec | HTML | tuple[IconSpec, str] | tuple[IconSpec, str, str]:
         raise NotImplementedError()
 
     def columns(self) -> Sequence[ColumnName]:

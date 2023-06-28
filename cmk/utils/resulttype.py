@@ -149,9 +149,7 @@ class OK(Result[T_co, E_co]):
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
-        if not isinstance(other, OK):
-            return False
-        return bool(self.ok == other.ok)
+        return self.ok == other.ok if isinstance(other, OK) else False
 
     def __lt__(self, other: Result[T_co, E_co]) -> bool:
         if not isinstance(other, Result):
@@ -159,7 +157,7 @@ class OK(Result[T_co, E_co]):
         if isinstance(other, Error):
             return True
         assert isinstance(other, OK)
-        return bool(self.ok < other.ok)
+        return self.ok < other.ok
 
     def __gt__(self, other: Result[T_co, E_co]) -> bool:
         if not isinstance(other, Result):
@@ -167,7 +165,7 @@ class OK(Result[T_co, E_co]):
         if isinstance(other, Error):
             return False
         assert isinstance(other, OK)
-        return bool(self.ok > other.ok)
+        return self.ok > other.ok
 
     def __iter__(self) -> Iterable[T_co]:
         return iter((self.ok,))
@@ -196,9 +194,7 @@ class OK(Result[T_co, E_co]):
         return func(self.join().ok)
 
     def join(self) -> OK[T_co, E_co]:
-        if isinstance(self.ok, OK):
-            return self.ok.join()
-        return self
+        return self.ok.join() if isinstance(self.ok, OK) else self
 
     def map(self, func: Callable[[T_co], U_co]) -> OK[U_co, E_co]:
         return OK(func(self.join().ok))
@@ -234,9 +230,7 @@ class Error(Result[T_co, E_co]):
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Result):
             return NotImplemented
-        if not isinstance(other, Error):
-            return False
-        return bool(self.error == other.error)
+        return self.error == other.error if isinstance(other, Error) else False
 
     def __lt__(self, other: Result[T_co, E_co]) -> bool:
         if not isinstance(other, Result):
@@ -244,7 +238,7 @@ class Error(Result[T_co, E_co]):
         if isinstance(other, OK):
             return False
         assert isinstance(other, Error)
-        return bool(self._error < other._error)
+        return self._error < other._error
 
     def __gt__(self, other: Result[T_co, E_co]) -> bool:
         if not isinstance(other, Result):
@@ -252,7 +246,7 @@ class Error(Result[T_co, E_co]):
         if isinstance(other, OK):
             return True
         assert isinstance(other, Error)
-        return bool(self._error > other._error)
+        return self._error > other._error
 
     def __iter__(self) -> Iterable[T_co]:
         return iter(())
@@ -281,9 +275,7 @@ class Error(Result[T_co, E_co]):
         return Error(self.join().error)
 
     def join(self) -> Error[T_co, E_co]:
-        if isinstance(self.error, Error):
-            return self.error.join()
-        return self
+        return self.error.join() if isinstance(self.error, Error) else self
 
     def map(self, _func: Callable[[T_co], U_co]) -> Error[U_co, E_co]:
         return Error(self.join().error)

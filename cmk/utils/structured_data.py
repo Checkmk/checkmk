@@ -233,11 +233,13 @@ def make_filter_func(choice: Literal["nothing", "all"] | Sequence[str]) -> Calla
     #   - ('choices', ['some', 'keys'])
     #   - MISSING (see mk/base/agent_based/inventory.py::_get_intervals_from_config) -> _use_nothing
     #   - 'all' -> _use_all
-    if choice == "nothing":
-        return lambda k: False
-    if choice == "all":
-        return lambda k: True
-    return lambda k: k in choice
+    match choice:
+        case "nothing":
+            return lambda k: False
+        case "all":
+            return lambda k: True
+        case _:
+            return lambda k: k in choice
 
 
 class SDFilterChoice(NamedTuple):
@@ -469,7 +471,7 @@ class _MutableTable:
 
             if old_row:
                 # Update row with key column entries
-                old_row.update({k: other.rows_by_ident[ident][k] for k in other.key_columns})
+                old_row |= {k: other.rows_by_ident[ident][k] for k in other.key_columns}
                 self._add_row(ident, old_row)
                 update_result.add_row_reason(path, ident, "row", old_row)
 
@@ -932,8 +934,8 @@ class _DeltaDict:
             elif keep_identical:
                 compared_dict.setdefault(key, (old_value, old_value))
 
-        compared_dict.update({k: _encode_as_new(right[k]) for k in compared_keys.only_new})
-        compared_dict.update({k: _encode_as_removed(left[k]) for k in compared_keys.only_old})
+        compared_dict |= {k: _encode_as_new(right[k]) for k in compared_keys.only_new}
+        compared_dict |= {k: _encode_as_removed(left[k]) for k in compared_keys.only_old}
 
         return cls(
             result=compared_dict,
@@ -1211,10 +1213,10 @@ class ImmutableTree:
             raw_table = raw_tree["Table"]
             raw_nodes = raw_tree["Nodes"]
         except KeyError:
-            return _deserialize_legacy_node(path=tuple(), raw_tree=raw_tree)
+            return _deserialize_legacy_node(path=(), raw_tree=raw_tree)
 
         return ImmutableTree._deserialize(
-            path=tuple(),
+            path=(),
             raw_attributes=raw_attributes,
             raw_table=raw_table,
             raw_nodes=raw_nodes,

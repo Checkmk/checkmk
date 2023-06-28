@@ -103,9 +103,7 @@ class AuxTag:
 
     @property
     def choice_title(self) -> str:
-        if self.topic:
-            return f"{self.topic} / {self.title}"
-        return self.title
+        return f"{self.topic} / {self.title}" if self.topic else self.title
 
     def validate(self) -> None:
         if not self.id:
@@ -189,10 +187,7 @@ class AuxTagList:
         return {tag.id for tag in self._tags}
 
     def get_dict_format(self) -> list[AuxTagSpec]:
-        response = []
-        for tag in self._tags:
-            response.append(tag.to_config())
-        return response
+        return [tag.to_config() for tag in self._tags]
 
     def get_choices(self) -> Sequence[tuple[str, str]]:
         return [(aux_tag.id, aux_tag.title) for aux_tag in self._tags]
@@ -254,9 +249,7 @@ class TagGroup:
 
     @property
     def choice_title(self) -> str:
-        if self.topic:
-            return f"{self.topic} / {self.title}"
-        return self.title
+        return f"{self.topic} / {self.title}" if self.topic else self.title
 
     @property
     def is_checkbox_tag_group(self) -> bool:
@@ -285,10 +278,7 @@ class TagGroup:
         return response
 
     def get_tag_choices(self) -> Sequence[tuple[TagID | None, str]]:
-        choices = []
-        for tag in self.tags:
-            choices.append((tag.id, tag.title))
-        return choices
+        return [(tag.id, tag.title) for tag in self.tags]
 
     def get_tag_group_config(self, value: TagID | None) -> Mapping[TagGroupID, TagID]:
         """Return the set of tag groups which should be set for a host based on the given value"""
@@ -301,7 +291,7 @@ class TagGroup:
         for grouped_tag in self.tags:
             if grouped_tag.id == value:
                 # We need to convert here.  Typing smell?
-                tag_groups.update({TagGroupID(t): t for t in grouped_tag.aux_tag_ids})
+                tag_groups |= {TagGroupID(t): t for t in grouped_tag.aux_tag_ids}
 
         return tag_groups
 
@@ -340,13 +330,11 @@ class TagConfig:
     def get_topic_choices(self) -> Sequence[tuple[str, str]]:
         names = set()
         for tag_group in self.tag_groups:
-            topic = tag_group.topic or _("Tags")
-            if topic:
+            if topic := tag_group.topic or _("Tags"):
                 names.add((topic, topic))
 
         for aux_tag in self.aux_tag_list.get_tags():
-            topic = aux_tag.topic or _("Tags")
-            if topic:
+            if topic := aux_tag.topic or _("Tags"):
                 names.add((topic, topic))
 
         return sorted(list(names), key=lambda x: x[1])
@@ -362,10 +350,7 @@ class TagConfig:
         return self.get_tag_group(tag_group_id) is not None
 
     def get_tag_group(self, tag_group_id: TagGroupID) -> TagGroup | None:
-        for group in self.tag_groups:
-            if group.id == tag_group_id:
-                return group
-        return None
+        return next((group for group in self.tag_groups if group.id == tag_group_id), None)
 
     def remove_tag_group(self, tag_group_id: TagGroupID) -> None:
         group = self.get_tag_group(tag_group_id)
@@ -395,12 +380,11 @@ class TagConfig:
         self.aux_tag_list.update(aux_tag_id, aux_tag)
 
     def remove_aux_tag(self, tag_id: TagID) -> None:
-        tag_groups_using_aux_tag = []
+        tag_groups_using_aux_tag: list[str] = []
         for group in self.tag_groups:
-            for grouped_tag in group.tags:
-                if tag_id in grouped_tag.aux_tag_ids:
-                    tag_groups_using_aux_tag.append(group.title)
-
+            tag_groups_using_aux_tag.extend(
+                group.title for grouped_tag in group.tags if tag_id in grouped_tag.aux_tag_ids
+            )
         if tag_groups_using_aux_tag:
             raise AuxTagInUseError(
                 _(
@@ -437,11 +421,10 @@ class TagConfig:
                 if grouped_tag.id == tag_id:
                     return grouped_tag
 
-        for aux_tag in self.aux_tag_list.get_tags():
-            if aux_tag.id == tag_id:
-                return aux_tag
-
-        return None
+        return next(
+            (aux_tag for aux_tag in self.aux_tag_list.get_tags() if aux_tag.id == tag_id),
+            None,
+        )
 
     # TODO: Change API to use __add__/__setitem__?
     def insert_tag_group(self, tag_group: TagGroup) -> None:
@@ -484,13 +467,11 @@ class TagConfig:
     def valid_id(self, tag_aux_id: TagID | TagGroupID) -> bool:
         """Verify if the proposed id is not already in use"""
         # Back to str, the code is untyped.
-        if str(tag_aux_id) in [str(tag_group.id) for tag_group in self.tag_groups]:
-            return False
+        tag_aux_id_str = str(tag_aux_id)
 
-        if str(tag_aux_id) in [str(aux_tag.id) for aux_tag in self.aux_tag_list.get_tags()]:
-            return False
-
-        return True
+        return all(tag_aux_id_str != str(tag_group.id) for tag_group in self.tag_groups) and all(
+            tag_aux_id_str != str(aux_tag.id) for aux_tag in self.aux_tag_list.get_tags()
+        )
 
     # TODO: cleanup this mess
     # This validation is quite gui specific, I do not want to introduce this into the base classes

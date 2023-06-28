@@ -182,7 +182,7 @@ class Version:
     @classmethod
     def _parse_release_version(cls, vstring: str) -> Self:
         if not (match := cls._RGX_STABLE.fullmatch(vstring)):
-            raise ValueError('Invalid version string "%s"' % vstring)
+            raise ValueError(f'Invalid version string "{vstring}"')
 
         match match.group(1, 2, 3, 4, 5):
             case major, minor, sub, None, None:
@@ -198,7 +198,7 @@ class Version:
     @classmethod
     def _parse_daily_version(cls, vstring: str) -> Self:
         if not (match := cls._RGX_DAILY.fullmatch(vstring)):
-            raise ValueError('Invalid version string "%s"' % vstring)
+            raise ValueError(f'Invalid version string "{vstring}"')
 
         (major, minor, sub, year, month, day) = match.group(1, 2, 3, 4, 5, 6)
 
@@ -594,7 +594,7 @@ def _get_os_info() -> str:
         return info["PRETTY_NAME"]
 
     if info:
-        return "%s" % info
+        return f"{info}"
 
     if os.environ.get("OMD_ROOT"):
         disto_info = os.environ["OMD_ROOT"] + "/share/omd/distro.info"

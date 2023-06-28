@@ -31,21 +31,21 @@ class TranslationOptionsSpec(TypedDict, total=False):
 
 
 def translate_hostname(translation: TranslationOptions, hostname: str) -> HostName:
-    return HostName(_translate(translation, str(hostname)))
+    return HostName(_translate(translation, hostname))
 
 
 def translate_service_description(
     translation: TranslationOptions, service_description: str
 ) -> ServiceName:
-    if service_description.strip() in [
+    if service_description.strip() in {
         "Check_MK",
         "Check_MK Agent",
         "Check_MK Discovery",
         "Check_MK inventory",
         "Check_MK HW/SW Inventory",
-    ]:
+    }:
         return service_description.strip()
-    return ServiceName(_translate(translation, str(service_description)))
+    return ServiceName(_translate(translation, service_description))
 
 
 def _translate(translation: TranslationOptions, name: str) -> str:
@@ -73,9 +73,7 @@ def _translate(translation: TranslationOptions, name: str) -> str:
         if not expr.endswith("$"):
             expr += "$"
         rcomp = regex(expr)
-        # re.RegexObject.sub() by hand to handle non-existing references
-        mo = rcomp.match(name)
-        if mo:
+        if mo := rcomp.match(name):
             name = subst
             for nr, text in enumerate(mo.groups("")):
                 name = name.replace("\\%d" % (nr + 1), text)

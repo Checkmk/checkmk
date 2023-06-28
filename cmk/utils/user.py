@@ -112,7 +112,7 @@ class UserId(str):
                 ...
                 ValueError: Username too long: '𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈𐌈…'
         """
-        if text == "":
+        if not text:
             # see UserId.builtin
             return
 

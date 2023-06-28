@@ -27,7 +27,7 @@ def omd_site() -> SiteId:
 
 
 def url_prefix() -> str:
-    return "/%s/" % omd_site()
+    return f"/{omd_site()}/"
 
 
 def get_omd_config(omd_root: Path | None = None) -> OMDConfig:
@@ -46,6 +46,4 @@ def get_omd_config(omd_root: Path | None = None) -> OMDConfig:
 
 def get_apache_port(omd_root: Path | None = None) -> int:
     port = get_omd_config(omd_root).get("CONFIG_APACHE_TCP_PORT")
-    if port is None:
-        return 80
-    return int(port)
+    return 80 if port is None else int(port)

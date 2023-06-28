@@ -36,21 +36,19 @@ def _signl4_msg(context: dict[str, str]) -> dict[str, object]:
 
     # Prepare description information
     if context.get("WHAT", "") == "SERVICE":
-        if notification_type in [ "PROBLEM", "RECOVERY" ]:
+        if notification_type in ["PROBLEM", "RECOVERY"]:
             description += " (" + service_desc + ")"
         else:
             description += " (" + service_desc + ")"
     else:
-        if notification_type in [ "PROBLEM", "RECOVERY" ]:
+        if notification_type in ["PROBLEM", "RECOVERY"]:
             host_state = context.get("HOSTSTATE", "") or ""
             description += " (" + host_state + ")"
         else:
             description += " (" + host_state + ")"
-
     # Remove placeholder "$SERVICEPROBLEMID$" if exists
     if service_problem_id.find("$") != -1:
         service_problem_id = ""
-
     # Check if this is a new problem or a recovery
     s4_status = "new" if notification_type != "RECOVERY" else "resolved"
 
@@ -62,7 +60,6 @@ def _signl4_msg(context: dict[str, str]) -> dict[str, object]:
         service_desc_bytes = service_desc.encode("ascii")
         service_desc_base64 = base64.b64encode(service_desc_bytes).decode()
         service_desc_id_part = ":ServiceDesc:" + service_desc_base64
-
     return {
         "Title": description,
         "HostName": host_name,

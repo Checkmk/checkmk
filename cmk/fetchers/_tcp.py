@@ -171,7 +171,11 @@ class TCPFetcher(Fetcher[AgentRawData]):
         self._validate_protocol(protocol, is_registered=controller_uuid is not None)
 
         if protocol is TransportProtocol.TLS:
-            with self._wrap_tls(controller_uuid) as ssock:
+            if controller_uuid is None:
+                raise MKFetcherError("Agent controller not registered")
+
+            self._logger.debug("Reading data from agent via TLS socket")
+            with self._wrap_tls(self._socket, controller_uuid) as ssock:
                 self._logger.debug("Reading data from agent")
                 raw_agent_data = recvall(ssock)
             try:
@@ -215,11 +219,8 @@ class TCPFetcher(Fetcher[AgentRawData]):
             case never:
                 assert_never(never)
 
-    def _wrap_tls(self, controller_uuid: UUID | None) -> ssl.SSLSocket:
-        if controller_uuid is None:
-            raise MKFetcherError("Agent controller not registered")
-
-        self._logger.debug("Reading data from agent via TLS socket")
+    @staticmethod
+    def _wrap_tls(sock: socket.socket, controller_uuid: UUID) -> ssl.SSLSocket:
         if not paths.agent_cert_store.exists():
             # agent cert store should be written on agent receiver startup.
             # However, if it's missing for some reason, we have to write it.
@@ -227,7 +228,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
         try:
             ctx = ssl.create_default_context(cafile=str(paths.agent_cert_store))
             ctx.load_cert_chain(certfile=paths.site_cert_file)
-            return ctx.wrap_socket(self._socket, server_hostname=str(controller_uuid))
+            return ctx.wrap_socket(sock, server_hostname=str(controller_uuid))
         except ssl.SSLError as e:
             raise MKFetcherError("Error establishing TLS connection") from e
 

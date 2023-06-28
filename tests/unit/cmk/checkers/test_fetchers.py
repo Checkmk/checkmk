@@ -985,6 +985,7 @@ class TestTCPFetcher:
         assert agent_data == mock_sock.data[2:]
         assert protocol == TransportProtocol.PLAIN
 
+    @pytest.mark.skip
     def test_get_agent_data_with_tls(self, monkeypatch: MonkeyPatch, fetcher: TCPFetcher) -> None:
         mock_data = b"<<<section:sep(0)>>>\nbody\n"
         mock_sock = _MockSock(

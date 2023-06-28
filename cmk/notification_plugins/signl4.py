@@ -6,8 +6,8 @@
 #          SIGNL4 <info@signl4.com>
 # SIGNL4: Mobile alerting and incident response.
 
-from os import environ
 import base64
+from os import environ
 
 from cmk.notification_plugins.utils import post_request, process_by_result_map
 from cmk.notification_plugins.utils import retrieve_from_passwordstore as passwords
@@ -18,7 +18,6 @@ RESULT_MAP = {
     (300, 499): StateInfo(2, "str", "Error"),
     (500, 599): StateInfo(1, "str", "Server-Error"),
 }
-
 
 def _signl4_url() -> str:
     password = passwords(environ["NOTIFY_PARAMETER_PASSWORD"])

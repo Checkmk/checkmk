@@ -257,7 +257,7 @@ class TestTimeseries:
         assert (
             prediction.TimeSeries(
                 [1, 2, None, 4, None, 5],
-                timewindow=(7, 8, 9),
+                time_window=(7, 8, 9),
             ).count(None)
             == 2
         )

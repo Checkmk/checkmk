@@ -82,7 +82,7 @@ def _discover_path_importables(
         if pkg_dir_path.parts[-1] == "__pycache__":
             continue
 
-        if all(Path(_).suffix != ".py" for _ in file_names):
+        if all(Path(f).suffix != ".py" for f in file_names):
             continue
 
         rel_pt = pkg_dir_path.relative_to(pkg_pth)
@@ -118,8 +118,7 @@ def load_plugins(
     # occurring while compiling.
     __import__(package_name)
     package = sys.modules[package_name]
-    module_path: list[str] | None = getattr(package, "__path__")
-    if module_path:
+    if module_path := getattr(package, "__path__"):
         for _loader, plugin_name, _is_pkg in pkgutil.walk_packages(module_path):
             importlib.import_module(f"{package_name}.{plugin_name}")
 

@@ -100,12 +100,12 @@ def replace_passwords() -> None:
     for password_spec in pwstore_args.split(","):
         parts = password_spec.split("@")
         if len(parts) != 3:
-            bail_out("pwstore: Invalid --pwstore entry: %s" % password_spec)
+            bail_out(f"pwstore: Invalid --pwstore entry: {password_spec}")
 
         try:
             num_arg, pos_in_arg, password_id = int(parts[0]), int(parts[1]), parts[2]
         except ValueError:
-            bail_out("pwstore: Invalid format: %s" % password_spec)
+            bail_out(f"pwstore: Invalid format: {password_spec}")
 
         try:
             arg = sys.argv[num_arg]
@@ -115,7 +115,7 @@ def replace_passwords() -> None:
         try:
             password = passwords[password_id]
         except KeyError:
-            bail_out("pwstore: Password '%s' does not exist" % password_id)
+            bail_out(f"pwstore: Password '{password_id}' does not exist")
 
         sys.argv[num_arg] = arg[:pos_in_arg] + password + arg[pos_in_arg + len(password) :]
 

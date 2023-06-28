@@ -4,7 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Core for getting the actual raw data points via Livestatus from RRD"""
 
+
 import collections
+import contextlib
 import time
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from typing import Any
@@ -67,7 +69,7 @@ def fetch_rrd_data_for_graph(
     )
     rrd_data: RRDData = {}
     for (site, host_name, service_description), metrics in by_service.items():
-        try:
+        with contextlib.suppress(livestatus.MKLivestatusNotFoundError):
             for (perfvar, cf, scale), data in fetch_rrd_data(
                 site, host_name, service_description, metrics, graph_recipe, graph_data_range
             ):
@@ -75,9 +77,6 @@ def fetch_rrd_data_for_graph(
                     data,
                     conversion=unit_conversion,
                 )
-        except livestatus.MKLivestatusNotFoundError:
-            pass
-
     align_and_resample_rrds(rrd_data, graph_recipe["consolidation_function"])
     chop_last_empty_step(graph_data_range, rrd_data)
 
@@ -97,18 +96,18 @@ def align_and_resample_rrds(rrd_data: RRDData, cf: GraphConsoldiationFunction | 
     step = None
 
     for spec, rrddata in rrd_data.items():
-        spec_title = f"{spec[1]}/{spec[2]}/{spec[3]}"  # host/service/perfvar
         if not rrddata:
+            spec_title = f"{spec[1]}/{spec[2]}/{spec[3]}"  # host/service/perfvar
             raise MKGeneralException(_("Cannot get RRD data for %s") % spec_title)
 
         if start_time is None:
             start_time, end_time, step = rrddata.twindow
-        else:
-            if (start_time, end_time, step) != rrddata.twindow:
-                if step >= rrddata.twindow[2]:
-                    rrddata.values = rrddata.downsample((start_time, end_time, step), spec[4] or cf)
-                elif step < rrddata.twindow[2]:
-                    rrddata.values = rrddata.bfill_upsample((start_time, end_time, step), 0)
+        elif (start_time, end_time, step) != rrddata.twindow:
+            rrddata.values = (
+                rrddata.downsample((start_time, end_time, step), spec[4] or cf)
+                if step >= rrddata.twindow[2]
+                else rrddata.bfill_upsample((start_time, end_time, step), 0)
+            )
 
 
 # The idea is to omit the empty last step of graphs which are showing the
@@ -119,20 +118,23 @@ def align_and_resample_rrds(rrd_data: RRDData, cf: GraphConsoldiationFunction | 
 # This makes only sense for graphs which are ending "now". So disable this
 # for the other graphs.
 def chop_last_empty_step(graph_data_range: GraphDataRange, rrd_data: RRDData) -> None:
-    if rrd_data:
-        sample_data = next(iter(rrd_data.values()))
-        step = sample_data.twindow[2]
-        # Disable graph chop for graphs which do not end within the current step
-        if abs(time.time() - graph_data_range["time_range"][1]) > step:
-            return
+    if not rrd_data:
+        return
 
-    # Chop of one step from the end of the graph if that is None
-    # for all curves. This is in order to avoid a gap when querying
-    # up to the current time.
-    for data in rrd_data.values():
-        if not data or data[-1] is not None:
-            return
+    sample_data = next(iter(rrd_data.values()))
+    step = sample_data.twindow[2]
+    # Disable graph chop for graphs which do not end within the current step
+    if abs(time.time() - graph_data_range["time_range"][1]) > step:
+        return
 
+    # To avoid a gap when querying:
+    # Chop one step from the end of the graph
+    # `if` that is None for *all* curves(TimeSeries or graphs).
+    if all(len(graph) and graph[-1] is None for graph in rrd_data.values()):
+        _chop_end_of_the_curve(rrd_data, step)
+
+
+def _chop_end_of_the_curve(rrd_data: RRDData, step: int) -> None:
     for data in rrd_data.values():
         del data.values[-1]
         data.end -= step
@@ -259,7 +261,7 @@ def all_rrd_columns_potentially_relevant_for_metric(
             )
         ),
         rrd_consolidation,
-        f"{from_time}:{until_time}:{60}",
+        f"{from_time}:{until_time}:60",
     )
 
 
@@ -295,7 +297,7 @@ def translate_and_merge_rrd_columns(
 
     return TimeSeries(
         single_value_series,
-        timewindow=relevant_ts[0].twindow,
+        time_window=relevant_ts[0].twindow,
         conversion=_retrieve_unit_conversion_function(target_metric),
     )
 

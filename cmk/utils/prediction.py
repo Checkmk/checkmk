@@ -10,6 +10,7 @@ from collections.abc import Callable, Iterable, Iterator
 from contextlib import suppress
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from statistics import fmean
 from typing import Any, Literal, NewType
 
 import livestatus
@@ -107,11 +108,9 @@ def timezone_at(timestamp: float) -> int:
     return time.altzone if is_dst(timestamp) else time.timezone
 
 
-def rrd_timestamps(twindow: TimeWindow) -> list[Timestamp]:
-    start, end, step = twindow
-    if step == 0:
-        return []
-    return [t + step for t in range(start, end, step)]
+def rrd_timestamps(time_window: TimeWindow) -> list[Timestamp]:
+    start, end, step = time_window
+    return [] if step == 0 else [t + step for t in range(start, end, step)]
 
 
 def aggregation_functions(
@@ -120,23 +119,20 @@ def aggregation_functions(
     """Aggregate data in series list according to aggr
 
     If series has None values they are dropped before aggregation"""
-    if aggr is None:
-        aggr = "max"
-    aggr = aggr.lower()
-
-    if not series or all(x is None for x in series):
+    cleaned_series = [x for x in series if x is not None]
+    if not cleaned_series:
         return None
 
-    cleaned_series = [x for x in series if x is not None]
-
-    if aggr == "average":
-        return sum(cleaned_series) / float(len(cleaned_series))
-    if aggr == "max":
-        return max(cleaned_series)
-    if aggr == "min":
-        return min(cleaned_series)
-
-    raise ValueError("Invalid Aggregation function %s, only max, min, average allowed" % aggr)
+    aggr = "max" if aggr is None else aggr.lower()
+    match aggr:
+        case "average":
+            return fmean(cleaned_series)
+        case "max":
+            return max(cleaned_series)
+        case "min":
+            return min(cleaned_series)
+        case _:
+            raise ValueError(f"Invalid Aggregation function {aggr}, only max, min, average allowed")
 
 
 class TimeSeries:
@@ -163,21 +159,21 @@ class TimeSeries:
     def __init__(
         self,
         data: TimeSeriesValues,
-        timewindow: tuple[Timestamp, Timestamp, Seconds] | None = None,
+        time_window: TimeWindow | None = None,
         conversion: Callable[[float], float] = lambda v: v,
         **metadata: str,
     ) -> None:
-        if timewindow is None:
+        if time_window is None:
             if not data or data[0] is None or data[1] is None or data[2] is None:
                 raise ValueError(data)
 
-            timewindow = int(data[0]), int(data[1]), int(data[2])
+            time_window = int(data[0]), int(data[1]), int(data[2])
             data = data[3:]
 
-        assert timewindow is not None
-        self.start = int(timewindow[0])
-        self.end = int(timewindow[1])
-        self.step = int(timewindow[2])
+        assert time_window is not None
+        self.start = int(time_window[0])
+        self.end = int(time_window[1])
+        self.step = int(time_window[2])
         self.values = [v if v is None else conversion(v) for v in data]
         self.metadata = metadata
 
@@ -216,11 +212,11 @@ class TimeSeries:
              consolidation function imitating RRD methods
         """
         dwsa = []
-        i = 0
         co: TimeSeriesValues = []
         start, end, step = twindow
         desired_times = rrd_timestamps(twindow)
         if start != self.start or end != self.end or step != self.step:
+            i = 0
             for t, val in self.time_data_pairs():
                 if t > desired_times[i]:
                     dwsa.append(aggregation_functions(co, cf))
@@ -231,7 +227,7 @@ class TimeSeries:
             diff_len = len(desired_times) - len(dwsa)
             if diff_len > 0:
                 dwsa.append(aggregation_functions(co, cf))
-                dwsa = dwsa + [None] * (diff_len - 1)
+                dwsa += [None] * (diff_len - 1)
 
             return dwsa
         return self.values
@@ -338,7 +334,7 @@ def get_rrd_data(
     except livestatus.MKLivestatusNotFoundError as e:
         if cmk.utils.debug.enabled():
             raise
-        raise MKGeneralException("Cannot get historic metrics via Livestatus: %s" % e)
+        raise MKGeneralException(f"Cannot get historic metrics via Livestatus: {e}")
 
     if response is None:
         raise MKGeneralException("Cannot retrieve historic data with Nagios Core")

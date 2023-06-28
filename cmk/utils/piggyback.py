@@ -98,7 +98,7 @@ def get_piggyback_raw_data(
             raw_data = AgentRawData(store.load_bytes_from_file(file_info.file_path))
 
         except OSError as e:
-            reason = "Cannot read piggyback raw data from source '%s'" % file_info.source_hostname
+            reason = f"Cannot read piggyback raw data from source '{file_info.source_hostname}'"
             piggyback_raw_data = PiggybackRawDataInfo(
                 PiggybackFileInfo(
                     source_hostname=file_info.source_hostname,
@@ -241,9 +241,9 @@ def _get_piggyback_processed_file_infos(
     return [
         _get_piggyback_processed_file_info(
             source_hostname,
-            piggybacked_hostname,
-            _get_piggybacked_file_path(source_hostname, piggybacked_hostname),
-            expanded_time_settings,
+            piggybacked_hostname=piggybacked_hostname,
+            piggyback_file_path=_get_piggybacked_file_path(source_hostname, piggybacked_hostname),
+            settings=expanded_time_settings,
         )
         for source_hostname in source_hostnames
         if not source_hostname.startswith(".")
@@ -252,6 +252,7 @@ def _get_piggyback_processed_file_infos(
 
 def _get_piggyback_processed_file_info(
     source_hostname: HostName,
+    *,
     piggybacked_hostname: HostName | HostAddress,
     piggyback_file_path: Path,
     settings: _TimeSettingsMap,
@@ -268,7 +269,7 @@ def _get_piggyback_processed_file_info(
             source_hostname,
             piggyback_file_path,
             False,
-            "Piggyback file too old: %s" % Age(outdated),
+            f"Piggyback file too old: {Age(outdated)}",
             0,
         )
 
@@ -389,10 +390,7 @@ def _store_status_file_of(
     # - status file is newer (before utime of piggybacked host files is set)
     # => piggybacked host file is outdated
     with tempfile.NamedTemporaryFile(
-        "wb",
-        dir=str(status_file_path.parent),
-        prefix=".%s.new" % status_file_path.name,
-        delete=False,
+        "wb", dir=str(status_file_path.parent), prefix=f".{status_file_path.name}.new", delete=False
     ) as tmp:
         tmp_path = tmp.name
         os.chmod(tmp_path, 0o660)
@@ -526,10 +524,7 @@ def _cleanup_old_source_status_files(
             )
 
             max_cache_age_of_source = max_cache_age_by_sources.get(source_host.name)
-            if max_cache_age_of_source is None:
-                max_cache_age_by_sources[source_host.name] = max_cache_age
-
-            elif max_cache_age >= max_cache_age_of_source:
+            if max_cache_age_of_source is None or max_cache_age_of_source <= max_cache_age:
                 max_cache_age_by_sources[source_host.name] = max_cache_age
 
     for source_state_file in _get_source_state_files():
@@ -567,9 +562,9 @@ def _cleanup_old_piggybacked_files(
         for piggybacked_host_source in source_hosts:
             file_info = _get_piggyback_processed_file_info(
                 HostName(piggybacked_host_source.name),
-                HostName(piggybacked_host_folder.name),
-                piggybacked_host_source,
-                time_settings,
+                piggybacked_hostname=HostName(piggybacked_host_folder.name),
+                piggyback_file_path=piggybacked_host_source,
+                settings=time_settings,
             )
 
             if not file_info.successfully_processed:

@@ -110,7 +110,7 @@ def test_fetch_rrd_data_for_graph(mock_livestatus: MockLiveStatusConnection) -> 
         ) == {
             ("NO_SITE", "my-host", "Temperature Zone 6", "temp", "max", 1): TimeSeries(
                 [4, 5, None],
-                timewindow=(1, 2, 3),
+                time_window=(1, 2, 3),
             )
         }
 
@@ -127,7 +127,7 @@ def test_fetch_rrd_data_for_graph_with_conversion(
         ) == {
             ("NO_SITE", "my-host", "Temperature Zone 6", "temp", "max", 1): TimeSeries(
                 [39.2, 41.0, None],
-                timewindow=(1, 2, 3),
+                time_window=(1, 2, 3),
             )
         }
 
@@ -144,7 +144,7 @@ def test_translate_and_merge_rrd_columns() -> None:
         {},
     ) == TimeSeries(
         [1, 2, 3, 4],
-        timewindow=(1682324400, 1682497800, 600),
+        time_window=(1682324400, 1682497800, 600),
     )
 
 
@@ -169,7 +169,7 @@ def test_translate_and_merge_rrd_columns_with_translation() -> None:
         },
     ) == TimeSeries(
         [10, 20, 3, 4],
-        timewindow=(1682324400, 1682497800, 600),
+        time_window=(1682324400, 1682497800, 600),
     )
 
 
@@ -284,5 +284,5 @@ def test_translate_and_merge_rrd_columns_unit_conversion(
         {},
     ) == TimeSeries(
         expected_data_points,
-        timewindow=(1682324400, 1682497800, 600),
+        time_window=(1682324400, 1682497800, 600),
     )

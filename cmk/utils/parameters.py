@@ -31,7 +31,7 @@ def boil_down_parameters(
     for par in parameters:
         if not isinstance(par, dict):
             return par
-        merged.update(item for item in par.items() if item[0] not in merged)
+        merged |= (item for item in par.items() if item[0] not in merged)
 
     try:
         # TODO: We could get rid of the suppression if we used a "isinstance(default, Mapping)"

@@ -23,7 +23,7 @@ hypothesis = "==6.68.0"    # used by unit tests
 mypy = "==1.0.0"  # used by test/static/Makefile's test-mypy target
 twine = "==4.0.2" # used to upload packages to internal PyPi mirror
 types-six = "==1.16.21.4"  # used for type checking
-types-requests = "==2.28.11.12"  # used for type checking
+types-requests = "*"  # used for type checking
 types-PyYAML = "==6.0.12.4"  # used for type checking
 types-freezegun = "==1.1.10"  # used for type checking
 types-markdown = "*"  # used for type checking
@@ -104,7 +104,7 @@ urllib3 = "==1.26.13"  # needed by requests
 pyOpenSSL = "==19.1.0"  # needed by requests with extras = ["security"]
 pbr = "==5.11.0"  # needed by jira
 pyghmi = "==1.5.13"  # needed by base for IPMI
-requests = {version = "==2.28.1",extras = ["security"]}  # needed by DCD, connexion
+requests = {version = "==2.31.0",extras = ["security"]}  # needed by DCD, connexion
 pykerberos = "==1.2.1"  # needed by check_bi_aggr
 requests-kerberos = "==0.12.0"  # needed by check_bi_aggr, versions >=0.13.0 depend on pyspnego, which pulls in gssapi, which in turn fails on SLES because of https://github.com/pythongssapi/python-gssapi/issues/212
 Jinja2 = "==3.1.2"  # needed by Flask

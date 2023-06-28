@@ -874,7 +874,6 @@ def test_openapi_discovery_refresh_services(
     assert mock_discovery_preview.mock_calls == [
         call("NO_SITE", "example.com", prevent_fetching=True, raise_errors=False),
         call("NO_SITE", "example.com", prevent_fetching=False, raise_errors=False),
-        call("NO_SITE", "example.com", prevent_fetching=True, raise_errors=False),
     ]
     mock_set_autochecks.assert_not_called()
 

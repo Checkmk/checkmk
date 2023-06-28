@@ -116,6 +116,9 @@ disallow_any_explicit = false  # 2854 errors in 836 files
 disallow_any_expr = false  # 112427 errors in 3304 files
 disallow_any_unimported = false  # 317 errors in 47 files
 warn_unreachable = false  # 240 errors in 133 files
+# hidden flags for PEP 688 compat, see https://github.com/python/mypy/issues/15313
+disable_bytearray_promotion = true
+disable_memoryview_promotion = true
 
 [[tool.mypy.overrides]]
 module = [

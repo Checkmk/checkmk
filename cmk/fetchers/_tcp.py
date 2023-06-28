@@ -10,7 +10,6 @@ import socket
 import ssl
 from collections.abc import Mapping, Sized
 from typing import Any, assert_never, Final
-from uuid import UUID
 
 import cmk.utils.debug
 from cmk.utils import paths
@@ -44,7 +43,7 @@ def recvall(sock: socket.socket, flags: int = 0) -> bytes:
     return b"".join(buffer)
 
 
-def wrap_tls(sock: socket.socket, controller_uuid: UUID) -> ssl.SSLSocket:
+def wrap_tls(sock: socket.socket, server_hostname: str) -> ssl.SSLSocket:
     if not paths.agent_cert_store.exists():
         # agent cert store should be written on agent receiver startup.
         # However, if it's missing for some reason, we have to write it.
@@ -52,7 +51,7 @@ def wrap_tls(sock: socket.socket, controller_uuid: UUID) -> ssl.SSLSocket:
     try:
         ctx = ssl.create_default_context(cafile=str(paths.agent_cert_store))
         ctx.load_cert_chain(certfile=paths.site_cert_file)
-        return ctx.wrap_socket(sock, server_hostname=str(controller_uuid))
+        return ctx.wrap_socket(sock, server_hostname=server_hostname)
     except ssl.SSLError as e:
         raise MKFetcherError("Error establishing TLS connection") from e
 
@@ -166,11 +165,14 @@ class TCPFetcher(Fetcher[AgentRawData]):
         self._opt_socket = None
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
-        agent_data, protocol = self._get_agent_data()
+        controller_uuid = get_uuid_link_manager().get_uuid(self.host_name)
+        agent_data, protocol = self._get_agent_data(
+            str(controller_uuid) if controller_uuid is not None else None
+        )
         self._validate_decrypted_data(self._decrypt(protocol, agent_data))
         return AgentRawData(agent_data)
 
-    def _get_agent_data(self) -> tuple[bytes, TransportProtocol]:
+    def _get_agent_data(self, server_hostname: str | None) -> tuple[bytes, TransportProtocol]:
         try:
             raw_protocol = self._socket.recv(2, socket.MSG_WAITALL)
         except OSError as e:
@@ -180,15 +182,14 @@ class TCPFetcher(Fetcher[AgentRawData]):
             raw_protocol, empty_msg="Empty output from host %s:%d" % self.address
         )
 
-        controller_uuid = get_uuid_link_manager().get_uuid(self.host_name)
-        self._validate_protocol(protocol, is_registered=controller_uuid is not None)
+        self._validate_protocol(protocol, is_registered=server_hostname is not None)
 
         if protocol is TransportProtocol.TLS:
-            if controller_uuid is None:
+            if server_hostname is None:
                 raise MKFetcherError("Agent controller not registered")
 
             self._logger.debug("Reading data from agent via TLS socket")
-            with wrap_tls(self._socket, controller_uuid) as ssock:
+            with wrap_tls(self._socket, server_hostname) as ssock:
                 self._logger.debug("Reading data from agent")
                 raw_agent_data = recvall(ssock)
             try:

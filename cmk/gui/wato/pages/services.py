@@ -187,6 +187,12 @@ class ModeDiscovery(WatoMode):
         html.close_div()
 
 
+class _AutomationServiceDiscoveryRequest(NamedTuple):
+    host_name: HostName
+    action: DiscoveryAction
+    raise_errors: bool
+
+
 @automation_command_registry.register
 class AutomationServiceDiscoveryJob(AutomationCommand):
     """Is called by _get_check_table() to execute the background job on a remote site"""
@@ -194,10 +200,22 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
     def command_name(self):
         return "service-discovery-job"
 
-    def get_request(self) -> StartDiscoveryRequest:
+    def get_request(self) -> _AutomationServiceDiscoveryRequest:
+        host_name = request.get_validated_type_input_mandatory(HostName, "host_name")
+        options = json.loads(request.get_ascii_input_mandatory("options"))
+        action = DiscoveryAction(options["action"])
+        raise_errors = not options["ignore_errors"]
+
+        self._check_permissions(host_name)
+
+        return _AutomationServiceDiscoveryRequest(
+            host_name=host_name, action=action, raise_errors=raise_errors
+        )
+
+    def _check_permissions(self, host_name: HostName) -> None:
         user.need_permission("wato.hosts")
 
-        host = Host.host(host_name := HostName(request.get_ascii_input_mandatory("host_name")))
+        host = Host.host(host_name)
         if host is None:
             raise MKGeneralException(
                 _(
@@ -210,21 +228,12 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
             )
         host.need_permission("read")
 
-        ascii_input = request.get_ascii_input("options")
-        if ascii_input is not None:
-            options = json.loads(ascii_input)
-        else:
-            options = {}
-        return StartDiscoveryRequest(
-            host=host, folder=host.folder(), options=DiscoveryOptions(**options)
-        )
-
-    def execute(self, api_request: StartDiscoveryRequest) -> str:
+    def execute(self, api_request: _AutomationServiceDiscoveryRequest) -> str:
         central_version = cmk_version_of_remote_automation_source(request)
         return execute_discovery_job(
-            api_request.host.name(),
-            api_request.options.action,
-            raise_errors=not api_request.options.ignore_errors,
+            api_request.host_name,
+            api_request.action,
+            raise_errors=api_request.raise_errors,
         ).serialize(central_version)
 
 

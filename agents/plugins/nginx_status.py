@@ -25,6 +25,11 @@ import re
 import sys
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
+import ssl
+
+ctx = ssl.create_default_context()
+ctx.check_hostname = False
+ctx.verify_mode = ssl.CERT_NONE
 
 if sys.version_info < (2, 6):
     sys.stderr.write("ERROR: Python 2.5 is not supported. Please use Python 2.6 or newer.\n")
@@ -158,7 +163,7 @@ def main():  # pylint: disable=too-many-branches
             # Try to fetch the status page for each server
             try:
                 request = Request(url, headers={"Accept": "text/plain", "User-Agent": USER_AGENT})
-                fd = urlopen(request)  # nosec B310 # BNS:6b61d9
+                fd = urlopen(request, context=ctx)  # nosec B310 # BNS:6b61d9
             except URLError as e:
                 if "SSL23_GET_SERVER_HELLO:unknown protocol" in str(e):
                     # HACK: workaround misconfigurations where port 443 is used for

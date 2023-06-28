@@ -23,16 +23,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from typing import NamedTuple
+from typing import Final, NamedTuple, Sequence
 
 
-def _convert_to_identifier(value):
-    characters = {
-        " ": "_",
-        "/": "",
-        "-": "_",
-    }
-    for char, repl in characters.items():
+def _convert_to_identifier(value: str) -> str:
+    characters: Final = ((" ", "_"), ("/", ""), ("-", "_"))
+    for char, repl in characters:
         value = value.replace(char, repl)
     return value.lower()
 
@@ -45,11 +41,11 @@ class OracleIOFile(NamedTuple):
     id: str
 
 
-def make_oracle_io_file_list(name_list):
+def make_oracle_io_file_list(name_list: Sequence[str]) -> list[OracleIOFile]:
     return [OracleIOFile(name, _convert_to_identifier(name)) for name in name_list]
 
 
-oracle_iofiles = make_oracle_io_file_list(
+oracle_iofiles: Final = make_oracle_io_file_list(
     [
         "Archive Log",
         "Archive Log Backup",
@@ -67,12 +63,12 @@ oracle_iofiles = make_oracle_io_file_list(
     ]
 )
 
-oracle_io_sizes = [
+oracle_io_sizes: Final = [
     ("s", "Small"),
     ("l", "Large"),
 ]
 
-oracle_io_types = [
+oracle_io_types: Final = [
     ("r", "Reads", "1/s"),
     ("w", "Writes", "1/s"),
     ("rb", "Read Bytes", "bytes/s"),
@@ -90,18 +86,18 @@ class OracleWaitclass(NamedTuple):
     metric_fg: str
 
 
-def make_oracle_waitclass(name):
+def make_oracle_waitclass(name: str) -> OracleWaitclass:
     ident = _convert_to_identifier(name)
-    metric = "oracle_wait_class_%s_waited" % ident
-    metric_fg = metric + "_fg"
+    metric = f"oracle_wait_class_{ident}_waited"
+    metric_fg = f"{metric}_fg"
     return OracleWaitclass(name, ident, metric, metric_fg)
 
 
-def make_oracle_waitclass_list(name_list):
+def make_oracle_waitclass_list(name_list: Sequence[str]) -> list[OracleWaitclass]:
     return [make_oracle_waitclass(name) for name in name_list]
 
 
-oracle_waitclasses = make_oracle_waitclass_list(
+oracle_waitclasses: Final = make_oracle_waitclass_list(
     [
         "Administrative",
         "Application",
@@ -128,16 +124,16 @@ class OracleSGA(NamedTuple):
     metric: str
 
 
-def make_oracle_sga(name, metric):
+def make_oracle_sga(name: str, metric: str) -> OracleSGA:
     ident = _convert_to_identifier(name)
     return OracleSGA(name, ident, metric)
 
 
-def make_oracle_sga_list(input_list):
+def make_oracle_sga_list(input_list: Sequence[tuple[str, str]]) -> list[OracleSGA]:
     return [make_oracle_sga(name, metric) for name, metric in input_list]
 
 
-oracle_sga_fields = make_oracle_sga_list(
+oracle_sga_fields: Final = make_oracle_sga_list(
     [
         ("Maximum SGA Size", "oracle_sga_size"),
         ("Buffer Cache Size", "oracle_sga_buffer_cache"),
@@ -160,17 +156,17 @@ class OraclePGA(NamedTuple):
     metric: str
 
 
-def make_oracle_pga(name):
+def make_oracle_pga(name: str) -> OraclePGA:
     ident = _convert_to_identifier(name)
-    metric = "oracle_pga_%s" % ident
+    metric = f"oracle_pga_{ident}"
     return OraclePGA(name, ident, metric)
 
 
-def make_oracle_pga_list(name_list):
+def make_oracle_pga_list(name_list: Sequence[str]) -> list[OraclePGA]:
     return [make_oracle_pga(name) for name in name_list]
 
 
-oracle_pga_fields = make_oracle_pga_list(
+oracle_pga_fields: Final = make_oracle_pga_list(
     [
         "total PGA allocated",
         "total PGA inuse",

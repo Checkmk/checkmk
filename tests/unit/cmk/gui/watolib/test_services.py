@@ -33,7 +33,6 @@ from cmk.gui.watolib.services import (
     perform_fix_all,
     perform_host_label_discovery,
     perform_service_discovery,
-    StartDiscoveryRequest,
 )
 
 MOCK_DISCOVERY_RESULT = ServiceDiscoveryPreviewResult(
@@ -156,18 +155,9 @@ def test_perform_discovery_tabula_rasa_action_with_no_previous_discovery_result(
     mock_discovery_preview: MagicMock,
 ) -> None:
     discovery_result = get_check_table(
-        StartDiscoveryRequest(
-            sample_host,
-            sample_host.folder(),
-            options=DiscoveryOptions(
-                action=DiscoveryAction.TABULA_RASA,
-                show_checkboxes=False,
-                show_parameters=False,
-                show_discovered_labels=False,
-                show_plugin_names=False,
-                ignore_errors=False,
-            ),
-        )
+        sample_host,
+        DiscoveryAction.TABULA_RASA,
+        raise_errors=True,
     )
 
     mock_discovery_preview.assert_has_calls(

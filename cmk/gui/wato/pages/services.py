@@ -86,7 +86,6 @@ from cmk.gui.watolib.services import (
     perform_fix_all,
     perform_host_label_discovery,
     perform_service_discovery,
-    StartDiscoveryRequest,
     UpdateType,
 )
 from cmk.gui.watolib.utils import may_edit_ruleset, mk_repr
@@ -355,7 +354,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         ):
             if transactions.check_transaction():
                 return get_check_table(
-                    StartDiscoveryRequest(host, host.folder(), discovery_options)
+                    host, discovery_options.action, raise_errors=not discovery_options.ignore_errors
                 )
             return initial_discovery_result(discovery_options, host, previous_discovery_result)
 

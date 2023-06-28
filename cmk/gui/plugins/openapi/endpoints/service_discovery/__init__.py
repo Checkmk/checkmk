@@ -159,11 +159,7 @@ DISCOVERY_ACTION = {
 def show_service_discovery_result(params: Mapping[str, Any]) -> Response:
     """Show the current service discovery result"""
     host = Host.load_host(params["host_name"])
-    discovery_result = get_check_table(
-        StartDiscoveryRequest(
-            host=host, folder=host.folder(), options=_discovery_options(DiscoveryAction.NONE)
-        )
-    )
+    discovery_result = get_check_table(host, DiscoveryAction.NONE, raise_errors=False)
     return serve_json(serialize_discovery_result(host, discovery_result))
 
 
@@ -193,19 +189,7 @@ def show_service_discovery_result(params: Mapping[str, Any]) -> Response:
 def show_services(params: Mapping[str, Any]) -> Response:
     """Show all services of specific phase"""
     host = Host.load_host(params["host_name"])
-    discovery_request = StartDiscoveryRequest(
-        host=host,
-        folder=host.folder(),
-        options=DiscoveryOptions(
-            action=DiscoveryAction.NONE,
-            show_checkboxes=False,
-            show_parameters=False,
-            show_discovered_labels=False,
-            show_plugin_names=False,
-            ignore_errors=True,
-        ),
-    )
-    discovery_result = get_check_table(discovery_request)
+    discovery_result = get_check_table(host, DiscoveryAction.NONE, raise_errors=False)
     return _serve_services(
         host,
         discovery_result.check_table,
@@ -450,11 +434,7 @@ def _execute_service_discovery(discovery_action: APIDiscoveryAction, host: CREHo
             "You do not have the necessary permissions to execute this action",
         )
     discovery_result = get_check_table(
-        StartDiscoveryRequest(
-            host,
-            host.folder(),
-            options=discovery_options,
-        )
+        host, discovery_options.action, raise_errors=not discovery_options.ignore_errors
     )
     match discovery_action:
         case APIDiscoveryAction.new:

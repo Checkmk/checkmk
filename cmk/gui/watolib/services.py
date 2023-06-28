@@ -262,7 +262,7 @@ class Discovery:
     def execute_discovery(self, discovery_result=None):
         if discovery_result is None:
             discovery_result = get_check_table(
-                StartDiscoveryRequest(self._host, self._host.folder(), self._options)
+                self._host, self._options.action, raise_errors=not self._options.ignore_errors
             )
         self.do_discovery(discovery_result)
 
@@ -577,7 +577,7 @@ def perform_fix_all(
         update_source=None,
     ).do_discovery(discovery_result)
     discovery_result = get_check_table(
-        StartDiscoveryRequest(host, host.folder(), discovery_options)
+        host, discovery_options.action, raise_errors=not discovery_options.ignore_errors
     )
     return discovery_result
 
@@ -592,7 +592,7 @@ def perform_host_label_discovery(
     """Handle update host labels discovery action"""
     _perform_update_host_labels(discovery_result.labels_by_host)
     discovery_result = get_check_table(
-        StartDiscoveryRequest(host, host.folder(), discovery_options)
+        host, discovery_options.action, raise_errors=not discovery_options.ignore_errors
     )
     return discovery_result
 
@@ -618,7 +618,7 @@ def perform_service_discovery(
         update_source=update_source,
     ).do_discovery(discovery_result)
     discovery_result = get_check_table(
-        StartDiscoveryRequest(host, host.folder(), discovery_options)
+        host, discovery_options.action, raise_errors=not discovery_options.ignore_errors
     )
     return discovery_result
 
@@ -689,7 +689,9 @@ def initial_discovery_result(
     previous_discovery_result: DiscoveryResult | None,
 ) -> DiscoveryResult:
     return (
-        get_check_table(StartDiscoveryRequest(host, host.folder(), discovery_options))
+        get_check_table(
+            host, discovery_options.action, raise_errors=not discovery_options.ignore_errors
+        )
         if previous_discovery_result is None or previous_discovery_result.is_active()
         else previous_discovery_result
     )
@@ -816,7 +818,9 @@ def checkbox_id(check_type: str, item: Item) -> str:
     return sha256(key.encode("utf-8")).hexdigest()
 
 
-def get_check_table(discovery_request: StartDiscoveryRequest) -> DiscoveryResult:
+def get_check_table(
+    host: CREHost, action: DiscoveryAction, *, raise_errors: bool
+) -> DiscoveryResult:
     """Gathers the check table using a background job
 
     Cares about handling local / remote sites using an automation call. In both cases
@@ -839,31 +843,31 @@ def get_check_table(discovery_request: StartDiscoveryRequest) -> DiscoveryResult
           v
     _get_check_table()
     """
-    if discovery_request.options.action == DiscoveryAction.TABULA_RASA:
+    if action == DiscoveryAction.TABULA_RASA:
         _changes.add_service_change(
             "refresh-autochecks",
-            _("Refreshed check configuration of host '%s'") % discovery_request.host.name(),
-            discovery_request.host.object_ref(),
-            discovery_request.host.site_id(),
+            _("Refreshed check configuration of host '%s'") % host.name(),
+            host.object_ref(),
+            host.site_id(),
         )
 
-    if site_is_local(discovery_request.host.site_id()):
+    if site_is_local(host.site_id()):
         return execute_discovery_job(
-            discovery_request.host.name(),
-            discovery_request.options.action,
-            raise_errors=not discovery_request.options.ignore_errors,
+            host.name(),
+            action,
+            raise_errors=raise_errors,
         )
 
-    sync_changes_before_remote_automation(discovery_request.host.site_id())
+    sync_changes_before_remote_automation(host.site_id())
 
     return DiscoveryResult.deserialize(
         str(
             do_remote_automation(
-                get_site_config(discovery_request.host.site_id()),
+                get_site_config(host.site_id()),
                 "service-discovery-job",
                 [
-                    ("host_name", discovery_request.host.name()),
-                    ("options", json.dumps(discovery_request.options._asdict())),
+                    ("host_name", host.name()),
+                    ("options", json.dumps({"ignore_errors": not raise_errors, "action": action})),
                 ],
             )
         )

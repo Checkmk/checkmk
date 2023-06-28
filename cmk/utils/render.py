@@ -111,7 +111,7 @@ class Age:
         precision = self.__precision
 
         if secs < 0:
-            return "-" + approx_age(-secs)
+            return f"-{approx_age(-secs)}"
         if precision and secs < 10 ** ((-1) * precision):
             return fmt_number_with_precision(secs, unit=_("s"), precision=precision)
         if 0 < secs < 1:  # ms
@@ -133,7 +133,7 @@ class Age:
 
         days = hours / 24.0
         if days < 6:
-            return "{} {}".format(drop_dotzero(days, 1), _("d"))
+            return f'{drop_dotzero(days, 1)} {_("d")}'
         if days < 999:
             return "{:.0f} {}".format(days, _("d"))
         years = days / 365.0
@@ -148,7 +148,7 @@ class Age:
 
 # TODO: Make call sites use Age() directly?
 def approx_age(secs: float) -> str:
-    return "%s" % Age(secs)
+    return f"{Age(secs)}"
 
 
 #   .--Prefix & Scale------------------------------------------------------.
@@ -225,9 +225,7 @@ def drop_dotzero(v: float, digits: int = 2) -> str:
     '46'
     """
     t = "%.*f" % (digits, v)
-    if "." in t:
-        return t.rstrip("0").rstrip(".")
-    return t
+    return t.rstrip("0").rstrip(".") if "." in t else t
 
 
 def fmt_number_with_precision(
@@ -240,9 +238,9 @@ def fmt_number_with_precision(
     zero_non_decimal: bool = False,
 ) -> str:
     factor, prefix = unit_prefix_type.scale_factor_and_prefix(v)
-    value = float(v) / factor
+    value = v / factor
     if zero_non_decimal and value == 0:
-        return "0 %s" % prefix + unit
+        return f"0 {prefix}{unit}"
     number = drop_dotzero(value, precision) if drop_zeroes else "%.*f" % (precision, value)
     return f"{number} {prefix + unit}"
 
@@ -354,7 +352,7 @@ def percent(perc: float, scientific_notation: bool = False) -> str:
     if float(result).is_integer() and float(result) < 100:
         result += ".0"
 
-    return result + "%"
+    return f"{result}%"
 
 
 def scientific(v: float, precision: int = 3) -> str:
@@ -362,9 +360,9 @@ def scientific(v: float, precision: int = 3) -> str:
     if v == 0:
         return "0"
     if v < 0:
-        return "-" + scientific(v * -1, precision)
+        return f"-{scientific(v * -1, precision)}"
 
-    mantissa, exponent = _frexp10(float(v))
+    mantissa, exponent = _frexp10(v)
     # Render small numbers without exponent
     if -3 <= exponent <= 4:
         return "%.*f" % (min(precision, max(0, precision - exponent)), v)
@@ -385,11 +383,11 @@ def scientific(v: float, precision: int = 3) -> str:
 # down to the precision of the actual number
 def physical_precision(v: float, precision: int, unit_symbol: str) -> str:
     if v < 0:
-        return "-" + physical_precision(-v, precision, unit_symbol)
+        return f"-{physical_precision(-v, precision, unit_symbol)}"
 
     scale_symbol, places_after_comma, scale_factor = calculate_physical_precision(v, precision)
 
-    scaled_value = float(v) / scale_factor
+    scaled_value = v / scale_factor
     return "%.*f %s%s" % (places_after_comma, scaled_value, scale_symbol, unit_symbol)
 
 
@@ -399,7 +397,7 @@ def calculate_physical_precision(v: float, precision: int) -> tuple[str, int, in
 
     # Splitup in mantissa (digits) an exponent to the power of 10
     # -> a: (2.23399998, -2)  b: (4.5, 6)    c: (1.3756, 2)
-    _mantissa, exponent = _frexp10(float(v))
+    _mantissa, exponent = _frexp10(v)
 
     if isinstance(v, int):
         precision = min(precision, exponent + 1)

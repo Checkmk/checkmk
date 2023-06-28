@@ -2210,8 +2210,6 @@ class ABCNodeRenderer(abc.ABC):
                 # sorted tries to find the common base class, which is object :(
                 self._show_node(node)
 
-    #   ---node-----------------------------------------------------------------
-
     def _show_node(self, node: ImmutableTree | ImmutableDeltaTree) -> None:
         raw_path = f".{'.'.join(map(str, node.path))}." if node.path else "."
 
@@ -2230,8 +2228,6 @@ class ABCNodeRenderer(abc.ABC):
         ) as is_open:
             if is_open:
                 self.show(node, hints)
-
-    #   ---table----------------------------------------------------------------
 
     def _show_table(self, table: ImmutableTable | ImmutableDeltaTable, hints: DisplayHints) -> None:
         if hints.table_hint.view_spec:
@@ -2297,8 +2293,6 @@ class ABCNodeRenderer(abc.ABC):
     ) -> None:
         raise NotImplementedError()
 
-    #   ---attributes-----------------------------------------------------------
-
     def _show_attributes(
         self, attributes: ImmutableAttributes | ImmutableDeltaAttributes, hints: DisplayHints
     ) -> None:
@@ -2326,8 +2320,6 @@ class ABCNodeRenderer(abc.ABC):
         retention_interval: RetentionInterval | None = None,
     ) -> None:
         raise NotImplementedError()
-
-    #   ---helper---------------------------------------------------------------
 
     def _show_child_value(
         self,

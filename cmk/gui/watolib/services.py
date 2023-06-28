@@ -939,14 +939,13 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
     def _perform_service_scan(self, api_request: StartDiscoveryRequest) -> None:
         """The try-inventory automation refreshes the Checkmk internal cache and makes the new
         information available to the next try-inventory call made by get_result()."""
-        sys.stdout.write(
-            discovery_preview(
-                api_request.host.site_id(),
-                api_request.host.name(),
-                prevent_fetching=False,
-                raise_errors=not api_request.options.ignore_errors,
-            ).output
+        result = discovery_preview(
+            api_request.host.site_id(),
+            api_request.host.name(),
+            prevent_fetching=False,
+            raise_errors=not api_request.options.ignore_errors,
         )
+        sys.stdout.write(result.output)
 
     def _perform_automatic_refresh(self, api_request: StartDiscoveryRequest) -> None:
         # TODO: In distributed sites this must not add a change on the remote site. We need to build
@@ -968,13 +967,14 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         """Executed from the outer world to report about the job state"""
         job_status = self.get_status()
         job_status.is_active = self.is_active()
+        if not job_status.is_active:
+            if job_status.state == JobStatusStates.EXCEPTION:
+                job_status = self._cleaned_up_status(job_status)
 
         if job_status.is_active:
             check_table_created, result = self._pre_discovery_preview
         else:
             check_table_created, result = self._get_discovery_preview(api_request)
-            if job_status.state == JobStatusStates.EXCEPTION:
-                job_status = self._cleaned_up_status(job_status)
 
         return DiscoveryResult(
             job_status=dict(job_status),

@@ -11,10 +11,11 @@ import subprocess
 import sys
 import tarfile
 import time
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
+from typing import Literal, TypedDict
 
 import docker  # type: ignore[import]
 import dockerpty  # type: ignore[import]
@@ -33,6 +34,11 @@ _DOCKER_BUILD_ID = 1
 logger = logging.getLogger()
 
 
+class _VolumeInfo(TypedDict):
+    bind: str
+    mode: Literal["ro"]
+
+
 def execute_tests_in_container(
     distro_name: str,
     docker_tag: str,
@@ -49,6 +55,7 @@ def execute_tests_in_container(
     image_name_with_tag = _create_cmk_image(client, base_image_name, docker_tag, version)
 
     # Start the container
+    container: docker.Container
     with _start(
         client,
         image=image_name_with_tag,
@@ -185,7 +192,7 @@ def _get_registry_data(client: docker.DockerClient, image_name_with_tag: str) ->
         return None
 
 
-def _handle_api_error(e):
+def _handle_api_error(e: docker.errors.APIError) -> None:
     if "no basic auth" in "%s" % e:
         raise Exception(
             "No authentication information stored for %s. You will have to login to the "
@@ -232,7 +239,7 @@ def _create_cmk_image(
             "not implemented yet to build the image locally. Terminating."
             % (base_image_name_with_tag, _DOCKER_REGISTRY_URL)
         )
-
+    container: docker.Container
     with _start(
         client,
         image=base_image_name_with_tag,
@@ -381,25 +388,25 @@ def get_current_cmk_hash_for_artifact(version: CMKVersion, package_name: str) ->
     return _hash
 
 
-def _image_build_volumes():
+def _image_build_volumes() -> Mapping[str, _VolumeInfo]:
     volumes = {
         # Credentials file for fetching the package from the download server. Used by
         # testlib/version.py in case the version package needs to be downloaded
-        os.path.join(os.environ["HOME"], ".cmk-credentials"): {
-            "bind": "/root/.cmk-credentials",
-            "mode": "ro",
-        },
+        os.path.join(os.environ["HOME"], ".cmk-credentials"): _VolumeInfo(
+            bind="/root/.cmk-credentials",
+            mode="ro",
+        ),
     }
     if "WORKSPACE" in os.environ:
-        volumes[os.path.join(os.environ["WORKSPACE"], "packages")] = {
-            "bind": "/packages",
-            "mode": "ro",
-        }
+        volumes[os.path.join(os.environ["WORKSPACE"], "packages")] = _VolumeInfo(
+            bind="/packages",
+            mode="ro",
+        )
     volumes.update(_git_repos())
     return volumes
 
 
-def _git_repos():
+def _git_repos() -> Mapping[str, _VolumeInfo]:
     # This ensures that we can also work with git-worktrees. For this, the original git repository
     # needs to be mapped into the container as well.
     repo_path = str(testlib.repo_path())
@@ -408,10 +415,10 @@ def _git_repos():
         # To get access to the test scripts and for updating the version from
         # the current git checkout. Will also be used for updating the image with
         # the current git state
-        repo_path: {
-            "bind": "/git-lowerdir",
-            "mode": "ro",
-        },
+        repo_path: _VolumeInfo(
+            bind="/git-lowerdir",
+            mode="ro",
+        ),
     }
     if os.path.isfile(git_entry):  # if not, it's a directory
         with open(git_entry) as f:
@@ -419,23 +426,23 @@ def _git_repos():
             real_path = real_path[8:]  # skip "gitdir: "
             real_path = real_path.split("/.git")[0]  # cut off .git/...
 
-        repos[real_path] = {
-            "bind": real_path,
-            "mode": "ro",
-        }
+        repos[real_path] = _VolumeInfo(
+            bind=real_path,
+            mode="ro",
+        )
 
     return repos
 
 
-def _runtime_volumes():
+def _runtime_volumes() -> Mapping[str, _VolumeInfo]:
     volumes = {
         # For whatever reason the image can not be started when nothing is mounted
         # at the file mount that was used while building the image. This is not
         # really needed during runtime of the test. We could mount any file.
-        os.path.join(os.environ["HOME"], ".cmk-credentials"): {
-            "bind": "/root/.cmk-credentials",
-            "mode": "ro",
-        }
+        os.path.join(os.environ["HOME"], ".cmk-credentials"): _VolumeInfo(
+            bind="/root/.cmk-credentials",
+            mode="ro",
+        )
     }
     volumes.update(_git_repos())
     return volumes
@@ -456,8 +463,9 @@ def _container_env(version: CMKVersion) -> dict[str, str]:
     }
 
 
+# pep-0692 is not yet finished in mypy...
 @contextmanager
-def _start(client, **kwargs):
+def _start(client: docker.DockerClient, **kwargs) -> Iterator[docker.Container]:  # type: ignore[no-untyped-def]
     logger.info("Start new container from [%s] (Args: %s)", kwargs["image"], kwargs)
 
     try:
@@ -482,7 +490,8 @@ def _start(client, **kwargs):
         c.remove(v=True, force=True)
 
 
-def _exec_run(c, cmd, **kwargs):
+# pep-0692 is not yet finished in mypy...
+def _exec_run(c: docker.Container, cmd: list[str], **kwargs) -> int:  # type: ignore[no-untyped-def]
     if kwargs:
         logger.info(
             "Execute in container %s: %r (kwargs: %r)",
@@ -510,7 +519,7 @@ def _exec_run(c, cmd, **kwargs):
 
 def container_exec(
     container: docker.Container,
-    cmd: str | list[object],
+    cmd: str | Sequence[str],
     stdout: bool = True,
     stderr: bool = True,
     stdin: bool = False,
@@ -558,13 +567,13 @@ class ContainerExec:
         self.id = container_id
         self.output = output
 
-    def inspect(self):
-        return self.client.api.exec_inspect(self.id)
+    def inspect(self) -> Mapping:
+        return self.client.api.exec_inspect(self.id)  # type: ignore[no-any-return]
 
-    def poll(self):
-        return self.inspect()["ExitCode"]
+    def poll(self) -> int:
+        return int(self.inspect()["ExitCode"])
 
-    def communicate(self, line_prefix=b""):
+    def communicate(self, line_prefix: bytes = b"") -> int:
         for data in self.output:
             if not data:
                 continue
@@ -602,7 +611,7 @@ def _copy_directory(
         tar.extractall(str(dest_path))
 
 
-def _prepare_git_overlay(container, lower_path, target_path):
+def _prepare_git_overlay(container: docker.Container, lower_path: str, target_path: str) -> None:
     """Prevent modification of git checkout volume contents
 
     Create some tmpfs that is mounted as rw layer over the the git checkout
@@ -664,7 +673,7 @@ def _prepare_git_overlay(container, lower_path, target_path):
     )
 
 
-def _prepare_virtual_environment(container, version):
+def _prepare_virtual_environment(container: docker.Container, version: CMKVersion) -> None:
     """Ensure the virtual environment is ready for use
 
     Because the virtual environment are in the /git path (which is not persisted),
@@ -675,7 +684,7 @@ def _prepare_virtual_environment(container, version):
     _setup_virtual_environment(container, version)
 
 
-def _setup_virtual_environment(container, version):
+def _setup_virtual_environment(container: docker.Container, version: CMKVersion) -> None:
     logger.info("Prepare virtual environment")
     assert (
         _exec_run(
@@ -691,7 +700,7 @@ def _setup_virtual_environment(container, version):
     assert _exec_run(container, ["test", "-d", "/git/.venv"]) == 0
 
 
-def _cleanup_previous_virtual_environment(container, version):
+def _cleanup_previous_virtual_environment(container: docker.Container, version: CMKVersion) -> None:
     """Delete existing .venv
 
     When the git is mounted to the test container for a node which already created it's virtual
@@ -715,7 +724,7 @@ def _cleanup_previous_virtual_environment(container, version):
     assert _exec_run(container, ["test", "-n", "/.venv"]) == 0
 
 
-def _persist_virtual_environment(container, version):
+def _persist_virtual_environment(container: docker.Container, version: CMKVersion) -> None:
     """Persist the used venv in container image
 
     Copy the virtual environment that was used during image creation from /git/.venv (not persisted)
@@ -736,7 +745,7 @@ def _persist_virtual_environment(container, version):
     assert _exec_run(container, ["test", "-d", "/.venv"]) == 0
 
 
-def _reuse_persisted_virtual_environment(container, version):
+def _reuse_persisted_virtual_environment(container: docker.Container, version: CMKVersion) -> None:
     """Copy /.venv to /git/.venv to reuse previous venv during testing"""
     if (
         _exec_run(
@@ -762,7 +771,7 @@ def _reuse_persisted_virtual_environment(container, version):
         _setup_virtual_environment(container, version)
 
 
-def _mirror_reachable():
+def _mirror_reachable() -> bool:
     try:
         requests.get(_DOCKER_REGISTRY_URL, timeout=2)
         return True

@@ -13,7 +13,7 @@ import pprint
 import queue
 import urllib.parse
 from collections.abc import Mapping, Sequence
-from typing import Any, cast, Literal, NoReturn, TypedDict
+from typing import Any, Callable, cast, Literal, NoReturn, TypedDict
 
 from cmk.utils import version
 
@@ -76,8 +76,8 @@ class Response:
         return self
 
     @property
-    def json(self):
-        assert self.body is not None  # mostly for mypy
+    def json(self) -> Any:
+        assert self.body is not None
         return json.loads(self.body.decode("utf-8"))
 
 
@@ -127,16 +127,16 @@ class RestApiException(Exception):
 def get_link(resp: dict, rel: str) -> Mapping:
     for link in resp.get("links", []):
         if link["rel"].startswith(rel):
-            return link
+            return link  # type: ignore[no-any-return]
     if "result" in resp:
         for link in resp["result"].get("links", []):
             if link["rel"].startswith(rel):
-                return link
+                return link  # type: ignore[no-any-return]
     for member in resp.get("members", {}).values():
         if member["memberType"] == "action":
             for link in member["links"]:
                 if link["rel"].startswith(rel):
-                    return link
+                    return link  # type: ignore[no-any-return]
     raise KeyError(f"{rel!r} not found")
 
 
@@ -351,10 +351,10 @@ class RestApiClient:
 CLIENTS: dict = {}
 
 
-def register_client(client):
+def register_client(client: type[RestApiClient]) -> Callable[[], type[RestApiClient]]:
     CLIENTS[client.__name__.replace("Client", "")] = client
 
-    def client_register():
+    def client_register() -> type[RestApiClient]:
         return client
 
     return client_register

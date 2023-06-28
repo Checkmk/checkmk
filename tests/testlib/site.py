@@ -371,6 +371,7 @@ class Site:
         stdout, stderr = p.communicate(input)
         if p.returncode != 0:
             raise subprocess.CalledProcessError(p.returncode, p.args, stdout, stderr)
+        assert isinstance(stdout, str)
         return stdout
 
     @contextmanager
@@ -418,13 +419,14 @@ class Site:
         stdout = p.communicate()[0]
         if p.returncode != 0:
             raise Exception("Failed to read file %s. Exit-Code: %d" % (rel_path, p.wait()))
-        return stdout if stdout is not None else ""
+        return stdout if isinstance(stdout, str) else ""
 
     def read_binary_file(self, rel_path: str) -> bytes:
         p = self.execute(["cat", self.path(rel_path)], stdout=subprocess.PIPE, encoding=None)
         stdout = p.communicate()[0]
         if p.returncode != 0:
             raise Exception("Failed to read file %s. Exit-Code: %d" % (rel_path, p.returncode))
+        assert isinstance(stdout, bytes)
         return stdout
 
     def delete_file(self, rel_path: str) -> None:
@@ -517,6 +519,7 @@ class Site:
         assert p.wait() == 0
         if not output:
             return []
+        assert isinstance(output, str)
         return output.split("\n")
 
     def system_temp_dir(self) -> Iterator[str]:
@@ -1194,8 +1197,8 @@ class Site:
     def is_global_flag_disabled(self, column: str) -> bool:
         return self._get_global_flag(column) == 0
 
-    def _get_global_flag(self, column: str) -> Literal[1, 0]:
-        return self.live.query_value(f"GET status\nColumns: {column}\n") == 1
+    def _get_global_flag(self, column: str) -> bool:
+        return bool(self.live.query_value(f"GET status\nColumns: {column}\n") == 1)
 
 
 class SiteFactory:

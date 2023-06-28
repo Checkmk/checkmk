@@ -791,21 +791,22 @@ def _filter_table(
 
 
 def _filter_tree(tree: ImmutableTree, filter_tree: _FilterTree) -> ImmutableTree:
-    filtered_nodes_by_name: dict[SDNodeName, ImmutableTree] = {}
-    for name in set(
-        name for name in tree.nodes_by_name for f in filter_tree.filters_nodes if f(name)
-    ).union(filter_tree.nodes):
-        if filtered_node := _filter_tree(
-            tree.nodes_by_name.get(name, ImmutableTree(path=tree.path + (name,))),
-            filter_tree.nodes.get(name, _FilterTree()),
-        ):
-            filtered_nodes_by_name.setdefault(name, filtered_node)
-
     return ImmutableTree(
         path=tree.path,
-        attributes=(_filter_attributes(tree.attributes, filter_tree.filters_pairs)),
+        attributes=_filter_attributes(tree.attributes, filter_tree.filters_pairs),
         table=_filter_table(tree.table, filter_tree.filters_columns),
-        nodes_by_name=filtered_nodes_by_name,
+        nodes_by_name={
+            name: filtered_node
+            for name in set(
+                name for name in tree.nodes_by_name for f in filter_tree.filters_nodes if f(name)
+            ).union(filter_tree.nodes)
+            if (
+                filtered_node := _filter_tree(
+                    tree.nodes_by_name.get(name, ImmutableTree(path=tree.path + (name,))),
+                    filter_tree.nodes.get(name, _FilterTree()),
+                )
+            )
+        },
     )
 
 
@@ -1301,21 +1302,22 @@ def _filter_delta_table(
 
 
 def _filter_delta_tree(tree: ImmutableDeltaTree, filter_tree: _FilterTree) -> ImmutableDeltaTree:
-    filtered_nodes: dict[SDNodeName, ImmutableDeltaTree] = {}
-    for name in set(
-        name for name in tree.nodes_by_name for f in filter_tree.filters_nodes if f(name)
-    ).union(filter_tree.nodes):
-        if filtered_node := _filter_delta_tree(
-            tree.nodes_by_name.get(name, ImmutableDeltaTree(path=tree.path + (name,))),
-            filter_tree.nodes.get(name, _FilterTree()),
-        ):
-            filtered_nodes.setdefault(name, filtered_node)
-
     return ImmutableDeltaTree(
         path=tree.path,
-        attributes=(_filter_delta_attributes(tree.attributes, filter_tree.filters_pairs)),
+        attributes=_filter_delta_attributes(tree.attributes, filter_tree.filters_pairs),
         table=_filter_delta_table(tree.table, filter_tree.filters_columns),
-        nodes_by_name=filtered_nodes,
+        nodes_by_name={
+            name: filtered_node
+            for name in set(
+                name for name in tree.nodes_by_name for f in filter_tree.filters_nodes if f(name)
+            ).union(filter_tree.nodes)
+            if (
+                filtered_node := _filter_delta_tree(
+                    tree.nodes_by_name.get(name, ImmutableDeltaTree(path=tree.path + (name,))),
+                    filter_tree.nodes.get(name, _FilterTree()),
+                )
+            )
+        },
     )
 
 

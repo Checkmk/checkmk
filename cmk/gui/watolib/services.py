@@ -8,11 +8,11 @@ import dataclasses
 import enum
 import functools
 import json
-import os
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
 from hashlib import sha256
+from pathlib import Path
 from typing import Any, assert_never, Literal, NamedTuple, TypedDict, TypeVar
 
 from mypy_extensions import Arg, NamedArg
@@ -22,10 +22,12 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel, HostLabelValueDict
 from cmk.utils.object_diff import make_diff_text
 from cmk.utils.rulesets.conditions import HostOrServiceConditions
-from cmk.utils.version import Version
+from cmk.utils.store import ObjectStore, TextSerializer
+from cmk.utils.version import __version__, Version
 
 from cmk.automations.results import (
     CheckPreviewEntry,
+    SerializedResult,
     ServiceDiscoveryPreviewResult,
     SetAutochecksTable,
 )
@@ -903,6 +905,10 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
                 estimated_duration=BackgroundJob(self.job_prefix).get_status().duration,
             ),
         )
+
+        self._preview_store = ObjectStore(
+            Path(self.get_work_dir(), "check_table.mk"), serializer=TextSerializer()
+        )
         self._pre_discovery_preview = (
             0,
             ServiceDiscoveryPreviewResult(
@@ -916,6 +922,22 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
                 labels_by_host={},
             ),
         )
+
+    def _store_last_preview(self, result: ServiceDiscoveryPreviewResult) -> None:
+        self._preview_store.write_obj(result.serialize(Version.from_str(__version__)))
+
+    def _load_last_preview(self) -> tuple[int, ServiceDiscoveryPreviewResult] | None:
+        try:
+            return (
+                int(self._preview_store.path.stat().st_mtime),
+                ServiceDiscoveryPreviewResult.deserialize(
+                    SerializedResult(self._preview_store.read_obj(default=""))
+                ),
+            )
+        except (FileNotFoundError, ValueError):
+            return None
+        finally:
+            self._preview_store.path.unlink(missing_ok=True)
 
     def discover(
         self, api_request: StartDiscoveryRequest, job_interface: BackgroundProcessInterface
@@ -940,18 +962,19 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
         """The try-inventory automation refreshes the Checkmk internal cache and makes the new
         information available to the next try-inventory call made by get_result()."""
         result = discovery_preview(
-            api_request.host.site_id(),
+            api_request.host.site_id(),  # TODO: this is a local discovery always.
             api_request.host.name(),
             prevent_fetching=False,
             raise_errors=not api_request.options.ignore_errors,
         )
+        self._store_last_preview(result)
         sys.stdout.write(result.output)
 
     def _perform_automatic_refresh(self, api_request: StartDiscoveryRequest) -> None:
         # TODO: In distributed sites this must not add a change on the remote site. We need to build
         # the way back to the central site and show the information there.
         discovery(
-            api_request.host.site_id(),
+            api_request.host.site_id(),  # TODO: this is a local discovery always.
             "refresh",
             [api_request.host.name()],
             scan=True,
@@ -973,6 +996,8 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
 
         if job_status.is_active:
             check_table_created, result = self._pre_discovery_preview
+        elif (last_result := self._load_last_preview()) is not None:
+            check_table_created, result = last_result
         else:
             check_table_created, result = self._get_discovery_preview(api_request)
 
@@ -992,9 +1017,6 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
     def _get_discovery_preview(
         api_request: StartDiscoveryRequest,
     ) -> tuple[int, ServiceDiscoveryPreviewResult]:
-        # TODO: Use the correct time. This is difficult because cmk.base does not have a single
-        # time for all data of a host. The data sources should be able to provide this information
-        # somehow.
         return (
             int(time.time()),
             discovery_preview(
@@ -1026,9 +1048,6 @@ class ServiceDiscoveryBackgroundJob(BackgroundJob):
             update={"state": JobStatusStates.FINISHED, "loginfo": new_loginfo},
             deep=True,  # not sure, better play it safe.
         )
-
-    def _check_table_file_path(self):
-        return os.path.join(self.get_work_dir(), "check_table.mk")
 
 
 job_registry.register(ServiceDiscoveryBackgroundJob)

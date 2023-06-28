@@ -1,0 +1,15 @@
+Title: Discovery page: Show true reason of a failed discovery
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1687956180
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The discovery page reports the success or failure of a datasource since Checkmk 2.2.
+However if a datasource failed the page most of the times only reported "No cached data available".
+While this is correct, it gives little information about the underlying problem.
+Now the actual error message is show.
+

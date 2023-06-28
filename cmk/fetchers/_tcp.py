@@ -4,60 +4,34 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import copy
+import enum
 import logging
 import socket
 import ssl
-from collections.abc import Mapping, Sized
-from typing import Any, Final
+from collections.abc import Mapping
+from typing import Any, assert_never, Final
+from uuid import UUID
 
 import cmk.utils.debug
 from cmk.utils import paths
 from cmk.utils.agent_registration import get_uuid_link_manager
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.certs import write_cert_store
+from cmk.utils.encryption import decrypt_by_agent_protocol, TransportProtocol
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.fetchers import Fetcher, Mode
 
-from ._agentprtcl import (
-    AgentCtlMessage,
-    decrypt_by_agent_protocol,
-    TCPEncryptionHandling,
-    TransportProtocol,
-    validate_agent_protocol,
-)
+from ._agentctl import AgentCtlMessage
 
-__all__ = ["TCPFetcher"]
+__all__ = ["TCPEncryptionHandling", "TCPFetcher"]
 
 
-def recvall(sock: socket.socket, flags: int = 0) -> bytes:
-    buffer: list[bytes] = []
-    try:
-        while True:
-            data = sock.recv(4096, flags)
-            if not data:
-                break
-            buffer.append(data)
-    except OSError as e:
-        if cmk.utils.debug.enabled():
-            raise
-        raise MKFetcherError("Communication failed: %s" % e)
-
-    return b"".join(buffer)
-
-
-def wrap_tls(sock: socket.socket, server_hostname: str) -> ssl.SSLSocket:
-    if not paths.agent_cert_store.exists():
-        # agent cert store should be written on agent receiver startup.
-        # However, if it's missing for some reason, we have to write it.
-        write_cert_store(source_dir=paths.agent_cas_dir, store_path=paths.agent_cert_store)
-    try:
-        ctx = ssl.create_default_context(cafile=str(paths.agent_cert_store))
-        ctx.load_cert_chain(certfile=paths.site_cert_file)
-        return ctx.wrap_socket(sock, server_hostname=server_hostname)
-    except ssl.SSLError as e:
-        raise MKFetcherError("Error establishing TLS connection") from e
+class TCPEncryptionHandling(enum.Enum):
+    TLS_ENCRYPTED_ONLY = enum.auto()
+    ANY_ENCRYPTED = enum.auto()
+    ANY_AND_PLAIN = enum.auto()
 
 
 class TCPFetcher(Fetcher[AgentRawData]):
@@ -163,65 +137,103 @@ class TCPFetcher(Fetcher[AgentRawData]):
         self._opt_socket = None
 
     def _fetch_from_io(self, mode: Mode) -> AgentRawData:
-        controller_uuid = get_uuid_link_manager().get_uuid(self.host_name)
-        agent_data = self._get_agent_data(str(controller_uuid))
-        self._validate_decrypted_data(agent_data)
-        return agent_data
+        agent_data, protocol = self._get_agent_data()
+        return self._validate_decrypted_data(self._decrypt(protocol, agent_data))
 
-    def _get_agent_data(self, server_hostname: str | None) -> AgentRawData:
+    def _get_agent_data(self) -> tuple[AgentRawData, TransportProtocol]:
         try:
             raw_protocol = self._socket.recv(2, socket.MSG_WAITALL)
         except OSError as e:
             raise MKFetcherError(f"Communication failed: {e}") from e
 
-        if not raw_protocol:
-            raise MKFetcherError("Empty output from host %s:%d" % self.address)
-
-        try:
-            protocol = TransportProtocol.from_bytes(raw_protocol)
-        except ValueError:
-            raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
-
-        self._logger.debug("Detected transport protocol: %r", protocol)
-        validate_agent_protocol(
-            protocol, self.encryption_handling, is_registered=server_hostname is not None
+        protocol = self._detect_transport_protocol(
+            raw_protocol, empty_msg="Empty output from host %s:%d" % self.address
         )
 
-        if protocol is TransportProtocol.TLS:
-            if server_hostname is None:
-                raise MKFetcherError("Agent controller not registered")
+        controller_uuid = get_uuid_link_manager().get_uuid(self.host_name)
+        self._validate_protocol(protocol, is_registered=controller_uuid is not None)
 
-            with wrap_tls(self._socket, server_hostname) as ssock:
-                self._logger.debug("Reading data from agent via TLS socket")
-                self._logger.debug("Reading data from agent")
-                raw_agent_data = recvall(ssock)
+        if protocol is TransportProtocol.TLS:
+            with self._wrap_tls(controller_uuid) as ssock:
+                raw_agent_data = self._recvall(ssock)
             try:
                 agent_data = AgentCtlMessage.from_bytes(raw_agent_data).payload
             except ValueError as e:
                 raise MKFetcherError(f"Failed to deserialize versioned agent data: {e!r}") from e
+            return AgentRawData(agent_data[2:]), self._detect_transport_protocol(
+                agent_data[:2], empty_msg="Empty payload from controller at %s:%d" % self.address
+            )
 
-            if len(agent_data) <= 2:
-                raise MKFetcherError("Empty payload from controller at %s:%d" % self.address)
+        return AgentRawData(self._recvall(self._socket, socket.MSG_WAITALL)), protocol
 
-            try:
-                protocol = TransportProtocol.from_bytes(agent_data)
-            except ValueError:
-                raise MKFetcherError(f"Unknown transport protocol: {agent_data!r}")
+    def _detect_transport_protocol(self, raw_protocol: bytes, empty_msg: str) -> TransportProtocol:
+        try:
+            protocol = TransportProtocol(raw_protocol)
+            self._logger.debug(f"Detected transport protocol: {protocol} ({raw_protocol!r})")
+            return protocol
+        except ValueError:
+            if raw_protocol:
+                raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
+            raise MKFetcherError(empty_msg)
 
-            self._logger.debug("Detected transport protocol: %r", protocol)
-            return self._decrypt(protocol, memoryview(agent_data)[2:])
+    def _validate_protocol(self, protocol: TransportProtocol, is_registered: bool) -> None:
+        if protocol is TransportProtocol.TLS:
+            return
 
+        if is_registered:
+            raise MKFetcherError("Refused: Host is registered for TLS but not using it")
+
+        match self.encryption_handling:
+            case TCPEncryptionHandling.TLS_ENCRYPTED_ONLY:
+                raise MKFetcherError("Refused: TLS is enforced but host is not using it")
+            case TCPEncryptionHandling.ANY_ENCRYPTED:
+                if protocol is TransportProtocol.PLAIN:
+                    raise MKFetcherError(
+                        "Refused: Encryption is enforced but agent output is plaintext"
+                    )
+            case TCPEncryptionHandling.ANY_AND_PLAIN:
+                pass
+            case never:
+                assert_never(never)
+
+    def _wrap_tls(self, controller_uuid: UUID | None) -> ssl.SSLSocket:
+        if controller_uuid is None:
+            raise MKFetcherError("Agent controller not registered")
+
+        self._logger.debug("Reading data from agent via TLS socket")
+        if not paths.agent_cert_store.exists():
+            # agent cert store should be written on agent receiver startup.
+            # However, if it's missing for some reason, we have to write it.
+            write_cert_store(source_dir=paths.agent_cas_dir, store_path=paths.agent_cert_store)
+        try:
+            ctx = ssl.create_default_context(cafile=str(paths.agent_cert_store))
+            ctx.load_cert_chain(certfile=paths.site_cert_file)
+            return ctx.wrap_socket(self._socket, server_hostname=str(controller_uuid))
+        except ssl.SSLError as e:
+            raise MKFetcherError("Error establishing TLS connection") from e
+
+    def _recvall(self, sock: socket.socket, flags: int = 0) -> bytes:
         self._logger.debug("Reading data from agent")
-        return self._decrypt(protocol, recvall(self._socket, socket.MSG_WAITALL))
+        buffer: list[bytes] = []
+        try:
+            while True:
+                data = sock.recv(4096, flags)
+                if not data:
+                    break
+                buffer.append(data)
+        except OSError as e:
+            if cmk.utils.debug.enabled():
+                raise
+            raise MKFetcherError("Communication failed: %s" % e)
 
-    def _decrypt(
-        self, protocol: TransportProtocol, output: bytes | bytearray | memoryview
-    ) -> AgentRawData:
+        return b"".join(buffer)
+
+    def _decrypt(self, protocol: TransportProtocol, output: AgentRawData) -> AgentRawData:
         if not output:
-            return AgentRawData(output)  # nothing to to, validation will fail
+            return output  # nothing to to, validation will fail
 
         if protocol is TransportProtocol.PLAIN:
-            return AgentRawData(protocol.value + output)  # bring back stolen bytes
+            return protocol.value + output  # bring back stolen bytes
 
         if (secret := self.pre_shared_secret) is None:
             raise MKFetcherError("Data is encrypted but no secret is known")
@@ -232,8 +244,9 @@ class TCPFetcher(Fetcher[AgentRawData]):
         except Exception as e:
             raise MKFetcherError("Failed to decrypt agent output: %s" % e) from e
 
-    def _validate_decrypted_data(self, output: Sized) -> None:
+    def _validate_decrypted_data(self, output: AgentRawData) -> AgentRawData:
         if len(output) < 16:
             raise MKFetcherError(
                 f"Too short payload from agent at {self.address[0]}:{self.address[1]}: {output!r}"
             )
+        return output

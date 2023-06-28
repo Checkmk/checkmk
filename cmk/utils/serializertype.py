@@ -6,11 +6,9 @@
 import abc
 from collections.abc import Iterator
 from contextlib import suppress
-from typing import Any, Protocol, Self, TypeAlias
+from typing import Any, Protocol, TypeVar
 
 __all__ = ["Serializer", "Deserializer"]
-
-_Buffer: TypeAlias = bytes | bytearray | memoryview
 
 
 class Serializer(Protocol):
@@ -58,6 +56,9 @@ class Serializer(Protocol):
         raise NotImplementedError
 
 
+TDeserializer = TypeVar("TDeserializer", bound="Deserializer")
+
+
 class Deserializer(Protocol):
     """Base class for deserializable data.
 
@@ -71,7 +72,7 @@ class Deserializer(Protocol):
 
     @classmethod
     @abc.abstractmethod
-    def from_bytes(cls, data: _Buffer) -> Self:
+    def from_bytes(cls: type[TDeserializer], data: bytes) -> TDeserializer:
         raise NotImplementedError
 
     @abc.abstractmethod

@@ -9,6 +9,7 @@ import json
 import os
 import socket
 from collections.abc import Sequence
+from itertools import product as cartesian_product
 from pathlib import Path
 from types import TracebackType
 from typing import Any, Literal, NamedTuple
@@ -22,6 +23,7 @@ from pytest import MonkeyPatch
 import cmk.utils.resulttype as result
 import cmk.utils.version as cmk_version
 from cmk.utils.agentdatatype import AgentRawData
+from cmk.utils.encryption import TransportProtocol
 from cmk.utils.exceptions import MKFetcherError, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
@@ -39,7 +41,6 @@ from cmk.snmplib.type_defs import (
 )
 
 import cmk.fetchers._snmp as snmp
-import cmk.fetchers._tcp as tcp
 from cmk.fetchers import (
     get_raw_data,
     IPMIFetcher,
@@ -50,9 +51,8 @@ from cmk.fetchers import (
     SNMPSectionMeta,
     TCPEncryptionHandling,
     TCPFetcher,
-    TransportProtocol,
 )
-from cmk.fetchers._agentprtcl import CompressionType, HeaderV1, Version
+from cmk.fetchers._agentctl import CompressionType, HeaderV1, Version
 from cmk.fetchers._ipmi import IPMISensor
 from cmk.fetchers.filecache import (
     AgentFileCache,
@@ -919,29 +919,99 @@ class TestTCPFetcher:
         )
         assert fetcher._decrypt(TransportProtocol(output[:2]), AgentRawData(output[2:])) == output
 
+    def test_validate_protocol_plaintext_with_enforce_raises(self) -> None:
+        fetcher = TCPFetcher(
+            family=socket.AF_INET,
+            address=(HostAddress("1.2.3.4"), 0),
+            host_name=HostName("irrelevant_for_this_test"),
+            timeout=0.0,
+            encryption_handling=TCPEncryptionHandling.ANY_ENCRYPTED,
+            pre_shared_secret=None,
+        )
+
+        with pytest.raises(MKFetcherError):
+            fetcher._validate_protocol(TransportProtocol.PLAIN, is_registered=False)
+
+    def test_validate_protocol_no_tls_with_registered_host_raises(self) -> None:
+        fetcher = TCPFetcher(
+            family=socket.AF_INET,
+            address=(HostAddress("1.2.3.4"), 0),
+            host_name=HostName("irrelevant_for_this_test"),
+            timeout=0.0,
+            encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,  # not relevant for this test
+            pre_shared_secret=None,
+        )
+        for p in TransportProtocol:
+            if p is TransportProtocol.TLS:
+                continue
+            with pytest.raises(MKFetcherError):
+                fetcher._validate_protocol(p, is_registered=True)
+
+    def test_validate_protocol_tls_always_ok(self) -> None:
+        for encryption_handling, is_registered in cartesian_product(
+            TCPEncryptionHandling, (True, False)
+        ):
+            TCPFetcher(
+                family=socket.AF_INET,
+                address=(HostAddress("1.2.3.4"), 0),
+                host_name=HostName("irrelevant_for_this_test"),
+                timeout=0.0,
+                encryption_handling=encryption_handling,
+                pre_shared_secret=None,
+            )._validate_protocol(TransportProtocol.TLS, is_registered=is_registered)
+
+    def test_validate_protocol_tls_required(self) -> None:
+        fetcher = TCPFetcher(
+            family=socket.AF_INET,
+            address=(HostAddress("1.2.3.4"), 0),
+            host_name=HostName("irrelevant_for_this_test"),
+            timeout=0.0,
+            encryption_handling=TCPEncryptionHandling.TLS_ENCRYPTED_ONLY,
+            pre_shared_secret=None,
+        )
+        for p in TransportProtocol:
+            if p is TransportProtocol.TLS:
+                continue
+            with pytest.raises(MKFetcherError, match="TLS"):
+                fetcher._validate_protocol(p, is_registered=False)
+
     def test_get_agent_data_without_tls(
         self, monkeypatch: MonkeyPatch, fetcher: TCPFetcher
     ) -> None:
         mock_sock = _MockSock(b"<<<section:sep(0)>>>\nbody\n")
         monkeypatch.setattr(fetcher, "_opt_socket", mock_sock)
 
-        assert fetcher._get_agent_data(None) == mock_sock.data
+        agent_data, protocol = fetcher._get_agent_data()
+        assert agent_data == mock_sock.data[2:]
+        assert protocol == TransportProtocol.PLAIN
 
     def test_get_agent_data_with_tls(self, monkeypatch: MonkeyPatch, fetcher: TCPFetcher) -> None:
         mock_data = b"<<<section:sep(0)>>>\nbody\n"
         mock_sock = _MockSock(
-            b"%b%b%b%b"
+            b"16%b%b%b"
             % (
-                TransportProtocol.TLS.value,
                 bytes(Version.V1),
                 bytes(HeaderV1(CompressionType.ZLIB)),
                 compress(mock_data),
             )
         )
         monkeypatch.setattr(fetcher, "_opt_socket", mock_sock)
-        monkeypatch.setattr(tcp, "wrap_tls", lambda *args: mock_sock)
+        monkeypatch.setattr(fetcher, "_wrap_tls", lambda _uuid: mock_sock)
 
-        assert fetcher._get_agent_data("server") == mock_data
+        agent_data, protocol = fetcher._get_agent_data()
+        assert agent_data == mock_data[2:]
+        assert protocol == TransportProtocol.PLAIN
+
+    def test_detect_transport_protocol(self, fetcher: TCPFetcher) -> None:
+        assert fetcher._detect_transport_protocol(b"02", "Unused") == TransportProtocol.SHA256
+
+    def test_detect_transport_protocol_error(self, fetcher: TCPFetcher) -> None:
+        with pytest.raises(MKFetcherError, match="Unknown transport protocol: b'abc'"):
+            fetcher._detect_transport_protocol(b"abc", "unused")
+
+    def test_detect_transport_protocol_empty_error(self, fetcher: TCPFetcher) -> None:
+        with pytest.raises(MKFetcherError, match="Passed error message"):
+            fetcher._detect_transport_protocol(b"", "Passed error message")
 
 
 class TestFetcherCaching:
@@ -1026,10 +1096,10 @@ def test_tcp_fetcher_dead_connection_timeout(
         if exc_type is not None:
             with pytest.raises(exc_type):
                 fetcher.open()
-                fetcher._get_agent_data(None)
+                fetcher._get_agent_data()
         else:
             fetcher.open()
-            fetcher._get_agent_data(None)
+            fetcher._get_agent_data()
 
 
 class FakeSocket:

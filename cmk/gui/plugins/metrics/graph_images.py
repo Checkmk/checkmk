@@ -34,17 +34,13 @@ from cmk.gui.plugins.metrics.graph_pdf import (
 )
 from cmk.gui.plugins.metrics.identification import graph_identification_types
 from cmk.gui.plugins.metrics.utils import (
-    CombinedGraphMetricSpec,
+    CombinedGraphMetricRecipe,
+    CombinedSingleMetricSpec,
     get_graph_data_from_livestatus,
     GraphRecipe,
 )
 from cmk.gui.session import SuperUserContext
-from cmk.gui.type_defs import (
-    CombinedGraphSpec,
-    GraphConsoldiationFunction,
-    GraphRenderOptions,
-    TemplateGraphSpec,
-)
+from cmk.gui.type_defs import GraphConsoldiationFunction, GraphRenderOptions, TemplateGraphSpec
 
 
 # Provides a json list containing base64 encoded PNG images of the current 24h graphs
@@ -52,7 +48,7 @@ from cmk.gui.type_defs import (
 #    # Needed by mail notification plugin (-> no authentication from localhost)
 def ajax_graph_images_for_notifications(
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
     ],
 ) -> None:
     """Registered as `noauth:ajax_graph_images`."""
@@ -67,7 +63,7 @@ def ajax_graph_images_for_notifications(
 
 def _answer_graph_image_request(
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
     ],
 ) -> None:
     try:
@@ -273,7 +269,7 @@ def graph_recipes_for_api_request(
 def graph_spec_from_request(
     api_request: dict[str, Any],
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
     ],
 ) -> dict[str, Any]:
     graph_data_range, graph_recipes = graph_recipes_for_api_request(api_request)

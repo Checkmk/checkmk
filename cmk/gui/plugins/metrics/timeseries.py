@@ -16,7 +16,7 @@ from cmk.utils.prediction import TimeSeries, TimeSeriesValues
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import (
-    CombinedGraphMetricSpec,
+    CombinedGraphMetricRecipe,
     Curve,
     ExpressionParams,
     fade_color,
@@ -41,7 +41,7 @@ from cmk.gui.type_defs import GraphMetric
 
 
 def compute_graph_curves(
-    metrics: Sequence[GraphMetric] | Sequence[CombinedGraphMetricSpec],
+    metrics: Sequence[GraphMetric] | Sequence[CombinedGraphMetricRecipe],
     rrd_data: RRDData,
 ) -> list[Curve]:
     curves = []

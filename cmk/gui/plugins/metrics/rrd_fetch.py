@@ -26,7 +26,8 @@ import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import (
     CheckMetricEntry,
-    CombinedGraphMetricSpec,
+    CombinedGraphMetricRecipe,
+    CombinedSingleMetricSpec,
     find_matching_translation,
     GraphDataRange,
     GraphRecipe,
@@ -36,20 +37,14 @@ from cmk.gui.plugins.metrics.utils import (
     RRDDataKey,
     unit_info,
 )
-from cmk.gui.type_defs import (
-    ColumnName,
-    CombinedGraphSpec,
-    GraphConsoldiationFunction,
-    GraphMetric,
-    RPNExpression,
-)
+from cmk.gui.type_defs import ColumnName, GraphConsoldiationFunction, GraphMetric, RPNExpression
 
 
 def fetch_rrd_data_for_graph(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
     ],
 ) -> RRDData:
     needed_rrd_data = get_needed_sources(
@@ -149,7 +144,7 @@ def _chop_end_of_the_curve(rrd_data: RRDData, step: int) -> None:
 def needed_elements_of_expression(
     expression: RPNExpression,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
     ],
 ) -> Iterator[tuple[Any, ...]]:
     if expression[0] in ["rrd", "scalar"]:
@@ -158,7 +153,16 @@ def needed_elements_of_expression(
         for operand in expression[2]:
             yield from needed_elements_of_expression(operand, resolve_combined_single_metric_spec)
     elif expression[0] == "combined" and not cmk_version.is_raw_edition():
-        metrics = resolve_combined_single_metric_spec(expression[1])
+        raw_spec = expression[1]
+        metrics = resolve_combined_single_metric_spec(
+            CombinedSingleMetricSpec(
+                datasource=raw_spec["datasource"],
+                context=raw_spec["context"],
+                selected_metric=raw_spec["selected_metric"],
+                consolidation_function=raw_spec["consolidation_function"],
+                presentation=raw_spec["presentation"],
+            )
+        )
 
         for out in (
             needed_elements_of_expression(m["expression"], resolve_combined_single_metric_spec)
@@ -168,9 +172,9 @@ def needed_elements_of_expression(
 
 
 def get_needed_sources(
-    metrics: Sequence[GraphMetric] | Sequence[CombinedGraphMetricSpec],
+    metrics: Sequence[GraphMetric] | Sequence[CombinedGraphMetricRecipe],
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
     ],
     *,
     condition: Callable[[Any], bool] = lambda x: True,

@@ -11,6 +11,7 @@ import re
 import shlex
 from collections import OrderedDict
 from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Sequence
+from dataclasses import dataclass
 from functools import lru_cache
 from itertools import chain
 from typing import Any, Final, Literal, NotRequired, overload, TypedDict, TypeVar, Union
@@ -48,6 +49,7 @@ from cmk.gui.type_defs import (
     HorizontalRule,
     LineType,
     MetricDefinition,
+    MetricDefinitionWithoutTitle,
     MetricExpression,
     Perfdata,
     PerfometerSpec,
@@ -134,7 +136,16 @@ class CombinedMetric(GraphMetric):
     original_metrics: NotRequired[Sequence["GraphMetric"]]
 
 
-class CombinedGraphMetricSpec(TypedDict):
+@dataclass(frozen=True)
+class CombinedSingleMetricSpec:
+    datasource: str
+    context: VisualContext
+    selected_metric: MetricDefinitionWithoutTitle
+    consolidation_function: GraphConsoldiationFunction
+    presentation: GraphPresentation
+
+
+class CombinedGraphMetricRecipe(TypedDict):
     unit: str
     color: str
     title: str
@@ -171,7 +182,7 @@ class SingleTimeseriesGraphRecipe(GraphRecipeBase):
 
 
 class CombinedGraphRecipe(GraphRecipeIncomplete):
-    metrics: Sequence[CombinedGraphMetricSpec]
+    metrics: Sequence[CombinedGraphMetricRecipe]
     specification: CombinedGraphIdentifier
 
 

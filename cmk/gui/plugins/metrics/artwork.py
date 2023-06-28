@@ -21,20 +21,15 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.metrics import rrd_fetch, timeseries
 from cmk.gui.plugins.metrics.utils import (
-    CombinedGraphMetricSpec,
+    CombinedGraphMetricRecipe,
+    CombinedSingleMetricSpec,
     Curve,
     GraphDataRange,
     GraphRecipe,
     SizeEx,
     unit_info,
 )
-from cmk.gui.type_defs import (
-    CombinedGraphSpec,
-    GraphRenderOptions,
-    HorizontalRule,
-    UnitInfo,
-    UnitRenderFunc,
-)
+from cmk.gui.type_defs import GraphRenderOptions, HorizontalRule, UnitInfo, UnitRenderFunc
 from cmk.gui.utils.theme import theme
 
 Label = tuple[float, str | None, int]
@@ -220,7 +215,7 @@ def compute_graph_artwork(
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
     ],
     *,
     graph_display_id: str = "",
@@ -392,7 +387,7 @@ def compute_graph_artwork_curves(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
     ],
 ) -> list[Curve]:
     # Fetch all raw RRD data

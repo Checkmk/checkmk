@@ -36,7 +36,8 @@ from cmk.gui.plugins.metrics.html_render import (
     host_service_graph_popup_cmk,
 )
 from cmk.gui.plugins.metrics.utils import (
-    CombinedGraphMetricSpec,
+    CombinedGraphMetricRecipe,
+    CombinedSingleMetricSpec,
     evaluate,
     graph_info,
     LegacyPerfometer,
@@ -45,13 +46,7 @@ from cmk.gui.plugins.metrics.utils import (
     translate_metrics,
     unit_info,
 )
-from cmk.gui.type_defs import (
-    CombinedGraphSpec,
-    MetricExpression,
-    PerfometerSpec,
-    TranslatedMetrics,
-    UnitInfo,
-)
+from cmk.gui.type_defs import MetricExpression, PerfometerSpec, TranslatedMetrics, UnitInfo
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 PerfometerExpression = str | int | float
@@ -758,7 +753,7 @@ class MetricometerRendererDual(MetricometerRenderer):
 # This page is called for the popup of the graph icon of hosts/services.
 def page_host_service_graph_popup(
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
     ],
 ) -> None:
     """Registered as `host_service_graph_popup`."""
@@ -788,7 +783,7 @@ def page_host_service_graph_popup(
 
 def page_graph_dashlet(
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
     ],
 ) -> None:
     """Registered as `graph_dashlet`."""

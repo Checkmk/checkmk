@@ -32,7 +32,8 @@ from cmk.gui.plugins.metrics.artwork import (
 )
 from cmk.gui.plugins.metrics.identification import graph_identification_types
 from cmk.gui.plugins.metrics.utils import (
-    CombinedGraphMetricSpec,
+    CombinedGraphMetricRecipe,
+    CombinedSingleMetricSpec,
     GraphDataRange,
     GraphRecipe,
     render_color_icon,
@@ -41,12 +42,7 @@ from cmk.gui.plugins.metrics.utils import (
 )
 from cmk.gui.plugins.metrics.valuespecs import migrate_graph_render_options_title_format
 from cmk.gui.sites import get_alias_of_host
-from cmk.gui.type_defs import (
-    CombinedGraphSpec,
-    GraphIdentifier,
-    GraphRenderOptions,
-    TemplateGraphSpec,
-)
+from cmk.gui.type_defs import GraphIdentifier, GraphRenderOptions, TemplateGraphSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.utils.popups import MethodAjax
@@ -91,7 +87,7 @@ def host_service_graph_popup_cmk(  # type: ignore[no-untyped-def]
     host_name,
     service_description,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
     ],
 ):
     graph_render_options = {
@@ -557,7 +553,7 @@ def _graph_margin_ex(  # type: ignore[no-untyped-def]
 
 def ajax_graph(
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
     ],
 ) -> None:
     """Registered as `ajax_graph`."""
@@ -577,7 +573,7 @@ def ajax_graph(
 def render_ajax_graph(
     context: Mapping[str, Any],
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
     ],
 ) -> dict[str, Any]:
     graph_data_range = context["data_range"]
@@ -709,7 +705,7 @@ def render_graphs_from_specification_html(
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
     ],
     *,
     render_async: bool = True,
@@ -734,7 +730,7 @@ def render_graphs_from_definitions(
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
     ],
     *,
     render_async: bool = True,
@@ -812,7 +808,7 @@ def render_graph_container_html(
 # Called from javascript code via JSON to initially render a graph
 def ajax_render_graph_content(
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
     ],
 ) -> None:
     """Registered as `ajax_render_graph_content`."""
@@ -844,7 +840,7 @@ def render_graph_content_html(
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
     ],
     *,
     graph_display_id: str = "",
@@ -896,7 +892,7 @@ def render_time_range_selection(
     graph_recipe: GraphRecipe,
     graph_render_options: GraphRenderOptions,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
     ],
     *,
     graph_display_id: str,
@@ -985,7 +981,7 @@ def estimate_graph_step_for_html(
 
 def ajax_graph_hover(
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
     ],
 ) -> None:
     """Registered as `ajax_graph_hover`."""
@@ -1009,7 +1005,7 @@ def render_ajax_graph_hover(
     context: Mapping[str, Any],
     hover_time: int,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
     ],
 ) -> dict[str, object]:
     graph_data_range = context["data_range"]
@@ -1107,7 +1103,7 @@ def host_service_graph_dashlet_cmk(
     graph_identification: GraphIdentifier,
     custom_graph_render_options: GraphRenderOptions,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedGraphSpec], Sequence[CombinedGraphMetricSpec]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
     ],
     *,
     graph_display_id: str = "",

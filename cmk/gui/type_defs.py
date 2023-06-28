@@ -681,9 +681,9 @@ class CombinedGraphSpec(GraphSpec):
     single_infos: SingleInfos
     presentation: GraphPresentation
     context: VisualContext
+    graph_template: str
     selected_metric: NotRequired[MetricDefinitionWithoutTitle]
     consolidation_function: NotRequired[GraphConsoldiationFunction]
-    graph_template: NotRequired[str]
 
 
 class _SingleTimeseriesGraphSpecMandatory(GraphSpec):

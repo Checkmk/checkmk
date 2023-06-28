@@ -41,6 +41,7 @@ from cmk.snmplib.type_defs import (
 )
 
 import cmk.fetchers._snmp as snmp
+import cmk.fetchers._tcp as tcp
 from cmk.fetchers import (
     get_raw_data,
     IPMIFetcher,
@@ -989,15 +990,16 @@ class TestTCPFetcher:
     def test_get_agent_data_with_tls(self, monkeypatch: MonkeyPatch, fetcher: TCPFetcher) -> None:
         mock_data = b"<<<section:sep(0)>>>\nbody\n"
         mock_sock = _MockSock(
-            b"16%b%b%b"
+            b"%b%b%b%b"
             % (
+                TransportProtocol.TLS.value,
                 bytes(Version.V1),
                 bytes(HeaderV1(CompressionType.ZLIB)),
                 compress(mock_data),
             )
         )
         monkeypatch.setattr(fetcher, "_opt_socket", mock_sock)
-        monkeypatch.setattr(fetcher, "_wrap_tls", lambda _uuid: mock_sock)
+        monkeypatch.setattr(tcp, "wrap_tls", lambda *args: mock_sock)
 
         agent_data, protocol = fetcher._get_agent_data()
         assert agent_data == mock_data[2:]

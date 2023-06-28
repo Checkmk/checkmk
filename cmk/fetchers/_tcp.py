@@ -44,6 +44,19 @@ def recvall(sock: socket.socket, flags: int = 0) -> bytes:
     return b"".join(buffer)
 
 
+def wrap_tls(sock: socket.socket, controller_uuid: UUID) -> ssl.SSLSocket:
+    if not paths.agent_cert_store.exists():
+        # agent cert store should be written on agent receiver startup.
+        # However, if it's missing for some reason, we have to write it.
+        write_cert_store(source_dir=paths.agent_cas_dir, store_path=paths.agent_cert_store)
+    try:
+        ctx = ssl.create_default_context(cafile=str(paths.agent_cert_store))
+        ctx.load_cert_chain(certfile=paths.site_cert_file)
+        return ctx.wrap_socket(sock, server_hostname=str(controller_uuid))
+    except ssl.SSLError as e:
+        raise MKFetcherError("Error establishing TLS connection") from e
+
+
 class TCPEncryptionHandling(enum.Enum):
     TLS_ENCRYPTED_ONLY = enum.auto()
     ANY_ENCRYPTED = enum.auto()
@@ -175,7 +188,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
                 raise MKFetcherError("Agent controller not registered")
 
             self._logger.debug("Reading data from agent via TLS socket")
-            with self._wrap_tls(self._socket, controller_uuid) as ssock:
+            with wrap_tls(self._socket, controller_uuid) as ssock:
                 self._logger.debug("Reading data from agent")
                 raw_agent_data = recvall(ssock)
             try:
@@ -218,19 +231,6 @@ class TCPFetcher(Fetcher[AgentRawData]):
                 pass
             case never:
                 assert_never(never)
-
-    @staticmethod
-    def _wrap_tls(sock: socket.socket, controller_uuid: UUID) -> ssl.SSLSocket:
-        if not paths.agent_cert_store.exists():
-            # agent cert store should be written on agent receiver startup.
-            # However, if it's missing for some reason, we have to write it.
-            write_cert_store(source_dir=paths.agent_cas_dir, store_path=paths.agent_cert_store)
-        try:
-            ctx = ssl.create_default_context(cafile=str(paths.agent_cert_store))
-            ctx.load_cert_chain(certfile=paths.site_cert_file)
-            return ctx.wrap_socket(sock, server_hostname=str(controller_uuid))
-        except ssl.SSLError as e:
-            raise MKFetcherError("Error establishing TLS connection") from e
 
     def _decrypt(self, protocol: TransportProtocol, output: bytes) -> bytes:
         if not output:

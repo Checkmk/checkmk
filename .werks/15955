@@ -1,0 +1,13 @@
+Title: Fix <tt>'NoneType' object has no attribute 'startswith'</tt> crash in views
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1688033297
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p31
+
+Certain views, such as the builtin view <i>Linux [CPU & Memory]</i>, might have crashed with the
+error message mentioned above.

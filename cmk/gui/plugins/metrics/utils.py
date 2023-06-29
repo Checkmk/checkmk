@@ -399,7 +399,10 @@ def _split_perf_data(perf_data_string: str) -> List[str]:
     return shlex.split(perf_data_string)
 
 
-def perfvar_translation(perfvar_name: str, check_command: str) -> TranslationInfo:
+def perfvar_translation(
+    perfvar_name: str,
+    check_command: Optional[str],  # None due to CMK-13883
+) -> TranslationInfo:
     """Get translation info for one performance var."""
     cm = lookup_metric_translations_for_check_command(check_metrics, check_command) or {}
     translation_entry = cm.get(perfvar_name, {})  # Default: no translation necessary
@@ -421,8 +424,10 @@ def perfvar_translation(perfvar_name: str, check_command: str) -> TranslationInf
 
 def lookup_metric_translations_for_check_command(
     all_translations: Mapping[str, Mapping[_MetricName, CheckMetricEntry]],
-    check_command: str,
+    check_command: Optional[str],  # None due to CMK-13883
 ) -> Optional[Mapping[_MetricName, CheckMetricEntry]]:
+    if not check_command:
+        return None
     return all_translations.get(
         check_command,
         all_translations.get(

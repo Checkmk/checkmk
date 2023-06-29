@@ -459,11 +459,20 @@ def test_hex_color_to_rgb_color(hex_color, expected_rgb):
             {MetricName("old"): {"scale": 3}},
             id="management board, explicit entry",
         ),
+        pytest.param(
+            {
+                "check_mk-x": {MetricName("old"): {"name": MetricName("new")}},
+                "check_mk-y": {MetricName("a"): {"scale": 2}},
+            },
+            None,
+            None,
+            id="no check command",
+        ),
     ],
 )
 def test_lookup_metric_translations_for_check_command(
     all_translations: Mapping[str, Mapping[MetricName, utils.CheckMetricEntry]],
-    check_command: str,
+    check_command: Optional[str],
     expected_result: Optional[Mapping[MetricName, utils.CheckMetricEntry]],
 ) -> None:
     assert (

@@ -40,8 +40,8 @@ class TransportProtocol(Enum):
     NONE = b"99"
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> Self:
-        return cls(data[:2])
+    def from_bytes(cls, data: Buffer) -> Self:
+        return cls(memoryview(data)[:2])
 
 
 class Version(Enum):
@@ -51,8 +51,8 @@ class Version(Enum):
         return self.value.to_bytes(self._length(), "big")
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> Version:
-        return cls(int.from_bytes(data[: cls._length()], "big"))
+    def from_bytes(cls, data: Buffer) -> Version:
+        return cls(int.from_bytes(memoryview(data)[: cls._length()], "big"))
 
     @staticmethod
     def _length() -> int:
@@ -67,8 +67,8 @@ class CompressionType(Enum):
         return self.value.to_bytes(self._length(), "big")
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> CompressionType:
-        return cls(int.from_bytes(data[: cls._length()], "big"))
+    def from_bytes(cls, data: Buffer) -> CompressionType:
+        return cls(int.from_bytes(memoryview(data)[: cls._length()], "big"))
 
     @staticmethod
     def _length() -> int:
@@ -79,91 +79,58 @@ class AgentCtlMessage(Deserializer):
     def __init__(
         self,
         version: Version,
-        payload: bytes,
+        payload: Buffer,
     ) -> None:
         self.version: Final = version
         self.payload: Final = payload
 
     @classmethod
-    def from_bytes(
-        cls,
-        data: bytes,
-    ) -> AgentCtlMessage:
+    def from_bytes(cls, data: Buffer) -> AgentCtlMessage:
         version = Version.from_bytes(data)
-        remaining_data = data[len(bytes(version)) :]
+        remaining_data = memoryview(data)[len(bytes(version)) :]
         if version is Version.V1:
-            return cls(
-                version,
-                MessageV1.from_bytes(remaining_data).payload,
-            )
+            return cls(version, MessageV1.from_bytes(remaining_data).payload)
         # unreachable
         raise NotImplementedError
 
     def __hash__(self) -> int:
-        return hash(
-            (
-                hash(self.version),
-                hash(self.payload),
-            )
-        )
+        return hash((hash(self.version), hash(self.payload)))
 
     def __eq__(self, __o: object) -> bool:
-        if isinstance(
-            __o,
-            AgentCtlMessage,
-        ):
+        if isinstance(__o, AgentCtlMessage):
             return self.version == __o.version and self.payload == __o.payload
         return False
 
 
 class HeaderV1(Serializer, Deserializer):
-    def __init__(
-        self,
-        compression_type: CompressionType,
-    ) -> None:
+    def __init__(self, compression_type: CompressionType) -> None:
         self.compression_type: Final = compression_type
 
     def __iter__(self) -> Iterator[bytes]:
         yield bytes(self.compression_type)
 
     @classmethod
-    def from_bytes(
-        cls,
-        data: bytes,
-    ) -> HeaderV1:
+    def from_bytes(cls, data: Buffer) -> HeaderV1:
         return cls(CompressionType.from_bytes(data))
 
 
 class MessageV1(Deserializer):
-    def __init__(
-        self,
-        header: HeaderV1,
-        payload: bytes,
-    ) -> None:
+    def __init__(self, header: HeaderV1, payload: Buffer) -> None:
         self.header: Final = header
         self.payload: Final = payload
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> MessageV1:
+    def from_bytes(cls, data: Buffer) -> MessageV1:
         return cls(
             header := HeaderV1.from_bytes(data),
-            # TODO: remove `bytes()` conversion
-            bytes(_decompress(header.compression_type, data[len(header) :])),
+            _decompress(header.compression_type, memoryview(data)[len(header) :]),
         )
 
     def __hash__(self) -> int:
-        return hash(
-            (
-                hash(self.header),
-                hash(self.payload),
-            )
-        )
+        return hash((hash(self.header), hash(self.payload)))
 
     def __eq__(self, __o: object) -> bool:
-        if isinstance(
-            __o,
-            MessageV1,
-        ):
+        if isinstance(__o, MessageV1):
             return self.header == __o.header and self.payload == __o.payload
         return False
 

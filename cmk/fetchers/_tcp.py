@@ -7,6 +7,7 @@ import copy
 import logging
 import socket
 import ssl
+import sys
 from collections.abc import Mapping, Sized
 from typing import Any, Final
 
@@ -27,6 +28,12 @@ from ._agentprtcl import (
     TransportProtocol,
     validate_agent_protocol,
 )
+
+if sys.version_info < (3, 12):
+    from typing_extensions import Buffer
+else:
+    from collections.abc import Buffer
+
 
 __all__ = ["TCPFetcher"]
 
@@ -184,7 +191,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
         except ValueError:
             raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
 
-        self._logger.debug(f"Detected transport protocol: {protocol} ({raw_protocol!r})")
+        self._logger.debug("Detected transport protocol: %s", protocol)
         validate_agent_protocol(
             protocol, self.encryption_handling, is_registered=server_hostname is not None
         )
@@ -202,24 +209,25 @@ class TCPFetcher(Fetcher[AgentRawData]):
             except ValueError as e:
                 raise MKFetcherError(f"Failed to deserialize versioned agent data: {e!r}") from e
 
-            if len(agent_data) <= 2:
+            if len(memoryview(agent_data)) <= 2:
                 raise MKFetcherError("Empty payload from controller at %s:%d" % self.address)
 
-            raw_protocol = agent_data[:2]
             try:
-                protocol = TransportProtocol.from_bytes(raw_protocol)
+                protocol = TransportProtocol.from_bytes(agent_data)
             except ValueError:
-                raise MKFetcherError(f"Unknown transport protocol: {raw_protocol!r}")
+                raise MKFetcherError(
+                    f"Unknown transport protocol: {bytes(memoryview(agent_data)[:2])!r}"
+                )
 
-            self._logger.debug(f"Detected transport protocol: {protocol} ({raw_protocol!r})")
-            return self._decrypt(protocol, agent_data[2:])
+            self._logger.debug("Detected transport protocol: %s", protocol)
+            return self._decrypt(protocol, memoryview(agent_data)[2:])
 
         self._logger.debug("Reading data from agent")
         return self._decrypt(protocol, recvall(self._socket, socket.MSG_WAITALL))
 
-    def _decrypt(self, protocol: TransportProtocol, output: bytes) -> AgentRawData:
+    def _decrypt(self, protocol: TransportProtocol, output: Buffer) -> AgentRawData:
         if not output:
-            return AgentRawData(output)  # nothing to to, validation will fail
+            return AgentRawData(b"")  # nothing to to, validation will fail
 
         if protocol is TransportProtocol.PLAIN:
             return AgentRawData(protocol.value + output)  # bring back stolen bytes
@@ -231,7 +239,7 @@ class TCPFetcher(Fetcher[AgentRawData]):
         try:
             return AgentRawData(decrypt_by_agent_protocol(secret, protocol, output))
         except Exception as e:
-            raise MKFetcherError("Failed to decrypt agent output: %s" % e) from e
+            raise MKFetcherError("Failed to decrypt agent output: %r" % e) from e
 
     def _validate_decrypted_data(self, output: Sized) -> None:
         if len(output) < 16:

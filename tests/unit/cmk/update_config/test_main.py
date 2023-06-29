@@ -50,13 +50,13 @@ def test_main_calls_config_updater(
     packages_dir.mkdir(parents=True, exist_ok=True)
     monkeypatch.setattr(cmk.utils.paths, "installed_packages_dir", packages_dir)
     mock_config_checker_call = mocker.patch.object(
-        main.ConfigChecker,
-        "__call__",
+        main,
+        "check_config",
         return_value=False,
     )
     mock_config_udpater_call = mocker.patch.object(
-        main.ConfigUpdater,
-        "__call__",
+        main,
+        "update_config",
         return_value=False,
     )
     assert not main.main([])
@@ -91,7 +91,7 @@ def test_config_updater_executes_plugins(
     )
     mocker.patch.object(main, "pre_update_action_registry", registry.PreUpdateActionRegistry())
     mocker.patch.object(main, "update_action_registry", reg)
-    mocker.patch.object(main.ConfigUpdater, "_initialize_base_environment")
+    mocker.patch.object(main, "_initialize_base_environment")
 
     assert not main.main(["-v"])
 

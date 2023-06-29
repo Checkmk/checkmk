@@ -15,7 +15,6 @@ import sys
 from collections.abc import Sequence
 from itertools import chain
 from pathlib import Path
-from typing import Final
 
 from cmk.utils import debug, log, paths, tty
 from cmk.utils.log import VERBOSE
@@ -63,7 +62,7 @@ def main(args: Sequence[str]) -> int:
 
     _load_pre_plugins()
     try:
-        ConfigChecker(logger, arguments.conflict)()
+        check_config(logger, arguments.conflict)
     except MKUserError as e:
         sys.stderr.write(
             f"\nUpdate aborted: {e}.\n"
@@ -87,7 +86,7 @@ def main(args: Sequence[str]) -> int:
     _load_plugins(logger)
 
     try:
-        return ConfigUpdater(logger, update_state)()
+        return update_config(logger, update_state)
     except Exception:
         if debug.enabled():
             raise
@@ -156,9 +155,9 @@ def _our_logging_level_to_gui_logging_level(lvl: int) -> int:
 def _load_plugins(logger: logging.Logger) -> None:
     for plugin, exc in chain(
         load_plugins_with_exceptions("cmk.update_config.plugins.actions"),
-        load_plugins_with_exceptions("cmk.update_config.cee.plugins.actions")
-        if not is_raw_edition()
-        else [],
+        []
+        if is_raw_edition()
+        else load_plugins_with_exceptions("cmk.update_config.cee.plugins.actions"),
     ):
         logger.error("Error in action plugin %s: %s\n", plugin, exc)
         if debug.enabled():
@@ -172,94 +171,85 @@ def _load_pre_plugins() -> None:
             raise exc
 
 
-class ConfigChecker:
-    def __init__(self, logger: logging.Logger, conflict_mode: ConflictMode) -> None:
-        self._logger: Final = logger
-        self.conflict_mode: Final = conflict_mode
+# TODO(sk): check_config can't raise exception(raise is an reaction on check, i.e. 2 in 1):
+# change name assert_config or ensure_valid_config for example
+# or change logic
+def check_config(logger: logging.Logger, conflict_mode: ConflictMode) -> None:
+    """Raise exception on failure"""
+    pre_update_actions = sorted(pre_update_action_registry.values(), key=lambda a: a.sort_index)
+    total = len(pre_update_actions)
+    logger.info("Verifying Checkmk configuration...")
+    for count, pre_action in enumerate(pre_update_actions, start=1):
+        logger.info(f" {tty.yellow}{count:02d}/{total:02d}{tty.normal} {pre_action.title}...")
+        pre_action(conflict_mode)
 
-    def __call__(self) -> None:
-        pre_update_actions = sorted(pre_update_action_registry.values(), key=lambda a: a.sort_index)
-        total = len(pre_update_actions)
-        self._logger.info("Verifying Checkmk configuration...")
-        for count, pre_action in enumerate(pre_update_actions, start=1):
-            self._logger.info(
-                f" {tty.yellow}{count:02d}/{total:02d}{tty.normal} {pre_action.title}..."
+    logger.info(f"Done ({tty.green}success{tty.normal})\n")
+
+
+def update_config(logger: logging.Logger, update_state: UpdateState) -> int:
+    """Return exit code, 0 is ok, 1 is failure"""
+    has_errors = False
+    logger.log(VERBOSE, "Initializing application...")
+
+    main_modules.load_plugins()
+
+    actions = sorted(update_action_registry.values(), key=lambda a: a.sort_index)
+    total = len(actions)
+
+    # Note: Redis has to be disabled first, the other contexts depend on it
+    with disable_redis(), gui_context(), SuperUserContext():
+        set_global_vars()
+        _check_failed_gui_plugins(logger)
+        _initialize_base_environment()
+
+        logger.info("Updating Checkmk configuration...")
+
+        for num, action in enumerate(actions, start=1):
+            logger.info(f" {tty.yellow}{num:02d}/{total:02d}{tty.normal} {action.title}...")
+            try:
+                with ActivateChangesWriter.disable():
+                    action(logger, update_state.setdefault(action.name))
+            except Exception:
+                has_errors = True
+                logger.error(f' + "{action.title}" failed', exc_info=True)
+                if not action.continue_on_failure or debug.enabled():
+                    raise
+
+        if not has_errors and not is_wato_slave_site():
+            # Force synchronization of the config after a successful configuration update
+            add_change(
+                "cmk-update-config",
+                "Successfully updated Checkmk configuration",
+                need_sync=True,
             )
-            pre_action(self.conflict_mode)
 
-        self._logger.info(f"Done ({tty.green}success{tty.normal})\n")
+    update_state.save()
+
+    if has_errors:
+        logger.error(f"Done ({tty.red}with errors{tty.normal})")
+        return 1
+
+    logger.info(f"Done ({tty.green}success{tty.normal})")
+    return 0
 
 
-class ConfigUpdater:
-    def __init__(self, logger: logging.Logger, update_state: UpdateState) -> None:
-        self._logger: Final = logger
-        self.update_state: Final = update_state
-
-    def __call__(self) -> int:
-        self._has_errors = False
-        self._logger.log(VERBOSE, "Initializing application...")
-
-        main_modules.load_plugins()
-
-        actions = sorted(update_action_registry.values(), key=lambda a: a.sort_index)
-        total = len(actions)
-
-        # Note: Redis has to be disabled first, the other contexts depend on it
-        with disable_redis(), gui_context(), SuperUserContext():
-            # TODO this is a HACK to set a theme because of AttributeError:
-            # 'NoneType' object has no attribute 'icon_themes'
-            set_global_vars()
-            self._check_failed_gui_plugins()
-            self._initialize_base_environment()
-
-            self._logger.info("Updating Checkmk configuration...")
-
-            for count, action in enumerate(actions, start=1):
-                self._logger.info(
-                    f" {tty.yellow}{count:02d}/{total:02d}{tty.normal} {action.title}..."
-                )
-                try:
-                    with ActivateChangesWriter.disable():
-                        action(self._logger, self.update_state.setdefault(action.name))
-                except Exception:
-                    self._has_errors = True
-                    self._logger.error(' + "%s" failed' % action.title, exc_info=True)
-                    if not action.continue_on_failure or debug.enabled():
-                        raise
-
-            if not self._has_errors and not is_wato_slave_site():
-                # Force synchronization of the config after a successful configuration update
-                add_change(
-                    "cmk-update-config",
-                    "Successfully updated Checkmk configuration",
-                    need_sync=True,
-                )
-
-        self.update_state.save()
-
-        if self._has_errors:
-            self._logger.error(f"Done ({tty.red}with errors{tty.normal})")
-            return 1
-
-        self._logger.info(f"Done ({tty.green}success{tty.normal})")
-        return 0
-
-    def _check_failed_gui_plugins(self) -> None:
-        if get_failed_plugins():
-            self._logger.error("")
-            self._logger.error(
-                "ERROR: Failed to load some GUI plugins. You will either have \n"
-                "       to remove or update them to be compatible with this \n"
-                "       Checkmk version."
-            )
-            self._logger.error("")
-
-    def _initialize_base_environment(self) -> None:
-        base_config.load_all_agent_based_plugins(
-            get_check_api_context,
-            local_checks_dir=paths.local_checks_dir,
-            checks_dir=paths.checks_dir,
+def _check_failed_gui_plugins(logger: logging.Logger) -> None:
+    if get_failed_plugins():
+        logger.error(
+            "\n"
+            "ERROR: Failed to load some GUI plugins. You will either have \n"
+            "       to remove or update them to be compatible with this \n"
+            "       Checkmk version."
+            "\n"
         )
-        # Watch out: always load the plugins before loading the config.
-        # The validation step will not be executed otherwise.
-        base_config.load()
+
+
+def _initialize_base_environment() -> None:
+    base_config.load_all_agent_based_plugins(
+        get_check_api_context,
+        local_checks_dir=paths.local_checks_dir,
+        checks_dir=paths.checks_dir,
+    )
+    # Watch out: always load the plugins before loading the config.
+    # The validation step will not be executed otherwise.
+    base_config.load()

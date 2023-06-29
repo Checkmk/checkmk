@@ -23,7 +23,7 @@ from typing import Final, Generator, Literal
 import pytest
 
 from tests.testlib.openapi_session import CMKOpenApiSession
-from tests.testlib.utils import cmc_path, cme_path, cmk_path, execute, is_containerized
+from tests.testlib.utils import cmc_path, cme_path, cmk_path, is_containerized, restart_httpd
 from tests.testlib.version import CMKVersion, version_from_env
 from tests.testlib.web_session import CMKWebSession
 
@@ -1279,15 +1279,8 @@ class SiteFactory:
             site = self.get_site(name, init_livestatus)
 
         if auto_restart_httpd:
-            # When executed locally and undockerized, the DISTRO may not be set
-            if os.environ.get("DISTRO") in {"centos-7", "centos-8", "almalinux-9"}:
-                # On RHEL-based distros, such as CentOS and AlmaLinux, we have to manually
-                # restart httpd after creating a new site. Otherwise, the REST API won't be
-                # reachable via port 80, preventing e.g. the controller from querying the
-                # agent receiver port.
-                # Note: the mere presence of httpd is not enough to determine
-                # whether we have to restart or not, see eg. sles-15sp4.
-                execute(["sudo", "httpd", "-k", "restart"])
+            restart_httpd()
+
         logger.info(
             'Site "%s" is ready!%s',
             site.id,

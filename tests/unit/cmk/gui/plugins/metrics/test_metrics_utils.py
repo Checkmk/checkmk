@@ -669,11 +669,20 @@ def test_translate_metrics(
             {MetricName("old"): {"scale": 3}},
             id="management board, explicit entry",
         ),
+        pytest.param(
+            {
+                "check_mk-x": {MetricName("old"): {"name": MetricName("new")}},
+                "check_mk-y": {MetricName("a"): {"scale": 2}},
+            },
+            None,
+            None,
+            id="no check command",
+        ),
     ],
 )
 def test_lookup_metric_translations_for_check_command(
     all_translations: Mapping[str, Mapping[MetricName, utils.CheckMetricEntry]],
-    check_command: str,
+    check_command: str | None,
     expected_result: Mapping[MetricName, utils.CheckMetricEntry] | None,
 ) -> None:
     assert (

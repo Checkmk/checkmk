@@ -114,10 +114,15 @@ $(RPM_PACKAGE): $(BUILDROOT_STAMP)
 	rm -rf $(RPM_TOPDIR) $(RPM_BUILDDIR)
 
 $(DEB_PACKAGE): $(BUILDROOT_STAMP)
-	rm $(DEB_BUILDDIR) -rf
-	mkdir -p $(DEB_BUILDDIR)/control
-	cp -r $(DEB_TOPDIR)/control $(DEB_BUILDDIR)/
-	touch "$(DEB_BUILDDIR)/control/md5sum"
+	rm "$(DEB_BUILDDIR)" -rf
+	mkdir -p "$(DEB_BUILDDIR)/control"
+	install -m 644 "$(DEB_TOPDIR)/control/conffiles" "$(DEB_BUILDDIR)/control"
+	install -m 644 "$(DEB_TOPDIR)/control/control" "$(DEB_BUILDDIR)/control"
+	install -m 644 "$(DEB_TOPDIR)/control/debian-binary" "$(DEB_BUILDDIR)/control"
+	install -m 755 "$(DEB_TOPDIR)/control/postinst" "$(DEB_BUILDDIR)/control"
+	install -m 755 "$(DEB_TOPDIR)/control/preinst" "$(DEB_BUILDDIR)/control"
+	install -m 755 "$(DEB_TOPDIR)/control/prerm" "$(DEB_BUILDDIR)/control"
+	install -m 644 /dev/null "$(DEB_BUILDDIR)/control/md5sum"
 	cd $(BUILDROOT); find . -type f | while read -r filename; do \
 	    md5sum "$${filename}" | sed 's|./||' >> "$(DEB_BUILDDIR)/control/md5sum"; \
 	done

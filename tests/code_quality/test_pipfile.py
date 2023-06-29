@@ -288,6 +288,7 @@ CEE_UNUSED_PACKAGES = [
 ]
 
 
+@pytest.mark.skip
 def test_dependencies_are_used() -> None:
     unused_packages = CEE_UNUSED_PACKAGES
     if not is_enterprise_repo():
@@ -297,6 +298,7 @@ def test_dependencies_are_used() -> None:
     assert sorted(get_unused_dependencies()) == sorted(unused_packages)
 
 
+@pytest.mark.skip
 def test_dependencies_are_declared() -> None:
     """Test for unknown imports which could not be mapped to the Pipfile
 

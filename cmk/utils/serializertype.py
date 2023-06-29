@@ -4,9 +4,15 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
+import sys
 from collections.abc import Iterator
-from contextlib import suppress
-from typing import Any, Protocol, TypeVar
+from typing import Protocol, Self, SupportsBytes, TypeVar
+
+if sys.version_info < (3, 12):
+    from typing_extensions import Buffer
+else:
+    from collections.abc import Buffer
+
 
 __all__ = ["Serializer", "Deserializer"]
 
@@ -27,23 +33,24 @@ class Serializer(Protocol):
         concrete implementation here.
     """
 
-    def __eq__(self, other: Any) -> bool:
-        with suppress(TypeError):
+    def __eq__(self, other: object) -> bool:
+        # Test both `Buffer` and `SupportsBytes`.
+        #
+        # `memoryview` doesn't have a `__bytes__()` method and therefore
+        # tests false to `isinstance(..., SupportsBytes)` eventhough
+        # `bytes(memoryview(b"hello"))` works as expected.
+        if isinstance(other, (Buffer, SupportsBytes)):
             return bytes(self) == bytes(other)
         return NotImplemented
 
     def __hash__(self) -> int:
         return hash(bytes(self))
 
-    def __add__(self, other: Any) -> bytes:
-        with suppress(TypeError):
-            return bytes(self) + bytes(other)
-        return NotImplemented
+    def __add__(self, other: Buffer | SupportsBytes) -> bytes:
+        return bytes(self) + bytes(other)
 
-    def __radd__(self, other: Any) -> bytes:
-        with suppress(TypeError):
-            return bytes(other) + bytes(self)
-        return NotImplemented
+    def __radd__(self, other: Buffer | SupportsBytes) -> bytes:
+        return bytes(other) + bytes(self)
 
     def __len__(self) -> int:
         return len(bytes(self))
@@ -72,11 +79,11 @@ class Deserializer(Protocol):
 
     @classmethod
     @abc.abstractmethod
-    def from_bytes(cls: type[TDeserializer], data: bytes) -> TDeserializer:
+    def from_bytes(cls, data: bytes) -> Self:
         raise NotImplementedError
 
     @abc.abstractmethod
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return NotImplemented
 
     @abc.abstractmethod

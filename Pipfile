@@ -214,6 +214,7 @@ pyjwt = {version = "*", extras = ["crypto"]}  # used for SSO via OAUTH2
 GitPython = "==3.1.31"  # used for werk collecting
 icalendar = "==5.0.7"  # used for importing .ical files
 recurring_ical_events = "==2.0.2"  # used for parsing recurring events in icalendar objects
+typing-extensions = "*"
 
 [requires]
 # As pipenv {sync,lock} does currently not support env variable expansion in and out Pipfile.lock,

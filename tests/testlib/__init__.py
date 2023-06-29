@@ -222,7 +222,7 @@ class WatchLog:
 
         return self
 
-    def __exit__(self, *_exc_info: object) -> None:
+    def __exit__(self, *exc_info):
         if self._tail_process is not None:
             for c in Process(self._tail_process.pid).children(recursive=True):
                 if c.name() == "tail":
@@ -278,7 +278,6 @@ def create_linux_test_host(request: pytest.FixtureRequest, site: Site, hostname:
         output = p.communicate()[0].strip()
         if not output:
             return []
-        assert isinstance(output, str)
         return output.split(" ")
 
     def finalizer() -> None:
@@ -361,13 +360,13 @@ class Check(BaseCheck):
             return self._migrated_plugin.check_default_parameters or {}
         return {}
 
-    def run_parse(self, info):  # type: ignore[no-untyped-def]
+    def run_parse(self, info):
         parse_func = self.info.get("parse_function")
         if not parse_func:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no parse function defined")
         return parse_func(info)
 
-    def run_discovery(self, info):  # type: ignore[no-untyped-def]
+    def run_discovery(self, info):
         disco_func = self.info.get("discovery_function")
         if not disco_func:
             raise MissingCheckInfoError(
@@ -375,7 +374,7 @@ class Check(BaseCheck):
             )
         return disco_func(info)
 
-    def run_check(self, item, params, info):  # type: ignore[no-untyped-def]
+    def run_check(self, item, params, info):
         check_func = self.info.get("check_function")
         if not check_func:
             raise MissingCheckInfoError("Check '%s' " % self.name + "has no check function defined")
@@ -392,13 +391,13 @@ class ActiveCheck(BaseCheck):
         ), "Specify the full name of the active check, e.g. check_http"
         self.info = config.active_check_info[self.name[len("check_") :]]
 
-    def run_argument_function(self, params):  # type: ignore[no-untyped-def]
+    def run_argument_function(self, params):
         return self.info["argument_function"](params)
 
-    def run_service_description(self, params):  # type: ignore[no-untyped-def]
+    def run_service_description(self, params):
         return self.info["service_description"](params)
 
-    def run_generate_icmp_services(self, host_config, params):  # type: ignore[no-untyped-def]
+    def run_generate_icmp_services(self, host_config, params):
         yield from self.info["service_generator"](host_config, params)
 
 

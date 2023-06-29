@@ -23,7 +23,7 @@ logger = logging.getLogger()
 class CMKWebSession:
     def __init__(self, site) -> None:  # type: ignore[no-untyped-def]
         super().__init__()
-        self.transids: list[str] = []
+        self.transids: list = []
         # Resources are only fetched and verified once per session
         self.verified_resources: set = set()
         self.site = site
@@ -207,7 +207,7 @@ class CMKWebSession:
                 "_login": "Login",
             },
         )
-        auth_cookie = self.session.cookies.get("auth_%s" % self.site.id)  # type: ignore[no-untyped-call]
+        auth_cookie = self.session.cookies.get("auth_%s" % self.site.id)
         assert auth_cookie
         assert auth_cookie.startswith("%s:" % username)
 

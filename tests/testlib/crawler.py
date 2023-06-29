@@ -156,7 +156,7 @@ class Crawler:
         browser, storage_state = await self.create_browser_and_storage_state()
         # makes sure authentication cookies is also available in the "requests" session.
         for cookie_dict in storage_state["cookies"]:
-            self.requests_session.cookies.set(  # type: ignore[no-untyped-call]
+            self.requests_session.cookies.set(
                 name=cookie_dict["name"],
                 value=cookie_dict["value"],
             )
@@ -374,7 +374,7 @@ class Crawler:
             await page.close()
 
     async def validate(self, url: Url, text: str, logs: Iterable[str]) -> None:
-        def blocking() -> None:
+        def blocking():
             soup = BeautifulSoup(text, "lxml")
             self.check_content(url, soup)
             self.check_links(url, soup)

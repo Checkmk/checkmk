@@ -132,7 +132,8 @@ module = [
     "cmk.update_config.*",
     "cmk.utils.crypto.*",
     "tests.gui_e2e.*",
-    "tests.testlib.*",
+    "tests.testlib.event_console",
+    "tests.testlib.playwright.*",
     "tests.unit.cmk.ec.*",
     "tests.unit.cmk.update_config.*",
 ]

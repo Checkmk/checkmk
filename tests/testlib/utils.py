@@ -327,7 +327,6 @@ def spawn_expect_process(
             LOGGER.debug(p)
             rc = 3
 
-    assert isinstance(rc, int)
     return rc
 
 

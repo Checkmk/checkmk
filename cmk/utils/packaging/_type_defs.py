@@ -10,7 +10,7 @@ from functools import cached_property
 from typing import Literal, Union
 
 from pydantic import BaseModel, validator
-from semver import VersionInfo
+from semver import VersionInfo  # type: ignore[import]
 
 
 class PackageError(Exception):
@@ -30,11 +30,11 @@ _SortKeyElement = Union[
 
 class PackageVersion(str):
     # one fine day we might remove the inheritance, but for now this'll have to do.
-    _MISMATCH_MSG = "A package version must not contain slashes"
+    _MISMATCH_MSG = "Invalid version %r. A package version must not contain slashes"
 
     def __new__(cls, value: str) -> PackageVersion:
         if "/" in value:
-            raise ValueError(cls._MISMATCH_MSG)
+            raise ValueError(cls._MISMATCH_MSG % value)
         return super().__new__(cls, value)
 
     @classmethod
@@ -80,7 +80,7 @@ class PackageVersion(str):
 class PackageName(str):
     _REGEX = re.compile(r"^[^\d\W][-\w]*$")
     _MISMATCH_MSG = (
-        "A package name must only consist of letters, digits, dash and "
+        "Invalid name %r. A package name must only consist of letters, digits, dash and "
         "underscore and it must start with a letter or underscore."
     )
 
@@ -94,7 +94,7 @@ class PackageName(str):
 
     def __new__(cls, value: str) -> PackageName:
         if not cls._REGEX.match(value):
-            raise ValueError(cls._MISMATCH_MSG)
+            raise ValueError(cls._MISMATCH_MSG % value)
         return super().__new__(cls, value)
 
 

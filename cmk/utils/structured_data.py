@@ -21,8 +21,23 @@ from typing import Generic, Literal, NamedTuple, Self, TypedDict, TypeVar
 from cmk.utils import store
 from cmk.utils.hostaddress import HostName
 
-# TODO key_columns should be a tuple[SDKey, ...]
 # TODO Cleanup path in utils, base, gui, find ONE place (type defs or similar)
+# TODO filter table rows?
+# TODO _FilterTree: SDNodeName
+# TODO Improve make_filter_func:
+# For contact groups (via make_filter)
+#   - ('choices', ['some', 'keys'])
+#   - 'nothing' -> _use_nothing
+#   - None -> _use_all
+# For retention intervals (directly)
+#   - ('choices', ['some', 'keys'])
+#   - MISSING (see mk/base/agent_based/inventory.py::_get_intervals_from_config) -> _use_nothing
+#   - 'all' -> _use_all
+# TODO Centralize different stores and loaders of tree files:
+#   - inventory/HOSTNAME, inventory/HOSTNAME.gz, inventory/.last
+#   - inventory_archive/HOSTNAME/TIMESTAMP,
+#   - inventory_delta_cache/HOSTNAME/TIMESTAMP_{TIMESTAMP,None}
+#   - status_data/HOSTNAME, status_data/HOSTNAME.gz
 
 SDNodeName = str
 SDPath = tuple[SDNodeName, ...]
@@ -186,17 +201,17 @@ def _make_row_ident(key_columns: Sequence[SDKey], row: Mapping[SDKey, SDValue]) 
     return tuple(row[k] for k in key_columns if k in row)
 
 
-T = TypeVar("T")
+_T = TypeVar("_T")
 
 
 @dataclass(frozen=True, kw_only=True)
-class _DictKeys(Generic[T]):
-    only_old: set[T]
-    both: set[T]
-    only_new: set[T]
+class _DictKeys(Generic[_T]):
+    only_old: set[_T]
+    both: set[_T]
+    only_new: set[_T]
 
     @classmethod
-    def compare(cls, *, left: set[T], right: set[T]) -> Self:
+    def compare(cls, *, left: set[_T], right: set[_T]) -> Self:
         """
         Returns the set relationships of the keys between two dictionaries:
         - relative complement of right in left
@@ -220,19 +235,8 @@ class _DictKeys(Generic[T]):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-# TODO filter table rows?
-
 
 def make_filter_func(choice: Literal["nothing", "all"] | Sequence[str]) -> Callable[[SDKey], bool]:
-    # TODO Improve:
-    # For contact groups (via make_filter)
-    #   - ('choices', ['some', 'keys'])
-    #   - 'nothing' -> _use_nothing
-    #   - None -> _use_all
-    # For retention intervals (directly)
-    #   - ('choices', ['some', 'keys'])
-    #   - MISSING (see mk/base/agent_based/inventory.py::_get_intervals_from_config) -> _use_nothing
-    #   - 'all' -> _use_all
     match choice:
         case "nothing":
             return lambda k: False
@@ -254,7 +258,6 @@ class _FilterTree:
     nodes: dict[SDNodeName, _FilterTree] = field(default_factory=dict)
     filters_pairs: list[Callable[[SDKey], bool]] = field(default_factory=list)
     filters_columns: list[Callable[[SDKey], bool]] = field(default_factory=list)
-    # TODO SDNodeName
     filters_nodes: list[Callable[[SDKey], bool]] = field(default_factory=list)
 
 
@@ -1506,13 +1509,6 @@ class ImmutableDeltaTree:
 #   |                             |___\___/                                |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
-# TODO Centralize different stores and loaders of tree files:
-#   - inventory/HOSTNAME, inventory/HOSTNAME.gz, inventory/.last
-#   - inventory_archive/HOSTNAME/TIMESTAMP,
-#   - inventory_delta_cache/HOSTNAME/TIMESTAMP_{TIMESTAMP,None}
-#   - status_data/HOSTNAME, status_data/HOSTNAME.gz
 
 
 def load_tree(filepath: Path) -> ImmutableTree:

@@ -22,7 +22,6 @@ from cmk.utils.rulesets import RuleSetName
 from cmk.utils.sectionname import SectionName
 from cmk.utils.structured_data import (
     ImmutableTree,
-    make_filter_func,
     MutableTree,
     parse_visible_raw_path,
     RawIntervalFromConfig,
@@ -477,13 +476,11 @@ def _may_update(
         if choices_for_attributes := entry.get("attributes"):
             results.append(
                 inventory_tree.update_pairs(
-                    now,
-                    path,
-                    previous_tree,
-                    make_filter_func(
-                        a[-1] if isinstance(a := choices_for_attributes, tuple) else a
-                    ),
-                    RetentionInterval.make(
+                    now=now,
+                    path=path,
+                    previous_tree=previous_tree,
+                    choice=a[-1] if isinstance(a := choices_for_attributes, tuple) else a,
+                    retention_interval=RetentionInterval.make(
                         (
                             (now, 0)
                             if (ci := cache_info_by_path_and_type.get((path, "Attributes"))) is None
@@ -497,11 +494,11 @@ def _may_update(
         elif choices_for_table := entry.get("columns"):
             results.append(
                 inventory_tree.update_rows(
-                    now,
-                    path,
-                    previous_tree,
-                    make_filter_func(c[-1] if isinstance(c := choices_for_table, tuple) else c),
-                    RetentionInterval.make(
+                    now=now,
+                    path=path,
+                    previous_tree=previous_tree,
+                    choice=c[-1] if isinstance(c := choices_for_table, tuple) else c,
+                    retention_interval=RetentionInterval.make(
                         (
                             (now, 0)
                             if (ci := cache_info_by_path_and_type.get((path, "TableRow"))) is None

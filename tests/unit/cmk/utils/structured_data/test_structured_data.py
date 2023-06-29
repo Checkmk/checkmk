@@ -1447,11 +1447,11 @@ def test_update_from_previous_1() -> None:
         ],
     )
     current_tree_.update_rows(
-        0,  # now
-        (),  # path
-        previous_tree,
-        lambda k: True,  # filter func
-        RetentionInterval(4, 5, 6),
+        now=0,
+        path=(),
+        previous_tree=previous_tree,
+        choice="all",
+        retention_interval=RetentionInterval(4, 5, 6),
     )
     current_tree = _make_immutable_tree(current_tree_)
     assert current_tree.table.key_columns == ["kc"]
@@ -1496,11 +1496,11 @@ def test_update_from_previous_2() -> None:
         ],
     )
     current_tree_.update_rows(
-        0,  # now
-        (),  # path
-        previous_tree,
-        lambda k: k in ["c2", "c3"],  # filter func
-        RetentionInterval(4, 5, 6),
+        now=0,
+        path=(),
+        previous_tree=previous_tree,
+        choice=["c2", "c3"],
+        retention_interval=RetentionInterval(4, 5, 6),
     )
     current_tree = _make_immutable_tree(current_tree_)
     assert current_tree.table.key_columns == ["kc"]

@@ -24,7 +24,7 @@ from cmk.utils.hostaddress import HostName
 # TODO Cleanup path in utils, base, gui, find ONE place (type defs or similar)
 # TODO filter table rows?
 # TODO _FilterTree: SDNodeName
-# TODO Improve make_filter_func:
+# TODO Improve _make_filter_func:
 # For contact groups (via make_filter)
 #   - ('choices', ['some', 'keys'])
 #   - 'nothing' -> _use_nothing
@@ -236,7 +236,7 @@ class _DictKeys(Generic[_T]):
 #   '----------------------------------------------------------------------'
 
 
-def make_filter_func(choice: Literal["nothing", "all"] | Sequence[str]) -> Callable[[SDKey], bool]:
+def _make_filter_func(choice: Literal["nothing", "all"] | Sequence[str]) -> Callable[[SDKey], bool]:
     match choice:
         case "nothing":
             return lambda k: False
@@ -265,18 +265,18 @@ def _make_filter_tree(filters: Iterable[SDFilterChoice]) -> _FilterTree:
     filter_tree = _FilterTree()
     for f in filters:
         if not f.path:
-            filter_tree.filters_pairs.append(make_filter_func(f.choice_pairs))
-            filter_tree.filters_columns.append(make_filter_func(f.choice_columns))
-            filter_tree.filters_nodes.append(make_filter_func(f.choice_nodes))
+            filter_tree.filters_pairs.append(_make_filter_func(f.choice_pairs))
+            filter_tree.filters_columns.append(_make_filter_func(f.choice_columns))
+            filter_tree.filters_nodes.append(_make_filter_func(f.choice_nodes))
             continue
 
         node = filter_tree.nodes.setdefault(f.path[0], _FilterTree())
         for name in f.path[1:]:
             node = node.nodes.setdefault(name, _FilterTree())
 
-        node.filters_pairs.append(make_filter_func(f.choice_pairs))
-        node.filters_columns.append(make_filter_func(f.choice_columns))
-        node.filters_nodes.append(make_filter_func(f.choice_nodes))
+        node.filters_pairs.append(_make_filter_func(f.choice_pairs))
+        node.filters_columns.append(_make_filter_func(f.choice_columns))
+        node.filters_nodes.append(_make_filter_func(f.choice_nodes))
     return filter_tree
 
 
@@ -337,9 +337,10 @@ class _MutableAttributes:
         now: int,
         path: SDPath,
         other: ImmutableAttributes,
-        filter_func: Callable[[SDKey], bool],
+        choice: Literal["all", "nothing"] | Sequence[SDKey],
         retention_interval: RetentionInterval,
     ) -> UpdateResult:
+        filter_func = _make_filter_func(choice)
         compared_keys = _DictKeys.compare(
             left=set(
                 _get_filtered_dict(
@@ -435,11 +436,11 @@ class _MutableTable:
         now: int,
         path: SDPath,
         other: ImmutableTable,
-        filter_func: Callable[[SDKey], bool],
+        choice: Literal["all", "nothing"] | Sequence[SDKey],
         retention_interval: RetentionInterval,
     ) -> UpdateResult:
+        filter_func = _make_filter_func(choice)
         self._add_key_columns(other.key_columns)
-
         old_filtered_rows = {
             ident: filtered_row
             for ident, row in other.rows_by_ident.items()
@@ -595,33 +596,35 @@ class MutableTree:
 
     def update_pairs(
         self,
+        *,
         now: int,
         path: SDPath,
         previous_tree: ImmutableTree,
-        filter_func: Callable[[SDKey], bool],
+        choice: Literal["all", "nothing"] | Sequence[SDKey],
         retention_interval: RetentionInterval,
     ) -> UpdateResult:
         return self.setdefault_node(path).attributes.update(
             now,
             path,
             previous_tree.get_tree(path).attributes,
-            filter_func,
+            choice,
             retention_interval,
         )
 
     def update_rows(
         self,
+        *,
         now: int,
         path: SDPath,
         previous_tree: ImmutableTree,
-        filter_func: Callable[[SDKey], bool],
+        choice: Literal["all", "nothing"] | Sequence[SDKey],
         retention_interval: RetentionInterval,
     ) -> UpdateResult:
         return self.setdefault_node(path).table.update(
             now,
             path,
             previous_tree.get_tree(path).table,
-            filter_func,
+            choice,
             retention_interval,
         )
 

@@ -170,7 +170,7 @@ class UniqueKeyLoader(yaml.SafeLoader):  # pylint: disable=too-many-ancestors
     def construct_mapping(self, node: yaml.MappingNode, deep: bool = False) -> dict:
         mapping = set()
         for key_node, _value_node in node.value:
-            key = self.construct_object(key_node, deep=deep)
+            key = self.construct_object(key_node, deep=deep)  # type: ignore[no-untyped-call]
             if key in mapping:
                 raise yaml.MarkedYAMLError(
                     "while constructing a mapping",

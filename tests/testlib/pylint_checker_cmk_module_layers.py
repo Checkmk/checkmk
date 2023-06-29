@@ -13,6 +13,7 @@ from typing import NewType
 from astroid.nodes import Import, ImportFrom, Statement  # type: ignore[import]
 from pylint.checkers import BaseChecker, utils  # type: ignore[import]
 from pylint.interfaces import IAstroidChecker  # type: ignore[import]
+from pylint.lint.pylinter import PyLinter  # type: ignore[import]
 
 from tests.testlib import cmk_path
 
@@ -21,7 +22,7 @@ ModulePath = NewType("ModulePath", str)  # TODO: use pathlib.Path
 Component = NewType("Component", str)
 
 
-def register(linter):
+def register(linter: PyLinter) -> None:
     linter.register_checker(CMKModuleLayerChecker(linter))
 
 
@@ -48,7 +49,7 @@ def _get_absolute_importee(
 def _is_package(node: ImportFrom) -> bool:
     parent = node.parent
     try:
-        return parent.package
+        return bool(parent.package)
     except AttributeError:  # could be a try/except block, for instance.
         return _is_package(parent)
 

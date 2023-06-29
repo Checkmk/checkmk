@@ -206,7 +206,7 @@ def wait_until_host_receives_data(
 
 
 def controller_status_json(contoller_path: Path) -> Mapping[str, Any]:
-    return json.loads(
+    return json.loads(  # type: ignore[no-any-return]
         execute(
             [
                 "sudo",

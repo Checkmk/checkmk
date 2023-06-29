@@ -327,6 +327,7 @@ def spawn_expect_process(
             LOGGER.debug(p)
             rc = 3
 
+    assert isinstance(rc, int)
     return rc
 
 
@@ -348,7 +349,7 @@ def execute(args: Sequence[str], check: bool = True) -> subprocess.CompletedProc
     return proc
 
 
-def restart_httpd():
+def restart_httpd() -> None:
     """On RHEL-based distros, such as CentOS and AlmaLinux, we have to manually restart httpd after
     creating a new site. Otherwise, the site's REST API won't be reachable via port 80, preventing
     e.g. the controller from querying the agent receiver port.

@@ -19,7 +19,7 @@ logger = logging.getLogger("rest-session")
 
 
 class RequestSessionRequestHandler(RequestHandler):
-    def __init__(self):
+    def __init__(self) -> None:
         self.session = requests.session()
 
     def request(
@@ -240,7 +240,7 @@ class CMKOpenApiSession(requests.Session):
         response = self.get(f"/objects/folder_config/{folder.replace('/', '~')}")
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
-        return response.json()
+        return response.json()  # type: ignore[no-any-return]
 
     def create_host(
         self,
@@ -262,7 +262,7 @@ class CMKOpenApiSession(requests.Session):
         response = self.get(f"/objects/host_config/{hostname}")
         if response.status_code != 200:
             raise UnexpectedResponse.from_response(response)
-        return response.json()
+        return response.json()  # type: ignore[no-any-return]
 
     def get_hosts(self) -> list[dict[str, Any]]:
         response = self.get("/domain-types/host_config/collections/all")

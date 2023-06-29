@@ -302,11 +302,10 @@ def test_dependencies_are_used() -> None:
 def test_dependencies_are_declared() -> None:
     """Test for unknown imports which could not be mapped to the Pipfile
 
-    mostly optional imports and OMD-only shiped packages.
-    issubset() is used since the dependencies vary between the versions."""
-
-    assert set(get_undeclared_dependencies()).issubset(
-        {
+    mostly optional imports and OMD-only shiped packages."""
+    assert (
+        set(str(_) for _ in get_undeclared_dependencies())
+        - {
             "NaElement",  # Optional import cmk/special_agents/agent_netapp.py
             "NaServer",  # Optional import cmk/special_agents/agent_netapp.py
             "matplotlib",  # Disabled debug code in enterprise/cmk/gui/cee/sla.py
@@ -321,6 +320,7 @@ def test_dependencies_are_declared() -> None:
             "saml2",
             "jwt",
         }
+        == set()
     )
 
 

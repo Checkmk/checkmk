@@ -58,7 +58,8 @@ def parse_hr_fs(string_table: StringTable) -> Section:
         except ValueError:
             continue
 
-        section.append((fix_hr_fs_mountpoint(hrdescr), size_mb, size_mb - used_mb, 0))
+        if hrdescr:
+            section.append((fix_hr_fs_mountpoint(hrdescr), size_mb, size_mb - used_mb, 0))
 
     return section
 

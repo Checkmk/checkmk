@@ -1,0 +1,13 @@
+Title: netapp_api_luns: Add vserver and volume name
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1698062759
+Edition: cre
+Level: 1
+Version: 2.3.0b1
+
+If you have a Setup with Multiple Netapps and Thousands of Luns, it was not
+possible to figure out to where a Lun belongs.
+
+With this Werk, this information is now part of the service output.

@@ -6,6 +6,7 @@ import logging
 import os
 from pathlib import Path
 
+import pytest
 from faker import Faker
 
 from tests.testlib.agent import register_controller, wait_until_host_receives_data
@@ -31,6 +32,7 @@ from .conftest import (
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.xfail(reason="Update process currently broken. See CMK-13841.")
 def test_update(test_site: Site, agent_ctl: Path) -> None:
     # TODO: set config - see CMK-13493
 

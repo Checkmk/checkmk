@@ -262,23 +262,19 @@ class _FilterTree:
     filters_columns: list[Callable[[SDKey], bool]] = field(default_factory=list)
     filters_nodes: list[Callable[[SDNodeName], bool]] = field(default_factory=list)
 
+    def append(self, path: SDPath, filter_choice: SDFilterChoice) -> None:
+        if path:
+            self.nodes.setdefault(path[0], _FilterTree()).append(path[1:], filter_choice)
+            return
+        self.filters_pairs.append(_make_filter_func(filter_choice.choice_pairs))
+        self.filters_columns.append(_make_filter_func(filter_choice.choice_columns))
+        self.filters_nodes.append(_make_filter_func(filter_choice.choice_nodes))
+
 
 def _make_filter_tree(filters: Iterable[SDFilterChoice]) -> _FilterTree:
     filter_tree = _FilterTree()
     for f in filters:
-        if not f.path:
-            filter_tree.filters_pairs.append(_make_filter_func(f.choice_pairs))
-            filter_tree.filters_columns.append(_make_filter_func(f.choice_columns))
-            filter_tree.filters_nodes.append(_make_filter_func(f.choice_nodes))
-            continue
-
-        node = filter_tree.nodes.setdefault(f.path[0], _FilterTree())
-        for name in f.path[1:]:
-            node = node.nodes.setdefault(name, _FilterTree())
-
-        node.filters_pairs.append(_make_filter_func(f.choice_pairs))
-        node.filters_columns.append(_make_filter_func(f.choice_columns))
-        node.filters_nodes.append(_make_filter_func(f.choice_nodes))
+        filter_tree.append(f.path, f)
     return filter_tree
 
 

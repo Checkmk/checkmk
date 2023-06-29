@@ -258,18 +258,34 @@ def _make_filter_func(choice: Literal["nothing", "all"] | Sequence[_CT]) -> Call
 
 @dataclass(frozen=True, kw_only=True)
 class _FilterTree:
-    nodes: dict[SDNodeName, _FilterTree] = field(default_factory=dict)
-    filters_pairs: list[Callable[[SDKey], bool]] = field(default_factory=list)
-    filters_columns: list[Callable[[SDKey], bool]] = field(default_factory=list)
-    filters_nodes: list[Callable[[SDNodeName], bool]] = field(default_factory=list)
+    _filters_by_name: dict[SDNodeName, _FilterTree] = field(default_factory=dict)
+    _filters_pairs: list[Callable[[SDKey], bool]] = field(default_factory=list)
+    _filters_columns: list[Callable[[SDKey], bool]] = field(default_factory=list)
+    _filters_nodes: list[Callable[[SDNodeName], bool]] = field(default_factory=list)
+
+    @property
+    def filters_by_name(self) -> Mapping[SDNodeName, _FilterTree]:
+        return self._filters_by_name
+
+    @property
+    def filters_pairs(self) -> Sequence[Callable[[SDKey], bool]]:
+        return self._filters_pairs
+
+    @property
+    def filters_columns(self) -> Sequence[Callable[[SDKey], bool]]:
+        return self._filters_columns
+
+    @property
+    def filters_nodes(self) -> Sequence[Callable[[SDNodeName], bool]]:
+        return self._filters_nodes
 
     def append(self, path: SDPath, filter_choice: SDFilterChoice) -> None:
         if path:
-            self.nodes.setdefault(path[0], _FilterTree()).append(path[1:], filter_choice)
+            self._filters_by_name.setdefault(path[0], _FilterTree()).append(path[1:], filter_choice)
             return
-        self.filters_pairs.append(_make_filter_func(filter_choice.pairs))
-        self.filters_columns.append(_make_filter_func(filter_choice.columns))
-        self.filters_nodes.append(_make_filter_func(filter_choice.nodes))
+        self._filters_pairs.append(_make_filter_func(filter_choice.pairs))
+        self._filters_columns.append(_make_filter_func(filter_choice.columns))
+        self._filters_nodes.append(_make_filter_func(filter_choice.nodes))
 
 
 def _make_filter_tree(filters: Iterable[SDFilterChoice]) -> _FilterTree:
@@ -806,11 +822,11 @@ def _filter_tree(tree: ImmutableTree, filter_tree: _FilterTree) -> ImmutableTree
             name: filtered_node
             for name in set(
                 name for name in tree.nodes_by_name for f in filter_tree.filters_nodes if f(name)
-            ).union(filter_tree.nodes)
+            ).union(filter_tree.filters_by_name)
             if (
                 filtered_node := _filter_tree(
                     tree.nodes_by_name.get(name, ImmutableTree(path=tree.path + (name,))),
-                    filter_tree.nodes.get(name, _FilterTree()),
+                    filter_tree.filters_by_name.get(name, _FilterTree()),
                 )
             )
         },
@@ -1317,11 +1333,11 @@ def _filter_delta_tree(tree: ImmutableDeltaTree, filter_tree: _FilterTree) -> Im
             name: filtered_node
             for name in set(
                 name for name in tree.nodes_by_name for f in filter_tree.filters_nodes if f(name)
-            ).union(filter_tree.nodes)
+            ).union(filter_tree.filters_by_name)
             if (
                 filtered_node := _filter_delta_tree(
                     tree.nodes_by_name.get(name, ImmutableDeltaTree(path=tree.path + (name,))),
-                    filter_tree.nodes.get(name, _FilterTree()),
+                    filter_tree.filters_by_name.get(name, _FilterTree()),
                 )
             )
         },

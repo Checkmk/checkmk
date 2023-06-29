@@ -235,8 +235,10 @@ class _DictKeys(Generic[_T]):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+_CT = TypeVar("_CT", SDKey, SDNodeName)
 
-def _make_filter_func(choice: Literal["nothing", "all"] | Sequence[str]) -> Callable[[SDKey], bool]:
+
+def _make_filter_func(choice: Literal["nothing", "all"] | Sequence[_CT]) -> Callable[[_CT], bool]:
     match choice:
         case "nothing":
             return lambda k: False
@@ -248,9 +250,9 @@ def _make_filter_func(choice: Literal["nothing", "all"] | Sequence[str]) -> Call
 
 class SDFilterChoice(NamedTuple):
     path: SDPath
-    choice_pairs: Literal["nothing", "all"] | Sequence[str]
-    choice_columns: Literal["nothing", "all"] | Sequence[str]
-    choice_nodes: Literal["nothing", "all"] | Sequence[str]
+    choice_pairs: Literal["nothing", "all"] | Sequence[SDKey]
+    choice_columns: Literal["nothing", "all"] | Sequence[SDKey]
+    choice_nodes: Literal["nothing", "all"] | Sequence[SDNodeName]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -258,7 +260,7 @@ class _FilterTree:
     nodes: dict[SDNodeName, _FilterTree] = field(default_factory=dict)
     filters_pairs: list[Callable[[SDKey], bool]] = field(default_factory=list)
     filters_columns: list[Callable[[SDKey], bool]] = field(default_factory=list)
-    filters_nodes: list[Callable[[SDKey], bool]] = field(default_factory=list)
+    filters_nodes: list[Callable[[SDNodeName], bool]] = field(default_factory=list)
 
 
 def _make_filter_tree(filters: Iterable[SDFilterChoice]) -> _FilterTree:

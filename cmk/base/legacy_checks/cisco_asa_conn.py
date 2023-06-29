@@ -61,7 +61,7 @@ def check_cisco_asa_conn(item, _no_params, parsed):
             else:  # CRIT if no IP is assigned
                 yield 2, "IP: Not found!"
 
-            state, state_readable = translate_status[values[2], (3, "N/A")]
+            state, state_readable = translate_status.get(values[2], (3, "N/A"))
             yield state, "Status: %s" % state_readable
 
 

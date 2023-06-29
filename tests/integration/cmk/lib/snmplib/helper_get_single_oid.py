@@ -51,7 +51,9 @@ match backend_type:
 print(
     repr(
         (
-            snmp_modes.get_single_oid(oid, backend=backend(config, logger)),
+            snmp_modes.get_single_oid(
+                oid, single_oid_cache=snmp_cache.single_oid_cache(), backend=backend(config, logger)
+            ),
             snmp_cache.single_oid_cache(),
         )
     )

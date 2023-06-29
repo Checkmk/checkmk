@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 from collections.abc import Iterable
+from contextlib import suppress
 from pathlib import Path
 
 import cmk.utils.cleanup
@@ -17,7 +18,6 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionName
 
-from . import snmp_cache
 from .type_defs import OID, SNMPBackend, SNMPDecodedString, SNMPRawValue, SNMPRowInfo
 
 SNMPRowInfoForStoredWalk = list[tuple[OID, str]]
@@ -38,7 +38,11 @@ SNMPWalkOptions = dict[str, list[OID]]
 
 # Contextes can only be used when check_plugin_name is given.
 def get_single_oid(
-    oid: str, *, section_name: SectionName | None = None, backend: SNMPBackend
+    oid: str,
+    *,
+    section_name: SectionName | None = None,
+    single_oid_cache: dict[OID, SNMPDecodedString | None],
+    backend: SNMPBackend,
 ) -> SNMPDecodedString | None:
     # The OID can end with ".*". In that case we do a snmpgetnext and try to
     # find an OID with the prefix in question. The *cache* is working including
@@ -48,11 +52,11 @@ def get_single_oid(
             raise MKGeneralException("OID definition '%s' does not begin with a '.'" % oid)
         oid = "." + oid
 
-    # TODO: Use generic cache mechanism
-    if oid in snmp_cache.single_oid_cache():
-        console.vverbose("       Using cached OID %s: " % oid)
-        cached_value = snmp_cache.single_oid_cache()[oid]
-        console.vverbose(f"{tty.bold}{tty.green}{cached_value!r}{tty.normal}\n")
+    with suppress(KeyError):
+        cached_value = single_oid_cache[oid]
+        console.vverbose(
+            f"       Using cached OID {oid}: {tty.bold}{tty.green}{cached_value!r}{tty.normal}\n"
+        )
         return cached_value
 
     # get_single_oid() can only return a single value. When SNMPv3 is used with multiple
@@ -84,7 +88,7 @@ def get_single_oid(
     else:
         decoded_value = value
 
-    snmp_cache.single_oid_cache()[oid] = decoded_value
+    single_oid_cache[oid] = decoded_value
     return decoded_value
 
 
@@ -252,9 +256,5 @@ def oids_to_walk(options: SNMPWalkOptions | None = None) -> list[OID]:
 
 
 def do_snmpget(oid: OID, *, backend: SNMPBackend) -> None:
-    # TODO what about SNMP management boards?
-    snmp_cache.initialize_single_oid_cache(backend.config.hostname, backend.config.ipaddress)
-
-    value = get_single_oid(oid, backend=backend)
+    value = get_single_oid(oid, single_oid_cache={}, backend=backend)
     sys.stdout.write(f"{backend.hostname} ({backend.address}): {value!r}\n")
-    cmk.utils.cleanup.cleanup_globals()

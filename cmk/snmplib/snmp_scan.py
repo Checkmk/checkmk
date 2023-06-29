@@ -80,7 +80,14 @@ def _prefetch_description_object(*, backend: SNMPBackend) -> None:
         (OID_SYS_DESCR, "system description"),
         (OID_SYS_OBJ, "system object"),
     ):
-        if snmp_modes.get_single_oid(oid, backend=backend) is None:
+        if (
+            snmp_modes.get_single_oid(
+                oid,
+                single_oid_cache=snmp_cache.single_oid_cache(),
+                backend=backend,
+            )
+            is None
+        ):
             raise MKSNMPError(
                 "Cannot fetch %s OID %s. Please check your SNMP "
                 "configuration. Possible reason might be: Wrong credentials, "
@@ -110,6 +117,7 @@ def _find_sections(
         oid_value_getter = functools.partial(
             snmp_modes.get_single_oid,
             section_name=name,
+            single_oid_cache=snmp_cache.single_oid_cache(),
             backend=backend,
         )
         try:

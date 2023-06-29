@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import enum
 import hashlib
+import sys
 import zlib
 from collections.abc import Callable, Iterator
 from enum import Enum
@@ -15,6 +16,11 @@ from typing import assert_never, Final, Self
 from cmk.utils.crypto.deprecated import AesCbcCipher
 from cmk.utils.exceptions import MKFetcherError
 from cmk.utils.serializertype import Deserializer, Serializer
+
+if sys.version_info < (3, 12):
+    from typing_extensions import Buffer
+else:
+    from collections.abc import Buffer
 
 OPENSSL_SALTED_MARKER = "Salted__"
 
@@ -141,10 +147,8 @@ class MessageV1(Deserializer):
     def from_bytes(cls, data: bytes) -> MessageV1:
         return cls(
             header := HeaderV1.from_bytes(data),
-            _decompress(
-                header.compression_type,
-                data[len(header) :],
-            ),
+            # TODO: remove `bytes()` conversion
+            bytes(_decompress(header.compression_type, data[len(header) :])),
         )
 
     def __hash__(self) -> int:
@@ -164,10 +168,7 @@ class MessageV1(Deserializer):
         return False
 
 
-def _decompress(
-    compression_type: CompressionType,
-    data: bytes,
-) -> bytes:
+def _decompress(compression_type: CompressionType, data: Buffer) -> Buffer:
     if compression_type is CompressionType.ZLIB:
         try:
             return zlib.decompress(data)
@@ -202,7 +203,7 @@ def validate_agent_protocol(
 def decrypt_by_agent_protocol(
     password: str,
     protocol: TransportProtocol,
-    encrypted_pkg: bytes,
+    encrypted_pkg: Buffer,
 ) -> bytes:
     """select the decryption algorithm based on the agent header
 
@@ -216,7 +217,7 @@ def decrypt_by_agent_protocol(
 
     if protocol is TransportProtocol.PBKDF2:
         return _decrypt_aes_256_cbc_pbkdf2(
-            ciphertext=encrypted_pkg[len(OPENSSL_SALTED_MARKER) :],
+            ciphertext=memoryview(encrypted_pkg)[len(OPENSSL_SALTED_MARKER) :],
             password=password,
         )
 
@@ -234,10 +235,7 @@ def decrypt_by_agent_protocol(
     )
 
 
-def _decrypt_aes_256_cbc_pbkdf2(
-    ciphertext: bytes,
-    password: str,
-) -> bytes:
+def _decrypt_aes_256_cbc_pbkdf2(ciphertext: Buffer, password: str) -> bytes:
     """Decrypt an openssl encrypted bytestring:
     Cipher: AES256-CBC
     Salted: yes
@@ -251,20 +249,20 @@ def _decrypt_aes_256_cbc_pbkdf2(
     key_iv = hashlib.pbkdf2_hmac(
         "sha256",
         password.encode("utf-8"),
-        ciphertext[:SALT_LENGTH],
+        memoryview(ciphertext)[:SALT_LENGTH],
         PBKDF2_CYCLES,
         KEY_LENGTH + IV_LENGTH,
     )
     key, iv = key_iv[:KEY_LENGTH], key_iv[KEY_LENGTH:]
 
     cipher = AesCbcCipher("decrypt", key, iv)
-    decrypted = cipher.update(ciphertext[SALT_LENGTH:]) + cipher.finalize()
+    decrypted = cipher.update(bytes(memoryview(ciphertext)[SALT_LENGTH:])) + cipher.finalize()
 
     return AesCbcCipher.unpad_block(decrypted)
 
 
 def _decrypt_aes_256_cbc_legacy(
-    ciphertext: bytes,
+    ciphertext: Buffer,
     password: str,
     digest: Callable[..., hashlib._Hash],
 ) -> bytes:
@@ -279,7 +277,7 @@ def _decrypt_aes_256_cbc_legacy(
     key, iv = _derive_openssl_key_and_iv(password.encode("utf-8"), digest, KEY_LENGTH, IV_LENGTH)
 
     cipher = AesCbcCipher("decrypt", key, iv)
-    decrypted = cipher.update(ciphertext) + cipher.finalize()
+    decrypted = cipher.update(bytes(ciphertext)) + cipher.finalize()
 
     return AesCbcCipher.unpad_block(decrypted)
 
@@ -291,8 +289,10 @@ def _derive_openssl_key_and_iv(
     iv_length: int,
 ) -> tuple[bytes, bytes]:
     """Simple and completely insecure OpenSSL Key derivation function"""
-    d = d_i = b""
+    d, d_i = bytearray(b""), b""
     while len(d) < key_length + iv_length:
         d_i = digest(d_i + password).digest()
         d += d_i
-    return d[:key_length], d[key_length : key_length + iv_length]
+    return bytes(memoryview(d)[:key_length]), bytes(
+        memoryview(d)[key_length : key_length + iv_length]
+    )

@@ -151,6 +151,11 @@ def parse_arguments(argv):
              If specified, every 'group=<name>' argument starts a new group configuration,
              and every 'resource=<name>' arguments specifies a resource.""",
     )
+    parser.add_argument(
+        "--monitor-costs",
+        action="store_true",
+        help="monitor usage details (costs)",
+    )
     args = parser.parse_args(argv)
 
     if args.vcrtrace:
@@ -1048,7 +1053,8 @@ def main_subscription(args, secret, selector, subscription):
     group_labels = get_group_labels(mgmt_client, monitored_groups)
     write_group_info(monitored_groups, monitored_resources, group_labels)
 
-    usage_details(mgmt_client, monitored_groups, args)
+    if args.monitor_costs:
+        usage_details(mgmt_client, monitored_groups, args)
 
     func_args = ((mgmt_client, resource, group_labels, args) for resource in monitored_resources)
     mapper = get_mapper(args.debug, args.sequential, args.timeout)

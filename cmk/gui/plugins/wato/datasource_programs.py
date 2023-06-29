@@ -3579,6 +3579,20 @@ def _valuespec_special_agents_azure():
                 ),
             ),
             (
+                "monitor_costs",
+                Checkbox(
+                    title=_("Usage details"),
+                    label=_("Monitor usage details"),
+                    default_value=True,
+                    help=_(
+                        "By default the usage details (costs) are monitored by the Azure agent. "
+                        "If the option is disabled, the agent won't fetch cost data from the Azure API."
+                        "The option can be useful in cases when querying usage details fails periodically,"
+                        "causing the Azure Agent Info to become CRIT."
+                    ),
+                ),
+            ),
+            (
                 "config",
                 Dictionary(
                     title=_("Retrieve information about..."),
@@ -3635,7 +3649,7 @@ def _valuespec_special_agents_azure():
                 ),
             ),
         ],
-        optional_keys=["subscription", "piggyback_vms", "sequential"],
+        optional_keys=["subscription", "piggyback_vms", "sequential", "monitor_costs"],
     )
 
 

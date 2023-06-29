@@ -34,6 +34,7 @@ pytestmark = pytest.mark.checks
                     "strawberry",
                     "--client",
                     "blueberry",
+                    "--monitor-costs",
                 ],
                 json.dumps(
                     {

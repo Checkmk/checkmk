@@ -1,0 +1,19 @@
+Title: agent_azure: Option to disable cost monitoring
+Class: feature
+Compatible: compat
+Component: agents
+Date: 1688556483
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.1.0p31
+
+By default, Azure agent fetches usage details (costs)
+on each run.
+
+Now, an additional option 'Monitor usage details' has
+been added to the 'Microsoft Azure' agent configuration.
+If disabled the agent will no longer fetch usage details,
+which can be useful if querying usage details fails periodically.
+
+

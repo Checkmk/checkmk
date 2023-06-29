@@ -256,6 +256,15 @@ def _make_filter_func(choice: Literal["nothing", "all"] | Sequence[_CT]) -> Call
             return lambda k: k in choice
 
 
+_VT_co = TypeVar("_VT_co", covariant=True)
+
+
+def _get_filtered_dict(
+    mapping: Mapping[SDKey, _VT_co], *filters: Callable[[SDKey], bool]
+) -> Mapping[SDKey, _VT_co]:
+    return {k: v for k, v in mapping.items() if any(f(k) for f in filters)} if filters else mapping
+
+
 @dataclass(frozen=True, kw_only=True)
 class _FilterTree:
     _filters_by_name: dict[SDNodeName, _FilterTree] = field(default_factory=dict)
@@ -267,13 +276,11 @@ class _FilterTree:
     def filters_by_name(self) -> Mapping[SDNodeName, _FilterTree]:
         return self._filters_by_name
 
-    @property
-    def filters_pairs(self) -> Sequence[Callable[[SDKey], bool]]:
-        return self._filters_pairs
+    def filter_pairs(self, pairs: Mapping[SDKey, _VT_co]) -> Mapping[SDKey, _VT_co]:
+        return _get_filtered_dict(pairs, *self._filters_pairs)
 
-    @property
-    def filters_columns(self) -> Sequence[Callable[[SDKey], bool]]:
-        return self._filters_columns
+    def filter_columns(self, row: Mapping[SDKey, _VT_co]) -> Mapping[SDKey, _VT_co]:
+        return _get_filtered_dict(row, *self._filters_columns)
 
     @property
     def filters_nodes(self) -> Sequence[Callable[[SDNodeName], bool]]:
@@ -307,15 +314,6 @@ def _make_retentions_filter_func(
         and (interval := intervals_by_key.get(k))
         and now <= interval.keep_until
     )
-
-
-_VT_co = TypeVar("_VT_co", covariant=True)
-
-
-def _get_filtered_dict(
-    mapping: Mapping[SDKey, _VT_co], *filters: Callable[[SDKey], bool]
-) -> Mapping[SDKey, _VT_co]:
-    return {k: v for k, v in mapping.items() if any(f(k) for f in filters)} if filters else mapping
 
 
 # .
@@ -791,23 +789,21 @@ def _deserialize_legacy_node(  # pylint: disable=too-many-branches
 
 
 def _filter_attributes(
-    attributes: ImmutableAttributes, filters: Sequence[Callable[[SDKey], bool]]
+    attributes: ImmutableAttributes, filter_tree: _FilterTree
 ) -> ImmutableAttributes:
     return ImmutableAttributes(
-        pairs=_get_filtered_dict(attributes.pairs, *filters),
+        pairs=filter_tree.filter_pairs(attributes.pairs),
         retentions=attributes.retentions,
     )
 
 
-def _filter_table(
-    table: ImmutableTable, filters: Sequence[Callable[[SDKey], bool]]
-) -> ImmutableTable:
+def _filter_table(table: ImmutableTable, filter_tree: _FilterTree) -> ImmutableTable:
     return ImmutableTable(
         key_columns=table.key_columns,
         rows_by_ident={
             ident: filtered_row
             for ident, row in table.rows_by_ident.items()
-            if (filtered_row := _get_filtered_dict(row, *filters))
+            if (filtered_row := filter_tree.filter_columns(row))
         },
         retentions=table.retentions,
     )
@@ -816,8 +812,8 @@ def _filter_table(
 def _filter_tree(tree: ImmutableTree, filter_tree: _FilterTree) -> ImmutableTree:
     return ImmutableTree(
         path=tree.path,
-        attributes=_filter_attributes(tree.attributes, filter_tree.filters_pairs),
-        table=_filter_table(tree.table, filter_tree.filters_columns),
+        attributes=_filter_attributes(tree.attributes, filter_tree),
+        table=_filter_table(tree.table, filter_tree),
         nodes_by_name={
             name: filtered_node
             for name in set(
@@ -1306,20 +1302,18 @@ class ImmutableTree:
 
 
 def _filter_delta_attributes(
-    attributes: ImmutableDeltaAttributes, filters: Sequence[Callable[[SDKey], bool]]
+    attributes: ImmutableDeltaAttributes, filter_tree: _FilterTree
 ) -> ImmutableDeltaAttributes:
-    return ImmutableDeltaAttributes(pairs=_get_filtered_dict(attributes.pairs, *filters))
+    return ImmutableDeltaAttributes(pairs=filter_tree.filter_pairs(attributes.pairs))
 
 
 def _filter_delta_table(
-    table: ImmutableDeltaTable, filters: Sequence[Callable[[SDKey], bool]]
+    table: ImmutableDeltaTable, filter_tree: _FilterTree
 ) -> ImmutableDeltaTable:
     return ImmutableDeltaTable(
         key_columns=table.key_columns,
         rows=[
-            filtered_row
-            for row in table.rows
-            if (filtered_row := _get_filtered_dict(row, *filters))
+            filtered_row for row in table.rows if (filtered_row := filter_tree.filter_columns(row))
         ],
     )
 
@@ -1327,8 +1321,8 @@ def _filter_delta_table(
 def _filter_delta_tree(tree: ImmutableDeltaTree, filter_tree: _FilterTree) -> ImmutableDeltaTree:
     return ImmutableDeltaTree(
         path=tree.path,
-        attributes=_filter_delta_attributes(tree.attributes, filter_tree.filters_pairs),
-        table=_filter_delta_table(tree.table, filter_tree.filters_columns),
+        attributes=_filter_delta_attributes(tree.attributes, filter_tree),
+        table=_filter_delta_table(tree.table, filter_tree),
         nodes_by_name={
             name: filtered_node
             for name in set(

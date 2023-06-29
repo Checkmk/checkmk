@@ -139,9 +139,9 @@ def test_parse_tree_path(
             },
             SDFilterChoice(
                 path=("path", "to", "node"),
-                choice_pairs="all",
-                choice_columns="all",
-                choice_nodes="all",
+                pairs="all",
+                columns="all",
+                nodes="all",
             ),
         ),
         (
@@ -151,9 +151,9 @@ def test_parse_tree_path(
             },
             SDFilterChoice(
                 path=("path", "to", "node"),
-                choice_pairs="all",
-                choice_columns="all",
-                choice_nodes=["node"],
+                pairs="all",
+                columns="all",
+                nodes=["node"],
             ),
         ),
         (
@@ -163,9 +163,9 @@ def test_parse_tree_path(
             },
             SDFilterChoice(
                 path=("path", "to", "node"),
-                choice_pairs=["key"],
-                choice_columns="all",
-                choice_nodes="all",
+                pairs=["key"],
+                columns="all",
+                nodes="all",
             ),
         ),
         (
@@ -175,9 +175,9 @@ def test_parse_tree_path(
             },
             SDFilterChoice(
                 path=("path", "to", "node"),
-                choice_pairs="all",
-                choice_columns=["key"],
-                choice_nodes="all",
+                pairs="all",
+                columns=["key"],
+                nodes="all",
             ),
         ),
         (
@@ -187,9 +187,9 @@ def test_parse_tree_path(
             },
             SDFilterChoice(
                 path=("path", "to", "node"),
-                choice_pairs="all",
-                choice_columns="all",
-                choice_nodes="nothing",
+                pairs="all",
+                columns="all",
+                nodes="nothing",
             ),
         ),
         (
@@ -199,9 +199,9 @@ def test_parse_tree_path(
             },
             SDFilterChoice(
                 path=("path", "to", "node"),
-                choice_pairs="nothing",
-                choice_columns="all",
-                choice_nodes="all",
+                pairs="nothing",
+                columns="all",
+                nodes="all",
             ),
         ),
         (
@@ -211,9 +211,9 @@ def test_parse_tree_path(
             },
             SDFilterChoice(
                 path=("path", "to", "node"),
-                choice_pairs="all",
-                choice_columns="nothing",
-                choice_nodes="all",
+                pairs="all",
+                columns="nothing",
+                nodes="all",
             ),
         ),
     ],
@@ -232,36 +232,36 @@ def test__make_filter_choices_from_permitted_paths(
             ".path.to.node.",
             SDFilterChoice(
                 path=("path", "to", "node"),
-                choice_pairs="all",
-                choice_columns="all",
-                choice_nodes="all",
+                pairs="all",
+                columns="all",
+                nodes="all",
             ),
         ),
         (
             ".path.to.node:",
             SDFilterChoice(
                 path=("path", "to", "node"),
-                choice_pairs="all",
-                choice_columns="all",
-                choice_nodes="all",
+                pairs="all",
+                columns="all",
+                nodes="all",
             ),
         ),
         (
             ".path.to.node:*.key",
             SDFilterChoice(
                 path=("path", "to", "node"),
-                choice_pairs=["key"],
-                choice_columns=["key"],
-                choice_nodes="nothing",
+                pairs=["key"],
+                columns=["key"],
+                nodes="nothing",
             ),
         ),
         (
             ".path.to.node.key",
             SDFilterChoice(
                 path=("path", "to", "node"),
-                choice_pairs=["key"],
-                choice_columns=["key"],
-                choice_nodes="nothing",
+                pairs=["key"],
+                columns=["key"],
+                nodes="nothing",
             ),
         ),
     ],

@@ -235,6 +235,14 @@ class _DictKeys(Generic[_T]):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+
+class SDFilterChoice(NamedTuple):
+    path: SDPath
+    pairs: Literal["nothing", "all"] | Sequence[SDKey]
+    columns: Literal["nothing", "all"] | Sequence[SDKey]
+    nodes: Literal["nothing", "all"] | Sequence[SDNodeName]
+
+
 _CT = TypeVar("_CT", SDKey, SDNodeName)
 
 
@@ -248,13 +256,6 @@ def _make_filter_func(choice: Literal["nothing", "all"] | Sequence[_CT]) -> Call
             return lambda k: k in choice
 
 
-class SDFilterChoice(NamedTuple):
-    path: SDPath
-    choice_pairs: Literal["nothing", "all"] | Sequence[SDKey]
-    choice_columns: Literal["nothing", "all"] | Sequence[SDKey]
-    choice_nodes: Literal["nothing", "all"] | Sequence[SDNodeName]
-
-
 @dataclass(frozen=True, kw_only=True)
 class _FilterTree:
     nodes: dict[SDNodeName, _FilterTree] = field(default_factory=dict)
@@ -266,9 +267,9 @@ class _FilterTree:
         if path:
             self.nodes.setdefault(path[0], _FilterTree()).append(path[1:], filter_choice)
             return
-        self.filters_pairs.append(_make_filter_func(filter_choice.choice_pairs))
-        self.filters_columns.append(_make_filter_func(filter_choice.choice_columns))
-        self.filters_nodes.append(_make_filter_func(filter_choice.choice_nodes))
+        self.filters_pairs.append(_make_filter_func(filter_choice.pairs))
+        self.filters_columns.append(_make_filter_func(filter_choice.columns))
+        self.filters_nodes.append(_make_filter_func(filter_choice.nodes))
 
 
 def _make_filter_tree(filters: Iterable[SDFilterChoice]) -> _FilterTree:

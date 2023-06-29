@@ -405,9 +405,9 @@ def test_filter_delta_tree_nt() -> None:
             [
                 SDFilterChoice(
                     path=("path-to-nta", "nt"),
-                    choice_pairs=["nt1"],
-                    choice_columns=["nt1"],
-                    choice_nodes="nothing",
+                    pairs=["nt1"],
+                    columns=["nt1"],
+                    nodes="nothing",
                 )
             ],
         )
@@ -436,9 +436,9 @@ def test_filter_delta_tree_na() -> None:
             [
                 SDFilterChoice(
                     path=("path-to-nta", "na"),
-                    choice_pairs=["na1"],
-                    choice_columns=["na1"],
-                    choice_nodes="nothing",
+                    pairs=["na1"],
+                    columns=["na1"],
+                    nodes="nothing",
                 )
             ],
         )
@@ -462,9 +462,9 @@ def test_filter_delta_tree_ta() -> None:
             [
                 SDFilterChoice(
                     path=("path-to-nta", "ta"),
-                    choice_pairs=["ta1"],
-                    choice_columns=["ta1"],
-                    choice_nodes="nothing",
+                    pairs=["ta1"],
+                    columns=["ta1"],
+                    nodes="nothing",
                 )
             ],
         )
@@ -493,15 +493,15 @@ def test_filter_delta_tree_nta_ta() -> None:
             [
                 SDFilterChoice(
                     path=("path-to-nta", "ta"),
-                    choice_pairs=["ta0"],
-                    choice_columns=["ta0"],
-                    choice_nodes="nothing",
+                    pairs=["ta0"],
+                    columns=["ta0"],
+                    nodes="nothing",
                 ),
                 SDFilterChoice(
                     path=("path-to-nta", "ta"),
-                    choice_pairs="nothing",
-                    choice_columns=["ta1"],
-                    choice_nodes="nothing",
+                    pairs="nothing",
+                    columns=["ta1"],
+                    nodes="nothing",
                 ),
             ],
         )
@@ -686,9 +686,9 @@ def test_filter_tree_wrong_node() -> None:
     filters = [
         SDFilterChoice(
             path=("path-to-nta", "ta"),
-            choice_pairs="all",
-            choice_columns="all",
-            choice_nodes="all",
+            pairs="all",
+            columns="all",
+            nodes="all",
         ),
     ]
     filtered = filled_root.filter(filters)
@@ -702,9 +702,9 @@ def test_filter_tree_paths_no_keys() -> None:
     filters = [
         SDFilterChoice(
             path=("path-to-nta", "ta"),
-            choice_pairs="all",
-            choice_columns="all",
-            choice_nodes="all",
+            pairs="all",
+            columns="all",
+            nodes="all",
         ),
     ]
     filtered_root = filled_root.filter(filters)
@@ -727,9 +727,9 @@ def test_filter_tree_paths_and_keys() -> None:
     filters = [
         SDFilterChoice(
             path=("path-to-nta", "ta"),
-            choice_pairs=["ta1"],
-            choice_columns=["ta1"],
-            choice_nodes="all",
+            pairs=["ta1"],
+            columns=["ta1"],
+            nodes="all",
         ),
     ]
     filtered_root = filled_root.filter(filters)
@@ -770,15 +770,15 @@ def test_filter_tree_mixed() -> None:
     filters = [
         SDFilterChoice(
             path=("path-to", "another"),
-            choice_pairs="all",
-            choice_columns="all",
-            choice_nodes="all",
+            pairs="all",
+            columns="all",
+            nodes="all",
         ),
         SDFilterChoice(
             path=("path-to-nta", "ta"),
-            choice_pairs=["ta0"],
-            choice_columns=["ta0"],
-            choice_nodes="all",
+            pairs=["ta0"],
+            columns=["ta0"],
+            nodes="all",
         ),
     ]
     filtered_root = _make_immutable_tree(filled_root_).filter(filters)
@@ -1158,21 +1158,21 @@ def test_merge_trees_2() -> None:
             [
                 SDFilterChoice(
                     path=("hardware", "components"),
-                    choice_pairs="all",
-                    choice_columns="all",
-                    choice_nodes="all",
+                    pairs="all",
+                    columns="all",
+                    nodes="all",
                 ),
                 SDFilterChoice(
                     path=("networking", "interfaces"),
-                    choice_pairs="all",
-                    choice_columns="all",
-                    choice_nodes="all",
+                    pairs="all",
+                    columns="all",
+                    nodes="all",
                 ),
                 SDFilterChoice(
                     path=("software", "os"),
-                    choice_pairs="all",
-                    choice_columns="all",
-                    choice_nodes="all",
+                    pairs="all",
+                    columns="all",
+                    nodes="all",
                 ),
             ],
             [("hardware", "system"), ("software", "applications")],
@@ -1198,9 +1198,9 @@ def test_filter_real_tree(
             [
                 SDFilterChoice(
                     path=("networking",),
-                    choice_pairs="all",
-                    choice_columns="all",
-                    choice_nodes="all",
+                    pairs="all",
+                    columns="all",
+                    nodes="all",
                 )
             ],
             3178,
@@ -1209,13 +1209,13 @@ def test_filter_real_tree(
             [
                 SDFilterChoice(
                     path=("networking",),
-                    choice_pairs=(
+                    pairs=(
                         ["total_interfaces", "total_ethernet_ports", "available_ethernet_ports"]
                     ),
-                    choice_columns=(
+                    columns=(
                         ["total_interfaces", "total_ethernet_ports", "available_ethernet_ports"]
                     ),
-                    choice_nodes="nothing",
+                    nodes="nothing",
                 ),
             ],
             None,
@@ -1224,9 +1224,9 @@ def test_filter_real_tree(
             [
                 SDFilterChoice(
                     path=("networking", "interfaces"),
-                    choice_pairs="all",
-                    choice_columns="all",
-                    choice_nodes="all",
+                    pairs="all",
+                    columns="all",
+                    nodes="all",
                 ),
             ],
             3178,
@@ -1235,9 +1235,9 @@ def test_filter_real_tree(
             [
                 SDFilterChoice(
                     path=("networking", "interfaces"),
-                    choice_pairs=["admin_status"],
-                    choice_columns=["admin_status"],
-                    choice_nodes="nothing",
+                    pairs=["admin_status"],
+                    columns=["admin_status"],
+                    nodes="nothing",
                 ),
             ],
             326,
@@ -1246,9 +1246,9 @@ def test_filter_real_tree(
             [
                 SDFilterChoice(
                     path=("networking", "interfaces"),
-                    choice_pairs=["admin_status", "FOOBAR"],
-                    choice_columns=["admin_status", "FOOBAR"],
-                    choice_nodes="nothing",
+                    pairs=["admin_status", "FOOBAR"],
+                    columns=["admin_status", "FOOBAR"],
+                    nodes="nothing",
                 ),
             ],
             326,
@@ -1257,9 +1257,9 @@ def test_filter_real_tree(
             [
                 SDFilterChoice(
                     path=("networking", "interfaces"),
-                    choice_pairs=["admin_status", "oper_status"],
-                    choice_columns=["admin_status", "oper_status"],
-                    choice_nodes="nothing",
+                    pairs=["admin_status", "oper_status"],
+                    columns=["admin_status", "oper_status"],
+                    nodes="nothing",
                 ),
             ],
             652,
@@ -1268,9 +1268,9 @@ def test_filter_real_tree(
             [
                 SDFilterChoice(
                     path=("networking", "interfaces"),
-                    choice_pairs=["admin_status", "oper_status", "FOOBAR"],
-                    choice_columns=["admin_status", "oper_status", "FOOBAR"],
-                    choice_nodes="nothing",
+                    pairs=["admin_status", "oper_status", "FOOBAR"],
+                    columns=["admin_status", "oper_status", "FOOBAR"],
+                    nodes="nothing",
                 ),
             ],
             652,
@@ -1298,9 +1298,9 @@ def test_filter_networking_tree_empty() -> None:
         [
             SDFilterChoice(
                 path=("networking",),
-                choice_pairs="nothing",
-                choice_columns="nothing",
-                choice_nodes="nothing",
+                pairs="nothing",
+                columns="nothing",
+                nodes="nothing",
             ),
         ]
     )

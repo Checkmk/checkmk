@@ -95,6 +95,7 @@ types-urllib3 = "*"  # used for type checking
 botocore-stubs = "==1.29.105"  # used for type checking, keep version in sync with botocore
 boto3-stubs = "==1.26.105"  # used for type checking, keep version in sync with boto3
 pexpect = "*" # used for update testing
+dill = "*"
 
 [packages]
 setuptools-scm = "==4.1.2"  # needed by various setup.py

@@ -23,7 +23,9 @@ from cmk.utils.hostaddress import HostName
 
 # TODO Cleanup path in utils, base, gui, find ONE place (type defs or similar)
 # TODO filter table rows?
-# TODO _FilterTree: SDNodeName
+# TODO Check filter logic:
+#   - choices = ["all", "nothing", ["k1", ...]]
+#   - How to handle?
 # TODO Improve _make_filter_func:
 # For contact groups (via make_filter)
 #   - ('choices', ['some', 'keys'])

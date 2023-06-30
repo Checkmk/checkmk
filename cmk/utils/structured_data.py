@@ -258,13 +258,19 @@ def _make_filter_func(choice: Literal["nothing", "all"] | Sequence[_CT]) -> Call
             return lambda k: k in choice
 
 
+def _consolidate_filter_funcs(
+    choices: Sequence[Literal["nothing", "all"] | Sequence[_CT]]
+) -> Callable[[_CT], bool]:
+    return lambda kn: any(_make_filter_func(c)(kn) for c in choices)
+
+
 _VT_co = TypeVar("_VT_co", covariant=True)
 
 
 def _get_filtered_dict(
-    mapping: Mapping[SDKey, _VT_co], *filters: Callable[[SDKey], bool]
+    mapping: Mapping[SDKey, _VT_co], filter_func: Callable[[SDKey], bool]
 ) -> Mapping[SDKey, _VT_co]:
-    return {k: v for k, v in mapping.items() if any(f(k) for f in filters)} if filters else mapping
+    return {k: v for k, v in mapping.items() if filter_func(k)}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -285,20 +291,22 @@ class _FilterTree:
         return self._filter_choices_by_name
 
     def filter_pairs(self, pairs: Mapping[SDKey, _VT_co]) -> Mapping[SDKey, _VT_co]:
-        return _get_filtered_dict(
-            pairs, *(_make_filter_func(c) for c in self._filter_choices_pairs)
+        return (
+            _get_filtered_dict(pairs, _consolidate_filter_funcs(self._filter_choices_pairs))
+            if self._filter_choices_pairs
+            else pairs
         )
 
     def filter_columns(self, row: Mapping[SDKey, _VT_co]) -> Mapping[SDKey, _VT_co]:
-        return _get_filtered_dict(
-            row, *(_make_filter_func(c) for c in self._filter_choices_columns)
+        return (
+            _get_filtered_dict(row, _consolidate_filter_funcs(self._filter_choices_columns))
+            if self._filter_choices_columns
+            else row
         )
 
     def filter_node_names(self, node_names: set[SDNodeName]) -> set[SDNodeName]:
-        filters_nodes = [_make_filter_func(c) for c in self._filter_choices_nodes]
-        return set(n for n in node_names if any(f(n) for f in filters_nodes)).union(
-            self.filters_by_name
-        )
+        filter_nodes = _consolidate_filter_funcs(self._filter_choices_nodes)
+        return set(n for n in node_names if filter_nodes(n)).union(self.filters_by_name)
 
     def append(self, path: SDPath, filter_choice: SDFilterChoice) -> None:
         if path:

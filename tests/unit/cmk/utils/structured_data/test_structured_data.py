@@ -777,7 +777,7 @@ def test_filter_tree_mixed() -> None:
         SDFilterChoice(
             path=("path-to-nta", "ta"),
             pairs=["ta0"],
-            columns=["ta0"],
+            columns=["ta1"],
             nodes="all",
         ),
     ]

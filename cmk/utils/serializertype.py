@@ -59,7 +59,7 @@ class Serializer(Protocol):
         return b"".join(self)
 
     @abc.abstractmethod
-    def __iter__(self) -> Iterator[bytes]:
+    def __iter__(self) -> Iterator[Buffer]:
         raise NotImplementedError
 
 

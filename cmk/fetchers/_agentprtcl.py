@@ -106,7 +106,7 @@ class HeaderV1(Serializer, Deserializer):
     def __init__(self, compression_type: CompressionType) -> None:
         self.compression_type: Final = compression_type
 
-    def __iter__(self) -> Iterator[bytes]:
+    def __iter__(self) -> Iterator[Buffer]:
         yield bytes(self.compression_type)
 
     @classmethod

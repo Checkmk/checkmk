@@ -79,7 +79,7 @@ class Deserializer(Protocol):
 
     @classmethod
     @abc.abstractmethod
-    def from_bytes(cls, data: bytes) -> Self:
+    def from_bytes(cls, data: Buffer) -> Self:
         raise NotImplementedError
 
     @abc.abstractmethod

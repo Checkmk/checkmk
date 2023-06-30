@@ -48,14 +48,14 @@ class Version(Enum):
     V1 = 0
 
     def __bytes__(self) -> bytes:
-        return self.value.to_bytes(self._length(), "big")
+        return self.value.to_bytes(Version.length(), "big")
 
     @classmethod
     def from_bytes(cls, data: Buffer) -> Version:
-        return cls(int.from_bytes(memoryview(data)[: cls._length()], "big"))
+        return cls(int.from_bytes(memoryview(data)[: Version.length()], "big"))
 
     @staticmethod
-    def _length() -> int:
+    def length() -> int:
         return 2
 
 
@@ -87,9 +87,9 @@ class AgentCtlMessage(Deserializer):
     @classmethod
     def from_bytes(cls, data: Buffer) -> AgentCtlMessage:
         version = Version.from_bytes(data)
-        remaining_data = memoryview(data)[len(bytes(version)) :]
+        message = memoryview(data)[version.length() :]
         if version is Version.V1:
-            return cls(version, MessageV1.from_bytes(remaining_data).payload)
+            return cls(version, MessageV1.from_bytes(message).payload)
         # unreachable
         raise NotImplementedError
 

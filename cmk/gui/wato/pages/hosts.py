@@ -580,7 +580,7 @@ class CreateHostMode(ABCHostMode):
 
     @classmethod
     @abc.abstractmethod
-    def _init_new_host_object(cls):
+    def _init_new_host_object(cls) -> CREHost:
         raise NotImplementedError()
 
     @classmethod
@@ -679,10 +679,10 @@ class ModeCreateHost(CreateHostMode):
         return _("Add host")
 
     @classmethod
-    def _init_new_host_object(cls):
+    def _init_new_host_object(cls) -> CREHost:
         return Host(
             folder=folder_from_request(),
-            host_name=HostName(request.get_ascii_input_mandatory("host")),
+            host_name=HostName(request.get_ascii_input_mandatory("host", "")),
             attributes={},
             cluster_nodes=None,
         )
@@ -712,10 +712,10 @@ class ModeCreateCluster(CreateHostMode):
         return _("Create cluster")
 
     @classmethod
-    def _init_new_host_object(cls):
+    def _init_new_host_object(cls) -> CREHost:
         return Host(
             folder=folder_from_request(),
-            host_name=HostName(request.get_ascii_input_mandatory("host")),
+            host_name=HostName(request.get_ascii_input_mandatory("host", "")),
             attributes={},
             cluster_nodes=[],
         )

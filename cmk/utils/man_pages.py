@@ -430,7 +430,7 @@ def _manpage_browser_folder(
     for e in subtrees:
         title = CATALOG_TITLES.get(e, e)
         if count := _manpage_num_entries(catalog, cat + (e,)):
-            title += " (%d)" % count
+            title += f" ({count})"
         titles.append((title, e))
     titles.sort()
 
@@ -553,12 +553,12 @@ def _parse_to_raw(path: Path, content: str) -> Mapping[str, str]:
             continue
 
         try:
-            key, restofline = line.split(":", 1)
+            key, rest = line.split(":", 1)
         except ValueError as exc:
             raise MKGeneralException(f"Syntax error in {path} line {no} ({exc}).\n")
 
         current = parsed[key]
-        current.append(restofline.strip())
+        current.append(rest.strip())
 
     return {k: "\n".join(v).strip() for k, v in parsed.items()}
 
@@ -585,7 +585,7 @@ class ManPageRenderer:
 
         ags = [CHECK_MK_AGENTS.get(agent, agent.upper()) for agent in self._page.agents]
         self._print_info_line(
-            "Distribution:            ", self._format_distribution(self._page.distribution)
+            "Distribution:            ", _format_distribution(self._page.distribution)
         )
         self._print_info_line("License:                 ", self._page.license)
         self._print_info_line("Supported Agents:        ", ", ".join(ags))
@@ -605,13 +605,6 @@ class ManPageRenderer:
         self._print_empty_line()
         self._flush()
 
-    def _format_distribution(self, distr: str) -> str:
-        if distr == "check_mk":
-            return "Official part of Checkmk"
-        if distr == "check_mk_cloud":
-            return "Official part of Checkmk Cloud Edition"
-        return distr
-
     def _flush(self) -> None:
         raise NotImplementedError()
 
@@ -627,7 +620,7 @@ class ManPageRenderer:
     def _print_subheader(self, line: str) -> None:
         raise NotImplementedError()
 
-    def _print_line(self, line: str, attr: str | None = None, no_markup: bool = False) -> None:
+    def _print_line(self, line: str, *, color: str | None = None, no_markup: bool = False) -> None:
         raise NotImplementedError()
 
     def _print_begin_splitlines(self) -> None:
@@ -641,6 +634,16 @@ class ManPageRenderer:
 
     def _print_textbody(self, text: str) -> None:
         raise NotImplementedError()
+
+
+def _format_distribution(distr: str) -> str:
+    match distr:
+        case "check_mk":
+            return "Official part of Checkmk"
+        case "check_mk_cloud":
+            return "Official part of Checkmk Cloud Edition"
+        case _:
+            return distr
 
 
 def _console_stream() -> TextIO:
@@ -669,9 +672,17 @@ class ConsoleManPageRenderer(ManPageRenderer):
     def _flush(self) -> None:
         self.__output.flush()
 
-    def _markup(self, line: str, attr: str) -> str:
-        # Replaces braces in the line but preserves the inner braces
-        return re.sub("(?<!{){", self._tty_color, re.sub("(?<!})}", tty.normal + attr, line))
+    def _patch_braces(self, line: str, *, color: str) -> str:
+        """Replace braces in the line with a colors
+        { -> self._tty_color
+        } -> cmk.utils.tty.normal + attr
+        All consequent braces except first one are ignored
+        Examples:
+        '{{{TEXT}}}' -> '<self._tty_color>{{TEXT<tty.normal><attr>}}'
+        '{{TEXT}}'   -> '<self._tty_color>{TEXT<tty.normal><attr>}'
+        '{TEXT}'     -> '<self._tty_color>TEXT<tty.normal><attr>'
+        """
+        return re.sub("(?<!{){", self._tty_color, re.sub("(?<!})}", tty.normal + color, line))
 
     def _print_header(self) -> None:
         pass
@@ -697,31 +708,31 @@ class ConsoleManPageRenderer(ManPageRenderer):
             + "\n"
         )
 
-    def _print_line(self, line: str, attr: str | None = None, no_markup: bool = False) -> None:
-        if attr is None:
-            attr = self._normal_color
+    def _print_line(self, line: str, *, color: str | None = None, no_markup: bool = False) -> None:
+        if color is None:
+            color = self._normal_color
 
         if no_markup:
             text = line
             l = len(line)
         else:
-            text = self._markup(line, attr)
+            text = self._patch_braces(line, color=color)
             l = self._print_len(line)
 
-        self.__output.write(f"{attr} ")
+        self.__output.write(f"{color} ")
         self.__output.write(text)
         self.__output.write(" " * (self.__width - 2 - l))
         self.__output.write(f" {tty.normal}\n")
 
-    def _print_splitline(self, attr1: str, left: str, attr2: str, right: str) -> None:
+    def _print_splitline(self, attr1: str, left: str, color: str, right: str) -> None:
         self.__output.write(f"{attr1} {left}")
-        self.__output.write(attr2)
-        self.__output.write(self._markup(right, attr2))
+        self.__output.write(color)
+        self.__output.write(self._patch_braces(right, color=color))
         self.__output.write(" " * (self.__width - 1 - len(left) - self._print_len(right)))
         self.__output.write(tty.normal + "\n")
 
     def _print_empty_line(self) -> None:
-        self._print_line("", tty.colorset(7, 4))
+        self._print_line("", color=tty.colorset(7, 4))
 
     def _print_len(self, word: str) -> int:
         # In case of double braces remove only one brace for counting the length
@@ -729,7 +740,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
         netto = re.sub("\033[^m]+m", "", netto)
         return len(netto)
 
-    def _wrap_text(self, text: str, width: int, attr: str = tty.colorset(7, 4)) -> Sequence[str]:
+    def _wrap_text(self, text: str, width: int, color: str = tty.colorset(7, 4)) -> Sequence[str]:
         wrapped: list[str] = []
         line = ""
         col = 0
@@ -748,7 +759,7 @@ class ConsoleManPageRenderer(ManPageRenderer):
                 if line != "":
                     line += " "
                     col += 1
-                line += self._markup(word, attr)
+                line += self._patch_braces(word, color=color)
                 col += netto
         if line != "":
             wrapped.append(self._fillup(line, width))
@@ -761,7 +772,6 @@ class ConsoleManPageRenderer(ManPageRenderer):
     def _justify(self, line: str, width: int) -> str:
         need_spaces = float(width - self._print_len(line))
         spaces = float(line.count(" "))
-        newline = ""
         x = 0.0
         s = 0.0
         words = line.split()
@@ -783,9 +793,9 @@ class ConsoleManPageRenderer(ManPageRenderer):
 
     def _print_textbody(self, text: str) -> None:
         wrapped = self._wrap_text(text, self.__width - 2)
-        attr = tty.colorset(7, 4)
+        color = tty.colorset(7, 4)
         for line in wrapped:
-            self._print_line(line, attr)
+            self._print_line(line, color=color)
 
 
 class NowikiManPageRenderer(ManPageRenderer):
@@ -803,15 +813,6 @@ class NowikiManPageRenderer(ManPageRenderer):
         self.paint()
         return self.__output.getvalue()
 
-    def _markup(self, line: str, ignored: str | None = None) -> str:
-        # preserve the inner { and } in double braces and then replace the braces left
-        return (
-            line.replace("{{", "{&#123;")
-            .replace("}}", "&#125;}")
-            .replace("{", "<tt>")
-            .replace("}", "</tt>")
-        )
-
     def _print_header(self) -> None:
         self.__output.write("TI:Check manual page of %s\n" % self.name)
         # It does not make much sense to print the date of the HTML generation
@@ -821,19 +822,17 @@ class NowikiManPageRenderer(ManPageRenderer):
         self.__output.write("SA:check_plugins_catalog,check_plugins_list\n")
 
     def _print_manpage_title(self, title: str) -> None:
-        self.__output.write("<b>%s</b>\n" % title)
+        self.__output.write(f"<b>{title}</b>\n")
 
     def _print_info_line(self, left: str, right: str) -> None:
         self.__output.write(f"<tr><td>{left}</td><td>{right}</td></tr>\n")
 
     def _print_subheader(self, line: str) -> None:
-        self.__output.write("H2:%s\n" % line)
+        self.__output.write(f"H2:{line}\n")
 
-    def _print_line(self, line: str, attr: str | None = None, no_markup: bool = False) -> None:
-        if no_markup:
-            self.__output.write("%s\n" % line)
-        else:
-            self.__output.write("%s\n" % self._markup(line))
+    def _print_line(self, line: str, *, color: str | None = None, no_markup: bool = False) -> None:
+        content = line if no_markup else _apply_markup(line)
+        self.__output.write(f"{content}\n")
 
     def _print_begin_splitlines(self) -> None:
         self.__output.write("<table>\n")
@@ -845,7 +844,22 @@ class NowikiManPageRenderer(ManPageRenderer):
         self.__output.write("\n")
 
     def _print_textbody(self, text: str) -> None:
-        self.__output.write("%s\n" % self._markup(text))
+        self.__output.write(f"{_apply_markup(text)}\n")
+
+
+def _apply_markup(line: str) -> str:
+    """Replace bracers with markup
+    '{{' -> '<tt>&#123;'
+    '{' -> '<tt>'
+    '}}' -> '&#125;</tt>'
+    '}' -> '</tt>'
+    """
+    return (
+        line.replace("{{", "{&#123;")
+        .replace("}}", "&#125;}")
+        .replace("{", "<tt>")
+        .replace("}", "</tt>")
+    )
 
 
 if __name__ == "__main__":

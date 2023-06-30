@@ -9,6 +9,7 @@ import os
 import subprocess
 from collections.abc import Iterator
 from pathlib import Path
+from pprint import pformat
 from typing import Optional
 
 import pytest
@@ -348,8 +349,8 @@ def reschedule_services(site: Site, hostname: str, max_count: int = 10) -> None:
 
     while len(get_services_with_status(base_data_host, "PEND")) > 0 and count < max_count:
         logger.info(
-            "The following services were found with pending status: %s. Rescheduling checks...",
-            get_services_with_status(base_data_host, "PEND"),
+            "The following services were found with pending status:\n%s.\nRescheduling checks...",
+            pformat(get_services_with_status(base_data_host, "PEND")),
         )
         site.schedule_check(hostname, "Check_MK", 0)
         base_data_host = get_host_data(site, hostname)
@@ -372,17 +373,26 @@ def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
 
 def logger_services_ok(version: str, services: list) -> None:
     logger.info(
-        "%s service(s) found in `OK` status in %s-version: %s", len(services), version, services
+        "%s service(s) found in `OK` status in %s-version:\n%s",
+        len(services),
+        version,
+        pformat(services),
     )
 
 
 def logger_services_warn(version: str, services: list) -> None:
     logger.warning(
-        "%s service(s) found in `WARN` status in %s-version: %s", len(services), version, services
+        "%s service(s) found in `WARN` status in %s-version:\n%s",
+        len(services),
+        version,
+        pformat(services),
     )
 
 
 def logger_services_crit(version: str, services: list) -> None:
     logger.error(
-        "%s service(s) found in `CRIT` status in %s-version: %s", len(services), version, services
+        "%s service(s) found in `CRIT` status in %s-version:\n%s",
+        len(services),
+        version,
+        pformat(services),
     )

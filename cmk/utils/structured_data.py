@@ -267,33 +267,46 @@ def _get_filtered_dict(
 
 @dataclass(frozen=True, kw_only=True)
 class _FilterTree:
-    _filters_by_name: dict[SDNodeName, _FilterTree] = field(default_factory=dict)
-    _filters_pairs: list[Callable[[SDKey], bool]] = field(default_factory=list)
-    _filters_columns: list[Callable[[SDKey], bool]] = field(default_factory=list)
-    _filters_nodes: list[Callable[[SDNodeName], bool]] = field(default_factory=list)
+    _filter_choices_by_name: dict[SDNodeName, _FilterTree] = field(default_factory=dict)
+    _filter_choices_pairs: list[Literal["nothing", "all"] | Sequence[SDKey]] = field(
+        default_factory=list
+    )
+    _filter_choices_columns: list[Literal["nothing", "all"] | Sequence[SDKey]] = field(
+        default_factory=list
+    )
+    _filter_choices_nodes: list[Literal["nothing", "all"] | Sequence[SDNodeName]] = field(
+        default_factory=list
+    )
 
     @property
     def filters_by_name(self) -> Mapping[SDNodeName, _FilterTree]:
-        return self._filters_by_name
+        return self._filter_choices_by_name
 
     def filter_pairs(self, pairs: Mapping[SDKey, _VT_co]) -> Mapping[SDKey, _VT_co]:
-        return _get_filtered_dict(pairs, *self._filters_pairs)
+        return _get_filtered_dict(
+            pairs, *(_make_filter_func(c) for c in self._filter_choices_pairs)
+        )
 
     def filter_columns(self, row: Mapping[SDKey, _VT_co]) -> Mapping[SDKey, _VT_co]:
-        return _get_filtered_dict(row, *self._filters_columns)
+        return _get_filtered_dict(
+            row, *(_make_filter_func(c) for c in self._filter_choices_columns)
+        )
 
     def filter_node_names(self, node_names: set[SDNodeName]) -> set[SDNodeName]:
-        return set(name for name in node_names for f in self._filters_nodes if f(name)).union(
+        filters_nodes = [_make_filter_func(c) for c in self._filter_choices_nodes]
+        return set(n for n in node_names if any(f(n) for f in filters_nodes)).union(
             self.filters_by_name
         )
 
     def append(self, path: SDPath, filter_choice: SDFilterChoice) -> None:
         if path:
-            self._filters_by_name.setdefault(path[0], _FilterTree()).append(path[1:], filter_choice)
+            self._filter_choices_by_name.setdefault(path[0], _FilterTree()).append(
+                path[1:], filter_choice
+            )
             return
-        self._filters_pairs.append(_make_filter_func(filter_choice.pairs))
-        self._filters_columns.append(_make_filter_func(filter_choice.columns))
-        self._filters_nodes.append(_make_filter_func(filter_choice.nodes))
+        self._filter_choices_pairs.append(filter_choice.pairs)
+        self._filter_choices_columns.append(filter_choice.columns)
+        self._filter_choices_nodes.append(filter_choice.nodes)
 
 
 def _make_filter_tree(filters: Iterable[SDFilterChoice]) -> _FilterTree:

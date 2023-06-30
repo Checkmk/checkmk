@@ -297,7 +297,7 @@ class _FilterTree:
             else pairs
         )
 
-    def filter_columns(self, row: Mapping[SDKey, _VT_co]) -> Mapping[SDKey, _VT_co]:
+    def filter_row(self, row: Mapping[SDKey, _VT_co]) -> Mapping[SDKey, _VT_co]:
         return (
             _get_filtered_dict(row, _consolidate_filter_funcs(self._filter_choices_columns))
             if self._filter_choices_columns
@@ -827,7 +827,7 @@ def _filter_table(table: ImmutableTable, filter_tree: _FilterTree) -> ImmutableT
         rows_by_ident={
             ident: filtered_row
             for ident, row in table.rows_by_ident.items()
-            if (filtered_row := filter_tree.filter_columns(row))
+            if (filtered_row := filter_tree.filter_row(row))
         },
         retentions=table.retentions,
     )
@@ -1334,9 +1334,7 @@ def _filter_delta_table(
 ) -> ImmutableDeltaTable:
     return ImmutableDeltaTable(
         key_columns=table.key_columns,
-        rows=[
-            filtered_row for row in table.rows if (filtered_row := filter_tree.filter_columns(row))
-        ],
+        rows=[filtered_row for row in table.rows if (filtered_row := filter_tree.filter_row(row))],
     )
 
 

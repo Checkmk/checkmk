@@ -131,13 +131,25 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponseData> {
             .join("tr");
 
         const a = rows.selectAll("td a").data(d => [
-            {text: d.count, url: d.url, css_class: "count " + d.css_class},
-            {css_class: "box " + d.css_class, url: d.url},
-            {text: d.title, url: d.url, css_class: "text"},
+            { // count
+                text: d.count,
+                url: d.url,
+                css_class: "count " + d.css_class,
+            },
+            { // state color
+                text: "",
+                url: d.url,
+                css_class: "box " + d.css_class,
+            },
+            { // text (state title)
+                text: d.title,
+                url: d.url,
+                css_class: "text",
+            },
         ]);
         a.join(enter => enter.append("td").append("a"))
             .attr("class", d => d.css_class)
-            .text(d => String(d.text))
+            .text(d => d.text)
             .attr("href", d => d.url);
 
         this.render_title(this._title, this._title_url);

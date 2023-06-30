@@ -282,9 +282,10 @@ class _FilterTree:
     def filter_columns(self, row: Mapping[SDKey, _VT_co]) -> Mapping[SDKey, _VT_co]:
         return _get_filtered_dict(row, *self._filters_columns)
 
-    @property
-    def filters_nodes(self) -> Sequence[Callable[[SDNodeName], bool]]:
-        return self._filters_nodes
+    def filter_node_names(self, node_names: set[SDNodeName]) -> set[SDNodeName]:
+        return set(name for name in node_names for f in self._filters_nodes if f(name)).union(
+            self.filters_by_name
+        )
 
     def append(self, path: SDPath, filter_choice: SDFilterChoice) -> None:
         if path:
@@ -816,9 +817,7 @@ def _filter_tree(tree: ImmutableTree, filter_tree: _FilterTree) -> ImmutableTree
         table=_filter_table(tree.table, filter_tree),
         nodes_by_name={
             name: filtered_node
-            for name in set(
-                name for name in tree.nodes_by_name for f in filter_tree.filters_nodes if f(name)
-            ).union(filter_tree.filters_by_name)
+            for name in filter_tree.filter_node_names(set(tree.nodes_by_name))
             if (
                 filtered_node := _filter_tree(
                     tree.nodes_by_name.get(name, ImmutableTree(path=tree.path + (name,))),
@@ -1325,9 +1324,7 @@ def _filter_delta_tree(tree: ImmutableDeltaTree, filter_tree: _FilterTree) -> Im
         table=_filter_delta_table(tree.table, filter_tree),
         nodes_by_name={
             name: filtered_node
-            for name in set(
-                name for name in tree.nodes_by_name for f in filter_tree.filters_nodes if f(name)
-            ).union(filter_tree.filters_by_name)
+            for name in filter_tree.filter_node_names(set(tree.nodes_by_name))
             if (
                 filtered_node := _filter_delta_tree(
                     tree.nodes_by_name.get(name, ImmutableDeltaTree(path=tree.path + (name,))),

@@ -42,6 +42,7 @@ class BaseVersions:
     BASE_VERSIONS_STR = [
         "2.1.0p28",
         "2.1.0p29",
+        "2.1.0p30",
     ]
     BASE_VERSIONS = [
         CMKVersion(base_version_str, Edition.CEE, current_base_branch_name())

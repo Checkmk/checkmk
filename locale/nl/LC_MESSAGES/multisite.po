@@ -11420,9 +11420,6 @@ msgstr "Verzamel diagnostische dump"
 msgid "Collect diagnostics"
 msgstr "Diagnostiek verzamelen"
 
-msgid "Collect diagnostics data from the local site."
-msgstr "Verzamel diagnostische gegevens van de lokale locatie."
-
 msgid "Collect information about OS and Checkmk version"
 msgstr "Verzamel informatie over OS en Checkmk versie"
 
@@ -72086,6 +72083,9 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Collect diagnostics data from the local site."
+#~ msgstr "Verzamel diagnostische gegevens van de lokale locatie."
 
 #, fuzzy
 #~| msgid ""

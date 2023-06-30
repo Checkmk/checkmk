@@ -11521,9 +11521,6 @@ msgstr "Colectarea descărcării de diagnosticare"
 msgid "Collect diagnostics"
 msgstr "Colectarea de diagnostice"
 
-msgid "Collect diagnostics data from the local site."
-msgstr "Colectați datele de diagnosticare de la locul de amplasare locală."
-
 msgid "Collect information about OS and Checkmk version"
 msgstr "Colectați informații despre sistemul de operare și versiunea Checkmk"
 
@@ -72774,6 +72771,9 @@ msgstr "{actual} este prea mică. Valoarea minimă permisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Collect diagnostics data from the local site."
+#~ msgstr "Colectați datele de diagnosticare de la locul de amplasare locală."
 
 #, fuzzy
 #~| msgid ""

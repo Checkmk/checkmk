@@ -11563,9 +11563,6 @@ msgstr "Collecte des données de diagnostic"
 msgid "Collect diagnostics"
 msgstr "Recueillir les diagnostics"
 
-msgid "Collect diagnostics data from the local site."
-msgstr "Collecter les données de diagnostic du site local."
-
 msgid "Collect information about OS and Checkmk version"
 msgstr ""
 "Collecte d'informations sur le système d'exploitation et la version de "
@@ -73072,6 +73069,9 @@ msgstr "{actual} est trop faible. La valeur minimale autorisée est de {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Tous droits réservés."
+
+#~ msgid "Collect diagnostics data from the local site."
+#~ msgstr "Collecter les données de diagnostic du site local."
 
 #, fuzzy
 #~| msgid ""

@@ -11238,10 +11238,6 @@ msgstr "診断ダンプを収集する"
 msgid "Collect diagnostics"
 msgstr "診断を収集する"
 
-#, fuzzy
-msgid "Collect diagnostics data from the local site."
-msgstr "ローカルサイトに接続する"
-
 msgid "Collect information about OS and Checkmk version"
 msgstr "OSとCheckmkのバージョンに関する情報を収集する"
 
@@ -70687,6 +70683,11 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "Connect to the local site"
+#~ msgid "Collect diagnostics data from the local site."
+#~ msgstr "ローカルサイトに接続する"
 
 #, fuzzy
 #~| msgid ""

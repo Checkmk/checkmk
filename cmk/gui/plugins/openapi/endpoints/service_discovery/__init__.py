@@ -421,39 +421,44 @@ def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: C
     service_discovery_job = ServiceDiscoveryBackgroundJob(host.name())
     if service_discovery_job.is_active():
         return Response(status=409)
-    discovery_options = _discovery_options(DISCOVERY_ACTION[api_discovery_action.value])
-    if not has_discovery_action_specific_permissions(discovery_options.action, None):
+
+    discovery_action = DISCOVERY_ACTION[api_discovery_action.value]
+    if not has_discovery_action_specific_permissions(discovery_action, None):
         return problem(
             403,
             "You do not have the necessary permissions to execute this action",
         )
-    discovery_result = get_check_table(
-        host, discovery_options.action, raise_errors=not discovery_options.ignore_errors
-    )
+    discovery_result = get_check_table(host, discovery_action, raise_errors=False)
     match api_discovery_action:
         case APIDiscoveryAction.new:
             discovery_result = perform_service_discovery(
-                discovery_options=discovery_options,
+                action=discovery_action,
                 discovery_result=discovery_result,
                 update_services=[],
                 update_source="new",
                 update_target="old",
                 host=host,
+                show_checkboxes=False,
+                raise_errors=False,
             )
         case APIDiscoveryAction.remove:
             discovery_result = perform_service_discovery(
-                discovery_options=discovery_options,
+                action=discovery_action,
                 discovery_result=discovery_result,
                 update_services=[],
                 update_source="vanished",
                 update_target="removed",
                 host=host,
+                show_checkboxes=False,
+                raise_errors=False,
             )
         case APIDiscoveryAction.fix_all:
             discovery_result = perform_fix_all(
-                discovery_options=discovery_options,
-                host=host,
+                action=discovery_action,
                 discovery_result=discovery_result,
+                host=host,
+                show_checkboxes=False,
+                raise_errors=False,
             )
         case APIDiscoveryAction.refresh | APIDiscoveryAction.tabula_rasa:
             discovery_run = _discovery_wait_for_completion_link(host.name())
@@ -462,7 +467,10 @@ def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: C
             return response
         case APIDiscoveryAction.only_host_labels:
             discovery_result = perform_host_label_discovery(
-                discovery_options=discovery_options, host=host, discovery_result=discovery_result
+                action=discovery_action,
+                discovery_result=discovery_result,
+                host=host,
+                raise_errors=False,
             )
         case _:
             assert_never(api_discovery_action)

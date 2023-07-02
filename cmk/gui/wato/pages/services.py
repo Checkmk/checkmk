@@ -365,40 +365,45 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             return discovery_result
 
         match discovery_options.action:
-            case DiscoveryAction.FIX_ALL:
+            case DiscoveryAction.FIX_ALL as action:
                 discovery_result = perform_fix_all(
-                    discovery_options=discovery_options,
+                    action=action,
                     discovery_result=discovery_result,
                     host=host,
+                    show_checkboxes=discovery_options.show_checkboxes,
+                    raise_errors=not discovery_options.ignore_errors,
                 )
-            case DiscoveryAction.UPDATE_HOST_LABELS:
+            case DiscoveryAction.UPDATE_HOST_LABELS as action:
                 discovery_result = perform_host_label_discovery(
-                    discovery_options=discovery_options,
+                    action=action,
                     discovery_result=discovery_result,
                     host=host,
+                    raise_errors=not discovery_options.ignore_errors,
                 )
-            case DiscoveryAction.SINGLE_UPDATE | DiscoveryAction.BULK_UPDATE | DiscoveryAction.UPDATE_SERVICES:
+            case DiscoveryAction.SINGLE_UPDATE | DiscoveryAction.BULK_UPDATE | DiscoveryAction.UPDATE_SERVICES as action:
                 discovery_result = perform_service_discovery(
-                    discovery_options=discovery_options,
+                    action=action,
                     discovery_result=discovery_result,
                     update_services=update_services,
                     update_source=update_source,
                     update_target=update_target,
                     host=host,
+                    show_checkboxes=discovery_options.show_checkboxes,
+                    raise_errors=not discovery_options.ignore_errors,
                 )
-            case DiscoveryAction.UPDATE_SERVICES:
+            case DiscoveryAction.UPDATE_SERVICES as action:
                 discovery_result = perform_service_discovery(
-                    discovery_options=discovery_options,
+                    action=action,
                     discovery_result=discovery_result,
                     update_services=update_services,
                     update_source=None,
                     update_target=None,
                     host=host,
+                    show_checkboxes=discovery_options.show_checkboxes,
+                    raise_errors=not discovery_options.ignore_errors,
                 )
-            case _:
-                raise MKUserError(
-                    "discovery", f"Unknown discovery action: {discovery_options.action}"
-                )
+            case action:
+                raise MKUserError("discovery", f"Unknown discovery action: {action}")
 
         return discovery_result
 

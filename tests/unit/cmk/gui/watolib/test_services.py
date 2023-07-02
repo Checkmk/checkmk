@@ -300,13 +300,15 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
     )
 
     discovery_result = perform_fix_all(
-        discovery_options=discovery_options,
+        action=DiscoveryAction.FIX_ALL,
         discovery_result=initial_discovery_result(
             discovery_options=discovery_options,
             host=sample_host,
             previous_discovery_result=previous_discovery_result,
         ),
         host=sample_host,
+        show_checkboxes=False,
+        raise_errors=True,
     )
     mock_set_autochecks.assert_called_with(
         "NO_SITE",
@@ -539,7 +541,7 @@ def test_perform_discovery_single_update(
         ignore_errors=False,
     )
     discovery_result = perform_service_discovery(
-        discovery_options=discovery_options,
+        action=DiscoveryAction.SINGLE_UPDATE,
         discovery_result=initial_discovery_result(
             discovery_options=discovery_options,
             host=sample_host,
@@ -549,6 +551,8 @@ def test_perform_discovery_single_update(
         update_source="new",
         update_target="old",
         host=sample_host,
+        show_checkboxes=False,
+        raise_errors=True,
     )
     mock_set_autochecks.assert_called_with(
         "NO_SITE",
@@ -728,7 +732,7 @@ def test_perform_discovery_action_update_services(
         ignore_errors=False,
     )
     discovery_result = perform_service_discovery(
-        discovery_options=discovery_options,
+        action=DiscoveryAction.UPDATE_SERVICES,
         discovery_result=initial_discovery_result(
             discovery_options=discovery_options,
             host=sample_host,
@@ -738,6 +742,8 @@ def test_perform_discovery_action_update_services(
         update_source=None,
         update_target=None,
         host=sample_host,
+        show_checkboxes=False,
+        raise_errors=True,
     )
     mock_set_autochecks.assert_called_with(
         "NO_SITE",
@@ -836,13 +842,14 @@ def test_perform_discovery_action_update_host_labels(
         ignore_errors=False,
     )
     discovery_result = perform_host_label_discovery(
-        discovery_options=discovery_options,
+        action=DiscoveryAction.UPDATE_HOST_LABELS,
         discovery_result=initial_discovery_result(
             discovery_options=discovery_options,
             host=sample_host,
             previous_discovery_result=previous_discovery_result,
         ),
         host=sample_host,
+        raise_errors=True,
     )
 
     mock_update_host_labels.assert_called_once_with(

@@ -515,20 +515,33 @@ _ActionCall = TypeVar(
     "_ActionCall",
     Callable[
         [
-            Arg(DiscoveryOptions, "discovery_options"),
+            Arg(DiscoveryAction, "action"),
             Arg(DiscoveryResult, "discovery_result"),
             NamedArg(CREHost, "host"),
+            NamedArg(bool, "show_checkboxes"),
+            NamedArg(bool, "raise_errors"),
         ],
         DiscoveryResult,
     ],
     Callable[
         [
-            Arg(DiscoveryOptions, "discovery_options"),
+            Arg(DiscoveryAction, "action"),
+            Arg(DiscoveryResult, "discovery_result"),
+            NamedArg(CREHost, "host"),
+            NamedArg(bool, "raise_errors"),
+        ],
+        DiscoveryResult,
+    ],
+    Callable[
+        [
+            Arg(DiscoveryAction, "action"),
             Arg(DiscoveryResult, "discovery_result"),
             NamedArg(CREHost, "host"),
             NamedArg(list[str], "update_services"),
             NamedArg(str | None, "update_source"),
             NamedArg(str | None, "update_target"),
+            NamedArg(bool, "show_checkboxes"),
+            NamedArg(bool, "raise_errors"),
         ],
         DiscoveryResult,
     ],
@@ -538,14 +551,14 @@ _ActionCall = TypeVar(
 def _service_discovery_call(perform_action_call: _ActionCall) -> _ActionCall:
     @functools.wraps(perform_action_call)
     def decorate(  # type: ignore[no-untyped-def]
-        discovery_options: DiscoveryOptions,
+        action: DiscoveryAction,
         discovery_result: DiscoveryResult,
         *,
         host: CREHost,
         **kwargs,
     ) -> DiscoveryResult:
         user.need_permission("wato.services")
-        result = perform_action_call(discovery_options, discovery_result, host=host, **kwargs)
+        result = perform_action_call(action, discovery_result, host=host, **kwargs)
         if not host.locked():
             host.clear_discovery_failed()
         return result
@@ -555,10 +568,12 @@ def _service_discovery_call(perform_action_call: _ActionCall) -> _ActionCall:
 
 @_service_discovery_call
 def perform_fix_all(
-    discovery_options: DiscoveryOptions,
+    action: DiscoveryAction,
     discovery_result: DiscoveryResult,
     *,
     host: CREHost,
+    show_checkboxes: bool,
+    raise_errors: bool,
 ) -> DiscoveryResult:
     """
     Handle fix all ('Accept All' on UI) discovery action
@@ -566,57 +581,54 @@ def perform_fix_all(
     _perform_update_host_labels(discovery_result.labels_by_host)
     Discovery(
         host,
-        discovery_options.action,
-        discovery_options.show_checkboxes,
+        action,
+        show_checkboxes,
         update_target=None,
         update_services=[],
         update_source=None,
     ).do_discovery(discovery_result)
-    discovery_result = get_check_table(
-        host, discovery_options.action, raise_errors=not discovery_options.ignore_errors
-    )
+    discovery_result = get_check_table(host, action, raise_errors=raise_errors)
     return discovery_result
 
 
 @_service_discovery_call
 def perform_host_label_discovery(
-    discovery_options: DiscoveryOptions,
+    action: DiscoveryAction,
     discovery_result: DiscoveryResult,
     *,
     host: CREHost,
+    raise_errors: bool,
 ) -> DiscoveryResult:
     """Handle update host labels discovery action"""
     _perform_update_host_labels(discovery_result.labels_by_host)
-    discovery_result = get_check_table(
-        host, discovery_options.action, raise_errors=not discovery_options.ignore_errors
-    )
+    discovery_result = get_check_table(host, action, raise_errors=raise_errors)
     return discovery_result
 
 
 @_service_discovery_call
 def perform_service_discovery(
-    discovery_options: DiscoveryOptions,
+    action: DiscoveryAction,
     discovery_result: DiscoveryResult,
     update_services: list[str],
     update_source: str | None,
     update_target: str | None,
     *,
     host: CREHost,
+    show_checkboxes: bool,
+    raise_errors: bool,
 ) -> DiscoveryResult:
     """
     Handle discovery action for Update Services, Single Update & Bulk Update
     """
     Discovery(
         host,
-        discovery_options.action,
-        show_checkboxes=discovery_options.show_checkboxes,
+        action,
+        show_checkboxes=show_checkboxes,
         update_target=update_target,
         update_services=update_services,
         update_source=update_source,
     ).do_discovery(discovery_result)
-    discovery_result = get_check_table(
-        host, discovery_options.action, raise_errors=not discovery_options.ignore_errors
-    )
+    discovery_result = get_check_table(host, action, raise_errors=raise_errors)
     return discovery_result
 
 

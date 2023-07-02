@@ -277,14 +277,8 @@ def _update_single_service_phase(
     action = DiscoveryAction.SINGLE_UPDATE
     Discovery(
         host=host,
-        discovery_options=DiscoveryOptions(
-            action=action,
-            show_checkboxes=False,
-            show_parameters=False,
-            show_discovered_labels=False,
-            show_plugin_names=False,
-            ignore_errors=True,
-        ),
+        action=action,
+        show_checkboxes=False,
         update_target=target_phase,
         update_services=[checkbox_id(check_type, service_item)],
     ).do_discovery(get_check_table(host, action, raise_errors=False))

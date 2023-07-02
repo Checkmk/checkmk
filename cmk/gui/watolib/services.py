@@ -246,13 +246,15 @@ class Discovery:
     def __init__(
         self,
         host: CREHost,
-        discovery_options: DiscoveryOptions,
+        action: DiscoveryAction,
+        show_checkboxes: bool,
         update_target: str | None,
         update_services: list[str],
         update_source: str | None = None,
     ) -> None:
         self._host = host
-        self._options = discovery_options
+        self._action = action
+        self._show_checkboxes = show_checkboxes
         self._discovery_info: DiscoveryInfo = {
             "update_source": update_source,
             "update_target": update_target,
@@ -467,8 +469,8 @@ class Discovery:
         return None
 
     def _get_table_target(self, entry: CheckPreviewEntry):  # type: ignore[no-untyped-def]
-        if self._options.action == DiscoveryAction.FIX_ALL or (
-            self._options.action == DiscoveryAction.UPDATE_SERVICES
+        if self._action == DiscoveryAction.FIX_ALL or (
+            self._action == DiscoveryAction.UPDATE_SERVICES
             and self._service_is_checked(entry.check_plugin_name, entry.item)
         ):
             if entry.check_source == DiscoveryState.VANISHED:
@@ -482,11 +484,11 @@ class Discovery:
         if not update_target:
             return entry.check_source
 
-        if self._options.action == DiscoveryAction.BULK_UPDATE:
+        if self._action == DiscoveryAction.BULK_UPDATE:
             if entry.check_source != self._discovery_info["update_source"]:
                 return entry.check_source
 
-            if not self._options.show_checkboxes:
+            if not self._show_checkboxes:
                 return update_target
 
             if (
@@ -495,7 +497,7 @@ class Discovery:
             ):
                 return update_target
 
-        if self._options.action == DiscoveryAction.SINGLE_UPDATE:
+        if self._action == DiscoveryAction.SINGLE_UPDATE:
             varname = checkbox_id(entry.check_plugin_name, entry.item)
             if varname in self._discovery_info["update_services"]:
                 return update_target
@@ -504,7 +506,7 @@ class Discovery:
 
     def _service_is_checked(self, check_type, item):
         return (
-            not self._options.show_checkboxes
+            not self._show_checkboxes
             or checkbox_id(check_type, item) in self._discovery_info["update_services"]
         )
 
@@ -564,7 +566,8 @@ def perform_fix_all(
     _perform_update_host_labels(discovery_result.labels_by_host)
     Discovery(
         host,
-        discovery_options,
+        discovery_options.action,
+        discovery_options.show_checkboxes,
         update_target=None,
         update_services=[],
         update_source=None,
@@ -605,7 +608,8 @@ def perform_service_discovery(
     """
     Discovery(
         host,
-        discovery_options,
+        discovery_options.action,
+        show_checkboxes=discovery_options.show_checkboxes,
         update_target=update_target,
         update_services=update_services,
         update_source=update_source,

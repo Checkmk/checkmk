@@ -259,13 +259,6 @@ class Discovery:
             "update_services": update_services,  # list of service hash
         }
 
-    def execute_discovery(self, discovery_result=None):
-        if discovery_result is None:
-            discovery_result = get_check_table(
-                self._host, self._options.action, raise_errors=not self._options.ignore_errors
-            )
-        self.do_discovery(discovery_result)
-
     def do_discovery(self, discovery_result: DiscoveryResult):  # type: ignore[no-untyped-def]
         old_autochecks: SetAutochecksTable = {}
         autochecks_to_save: SetAutochecksTable = {}

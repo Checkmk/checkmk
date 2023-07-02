@@ -417,11 +417,11 @@ def execute(params: Mapping[str, Any]) -> Response:
     return _execute_service_discovery(discovery_action, host)
 
 
-def _execute_service_discovery(discovery_action: APIDiscoveryAction, host: CREHost) -> Response:
+def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: CREHost) -> Response:
     service_discovery_job = ServiceDiscoveryBackgroundJob(host.name())
     if service_discovery_job.is_active():
         return Response(status=409)
-    discovery_options = _discovery_options(DISCOVERY_ACTION[discovery_action.value])
+    discovery_options = _discovery_options(DISCOVERY_ACTION[api_discovery_action.value])
     if not has_discovery_action_specific_permissions(discovery_options.action, None):
         return problem(
             403,
@@ -430,7 +430,7 @@ def _execute_service_discovery(discovery_action: APIDiscoveryAction, host: CREHo
     discovery_result = get_check_table(
         host, discovery_options.action, raise_errors=not discovery_options.ignore_errors
     )
-    match discovery_action:
+    match api_discovery_action:
         case APIDiscoveryAction.new:
             discovery_result = perform_service_discovery(
                 discovery_options=discovery_options,
@@ -465,7 +465,7 @@ def _execute_service_discovery(discovery_action: APIDiscoveryAction, host: CREHo
                 discovery_options=discovery_options, host=host, discovery_result=discovery_result
             )
         case _:
-            assert_never(discovery_action)
+            assert_never(api_discovery_action)
 
     return serve_json(serialize_discovery_result(host, discovery_result))
 

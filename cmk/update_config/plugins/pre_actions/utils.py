@@ -6,7 +6,7 @@
 import enum
 import sys
 from pathlib import Path
-from typing import Final
+from typing import Final, Sequence
 
 from cmk.utils import paths
 from cmk.utils.packaging import (
@@ -70,6 +70,16 @@ class ConflictMode(enum.StrEnum):
     ABORT = "abort"
 
 
+NEED_USER_INPUT_MODES: Final[Sequence] = [
+    ConflictMode.INSTALL,
+    ConflictMode.KEEP_OLD,
+    ConflictMode.ASK,
+]
+
+USER_INPUT_CONTINUE: Final[Sequence] = ["c", "continue"]
+USER_INPUT_DISABLE: Final[Sequence] = ["d", "disable"]
+
+
 def disable_incomp_mkp(
     conflict_mode: ConflictMode,
     module_name: str,
@@ -77,17 +87,10 @@ def disable_incomp_mkp(
     package_id: PackageID,
     installer: Installer,
 ) -> bool:
-    if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
-        conflict_mode is ConflictMode.ASK
-        and input(
-            "Incompatible file '%s' of extension package '%s %s'\n"
-            "Error: %s\n\n"
-            "You can abort the update process (A) or disable the "
-            "extension package (d) and continue the update process.\n"
-            "Abort the update process? [A/d] \n"
-            % (module_name, package_id.name, package_id.version, error),
-        ).lower()
-        in ["d", "disable"]
+    if (
+        conflict_mode in NEED_USER_INPUT_MODES
+        and _request_user_input_on_incompatible_file(module_name, package_id, error).lower()
+        in USER_INPUT_DISABLE
     ):
         disable(
             installer,
@@ -102,24 +105,34 @@ def disable_incomp_mkp(
     return False
 
 
+def _request_user_input_on_incompatible_file(
+    module_name: str, package_id: PackageID, error: BaseException
+) -> str:
+    return input(
+        f"Incompatible file '{module_name}' of extension package '{package_id.name} {package_id.version}'\n"
+        f"Error: {error}\n\n"
+        "You can abort the update process (A) or disable the "
+        "extension package (d) and continue the update process.\n"
+        "Abort the update process? [A/d] \n"
+    )
+
+
 def continue_on_incomp_local_file(
     conflict_mode: ConflictMode,
     module_name: str,
     error: BaseException,
 ) -> bool:
-    if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
-        conflict_mode is ConflictMode.ASK
+    return (
+        conflict_mode in NEED_USER_INPUT_MODES
         and input(
-            "Incompatible local file '%s'.\n"
-            "Error: %s\n\n"
+            f"Incompatible local file '{module_name}'.\n"
+            f"Error: {error}\n\n"
             "You can abort the update process (A) and try to fix "
             "the incompatibilities or continue the update (c).\n\n"
-            "Abort the update process? [A/c] \n" % (module_name, error)
+            "Abort the update process? [A/c] \n"
         ).lower()
-        in ["c", "continue"]
-    ):
-        return True
-    return False
+        in USER_INPUT_CONTINUE
+    )
 
 
 def get_installer_and_package_map() -> tuple[Installer, dict[Path, PackageID]]:

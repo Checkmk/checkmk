@@ -4,16 +4,22 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """ Pre update checks, executed before any configuration is changed. """
 
+
 from cmk.utils.redis import disable_redis
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
-from cmk.gui.watolib.rulesets import RulesetCollection
+from cmk.gui.watolib.hosts_and_folders import CREFolder
+from cmk.gui.watolib.rulesets import Ruleset, RulesetCollection
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
 from cmk.update_config.plugins.actions.rulesets import AllRulesets
-from cmk.update_config.plugins.pre_actions.utils import ConflictMode
+from cmk.update_config.plugins.pre_actions.utils import (
+    ConflictMode,
+    NEED_USER_INPUT_MODES,
+    USER_INPUT_CONTINUE,
+)
 from cmk.update_config.registry import pre_update_action_registry, PreUpdateAction
 
 
@@ -26,18 +32,12 @@ class PreUpdateRulesets(PreUpdateAction):
                 set_global_vars()
                 rulesets = AllRulesets.load_all_rulesets()
         except Exception as exc:
-            if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
-                conflict_mode is ConflictMode.ASK
-                and input(
-                    f"Exception while trying to load rulesets: {exc}\n\n"
-                    "You can abort the update process (A) and try to fix "
-                    "the incompatibilities or try to continue the update (c).\n"
-                    "Abort update? [A/c]\n"
-                ).lower()
-                in ["c", "continue"]
+            if (
+                conflict_mode in NEED_USER_INPUT_MODES
+                and _request_user_input_on_ruleset_exception(exc).lower() in USER_INPUT_CONTINUE
             ):
                 return None
-            raise MKUserError(None, "an incompatible ruleset")
+            raise MKUserError(None, "an incompatible ruleset") from exc
 
         with disable_redis(), gui_context(), SuperUserContext():
             set_global_vars()
@@ -47,6 +47,15 @@ class PreUpdateRulesets(PreUpdateAction):
             raise MKUserError(None, "failed ruleset validation")
 
         return None
+
+
+def _request_user_input_on_ruleset_exception(exc: Exception) -> str:
+    return input(
+        f"Exception while trying to load rulesets: {exc}\n\n"
+        "You can abort the update process (A) and try to fix "
+        "the incompatibilities or try to continue the update (c).\n"
+        "Abort update? [A/c]\n"
+    )
 
 
 def _validate_rule_values(
@@ -69,26 +78,31 @@ def _validate_rule_values(
                     rule.value,
                     "",
                 )
-            except MKUserError as excpt:
-                if conflict_mode in (ConflictMode.INSTALL, ConflictMode.KEEP_OLD) or (
-                    conflict_mode is ConflictMode.ASK
-                    and input(
-                        f"WARNING: Invalid rule configuration detected\n"
-                        f"Ruleset: {ruleset.name}\n"
-                        f"Title: {ruleset.title()}\n"
-                        f"Folder: {folder.path() if folder.path() else 'main'}\n"
-                        f"Rule nr: {index + 1}\n"
-                        f"Exception: {excpt}\n\n"
-                        f"You can abort the update process (A) and "
-                        f"try to fix the incompatibilities with a downgrade "
-                        f"to the version you came from or continue (c) the update.\n\n"
-                        f"Abort update? [A/c]\n"
-                    ).lower()
-                    in ["c", "continue"]
-                ):
-                    return True
-                return False
+            except MKUserError as e:
+                return (
+                    conflict_mode in NEED_USER_INPUT_MODES
+                    and _request_user_input_on_invalid_rule(ruleset, folder, index, e).lower()
+                    in USER_INPUT_CONTINUE
+                )
+
     return True
+
+
+def _request_user_input_on_invalid_rule(
+    ruleset: Ruleset, folder: CREFolder, index: int, exception: MKUserError
+) -> str:
+    return input(
+        "WARNING: Invalid rule configuration detected\n"
+        f"Ruleset: {ruleset.name}\n"
+        f"Title: {ruleset.title()}\n"
+        f"Folder: {folder.path() or 'main'}\n"
+        f"Rule nr: {index + 1}\n"
+        f"Exception: {exception}\n\n"
+        "You can abort the update process (A) and "
+        "try to fix the incompatibilities with a downgrade "
+        "to the version you came from or continue (c) the update.\n\n"
+        "Abort update? [A/c]\n"
+    )
 
 
 pre_update_action_registry.register(

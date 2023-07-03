@@ -9,12 +9,11 @@ import pprint
 import re
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any, TypedDict
+from typing import Any
 
 import cmk.utils.paths
 import cmk.utils.rulesets.tuple_rulesets
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.store.host_storage import ContactgroupName
 
 from cmk.gui.config import active_config
 from cmk.gui.i18n import _
@@ -51,14 +50,6 @@ def rename_host_in_list(thelist: list[str], oldname: str, newname: str) -> bool:
             thelist[nr] = "!" + newname
             did_rename = True
     return did_rename
-
-
-class HostContactGroupSpec(TypedDict):
-    groups: list[ContactgroupName]
-    recurse_perms: bool
-    use: bool
-    use_for_services: bool
-    recurse_use: bool
 
 
 # TODO: Find a better place later

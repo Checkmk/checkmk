@@ -7,8 +7,8 @@ from typing import Callable, Iterator
 
 from cmk.utils.store.host_storage import ContactgroupName
 
+from cmk.gui.watolib.host_attributes import HostContactGroupSpec
 from cmk.gui.watolib.hosts_and_folders import CREFolder, folder_tree, WithAttributes
-from cmk.gui.watolib.utils import HostContactGroupSpec
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.update_config.update_state import UpdateActionState

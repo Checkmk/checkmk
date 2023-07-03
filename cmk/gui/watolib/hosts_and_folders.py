@@ -81,7 +81,11 @@ from cmk.gui.watolib.config_domain_name import (
     generate_hosts_to_update_settings,
     SerializedSettings,
 )
-from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
+from cmk.gui.watolib.host_attributes import (
+    collect_attributes,
+    host_attribute_registry,
+    HostContactGroupSpec,
+)
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
@@ -93,7 +97,6 @@ from cmk.gui.watolib.sidebar_reload import need_sidebar_reload
 from cmk.gui.watolib.utils import (
     get_value_formatter,
     host_attribute_matches,
-    HostContactGroupSpec,
     rename_host_in_list,
     wato_root_dir,
 )

@@ -48,11 +48,11 @@ from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,
     HostAttributeTopic,
     HostAttributeTopicBasicSettings,
+    HostContactGroupSpec,
 )
 from cmk.gui.watolib.hosts_and_folders import CREFolder, folder_preserving_link, folder_tree
 from cmk.gui.watolib.notifications import load_notification_rules, load_user_notification_rules
 from cmk.gui.watolib.rulesets import AllRulesets
-from cmk.gui.watolib.utils import HostContactGroupSpec
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.helpers as managed_helpers  # pylint: disable=no-name-in-module
@@ -493,13 +493,15 @@ class HostAttributeContactGroups(ABCHostAttribute):
         return True
 
     def default_value(self) -> HostContactGroupSpec:
-        return {
-            "groups": [],
-            "recurse_perms": False,
-            "use": False,
-            "use_for_services": False,
-            "recurse_use": False,
-        }
+        return HostContactGroupSpec(
+            {
+                "groups": [],
+                "recurse_perms": False,
+                "use": False,
+                "use_for_services": False,
+                "recurse_use": False,
+            }
+        )
 
     def paint(self, value, hostname):
         texts: list[HTML] = []

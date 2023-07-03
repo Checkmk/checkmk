@@ -11,13 +11,14 @@ import abc
 import functools
 import re
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any
+from typing import Any, TypedDict
 
 from marshmallow import fields
 
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
+from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
 
 from cmk.gui.config import active_config
@@ -31,6 +32,15 @@ from cmk.gui.valuespec import Checkbox, DropdownChoice, TextInput, Transform, Va
 from cmk.gui.watolib.utils import host_attribute_matches
 
 from cmk.fields import String
+
+
+class HostContactGroupSpec(TypedDict):
+    groups: list[ContactgroupName]
+    recurse_perms: bool
+    use: bool
+    use_for_services: bool
+    recurse_use: bool
+
 
 HostAttributeSpec = dict[str, Any]
 

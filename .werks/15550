@@ -1,0 +1,17 @@
+Title: Grouped services crash and incorrect visualization
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1688380994
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Using grouped services containing unescaped regex chars, like <b>\P</b>,
+in their title would cause views displaying these services in a group to crash.
+
+Now the views are displayed as expected.
+
+Also the visualization of group title is now fixed. The content of a match group is only shown in the title of the
+grouped services if a match group is actually being used in grouping.

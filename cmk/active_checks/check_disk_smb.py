@@ -191,7 +191,7 @@ class _SMBShareDiskUsage:
         smbclient = shutil.which("smbclient")
 
         cmd = [
-            smbclient if smbclient else "/usr/bin/client",
+            smbclient if smbclient else "/usr/bin/smbclient",
             "//{}/{}".format(hostname, share),
             "-U",
             "{}%{}".format(user, password),

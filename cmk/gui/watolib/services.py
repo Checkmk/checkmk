@@ -360,15 +360,17 @@ class Discovery:
         self._save_service_enable_disable_rules(to_enable, value=False)
         self._save_service_enable_disable_rules(to_disable, value=True)
 
-    # Load all disabled services rules from the folder, then check whether or not there is a
-    # rule for that host and check whether or not it currently disabled the services in question.
-    # if so, remove them and save the rule again.
-    # Then check whether or not the services are still disabled (by other rules). If so, search
-    # for an existing host dedicated negative rule that enables services. Modify this or create
-    # a new rule to override the disabling of other rules.
-    #
-    # Do the same vice versa for disabling services.
     def _save_service_enable_disable_rules(self, services, value):
+        """
+        Load all disabled services rules from the folder, then check whether or not there is a
+        rule for that host and check whether or not it currently disabled the services in question.
+        if so, remove them and save the rule again.
+        Then check whether or not the services are still disabled (by other rules). If so, search
+        for an existing host dedicated negative rule that enables services. Modify this or create
+        a new rule to override the disabling of other rules.
+
+        Do the same vice versa for disabling services.
+        """
         if not services:
             return
 

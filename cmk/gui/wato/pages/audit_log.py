@@ -15,7 +15,7 @@ from cmk.gui.display_options import display_options
 from cmk.gui.exceptions import FinalizeRequest, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, response
+from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -555,7 +555,7 @@ class ModeAuditLog(WatoMode):
                 self._options["display"][1],
             )
 
-        response.headers["Content-Disposition"] = 'attachment; filename="%s"' % filename
+        response.set_content_disposition(ContentDispositionType.ATTACHMENT, filename)
 
         titles = [
             _("Date"),

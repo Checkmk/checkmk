@@ -17,7 +17,7 @@ in [Agent Deployment](https://docs.checkmk.com/latest/en/agent_deployment.html).
 from collections.abc import Mapping
 from typing import Any
 
-from cmk.gui.http import Response
+from cmk.gui.http import ContentDispositionType, Response
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint
 from cmk.gui.utils import agent
 
@@ -48,21 +48,23 @@ OS_TYPE_RAW = {
 def download_agent(params: Mapping[str, Any]) -> Response:
     """Download agents shipped with Checkmk"""
     os_type = params.get("os_type")
+    response = Response()
 
     if os_type == "windows_msi":
         agent_path = agent.packed_agent_path_windows_msi()
+        response.set_content_type("application/x-msi")
     elif os_type == "linux_rpm":
         agent_path = agent.packed_agent_path_linux_rpm()
+        response.set_content_type("application/x-rpm")
     elif os_type == "linux_deb":
         agent_path = agent.packed_agent_path_linux_deb()
+        response.set_content_type("application/x-deb")
     else:
         # This should never happen. Due to validation `os_type` can only be one
         # of the three elements above.
         raise AssertionError(f"Agent: os_type '{os_type}' not known in raw edition.")
 
-    response = Response()
-    response.headers["Content-Type"] = "application/octet-stream"
-    response.headers["Content-Disposition"] = f'attachment; filename="{agent_path.name}"'
+    response.set_content_disposition(ContentDispositionType.ATTACHMENT, agent_path.name)
 
     with open(agent_path, mode="rb") as f:
         response.data = f.read()

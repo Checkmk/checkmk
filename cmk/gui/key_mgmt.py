@@ -26,7 +26,7 @@ from cmk.utils.user import UserId
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import FinalizeRequest, HTTPRedirect, MKUserError
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, response
+from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -482,10 +482,10 @@ class PageDownloadKey:
 
     def _send_download(self, keys: dict[int, Key], key_id: int) -> None:
         key = keys[key_id]
-        response.headers["Content-Disposition"] = "Attachment; filename=%s" % self._file_name(
-            key_id, key
+        response.set_content_type("application/x-pem-file")
+        response.set_content_disposition(
+            ContentDispositionType.ATTACHMENT, self._file_name(key_id, key)
         )
-        response.headers["Content-type"] = "application/x-pem-file"
         response.set_data(key.private_key + key.certificate)
 
     def _file_name(self, key_id: int, key: Key) -> str:

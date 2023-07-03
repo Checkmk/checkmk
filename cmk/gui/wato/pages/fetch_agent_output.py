@@ -25,7 +25,7 @@ from cmk.gui.exceptions import HTTPRedirect, MKUserError
 from cmk.gui.gui_background_job import ActionHandler, JobRenderer
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, response
+from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.pages import Page, page_registry
@@ -323,7 +323,7 @@ class PageDownloadAgentOutput(AgentOutputPage):
         file_content = self._get_agent_output_file()
 
         response.set_content_type("text/plain")
-        response.headers["Content-Disposition"] = "Attachment; filename=%s" % file_name
+        response.set_content_disposition(ContentDispositionType.ATTACHMENT, file_name)
         response.set_data(file_content)
 
     def _get_agent_output_file(self) -> bytes:

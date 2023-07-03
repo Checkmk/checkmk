@@ -37,7 +37,7 @@ from six import ensure_str
 import cmk.utils.paths
 
 from cmk.gui.exceptions import MKInternalError
-from cmk.gui.http import response
+from cmk.gui.http import ContentDispositionType, response
 from cmk.gui.i18n import _
 from cmk.gui.type_defs import RGBColor, RowShading, SizeMM, SizePT
 
@@ -226,10 +226,9 @@ class Document:
     def send(cls, pdf_source: bytes, sendas: str) -> None:
         # ? sendas seems to be used with type str
         response.set_content_type("application/pdf")
-        response.headers[
-            "Content-Disposition"
-        ] = "inline; filename=" + ensure_str(  # pylint: disable= six-ensure-str-bin-call
-            sendas
+        response.set_content_disposition(
+            ContentDispositionType.INLINE,
+            ensure_str(sendas),  # pylint: disable= six-ensure-str-bin-call
         )
         response.set_data(pdf_source)
 

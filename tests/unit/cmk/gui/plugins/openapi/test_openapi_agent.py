@@ -30,7 +30,7 @@ def test_download_agent_shipped_with_checkmk(
     tmp_path: Path,
 ) -> None:
     agent_bin_data = bytes.fromhex("01 02 03 04 05")
-    mocked_agent_path = tmp_path / "agent_bin_mock.bin"
+    mocked_agent_path = tmp_path / "agent_bin_mock.deb"
     with open(mocked_agent_path, "wb") as fo:
         fo.write(agent_bin_data)
 
@@ -47,7 +47,7 @@ def test_download_agent_shipped_with_checkmk(
     )
 
     assert resp.body == agent_bin_data
-    assert resp.headers["Content-Disposition"] == 'attachment; filename="agent_bin_mock.bin"'
+    assert resp.headers["Content-Disposition"] == 'attachment; filename="agent_bin_mock.deb"'
     packed_agent_path_patched.assert_called_once()
 
 

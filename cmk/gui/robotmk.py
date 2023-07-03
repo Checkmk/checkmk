@@ -19,7 +19,7 @@ from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, response
+from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -210,9 +210,9 @@ def robotmk_download_page() -> None:
         urlencode(service_description),
         time.strftime("%Y-%m-%d_%H-%M-%S"),
     )
+    response.set_content_type("application/x-tgz")
+    response.set_content_disposition(ContentDispositionType.ATTACHMENT, filename)
 
-    response.headers["Content-Disposition"] = "Attachment; filename=%s" % filename
-    response.headers["Content-Type"] = "application/x-tar"
     html_content: bytes = _get_html_from_livestatus(
         report_type, site_id, host_name, service_description
     )[0]

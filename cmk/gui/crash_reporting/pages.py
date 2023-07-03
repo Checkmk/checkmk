@@ -38,7 +38,7 @@ from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.tag_rendering import HTMLContent
-from cmk.gui.http import request, response
+from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
@@ -656,9 +656,8 @@ class PageDownloadCrashReport(ABCCrashReportPage):
             urlencode(self._crash_id),
             time.strftime("%Y-%m-%d_%H-%M-%S"),
         )
-
-        response.headers["Content-Disposition"] = "Attachment; filename=%s" % filename
-        response.headers["Content-Type"] = "application/x-tar"
+        response.set_content_type("application/x-tgz")
+        response.set_content_disposition(ContentDispositionType.ATTACHMENT, filename)
         response.set_data(_pack_crash_report(self._get_serialized_crash_report()))
 
 

@@ -38,7 +38,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.htmllib.top_heading import top_heading
-from cmk.gui.http import request, response
+from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -1485,4 +1485,5 @@ def _av_output_set_content_disposition(title: str) -> None:
         title,
         time.strftime("%Y-%m-%d_%H-%M-%S", time.localtime(time.time())),
     )
-    response.headers["Content-Disposition"] = 'Attachment; filename="%s"' % filename
+    response.set_content_type("text/csv")
+    response.set_content_disposition(ContentDispositionType.ATTACHMENT, filename)

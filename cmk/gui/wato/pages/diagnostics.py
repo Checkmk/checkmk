@@ -49,7 +49,7 @@ from cmk.gui.background_job import (
 )
 from cmk.gui.exceptions import HTTPRedirect, MKAuthException, MKUserError
 from cmk.gui.htmllib.html import html
-from cmk.gui.http import request, response
+from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.page_menu import (
@@ -722,7 +722,7 @@ class PageDownloadDiagnosticsDump(Page):
         file_content = _get_diagnostics_dump_file(site, tarfile_name)
 
         response.set_content_type("application/x-tgz")
-        response.headers["Content-Disposition"] = "Attachment; filename=%s" % tarfile_name
+        response.set_content_disposition(ContentDispositionType.ATTACHMENT, tarfile_name)
         response.set_data(file_content)
 
 

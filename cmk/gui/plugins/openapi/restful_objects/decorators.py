@@ -1136,7 +1136,7 @@ class Endpoint:
             if self.response_schema:
                 content: ContentObject
                 content = {self.content_type: {"schema": self.response_schema}}
-            elif self.content_type == "application/octet-stream" or self.content_type.startswith(
+            elif self.content_type.startswith("application/") or self.content_type.startswith(
                 "image/"
             ):
                 content = {

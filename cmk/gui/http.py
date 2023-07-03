@@ -9,6 +9,7 @@ import json
 import urllib.parse
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
+from enum import auto, StrEnum
 from typing import Any, cast, Literal, overload, Protocol, TypeVar
 
 import flask
@@ -30,6 +31,38 @@ T = TypeVar("T")
 Value = TypeVar("Value")
 
 HTTPMethod = Literal["get", "put", "post", "delete"]
+
+
+class ContentDispositionType(StrEnum):
+    """
+    https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition
+
+    Form data currently not supported by us.
+    """
+
+    INLINE = auto()
+    ATTACHMENT = auto()
+
+
+# This is used to match content-type to file ending (file extension) in
+# set_content_disposition. Feel free to add more extensions and content-types.
+# However please make sure that the added types are precise as we are
+# restricting types mitigate risk.
+FILE_EXTENSIONS = {
+    "application/javascript": [".js"],
+    "application/json": [".json"],
+    "application/pdf": [".pdf"],
+    "application/x-deb": [".deb"],
+    "application/x-rpm": [".rpm"],
+    "application/x-pkg": [".pkg"],
+    "application/x-tgz": [".tar.gz"],
+    "application/x-msi": [".msi"],
+    "application/x-mkp": [".mkp"],
+    "image/png": [".png"],
+    "text/csv": [".csv"],
+    "text/plain": [".txt"],
+    "application/x-pem-file": [".pem"],
+}
 
 
 class ValidatedClass(Protocol):
@@ -611,6 +644,22 @@ class Response(flask.Response):
         self.headers[
             "Content-Security-Policy"
         ] = f"form-action 'self' javascript: 'unsafe-inline' {form_action};"
+
+    def set_content_disposition(self, header_type: ContentDispositionType, filename: str) -> None:
+        """Define the Content-Disposition header here, this HTTP header controls how
+        browsers present download data. If you are providing custom meta data for
+        the filename and process (such as attachment, inline etc) by which a browser
+        should make use when downloading.
+        """
+
+        if '"' in filename or "\\" in filename:
+            raise ValueError("Invalid character in filename")
+        for extensions in FILE_EXTENSIONS.get(str(self.mimetype), []):
+            if filename.endswith(extensions):
+                break
+        else:
+            raise ValueError("Invalid file extension: Have you set the Content-Type header?")
+        self.headers["Content-Disposition"] = f'{header_type}; filename="{filename}"'
 
 
 # From request context

@@ -8,6 +8,7 @@ from unittest.mock import call, MagicMock, patch
 import pytest
 from pytest_mock import MockerFixture
 
+from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel
 from cmk.utils.sectionname import SectionName
@@ -24,7 +25,6 @@ from cmk.gui.utils import transaction_manager
 from cmk.gui.watolib.audit_log import AuditLogStore
 from cmk.gui.watolib.hosts_and_folders import CREHost, folder_tree
 from cmk.gui.watolib.services import (
-    checkbox_id,
     DiscoveryAction,
     DiscoveryResult,
     get_check_table,
@@ -523,11 +523,10 @@ def test_perform_discovery_single_update(
             previous_discovery_result=previous_discovery_result,
             raise_errors=True,
         ),
-        update_services=[checkbox_id("mem_linux", None)],
+        selected_services=(("mem_linux", None),),
         update_source="new",
         update_target="old",
         host=sample_host,
-        show_checkboxes=False,
         raise_errors=True,
     )
     mock_set_autochecks.assert_called_with(
@@ -707,11 +706,10 @@ def test_perform_discovery_action_update_services(
             previous_discovery_result=previous_discovery_result,
             raise_errors=True,
         ),
-        update_services=[],
+        selected_services=EVERYTHING,
         update_source=None,
         update_target=None,
         host=sample_host,
-        show_checkboxes=False,
         raise_errors=True,
     )
     mock_set_autochecks.assert_called_with(

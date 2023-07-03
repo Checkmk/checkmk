@@ -12,7 +12,7 @@ import time
 from collections.abc import Mapping, Sequence
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, assert_never, Final, Iterator, Literal, NamedTuple
+from typing import Any, assert_never, Container, Final, Iterator, Literal, NamedTuple
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel, HostLabelValueDict
@@ -222,17 +222,16 @@ class Discovery:
         self,
         host: CREHost,
         action: DiscoveryAction,
-        show_checkboxes: bool,
+        *,
         update_target: str | None,
-        update_services: list[str],
         update_source: str | None = None,
+        selected_services: Container[tuple[CheckPluginNameStr, Item]],
     ) -> None:
         self._host = host
         self._action = action
-        self._show_checkboxes = show_checkboxes
         self._update_source = update_source
         self._update_target = update_target
-        self._update_services = update_services  # list of service hash
+        self._selected_services = selected_services
 
     def do_discovery(self, discovery_result: DiscoveryResult) -> None:
         old_autochecks: SetAutochecksTable = {}
@@ -334,10 +333,7 @@ class Discovery:
     def _get_table_target(self, entry: CheckPreviewEntry) -> str:
         if self._action == DiscoveryAction.FIX_ALL or (
             self._action == DiscoveryAction.UPDATE_SERVICES
-            and (
-                not self._show_checkboxes
-                or self._service_is_checked(entry.check_plugin_name, entry.item)
-            )
+            and (entry.check_plugin_name, entry.item) in self._selected_services
         ):
             if entry.check_source == DiscoveryState.VANISHED:
                 return DiscoveryState.REMOVED
@@ -353,19 +349,14 @@ class Discovery:
             if entry.check_source != self._update_source:
                 return entry.check_source
 
-            if not self._show_checkboxes or self._service_is_checked(
-                entry.check_plugin_name, entry.item
-            ):
+            if (entry.check_plugin_name, entry.item) in self._selected_services:
                 return self._update_target
 
         if self._action == DiscoveryAction.SINGLE_UPDATE:
-            if self._service_is_checked(entry.check_plugin_name, entry.item):
+            if (entry.check_plugin_name, entry.item) in self._selected_services:
                 return self._update_target
 
         return entry.check_source
-
-    def _service_is_checked(self, check_plugin_name: CheckPluginNameStr, item: Item) -> bool:
-        return checkbox_id(check_plugin_name, item) in self._update_services
 
 
 @contextmanager
@@ -393,10 +384,9 @@ def perform_fix_all(
         Discovery(
             host,
             DiscoveryAction.FIX_ALL,
-            show_checkboxes=False,  # does not matter in case of "FIX_ALL"
             update_target=None,
-            update_services=[],  # does not matter in case of "FIX_ALL"
             update_source=None,
+            selected_services=(),  # does not matter in case of "FIX_ALL"
         ).do_discovery(discovery_result)
         discovery_result = get_check_table(host, DiscoveryAction.FIX_ALL, raise_errors=raise_errors)
     return discovery_result
@@ -419,12 +409,11 @@ def perform_host_label_discovery(
 def perform_service_discovery(
     action: DiscoveryAction,
     discovery_result: DiscoveryResult,
-    update_services: list[str],
     update_source: str | None,
     update_target: str | None,
     *,
     host: CREHost,
-    show_checkboxes: bool,
+    selected_services: Container[tuple[CheckPluginNameStr, Item]],
     raise_errors: bool,
 ) -> DiscoveryResult:
     """
@@ -434,10 +423,9 @@ def perform_service_discovery(
         Discovery(
             host,
             action,
-            show_checkboxes=show_checkboxes,
             update_target=update_target,
-            update_services=update_services,
             update_source=update_source,
+            selected_services=selected_services,
         ).do_discovery(discovery_result)
         discovery_result = get_check_table(host, action, raise_errors=raise_errors)
     return discovery_result

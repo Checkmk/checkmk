@@ -14,6 +14,8 @@ import enum
 from collections.abc import Mapping, Sequence
 from typing import Any, assert_never
 
+from cmk.utils.everythingtype import EVERYTHING
+
 from cmk.automations.results import CheckPreviewEntry
 
 from cmk.gui import fields as gui_fields
@@ -47,7 +49,6 @@ from cmk.gui.watolib.bulk_discovery import (
 )
 from cmk.gui.watolib.hosts_and_folders import CREHost, Host
 from cmk.gui.watolib.services import (
-    checkbox_id,
     Discovery,
     DiscoveryAction,
     DiscoveryOptions,
@@ -277,9 +278,8 @@ def _update_single_service_phase(
     Discovery(
         host=host,
         action=action,
-        show_checkboxes=False,
         update_target=target_phase,
-        update_services=[checkbox_id(check_type, service_item)],
+        selected_services=((check_type, service_item),),
     ).do_discovery(get_check_table(host, action, raise_errors=False))
 
 
@@ -433,22 +433,20 @@ def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: C
             discovery_result = perform_service_discovery(
                 action=discovery_action,
                 discovery_result=discovery_result,
-                update_services=[],
                 update_source="new",
                 update_target="old",
                 host=host,
-                show_checkboxes=False,
+                selected_services=EVERYTHING,
                 raise_errors=False,
             )
         case APIDiscoveryAction.remove:
             discovery_result = perform_service_discovery(
                 action=discovery_action,
                 discovery_result=discovery_result,
-                update_services=[],
                 update_source="vanished",
                 update_target="removed",
                 host=host,
-                show_checkboxes=False,
+                selected_services=EVERYTHING,
                 raise_errors=False,
             )
         case APIDiscoveryAction.fix_all:

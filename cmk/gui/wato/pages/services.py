@@ -8,12 +8,13 @@ import json
 import pprint
 import traceback
 from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
-from typing import Any, Literal, NamedTuple
+from typing import Any, Container, Literal, NamedTuple
 
 from livestatus import SiteId
 
 import cmk.utils.render
 from cmk.utils.check_utils import worst_service_state
+from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.html import get_html_state_marker
@@ -24,7 +25,7 @@ from cmk.utils.version import __version__, Version
 
 from cmk.automations.results import CheckPreviewEntry
 
-from cmk.checkengine.checking import Item
+from cmk.checkengine.checking import CheckPluginNameStr, Item
 
 from cmk.gui.background_job import JobStatusStates
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
@@ -76,6 +77,7 @@ from cmk.gui.watolib.hosts_and_folders import (
 from cmk.gui.watolib.rulespecs import rulespec_registry
 from cmk.gui.watolib.services import (
     checkbox_id,
+    checkbox_service,
     DiscoveryAction,
     DiscoveryOptions,
     DiscoveryResult,
@@ -264,7 +266,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             raise MKUserError("host", _("You called this page with an invalid host name."))
         host.permissions.need_permission("read")
 
-        discovery_options = DiscoveryOptions(**api_request["discovery_options"])
+        discovery_options = DiscoveryOptions(
+            **api_request["discovery_options"]
+        )  # FIXME: this violates typing.
         # Reuse the discovery result already known to the GUI or fetch a new one?
         previous_discovery_result = (
             DiscoveryResult.deserialize(raw)
@@ -278,13 +282,14 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             discovery_options = discovery_options._replace(action=DiscoveryAction.NONE)
 
         discovery_result = self._perform_discovery_action(
-            host=host,
             action=discovery_options.action,
+            host=host,
             previous_discovery_result=previous_discovery_result,
             update_source=update_source,
             update_target=None if update_target is None else update_target.value,
-            update_services=update_services,
-            show_checkboxes=discovery_options.show_checkboxes,
+            selected_services=self._resolve_selected_services(
+                update_services, discovery_options.show_checkboxes
+            ),
             raise_errors=not discovery_options.ignore_errors,
         )
         if self._sources_failed_on_first_attempt(previous_discovery_result, discovery_result):
@@ -343,19 +348,21 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
     def _perform_discovery_action(
         self,
-        host: CREHost,
         action: DiscoveryAction,
+        host: CREHost,
         previous_discovery_result: DiscoveryResult | None,
         update_source: str | None,
         update_target: str | None,
-        update_services: list[str],
+        selected_services: Container[tuple[CheckPluginNameStr, Item]],
         *,
-        show_checkboxes: bool,
         raise_errors: bool,
     ) -> DiscoveryResult:
         if action == DiscoveryAction.NONE or not transactions.check_transaction():
             return initial_discovery_result(
-                action, host, previous_discovery_result, raise_errors=raise_errors
+                action,
+                host,
+                previous_discovery_result,
+                raise_errors=raise_errors,
             )
 
         if action in (
@@ -372,7 +379,9 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         match action:
             case DiscoveryAction.FIX_ALL:
                 discovery_result = perform_fix_all(
-                    discovery_result=discovery_result, host=host, raise_errors=raise_errors
+                    discovery_result=discovery_result,
+                    host=host,
+                    raise_errors=raise_errors,
                 )
             case DiscoveryAction.UPDATE_HOST_LABELS:
                 discovery_result = perform_host_label_discovery(
@@ -385,28 +394,35 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                 discovery_result = perform_service_discovery(
                     action=action,
                     discovery_result=discovery_result,
-                    update_services=update_services,
                     update_source=update_source,
                     update_target=update_target,
                     host=host,
-                    show_checkboxes=show_checkboxes,
+                    selected_services=selected_services,
                     raise_errors=raise_errors,
                 )
             case DiscoveryAction.UPDATE_SERVICES:
                 discovery_result = perform_service_discovery(
                     action=action,
                     discovery_result=discovery_result,
-                    update_services=update_services,
                     update_source=None,
                     update_target=None,
                     host=host,
-                    show_checkboxes=show_checkboxes,
+                    selected_services=selected_services,
                     raise_errors=raise_errors,
                 )
             case _:
                 raise MKUserError("discovery", f"Unknown discovery action: {action}")
 
         return discovery_result
+
+    @staticmethod
+    def _resolve_selected_services(
+        update_services: list[str], checkboxes_where_avaliable: bool
+    ) -> Container[tuple[CheckPluginNameStr, Item]]:
+        if update_services:
+            return {checkbox_service(e) for e in update_services}
+        # empty list can mean everything or nothing.
+        return () if checkboxes_where_avaliable else EVERYTHING
 
     def _get_page_menu(self, discovery_options: DiscoveryOptions, host: CREHost) -> str:
         """Render the page menu contents to reflect contect changes

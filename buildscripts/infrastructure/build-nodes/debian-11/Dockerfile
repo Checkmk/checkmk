@@ -19,7 +19,6 @@ RUN apt-get update \
     libssl-dev \
     make \
     python-dev \
-    python-dev \
     python3-pip \
     rrdtool \
     strace \

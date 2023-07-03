@@ -24,7 +24,6 @@ RUN apt-get update \
     nullmailer \
     php7.4-common \
     python-dev \
-    python-dev \
     python3-pip \
     rrdtool \
     strace \

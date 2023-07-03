@@ -1,0 +1,17 @@
+title: Pure Storage FlashArray: Overall Capacity
+agents: pure_storage_fa
+catalog: hw/storagehw/pure_storage
+license: GPLv2
+distribution: check_mk
+description:
+ This check monitors overall capacity and data reduction of a Pure Storage FlashArray.
+
+ The default upper levels for used capacity are 80% (warn) and 90% (critical).
+ They can be configured, together with lower levels for data reduction ratio, using the
+ "Pure Storage Capacity" rule.
+
+ To make this check work you have to configure the related special agent
+ {Pure Storage FlashArray}.
+
+discovery:
+ One service is created.

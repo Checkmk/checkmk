@@ -298,6 +298,7 @@ CATALOG_TITLES: Final = {
     "aws_status": "Amazon Web Service (AWS) Status",
     "gcp_status": "Google Cloud Platform (GCP) Status",
     "virtual": "Virtualization",
+    "pure_storage": "Pure Storage",
 }
 
 # TODO: Do we need a more generic place for this?

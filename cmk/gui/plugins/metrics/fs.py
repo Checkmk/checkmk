@@ -69,6 +69,48 @@ metric_info["fs_provisioning"] = {
     "color": "#ff8000",
 }
 
+metric_info["data_reduction"] = {
+    "title": _("Data reduction ratio"),
+    "unit": "count",
+    "color": "11/a",
+}
+
+metric_info["unique_size"] = {
+    "title": _("Unique"),
+    "unit": "bytes",
+    "color": "14/a",
+}
+
+metric_info["snapshots_size"] = {
+    "title": _("Snapshots"),
+    "unit": "bytes",
+    "color": "21/a",
+}
+
+metric_info["shared_size"] = {
+    "title": _("Shared"),
+    "unit": "bytes",
+    "color": "24/a",
+}
+
+metric_info["system_size"] = {
+    "title": _("System"),
+    "unit": "bytes",
+    "color": "31/a",
+}
+
+metric_info["replication_size"] = {
+    "title": _("Replication"),
+    "unit": "bytes",
+    "color": "41/a",
+}
+
+metric_info["virtual_size"] = {
+    "title": _("Virtual"),
+    "unit": "bytes",
+    "color": "44/a",
+}
+
 # .
 #   .--Graphs--------------------------------------------------------------.
 #   |                    ____                 _                            |
@@ -138,5 +180,26 @@ graph_info["fs_trend"] = {
     "title": _("Growth trend"),
     "metrics": [
         ("fs_trend", "line"),
+    ],
+}
+
+graph_info["capacity_usage"] = {
+    "title": _("Capacity usage"),
+    "metrics": [
+        ("unique_size", "stack"),
+        ("snapshots_size", "stack"),
+        ("shared_size", "stack"),
+        ("system_size", "stack"),
+        ("replication_size", "stack"),
+    ],
+}
+
+graph_info["capacity_usage_2"] = {
+    "title": _("Capacity usage"),
+    "metrics": [
+        ("fs_size", "line"),
+        ("unique_size", "line"),
+        ("snapshots_size", "line"),
+        ("virtual_size", "line"),
     ],
 }

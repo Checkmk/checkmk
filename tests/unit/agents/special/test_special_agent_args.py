@@ -147,6 +147,7 @@ REQUIRED_ARGUMENTS: dict[str, list[str]] = {
     "agent_azure_status": ["REGION1 REGION2"],
     "agent_aws_status": [],
     "agent_gcp_status": [],
+    "agent_pure_storage_fa": ["--api-token", "API-TOKEN", "SERVER"],
 }
 
 

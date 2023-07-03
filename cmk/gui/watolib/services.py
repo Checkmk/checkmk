@@ -13,7 +13,7 @@ from collections.abc import Mapping, Sequence
 from contextlib import contextmanager
 from hashlib import sha256
 from pathlib import Path
-from typing import Any, assert_never, Final, Iterator, Literal, NamedTuple, TypedDict
+from typing import Any, assert_never, Final, Iterator, Literal, NamedTuple
 
 import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.hostaddress import HostName
@@ -234,12 +234,6 @@ class StartDiscoveryRequest(NamedTuple):
     options: DiscoveryOptions
 
 
-class DiscoveryInfo(TypedDict):
-    update_source: str | None
-    update_target: str | None
-    update_services: Sequence[str]
-
-
 class Discovery:
     def __init__(
         self,
@@ -253,11 +247,9 @@ class Discovery:
         self._host = host
         self._action = action
         self._show_checkboxes = show_checkboxes
-        self._discovery_info: DiscoveryInfo = {
-            "update_source": update_source,
-            "update_target": update_target,
-            "update_services": update_services,  # list of service hash
-        }
+        self._update_source = update_source
+        self._update_target = update_target
+        self._update_services = update_services  # list of service hash
 
     def do_discovery(self, discovery_result: DiscoveryResult):  # type: ignore[no-untyped-def]
         old_autochecks: SetAutochecksTable = {}
@@ -483,27 +475,26 @@ class Discovery:
             # entry.check_source in [DiscoveryState.MONITORED, DiscoveryState.UNDECIDED]
             return DiscoveryState.MONITORED
 
-        update_target = self._discovery_info["update_target"]
-        if not update_target:
+        if not self._update_target:
             return entry.check_source
 
         if self._action == DiscoveryAction.BULK_UPDATE:
-            if entry.check_source != self._discovery_info["update_source"]:
+            if entry.check_source != self._update_source:
                 return entry.check_source
 
             if not self._show_checkboxes or self._service_is_checked(
                 entry.check_plugin_name, entry.item
             ):
-                return update_target
+                return self._update_target
 
         if self._action == DiscoveryAction.SINGLE_UPDATE:
             if self._service_is_checked(entry.check_plugin_name, entry.item):
-                return update_target
+                return self._update_target
 
         return entry.check_source
 
     def _service_is_checked(self, check_plugin_name: CheckPluginNameStr, item: Item) -> bool:
-        return checkbox_id(check_plugin_name, item) in self._discovery_info["update_services"]
+        return checkbox_id(check_plugin_name, item) in self._update_services
 
 
 @contextmanager

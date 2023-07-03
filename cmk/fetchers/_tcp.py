@@ -39,19 +39,19 @@ __all__ = ["TCPFetcher"]
 
 
 def recvall(sock: socket.socket, flags: int = 0) -> bytes:
-    buffer: list[bytes] = []
+    buffer = bytearray()
     try:
         while True:
             data = sock.recv(4096, flags)
             if not data:
                 break
-            buffer.append(data)
+            buffer += data
     except OSError as e:
         if cmk.utils.debug.enabled():
             raise
         raise MKFetcherError("Communication failed: %s" % e)
 
-    return b"".join(buffer)
+    return bytes(buffer)
 
 
 def wrap_tls(sock: socket.socket, server_hostname: str) -> ssl.SSLSocket:

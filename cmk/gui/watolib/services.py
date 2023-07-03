@@ -32,7 +32,7 @@ from cmk.automations.results import (
     SetAutochecksTable,
 )
 
-from cmk.checkengine.checking import Item
+from cmk.checkengine.checking import CheckPluginNameStr, Item
 
 import cmk.gui.watolib.changes as _changes
 from cmk.gui.background_job import (
@@ -471,7 +471,10 @@ class Discovery:
     def _get_table_target(self, entry: CheckPreviewEntry):  # type: ignore[no-untyped-def]
         if self._action == DiscoveryAction.FIX_ALL or (
             self._action == DiscoveryAction.UPDATE_SERVICES
-            and self._service_is_checked(entry.check_plugin_name, entry.item)
+            and (
+                not self._show_checkboxes
+                or self._service_is_checked(entry.check_plugin_name, entry.item)
+            )
         ):
             if entry.check_source == DiscoveryState.VANISHED:
                 return DiscoveryState.REMOVED
@@ -488,27 +491,19 @@ class Discovery:
             if entry.check_source != self._discovery_info["update_source"]:
                 return entry.check_source
 
-            if not self._show_checkboxes:
-                return update_target
-
-            if (
-                checkbox_id(entry.check_plugin_name, entry.item)
-                in self._discovery_info["update_services"]
+            if not self._show_checkboxes or self._service_is_checked(
+                entry.check_plugin_name, entry.item
             ):
                 return update_target
 
         if self._action == DiscoveryAction.SINGLE_UPDATE:
-            varname = checkbox_id(entry.check_plugin_name, entry.item)
-            if varname in self._discovery_info["update_services"]:
+            if self._service_is_checked(entry.check_plugin_name, entry.item):
                 return update_target
 
         return entry.check_source
 
-    def _service_is_checked(self, check_type, item):
-        return (
-            not self._show_checkboxes
-            or checkbox_id(check_type, item) in self._discovery_info["update_services"]
-        )
+    def _service_is_checked(self, check_plugin_name: CheckPluginNameStr, item: Item) -> bool:
+        return checkbox_id(check_plugin_name, item) in self._discovery_info["update_services"]
 
 
 _ActionCall = TypeVar(

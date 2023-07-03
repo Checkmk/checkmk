@@ -365,12 +365,10 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             return discovery_result
 
         match discovery_options.action:
-            case DiscoveryAction.FIX_ALL as action:
+            case DiscoveryAction.FIX_ALL:
                 discovery_result = perform_fix_all(
-                    action=action,
                     discovery_result=discovery_result,
                     host=host,
-                    show_checkboxes=discovery_options.show_checkboxes,
                     raise_errors=not discovery_options.ignore_errors,
                 )
             case DiscoveryAction.UPDATE_HOST_LABELS as action:

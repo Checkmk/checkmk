@@ -516,11 +516,9 @@ def _service_discovery_context(host: CREHost) -> Iterator[None]:
 
 
 def perform_fix_all(
-    action: DiscoveryAction,
     discovery_result: DiscoveryResult,
     *,
     host: CREHost,
-    show_checkboxes: bool,
     raise_errors: bool,
 ) -> DiscoveryResult:
     """
@@ -530,13 +528,13 @@ def perform_fix_all(
         _perform_update_host_labels(discovery_result.labels_by_host)
         Discovery(
             host,
-            action,
-            show_checkboxes,
+            DiscoveryAction.FIX_ALL,
+            show_checkboxes=False,  # does not matter in case of "FIX_ALL"
             update_target=None,
-            update_services=[],
+            update_services=[],  # does not matter in case of "FIX_ALL"
             update_source=None,
         ).do_discovery(discovery_result)
-        discovery_result = get_check_table(host, action, raise_errors=raise_errors)
+        discovery_result = get_check_table(host, DiscoveryAction.FIX_ALL, raise_errors=raise_errors)
     return discovery_result
 
 

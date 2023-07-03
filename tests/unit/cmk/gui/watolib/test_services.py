@@ -300,14 +300,12 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
     )
 
     discovery_result = perform_fix_all(
-        action=DiscoveryAction.FIX_ALL,
         discovery_result=initial_discovery_result(
             discovery_options=discovery_options,
             host=sample_host,
             previous_discovery_result=previous_discovery_result,
         ),
         host=sample_host,
-        show_checkboxes=False,
         raise_errors=True,
     )
     mock_set_autochecks.assert_called_with(

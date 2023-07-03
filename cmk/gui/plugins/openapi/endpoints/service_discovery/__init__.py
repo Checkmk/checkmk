@@ -454,10 +454,8 @@ def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: C
             )
         case APIDiscoveryAction.fix_all:
             discovery_result = perform_fix_all(
-                action=discovery_action,
                 discovery_result=discovery_result,
                 host=host,
-                show_checkboxes=False,
                 raise_errors=False,
             )
         case APIDiscoveryAction.refresh | APIDiscoveryAction.tabula_rasa:

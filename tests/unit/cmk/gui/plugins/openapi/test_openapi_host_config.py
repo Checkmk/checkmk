@@ -1507,6 +1507,26 @@ def test_openapi_host_config_effective_attributes_includes_tags_regression(
 
 
 @managedtest
+def test_openapi_host_config_correct_contactgroup_default(
+    clients: ClientRegistry, with_admin: Tuple[str, str]
+) -> None:
+    username, password = with_admin
+    clients.HostConfig.set_credentials(username, password)
+
+    clients.HostConfig.create(host_name="localhost")
+    resp = clients.HostConfig.get(host_name="localhost", effective_attributes=True)
+
+    assert "contactgroups" not in resp.json["extensions"]["attributes"]
+    assert resp.json["extensions"]["effective_attributes"]["contactgroups"] == {
+        "groups": [],
+        "recurse_perms": False,
+        "recurse_use": False,
+        "use": False,
+        "use_for_services": False,
+    }
+
+
+@managedtest
 @freeze_time("2022-11-05")
 def test_openapi_host_config_effective_attributes_includes_all_host_attributes_regression(
     clients: ClientRegistry, with_admin: Tuple[str, str]
@@ -1530,7 +1550,13 @@ def test_openapi_host_config_effective_attributes_includes_all_host_attributes_r
             "alias": "",
             "bake_agent_package": False,
             "cmk_agent_connection": "pull-agent",
-            "contactgroups": {},
+            "contactgroups": {
+                "groups": [],
+                "recurse_perms": False,
+                "recurse_use": False,
+                "use": False,
+                "use_for_services": False,
+            },
             "inventory_failed": False,
             "ipaddress": "",
             "ipv6address": "",
@@ -1569,7 +1595,13 @@ def test_openapi_host_config_effective_attributes_includes_all_host_attributes_r
             "alias": "",
             "bake_agent_package": False,
             "cmk_agent_connection": "pull-agent",
-            "contactgroups": {},
+            "contactgroups": {
+                "groups": [],
+                "recurse_perms": False,
+                "recurse_use": False,
+                "use": False,
+                "use_for_services": False,
+            },
             "inventory_failed": False,
             "ipaddress": "",
             "ipv6address": "",

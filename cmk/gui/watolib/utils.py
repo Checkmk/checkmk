@@ -61,34 +61,6 @@ class HostContactGroupSpec(TypedDict):
     recurse_use: bool
 
 
-LegacyContactGroupSpec = tuple[bool, list[ContactgroupName]]
-
-
-# TODO: Find a better place later
-def convert_cgroups_from_tuple(
-    value: HostContactGroupSpec | LegacyContactGroupSpec,
-) -> HostContactGroupSpec:
-    """Convert old tuple representation to new dict representation of folder's group settings"""
-    if isinstance(value, dict):
-        if "use_for_services" in value:
-            return value
-        return {
-            "groups": value["groups"],
-            "recurse_perms": value["recurse_perms"],
-            "use": value["use"],
-            "use_for_services": False,
-            "recurse_use": value["recurse_use"],
-        }
-
-    return {
-        "groups": value[1],
-        "recurse_perms": False,
-        "use": value[0],
-        "use_for_services": False,
-        "recurse_use": False,
-    }
-
-
 # TODO: Find a better place later
 def host_attribute_matches(crit: str, value: str) -> bool:
     if crit and crit[0] == "~":

@@ -5,11 +5,15 @@
 from logging import Logger
 from typing import Callable, Iterator
 
+from cmk.utils.store.host_storage import ContactgroupName
+
 from cmk.gui.watolib.hosts_and_folders import CREFolder, folder_tree, WithAttributes
-from cmk.gui.watolib.utils import convert_cgroups_from_tuple
+from cmk.gui.watolib.utils import HostContactGroupSpec
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.update_config.update_state import UpdateActionState
+
+LegacyContactGroupSpec = tuple[bool, list[ContactgroupName]]
 
 
 class UpdateHostsAndFolders(UpdateAction):
@@ -37,6 +41,30 @@ def replace_legacy_contact_groups(root_folder: CREFolder) -> Iterator[Callable[[
         replaced_hosts = [replace_contact_groups(host) for host in folder.hosts().values()]
         if any(replaced_hosts):
             yield folder.save_hosts
+
+
+def convert_cgroups_from_tuple(
+    value: HostContactGroupSpec | LegacyContactGroupSpec,
+) -> HostContactGroupSpec:
+    """Convert old tuple representation to new dict representation of folder's group settings"""
+    if isinstance(value, dict):
+        if "use_for_services" in value:
+            return value
+        return {
+            "groups": value["groups"],
+            "recurse_perms": value["recurse_perms"],
+            "use": value["use"],
+            "use_for_services": False,
+            "recurse_use": value["recurse_use"],
+        }
+
+    return {
+        "groups": value[1],
+        "recurse_perms": False,
+        "use": value[0],
+        "use_for_services": False,
+        "recurse_use": False,
+    }
 
 
 update_action_registry.register(

@@ -91,7 +91,6 @@ from cmk.gui.watolib.search import (
 )
 from cmk.gui.watolib.sidebar_reload import need_sidebar_reload
 from cmk.gui.watolib.utils import (
-    convert_cgroups_from_tuple,
     get_value_formatter,
     host_attribute_matches,
     HostContactGroupSpec,
@@ -1491,7 +1490,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
             # this way. I won't change it now and leave the comment here for
             # reference.
             if host.has_explicit_attribute("contactgroups"):
-                cgconfig = convert_cgroups_from_tuple(host.attribute("contactgroups"))
+                cgconfig = host.attribute("contactgroups")
                 cgs = cgconfig["groups"]
                 if cgs and cgconfig["use"]:
                     group_rules: list[GroupRuleType] = []
@@ -2873,8 +2872,16 @@ def validate_host_uniqueness(varname, host_name):
 
 
 def _get_cgconf_from_attributes(attributes: HostAttributes) -> HostContactGroupSpec:
-    v = attributes.get("contactgroups", (False, []))
-    return convert_cgroups_from_tuple(v)
+    return attributes.get(
+        "contactgroups",
+        {
+            "groups": [],
+            "recurse_perms": False,
+            "use": False,
+            "use_for_services": False,
+            "recurse_use": False,
+        },
+    )
 
 
 # TODO: We do not implement 13 abstract methods from the super classes, but we nevertheless

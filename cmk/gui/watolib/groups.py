@@ -52,7 +52,7 @@ from cmk.gui.watolib.host_attributes import (
 from cmk.gui.watolib.hosts_and_folders import CREFolder, folder_preserving_link, folder_tree
 from cmk.gui.watolib.notifications import load_notification_rules, load_user_notification_rules
 from cmk.gui.watolib.rulesets import AllRulesets
-from cmk.gui.watolib.utils import convert_cgroups_from_tuple
+from cmk.gui.watolib.utils import HostContactGroupSpec
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.helpers as managed_helpers  # pylint: disable=no-name-in-module
@@ -492,11 +492,16 @@ class HostAttributeContactGroups(ABCHostAttribute):
     def show_in_folder(self) -> bool:
         return True
 
-    def default_value(self) -> Any:
-        return (True, [])
+    def default_value(self) -> HostContactGroupSpec:
+        return {
+            "groups": [],
+            "recurse_perms": False,
+            "use": False,
+            "use_for_services": False,
+            "recurse_use": False,
+        }
 
     def paint(self, value, hostname):
-        value = convert_cgroups_from_tuple(value)
         texts: list[HTML] = []
         self.load_data()
         if self._contactgroups is None:  # conditional caused by horrible API
@@ -524,8 +529,6 @@ class HostAttributeContactGroups(ABCHostAttribute):
         return "", result
 
     def render_input(self, varprefix: str, value: Any) -> None:
-        value = convert_cgroups_from_tuple(value)
-
         # If we're just editing a host, then some of the checkboxes will be missing.
         # This condition is not very clean, but there is no other way to savely determine
         # the context.
@@ -608,7 +611,6 @@ class HostAttributeContactGroups(ABCHostAttribute):
         }
 
     def filter_matches(self, crit, value, hostname):
-        value = convert_cgroups_from_tuple(value)
         # Just use the contact groups for searching
         for contact_group in crit["groups"]:
             if contact_group not in value["groups"]:

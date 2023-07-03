@@ -361,9 +361,9 @@ class Result(ResultTuple):
         >>> # run function to make sure we have a working example
         >>> _ = list(my_check_function())
 
-    The ``notice`` keyword has the special property that it will only be displayed if the
-    corresponding state is not OK. Otherwise we assume it is sufficient if the information
-    is available in the details view:
+    The ``notice`` keyword has the special property that it will only be displayed in the summary
+    if the state passed to _this_ ``Result`` instance is not OK.
+    Otherwise we assume it is sufficient to show the information in the details view:
 
         >>> def my_check_function() -> None:
         ...     count = 23

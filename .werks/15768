@@ -6,7 +6,7 @@ Date: 1687955892
 Edition: cre
 Knowledge: doc
 Level: 1
-Version: 2.1.0p30
+Version: 2.1.0p31
 
 Previously, siemens_plc_duration check would crash if duration was smaller
 than a second with an error:

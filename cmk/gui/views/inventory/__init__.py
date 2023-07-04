@@ -2282,14 +2282,18 @@ class ABCNodeRenderer(abc.ABC):
                 tdclass, _rendered_value = column_hint.paint_function(None)
 
                 html.open_td(class_=tdclass)
-                self._show_row_value(value, column_hint, retention_interval)
+                self._show_row_value(
+                    value,
+                    column_hint,
+                    None if retention_interval is None else retention_interval.keep_until,
+                )
                 html.close_td()
             html.close_tr()
         html.close_table()
 
     @abc.abstractmethod
     def _show_row_value(
-        self, value: Any, col_hint: ColumnDisplayHint, retention_interval: RetentionInterval | None
+        self, value: Any, col_hint: ColumnDisplayHint, keep_until: int | None
     ) -> None:
         raise NotImplementedError()
 
@@ -2307,7 +2311,11 @@ class ABCNodeRenderer(abc.ABC):
             html.open_tr()
             html.th(self._get_header(attr_hint.title, key))
             html.open_td()
-            self.show_attribute(value, attr_hint, retention_interval)
+            self.show_attribute(
+                value,
+                attr_hint,
+                None if retention_interval is None else retention_interval.keep_until,
+            )
             html.close_td()
             html.close_tr()
         html.close_table()
@@ -2317,7 +2325,7 @@ class ABCNodeRenderer(abc.ABC):
         self,
         value: Any,
         attr_hint: AttributeDisplayHint,
-        retention_interval: RetentionInterval | None = None,
+        keep_until: int | None = None,
     ) -> None:
         raise NotImplementedError()
 
@@ -2325,20 +2333,16 @@ class ABCNodeRenderer(abc.ABC):
         self,
         value: Any,
         hint: ColumnDisplayHint | AttributeDisplayHint,
-        retention_interval: RetentionInterval | None = None,
+        keep_until: int | None = None,
     ) -> None:
         if not isinstance(value, HTML):
             _tdclass, code = hint.paint_function(value)
             value = HTML(code)
 
-        if self._is_outdated(retention_interval):
+        if keep_until is not None and time.time() > keep_until:
             html.write_html(HTMLWriter.render_span(value.value, css="muted-text"))
         else:
             html.write_html(value)
-
-    @staticmethod
-    def _is_outdated(retention_interval: RetentionInterval | None) -> bool:
-        return False if retention_interval is None else time.time() > retention_interval.keep_until
 
 
 class NodeRenderer(ABCNodeRenderer):
@@ -2374,17 +2378,17 @@ class NodeRenderer(ABCNodeRenderer):
         return header
 
     def _show_row_value(
-        self, value: Any, col_hint: ColumnDisplayHint, retention_interval: RetentionInterval | None
+        self, value: Any, col_hint: ColumnDisplayHint, keep_until: int | None
     ) -> None:
-        self._show_child_value(value, col_hint, retention_interval)
+        self._show_child_value(value, col_hint, keep_until)
 
     def show_attribute(
         self,
         value: Any,
         attr_hint: AttributeDisplayHint,
-        retention_interval: RetentionInterval | None = None,
+        keep_until: int | None = None,
     ) -> None:
-        self._show_child_value(value, attr_hint, retention_interval)
+        self._show_child_value(value, attr_hint, keep_until)
 
 
 class DeltaNodeRenderer(ABCNodeRenderer):
@@ -2412,7 +2416,7 @@ class DeltaNodeRenderer(ABCNodeRenderer):
         return HTML(title)
 
     def _show_row_value(
-        self, value: Any, col_hint: ColumnDisplayHint, retention_interval: RetentionInterval | None
+        self, value: Any, col_hint: ColumnDisplayHint, keep_until: int | None
     ) -> None:
         self._show_delta_child_value(value, col_hint)
 
@@ -2420,7 +2424,7 @@ class DeltaNodeRenderer(ABCNodeRenderer):
         self,
         value: Any,
         attr_hint: AttributeDisplayHint,
-        retention_interval: RetentionInterval | None = None,
+        keep_until: int | None = None,
     ) -> None:
         self._show_delta_child_value(value, attr_hint)
 

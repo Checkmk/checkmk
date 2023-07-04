@@ -7,6 +7,7 @@ import json
 from typing import Any, Mapping
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    check_levels,
     Metric,
     register,
     render,
@@ -40,13 +41,13 @@ def check_proxmox_ve_disk_usage(params: Mapping[str, Any], section: Section) -> 
     ...   print(result)
     Metric('fs_used', 1073741824.0, levels=(1717986918.4, 1932735283.2), boundaries=(0.0, 2147483648.0))
     Metric('fs_free', 1073741824.0, boundaries=(0.0, None))
+    Result(state=<State.OK: 0>, summary='Used: 50.00%')
     Metric('fs_used_percent', 50.0, levels=(80.0, 90.0), boundaries=(0.0, 100.0))
+    Result(state=<State.OK: 0>, summary='1.07 GB of 2.15 GB')
     Metric('fs_size', 2147483648.0, boundaries=(0.0, None))
-    Result(state=<State.OK: 0>, summary='50.00% used (1.07 GB of 2.15 GB)')
     """
     used_bytes, total_bytes = section.get("disk", 0), section.get("max_disk", 0)
-    warn, crit = params.get("levels", (0.0, 0.0))
-    warn_bytes, crit_bytes = (warn / 100 * total_bytes, crit / 100 * total_bytes)
+    warn, crit = params["levels"]
 
     if total_bytes == 0:
         yield Result(state=State.WARN, summary="Size of filesystem is 0 B")
@@ -55,7 +56,7 @@ def check_proxmox_ve_disk_usage(params: Mapping[str, Any], section: Section) -> 
     yield Metric(
         "fs_used",
         used_bytes,
-        levels=(warn_bytes, crit_bytes),
+        levels=(warn / 100 * total_bytes, crit / 100 * total_bytes),
         boundaries=(0, total_bytes),
     )
     yield Metric(
@@ -63,32 +64,23 @@ def check_proxmox_ve_disk_usage(params: Mapping[str, Any], section: Section) -> 
         total_bytes - used_bytes,
         boundaries=(0, None),
     )
-    yield Metric(
-        "fs_used_percent",
+
+    yield from check_levels(
         100.0 * used_bytes / total_bytes,
-        levels=(warn, crit),
+        levels_upper=(warn, crit),
+        metric_name="fs_used_percent",
+        render_func=render.percent,
         boundaries=(0.0, 100.0),
+        label="Used",
     )
+    yield Result(
+        state=State.OK, summary=f"{render.disksize(used_bytes)} of {render.disksize(total_bytes)}"
+    )
+
     yield Metric(
         "fs_size",
         total_bytes,
         boundaries=(0, None),
-    )
-
-    yield Result(
-        state=(
-            State.CRIT
-            if used_bytes >= crit_bytes
-            else State.WARN
-            if used_bytes >= warn_bytes
-            else State.OK
-        ),
-        summary="%s used (%s of %s)"
-        % (
-            render.percent(100.0 * used_bytes / total_bytes),
-            render.disksize(used_bytes),
-            render.disksize(total_bytes),
-        ),
     )
 
 

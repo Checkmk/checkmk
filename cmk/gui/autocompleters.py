@@ -98,7 +98,7 @@ def config_hostname_autocompleter(value: str, params: dict) -> Choices:
     match_pattern = re.compile(value, re.IGNORECASE)
     match_list: Choices = []
     for host_name, host_object in all_hosts.items():
-        if match_pattern.search(host_name) is not None and host_object.may("read"):
+        if match_pattern.search(host_name) is not None and host_object.permissions.may("read"):
             match_list.append((host_name, host_name))
 
     if not any(x[0] == value for x in match_list):

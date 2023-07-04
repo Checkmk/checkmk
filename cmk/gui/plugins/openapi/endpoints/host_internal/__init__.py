@@ -134,11 +134,11 @@ def _verify_permissions(host: CREHost) -> None:
     )
 
     try:
-        host.need_permission("read")
+        host.permissions.need_permission("read")
     except MKAuthException:
         raise unathorized_excpt
     try:
-        host.need_permission("write")
+        host.permissions.need_permission("write")
     except MKAuthException:
         raise unathorized_excpt
 
@@ -165,7 +165,7 @@ def _check_host_access_permissions(
 ) -> CREHost:
     host = Host.load_host(host_name)
     try:
-        host.need_permission(access_type)
+        host.permissions.need_permission(access_type)
     except MKAuthException:
         raise ProblemException(
             status=401,

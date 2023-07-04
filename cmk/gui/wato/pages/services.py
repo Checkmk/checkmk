@@ -128,7 +128,7 @@ class ModeDiscovery(WatoMode):
         if not self._host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
 
-        self._host.need_permission("read")
+        self._host.permissions.need_permission("read")
 
         action = DiscoveryAction.NONE
         if user.may("wato.services"):
@@ -227,7 +227,7 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
                 )
                 % (host_name, omd_site())
             )
-        host.need_permission("read")
+        host.permissions.need_permission("read")
 
     def execute(self, api_request: _AutomationServiceDiscoveryRequest) -> str:
         central_version = cmk_version_of_remote_automation_source(request)
@@ -260,7 +260,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         host = folder.host(api_request["host_name"])
         if not host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
-        host.need_permission("read")
+        host.permissions.need_permission("read")
 
         discovery_options = DiscoveryOptions(**api_request["discovery_options"])
         # Reuse the discovery result already known to the GUI or fetch a new one?
@@ -1486,7 +1486,7 @@ class ModeAjaxExecuteCheck(AjaxPage):
         self._host = folder_from_request().host(self._host_name)
         if not self._host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
-        self._host.need_permission("read")
+        self._host.permissions.need_permission("read")
 
         # TODO: Validate
         self._check_type = request.get_ascii_input_mandatory("checktype")

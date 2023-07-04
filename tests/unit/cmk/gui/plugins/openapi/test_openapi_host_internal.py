@@ -42,7 +42,7 @@ def test_link_with_uuid_401(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     mocker.patch(
-        "cmk.gui.watolib.hosts_and_folders.CREHost.need_permission",
+        "cmk.gui.watolib.hosts_and_folders.PermissionChecker.need_permission",
         side_effect=MKAuthException("hands off this host"),
     )
     assert (
@@ -56,6 +56,7 @@ def test_link_with_uuid_401(
         ).json_body["title"]
         == "You do not have write access to the host example.com"
     )
+    mocker.stopall()
 
 
 @pytest.mark.usefixtures("with_host")
@@ -127,7 +128,7 @@ def test_openapi_show_host_401(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
 ) -> None:
     mocker.patch(
-        "cmk.gui.watolib.hosts_and_folders.CREHost.need_permission",
+        "cmk.gui.watolib.hosts_and_folders.PermissionChecker.need_permission",
         side_effect=MKAuthException("hands off this host"),
     )
     assert (
@@ -139,6 +140,7 @@ def test_openapi_show_host_401(
         ).json_body["title"]
         == "You do not have read access to the host heute"
     )
+    mocker.stopall()
 
 
 @pytest.mark.usefixtures("with_host")

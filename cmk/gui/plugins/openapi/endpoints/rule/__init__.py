@@ -129,7 +129,7 @@ def move_rule_to(param: typing.Mapping[str, typing.Any]) -> http.Response:
                 detail=f"Position {position!r} is not a valid position.",
             )
 
-    dest_folder.need_permission("write")
+    dest_folder.permissions.need_permission("write")
     source_entry.ruleset.move_to_folder(source_entry.rule, dest_folder, index)
     source_entry.folder = dest_folder
     all_rulesets.save()
@@ -167,7 +167,7 @@ def create_rule(param):
     value = body["value_raw"]
     ruleset_name = body["ruleset"]
 
-    folder.need_permission("write")
+    folder.permissions.need_permission("write")
 
     rulesets = FolderRulesets.load_folder_rulesets(folder)
     try:

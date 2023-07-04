@@ -70,7 +70,7 @@ class ModeObjectParameters(WatoMode):
         if host is None:
             raise MKUserError("host", _("The given host does not exist."))
         self._host: CREHost = host
-        self._host.need_permission("read")
+        self._host.permissions.need_permission("read")
 
         # TODO: Validate?
         self._service = request.get_str_input("service")

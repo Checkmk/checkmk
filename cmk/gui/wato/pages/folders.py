@@ -263,7 +263,7 @@ class ModeFolder(WatoMode):
         if (
             not self._folder.locked_hosts()
             and user.may("wato.manage_hosts")
-            and self._folder.may("write")
+            and self._folder.permissions.may("write")
         ):
             yield PageMenuEntry(
                 title=_("Add host"),
@@ -317,7 +317,7 @@ class ModeFolder(WatoMode):
         if (
             not self._folder.locked_hosts()
             and user.may("wato.parentscan")
-            and self._folder.may("write")
+            and self._folder.permissions.may("write")
         ):
             yield PageMenuEntry(
                 title=_("Detect network parent hosts"),
@@ -459,7 +459,7 @@ class ModeFolder(WatoMode):
         if isinstance(self._folder, SearchFolder):
             return
 
-        if self._folder.may("read"):
+        if self._folder.permissions.may("read"):
             yield PageMenuEntry(
                 title=_("Properties"),
                 icon_name="edit",
@@ -467,7 +467,7 @@ class ModeFolder(WatoMode):
             )
 
         if not self._folder.locked_subfolders() and not self._folder.locked():
-            if self._folder.may("write") and user.may("wato.manage_folders"):
+            if self._folder.permissions.may("write") and user.may("wato.manage_folders"):
                 yield PageMenuEntry(
                     title=_("Add folder"),
                     icon_name="newfolder",
@@ -661,8 +661,8 @@ class ModeFolder(WatoMode):
         return None
 
     def page(self) -> None:
-        if not self._folder.may("read"):
-            reason = self._folder.reason_why_may_not("read")
+        if not self._folder.permissions.may("read"):
+            reason = self._folder.permissions.reason_why_may_not("read")
             if reason:
                 html.show_message(
                     html.render_icon("autherr", cssclass="authicon")
@@ -671,13 +671,13 @@ class ModeFolder(WatoMode):
 
         self._folder.show_locking_information()
         self._show_subfolders_of()
-        if self._folder.may("read"):
+        if self._folder.permissions.may("read"):
             self._show_hosts()
 
         if not self._folder.has_hosts():
             if self._folder.is_search_folder():
                 html.show_message(_("No matching hosts found."))
-            elif not self._folder.has_subfolders() and self._folder.may("write"):
+            elif not self._folder.has_subfolders() and self._folder.permissions.may("write"):
                 self._show_empty_folder_menu()
 
     def _show_empty_folder_menu(self):
@@ -1011,7 +1011,7 @@ class ModeFolder(WatoMode):
                 table.cell(attr.title(), tdcontent, css=[tdclass])
 
         # Am I authorized?
-        reason = host.reason_why_may_not("read")
+        reason = host.permissions.reason_why_may_not("read")
         if not reason:
             icon = "authok"
             title = _("You have permission to this host.")
@@ -1310,7 +1310,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
     def page(self) -> None:
         new = self._is_new
         folder = folder_from_request()
-        folder.need_permission("read")
+        folder.permissions.need_permission("read")
 
         if new and folder.locked():
             folder.show_locking_information()

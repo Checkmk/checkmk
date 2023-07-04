@@ -432,7 +432,7 @@ def fixture_patch_may(mocker: MagicMock) -> None:
     def may(self_, _permission):
         return getattr(self_, "_may_see", True)
 
-    mocker.patch.object(hosts_and_folders.Folder, "may", may)
+    mocker.patch.object(hosts_and_folders.PermissionChecker, "may", may)
 
 
 def only_root() -> hosts_and_folders.CREFolder:
@@ -459,18 +459,18 @@ def three_levels_leaf_permissions() -> hosts_and_folders.CREFolder:
     main = folder_tree().root_folder()
 
     # Attribute only used for testing
-    main._may_see = False  # type: ignore[attr-defined]
+    main.permissions._may_see = False  # type: ignore[attr-defined]
 
     a = main.create_subfolder("a", title="A", attributes={})
-    a._may_see = False  # type: ignore[attr-defined]
+    a.permissions._may_see = False  # type: ignore[attr-defined]
     c = a.create_subfolder("c", title="C", attributes={})
-    c._may_see = False  # type: ignore[attr-defined]
+    c.permissions._may_see = False  # type: ignore[attr-defined]
     a.create_subfolder("d", title="D", attributes={})
 
     b = main.create_subfolder("b", title="B", attributes={})
-    b._may_see = False  # type: ignore[attr-defined]
+    b.permissions._may_see = False  # type: ignore[attr-defined]
     e = b.create_subfolder("e", title="E", attributes={})
-    e._may_see = False  # type: ignore[attr-defined]
+    e.permissions._may_see = False  # type: ignore[attr-defined]
     e.create_subfolder("f", title="F", attributes={})
 
     return main

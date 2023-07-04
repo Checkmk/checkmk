@@ -177,26 +177,26 @@ class FolderMetaData:
 # add, remove      mean just modifications in the data structures
 
 
-class WithPermissions:
+class PermissionChecker:
+    def __init__(self, check_permission: Callable[[Literal["read", "write"]], None]) -> None:
+        self._check_permission = check_permission
+
     def may(self, how: Literal["read", "write"]) -> bool:
         try:
-            self._user_needs_permission(how)
+            self._check_permission(how)
             return True
         except MKAuthException:
             return False
 
     def reason_why_may_not(self, how: Literal["read", "write"]) -> str | None:
         try:
-            self._user_needs_permission(how)
+            self._check_permission(how)
             return None
         except MKAuthException as e:
             return str(e)
 
     def need_permission(self, how: Literal["read", "write"]) -> None:
-        self._user_needs_permission(how)
-
-    def _user_needs_permission(self, how: Literal["read", "write"]) -> None:
-        raise NotImplementedError()
+        self._check_permission(how)
 
 
 class _ContactGroupsInfo(NamedTuple):
@@ -1250,7 +1250,7 @@ def disk_or_search_base_folder_from_request() -> CREFolder:
     return folder
 
 
-class CREFolder(WithPermissions, WithAttributes, BaseFolder):
+class CREFolder(WithAttributes, BaseFolder):
     """This class represents a Setup folder that contains other folders and hosts."""
 
     # Need this for specifying the correct type
@@ -1328,6 +1328,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         hosts: dict[HostName, CREHost] | None,
     ):
         super().__init__()
+        self.permissions = PermissionChecker(self._user_needs_permission)
         self.tree = tree
         self._name = name
         self._id = folder_id
@@ -1405,7 +1406,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
 
     def save_hosts(self) -> None:
         self.need_unlocked_hosts()
-        self.need_permission("write")
+        self.permissions.need_permission("write")
         if self._hosts is not None:
             # Clean up caches of all hosts in this folder, just to be sure. We could also
             # check out all call sites of save_hosts() and partially drop the caches of
@@ -1809,7 +1810,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
 
         if (
             visible_subfolders
-            or self.may("read")
+            or self.permissions.may("read")
             or self.is_root()
             or not active_config.wato_hide_folders_without_read_permissions
         ):
@@ -1838,7 +1839,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         if not active_config.wato_hide_folders_without_read_permissions:
             return True
 
-        has_permission = self.may(how)
+        has_permission = self.permissions.may(how)
         for subfolder in self.subfolders():
             if has_permission:
                 break
@@ -1855,7 +1856,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
             )
 
         for folder_path, folder in folder_tree().all_folders().items():
-            if not folder.may("write"):
+            if not folder.permissions.may("write"):
                 continue
             if folder.is_same_as(self):
                 continue  # do not move into itself
@@ -2038,7 +2039,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         return any(group in permitted_groups for group in user_.contact_groups)
 
     def need_recursive_permission(self, how: Literal["read", "write"]) -> None:
-        self.need_permission(how)
+        self.permissions.need_permission(how)
         if how == "write":
             self.need_unlocked()
             self.need_unlocked_subfolders()
@@ -2207,7 +2208,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         """Create a subfolder of the current folder"""
         # 1. Check preconditions
         user.need_permission("wato.manage_folders")
-        self.need_permission("write")
+        self.permissions.need_permission("write")
         self.need_unlocked_subfolders()
         _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"])
 
@@ -2237,7 +2238,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
     def delete_subfolder(self, name: str) -> None:
         # 1. Check preconditions
         user.need_permission("wato.manage_folders")
-        self.need_permission("write")
+        self.permissions.need_permission("write")
         self.need_unlocked_subfolders()
 
         # 2. check if hosts have parents
@@ -2275,9 +2276,9 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
     def move_subfolder_to(self, subfolder: CREFolder, target_folder: CREFolder) -> None:
         # 1. Check preconditions
         user.need_permission("wato.manage_folders")
-        self.need_permission("write")
+        self.permissions.need_permission("write")
         self.need_unlocked_subfolders()
-        target_folder.need_permission("write")
+        target_folder.permissions.need_permission("write")
         target_folder.need_unlocked_subfolders()
         subfolder.need_recursive_permission("write")  # Inheritance is changed
         if os.path.exists(target_folder.filesystem_path() + "/" + subfolder.name()):
@@ -2343,7 +2344,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
     def edit(self, new_title: str, new_attributes: dict[str, object]) -> None:
         # 1. Check preconditions
         user.need_permission("wato.edit_folders")
-        self.need_permission("write")
+        self.permissions.need_permission("write")
         self.need_unlocked()
 
         # For changing contact groups user needs write permission on parent folder
@@ -2355,7 +2356,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
             if self.has_parent():
                 parent = self.parent()
                 assert parent is not None
-                if not parent.may("write"):
+                if not parent.permissions.may("write"):
                     raise MKAuthException(
                         _(
                             "Sorry. In order to change the permissions of a folder you need write "
@@ -2395,7 +2396,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
     def prepare_create_hosts(self) -> None:
         user.need_permission("wato.manage_hosts")
         self.need_unlocked_hosts()
-        self.need_permission("write")
+        self.permissions.need_permission("write")
 
     def create_hosts(
         self,
@@ -2472,7 +2473,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         # 1. Check preconditions
         user.need_permission("wato.manage_hosts")
         self.need_unlocked_hosts()
-        self.need_permission("write")
+        self.permissions.need_permission("write")
 
         # 2. check if hosts have parents
         hosts_with_children = self._get_parents_of_hosts(host_names)
@@ -2552,9 +2553,9 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         user.need_permission("wato.manage_hosts")
         user.need_permission("wato.edit_hosts")
         user.need_permission("wato.move_hosts")
-        self.need_permission("write")
+        self.permissions.need_permission("write")
         self.need_unlocked_hosts()
-        target_folder.need_permission("write")
+        target_folder.permissions.need_permission("write")
         target_folder.need_unlocked_hosts()
 
         # 2. Actual modification
@@ -2597,7 +2598,7 @@ class CREFolder(WithPermissions, WithAttributes, BaseFolder):
         user.need_permission("wato.edit_hosts")
         self.need_unlocked_hosts()
         host = self.hosts()[oldname]
-        host.need_permission("write")
+        host.permissions.need_permission("write")
 
         # 2. Actual modification
         host.rename(newname)
@@ -2891,7 +2892,7 @@ def _get_cgconf_from_attributes(attributes: HostAttributes) -> HostContactGroupS
 # instantiate SearchFolder below in current_search_folder() and pretend that it is a CREFolder! This
 # is totally broken, the class hierarchy and/or the code below needs some serious overhaul.
 # Nevertheless, we suppress the warnings for this chaos to activate pylint's warning.
-class SearchFolder(WithPermissions, WithAttributes, BaseFolder):  # pylint: disable=abstract-method
+class SearchFolder(WithAttributes, BaseFolder):  # pylint: disable=abstract-method
     """A virtual folder representing the result of a search."""
 
     # .--------------------------------------------------------------------.
@@ -2900,6 +2901,7 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):  # pylint: disa
 
     def __init__(self, tree: FolderTree, base_folder, criteria) -> None:  # type: ignore[no-untyped-def]
         super().__init__()
+        self.permissions = PermissionChecker(lambda _unused: None)
         self.tree = tree
         self._criteria = criteria
         self._base_folder = base_folder
@@ -2921,9 +2923,6 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):  # pylint: disa
 
     def is_search_folder(self) -> bool:
         return True
-
-    def _user_needs_permission(self, how: Literal["read", "write"]) -> None:
-        pass
 
     def title(self) -> str:
         return _("Search results for folder %s") % self._base_folder.title()
@@ -3030,7 +3029,7 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):  # pylint: disa
         return hosts
 
     def _search_hosts(self, in_folder):
-        if not in_folder.may("read"):
+        if not in_folder.permissions.may("read"):
             return {}
 
         found = {}
@@ -3062,7 +3061,7 @@ class SearchFolder(WithPermissions, WithAttributes, BaseFolder):  # pylint: disa
         self._found_hosts = None
 
 
-class CREHost(WithPermissions, WithAttributes):
+class CREHost(WithAttributes):
     """Class representing one host that is managed via Setup. Hosts are contained in Folders."""
 
     # .--------------------------------------------------------------------.
@@ -3100,6 +3099,7 @@ class CREHost(WithPermissions, WithAttributes):
         cluster_nodes: Sequence[HostName] | None,
     ) -> None:
         super().__init__()
+        self.permissions = PermissionChecker(self._user_needs_permission)
         self._folder = folder
         self._name = host_name
         self._attributes = attributes
@@ -3349,7 +3349,7 @@ class CREHost(WithPermissions, WithAttributes):
         # 1. Check preconditions
         if attributes.get("contactgroups") != self._attributes.get("contactgroups"):
             self._need_folder_write_permissions()
-        self.need_permission("write")
+        self.permissions.need_permission("write")
         self.need_unlocked()
 
         _validate_contact_group_modification(
@@ -3406,7 +3406,7 @@ class CREHost(WithPermissions, WithAttributes):
         )
 
     def _need_folder_write_permissions(self) -> None:
-        if not self.folder().may("write"):
+        if not self.folder().permissions.may("write"):
             raise MKAuthException(
                 _(
                     "Sorry. In order to change the permissions of a host you need write "

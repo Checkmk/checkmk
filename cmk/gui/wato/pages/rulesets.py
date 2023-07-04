@@ -755,7 +755,7 @@ class ModeEditRuleset(WatoMode):
         if not may_edit_ruleset(self._name):
             raise MKAuthException(_("You are not permitted to access this ruleset."))
         if self._host:
-            self._host.need_permission("read")
+            self._host.permissions.need_permission("read")
 
     @classmethod
     def parent_mode(cls) -> type[WatoMode] | None:
@@ -1034,7 +1034,7 @@ class ModeEditRuleset(WatoMode):
         folder = mandatory_parameter("folder", request.var("folder"))
 
         rule_folder = folder_tree().folder(request.get_str_input_mandatory("_folder", folder))
-        rule_folder.need_permission("write")
+        rule_folder.permissions.need_permission("write")
         rulesets = FolderRulesets.load_folder_rulesets(rule_folder)
         ruleset = rulesets.get(self._name)
 
@@ -1835,8 +1835,8 @@ class ABCEditRuleMode(WatoMode):
         # Check permissions on folders
         new_rule_folder = folder_tree().folder(self._get_rule_conditions_from_vars().host_folder)
         if not isinstance(self, ModeNewRule):
-            self._folder.need_permission("write")
-        new_rule_folder.need_permission("write")
+            self._folder.permissions.need_permission("write")
+        new_rule_folder.permissions.need_permission("write")
 
         if new_rule_folder == self._folder:
             self._rule.folder = new_rule_folder

@@ -404,7 +404,7 @@ class ModeRenameHost(WatoMode):
             raise MKAuthException(_("You don't have the right to rename hosts"))
 
         self._host = folder.load_host(host_name)
-        self._host.need_permission("write")
+        self._host.permissions.need_permission("write")
 
     def title(self) -> str:
         return _("Rename %s %s") % (

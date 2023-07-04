@@ -586,7 +586,7 @@ class HostField(base.String):
                 raise self.make_error("should_exist", host_name=value)
 
             if (
-                self._should_exist and host is not None and not host.may("read")
+                self._should_exist and host is not None and not host.permissions.may("read")
             ):  # host is there but user isn't allowed see it
                 # TODO: This is probably the wrong Exception Type to use here.
                 # TODO: We're adressing this in CMK-13171

@@ -327,7 +327,11 @@ def list_hosts(param) -> Response:  # type: ignore[no-untyped-def]
     root_folder = folder_tree().root_folder()
     effective_attributes: bool = param.get("effective_attributes", False)
 
-    hosts = (host for host in root_folder.all_hosts_recursively().values() if host.may("read"))
+    hosts = (
+        host
+        for host in root_folder.all_hosts_recursively().values()
+        if host.permissions.may("read")
+    )
     return serve_host_collection(
         hosts,
         effective_attributes=effective_attributes,

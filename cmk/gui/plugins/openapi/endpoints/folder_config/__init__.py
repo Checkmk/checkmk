@@ -133,7 +133,7 @@ def create(params: Mapping[str, Any]) -> Response:
 def hosts_of_folder(params: Mapping[str, Any]) -> Response:
     """Show all hosts in a folder"""
     folder: CREFolder = params["folder"]
-    folder.need_permission("read")
+    folder.permissions.need_permission("read")
     return serve_host_collection(folder.hosts().values())
 
 
@@ -348,7 +348,7 @@ def list_folders(params: Mapping[str, Any]) -> Response:
         parent.need_recursive_permission("read")
         folders = parent.subfolders_recursively()
     else:
-        parent.need_permission("read")
+        parent.permissions.need_permission("read")
         folders = parent.subfolders()
     return serve_json(_folders_collection(folders, params["show_hosts"]))
 
@@ -417,7 +417,7 @@ def _folders_collection(  # type: ignore[no-untyped-def]
 def show_folder(params: Mapping[str, Any]) -> Response:
     """Show a folder"""
     folder: CREFolder = params["folder"]
-    folder.need_permission("read")
+    folder.permissions.need_permission("read")
     return _serve_folder(folder, show_hosts=params["show_hosts"])
 
 

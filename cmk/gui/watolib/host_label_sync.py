@@ -82,7 +82,7 @@ class SiteRequest:
                     )
                     % (enforce_host.host_name, enforce_host.site_id)
                 )
-            host.need_permission("read")
+            host.permissions.need_permission("read")
 
         newest_host_labels = serialized["newest_host_labels"]
         assert isinstance(newest_host_labels, float)

@@ -307,7 +307,7 @@ class ModeEditHost(ABCHostMode):
 
     def ensure_permissions(self) -> None:
         super().ensure_permissions()
-        self._host.need_permission("read")
+        self._host.permissions.need_permission("read")
 
     # pylint does not understand this overloading
     @overload

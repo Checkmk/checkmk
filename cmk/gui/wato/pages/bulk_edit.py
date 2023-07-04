@@ -159,13 +159,13 @@ class ModeBulkCleanup(WatoMode):
         user.need_permission("wato.edit_hosts")
         to_clean = self._bulk_collect_cleaned_attributes()
         if "contactgroups" in to_clean:
-            self._folder.need_permission("write")
+            self._folder.permissions.need_permission("write")
 
         hosts = get_hosts_from_checkboxes(self._folder)
 
         # Check all permissions before doing any edit
         for host in hosts:
-            host.need_permission("write")
+            host.permissions.need_permission("write")
 
         for host in hosts:
             host.clean_attributes(to_clean)

@@ -74,7 +74,7 @@ class FetchAgentOutputRequest:
                 )
                 % (host_name, omd_site())
             )
-        host.need_permission("read")
+        host.permissions.need_permission("read")
 
         return cls(host, serialized["agent_type"])
 
@@ -111,7 +111,7 @@ class AgentOutputPage(Page, abc.ABC):
                 _('Host is not managed by Setup. Click <a href="%s">here</a> to go back.')
                 % escape_attribute(self._back_url)
             )
-        host.need_permission("read")
+        host.permissions.need_permission("read")
 
         self._request = FetchAgentOutputRequest(host=host, agent_type=ty)
 

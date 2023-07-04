@@ -206,7 +206,7 @@ class ModeBulkDiscovery(WatoMode):
                 if host_name in skip_hosts:
                     continue
                 host = self._folder.load_host(host_name)
-                host.need_permission("write")
+                host.permissions.need_permission("write")
                 hosts_to_discover.append(
                     DiscoveryHost(host.site_id(), host.folder().path(), host_name)
                 )
@@ -222,7 +222,7 @@ class ModeBulkDiscovery(WatoMode):
                 if host_name in skip_hosts:
                     continue
                 host = folder.load_host(host_name)
-                host.need_permission("write")
+                host.permissions.need_permission("write")
                 hosts_to_discover.append(
                     DiscoveryHost(host.site_id(), host.folder().path(), host_name)
                 )

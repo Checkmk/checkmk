@@ -3,6 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import contextlib
 from logging import Logger
 from pathlib import Path
 
@@ -35,15 +36,13 @@ class RemoveOldCustomLogos(UpdateAction):
             if logo_path.is_file():
                 logo_path.unlink()
 
-        try:
+        with contextlib.suppress(MKGeneralException):
             customers: dict[CustomerId, Customer] = load_customers()
             for config in customers.values():
                 globals_config: dict[str, dict] = config.get("globals", {})
                 if "logo" in globals_config:
                     del globals_config["logo"]
             save_customers(customers)
-        except MKGeneralException:
-            pass
 
 
 update_action_registry.register(

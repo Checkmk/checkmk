@@ -6,7 +6,6 @@ import logging
 import os
 from pathlib import Path
 
-import pytest
 from faker import Faker
 
 from tests.testlib.agent import register_controller, wait_until_host_receives_data
@@ -32,7 +31,6 @@ from .conftest import (
 logger = logging.getLogger(__name__)
 
 
-@pytest.mark.xfail(reason="Update process currently broken. See CMK-13841.")
 def test_update(test_site: Site, agent_ctl: Path) -> None:
     # TODO: set config - see CMK-13493
 
@@ -64,9 +62,9 @@ def test_update(test_site: Site, agent_ctl: Path) -> None:
     # get baseline monitoring data
     base_data_host = get_host_data(test_site, hostname)
 
-    # TODO: 'Postfix Queue' and 'Postfix status' not found on Centos-8 distro after the update.
-    #   Investigate.
-    if os.environ.get("DISTRO") == "centos-8":
+    # TODO: 'Postfix Queue' and 'Postfix status' not found on Centos-8 and Almalinux-9 distros after
+    #  the update. See CMK-13774.
+    if os.environ.get("DISTRO") in ["centos-8", "almalinux-9"]:
         postfix_services = ["Postfix Queue", "Postfix status"]
         for postfix_service in postfix_services:
             if postfix_service in base_data_host:

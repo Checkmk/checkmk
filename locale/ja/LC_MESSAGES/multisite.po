@@ -68586,6 +68586,16 @@ msgstr "スケジュールタスクが保存されました。"
 msgid "Your search statement is not valid. You can not use a lookahead here."
 msgstr "検索ステートメントが無効です。ここでは先読みを使用できません。"
 
+#, fuzzy, python-format
+msgid ""
+"Your search statement is not valid. You need to provide a %s (regex). For "
+"example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> if you like to "
+"search for a single backslash."
+msgstr ""
+"その検索文は無効です。正規表現（regex）を指定する必要があります。例えば、バッ"
+"クスラッシュを１つだけ検索したい場合は<tt>\\\\</tt>を<tt>\\</tt>の代わりに使"
+"用する必要があります。"
+
 msgid ""
 "Your search statement is not valid. You need to provide a regular expression "
 "(regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> if "

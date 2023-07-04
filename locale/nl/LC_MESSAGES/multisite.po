@@ -69979,6 +69979,16 @@ msgstr "Uw planningstaak is opgeslagen."
 msgid "Your search statement is not valid. You can not use a lookahead here."
 msgstr "Uw zoekopdracht is niet geldig. U kunt hier geen lookahead gebruiken."
 
+#, fuzzy, python-format
+msgid ""
+"Your search statement is not valid. You need to provide a %s (regex). For "
+"example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> if you like to "
+"search for a single backslash."
+msgstr ""
+"Uw zoekopdracht is ongeldig. U moet een reguliere expressie (regex) opgeven. "
+"U moet bijvoorbeeld <tt></tt> gebruiken in plaats van <tt></tt> als u naar "
+"een enkele backslash wilt zoeken."
+
 msgid ""
 "Your search statement is not valid. You need to provide a regular expression "
 "(regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> if "

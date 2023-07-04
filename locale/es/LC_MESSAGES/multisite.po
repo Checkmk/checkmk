@@ -70567,6 +70567,16 @@ msgstr ""
 "Su declaración de búsqueda no es válida. No se puede utilizar un lookahead "
 "aquí."
 
+#, fuzzy, python-format
+msgid ""
+"Your search statement is not valid. You need to provide a %s (regex). For "
+"example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> if you like to "
+"search for a single backslash."
+msgstr ""
+"Su declaración de búsqueda no es válida. Necesita proporcionar una expresión "
+"regular (regex). Por ejemplo, tiene que utilizar <tt>\\año</tt> en lugar de "
+"<tt>\\año</tt> si quiere buscar una sola barra invertida."
+
 msgid ""
 "Your search statement is not valid. You need to provide a regular expression "
 "(regex). For example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> if "

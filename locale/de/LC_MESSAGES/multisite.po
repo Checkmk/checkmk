@@ -5,9 +5,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
-"Report-Msgid-Bugs-To: feedback@checkmk.com\n"
+"Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-06-28 06:00+0000\n"
+"PO-Revision-Date: 2023-07-03 23:08+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -60,10 +60,10 @@ msgid " (in relation to all packets (successful + discard))"
 msgstr " (in Bezug auf alle Pakete (erfolgreiche + abgelehnte))"
 
 msgid " (in relation to all packets (successful + error))"
-msgstr " (in Bezug auf alle Pakete (erfolgreich + fehlgeschlagene))"
+msgstr " (in Bezug auf alle Pakete (erfolgreiche + fehlgeschlagene))"
 
 msgid " (in relation to all successful packets)"
-msgstr " (im Bezug auf alle erfolgreichen Pakete)"
+msgstr " (in Bezug auf alle erfolgreichen Pakete)"
 
 msgid " (packaged)"
 msgstr " (packetiert)"
@@ -80,12 +80,12 @@ msgid ""
 " <b>Note</b>: To restrict this rule to hosts created via <a href=\"%s\">auto-"
 "registration</a>, use the host label <tt>cmk/agent_auto_registered:yes</tt>."
 msgstr ""
-" <b>Note</b>: Um diese Regel auf Hosts zu beschränken, die über die <a href="
-"\"%s\">auto-registration</a> erstellt wurden, verwenden Sie das Host-Label "
-"<tt>cmk/agent_auto_registered:yes</tt>."
+" <b>Hinweis</b>: Um diese Regel auf Hosts zu beschränken, die über die <a "
+"href=\"%s\">Autoregistrierung</a> erstellt wurden, verwenden Sie das Host-"
+"Label <tt>cmk/agent_auto_registered:yes</tt>."
 
 msgid " Activate this option"
-msgstr " Aktiviere Option"
+msgstr " Aktiviere diese Option"
 
 msgid ""
 " An identifier of your choice. This identifier is used by the Checkmk checks "
@@ -93,15 +93,15 @@ msgid ""
 "within a group of VALUETYPES."
 msgstr ""
 " Ein Bezeichner Ihrer Wahl. Dieser Bezeichner wird von Checkmk-Checks "
-"verwendet, um einzelne Werte zu referenzieren. Dieser Bezeichner muss "
-"innerhalb einer Gruppe von VALUETYPES eindeutig sein."
+"verwendet, um auf die einzelnen Werte zuzugreifen und sie zu identifizieren. "
+"Dieser Bezeichner muss innerhalb einer Gruppe von VALUETYPES eindeutig sein."
 
 #, python-format
 msgid " Finished at: %s."
 msgstr " Fertiggestellt um: %s."
 
 msgid " Ignore this option"
-msgstr " Ignoriere Option"
+msgstr " Ignoriere diese Option"
 
 #, python-format
 msgid " Match groups: %s"
@@ -111,15 +111,15 @@ msgid ""
 " Note: if no contact information is configured for a service then that of "
 "the host will be used instead (if configured)."
 msgstr ""
-" Achtung: Wenn keine Kontaktinformation für den Service konfiguriert ist, "
+" Hinweis: Wenn für einen Service keine Kontaktinformation konfiguriert ist, "
 "wird die des Hosts verwendet (wenn konfiguriert)."
 
 msgid ""
 " Note: if no service level is configured for a service then that of the host "
 "will be used instead (if configured)."
 msgstr ""
-" Achtung: Wenn kein Level für einen Service konfiguriert ist, wird der des "
-"Hosts verwendet (wenn konfiguriert)."
+" Hinweis: Wenn für einen Service keine Service-Ebene konfiguriert ist, wird "
+"die des Hosts verwendet (wenn konfiguriert)."
 
 msgid " State"
 msgstr " Status"
@@ -156,7 +156,7 @@ msgstr " für Host %s"
 
 #, python-format
 msgid " for the following %d Event Console  %s"
-msgstr " für die folgenden %d Eventkonsolen-%s"
+msgstr " für die folgende %d Event Console-%s"
 
 #, python-format
 msgid " in %d days"
@@ -180,17 +180,17 @@ msgstr " von"
 
 #, python-format
 msgid " of service %s on host %s"
-msgstr " des Dienstes %s auf dem Host %s"
+msgstr " des Services %s auf dem Host %s"
 
 #, python-format
 msgid " of the following %d Event Console %s"
-msgstr " der folgenden %d Eventkonsolen-%s"
+msgstr " der folgenden %d Event Console-%s"
 
 msgid " or "
 msgstr " oder "
 
 msgid " or int"
-msgstr " oder Int"
+msgstr " oder int"
 
 #, python-format
 msgid " spread over %d minutes "
@@ -198,11 +198,11 @@ msgstr " über %d Minuten verteilt "
 
 #, python-format
 msgid " the following %d Event Console %s"
-msgstr " die folgenden %d Evenkonsolen-%s"
+msgstr " die folgenden %d Event Console-%s"
 
 #, python-format
 msgid " the following %d crash %s"
-msgstr " die folgenden %d Absturz-%s"
+msgstr " den folgenden %d Absturz-%s"
 
 msgid " to:"
 msgstr " An:"
@@ -221,7 +221,7 @@ msgstr "\"%s\" ist kein gültiger Host-Name"
 
 #, python-format
 msgid "\"%s\" is not a valid python encoding."
-msgstr "'%s' ist keine gültiges Python-Encoding."
+msgstr "'%s' ist kein gültiges Python-Encoding."
 
 #, python-format
 msgid ""
@@ -231,9 +231,9 @@ msgid ""
 "group."
 msgstr ""
 "\"%s\" ist innerhalb der regulären Ausdrucksgruppe %s nicht erlaubt. "
-"Begrenzungszeichen innerhalb von Gruppen werden nach der Serviceerkennung "
-"verschwinden, da Prozesse für jede passende Gruppe instanziiert werden. Auf "
-"diese Weise werden Begrenzungszeichen außerhalb der Gruppe durchgesetzt."
+"Begrenzungszeichen innerhalb von Gruppen werden nach der Erkennung "
+"verschwinden, da Prozesse für jede passende Gruppe instanziiert werden. "
+"Dadurch werden Begrenzungszeichen außerhalb der Gruppe erzwungen."
 
 msgid "# Containers"
 msgstr "# Container"
@@ -70125,6 +70125,16 @@ msgid "Your search statement is not valid. You can not use a lookahead here."
 msgstr ""
 "Ihre Suchanweisung ist nicht gültig. Sie können hier keinen Lookahead "
 "verwenden."
+
+#, fuzzy, python-format
+msgid ""
+"Your search statement is not valid. You need to provide a %s (regex). For "
+"example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> if you like to "
+"search for a single backslash."
+msgstr ""
+"Ihre Suchanweisung ist nicht gültig. Sie müssen einen regulären Ausdruck "
+"(regex) angeben. Zum Beispiel müssen Sie <tt>\\\\</tt> statt <tt>\\</tt> "
+"verwenden, wenn Sie nach einem einzelnen Backslash suchen möchten."
 
 msgid ""
 "Your search statement is not valid. You need to provide a regular expression "

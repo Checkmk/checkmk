@@ -228,12 +228,6 @@ class DiscoveryOptions(NamedTuple):
     ignore_errors: bool
 
 
-class StartDiscoveryRequest(NamedTuple):
-    host: CREHost
-    folder: CREFolder
-    options: DiscoveryOptions
-
-
 class Discovery:
     def __init__(
         self,

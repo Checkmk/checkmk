@@ -58,7 +58,6 @@ from cmk.gui.watolib.services import (
     perform_host_label_discovery,
     perform_service_discovery,
     ServiceDiscoveryBackgroundJob,
-    StartDiscoveryRequest,
 )
 
 from cmk import fields

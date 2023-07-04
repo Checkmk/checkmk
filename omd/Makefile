@@ -55,6 +55,7 @@ PACKAGES := \
     heirloom-pkgtools \
     livestatus \
     unixcat \
+    neb \
     xmlsec1
 
 ifeq ($(EDITION),enterprise)

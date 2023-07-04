@@ -4,7 +4,7 @@
 // source code package.
 
 // NOLINTNEXTLINE(bugprone-suspicious-include)
-#include "test/DummyNagios.cc"
+#include "DummyNagios.cc"
 
 extern "C" {
 int nebmodule_init(int flags, char *args, void *handle);

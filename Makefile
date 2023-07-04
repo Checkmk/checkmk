@@ -32,12 +32,6 @@ LIVESTATUS_API_SOURCES := api/c++/{Makefile,*.{h,cc}} \
                       api/perl/* \
                       api/python/{README,*.py}
 
-LIVESTATUS_SOURCES := Makefile.am standalone/config_files.m4 \
-                      third_party/include/{nagios,nagios4}/{README,*.h} \
-                      include/neb/*.h \
-                      src/*.cc \
-                      test/*.{cc,h}
-
 WERKS              := $(wildcard .werks/[0-9]*)
 
 JAVASCRIPT_SOURCES := $(filter-out %_min.js, \
@@ -67,7 +61,7 @@ ifneq ("$(wildcard $(PY_PATH))","")
 endif
 
 .PHONY: announcement all build check check-binaries check-permissions check-version \
-        clean compile-neb-cmc compile-neb-cmc-docker css dist documentation \
+        clean compile-neb compile-neb-cmc compile-neb-cmc-docker css dist documentation \
         format format-c test-format-c format-python format-shell \
         format-js GTAGS help install iwyu mrproper mrclean optimize-images \
         packages setup setversion tidy version am--refresh skel openapi openapi-doc \
@@ -143,7 +137,7 @@ dist: $(LIVESTATUS_INTERMEDIATE_ARCHIVE) config.h.in $(SOURCE_BUILT_AGENTS) $(SO
 	if [ -d .git ]; then \
 	    git rev-parse --short HEAD > COMMIT ; \
 	    for X in $$(git ls-files --directory --others -i --exclude-standard) ; do \
-	    if [[ $$X != aclocal.m4 && $$X != config.h.in  && ! "$(DIST_DEPS)" =~ (^|[[:space:]])$$X($$|[[:space:]]) && $$X != omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz && $$X != packages/neb/* && $$X != livestatus/* && $$X != enterprise/* ]]; then \
+	    if [[ $$X != aclocal.m4 && $$X != config.h.in  && ! "$(DIST_DEPS)" =~ (^|[[:space:]])$$X($$|[[:space:]]) && $$X != omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz && $$X != livestatus/* && $$X != enterprise/* ]]; then \
 		    EXCLUDES+=" --exclude $${X%*/}" ; \
 		fi ; \
 	    done ; \
@@ -194,14 +188,8 @@ packages:
 $(LIVESTATUS_INTERMEDIATE_ARCHIVE):
 	rm -rf mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)
-	set -o pipefail; tar chf - $(TAROPTS) -C packages/neb $$(cd packages/neb ; echo $(LIVESTATUS_SOURCES) )  | tar xf - -C mk-livestatus-$(VERSION)
 	set -o pipefail; tar chf - $(TAROPTS) -C livestatus $$(cd livestatus ; echo $(LIVESTATUS_API_SOURCES) )  | tar xf - -C mk-livestatus-$(VERSION)
-	set -o pipefail; tar chf - $(TAROPTS) --exclude=build packages/livestatus packages/unixcat third_party/re2 third_party/asio third_party/googletest third_party/rrdtool | tar xf - -C mk-livestatus-$(VERSION)
-	cp -a configure.ac defines.make m4 mk-livestatus-$(VERSION)
-	cd mk-livestatus-$(VERSION) && \
-	    autoreconf --install --include=m4 && \
-	    rm -rf autom4te.cache && \
-	    touch ar-lib compile config.guess config.sub install-sh missing depcomp
+	set -o pipefail; tar chf - $(TAROPTS) --exclude=build packages/livestatus packages/unixcat packages/neb third_party/re2 third_party/asio third_party/googletest third_party/rrdtool | tar xf - -C mk-livestatus-$(VERSION)
 	tar czf omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz $(TAROPTS) mk-livestatus-$(VERSION)
 	rm -rf mk-livestatus-$(VERSION)
 
@@ -491,23 +479,25 @@ GTAGS: config.h
 # to configure.ac).
 	$(MAKE) -C livestatus GTAGS
 
-compile-neb-cmc: config.status test-format-c
-	$(MAKE) -C packages/neb -j4
+# TODO(sk): remove this target/merge to compile-neb-cmc after moving cmc into packages
+compile-neb:
+	packages/neb/run --build
+
+compile-neb-cmc: config.status test-format-c compile-neb
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core -j4
 endif
+
 
 compile-neb-cmc-docker:
 	scripts/run-in-docker.sh make compile-neb-cmc
 
 tidy: config.h
-	$(MAKE) -C packages/neb tidy
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src tidy
 endif
 
 iwyu: config.status
-	$(MAKE) -C packages/neb iwyu
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src iwyu
 endif
@@ -517,7 +507,7 @@ format: format-python format-c format-shell format-js format-css format-bazel
 format-c:
 	packages/livestatus/run --format
 	packages/unixcat/run --format
-	$(MAKE) -C packages/neb format
+	packages/neb/run --format
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src format
 endif
@@ -525,7 +515,7 @@ endif
 test-format-c:
 	packages/livestatus/run --check-format
 	packages/unixcat/run --check-format
-	$(MAKE) -C packages/neb check-format
+	packages/neb/run --check-format
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src check-format
 endif
@@ -557,7 +547,6 @@ format-bazel:
 
 # Note: You need the doxygen and graphviz packages.
 documentation: config.h
-	$(MAKE) -C packages/neb documentation
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise/core/src documentation
 endif

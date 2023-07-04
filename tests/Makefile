@@ -68,8 +68,8 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 	test-mypy test-mypy-raw itest-mypy-docker test-packaging test-pipenv-deps test-pylint test-pylint-docker \
 	test-unit test-unit-docker test-unit-resilience test-unit-resilience-docker test-unit-coverage-html \
 	test-unit-shell test-unit-shell-docker test-shellcheck test-cycles test-cycles-docker \
-	test-tidy-livestatus test-tidy-core test-tidy-docker test-iwyu-livestatus test-iwyu-core test-iwyu-docker \
-	test-unit-livestatus test-unit-core %-livestatus-docker %-core-docker
+	test-tidy-core test-tidy-docker test-iwyu-core test-iwyu-docker \
+	test-unit-neb test-unit-core %-core-docker
 
 clean:
 	$(RM) -r .mypy_cache $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
@@ -113,15 +113,12 @@ help:
 	@echo "test-unit-coverage-html             - Create HTML coverage report for unit tests"
 	@echo "test-unit-shell                     - Run shell unit tests"
 	@echo "test-unit-shell-docker              - Run shell unit tests in docker"
-	@echo "test-tidy-livestatus                - Run clang tidy for livestatus"
 	@echo "test-tidy-core                      - Run clang tidy for core"
-	@echo "test-tidy-docker                    - Run clang tidy for core and livestatus in docker"
-	@echo "test-iwyu-livestatus                - Run the iwyu tool for livestatus"
+	@echo "test-tidy-docker                    - Run clang tidy for core in docker"
 	@echo "test-iwyu-core                      - Run the iwyu tool for the core"
 	@echo "test-iwyu-docker                    - Run the iwyu tool for both in docker"
-	@echo "test-unit-livestatus                - Run unit tests for livestatus"
+	@echo "test-unit-neb                       - Run unit tests for neb"
 	@echo "test-unit-core                      - Run unit tests for core"
-	@echo "*-livestatus-docker                 - Run any of the livestatus tests in docker"
 
 bandit.ini:
 	( echo -n -e "[bandit]\ntargets: "; \
@@ -391,14 +388,8 @@ test-unit-shell:
 test-unit-shell-docker:
 	../scripts/run-in-docker.sh make test-unit-shell
 
-%-livestatus-docker:
-	../scripts/run-in-docker.sh make GERRIT_PATCHSET_REVISION=$(GERRIT_PATCHSET_REVISION) IWYU_EXTRA_ARGS="--gcc-toolchain=$(GCC_TOOLCHAIN)" CLANG_TIDY_EXTRA_ARGS="-extra-arg-before=--gcc-toolchain=$(GCC_TOOLCHAIN)" $*-livestatus
-
 %-core-docker:
 	../scripts/run-in-docker.sh make GERRIT_PATCHSET_REVISION=$(GERRIT_PATCHSET_REVISION) IWYU_EXTRA_ARGS="--gcc-toolchain=$(GCC_TOOLCHAIN)" CLANG_TIDY_EXTRA_ARGS="-extra-arg-before=--gcc-toolchain=$(GCC_TOOLCHAIN)" $*-core
-
-test-tidy-livestatus:
-	cd ../packages/neb && ../../scripts/run-cxx-linter tidy $(GERRIT_PATCHSET_REVISION)
 
 test-tidy-core:
 	cd ../enterprise/core/src && ../../../scripts/run-cxx-linter tidy $(GERRIT_PATCHSET_REVISION)
@@ -406,16 +397,13 @@ test-tidy-core:
 test-tidy-docker:
 	../scripts/run-in-docker.sh make -C .. tidy CLANG_TIDY_EXTRA_ARGS="-extra-arg-before=--gcc-toolchain=$(GCC_TOOLCHAIN)"
 
-test-iwyu-livestatus:
-	cd ../packages/neb && ../../scripts/run-cxx-linter iwyu $(GERRIT_PATCHSET_REVISION)
-
 test-iwyu-core:
 	cd ../enterprise/core/src && ../../../scripts/run-cxx-linter iwyu $(GERRIT_PATCHSET_REVISION)
 
 test-iwyu-docker:
 	../scripts/run-in-docker.sh make -C .. iwyu IWYU_EXTRA_ARGS="--gcc-toolchain=$(GCC_TOOLCHAIN)"
 
-test-unit-livestatus:
+test-unit-neb:
 	cd ../packages/neb/test && ./.f12
 
 test-unit-core:

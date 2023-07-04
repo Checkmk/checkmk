@@ -32,57 +32,71 @@ logger = logging.getLogger(__name__)
 
 
 def test_update(test_site: Site, agent_ctl: Path) -> None:
-    # TODO: set config - see CMK-13493
-
     # get version data
     base_version = test_site.version
 
-    # create a new host and perform a service discovery
-    hostname = HostName(f"test-update-{Faker().first_name()}")
-    logger.info("Creating new host: %s", hostname)
+    # create new hosts and perform a service discovery
+    hostnames = [HostName(f"test-update-{Faker().first_name()}") for _ in range(1)]
+    logger.info("Creating new hosts: %s", hostnames)
 
-    test_site.openapi.create_host(
-        hostname=hostname,
-        attributes={
-            "ipaddress": "127.0.0.1",
-            "tag_criticality": "test",
-        },
+    test_site.openapi.bulk_create_hosts(
+        [
+            {
+                "host_name": hostname,
+                "folder": "/",
+                "attributes": {"ipaddress": "127.0.0.1", "tag_agent": "cmk-agent"},
+            }
+            for hostname in hostnames
+        ],
         bake_agent=True,
+        ignore_existing=True,
     )
+
     test_site.activate_changes_and_wait_for_core_reload()
 
-    register_controller(agent_ctl, test_site, hostname)
-    wait_until_host_receives_data(test_site, hostname)
+    for hostname in hostnames:
+        register_controller(agent_ctl, test_site, hostname)
+        wait_until_host_receives_data(test_site, hostname)
 
     logger.info("Discovering services and waiting for completion...")
-    test_site.openapi.discover_services_and_wait_for_completion(hostname)
+    test_site.openapi.bulk_discover_services(
+        [str(hostname) for hostname in hostnames], wait_for_completion=True
+    )
     test_site.openapi.activate_changes_and_wait_for_completion()
-    reschedule_services(test_site, hostname)
 
-    # get baseline monitoring data
-    base_data_host = get_host_data(test_site, hostname)
+    base_data = {}
+    base_ok_services = {}
+    base_pend_services = {}
+    base_warn_services = {}
+    base_crit_services = {}
 
-    # TODO: 'Postfix Queue' and 'Postfix status' not found on Centos-8 and Almalinux-9 distros after
-    #  the update. See CMK-13774.
-    if os.environ.get("DISTRO") in ["centos-8", "almalinux-9"]:
-        postfix_services = ["Postfix Queue", "Postfix status"]
-        for postfix_service in postfix_services:
-            if postfix_service in base_data_host:
-                base_data_host.pop(postfix_service)
+    for hostname in hostnames:
+        reschedule_services(test_site, hostname)
 
-    base_ok_services = get_services_with_status(base_data_host, "OK")
-    base_pend_services = get_services_with_status(base_data_host, "PEND")
-    base_warn_services = get_services_with_status(base_data_host, "WARN")
-    base_crit_services = get_services_with_status(base_data_host, "CRIT")
+        # get baseline monitoring data for each host
+        base_data[hostname] = get_host_data(test_site, hostname)
 
-    assert len(base_ok_services) > 0
-    assert len(base_pend_services) == 0
+        # TODO: 'Postfix Queue' and 'Postfix status' not found on Centos-8 and Almalinux-9 distros
+        #  after the update. See CMK-13774.
+        if os.environ.get("DISTRO") in ["centos-8", "almalinux-9"]:
+            postfix_services = ["Postfix Queue", "Postfix status"]
+            for postfix_service in postfix_services:
+                if postfix_service in base_data[hostname]:
+                    base_data[hostname].pop(postfix_service)
 
-    logger_services_ok("base", base_ok_services)
-    if len(base_warn_services) > 0:
-        logger_services_warn("base", base_warn_services)
-    if len(base_crit_services) > 0:
-        logger_services_crit("base", base_crit_services)
+        base_ok_services[hostname] = get_services_with_status(base_data[hostname], "OK")
+        base_pend_services[hostname] = get_services_with_status(base_data[hostname], "PEND")
+        base_warn_services[hostname] = get_services_with_status(base_data[hostname], "WARN")
+        base_crit_services[hostname] = get_services_with_status(base_data[hostname], "CRIT")
+
+        assert len(base_ok_services[hostname]) > 0
+        assert len(base_pend_services[hostname]) == 0
+
+        logger_services_ok("base", base_ok_services[hostname], hostname)
+        if len(base_warn_services[hostname]) > 0:
+            logger_services_warn("base", base_warn_services[hostname], hostname)
+        if len(base_crit_services[hostname]) > 0:
+            logger_services_crit("base", base_crit_services[hostname], hostname)
 
     target_version = version_from_env(
         fallback_version_spec=CMKVersion.DAILY,
@@ -91,11 +105,6 @@ def test_update(test_site: Site, agent_ctl: Path) -> None:
     )
 
     target_site = update_site(test_site, target_version, interactive=True)
-
-    # TODO: check config - see CMK-13493
-
-    # Dumping cmc config as parseable object (JSON)
-    # cmk --dump-cmc-config
 
     # Triggering cmk config update
     update_config_result = update_config(target_site)
@@ -108,40 +117,60 @@ def test_update(test_site: Site, agent_ctl: Path) -> None:
     logger.info("Successfully tested updating %s>%s!", base_version.version, target_version.version)
 
     logger.info("Discovering services and waiting for completion...")
-    target_site.openapi.discover_services_and_wait_for_completion(hostname)
+    target_site.openapi.bulk_discover_services(
+        [str(hostname) for hostname in hostnames], wait_for_completion=True
+    )
     target_site.openapi.activate_changes_and_wait_for_completion()
-    reschedule_services(target_site, hostname)
 
-    # get update monitoring data
-    target_data_host = get_host_data(target_site, hostname)
+    target_data = {}
+    target_ok_services = {}
+    target_pend_services = {}
+    target_warn_services = {}
+    target_crit_services = {}
 
-    target_ok_services = get_services_with_status(target_data_host, "OK")
-    target_pend_services = get_services_with_status(target_data_host, "PEND")
-    target_warn_services = get_services_with_status(target_data_host, "WARN")
-    target_crit_services = get_services_with_status(target_data_host, "CRIT")
+    for hostname in hostnames:
+        reschedule_services(target_site, hostname)
 
-    assert len(target_pend_services) == 0
+        # get update monitoring data
+        target_data[hostname] = get_host_data(target_site, hostname)
 
-    logger_services_ok("target", target_ok_services)
-    if len(target_warn_services) > 0:
-        logger_services_warn("target", target_warn_services)
-    if len(target_crit_services) > 0:
-        logger_services_crit("target", target_crit_services)
+        target_ok_services[hostname] = get_services_with_status(target_data[hostname], "OK")
+        target_pend_services[hostname] = get_services_with_status(target_data[hostname], "PEND")
+        target_warn_services[hostname] = get_services_with_status(target_data[hostname], "WARN")
+        target_crit_services[hostname] = get_services_with_status(target_data[hostname], "CRIT")
 
-    # TODO: 'Nullmailer Queue' service is not found after the update. Investigate.
-    nullmailer_service = "Nullmailer Queue"
-    if nullmailer_service in base_data_host:
-        base_data_host.pop(nullmailer_service)
-        base_ok_services.remove(nullmailer_service)
+        assert len(target_pend_services[hostname]) == 0
 
-    err_msg = (
-        f"The following services were found in base-version but not in target-version: "
-        f"{[service for service in base_data_host if service not in target_data_host]}"
-    )
-    assert len(target_data_host) >= len(base_data_host), err_msg
+        logger_services_ok("target", target_ok_services[hostname], hostname)
+        if len(target_warn_services[hostname]) > 0:
+            logger_services_warn("target", target_warn_services[hostname], hostname)
+        if len(target_crit_services[hostname]) > 0:
+            logger_services_crit("target", target_crit_services[hostname], hostname)
 
-    err_msg = (
-        f"The following services were `OK` in base-version but not in target-version: "
-        f"{[service for service in base_ok_services if service not in target_ok_services]}"
-    )
-    assert set(base_ok_services).issubset(set(target_ok_services)), err_msg
+        # TODO: 'Nullmailer Queue' service is not found after the update. Investigate.
+        nullmailer_service = "Nullmailer Queue"
+        if nullmailer_service in base_data[hostname]:
+            base_data[hostname].pop(nullmailer_service)
+            base_ok_services[hostname].remove(nullmailer_service)
+
+        not_found_services = [
+            service for service in base_data[hostname] if service not in target_data[hostname]
+        ]
+        err_msg = (
+            f"In the {hostname} host the following services were found in base-version but not in "
+            f"target-version: "
+            f"{not_found_services}"
+        )
+        assert len(target_data[hostname]) >= len(base_data[hostname]), err_msg
+
+        not_ok_services = [
+            service
+            for service in base_ok_services[hostname]
+            if service not in target_ok_services[hostname]
+        ]
+        err_msg = (
+            f"In the {hostname} host the following services were `OK` in base-version but not in "
+            f"target-version: "
+            f"{not_ok_services}"
+        )
+        assert set(base_ok_services[hostname]).issubset(set(target_ok_services[hostname])), err_msg

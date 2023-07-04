@@ -275,11 +275,13 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
         discovery_result = self._perform_discovery_action(
             host=host,
-            discovery_options=discovery_options,
+            action=discovery_options.action,
             previous_discovery_result=previous_discovery_result,
             update_source=update_source,
             update_target=None if update_target is None else update_target.value,
             update_services=update_services,
+            show_checkboxes=discovery_options.show_checkboxes,
+            raise_errors=not discovery_options.ignore_errors,
         )
         if self._sources_failed_on_first_attempt(previous_discovery_result, discovery_result):
             discovery_result = discovery_result._replace(
@@ -338,51 +340,44 @@ class ModeAjaxServiceDiscovery(AjaxPage):
     def _perform_discovery_action(
         self,
         host: CREHost,
-        discovery_options: DiscoveryOptions,
+        action: DiscoveryAction,
         previous_discovery_result: DiscoveryResult | None,
         update_source: str | None,
         update_target: str | None,
         update_services: list[str],
+        *,
+        show_checkboxes: bool,
+        raise_errors: bool,
     ) -> DiscoveryResult:
-        if discovery_options.action == DiscoveryAction.NONE or not transactions.check_transaction():
+        if action == DiscoveryAction.NONE or not transactions.check_transaction():
             return initial_discovery_result(
-                discovery_options.action,
-                host,
-                previous_discovery_result,
-                raise_errors=not discovery_options.ignore_errors,
+                action, host, previous_discovery_result, raise_errors=raise_errors
             )
 
-        if discovery_options.action in (
+        if action in (
             DiscoveryAction.REFRESH,
             DiscoveryAction.TABULA_RASA,
             DiscoveryAction.STOP,
         ):
-            return get_check_table(
-                host, discovery_options.action, raise_errors=not discovery_options.ignore_errors
-            )
+            return get_check_table(host, action, raise_errors=raise_errors)
 
         discovery_result = initial_discovery_result(
-            discovery_options.action,
-            host,
-            previous_discovery_result,
-            raise_errors=not discovery_options.ignore_errors,
+            action, host, previous_discovery_result, raise_errors=raise_errors
         )
 
-        match discovery_options.action:
+        match action:
             case DiscoveryAction.FIX_ALL:
                 discovery_result = perform_fix_all(
-                    discovery_result=discovery_result,
-                    host=host,
-                    raise_errors=not discovery_options.ignore_errors,
+                    discovery_result=discovery_result, host=host, raise_errors=raise_errors
                 )
-            case DiscoveryAction.UPDATE_HOST_LABELS as action:
+            case DiscoveryAction.UPDATE_HOST_LABELS:
                 discovery_result = perform_host_label_discovery(
                     action=action,
                     discovery_result=discovery_result,
                     host=host,
-                    raise_errors=not discovery_options.ignore_errors,
+                    raise_errors=raise_errors,
                 )
-            case DiscoveryAction.SINGLE_UPDATE | DiscoveryAction.BULK_UPDATE | DiscoveryAction.UPDATE_SERVICES as action:
+            case DiscoveryAction.SINGLE_UPDATE | DiscoveryAction.BULK_UPDATE | DiscoveryAction.UPDATE_SERVICES:
                 discovery_result = perform_service_discovery(
                     action=action,
                     discovery_result=discovery_result,
@@ -390,10 +385,10 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     update_source=update_source,
                     update_target=update_target,
                     host=host,
-                    show_checkboxes=discovery_options.show_checkboxes,
-                    raise_errors=not discovery_options.ignore_errors,
+                    show_checkboxes=show_checkboxes,
+                    raise_errors=raise_errors,
                 )
-            case DiscoveryAction.UPDATE_SERVICES as action:
+            case DiscoveryAction.UPDATE_SERVICES:
                 discovery_result = perform_service_discovery(
                     action=action,
                     discovery_result=discovery_result,
@@ -401,10 +396,10 @@ class ModeAjaxServiceDiscovery(AjaxPage):
                     update_source=None,
                     update_target=None,
                     host=host,
-                    show_checkboxes=discovery_options.show_checkboxes,
-                    raise_errors=not discovery_options.ignore_errors,
+                    show_checkboxes=show_checkboxes,
+                    raise_errors=raise_errors,
                 )
-            case action:
+            case _:
                 raise MKUserError("discovery", f"Unknown discovery action: {action}")
 
         return discovery_result

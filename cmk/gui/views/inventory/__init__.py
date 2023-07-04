@@ -2058,7 +2058,7 @@ def _sort_pairs(
     pairs: Mapping[SDKey, SDValue],
     retentions: Mapping[SDKey, RetentionInterval],
     key_order: Sequence[SDKey],
-) -> Sequence[tuple[SDKey, SDValue, RetentionInterval | None]]:
+) -> Sequence[tuple[SDKey, SDValue, int | None]]:
     ...
 
 
@@ -2073,7 +2073,15 @@ def _sort_pairs(
 
 def _sort_pairs(pairs, retentions, key_order):
     sorted_keys = list(key_order) + sorted(set(pairs) - set(key_order))
-    return [(k, pairs[k], retentions.get(k)) for k in sorted_keys if k in pairs]
+    return [
+        (
+            k,
+            pairs[k],
+            None if (ri := retentions.get(k)) is None else ri.keep_until,
+        )
+        for k in sorted_keys
+        if k in pairs
+    ]
 
 
 def _make_columns(
@@ -2110,7 +2118,7 @@ class _DeltaRowOrRetentions(NamedTuple):
 @overload
 def _sort_row(
     row_or_retentions: _RowOrRetentions, columns: Sequence[SDKey]
-) -> Sequence[tuple[SDKey, SDValue, RetentionInterval | None]]:
+) -> Sequence[tuple[SDKey, SDValue, int | None]]:
     ...
 
 
@@ -2123,13 +2131,20 @@ def _sort_row(
 
 
 def _sort_row(row_or_retentions, columns):
-    return [(c, row_or_retentions.row.get(c), row_or_retentions.retentions.get(c)) for c in columns]
+    return [
+        (
+            c,
+            row_or_retentions.row.get(c),
+            None if (ri := row_or_retentions.retentions.get(c)) is None else ri.keep_until,
+        )
+        for c in columns
+    ]
 
 
 @overload
 def _sort_rows(
     rows: Sequence[_RowOrRetentions], columns: Sequence[SDKey]
-) -> Sequence[Sequence[tuple[SDKey, SDValue, RetentionInterval | None]]]:
+) -> Sequence[Sequence[tuple[SDKey, SDValue, int | None]]]:
     ...
 
 
@@ -2275,18 +2290,12 @@ class ABCNodeRenderer(abc.ABC):
 
         for row in _sort_rows(rows, columns):
             html.open_tr(class_="even0")
-            for key, value, retention_interval in row:
+            for key, value, keep_until in row:
                 column_hint = hints.get_column_hint(key)
-
                 # TODO separate tdclass from rendered value
                 tdclass, _rendered_value = column_hint.paint_function(None)
-
                 html.open_td(class_=tdclass)
-                self._show_row_value(
-                    value,
-                    column_hint,
-                    None if retention_interval is None else retention_interval.keep_until,
-                )
+                self._show_row_value(value, column_hint, keep_until)
                 html.close_td()
             html.close_tr()
         html.close_table()
@@ -2301,21 +2310,16 @@ class ABCNodeRenderer(abc.ABC):
         self, attributes: ImmutableAttributes | ImmutableDeltaAttributes, hints: DisplayHints
     ) -> None:
         html.open_table()
-        for key, value, retention_interval in _sort_pairs(
+        for key, value, keep_until in _sort_pairs(
             attributes.pairs,
             attributes.retentions if isinstance(attributes, ImmutableAttributes) else {},
             hints.attributes_hint.key_order,
         ):
             attr_hint = hints.get_attribute_hint(key)
-
             html.open_tr()
             html.th(self._get_header(attr_hint.title, key))
             html.open_td()
-            self.show_attribute(
-                value,
-                attr_hint,
-                None if retention_interval is None else retention_interval.keep_until,
-            )
+            self.show_attribute(value, attr_hint, keep_until)
             html.close_td()
             html.close_tr()
         html.close_table()

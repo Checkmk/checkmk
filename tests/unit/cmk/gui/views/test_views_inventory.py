@@ -498,7 +498,7 @@ def test_make_node_displayhint_from_hint(
                     ("other", "Other 1", None),
                 ],
                 [
-                    ("sid", "SID 2", RetentionInterval(1, 2, 3)),
+                    ("sid", "SID 2", 6),
                     ("changed", None, None),
                     ("foo", None, None),
                     ("flashback", "Flashback 2", None),
@@ -723,7 +723,7 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
                 ("a", "A", None),
                 ("b", "B", None),
                 ("d", "D", None),
-                ("c", "C", RetentionInterval(1, 2, 3)),
+                ("c", "C", 6),
             ],
         ),
     ],

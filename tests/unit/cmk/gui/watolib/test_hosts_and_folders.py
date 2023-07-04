@@ -13,6 +13,7 @@ import uuid
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass
+from itertools import count
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -35,8 +36,22 @@ from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.logged_in import user as logged_in_user
 from cmk.gui.watolib.bakery import has_agent_bakery
-from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
+from cmk.gui.watolib.hosts_and_folders import EffectiveAttributes, Folder, folder_tree
 from cmk.gui.watolib.search import MatchItem
+
+
+def test_effective_attributes() -> None:
+    counter = count()
+
+    def compute_attributes() -> dict[str, int]:
+        return {"a": next(counter)}
+
+    attributes = EffectiveAttributes(compute_attributes)
+    first_attributes = attributes()
+    assert first_attributes == attributes()
+
+    attributes.drop_caches()
+    assert first_attributes != attributes()
 
 
 @pytest.fixture(autouse=True)

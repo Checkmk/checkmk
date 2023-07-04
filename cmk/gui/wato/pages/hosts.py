@@ -407,9 +407,10 @@ class ModeEditHost(ABCHostMode):
         return redirect(mode_url("folder", folder=folder.path()))
 
     def _should_use_dns_cache(self) -> bool:
-        site = self._host.effective_attribute("site")
+        site = self._host.effective_attributes().get("site")
         return watolib.sites.get_effective_global_setting(
-            site,
+            # Can be cleaned up later once HostAttributes is typed
+            site,  # type: ignore[arg-type]
             is_wato_slave_site(),
             "use_dns_cache",
         )

@@ -216,13 +216,16 @@ class ParentScanBackgroundJob(BackgroundJob):
             # `host` being optional was revealed when `folder` was no longer `Any`.
             raise MKGeneralException("No host named '{task.host_name}'")
 
-        if host.effective_attribute("parents") == parents:
+        if host.effective_attributes().get("parents") == parents:
             self._logger.info(
                 "Parents unchanged at %s", (",".join(parents) if parents else _("none"))
             )
             return
 
-        if settings.force_explicit or host.folder().effective_attribute("parents") != parents:
+        if (
+            settings.force_explicit
+            or host.folder().effective_attributes().get("parents") != parents
+        ):
             host.update_attributes({"parents": parents})
         else:
             # Check which parents the host would have inherited
@@ -435,7 +438,7 @@ class ModeParentScan(WatoMode):
         if select == "noexplicit" and host.has_explicit_attribute("parents"):
             return False
         if select == "no":
-            if host.effective_attribute("parents"):
+            if host.effective_attributes().get("parents"):
                 return False
         return True
 

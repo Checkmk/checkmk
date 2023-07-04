@@ -731,6 +731,26 @@ class _WATOInfoStorageManager:
             storage.write(store_file, data)
 
 
+class EffectiveAttributes:
+    """A memoized access to the effective attributes of hosts and folders"""
+
+    def __init__(self, compute_attributes: Callable[[], dict[str, Any]]) -> None:
+        self._compute_attributes = compute_attributes
+        self._effective_attributes: dict[str, Any] | None = None
+
+    # Built this way to stay compatible with the former API.
+    # Might be cleaned up in a follow up action.
+    def __call__(self) -> dict[str, Any]:
+        if self._effective_attributes is None:
+            self._effective_attributes = self._compute_attributes()
+        # Would be nice if we could avoid the copies here. But we would need stricter typing to be
+        # sure the cached data is not modified by the call sites.
+        return self._effective_attributes.copy()
+
+    def drop_caches(self) -> None:
+        self._effective_attributes = None
+
+
 class WithAttributes:
     """Mixin containing attribute management methods.
 
@@ -739,7 +759,6 @@ class WithAttributes:
     def __init__(self, *args, **kw) -> None:  # type: ignore[no-untyped-def]
         super().__init__(*args, **kw)
         self._attributes: dict[str, Any] = {"meta_data": {}}
-        self._effective_attributes: dict[str, Any] | None = None
 
     # .--------------------------------------------------------------------.
     # | ATTRIBUTES                                                         |
@@ -757,29 +776,12 @@ class WithAttributes:
     def has_explicit_attribute(self, attrname: str) -> bool:
         return attrname in self.attributes()
 
-    def effective_attributes(self) -> dict[str, object]:
-        raise NotImplementedError()
-
-    def effective_attribute(self, attrname, default_value=None):
-        return self.effective_attributes().get(attrname, default_value)
-
     def remove_attribute(self, attrname: str) -> None:
         del self.attributes()[attrname]
-
-    def drop_caches(self) -> None:
-        self._effective_attributes = None
 
     def updated_at(self) -> float | None:
         md = self._attributes.get("meta_data", {})
         return md.get("updated_at")
-
-    def _cache_effective_attributes(self, effective: dict[str, object]) -> None:
-        self._effective_attributes = effective.copy()
-
-    def _get_cached_effective_attributes(self) -> dict[str, object]:
-        if self._effective_attributes is None:
-            raise KeyError("Not cached")
-        return self._effective_attributes.copy()
 
 
 class BaseFolder:
@@ -1328,6 +1330,7 @@ class CREFolder(WithAttributes, BaseFolder):
         hosts: dict[HostName, CREHost] | None,
     ):
         super().__init__()
+        self.effective_attributes = EffectiveAttributes(self._compute_effective_attributes)
         self.permissions = PermissionChecker(self._user_needs_permission)
         self.tree = tree
         self._name = name
@@ -1620,7 +1623,7 @@ class CREFolder(WithAttributes, BaseFolder):
             subfolder.add_to_dictionary(dictionary)
 
     def drop_caches(self) -> None:
-        super().drop_caches()
+        self.effective_attributes.drop_caches()
         self._choices_for_moving_host = None
 
         for subfolder in self._subfolders.values():
@@ -1929,12 +1932,7 @@ class CREFolder(WithAttributes, BaseFolder):
         tp = self.title_path() if show_main else self.title_path_without_root()
         return " / ".join(str(p) for p in tp)
 
-    def effective_attributes(self) -> dict[str, object]:
-        try:
-            return self._get_cached_effective_attributes()  # cached :-)
-        except KeyError:
-            pass
-
+    def _compute_effective_attributes(self) -> dict[str, object]:
         effective = {}
         for folder in self.parent_folder_chain():
             effective.update(folder.attributes())
@@ -1946,7 +1944,6 @@ class CREFolder(WithAttributes, BaseFolder):
             if attrname not in effective:
                 effective.setdefault(attrname, host_attribute.default_value())
 
-        self._cache_effective_attributes(effective)
         return effective
 
     def groups(
@@ -2901,6 +2898,7 @@ class SearchFolder(WithAttributes, BaseFolder):  # pylint: disable=abstract-meth
 
     def __init__(self, tree: FolderTree, base_folder, criteria) -> None:  # type: ignore[no-untyped-def]
         super().__init__()
+        self.effective_attributes = EffectiveAttributes(lambda: {})
         self.permissions = PermissionChecker(lambda _unused: None)
         self.tree = tree
         self._criteria = criteria
@@ -3099,6 +3097,7 @@ class CREHost(WithAttributes):
         cluster_nodes: Sequence[HostName] | None,
     ) -> None:
         super().__init__()
+        self.effective_attributes = EffectiveAttributes(self._compute_effective_attributes)
         self.permissions = PermissionChecker(self._user_needs_permission)
         self._folder = folder
         self._name = host_name
@@ -3110,7 +3109,7 @@ class CREHost(WithAttributes):
         return "Host(%r)" % (self._name)
 
     def drop_caches(self) -> None:
-        super().drop_caches()
+        self.effective_attributes.drop_caches()
         self._cached_host_tags = None
 
     # .--------------------------------------------------------------------.
@@ -3155,7 +3154,7 @@ class CREHost(WithAttributes):
         return self._attributes.get("site") or self.folder().site_id()
 
     def parents(self) -> list[HostName]:
-        return self.effective_attribute("parents", [])
+        return self.effective_attributes().get("parents", [])
 
     def tag_groups(self) -> Mapping[TagGroupID, TagID]:
         """Compute tags from host attributes
@@ -3240,15 +3239,9 @@ class CREHost(WithAttributes):
             return errors
         return []
 
-    def effective_attributes(self) -> dict[str, object]:
-        try:
-            return self._get_cached_effective_attributes()  # cached :-)
-        except KeyError:
-            pass
-
+    def _compute_effective_attributes(self) -> dict[str, object]:
         effective = self.folder().effective_attributes()
         effective.update(self.attributes())
-        self._cache_effective_attributes(effective)
         return effective
 
     def labels(self) -> Labels:

@@ -344,7 +344,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         update_target: str | None,
         update_services: list[str],
     ) -> DiscoveryResult:
-        if discovery_options.action == DiscoveryAction.NONE:
+        if discovery_options.action == DiscoveryAction.NONE or not transactions.check_transaction():
             return initial_discovery_result(discovery_options, host, previous_discovery_result)
 
         if discovery_options.action in (
@@ -352,17 +352,13 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             DiscoveryAction.TABULA_RASA,
             DiscoveryAction.STOP,
         ):
-            if transactions.check_transaction():
-                return get_check_table(
-                    host, discovery_options.action, raise_errors=not discovery_options.ignore_errors
-                )
-            return initial_discovery_result(discovery_options, host, previous_discovery_result)
+            return get_check_table(
+                host, discovery_options.action, raise_errors=not discovery_options.ignore_errors
+            )
 
         discovery_result = initial_discovery_result(
             discovery_options, host, previous_discovery_result
         )
-        if not transactions.check_transaction():
-            return discovery_result
 
         match discovery_options.action:
             case DiscoveryAction.FIX_ALL:

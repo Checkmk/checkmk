@@ -633,14 +633,13 @@ def has_modification_specific_permissions(update_target: UpdateType) -> bool:
 
 
 def initial_discovery_result(
-    discovery_options: DiscoveryOptions,
+    action: DiscoveryAction,
     host: CREHost,
     previous_discovery_result: DiscoveryResult | None,
+    raise_errors: bool,
 ) -> DiscoveryResult:
     return (
-        get_check_table(
-            host, discovery_options.action, raise_errors=not discovery_options.ignore_errors
-        )
+        get_check_table(host, action, raise_errors=raise_errors)
         if previous_discovery_result is None or previous_discovery_result.is_active()
         else previous_discovery_result
     )

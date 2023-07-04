@@ -345,7 +345,12 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         update_services: list[str],
     ) -> DiscoveryResult:
         if discovery_options.action == DiscoveryAction.NONE or not transactions.check_transaction():
-            return initial_discovery_result(discovery_options, host, previous_discovery_result)
+            return initial_discovery_result(
+                discovery_options.action,
+                host,
+                previous_discovery_result,
+                raise_errors=not discovery_options.ignore_errors,
+            )
 
         if discovery_options.action in (
             DiscoveryAction.REFRESH,
@@ -357,7 +362,10 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             )
 
         discovery_result = initial_discovery_result(
-            discovery_options, host, previous_discovery_result
+            discovery_options.action,
+            host,
+            previous_discovery_result,
+            raise_errors=not discovery_options.ignore_errors,
         )
 
         match discovery_options.action:

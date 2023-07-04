@@ -26,7 +26,6 @@ from cmk.gui.watolib.hosts_and_folders import CREHost, folder_tree
 from cmk.gui.watolib.services import (
     checkbox_id,
     DiscoveryAction,
-    DiscoveryOptions,
     DiscoveryResult,
     get_check_table,
     initial_discovery_result,
@@ -133,16 +132,10 @@ def test_perform_discovery_none_action(
     sample_host: CREHost, mock_discovery_preview: MagicMock
 ) -> None:
     discovery_result = initial_discovery_result(
-        discovery_options=DiscoveryOptions(
-            action=DiscoveryAction.NONE,
-            show_checkboxes=False,
-            show_parameters=False,
-            show_discovered_labels=False,
-            show_plugin_names=False,
-            ignore_errors=False,
-        ),
+        action=DiscoveryAction.NONE,
         host=sample_host,
         previous_discovery_result=None,
+        raise_errors=True,
     )
     mock_discovery_preview.assert_called_once()
     assert discovery_result.check_table == MOCK_DISCOVERY_RESULT.check_table
@@ -290,20 +283,12 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
         },
     )
 
-    discovery_options = DiscoveryOptions(
-        action=DiscoveryAction.FIX_ALL,
-        show_checkboxes=False,
-        show_parameters=True,
-        show_discovered_labels=False,
-        show_plugin_names=False,
-        ignore_errors=False,
-    )
-
     discovery_result = perform_fix_all(
         discovery_result=initial_discovery_result(
-            discovery_options=discovery_options,
+            action=DiscoveryAction.FIX_ALL,
             host=sample_host,
             previous_discovery_result=previous_discovery_result,
+            raise_errors=True,
         ),
         host=sample_host,
         raise_errors=True,
@@ -530,20 +515,13 @@ def test_perform_discovery_single_update(
         },
     )
 
-    discovery_options = DiscoveryOptions(
-        action=DiscoveryAction.SINGLE_UPDATE,
-        show_checkboxes=False,
-        show_parameters=False,
-        show_discovered_labels=False,
-        show_plugin_names=False,
-        ignore_errors=False,
-    )
     discovery_result = perform_service_discovery(
         action=DiscoveryAction.SINGLE_UPDATE,
         discovery_result=initial_discovery_result(
-            discovery_options=discovery_options,
+            action=DiscoveryAction.SINGLE_UPDATE,
             host=sample_host,
             previous_discovery_result=previous_discovery_result,
+            raise_errors=True,
         ),
         update_services=[checkbox_id("mem_linux", None)],
         update_source="new",
@@ -721,20 +699,13 @@ def test_perform_discovery_action_update_services(
         },
     )
 
-    discovery_options = DiscoveryOptions(
-        action=DiscoveryAction.UPDATE_SERVICES,
-        show_checkboxes=False,
-        show_parameters=False,
-        show_discovered_labels=False,
-        show_plugin_names=False,
-        ignore_errors=False,
-    )
     discovery_result = perform_service_discovery(
         action=DiscoveryAction.UPDATE_SERVICES,
         discovery_result=initial_discovery_result(
-            discovery_options=discovery_options,
+            action=DiscoveryAction.UPDATE_SERVICES,
             host=sample_host,
             previous_discovery_result=previous_discovery_result,
+            raise_errors=True,
         ),
         update_services=[],
         update_source=None,
@@ -831,20 +802,13 @@ def test_perform_discovery_action_update_host_labels(
         },
     )
 
-    discovery_options = DiscoveryOptions(
-        action=DiscoveryAction.UPDATE_HOST_LABELS,
-        show_checkboxes=False,
-        show_parameters=False,
-        show_discovered_labels=False,
-        show_plugin_names=False,
-        ignore_errors=False,
-    )
     discovery_result = perform_host_label_discovery(
         action=DiscoveryAction.UPDATE_HOST_LABELS,
         discovery_result=initial_discovery_result(
-            discovery_options=discovery_options,
+            action=DiscoveryAction.UPDATE_HOST_LABELS,
             host=sample_host,
             previous_discovery_result=previous_discovery_result,
+            raise_errors=True,
         ),
         host=sample_host,
         raise_errors=True,

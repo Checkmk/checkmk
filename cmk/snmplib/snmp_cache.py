@@ -25,7 +25,8 @@ def initialize_single_oid_cache(
     global _g_single_oid_cache, _g_single_oid_ipaddress, _g_single_oid_hostname
 
     if (
-        not (_g_single_oid_hostname == host_name and _g_single_oid_ipaddress == ipaddress)
+        _g_single_oid_hostname != host_name
+        or _g_single_oid_ipaddress != ipaddress
         or _g_single_oid_cache is None
     ):
         _g_single_oid_hostname = host_name
@@ -50,11 +51,7 @@ def write_single_oid_cache(host_name: HostName, ipaddress: HostAddress | None) -
 def _load_single_oid_cache(
     host_name: HostName, ipaddress: HostAddress | None
 ) -> dict[OID, SNMPDecodedString | None]:
-    cache_path = "{}/{}.{}".format(
-        cmk.utils.paths.snmp_scan_cache_dir,
-        host_name,
-        ipaddress,
-    )
+    cache_path = f"{cmk.utils.paths.snmp_scan_cache_dir}/{host_name}.{ipaddress}"
     return store.load_object_from_file(cache_path, default={})
 
 

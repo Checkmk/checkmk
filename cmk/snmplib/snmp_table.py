@@ -4,8 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Provide methods to get an snmp table with or without caching
 """
+
+import contextlib
 from collections.abc import Callable, Iterable, Iterator, MutableMapping, Sequence
 from pathlib import Path
+from typing import assert_never
 
 import cmk.utils.debug
 import cmk.utils.store as store
@@ -65,9 +68,7 @@ class WalkCache(
         return basename[3:]
 
     def _iterfiles(self) -> Iterable[Path]:
-        if not self._path.is_dir():
-            return ()
-        return self._path.iterdir()
+        return self._path.iterdir() if self._path.is_dir() else ()
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self._store!r})"
@@ -201,18 +202,19 @@ def _make_index_rows(
 ) -> SNMPRowInfo:
     index_rows = []
     for o, _unused_value in max_column:
-        if index_format is SpecialColumn.END:
-            val = _extract_end_oid(fetchoid, o).encode()
-        elif index_format is SpecialColumn.STRING:
-            val = o.encode()
-        elif index_format is SpecialColumn.BIN:
-            val = _oid_to_bin(o)
-        elif index_format is SpecialColumn.END_BIN:
-            val = _oid_to_bin(_extract_end_oid(fetchoid, o))
-        elif index_format is SpecialColumn.END_OCTET_STRING:
-            val = _oid_to_bin(_extract_end_oid(fetchoid, o))[1:]
-        else:
-            raise MKGeneralException(f"Invalid index format {index_format!r}")
+        match index_format:
+            case SpecialColumn.END:
+                val = _extract_end_oid(fetchoid, o).encode()
+            case SpecialColumn.STRING:
+                val = o.encode()
+            case SpecialColumn.BIN:
+                val = _oid_to_bin(o)
+            case SpecialColumn.END_BIN:
+                val = _oid_to_bin(_extract_end_oid(fetchoid, o))
+            case SpecialColumn.END_OCTET_STRING:
+                val = _oid_to_bin(_extract_end_oid(fetchoid, o))[1:]
+            case _:
+                assert_never(index_format)
         index_rows.append((o, val))
     return index_rows
 
@@ -242,11 +244,8 @@ def _extract_end_oid(prefix: OID, complete: OID) -> OID:
     return complete[len(prefix) :].lstrip(".")
 
 
-# sort OID strings numerically
 def _oid_to_intlist(oid: OID) -> list[int]:
-    if oid:
-        return list(map(int, oid.split(".")))
-    return []
+    return list(map(int, oid.split("."))) if oid else []
 
 
 def _cmp_oids(o1: OID, o2: OID) -> int:
@@ -270,16 +269,13 @@ def _get_snmpwalk(
     save_walk_cache: bool,
     backend: SNMPBackend,
 ) -> SNMPRowInfo:
-    try:
-        rowinfo = walk_cache[fetchoid][1]
+    with contextlib.suppress(KeyError):
+        cache_info = walk_cache[fetchoid][1]
         console.vverbose(f"Already fetched OID: {fetchoid}\n")
-        return rowinfo
-    except KeyError:
-        pass
-
-    rowinfo = _perform_snmpwalk(section_name, base, fetchoid, backend=backend)
-    walk_cache[fetchoid] = (save_walk_cache, rowinfo)
-    return rowinfo
+        return cache_info
+    info = _perform_snmpwalk(section_name, base, fetchoid, backend=backend)
+    walk_cache[fetchoid] = (save_walk_cache, info)
+    return info
 
 
 def _perform_snmpwalk(

@@ -1,4 +1,4 @@
-$CMK_VERSION = "2.2.0p5"
+$CMK_VERSION = "2.2.0p6"
 
 Write-Host "<<<nvidia_smi:sep(9)>>>"
 

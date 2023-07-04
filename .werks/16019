@@ -1,0 +1,14 @@
+Title: Update PHP version in SLES15P4 from 7 to 8
+Class: fix
+Compatible: compat
+Component: rpm
+Date: 1689864216
+Edition: cre
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.2.0p7
+
+SLES15P4 ships by default with PHP8, this werk updates the PHP version required and shipped with Checkmk to PHP8
+
+

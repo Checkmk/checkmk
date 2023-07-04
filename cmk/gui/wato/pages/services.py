@@ -17,12 +17,14 @@ from cmk.utils.check_utils import worst_service_state
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.html import get_html_state_marker
-from cmk.utils.labels import HostLabelValueDict
+from cmk.utils.labels import HostLabelValueDict, Labels
 from cmk.utils.site import omd_site
 from cmk.utils.statename import short_service_state_name
 from cmk.utils.version import __version__, Version
 
 from cmk.automations.results import CheckPreviewEntry
+
+from cmk.checkengine.checking import Item
 
 from cmk.gui.background_job import JobStatusStates
 from cmk.gui.breadcrumb import Breadcrumb, make_main_menu_breadcrumb
@@ -599,11 +601,7 @@ class DiscoveryPageRenderer:
                 discovery_result,
             )
 
-    def _render_host_labels(  # type: ignore[no-untyped-def]
-        self,
-        table,
-        discovery_result: DiscoveryResult,
-    ) -> None:
+    def _render_host_labels(self, table: Table, discovery_result: DiscoveryResult) -> None:
         active_host_labels: dict[str, HostLabelValueDict] = {}
         changed_host_labels: dict[str, HostLabelValueDict] = {}
 
@@ -647,14 +645,14 @@ class DiscoveryPageRenderer:
             _("Active"),
         )
 
-    def _create_host_label_row(  # type: ignore[no-untyped-def]
-        self, table, host_labels, text
+    def _create_host_label_row(
+        self, table: Table, host_labels: Mapping[str, HostLabelValueDict], text: str
     ) -> None:
         if not host_labels:
             return
 
         table.row()
-        table.cell(_("Status"), text, css="labelstate")
+        table.cell(_("Status"), text, css=["labelstate"])
 
         if not self._options.show_plugin_names:
             labels_html = render_labels(
@@ -663,7 +661,7 @@ class DiscoveryPageRenderer:
                 with_links=False,
                 label_sources={label_id: "discovered" for label_id in host_labels.keys()},
             )
-            table.cell(_("Host labels"), labels_html, css="expanding")
+            table.cell(_("Host labels"), labels_html, css=["expanding"])
             return
 
         plugin_names = HTML("")
@@ -683,8 +681,8 @@ class DiscoveryPageRenderer:
                 label_sources={label_id: "discovered"},
             )
 
-        table.cell(_("Host labels"), labels_html, css="expanding")
-        table.cell(_("Check Plugin"), plugin_names, css="plugins")
+        table.cell(_("Host labels"), labels_html, css=["expanding"])
+        table.cell(_("Check Plugin"), plugin_names, css=["plugins"])
         return
 
     def _show_discovery_details(self, discovery_result: DiscoveryResult, api_request: dict) -> None:
@@ -911,7 +909,7 @@ class DiscoveryPageRenderer:
             if has_modification_specific_permissions(UpdateType.IGNORED):
                 self._enable_bulk_button(table_source, DiscoveryState.IGNORED)
 
-    def _enable_bulk_button(self, source, target):
+    def _enable_bulk_button(self, source: str, target: str) -> None:
         enable_page_menu_entry(html, f"bulk_{source}_{target}")
 
     def _show_check_row(
@@ -1040,7 +1038,7 @@ class DiscoveryPageRenderer:
             paramtext += "<pre>%s</pre>" % (pprint.pformat(params))
             html.write_text(paramtext)
 
-    def _show_discovered_labels(self, service_labels):
+    def _show_discovered_labels(self, service_labels: Labels) -> None:
         label_code = render_labels(
             service_labels,
             "service",
@@ -1050,13 +1048,19 @@ class DiscoveryPageRenderer:
         html.write_html(label_code)
 
     def _show_bulk_checkbox(
-        self, table, discovery_result, api_request, check_type, item, show_bulk_actions
-    ):
+        self,
+        table: Table,
+        discovery_result: DiscoveryResult,
+        api_request: dict,
+        check_type: str,
+        item: Item,
+        show_bulk_actions: bool,
+    ) -> None:
         if not self._options.show_checkboxes or not user.may("wato.services"):
             return
 
         if not show_bulk_actions:
-            table.cell(css="checkbox")
+            table.cell(css=["checkbox"])
             return
 
         css_classes = ["service_checkbox"]
@@ -1072,7 +1076,7 @@ class DiscoveryPageRenderer:
                 value="X",
             ),
             sortable=False,
-            css="checkbox",
+            css=["checkbox"],
         )
         name = checkbox_id(check_type, item)
         checked = (
@@ -1215,7 +1219,9 @@ class DiscoveryPageRenderer:
         )
         return 1
 
-    def _icon_button_removed(self, table_source, checkbox_name, button_classes):
+    def _icon_button_removed(
+        self, table_source: Literal["vanished"], checkbox_name: str, button_classes: list[str]
+    ) -> Literal[1]:
         options = self._options._replace(action=DiscoveryAction.SINGLE_UPDATE)
         html.icon_button(
             url="",
@@ -1234,7 +1240,7 @@ class DiscoveryPageRenderer:
         )
         return 1
 
-    def _rulesets_button(self, descr):
+    def _rulesets_button(self, descr: str) -> Literal[1]:
         # Link to list of all rulesets affecting this service
         html.icon_button(
             folder_preserving_link(
@@ -1249,7 +1255,7 @@ class DiscoveryPageRenderer:
         )
         return 1
 
-    def _check_parameters_button(self, entry: CheckPreviewEntry):  # type: ignore[no-untyped-def]
+    def _check_parameters_button(self, entry: CheckPreviewEntry) -> Literal[0, 1]:
         if not entry.ruleset_name:
             return 0
 
@@ -1287,7 +1293,7 @@ class DiscoveryPageRenderer:
         )
         return 1
 
-    def _disabled_services_button(self, descr):
+    def _disabled_services_button(self, descr: str) -> Literal[1]:
         html.icon_button(
             folder_preserving_link(
                 [
@@ -1471,7 +1477,7 @@ class DiscoveryPageRenderer:
 
 @page_registry.register_page("wato_ajax_execute_check")
 class ModeAjaxExecuteCheck(AjaxPage):
-    def _from_vars(self):
+    def _from_vars(self) -> None:
         self._site = SiteId(request.get_ascii_input_mandatory("site"))
         if self._site not in sitenames():
             raise MKUserError("site", _("You called this page with an invalid site."))
@@ -1509,9 +1515,7 @@ class ModeAjaxExecuteCheck(AjaxPage):
         }
 
 
-def service_page_menu(  # type: ignore[no-untyped-def]
-    breadcrumb, host: CREHost, options: DiscoveryOptions
-):
+def service_page_menu(breadcrumb: Breadcrumb, host: CREHost, options: DiscoveryOptions) -> PageMenu:
     menu = PageMenu(
         dropdowns=[
             PageMenuDropdown(

@@ -90,7 +90,7 @@ class DiscoveryState:
     CUSTOM_IGNORED = "custom_ignored"
 
     @classmethod
-    def is_discovered(cls, table_source) -> bool:  # type: ignore[no-untyped-def]
+    def is_discovered(cls, table_source: str) -> bool:
         return table_source in [
             cls.UNDECIDED,
             cls.VANISHED,
@@ -245,7 +245,7 @@ class Discovery:
         self._update_target = update_target
         self._update_services = update_services  # list of service hash
 
-    def do_discovery(self, discovery_result: DiscoveryResult):  # type: ignore[no-untyped-def]
+    def do_discovery(self, discovery_result: DiscoveryResult) -> None:
         old_autochecks: SetAutochecksTable = {}
         autochecks_to_save: SetAutochecksTable = {}
         remove_disabled_rule: set[str] = set()
@@ -454,7 +454,7 @@ class Discovery:
                 return rule
         return None
 
-    def _get_table_target(self, entry: CheckPreviewEntry):  # type: ignore[no-untyped-def]
+    def _get_table_target(self, entry: CheckPreviewEntry) -> str:
         if self._action == DiscoveryAction.FIX_ALL or (
             self._action == DiscoveryAction.UPDATE_SERVICES
             and (
@@ -661,7 +661,7 @@ def _perform_update_host_labels(labels_by_nodes: Mapping[HostName, Sequence[Host
         )
 
 
-def _apply_state_change(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
+def _apply_state_change(  # pylint: disable=too-many-branches
     table_source: str,
     table_target: str,
     key: tuple[Any, Any],
@@ -671,7 +671,7 @@ def _apply_state_change(  # type: ignore[no-untyped-def] # pylint: disable=too-m
     saved_services: set[str],
     add_disabled_rule: set[str],
     remove_disabled_rule: set[str],
-):
+) -> None:
     if table_source == DiscoveryState.UNDECIDED:
         if table_target == DiscoveryState.MONITORED:
             autochecks_to_save[key] = value

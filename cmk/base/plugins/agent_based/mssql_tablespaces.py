@@ -148,6 +148,17 @@ def _check_levels_space_lower(
     yield Metric(name=metric_name, value=value_bytes)
 
 
+def cluster_check(item: str, params: Mapping[str, Any],
+                  section: Mapping[str, Optional[SectionTableSpaces]]) -> CheckResult:
+
+    cluster_section = {
+        section_item: section_data for node_section in reversed(list(section.values()))
+        if node_section is not None for section_item, section_data in node_section.items()
+    }
+
+    yield from check(item, params, cluster_section)
+
+
 def check(item: str, params: Mapping[str, Any], section: SectionTableSpaces) -> CheckResult:
     tablespace = section.get(item)
     if tablespace is None:
@@ -199,6 +210,7 @@ register.check_plugin(
     service_name="MSSQL %s Sizes",
     discovery_function=discover,
     check_function=check,
+    cluster_check_function=cluster_check,
     check_default_parameters={},
     check_ruleset_name="mssql_tablespaces",
 )

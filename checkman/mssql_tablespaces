@@ -18,3 +18,6 @@ item:
 
 inventory:
  One service is created for each tablespace.
+
+cluster:
+ If a cluster is configured, only the first node supplying data is checked.

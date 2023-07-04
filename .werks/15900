@@ -1,0 +1,12 @@
+Title: mssql_tablespaces: Re-enable cluster mode
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1688485393
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.0.0p38
+
+This werk fixes an issue introduced in 2.0.0p36 where the mssql_tablespaces plugin could not be used as a clustered service.
+The error "This service is not ready to handle clustered data. Please change your configuration." will no longer occur.

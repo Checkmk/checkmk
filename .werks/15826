@@ -1,0 +1,14 @@
+Title: Distributed monitoring respects InfluxDB site restriction rule
+Class: fix
+Compatible: compat
+Component: setup
+Date: 1684747470
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.1.0p31
+
+Previously all configured InfluxDB connections were enabled on all remote
+configured sites, despite limiting a connection to specific sites.
+With this release the problem is eliminated.

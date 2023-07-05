@@ -1888,7 +1888,7 @@ class PainterInvhistDelta(Painter):
         tree_renderer = DeltaNodeRenderer(
             row["site"],
             row["host_name"],
-            tree_id="/" + str(row["invhist_time"]),
+            tree_id=str(row["invhist_time"]),
         )
 
         with output_funnel.plugged():
@@ -2396,7 +2396,7 @@ def ajax_inv_render_delta_tree() -> None:
     raw_path = request.get_ascii_input_mandatory("raw_path")
     tree_id = request.get_ascii_input_mandatory("tree_id")
 
-    tree, corrupted_history_files = inventory.load_delta_tree(hostname, int(tree_id[1:]))
+    tree, corrupted_history_files = inventory.load_delta_tree(hostname, int(tree_id))
     if corrupted_history_files:
         user_errors.add(
             MKUserError(

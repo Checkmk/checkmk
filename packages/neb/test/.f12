@@ -3,4 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-exec ../run --unit-test
+if [ -z "$RUN_HERE" ]; then
+    echo "Running in Docker Container $CONTAINER (workdir $PWD)"
+    : "${IMAGE_NAME:="$("${REPO_DIR}/buildscripts/docker_image_aliases/resolve.py" IMAGE_TESTING)"}"
+    docker run -a stdout -a stderr -t --rm \
+        -u "$UID:$UID" \
+        -v "$REPO_DIR:$REPO_DIR" \
+        -e RUN_HERE="true" \
+        -w "$PWD" \
+        "${IMAGE_NAME}" \
+        ../run --unit-test
+else
+    exec ../run --unit-test
+fi

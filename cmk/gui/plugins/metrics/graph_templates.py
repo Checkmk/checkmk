@@ -13,10 +13,8 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
-from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.plugins.metrics.identification import GraphIdentification
 from cmk.gui.plugins.metrics.utils import (
     evaluate,
     get_graph_data_from_livestatus,
@@ -160,80 +158,6 @@ def matching_graph_templates(
         if (graph_index is None or index == graph_index)
         and (graph_id is None or graph_template["id"] == graph_id)
     )
-
-
-class GraphIdentificationTemplate(GraphIdentification[TemplateGraphSpec, TemplateGraphRecipe]):
-    @classmethod
-    def ident(cls) -> str:
-        return "template"
-
-    @staticmethod
-    def template_tuning(
-        graph_template: GraphTemplate,
-        site: str | None,
-        host_name: HostName | None,
-        service_description: ServiceName | None,
-        destination: str | None,
-    ) -> GraphTemplate | None:
-        return graph_template
-
-    def create_graph_recipes(
-        self, ident_info: TemplateGraphSpec, destination: str | None = None
-    ) -> list[TemplateGraphRecipe]:
-        graph_identification_info = ident_info
-
-        try:
-            site = graph_identification_info["site"]
-            host_name = graph_identification_info["host_name"]
-            service_description = graph_identification_info["service_description"]
-        except KeyError as e:
-            raise MKUserError(None, _("Graph identification: The '%s' attribute is missing") % e)
-        row = get_graph_data_from_livestatus(site, host_name, service_description)
-        translated_metrics = translated_metrics_from_row(row)
-
-        graph_recipes = []
-        for index, graph_template in matching_graph_templates(
-            graph_identification_info,
-            translated_metrics,
-        ):
-            graph_template_tuned = self.template_tuning(
-                graph_template,
-                site=site,
-                host_name=host_name,
-                service_description=service_description,
-                destination=destination,
-            )
-            if graph_template_tuned is None:
-                continue
-
-            graph_recipe = create_graph_recipe_from_template(
-                graph_template_tuned,
-                translated_metrics,
-                row,
-            )
-
-            spec_info = graph_identification_info.copy()
-            # Performance graph dashlets already use graph_id, but for example in reports, we still
-            # use graph_index. We should switch to graph_id everywhere (CMK-7308). Once this is
-            # done, we can remove the line below.
-            spec_info["graph_index"] = index
-            spec_info["graph_id"] = graph_template_tuned["id"]
-
-            graph_recipes.append(
-                TemplateGraphRecipe(
-                    {
-                        "title": graph_recipe["title"],
-                        "metrics": graph_recipe["metrics"],
-                        "unit": graph_recipe["unit"],
-                        "explicit_vertical_range": graph_recipe["explicit_vertical_range"],
-                        "horizontal_rules": graph_recipe["horizontal_rules"],
-                        "omit_zero_metrics": graph_recipe["omit_zero_metrics"],
-                        "consolidation_function": graph_recipe["consolidation_function"],
-                        "specification": ("template", spec_info),
-                    }
-                )
-            )
-        return graph_recipes
 
 
 def create_graph_recipe_from_template(

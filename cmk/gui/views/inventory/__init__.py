@@ -2197,22 +2197,28 @@ def _show_delta_value(
 
 
 class ABCNodeRenderer(abc.ABC):
-    def __init__(self, site_id: SiteId, hostname: HostName) -> None:
+    def __init__(
+        self,
+        site_id: SiteId,
+        hostname: HostName,
+        show_internal_tree_paths: bool = False,
+        tree_id: str = "",
+    ) -> None:
         self._site_id = site_id
         self._hostname = hostname
-
-    @property
-    @abc.abstractmethod
-    def _tree_name(self) -> str:
-        raise NotImplementedError()
+        self._show_internal_tree_paths = show_internal_tree_paths
+        self._tree_id = tree_id
+        self._tree_name = f"inv_{hostname}{tree_id}"
 
     @abc.abstractmethod
     def _fetch_url(self, raw_path: str) -> str:
         raise NotImplementedError()
 
-    @abc.abstractmethod
     def _get_header(self, title: str, key_info: str) -> HTML:
-        raise NotImplementedError()
+        header = HTML(title)
+        if self._show_internal_tree_paths:
+            header += " " + HTMLWriter.render_span("(%s)" % key_info, css="muted-text")
+        return header
 
     def show(self, tree: ImmutableTree | ImmutableDeltaTree, hints: DisplayHints) -> None:
         if tree.attributes:
@@ -2321,19 +2327,6 @@ class ABCNodeRenderer(abc.ABC):
 
 
 class NodeRenderer(ABCNodeRenderer):
-    def __init__(
-        self,
-        site_id: SiteId,
-        hostname: HostName,
-        show_internal_tree_paths: bool = False,
-    ) -> None:
-        super().__init__(site_id, hostname)
-        self._show_internal_tree_paths = show_internal_tree_paths
-
-    @property
-    def _tree_name(self) -> str:
-        return f"inv_{self._hostname}"
-
     def _fetch_url(self, raw_path: str) -> str:
         return makeuri_contextless(
             request,
@@ -2346,22 +2339,8 @@ class NodeRenderer(ABCNodeRenderer):
             "ajax_inv_render_tree.py",
         )
 
-    def _get_header(self, title: str, key_info: str) -> HTML:
-        header = HTML(title)
-        if self._show_internal_tree_paths:
-            header += " " + HTMLWriter.render_span("(%s)" % key_info, css="muted-text")
-        return header
-
 
 class DeltaNodeRenderer(ABCNodeRenderer):
-    def __init__(self, site_id: SiteId, hostname: HostName, tree_id: str) -> None:
-        super().__init__(site_id, hostname)
-        self._tree_id = tree_id
-
-    @property
-    def _tree_name(self) -> str:
-        return f"inv_{self._hostname}{self._tree_id}"
-
     def _fetch_url(self, raw_path: str) -> str:
         return makeuri_contextless(
             request,
@@ -2373,9 +2352,6 @@ class DeltaNodeRenderer(ABCNodeRenderer):
             ],
             "ajax_inv_render_delta_tree.py",
         )
-
-    def _get_header(self, title: str, key_info: str) -> HTML:
-        return HTML(title)
 
 
 # Ajax call for fetching parts of the tree

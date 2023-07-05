@@ -308,7 +308,7 @@ class Discovery:
             need_sync = False
             if remove_disabled_rule or add_disabled_rule:
                 add_disabled_rule = add_disabled_rule - remove_disabled_rule - saved_services
-                self._save_host_service_enable_disable_rules(
+                EnabledDisabledServicesEditor(self._host).save_host_service_enable_disable_rules(
                     remove_disabled_rule, add_disabled_rule
                 )
                 need_sync = True
@@ -378,7 +378,12 @@ class Discovery:
     def _service_is_checked(self, check_plugin_name: CheckPluginNameStr, item: Item) -> bool:
         return checkbox_id(check_plugin_name, item) in self._update_services
 
-    def _save_host_service_enable_disable_rules(self, to_enable, to_disable):
+
+class EnabledDisabledServicesEditor:
+    def __init__(self, host: CREHost) -> None:
+        self._host = host
+
+    def save_host_service_enable_disable_rules(self, to_enable, to_disable):
         self._save_service_enable_disable_rules(to_enable, value=False)
         self._save_service_enable_disable_rules(to_disable, value=True)
 

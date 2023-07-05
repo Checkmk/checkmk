@@ -10,9 +10,8 @@ from typing import NamedTuple
 
 import pytest
 import requests
-from agent_receiver.certs import serialize_to_pem, sign_agent_csr
+from agent_receiver.certs import _load_combined_file_content, serialize_to_pem, sign_agent_csr
 from cryptography.hazmat.primitives import serialization
-from cryptography.x509 import load_pem_x509_certificate
 
 from tests.testlib.certs import generate_csr_pair
 from tests.testlib.site import Site
@@ -66,10 +65,7 @@ def paired_keypair_fixture(
     private_key, csr = generate_csr_pair(uuid_)
 
     pem_bytes = site.read_file("etc/ssl/agents/ca.pem").encode("utf-8")
-    root_ca = (
-        load_pem_x509_certificate(pem_bytes),
-        serialization.load_pem_private_key(pem_bytes, None),
-    )
+    root_ca = _load_combined_file_content(pem_bytes)
 
     private_key_path = tmp_path_factory.mktemp("certs") / "private_key.key"
     with private_key_path.open("wb") as private_key_file:

@@ -9,7 +9,7 @@ import re
 from collections.abc import Iterable
 from datetime import datetime
 from pathlib import Path
-from typing import Final, NamedTuple
+from typing import cast, Final, NamedTuple
 
 from cryptography.hazmat.primitives.asymmetric.rsa import (
     generate_private_key,
@@ -17,12 +17,7 @@ from cryptography.hazmat.primitives.asymmetric.rsa import (
     RSAPublicKey,
 )
 from cryptography.hazmat.primitives.hashes import SHA256
-from cryptography.hazmat.primitives.serialization import (
-    Encoding,
-    load_pem_private_key,
-    NoEncryption,
-    PrivateFormat,
-)
+from cryptography.hazmat.primitives.serialization import Encoding, NoEncryption, PrivateFormat
 from cryptography.x509 import (
     BasicConstraints,
     Certificate,
@@ -42,6 +37,8 @@ from cryptography.x509.oid import NameOID
 from dateutil.relativedelta import relativedelta
 
 from livestatus import SiteId
+
+from cmk.utils.crypto.certificate import CertificateWithPrivateKey
 
 
 class _CNTemplate:
@@ -125,23 +122,19 @@ def root_cert_path(ca_dir: Path) -> Path:
 def write_cert_store(source_dir: Path, store_path: Path) -> None:
     """Extract certificate part out of PEM files and concat
     to single cert store file."""
-    pem_certs = (
-        load_pem_x509_certificate(pem_path.read_bytes()).public_bytes(Encoding.PEM)
-        for pem_path in source_dir.glob("*.pem")
-    )
+    pem_certs = []
+    for pem_path in source_dir.glob("*.pem"):
+        cert, _key = load_cert_and_private_key(pem_path)
+        pem_certs.append(cert.public_bytes(Encoding.PEM))
+
     store_path.write_bytes(b"".join(pem_certs))
 
 
 def load_cert_and_private_key(path_pem: Path) -> tuple[Certificate, RSAPrivateKeyWithSerialization]:
-    return (
-        load_pem_x509_certificate(
-            pem_bytes := path_pem.read_bytes(),
-        ),
-        load_pem_private_key(
-            pem_bytes,
-            None,
-        ),
+    cert, key = CertificateWithPrivateKey.load_combined_file_content(
+        path_pem.read_bytes().decode("utf-8"), None
     )
+    return cert._cert, cast(RSAPrivateKeyWithSerialization, key._key)
 
 
 def _save_cert_chain(

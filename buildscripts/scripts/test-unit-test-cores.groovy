@@ -6,7 +6,7 @@ def main() {
     dir("${checkout_dir}") {
         stage("Execute NEB Test") {
             dir("packages/neb") {
-                sh("./run --unit-tests");
+                sh("./.f12");
             }
         }
         stage("Execute CMC Test") {

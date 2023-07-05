@@ -342,6 +342,42 @@ class Discovery:
             checks,
         )
 
+    def _get_table_target(self, entry: CheckPreviewEntry) -> str:
+        if self._action == DiscoveryAction.FIX_ALL or (
+            self._action == DiscoveryAction.UPDATE_SERVICES
+            and (
+                not self._show_checkboxes
+                or self._service_is_checked(entry.check_plugin_name, entry.item)
+            )
+        ):
+            if entry.check_source == DiscoveryState.VANISHED:
+                return DiscoveryState.REMOVED
+            if entry.check_source == DiscoveryState.IGNORED:
+                return DiscoveryState.IGNORED
+            # entry.check_source in [DiscoveryState.MONITORED, DiscoveryState.UNDECIDED]
+            return DiscoveryState.MONITORED
+
+        if not self._update_target:
+            return entry.check_source
+
+        if self._action == DiscoveryAction.BULK_UPDATE:
+            if entry.check_source != self._update_source:
+                return entry.check_source
+
+            if not self._show_checkboxes or self._service_is_checked(
+                entry.check_plugin_name, entry.item
+            ):
+                return self._update_target
+
+        if self._action == DiscoveryAction.SINGLE_UPDATE:
+            if self._service_is_checked(entry.check_plugin_name, entry.item):
+                return self._update_target
+
+        return entry.check_source
+
+    def _service_is_checked(self, check_plugin_name: CheckPluginNameStr, item: Item) -> bool:
+        return checkbox_id(check_plugin_name, item) in self._update_services
+
     def _save_host_service_enable_disable_rules(self, to_enable, to_disable):
         self._save_service_enable_disable_rules(to_enable, value=False)
         self._save_service_enable_disable_rules(to_disable, value=True)
@@ -453,42 +489,6 @@ class Discovery:
             if rule.is_discovery_rule_of(self._host) and rule.value == value:
                 return rule
         return None
-
-    def _get_table_target(self, entry: CheckPreviewEntry) -> str:
-        if self._action == DiscoveryAction.FIX_ALL or (
-            self._action == DiscoveryAction.UPDATE_SERVICES
-            and (
-                not self._show_checkboxes
-                or self._service_is_checked(entry.check_plugin_name, entry.item)
-            )
-        ):
-            if entry.check_source == DiscoveryState.VANISHED:
-                return DiscoveryState.REMOVED
-            if entry.check_source == DiscoveryState.IGNORED:
-                return DiscoveryState.IGNORED
-            # entry.check_source in [DiscoveryState.MONITORED, DiscoveryState.UNDECIDED]
-            return DiscoveryState.MONITORED
-
-        if not self._update_target:
-            return entry.check_source
-
-        if self._action == DiscoveryAction.BULK_UPDATE:
-            if entry.check_source != self._update_source:
-                return entry.check_source
-
-            if not self._show_checkboxes or self._service_is_checked(
-                entry.check_plugin_name, entry.item
-            ):
-                return self._update_target
-
-        if self._action == DiscoveryAction.SINGLE_UPDATE:
-            if self._service_is_checked(entry.check_plugin_name, entry.item):
-                return self._update_target
-
-        return entry.check_source
-
-    def _service_is_checked(self, check_plugin_name: CheckPluginNameStr, item: Item) -> bool:
-        return checkbox_id(check_plugin_name, item) in self._update_services
 
 
 @contextmanager

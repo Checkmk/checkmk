@@ -386,7 +386,7 @@ def update_nodes(params: Mapping[str, Any]) -> Response:
     nodes = body["nodes"]
     host: CREHost = Host.load_host(host_name)
     _require_host_etag(host)
-    host.edit(host.attributes(), nodes)
+    host.edit(host.attributes, nodes)
 
     return serve_json(
         constructors.object_sub_property(
@@ -422,7 +422,7 @@ def update_host(params: Mapping[str, Any]) -> Response:
     _require_host_etag(host)
 
     if new_attributes:
-        new_attributes["meta_data"] = host.attributes().get("meta_data", {})
+        new_attributes["meta_data"] = host.attributes.get("meta_data", {})
         host.edit(new_attributes, None)
 
     if update_attributes:
@@ -430,7 +430,7 @@ def update_host(params: Mapping[str, Any]) -> Response:
 
     faulty_attributes = []
     for attribute in remove_attributes:
-        if not host.has_explicit_attribute(attribute):
+        if attribute not in host.attributes:
             faulty_attributes.append(attribute)
 
     if remove_attributes:
@@ -486,7 +486,7 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
 
         faulty_attributes = []
         for attribute in remove_attributes:
-            if not host.has_explicit_attribute(attribute):
+            if attribute not in host.attributes:
                 faulty_attributes.append(attribute)
 
         if faulty_attributes:
@@ -740,7 +740,7 @@ def _serve_host(host: CREHost, effective_attributes: bool = False) -> Response:
 def serialize_host(host: CREHost, effective_attributes: bool) -> dict[str, Any]:
     extensions = {
         "folder": "/" + host.folder().path(),
-        "attributes": host.attributes(),
+        "attributes": host.attributes,
         "effective_attributes": host.effective_attributes() if effective_attributes else None,
         "is_cluster": host.is_cluster(),
         "is_offline": host.is_offline(),
@@ -796,7 +796,7 @@ def _except_keys(dict_: dict[str, Any], exclude_keys: list[str]) -> dict[str, An
     return {key: value for key, value in dict_.items() if key not in exclude_keys}
 
 
-def _require_host_etag(host):
+def _require_host_etag(host: CREHost) -> None:
     etag_values = _host_etag_values(host)
     constructors.require_etag(
         constructors.hash_of_dict(etag_values),
@@ -804,13 +804,13 @@ def _require_host_etag(host):
     )
 
 
-def _host_etag_values(host):
+def _host_etag_values(host: CREHost) -> dict[str, Any]:
     # FIXME: Through some not yet fully explored effect, we do not get the actual persisted
     #        timestamp in the meta_data section but rather some other timestamp. This makes the
     #        reported ETag a different one than the one which is accepted by the endpoint.
     return {
         "name": host.name(),
-        "attributes": _except_keys(host.attributes(), ["meta_data"]),
+        "attributes": _except_keys(host.attributes, ["meta_data"]),
         "cluster_nodes": host.cluster_nodes(),
     }
 

@@ -382,7 +382,7 @@ def _change_host_tags_in_host_or_folder(
     affected: list[T] = []
 
     attrname = "tag_" + operation.tag_group_id
-    attributes = host_or_folder.attributes()
+    attributes = host_or_folder.attributes
     if attrname not in attributes:
         return affected  # The attribute is not set
 

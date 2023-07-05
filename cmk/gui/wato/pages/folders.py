@@ -1008,8 +1008,8 @@ class ModeFolder(WatoMode):
         for attr in host_attribute_registry.attributes():
             if attr.show_in_table():
                 attrname = attr.name()
-                if attrname in host.attributes():
-                    tdclass, tdcontent = attr.paint(host.attributes()[attrname], hostname)
+                if attrname in host.attributes:
+                    tdclass, tdcontent = attr.paint(host.attributes[attrname], hostname)
                 else:
                     tdclass, tdcontent = attr.paint(effective.get(attrname), hostname)
                     tdclass += " inherited"
@@ -1148,14 +1148,15 @@ class ModeFolder(WatoMode):
         target_folder_names: dict[str, list[HostName]] = {}
         for host_name in host_names_to_move:
             host = self._folder.load_host(host_name)
-            imported_folder_name = host.attribute("imported_folder")
+            imported_folder_name = host.attributes.get("imported_folder")
+            assert isinstance(imported_folder_name, str)
             if imported_folder_name is None:
                 continue
             target_folder_names.setdefault(imported_folder_name, []).append(host_name)
 
             # Remove target folder information, now that the hosts are
             # at their target position.
-            host.remove_attribute("imported_folder")
+            del host.attributes["imported_folder"]
 
         # Now handle each target folder
         for imported_folder, host_names in target_folder_names.items():

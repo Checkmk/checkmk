@@ -203,8 +203,8 @@ def test_write_and_read_host_attributes(attributes: dict[str, str | list[str]]) 
     read_folder_hosts = read_data_folder.hosts()
     assert len(read_folder_hosts) == 1
     for _, host in read_folder_hosts.items():
-        assert host.attributes() == {
-            "meta_data": host.attributes()["meta_data"],
+        assert host.attributes == {
+            "meta_data": host.attributes["meta_data"],
             **attributes,
         }
 
@@ -279,7 +279,7 @@ def test_mgmt_inherit_credentials_explicit_host(
     folder_credentials: str | dict[str, str],
 ) -> None:
     folder = folder_tree().root_folder()
-    folder.set_attribute(host_attribute, folder_credentials)
+    folder.attributes[host_attribute] = folder_credentials
 
     folder.create_hosts(
         [
@@ -323,7 +323,7 @@ def test_mgmt_inherit_credentials(
     folder_credentials: str | dict[str, str],
 ) -> None:
     folder = folder_tree().root_folder()
-    folder.set_attribute(host_attribute, folder_credentials)
+    folder.attributes[host_attribute] = folder_credentials
 
     folder.create_hosts(
         [
@@ -371,8 +371,8 @@ def test_mgmt_inherit_protocol_explicit_host(
     folder_credentials: str | dict[str, str],
 ) -> None:
     folder = folder_tree().root_folder()
-    folder.set_attribute("management_protocol", None)
-    folder.set_attribute(host_attribute, folder_credentials)
+    folder.attributes["management_protocol"] = None
+    folder.attributes[host_attribute] = folder_credentials
 
     folder.create_hosts(
         [
@@ -416,8 +416,8 @@ def test_mgmt_inherit_protocol(
     folder_credentials: str | dict[str, str],
 ) -> None:
     folder = folder_tree().root_folder()
-    folder.set_attribute("management_protocol", protocol)
-    folder.set_attribute(host_attribute, folder_credentials)
+    folder.attributes["management_protocol"] = protocol
+    folder.attributes[host_attribute] = folder_credentials
 
     folder.create_hosts(
         [
@@ -592,7 +592,7 @@ def make_monkeyfree_folder(
     tree = hosts_and_folders.folder_tree()
     if parent is None:
         new_folder = tree.root_folder()
-        new_folder._attributes = tree_structure.attributes
+        new_folder.attributes = tree_structure.attributes
     else:
         new_folder = hosts_and_folders.CREFolder.new(
             tree=tree,
@@ -624,7 +624,7 @@ def dump_wato_folder_structure(wato_folder: hosts_and_folders.CREFolder) -> None
         sys.stdout.write(f"{indent_space + '->' + str(wato_folder):80} {wato_folder.path()}\n")
         sys.stdout.write(
             "\n".join(
-                f"{indent_space}  {x}" for x in pprint.pformat(wato_folder.attributes()).split("\n")
+                f"{indent_space}  {x}" for x in pprint.pformat(wato_folder.attributes).split("\n")
             )
             + "\n"
         )
@@ -1038,7 +1038,7 @@ def test_new_empty_folder(monkeypatch: pytest.MonkeyPatch) -> None:
     assert folder.name() == "bla"
     assert folder.id() == "a8098c1af86e11dabd1a00112444be1e"
     assert folder.title() == "Bla"
-    assert folder.attributes() == {
+    assert folder.attributes == {
         "meta_data": {
             "created_at": 1515549600.0,
             "created_by": None,
@@ -1060,7 +1060,7 @@ def test_new_loaded_folder(monkeypatch: pytest.MonkeyPatch) -> None:
     assert folder.name() == "folder1"
     assert folder.id() == "c6bda767ae5c47038f73d8906fb91bb4"
     assert folder.title() == "folder1"
-    assert folder.attributes() == {
+    assert folder.attributes == {
         "meta_data": {
             "created_at": 1515549600.0,
             "created_by": None,
@@ -1125,7 +1125,7 @@ def test_folder_times() -> None:
         folder = Folder.load(tree=tree, name="test", parent_folder=root)
         folder.save()
 
-    meta_data = folder.attributes()["meta_data"]
+    meta_data = folder.attributes["meta_data"]
     assert int(meta_data["created_at"]) == int(current)
     assert int(meta_data["updated_at"]) == int(current)
 

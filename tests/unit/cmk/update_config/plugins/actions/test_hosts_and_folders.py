@@ -23,12 +23,11 @@ def run_plugin() -> None:
 
 def test_update_tuple_contact_groups_in_folder() -> None:
     folder = folder_tree().root_folder()
-    folder.set_attribute("contactgroups", (False, []))
+    folder.attributes["contactgroups"] = (False, [])
 
-    assert folder.attribute("contactgroups") == (False, [])
     run_plugin()
 
-    assert folder.attribute("contactgroups") == {
+    assert folder.attributes["contactgroups"] == {
         "groups": [],
         "recurse_perms": False,
         "recurse_use": False,
@@ -42,12 +41,11 @@ def test_update_tuple_contact_groups_in_host(with_admin_login: UserId) -> None:
     hostname = HostName("testhost")
     folder.create_hosts([(hostname, {}, [])])
     host = folder.load_host(hostname)
-    host.set_attribute("contactgroups", (True, ["a", "b"]))
+    host.attributes["contactgroups"] = (True, ["a", "b"])
 
-    assert folder.load_host(hostname).attribute("contactgroups") == (True, ["a", "b"])
     run_plugin()
 
-    assert folder.load_host(hostname).attribute("contactgroups") == {
+    assert folder.load_host(hostname).attributes["contactgroups"] == {
         "groups": ["a", "b"],
         "recurse_perms": False,
         "recurse_use": False,

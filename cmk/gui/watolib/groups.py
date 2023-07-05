@@ -311,13 +311,11 @@ def _find_usages_of_contact_group_in_hosts_and_folders(
     for subfolder in folder.subfolders():
         used_in += _find_usages_of_contact_group_in_hosts_and_folders(name, subfolder)
 
-    attributes = folder.attributes()
-    if name in attributes.get("contactgroups", {}).get("groups", []):
+    if name in folder.attributes.get("contactgroups", {}).get("groups", []):
         used_in.append((_("Folder: %s") % folder.alias_path(), folder.edit_url()))
 
     for host in folder.hosts().values():
-        attributes = host.attributes()
-        if name in attributes.get("contactgroups", {}).get("groups", []):
+        if name in host.attributes.get("contactgroups", {}).get("groups", []):
             used_in.append((_("Host: %s") % host.name(), host.edit_url()))
 
     return used_in

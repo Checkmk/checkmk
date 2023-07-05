@@ -200,8 +200,8 @@ class ModeDiagHost(WatoMode):
         # The diagnose page shows both snmp variants at the same time
         # We need to analyse the preconfigured community and set either the
         # snmp_community or the snmp_v3_credentials
-        vs_dict = {}
-        for key, value in self._host.attributes().items():
+        vs_dict: dict[str, object] = {}
+        for key, value in self._host.attributes.items():
             if key == "snmp_community" and isinstance(value, tuple):
                 vs_dict["snmp_v3_credentials"] = value
                 continue

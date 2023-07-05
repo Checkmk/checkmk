@@ -48,7 +48,7 @@ def execute_network_scan_job() -> None:
     if not folder:
         return  # Nothing to do.
 
-    run_as = UserId(folder.attribute("network_scan")["run_as"])
+    run_as = UserId(folder.attributes["network_scan"]["run_as"])
     if not userdb.user_exists(run_as):
         raise MKGeneralException(
             _("The user %s used by the network scan of the folder %s does not exist.")
@@ -115,7 +115,8 @@ def _find_folder_to_scan() -> CREFolder | None:
 
 
 def _add_scanned_hosts_to_folder(folder: CREFolder, found: NetworkScanFoundHosts) -> None:
-    network_scan_properties = folder.attribute("network_scan")
+    if (network_scan_properties := folder.attributes.get("network_scan")) is None:
+        return
 
     translation = network_scan_properties.get("translate_names", {})
 
@@ -147,7 +148,7 @@ def _save_network_scan_result(folder: CREFolder, result: NetworkScanResult) -> N
         # A user might have changed the folder somehow since starting the scan. Load the
         # folder again to get the current state.
         write_folder = folder_tree().folder(folder.path())
-        write_folder.set_attribute("network_scan_result", result)
+        write_folder.attributes["network_scan_result"] = result
         write_folder.save()
 
 
@@ -267,7 +268,7 @@ def _known_ip_addresses():
     addresses = set()
 
     for host in Host.all().values():
-        attributes = host.attributes()
+        attributes = host.attributes
 
         address = attributes.get("ipaddress")
         if address:

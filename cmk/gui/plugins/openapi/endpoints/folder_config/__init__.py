@@ -151,7 +151,7 @@ def update(params: Mapping[str, Any]) -> Response:
     """Update a folder"""
     user.need_permission("wato.edit")
     user.need_permission("wato.edit_folders")
-    folder = params["folder"]
+    folder: CREFolder = params["folder"]
     constructors.require_etag(hash_of_folder(folder))
 
     post_body = params["body"]
@@ -163,7 +163,7 @@ def update(params: Mapping[str, Any]) -> Response:
     update_attributes = post_body["update_attributes"]
     remove_attributes = post_body["remove_attributes"]
 
-    attributes = folder.attributes().copy()
+    attributes = folder.attributes.copy()
 
     if replace_attributes:
         attributes = replace_attributes
@@ -215,13 +215,13 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
     faulty_folders = []
 
     for update_details in entries:
-        folder = update_details["folder"]
+        folder: CREFolder = update_details["folder"]
         current_title = folder.title()
         title = update_details.get("title", current_title)
         replace_attributes = update_details["attributes"]
         update_attributes = update_details["update_attributes"]
         remove_attributes = update_details["remove_attributes"]
-        attributes = folder.attributes().copy()
+        attributes = folder.attributes.copy()
 
         if replace_attributes:
             attributes = replace_attributes
@@ -381,7 +381,7 @@ def _folders_collection(  # type: ignore[no-untyped-def]
                 title=folder.title(),
                 extensions={
                     "path": "/" + folder.path(),
-                    "attributes": folder.attributes().copy(),
+                    "attributes": folder.attributes.copy(),
                 },
                 members=members,
             )
@@ -455,7 +455,7 @@ def _serialize_folder(folder: CREFolder, show_hosts):  # type: ignore[no-untyped
         title=folder.title(),
         extensions={
             "path": "/" + folder.path(),
-            "attributes": folder.attributes().copy(),
+            "attributes": folder.attributes.copy(),
         },
         links=links,
     )
@@ -479,7 +479,7 @@ def hash_of_folder(folder: CREFolder) -> constructors.ETagHash:
     return constructors.hash_of_dict(
         {
             "path": folder.path(),
-            "attributes": folder.attributes(),
+            "attributes": folder.attributes,
             "hosts": folder.host_names(),
         }
     )

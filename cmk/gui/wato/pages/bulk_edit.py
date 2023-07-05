@@ -236,7 +236,7 @@ class ModeBulkCleanup(WatoMode):
             # only show attributes that at least on host have set
             num_haveit = 0
             for host in hosts:
-                if host.has_explicit_attribute(attrname):
+                if attrname in host.attributes:
                     num_haveit += 1
 
             if not num_haveit:
@@ -247,7 +247,7 @@ class ModeBulkCleanup(WatoMode):
             container: CREFolder | SearchFolder | None = self._folder
             is_inherited = False
             while container:
-                if container.has_explicit_attribute(attrname):
+                if attrname in container.attributes:
                     is_inherited = True
                     break
                 container = container.parent()

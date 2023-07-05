@@ -229,7 +229,7 @@ class ParentScanBackgroundJob(BackgroundJob):
             host.update_attributes({"parents": parents})
         else:
             # Check which parents the host would have inherited
-            if host.has_explicit_attribute("parents"):
+            if "parents" in host.attributes:
                 host.clean_attributes(["parents"])
 
         if parents:

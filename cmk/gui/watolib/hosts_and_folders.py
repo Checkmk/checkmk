@@ -242,7 +242,7 @@ def _get_permitted_groups_of_all_folders(
 
             parent_tokens = parent_tokens[:-1]
 
-        if contactgroups := all_folders["/".join(tokens[1:])].attributes().get("contactgroups"):
+        if contactgroups := all_folders["/".join(tokens[1:])].attributes.get("contactgroups"):
             configured_contactgroups = contactgroups.get("groups")
             inherit_groups = contactgroups["recurse_perms"]
         else:
@@ -751,39 +751,6 @@ class EffectiveAttributes:
         self._effective_attributes = None
 
 
-class WithAttributes:
-    """Mixin containing attribute management methods.
-
-    Used in the Host and Folder classes."""
-
-    def __init__(self, *args, **kw) -> None:  # type: ignore[no-untyped-def]
-        super().__init__(*args, **kw)
-        self._attributes: dict[str, Any] = {"meta_data": {}}
-
-    # .--------------------------------------------------------------------.
-    # | ATTRIBUTES                                                         |
-    # '--------------------------------------------------------------------'
-    # TODO: Returning a mutable private field is an absolute no-no... :-P
-    def attributes(self) -> dict[str, Any]:
-        return self._attributes
-
-    def attribute(self, attrname: str, default_value: object | None = None) -> Any:
-        return self.attributes().get(attrname, default_value)
-
-    def set_attribute(self, attrname: str, value: object) -> None:
-        self._attributes[attrname] = value
-
-    def has_explicit_attribute(self, attrname: str) -> bool:
-        return attrname in self.attributes()
-
-    def remove_attribute(self, attrname: str) -> None:
-        del self.attributes()[attrname]
-
-    def updated_at(self) -> float | None:
-        md = self._attributes.get("meta_data", {})
-        return md.get("updated_at")
-
-
 class BaseFolder:
     """Base class of SearchFolder and Folder. Implements common methods"""
 
@@ -1252,7 +1219,7 @@ def disk_or_search_base_folder_from_request() -> CREFolder:
     return folder
 
 
-class CREFolder(WithAttributes, BaseFolder):
+class CREFolder(BaseFolder):
     """This class represents a Setup folder that contains other folders and hosts."""
 
     # Need this for specifying the correct type
@@ -1337,7 +1304,7 @@ class CREFolder(WithAttributes, BaseFolder):
         self._id = folder_id
         self._path = folder_path
         self._title = title
-        self._attributes = attributes
+        self.attributes = attributes
         self._locked = locked
         self._locked_subfolders = locked_subfolders
         self._locked_hosts = False
@@ -1455,7 +1422,7 @@ class CREFolder(WithAttributes, BaseFolder):
 
         for hostname, host in sorted(self.hosts().items()):
             effective = host.effective_attributes()
-            cleaned_hosts[hostname] = update_metadata(host.attributes(), created_by=user.id)
+            cleaned_hosts[hostname] = update_metadata(host.attributes, created_by=user.id)
 
             tag_groups = host.tag_groups()
             if tag_groups:
@@ -1496,8 +1463,8 @@ class CREFolder(WithAttributes, BaseFolder):
             # groups I went back to ~2015 and it seems it was always working
             # this way. I won't change it now and leave the comment here for
             # reference.
-            if host.has_explicit_attribute("contactgroups"):
-                cgconfig = host.attribute("contactgroups")
+            if "contactgroups" in host.attributes:
+                cgconfig = host.attributes["contactgroups"]
                 cgs = cgconfig["groups"]
                 if cgs and cgconfig["use"]:
                     group_rules: list[GroupRuleType] = []
@@ -1564,10 +1531,10 @@ class CREFolder(WithAttributes, BaseFolder):
         # TODO:
         # At this time, this is the only attribute there is, at it only exists in the CEE.
         # This functionality should be moved to CEE specific code!
-        if "bake_agent_package" in self._attributes:
+        if "bake_agent_package" in self.attributes:
             return {
                 self.path_for_rule_matching(): {
-                    "bake_agent_package": bool(self._attributes["bake_agent_package"]),
+                    "bake_agent_package": bool(self.attributes["bake_agent_package"]),
                 },
             }
         return {}
@@ -1580,7 +1547,7 @@ class CREFolder(WithAttributes, BaseFolder):
         return {
             "__id": self._id,
             "title": self._title,
-            "attributes": self._attributes,
+            "attributes": self.attributes,
             "num_hosts": self._num_hosts,
             "lock": self._locked,
             "lock_subfolders": self._locked_subfolders,
@@ -1652,7 +1619,7 @@ class CREFolder(WithAttributes, BaseFolder):
 
     def persist_instance(self) -> None:
         """Save the current state of the instance to a file."""
-        self._attributes = update_metadata(self._attributes)
+        self.attributes = update_metadata(self.attributes)
         store.makedirs(os.path.dirname(self.wato_info_path()))
         self.wato_info_storage_manager().write(Path(self.wato_info_path()), self.serialize())
         if may_use_redis():
@@ -1889,8 +1856,8 @@ class CREFolder(WithAttributes, BaseFolder):
         - Remote sites: Use "" -> Assigned to central site
         - Standalone and central sites: Use the ID of the local site
         """
-        if "site" in self._attributes:
-            return self._attributes["site"]
+        if "site" in self.attributes:
+            return self.attributes["site"]
         if self.has_parent():
             parent = self.parent()
             assert parent is not None
@@ -1935,8 +1902,8 @@ class CREFolder(WithAttributes, BaseFolder):
     def _compute_effective_attributes(self) -> dict[str, object]:
         effective = {}
         for folder in self.parent_folder_chain():
-            effective.update(folder.attributes())
-        effective.update(self.attributes())
+            effective.update(folder.attributes)
+        effective.update(self.attributes)
 
         # now add default values of attributes for all missing values
         for host_attribute in host_attribute_registry.attributes():
@@ -2110,17 +2077,17 @@ class CREFolder(WithAttributes, BaseFolder):
     #  None:      No network scan is enabled.
     #  timestamp: Next planned run according to config.
     def next_network_scan_at(self) -> float | None:
-        if "network_scan" not in self._attributes:
+        if "network_scan" not in self.attributes:
             return None
 
-        interval = self._attributes["network_scan"]["scan_interval"]
-        last_end = self._attributes.get("network_scan_result", {}).get("end", None)
+        interval = self.attributes["network_scan"]["scan_interval"]
+        last_end = self.attributes.get("network_scan_result", {}).get("end", None)
         if last_end is None:
             next_time = time.time()
         else:
             next_time = last_end + interval
 
-        time_allowed = self._attributes["network_scan"].get("time_allowed")
+        time_allowed = self.attributes["network_scan"].get("time_allowed")
         if time_allowed is None:
             return next_time  # No time frame limit
 
@@ -2225,7 +2192,7 @@ class CREFolder(WithAttributes, BaseFolder):
             sites=[new_subfolder.site_id()],
             diff_text=make_diff_text(
                 make_folder_audit_log_object({}),
-                make_folder_audit_log_object(new_subfolder.attributes()),
+                make_folder_audit_log_object(new_subfolder.attributes),
             ),
         )
         hooks.call("folder-created", new_subfolder)
@@ -2338,7 +2305,7 @@ class CREFolder(WithAttributes, BaseFolder):
         need_sidebar_reload()
         folder_lookup_cache().delete()
 
-    def edit(self, new_title: str, new_attributes: dict[str, object]) -> None:
+    def edit(self, new_title: str, new_attributes: dict[str, Any]) -> None:
         # 1. Check preconditions
         user.need_permission("wato.edit_folders")
         self.permissions.need_permission("write")
@@ -2346,7 +2313,7 @@ class CREFolder(WithAttributes, BaseFolder):
 
         # For changing contact groups user needs write permission on parent folder
         new_cgconf = _get_cgconf_from_attributes(new_attributes)
-        old_cgconf = _get_cgconf_from_attributes(self.attributes())
+        old_cgconf = _get_cgconf_from_attributes(self.attributes)
         if new_cgconf != old_cgconf:
             _validate_contact_group_modification(old_cgconf["groups"], new_cgconf["groups"])
 
@@ -2370,10 +2337,10 @@ class CREFolder(WithAttributes, BaseFolder):
         # to the new mapping.
         affected_sites = self.all_site_ids()
 
-        old_object = make_folder_audit_log_object(self._attributes)
+        old_object = make_folder_audit_log_object(self.attributes)
 
         self._title = new_title
-        self._attributes = new_attributes
+        self.attributes = new_attributes
 
         # Due to changes in folder/file attributes, host files
         # might need to be rewritten in order to reflect Changes
@@ -2387,7 +2354,7 @@ class CREFolder(WithAttributes, BaseFolder):
             _l("Edited properties of folder %s") % self.title(),
             object_ref=self.object_ref(),
             sites=affected_sites,
-            diff_text=make_diff_text(old_object, make_folder_audit_log_object(self._attributes)),
+            diff_text=make_diff_text(old_object, make_folder_audit_log_object(self.attributes)),
         )
 
     def prepare_create_hosts(self) -> None:
@@ -2456,7 +2423,7 @@ class CREFolder(WithAttributes, BaseFolder):
             object_ref=host.object_ref(),
             sites=[host.site_id()],
             diff_text=make_diff_text(
-                {}, make_host_audit_log_object(host.attributes(), host.cluster_nodes())
+                {}, make_host_audit_log_object(host.attributes, host.cluster_nodes())
             ),
             domain_settings=_generate_domain_settings("check_mk", [host_name]),
         )
@@ -2617,7 +2584,7 @@ class CREFolder(WithAttributes, BaseFolder):
     def rename_parent(self, oldname, newname):
         # Must not fail because of auth problems. Auth is check at the
         # actually renamed host.
-        changed = rename_host_in_list(self._attributes["parents"], oldname, newname)
+        changed = rename_host_in_list(self.attributes["parents"], oldname, newname)
         if not changed:
             return False
 
@@ -2889,7 +2856,7 @@ def _get_cgconf_from_attributes(attributes: HostAttributes) -> HostContactGroupS
 # instantiate SearchFolder below in current_search_folder() and pretend that it is a CREFolder! This
 # is totally broken, the class hierarchy and/or the code below needs some serious overhaul.
 # Nevertheless, we suppress the warnings for this chaos to activate pylint's warning.
-class SearchFolder(WithAttributes, BaseFolder):  # pylint: disable=abstract-method
+class SearchFolder(BaseFolder):  # pylint: disable=abstract-method
     """A virtual folder representing the result of a search."""
 
     # .--------------------------------------------------------------------.
@@ -2898,6 +2865,7 @@ class SearchFolder(WithAttributes, BaseFolder):  # pylint: disable=abstract-meth
 
     def __init__(self, tree: FolderTree, base_folder, criteria) -> None:  # type: ignore[no-untyped-def]
         super().__init__()
+        self.attributes: dict[str, Any] = {"meta_data": {}}
         self.effective_attributes = EffectiveAttributes(lambda: {})
         self.permissions = PermissionChecker(lambda _unused: None)
         self.tree = tree
@@ -2912,9 +2880,6 @@ class SearchFolder(WithAttributes, BaseFolder):  # pylint: disable=abstract-meth
     # .--------------------------------------------------------------------.
     # | ACCESS                                                             |
     # '--------------------------------------------------------------------'
-
-    def attributes(self):
-        return {}
 
     def parent(self):
         return self._base_folder
@@ -3059,7 +3024,7 @@ class SearchFolder(WithAttributes, BaseFolder):  # pylint: disable=abstract-meth
         self._found_hosts = None
 
 
-class CREHost(WithAttributes):
+class CREHost:
     """Class representing one host that is managed via Setup. Hosts are contained in Folders."""
 
     # .--------------------------------------------------------------------.
@@ -3093,7 +3058,7 @@ class CREHost(WithAttributes):
         self,
         folder: CREFolder,
         host_name: HostName,
-        attributes: dict[str, object],
+        attributes: dict[str, Any],
         cluster_nodes: Sequence[HostName] | None,
     ) -> None:
         super().__init__()
@@ -3101,7 +3066,7 @@ class CREHost(WithAttributes):
         self.permissions = PermissionChecker(self._user_needs_permission)
         self._folder = folder
         self._name = host_name
-        self._attributes = attributes
+        self.attributes = attributes
         self._cluster_nodes = cluster_nodes
         self._cached_host_tags: None | dict[TagGroupID, TagID] = None
 
@@ -3127,7 +3092,7 @@ class CREHost(WithAttributes):
 
     def alias(self) -> str | None:
         # Alias cannot be inherited, so no need to use effective_attributes()
-        return self.attributes().get("alias")
+        return self.attributes.get("alias")
 
     def folder(self) -> CREFolder:
         return self._folder
@@ -3151,7 +3116,7 @@ class CREHost(WithAttributes):
         return self.tag(TagGroupID("criticality")) == "offline"
 
     def site_id(self) -> SiteId:
-        return self._attributes.get("site") or self.folder().site_id()
+        return self.attributes.get("site") or self.folder().site_id()
 
     def parents(self) -> list[HostName]:
         return self.effective_attributes().get("parents", [])
@@ -3226,7 +3191,7 @@ class CREHost(WithAttributes):
         return None
 
     def discovery_failed(self) -> bool:
-        return self.attributes().get("inventory_failed", False)
+        return self.attributes.get("inventory_failed", False)
 
     def validation_errors(self) -> list[str]:
         if hooks.registered("validate-host"):
@@ -3241,7 +3206,7 @@ class CREHost(WithAttributes):
 
     def _compute_effective_attributes(self) -> dict[str, object]:
         effective = self.folder().effective_attributes()
-        effective.update(self.attributes())
+        effective.update(self.attributes)
         return effective
 
     def labels(self) -> Labels:
@@ -3251,8 +3216,8 @@ class CREHost(WithAttributes):
         objects define the same tag group, the nearest to the host wins."""
         labels = {}
         for obj in self.folder().parent_folder_chain() + [self.folder()]:
-            labels.update(obj.attributes().get("labels", {}).items())
-        labels.update(self.attributes().get("labels", {}).items())
+            labels.update(obj.attributes.get("labels", {}).items())
+        labels.update(self.attributes.get("labels", {}).items())
         return labels
 
     def groups(self) -> tuple[set[ContactgroupName], set[ContactgroupName], bool]:
@@ -3338,24 +3303,24 @@ class CREHost(WithAttributes):
     # | want to modify hosts. See details at the comment header in Folder. |
     # '--------------------------------------------------------------------'
 
-    def edit(self, attributes: dict[str, object], cluster_nodes: Sequence[HostName] | None) -> None:
+    def edit(self, attributes: dict[str, Any], cluster_nodes: Sequence[HostName] | None) -> None:
         # 1. Check preconditions
-        if attributes.get("contactgroups") != self._attributes.get("contactgroups"):
+        if attributes.get("contactgroups") != self.attributes.get("contactgroups"):
             self._need_folder_write_permissions()
         self.permissions.need_permission("write")
         self.need_unlocked()
 
         _validate_contact_group_modification(
-            _get_cgconf_from_attributes(self._attributes)["groups"],
+            _get_cgconf_from_attributes(self.attributes)["groups"],
             _get_cgconf_from_attributes(attributes)["groups"],
         )
 
-        old_object = make_host_audit_log_object(self._attributes, self._cluster_nodes)
+        old_object = make_host_audit_log_object(self.attributes, self._cluster_nodes)
         new_object = make_host_audit_log_object(attributes, cluster_nodes)
 
         # 2. Actual modification
         affected_sites = [self.site_id()]
-        self._attributes = attributes
+        self.attributes = attributes
         self._cluster_nodes = cluster_nodes
         affected_sites = list(set(affected_sites + [self.site_id()]))
         self.folder().save_hosts()
@@ -3369,7 +3334,7 @@ class CREHost(WithAttributes):
         )
 
     def update_attributes(self, changed_attributes: Mapping[str, object]) -> None:
-        new_attributes = self.attributes().copy()
+        new_attributes = self.attributes.copy()
         new_attributes.update(changed_attributes)
         self.edit(new_attributes, self._cluster_nodes)
 
@@ -3379,13 +3344,13 @@ class CREHost(WithAttributes):
             self._need_folder_write_permissions()
         self.need_unlocked()
 
-        old = make_host_audit_log_object(self._attributes.copy(), self._cluster_nodes)
+        old = make_host_audit_log_object(self.attributes.copy(), self._cluster_nodes)
 
         # 2. Actual modification
         affected_sites = [self.site_id()]
         for attrname in attrnames_to_clean:
-            if attrname in self._attributes:
-                del self._attributes[attrname]
+            if attrname in self.attributes:
+                del self.attributes[attrname]
         affected_sites = list(set(affected_sites + [self.site_id()]))
         self.folder().save_hosts()
         add_change(
@@ -3394,7 +3359,7 @@ class CREHost(WithAttributes):
             object_ref=self.object_ref(),
             sites=affected_sites,
             diff_text=make_diff_text(
-                old, make_host_audit_log_object(self._attributes, self._cluster_nodes)
+                old, make_host_audit_log_object(self.attributes, self._cluster_nodes)
             ),
         )
 
@@ -3422,12 +3387,12 @@ class CREHost(WithAttributes):
 
         # 2. Actual modification
         if how:
-            if not self._attributes.get("inventory_failed"):
-                self._attributes["inventory_failed"] = True
+            if not self.attributes.get("inventory_failed"):
+                self.attributes["inventory_failed"] = True
                 self.folder().save_hosts()
         else:
-            if self._attributes.get("inventory_failed"):
-                del self._attributes["inventory_failed"]
+            if self.attributes.get("inventory_failed"):
+                del self.attributes["inventory_failed"]
                 self.folder().save_hosts()
 
     def rename_cluster_node(self, oldname: HostName, newname: HostName) -> bool:
@@ -3454,7 +3419,7 @@ class CREHost(WithAttributes):
 
     def rename_parent(self, oldname: HostName, newname: HostName) -> bool:
         # Same is with rename_cluster_node()
-        changed = rename_host_in_list(self._attributes["parents"], oldname, newname)
+        changed = rename_host_in_list(self.attributes["parents"], oldname, newname)
         if not changed:
             return False
 
@@ -3614,7 +3579,7 @@ class CMEFolder(CREFolder):
 
         # Check subfolders
         for subfolder in (f for f in self.subfolders() if isinstance(f, CMEFolder)):
-            subfolder_explicit_site = subfolder.attributes().get("site")
+            subfolder_explicit_site = subfolder.attributes.get("site")
             if subfolder_explicit_site:
                 subfolder_customer = subfolder._get_customer_id()
                 if subfolder_customer != customer_id:
@@ -3636,7 +3601,7 @@ class CMEFolder(CREFolder):
     def _check_hosts_customer_conflicts(self, site_id):
         customer_id = managed.get_customer_of_site(site_id)
         for host in self.hosts().values():
-            host_explicit_site = host.attributes().get("site")
+            host_explicit_site = host.attributes.get("site")
             if host_explicit_site:
                 host_customer = managed.get_customer_of_site(host_explicit_site)
                 if host_customer != customer_id:
@@ -3730,7 +3695,7 @@ class CMEFolder(CREFolder):
             allowed_sites = managed_helpers.get_sites_of_customer(target_customer_id)
             for hostname in host_names:
                 host = self.load_host(hostname)
-                host_site = host.attributes().get("site")
+                host_site = host.attributes.get("site")
                 if not host_site:
                     continue
                 if host_site not in allowed_sites:
@@ -3766,14 +3731,14 @@ class CMEFolder(CREFolder):
 
     def _determine_explicit_set_site_ids(self, result_dict):
         for host in self.hosts().values():
-            host_explicit_site = host.attributes().get("site")
+            host_explicit_site = host.attributes.get("site")
             if host_explicit_site:
                 result_dict["explicit_host_sites"].setdefault(host_explicit_site, []).append(
                     host.name()
                 )
 
         for subfolder in (f for f in self.subfolders() if isinstance(f, CMEFolder)):
-            subfolder_explicit_site = subfolder.attributes().get("site")
+            subfolder_explicit_site = subfolder.attributes.get("site")
             if subfolder_explicit_site:
                 result_dict["explicit_folder_sites"].setdefault(subfolder_explicit_site, []).append(
                     subfolder.title()

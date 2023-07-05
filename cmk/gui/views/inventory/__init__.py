@@ -1299,20 +1299,7 @@ def _compute_attribute_painter_data(row: Row, path: SDPath, key: SDKey) -> SDVal
 def _paint_host_inventory_attribute(
     row: Row, path: SDPath, key: str, hint: AttributeDisplayHint
 ) -> CellSpec:
-    if (attribute := _compute_attribute_painter_data(row, path, key)) is None:
-        return "", ""
-
-    painter_options = PainterOptions.get_instance()
-    tree_renderer = NodeRenderer(
-        row["site"],
-        row["host_name"],
-        show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
-    )
-
-    with output_funnel.plugged():
-        tree_renderer.show_attribute(attribute, hint)
-        code = HTML(output_funnel.drain())
-
+    _tdclass, code = hint.paint_function(_compute_attribute_painter_data(row, path, key))
     return "", code
 
 
@@ -2319,13 +2306,13 @@ class ABCNodeRenderer(abc.ABC):
             html.open_tr()
             html.th(self._get_header(attr_hint.title, key))
             html.open_td()
-            self.show_attribute(value, attr_hint, keep_until)
+            self._show_attribute(value, attr_hint, keep_until)
             html.close_td()
             html.close_tr()
         html.close_table()
 
     @abc.abstractmethod
-    def show_attribute(
+    def _show_attribute(
         self,
         value: Any,
         attr_hint: AttributeDisplayHint,
@@ -2386,7 +2373,7 @@ class NodeRenderer(ABCNodeRenderer):
     ) -> None:
         self._show_child_value(value, col_hint, keep_until)
 
-    def show_attribute(
+    def _show_attribute(
         self,
         value: Any,
         attr_hint: AttributeDisplayHint,
@@ -2424,7 +2411,7 @@ class DeltaNodeRenderer(ABCNodeRenderer):
     ) -> None:
         self._show_delta_child_value(value, col_hint)
 
-    def show_attribute(
+    def _show_attribute(
         self,
         value: Any,
         attr_hint: AttributeDisplayHint,

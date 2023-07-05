@@ -6,6 +6,7 @@
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
+from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_options
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
     MigrateToIndividualOrStoredPassword,
@@ -13,11 +14,9 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
-    Alternative,
     Checkbox,
     Dictionary,
     DropdownChoice,
-    FixedValue,
     Integer,
     ListChoice,
     NetworkPort,
@@ -73,21 +72,7 @@ def _valuespec_special_agents_vsphere() -> Dictionary:
                     maxvalue=65535,
                 ),
             ),
-            (
-                "ssl",
-                Alternative(
-                    title=_("SSL certificate checking"),
-                    elements=[
-                        FixedValue(value=False, title=_("Deactivated"), totext=""),
-                        FixedValue(value=True, title=_("Use hostname"), totext=""),
-                        TextInput(
-                            title=_("Use other hostname"),
-                            help=_("Use a custom name for the SSL certificate validation"),
-                        ),
-                    ],
-                    default_value=True,
-                ),
-            ),
+            tls_verify_options(),
             (
                 "timeout",
                 Integer(

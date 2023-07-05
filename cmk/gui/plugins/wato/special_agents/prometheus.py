@@ -11,8 +11,8 @@ from cmk.gui.plugins.wato.special_agents.common import (
     api_request_authentication,
     filter_kubernetes_namespace_element,
     RulespecGroupVMCloudContainer,
-    ssl_verification,
 )
+from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_flag_default_no
 from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
@@ -153,7 +153,7 @@ def _valuespec_generic_metrics_prometheus() -> Dictionary:
                     title=_("Prometheus connection option"),
                 ),
             ),
-            ssl_verification(),
+            tls_verify_flag_default_no(),
             api_request_authentication(),
             (
                 "protocol",

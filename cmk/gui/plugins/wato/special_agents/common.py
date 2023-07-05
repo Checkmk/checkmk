@@ -10,6 +10,7 @@ from cmk.utils import aws_constants
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
+from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_flag_default_yes
 from cmk.gui.plugins.wato.utils import (
     MigrateToIndividualOrStoredPassword,
     rulespec_group_registry,
@@ -18,12 +19,10 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.valuespec import (
-    Alternative,
     CascadingDropdown,
     Dictionary,
     DictionaryEntry,
     DropdownChoice,
-    FixedValue,
     HTTPUrl,
     ListOf,
     NetworkPort,
@@ -392,21 +391,7 @@ def connection_set(options: list[str] | None = None, auth_option: str | None = N
         )
 
     if "ssl_verify" in options or all_options:
-        connection_options.append(
-            (
-                "no-cert-check",
-                Alternative(
-                    title=_("SSL certificate verification"),
-                    elements=[
-                        FixedValue(value=False, title=_("Verify the certificate"), totext=""),
-                        FixedValue(
-                            value=True, title=_("Ignore certificate errors (unsecure)"), totext=""
-                        ),
-                    ],
-                    default_value=False,
-                ),
-            )
-        )
+        connection_options.append(tls_verify_flag_default_yes())
 
     if auth_option:
         connection_options.extend(_auth_option(auth_option))
@@ -484,20 +469,6 @@ def validate_aws_tags(value, varprefix):
                 raise MKUserError(values_field, _("The maximum value length is 256 characters."))
             if v.startswith("aws:"):
                 raise MKUserError(values_field, _("Do not use 'aws:' prefix for the values."))
-
-
-def ssl_verification():
-    return (
-        "verify-cert",
-        Alternative(
-            title=_("SSL certificate verification"),
-            elements=[
-                FixedValue(value=True, title=_("Verify the certificate"), totext=""),
-                FixedValue(value=False, title=_("Ignore certificate errors (unsecure)"), totext=""),
-            ],
-            default_value=False,
-        ),
-    )
 
 
 def aws_region_to_monitor() -> list[tuple[str, str]]:

@@ -10,10 +10,8 @@ from cmk.utils.version import Edition, is_cloud_edition, mark_edition_only
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common import (
-    RulespecGroupVMCloudContainer,
-    ssl_verification,
-)
+from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
+from cmk.gui.plugins.wato.special_agents.common_tls_verification import tls_verify_flag_default_no
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
     HTTPProxyReference,
@@ -151,7 +149,7 @@ def _openshift() -> tuple[str, str, Migrate]:
                             ),
                         ),
                     ),
-                    ssl_verification(),
+                    tls_verify_flag_default_no(),
                     (
                         "proxy",
                         HTTPProxyReference(),
@@ -185,7 +183,7 @@ def _cluster_collector() -> tuple[str, str, Migrate]:
                             ),
                         ),
                     ),
-                    ssl_verification(),
+                    tls_verify_flag_default_no(),
                     (
                         "proxy",
                         HTTPProxyReference(),
@@ -217,7 +215,7 @@ def _api_endpoint() -> tuple[str, Migrate]:
                             ),
                         ),
                     ),
-                    ssl_verification(),
+                    tls_verify_flag_default_no(),
                     (
                         "proxy",
                         HTTPProxyReference({"http", "https"}),  # Kubernetes client does not

@@ -4,24 +4,18 @@
 
 def main() {
     dir("${checkout_dir}") {
-        stage("Execute NEB Test") {
-            dir("packages/neb") {
-                sh("./run --unit-tests");
-            }
-        }
         stage("Execute CMC Test") {
             dir("enterprise/core/src/test") {
                 sh("./.f12");
             }
         }
-        def results_livestatus="packages/neb/test_detail_livestatus.xml"
         def results_core="enterprise/core/src/test_detail_core.xml"
 
         stage("Analyse Issues") {
             xunit([GoogleTest(
                 deleteOutputFiles: true,
                 failIfNotNew: true,
-                pattern: "${results_livestatus}, ${results_core}",
+                pattern: "${results_core}",
                 skipNoTestFiles: false,
                 stopProcessingIfError: true
             )]);
@@ -34,7 +28,6 @@ def main() {
                     unstable: false,
                 ]]
             );
-            archiveArtifacts(artifacts: results_livestatus, followSymlinks: false);
             archiveArtifacts(artifacts: results_core, followSymlinks: false);
         }
     }

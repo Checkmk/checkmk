@@ -11,7 +11,7 @@ from collections import OrderedDict
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from functools import total_ordering
-from typing import Any, Literal, NamedTuple, overload, Protocol, TypeVar
+from typing import Any, Literal, NamedTuple, Protocol, TypeVar
 
 from livestatus import LivestatusResponse, OnlySites, SiteId
 
@@ -24,11 +24,11 @@ from cmk.utils.structured_data import (
     ImmutableDeltaTree,
     ImmutableTable,
     ImmutableTree,
-    RetentionInterval,
     SDKey,
     SDPath,
     SDRawDeltaTree,
     SDRawTree,
+    SDRowIdent,
     SDValue,
 )
 from cmk.utils.user import UserId
@@ -2040,37 +2040,6 @@ multisite_builtin_views["inv_host_history"] = {
 #   '----------------------------------------------------------------------'
 
 
-@overload
-def _sort_pairs(
-    pairs: Mapping[SDKey, SDValue],
-    retentions: Mapping[SDKey, RetentionInterval],
-    key_order: Sequence[SDKey],
-) -> Sequence[tuple[SDKey, SDValue, int | None]]:
-    ...
-
-
-@overload
-def _sort_pairs(
-    pairs: Mapping[SDKey, tuple[SDValue, SDValue]],
-    retentions: Mapping[SDKey, RetentionInterval],
-    key_order: Sequence[SDKey],
-) -> Sequence[tuple[SDKey, tuple[SDValue, SDValue], None]]:
-    ...
-
-
-def _sort_pairs(pairs, retentions, key_order):
-    sorted_keys = list(key_order) + sorted(set(pairs) - set(key_order))
-    return [
-        (
-            k,
-            pairs[k],
-            None if (ri := retentions.get(k)) is None else ri.keep_until,
-        )
-        for k in sorted_keys
-        if k in pairs
-    ]
-
-
 def _make_columns(
     rows: Sequence[Mapping[SDKey, SDValue]] | Sequence[Mapping[SDKey, tuple[SDValue, SDValue]]],
     key_order: Sequence[SDKey],
@@ -2078,107 +2047,103 @@ def _make_columns(
     return list(key_order) + sorted({k for r in rows for k in r} - set(key_order))
 
 
-def _empty_or_equal_row_value(value: SDValue | tuple[SDValue, SDValue]) -> bool:
-    # Some refactorings broke werk 6821. Especially delta trees may contain empty or
-    # unchanged rows.
-    if value is None:
+@total_ordering
+class _MinType:
+    def __le__(self, other: object) -> bool:
         return True
-    if isinstance(value, tuple) and len(value) == 2 and value[0] == value[1]:
-        # Only applies to delta tree
-        return True
-    return False
+
+    def __eq__(self, other: object) -> bool:
+        return self is other
 
 
-class _RowOrRetentions(NamedTuple):
-    row: Mapping[SDKey, SDValue]
-    retentions: Mapping[SDKey, RetentionInterval]
+class _InventoryTreeValueInfo(NamedTuple):
+    key: SDKey
+    value: SDValue
+    keep_until: int | None
 
 
-class _DeltaRowOrRetentions(NamedTuple):
-    row: Mapping[SDKey, tuple[SDValue, SDValue]]
-
-    @property
-    def retentions(self) -> Mapping[SDKey, RetentionInterval]:
-        return {}
-
-
-@overload
-def _sort_row(
-    row_or_retentions: _RowOrRetentions, columns: Sequence[SDKey]
-) -> Sequence[tuple[SDKey, SDValue, int | None]]:
-    ...
-
-
-@overload
-def _sort_row(
-    row_or_retentions: _DeltaRowOrRetentions,
-    columns: Sequence[SDKey],
-) -> Sequence[tuple[SDKey, tuple[SDValue, SDValue], None]]:
-    ...
-
-
-def _sort_row(row_or_retentions, columns):
+def _sort_pairs(
+    attributes: ImmutableAttributes, key_order: Sequence[SDKey]
+) -> Sequence[_InventoryTreeValueInfo]:
+    sorted_keys = list(key_order) + sorted(set(attributes.pairs) - set(key_order))
     return [
-        (
-            c,
-            row_or_retentions.row.get(c),
-            None if (ri := row_or_retentions.retentions.get(c)) is None else ri.keep_until,
+        _InventoryTreeValueInfo(
+            k,
+            attributes.pairs[k],
+            None if (ri := attributes.retentions.get(k)) is None else ri.keep_until,
         )
-        for c in columns
+        for k in sorted_keys
+        if k in attributes.pairs
     ]
 
 
-@overload
 def _sort_rows(
-    rows: Sequence[_RowOrRetentions], columns: Sequence[SDKey]
-) -> Sequence[Sequence[tuple[SDKey, SDValue, int | None]]]:
-    ...
-
-
-@overload
-def _sort_rows(
-    rows: Sequence[_DeltaRowOrRetentions], columns: Sequence[SDKey]
-) -> Sequence[Sequence[tuple[SDKey, tuple[SDValue, SDValue], None]]]:
-    ...
-
-
-def _sort_rows(rows, columns):
-    # The sorting of rows is overly complicated here, because of the type SDValue = Any and
-    # because the given values can be from both an inventory tree or from a delta tree.
-    # Therefore, values may also be tuples of old and new value (delta tree), see _compare_dicts
-    # in cmk.utils.structured_data.
-
-    @total_ordering
-    class _MinType:
-        def __le__(self, other: object) -> bool:
-            return True
-
-        def __eq__(self, other: object) -> bool:
-            return self is other
+    table: ImmutableTable, columns: Sequence[SDKey]
+) -> Sequence[Sequence[_InventoryTreeValueInfo]]:
+    def _sort_row(
+        ident: SDRowIdent, row: Mapping[SDKey, SDValue], columns: Sequence[SDKey]
+    ) -> Sequence[_InventoryTreeValueInfo]:
+        return [
+            _InventoryTreeValueInfo(
+                c,
+                row.get(c),
+                None if (ri := table.retentions.get(ident, {}).get(c)) is None else ri.keep_until,
+            )
+            for c in columns
+        ]
 
     min_type = _MinType()
 
-    def _sanitize_value_for_sorting(
-        value: SDValue,
-    ) -> _MinType | SDValue | tuple[_MinType | SDValue, _MinType | SDValue]:
-        # Replace None values with min_type to enable comparison for type SDValue, i.e. Any.
-        if value is None:
-            return min_type
+    return [
+        _sort_row(ident, row, columns)
+        for ident, row in sorted(
+            table.rows_by_ident.items(),
+            key=lambda t: tuple(t[1].get(c) or min_type for c in columns),
+        )
+        if not all(v is None for v in row.values())
+    ]
 
-        if isinstance(value, tuple):
-            return (
-                min_type if value[0] is None else value[0],
-                min_type if value[1] is None else value[1],
-            )
 
-        return value
+class _DeltaTreeValueInfo(NamedTuple):
+    key: SDKey
+    value: tuple[SDValue, SDValue]
+
+    @property
+    def keep_until(self) -> None:
+        return None
+
+
+def _sort_delta_pairs(
+    attributes: ImmutableDeltaAttributes, key_order: Sequence[SDKey]
+) -> Sequence[_DeltaTreeValueInfo]:
+    sorted_keys = list(key_order) + sorted(set(attributes.pairs) - set(key_order))
+    return [
+        _DeltaTreeValueInfo(k, attributes.pairs[k]) for k in sorted_keys if k in attributes.pairs
+    ]
+
+
+def _sort_delta_rows(
+    table: ImmutableDeltaTable, columns: Sequence[SDKey]
+) -> Sequence[Sequence[_DeltaTreeValueInfo]]:
+    def _sort_row(
+        row: Mapping[SDKey, tuple[SDValue, SDValue]], columns: Sequence[SDKey]
+    ) -> Sequence[_DeltaTreeValueInfo]:
+        return [_DeltaTreeValueInfo(c, row.get(c) or (None, None)) for c in columns]
+
+    min_type = _MinType()
+
+    def _sanitize(value: tuple[SDValue, SDValue]) -> tuple[_MinType | SDValue, _MinType | SDValue]:
+        return (
+            min_type if value[0] is None else value[0],
+            min_type if value[1] is None else value[1],
+        )
 
     return [
-        _sort_row(row_or_retentions, columns)
-        for row_or_retentions in sorted(
-            rows, key=lambda t: tuple(_sanitize_value_for_sorting(t.row.get(k)) for k in columns)
+        _sort_row(row, columns)
+        for row in sorted(
+            table.rows, key=lambda r: tuple(_sanitize(r.get(c) or (None, None)) for c in columns)
         )
-        if not all(_empty_or_equal_row_value(v) for _k, v in row_or_retentions.row.items())
+        if not all(left == right for left, right in row.values())
     ]
 
 
@@ -2253,6 +2218,13 @@ class ABCNodeRenderer(abc.ABC):
             )
 
         columns = _make_columns(table.rows, hints.table_hint.key_order)
+        sorted_rows: Sequence[Sequence[_InventoryTreeValueInfo]] | Sequence[
+            Sequence[_DeltaTreeValueInfo]
+        ]
+        if isinstance(table, ImmutableTable):
+            sorted_rows = _sort_rows(table, columns)
+        else:
+            sorted_rows = _sort_delta_rows(table, columns)
 
         # TODO: Use table.open_table() below.
         html.open_table(class_="data")
@@ -2266,23 +2238,14 @@ class ABCNodeRenderer(abc.ABC):
             )
         html.close_tr()
 
-        rows: Sequence[_RowOrRetentions] | Sequence[_DeltaRowOrRetentions]
-        if isinstance(table, ImmutableTable):
-            rows = [
-                _RowOrRetentions(row, table.retentions.get(ident, {}))
-                for ident, row in table.rows_by_ident.items()
-            ]
-        else:
-            rows = [_DeltaRowOrRetentions(row) for row in table.rows]
-
-        for row in _sort_rows(rows, columns):
+        for row in sorted_rows:
             html.open_tr(class_="even0")
-            for key, value, keep_until in row:
-                column_hint = hints.get_column_hint(key)
+            for value_info in row:
+                column_hint = hints.get_column_hint(value_info.key)
                 # TODO separate tdclass from rendered value
                 tdclass, _rendered_value = column_hint.paint_function(None)
                 html.open_td(class_=tdclass)
-                self._show_row_value(value, column_hint, keep_until)
+                self._show_row_value(value_info.value, column_hint, value_info.keep_until)
                 html.close_td()
             html.close_tr()
         html.close_table()
@@ -2296,17 +2259,19 @@ class ABCNodeRenderer(abc.ABC):
     def _show_attributes(
         self, attributes: ImmutableAttributes | ImmutableDeltaAttributes, hints: DisplayHints
     ) -> None:
+        sorted_pairs: Sequence[_InventoryTreeValueInfo] | Sequence[_DeltaTreeValueInfo]
+        if isinstance(attributes, ImmutableAttributes):
+            sorted_pairs = _sort_pairs(attributes, hints.attributes_hint.key_order)
+        else:
+            sorted_pairs = _sort_delta_pairs(attributes, hints.attributes_hint.key_order)
+
         html.open_table()
-        for key, value, keep_until in _sort_pairs(
-            attributes.pairs,
-            attributes.retentions if isinstance(attributes, ImmutableAttributes) else {},
-            hints.attributes_hint.key_order,
-        ):
-            attr_hint = hints.get_attribute_hint(key)
+        for value_info in sorted_pairs:
+            attr_hint = hints.get_attribute_hint(value_info.key)
             html.open_tr()
-            html.th(self._get_header(attr_hint.title, key))
+            html.th(self._get_header(attr_hint.title, value_info.key))
             html.open_td()
-            self._show_attribute(value, attr_hint, keep_until)
+            self._show_attribute(value_info.value, attr_hint, value_info.keep_until)
             html.close_td()
             html.close_tr()
         html.close_table()

@@ -396,13 +396,13 @@ test-unit-shell-docker:
 	../scripts/run-in-docker.sh make GERRIT_PATCHSET_REVISION=$(GERRIT_PATCHSET_REVISION) IWYU_EXTRA_ARGS="--gcc-toolchain=$(GCC_TOOLCHAIN)" CLANG_TIDY_EXTRA_ARGS="-extra-arg-before=--gcc-toolchain=$(GCC_TOOLCHAIN)" $*-core
 
 test-tidy-core:
-	cd ../enterprise/core/src && ../../../scripts/run-cxx-linter tidy $(GERRIT_PATCHSET_REVISION)
+	cd ../packages/cmc && ../../scripts/run-cxx-linter tidy $(GERRIT_PATCHSET_REVISION)
 
 test-tidy-docker:
 	../scripts/run-in-docker.sh make -C .. tidy CLANG_TIDY_EXTRA_ARGS="-extra-arg-before=--gcc-toolchain=$(GCC_TOOLCHAIN)"
 
 test-iwyu-core:
-	cd ../enterprise/core/src && ../../../scripts/run-cxx-linter iwyu $(GERRIT_PATCHSET_REVISION)
+	cd ../packages/cmc && ../../scripts/run-cxx-linter iwyu $(GERRIT_PATCHSET_REVISION)
 
 test-iwyu-docker:
 	../scripts/run-in-docker.sh make -C .. iwyu IWYU_EXTRA_ARGS="--gcc-toolchain=$(GCC_TOOLCHAIN)"
@@ -411,7 +411,7 @@ test-unit-neb:
 	cd ../packages/neb/test && ./.f12
 
 test-unit-core:
-	cd ../enterprise/core/src/test && ./.f12
+	cd ../packages/cmc/test && ./.f12
 
 test-find-dirty-files-in-git:
 	scripts/find_dirty_files_in_git

@@ -32,8 +32,8 @@ RRDTOOL_WORK_MODULEBUILDRC := $(RRDTOOL_WORK_DIR)/.modulebuildrc
 # Used by other OMD packages (e.g. mk-livestatus.make)
 PACKAGE_RRDTOOL_DESTDIR := $(RRDTOOL_INSTALL_DIR_LIBRARY)
 
-# Executed from enterprise/core/src/Makefile.am
-# and enterprise/core/src/.f12
+# Executed from packages/cmc/Makefile.am
+# and packages/cmc/.f12
 $(RRDTOOL)-build-library: $(BUILD_HELPER_DIR) $(RRDTOOL_CACHE_PKG_PROCESS_LIBRARY)
 
 RRDTOOL_CONFIGUREOPTS  := \

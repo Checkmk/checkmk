@@ -10,7 +10,7 @@ OPENSSL_INSTALL := $(BUILD_HELPER_DIR)/$(OPENSSL_DIR)-install
 # externally required variables
 OPENSSL_INSTALL_DIR := $(INTERMEDIATE_INSTALL_BASE)/$(OPENSSL_DIR)
 
-# Executed from enterprise/core/src/Makefile.am
+# Executed from packages/cmc/Makefile.am
 $(OPENSSL)-build-library: $(BUILD_HELPER_DIR) $(OPENSSL_CACHE_PKG_PROCESS)
 
 # Used by Python/Python.make

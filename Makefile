@@ -499,7 +499,7 @@ compile-neb:
 
 compile-neb-cmc: config.status test-format-c compile-neb
 ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C enterprise/core -j4
+	$(MAKE) -C packages/cmc -j4
 endif
 
 
@@ -508,12 +508,12 @@ compile-neb-cmc-docker:
 
 tidy: config.h
 ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C enterprise/core/src tidy
+	$(MAKE) -C packages/cmc tidy
 endif
 
 iwyu: config.status
 ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C enterprise/core/src iwyu
+	$(MAKE) -C packages/cmc iwyu
 endif
 
 format: format-python format-c format-shell format-js format-css format-bazel
@@ -523,7 +523,7 @@ format-c:
 	packages/unixcat/run --format
 	packages/neb/run --format
 ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C enterprise/core/src format
+	$(MAKE) -C packages/cmc format
 endif
 
 test-format-c:
@@ -531,7 +531,7 @@ test-format-c:
 	packages/unixcat/run --check-format
 	packages/neb/run --check-format
 ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C enterprise/core/src check-format
+	$(MAKE) -C packages/cmc check-format
 endif
 
 format-python: format-python-isort format-python-black
@@ -562,7 +562,7 @@ format-bazel:
 # Note: You need the doxygen and graphviz packages.
 documentation: config.h
 ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C enterprise/core/src documentation
+	$(MAKE) -C packages/cmc/src documentation
 endif
 
 sw-documentation-docker:

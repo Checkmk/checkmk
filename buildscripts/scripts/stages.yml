@@ -83,7 +83,7 @@ VARIABLES:
       REPLACE_NEWLINES: true
 
     - NAME: CHANGED_CORE_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep -e '^livestatus' -e '^enterprise/core' || true"
+      SH: "echo '${CHANGED_FILES_REL}' | grep -e '^livestatus' -e '^packages/cmc' || true"
       REPLACE_NEWLINES: true
 
     - NAME: CHANGED_UNIXCAT_FILES
@@ -353,7 +353,7 @@ STAGES:
 
     - NAME: 'Unit Test CMC'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
-      DIR: 'enterprise/core/src/test'
+      DIR: 'packages/cmc/test'
       COMMAND: "./.f12 &> ${RESULTS}/cmc-unit.txt"
       TEXT_ON_SKIP: 'No CMC files changed'
       RESULT_CHECK_TYPE: "GCC"

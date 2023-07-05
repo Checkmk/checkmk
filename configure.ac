@@ -107,6 +107,6 @@ AH_VERBATIM([__STDC_WANT_LIB_EXT1__], [/* we want C11 library extensions  */
 
 # HACKING ALERT: automake can't really handle optional subdirectories, so we
 # have to do this in a slightly hacky way by using M4's silent includes.
-m4_sinclude([enterprise/config_files.m4])
+m4_sinclude([packages/cmc/config_files.m4])
 
 AC_OUTPUT

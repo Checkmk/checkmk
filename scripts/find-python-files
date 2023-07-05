@@ -39,7 +39,7 @@ get_candidates_from_filesystem() {
         SEARCH+=" enterprise/agents/plugins"
         SEARCH+=" enterprise/alert_handlers"
         SEARCH+=" enterprise/bin"
-        SEARCH+=" enterprise/core/src/test"
+        SEARCH+=" packages/cmc/test"
     fi
     SEARCH+=" livestatus/api/python"
     SEARCH+=" locale"

@@ -2147,6 +2147,55 @@ def _sort_delta_rows(
     ]
 
 
+def _get_html_value(value: SDValue, hint: ColumnDisplayHint | AttributeDisplayHint) -> HTML:
+    # TODO separate tdclass from rendered value
+    _tdclass, code = hint.paint_function(value)
+    return HTML(code)
+
+
+def _show_value(
+    value_info: _InventoryTreeValueInfo | _DeltaTreeValueInfo,
+    hint: AttributeDisplayHint | ColumnDisplayHint,
+) -> None:
+    if isinstance(value_info, _DeltaTreeValueInfo):
+        _show_delta_value(value_info.value, hint)
+        return
+
+    if value_info.keep_until is not None and time.time() > value_info.keep_until:
+        html.write_html(
+            HTMLWriter.render_span(_get_html_value(value_info.value, hint).value, css="muted-text")
+        )
+    else:
+        html.write_html(_get_html_value(value_info.value, hint))
+
+
+def _show_delta_value(
+    value: tuple[SDValue, SDValue],
+    hint: ColumnDisplayHint | AttributeDisplayHint,
+) -> None:
+    old, new = value
+    if old is None and new is not None:
+        html.open_span(class_="invnew")
+        html.write_html(_get_html_value(new, hint))
+        html.close_span()
+    elif old is not None and new is None:
+        html.open_span(class_="invold")
+        html.write_html(_get_html_value(old, hint))
+        html.close_span()
+    elif old == new:
+        html.write_html(_get_html_value(old, hint))
+    elif old is not None and new is not None:
+        html.open_span(class_="invold")
+        html.write_html(_get_html_value(old, hint))
+        html.close_span()
+        html.write_text(" → ")
+        html.open_span(class_="invnew")
+        html.write_html(_get_html_value(new, hint))
+        html.close_span()
+    else:
+        raise NotImplementedError()
+
+
 class ABCNodeRenderer(abc.ABC):
     def __init__(self, site_id: SiteId, hostname: HostName) -> None:
         self._site_id = site_id
@@ -2245,7 +2294,7 @@ class ABCNodeRenderer(abc.ABC):
                 # TODO separate tdclass from rendered value
                 tdclass, _rendered_value = column_hint.paint_function(None)
                 html.open_td(class_=tdclass)
-                self._show_value(value_info, column_hint)
+                _show_value(value_info, column_hint)
                 html.close_td()
             html.close_tr()
         html.close_table()
@@ -2265,62 +2314,10 @@ class ABCNodeRenderer(abc.ABC):
             html.open_tr()
             html.th(self._get_header(attr_hint.title, value_info.key))
             html.open_td()
-            self._show_value(value_info, attr_hint)
+            _show_value(value_info, attr_hint)
             html.close_td()
             html.close_tr()
         html.close_table()
-
-    def _get_html_value(
-        self, value: SDValue, hint: ColumnDisplayHint | AttributeDisplayHint
-    ) -> HTML:
-        # TODO separate tdclass from rendered value
-        _tdclass, code = hint.paint_function(value)
-        return HTML(code)
-
-    def _show_value(
-        self,
-        value_info: _InventoryTreeValueInfo | _DeltaTreeValueInfo,
-        hint: AttributeDisplayHint | ColumnDisplayHint,
-    ) -> None:
-        if isinstance(value_info, _DeltaTreeValueInfo):
-            self._show_delta_value(value_info.value, hint)
-            return
-
-        if value_info.keep_until is not None and time.time() > value_info.keep_until:
-            html.write_html(
-                HTMLWriter.render_span(
-                    self._get_html_value(value_info.value, hint).value, css="muted-text"
-                )
-            )
-        else:
-            html.write_html(self._get_html_value(value_info.value, hint))
-
-    def _show_delta_value(
-        self,
-        value: tuple[SDValue, SDValue],
-        hint: ColumnDisplayHint | AttributeDisplayHint,
-    ) -> None:
-        old, new = value
-        if old is None and new is not None:
-            html.open_span(class_="invnew")
-            html.write_html(self._get_html_value(new, hint))
-            html.close_span()
-        elif old is not None and new is None:
-            html.open_span(class_="invold")
-            html.write_html(self._get_html_value(old, hint))
-            html.close_span()
-        elif old == new:
-            html.write_html(self._get_html_value(old, hint))
-        elif old is not None and new is not None:
-            html.open_span(class_="invold")
-            html.write_html(self._get_html_value(old, hint))
-            html.close_span()
-            html.write_text(" → ")
-            html.open_span(class_="invnew")
-            html.write_html(self._get_html_value(new, hint))
-            html.close_span()
-        else:
-            raise NotImplementedError()
 
 
 class NodeRenderer(ABCNodeRenderer):

@@ -2245,16 +2245,10 @@ class ABCNodeRenderer(abc.ABC):
                 # TODO separate tdclass from rendered value
                 tdclass, _rendered_value = column_hint.paint_function(None)
                 html.open_td(class_=tdclass)
-                self._show_row_value(value_info.value, column_hint, value_info.keep_until)
+                self._show_value(value_info.value, column_hint, value_info.keep_until)
                 html.close_td()
             html.close_tr()
         html.close_table()
-
-    @abc.abstractmethod
-    def _show_row_value(
-        self, value: Any, col_hint: ColumnDisplayHint, keep_until: int | None
-    ) -> None:
-        raise NotImplementedError()
 
     def _show_attributes(
         self, attributes: ImmutableAttributes | ImmutableDeltaAttributes, hints: DisplayHints
@@ -2271,34 +2265,62 @@ class ABCNodeRenderer(abc.ABC):
             html.open_tr()
             html.th(self._get_header(attr_hint.title, value_info.key))
             html.open_td()
-            self._show_attribute(value_info.value, attr_hint, value_info.keep_until)
+            self._show_value(value_info.value, attr_hint, value_info.keep_until)
             html.close_td()
             html.close_tr()
         html.close_table()
 
-    @abc.abstractmethod
-    def _show_attribute(
+    def _show_value(
         self,
-        value: Any,
-        attr_hint: AttributeDisplayHint,
-        keep_until: int | None = None,
+        value: SDValue | tuple[SDValue, SDValue],
+        hint: AttributeDisplayHint | ColumnDisplayHint,
+        keep_until: int | None,
     ) -> None:
-        raise NotImplementedError()
+        if isinstance(value, tuple):
+            self._show_delta_value(value, hint)
+            return
+        self._show_single_value(value, hint, keep_until)
 
-    def _show_child_value(
+    def _show_single_value(
         self,
-        value: Any,
+        value: SDValue,
         hint: ColumnDisplayHint | AttributeDisplayHint,
         keep_until: int | None = None,
     ) -> None:
-        if not isinstance(value, HTML):
-            _tdclass, code = hint.paint_function(value)
-            value = HTML(code)
+        _tdclass, code = hint.paint_function(value)
+        html_value = HTML(code)
 
         if keep_until is not None and time.time() > keep_until:
-            html.write_html(HTMLWriter.render_span(value.value, css="muted-text"))
+            html.write_html(HTMLWriter.render_span(html_value.value, css="muted-text"))
         else:
-            html.write_html(value)
+            html.write_html(html_value)
+
+    def _show_delta_value(
+        self,
+        value: tuple[SDValue, SDValue],
+        hint: ColumnDisplayHint | AttributeDisplayHint,
+    ) -> None:
+        old, new = value
+        if old is None and new is not None:
+            html.open_span(class_="invnew")
+            self._show_single_value(new, hint)
+            html.close_span()
+        elif old is not None and new is None:
+            html.open_span(class_="invold")
+            self._show_single_value(old, hint)
+            html.close_span()
+        elif old == new:
+            self._show_single_value(old, hint)
+        elif old is not None and new is not None:
+            html.open_span(class_="invold")
+            self._show_single_value(old, hint)
+            html.close_span()
+            html.write_text(" → ")
+            html.open_span(class_="invnew")
+            self._show_single_value(new, hint)
+            html.close_span()
+        else:
+            raise NotImplementedError()
 
 
 class NodeRenderer(ABCNodeRenderer):
@@ -2333,19 +2355,6 @@ class NodeRenderer(ABCNodeRenderer):
             header += " " + HTMLWriter.render_span("(%s)" % key_info, css="muted-text")
         return header
 
-    def _show_row_value(
-        self, value: Any, col_hint: ColumnDisplayHint, keep_until: int | None
-    ) -> None:
-        self._show_child_value(value, col_hint, keep_until)
-
-    def _show_attribute(
-        self,
-        value: Any,
-        attr_hint: AttributeDisplayHint,
-        keep_until: int | None = None,
-    ) -> None:
-        self._show_child_value(value, attr_hint, keep_until)
-
 
 class DeltaNodeRenderer(ABCNodeRenderer):
     def __init__(self, site_id: SiteId, hostname: HostName, tree_id: str) -> None:
@@ -2370,47 +2379,6 @@ class DeltaNodeRenderer(ABCNodeRenderer):
 
     def _get_header(self, title: str, key_info: str) -> HTML:
         return HTML(title)
-
-    def _show_row_value(
-        self, value: Any, col_hint: ColumnDisplayHint, keep_until: int | None
-    ) -> None:
-        self._show_delta_child_value(value, col_hint)
-
-    def _show_attribute(
-        self,
-        value: Any,
-        attr_hint: AttributeDisplayHint,
-        keep_until: int | None = None,
-    ) -> None:
-        self._show_delta_child_value(value, attr_hint)
-
-    def _show_delta_child_value(
-        self,
-        value: Any,
-        hint: ColumnDisplayHint | AttributeDisplayHint,
-    ) -> None:
-        if value is None:
-            value = (None, None)
-
-        old, new = value
-        if old is None and new is not None:
-            html.open_span(class_="invnew")
-            self._show_child_value(new, hint)
-            html.close_span()
-        elif old is not None and new is None:
-            html.open_span(class_="invold")
-            self._show_child_value(old, hint)
-            html.close_span()
-        elif old == new:
-            self._show_child_value(old, hint)
-        elif old is not None and new is not None:
-            html.open_span(class_="invold")
-            self._show_child_value(old, hint)
-            html.close_span()
-            html.write_text(" → ")
-            html.open_span(class_="invnew")
-            self._show_child_value(new, hint)
-            html.close_span()
 
 
 # Ajax call for fetching parts of the tree

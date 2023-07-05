@@ -11,7 +11,6 @@ import sys
 import time
 from collections.abc import Mapping, Sequence
 from contextlib import contextmanager
-from hashlib import sha256
 from pathlib import Path
 from typing import Any, assert_never, Final, Iterator, Literal, NamedTuple
 
@@ -623,15 +622,28 @@ def checkbox_id(check_type: str, item: Item) -> str:
     Examples:
 
         >>> checkbox_id("df", "/opt/omd/sites/testering/tmp")
-        '0735e04becbc2f9481ea8e0b54f1aa512d0b04e036cdfac5cc72238f6b39aaeb'
+        '64663a2f6f70742f6f6d642f73697465732f746573746572696e672f746d70'
 
     Returns:
         A string representing the service checkbox
 
     """
+    return f"{check_type}:{item or ''}".encode("utf8").hex()
 
-    key = f"{check_type}_{item}"
-    return sha256(key.encode("utf-8")).hexdigest()
+
+def checkbox_service(checkbox_id_value: str) -> tuple[CheckPluginNameStr, Item]:
+    """Invert checkbox_id
+
+    Examples:
+
+        >>> checkbox_service(checkbox_id("uptime", None))
+        ('uptime', None)
+        >>> checkbox_service(checkbox_id("df", "/"))
+        ('df', '/')
+
+    """
+    check_name, item_str = bytes.fromhex(checkbox_id_value).decode("utf8").split(":", 1)
+    return check_name, item_str or None
 
 
 def get_check_table(

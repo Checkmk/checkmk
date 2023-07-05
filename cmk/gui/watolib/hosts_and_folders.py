@@ -106,6 +106,7 @@ if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 HostAttributes = Mapping[str, Any]
+SearchCriteria = Mapping[str, Any]
 
 
 class WATOFolderInfo(TypedDict, total=False):
@@ -2859,11 +2860,7 @@ def _get_cgconf_from_attributes(attributes: HostAttributes) -> HostContactGroupS
 class SearchFolder(BaseFolder):  # pylint: disable=abstract-method
     """A virtual folder representing the result of a search."""
 
-    # .--------------------------------------------------------------------.
-    # | CONSTRUCTION                                                       |
-    # '--------------------------------------------------------------------'
-
-    def __init__(self, tree: FolderTree, base_folder, criteria) -> None:  # type: ignore[no-untyped-def]
+    def __init__(self, tree: FolderTree, base_folder: CREFolder, criteria: SearchCriteria) -> None:
         super().__init__()
         self.attributes: dict[str, Any] = {"meta_data": {}}
         self.effective_attributes = EffectiveAttributes(lambda: {})
@@ -2871,17 +2868,13 @@ class SearchFolder(BaseFolder):  # pylint: disable=abstract-method
         self.tree = tree
         self._criteria = criteria
         self._base_folder = base_folder
-        self._found_hosts = None
+        self._found_hosts: dict[HostName, CREHost] | None = None
         self._name = None
 
     def __repr__(self) -> str:
         return f"SearchFolder({self.tree!r}, {self._base_folder.path()!r}, {self._name})"
 
-    # .--------------------------------------------------------------------.
-    # | ACCESS                                                             |
-    # '--------------------------------------------------------------------'
-
-    def parent(self):
+    def parent(self) -> CREFolder:
         return self._base_folder
 
     def is_search_folder(self) -> bool:
@@ -2890,21 +2883,21 @@ class SearchFolder(BaseFolder):  # pylint: disable=abstract-method
     def title(self) -> str:
         return _("Search results for folder %s") % self._base_folder.title()
 
-    def hosts(self):
+    def hosts(self) -> Mapping[HostName, CREHost]:
         if self._found_hosts is None:
             self._found_hosts = self._search_hosts_recursively(self._base_folder)
         return self._found_hosts
 
-    def locked_hosts(self):
+    def locked_hosts(self) -> bool:
         return False
 
-    def locked_subfolders(self):
+    def locked_subfolders(self) -> bool:
         return False
 
-    def show_locking_information(self):
+    def show_locking_information(self) -> None:
         pass
 
-    def has_subfolder(self, name) -> bool:  # type: ignore[no-untyped-def]
+    def has_subfolder(self, name: str) -> bool:
         return False
 
     def has_subfolders(self) -> bool:
@@ -2913,25 +2906,21 @@ class SearchFolder(BaseFolder):  # pylint: disable=abstract-method
     def choices_for_moving_host(self) -> Sequence[tuple[str, str]]:
         return self.tree.folder_choices()
 
-    def path(self):
+    def path(self) -> str:
         if self._name:
             return self._base_folder.path() + "//search:" + self._name
         return self._base_folder.path() + "//search"
 
-    def url(self, add_vars=None):
+    def url(self, add_vars: HTTPVariables | None = None) -> str:
         if add_vars is None:
             add_vars = []
 
-        url_vars = [("host_search", "1")] + add_vars
+        url_vars: HTTPVariables = [("host_search", "1"), *add_vars]
 
         for varname, value in request.itervars():
             if varname.startswith("host_search_") or varname.startswith("_change"):
                 url_vars.append((varname, value))
         return self.parent().url(url_vars)
-
-    # .--------------------------------------------------------------------.
-    # | ACTIONS                                                            |
-    # '--------------------------------------------------------------------'
 
     def delete_hosts(
         self,
@@ -2969,10 +2958,6 @@ class SearchFolder(BaseFolder):  # pylint: disable=abstract-method
                 _("Some hosts could not be moved:<ul>%s</ul>") % "".join(auth_errors)
             )
 
-    # .--------------------------------------------------------------------.
-    # | PRIVATE METHODS                                                    |
-    # '--------------------------------------------------------------------'
-
     def _group_hostnames_by_folder(
         self, host_names: Sequence[HostName]
     ) -> list[tuple[CREFolder, list[HostName]]]:
@@ -2985,13 +2970,13 @@ class SearchFolder(BaseFolder):  # pylint: disable=abstract-method
             (hosts[0].folder(), [_host.name() for _host in hosts]) for hosts in by_folder.values()
         ]
 
-    def _search_hosts_recursively(self, in_folder):
+    def _search_hosts_recursively(self, in_folder: CREFolder) -> dict[HostName, CREHost]:
         hosts = self._search_hosts(in_folder)
         for subfolder in in_folder.subfolders():
             hosts.update(self._search_hosts_recursively(subfolder))
         return hosts
 
-    def _search_hosts(self, in_folder):
+    def _search_hosts(self, in_folder: CREFolder) -> dict[HostName, CREHost]:
         if not in_folder.permissions.may("read"):
             return {}
 
@@ -3020,7 +3005,7 @@ class SearchFolder(BaseFolder):  # pylint: disable=abstract-method
 
         return found
 
-    def _invalidate_search(self):
+    def _invalidate_search(self) -> None:
         self._found_hosts = None
 
 

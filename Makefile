@@ -424,8 +424,10 @@ linesofcode:
 	@wc -l $$(find -type f -name "*.py" -o -name "*.js" -o -name "*.cc" -o -name "*.h" -o -name "*.css" | grep -v openhardwaremonitor | grep -v jquery ) | sort -n
 
 ar-lib compile config.guess config.sub install-sh missing depcomp: configure.ac
+ifeq ($(ENTERPRISE),yes)
 	autoreconf --install --include=m4
 	touch ar-lib compile config.guess config.sub install-sh missing depcomp
+endif
 
 # TODO(sp): We should really detect and use our own packages in a less hacky way...
 # NOTE: --recheck in some cases doesn't produce Makefile(see automake docu am->in->Makefile).
@@ -433,6 +435,7 @@ ar-lib compile config.guess config.sub install-sh missing depcomp: configure.ac
 # This code will be removed in any case together with a automake. Alternative: investigation why CI in
 # some cases has no Makefile but have Makefile.in is complicated.
 config.status: $(CONFIG_DEPS)
+ifeq ($(ENTERPRISE),yes)
 	@echo "Build $@ (newer targets: $?)"
 	@if test -f config.status; then \
 	  echo "configure CXXFLAGS=\"$(CXX_FLAGS)\" \"$$RRD_OPT\"" ; \
@@ -446,6 +449,7 @@ config.status: $(CONFIG_DEPS)
 	  echo "configure CXXFLAGS=\"$(CXX_FLAGS)\" \"$$RRD_OPT\"" ; \
 	  ./configure CXXFLAGS="$(CXX_FLAGS)" "$$RRD_OPT" ; \
 	fi
+endif
 
 protobuf-files:
 ifeq ($(ENTERPRISE),yes)
@@ -453,23 +457,33 @@ ifeq ($(ENTERPRISE),yes)
 endif
 
 configure: $(CONFIGURE_DEPS)
+ifeq ($(ENTERPRISE),yes)
 	autoconf
+endif
 
 aclocal.m4: $(M4_DEPS)
+ifeq ($(ENTERPRISE),yes)
 	aclocal
+endif
 
 config.h.in: $(CONFIGURE_DEPS)
+ifeq ($(ENTERPRISE),yes)
 	autoheader
 	rm -f stamp-h1
 	touch $@
+endif
 
 config.h: stamp-h1
+ifeq ($(ENTERPRISE),yes)
 	@test -f $@ || rm -f stamp-h1
 	@test -f $@ || $(MAKE) stamp-h1
+endif
 
 stamp-h1: config.h.in config.status
+ifeq ($(ENTERPRISE),yes)
 	@rm -f stamp-h1
 	./config.status config.h
+endif
 
 GTAGS: config.h
 # automake generates "gtags -i ...", but incremental updates seem to be a bit

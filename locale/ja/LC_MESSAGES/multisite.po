@@ -7965,6 +7965,10 @@ msgstr "バルクウォーク: バルクあたりのOIDの数"
 msgid "Bulking"
 msgstr "バルキング"
 
+#, fuzzy
+msgid "Bulking not allowed"
+msgstr "許可されていないURL"
+
 msgid "Burst Balance"
 msgstr "バーストバランス"
 
@@ -40435,6 +40439,10 @@ msgstr "プラグイン"
 msgid "Plugin Name"
 msgstr "プラグイン名"
 
+#, fuzzy
+msgid "Plugin doesn't exist"
+msgstr "フォルダは存在しません"
+
 msgid "Plugin file pattern"
 msgstr "プラグインファイルパターン"
 
@@ -54299,6 +54307,10 @@ msgstr ""
 "プレースホルダー <tt>\\0</tt> は元のテキストに置き換えられます。これにより、"
 "前または最後に新しい情報を追加できます。 "
 
+#, fuzzy, python-format
+msgid "The plugin '%s' is not a valid notification plugin."
+msgstr "タイムアウト %s は有効な整数ではありません。"
+
 msgid ""
 "The plugin <tt>isc_dhcpd</tt> collects information about a DHCP server "
 "daemon on Linux."
@@ -54595,6 +54607,10 @@ msgid ""
 "The rule you selected needs %d argument(s) (%s), but you configured %d "
 "arguments."
 msgstr "選択したルールには%d引数(%s)が必要ですが、%d引数を構成しました。"
+
+#, fuzzy, python-format
+msgid "The rule_id %s does not exist."
+msgstr "ルールセット \"%s\" は存在しません。"
 
 msgid ""
 "The rules and aggregations in this pack can be edited by all members of the "

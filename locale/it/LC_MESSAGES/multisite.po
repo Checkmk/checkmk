@@ -8121,6 +8121,10 @@ msgstr "Camminata in blocco: Numero di OID per blocco"
 msgid "Bulking"
 msgstr "Bulking"
 
+#, fuzzy
+msgid "Bulking not allowed"
+msgstr "URL non consentito"
+
 msgid "Burst Balance"
 msgstr "Scoppio di equilibrio"
 
@@ -41095,6 +41099,10 @@ msgstr "Plugin"
 msgid "Plugin Name"
 msgstr "Nome del plugin"
 
+#, fuzzy
+msgid "Plugin doesn't exist"
+msgstr "La cartella %s non esiste"
+
 msgid "Plugin file pattern"
 msgstr "Modello di file plugin"
 
@@ -55279,6 +55287,10 @@ msgstr ""
 "Il segnaposto <tt>0</tt> sarà sostituito dal testo originale. Questo ti "
 "permette di aggiungere nuove informazioni davanti o alla fine. "
 
+#, fuzzy, python-format
+msgid "The plugin '%s' is not a valid notification plugin."
+msgstr "Il timeout %s non è un numero intero valido."
+
 msgid ""
 "The plugin <tt>isc_dhcpd</tt> collects information about a DHCP server "
 "daemon on Linux."
@@ -55593,6 +55605,10 @@ msgid ""
 msgstr ""
 "La regola che hai selezionato necessita di %d argomenti (%s), ma hai "
 "configurato %d argomenti."
+
+#, fuzzy, python-format
+msgid "The rule_id %s does not exist."
+msgstr "Il set di regole \"%s\" non esiste."
 
 msgid ""
 "The rules and aggregations in this pack can be edited by all members of the "

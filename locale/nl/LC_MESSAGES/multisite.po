@@ -8093,6 +8093,10 @@ msgstr "Bulk wandeling: Aantal OID's per bulk"
 msgid "Bulking"
 msgstr "Bulking"
 
+#, fuzzy
+msgid "Bulking not allowed"
+msgstr "URL niet toegestaan"
+
 msgid "Burst Balance"
 msgstr "Burst Balance"
 
@@ -40938,6 +40942,10 @@ msgstr "Plugin"
 msgid "Plugin Name"
 msgstr "Plugin naam"
 
+#, fuzzy
+msgid "Plugin doesn't exist"
+msgstr "Map bestaat niet"
+
 msgid "Plugin file pattern"
 msgstr "Plugin bestandspatroon"
 
@@ -55069,6 +55077,10 @@ msgstr ""
 "tekst. Dit maakt het mogelijk om nieuwe informatie vooraan of aan het eind "
 "toe te voegen. "
 
+#, fuzzy, python-format
+msgid "The plugin '%s' is not a valid notification plugin."
+msgstr "De timeout %s is geen geldig geheel getal."
+
 msgid ""
 "The plugin <tt>isc_dhcpd</tt> collects information about a DHCP server "
 "daemon on Linux."
@@ -55380,6 +55392,10 @@ msgid ""
 msgstr ""
 "De regel die je hebt geselecteerd heeft %d argument(en) (%s) nodig, maar je "
 "hebt %d argumenten geconfigureerd."
+
+#, fuzzy, python-format
+msgid "The rule_id %s does not exist."
+msgstr "De regelset \"%s\" bestaat niet."
 
 msgid ""
 "The rules and aggregations in this pack can be edited by all members of the "

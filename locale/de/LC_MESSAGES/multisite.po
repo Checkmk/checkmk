@@ -7,7 +7,7 @@ msgstr ""
 "Project-Id-Version: Checkmk user interface translation 0.1\n"
 "Report-Msgid-Bugs-To: martin.hirschvogel@tribe29.com\n"
 "POT-Creation-Date: 2011-05-13 09:42+0200\n"
-"PO-Revision-Date: 2023-07-03 23:08+0000\n"
+"PO-Revision-Date: 2023-07-05 11:22+0000\n"
 "Last-Translator: Silke Paintner <silke.paintner@checkmk.com>\n"
 "Language-Team: German <https://translate.checkmk.com/projects/checkmk/"
 "software/de/>\n"
@@ -332,7 +332,7 @@ msgstr "% Zeit"
 
 #, no-python-format
 msgid "% usage"
-msgstr "% Nutzung"
+msgstr "% Auslastung"
 
 #, no-python-format
 msgid "% used"
@@ -340,15 +340,15 @@ msgstr "% verbraucht"
 
 #, python-format
 msgid "%% of %s"
-msgstr "%% %s"
+msgstr "%% von %s"
 
 #, python-format
 msgid "%%d locked element"
-msgstr "%%d Elemente gesperrt"
+msgstr "%%d gesperrtes Element"
 
 #, python-format
 msgid "%%d locked elements"
-msgstr "%%d Elemente gesperrt"
+msgstr "%%d gesperrte Elemente"
 
 #, python-format
 msgid "%.1f mm"
@@ -402,7 +402,7 @@ msgstr "%d Bedingungen"
 
 #, python-format
 msgid "%d custom service attributes"
-msgstr "%d benutzerdefinierte Serviceattribute"
+msgstr "%d benutzerdefinierte Service-Attribute"
 
 #, python-format
 msgid "%d days"
@@ -410,15 +410,15 @@ msgstr "%d Tage"
 
 #, python-format
 msgid "%d days ago"
-msgstr "Vor %d Tagen"
+msgstr "vor %d Tagen"
 
 #, python-format
 msgid "%d days left in your Checkmk trial period"
-msgstr "noch %d Tage in Ihrem Checkmk-Testzeitraum"
+msgstr "es verbleiben noch %d Tage in Ihrem Checkmk-Testzeitraum"
 
 #, python-format
 msgid "%d days left in your free trial"
-msgstr "%d Tage im kostenlosen Testzeitraum verbleibend"
+msgstr "es verbleiben noch %d Tage im kostenlosen Testzeitraum"
 
 #, python-format
 msgid "%d errors occured:"
@@ -426,7 +426,7 @@ msgstr "%d aufgetretene Fehler:"
 
 #, python-format
 msgid "%d failed notifications"
-msgstr "%d fehlgeschlagene Alarmierungen"
+msgstr "%d fehlgeschlagene Benachrichtigungen"
 
 #, python-format
 msgid "%d icons and actions"
@@ -465,8 +465,8 @@ msgid ""
 "%d of the configured maximum of %d processes have been started. This is a "
 "usage of %0.2f %%."
 msgstr ""
-"%d der konfigurierten maximalen %d Prozessen wurden gestartet. Dies ist eine "
-"Nutzung von %0.2f %%."
+"%d der konfigurierten maximalen %d Prozesse wurden gestartet. Dies "
+"entspricht einer Auslastung von %0.2f %%."
 
 #, python-format
 msgid "%d open incompatible werks"
@@ -496,7 +496,7 @@ msgstr "%d spezifische Einstellungen"
 
 #, python-format
 msgid "%d timeranges"
-msgstr "%d Zeitbereiche"
+msgstr "%d Zeiträume"
 
 #, python-format
 msgid "%d translations"
@@ -505,8 +505,8 @@ msgstr "%d Übersetzungen"
 #, python-format
 msgid "%d unacknowledged incompatible werk"
 msgid_plural "%d unacknowledged incompatible werks"
-msgstr[0] "%d unquittiertes Werk"
-msgstr[1] "%d unquittierte Werks"
+msgstr[0] "%d unquittiertes inkompatibles Werk"
+msgstr[1] "%d unquittierte inkompatible Werks"
 
 #, no-python-format
 msgid "%m-%d"
@@ -540,7 +540,7 @@ msgstr "%s - Fehler beim Kompilieren (%s)"
 
 #, python-format
 msgid "%s - Unable to restore snapshot:<br>%s"
-msgstr "%s - Fehler beim Einspielen der Sicherung:<br>%s"
+msgstr "%s - Snapshot kann nicht wiederhergestellt werden:<br>%s"
 
 #, python-format
 msgid "%s Asserts"
@@ -561,15 +561,15 @@ msgstr "%s Pakete / %s%s"
 
 #, python-format
 msgid "%s Preview of report finished"
-msgstr "%s Erstellung der Report Vorschau beendet"
+msgstr "%s Berichtsvorschau beendet"
 
 #, python-format
 msgid "%s Requests"
-msgstr "%s-Anfragen"
+msgstr "%s Anfragen"
 
 #, python-format
 msgid "%s Retrieve created dump file"
-msgstr "%s erstellte Dump-Datei laden"
+msgstr "%s erstellte Dump-Datei abrufen"
 
 #, python-format
 msgid "%s by host"
@@ -608,7 +608,7 @@ msgstr "%s ist kein erlaubter Wert"
 
 #, python-format
 msgid "%s is not an existing element in this selection."
-msgstr "%s ist kein existierendes Element in der Auswahl."
+msgstr "%s ist kein existierendes Element in dieser Auswahl."
 
 #, python-format
 msgid "%s is parent of %s."
@@ -624,11 +624,11 @@ msgstr "%s Latenz %s"
 
 #, python-format
 msgid "%s matching labels: %s"
-msgstr "%s mit übereinstimmenden Labels: %s"
+msgstr "%s übereinstimmende Labels: %s"
 
 #, python-format
 msgid "%s may be missing, if must not be empty if it is set."
-msgstr "%s fehlt (möglicherweise) - darf nicht leer sein, wenn gesetzt."
+msgstr "%s fehlt möglicherweise - darf nicht leer sein, wenn gesetzt."
 
 #, python-format
 msgid "%s not in the selected Setup folders."
@@ -640,7 +640,7 @@ msgstr "%s ist in der aktivierten Monitoring-Konfiguration nicht bekannt"
 
 #, python-format
 msgid "%s not listed in the explicit list of host names."
-msgstr "%s nicht in der expliziten Liste von Hostnamen aufgelistet ist."
+msgstr "%s nicht in der expliziten Liste von Host-Namen aufgelistet."
 
 #, python-format
 msgid "%s not monitored by one of the explicitly selected sites."
@@ -651,8 +651,8 @@ msgid ""
 "%s now to continue using Checkmk as you do today. If you already have a "
 "license, please enter your license details on the %s."
 msgstr ""
-"%s Sie, um Checkmk weiterhin wie bisher zu nutzen. Wenn Sie bereits eine "
-"Lizenz haben, geben Sie bitte Ihre Lizenzdaten in das Feld %s ein."
+"%s Sie jetzt, um Checkmk weiterhin wie bisher zu nutzen. Wenn Sie bereits "
+"eine Lizenz haben, geben Sie bitte Ihre Lizenzdaten in das Feld %s ein."
 
 #, python-format
 msgid "%s of %s"
@@ -664,7 +664,7 @@ msgstr "%s von %s%%"
 
 #, python-format
 msgid "%s on the exclusion list."
-msgstr "%s ausgeschlossen ist."
+msgstr "%s auf der Ausschlussliste."
 
 #, python-format
 msgid "%s operations"
@@ -700,7 +700,7 @@ msgstr "Diesen Kunden %s"
 
 #, python-format
 msgid "%s traffic"
-msgstr "%s Bandbreite"
+msgstr "%s Verkehr"
 
 #, python-format
 msgid "%s was stopped after %s at %s."
@@ -737,8 +737,8 @@ msgstr "%s: Kein Ergebnis der Erkennung"
 #, python-format
 msgid "%s: Not using SSL. Consider enabling it in the connection settings."
 msgstr ""
-"%s: Nutzt kein SSL. Prüfen Sie, ob Sie SSL aktivieren können um die "
-"Verbindung abzusichern."
+"%s: SSL wird nicht genutzt. Erwägen Sie, es in den Verbindungseinstellungen "
+"zu aktivieren."
 
 #, python-format
 msgid "%s: Service discovery: Permission denied"
@@ -754,7 +754,7 @@ msgstr "%s: Verwendet SSL"
 
 #, python-format
 msgid "%sPacket loss"
-msgstr "%sPacketverlust"
+msgstr "%sPaketverlust"
 
 #, python-format
 msgid "%sResponse time"
@@ -8105,6 +8105,9 @@ msgstr "Anzahl von OIDs pro Bulk-Walk"
 
 msgid "Bulking"
 msgstr "Zusammenfassung"
+
+msgid "Bulking not allowed"
+msgstr "Bulking nicht erlaubt"
 
 msgid "Burst Balance"
 msgstr "Burst-Balance"
@@ -41048,6 +41051,9 @@ msgstr "Plugin"
 msgid "Plugin Name"
 msgstr "Pluginname"
 
+msgid "Plugin doesn't exist"
+msgstr "Plugin existiert nicht"
+
 msgid "Plugin file pattern"
 msgstr "Plugin-Dateimuster"
 
@@ -55184,6 +55190,10 @@ msgstr ""
 "Der Platzhalter <tt>\\0</tt> wird durch den ursprünglichen Text ersetzt. "
 "Damit können Sie am Anfang oder am Ende Ergänzungen hinzufügen. "
 
+#, python-format
+msgid "The plugin '%s' is not a valid notification plugin."
+msgstr "Das Plugin '%s' ist kein gültiges Benachrichtigungs-Plugin."
+
 msgid ""
 "The plugin <tt>isc_dhcpd</tt> collects information about a DHCP server "
 "daemon on Linux."
@@ -55497,6 +55507,10 @@ msgid ""
 msgstr ""
 "Die gewählte Regel benötigt %d Argument(e) (%s), aber es sind nur %d "
 "Argumente konfiguriert."
+
+#, python-format
+msgid "The rule_id %s does not exist."
+msgstr "Die rule_id %s existiert nicht."
 
 msgid ""
 "The rules and aggregations in this pack can be edited by all members of the "
@@ -70126,15 +70140,15 @@ msgstr ""
 "Ihre Suchanweisung ist nicht gültig. Sie können hier keinen Lookahead "
 "verwenden."
 
-#, fuzzy, python-format
+#, python-format
 msgid ""
 "Your search statement is not valid. You need to provide a %s (regex). For "
 "example you need to use <tt>\\\\</tt> instead of <tt>\\</tt> if you like to "
 "search for a single backslash."
 msgstr ""
-"Ihre Suchanweisung ist nicht gültig. Sie müssen einen regulären Ausdruck "
-"(regex) angeben. Zum Beispiel müssen Sie <tt>\\\\</tt> statt <tt>\\</tt> "
-"verwenden, wenn Sie nach einem einzelnen Backslash suchen möchten."
+"Ihre Suchanweisung ist nicht gültig. Sie müssen ein %s (regex) angeben. Zum "
+"Beispiel müssen Sie <tt>\\\\</tt> statt <tt>\\</tt> verwenden, wenn Sie nach "
+"einem einzelnen Backslash suchen möchten."
 
 msgid ""
 "Your search statement is not valid. You need to provide a regular expression "
@@ -76829,9 +76843,6 @@ msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
 
 #~ msgid "The schedule you are trying to execute does not exist."
 #~ msgstr "Der Geplante Bereicht, den Sie ausführen möchten, existiert nicht."
-
-#~ msgid "The requested %s does not exist."
-#~ msgstr "Die zu kopierende %s existiert nicht."
 
 #~ msgid "Checks to send data for"
 #~ msgstr "Checks, für die Daten übertragen werden sollen"

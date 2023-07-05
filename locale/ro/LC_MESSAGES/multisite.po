@@ -8158,6 +8158,10 @@ msgstr "Plimbare în vrac: Numărul de OID-uri pe grup"
 msgid "Bulking"
 msgstr "Umplerea"
 
+#, fuzzy
+msgid "Bulking not allowed"
+msgstr "URL nepermis"
+
 msgid "Burst Balance"
 msgstr "Echilibru de explozie"
 
@@ -41316,6 +41320,10 @@ msgstr "Plugin"
 msgid "Plugin Name"
 msgstr "Nume Plugin"
 
+#, fuzzy
+msgid "Plugin doesn't exist"
+msgstr "Dosarul nu există"
+
 msgid "Plugin file pattern"
 msgstr "Model de fișier plug-in"
 
@@ -55601,6 +55609,10 @@ msgstr ""
 "Marca de poziție <tt>\\0</tt> va fi înlocuită cu textul original. Acest "
 "lucru vă permite să adăugați informații noi în față sau la sfârșit. "
 
+#, fuzzy, python-format
+msgid "The plugin '%s' is not a valid notification plugin."
+msgstr "Timpul de așteptare %s nu este un număr întreg valid."
+
 msgid ""
 "The plugin <tt>isc_dhcpd</tt> collects information about a DHCP server "
 "daemon on Linux."
@@ -55916,6 +55928,10 @@ msgid ""
 msgstr ""
 "Regula pe care ați selectat-o are nevoie de %d argument(e) (%s), dar ați "
 "configurat %d argumente."
+
+#, fuzzy, python-format
+msgid "The rule_id %s does not exist."
+msgstr "Setul de reguli \"%s\" nu există."
 
 msgid ""
 "The rules and aggregations in this pack can be edited by all members of the "

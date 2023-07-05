@@ -8188,6 +8188,10 @@ msgstr "Marche en vrac : Nombre d'OIDs par bulk"
 msgid "Bulking"
 msgstr "Remplissage"
 
+#, fuzzy
+msgid "Bulking not allowed"
+msgstr "URL non autorisé"
+
 msgid "Burst Balance"
 msgstr "Balance Burst"
 
@@ -41459,6 +41463,10 @@ msgstr "Plugin"
 msgid "Plugin Name"
 msgstr "Nom du plugin"
 
+#, fuzzy
+msgid "Plugin doesn't exist"
+msgstr "Le dossier n'existe pas"
+
 msgid "Plugin file pattern"
 msgstr "Modèle de fichier de plugin"
 
@@ -55802,6 +55810,10 @@ msgstr ""
 "L'espace réservé <tt>\\0</tt> sera remplacé par le texte original. Cela vous "
 "permet d'ajouter de nouvelles informations au début ou à la fin. "
 
+#, fuzzy, python-format
+msgid "The plugin '%s' is not a valid notification plugin."
+msgstr "Le délai d'attente %s n'est pas un nombre entier valide."
+
 msgid ""
 "The plugin <tt>isc_dhcpd</tt> collects information about a DHCP server "
 "daemon on Linux."
@@ -56118,6 +56130,10 @@ msgid ""
 msgstr ""
 "La règle que vous avez sélectionnée nécessite %d argument(s) (%s), mais vous "
 "avez configuré %d arguments."
+
+#, fuzzy, python-format
+msgid "The rule_id %s does not exist."
+msgstr "Le jeu de règles \"%s\" n'existe pas."
 
 msgid ""
 "The rules and aggregations in this pack can be edited by all members of the "

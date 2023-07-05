@@ -8118,6 +8118,10 @@ msgstr "Passeio a granel: Número de OIDs por granel"
 msgid "Bulking"
 msgstr "A granel"
 
+#, fuzzy
+msgid "Bulking not allowed"
+msgstr "URL não permitido"
+
 msgid "Burst Balance"
 msgstr "Balanço de ruptura"
 
@@ -41029,6 +41033,10 @@ msgstr "Plugin"
 msgid "Plugin Name"
 msgstr "Nome do Plugin"
 
+#, fuzzy
+msgid "Plugin doesn't exist"
+msgstr "A pasta não existe"
+
 msgid "Plugin file pattern"
 msgstr "Padrão de arquivo de plugin"
 
@@ -55193,6 +55201,10 @@ msgstr ""
 "O espaço reservado <tt>\\0</tt> será substituído pelo texto original. Isto "
 "permite adicionar novas informações na frente ou no final. "
 
+#, fuzzy, python-format
+msgid "The plugin '%s' is not a valid notification plugin."
+msgstr "O timeout %s não é um número inteiro válido."
+
 msgid ""
 "The plugin <tt>isc_dhcpd</tt> collects information about a DHCP server "
 "daemon on Linux."
@@ -55504,6 +55516,10 @@ msgid ""
 msgstr ""
 "A regra que você selecionou precisa de %d argumento(s) (%s), mas você "
 "configurou %d argumento(s)."
+
+#, fuzzy, python-format
+msgid "The rule_id %s does not exist."
+msgstr "O conjunto de regras \"%s\" não existe."
 
 msgid ""
 "The rules and aggregations in this pack can be edited by all members of the "

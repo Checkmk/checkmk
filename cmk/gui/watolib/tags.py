@@ -5,23 +5,24 @@
 """Helper functions for dealing with host tags"""
 
 import abc
+from collections.abc import Mapping, Sequence
 from enum import Enum
 from pathlib import Path
-from typing import Any, Final
+from typing import Any, Final, TypeVar
 
 import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.tags
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.i18n import _
-from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagConfigSpec, TagGroup, TagGroupID
+from cmk.utils.tags import BuiltinTagConfig, TagConfig, TagConfigSpec, TagGroup, TagGroupID, TagID
 
 from cmk.gui.config import load_config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.hooks import request_memoize
 from cmk.gui.logged_in import user
 from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, folder_tree
-from cmk.gui.watolib.rulesets import AllRulesets, FolderRulesets, Ruleset
+from cmk.gui.watolib.rulesets import AllRulesets, Rule, RuleConditions, Ruleset
 from cmk.gui.watolib.utils import format_php, multisite_dir, wato_root_dir
 
 
@@ -132,7 +133,7 @@ def is_builtin(ident: TagGroupID) -> bool:
     return tag_config.tag_group_exists(ident)
 
 
-def tag_group_exists(ident: TagGroupID, builtin_included=False) -> bool:  # type: ignore[no-untyped-def]
+def tag_group_exists(ident: TagGroupID, builtin_included: bool = False) -> bool:
     """Verify if a tag group exists"""
     tag_config = load_tag_config()
     if builtin_included:
@@ -140,7 +141,7 @@ def tag_group_exists(ident: TagGroupID, builtin_included=False) -> bool:  # type
     return tag_config.tag_group_exists(ident)
 
 
-def _update_tag_dependencies():
+def _update_tag_dependencies() -> None:
     load_config()
     tree = folder_tree()
     tree.invalidate_caches()
@@ -187,9 +188,9 @@ def edit_tag_group(ident: TagGroupID, edited_group: TagGroup, allow_repair: bool
     update_tag_config(tag_config)
 
 
-def identify_modified_tags(  # type: ignore[no-untyped-def]
+def identify_modified_tags(
     updated_group: TagGroup, old_group: TagGroup
-):
+) -> tuple[list[TagID], dict[TagID | None, TagID | None]]:
     """Identify which ids were changed and which ids are to be deleted
 
     Example:
@@ -256,39 +257,39 @@ class ABCOperation(abc.ABC):
 
 
 class ABCTagGroupOperation(ABCOperation, abc.ABC):
-    def __init__(self, tag_group_id: str) -> None:
+    def __init__(self, tag_group_id: TagGroupID) -> None:
         super().__init__()
         self.tag_group_id = tag_group_id
 
 
 class OperationRemoveTagGroup(ABCTagGroupOperation):
-    def confirm_title(self):
+    def confirm_title(self) -> str:
         return _("Confirm tag group deletion")
 
 
 class OperationRemoveAuxTag(ABCTagGroupOperation):
-    def confirm_title(self):
+    def confirm_title(self) -> str:
         return _("Confirm aux tag deletion")
 
 
 class OperationReplaceGroupedTags(ABCOperation):
     def __init__(
         self,
-        tag_group_id: str,
-        remove_tag_ids: list[str | None],
-        replace_tag_ids: dict[str, str],
+        tag_group_id: TagGroupID,
+        remove_tag_ids: Sequence[TagID | None],
+        replace_tag_ids: Mapping[TagID | None, TagID | None],
     ) -> None:
         super().__init__()
         self.tag_group_id = tag_group_id
         self.remove_tag_ids = remove_tag_ids
         self.replace_tag_ids = replace_tag_ids
 
-    def confirm_title(self):
+    def confirm_title(self) -> str:
         return _("Confirm tag modifications")
 
 
 def change_host_tags(
-    operation: ABCOperation, mode: TagCleanupMode
+    operation: ABCTagGroupOperation | OperationReplaceGroupedTags, mode: TagCleanupMode
 ) -> tuple[list[CREFolder], list[CREHost], list[Ruleset]]:
     affected_folder, affected_hosts = _change_host_tags_in_folders(
         operation,
@@ -305,7 +306,9 @@ def _get_all_rulesets() -> AllRulesets:
     return cmk.gui.watolib.rulesets.AllRulesets.load_all_rulesets()
 
 
-def change_host_tags_in_rulesets(operation: ABCOperation, mode: TagCleanupMode) -> list[Ruleset]:
+def change_host_tags_in_rulesets(
+    operation: ABCTagGroupOperation | OperationReplaceGroupedTags, mode: TagCleanupMode
+) -> list[Ruleset]:
     affected_rulesets = set()
     all_rulesets = _get_all_rulesets()
     for ruleset in all_rulesets.get_rulesets().values():
@@ -319,7 +322,7 @@ def change_host_tags_in_rulesets(operation: ABCOperation, mode: TagCleanupMode) 
 
 
 def _change_host_tags_in_folders(
-    operation: ABCOperation, mode: TagCleanupMode, folder: Any
+    operation: ABCTagGroupOperation | OperationReplaceGroupedTags, mode: TagCleanupMode, folder: Any
 ) -> tuple[list[CREFolder], list[CREHost]]:
     """Update host tag assignments in hosts/folders
 
@@ -349,7 +352,11 @@ def _change_host_tags_in_folders(
     return affected_folders, affected_hosts
 
 
-def _change_host_tags_in_hosts(operation, mode, folder):
+def _change_host_tags_in_hosts(
+    operation: ABCTagGroupOperation | OperationReplaceGroupedTags,
+    mode: TagCleanupMode,
+    folder: CREFolder,
+) -> list[CREHost]:
     affected_hosts = []
     for host in folder.hosts().values():
         aff_hosts = _change_host_tags_in_host_or_folder(operation, mode, host)
@@ -364,8 +371,15 @@ def _change_host_tags_in_hosts(operation, mode, folder):
     return affected_hosts
 
 
-def _change_host_tags_in_host_or_folder(operation, mode, host_or_folder):
-    affected: list[CREHost | CREFolder] = []
+T = TypeVar("T", CREFolder, CREHost)
+
+
+def _change_host_tags_in_host_or_folder(
+    operation: ABCTagGroupOperation | OperationReplaceGroupedTags,
+    mode: TagCleanupMode,
+    host_or_folder: T,
+) -> list[T]:
+    affected: list[T] = []
 
     attrname = "tag_" + operation.tag_group_id
     attributes = host_or_folder.attributes()
@@ -399,8 +413,13 @@ def _change_host_tags_in_host_or_folder(operation, mode, host_or_folder):
     return affected
 
 
-def _change_host_tags_in_rule(operation, mode, ruleset, rule):  # pylint: disable=too-many-branches
-    affected_rulesets: set[FolderRulesets] = set()
+def _change_host_tags_in_rule(  # pylint: disable=too-many-branches
+    operation: ABCTagGroupOperation | OperationReplaceGroupedTags,
+    mode: TagCleanupMode,
+    ruleset: Ruleset,
+    rule: Rule,
+) -> set[Ruleset]:
+    affected_rulesets: set[Ruleset] = set()
     if operation.tag_group_id not in rule.conditions.host_tags:
         return affected_rulesets  # The tag group is not used
 
@@ -416,11 +435,12 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):  # pylint: disabl
             if (
                 condition := rule.conditions.host_tags[operation.tag_group_id]
             ) is not None and list(condition)[0] in ["$ne", "$nor"]:
-                del rule.conditions.host_tags[operation.tag_group_id]
+                _remove_tag_group_condition(rule, operation.tag_group_id)
             else:
                 ruleset.delete_rule(rule)
         elif mode == TagCleanupMode.REMOVE:
-            del rule.conditions.host_tags[operation.tag_group_id]
+            _remove_tag_group_condition(rule, operation.tag_group_id)
+
         else:
             raise NotImplementedError()
 
@@ -453,13 +473,25 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):  # pylint: disabl
             continue  # Skip modification
 
         # First remove current setting
-        del rule.conditions.host_tags[operation.tag_group_id]
+        _remove_tag_group_condition(rule, operation.tag_group_id)
 
         # In case it needs to be replaced with a new value, do it now
         if new_tag:
             was_negated = isinstance(current_value, dict) and "$ne" in current_value
             new_value = {"$ne": new_tag} if was_negated else new_tag
-            rule.conditions.host_tags[operation.tag_group_id] = new_value
+            rule.update_conditions(
+                RuleConditions(
+                    host_folder=rule.conditions.host_folder,
+                    host_tags={
+                        **rule.conditions.host_tags,
+                        operation.tag_group_id: new_value,
+                    },
+                    host_labels=rule.conditions.host_labels,
+                    host_name=rule.conditions.host_name,
+                    service_description=rule.conditions.service_description,
+                    service_labels=rule.conditions.service_labels,
+                )
+            )
         # Example for current_value: {'$ne': 'my_tag'} / my_tag
         elif mode == TagCleanupMode.DELETE and (
             not isinstance(current_value, dict) and list(current_value)[0] not in ["$ne", "$nor"]
@@ -467,6 +499,19 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):  # pylint: disabl
             ruleset.delete_rule(rule)
 
     return affected_rulesets
+
+
+def _remove_tag_group_condition(rule: Rule, tag_group_id: TagGroupID) -> None:
+    rule.update_conditions(
+        RuleConditions(
+            host_folder=rule.conditions.host_folder,
+            host_tags={k: v for k, v in rule.conditions.host_tags.items() if k != tag_group_id},
+            host_labels=rule.conditions.host_labels,
+            host_name=rule.conditions.host_name,
+            service_description=rule.conditions.service_description,
+            service_labels=rule.conditions.service_labels,
+        )
+    )
 
 
 # Creates a includable PHP file which provides some functions which
@@ -488,7 +533,7 @@ def _change_host_tags_in_rule(operation, mode, ruleset, rule):  # pylint: disabl
 # the tag group title and the value contains the value returned by
 # taggroup_choice() for this tag group.
 #
-def _export_hosttags_to_php(cfg):
+def _export_hosttags_to_php(cfg: TagConfigSpec) -> None:
     php_api_dir = Path(cmk.utils.paths.var_dir) / "wato/php-api"
     path = php_api_dir / "hosttags.php"
     store.mkdir(php_api_dir)

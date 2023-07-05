@@ -67,6 +67,7 @@ from cmk.gui.watolib.hosts_and_folders import (
 from cmk.gui.watolib.rulesets import Ruleset
 from cmk.gui.watolib.tags import (
     ABCOperation,
+    ABCTagGroupOperation,
     change_host_tags,
     identify_modified_tags,
     OperationRemoveAuxTag,
@@ -265,7 +266,9 @@ class ModeTags(ABCTagMode):
                         % group.title,
                     )
 
-        message = _rename_tags_after_confirmation(self.breadcrumb(), OperationRemoveAuxTag(del_id))
+        message = _rename_tags_after_confirmation(
+            self.breadcrumb(), OperationRemoveAuxTag(TagGroupID(del_id))
+        )
         if message is False:
             return FinalizeRequest(code=200)
 
@@ -615,7 +618,7 @@ class ModeTagUsage(ABCTagMode):
         # TODO: This check shouldn't be necessary if we get our types right.
         if aux_tag.id is None:
             raise Exception("uninitialized tag")
-        operation = OperationRemoveAuxTag(aux_tag.id)
+        operation = OperationRemoveAuxTag(TagGroupID(aux_tag.id))
         affected_folders, affected_hosts, affected_rulesets = change_host_tags(
             operation, TagCleanupMode.CHECK
         )
@@ -913,7 +916,9 @@ class ModeEditTagGroup(ABCEditTagMode):
         )
 
 
-def _rename_tags_after_confirmation(breadcrumb: Breadcrumb, operation: ABCOperation) -> bool | str:
+def _rename_tags_after_confirmation(
+    breadcrumb: Breadcrumb, operation: ABCTagGroupOperation | OperationReplaceGroupedTags
+) -> bool | str:
     """Handle renaming and deletion of tags
 
     Find affected hosts, folders and rules. Remove or fix those rules according

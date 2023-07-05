@@ -137,7 +137,7 @@ class ABCHostMode(WatoMode, abc.ABC):
             Host(
                 folder_from_request(),
                 self._host.name(),
-                collect_attributes("cluster", new=False),
+                dict(collect_attributes("cluster", new=False)),
                 [],
             ).tag_groups()
         )
@@ -393,7 +393,7 @@ class ModeEditHost(ABCHostMode):
             flash(f"Host {self._host.name()} could not be found.")
             return None
 
-        host.edit(attributes, self._get_cluster_nodes())
+        host.edit(dict(attributes), self._get_cluster_nodes())
         self._host = folder.load_host(self._host.name())
 
         if request.var("_save"):

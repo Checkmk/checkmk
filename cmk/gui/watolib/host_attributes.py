@@ -42,7 +42,7 @@ class HostContactGroupSpec(TypedDict):
     recurse_use: bool
 
 
-HostAttributeSpec = dict[str, Any]
+HostAttributes = Mapping[str, Any]
 
 
 class HostAttributeTopic(abc.ABC):
@@ -480,7 +480,7 @@ def get_sorted_host_attributes_by_topic(  # type: ignore[no-untyped-def]
 
 # Is used for dynamic host attribute declaration (based on host tags)
 # + Kept for comatibility with pre 1.6 plugins
-def declare_host_attribute(  # type: ignore[no-untyped-def]
+def declare_host_attribute(
     a: type[ABCHostAttribute],
     show_in_table: bool = True,
     show_in_folder: bool = True,
@@ -494,7 +494,7 @@ def declare_host_attribute(  # type: ignore[no-untyped-def]
     show_inherited_value: bool = True,
     may_edit: Callable[[], bool] | None = None,
     from_config: bool = False,
-):
+) -> None:
     if not issubclass(a, ABCHostAttribute):
         raise MKGeneralException(
             _("Failed to load legacy host attribute from local plugins: %r") % a
@@ -754,7 +754,7 @@ def host_attribute(name: str) -> ABCHostAttribute:
 # is related to these HTTP variables and so on is SearchFolder.
 def collect_attributes(
     for_what: str, new: bool, do_validate: bool = True, varprefix: str = ""
-) -> HostAttributeSpec:
+) -> HostAttributes:
     """Read attributes from HTML variables"""
     host = {}
     for attr in host_attribute_registry.attributes():

@@ -84,6 +84,7 @@ from cmk.gui.watolib.config_domain_name import (
 from cmk.gui.watolib.host_attributes import (
     collect_attributes,
     host_attribute_registry,
+    HostAttributes,
     HostContactGroupSpec,
 )
 from cmk.gui.watolib.objref import ObjectRef, ObjectRefType
@@ -105,7 +106,6 @@ if cmk_version.is_managed_edition():
     import cmk.gui.cme.helpers as managed_helpers  # pylint: disable=no-name-in-module
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
-HostAttributes = Mapping[str, Any]
 SearchCriteria = Mapping[str, Any]
 
 

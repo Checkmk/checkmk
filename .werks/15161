@@ -1,0 +1,18 @@
+Title: Enforce user role & permissions for statehist table
+Class: fix
+Compatible: compat
+Component: livestatus
+Date: 1688564150
+Edition: cee
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.2.0p6
+
+User role & permissions, such as disabling "see all host
+and services" was not always enforced for the statehist
+table.  That would lead, for example, to non-authorized
+users being able to retrieve the list of hosts from the
+"availability" menu.
+
+

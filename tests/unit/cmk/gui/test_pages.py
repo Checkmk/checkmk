@@ -28,7 +28,6 @@ def test_registered_pages() -> None:
         "ajax_dict_host_tag_condition_get_choice",
         "ajax_fetch_ca",
         "ajax_inv_render_tree",
-        "ajax_inv_render_delta_tree",
         "ajax_nagvis_maps_snapin",
         "ajax_popup_action_menu",
         "ajax_popup_host_action_menu",

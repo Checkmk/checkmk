@@ -207,7 +207,7 @@ class PainterInventoryTree(Painter):
             return "", ""
 
         painter_options = PainterOptions.get_instance()
-        tree_renderer = NodeRenderer(
+        tree_renderer = TreeRenderer(
             row["site"],
             row["host_name"],
             show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
@@ -1200,7 +1200,7 @@ def _paint_host_inventory_tree(row: Row, hints: DisplayHints) -> CellSpec:
         return "", ""
 
     painter_options = PainterOptions.get_instance()
-    tree_renderer = NodeRenderer(
+    tree_renderer = TreeRenderer(
         row["site"],
         row["host_name"],
         show_internal_tree_paths=painter_options.get("show_internal_tree_paths"),
@@ -1885,7 +1885,7 @@ class PainterInvhistDelta(Painter):
         if not (tree := self._compute_data(row, cell)):
             return "", ""
 
-        tree_renderer = DeltaNodeRenderer(
+        tree_renderer = TreeRenderer(
             row["site"],
             row["host_name"],
             tree_id=str(row["invhist_time"]),
@@ -2030,12 +2030,12 @@ multisite_builtin_views["inv_host_history"] = {
 }
 
 # .
-#   .--renderers-----------------------------------------------------------.
-#   |                                _                                     |
-#   |             _ __ ___ _ __   __| | ___ _ __ ___ _ __ ___              |
-#   |            | '__/ _ \ '_ \ / _` |/ _ \ '__/ _ \ '__/ __|             |
-#   |            | | |  __/ | | | (_| |  __/ | |  __/ |  \__ \             |
-#   |            |_|  \___|_| |_|\__,_|\___|_|  \___|_|  |___/             |
+#   .--tree renderer-------------------------------------------------------.
+#   |     _                                      _                         |
+#   |    | |_ _ __ ___  ___   _ __ ___ _ __   __| | ___ _ __ ___ _ __      |
+#   |    | __| '__/ _ \/ _ \ | '__/ _ \ '_ \ / _` |/ _ \ '__/ _ \ '__|     |
+#   |    | |_| | |  __/  __/ | | |  __/ | | | (_| |  __/ | |  __/ |        |
+#   |     \__|_|  \___|\___| |_|  \___|_| |_|\__,_|\___|_|  \___|_|        |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
@@ -2196,7 +2196,7 @@ def _show_delta_value(
         raise NotImplementedError()
 
 
-class ABCNodeRenderer(abc.ABC):
+class TreeRenderer:
     def __init__(
         self,
         site_id: SiteId,
@@ -2210,9 +2210,16 @@ class ABCNodeRenderer(abc.ABC):
         self._tree_id = tree_id
         self._tree_name = f"inv_{hostname}{tree_id}"
 
-    @abc.abstractmethod
     def _fetch_url(self, raw_path: str) -> str:
-        raise NotImplementedError()
+        params: list[tuple[str, int | str | None]] = [
+            ("site", self._site_id),
+            ("host", self._hostname),
+            ("raw_path", raw_path),
+            ("show_internal_tree_paths", "on" if self._show_internal_tree_paths else ""),
+        ]
+        if self._tree_id:
+            params.append(("tree_id", self._tree_id))
+        return makeuri_contextless(request, params, "ajax_inv_render_tree.py")
 
     def _get_header(self, title: str, key_info: str) -> HTML:
         header = HTML(title)
@@ -2326,45 +2333,29 @@ class ABCNodeRenderer(abc.ABC):
         html.close_table()
 
 
-class NodeRenderer(ABCNodeRenderer):
-    def _fetch_url(self, raw_path: str) -> str:
-        return makeuri_contextless(
-            request,
-            [
-                ("site", self._site_id),
-                ("host", self._hostname),
-                ("raw_path", raw_path),
-                ("show_internal_tree_paths", "on" if self._show_internal_tree_paths else ""),
-            ],
-            "ajax_inv_render_tree.py",
+class _LoadTreeError(Exception):
+    pass
+
+
+def _load_delta_tree(site_id: SiteId, host_name: HostName, tree_id: str) -> ImmutableDeltaTree:
+    tree, corrupted_history_files = inventory.load_delta_tree(host_name, int(tree_id))
+    if corrupted_history_files:
+        user_errors.add(
+            MKUserError(
+                "load_inventory_delta_tree",
+                _(
+                    "Cannot load HW/SW inventory history entries %s."
+                    " Please remove the corrupted files."
+                )
+                % ", ".join(corrupted_history_files),
+            )
         )
+        raise _LoadTreeError()
+    return tree
 
 
-class DeltaNodeRenderer(ABCNodeRenderer):
-    def _fetch_url(self, raw_path: str) -> str:
-        return makeuri_contextless(
-            request,
-            [
-                ("site", self._site_id),
-                ("host", self._hostname),
-                ("raw_path", raw_path),
-                ("tree_id", self._tree_id),
-            ],
-            "ajax_inv_render_delta_tree.py",
-        )
-
-
-# Ajax call for fetching parts of the tree
-@cmk.gui.pages.register("ajax_inv_render_tree")
-def ajax_inv_render_tree() -> None:
-    site_id = SiteId(request.get_ascii_input_mandatory("site"))
-    hostname = HostName(request.get_ascii_input_mandatory("host"))
-    inventory.verify_permission(hostname, site_id)
-
-    raw_path = request.get_ascii_input_mandatory("raw_path")
-    show_internal_tree_paths = bool(request.var("show_internal_tree_paths"))
-
-    row = inventory.get_status_data_via_livestatus(site_id, hostname)
+def _load_inventory_tree(site_id: SiteId, host_name: HostName) -> ImmutableTree:
+    row = inventory.get_status_data_via_livestatus(site_id, host_name)
     try:
         tree = inventory.load_filtered_and_merged_tree(row)
     except inventory.LoadStructuredDataError:
@@ -2372,41 +2363,31 @@ def ajax_inv_render_tree() -> None:
             MKUserError(
                 "load_inventory_tree",
                 _("Cannot load HW/SW inventory tree %s. Please remove the corrupted file.")
-                % inventory.get_short_inventory_filepath(hostname),
+                % inventory.get_short_inventory_filepath(host_name),
             )
         )
-        return
-
-    inventory_path = inventory.InventoryPath.parse(raw_path or "")
-    if not (tree := tree.get_tree(inventory_path.path)):
-        html.show_error(_("No such tree below %r") % inventory_path.path)
-        return
-
-    NodeRenderer(site_id, hostname, show_internal_tree_paths=show_internal_tree_paths).show(
-        tree, DISPLAY_HINTS.get_hints(tree.path)
-    )
+        raise _LoadTreeError()
+    return tree
 
 
-@cmk.gui.pages.register("ajax_inv_render_delta_tree")
-def ajax_inv_render_delta_tree() -> None:
+# Ajax call for fetching parts of the tree
+@cmk.gui.pages.register("ajax_inv_render_tree")
+def ajax_inv_render_tree() -> None:
     site_id = SiteId(request.get_ascii_input_mandatory("site"))
-    hostname = HostName(request.get_ascii_input_mandatory("host"))
-    inventory.verify_permission(hostname, site_id)
+    host_name = HostName(request.get_ascii_input_mandatory("host"))
+    inventory.verify_permission(host_name, site_id)
 
     raw_path = request.get_ascii_input_mandatory("raw_path")
-    tree_id = request.get_ascii_input_mandatory("tree_id")
+    show_internal_tree_paths = bool(request.var("show_internal_tree_paths"))
+    tree_id = request.get_ascii_input_mandatory("tree_id", "")
 
-    tree, corrupted_history_files = inventory.load_delta_tree(hostname, int(tree_id))
-    if corrupted_history_files:
-        user_errors.add(
-            MKUserError(
-                "load_inventory_delta_tree",
-                _(
-                    "Cannot load HW/SW inventory history entries %s. Please remove the corrupted files."
-                )
-                % ", ".join(corrupted_history_files),
-            )
-        )
+    tree: ImmutableTree | ImmutableDeltaTree
+    try:
+        if tree_id:
+            tree = _load_delta_tree(site_id, host_name, tree_id)
+        else:
+            tree = _load_inventory_tree(site_id, host_name)
+    except _LoadTreeError:
         return
 
     inventory_path = inventory.InventoryPath.parse(raw_path or "")
@@ -2414,6 +2395,6 @@ def ajax_inv_render_delta_tree() -> None:
         html.show_error(_("No such tree below %r") % inventory_path.path)
         return
 
-    DeltaNodeRenderer(site_id, hostname, tree_id=tree_id).show(
+    TreeRenderer(site_id, host_name, show_internal_tree_paths, tree_id).show(
         tree, DISPLAY_HINTS.get_hints(tree.path)
     )

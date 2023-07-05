@@ -124,6 +124,8 @@ def main() {
 
                         if (branch_name.contains("sandbox") ) {
                             print("Skip uploading ${filename} due to sandbox branch");
+                        } else if ("${EDITION}" == "saas"){
+                            print("Skip uploading ${filename} due to saas edition");
                         } else {
                             stage("Upload ${filename}") {
                                 artifacts_helper.upload_via_rsync(

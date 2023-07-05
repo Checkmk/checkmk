@@ -25,8 +25,8 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # tell requests not to honour "http(s)_proxy" env variables
 proxies = {
-    "http": None,
-    "https": None,
+    "http": "",
+    "https": "",
 }
 
 
@@ -148,6 +148,7 @@ if track_downtime and not hostname:
 
 
 def init_auth():
+    assert password is not None
     if auth_mode == "kerberos":
         kinit_completed = subprocess.run(
             ["kinit", username],

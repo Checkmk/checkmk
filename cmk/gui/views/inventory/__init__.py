@@ -2245,7 +2245,7 @@ class ABCNodeRenderer(abc.ABC):
                 # TODO separate tdclass from rendered value
                 tdclass, _rendered_value = column_hint.paint_function(None)
                 html.open_td(class_=tdclass)
-                self._show_value(value_info.value, column_hint, value_info.keep_until)
+                self._show_value(value_info, column_hint)
                 html.close_td()
             html.close_tr()
         html.close_table()
@@ -2265,35 +2265,35 @@ class ABCNodeRenderer(abc.ABC):
             html.open_tr()
             html.th(self._get_header(attr_hint.title, value_info.key))
             html.open_td()
-            self._show_value(value_info.value, attr_hint, value_info.keep_until)
+            self._show_value(value_info, attr_hint)
             html.close_td()
             html.close_tr()
         html.close_table()
 
+    def _get_html_value(
+        self, value: SDValue, hint: ColumnDisplayHint | AttributeDisplayHint
+    ) -> HTML:
+        # TODO separate tdclass from rendered value
+        _tdclass, code = hint.paint_function(value)
+        return HTML(code)
+
     def _show_value(
         self,
-        value: SDValue | tuple[SDValue, SDValue],
+        value_info: _InventoryTreeValueInfo | _DeltaTreeValueInfo,
         hint: AttributeDisplayHint | ColumnDisplayHint,
-        keep_until: int | None,
     ) -> None:
-        if isinstance(value, tuple):
-            self._show_delta_value(value, hint)
+        if isinstance(value_info, _DeltaTreeValueInfo):
+            self._show_delta_value(value_info.value, hint)
             return
-        self._show_single_value(value, hint, keep_until)
 
-    def _show_single_value(
-        self,
-        value: SDValue,
-        hint: ColumnDisplayHint | AttributeDisplayHint,
-        keep_until: int | None = None,
-    ) -> None:
-        _tdclass, code = hint.paint_function(value)
-        html_value = HTML(code)
-
-        if keep_until is not None and time.time() > keep_until:
-            html.write_html(HTMLWriter.render_span(html_value.value, css="muted-text"))
+        if value_info.keep_until is not None and time.time() > value_info.keep_until:
+            html.write_html(
+                HTMLWriter.render_span(
+                    self._get_html_value(value_info.value, hint).value, css="muted-text"
+                )
+            )
         else:
-            html.write_html(html_value)
+            html.write_html(self._get_html_value(value_info.value, hint))
 
     def _show_delta_value(
         self,
@@ -2303,21 +2303,21 @@ class ABCNodeRenderer(abc.ABC):
         old, new = value
         if old is None and new is not None:
             html.open_span(class_="invnew")
-            self._show_single_value(new, hint)
+            html.write_html(self._get_html_value(new, hint))
             html.close_span()
         elif old is not None and new is None:
             html.open_span(class_="invold")
-            self._show_single_value(old, hint)
+            html.write_html(self._get_html_value(old, hint))
             html.close_span()
         elif old == new:
-            self._show_single_value(old, hint)
+            html.write_html(self._get_html_value(old, hint))
         elif old is not None and new is not None:
             html.open_span(class_="invold")
-            self._show_single_value(old, hint)
+            html.write_html(self._get_html_value(old, hint))
             html.close_span()
             html.write_text(" → ")
             html.open_span(class_="invnew")
-            self._show_single_value(new, hint)
+            html.write_html(self._get_html_value(new, hint))
             html.close_span()
         else:
             raise NotImplementedError()

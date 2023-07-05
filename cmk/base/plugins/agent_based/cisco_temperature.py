@@ -3,7 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any, List, Mapping, Union
+import dataclasses
+import enum
+from collections.abc import Mapping, Sequence
+from typing import Any, List
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     all_of,
@@ -30,7 +33,9 @@ from cmk.base.plugins.agent_based.utils.temperature import check_temperature, Te
 
 Section = Mapping[str, Mapping[str, Mapping[str, Any]]]  # oh boy.
 
-_Levels = Union[None, tuple[float, float, float, float], tuple[float, float]]
+
+_Levels = tuple[float, float] | None
+
 
 # NOTE: Devices of type 3850 with firmware versions 3.2.0SE, 3.2.1, 3.2.2
 # have been observed to display a tenth of the actual temperature value.
@@ -49,6 +54,54 @@ _CISCO_TEMPERATURE_ADMIN_STATE_MAP = {
     "2": "down",
     "3": "testing",
 }
+
+
+class EntSensorThresholdRelation(enum.IntEnum):
+    LESS_THAN = 1
+    LESS_OR_EQUAL = 2
+    GREATER_THAN = 3
+    GREATER_OR_EQUAL = 4
+    EQUAL_TO = 5
+    NOT_EQUAL_TO = 6
+
+
+class EntSensorThresholdSeverity(enum.IntEnum):
+    OTHER = 1
+    MINOR = 10
+    MAJOR = 20
+    CRITICAL = 30
+
+
+@dataclasses.dataclass
+class EntSensorThreshold:
+    severity: EntSensorThresholdSeverity
+    relation: EntSensorThresholdRelation
+    value: float
+
+
+def _filter_thresholds_for_relation(
+    thresholds: Sequence[EntSensorThreshold],
+    filter_comp_op: EntSensorThresholdRelation,
+) -> Mapping[EntSensorThresholdSeverity, EntSensorThreshold]:
+    return {thresh.severity: thresh for thresh in thresholds if thresh.relation == filter_comp_op}
+
+
+def _parse_temperature_thresholds(
+    filtered_thresholds: Mapping[EntSensorThresholdSeverity, EntSensorThreshold],
+    factor: float,
+) -> _Levels:
+    filtered_thresholds = dict(filtered_thresholds)
+    # thresholds can be (minor, major, critical, shutdown), but not all have to be defined
+    # WARN <- minor, CRIT <- min(major, critical, shutdown)
+    warn_threshold = filtered_thresholds.pop(EntSensorThresholdSeverity.MINOR, None)
+    crit_threshold_val = min(
+        (thresh.value * factor for thresh in filtered_thresholds.values()), default=None
+    )
+    if crit_threshold_val is None:
+        return None
+    if warn_threshold is None:
+        return crit_threshold_val, crit_threshold_val
+    return warn_threshold.value * factor, crit_threshold_val
 
 
 def parse_cisco_temperature(  # pylint: disable=too-many-branches
@@ -154,14 +207,20 @@ def parse_cisco_temperature(  # pylint: disable=too-many-branches
                 admin_states_dict[sensor_id] = _CISCO_TEMPERATURE_ADMIN_STATE_MAP.get(admin_state)
 
     # Create dict with thresholds
-    thresholds: dict[str, list[str]] = {}
+    thresholds: dict[str, list[EntSensorThreshold]] = {}
     for sensor_id, sensortype_id, scalecode, magnitude, value, sensorstate in state_info:
         thresholds.setdefault(sensor_id, [])
 
-    for endoid, level in levels_info:
+    for endoid, severity, relation, thresh_value in levels_info:
         # endoid is e.g. 21549.9 or 21459.10
         sensor_id, _subid = endoid.split(".")
-        thresholds.setdefault(sensor_id, []).append(level)
+        thresholds.setdefault(sensor_id, []).append(
+            EntSensorThreshold(
+                severity=EntSensorThresholdSeverity(int(severity)),
+                relation=EntSensorThresholdRelation(int(relation)),
+                value=float(thresh_value),
+            )
+        )
 
     # Parse OIDs described by CISCO-ENTITY-SENSOR-MIB
     entity_parsed: dict[str, dict[str, dict[str, str]]] = {}
@@ -187,6 +246,9 @@ def parse_cisco_temperature(  # pylint: disable=too-many-branches
             "admin_state": admin_states_dict.get(sensor_id),
         }
 
+        dev_levels_lower: _Levels = None
+        dev_levels_upper: _Levels = None
+
         if sensorstate == "1":
             factor = 10.0 ** (float(cisco_entity_exponents[scalecode]) - float(magnitude))
             sensor_attrs["reading"] = float(value) * factor
@@ -202,7 +264,7 @@ def parse_cisco_temperature(  # pylint: disable=too-many-branches
             # to temperature sensors the device levels are ordered accordingly.
             if sensortype == "dBm" and len(thresholds[sensor_id]) == 4:
                 unsorted_thresholds = thresholds[sensor_id][0:4]
-                converted_thresholds = [float(t) * factor for t in unsorted_thresholds]
+                converted_thresholds = [t.value * factor for t in unsorted_thresholds]
                 sorted_thresholds = sorted(converted_thresholds, key=float)
                 opt_crit_upper, opt_warn_upper, opt_crit_lower, opt_warn_lower = (
                     sorted_thresholds[3],
@@ -210,24 +272,25 @@ def parse_cisco_temperature(  # pylint: disable=too-many-branches
                     sorted_thresholds[0],
                     sorted_thresholds[1],
                 )
-                dev_levels: _Levels = (
-                    opt_warn_upper,
-                    opt_crit_upper,
-                    opt_warn_lower,
-                    opt_crit_lower,
+                dev_levels_lower = opt_warn_lower, opt_crit_lower
+                dev_levels_upper = opt_warn_upper, opt_crit_upper
+
+            elif sensortype == "celsius":
+                # sensor values can be compared to the thresholds using different operators
+                # (<, <=, >, >=, =, !=))
+                # use the threshold only if the comp operator is the same as check_levels uses
+                greater_equal_thresholds = _filter_thresholds_for_relation(
+                    thresholds[sensor_id], EntSensorThresholdRelation.GREATER_OR_EQUAL
                 )
-            elif sensortype == "celsius" and len(thresholds[sensor_id]) == 4:
-                temp_crit_upper_raw, temp_warn_upper_raw = thresholds[sensor_id][0:2]
-                # Some devices deliver these values in the wrong order. In case the devices
-                # do no validation when thresholds are set this could result in values in a
-                # wrong oder as well. Device levels are assigned according to their size.
-                dev_levels = (
-                    min(float(temp_warn_upper_raw) * factor, float(temp_crit_upper_raw) * factor),
-                    max(float(temp_warn_upper_raw) * factor, float(temp_crit_upper_raw) * factor),
+                dev_levels_upper = _parse_temperature_thresholds(greater_equal_thresholds, factor)
+
+                lower_thresholds = _filter_thresholds_for_relation(
+                    thresholds[sensor_id], EntSensorThresholdRelation.LESS_THAN
                 )
-            else:
-                dev_levels = None
-            sensor_attrs["dev_levels"] = dev_levels
+                dev_levels_lower = _parse_temperature_thresholds(lower_thresholds, factor)
+
+            sensor_attrs["dev_levels_lower"] = dev_levels_lower
+            sensor_attrs["dev_levels_upper"] = dev_levels_upper
             entity_parsed[sensortype_id].setdefault(sensor_id, sensor_attrs)
         elif sensorstate in ["2", "3"]:
             entity_parsed[sensortype_id].setdefault(sensor_id, sensor_attrs)
@@ -254,10 +317,16 @@ def parse_cisco_temperature(  # pylint: disable=too-many-branches
 
         try:
             temp_sensor_attrs["reading"] = int(temp)
-            if max_temp and int(max_temp):
-                temp_sensor_attrs["dev_levels"] = (int(max_temp), int(max_temp))
+
+            attrs = entity_parsed.get(temp_sensor_type, {}).get(sensor_id, {})
+            if levels_upper := attrs.get("dev_levels_upper"):
+                temp_sensor_attrs["dev_levels_upper"] = levels_upper
+            elif max_temp and int(max_temp):
+                temp_sensor_attrs["dev_levels_upper"] = int(max_temp), int(max_temp)
             else:
-                temp_sensor_attrs["dev_levels"] = None
+                temp_sensor_attrs["dev_levels_upper"] = None
+            temp_sensor_attrs["dev_levels_lower"] = attrs.get("dev_levels_lower", None)
+
         except Exception:
             temp_sensor_attrs["dev_state"] = (3, "sensor defect")
 
@@ -307,7 +376,9 @@ register.snmp_section(
             base=".1.3.6.1.4.1.9.9.91.1.2.1.1",
             oids=[
                 OIDEnd(),
-                "4",  # Thresholds
+                "2",  # entSensorThresholdSeverity
+                "3",  # entSensorThresholdRelation
+                "4",  # entSensorThresholdValue
             ],
         ),
         # cisco_temp_perf data
@@ -379,7 +450,8 @@ def check_cisco_temperature(item: str, params: TempParamDict, section: Section) 
         params,
         unique_name="cisco_temperature_%s" % item,
         value_store=get_value_store(),
-        dev_levels=data["dev_levels"],
+        dev_levels=data.get("dev_levels_upper", None),
+        dev_levels_lower=data.get("dev_levels_lower", None),
         dev_status=state,
         dev_status_name=state_readable,
     )
@@ -423,7 +495,7 @@ def discover_cisco_temperature_dom(params: Mapping[str, Any], section: Section) 
 def _determine_levels(
     user_levels: tuple[float, float] | bool,
     device_levels: tuple[float, float] | tuple[None, None],
-) -> tuple[float, float] | None:
+) -> _Levels:
     if isinstance(user_levels, tuple):
         return user_levels
     if user_levels:
@@ -450,7 +522,8 @@ def check_cisco_temperature_dom(
         return
 
     # get won't save you, because 'dev_levels' may be present, but None.
-    device_levels = data.get("dev_levels") or (None, None, None, None)
+    dev_levels_lower = data.get("dev_levels_lower") or (None, None)
+    dev_levels_upper = data.get("dev_levels_upper") or (None, None)
 
     if "Transmit" in data["descr"]:
         dsname = "output_signal_power_dbm"
@@ -465,8 +538,8 @@ def check_cisco_temperature_dom(
         metric_name=dsname,
         # Map WATO configuration of levels to check_levels() compatible tuple.
         # Default value in case of missing WATO config is use device levels.
-        levels_lower=_determine_levels(params.get("power_levels_lower", True), device_levels[2:4]),
-        levels_upper=_determine_levels(params.get("power_levels_upper", True), device_levels[0:2]),
+        levels_lower=_determine_levels(params.get("power_levels_lower", True), dev_levels_lower),
+        levels_upper=_determine_levels(params.get("power_levels_upper", True), dev_levels_upper),
         render_func=lambda f: "%.2f dBm" % f,
         label="Signal power",
     )

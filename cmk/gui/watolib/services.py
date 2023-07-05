@@ -661,7 +661,7 @@ def _perform_update_host_labels(labels_by_nodes: Mapping[HostName, Sequence[Host
         )
 
 
-def _apply_state_change(  # pylint: disable=too-many-branches
+def _apply_state_change(
     table_source: str,
     table_target: str,
     key: tuple[Any, Any],
@@ -672,64 +672,60 @@ def _apply_state_change(  # pylint: disable=too-many-branches
     add_disabled_rule: set[str],
     remove_disabled_rule: set[str],
 ) -> None:
-    if table_source == DiscoveryState.UNDECIDED:
-        if table_target == DiscoveryState.MONITORED:
+    match table_source:
+        case DiscoveryState.UNDECIDED:
+            if table_target == DiscoveryState.MONITORED:
+                autochecks_to_save[key] = value
+                saved_services.add(descr)
+            elif table_target == DiscoveryState.IGNORED:
+                add_disabled_rule.add(descr)
+
+        case DiscoveryState.VANISHED:
+            if table_target == DiscoveryState.REMOVED:
+                pass
+            elif table_target == DiscoveryState.IGNORED:
+                add_disabled_rule.add(descr)
+                autochecks_to_save[key] = value
+            else:
+                autochecks_to_save[key] = value
+                saved_services.add(descr)
+
+        case DiscoveryState.MONITORED:
+            if table_target in [
+                DiscoveryState.MONITORED,
+                DiscoveryState.IGNORED,
+            ]:
+                autochecks_to_save[key] = value
+
+            if table_target == DiscoveryState.IGNORED:
+                add_disabled_rule.add(descr)
+            else:
+                saved_services.add(descr)
+
+        case DiscoveryState.IGNORED:
+            if table_target in [
+                DiscoveryState.MONITORED,
+                DiscoveryState.UNDECIDED,
+                DiscoveryState.VANISHED,
+            ]:
+                remove_disabled_rule.add(descr)
+            if table_target in [
+                DiscoveryState.MONITORED,
+                DiscoveryState.IGNORED,
+            ]:
+                autochecks_to_save[key] = value
+                saved_services.add(descr)
+            if table_target == DiscoveryState.IGNORED:
+                add_disabled_rule.add(descr)
+
+        case DiscoveryState.CLUSTERED_NEW | DiscoveryState.CLUSTERED_OLD | DiscoveryState.CLUSTERED_VANISHED | DiscoveryState.CLUSTERED_IGNORED:
+            # We keep VANISHED clustered services on the node with the following reason:
+            # If a service is mapped to a cluster then there are already operations
+            # for adding, removing, etc. of this service on the cluster. Therefore we
+            # do not allow any operation for this clustered service on the related node.
+            # We just display the clustered service state (OLD, NEW, VANISHED).
             autochecks_to_save[key] = value
             saved_services.add(descr)
-        elif table_target == DiscoveryState.IGNORED:
-            add_disabled_rule.add(descr)
-
-    elif table_source == DiscoveryState.VANISHED:
-        if table_target == DiscoveryState.REMOVED:
-            pass
-        elif table_target == DiscoveryState.IGNORED:
-            add_disabled_rule.add(descr)
-            autochecks_to_save[key] = value
-        else:
-            autochecks_to_save[key] = value
-            saved_services.add(descr)
-
-    elif table_source == DiscoveryState.MONITORED:
-        if table_target in [
-            DiscoveryState.MONITORED,
-            DiscoveryState.IGNORED,
-        ]:
-            autochecks_to_save[key] = value
-
-        if table_target == DiscoveryState.IGNORED:
-            add_disabled_rule.add(descr)
-        else:
-            saved_services.add(descr)
-
-    elif table_source == DiscoveryState.IGNORED:
-        if table_target in [
-            DiscoveryState.MONITORED,
-            DiscoveryState.UNDECIDED,
-            DiscoveryState.VANISHED,
-        ]:
-            remove_disabled_rule.add(descr)
-        if table_target in [
-            DiscoveryState.MONITORED,
-            DiscoveryState.IGNORED,
-        ]:
-            autochecks_to_save[key] = value
-            saved_services.add(descr)
-        if table_target == DiscoveryState.IGNORED:
-            add_disabled_rule.add(descr)
-
-    elif table_source in [
-        DiscoveryState.CLUSTERED_NEW,
-        DiscoveryState.CLUSTERED_OLD,
-        DiscoveryState.CLUSTERED_VANISHED,
-        DiscoveryState.CLUSTERED_IGNORED,
-    ]:
-        # We keep VANISHED clustered services on the node with the following reason:
-        # If a service is mapped to a cluster then there are already operations
-        # for adding, removing, etc. of this service on the cluster. Therefore we
-        # do not allow any operation for this clustered service on the related node.
-        # We just display the clustered service state (OLD, NEW, VANISHED).
-        autochecks_to_save[key] = value
-        saved_services.add(descr)
 
 
 def _make_host_audit_log_object(checks: SetAutochecksTable) -> set[str]:

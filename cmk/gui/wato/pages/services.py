@@ -878,36 +878,35 @@ class DiscoveryPageRenderer:
             enable_page_menu_entry(html, "show_discovered_labels")
             enable_page_menu_entry(html, "show_plugin_names")
 
-    def _toggle_bulk_action_page_menu_entries(  # pylint: disable=too-many-branches
-        self, table_source: str
-    ) -> None:
+    def _toggle_bulk_action_page_menu_entries(self, table_source: str) -> None:
         if not user.may("wato.services"):
             return
 
-        if table_source == DiscoveryState.MONITORED:
-            if has_modification_specific_permissions(UpdateType.UNDECIDED):
-                self._enable_bulk_button(table_source, DiscoveryState.UNDECIDED)
-            if has_modification_specific_permissions(UpdateType.IGNORED):
-                self._enable_bulk_button(table_source, DiscoveryState.IGNORED)
-
-        elif table_source == DiscoveryState.IGNORED:
-            if may_edit_ruleset("ignored_services"):
-                if has_modification_specific_permissions(UpdateType.MONITORED):
-                    self._enable_bulk_button(table_source, DiscoveryState.MONITORED)
+        match table_source:
+            case DiscoveryState.MONITORED:
                 if has_modification_specific_permissions(UpdateType.UNDECIDED):
                     self._enable_bulk_button(table_source, DiscoveryState.UNDECIDED)
+                if has_modification_specific_permissions(UpdateType.IGNORED):
+                    self._enable_bulk_button(table_source, DiscoveryState.IGNORED)
 
-        elif table_source == DiscoveryState.VANISHED:
-            if has_modification_specific_permissions(UpdateType.REMOVED):
-                self._enable_bulk_button(table_source, DiscoveryState.REMOVED)
-            if has_modification_specific_permissions(UpdateType.IGNORED):
-                self._enable_bulk_button(table_source, DiscoveryState.IGNORED)
+            case DiscoveryState.IGNORED:
+                if may_edit_ruleset("ignored_services"):
+                    if has_modification_specific_permissions(UpdateType.MONITORED):
+                        self._enable_bulk_button(table_source, DiscoveryState.MONITORED)
+                    if has_modification_specific_permissions(UpdateType.UNDECIDED):
+                        self._enable_bulk_button(table_source, DiscoveryState.UNDECIDED)
 
-        elif table_source == DiscoveryState.UNDECIDED:
-            if has_modification_specific_permissions(UpdateType.MONITORED):
-                self._enable_bulk_button(table_source, DiscoveryState.MONITORED)
-            if has_modification_specific_permissions(UpdateType.IGNORED):
-                self._enable_bulk_button(table_source, DiscoveryState.IGNORED)
+            case DiscoveryState.VANISHED:
+                if has_modification_specific_permissions(UpdateType.REMOVED):
+                    self._enable_bulk_button(table_source, DiscoveryState.REMOVED)
+                if has_modification_specific_permissions(UpdateType.IGNORED):
+                    self._enable_bulk_button(table_source, DiscoveryState.IGNORED)
+
+            case DiscoveryState.UNDECIDED:
+                if has_modification_specific_permissions(UpdateType.MONITORED):
+                    self._enable_bulk_button(table_source, DiscoveryState.MONITORED)
+                if has_modification_specific_permissions(UpdateType.IGNORED):
+                    self._enable_bulk_button(table_source, DiscoveryState.IGNORED)
 
     def _enable_bulk_button(self, source: str, target: str) -> None:
         enable_page_menu_entry(html, f"bulk_{source}_{target}")
@@ -1106,77 +1105,78 @@ class DiscoveryPageRenderer:
         checkbox_name = checkbox_id(entry.check_plugin_name, entry.item)
 
         num_buttons = 0
-        if entry.check_source == DiscoveryState.MONITORED:
-            if has_modification_specific_permissions(UpdateType.UNDECIDED):
-                num_buttons += self._icon_button(
-                    DiscoveryState.MONITORED,
-                    checkbox_name,
-                    DiscoveryState.UNDECIDED,
-                    "undecided",
-                    button_classes,
-                )
-            if has_modification_specific_permissions(UpdateType.IGNORED):
-                num_buttons += self._icon_button(
-                    DiscoveryState.MONITORED,
-                    checkbox_name,
-                    DiscoveryState.IGNORED,
-                    "disabled",
-                    button_classes,
-                )
+        match entry.check_source:
+            case DiscoveryState.MONITORED:
+                if has_modification_specific_permissions(UpdateType.UNDECIDED):
+                    num_buttons += self._icon_button(
+                        DiscoveryState.MONITORED,
+                        checkbox_name,
+                        DiscoveryState.UNDECIDED,
+                        "undecided",
+                        button_classes,
+                    )
+                if has_modification_specific_permissions(UpdateType.IGNORED):
+                    num_buttons += self._icon_button(
+                        DiscoveryState.MONITORED,
+                        checkbox_name,
+                        DiscoveryState.IGNORED,
+                        "disabled",
+                        button_classes,
+                    )
 
-        elif entry.check_source == DiscoveryState.IGNORED:
-            if may_edit_ruleset("ignored_services") and has_modification_specific_permissions(
-                UpdateType.MONITORED
-            ):
-                num_buttons += self._icon_button(
-                    DiscoveryState.IGNORED,
-                    checkbox_name,
-                    DiscoveryState.MONITORED,
-                    "monitored",
-                    button_classes,
-                )
-            if has_modification_specific_permissions(UpdateType.IGNORED):
-                num_buttons += self._icon_button(
-                    DiscoveryState.IGNORED,
-                    checkbox_name,
-                    DiscoveryState.UNDECIDED,
-                    "undecided",
-                    button_classes,
-                )
-                num_buttons += self._disabled_services_button(entry.description)
+            case DiscoveryState.IGNORED:
+                if may_edit_ruleset("ignored_services") and has_modification_specific_permissions(
+                    UpdateType.MONITORED
+                ):
+                    num_buttons += self._icon_button(
+                        DiscoveryState.IGNORED,
+                        checkbox_name,
+                        DiscoveryState.MONITORED,
+                        "monitored",
+                        button_classes,
+                    )
+                if has_modification_specific_permissions(UpdateType.IGNORED):
+                    num_buttons += self._icon_button(
+                        DiscoveryState.IGNORED,
+                        checkbox_name,
+                        DiscoveryState.UNDECIDED,
+                        "undecided",
+                        button_classes,
+                    )
+                    num_buttons += self._disabled_services_button(entry.description)
 
-        elif entry.check_source == DiscoveryState.VANISHED:
-            if has_modification_specific_permissions(UpdateType.REMOVED):
-                num_buttons += self._icon_button_removed(
-                    entry.check_source, checkbox_name, button_classes
-                )
+            case DiscoveryState.VANISHED:
+                if has_modification_specific_permissions(UpdateType.REMOVED):
+                    num_buttons += self._icon_button_removed(
+                        entry.check_source, checkbox_name, button_classes
+                    )
 
-            if has_modification_specific_permissions(UpdateType.IGNORED):
-                num_buttons += self._icon_button(
-                    DiscoveryState.VANISHED,
-                    checkbox_name,
-                    DiscoveryState.IGNORED,
-                    "disabled",
-                    button_classes,
-                )
+                if has_modification_specific_permissions(UpdateType.IGNORED):
+                    num_buttons += self._icon_button(
+                        DiscoveryState.VANISHED,
+                        checkbox_name,
+                        DiscoveryState.IGNORED,
+                        "disabled",
+                        button_classes,
+                    )
 
-        elif entry.check_source == DiscoveryState.UNDECIDED:
-            if has_modification_specific_permissions(UpdateType.MONITORED):
-                num_buttons += self._icon_button(
-                    DiscoveryState.UNDECIDED,
-                    checkbox_name,
-                    DiscoveryState.MONITORED,
-                    "monitored",
-                    button_classes,
-                )
-            if has_modification_specific_permissions(UpdateType.IGNORED):
-                num_buttons += self._icon_button(
-                    DiscoveryState.UNDECIDED,
-                    checkbox_name,
-                    DiscoveryState.IGNORED,
-                    "disabled",
-                    button_classes,
-                )
+            case DiscoveryState.UNDECIDED:
+                if has_modification_specific_permissions(UpdateType.MONITORED):
+                    num_buttons += self._icon_button(
+                        DiscoveryState.UNDECIDED,
+                        checkbox_name,
+                        DiscoveryState.MONITORED,
+                        "monitored",
+                        button_classes,
+                    )
+                if has_modification_specific_permissions(UpdateType.IGNORED):
+                    num_buttons += self._icon_button(
+                        DiscoveryState.UNDECIDED,
+                        checkbox_name,
+                        DiscoveryState.IGNORED,
+                        "disabled",
+                        button_classes,
+                    )
 
         while num_buttons < 2:
             html.empty_icon()

@@ -571,11 +571,9 @@ def test_sort_deltatable_rows_displayhint(
     delta_table: ImmutableDeltaTable,
     expected: Sequence[Sequence[_DeltaTreeValueInfo]],
 ) -> None:
-    sorted_rows = _sort_delta_rows(delta_table, ["sid", "changed", "foo", "flashback", "other"])
-    assert sorted_rows == expected
-    for row in sorted_rows:
-        for value in row:
-            assert value.keep_until is None
+    assert (
+        _sort_delta_rows(delta_table, ["sid", "changed", "foo", "flashback", "other"]) == expected
+    )
 
 
 @pytest.mark.parametrize(

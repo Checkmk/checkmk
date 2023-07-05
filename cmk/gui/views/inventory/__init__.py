@@ -2108,10 +2108,6 @@ class _DeltaTreeValueInfo(NamedTuple):
     key: SDKey
     value: tuple[SDValue, SDValue]
 
-    @property
-    def keep_until(self) -> None:
-        return None
-
 
 def _sort_delta_pairs(
     attributes: ImmutableDeltaAttributes, key_order: Sequence[SDKey]

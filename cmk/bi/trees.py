@@ -113,11 +113,7 @@ class BICompiledLeaf(ABCBICompiledNode):
         return {RequiredBIElement(self.site_id, self.host_name, self.service_description)}
 
     def __str__(self) -> str:
-        return "BICompiledLeaf[Site {}, Host: {}, Service {}]".format(
-            self.site_id,
-            self.host_name,
-            self.service_description,
-        )
+        return f"BICompiledLeaf[Site {self.site_id}, Host: {self.host_name}, Service {self.service_description}]"
 
     def __repr__(self):
         return f"{self} / frozen: {self.frozen_marker}"
@@ -205,13 +201,13 @@ class BICompiledLeaf(ABCBICompiledNode):
         )
 
     def _map_hoststate_to_bistate(self, host_state: HostState) -> int:
-        if host_state == BIStates.HOST_UP:
-            return BIStates.OK
-        if host_state == BIStates.HOST_DOWN:
-            return BIStates.CRIT
-        if host_state == BIStates.HOST_UNREACHABLE:
-            return BIStates.UNKNOWN
-        return BIStates.UNKNOWN
+        match host_state:
+            case BIStates.HOST_UP:
+                return BIStates.OK
+            case BIStates.HOST_DOWN:
+                return BIStates.CRIT
+            case _:  # also BIStates.HOST_UNREACHABLE:
+                return BIStates.UNKNOWN
 
     def _get_state_name(self, state: HostState | ServiceState) -> str:
         return service_state_name(state) if self.service_description else host_state_name(state)
@@ -220,14 +216,15 @@ class BICompiledLeaf(ABCBICompiledNode):
         self, bi_status_fetcher: ABCBIStatusFetcher
     ) -> tuple[int | None, BIHostStatusInfoRow | BIServiceWithFullState | None]:
         assert self.site_id is not None
-        entity = bi_status_fetcher.states.get(BIHostSpec(self.site_id, self.host_name))
-        if not entity:
-            return None, None
-        if self.service_description is None:
-            return entity.scheduled_downtime_depth, entity
-        return entity.scheduled_downtime_depth, entity.services_with_fullstate.get(
-            self.service_description
-        )
+
+        if entity := bi_status_fetcher.states.get(BIHostSpec(self.site_id, self.host_name)):
+            if self.service_description is None:
+                return entity.scheduled_downtime_depth, entity
+            return entity.scheduled_downtime_depth, entity.services_with_fullstate.get(
+                self.service_description
+            )
+
+        return None, None
 
     @classmethod
     def schema(cls) -> type[BICompiledLeafSchema]:
@@ -312,12 +309,11 @@ class BICompiledRule(ABCBICompiledNode):
         return self.properties.title
 
     def get_identifiers(self, parent_id: tuple, used_ids: set[tuple]) -> list[NodeIdentifierInfo]:
-        idents = []
         own_id = (1, self.properties.title)
         while (*parent_id, own_id) in used_ids:
             own_id = (own_id[0] + 1, own_id[1])
         my_id = (*parent_id, own_id)
-        idents.append(NodeIdentifierInfo(my_id, self))
+        idents = [NodeIdentifierInfo(my_id, self)]
         used_ids.add(my_id)
         for node in self.nodes:
             idents.extend(node.get_identifiers(my_id, used_ids))
@@ -374,11 +370,10 @@ class BICompiledRule(ABCBICompiledNode):
         if not use_assumed:
             return NodeResultBundle(actual_result, None, bundled_results, self)
 
-        assumed_result_items = []
-        for bundle in bundled_results:
-            assumed_result_items.append(
-                bundle.assumed_result if bundle.assumed_result is not None else bundle.actual_result
-            )
+        assumed_result_items = [
+            bundle.assumed_result if bundle.assumed_result is not None else bundle.actual_result
+            for bundle in bundled_results
+        ]
         assumed_result = self._process_node_compute_result(
             assumed_result_items, computation_options
         )
@@ -599,9 +594,7 @@ class BICompiledAggregation:
             "aggr_state": generate_state(node_result_bundle.actual_result),
             "aggr_assumed_state": generate_state(node_result_bundle.assumed_result),
             "aggr_effective_state": generate_state(
-                node_result_bundle.assumed_result
-                if node_result_bundle.assumed_result
-                else node_result_bundle.actual_result
+                node_result_bundle.assumed_result or node_result_bundle.actual_result
             ),
             "aggr_id": bi_compiled_branch.properties.title,
             "aggr_name": bi_compiled_branch.properties.title,
@@ -629,8 +622,7 @@ class BICompiledAggregation:
         return response
 
     def eval_result_node(self, node: ABCBICompiledNode) -> dict[str, Any]:
-        result: dict[str, Any] = {}
-        result["frozen_marker"] = node.frozen_marker
+        result: dict[str, Any] = {"frozen_marker": node.frozen_marker}
         if isinstance(node, BICompiledLeaf):
             result["type"] = 1
             result["host"] = (node.site_id, node.host_name)

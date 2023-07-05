@@ -103,7 +103,7 @@ class BICompiler:
 
         result = self.get_aggregation_by_name(aggr_name=branch_name)
         if not result:
-            raise MKGeneralException("Unknown aggregation %s" % branch_name)
+            raise MKGeneralException(f"Unknown aggregation {branch_name}")
         aggregation, branch = result
 
         # Prepare a single frozen configuration specifically for this branch
@@ -297,10 +297,7 @@ class BICompiler:
             return True
 
         # Check BI configuration changes
-        if current_configstatus["configfile_timestamp"] > self._get_compilation_timestamp():
-            return True
-
-        return False
+        return current_configstatus["configfile_timestamp"] > self._get_compilation_timestamp()
 
     def _get_compilation_timestamp(self) -> float:
         compilation_timestamp = 0.0
@@ -339,7 +336,7 @@ class BICompiler:
         return current_configstatus
 
     def _get_last_configuration_change(self) -> float:
-        conf_dir = default_config_dir + "/multisite.d"
+        conf_dir = f"{default_config_dir}/multisite.d"
         latest_timestamp = 0.0
         wato_config = Path(conf_dir, "wato", self._bi_configuration_file)
         if wato_config.exists():
@@ -420,9 +417,7 @@ class BICompiler:
             pipeline.sadd(key, *values)
         pipeline.set("bi:aggregation_lookup", "1")
 
-        # Remove obsolete keys
-        obsolete_keys = existing_keys - set(part_of_aggregation_map.keys())
-        if obsolete_keys:
+        if obsolete_keys := existing_keys - set(part_of_aggregation_map.keys()):
             pipeline.delete(*obsolete_keys)
 
         pipeline.execute()

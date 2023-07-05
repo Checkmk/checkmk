@@ -137,12 +137,11 @@ class BIComputer:
         if not self._use_aggregation(compiled_aggregation, bi_aggregation_filter):
             return []
 
-        used_branches = []
-        for compiled_branch in compiled_aggregation.branches:
-            if not self._use_aggregation_branch(compiled_branch, bi_aggregation_filter):
-                continue
-            used_branches.append(compiled_branch)
-        return used_branches
+        return [
+            compiled_branch
+            for compiled_branch in compiled_aggregation.branches
+            if self._use_aggregation_branch(compiled_branch, bi_aggregation_filter)
+        ]
 
     def _use_aggregation(
         self,
@@ -158,25 +157,22 @@ class BIComputer:
 
         # Filter aggregation group names
         # Note: Paths are also available as names
-        if bi_aggregation_filter.group_names:
-            if (
-                len(
-                    compiled_aggregation.groups.combined_groups().intersection(
-                        bi_aggregation_filter.group_names
-                    )
+        if bi_aggregation_filter.group_names and (
+            len(
+                compiled_aggregation.groups.combined_groups().intersection(
+                    bi_aggregation_filter.group_names
                 )
-                == 0
-            ):
-                return False
-
-        # Filter aggregation group paths
-        group_paths = compiled_aggregation.groups.paths
-        if bi_aggregation_filter.group_path_prefix and not self._matches_group_path(
-            group_paths, bi_aggregation_filter.group_path_prefix
+            )
+            == 0
         ):
             return False
 
-        return True
+        # Filter aggregation group paths
+        group_paths = compiled_aggregation.groups.paths
+        return bool(
+            not bi_aggregation_filter.group_path_prefix
+            or self._matches_group_path(group_paths, bi_aggregation_filter.group_path_prefix)
+        )
 
     def _use_aggregation_branch(
         self, compiled_branch: BICompiledRule, bi_aggregation_filter: BIAggregationFilter
@@ -184,25 +180,20 @@ class BIComputer:
         branch_elements = compiled_branch.required_elements()
         branch_hosts = {x[1] for x in branch_elements}
         branch_services = {(x[1], x[2]) for x in branch_elements if x[2] is not None}
-        if (
+        if bi_aggregation_filter.hosts and not branch_hosts.intersection(
             bi_aggregation_filter.hosts
-            and len(branch_hosts.intersection(bi_aggregation_filter.hosts)) == 0
         ):
             return False
 
-        if (
+        if bi_aggregation_filter.services and not branch_services.intersection(
             bi_aggregation_filter.services
-            and len(branch_services.intersection(bi_aggregation_filter.services)) == 0
         ):
             return False
 
-        if (
-            bi_aggregation_filter.aggr_titles
-            and compiled_branch.properties.title not in bi_aggregation_filter.aggr_titles
-        ):
-            return False
-
-        return True
+        return (
+            not bi_aggregation_filter.aggr_titles
+            or compiled_branch.properties.title in bi_aggregation_filter.aggr_titles
+        )
 
     #   .--Legacy--------------------------------------------------------------.
     #   |                  _                                                   |
@@ -217,8 +208,7 @@ class BIComputer:
         self, bi_aggregation_filter: BIAggregationFilter
     ) -> list[dict]:
         results = self.compute_result_for_filter(bi_aggregation_filter)
-        legacy_results = self.convert_to_legacy_results(results, bi_aggregation_filter)
-        return legacy_results
+        return self.convert_to_legacy_results(results, bi_aggregation_filter)
 
     def convert_to_legacy_results(
         self,

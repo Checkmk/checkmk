@@ -351,17 +351,14 @@ def replace_macros(
 
 
 def replace_macros_in_list(elements: list[str], macros: MacroMapping) -> list[str]:
-    new_list: list[str] = []
-    for element in elements:
-        new_list.append(replace_macros(element, macros))
-    return new_list
+    return [replace_macros(element, macros) for element in elements]
 
 
 def replace_macros_in_dict(old_dict: dict[str, str], macros: MacroMapping) -> dict[str, str]:
-    new_dict: dict[str, str] = {}
-    for key, value in old_dict.items():
-        new_dict[replace_macros(key, macros)] = replace_macros(value, macros)
-    return new_dict
+    return {
+        replace_macros(key, macros): replace_macros(value, macros)
+        for key, value in old_dict.items()
+    }
 
 
 def replace_macros_in_string(pattern: str, macros: MacroMapping) -> str:

@@ -82,7 +82,7 @@ class BICallARuleAction(ABCBIAction, ABCWithSchema):
         bi_rule = bi_rule_id_registry[self.rule_id]
         rule_arguments = replace_macros(self.params.arguments, search_result)
         mapped_rule_arguments = dict(
-            zip(["$%s$" % x for x in bi_rule.params.arguments], rule_arguments)
+            zip([f"${x}$" for x in bi_rule.params.arguments], rule_arguments)
         )
         return replace_macros(bi_rule.properties.title, mapped_rule_arguments)
 
@@ -286,6 +286,4 @@ class BIActionSchema(OneOfSchema):
     # }
 
     def get_obj_type(self, obj: ABCBIAction | dict) -> str:
-        if isinstance(obj, dict):
-            return obj["type"]
-        return obj.kind()
+        return obj["type"] if isinstance(obj, dict) else obj.kind()

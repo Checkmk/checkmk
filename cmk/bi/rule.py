@@ -113,7 +113,7 @@ class BIRule(ABCBIRule, ABCWithSchema):
             return []
 
         mapped_rule_arguments: MacroMapping = dict(
-            zip(["$%s$" % x for x in self._params.arguments], extern_arguments)
+            zip([f"${x}$" for x in self._params.arguments], extern_arguments)
         )
 
         action_results = []

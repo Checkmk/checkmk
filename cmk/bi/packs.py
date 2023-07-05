@@ -165,14 +165,12 @@ class BIAggregationPacks:
 
     def get_rule(self, rule_id: str) -> BIRule | None:
         for bi_pack in self.packs.values():
-            bi_rule = bi_pack.get_rule(rule_id)
-            if bi_rule:
+            if bi_rule := bi_pack.get_rule(rule_id):
                 return bi_rule
         return None
 
     def get_rule_mandatory(self, rule_id: str) -> BIRule:
-        bi_rule = self.get_rule(rule_id)
-        if bi_rule:
+        if bi_rule := self.get_rule(rule_id):
             return bi_rule
         raise RuleNotFoundException(_("The requested BI rule does not exist."))
 
@@ -189,8 +187,7 @@ class BIAggregationPacks:
             )
 
         for bi_pack in self.packs.values():
-            bi_rule = bi_pack.get_rule(rule_id)
-            if bi_rule:
+            if bi_pack.get_rule(rule_id) is not None:
                 bi_pack.delete_rule(rule_id)
                 break
 
@@ -219,21 +216,18 @@ class BIAggregationPacks:
 
     def get_aggregation(self, aggregation_id: str) -> BIAggregation | None:
         for bi_pack in self.packs.values():
-            bi_aggregation = bi_pack.get_aggregation(aggregation_id)
-            if bi_aggregation:
+            if bi_aggregation := bi_pack.get_aggregation(aggregation_id):
                 return bi_aggregation
         return None
 
     def delete_aggregation(self, aggregation_id: str) -> None:
         for bi_pack in self.packs.values():
-            bi_aggregation = bi_pack.get_aggregation(aggregation_id)
-            if bi_aggregation:
+            if bi_pack.get_aggregation(aggregation_id):
                 bi_pack.delete_aggregation(aggregation_id)
                 break
 
     def get_aggregation_mandatory(self, aggregation_id: str) -> BIAggregation:
-        bi_aggregation = self.get_aggregation(aggregation_id)
-        if bi_aggregation:
+        if bi_aggregation := self.get_aggregation(aggregation_id):
             return bi_aggregation
         raise AggregationNotFoundException(_("The requested BI aggregation does not exist."))
 
@@ -368,9 +362,11 @@ class BIAggregationPacks:
     def count_rule_references(self, check_rule_id: str) -> RuleReferencesResult:
         aggr_refs = 0
         for bi_aggregation in self.get_all_aggregations():
-            if isinstance(bi_aggregation.node.action, BICallARuleAction):
-                if bi_aggregation.node.action.rule_id == check_rule_id:
-                    aggr_refs += 1
+            if (
+                isinstance(bi_aggregation.node.action, BICallARuleAction)
+                and bi_aggregation.node.action.rule_id == check_rule_id
+            ):
+                aggr_refs += 1
 
         level = 0
         rule_refs = 0
@@ -491,12 +487,12 @@ class BIHostRenamer:
 
     def rename_node_search(self, bi_node: BINodeGenerator, oldname: str, newname: str) -> int:
         # TODO: renaming can be moved into the search class itself. allows easier plugins
-        if isinstance(bi_node.search, (BIHostSearch, BIServiceSearch)):
-            if (
-                bi_node.search.conditions["host_choice"]["type"] == "host_name_regex"
-                and bi_node.search.conditions["host_choice"]["pattern"] == oldname
-            ):
-                bi_node.search.conditions["host_choice"]["pattern"] = newname
-                return 1
+        if (
+            isinstance(bi_node.search, (BIHostSearch, BIServiceSearch))
+            and bi_node.search.conditions["host_choice"]["type"] == "host_name_regex"
+            and bi_node.search.conditions["host_choice"]["pattern"] == oldname
+        ):
+            bi_node.search.conditions["host_choice"]["pattern"] = newname
+            return 1
 
         return 0

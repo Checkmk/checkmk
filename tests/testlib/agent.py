@@ -167,9 +167,7 @@ def clean_agent_controller(ctl_path: Path) -> Iterator[None]:
 
 
 def register_controller(
-    contoller_path: Path,
-    site: Site,
-    hostname: HostName,
+    contoller_path: Path, site: Site, hostname: HostName, site_address: str | None = None
 ) -> None:
     execute(
         [
@@ -177,7 +175,7 @@ def register_controller(
             contoller_path.as_posix(),
             "register",
             "--server",
-            site.http_address,
+            site_address if site_address else site.http_address,
             "--site",
             site.id,
             "--hostname",

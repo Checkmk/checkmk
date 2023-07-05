@@ -36,7 +36,7 @@ def test_update(test_site: Site, agent_ctl: Path) -> None:
     base_version = test_site.version
 
     # create new hosts and perform a service discovery
-    hostnames = [HostName(f"test-update-{Faker().first_name()}") for _ in range(1)]
+    hostnames = [HostName(f"test-update-{Faker().first_name()}") for _ in range(2)]
     logger.info("Creating new hosts: %s", hostnames)
 
     test_site.openapi.bulk_create_hosts(
@@ -54,8 +54,14 @@ def test_update(test_site: Site, agent_ctl: Path) -> None:
 
     test_site.activate_changes_and_wait_for_core_reload()
 
+    # perform hosts registration via the agent-ctl
+    assert (
+        len(hostnames) < 256
+    ), "The current hosts-registration logic does not allow more than 255 hosts"
+
     for hostname in hostnames:
-        register_controller(agent_ctl, test_site, hostname)
+        address = f"127.0.0.{hostnames.index(hostname) + 1}"
+        register_controller(agent_ctl, test_site, hostname, site_address=address)
         wait_until_host_receives_data(test_site, hostname)
 
     logger.info("Discovering services and waiting for completion...")

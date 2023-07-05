@@ -203,16 +203,12 @@ def _example_image_data():
 )
 def test_imageupload_non_compliance(filedata: vs.FileUploadModel) -> None:
     with pytest.raises(MKUserError):
-        vs.ImageUpload(allowed_extensions=[".png"], mime_types=["image/png"]).validate_value(
-            filedata, "prefix"
-        )
+        vs.ImageUpload(mime_types=["image/png"]).validate_value(filedata, "prefix")
 
 
 @pytest.mark.parametrize("filedata", [("OneByOne.png", "image/png", _example_image_data())])
 def test_imageupload_compliance(filedata: vs.FileUploadModel) -> None:
-    vs.ImageUpload(allowed_extensions=[".png"], mime_types=["image/png"]).validate_value(
-        filedata, "prefix"
-    )
+    vs.ImageUpload(mime_types=["image/png"]).validate_value(filedata, "prefix")
 
 
 @pytest.mark.parametrize(

@@ -6727,6 +6727,8 @@ class ImageUpload(FileUpload):
         default_value: ValueSpecDefault[FileUploadModel] = DEF_VALUE,
         validate: ValueSpecValidateFunc[FileUploadModel] | None = None,
     ) -> None:
+        if allowed_extensions is None:
+            allowed_extensions = [".png"]
         self._max_size: Final = max_size
         self._show_current_image: Final = show_current_image
         super().__init__(

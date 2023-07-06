@@ -29,6 +29,9 @@ from cmk.base.config import get_config_cache  # pylint: disable=cmk-module-layer
 from .agent_based_api.v1 import check_levels, regex, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult
 from .utils.checkmk import (
+    CachedPlugin,
+    CachedPluginsSection,
+    CachedPluginType,
     CheckmkSection,
     CMKAgentUpdateSection,
     ControllerSection,
@@ -46,6 +49,7 @@ def discover_checkmk_agent(
     section_checkmk_agent_plugins: Optional[PluginSection],
     section_cmk_agent_ctl_status: Optional[ControllerSection],
     section_cmk_update_agent_status: Optional[CMKAgentUpdateSection],
+    section_checkmk_cached_plugins: Optional[CachedPluginsSection],
 ) -> DiscoveryResult:
     # If we're called, at least one section is not None, so just disocver.
     yield Service()
@@ -493,12 +497,60 @@ def _check_controller_cert_validity(section: ControllerSection, now: float) -> C
         )
 
 
+def _format_cached_plugin(plugin: CachedPlugin) -> str:
+    plugin_info = f"Timeout: {plugin.timeout}s, PID: {plugin.pid}"
+
+    if plugin.plugin_type is None:
+        return f"{plugin.plugin_name} ({plugin_info})"
+
+    name_mapping = {
+        CachedPluginType.PLUGIN: "Agent plugin",
+        CachedPluginType.LOCAL: "Local check",
+        CachedPluginType.ORACLE: "mk_oracle plugin",
+    }
+
+    return f"{plugin.plugin_name} ({name_mapping[plugin.plugin_type]}, {plugin_info})"
+
+
+def _plugin_strings(plugins: Sequence[CachedPlugin]) -> tuple[str, str]:
+    return (
+        ", ".join(_format_cached_plugin(plugin) for plugin in plugins),
+        ", ".join(plugin.plugin_name for plugin in plugins),
+    )
+
+
+def _check_cached_plugins(section_checkmk_cached_plugins: CachedPluginsSection) -> CheckResult:
+    if section_checkmk_cached_plugins.timeout is not None:
+        timeout_plugins_long, timeout_plugins_short = _plugin_strings(
+            section_checkmk_cached_plugins.timeout
+        )
+        yield Result(
+            state=State.WARN,
+            summary=f"Timed out plugin(s): {timeout_plugins_short}",
+            details=f"Cached plugins(s) that reached timeout: {timeout_plugins_long} - "
+            "Corresponding output is outdated and/or dropped.",
+        )
+
+    if section_checkmk_cached_plugins.killfailed is not None:
+        killfailed_plugins_long, killfailed_plugins_short = _plugin_strings(
+            section_checkmk_cached_plugins.killfailed
+        )
+        yield Result(
+            state=State.WARN,
+            summary=f"Termination failed: {killfailed_plugins_short}",
+            details="Cached plugins(s) that failed to be terminated after timeout: "
+            f"{killfailed_plugins_long} - "
+            "Dysfunctional until successful termination.",
+        )
+
+
 def check_checkmk_agent(
     params: Mapping[str, Any],
     section_check_mk: Optional[CheckmkSection],
     section_checkmk_agent_plugins: Optional[PluginSection],
     section_cmk_agent_ctl_status: Optional[ControllerSection],
     section_cmk_update_agent_status: Optional[CMKAgentUpdateSection],
+    section_checkmk_cached_plugins: Optional[CachedPluginsSection],
 ) -> CheckResult:
     if section_check_mk is not None:
         yield from _check_cmk_agent_installation(
@@ -512,6 +564,9 @@ def check_checkmk_agent(
     if section_cmk_agent_ctl_status:
         yield from _check_controller_cert_validity(section_cmk_agent_ctl_status, time.time())
 
+    if section_checkmk_cached_plugins:
+        yield from _check_cached_plugins(section_checkmk_cached_plugins)
+
 
 register.check_plugin(
     name="checkmk_agent",
@@ -521,6 +576,7 @@ register.check_plugin(
         "checkmk_agent_plugins",
         "cmk_agent_ctl_status",
         "cmk_update_agent_status",
+        "checkmk_cached_plugins",
     ],
     discovery_function=discover_checkmk_agent,
     check_function=check_checkmk_agent,

@@ -2423,26 +2423,42 @@ run_cached() {
     MTIME=$(get_file_mtime "${CACHEFILE}" 2>/dev/null) || MTIME=0
 
     if [ -s "${CACHEFILE}" ]; then
-
         # Output the file (even if it is outdated)
         CACHE_INFO="cached(${MTIME},${MAXAGE})"
+        # prefix or insert cache info, unless already present.
+        # WATCH OUT: AIX does not allow us to pass this as a single '-e' option!
         if [ "${NAME%%_*}" = "local" ] || [ "${NAME%%_*}" = "mrpe" ]; then
-            # prefix CACHE_INFO, but skip any headers and lines with existing CACHE_INFO
-            sed -e '/^<<<.*>>>/{p;d;}' -e "/^cached([0-9]*,[0-9]*) /{p;d;}; s/^/${CACHE_INFO} /" "${CACHEFILE}"
+            sed -e '/^<<<.*>>>/{p;d;}' -e '/^cached([0-9]*,[0-9]*) /{p;d;}' -e "s/^/${CACHE_INFO} /" "${CACHEFILE}"
         else
-            # insert CACHE_INFO in header, but skip headers with existing CACHE_INFO
             sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}' -e 's/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
         fi
-
     fi
 
-    # Check if the creation of the cache takes suspiciously long.
-    # Kill the process if the cache file has not been accessed for more than TIMEOUT seconds.
+    # Error information about plugin, if available.
+    # Output independent of cachefile existance
+    [ -s "${CACHEFILE}.fail" ] && cat "${CACHEFILE}.fail"
+
+    # Kill the process if it is running too long (cache file not accessed for more than TIMEOUT seconds).
+    # If killing succeeds, remove CACHFILE.new.PID.
+    # Remove CACHEFILE unconditionally.
+    # Write info about the timed out process and the kill attempt to CACHEFILE.fail.
+    # It will be reported to the Check_MK agent service later on, by the sync part.
+    # CACHEFILE.fail will be deleted as soon as the plugin/local check is functional again.
     for cfile in "${CACHEFILE}.new."*; do
         [ -e "${cfile}" ] || break # no match
         if [ $((NOW - $(get_file_atime "${cfile}"))) -ge "${TIMEOUT}" ]; then
-            kill -9 "${cfile##*.new.}" # TODO: what about child processes?
-            rm -f "${cfile}" "${CACHEFILE}"
+            {
+                echo "<<<checkmk_cached_plugins:sep(124)>>>"
+                pid="${cfile##*.new.}"
+                printf "timeout|%s|%s|%s\n" "${NAME}" "${TIMEOUT}" "${pid}"
+                kill -9 "${pid}" >/dev/null 2>&1 && sleep 2 # TODO: what about child processes?
+                if [ -n "$(ps -o args= -p "${pid}")" ]; then
+                    printf "killfailed|%s|%s|%s\n" "${NAME}" "${TIMEOUT}" "${pid}"
+                else
+                    rm -f "${cfile}"
+                fi
+                rm -f "${CACHEFILE}"
+            } >"${CACHEFILE}".fail 2>&1
         fi
     done
 
@@ -2461,12 +2477,12 @@ run_cached() {
         if $MK_ORA_DEBUG; then
             cat <<HERE | "${THIS_SHELL}"
 exec > "${CACHEFILE}.new.\$\$" || exit 1
-${CMD} && mv "${CACHEFILE}.new.\$\$" "${CACHEFILE}" || rm -f "${CACHEFILE}" "${CACHEFILE}.new.\$\$"
+${CMD} && mv "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${CACHEFILE}".fail || rm -f "${CACHEFILE}" "${CACHEFILE}.new.\$\$"
 HERE
         else
             cat <<HERE | nohup "${THIS_SHELL}" >/dev/null 2>&1 &
 exec > "${CACHEFILE}.new.\$\$" || exit 1
-${CMD} && mv "${CACHEFILE}.new.\$\$" "${CACHEFILE}" || rm -f "${CACHEFILE}" "${CACHEFILE}.new.\$\$"
+${CMD} && mv "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${CACHEFILE}".fail || rm -f "${CACHEFILE}" "${CACHEFILE}.new.\$\$"
 HERE
 
         fi

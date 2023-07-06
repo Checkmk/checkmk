@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from enum import StrEnum
 from typing import Mapping, NamedTuple, Optional, Sequence
 
 from pyasn1.type.useful import GeneralizedTime  # type: ignore[import]
@@ -25,6 +26,25 @@ class Plugin(NamedTuple):
 class PluginSection(NamedTuple):
     plugins: Sequence[Plugin]
     local_checks: Sequence[Plugin]
+
+
+class CachedPluginType(StrEnum):
+    PLUGIN = "plugins"
+    LOCAL = "local"
+    ORACLE = "oracle"
+    MRPE = "mrpe"
+
+
+class CachedPlugin(NamedTuple):
+    plugin_type: CachedPluginType | None
+    plugin_name: str
+    timeout: int
+    pid: int
+
+
+class CachedPluginsSection(NamedTuple):
+    timeout: list[CachedPlugin] | None
+    killfailed: list[CachedPlugin] | None
 
 
 class CertInfoController(BaseModel):

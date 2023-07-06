@@ -5,6 +5,7 @@
 
 #include "neb/TimeperiodsCache.h"
 
+#include <type_traits>
 #include <utility>
 
 #include "livestatus/Logger.h"

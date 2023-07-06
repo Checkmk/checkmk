@@ -299,12 +299,12 @@ for i in range(MAX_CORES):
     # color wheel, times two for two shades each, we
     # can only draw 48 differently colored graphs
     metric_info["cpu_core_util_%d" % i] = {
-        "title": _l("Utilization Core %d") % (i + 1),
+        "title": _l("Utilization Core %d") % i,
         "unit": "%",
         "color": indexed_color(i, MAX_CORES),
     }
     metric_info["cpu_core_util_average_%d" % i] = {
-        "title": _l("Average utilization core %d") % (i + 1),
+        "title": _l("Average utilization core %d") % i,
         "unit": "%",
         "color": indexed_color(i, MAX_CORES),
     }

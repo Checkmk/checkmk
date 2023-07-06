@@ -650,8 +650,10 @@ run_cached() {
         for cfile in "${CACHEFILE}.new."*; do
             [ -e "${cfile}" ] || break # no match
             if [ $((NOW - $(get_file_atime "${cfile}"))) -ge "${TIMEOUT}" ]; then
-                kill -9 "${cfile##*.new.}" # TODO: what about child processes?
-                rm -f "${cfile}" "${CACHEFILE}"
+                pid="${cfile##*.new.}"
+                kill -9 "${pid}" && sleep 2 # TODO: what about child processes?
+                [ -n "$(ps -o args= -p "${pid}")" ] || rm -f "${cfile}"
+                rm -f "${CACHEFILE}"
             fi
         done
 

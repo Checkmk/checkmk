@@ -2353,17 +2353,6 @@ class TreeRenderer:
             html.close_tr()
         html.close_table()
 
-    def _fetch_url(self, raw_path: str) -> str:
-        params: list[tuple[str, int | str | None]] = [
-            ("site", self._site_id),
-            ("host", self._hostname),
-            ("raw_path", raw_path),
-            ("show_internal_tree_paths", "on" if self._show_internal_tree_paths else ""),
-        ]
-        if self._tree_id:
-            params.append(("tree_id", self._tree_id))
-        return makeuri_contextless(request, params, "ajax_inv_render_tree.py")
-
     def _show_node(self, node: ImmutableTree | ImmutableDeltaTree) -> None:
         raw_path = f".{'.'.join(map(str, node.path))}." if node.path else "."
 
@@ -2378,7 +2367,17 @@ class TreeRenderer:
                 ".".join(map(str, node.path)),
             ),
             icon=hints.node_hint.icon,
-            fetch_url=self._fetch_url(raw_path),
+            fetch_url=makeuri_contextless(
+                request,
+                [
+                    ("site", self._site_id),
+                    ("host", self._hostname),
+                    ("raw_path", raw_path),
+                    ("show_internal_tree_paths", "on" if self._show_internal_tree_paths else ""),
+                    ("tree_id", self._tree_id),
+                ],
+                "ajax_inv_render_tree.py",
+            ),
         ) as is_open:
             if is_open:
                 self.show(node, hints)

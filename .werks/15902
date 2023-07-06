@@ -1,0 +1,13 @@
+Title: CPU utilization: Make core numbering consistent
+Class: fix
+Compatible: compat
+Component: metrics
+Date: 1688652007
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Currently, the cores shown for the per core utilization are numbered starting at 1, while elsewhere the numbering starts at 0.
+This has been made consistent by changing the start to 0 for the per core utilization as well.
+

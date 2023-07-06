@@ -2159,7 +2159,7 @@ def _show_value(
 
     if value_info.keep_until is not None and time.time() > value_info.keep_until:
         html.write_html(
-            HTMLWriter.render_span(_get_html_value(value_info.value, hint).value, css="muted-text")
+            HTMLWriter.render_span(_get_html_value(value_info.value, hint).value, css="muted_text")
         )
     else:
         html.write_html(_get_html_value(value_info.value, hint))

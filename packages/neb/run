@@ -237,6 +237,7 @@ run_unit_tests() {
 run_iwyu() {
     test ${#FILES_TO_USE[@]} -eq 0 && return
     update_cmake_artifacts
+    iwyu --version
     # shellcheck disable=SC2086 # Yes, we want splitting for IWYU_EXTRA_ARGS.
     python3 "$(command -v iwyu_tool.py)" \
         --jobs="${JOBS}" \

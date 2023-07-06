@@ -25,6 +25,7 @@ from cmk.utils.structured_data import (
     ImmutableTable,
     ImmutableTree,
     SDKey,
+    SDNodeName,
     SDPath,
     SDRawDeltaTree,
     SDRawTree,
@@ -214,7 +215,7 @@ class PainterInventoryTree(Painter):
         )
 
         with output_funnel.plugged():
-            tree_renderer.show(tree, DISPLAY_HINTS.get_hints(tree.path))
+            tree_renderer.show(tree)
             code = HTML(output_funnel.drain())
 
         return "invtree", code
@@ -632,7 +633,7 @@ def _make_title_function(raw_hint: InventoryHintSpec) -> Callable[[str], str]:
 
 def _make_long_title_function(title: str, parent_path: SDPath) -> Callable[[], str]:
     return lambda: (
-        DISPLAY_HINTS.get_hints(parent_path).node_hint.title + " ➤ " + title
+        DISPLAY_HINTS.get_tree_hints(parent_path).node_hint.title + " ➤ " + title
         if parent_path
         else title
     )
@@ -1064,7 +1065,10 @@ class DisplayHints:
         for node_name, node in self.nodes.items():
             yield from node._make_inventory_paths_or_hints(path + [node_name])
 
-    def get_hints(self, path: SDPath) -> DisplayHints:
+    def get_node_hints(self, name: SDNodeName) -> DisplayHints:
+        return self.nodes.get(name, DisplayHints.default(self.abc_path))
+
+    def get_tree_hints(self, path: SDPath) -> DisplayHints:
         node = self
         for node_name in path:
             if node_name in node.nodes:
@@ -1174,7 +1178,7 @@ def _register_node_painter(name: str, hints: DisplayHints) -> None:
             "printable": False,
             "load_inv": True,
             "sorter": name,
-            "paint": lambda row: _paint_host_inventory_tree(row, hints),
+            "paint": lambda row: _paint_host_inventory_tree(row, hints.abc_path),
             "export_for_python": lambda row, cell: (
                 _compute_node_painter_data(row, hints.abc_path).serialize()
             ),
@@ -1195,8 +1199,8 @@ def _compute_node_painter_data(row: Row, path: SDPath) -> ImmutableTree:
     return row.get("host_inventory", ImmutableTree()).get_tree(path)
 
 
-def _paint_host_inventory_tree(row: Row, hints: DisplayHints) -> CellSpec:
-    if not (tree := _compute_node_painter_data(row, hints.abc_path)):
+def _paint_host_inventory_tree(row: Row, path: SDPath) -> CellSpec:
+    if not (tree := _compute_node_painter_data(row, path)):
         return "", ""
 
     painter_options = PainterOptions.get_instance()
@@ -1207,7 +1211,7 @@ def _paint_host_inventory_tree(row: Row, hints: DisplayHints) -> CellSpec:
     )
 
     with output_funnel.plugged():
-        tree_renderer.show(tree, hints)
+        tree_renderer.show(tree)
         code = HTML(output_funnel.drain())
 
     return "invtree", code
@@ -1892,7 +1896,7 @@ class PainterInvhistDelta(Painter):
         )
 
         with output_funnel.plugged():
-            tree_renderer.show(tree, DISPLAY_HINTS.get_hints(tree.path))
+            tree_renderer.show(tree)
             code = HTML(output_funnel.drain())
 
         return "invtree", code
@@ -2254,9 +2258,7 @@ def ajax_inv_render_tree() -> None:
         html.show_error(_("No such tree below %r") % inventory_path.path)
         return
 
-    TreeRenderer(site_id, host_name, show_internal_tree_paths, tree_id).show(
-        tree, DISPLAY_HINTS.get_hints(tree.path)
-    )
+    TreeRenderer(site_id, host_name, show_internal_tree_paths, tree_id).show(tree)
 
 
 class TreeRenderer:
@@ -2353,11 +2355,8 @@ class TreeRenderer:
             html.close_tr()
         html.close_table()
 
-    def _show_node(self, node: ImmutableTree | ImmutableDeltaTree) -> None:
+    def _show_node(self, node: ImmutableTree | ImmutableDeltaTree, hints: DisplayHints) -> None:
         raw_path = f".{'.'.join(map(str, node.path))}." if node.path else "."
-
-        hints = DISPLAY_HINTS.get_hints(node.path)
-
         with foldable_container(
             treename=self._tree_name,
             id_=raw_path,
@@ -2380,16 +2379,18 @@ class TreeRenderer:
             ),
         ) as is_open:
             if is_open:
-                self.show(node, hints)
+                self.show(node)
 
-    def show(self, tree: ImmutableTree | ImmutableDeltaTree, hints: DisplayHints) -> None:
+    def show(self, tree: ImmutableTree | ImmutableDeltaTree) -> None:
+        hints = DISPLAY_HINTS.get_tree_hints(tree.path)
+
         if tree.attributes:
             self._show_attributes(tree.attributes, hints)
 
         if tree.table:
             self._show_table(tree.table, hints)
 
-        for _name, node in sorted(tree.nodes_by_name.items(), key=lambda t: t[0]):
+        for name, node in sorted(tree.nodes_by_name.items(), key=lambda t: t[0]):
             if isinstance(node, (ImmutableTree, ImmutableDeltaTree)):
                 # sorted tries to find the common base class, which is object :(
-                self._show_node(node)
+                self._show_node(node, hints.get_node_hints(name))

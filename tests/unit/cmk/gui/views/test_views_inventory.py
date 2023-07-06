@@ -352,7 +352,7 @@ def test_make_node_displayhint(
     expected_attributes_hint: AttributesDisplayHint,
     expected_table_hint: TableDisplayHint,
 ) -> None:
-    hints = DISPLAY_HINTS.get_hints(path)
+    hints = DISPLAY_HINTS.get_tree_hints(path)
 
     assert hints.node_hint.icon == expected_node_hint.icon
     assert hints.node_hint.title == expected_node_hint.title
@@ -453,7 +453,7 @@ def test_make_node_displayhint_from_hint(
     expected_attributes_hint: AttributesDisplayHint,
     expected_table_hint: TableDisplayHint,
 ) -> None:
-    hints = DISPLAY_HINTS.get_hints(cmk.gui.inventory.InventoryPath.parse(raw_path).path)
+    hints = DISPLAY_HINTS.get_tree_hints(cmk.gui.inventory.InventoryPath.parse(raw_path).path)
 
     assert hints.node_hint.icon == expected_node_hint.icon
     assert hints.node_hint.title == expected_node_hint.title
@@ -630,7 +630,7 @@ def test_sort_deltatable_rows_displayhint(
     ],
 )
 def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplayHint) -> None:
-    hint = DISPLAY_HINTS.get_hints(path).get_column_hint(key)
+    hint = DISPLAY_HINTS.get_tree_hints(path).get_column_hint(key)
 
     assert hint.title == expected.title
     assert hint.short == expected.short
@@ -702,7 +702,9 @@ def test_make_column_displayhint(path: SDPath, key: str, expected: ColumnDisplay
 )
 def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDisplayHint) -> None:
     inventory_path = cmk.gui.inventory.InventoryPath.parse(raw_path)
-    hint = DISPLAY_HINTS.get_hints(inventory_path.path).get_column_hint(inventory_path.key or "")
+    hint = DISPLAY_HINTS.get_tree_hints(inventory_path.path).get_column_hint(
+        inventory_path.key or ""
+    )
 
     assert hint.title == expected.title
     assert hint.long_title == expected.long_title
@@ -815,7 +817,7 @@ def test_sort_delta_attributes_pairs_displayhint(
     ],
 )
 def test_make_attribute_displayhint(path: SDPath, key: str, expected: AttributeDisplayHint) -> None:
-    hint = DISPLAY_HINTS.get_hints(path).get_attribute_hint(key)
+    hint = DISPLAY_HINTS.get_tree_hints(path).get_attribute_hint(key)
 
     assert hint.data_type == expected.data_type
     assert callable(hint.paint_function)
@@ -871,7 +873,9 @@ def test_make_attribute_displayhint_from_hint(
     raw_path: str, expected: AttributeDisplayHint
 ) -> None:
     inventory_path = cmk.gui.inventory.InventoryPath.parse(raw_path)
-    hint = DISPLAY_HINTS.get_hints(inventory_path.path).get_attribute_hint(inventory_path.key or "")
+    hint = DISPLAY_HINTS.get_tree_hints(inventory_path.path).get_attribute_hint(
+        inventory_path.key or ""
+    )
 
     assert hint.data_type == expected.data_type
     assert callable(hint.paint_function)
@@ -898,7 +902,7 @@ def test_make_attribute_displayhint_from_hint(
     ],
 )
 def test_replace_placeholder(abc_path: SDPath, path: SDPath, expected_title: str) -> None:
-    assert DISPLAY_HINTS.get_hints(abc_path).replace_placeholders(path) == expected_title
+    assert DISPLAY_HINTS.get_tree_hints(abc_path).replace_placeholders(path) == expected_title
 
 
 @pytest.mark.parametrize(

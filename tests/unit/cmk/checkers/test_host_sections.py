@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
+from copy import deepcopy
 
 import pytest
 
@@ -17,10 +18,6 @@ from cmk.checkengine.type_defs import AgentRawDataSection
 class TestHostSections:
     @pytest.fixture
     def host_sections(self) -> HostSections:
-        return self._get_some_section()
-
-    @pytest.fixture
-    def identical_host_sections(self) -> HostSections:
         return self._get_some_section()
 
     def _get_some_section(self) -> HostSections:
@@ -39,23 +36,25 @@ class TestHostSections:
             },
         )
 
-    def test_add_self_extends_sections(
-        self, host_sections: HostSections, identical_host_sections: HostSections
-    ) -> None:
-        # host_sections will be modified inline
-        result = host_sections + identical_host_sections
-        assert id(result) == id(host_sections)
+    def test_add_self_extends_sections(self, host_sections: HostSections) -> None:
+        # host_sections will be modified inline, so copy here to compare later
+        orig = HostSections(
+            sections=deepcopy(host_sections.sections),
+            cache_info=deepcopy(host_sections.cache_info),
+            piggybacked_raw_data=deepcopy(host_sections.piggybacked_raw_data),
+        )
 
-        assert result.sections.keys() == host_sections.sections.keys()
-        assert result.cache_info.keys() == host_sections.cache_info.keys()
-        assert result.piggybacked_raw_data.keys() == host_sections.piggybacked_raw_data.keys()
+        host_sections.update(host_sections)
+        assert host_sections.sections.keys() == orig.sections.keys()
+        assert host_sections.cache_info.keys() == orig.cache_info.keys()
+        assert host_sections.piggybacked_raw_data.keys() == orig.piggybacked_raw_data.keys()
 
         for section in host_sections.sections:
-            assert result.sections[section] == 2 * list(identical_host_sections.sections[section])
-        assert result.cache_info == host_sections.cache_info
+            assert host_sections.sections[section] == 2 * list(orig.sections[section])
+        assert host_sections.cache_info == orig.cache_info
         for host_name in host_sections.piggybacked_raw_data:
-            assert result.piggybacked_raw_data[host_name] == 2 * list(
-                identical_host_sections.piggybacked_raw_data[host_name]
+            assert host_sections.piggybacked_raw_data[host_name] == 2 * list(
+                orig.piggybacked_raw_data[host_name]
             )
 
     def test_add_other_adds_sections(self, host_sections: HostSections) -> None:
@@ -80,10 +79,9 @@ class TestHostSections:
         num_previous_cache_info = len(host_sections.cache_info)
 
         # host_sections will be modified inline
-        result = host_sections + other
-        assert id(result) == id(host_sections)
-        assert len(result.sections) == num_previous_sections + len(other.sections)
-        assert len(result.cache_info) == num_previous_cache_info + len(other.cache_info)
-        assert len(result.piggybacked_raw_data) == num_previous_piggyback + len(
+        host_sections.update(other)
+        assert len(host_sections.sections) == num_previous_sections + len(other.sections)
+        assert len(host_sections.cache_info) == num_previous_cache_info + len(other.cache_info)
+        assert len(host_sections.piggybacked_raw_data) == num_previous_piggyback + len(
             other.piggybacked_raw_data
         )

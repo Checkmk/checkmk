@@ -42,7 +42,7 @@ class HostSections(Generic[TRawDataSection], abc.ABC):
         )
 
     @no_type_check
-    def __add__(self, other: HostSections[TRawDataSection]) -> HostSections[TRawDataSection]:
+    def update(self, other: HostSections[TRawDataSection]) -> None:
         for section_name, section_content in other.sections.items():
             self.sections.setdefault(section_name, []).extend(section_content)
         for hostname, raw_lines in other.piggybacked_raw_data.items():
@@ -53,7 +53,6 @@ class HostSections(Generic[TRawDataSection], abc.ABC):
         # TODO: checking._execute_check() is using the oldest cached_at and the largest interval.
         #       Would this be correct here?
         self.cache_info.update(other.cache_info)
-        return self
 
     def __bool__(self) -> bool:
         # This is needed in order to decide whether a host has inventory data or not, see:

@@ -53,7 +53,7 @@ def filter_out_errors(
                 "  -> Add sections: %s\n"
                 % sorted([str(s) for s in host_section.ok.sections.keys()])
             )
-            output[host_key] += host_section.ok
+            output[host_key].update(host_section.ok)
         else:
             console.vverbose("  -> Not adding sections: %s\n" % host_section.error)
     return output

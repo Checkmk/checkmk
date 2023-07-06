@@ -1616,7 +1616,7 @@ def mode_check_discovery(
         console.verbose(text)
     else:
         with suppress(IOError):
-            sys.stdout.write(text)
+            sys.stdout.write(text + "\n")
             sys.stdout.flush()
     return state
 
@@ -2028,7 +2028,7 @@ def mode_check(
         console.verbose(text)
     else:
         with suppress(IOError):
-            sys.stdout.write(text)
+            sys.stdout.write(text + "\n")
             sys.stdout.flush()
     return state
 
@@ -2274,7 +2274,7 @@ def mode_inventory_as_check(
         console.verbose(text)
     else:
         with suppress(IOError):
-            sys.stdout.write(text)
+            sys.stdout.write(text + "\n")
             sys.stdout.flush()
     return state
 

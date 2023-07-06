@@ -177,6 +177,30 @@ class TCPFetcher(Fetcher[AgentRawData]):
         self._validate_decrypted_data(agent_data)
         return agent_data
 
+    def _from_tls(self, server_hostname: str) -> tuple[TransportProtocol, Buffer]:
+        self._logger.debug("Reading data from agent via TLS socket")
+        with wrap_tls(self._socket, server_hostname) as ssock:
+            self._logger.debug("Reading data from agent")
+            raw_agent_data = recvall(ssock)
+        try:
+            agent_data = AgentCtlMessage.from_bytes(raw_agent_data).payload
+        except ValueError as e:
+            raise MKFetcherError(f"Failed to deserialize versioned agent data: {e!r}") from e
+
+        if len(memoryview(agent_data)) <= 2:
+            raise MKFetcherError("Empty payload from controller at %s:%d" % self.address)
+
+        try:
+            # I don't understand that recursive protocol thing.
+            protocol = TransportProtocol.from_bytes(agent_data)
+        except ValueError:
+            raise MKFetcherError(
+                f"Unknown transport protocol: {bytes(memoryview(agent_data)[:2])!r}"
+            )
+
+        self._logger.debug("Detected transport protocol: %s", protocol)
+        return protocol, memoryview(agent_data)[2:]
+
     def _get_agent_data(self, server_hostname: str | None) -> AgentRawData:
         try:
             raw_protocol = self._socket.recv(2, socket.MSG_WAITALL)
@@ -200,32 +224,11 @@ class TCPFetcher(Fetcher[AgentRawData]):
             if server_hostname is None:
                 raise MKFetcherError("Agent controller not registered")
 
-            self._logger.debug("Reading data from agent via TLS socket")
-            with wrap_tls(self._socket, server_hostname) as ssock:
-                self._logger.debug("Reading data from agent")
-                raw_agent_data = recvall(ssock)
-            try:
-                agent_data = AgentCtlMessage.from_bytes(raw_agent_data).payload
-            except ValueError as e:
-                raise MKFetcherError(f"Failed to deserialize versioned agent data: {e!r}") from e
+            protocol, output = self._from_tls(server_hostname)
+        else:
+            self._logger.debug("Reading data from agent")
+            output = recvall(self._socket, socket.MSG_WAITALL)
 
-            if len(memoryview(agent_data)) <= 2:
-                raise MKFetcherError("Empty payload from controller at %s:%d" % self.address)
-
-            try:
-                protocol = TransportProtocol.from_bytes(agent_data)
-            except ValueError:
-                raise MKFetcherError(
-                    f"Unknown transport protocol: {bytes(memoryview(agent_data)[:2])!r}"
-                )
-
-            self._logger.debug("Detected transport protocol: %s", protocol)
-            return self._decrypt(protocol, memoryview(agent_data)[2:])
-
-        self._logger.debug("Reading data from agent")
-        return self._decrypt(protocol, recvall(self._socket, socket.MSG_WAITALL))
-
-    def _decrypt(self, protocol: TransportProtocol, output: Buffer) -> AgentRawData:
         if not output:
             return AgentRawData(b"")  # nothing to to, validation will fail
 

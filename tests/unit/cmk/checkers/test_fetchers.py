@@ -907,18 +907,6 @@ class TestTCPFetcher:
 
         assert isinstance(raw_data.error, MKFetcherError)
 
-    def test_decrypt_plaintext_is_noop(self) -> None:
-        output = b"<<<section:sep(0)>>>\nbody\n"
-        fetcher = TCPFetcher(
-            family=socket.AF_INET,
-            address=(HostAddress("1.2.3.4"), 0),
-            host_name=HostName("irrelevant_for_this_test"),
-            timeout=0.0,
-            encryption_handling=TCPEncryptionHandling.ANY_AND_PLAIN,
-            pre_shared_secret=None,
-        )
-        assert fetcher._decrypt(TransportProtocol(output[:2]), AgentRawData(output[2:])) == output
-
     def test_get_agent_data_without_tls(
         self, monkeypatch: MonkeyPatch, fetcher: TCPFetcher
     ) -> None:

@@ -162,16 +162,16 @@ class UpdateResult:
                 update_result.reasons_by_path.setdefault(path, []).extend(reasons)
         return update_result
 
-    def add_attr_reason(self, path: SDPath, name: str, iterable: Iterable[str]) -> None:
+    def add_attr_reason(self, path: SDPath, title: str, iterable: Iterable[str]) -> None:
         self.reasons_by_path.setdefault(path, []).append(
-            f"[Attributes] Added {name}: {', '.join(iterable)}"
+            f"[Attributes] {title}: {', '.join(sorted(iterable))}"
         )
 
     def add_row_reason(
-        self, path: SDPath, ident: SDRowIdent, name: str, iterable: Iterable[str]
+        self, path: SDPath, ident: SDRowIdent, title: str, iterable: Iterable[str]
     ) -> None:
         self.reasons_by_path.setdefault(path, []).append(
-            f"[Table] '{', '.join(map(str, ident))}': Added {name}: {', '.join(iterable)}"
+            f"[Table] '{', '.join(map(str, ident))}': {title}: {', '.join(sorted(iterable))}"
         )
 
     def __str__(self) -> str:
@@ -181,7 +181,7 @@ class UpdateResult:
         lines = ["Updated inventory tree:"]
         for path, reasons in self.reasons_by_path.items():
             lines.append(f"  Path '{' > '.join(path)}':")
-            lines.extend(f"    {r}" for r in reasons)
+            lines.extend(f"    {r}" for r in sorted(reasons))
         return "\n".join(lines) + "\n"
 
 
@@ -404,11 +404,13 @@ class _MutableAttributes:
         update_result = UpdateResult()
         if pairs:
             self.add(pairs)
-            update_result.add_attr_reason(path, "pairs", pairs)
+            update_result.add_attr_reason(path, "Added pairs", pairs)
 
         if retentions:
             self.retentions = retentions
-            update_result.add_attr_reason(path, "interval", retentions)
+            update_result.add_attr_reason(
+                path, "Keep until", [f"{k} ({v.keep_until})" for k, v in retentions.items()]
+            )
 
         return update_result
 
@@ -514,7 +516,7 @@ class _MutableTable:
                 # Update row with key column entries
                 old_row |= {k: other.rows_by_ident[ident][k] for k in other.key_columns}
                 self._add_row(ident, old_row)
-                update_result.add_row_reason(path, ident, "row", old_row)
+                update_result.add_row_reason(path, ident, "Added row", old_row)
 
         for ident in compared_row_idents.both:
             compared_keys = _DictKeys.compare(
@@ -538,7 +540,7 @@ class _MutableTable:
                     }
                 )
                 self._add_row(ident, row)
-                update_result.add_row_reason(path, ident, "row", row)
+                update_result.add_row_reason(path, ident, "Added row", row)
 
         for ident in compared_row_idents.only_new:
             for key in self_filtered_rows[ident]:
@@ -546,8 +548,13 @@ class _MutableTable:
 
         if retentions:
             self.retentions = retentions
-            for ident, interval in retentions.items():
-                update_result.add_row_reason(path, ident, "interval", interval)
+            for ident, intervals_by_key in retentions.items():
+                update_result.add_row_reason(
+                    path,
+                    ident,
+                    "Keep until",
+                    [f"{k} ({v.keep_until})" for k, v in intervals_by_key.items()],
+                )
 
         return update_result
 

@@ -4,9 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
 import os
+import random
 from pathlib import Path
-
-from faker import Faker
 
 from tests.testlib.agent import register_controller, wait_until_host_receives_data
 from tests.testlib.site import Site
@@ -35,15 +34,19 @@ def test_update(test_site: Site, agent_ctl: Path) -> None:
     # get version data
     base_version = test_site.version
 
-    # create new hosts and perform a service discovery
-    hostnames = [HostName(f"test-update-{Faker().first_name()}") for _ in range(2)]
-    logger.info("Creating new hosts: %s", hostnames)
+    hostnames = [HostName(f"test-host-{i}") for i in range(5)]
+    hosts_folders = [f"/test-folder-{i}" for i in range(2)]
 
+    logger.info("Creating new folders: %s", hosts_folders)
+    for folder in hosts_folders:
+        test_site.openapi.create_folder(folder)
+
+    logger.info("Creating new hosts: %s", hostnames)
     test_site.openapi.bulk_create_hosts(
         [
             {
                 "host_name": hostname,
-                "folder": "/",
+                "folder": random.choice(hosts_folders),
                 "attributes": {"ipaddress": "127.0.0.1", "tag_agent": "cmk-agent"},
             }
             for hostname in hostnames

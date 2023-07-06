@@ -29,9 +29,9 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.metrics import MetricName
-from cmk.utils.regex import regex  # noqa: F401 # pylint: disable=unused-import
+from cmk.utils.regex import regex as regex  # pylint: disable=unused-import
 
-from cmk.checkengine.checkresults import state_markers
+from cmk.checkengine.checkresults import state_markers as state_markers
 from cmk.checkengine.plugin_contexts import host_name as _internal_host_name
 from cmk.checkengine.plugin_contexts import service_description
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
@@ -40,9 +40,13 @@ import cmk.base.config as _config
 import cmk.base.item_state as _item_state
 import cmk.base.prediction as _prediction
 from cmk.base.api.agent_based import render as _render
-from cmk.base.api.agent_based.register.utils_legacy import (  # noqa: F401 # pylint: disable=unused-import
-    LegacyCheckDefinition,
+
+# pylint: disable=unused-import
+from cmk.base.api.agent_based.register.utils_legacy import (
+    LegacyCheckDefinition as LegacyCheckDefinition,
 )
+
+# pylint: enable=unused-import
 
 Warn = Union[None, int, float]
 Crit = Union[None, int, float]

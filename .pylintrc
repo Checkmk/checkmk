@@ -25,6 +25,9 @@ signature-mutators=cmk.utils.store.with_lock_dict
 
 [MESSAGES CONTROL]
 disable=
+    # Not useless if that's exporting a type as done often enough
+    # in the standard library.
+    useless-import-alias,
     # Use local suppressions or (even better) refactor the code.
     import-outside-toplevel,
     #---------------------------------------------------------------------------

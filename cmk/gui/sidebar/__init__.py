@@ -18,6 +18,7 @@ from livestatus import SiteId
 
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
+from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
@@ -37,22 +38,20 @@ from cmk.gui.pages import AjaxPage, PageResult
 
 # Kept for compatibility with legacy plugins
 # TODO: Drop once we don't support legacy snapins anymore
-from cmk.gui.plugins.sidebar.utils import (  # noqa: F401 # pylint: disable=unused-import
-    begin_footnote_links,
-    bulletlink,
-    end_footnote_links,
-    footnotelinks,
-    heading,
-    iconlink,
-    link,
-    render_link,
-    SidebarSnapin,
-    snapin_registry,
-    snapin_site_choice,
-    snapin_width,
-    write_snapin_exception,
-)
-from cmk.gui.type_defs import Icon
+from cmk.gui.plugins.sidebar.utils import begin_footnote_links as begin_footnote_links
+from cmk.gui.plugins.sidebar.utils import bulletlink as bulletlink
+from cmk.gui.plugins.sidebar.utils import end_footnote_links as end_footnote_links
+from cmk.gui.plugins.sidebar.utils import footnotelinks as footnotelinks
+from cmk.gui.plugins.sidebar.utils import heading as heading
+from cmk.gui.plugins.sidebar.utils import iconlink as iconlink
+from cmk.gui.plugins.sidebar.utils import link as link
+from cmk.gui.plugins.sidebar.utils import render_link as render_link
+from cmk.gui.plugins.sidebar.utils import SidebarSnapin as SidebarSnapin
+from cmk.gui.plugins.sidebar.utils import snapin_registry as snapin_registry
+from cmk.gui.plugins.sidebar.utils import snapin_site_choice as snapin_site_choice
+from cmk.gui.plugins.sidebar.utils import snapin_width as snapin_width
+from cmk.gui.plugins.sidebar.utils import write_snapin_exception as write_snapin_exception
+from cmk.gui.type_defs import Icon as Icon
 from cmk.gui.user_sites import get_configured_site_choices
 from cmk.gui.utils import load_web_plugins
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -63,7 +62,6 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import CascadingDropdown, CascadingDropdownChoice, Dictionary, ValueSpec
 from cmk.gui.werks import may_acknowledge
 
-from ...utils.exceptions import MKGeneralException
 from .main_menu import MainMenuRenderer
 
 # TODO: Kept for pre 1.6 plugin compatibility

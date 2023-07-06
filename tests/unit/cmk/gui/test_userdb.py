@@ -17,12 +17,13 @@ import pytest
 from flask import Flask
 from pytest import MonkeyPatch
 
-from tests.testlib import is_managed_repo
+from tests.testlib.utils import is_managed_repo
 
 import cmk.utils.paths
 import cmk.utils.version
 from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password, PasswordHash
+from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.user import UserId
 
 import cmk.gui.plugins.userdb.utils as utils
@@ -32,10 +33,11 @@ from cmk.gui import http
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.session import session
-from cmk.gui.type_defs import SessionId, SessionInfo, WebAuthnCredential
-from cmk.gui.userdb import htpasswd
+from cmk.gui.type_defs import SessionId, SessionInfo, TwoFactorCredentials, WebAuthnCredential
 from cmk.gui.userdb import ldap_connector as ldap
-from cmk.gui.userdb.store import load_custom_attr
+from cmk.gui.userdb.htpasswd import hash_password
+from cmk.gui.userdb.session import is_valid_user_session, load_session_infos
+from cmk.gui.userdb.store import load_custom_attr, save_users
 from cmk.gui.valuespec import Dictionary
 
 if TYPE_CHECKING:
@@ -121,7 +123,7 @@ def _load_failed_logins(user_id: UserId) -> int | None:
 def test_load_pre_20_session(user_id: UserId) -> None:
     timestamp = 1234567890
     userdb.save_custom_attr(user_id, "session_info", f"sess2|{timestamp}")
-    old_session = userdb.load_session_infos(user_id)
+    old_session = load_session_infos(user_id)
     assert isinstance(old_session, dict)
     assert old_session["sess2"].started_at == timestamp
     assert old_session["sess2"].last_activity == timestamp
@@ -137,7 +139,7 @@ def test_on_succeeded_login(single_auth_request: SingleRequest) -> None:
     assert len(session_info.csrf_token) == 36
 
     # Verify the session was initialized
-    session_infos = userdb.load_session_infos(user_id)
+    session_infos = load_session_infos(user_id)
     assert session_infos == {
         session_id: SessionInfo(
             session_id=session_id,
@@ -239,12 +241,12 @@ def test_on_logout_no_session(flask_app: Flask, auth_request: http.Request) -> N
 
 def test_on_logout_invalidate_session(single_auth_request: SingleRequest) -> None:
     user_id, session_info = single_auth_request()
-    assert session_info.session_id in userdb.load_session_infos(user_id)
+    assert session_info.session_id in load_session_infos(user_id)
 
     session_info.invalidate()
     userdb.session.save_session_infos(user_id, {session_info.session_id: session_info})
 
-    assert userdb.load_session_infos(user_id)[session_info.session_id].logged_out
+    assert load_session_infos(user_id)[session_info.session_id].logged_out
 
 
 def test_access_denied_with_invalidated_session(single_auth_request: SingleRequest) -> None:
@@ -253,13 +255,13 @@ def test_access_denied_with_invalidated_session(single_auth_request: SingleReque
 
     now = datetime.now()
 
-    assert session_id in userdb.load_session_infos(user_id)
+    assert session_id in load_session_infos(user_id)
 
     userdb.on_access(user_id, session_id, now)
     session.session_info.invalidate()
     userdb.session.save_session_infos(user_id, {session_id: session.session_info})
 
-    assert userdb.load_session_infos(user_id)[session_info.session_id].logged_out
+    assert load_session_infos(user_id)[session_info.session_id].logged_out
 
     with pytest.raises(MKAuthException, match="Invalid user session"):
         userdb.on_access(user_id, session_id, now)
@@ -315,7 +317,7 @@ def test_on_access_update_unknown_session(single_auth_request: SingleRequest) ->
     now = datetime.now()
     user_id, session_info = single_auth_request()
     session_valid = session_info.session_id
-    session_info = userdb.load_session_infos(user_id)[session_valid]
+    session_info = load_session_infos(user_id)[session_valid]
     session_info.started_at = 10
 
     with pytest.raises(MKAuthException, match="Invalid user session"):
@@ -342,14 +344,12 @@ def test_on_succeeded_login_already_existing_session(single_auth_request: Single
 
 def test_is_valid_user_session_single_user_session_disabled(user_id: UserId) -> None:
     assert active_config.single_user_session is None
-    assert not userdb.is_valid_user_session(user_id, userdb.load_session_infos(user_id), "session1")
+    assert not is_valid_user_session(user_id, load_session_infos(user_id), "session1")
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_is_valid_user_session_not_existing(user_id: UserId) -> None:
-    assert not userdb.is_valid_user_session(
-        user_id, userdb.load_session_infos(user_id), "not-existing-session"
-    )
+    assert not is_valid_user_session(user_id, load_session_infos(user_id), "not-existing-session")
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
@@ -365,16 +365,14 @@ def test_is_valid_user_session_still_valid_when_last_activity_extends_timeout(
 
     session_timed_out = session_info.session_id
 
-    assert userdb.is_valid_user_session(
-        user_id, userdb.load_session_infos(user_id), session_timed_out
-    )
+    assert is_valid_user_session(user_id, load_session_infos(user_id), session_timed_out)
 
 
 @pytest.mark.usefixtures("single_user_session_enabled")
 def test_is_valid_user_session_valid(single_auth_request: SingleRequest) -> None:
     user_id, session_info = single_auth_request()
     session_valid = session_info.session_id
-    assert userdb.is_valid_user_session(user_id, userdb.load_session_infos(user_id), session_valid)
+    assert is_valid_user_session(user_id, load_session_infos(user_id), session_valid)
 
 
 def test_ensure_user_can_init_no_single_user_session(user_id: UserId) -> None:
@@ -487,7 +485,7 @@ def test_refresh_session_success(single_auth_request: SingleRequest) -> None:
     assert old_session_info.last_activity < last_activity
     userdb.session.save_session_infos(user_id, {session_valid: old_session_info})
 
-    new_session_info = userdb.load_session_infos(user_id)[session_valid]
+    new_session_info = load_session_infos(user_id)[session_valid]
     new_session_info.refresh()
     assert new_session_info.session_id == old_session_info.session_id
     assert new_session_info.last_activity > old_session_info.last_activity
@@ -496,10 +494,10 @@ def test_refresh_session_success(single_auth_request: SingleRequest) -> None:
 def test_invalidate_session(single_auth_request: SingleRequest) -> None:
     user_id, session_info = single_auth_request()
     session_id = session_info.session_id
-    assert session_id in userdb.load_session_infos(user_id)
+    assert session_id in load_session_infos(user_id)
     session_info.invalidate()
     userdb.session.save_session_infos(user_id, {session_id: session_info})
-    assert userdb.load_session_infos(user_id)[session_info.session_id].logged_out
+    assert load_session_infos(user_id)[session_info.session_id].logged_out
 
 
 def test_get_last_activity(single_auth_request: SingleRequest) -> None:
@@ -586,8 +584,8 @@ def test_check_credentials_local_user_create_htpasswd_user_ad_hoc() -> None:
     assert not userdb._user_exists_according_to_profile(user_id)
     assert user_id not in _load_users_uncached(lock=False)
 
-    htpasswd.Htpasswd(Path(cmk.utils.paths.htpasswd_file)).save_all(
-        {user_id: htpasswd.hash_password(Password("cmk"))}
+    Htpasswd(Path(cmk.utils.paths.htpasswd_file)).save_all(
+        {user_id: hash_password(Password("cmk"))}
     )
     # Once a user exists in the htpasswd, the GUI treats the user as existing user and will
     # automatically initialize the missing data structures
@@ -611,7 +609,7 @@ def test_check_credentials_local_user_disallow_locked(with_user: tuple[UserId, s
     users = _load_users_uncached(lock=True)
 
     users[user_id]["locked"] = True
-    userdb.save_users(users, now)
+    save_users(users, now)
 
     with pytest.raises(MKUserError, match="User is locked"):
         userdb.check_credentials(user_id, Password(password), now)
@@ -641,7 +639,7 @@ def test_check_credentials_managed_global_user_is_allowed(with_user: tuple[UserI
 
     users = _load_users_uncached(lock=True)
     users[user_id]["customer"] = managed.SCOPE_GLOBAL
-    userdb.save_users(users, now)
+    save_users(users, now)
     assert userdb.check_credentials(user_id, Password(password), now) == user_id
 
 
@@ -652,7 +650,7 @@ def test_check_credentials_managed_customer_user_is_allowed(with_user: tuple[Use
     now = datetime.now()
     users = _load_users_uncached(lock=True)
     users[user_id]["customer"] = "test-customer"
-    userdb.save_users(users, now)
+    save_users(users, now)
     assert userdb.check_credentials(user_id, Password(password), now) == user_id
 
 
@@ -665,7 +663,7 @@ def test_check_credentials_managed_wrong_customer_user_is_denied(
     now = datetime.now()
     users = _load_users_uncached(lock=True)
     users[user_id]["customer"] = "wrong-customer"
-    userdb.save_users(users, now)
+    save_users(users, now)
     assert userdb.check_credentials(user_id, Password(password), now) is False
 
 
@@ -758,7 +756,7 @@ def test_load_two_factor_credentials_unset(user_id: UserId) -> None:
 
 
 def test_save_two_factor_credentials(user_id: UserId) -> None:
-    credentials = userdb.TwoFactorCredentials(
+    credentials = TwoFactorCredentials(
         {
             "webauthn_credentials": {
                 "id": WebAuthnCredential(
@@ -779,7 +777,7 @@ def test_save_two_factor_credentials(user_id: UserId) -> None:
 
 
 def test_disable_two_factor_authentication(user_id: UserId) -> None:
-    credentials = userdb.TwoFactorCredentials(
+    credentials = TwoFactorCredentials(
         {
             "webauthn_credentials": {
                 "id": WebAuthnCredential(

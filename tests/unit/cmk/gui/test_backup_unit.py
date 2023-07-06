@@ -11,8 +11,8 @@ import cmk.utils.paths
 from cmk.utils.crypto.password import Password
 from cmk.utils.user import UserId
 
-import cmk.gui.wato as wato
 from cmk.gui.logged_in import user
+from cmk.gui.wato.pages.backup import ModeBackupEditKey
 
 
 @pytest.mark.usefixtures("request_context")
@@ -22,7 +22,7 @@ def test_backup_key_create_web(monkeypatch: pytest.MonkeyPatch) -> None:
         store_path = Path(cmk.utils.paths.default_config_dir, "backup_keys.mk")
 
         assert not store_path.exists()
-        mode = wato.ModeBackupEditKey()
+        mode = ModeBackupEditKey()
 
         # First create a backup key
         mode._create_key(alias="älias", passphrase=Password("passphra$e"))
@@ -30,7 +30,7 @@ def test_backup_key_create_web(monkeypatch: pytest.MonkeyPatch) -> None:
         assert store_path.exists()
 
         # Then test key existence
-        test_mode = wato.ModeBackupEditKey()
+        test_mode = ModeBackupEditKey()
         keys = test_mode.key_store.load()
         assert len(keys) == 1
 

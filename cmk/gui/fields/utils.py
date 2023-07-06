@@ -28,7 +28,7 @@ from cmk.utils.livestatus_helpers.types import Table
 from cmk.utils.tags import BuiltinTagConfig, TagGroup, TagID
 
 from cmk.gui import site_config
-from cmk.gui.fields.base import BaseSchema
+from cmk.gui.fields.base import BaseSchema as BaseSchema
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib.host_attributes import (
     get_sorted_host_attribute_topics,

@@ -18,27 +18,26 @@ import cmk.utils.store as store
 from cmk.utils.setup_search_index import request_index_rebuild
 from cmk.utils.version import is_daily_build_of_master, parse_check_mk_version
 
-from ._installed import Installer
-from ._mkp import (  # noqa: F401
-    create_mkp,
-    extract_manifest,
-    extract_manifest_optionally,
-    extract_manifests,
-    extract_mkp,
-    Manifest,
-    manifest_template,
-    PackagePart,
-    read_manifest_optionally,
-)
-from ._parts import (  # noqa: F401
-    CONFIG_PARTS,
-    PackageOperationCallbacks,
-    PathConfig,
-    permissions,
-    ui_title,
-)
+from ._installed import Installer as Installer
+from ._mkp import create_mkp as create_mkp
+from ._mkp import extract_manifest as extract_manifest
+from ._mkp import extract_manifest_optionally as extract_manifest_optionally
+from ._mkp import extract_manifests as extract_manifests
+from ._mkp import extract_mkp as extract_mkp
+from ._mkp import Manifest as Manifest
+from ._mkp import manifest_template as manifest_template
+from ._mkp import PackagePart as PackagePart
+from ._mkp import read_manifest_optionally as read_manifest_optionally
+from ._parts import CONFIG_PARTS as CONFIG_PARTS
+from ._parts import PackageOperationCallbacks as PackageOperationCallbacks
+from ._parts import PathConfig as PathConfig
+from ._parts import permissions as permissions
+from ._parts import ui_title as ui_title
 from ._reporter import all_local_files, all_rule_pack_files
-from ._type_defs import PackageError, PackageID, PackageName, PackageVersion
+from ._type_defs import PackageError as PackageError
+from ._type_defs import PackageID as PackageID
+from ._type_defs import PackageName as PackageName
+from ._type_defs import PackageVersion as PackageVersion
 
 _logger = logging.getLogger(__name__)
 

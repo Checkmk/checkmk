@@ -142,7 +142,7 @@ def create_apache_hook(site: SiteContext, version: int) -> None:
 </Location>
 """
         )
-        os.chmod(hook_path, 0o664)  # Ensure the site user can read the files created by root
+        os.chmod(hook_path, 0o644)  # Ensure the site user can read the files created by root
 
 
 def delete_apache_hook(sitename: str) -> None:

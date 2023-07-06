@@ -2441,7 +2441,7 @@ def create_site_dir(site: SiteContext) -> None:
             raise
     os.chown(site.dir, user_id(site.name), group_id(site.name))
     # If the site-dir is not world executable files in the site are all not readable/writeable
-    os.chmod(site.dir, 0o751)
+    os.chmod(site.dir, 0o751)  # nosec B103 # BNS:7e6b08
 
 
 def main_disable(

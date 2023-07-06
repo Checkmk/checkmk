@@ -393,7 +393,6 @@ def _store_status_file_of(
         "wb", dir=str(status_file_path.parent), prefix=f".{status_file_path.name}.new", delete=False
     ) as tmp:
         tmp_path = tmp.name
-        os.chmod(tmp_path, 0o660)
         tmp.write(b"")
 
         tmp_stats = os.stat(tmp_path)

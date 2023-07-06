@@ -1094,7 +1094,7 @@ class HostCheckStore:
                 dfile=str(compiled_filename),
                 doraise=True,
             )
-            os.chmod(compiled_filename, 0o750)
+            os.chmod(compiled_filename, 0o750)  # nosec B103 # BNS:c29b0e
 
         console.verbose(" ==> %s.\n", compiled_filename, stream=sys.stderr)
 

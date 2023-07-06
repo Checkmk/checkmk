@@ -72,7 +72,7 @@ def prepare_tmpfs(version_info: VersionInfo, site: SiteContext) -> None:
 
         try:
             os.mkdir(site.tmp_dir)
-            os.chmod(site.tmp_dir, 0o751)
+            os.chmod(site.tmp_dir, 0o751)  # nosec B103 # BNS:7e6b08
         except OSError as e:
             if e.errno != errno.EEXIST:  # File exists
                 raise
@@ -82,7 +82,7 @@ def prepare_tmpfs(version_info: VersionInfo, site: SiteContext) -> None:
     sys.stdout.flush()
     if not os.path.exists(site.tmp_dir):
         os.mkdir(site.tmp_dir)
-        os.chmod(site.tmp_dir, 0o751)
+        os.chmod(site.tmp_dir, 0o751)  # nosec B103 # BNS:7e6b08
 
     mount_options = shlex.split(version_info.MOUNT_OPTIONS)
     completed_process = subprocess.run(

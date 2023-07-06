@@ -8,7 +8,7 @@ import logging
 import socket
 import ssl
 import sys
-from collections.abc import Mapping, Sized
+from collections.abc import Mapping
 from typing import Any, Final
 
 import cmk.utils.debug
@@ -174,7 +174,6 @@ class TCPFetcher(Fetcher[AgentRawData]):
         agent_data = self._get_agent_data(
             str(controller_uuid) if controller_uuid is not None else None
         )
-        self._validate_decrypted_data(agent_data)
         return agent_data
 
     def _from_tls(self, server_hostname: str) -> tuple[TransportProtocol, Buffer]:
@@ -243,9 +242,3 @@ class TCPFetcher(Fetcher[AgentRawData]):
             return AgentRawData(decrypt_by_agent_protocol(secret, protocol, output))
         except Exception as e:
             raise MKFetcherError("Failed to decrypt agent output: %r" % e) from e
-
-    def _validate_decrypted_data(self, output: Sized) -> None:
-        if len(output) < 16:
-            raise MKFetcherError(
-                f"Too short payload from agent at {self.address[0]}:{self.address[1]}: {output!r}"
-            )

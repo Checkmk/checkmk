@@ -5,7 +5,7 @@ def freetds(version_str, sha256):
     filename = "freetds-" + version_str + ".tar.gz"
     http_archive(
         name = "freetds",
-        build_file = "@omd_packages//packages/freetds:BUILD.freetds.bazel",
+        build_file = "@omd_packages//omd/packages/freetds:BUILD.freetds.bazel",
         urls = [
             "https://www.freetds.org/files/stable/" + filename,
             UPSTREAM_MIRROR_URL + filename,

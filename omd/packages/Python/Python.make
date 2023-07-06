@@ -33,7 +33,7 @@ $(PYTHON_INTERMEDIATE_INSTALL): $(PYTHON_BUILD)
 	mkdir -p "$(INTERMEDIATE_INSTALL_BASE)/$(PYTHON_DIR)"
 	# This will leave us with some strange file permissions, but works for now, see
 	# https://stackoverflow.com/questions/75208034
-	$(RSYNC) -r --chmod=u+w "bazel-bin/external/python/python/" \
+	$(RSYNC) -r --chmod=u+w "$(BAZEL_BIN_EXT)/python/python/" \
 	    "$(PYTHON_INSTALL_DIR)/"
 	cd "$(INTERMEDIATE_INSTALL_BASE)/$(PYTHON_DIR)/bin"; \
 	    ln -sf 2to3-$(PYTHON_MAJOR_DOT_MINOR) 2to3; \

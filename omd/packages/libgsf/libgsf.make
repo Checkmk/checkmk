@@ -15,7 +15,7 @@ endif
 $(LIBGSF_INTERMEDIATE_INSTALL): $(LIBGSF_BUILD)
 ifneq ($(filter $(DISTRO_CODE),sles15 sles15sp1 sles15sp2 sles15sp3 sles15sp4),)
 	$(MKDIR) $(LIBGSF_INSTALL_DIR)
-	$(RSYNC) --chmod=u+w $(BAZEL_BIN)/$(LIBGSF)/$(LIBGSF)/ $(LIBGSF_INSTALL_DIR)/
+	$(RSYNC) --chmod=u+w $(BAZEL_BIN_EXT)/$(LIBGSF)/$(LIBGSF)/ $(LIBGSF_INSTALL_DIR)/
 	# TODO: Linking with force is needed as this target might be executed more than once
 	cd $(LIBGSF_INSTALL_DIR)/lib ; \
 	    ln -sf libgsf-1.so.114.0.44 libgsf-1.so ;\

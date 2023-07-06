@@ -5,7 +5,7 @@ def pnp4nagios(version_str, sha256):
     filename = "pnp4nagios-" + version_str + ".tar.gz"
     http_archive(
         name = "pnp4nagios",
-        build_file = "@omd_packages//packages/pnp4nagios:BUILD.pnp4nagios.bazel",
+        build_file = "@omd_packages//omd/packages/pnp4nagios:BUILD.pnp4nagios.bazel",
         strip_prefix = "pnp4nagios-" + version_str,
         urls = [
             "https://sourceforge.net/projects/pnp4nagios/files/PNP-0.6/" + filename,

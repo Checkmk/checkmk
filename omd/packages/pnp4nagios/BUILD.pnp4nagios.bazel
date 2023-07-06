@@ -29,7 +29,7 @@ configure_make(
         "--with-nagios-group=\\$\\$\\(id\\ -gn\\)",
         "--with-rrdtool=/bin/true",
         # The perl_lib_path seems to be obsolete (Tested by checking metrics in raw edition)
-        #        "--with-perl_lib_path=$(location @omd_packages//packages/perl-modules:perl-modules)/lib/perl5/lib/perl5",
+        #        "--with-perl_lib_path=$(location @omd_packages//omd/packages/perl-modules:perl-modules)/lib/perl5/lib/perl5",
         "--with-base-url='/\\#\\#\\#SITE\\#\\#\\#/pnp4nagios'",
     ],
     lib_source = ":all_srcs",
@@ -75,9 +75,9 @@ configure_make(
 genrule(
     name = "skel",
     srcs = [
-        "@omd_packages//packages/pnp4nagios:skel",
-        "@omd_packages//packages/pnp4nagios:diskspace",
-        "@omd_packages//packages/pnp4nagios:PNP4NAGIOS",
+        "@omd_packages//omd/packages/pnp4nagios:skel",
+        "@omd_packages//omd/packages/pnp4nagios:diskspace",
+        "@omd_packages//omd/packages/pnp4nagios:PNP4NAGIOS",
     ],
     outs = [
         "skel/etc/pnp4nagios/rra.cfg-sample",
@@ -112,11 +112,11 @@ genrule(
         "lib/omd/hooks/PNP4NAGIOS",
     ],
     cmd = """
-        cp -r --dereference $(execpath @omd_packages//packages/pnp4nagios:skel) $$(realpath $(RULEDIR))
+        cp -r --dereference $(execpath @omd_packages//omd/packages/pnp4nagios:skel) $$(realpath $(RULEDIR))
         mkdir -p $$(realpath $(RULEDIR))/share
-        cp --dereference $(execpath @omd_packages//packages/pnp4nagios:diskspace) $$(realpath $(RULEDIR))/share/diskspace/pnp4nagios
+        cp --dereference $(execpath @omd_packages//omd/packages/pnp4nagios:diskspace) $$(realpath $(RULEDIR))/share/diskspace/pnp4nagios
         mkdir -p $$(realpath $(RULEDIR))/lib/omd/hooks/
-        cp --dereference $(execpath @omd_packages//packages/pnp4nagios:PNP4NAGIOS) $$(realpath $(RULEDIR))/lib/omd/hooks/
+        cp --dereference $(execpath @omd_packages//omd/packages/pnp4nagios:PNP4NAGIOS) $$(realpath $(RULEDIR))/lib/omd/hooks/
         mkdir -p $$(realpath $(RULEDIR))/skel/var/pnp4nagios/stats
         mkdir -p $$(realpath $(RULEDIR))/skel/var/pnp4nagios/perfdata
         mkdir -p $$(realpath $(RULEDIR))/skel/var/pnp4nagios/log

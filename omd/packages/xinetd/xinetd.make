@@ -46,7 +46,7 @@ endif
 
 ifneq ($(filter sles% el9,$(DISTRO_CODE)),)
 $(XINETD_INSTALL): $(XINETD_BUILD)
-	$(RSYNC) --chmod=u+w $(BAZEL_BIN)/$(XINETD)/$(XINETD)/ $(DESTDIR)$(OMD_ROOT)/
+	$(RSYNC) --chmod=u+w $(BAZEL_BIN_EXT)/$(XINETD)/$(XINETD)/ $(DESTDIR)$(OMD_ROOT)/
 	chmod 644 $(DESTDIR)$(OMD_ROOT)/share/doc/xinetd/*
 	chmod 644 $(DESTDIR)$(OMD_ROOT)/share/man/man5/xinetd.*
 	chmod 644 $(DESTDIR)$(OMD_ROOT)/share/man/man8/xinetd.8

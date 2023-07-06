@@ -9,6 +9,6 @@ $(MOD_FCGID_BUILD):
 
 $(MOD_FCGID_INSTALL): $(MOD_FCGID_BUILD)
 	$(MKDIR) $(DESTDIR)$(OMD_ROOT)/lib/apache/modules
-	$(RSYNC) --chmod=644 $(BAZEL_BIN)/$(MOD_FCGID)/$(MOD_FCGID)/lib/mod_fcgid.so $(DESTDIR)$(OMD_ROOT)/lib/apache/modules
+	$(RSYNC) --chmod=644 $(BAZEL_BIN_EXT)/$(MOD_FCGID)/$(MOD_FCGID)/lib/mod_fcgid.so $(DESTDIR)$(OMD_ROOT)/lib/apache/modules
 	$(MKDIR) $(SKEL)/tmp/apache/fcgid_sock
 	$(TOUCH) $@

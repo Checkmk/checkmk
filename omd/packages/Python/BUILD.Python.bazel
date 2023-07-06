@@ -60,8 +60,8 @@ configure_make(
         "DESTDIR=%s" % INSTALL_PREFIX,
     ],
     data = [
-        "@omd_packages//packages/Python:pip",
-        "@omd_packages//packages/Python:sitecustomize.py",
+        "@omd_packages//omd/packages/Python:pip",
+        "@omd_packages//omd/packages/Python:sitecustomize.py",
     ],
 
     # rules_foreign_cc defaults the install_prefix to "python". This conflicts with the "python" executable that is generated.
@@ -80,7 +80,7 @@ configure_make(
         omd_prefix="/replace-me"
 
         echo '### Compile and install sitecustomize.py ###';
-        install -m 644 $EXT_BUILD_ROOT/packages/Python/sitecustomize.py $INSTALLDIR/lib/python{pyMajMin}/;
+        install -m 644 $EXT_BUILD_ROOT/omd/packages/Python/sitecustomize.py $INSTALLDIR/lib/python{pyMajMin}/;
         LD_LIBRARY_PATH=$py_install_dir/lib $py_install_dir/bin/python{pyMaj} -m py_compile $INSTALLDIR/lib/python{pyMajMin}/sitecustomize.py;
 
         echo '### Fix sysconfigdata ###';
@@ -105,8 +105,8 @@ configure_make(
         # https://github.com/pypa/pip/blob/83c800d3b8b367b6ae1fbf92fd4f699612cecfc7/src/pip/_internal/operations/install/wheel.py#L422
         # * However, we may run into issues in the future again. It seems actually the module invocation (python -m pip) is more solid, see:
         # https://github.com/pypa/pip/issues/5599
-        install -m 644 $EXT_BUILD_ROOT/packages/Python/pip $bin_dir/pip{pyMaj};
-        install -m 644 $EXT_BUILD_ROOT/packages/Python/pip $bin_dir/pip{pyMajMin};
+        install -m 644 $EXT_BUILD_ROOT/omd/packages/Python/pip $bin_dir/pip{pyMaj};
+        install -m 644 $EXT_BUILD_ROOT/omd/packages/Python/pip $bin_dir/pip{pyMajMin};
     """.format(
         installPrefix = INSTALL_PREFIX,
         pyMaj = PYTHON_VERSION_MAJOR,

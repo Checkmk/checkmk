@@ -26,7 +26,7 @@ configure_make(
 
     # In contrast to "sources", @build_data is a list of files we need
     # to build stuff, lol
-    build_data = ["@omd_packages//packages/monitoring-plugins:cmk_password_store.h"],
+    build_data = ["@omd_packages//omd/packages/monitoring-plugins:cmk_password_store.h"],
     configure_command = "configure",
     configure_in_place = True,
     configure_options = select({
@@ -40,7 +40,7 @@ configure_make(
         "--with-snmpgetnext-command=/bin/snmpgetnext",
     ],
     copts = [
-        "-I$EXT_BUILD_ROOT/packages/monitoring-plugins/",
+        "-I$EXT_BUILD_ROOT/omd/packages/monitoring-plugins/",
         # will be prepended to executable and appended to dynamic libraries,
         # leaving all other "copts" non-optional, lol
         "-Wl,--rpath,$ORIGIN_VAR/../lib",

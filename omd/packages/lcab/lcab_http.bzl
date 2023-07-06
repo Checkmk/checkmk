@@ -5,7 +5,7 @@ def lcab(version_str, sha256):
     filename = "lcab-" + version_str + ".tar.gz"
     http_archive(
         name = "lcab",
-        build_file = "@omd_packages//packages/lcab:BUILD.lcab.bazel",
+        build_file = "@omd_packages//omd/packages/lcab:BUILD.lcab.bazel",
         strip_prefix = "lcab-" + version_str,
         urls = [
             "http://archlinux.c3sl.ufpr.br/other/lcab/" + filename,

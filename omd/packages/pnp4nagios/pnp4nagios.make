@@ -11,11 +11,11 @@ $(PNP4NAGIOS_BUILD):
 	$(BAZEL_BUILD) @pnp4nagios//:skel
 
 $(PNP4NAGIOS_INSTALL): $(PNP4NAGIOS_BUILD)
-	$(RSYNC) --chmod=u+w $(BAZEL_BIN)/$(PNP4NAGIOS)/$(PNP4NAGIOS)/ $(DESTDIR)$(OMD_ROOT)/
+	$(RSYNC) --chmod=u+w $(BAZEL_BIN_EXT)/$(PNP4NAGIOS)/$(PNP4NAGIOS)/ $(DESTDIR)$(OMD_ROOT)/
 	chmod 644 $(DESTDIR)$(OMD_ROOT)/share/doc/pnp4nagios/*
-	$(RSYNC) --chmod=Du=rwx,Dg=rx,Do=rx,Fu=rw,Fg=r,Fo=r $(BAZEL_BIN)/$(PNP4NAGIOS)/skel/ $(DESTDIR)$(OMD_ROOT)/skel
-	install -m 644 $(BAZEL_BIN)/$(PNP4NAGIOS)/share/diskspace/pnp4nagios $(DESTDIR)$(OMD_ROOT)/share/diskspace/pnp4nagios
-	install -m 755 $(BAZEL_BIN)/$(PNP4NAGIOS)/lib/omd/hooks/PNP4NAGIOS $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
+	$(RSYNC) --chmod=Du=rwx,Dg=rx,Do=rx,Fu=rw,Fg=r,Fo=r $(BAZEL_BIN_EXT)/$(PNP4NAGIOS)/skel/ $(DESTDIR)$(OMD_ROOT)/skel
+	install -m 644 $(BAZEL_BIN_EXT)/$(PNP4NAGIOS)/share/diskspace/pnp4nagios $(DESTDIR)$(OMD_ROOT)/share/diskspace/pnp4nagios
+	install -m 755 $(BAZEL_BIN_EXT)/$(PNP4NAGIOS)/lib/omd/hooks/PNP4NAGIOS $(DESTDIR)$(OMD_ROOT)/lib/omd/hooks/
 	# Add symlinks, as bazel is dereferencing them
 	cd $(DESTDIR)$(OMD_ROOT)/skel/etc/rc.d/ ; \
 	ln -sf ../init.d/npcd 50-npcd ; \

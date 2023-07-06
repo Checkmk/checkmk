@@ -7,4 +7,4 @@ $(LCAB_BUILD):
 	$(BAZEL_BUILD) @$(LCAB)//:$(LCAB)
 
 $(LCAB_INSTALL): $(LCAB_BUILD)
-	$(RSYNC) --chmod=u+w $(BAZEL_BIN)/$(LCAB)/$(LCAB)/bin $(DESTDIR)$(OMD_ROOT)/
+	$(RSYNC) --chmod=u+w $(BAZEL_BIN_EXT)/$(LCAB)/$(LCAB)/bin $(DESTDIR)$(OMD_ROOT)/

@@ -5,7 +5,7 @@ def libgsf(version_str, sha256):
     filename = "libgsf-" + version_str + ".tar.xz"
     http_archive(
         name = "libgsf",
-        build_file = "@omd_packages//packages/libgsf:BUILD.libgsf.bazel",
+        build_file = "@omd_packages//omd/packages/libgsf:BUILD.libgsf.bazel",
         strip_prefix = "libgsf-" + version_str,
         urls = [
             "https://ftp.osuosl.org/pub/blfs/conglomeration/libgsf/" + filename,

@@ -13,10 +13,10 @@ $(NAGIOS_BUILD):
 	$(BAZEL_BUILD) @$(NAGIOS)//:skel
 
 $(NAGIOS_INSTALL): $(NAGIOS_BUILD)
-	$(RSYNC) --chmod=u+w $(BAZEL_BIN)/$(NAGIOS)/$(NAGIOS)/ $(DESTDIR)$(OMD_ROOT)/
-	$(RSYNC) --chmod=u+w $(BAZEL_BIN)/$(NAGIOS)/bin $(DESTDIR)$(OMD_ROOT)/
+	$(RSYNC) --chmod=u+w $(BAZEL_BIN_EXT)/$(NAGIOS)/$(NAGIOS)/ $(DESTDIR)$(OMD_ROOT)/
+	$(RSYNC) --chmod=u+w $(BAZEL_BIN_EXT)/$(NAGIOS)/bin $(DESTDIR)$(OMD_ROOT)/
 	patchelf --set-rpath "\$$ORIGIN/../lib" $(DESTDIR)$(OMD_ROOT)/bin/nagios
-	$(RSYNC) --chmod=u+w $(BAZEL_BIN)/$(NAGIOS)/share $(DESTDIR)$(OMD_ROOT)/
+	$(RSYNC) --chmod=u+w $(BAZEL_BIN_EXT)/$(NAGIOS)/share $(DESTDIR)$(OMD_ROOT)/
 	# Fix permissions as they don't come out of bazel correctly yet
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/nagios
 	chmod 755 $(DESTDIR)$(OMD_ROOT)/bin/nagiostats

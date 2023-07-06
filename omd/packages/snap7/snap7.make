@@ -6,7 +6,7 @@ SNAP7_INSTALL := $(BUILD_HELPER_DIR)/$(SNAP7)-install
 $(SNAP7_INSTALL):
 	# run the Bazel build process which does all the dependency stuff
 	$(BAZEL_BUILD) @$(SNAP7)//:$(SNAP7)
-	install -m 644 $(BAZEL_BIN)/$(SNAP7)/$(SNAP7)/libsnap7.so $(DESTDIR)$(OMD_ROOT)/lib
+	install -m 644 $(BAZEL_BIN_EXT)/$(SNAP7)/$(SNAP7)/libsnap7.so $(DESTDIR)$(OMD_ROOT)/lib
 
 # The original 7z file is quite large (20MB), because it contains tons of
 # executables, but we don't need any of them. An equivalent .tar.gz would almost

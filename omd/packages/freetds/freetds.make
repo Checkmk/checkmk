@@ -22,11 +22,11 @@ $(FREETDS_BUILD): packages/freetds/BUILD.freetds.bazel packages/freetds/freetds.
 $(FREETDS_INTERMEDIATE_INSTALL): $(FREETDS_BUILD)
 	# Package python-modules needs some stuff during the build.
 	$(MKDIR) $(PACKAGE_FREETDS_DESTDIR)
-	$(RSYNC) -r --chmod=u+w "$(BAZEL_BIN)/freetds/freetds/" "$(PACKAGE_FREETDS_DESTDIR)/"
+	$(RSYNC) -r --chmod=u+w "$(BAZEL_BIN_EXT)/freetds/freetds/" "$(PACKAGE_FREETDS_DESTDIR)/"
 	#
 	# At runtime we need only the libraries.
 	$(MKDIR) $(FREETDS_INSTALL_DIR)/runtime
-	$(RSYNC) -r --exclude=libct* --chmod=u+w "$(BAZEL_BIN)/freetds/freetds/lib" "$(FREETDS_INSTALL_DIR)/runtime/"
+	$(RSYNC) -r --exclude=libct* --chmod=u+w "$(BAZEL_BIN_EXT)/freetds/freetds/lib" "$(FREETDS_INSTALL_DIR)/runtime/"
 	patchelf --set-rpath "\$$ORIGIN/../lib" \
 	    "$(FREETDS_INSTALL_DIR)/runtime/lib/libsybdb.so" \
 	    "$(FREETDS_INSTALL_DIR)/runtime/lib/libsybdb.so.5" \

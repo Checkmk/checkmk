@@ -48,8 +48,8 @@ configure_make(
 genrule(
     name = "skel",
     srcs = [
-        "@omd_packages//packages/nagios:merge-nagios-config",
-        "@omd_packages//packages/nagios:diskspace",
+        "@omd_packages//omd/packages/nagios:merge-nagios-config",
+        "@omd_packages//omd/packages/nagios:diskspace",
     ],
     outs = [
         "bin/merge-nagios-config",
@@ -57,8 +57,8 @@ genrule(
     ],
     cmd = """
         mkdir -p $(RULEDIR)/bin
-        cp --dereference $(execpath @omd_packages//packages/nagios:merge-nagios-config) $$(realpath $(RULEDIR))/bin
+        cp --dereference $(execpath @omd_packages//omd/packages/nagios:merge-nagios-config) $$(realpath $(RULEDIR))/bin
         mkdir -p $(RULEDIR)/share/diskspace/
-        cp --dereference $(execpath @omd_packages//packages/nagios:diskspace) $$(realpath $(RULEDIR))/share/diskspace/nagios
+        cp --dereference $(execpath @omd_packages//omd/packages/nagios:diskspace) $$(realpath $(RULEDIR))/share/diskspace/nagios
     """,
 )

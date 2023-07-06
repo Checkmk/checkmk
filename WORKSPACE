@@ -75,98 +75,98 @@ load(
     "XMLSEC1_SHA256",
     "XMLSEC1_VERSION",
 )
-load("//packages/patch:patch_http.bzl", "patch")
+load("//omd/packages/patch:patch_http.bzl", "patch")
 
 patch(
     sha256 = PATCH_SHA256,
     version_str = PATCH_VERSION,
 )
 
-load("//packages/redis:redis_http.bzl", "redis")
+load("//omd/packages/redis:redis_http.bzl", "redis")
 
 redis(
     sha256 = REDIS_SHA256,
     version_str = REDIS_VERSION,
 )
 
-load("//packages/openssl:openssl_http.bzl", "openssl")
+load("//omd/packages/openssl:openssl_http.bzl", "openssl")
 
 openssl(
     sha256 = OPENSSL_SHA256,
     version_str = OPENSSL_VERSION,
 )
 
-load("//packages/xmlsec1:xmlsec1_http.bzl", "xmlsec1")
+load("//omd/packages/xmlsec1:xmlsec1_http.bzl", "xmlsec1")
 
 xmlsec1(
     sha256 = XMLSEC1_SHA256,
     version_str = XMLSEC1_VERSION,
 )
 
-load("//packages/heirloom-mailx:heirloom-mailx_http.bzl", "heirloommailx")
+load("//omd/packages/heirloom-mailx:heirloom-mailx_http.bzl", "heirloommailx")
 
 heirloommailx(
     sha256 = HEIRLOOMMAILX_SHA256,
     version_str = HEIRLOOMMAILX_VERSION,
 )
 
-load("//packages/monitoring-plugins:monitoring-plugins_http.bzl", "monitoring_plugins")
+load("//omd/packages/monitoring-plugins:monitoring-plugins_http.bzl", "monitoring_plugins")
 
 monitoring_plugins(
     sha256 = MONITORING_PLUGINS_SHA256,
     version_str = MONITORING_PLUGINS_VERSION,
 )
 
-load("//packages/stunnel:stunnel_http.bzl", "stunnel")
+load("//omd/packages/stunnel:stunnel_http.bzl", "stunnel")
 
 stunnel(
     sha256 = STUNNEL_SHA256,
     version_str = STUNNEL_VERSION,
 )
 
-load("//packages/freetds:freetds_http.bzl", "freetds")
+load("//omd/packages/freetds:freetds_http.bzl", "freetds")
 
 freetds(
     sha256 = FREETDS_SHA256,
     version_str = FREETDS_VERSION,
 )
 
-load("//packages/heirloom-pkgtools:heirloom-pkgtools_http.bzl", "heirloom_pkgtools")
+load("//omd/packages/heirloom-pkgtools:heirloom-pkgtools_http.bzl", "heirloom_pkgtools")
 
 heirloom_pkgtools(
     sha256 = HEIRLOOM_PKGTOOLS_SHA256,
     version_str = HEIRLOOM_PKGTOOLS_VERSION,
 )
 
-load("//packages/libgsf:libgsf_http.bzl", "libgsf")
+load("//omd/packages/libgsf:libgsf_http.bzl", "libgsf")
 
 libgsf(
     sha256 = LIBGSF_SHA256,
     version_str = LIBGSF_VERSION,
 )
 
-load("//packages/lcab:lcab_http.bzl", "lcab")
+load("//omd/packages/lcab:lcab_http.bzl", "lcab")
 
 lcab(
     sha256 = LCAB_SHA256,
     version_str = LCAB_VERSION,
 )
 
-load("//packages/msitools:msitools_http.bzl", "msitools")
+load("//omd/packages/msitools:msitools_http.bzl", "msitools")
 
 msitools(
     sha256 = MSITOOLS_SHA256,
     version_str = MSITOOLS_VERSION,
 )
 
-load("//packages/snap7:snap7_http.bzl", "snap7")
+load("//omd/packages/snap7:snap7_http.bzl", "snap7")
 
 snap7(
     sha256 = SNAP7_SHA256,
     version_str = SNAP7_VERSION,
 )
 
-load("//packages/perl-modules:perl-modules_http.bzl", "perl_modules")
+load("//omd/packages/perl-modules:perl-modules_http.bzl", "perl_modules")
 
 # TODO: Centralize perl modules versions
 perl_modules()
@@ -175,11 +175,11 @@ load("//:bazel_variables.bzl", "UPSTREAM_MIRROR_URL")
 
 http_archive(
     name = "Crypt-SSLeay",
-    build_file = "//packages/perl-modules:BUILD.Crypt-SSLeay.bazel",
+    build_file = "//omd/packages/perl-modules:BUILD.Crypt-SSLeay.bazel",
     patch_args = ["-p1"],
     patch_tool = "patch",
     patches = [
-        "//packages/perl-modules/patches:Crypt-SSLeay-0.72-do-not-use-SSLv2_client_method-with-new-openssl.dif",
+        "//omd/packages/perl-modules/patches:Crypt-SSLeay-0.72-do-not-use-SSLv2_client_method-with-new-openssl.dif",
     ],
     strip_prefix = "Crypt-SSLeay-0.72",
     urls = [
@@ -188,42 +188,42 @@ http_archive(
     ],
 )
 
-load("//packages/nrpe:nrpe_http.bzl", "nrpe")
+load("//omd/packages/nrpe:nrpe_http.bzl", "nrpe")
 
 nrpe(
     sha256 = NRPE_SHA256,
     version_str = NRPE_VERSION,
 )
 
-load("//packages/Python:Python_http.bzl", "python")
+load("//omd/packages/Python:Python_http.bzl", "python")
 
 python(
     sha256 = PYTHON_SHA256,
     version_str = PYTHON_VERSION,
 )
 
-load("//packages/pnp4nagios:pnp4nagios_http.bzl", "pnp4nagios")
+load("//omd/packages/pnp4nagios:pnp4nagios_http.bzl", "pnp4nagios")
 
 pnp4nagios(
     sha256 = "ab59a8a02d0f70de3cf89b12fe1e9216e4b1127bc29c04a036cd06dde72ee8fb",
     version_str = "0.6.26",
 )
 
-load("//packages/mod_fcgid:mod_fcgid_http.bzl", "mod_fcgid")
+load("//omd/packages/mod_fcgid:mod_fcgid_http.bzl", "mod_fcgid")
 
 mod_fcgid(
     sha256 = MOD_FCGID_SHA256,
     version_str = MOD_FCGID_VERSION,
 )
 
-load("//packages/xinetd:xinetd_http.bzl", "xinetd")
+load("//omd/packages/xinetd:xinetd_http.bzl", "xinetd")
 
 xinetd(
     sha256 = XINETD_SHA256,
     version_str = XINETD_VERSION,
 )
 
-load("//packages/nagios:nagios_http.bzl", "nagios")
+load("//omd/packages/nagios:nagios_http.bzl", "nagios")
 
 nagios(
     sha256 = NAGIOS_SHA256,

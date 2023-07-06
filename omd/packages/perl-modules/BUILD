@@ -59,10 +59,10 @@ genrule(
         export PERL_MM_OPT=INSTALL_BASE=$$PWD/perl-modules
         export PERL_MB_OPT=--install_base=$$PWD/perl-modules
         export MODULEBUILDRC=$$PWD/perl-modules/.modulebuildrc
-        export PERL5LIB="$$(dirname $(location @omd_packages//packages/perl-modules:lib/BuildHelper.pm)):$$PWD/perl-modules/lib/perl5:$$PWD/Crypt-SSLeay-0.72"
-        FORCE=1 $(location @omd_packages//packages/perl-modules:build_module.pl) -p $$PWD/perl-modules $$(cat $(location perl_module_list_1.txt));
-        $(location @omd_packages//packages/perl-modules:build_module.pl) -p $$PWD/perl-modules $$(cat $(location perl_module_list_2.txt));
-        $(location @omd_packages//packages/perl-modules:build_module.pl) -p $$PWD/perl-modules $(locations @Crypt-SSLeay//:Crypt-SSLeay-0.72.tar.gz);
+        export PERL5LIB="$$(dirname $(location @omd_packages//omd/packages/perl-modules:lib/BuildHelper.pm)):$$PWD/perl-modules/lib/perl5:$$PWD/Crypt-SSLeay-0.72"
+        FORCE=1 $(location @omd_packages//omd/packages/perl-modules:build_module.pl) -p $$PWD/perl-modules $$(cat $(location perl_module_list_1.txt));
+        $(location @omd_packages//omd/packages/perl-modules:build_module.pl) -p $$PWD/perl-modules $$(cat $(location perl_module_list_2.txt));
+        $(location @omd_packages//omd/packages/perl-modules:build_module.pl) -p $$PWD/perl-modules $(locations @Crypt-SSLeay//:Crypt-SSLeay-0.72.tar.gz);
         mkdir -p $@
         cp -r perl-modules/{bin,lib,man} $@
     """,

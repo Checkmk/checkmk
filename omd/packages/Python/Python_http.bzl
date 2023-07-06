@@ -5,7 +5,7 @@ def python(version_str, sha256):
     filename = "Python-" + version_str + ".tar.xz"
     http_archive(
         name = "python",
-        build_file = "@omd_packages//packages/Python:BUILD.Python.bazel",
+        build_file = "@omd_packages//omd/packages/Python:BUILD.Python.bazel",
         urls = [
             "https://www.python.org/ftp/python/" + version_str + "/" + filename,
             UPSTREAM_MIRROR_URL + filename,

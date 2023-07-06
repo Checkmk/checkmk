@@ -18,7 +18,7 @@ import urllib.parse
 from collections.abc import Callable, Iterator, Mapping, MutableMapping
 from contextlib import contextmanager, suppress
 from pathlib import Path
-from typing import Final, Generator, Literal
+from typing import Final, Literal, Optional
 
 import pytest
 
@@ -162,7 +162,12 @@ class Site:
         self.wait_for_core_reloaded(before_restart)
 
     def send_host_check_result(
-        self, hostname: str, state: int, output: str, expected_state: int | None = None
+        self,
+        hostname: str,
+        state: int,
+        output: str,
+        expected_state: Optional[int] = None,
+        wait_timeout: int = 20,
     ) -> None:
         if expected_state is None:
             expected_state = state
@@ -172,7 +177,11 @@ class Site:
             f"[{command_timestamp:.0f}] PROCESS_HOST_CHECK_RESULT;{hostname};{state};{output}"
         )
         self._wait_for_next_host_check(
-            hostname, last_check_before, command_timestamp, expected_state
+            hostname,
+            last_check_before,
+            command_timestamp,
+            expected_state,
+            wait_timeout,
         )
 
     def send_service_check_result(
@@ -181,7 +190,8 @@ class Site:
         service_description: str,
         state: int,
         output: str,
-        expected_state: int | None = None,
+        expected_state: Optional[int] = None,
+        wait_timeout: int = 20,
     ) -> None:
         if expected_state is None:
             expected_state = state
@@ -191,10 +201,21 @@ class Site:
             f"[{command_timestamp:.0f}] PROCESS_SERVICE_CHECK_RESULT;{hostname};{service_description};{state};{output}"
         )
         self._wait_for_next_service_check(
-            hostname, service_description, last_check_before, command_timestamp, expected_state
+            hostname,
+            service_description,
+            last_check_before,
+            command_timestamp,
+            expected_state,
+            wait_timeout,
         )
 
-    def schedule_check(self, hostname: str, service_description: str, expected_state: int) -> None:
+    def schedule_check(
+        self,
+        hostname: str,
+        service_description: str,
+        expected_state: Optional[int] = None,
+        wait_timeout: int = 20,
+    ) -> None:
         logger.debug("%s;%s schedule check", hostname, service_description)
         last_check_before = self._last_service_check(hostname, service_description)
         logger.debug("%s;%s last check before %r", hostname, service_description, last_check_before)
@@ -204,10 +225,16 @@ class Site:
         command = f"[{command_timestamp:.0f}] SCHEDULE_FORCED_SVC_CHECK;{hostname};{service_description};{command_timestamp:.0f}"
 
         logger.debug("%s;%s: %r", hostname, service_description, command)
+
         self.live.command(command)
 
         self._wait_for_next_service_check(
-            hostname, service_description, last_check_before, command_timestamp, expected_state
+            hostname,
+            service_description,
+            last_check_before,
+            command_timestamp,
+            expected_state,
+            wait_timeout,
         )
 
     def _command_timestamp(self, last_check_before: float) -> float:
@@ -219,19 +246,25 @@ class Site:
         return timestamp
 
     def _wait_for_next_host_check(
-        self, hostname: str, last_check_before: float, command_timestamp: float, expected_state: int
+        self,
+        hostname: str,
+        last_check_before: float,
+        command_timestamp: float,
+        expected_state: Optional[int] = None,
+        wait_timeout: int = 20,
     ) -> None:
-        wait_timeout = 20
-        last_check, state, plugin_output = self.live.query_row(
+        query: str = (
             "GET hosts\n"
             "Columns: last_check state plugin_output\n"
             f"Filter: host_name = {hostname}\n"
             f"WaitObject: {hostname}\n"
             f"WaitTimeout: {wait_timeout*1000:d}\n"
+            f"WaitTrigger: check\n"
             f"WaitCondition: last_check > {last_check_before:.0f}\n"
-            f"WaitCondition: state = {expected_state}\n"
-            "WaitTrigger: check\n"
         )
+        if expected_state is not None:
+            query += f"WaitCondition: state = {expected_state}\n"
+        last_check, state, plugin_output = self.live.query_row(query)
         self._verify_next_check_output(
             command_timestamp,
             last_check,
@@ -248,10 +281,10 @@ class Site:
         service_description: str,
         last_check_before: float,
         command_timestamp: float,
-        expected_state: int,
+        expected_state: Optional[int] = None,
+        wait_timeout: int = 20,
     ) -> None:
-        wait_timeout = 20
-        last_check, state, plugin_output = self.live.query_row(
+        query: str = (
             "GET services\n"
             "Columns: last_check state plugin_output\n"
             f"Filter: host_name = {hostname}\n"
@@ -259,10 +292,12 @@ class Site:
             f"WaitObject: {hostname};{service_description}\n"
             f"WaitTimeout: {wait_timeout*1000:d}\n"
             f"WaitCondition: last_check > {last_check_before:.0f}\n"
-            f"WaitCondition: state = {expected_state}\n"
             "WaitCondition: has_been_checked = 1\n"
             "WaitTrigger: check\n"
         )
+        if expected_state is not None:
+            query += f"WaitCondition: state = {expected_state}\n"
+        last_check, state, plugin_output = self.live.query_row(query)
         self._verify_next_check_output(
             command_timestamp,
             last_check,
@@ -279,9 +314,9 @@ class Site:
         last_check: float,
         last_check_before: float,
         state: int,
-        expected_state: int,
+        expected_state: Optional[int],
         plugin_output: str,
-        wait_timeout: int,
+        wait_timeout: int = 20,
     ) -> None:
         logger.debug("processing check result took %0.2f seconds", time.time() - command_timestamp)
         assert last_check > last_check_before, (
@@ -289,6 +324,8 @@ class Site:
             f"(last check before reschedule: {last_check_before:.0f}, "
             f"scheduled at: {command_timestamp:.0f}, last check: {last_check:.0f})"
         )
+        if expected_state is None:
+            return
         assert (
             state == expected_state
         ), f"Expected {expected_state} state, got {state} state, output {plugin_output}"
@@ -1260,7 +1297,7 @@ class SiteFactory:
         auto_cleanup: bool = True,
         auto_restart_httpd: bool = False,
         init_livestatus: bool = True,
-    ) -> Generator[Site, None, None]:
+    ) -> Iterator[Site]:
         """Return a fully setup test site (for use in site fixtures)."""
         reuse_site = os.environ.get("REUSE", "0") == "1"
         # by default, the site will be cleaned up if REUSE=1 is not set

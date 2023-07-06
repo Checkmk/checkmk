@@ -1066,14 +1066,10 @@ class DisplayHints:
             yield from node._make_inventory_paths_or_hints(path + [node_name])
 
     def get_attribute_hint(self, key: str) -> AttributeDisplayHint:
-        if key in self.attribute_hints:
-            return self.attribute_hints[key]
-        return AttributeDisplayHint.from_raw(self.abc_path, key, {})
+        return self.attribute_hints.get(key, AttributeDisplayHint.from_raw(self.abc_path, key, {}))
 
     def get_column_hint(self, key: str) -> ColumnDisplayHint:
-        if key in self.column_hints:
-            return self.column_hints[key]
-        return ColumnDisplayHint.from_raw(self.abc_path, key, {})
+        return self.column_hints.get(key, ColumnDisplayHint.from_raw(self.abc_path, key, {}))
 
     def get_node_hints(self, name: SDNodeName) -> DisplayHints:
         return self.nodes.get(name, DisplayHints.default(self.abc_path))

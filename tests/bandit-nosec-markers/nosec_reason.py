@@ -198,7 +198,9 @@ def find_nosecs(src_root: Path, excluded: Sequence[Path]) -> Sequence[Nosec]:
         return output.strip().decode("utf-8").split("\n")
 
     run_find_files = "./scripts/find-python-files"
-    files = _format_output(subprocess.check_output(run_find_files, cwd=src_root))
+    files = _format_output(
+        subprocess.run(run_find_files, cwd=src_root, check=False, capture_output=True).stdout
+    )
     print(
         f"Checking {len(files)} python files in '{src_root}'"
         + (f" excluding '{', '.join(map(str, excluded))}'." if excluded else "")

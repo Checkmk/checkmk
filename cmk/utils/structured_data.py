@@ -130,16 +130,16 @@ class UpdateResult:
                 update_result.reasons_by_path.setdefault(path, []).extend(reasons)
         return update_result
 
-    def add_attr_reason(self, path: SDPath, name: str, iterable: Iterable[str]) -> None:
+    def add_attr_reason(self, path: SDPath, title: str, iterable: Iterable[str]) -> None:
         self.reasons_by_path.setdefault(path, []).append(
-            f"[Attributes] Added {name}: {', '.join(iterable)}"
+            f"[Attributes] {title}: {', '.join(sorted(iterable))}"
         )
 
     def add_row_reason(
-        self, path: SDPath, ident: SDRowIdent, name: str, iterable: Iterable[str]
+        self, path: SDPath, ident: SDRowIdent, title: str, iterable: Iterable[str]
     ) -> None:
         self.reasons_by_path.setdefault(path, []).append(
-            f"[Table] '{', '.join(ident)}': Added {name}: {', '.join(iterable)}"
+            f"[Table] '{', '.join(map(str, ident))}': {title}: {', '.join(sorted(iterable))}"
         )
 
     def __repr__(self) -> str:
@@ -149,7 +149,7 @@ class UpdateResult:
         lines = ["Updated inventory tree:"]
         for path, reasons in self.reasons_by_path.items():
             lines.append(f"  Path '{' > '.join(path)}':")
-            lines.extend(f"    {r}" for r in reasons)
+            lines.extend(f"    {r}" for r in sorted(reasons))
         return "\n".join(lines) + "\n"
 
 
@@ -810,7 +810,7 @@ class Table:
                 # Update row with key column entries
                 old_row.update({k: other._rows[ident][k] for k in other.key_columns})
                 self.add_row(ident, old_row)
-                update_result.add_row_reason(self.path, ident, "row", old_row)
+                update_result.add_row_reason(self.path, ident, "Added row", old_row)
 
         for ident in compared_filtered_idents.both:
             compared_filtered_keys = _compare_dict_keys(
@@ -834,7 +834,7 @@ class Table:
                     }
                 )
                 self.add_row(ident, row)
-                update_result.add_row_reason(self.path, ident, "row", row)
+                update_result.add_row_reason(self.path, ident, "Added row", row)
 
         for ident in compared_filtered_idents.only_new:
             for key in self_filtered_rows[ident]:
@@ -842,8 +842,13 @@ class Table:
 
         if retentions:
             self.set_retentions(retentions)
-            for ident, intervals in retentions.items():
-                update_result.add_row_reason(self.path, ident, "intervals", intervals)
+            for ident, intervals_by_key in retentions.items():
+                update_result.add_row_reason(
+                    self.path,
+                    ident,
+                    "Keep until",
+                    [f"{k} ({v.keep_until})" for k, v in intervals_by_key.items()],
+                )
 
         return update_result
 
@@ -1041,11 +1046,13 @@ class Attributes:
         update_result = UpdateResult()
         if pairs:
             self.add_pairs(pairs)
-            update_result.add_attr_reason(self.path, "pairs", pairs)
+            update_result.add_attr_reason(self.path, "Added pairs", pairs)
 
         if retentions:
             self.set_retentions(retentions)
-            update_result.add_attr_reason(self.path, "intervals", retentions)
+            update_result.add_attr_reason(
+                self.path, "Keep until", [f"{k} ({v.keep_until})" for k, v in retentions.items()]
+            )
 
         return update_result
 

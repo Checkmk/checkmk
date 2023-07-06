@@ -22,7 +22,7 @@ import tests.testlib as testlib
 from tests.testlib.utils import cmk_path
 from tests.testlib.version import CMKVersion, version_from_env
 
-from cmk.utils.version import Edition
+from cmk.utils.version import Edition, Version, versions_compatible, VersionsCompatible
 
 build_path = str(testlib.repo_path() / "docker_image")
 image_prefix = "docker-tests"
@@ -622,6 +622,35 @@ def test_update(
         version_spec="2.1.0b3",
         branch="2.1.0",
         edition=Edition.CRE,
+    )
+
+    assert isinstance(
+        versions_compatible(
+            Version.from_str(old_version.version), Version.from_str(version.version)
+        ),
+        VersionsCompatible,
+    )
+    # Currently, in the master branch, we can't derive the future major version from from the daily
+    # build version. So we hack around a bit to gather it from the git. In the future we plan to
+    # use the scheme "<branch_version>-2023.07.06" also for master daily builds. Then this
+    # additional check can be removed.
+    branch_version = subprocess.check_output(
+        [
+            "make",
+            "-s",
+            "-C",
+            str(testlib.repo_path()),
+            "-f",
+            "defines.make",
+            "print-BRANCH_VERSION",
+        ],
+        encoding="utf-8",
+    ).rstrip()
+    assert isinstance(
+        versions_compatible(
+            Version.from_str(old_version.version), Version.from_str(branch_version)
+        ),
+        VersionsCompatible,
     )
 
     # 1. create container with old version and add a file to mark the pre-update state

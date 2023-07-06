@@ -68,6 +68,7 @@ bazel build \
     --action_env=SYSTEM_DIGEST="$SYSTEM_DIGEST" \
     --host_action_env=PATH="$PATH" \
     --host_action_env=SYSTEM_DIGEST="$SYSTEM_DIGEST" \
+    --experimental_ui_max_stdouterr_bytes=10000000 \
     "${BAZEL_REMOTE_CACHE_ARGUMENT}" \
     ${BAZEL_EXTRA_ARGS} \
     "${TARGET}"

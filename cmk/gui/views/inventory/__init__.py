@@ -1065,6 +1065,16 @@ class DisplayHints:
         for node_name, node in self.nodes.items():
             yield from node._make_inventory_paths_or_hints(path + [node_name])
 
+    def get_attribute_hint(self, key: str) -> AttributeDisplayHint:
+        if key in self.attribute_hints:
+            return self.attribute_hints[key]
+        return AttributeDisplayHint.from_raw(self.abc_path, key, {})
+
+    def get_column_hint(self, key: str) -> ColumnDisplayHint:
+        if key in self.column_hints:
+            return self.column_hints[key]
+        return ColumnDisplayHint.from_raw(self.abc_path, key, {})
+
     def get_node_hints(self, name: SDNodeName) -> DisplayHints:
         return self.nodes.get(name, DisplayHints.default(self.abc_path))
 
@@ -1081,16 +1091,6 @@ class DisplayHints:
                 return DisplayHints.default(path)
 
         return node
-
-    def get_column_hint(self, key: str) -> ColumnDisplayHint:
-        if key in self.column_hints:
-            return self.column_hints[key]
-        return ColumnDisplayHint.from_raw(self.abc_path, key, {})
-
-    def get_attribute_hint(self, key: str) -> AttributeDisplayHint:
-        if key in self.attribute_hints:
-            return self.attribute_hints[key]
-        return AttributeDisplayHint.from_raw(self.abc_path, key, {})
 
     def replace_placeholders(self, path: SDPath) -> str:
         if "%d" not in self.node_hint.title and "%s" not in self.node_hint.title:

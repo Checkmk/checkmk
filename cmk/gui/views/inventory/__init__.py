@@ -2143,7 +2143,7 @@ def _sort_delta_rows(
     ]
 
 
-def _get_html_value(value: SDValue, hint: ColumnDisplayHint | AttributeDisplayHint) -> HTML:
+def _get_html_value(value: SDValue, hint: AttributeDisplayHint | ColumnDisplayHint) -> HTML:
     # TODO separate tdclass from rendered value
     _tdclass, code = hint.paint_function(value)
     return HTML(code)
@@ -2167,7 +2167,7 @@ def _show_value(
 
 def _show_delta_value(
     value: tuple[SDValue, SDValue],
-    hint: ColumnDisplayHint | AttributeDisplayHint,
+    hint: AttributeDisplayHint | ColumnDisplayHint,
 ) -> None:
     old, new = value
     if old is None and new is not None:
@@ -2190,143 +2190,6 @@ def _show_delta_value(
         html.close_span()
     else:
         raise NotImplementedError()
-
-
-class TreeRenderer:
-    def __init__(
-        self,
-        site_id: SiteId,
-        hostname: HostName,
-        show_internal_tree_paths: bool = False,
-        tree_id: str = "",
-    ) -> None:
-        self._site_id = site_id
-        self._hostname = hostname
-        self._show_internal_tree_paths = show_internal_tree_paths
-        self._tree_id = tree_id
-        self._tree_name = f"inv_{hostname}{tree_id}"
-
-    def _fetch_url(self, raw_path: str) -> str:
-        params: list[tuple[str, int | str | None]] = [
-            ("site", self._site_id),
-            ("host", self._hostname),
-            ("raw_path", raw_path),
-            ("show_internal_tree_paths", "on" if self._show_internal_tree_paths else ""),
-        ]
-        if self._tree_id:
-            params.append(("tree_id", self._tree_id))
-        return makeuri_contextless(request, params, "ajax_inv_render_tree.py")
-
-    def _get_header(self, title: str, key_info: str) -> HTML:
-        header = HTML(title)
-        if self._show_internal_tree_paths:
-            header += " " + HTMLWriter.render_span("(%s)" % key_info, css="muted-text")
-        return header
-
-    def show(self, tree: ImmutableTree | ImmutableDeltaTree, hints: DisplayHints) -> None:
-        if tree.attributes:
-            self._show_attributes(tree.attributes, hints)
-
-        if tree.table:
-            self._show_table(tree.table, hints)
-
-        for _name, node in sorted(tree.nodes_by_name.items(), key=lambda t: t[0]):
-            if isinstance(node, (ImmutableTree, ImmutableDeltaTree)):
-                # sorted tries to find the common base class, which is object :(
-                self._show_node(node)
-
-    def _show_node(self, node: ImmutableTree | ImmutableDeltaTree) -> None:
-        raw_path = f".{'.'.join(map(str, node.path))}." if node.path else "."
-
-        hints = DISPLAY_HINTS.get_hints(node.path)
-
-        with foldable_container(
-            treename=self._tree_name,
-            id_=raw_path,
-            isopen=False,
-            title=self._get_header(
-                hints.replace_placeholders(node.path),
-                ".".join(map(str, node.path)),
-            ),
-            icon=hints.node_hint.icon,
-            fetch_url=self._fetch_url(raw_path),
-        ) as is_open:
-            if is_open:
-                self.show(node, hints)
-
-    def _show_table(self, table: ImmutableTable | ImmutableDeltaTable, hints: DisplayHints) -> None:
-        if hints.table_hint.view_spec:
-            # Link to Multisite view with exactly this table
-            html.div(
-                HTMLWriter.render_a(
-                    _("Open this table for filtering / sorting"),
-                    href=makeuri_contextless(
-                        request,
-                        [
-                            (
-                                "view_name",
-                                _make_table_view_name_of_host(hints.table_hint.view_spec.view_name),
-                            ),
-                            ("host", self._hostname),
-                        ],
-                        filename="view.py",
-                    ),
-                ),
-                class_="invtablelink",
-            )
-
-        columns = _make_columns(table.rows, hints.table_hint.key_order)
-        sorted_rows: Sequence[Sequence[_InventoryTreeValueInfo]] | Sequence[
-            Sequence[_DeltaTreeValueInfo]
-        ]
-        if isinstance(table, ImmutableTable):
-            sorted_rows = _sort_rows(table, columns)
-        else:
-            sorted_rows = _sort_delta_rows(table, columns)
-
-        # TODO: Use table.open_table() below.
-        html.open_table(class_="data")
-        html.open_tr()
-        for column in columns:
-            html.th(
-                self._get_header(
-                    hints.get_column_hint(column).title,
-                    "%s*" % column if column in table.key_columns else column,
-                )
-            )
-        html.close_tr()
-
-        for row in sorted_rows:
-            html.open_tr(class_="even0")
-            for value_info in row:
-                column_hint = hints.get_column_hint(value_info.key)
-                # TODO separate tdclass from rendered value
-                tdclass, _rendered_value = column_hint.paint_function(None)
-                html.open_td(class_=tdclass)
-                _show_value(value_info, column_hint)
-                html.close_td()
-            html.close_tr()
-        html.close_table()
-
-    def _show_attributes(
-        self, attributes: ImmutableAttributes | ImmutableDeltaAttributes, hints: DisplayHints
-    ) -> None:
-        sorted_pairs: Sequence[_InventoryTreeValueInfo] | Sequence[_DeltaTreeValueInfo]
-        if isinstance(attributes, ImmutableAttributes):
-            sorted_pairs = _sort_pairs(attributes, hints.attributes_hint.key_order)
-        else:
-            sorted_pairs = _sort_delta_pairs(attributes, hints.attributes_hint.key_order)
-
-        html.open_table()
-        for value_info in sorted_pairs:
-            attr_hint = hints.get_attribute_hint(value_info.key)
-            html.open_tr()
-            html.th(self._get_header(attr_hint.title, value_info.key))
-            html.open_td()
-            _show_value(value_info, attr_hint)
-            html.close_td()
-            html.close_tr()
-        html.close_table()
 
 
 class _LoadTreeError(Exception):
@@ -2394,3 +2257,140 @@ def ajax_inv_render_tree() -> None:
     TreeRenderer(site_id, host_name, show_internal_tree_paths, tree_id).show(
         tree, DISPLAY_HINTS.get_hints(tree.path)
     )
+
+
+class TreeRenderer:
+    def __init__(
+        self,
+        site_id: SiteId,
+        hostname: HostName,
+        show_internal_tree_paths: bool = False,
+        tree_id: str = "",
+    ) -> None:
+        self._site_id = site_id
+        self._hostname = hostname
+        self._show_internal_tree_paths = show_internal_tree_paths
+        self._tree_id = tree_id
+        self._tree_name = f"inv_{hostname}{tree_id}"
+
+    def _get_header(self, title: str, key_info: str) -> HTML:
+        header = HTML(title)
+        if self._show_internal_tree_paths:
+            header += " " + HTMLWriter.render_span("(%s)" % key_info, css="muted-text")
+        return header
+
+    def _show_attributes(
+        self, attributes: ImmutableAttributes | ImmutableDeltaAttributes, hints: DisplayHints
+    ) -> None:
+        sorted_pairs: Sequence[_InventoryTreeValueInfo] | Sequence[_DeltaTreeValueInfo]
+        if isinstance(attributes, ImmutableAttributes):
+            sorted_pairs = _sort_pairs(attributes, hints.attributes_hint.key_order)
+        else:
+            sorted_pairs = _sort_delta_pairs(attributes, hints.attributes_hint.key_order)
+
+        html.open_table()
+        for value_info in sorted_pairs:
+            attr_hint = hints.get_attribute_hint(value_info.key)
+            html.open_tr()
+            html.th(self._get_header(attr_hint.title, value_info.key))
+            html.open_td()
+            _show_value(value_info, attr_hint)
+            html.close_td()
+            html.close_tr()
+        html.close_table()
+
+    def _show_table(self, table: ImmutableTable | ImmutableDeltaTable, hints: DisplayHints) -> None:
+        if hints.table_hint.view_spec:
+            # Link to Multisite view with exactly this table
+            html.div(
+                HTMLWriter.render_a(
+                    _("Open this table for filtering / sorting"),
+                    href=makeuri_contextless(
+                        request,
+                        [
+                            (
+                                "view_name",
+                                _make_table_view_name_of_host(hints.table_hint.view_spec.view_name),
+                            ),
+                            ("host", self._hostname),
+                        ],
+                        filename="view.py",
+                    ),
+                ),
+                class_="invtablelink",
+            )
+
+        columns = _make_columns(table.rows, hints.table_hint.key_order)
+        sorted_rows: Sequence[Sequence[_InventoryTreeValueInfo]] | Sequence[
+            Sequence[_DeltaTreeValueInfo]
+        ]
+        if isinstance(table, ImmutableTable):
+            sorted_rows = _sort_rows(table, columns)
+        else:
+            sorted_rows = _sort_delta_rows(table, columns)
+
+        # TODO: Use table.open_table() below.
+        html.open_table(class_="data")
+        html.open_tr()
+        for column in columns:
+            html.th(
+                self._get_header(
+                    hints.get_column_hint(column).title,
+                    "%s*" % column if column in table.key_columns else column,
+                )
+            )
+        html.close_tr()
+
+        for row in sorted_rows:
+            html.open_tr(class_="even0")
+            for value_info in row:
+                column_hint = hints.get_column_hint(value_info.key)
+                # TODO separate tdclass from rendered value
+                tdclass, _rendered_value = column_hint.paint_function(None)
+                html.open_td(class_=tdclass)
+                _show_value(value_info, column_hint)
+                html.close_td()
+            html.close_tr()
+        html.close_table()
+
+    def _fetch_url(self, raw_path: str) -> str:
+        params: list[tuple[str, int | str | None]] = [
+            ("site", self._site_id),
+            ("host", self._hostname),
+            ("raw_path", raw_path),
+            ("show_internal_tree_paths", "on" if self._show_internal_tree_paths else ""),
+        ]
+        if self._tree_id:
+            params.append(("tree_id", self._tree_id))
+        return makeuri_contextless(request, params, "ajax_inv_render_tree.py")
+
+    def _show_node(self, node: ImmutableTree | ImmutableDeltaTree) -> None:
+        raw_path = f".{'.'.join(map(str, node.path))}." if node.path else "."
+
+        hints = DISPLAY_HINTS.get_hints(node.path)
+
+        with foldable_container(
+            treename=self._tree_name,
+            id_=raw_path,
+            isopen=False,
+            title=self._get_header(
+                hints.replace_placeholders(node.path),
+                ".".join(map(str, node.path)),
+            ),
+            icon=hints.node_hint.icon,
+            fetch_url=self._fetch_url(raw_path),
+        ) as is_open:
+            if is_open:
+                self.show(node, hints)
+
+    def show(self, tree: ImmutableTree | ImmutableDeltaTree, hints: DisplayHints) -> None:
+        if tree.attributes:
+            self._show_attributes(tree.attributes, hints)
+
+        if tree.table:
+            self._show_table(tree.table, hints)
+
+        for _name, node in sorted(tree.nodes_by_name.items(), key=lambda t: t[0]):
+            if isinstance(node, (ImmutableTree, ImmutableDeltaTree)):
+                # sorted tries to find the common base class, which is object :(
+                self._show_node(node)

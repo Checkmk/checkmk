@@ -6,7 +6,7 @@
 import pytest
 
 import cmk.base.plugins.agent_based.jenkins_nodes as jn
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 
 
 @pytest.fixture(scope="module", name="section")
@@ -26,52 +26,52 @@ def _section() -> jn.Section:
 
 def test_discovery(section: jn.Section) -> None:
     assert list(jn.discover_jenkins_nodes(section)) == [
-        jn.Service(item="master"),
-        jn.Service(item="Windows"),
-        jn.Service(item="foo"),
+        Service(item="master"),
+        Service(item="Windows"),
+        Service(item="foo"),
     ]
 
 
 def test_check_windows_item(section: jn.Section) -> None:
     assert list(jn.check_jenkins_nodes("Windows", {"jenkins_offline": 2}, section)) == [
-        jn.Result(state=jn.State.OK, summary="Description: Name: Myname, Ip-Address: 1.1.1.1"),
-        jn.Result(state=jn.State.OK, summary="Is JNLP agent: yes"),
-        jn.Result(state=jn.State.OK, summary="Is idle: yes"),
-        jn.Result(state=jn.State.OK, summary="Total number of executors: 1"),
+        Result(state=State.OK, summary="Description: Name: Myname, Ip-Address: 1.1.1.1"),
+        Result(state=State.OK, summary="Is JNLP agent: yes"),
+        Result(state=State.OK, summary="Is idle: yes"),
+        Result(state=State.OK, summary="Total number of executors: 1"),
         Metric("jenkins_num_executors", 1),
-        jn.Result(state=jn.State.OK, summary="Number of busy executors: 0"),
+        Result(state=State.OK, summary="Number of busy executors: 0"),
         Metric("jenkins_busy_executors", 0),
-        jn.Result(state=jn.State.OK, summary="Number of idle executors: 1"),
+        Result(state=State.OK, summary="Number of idle executors: 1"),
         Metric("jenkins_idle_executors", 1),
-        jn.Result(state=jn.State.OK, summary="Mode: Exclusive "),
-        jn.Result(state=jn.State.OK, summary="Offline: no"),
-        jn.Result(state=jn.State.OK, summary="Average response time: 35 milliseconds"),
+        Result(state=State.OK, summary="Mode: Exclusive "),
+        Result(state=State.OK, summary="Offline: no"),
+        Result(state=State.OK, summary="Average response time: 35 milliseconds"),
         Metric("avg_response_time", 0.035),
-        jn.Result(state=jn.State.OK, summary="Clock difference: 8 milliseconds"),
+        Result(state=State.OK, summary="Clock difference: 8 milliseconds"),
         Metric("jenkins_clock", 0.008),
-        jn.Result(state=jn.State.OK, summary="Free temp space: 14.0 GiB"),
+        Result(state=State.OK, summary="Free temp space: 14.0 GiB"),
         Metric("jenkins_temp", 15085674496),
     ]
 
 
 def test_check_master_item(section: jn.Section) -> None:
     assert list(jn.check_jenkins_nodes("master", {"jenkins_offline": 2}, section)) == [
-        jn.Result(state=jn.State.OK, summary="Description: The Master Jenkins Node"),
-        jn.Result(state=jn.State.OK, summary="Is JNLP agent: no"),
-        jn.Result(state=jn.State.OK, summary="Is idle: no"),
-        jn.Result(state=jn.State.OK, summary="Total number of executors: 20"),
+        Result(state=State.OK, summary="Description: The Master Jenkins Node"),
+        Result(state=State.OK, summary="Is JNLP agent: no"),
+        Result(state=State.OK, summary="Is idle: no"),
+        Result(state=State.OK, summary="Total number of executors: 20"),
         Metric("jenkins_num_executors", 20),
-        jn.Result(state=jn.State.OK, summary="Number of busy executors: 3"),
+        Result(state=State.OK, summary="Number of busy executors: 3"),
         Metric("jenkins_busy_executors", 3),
-        jn.Result(state=jn.State.OK, summary="Number of idle executors: 17"),
+        Result(state=State.OK, summary="Number of idle executors: 17"),
         Metric("jenkins_idle_executors", 17),
-        jn.Result(state=jn.State.OK, summary="Mode: Exclusive "),
-        jn.Result(state=jn.State.OK, summary="Offline: no"),
-        jn.Result(state=jn.State.OK, summary="Average response time: 0 seconds"),
+        Result(state=State.OK, summary="Mode: Exclusive "),
+        Result(state=State.OK, summary="Offline: no"),
+        Result(state=State.OK, summary="Average response time: 0 seconds"),
         Metric("avg_response_time", 0.0),
-        jn.Result(state=jn.State.OK, summary="Clock difference: 0 seconds"),
+        Result(state=State.OK, summary="Clock difference: 0 seconds"),
         Metric("jenkins_clock", 0.0),
-        jn.Result(state=jn.State.OK, summary="Free temp space: 30.3 GiB"),
+        Result(state=State.OK, summary="Free temp space: 30.3 GiB"),
         Metric("jenkins_temp", 32569888768),
     ]
 
@@ -88,27 +88,27 @@ def test_check_foo_item(section: jn.Section) -> None:
             section,
         )
     ) == [
-        jn.Result(state=jn.State.OK, summary="Description: Name: Myname, Ip-Address: 1.1.1.1"),
-        jn.Result(state=jn.State.OK, summary="Is JNLP agent: yes"),
-        jn.Result(state=jn.State.OK, summary="Is idle: yes"),
-        jn.Result(state=jn.State.OK, summary="Total number of executors: 1"),
+        Result(state=State.OK, summary="Description: Name: Myname, Ip-Address: 1.1.1.1"),
+        Result(state=State.OK, summary="Is JNLP agent: yes"),
+        Result(state=State.OK, summary="Is idle: yes"),
+        Result(state=State.OK, summary="Total number of executors: 1"),
         Metric("jenkins_num_executors", 1),
-        jn.Result(state=jn.State.OK, summary="Number of busy executors: 0"),
+        Result(state=State.OK, summary="Number of busy executors: 0"),
         Metric("jenkins_busy_executors", 0),
-        jn.Result(state=jn.State.OK, summary="Number of idle executors: 1"),
+        Result(state=State.OK, summary="Number of idle executors: 1"),
         Metric("jenkins_idle_executors", 1),
-        jn.Result(state=jn.State.OK, summary="Mode: Exclusive "),
-        jn.Result(state=jn.State.OK, summary="Offline: no"),
-        jn.Result(
-            state=jn.State.WARN,
+        Result(state=State.OK, summary="Mode: Exclusive "),
+        Result(state=State.OK, summary="Offline: no"),
+        Result(
+            state=State.WARN,
             summary="Average response time: 1 second (warn/crit at 1 second/2 seconds)",
         ),
         Metric("avg_response_time", 1.337, levels=(1.0, 2.0)),
-        jn.Result(
-            state=jn.State.CRIT,
+        Result(
+            state=State.CRIT,
             summary="Clock difference: 5 seconds (warn/crit at 3 seconds/4 seconds)",
         ),
         Metric("jenkins_clock", 5.000, levels=(3.0, 4.0)),
-        jn.Result(state=jn.State.OK, summary="Free temp space: 14.0 GiB"),
+        Result(state=State.OK, summary="Free temp space: 14.0 GiB"),
         Metric("jenkins_temp", 15085674496),
     ]

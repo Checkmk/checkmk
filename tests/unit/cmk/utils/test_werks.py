@@ -10,7 +10,9 @@ from typing import Any
 import pytest
 
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.werks import load_werk_v1, load_werk_v2, RawWerkV2, WerkError
+from cmk.utils.werks.werk import WerkError
+from cmk.utils.werks.werkv1 import load_werk_v1
+from cmk.utils.werks.werkv2 import load_werk_v2, RawWerkV2
 
 WERK = {
     "class": "fix",

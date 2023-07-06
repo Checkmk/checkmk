@@ -11,8 +11,8 @@ from jinja2 import Environment, PackageLoader, select_autoescape, StrictUndefine
 
 from cmk.utils.version import RType, Version
 
-from .. import has_content, load_raw_files, sort_by_version_and_component, WerkTranslator
-from ..werk import Class, Compatibility, Edition, Werk
+from .. import has_content, load_raw_files, sort_by_version_and_component
+from ..werk import Class, Compatibility, Edition, Werk, WerkTranslator
 
 
 class SimpleWerk(NamedTuple):

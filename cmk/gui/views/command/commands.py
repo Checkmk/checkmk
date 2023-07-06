@@ -10,6 +10,7 @@ from typing import Any, Literal
 import livestatus
 
 from cmk.utils.hostaddress import HostName
+from cmk.utils.prediction import Seconds
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.servicename import ServiceName
 
@@ -29,7 +30,7 @@ from cmk.gui.permissions import (
     PermissionSection,
 )
 from cmk.gui.type_defs import Choices, Row, Rows
-from cmk.gui.valuespec import AbsoluteDate, Age, Seconds
+from cmk.gui.valuespec import AbsoluteDate, Age
 from cmk.gui.watolib.downtime import determine_downtime_mode, DowntimeSchedule
 
 from .base import Command, CommandActionResult, CommandGroup, CommandSpec

@@ -12,6 +12,7 @@ from typing import Literal, TypedDict
 from livestatus import LocalConnection, SiteId
 
 from cmk.utils.hostaddress import HostName
+from cmk.utils.prediction import Seconds
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject, RuleSpec
 
 from cmk.base.export import get_ruleset_matcher  # pylint: disable=cmk-module-layer-violation
@@ -22,7 +23,6 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.session import SuperUserContext
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local, wato_site_ids
-from cmk.gui.valuespec import Seconds
 from cmk.gui.watolib.activate_changes import ActivateChangesManager
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation

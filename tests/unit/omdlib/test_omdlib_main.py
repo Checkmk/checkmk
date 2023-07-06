@@ -14,7 +14,7 @@ from pytest_mock import MockerFixture
 import omdlib
 import omdlib.main
 import omdlib.utils
-from omdlib.contexts import SiteContext
+from omdlib.contexts import RootContext, SiteContext
 from omdlib.type_defs import CommandOptions
 from omdlib.version_info import VersionInfo
 
@@ -39,7 +39,7 @@ def test_initialize_site_ca(
         return_value=ca_path,
     )
 
-    omdlib.main.initialize_site_ca(omdlib.main.SiteContext(site_id))
+    omdlib.main.initialize_site_ca(SiteContext(site_id))
     assert (ca_path / "ca.pem").exists()
     assert (ca_path / "sites" / ("%s.pem" % site_id)).exists()
 
@@ -79,7 +79,7 @@ def test_main_version_root(
     global_opts = omdlib.main.default_global_options()
     args: omdlib.main.Arguments = []
     options: CommandOptions = {}
-    omdlib.main.main_version(version_info, omdlib.main.RootContext(), global_opts, args, options)
+    omdlib.main.main_version(version_info, RootContext(), global_opts, args, options)
 
     stdout = capsys.readouterr()[0]
     assert stdout == "OMD - Open Monitoring Distribution Version 1.2.3p4\n"
@@ -89,7 +89,7 @@ def test_main_version_root_not_existing_site(version_info: VersionInfo) -> None:
     with pytest.raises(SystemExit, match="No such site: testsite"):
         omdlib.main.main_version(
             version_info,
-            omdlib.main.RootContext(),
+            RootContext(),
             omdlib.main.default_global_options(),
             ["testsite"],
             {},
@@ -103,7 +103,7 @@ def test_main_version_root_specific_site_broken_version(
     with pytest.raises(SystemExit, match="Failed to determine site version"):
         omdlib.main.main_version(
             version_info,
-            omdlib.main.RootContext(),
+            RootContext(),
             omdlib.main.default_global_options(),
             ["testsite"],
             {},
@@ -121,7 +121,7 @@ def test_main_version_root_specific_site(
     tmp_path.joinpath("omd/versions/1.2.3p4").mkdir(parents=True)
     omdlib.main.main_version(
         version_info,
-        omdlib.main.RootContext(),
+        RootContext(),
         omdlib.main.default_global_options(),
         ["testsite"],
         {},
@@ -142,7 +142,7 @@ def test_main_version_root_specific_site_bare(
     tmp_path.joinpath("omd/versions/1.2.3p4").mkdir(parents=True)
     omdlib.main.main_version(
         version_info,
-        omdlib.main.RootContext(),
+        RootContext(),
         omdlib.main.default_global_options(),
         ["testsite"],
         {"bare": None},
@@ -163,7 +163,7 @@ def test_main_versions(
     tmp_path.joinpath("omd/versions/1.6.0p14").mkdir(parents=True)
     tmp_path.joinpath("omd/versions/default").symlink_to("1.6.0p4")
     omdlib.main.main_versions(
-        version_info, omdlib.main.RootContext(), omdlib.main.default_global_options(), [], {}
+        version_info, RootContext(), omdlib.main.default_global_options(), [], {}
     )
 
     stdout = capsys.readouterr()[0]
@@ -182,7 +182,7 @@ def test_main_versions_bare(
     tmp_path.joinpath("omd/versions/default").symlink_to("1.6.0p4")
     omdlib.main.main_versions(
         version_info,
-        omdlib.main.RootContext(),
+        RootContext(),
         omdlib.main.default_global_options(),
         [],
         {"bare": None},
@@ -259,7 +259,7 @@ def test_main_sites(
     tmp_path.joinpath("omd/sites/disabled/version").symlink_to("../../versions/1.6.0p4")
 
     omdlib.main.main_sites(
-        version_info, omdlib.main.RootContext(), omdlib.main.default_global_options(), [], {}
+        version_info, RootContext(), omdlib.main.default_global_options(), [], {}
     )
 
     stdout = _strip_ansi(capsys.readouterr()[0])
@@ -274,7 +274,7 @@ def test_main_sites(
 
 def test_sitename_must_be_valid_ok(tmp_path: Path) -> None:
     tmp_path.joinpath("omd/sites/lala").mkdir(parents=True)
-    assert omdlib.main.sitename_must_be_valid(omdlib.main.SiteContext("lulu")) is None
+    assert omdlib.main.sitename_must_be_valid(SiteContext("lulu")) is None
 
 
 @pytest.mark.parametrize(
@@ -291,17 +291,17 @@ def test_sitename_must_be_valid_regex(tmp_path: Path, name: str, expected_result
     tmp_path.joinpath("omd/sites/lala").mkdir(parents=True)
 
     if expected_result:
-        assert omdlib.main.sitename_must_be_valid(omdlib.main.SiteContext(name)) is None
+        assert omdlib.main.sitename_must_be_valid(SiteContext(name)) is None
     else:
         with pytest.raises(SystemExit, match="Invalid site name"):
-            omdlib.main.sitename_must_be_valid(omdlib.main.SiteContext(name))
+            omdlib.main.sitename_must_be_valid(SiteContext(name))
 
 
 def test_sitename_must_be_valid_already_exists(tmp_path: Path) -> None:
     tmp_path.joinpath("omd/sites/lala").mkdir(parents=True)
 
     with pytest.raises(SystemExit, match="already existing"):
-        omdlib.main.sitename_must_be_valid(omdlib.main.SiteContext("lala"))
+        omdlib.main.sitename_must_be_valid(SiteContext("lala"))
 
 
 def test_get_orig_working_directory(tmp_path: Path) -> None:
@@ -340,7 +340,7 @@ def test_get_edition(edition: version._EditionValue) -> None:
 def test_permission_action_new_link_triggers_no_action() -> None:
     assert (
         omdlib.main.permission_action(
-            site=omdlib.main.SiteContext("bye"),
+            site=SiteContext("bye"),
             conflict_mode="ask",
             relpath="my/file",
             old_type="link",
@@ -354,7 +354,7 @@ def test_permission_action_new_link_triggers_no_action() -> None:
     )
     assert (
         omdlib.main.permission_action(
-            site=omdlib.main.SiteContext("bye"),
+            site=SiteContext("bye"),
             conflict_mode="ask",
             relpath="my/file",
             old_type="file",
@@ -368,7 +368,7 @@ def test_permission_action_new_link_triggers_no_action() -> None:
     )
     assert (
         omdlib.main.permission_action(
-            site=omdlib.main.SiteContext("bye"),
+            site=SiteContext("bye"),
             conflict_mode="ask",
             relpath="my/file",
             old_type="link",
@@ -385,7 +385,7 @@ def test_permission_action_new_link_triggers_no_action() -> None:
 def test_permission_action_changed_type_triggers_no_action() -> None:
     assert (
         omdlib.main.permission_action(
-            site=omdlib.main.SiteContext("bye"),
+            site=SiteContext("bye"),
             conflict_mode="ask",
             relpath="my/file",
             old_type="dir",
@@ -399,7 +399,7 @@ def test_permission_action_changed_type_triggers_no_action() -> None:
     )
     assert (
         omdlib.main.permission_action(
-            site=omdlib.main.SiteContext("bye"),
+            site=SiteContext("bye"),
             conflict_mode="ask",
             relpath="my/file",
             old_type="file",
@@ -416,7 +416,7 @@ def test_permission_action_changed_type_triggers_no_action() -> None:
 def test_permission_action_same_target_permission_triggers_no_action() -> None:
     assert (
         omdlib.main.permission_action(
-            site=omdlib.main.SiteContext("bye"),
+            site=SiteContext("bye"),
             conflict_mode="ask",
             relpath="my/file",
             old_type="file",
@@ -430,7 +430,7 @@ def test_permission_action_same_target_permission_triggers_no_action() -> None:
     )
     assert (
         omdlib.main.permission_action(
-            site=omdlib.main.SiteContext("bye"),
+            site=SiteContext("bye"),
             conflict_mode="ask",
             relpath="my/file",
             old_type="dir",
@@ -450,7 +450,7 @@ def test_permission_action_user_and_new_changed(
     monkeypatch.setattr(omdlib.main, "user_confirms", lambda *a: True)
     assert (
         omdlib.main.permission_action(
-            site=omdlib.main.SiteContext("bye"),
+            site=SiteContext("bye"),
             conflict_mode="ask",
             relpath="my/file",
             old_type="file",
@@ -470,7 +470,7 @@ def test_permission_action_user_and_new_changed_set_default(
     monkeypatch.setattr(omdlib.main, "user_confirms", lambda *a: False)
     assert (
         omdlib.main.permission_action(
-            site=omdlib.main.SiteContext("bye"),
+            site=SiteContext("bye"),
             conflict_mode="ask",
             relpath="my/file",
             old_type="file",
@@ -487,7 +487,7 @@ def test_permission_action_user_and_new_changed_set_default(
 def test_permission_action_new_changed_set_default() -> None:
     assert (
         omdlib.main.permission_action(
-            site=omdlib.main.SiteContext("bye"),
+            site=SiteContext("bye"),
             conflict_mode="ask",
             relpath="my/file",
             old_type="file",
@@ -504,7 +504,7 @@ def test_permission_action_new_changed_set_default() -> None:
 def test_permission_action_user_changed_no_action() -> None:
     assert (
         omdlib.main.permission_action(
-            site=omdlib.main.SiteContext("bye"),
+            site=SiteContext("bye"),
             conflict_mode="ask",
             relpath="my/file",
             old_type="file",
@@ -521,7 +521,7 @@ def test_permission_action_user_changed_no_action() -> None:
 def test_permission_action_old_and_new_changed_set_to_new() -> None:
     assert (
         omdlib.main.permission_action(
-            site=omdlib.main.SiteContext("bye"),
+            site=SiteContext("bye"),
             conflict_mode="ask",
             relpath="my/file",
             old_type="file",
@@ -539,7 +539,7 @@ def test_permission_action_all_changed_incl_type_ask(monkeypatch: pytest.MonkeyP
     monkeypatch.setattr(omdlib.main, "user_confirms", lambda *a: True)
     assert (
         omdlib.main.permission_action(
-            site=omdlib.main.SiteContext("bye"),
+            site=SiteContext("bye"),
             conflict_mode="ask",
             relpath="my/file",
             old_type="file",
@@ -559,7 +559,7 @@ def test_permission_action_all_changed_incl_type_ask_default(
     monkeypatch.setattr(omdlib.main, "user_confirms", lambda *a: False)
     assert (
         omdlib.main.permission_action(
-            site=omdlib.main.SiteContext("bye"),
+            site=SiteContext("bye"),
             conflict_mode="ask",
             relpath="my/file",
             old_type="file",
@@ -591,7 +591,7 @@ def test_permission_action_all_changed_incl_type_ask_default(
 def test_permission_action_all_changed_streamline_standard_directories(relpath: str) -> None:
     assert (
         omdlib.main.permission_action(
-            site=omdlib.main.SiteContext("bye"),
+            site=SiteContext("bye"),
             conflict_mode="ask",
             relpath=relpath,
             old_type="dir",

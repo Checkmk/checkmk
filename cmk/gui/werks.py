@@ -16,10 +16,9 @@ from typing import Any, cast, Literal, NamedTuple, TypedDict
 
 import cmk.utils.paths
 import cmk.utils.store as store
-from cmk.utils import werks as utils_werks
+import cmk.utils.werks as utils_werks
 from cmk.utils.version import __version__, Edition, Version
-from cmk.utils.werks import Werk, WerkTranslator
-from cmk.utils.werks.werk import Compatibility
+from cmk.utils.werks.werk import Compatibility, NoWiki, Werk, WerkTranslator
 
 import cmk.gui.pages
 from cmk.gui.breadcrumb import (
@@ -33,7 +32,8 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.header import make_header
-from cmk.gui.htmllib.html import html, HTMLContent
+from cmk.gui.htmllib.html import html
+from cmk.gui.htmllib.tag_rendering import HTMLContent
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
@@ -101,8 +101,8 @@ def sort_by_date(werks: Iterable[GuiWerk]) -> list[GuiWerk]:
     return sorted(werks, key=lambda w: w.werk.date, reverse=True)
 
 
-def render_description(description: str | utils_werks.NoWiki) -> HTML:
-    if isinstance(description, utils_werks.NoWiki):
+def render_description(description: str | NoWiki) -> HTML:
+    if isinstance(description, NoWiki):
         return render_nowiki_werk_description(description.value)
     return HTML(description)
 
@@ -260,10 +260,7 @@ def handle_acknowledgement():
         werk_id = request.get_integer_input_mandatory("_werk_ack")
         gui_werk = get_werk_by_id(werk_id)
         werk = gui_werk.werk
-        if (
-            werk.compatible == utils_werks.Compatibility.NOT_COMPATIBLE
-            and not gui_werk.acknowledged
-        ):
+        if werk.compatible == Compatibility.NOT_COMPATIBLE and not gui_werk.acknowledged:
             acknowledge_werk(gui_werk)
             html.show_message(
                 _("Werk %s - %s has been acknowledged.")
@@ -503,8 +500,7 @@ def unacknowledged_incompatible_werks() -> list[GuiWerk]:
     return sort_by_date(
         werk
         for werk in load_werk_entries()
-        if werk.werk.compatible == utils_werks.Compatibility.NOT_COMPATIBLE
-        and not werk.acknowledged
+        if werk.werk.compatible == Compatibility.NOT_COMPATIBLE and not werk.acknowledged
     )
 
 
@@ -733,7 +729,7 @@ def render_werks_table_row(table: Table, translator: WerkTranslator, gui_werk: G
 
 
 def _to_ternary_compatibility(werk: GuiWerk) -> str:
-    if werk.werk.compatible == utils_werks.Compatibility.NOT_COMPATIBLE:
+    if werk.werk.compatible == Compatibility.NOT_COMPATIBLE:
         if werk.acknowledged:
             return "incomp_ack"
         return "incomp_unack"

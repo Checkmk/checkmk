@@ -19,6 +19,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any, Final, Literal, NamedTuple, TypedDict
 
+from redis.client import Pipeline
+
 from livestatus import SiteId
 
 import cmk.utils.paths
@@ -29,7 +31,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import Labels
 from cmk.utils.object_diff import make_diff_text
-from cmk.utils.redis import get_redis_client, Pipeline, redis_enabled, redis_server_reachable
+from cmk.utils.redis import get_redis_client, redis_enabled, redis_server_reachable
 from cmk.utils.regex import regex, WATO_FOLDER_PATH_NAME_CHARS, WATO_FOLDER_PATH_NAME_REGEX
 from cmk.utils.site import omd_site
 from cmk.utils.store.host_storage import (
@@ -68,12 +70,11 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.page_menu import confirmed_form_submit_options
 from cmk.gui.site_config import enabled_sites, is_wato_slave_site
-from cmk.gui.type_defs import HTTPVariables, SetOnceDict
+from cmk.gui.type_defs import Choices, HTTPVariables, SetOnceDict
 from cmk.gui.utils import urls
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.transaction_manager import transactions
-from cmk.gui.valuespec import Choices
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import (
     ConfigDomainName,
@@ -3568,8 +3569,8 @@ class CMEFolder(CREFolder):
         customer_id = self._get_customer_id()
 
         if (
-            new_customer_id == managed.default_customer_id()
-            and customer_id != managed.default_customer_id()
+            new_customer_id == managed_helpers.default_customer_id()
+            and customer_id != managed_helpers.default_customer_id()
         ):
             raise MKUserError(
                 None,
@@ -3578,14 +3579,14 @@ class CMEFolder(CREFolder):
                     "already have the specific customer <i>%s</i> set. This violates the CME folder hierarchy."
                 )
                 % (
-                    managed.get_customer_name_by_id(managed.default_customer_id()),
+                    managed.get_customer_name_by_id(managed_helpers.default_customer_id()),
                     managed.get_customer_name_by_id(customer_id),
                 ),
             )
 
         # The parents customer id may be the default customer or the same customer
         customer_id = self._get_customer_id()
-        if customer_id not in [managed.default_customer_id(), new_customer_id]:
+        if customer_id not in [managed_helpers.default_customer_id(), new_customer_id]:
             folder_sites = ", ".join(
                 list(managed_helpers.get_sites_of_customer(customer_id).keys())
             )
@@ -3657,7 +3658,7 @@ class CMEFolder(CREFolder):
 
     def move_subfolder_to(self, subfolder, target_folder):
         target_folder_customer = target_folder._get_customer_id()
-        if target_folder_customer != managed.default_customer_id():
+        if target_folder_customer != managed_helpers.default_customer_id():
             result_dict: dict[str, Any] = {
                 "explicit_host_sites": {},  # May be used later on to
                 "explicit_folder_sites": {},  # improve error message
@@ -3686,7 +3687,7 @@ class CMEFolder(CREFolder):
         entries: Iterable[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
     ) -> None:
         customer_id = self._get_customer_id()
-        if customer_id != managed.default_customer_id():
+        if customer_id != managed_helpers.default_customer_id():
             for hostname, attributes, _cluster_nodes in entries:
                 self.check_modify_host(hostname, attributes)
 
@@ -3697,7 +3698,7 @@ class CMEFolder(CREFolder):
             return
 
         customer_id = self._get_customer_id()
-        if customer_id != managed.default_customer_id():
+        if customer_id != managed_helpers.default_customer_id():
             host_customer_id = managed.get_customer_of_site(attributes["site"])
             if host_customer_id != customer_id:
                 folder_sites = ", ".join(managed_helpers.get_sites_of_customer(customer_id))
@@ -3723,7 +3724,7 @@ class CMEFolder(CREFolder):
 
         # Check if the hosts are moved to a provider folder
         target_customer_id = managed.get_customer_of_site(target_site_id)
-        if target_customer_id != managed.default_customer_id():
+        if target_customer_id != managed_helpers.default_customer_id():
             allowed_sites = managed_helpers.get_sites_of_customer(target_customer_id)
             for hostname in host_names:
                 host = self.load_host(hostname)

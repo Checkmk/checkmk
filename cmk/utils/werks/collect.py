@@ -9,7 +9,7 @@ import re
 from collections import defaultdict
 from pathlib import Path
 
-from git import Repo
+from git.repo import Repo
 
 from .werkv1 import load_werk_v1
 

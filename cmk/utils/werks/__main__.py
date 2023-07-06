@@ -6,16 +6,10 @@
 import argparse
 from pathlib import Path
 
-from . import (
-    load_precompiled_werks_file,
-    load_raw_files,
-    Werk,
-    write_as_text,
-    write_precompiled_werks,
-)
+from . import load_precompiled_werks_file, load_raw_files, write_as_text, write_precompiled_werks
 from .announce import main as main_announce
 from .collect import main as collect
-from .werk import Edition
+from .werk import Edition, Werk
 
 
 def main_changelog(args: argparse.Namespace) -> None:

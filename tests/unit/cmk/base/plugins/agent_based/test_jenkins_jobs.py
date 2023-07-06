@@ -7,7 +7,7 @@ import pytest
 from freezegun import freeze_time
 
 import cmk.base.plugins.agent_based.jenkins_jobs as jn
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 
 NOW_SIMULATED = "2021-11-23 13:00:00"
 
@@ -33,16 +33,16 @@ def test_discovery_jenkins_org_folder():
     )
 
     assert list(jn.discovery_jenkins_jobs(section)) == [
-        jn.Service(item="Powershell/Add-Laptops-Group"),
+        Service(item="Powershell/Add-Laptops-Group"),
     ]
 
 
 def test_discovery(section: jn.Section) -> None:
     assert list(jn.discovery_jenkins_jobs(section)) == [
-        jn.Service(item="project/Job"),
-        jn.Service(item="project/Job1"),
-        jn.Service(item="project/Job2"),
-        jn.Service(item="project/Job3"),
+        Service(item="project/Job"),
+        Service(item="project/Job1"),
+        Service(item="project/Job2"),
+        Service(item="project/Job3"),
     ]
 
 
@@ -50,26 +50,26 @@ def test_discovery(section: jn.Section) -> None:
 def test_check_job_item(section: jn.Section) -> None:
     """Successfull job"""
     assert list(jn.check_jenkins_jobs("project/Job", {}, section)) == [
-        jn.Result(state=jn.State.OK, summary="Display name: Job"),
-        jn.Result(state=jn.State.OK, summary="State: Success"),
-        jn.Result(state=jn.State.OK, summary="Job score: 80.00%"),
+        Result(state=State.OK, summary="Display name: Job"),
+        Result(state=State.OK, summary="State: Success"),
+        Result(state=State.OK, summary="Job score: 80.00%"),
         Metric("jenkins_job_score", 80.0),
-        jn.Result(state=jn.State.OK, summary="Time since last build: 7 days 2 hours"),
+        Result(state=State.OK, summary="Time since last build: 7 days 2 hours"),
         Metric("jenkins_last_build", 612403.0),
-        jn.Result(state=jn.State.OK, summary="Time since last successful build: 7 days 2 hours"),
+        Result(state=State.OK, summary="Time since last successful build: 7 days 2 hours"),
         Metric("jenkins_time_since", 612402.6540000439),
-        jn.Result(state=jn.State.OK, summary="Build id: 53"),
-        jn.Result(state=jn.State.OK, summary="Build duration: 8 minutes 28 seconds"),
+        Result(state=State.OK, summary="Build id: 53"),
+        Result(state=State.OK, summary="Build duration: 8 minutes 28 seconds"),
         Metric("jenkins_build_duration", 507.524),
-        jn.Result(state=jn.State.OK, summary="Build result: Success"),
+        Result(state=State.OK, summary="Build result: Success"),
     ]
 
 
 def test_check_job1_item(section: jn.Section) -> None:
     "Never built job, state change to WARN"
     assert list(jn.check_jenkins_jobs("project/Job1", {"job_state": {"notbuilt": 1}}, section)) == [
-        jn.Result(state=jn.State.OK, summary="Display name: Job 1"),
-        jn.Result(state=jn.State.WARN, summary="State: Not built"),
+        Result(state=State.OK, summary="Display name: Job 1"),
+        Result(state=State.WARN, summary="State: Not built"),
     ]
 
 
@@ -77,34 +77,34 @@ def test_check_job1_item(section: jn.Section) -> None:
 def test_check_job2_item(section: jn.Section) -> None:
     """Failed job"""
     assert list(jn.check_jenkins_jobs("project/Job2", {}, section)) == [
-        jn.Result(state=jn.State.OK, summary="Display name: Job 2"),
-        jn.Result(state=jn.State.OK, summary="State: Success"),
-        jn.Result(state=jn.State.OK, summary="Job score: 50.00%"),
+        Result(state=State.OK, summary="Display name: Job 2"),
+        Result(state=State.OK, summary="State: Success"),
+        Result(state=State.OK, summary="Job score: 50.00%"),
         Metric("jenkins_job_score", 50.0),
-        jn.Result(state=jn.State.OK, summary="Time since last build: 7 days 1 hour"),
+        Result(state=State.OK, summary="Time since last build: 7 days 1 hour"),
         Metric("jenkins_last_build", 610176.0),
-        jn.Result(state=jn.State.OK, summary="Time since last successful build: 7 days 1 hour"),
+        Result(state=State.OK, summary="Time since last successful build: 7 days 1 hour"),
         Metric("jenkins_time_since", 610175.242000103),
-        jn.Result(state=jn.State.OK, summary="Build id: 30"),
-        jn.Result(state=jn.State.OK, summary="Build duration: 3 minutes 32 seconds"),
+        Result(state=State.OK, summary="Build id: 30"),
+        Result(state=State.OK, summary="Build duration: 3 minutes 32 seconds"),
         Metric("jenkins_build_duration", 212.036),
-        jn.Result(state=jn.State.OK, summary="Build result: Success"),
+        Result(state=State.OK, summary="Build result: Success"),
     ]
 
 
 @freeze_time("2021-11-23 13:00:00")
 def test_check_job3_item(section: jn.Section) -> None:
     assert list(jn.check_jenkins_jobs("project/Job3", {}, section)) == [
-        jn.Result(state=jn.State.OK, summary="Display name: Job 3"),
-        jn.Result(state=jn.State.OK, summary="State: Success"),
-        jn.Result(state=jn.State.OK, summary="Job score: 100.00%"),
+        Result(state=State.OK, summary="Display name: Job 3"),
+        Result(state=State.OK, summary="State: Success"),
+        Result(state=State.OK, summary="Job score: 100.00%"),
         Metric("jenkins_job_score", 100.0),
-        jn.Result(state=jn.State.OK, summary="Time since last build: 7 days 1 hour"),
+        Result(state=State.OK, summary="Time since last build: 7 days 1 hour"),
         Metric("jenkins_last_build", 609957.0),
-        jn.Result(state=jn.State.OK, summary="Time since last successful build: 7 days 1 hour"),
+        Result(state=State.OK, summary="Time since last successful build: 7 days 1 hour"),
         Metric("jenkins_time_since", 609956.5680000782),
-        jn.Result(state=jn.State.OK, summary="Build id: 26"),
-        jn.Result(state=jn.State.OK, summary="Build duration: 3 minutes 14 seconds"),
+        Result(state=State.OK, summary="Build id: 26"),
+        Result(state=State.OK, summary="Build duration: 3 minutes 14 seconds"),
         Metric("jenkins_build_duration", 193.715),
-        jn.Result(state=jn.State.CRIT, summary="Build result: Failure"),
+        Result(state=State.CRIT, summary="Build result: Failure"),
     ]

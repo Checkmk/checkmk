@@ -2365,7 +2365,7 @@ class ABCNodeRenderer(abc.ABC):
     def _get_header(self, title: str, key_info: str) -> HTML:
         header = HTML(title)
         if self._show_internal_tree_paths:
-            header += " " + HTMLWriter.render_span("(%s)" % key_info, css="muted-text")
+            header += " " + HTMLWriter.render_span("(%s)" % key_info, css="muted_text")
         return header
 
     def _show_child_value(
@@ -2379,7 +2379,7 @@ class ABCNodeRenderer(abc.ABC):
             value = HTML(code)
 
         if self._is_outdated(retention_intervals):
-            html.write_html(HTMLWriter.render_span(value.value, css="muted-text"))
+            html.write_html(HTMLWriter.render_span(value.value, css="muted_text"))
         else:
             html.write_html(value)
 

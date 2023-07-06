@@ -4,6 +4,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from __future__ import annotations
+
+from enum import Enum
 from typing import Mapping, NamedTuple, Optional, Sequence
 
 CheckmkSection = Mapping[str, Optional[str]]
@@ -26,3 +29,22 @@ class ControllerSection(NamedTuple):
     allow_legacy_pull: bool
     socket_ready: bool
     ip_allowlist: tuple[str, ...]
+
+
+class CachedPluginType(str, Enum):
+    PLUGIN = "plugins"
+    LOCAL = "local"
+    ORACLE = "oracle"
+    MRPE = "mrpe"
+
+
+class CachedPlugin(NamedTuple):
+    plugin_type: CachedPluginType | None
+    plugin_name: str
+    timeout: int
+    pid: int
+
+
+class CachedPluginsSection(NamedTuple):
+    timeout: list[CachedPlugin] | None
+    killfailed: list[CachedPlugin] | None

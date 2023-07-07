@@ -13,7 +13,7 @@ import gzip
 import io
 import pprint
 from collections import Counter
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Generic, Literal, NamedTuple, Self, TypedDict, TypeVar
@@ -245,6 +245,37 @@ class SDFilterChoice(NamedTuple):
     nodes: Literal["nothing", "all"] | Sequence[SDNodeName]
 
 
+class _SDRetentionFilterChoice(NamedTuple):
+    choice: Literal["nothing", "all"] | Sequence[SDKey]
+    cache_info: tuple[int, int]
+
+
+@dataclass(frozen=True, kw_only=True)
+class SDRetentionFilterChoices:
+    path: SDPath
+    interval: int
+    _pairs: list[_SDRetentionFilterChoice] = field(default_factory=list)
+    _columns: list[_SDRetentionFilterChoice] = field(default_factory=list)
+
+    @property
+    def pairs(self) -> Sequence[_SDRetentionFilterChoice]:
+        return self._pairs
+
+    @property
+    def columns(self) -> Sequence[_SDRetentionFilterChoice]:
+        return self._columns
+
+    def add_pairs_choice(
+        self, choice: Literal["nothing", "all"] | Sequence[SDKey], cache_info: tuple[int, int]
+    ) -> None:
+        self._pairs.append(_SDRetentionFilterChoice(choice, cache_info))
+
+    def add_columns_choice(
+        self, choice: Literal["nothing", "all"] | Sequence[SDKey], cache_info: tuple[int, int]
+    ) -> None:
+        self._columns.append(_SDRetentionFilterChoice(choice, cache_info))
+
+
 _CT = TypeVar("_CT", SDKey, SDNodeName)
 
 
@@ -372,12 +403,13 @@ class _MutableAttributes:
     def update(
         self,
         now: int,
-        path: SDPath,
         other: ImmutableAttributes,
-        choice: Literal["all", "nothing"] | Sequence[SDKey],
-        retention_interval: RetentionInterval,
+        path: SDPath,
+        interval: int,
+        choice: _SDRetentionFilterChoice,
     ) -> UpdateResult:
-        filter_func = _make_filter_func(choice)
+        filter_func = _make_filter_func(choice.choice)
+        retention_interval = RetentionInterval(*choice.cache_info, interval)
         compared_keys = _DictKeys.compare(
             left=set(
                 _get_filtered_dict(
@@ -473,12 +505,13 @@ class _MutableTable:
     def update(  # pylint: disable=too-many-branches
         self,
         now: int,
-        path: SDPath,
         other: ImmutableTable,
-        choice: Literal["all", "nothing"] | Sequence[SDKey],
-        retention_interval: RetentionInterval,
+        path: SDPath,
+        interval: int,
+        choice: _SDRetentionFilterChoice,
     ) -> UpdateResult:
-        filter_func = _make_filter_func(choice)
+        filter_func = _make_filter_func(choice.choice)
+        retention_interval = RetentionInterval(*choice.cache_info, interval)
         self._add_key_columns(other.key_columns)
         old_filtered_rows = {
             ident: filtered_row
@@ -639,39 +672,31 @@ class MutableTree:
         if key_columns and rows:
             node.table.add(key_columns, rows)
 
-    def update_pairs(
+    def update(
         self,
         *,
         now: int,
-        path: SDPath,
         previous_tree: ImmutableTree,
-        choice: Literal["all", "nothing"] | Sequence[SDKey],
-        retention_interval: RetentionInterval,
-    ) -> UpdateResult:
-        return self.setdefault_node(path).attributes.update(
-            now,
-            path,
-            previous_tree.get_tree(path).attributes,
-            choice,
-            retention_interval,
-        )
-
-    def update_rows(
-        self,
-        *,
-        now: int,
-        path: SDPath,
-        previous_tree: ImmutableTree,
-        choice: Literal["all", "nothing"] | Sequence[SDKey],
-        retention_interval: RetentionInterval,
-    ) -> UpdateResult:
-        return self.setdefault_node(path).table.update(
-            now,
-            path,
-            previous_tree.get_tree(path).table,
-            choice,
-            retention_interval,
-        )
+        choices: SDRetentionFilterChoices,
+    ) -> Iterator[UpdateResult]:
+        node = self.setdefault_node(choices.path)
+        previous_node = previous_tree.get_tree(choices.path)
+        for choice in choices.pairs:
+            yield node.attributes.update(
+                now,
+                previous_node.attributes,
+                choices.path,
+                choices.interval,
+                choice,
+            )
+        for choice in choices.columns:
+            yield node.table.update(
+                now,
+                previous_node.table,
+                choices.path,
+                choices.interval,
+                choice,
+            )
 
     def setdefault_node(self, path: SDPath) -> MutableTree:
         if not path:

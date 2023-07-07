@@ -25,9 +25,9 @@ from cmk.utils.structured_data import (
     MutableTree,
     parse_visible_raw_path,
     RawIntervalFromConfig,
-    RetentionInterval,
     SDKey,
     SDPath,
+    SDRetentionFilterChoices,
     SDValue,
     UpdateResult,
 )
@@ -468,47 +468,40 @@ def _may_update(
         for item in items_of_inventory_plugin.items
     }
 
-    results = []
+    choices_by_path: dict[SDPath, SDRetentionFilterChoices] = {}
     for entry in raw_intervals_from_config:
         path = tuple(parse_visible_raw_path(entry["visible_raw_path"]))
-
+        choices = choices_by_path.setdefault(
+            path, SDRetentionFilterChoices(path=path, interval=entry["interval"])
+        )
         if choices_for_attributes := entry.get("attributes"):
-            results.append(
-                inventory_tree.update_pairs(
-                    now=now,
-                    path=path,
-                    previous_tree=previous_tree,
-                    choice=a[-1] if isinstance(a := choices_for_attributes, tuple) else a,
-                    retention_interval=RetentionInterval.make(
-                        (
-                            (now, 0)
-                            if (ci := cache_info_by_path_and_type.get((path, "Attributes"))) is None
-                            else ci
-                        ),
-                        entry["interval"],
-                    ),
-                )
+            choices.add_pairs_choice(
+                choice=a[-1] if isinstance(a := choices_for_attributes, tuple) else a,
+                cache_info=(
+                    (now, 0)
+                    if (ci := cache_info_by_path_and_type.get((path, "Attributes"))) is None
+                    else ci
+                ),
+            )
+        elif choices_for_columns := entry.get("columns"):
+            choices.add_columns_choice(
+                choice=c[-1] if isinstance(c := choices_for_columns, tuple) else c,
+                cache_info=(
+                    (now, 0)
+                    if (ci := cache_info_by_path_and_type.get((path, "TableRow"))) is None
+                    else ci
+                ),
             )
 
-        elif choices_for_table := entry.get("columns"):
-            results.append(
-                inventory_tree.update_rows(
-                    now=now,
-                    path=path,
-                    previous_tree=previous_tree,
-                    choice=c[-1] if isinstance(c := choices_for_table, tuple) else c,
-                    retention_interval=RetentionInterval.make(
-                        (
-                            (now, 0)
-                            if (ci := cache_info_by_path_and_type.get((path, "TableRow"))) is None
-                            else ci
-                        ),
-                        entry["interval"],
-                    ),
-                )
+    return UpdateResult.from_results(
+        (
+            result
+            for choices in choices_by_path.values()
+            for result in inventory_tree.update(
+                now=now, previous_tree=previous_tree, choices=choices
             )
-
-    return UpdateResult.from_results(results)
+        )
+    )
 
 
 def _check_fetched_data_or_trees(

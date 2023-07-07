@@ -26,6 +26,7 @@ from cmk.utils.structured_data import (
     SDFilterChoice,
     SDNodeName,
     SDPath,
+    SDRetentionFilterChoices,
     TreeStore,
 )
 
@@ -1445,13 +1446,12 @@ def test_update_from_previous_1() -> None:
             {"kc": "KC", "c1": "C1: cur", "c3": "C3: only cur"},
         ],
     )
-    current_tree_.update_rows(
-        now=0,
-        path=(),
-        previous_tree=previous_tree,
-        choice="all",
-        retention_interval=RetentionInterval(4, 5, 6),
-    )
+    choices = SDRetentionFilterChoices(path=(), interval=6)
+    choices.add_columns_choice(choice="all", cache_info=(4, 5))
+
+    results = list(current_tree_.update(now=0, previous_tree=previous_tree, choices=choices))
+    assert bool(results)
+
     current_tree = _make_immutable_tree(current_tree_)
     assert current_tree.table.key_columns == ["kc"]
     assert current_tree.table.retentions == {
@@ -1494,13 +1494,12 @@ def test_update_from_previous_2() -> None:
             {"kc": "KC", "c3": "C3: only cur"},
         ],
     )
-    current_tree_.update_rows(
-        now=0,
-        path=(),
-        previous_tree=previous_tree,
-        choice=["c2", "c3"],
-        retention_interval=RetentionInterval(4, 5, 6),
-    )
+    choices = SDRetentionFilterChoices(path=(), interval=6)
+    choices.add_columns_choice(choice=["c2", "c3"], cache_info=(4, 5))
+
+    results = list(current_tree_.update(now=0, previous_tree=previous_tree, choices=choices))
+    assert bool(results)
+
     current_tree = _make_immutable_tree(current_tree_)
     assert current_tree.table.key_columns == ["kc"]
     assert current_tree.table.retentions == {

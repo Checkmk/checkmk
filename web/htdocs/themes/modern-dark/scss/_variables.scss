@@ -47,6 +47,7 @@ $default-button-border-color: $ux-theme-5;
 $default-submit-button-border-color: darken($success, 25%);
 
 $input-background-color: $ux-theme-5;
+$input-hover-bg-color: $ux-theme-4;
 $input-nested-background-color: rgb(63, 75, 93);
 $input-dropdown-border-color: $ux-theme-6;
 
@@ -107,8 +108,6 @@ $host-diag-success-bg-color: rgb(50, 80, 50);
 $input-error-bg-color: $red-2;
 
 $hot-bg-color: $orange-1;
-
-$input-hover-bg-color: null;
 
 $data-th-sort-hover-bg-color: null;
 

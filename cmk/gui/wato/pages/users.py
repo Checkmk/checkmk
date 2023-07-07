@@ -1082,21 +1082,25 @@ class ModeEditUser(WatoMode):
         # Roles
         forms.section(_("Roles"))
         is_member_of_at_least_one = False
+        html.open_table()
         for role_id, role in sorted(self._roles.items(), key=lambda x: (x[1]["alias"], x[0])):
+            html.open_tr()
+            html.open_td()
             if not self._is_locked("roles"):
                 html.checkbox("role_" + role_id, role_id in self._user.get("roles", []))
                 url = folder_preserving_link([("mode", "edit_role"), ("edit", role_id)])
                 html.a(role["alias"], href=url)
-                html.br()
             else:
                 is_member = role_id in self._user.get("roles", [])
                 if is_member:
                     is_member_of_at_least_one = True
                     url = folder_preserving_link([("mode", "edit_role"), ("edit", role_id)])
                     html.a(role["alias"], href=url)
-                    html.br()
-
                 html.hidden_field("role_" + role_id, "1" if is_member else "")
+            html.close_td()
+            html.close_tr()
+        html.close_table()
+
         if self._is_locked("roles") and not is_member_of_at_least_one:
             html.i(_("No roles assigned."))
         self._show_custom_user_attributes(custom_user_attr_topics.get("security", []))

@@ -19,6 +19,8 @@ configure_make(
     ],
     out_data_dirs = ["share"],
     out_shared_libs = [
+        "libgsf-1.so",
+        "libgsf-1.so.114",
         "libgsf-1.so.114.0.44",
         "pkgconfig",
     ],

@@ -36,6 +36,8 @@ configure_make(
         "msibuild",
     ],
     out_shared_libs = [
+        "libmsi.so",
+        "libmsi.so.0",
         "libmsi.so.0.0.0",
     ],
     postfix_script = """

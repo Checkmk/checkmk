@@ -14,6 +14,3 @@ endif
 
 $(MSITOOLS_INSTALL): $(MSITOOLS_BUILD)
 	$(RSYNC) --chmod=u+w $(MSITOOLS_BUILD_DIR)/ $(DESTDIR)$(OMD_ROOT)/
-	cd $(DESTDIR)$(OMD_ROOT)/lib ; \
-	ln -sf libmsi.so.0.0.0 libmsi.so; \
-	ln -sf libmsi.so.0.0.0 libmsi.so.0

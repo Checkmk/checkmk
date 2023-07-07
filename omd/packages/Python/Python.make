@@ -35,12 +35,6 @@ $(PYTHON_INTERMEDIATE_INSTALL): $(PYTHON_BUILD)
 	# https://stackoverflow.com/questions/75208034
 	$(RSYNC) -r --chmod=u+w "$(BAZEL_BIN_EXT)/python/python/" \
 	    "$(PYTHON_INSTALL_DIR)/"
-	cd "$(INTERMEDIATE_INSTALL_BASE)/$(PYTHON_DIR)/bin"; \
-	    ln -sf 2to3-$(PYTHON_MAJOR_DOT_MINOR) 2to3; \
-	    ln -sf idle$(PYTHON_MAJOR_DOT_MINOR) idle3; \
-	    ln -sf pydoc$(PYTHON_MAJOR_DOT_MINOR) pydoc$(PYTHON_VERSION_MAJOR); \
-	    ln -sf python$(PYTHON_MAJOR_DOT_MINOR) python$(PYTHON_VERSION_MAJOR); \
-	    ln -sf python$(PYTHON_MAJOR_DOT_MINOR)-config python$(PYTHON_VERSION_MAJOR)-config
 	# Fix sysconfigdata
 	$(SED) -i "s|/replace-me|$(PACKAGE_PYTHON_DESTDIR)|g" $(PACKAGE_PYTHON_SYSCONFIGDATA)
 	# set RPATH for all ELF binaries we find

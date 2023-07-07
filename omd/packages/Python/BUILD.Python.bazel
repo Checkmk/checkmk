@@ -33,12 +33,18 @@ config_setting(
 )
 
 out_binaries = [
+    "python%s" % PYTHON_VERSION_MAJOR,
     "python%s" % PYTHON_MAJOR_DOT_MINOR,
     "pip%s" % PYTHON_VERSION_MAJOR,
+    "pip%s" % PYTHON_VERSION_MAJOR,
     "pip%s" % PYTHON_MAJOR_DOT_MINOR,
+    "2to3",
     "2to3-%s" % PYTHON_MAJOR_DOT_MINOR,
+    "idle%s" % PYTHON_VERSION_MAJOR,
     "idle%s" % PYTHON_MAJOR_DOT_MINOR,
+    "pydoc%s" % PYTHON_VERSION_MAJOR,
     "pydoc%s" % PYTHON_MAJOR_DOT_MINOR,
+    "python%s-config" % PYTHON_VERSION_MAJOR,
     "python%s-config" % PYTHON_MAJOR_DOT_MINOR,
 ]
 

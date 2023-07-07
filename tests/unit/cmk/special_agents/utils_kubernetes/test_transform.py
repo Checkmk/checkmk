@@ -8,7 +8,6 @@ import datetime
 import pytest
 
 from cmk.special_agents.utils_kubernetes.schemata import api
-from cmk.special_agents.utils_kubernetes.transform import convert_to_timestamp
 
 
 @pytest.mark.parametrize(
@@ -20,7 +19,7 @@ from cmk.special_agents.utils_kubernetes.transform import convert_to_timestamp
 )
 def test_convert_to_timestamp_raises_error(kube_date_time: str) -> None:
     with pytest.raises(Exception):
-        convert_to_timestamp(kube_date_time)
+        api.convert_to_timestamp(kube_date_time)
 
 
 @pytest.mark.parametrize(
@@ -33,4 +32,4 @@ def test_convert_to_timestamp_raises_error(kube_date_time: str) -> None:
 def test_convert_to_timestamp_correct_conversion(
     kube_date_time: str,
 ) -> None:
-    assert api.Timestamp(0.0) == convert_to_timestamp(kube_date_time)
+    assert api.Timestamp(0.0) == api.convert_to_timestamp(kube_date_time)

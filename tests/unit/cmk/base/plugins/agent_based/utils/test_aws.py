@@ -6,10 +6,9 @@
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult, StringTable
 from cmk.base.plugins.agent_based.utils.aws import (
     check_aws_limits,
-    CheckResult,
     CloudwatchInsightsSection,
     extract_aws_metrics_by_labels,
     GenericAWSSection,

@@ -14,7 +14,6 @@ from tests.unit.cmk.special_agents.agent_kubernetes.utils import FakeResponse
 from cmk.special_agents.utils_kubernetes.agent_handlers import pod_handler
 from cmk.special_agents.utils_kubernetes.schemata import api, section
 from cmk.special_agents.utils_kubernetes.transform import (
-    convert_to_timestamp,
     parse_metadata,
     pod_conditions,
     pod_containers,
@@ -193,7 +192,7 @@ class TestPodWithNoNode(TestCase):
                     custom_type=None,
                     reason="Unschedulable",
                     detail="0/1 nodes are available: 1 Too many pods.",
-                    last_transition_time=int(convert_to_timestamp(last_transition_time)),
+                    last_transition_time=int(api.convert_to_timestamp(last_transition_time)),
                 )
             ],
         )
@@ -245,7 +244,7 @@ class TestPodStartUp(TestCase):
         It is possible that during startup of pods, also more complete information arises.
         """
         api_pod_status = api.PodStatus(
-            start_time=convert_to_timestamp(
+            start_time=api.convert_to_timestamp(
                 datetime.datetime(2021, 11, 22, 16, 11, 38, 710257, tzinfo=datetime.UTC)
             ),
             conditions=[
@@ -304,7 +303,7 @@ class TestPodStartUp(TestCase):
         In this specific instance all of the fields except for the scheduled field are missing.
         """
         api_pod_status = api.PodStatus(
-            start_time=convert_to_timestamp(
+            start_time=api.convert_to_timestamp(
                 datetime.datetime(2021, 11, 22, 16, 11, 38, 710257, tzinfo=datetime.UTC)
             ),
             conditions=[

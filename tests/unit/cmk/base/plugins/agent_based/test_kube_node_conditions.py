@@ -64,14 +64,14 @@ def custom_string_table():
 
 
 @pytest.fixture
-def section(string_table: StringTable) -> kube_node_conditions.NodeConditions:
+def section(string_table: StringTable) -> kube.NodeConditions:
     return kube_node_conditions.parse_node_conditions(string_table)
 
 
 @pytest.fixture
 def custom_section(
     custom_string_table: StringTable,
-) -> kube_node_conditions.NodeCustomConditions:
+) -> kube.NodeCustomConditions:
     return kube_node_conditions.parse_node_custom_conditions(custom_string_table)
 
 

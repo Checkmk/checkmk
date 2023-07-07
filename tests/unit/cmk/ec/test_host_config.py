@@ -11,7 +11,8 @@ import pytest
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
-from cmk.ec.host_config import HostConfig, HostInfo
+from cmk.ec.core_queries import HostInfo
+from cmk.ec.host_config import HostConfig
 
 
 @pytest.fixture(name="host_config")

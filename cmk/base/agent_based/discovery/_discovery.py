@@ -25,6 +25,7 @@ from cmk.checkengine.checking import CheckPluginName, Item
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import (
     analyse_cluster_labels,
+    AutocheckServiceWithNodes,
     discover_host_labels,
     DiscoveryMode,
     DiscoveryPlugin,
@@ -42,7 +43,7 @@ from cmk.checkengine.sectionparserutils import check_parsing_errors
 
 from cmk.base.config import ConfigCache, DiscoveryCheckParameters
 
-from .autodiscovery import AutocheckServiceWithNodes, get_host_services, ServicesByTransition
+from .autodiscovery import get_host_services, ServicesByTransition
 
 __all__ = ["execute_check_discovery"]
 

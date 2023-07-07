@@ -8,7 +8,7 @@ from json.decoder import JSONDecodeError
 from re import DOTALL, match
 from typing import Any
 
-import schemathesis  # typing: ignore[name-defined]
+import schemathesis
 
 from tests.openapi import settings
 
@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 
 def fix_response(  # pylint: disable=too-many-branches
-    case: schemathesis.Case,
-    response: schemathesis.GenericResponse,
+    case: schemathesis.models.Case,
+    response: schemathesis.utils.GenericResponse,
     method: str | None = None,
     path: str | None = None,
     body: dict[str, Any] | None = None,

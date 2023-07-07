@@ -15,6 +15,10 @@ from cmk.checkengine.inventory import InventoryPluginName
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 import cmk.base.api.agent_based.register.check_plugins as check_plugins
+from cmk.base.api.agent_based.register.utils import (
+    create_subscribed_sections,
+    validate_function_arguments,
+)
 
 
 def dummy_generator(section):  # pylint: disable=unused-argument
@@ -95,7 +99,7 @@ def test_requires_item(service_name: str, expected: bool) -> None:
 )
 def test_create_sections_invalid(sections: list[str] | None) -> None:
     with pytest.raises((TypeError, ValueError)):
-        check_plugins.create_subscribed_sections(sections, None)  # type: ignore[arg-type]
+        create_subscribed_sections(sections, None)  # type: ignore[arg-type]
 
 
 @pytest.mark.parametrize(
@@ -114,7 +118,7 @@ def test_create_sections(
     plugin_name: InventoryPluginName | CheckPluginName,
     expected: list[ParsedSectionName],
 ) -> None:
-    assert check_plugins.create_subscribed_sections(sections, plugin_name) == expected
+    assert create_subscribed_sections(sections, plugin_name) == expected
 
 
 @pytest.mark.parametrize(
@@ -155,7 +159,7 @@ def test_validate_function_args(
     raises: None | type["TypeError"],
 ) -> None:
     if raises is None:
-        check_plugins.validate_function_arguments(
+        validate_function_arguments(
             type_label="check",
             function=function,
             has_item=has_item,
@@ -165,7 +169,7 @@ def test_validate_function_args(
         return
 
     with pytest.raises(raises):
-        check_plugins.validate_function_arguments(
+        validate_function_arguments(
             type_label="check",
             function=function,
             has_item=has_item,

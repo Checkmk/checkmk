@@ -8,7 +8,7 @@ from json.decoder import JSONDecodeError
 from typing import Any
 
 import hypothesis
-import schemathesis  # typing: ignore[name-defined]
+import schemathesis
 from requests import Response
 
 from tests.openapi import settings
@@ -68,7 +68,7 @@ def run_crud_test(  # pylint: disable=too-many-branches
                 case.path_parameters = parameters
         return case
 
-    def case_json(case: schemathesis.Case) -> dict[str, Any]:
+    def case_json(case: schemathesis.models.Case) -> dict[str, Any]:
         if not isinstance(case.body, dict):
             return {"error": f"INVALID JSON BODY: {case.body!r}"}
         return case.body

@@ -7,6 +7,8 @@
 from collections.abc import Callable
 from typing import overload
 
+from cmk.utils.check_utils import ParametersTypeAlias
+
 from cmk.base.api.agent_based.checking_classes import CheckFunction, DiscoveryFunction
 from cmk.base.api.agent_based.inventory_classes import InventoryFunction
 from cmk.base.api.agent_based.register import (
@@ -30,7 +32,6 @@ from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification, SN
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     HostLabelFunction,
-    ParametersTypeAlias,
     SimpleSNMPParseFunction,
     SNMPParseFunction,
 )

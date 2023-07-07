@@ -44,7 +44,7 @@ from cmk.checkengine.discovery import (
     QualifiedDiscovery,
 )
 from cmk.checkengine.discovery._services import _find_host_plugins, _find_mgmt_plugins
-from cmk.checkengine.discovery.filters import RediscoveryParameters
+from cmk.checkengine.discovery.filters import RediscoveryParameters, ServiceFilters
 from cmk.checkengine.host_sections import HostSections
 from cmk.checkengine.sectionparser import (
     ParsedSectionName,
@@ -63,7 +63,6 @@ from cmk.base.agent_based.discovery.autodiscovery import (
     _get_post_discovery_autocheck_services,
     _group_by_transition,
     _make_diff,
-    _ServiceFilters,
     make_table,
     ServicesByTransition,
     ServicesTable,
@@ -390,7 +389,7 @@ def test__get_post_discovery_services(
 ) -> None:
     result = DiscoveryResult()
 
-    service_filters = _ServiceFilters.from_settings(parameters_rediscovery)
+    service_filters = ServiceFilters.from_settings(parameters_rediscovery)
 
     new_item_names = [
         entry.service.item or ""
@@ -674,7 +673,7 @@ def test__check_service_table(
         host_name=HostName("hostname"),
         services_by_transition=grouped_services,
         params=parameters,
-        service_filters=_ServiceFilters.from_settings(rediscovery_parameters),
+        service_filters=ServiceFilters.from_settings(rediscovery_parameters),
         find_service_description=lambda *args: f"Test Description {args[-1]}",
         discovery_mode=discovery_mode,
     )

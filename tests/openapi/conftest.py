@@ -5,7 +5,7 @@
 import logging
 from typing import Any
 
-import schemathesis  # typing: ignore[attr-defined, name-defined]
+import schemathesis
 from requests.structures import CaseInsensitiveDict
 
 from tests.openapi import settings
@@ -182,7 +182,7 @@ def hook_before_load_schema(  # pylint: disable=too-many-branches
 @schemathesis.hooks.register("before_call")
 def hook_before_call(
     context: schemathesis.hooks.HookContext,
-    case: schemathesis.Case,
+    case: schemathesis.models.Case,
 ) -> None:
     """Modify the case before execution.
 
@@ -197,8 +197,8 @@ def hook_before_call(
 @schemathesis.hooks.register("after_call")
 def hook_after_call(  # pylint: disable=too-many-branches
     context: schemathesis.hooks.HookContext,
-    case: schemathesis.Case,
-    response: schemathesis.GenericResponse,
+    case: schemathesis.models.Case,
+    response: schemathesis.utils.GenericResponse,
 ) -> None:
     """Modify the case after execution but before validation.
 

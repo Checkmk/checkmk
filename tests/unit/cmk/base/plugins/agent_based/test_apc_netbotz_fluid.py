@@ -6,9 +6,9 @@ import pytest
 
 from cmk.base.api.agent_based.type_defs import StringTable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.apc_netbotz_fluid import (
     check_apc_netbotz_fluid,
-    CheckResult,
     discover_apc_netbotz_fluid,
     DiscoveryResult,
     FluidSensorSection,

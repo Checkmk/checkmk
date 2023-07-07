@@ -132,7 +132,7 @@ def _oid_name_map(names: StringTable, filter_oids: Container[str]) -> Mapping[st
 
 
 def discover_cisco_fru_power(section: Section) -> DiscoveryResult:
-    yield from (Service(item=item) for item, fru in section.items() if fru.state != 3)
+    yield from (Service(item=item) for item, fru in section.items() if fru.state not in (1, 3))
 
 
 def check_cisco_fru_power(item: str, section: Section) -> CheckResult:

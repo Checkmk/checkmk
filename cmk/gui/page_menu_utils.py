@@ -168,19 +168,19 @@ def _get_ntop_page_menu_topics(view, host_address):
             entries=[
                 PageMenuEntry(
                     name="overview",
-                    title="Engaged alerts",
+                    title="Engaged Host",
                     icon_name="trans",
                     item=_get_ntop_entry_item_link(host_name, host_address, "engaged_alerts_tab"),
                 ),
                 PageMenuEntry(
                     name="overview",
-                    title="Past alerts",
+                    title="Past Host",
                     icon_name="trans",
                     item=_get_ntop_entry_item_link(host_name, host_address, "past_alerts_tab"),
                 ),
                 PageMenuEntry(
                     name="overview",
-                    title="Flow alerts",
+                    title="Past Flow",
                     icon_name="trans",
                     item=_get_ntop_entry_item_link(host_name, host_address, "flow_alerts_tab"),
                 ),

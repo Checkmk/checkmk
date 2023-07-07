@@ -19,6 +19,7 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib.type_defs import SNMPDetectBaseType
 
+from cmk.checkengine.discovery import HostLabel
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.base.api.agent_based.register.utils import (
@@ -31,7 +32,6 @@ from cmk.base.api.agent_based.section_classes import SNMPTree
 from cmk.base.api.agent_based.type_defs import (
     AgentParseFunction,
     AgentSectionPlugin,
-    HostLabel,
     HostLabelFunction,
     SimpleSNMPParseFunction,
     SNMPParseFunction,

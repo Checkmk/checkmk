@@ -7,16 +7,15 @@ import pytest
 
 from livestatus import SiteId
 
-from cmk.ec.main import Event, MatchGroups
+from cmk.ec.config import MatchGroups, Rule, TextMatchResult
+from cmk.ec.event import Event
 from cmk.ec.rule_matcher import (
     compile_matching_value,
     MatchFailure,
     MatchPriority,
     MatchResult,
     MatchSuccess,
-    Rule,
     RuleMatcher,
-    TextMatchResult,
 )
 
 

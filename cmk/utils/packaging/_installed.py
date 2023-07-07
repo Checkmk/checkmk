@@ -7,8 +7,7 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Final
 
-from ._mkp import Manifest, read_manifest_optionally
-from ._parts import PackagePart
+from ._mkp import Manifest, PackagePart, read_manifest_optionally
 from ._type_defs import PackageID, PackageName
 
 

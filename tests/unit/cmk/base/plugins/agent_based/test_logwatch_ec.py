@@ -20,6 +20,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
     StringTable,
 )
 from cmk.base.plugins.agent_based.logwatch_section import parse_logwatch
+from cmk.base.plugins.agent_based.utils import logwatch as logwatch_
 
 from cmk.ec.export import SyslogMessage
 
@@ -63,7 +64,7 @@ _STRING_TABLE_MESSAGES_LOG5 = [
 ]
 
 
-SECTION1 = logwatch_ec.logwatch.Section(
+SECTION1 = logwatch_.Section(
     errors=[],
     logfiles={
         "log1": {
@@ -167,7 +168,7 @@ def test_logwatch_ec_inventory_single(
 ) -> None:
     parsed = parse_logwatch(info)
 
-    monkeypatch.setattr(logwatch_ec.logwatch, "get_ec_rule_params", lambda: fwd_rule)
+    monkeypatch.setattr(logwatch_, "get_ec_rule_params", lambda: fwd_rule)
     actual_result = sorted(logwatch_ec.discover_single(parsed), key=lambda s: s.item or "")
     assert actual_result == expected_result
 
@@ -201,7 +202,7 @@ def test_logwatch_ec_inventory_groups(
 ) -> None:
     parsed = parse_logwatch(info)
 
-    monkeypatch.setattr(logwatch_ec.logwatch, "get_ec_rule_params", lambda: fwd_rule)
+    monkeypatch.setattr(logwatch_, "get_ec_rule_params", lambda: fwd_rule)
     actual_result = list(logwatch_ec.discover_group(parsed))
     assert actual_result == expected_result
 

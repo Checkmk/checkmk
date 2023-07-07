@@ -3,21 +3,23 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=unused-import
+
 import time
 from typing import AnyStr, Union
 
 from cmk.base.check_api import check_levels, get_average, get_rate, state_markers
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
-from cmk.base.plugins.agent_based.utils.temperature import (  # pylint: disable=unused-import  # noqa: F401  # reimported from checks!; See warning below
-    _migrate_params,
-    fahrenheit_to_celsius,
-    render_temp,
-    StatusType,
-    temp_unitsym,
-    TempParamType,
-    to_celsius,
-    TwoLevelsType,
+from cmk.base.plugins.agent_based.utils.temperature import _migrate_params
+from cmk.base.plugins.agent_based.utils.temperature import (
+    fahrenheit_to_celsius as fahrenheit_to_celsius,
 )
+from cmk.base.plugins.agent_based.utils.temperature import render_temp as render_temp
+from cmk.base.plugins.agent_based.utils.temperature import StatusType as StatusType
+from cmk.base.plugins.agent_based.utils.temperature import temp_unitsym as temp_unitsym
+from cmk.base.plugins.agent_based.utils.temperature import TempParamType as TempParamType
+from cmk.base.plugins.agent_based.utils.temperature import to_celsius as to_celsius
+from cmk.base.plugins.agent_based.utils.temperature import TwoLevelsType as TwoLevelsType
 
 Number = int | float
 

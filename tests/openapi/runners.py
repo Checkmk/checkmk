@@ -8,7 +8,7 @@ from json.decoder import JSONDecodeError
 from typing import Any
 
 import hypothesis
-import schemathesis
+import schemathesis  # typing: ignore[name-defined]
 from requests import Response
 
 from tests.openapi import settings

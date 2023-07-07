@@ -6,14 +6,14 @@
 from pydantic_factories import ModelFactory
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.kube_resource_quota_memory import (
+from cmk.base.plugins.agent_based.utils.kube import Memory, PerformanceUsage
+from cmk.base.plugins.agent_based.utils.kube_resources import (
     check_resource_quota_resource,
+    HardResourceRequirement,
     Params,
     render,
     RESOURCE_QUOTA_DEFAULT_PARAMS,
 )
-from cmk.base.plugins.agent_based.utils.kube import Memory, PerformanceUsage
-from cmk.base.plugins.agent_based.utils.kube_resources import HardResourceRequirement
 
 
 class MemoryFactory(ModelFactory):

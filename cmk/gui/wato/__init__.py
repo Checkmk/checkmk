@@ -243,22 +243,22 @@ modes: dict[Any, Any] = {}
 
 # Import the module to register page handler
 import cmk.gui.wato.page_handler
+from cmk.gui.page_menu import search_form
 from cmk.gui.painter.v0.base import PainterRegistry
 from cmk.gui.plugins.wato.utils.html_elements import (
     initialize_wato_html_head,
-    search_form,
     wato_html_footer,
     wato_html_head,
 )
 from cmk.gui.plugins.wato.utils.main_menu import (  # Kept for compatibility with pre 1.6 plugins
     MainMenu,
-    MenuItem,
     register_modules,
     WatoModule,
 )
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.views.sorter import SorterRegistry
 from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
+from cmk.gui.watolib.main_menu import MenuItem
 
 from .icons import DownloadAgentOutputIcon, DownloadSnmpWalkIcon, WatoIcon
 from .views import (

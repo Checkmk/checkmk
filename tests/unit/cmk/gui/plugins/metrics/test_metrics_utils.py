@@ -506,7 +506,7 @@ def test_stack_resolver_exception() -> None:
     def apply_operator(op: str, f: int, s: int) -> int:
         return f + s
 
-    with pytest.raises(utils.MKGeneralException, match="too many operands left"):
+    with pytest.raises(MKGeneralException, match="too many operands left"):
         utils.stack_resolver(
             "1 2 3 +".split(),
             lambda x: x == "+",
@@ -520,7 +520,7 @@ def test_stack_resolver_exception_missing_operator_arguments() -> None:
         return f + s
 
     with pytest.raises(
-        utils.MKGeneralException, match="Syntax error in expression '3, T': too few operands"
+        MKGeneralException, match="Syntax error in expression '3, T': too few operands"
     ):
         utils.stack_resolver(
             "3 T".split(),

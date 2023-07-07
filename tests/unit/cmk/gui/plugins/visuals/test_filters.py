@@ -25,6 +25,7 @@ import cmk.gui.plugins.visuals
 import cmk.gui.views
 import cmk.gui.visuals
 from cmk.gui.plugins.visuals import filters
+from cmk.gui.plugins.visuals.utils import filter_registry
 from cmk.gui.plugins.visuals.wato import FilterWatoFolder
 from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
@@ -116,7 +117,7 @@ def fixture_livestatus_test_config(mock_livestatus, mock_wato_folders):
 
 
 # In general filters should not affect livestatus query in case there is no variable set for them
-@pytest.mark.parametrize("filter_ident", cmk.gui.plugins.visuals.utils.filter_registry.keys())
+@pytest.mark.parametrize("filter_ident", filter_registry.keys())
 def test_filters_filter_with_empty_request(
     filter_ident: str, live: MockLiveStatusConnection
 ) -> None:
@@ -126,7 +127,7 @@ def test_filters_filter_with_empty_request(
         expected_filter = ""
 
     with live(expect_status_query=False):
-        filt = cmk.gui.plugins.visuals.utils.filter_registry[filter_ident]
+        filt = filter_registry[filter_ident]
         assert filt.filter({}) == expected_filter
 
 
@@ -617,7 +618,7 @@ def test_filters_filter(test: FilterTest, set_config: SetConfig) -> None:
         wato_host_attrs=[{"name": "bla", "title": "Bla"}],  # Needed for ABCFilterCustomAttribute
         tags=cmk.utils.tags.BuiltinTagConfig(),  # Need for ABCTagFilter
     ), on_time("2018-04-15 16:50", "CET"):
-        filt = cmk.gui.plugins.visuals.utils.filter_registry[test.ident]
+        filt = filter_registry[test.ident]
         filter_vars = dict(filt.value())  # Default empty vars, exhaustive
         filter_vars.update(dict(test.request_vars))
         assert filt.filter(filter_vars) == test.expected_filters
@@ -1144,7 +1145,7 @@ def test_filters_filter_table(test: FilterTableTest, monkeypatch: pytest.MonkeyP
 
         # TODO: Fix this for real...
         if not cmk_version.is_raw_edition() or test.ident != "deployment_has_agent":
-            filt = cmk.gui.plugins.visuals.utils.filter_registry[test.ident]
+            filt = filter_registry[test.ident]
             assert filt.filter_table(context, test.rows) == test.expected_rows
 
 
@@ -1280,9 +1281,7 @@ def test_filters_filter_inv_table(test: FilterTableTest) -> None:
 
         # TODO: Fix this for real...
         if not cmk_version.is_raw_edition():
-            rows = cmk.gui.plugins.visuals.utils.filter_registry[test.ident].filter_table(
-                context, test.rows
-            )
+            rows = filter_registry[test.ident].filter_table(context, test.rows)
             assert len(rows) == len(test.expected_rows)
             for row, expected_row in zip(rows, test.expected_rows):
                 assert row["host_inventory"] == expected_row["host_inventory"]
@@ -1291,7 +1290,7 @@ def test_filters_filter_inv_table(test: FilterTableTest) -> None:
 # Filter form is not really checked. Only checking that no exception occurs
 def test_filters_display_with_empty_request(live: MockLiveStatusConnection) -> None:
     with live:
-        for filt in cmk.gui.plugins.visuals.utils.filter_registry.values():
+        for filt in filter_registry.values():
             with output_funnel.plugged():
                 _set_expected_queries(filt.ident, live)
                 filt.display({k: "" for k in filt.htmlvars})
@@ -1320,9 +1319,7 @@ class TestFilterCMKSiteStatisticsByCorePIDs:
     @pytest.fixture(name="filter_core_pid")
     def fixture_filter_core_pid(self) -> filters.FilterCMKSiteStatisticsByCorePIDs:
         assert isinstance(
-            filter_core_pid := filters.filter_registry[
-                filters.FilterCMKSiteStatisticsByCorePIDs.ID
-            ],
+            filter_core_pid := filter_registry[filters.FilterCMKSiteStatisticsByCorePIDs.ID],
             filters.FilterCMKSiteStatisticsByCorePIDs,
         )
         return filter_core_pid
@@ -1339,7 +1336,7 @@ class TestFilterCMKSiteStatisticsByCorePIDs:
         )
 
     @pytest.fixture(name="livestatus_data")
-    def fixture_livestatus_data(self) -> filters.Rows:
+    def fixture_livestatus_data(self) -> Rows:
         return [
             {
                 "site": "heute",
@@ -1464,7 +1461,7 @@ class TestFilterCMKSiteStatisticsByCorePIDs:
         ]
 
     @pytest.fixture(name="expected_result")
-    def fixture_expected_result(self) -> filters.Rows:
+    def fixture_expected_result(self) -> Rows:
         return [
             {
                 "host_name": "heute",
@@ -1536,8 +1533,8 @@ class TestFilterCMKSiteStatisticsByCorePIDs:
     def test_filter_table(
         self,
         filter_core_pid: filters.FilterCMKSiteStatisticsByCorePIDs,
-        livestatus_data: filters.Rows,
-        expected_result: filters.Rows,
+        livestatus_data: Rows,
+        expected_result: Rows,
     ) -> None:
         assert (
             filter_core_pid.filter_table(
@@ -1550,7 +1547,7 @@ class TestFilterCMKSiteStatisticsByCorePIDs:
     def test_filter_table_filter_not_active(
         self,
         filter_core_pid: filters.FilterCMKSiteStatisticsByCorePIDs,
-        livestatus_data: filters.Rows,
+        livestatus_data: Rows,
     ) -> None:
         assert (
             filter_core_pid.filter_table(
@@ -1564,8 +1561,8 @@ class TestFilterCMKSiteStatisticsByCorePIDs:
     def test_filter_table_unsorted(
         self,
         filter_core_pid: filters.FilterCMKSiteStatisticsByCorePIDs,
-        livestatus_data: filters.Rows,
-        expected_result: filters.Rows,
+        livestatus_data: Rows,
+        expected_result: Rows,
     ) -> None:
         assert (
             filter_core_pid.filter_table(

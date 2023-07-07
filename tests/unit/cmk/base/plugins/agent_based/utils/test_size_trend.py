@@ -9,7 +9,8 @@ from typing import Any, TypedDict
 
 import pytest
 
-from cmk.base.api.agent_based.utils import GetRateError, Metric, Result, State
+from cmk.base.api.agent_based.checking_classes import Metric, Result, State
+from cmk.base.api.agent_based.utils import GetRateError
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResults
 from cmk.base.plugins.agent_based.utils.size_trend import size_trend
 

@@ -9,10 +9,10 @@ from tests.testlib import CMKEventConsole
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.ec.config import Config, ServiceLevel
+from cmk.ec.config import Config, Rule, ServiceLevel
 from cmk.ec.defaults import default_rule_pack
-from cmk.ec.main import Event, EventServer
-from cmk.ec.rule_matcher import Rule
+from cmk.ec.event import Event
+from cmk.ec.main import EventServer
 
 RULE = Rule(
     actions=[],

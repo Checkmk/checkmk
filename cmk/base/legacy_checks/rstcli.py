@@ -46,7 +46,9 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import LegacyCheckDefinition, MKGeneralException
+from cmk.utils.exceptions import MKGeneralException
+
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 

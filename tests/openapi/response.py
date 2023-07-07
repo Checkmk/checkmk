@@ -8,7 +8,7 @@ from json.decoder import JSONDecodeError
 from re import DOTALL, match
 from typing import Any
 
-import schemathesis
+import schemathesis  # typing: ignore[name-defined]
 
 from tests.openapi import settings
 

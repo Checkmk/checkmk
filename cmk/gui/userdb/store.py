@@ -31,6 +31,7 @@ from cmk.utils.store import (
     save_to_mk_file,
 )
 from cmk.utils.store.host_storage import ContactgroupName
+from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.user import UserId
 
 import cmk.gui.hooks as hooks
@@ -51,7 +52,6 @@ from cmk.gui.plugins.userdb.utils import (
     UserConnector,
 )
 from cmk.gui.type_defs import SessionInfo, TwoFactorCredentials, Users, UserSpec
-from cmk.gui.userdb.htpasswd import Htpasswd
 from cmk.gui.utils.roles import roles_of_user
 
 T = TypeVar("T")

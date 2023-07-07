@@ -21,6 +21,7 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.crypto import password_hashing
 from cmk.utils.crypto.password import Password, PasswordHash
+from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.user import UserId
 
 import cmk.gui.pages
@@ -51,9 +52,8 @@ from cmk.gui.plugins.userdb.utils import (
     UserConnector,
 )
 from cmk.gui.site_config import is_wato_slave_site
-from cmk.gui.type_defs import TwoFactorCredentials, Users
+from cmk.gui.type_defs import TwoFactorCredentials, Users, UserSpec
 from cmk.gui.userdb import user_attributes
-from cmk.gui.userdb.htpasswd import Htpasswd
 from cmk.gui.userdb.ldap_connector import MKLDAPException
 from cmk.gui.userdb.session import is_valid_user_session, load_session_infos
 from cmk.gui.userdb.store import (
@@ -74,7 +74,6 @@ from cmk.gui.userdb.store import (
     save_custom_attr,
     save_two_factor_credentials,
     save_users,
-    UserSpec,
     write_contacts_and_users_file,
 )
 from cmk.gui.utils.urls import makeuri_contextless
@@ -98,10 +97,12 @@ __all__ = [
     "load_contacts",
     "load_custom_attr",
     "load_multisite_users",
+    "load_user",
     "load_users",
     "remove_custom_attr",
     "rewrite_users",
     "save_custom_attr",
+    "save_users",
     "Users",
     "UserSpec",
     "write_contacts_and_users_file",

@@ -14,16 +14,15 @@ import pytest
 from fakeredis import FakeRedis
 from pytest import MonkeyPatch
 
-from tests.testlib import (
+# Import this fixture to not clutter this file, but it's unused here...
+from tests.testlib.certs import fixture_self_signed  # pylint: disable=unused-import # noqa: F401
+from tests.testlib.utils import (
     is_cloud_repo,
     is_enterprise_repo,
     is_managed_repo,
     is_saas_repo,
     repo_path,
 )
-
-# Import this fixture to not clutter this file, but it's unused here...
-from tests.testlib.certs import fixture_self_signed  # pylint: disable=unused-import # noqa: F401
 
 import livestatus
 
@@ -34,8 +33,12 @@ import cmk.utils.redis as redis
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils import tty
-from cmk.utils.licensing.handler import LicensingHandler, NotificationHandler, UserEffect
-from cmk.utils.licensing.registry import LicenseState
+from cmk.utils.licensing.handler import (
+    LicenseState,
+    LicensingHandler,
+    NotificationHandler,
+    UserEffect,
+)
 from cmk.utils.livestatus_helpers.testing import (
     mock_livestatus_communication,
     MockLiveStatusConnection,

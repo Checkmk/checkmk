@@ -27,6 +27,7 @@ from urllib.request import urlopen
 
 import cmk.utils.site as site
 from cmk.utils.exceptions import MKException
+from cmk.utils.html import replace_state_markers as format_plugin_output
 from cmk.utils.mail import default_from_address, MailString, send_mail_sendmail, set_mail_headers
 
 from cmk.notification_plugins import utils
@@ -843,14 +844,14 @@ def extend_context(context: dict[str, str]) -> None:
     )
 
     if "HOSTOUTPUT" in context:
-        context["HOSTOUTPUT_HTML"] = utils.format_plugin_output(context["HOSTOUTPUT"])
+        context["HOSTOUTPUT_HTML"] = format_plugin_output(context["HOSTOUTPUT"])
     if context["WHAT"] == "SERVICE":
-        context["SERVICEOUTPUT_HTML"] = utils.format_plugin_output(context["SERVICEOUTPUT"])
+        context["SERVICEOUTPUT_HTML"] = format_plugin_output(context["SERVICEOUTPUT"])
 
         long_serviceoutput = (
             context["LONGSERVICEOUTPUT"].replace("\\n", "<br>").replace("\n", "<br>")
         )
-        context["LONGSERVICEOUTPUT_HTML"] = utils.format_plugin_output(long_serviceoutput)
+        context["LONGSERVICEOUTPUT_HTML"] = format_plugin_output(long_serviceoutput)
 
     # Compute the subject of the mail
     if context["WHAT"] == "HOST":

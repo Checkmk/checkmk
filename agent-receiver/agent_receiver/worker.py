@@ -5,17 +5,13 @@
 
 # pylint: disable=too-many-branches,no-else-break
 
+import asyncio
 from ssl import SSLObject
+from urllib.parse import unquote
 
-from uvicorn.protocols.http.h11_impl import (
-    asyncio,
-    h11,
-    H11Protocol,
-    HIGH_WATER_LIMIT,
-    RequestResponseCycle,
-    service_unavailable,
-    unquote,
-)
+import h11
+from uvicorn.protocols.http.flow_control import HIGH_WATER_LIMIT, service_unavailable
+from uvicorn.protocols.http.h11_impl import H11Protocol, RequestResponseCycle
 from uvicorn.workers import UvicornWorker
 
 

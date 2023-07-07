@@ -3,17 +3,19 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+# pylint: disable=unused-import
+
 import functools
-import json  # pylint: disable=unused-import  # noqa: F401
+import json
 import time
 
 from cmk.base.check_api import check_levels, get_bytes_human_readable, get_rate
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
-from cmk.base.plugins.agent_based.utils.azure import (  # pylint: disable=unused-import  # noqa: F401
-    AZURE_AGENT_SEPARATOR,
-    iter_resource_attributes,
-    parse_resources,
+from cmk.base.plugins.agent_based.utils.azure import AZURE_AGENT_SEPARATOR as AZURE_AGENT_SEPARATOR
+from cmk.base.plugins.agent_based.utils.azure import (
+    iter_resource_attributes as iter_resource_attributes,
 )
+from cmk.base.plugins.agent_based.utils.azure import parse_resources as parse_resources
 
 _AZURE_METRIC_FMT = {
     "count": lambda n: "%d" % n,

@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from tests.testlib import is_enterprise_repo, is_managed_repo
+from tests.testlib.utils import is_enterprise_repo, is_managed_repo
 
 import cmk.utils.paths
 

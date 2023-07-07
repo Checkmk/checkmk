@@ -87,7 +87,7 @@ def params_node():
 
 @pytest.fixture
 def params(params_usage, params_request, params_limit, params_cluster, params_node):
-    return kube_cpu.Params(
+    return kube_resources.Params(
         usage=params_usage,
         request=params_request,
         limit=params_limit,
@@ -147,7 +147,7 @@ def resources_string_table(resources_string_table_element):
 
 @pytest.fixture
 def resources_section(resources_string_table):
-    return kube_cpu.parse_resources(resources_string_table)
+    return kube_resources.parse_resources(resources_string_table)
 
 
 @pytest.fixture
@@ -177,7 +177,7 @@ def allocatable_resource_string_table(allocatable_resource_string_table_element)
 
 @pytest.fixture
 def allocatable_resource_section(allocatable_resource_string_table):
-    return kube_cpu.parse_allocatable_resource(allocatable_resource_string_table)
+    return kube_resources.parse_allocatable_resource(allocatable_resource_string_table)
 
 
 @pytest.fixture
@@ -190,7 +190,7 @@ def check_result(params, usage_section, resources_section, allocatable_resource_
 def test_parse_resources(
     resources_string_table: StringTable, resources_request: float, resources_limit: float
 ) -> None:
-    resources_section = kube_cpu.parse_resources(resources_string_table)
+    resources_section = kube_resources.parse_resources(resources_string_table)
     assert resources_section.request == resources_request
     assert resources_section.limit == resources_limit
 
@@ -198,7 +198,7 @@ def test_parse_resources(
 def test_parse_allocatable_resource(
     allocatable_resource_string_table: StringTable, allocatable_value: float
 ) -> None:
-    allocatable_resource_section = kube_cpu.parse_allocatable_resource(
+    allocatable_resource_section = kube_resources.parse_allocatable_resource(
         allocatable_resource_string_table
     )
     assert allocatable_resource_section.value == allocatable_value

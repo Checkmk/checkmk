@@ -5,7 +5,7 @@
 import logging
 from typing import Any
 
-import schemathesis
+import schemathesis  # typing: ignore[attr-defined]
 from requests.structures import CaseInsensitiveDict
 
 from tests.openapi import settings

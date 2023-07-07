@@ -45,17 +45,14 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _u
 from cmk.gui.logged_in import user
+from cmk.gui.page_menu import search_form as search_form
 from cmk.gui.pages import page_registry
 from cmk.gui.permissions import permission_section_registry, PermissionSection
 from cmk.gui.plugins.wato.utils.base_modes import mode_registry as mode_registry
 from cmk.gui.plugins.wato.utils.base_modes import mode_url as mode_url
 from cmk.gui.plugins.wato.utils.base_modes import redirect as redirect
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode as WatoMode
-from cmk.gui.plugins.wato.utils.html_elements import search_form as search_form
-from cmk.gui.plugins.wato.utils.main_menu import ABCMainModule as ABCMainModule
-from cmk.gui.plugins.wato.utils.main_menu import main_module_registry as main_module_registry
 from cmk.gui.plugins.wato.utils.main_menu import MainMenu as MainMenu
-from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopic as MainModuleTopic
 from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopicAgents as MainModuleTopicAgents
 from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopicBI as MainModuleTopicBI
 from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopicEvents as MainModuleTopicEvents
@@ -67,7 +64,6 @@ from cmk.gui.plugins.wato.utils.main_menu import (
 )
 from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopicServices as MainModuleTopicServices
 from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopicUsers as MainModuleTopicUsers
-from cmk.gui.plugins.wato.utils.main_menu import MenuItem as MenuItem
 from cmk.gui.plugins.wato.utils.main_menu import register_modules as register_modules
 from cmk.gui.plugins.wato.utils.main_menu import WatoModule as WatoModule
 from cmk.gui.plugins.wato.utils.simple_modes import SimpleEditMode as SimpleEditMode
@@ -168,6 +164,10 @@ from cmk.gui.watolib.hosts_and_folders import CREHost as CREHost
 from cmk.gui.watolib.hosts_and_folders import folder_from_request as folder_from_request
 from cmk.gui.watolib.hosts_and_folders import folder_tree as folder_tree
 from cmk.gui.watolib.hosts_and_folders import SearchFolder as SearchFolder
+from cmk.gui.watolib.main_menu import ABCMainModule as ABCMainModule
+from cmk.gui.watolib.main_menu import main_module_registry as main_module_registry
+from cmk.gui.watolib.main_menu import MainModuleTopic as MainModuleTopic
+from cmk.gui.watolib.main_menu import MenuItem as MenuItem
 from cmk.gui.watolib.password_store import PasswordStore as PasswordStore
 from cmk.gui.watolib.password_store import passwordstore_choices as passwordstore_choices
 from cmk.gui.watolib.rulespec_groups import RulespecGroupAgentSNMP as RulespecGroupAgentSNMP

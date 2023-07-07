@@ -5,6 +5,7 @@
 """Module to hold shared code for main module internals and the plugins"""
 
 import colorsys
+import http
 import random
 import re
 import shlex
@@ -20,22 +21,16 @@ import cmk.utils.regex
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
-from cmk.utils.metrics import MetricName as _MetricName
+from cmk.utils.metrics import MetricName as MetricName_
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.prediction import (
-    livestatus_lql,
-    Seconds,
-    ServiceName,
-    TimeRange,
-    TimeSeries,
-    TimeSeriesValue,
-)
+from cmk.utils.prediction import livestatus_lql, Seconds, TimeRange, TimeSeries, TimeSeriesValue
+from cmk.utils.servicename import ServiceName
 from cmk.utils.version import parse_check_mk_version
 
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
-from cmk.gui.exceptions import http, MKHTTPException, MKUserError
+from cmk.gui.exceptions import MKHTTPException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -54,9 +49,6 @@ from cmk.gui.type_defs import (
     LineType,
     MetricDefinition,
     MetricExpression,
-)
-from cmk.gui.type_defs import MetricName as MetricNameType
-from cmk.gui.type_defs import (
     Perfdata,
     PerfometerSpec,
     RenderableRecipe,
@@ -191,7 +183,7 @@ class ForecastGraphRecipeBase(GraphRecipeBase):
 class ForecastGraphRecipe(ForecastGraphRecipeBase):
     specification: ForecastGraphIdentifier
     model_params_repr: ValueSpecText
-    metric_id: NotRequired[tuple[HostName, ServiceName, _MetricName, str]]
+    metric_id: NotRequired[tuple[HostName, ServiceName, MetricName_, str]]
 
 
 class CustomGraphRecipe(GraphRecipeBase):
@@ -219,7 +211,7 @@ class MetricUnitColor(TypedDict):
 
 class CheckMetricEntry(TypedDict, total=False):
     scale: float
-    name: MetricNameType
+    name: MetricName_
     auto_graph: bool
     deprecated: str
 
@@ -296,8 +288,8 @@ class UnitRegistry:
 # Note: we cannot simply use dict[str, Callable[[], UnitInfo]] and refactor all unit registrations
 # in our codebase because we need to stay compatible with custom extensions
 unit_info = UnitRegistry()
-metric_info: dict[_MetricName, MetricInfo] = {}
-check_metrics: dict[str, dict[MetricNameType, CheckMetricEntry]] = {}
+metric_info: dict[MetricName_, MetricInfo] = {}
+check_metrics: dict[str, dict[MetricName_, CheckMetricEntry]] = {}
 perfometer_info: list[LegacyPerfometer | PerfometerSpec] = []
 # _AutomaticDict is used here to provide some list methods.
 # This is needed to maintain backwards-compatibility.
@@ -543,7 +535,7 @@ def perfvar_translation(
 ) -> TranslationInfo:
     """Get translation info for one performance var."""
     translation_entry = find_matching_translation(
-        MetricNameType(perfvar_name),
+        MetricName_(perfvar_name),
         lookup_metric_translations_for_check_command(check_metrics, check_command) or {},
     )
     return {
@@ -554,9 +546,9 @@ def perfvar_translation(
 
 
 def lookup_metric_translations_for_check_command(
-    all_translations: Mapping[str, Mapping[MetricNameType, CheckMetricEntry]],
+    all_translations: Mapping[str, Mapping[MetricName_, CheckMetricEntry]],
     check_command: str | None,  # None due to CMK-13883
-) -> Mapping[MetricNameType, CheckMetricEntry] | None:
+) -> Mapping[MetricName_, CheckMetricEntry] | None:
     if not check_command:
         return None
     return all_translations.get(
@@ -574,8 +566,8 @@ def lookup_metric_translations_for_check_command(
 
 
 def find_matching_translation(
-    metric_name: MetricNameType,
-    translations: Mapping[MetricNameType, CheckMetricEntry],
+    metric_name: MetricName_,
+    translations: Mapping[MetricName_, CheckMetricEntry],
 ) -> CheckMetricEntry:
     if translation := translations.get(metric_name):
         return translation
@@ -679,7 +671,7 @@ def translate_metrics(perf_data: Perfdata, check_command: str) -> TranslatedMetr
     return translated_metrics
 
 
-def perf_data_string_from_metric_names(metric_names: list[_MetricName]) -> str:
+def perf_data_string_from_metric_names(metric_names: list[MetricName_]) -> str:
     parts = []
     for var_name in metric_names:
         # Metrics with "," in their name are not allowed. They lead to problems with the RPN processing
@@ -698,7 +690,7 @@ def perf_data_string_from_metric_names(metric_names: list[_MetricName]) -> str:
 
 def available_metrics_translated(
     perf_data_string: str,
-    rrd_metrics: list[_MetricName],
+    rrd_metrics: list[MetricName_],
     check_command: str,
 ) -> TranslatedMetrics:
     # If we have no RRD files then we cannot paint any graph :-(
@@ -1157,14 +1149,14 @@ def get_graph_data_from_livestatus(only_sites, host_name, service_description):
     return info
 
 
-def metric_title(metric_name: _MetricName) -> str:
+def metric_title(metric_name: MetricName_) -> str:
     return str(metric_info.get(metric_name, {}).get("title", metric_name.title()))
 
 
 def metric_recipe_and_unit(
     host_name: HostName | str,
     service_description: ServiceName,
-    metric_name: _MetricName,
+    metric_name: MetricName_,
     consolidation_function: str,
     line_type: str = "stack",
     visible: bool = True,
@@ -1453,10 +1445,10 @@ def render_color_icon(color: str) -> HTML:
 
 
 def reverse_translate_into_all_potentially_relevant_metrics(
-    canonical_name: MetricNameType,
+    canonical_name: MetricName_,
     current_version: int,
-    all_translations: Iterable[Mapping[MetricNameType, CheckMetricEntry]],
-) -> set[MetricNameType]:
+    all_translations: Iterable[Mapping[MetricName_, CheckMetricEntry]],
+) -> set[MetricName_]:
     return {
         canonical_name,
         *(
@@ -1485,8 +1477,8 @@ def reverse_translate_into_all_potentially_relevant_metrics(
 
 @lru_cache
 def reverse_translate_into_all_potentially_relevant_metrics_cached(
-    canonical_name: MetricNameType,
-) -> set[MetricNameType]:
+    canonical_name: MetricName_,
+) -> set[MetricName_]:
     return reverse_translate_into_all_potentially_relevant_metrics(
         canonical_name,
         parse_check_mk_version(cmk_version.__version__),
@@ -1494,7 +1486,7 @@ def reverse_translate_into_all_potentially_relevant_metrics_cached(
     )
 
 
-def metric_choices(check_command: str, perfvars: tuple[_MetricName, ...]) -> Iterator[Choice]:
+def metric_choices(check_command: str, perfvars: tuple[MetricName_, ...]) -> Iterator[Choice]:
     for perfvar in perfvars:
         translated = perfvar_translation(perfvar, check_command)
         name = translated["name"]

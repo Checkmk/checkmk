@@ -16,6 +16,7 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.base.plugins.agent_based import mcafee_webgateway_client_requests as plugin
 from cmk.base.plugins.agent_based.agent_based_api import v1
+from cmk.base.plugins.agent_based.utils.mcafee_gateway import MISC_DEFAULT_PARAMS, MiscParams
 
 SECTION_NAME = SectionName("mcafee_webgateway_client_requests")
 
@@ -67,7 +68,7 @@ def test_discovery(
     [
         pytest.param(
             WALK,
-            plugin.MISC_DEFAULT_PARAMS | {"client_requests_https": None},
+            MISC_DEFAULT_PARAMS | {"client_requests_https": None},
             [
                 v1.Result(state=v1.State.OK, summary="2.0/s"),
                 v1.Metric("requests_per_second", 2.0),
@@ -76,7 +77,7 @@ def test_discovery(
         ),
         pytest.param(
             WALK,
-            plugin.MISC_DEFAULT_PARAMS | {"client_requests_https": (1, 2)},
+            MISC_DEFAULT_PARAMS | {"client_requests_https": (1, 2)},
             [
                 v1.Result(state=v1.State.CRIT, summary="2.0/s (warn/crit at 1.0/s/2.0/s)"),
                 v1.Metric("requests_per_second", 2.0, levels=(1.0, 2.0)),
@@ -88,7 +89,7 @@ def test_discovery(
 def test_check_https(
     walk: str,
     fix_register: FixRegister,
-    params: plugin.MiscParams,
+    params: MiscParams,
     expected_results: list[object],
     as_path: typing.Callable[[str], Path],
 ) -> None:
@@ -110,7 +111,7 @@ def test_check_https(
     [
         pytest.param(
             WALK,
-            plugin.MISC_DEFAULT_PARAMS | {"client_requests_httpv2": None},
+            MISC_DEFAULT_PARAMS | {"client_requests_httpv2": None},
             [
                 v1.Result(state=v1.State.OK, summary="2.0/s"),
                 v1.Metric("requests_per_second", 2.0),
@@ -119,7 +120,7 @@ def test_check_https(
         ),
         pytest.param(
             WALK,
-            plugin.MISC_DEFAULT_PARAMS | {"client_requests_httpv2": (1, 2)},
+            MISC_DEFAULT_PARAMS | {"client_requests_httpv2": (1, 2)},
             [
                 v1.Result(state=v1.State.CRIT, summary="2.0/s (warn/crit at 1.0/s/2.0/s)"),
                 v1.Metric("requests_per_second", 2.0, levels=(1.0, 2.0)),
@@ -131,7 +132,7 @@ def test_check_https(
 def test_check_httpv2(
     walk: str,
     fix_register: FixRegister,
-    params: plugin.MiscParams,
+    params: MiscParams,
     expected_results: list[object],
     as_path: typing.Callable[[str], Path],
 ) -> None:
@@ -153,7 +154,7 @@ def test_check_httpv2(
     [
         pytest.param(
             WALK,
-            plugin.MISC_DEFAULT_PARAMS | {"client_requests_http": None},
+            MISC_DEFAULT_PARAMS | {"client_requests_http": None},
             [
                 v1.Result(state=v1.State.OK, summary="2.0/s"),
                 v1.Metric("requests_per_second", 2.0),
@@ -162,7 +163,7 @@ def test_check_httpv2(
         ),
         pytest.param(
             WALK,
-            plugin.MISC_DEFAULT_PARAMS | {"client_requests_http": (1, 2)},
+            MISC_DEFAULT_PARAMS | {"client_requests_http": (1, 2)},
             [
                 v1.Result(state=v1.State.CRIT, summary="2.0/s (warn/crit at 1.0/s/2.0/s)"),
                 v1.Metric("requests_per_second", 2.0, levels=(1.0, 2.0)),
@@ -174,7 +175,7 @@ def test_check_httpv2(
 def test_check_http(
     walk: str,
     fix_register: FixRegister,
-    params: plugin.MiscParams,
+    params: MiscParams,
     expected_results: list[object],
     as_path: typing.Callable[[str], Path],
 ) -> None:
@@ -200,9 +201,9 @@ def test_check_results_newly_discovered(
     assert section is not None
 
     # Act
-    results_http = list(plugin._check_http(2.0, {}, plugin.MISC_DEFAULT_PARAMS, section))
-    results_https = list(plugin._check_https(2.0, {}, plugin.MISC_DEFAULT_PARAMS, section))
-    results_httpv2 = list(plugin._check_httpv2(2.0, {}, plugin.MISC_DEFAULT_PARAMS, section))
+    results_http = list(plugin._check_http(2.0, {}, MISC_DEFAULT_PARAMS, section))
+    results_https = list(plugin._check_https(2.0, {}, MISC_DEFAULT_PARAMS, section))
+    results_httpv2 = list(plugin._check_httpv2(2.0, {}, MISC_DEFAULT_PARAMS, section))
 
     # Assert
     assert results_http == [v1.Result(state=v1.State.OK, summary="Can't compute rate.")]

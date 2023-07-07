@@ -15,6 +15,7 @@ import cmk.utils.store as store
 import cmk.gui.hooks as hooks
 import cmk.gui.plugins.userdb.utils as userdb_utils
 import cmk.gui.userdb as userdb
+import cmk.gui.userdb.store as userdb_store
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -120,7 +121,7 @@ def rename_user_role(role_id: RoleID, new_role_id: RoleID | None) -> None:
             user["roles"].remove(role_id)
             if new_role_id:
                 user["roles"].append(new_role_id)
-    userdb.save_users(users, datetime.now())
+    userdb_store.save_users(users, datetime.now())
 
 
 def validate_new_alias(old_alias: str, new_alias: str) -> None:

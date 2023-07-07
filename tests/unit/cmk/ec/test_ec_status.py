@@ -14,7 +14,8 @@ from tests.unit.cmk.ec.helpers import FakeStatusSocket
 from cmk.utils.hostaddress import HostName
 
 from cmk.ec.config import ConfigFromWATO
-from cmk.ec.main import Event, EventStatus, StatusServer
+from cmk.ec.event import Event
+from cmk.ec.main import EventStatus, StatusServer
 
 
 def test_handle_client(status_server: StatusServer) -> None:

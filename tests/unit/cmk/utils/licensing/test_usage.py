@@ -15,7 +15,9 @@ import livestatus
 
 from cmk.utils.licensing.export import (
     LicenseUsageExtensions,
+    LicenseUsageReportVersion,
     LicenseUsageSample,
+    RawLicenseUsageReport,
     UnknownSampleParserError,
 )
 from cmk.utils.licensing.usage import (
@@ -24,11 +26,9 @@ from cmk.utils.licensing.usage import (
     CLOUD_SERVICE_PREFIXES,
     get_license_usage_report_file_path,
     HostsOrServicesCloudCounter,
-    LicenseUsageReportVersion,
     load_raw_license_usage_report,
     LocalLicenseUsageHistory,
     Now,
-    RawLicenseUsageReport,
     save_extensions,
     try_update_license_usage,
 )

@@ -43,36 +43,36 @@ def _get_section() -> netapp_api.SectionSingleInstance:
 
 
 def test_disovery_single(section: netapp_api.SectionSingleInstance) -> None:
-    assert sorted(naf.netapp_api.discover_single({"mode": "single"}, section)) == [
+    assert sorted(netapp_api.discover_single({"mode": "single"}, section)) == [
         Service(item="0/1"),
         Service(item="0/2"),
         Service(item="0/3"),
         Service(item="0/4"),
     ]
-    assert not list(naf.netapp_api.discover_summary({"mode": "single"}, section))
+    assert not list(netapp_api.discover_summary({"mode": "single"}, section))
 
 
 def test_disovery_summary(section: netapp_api.SectionSingleInstance) -> None:
-    assert not list(naf.netapp_api.discover_single({"mode": "summary"}, section))
-    assert list(naf.netapp_api.discover_summary({"mode": "summary"}, section)) == [
+    assert not list(netapp_api.discover_single({"mode": "summary"}, section))
+    assert list(netapp_api.discover_summary({"mode": "summary"}, section)) == [
         Service(item="Summary"),
     ]
 
 
 def test_check_ok(section: netapp_api.SectionSingleInstance) -> None:
-    assert list(naf.netapp_api.get_single_check("fan")("0/1", section)) == [
+    assert list(netapp_api.get_single_check("fan")("0/1", section)) == [
         Result(state=State.OK, summary="Operational state OK"),
     ]
 
 
 def test_check_failed(section: netapp_api.SectionSingleInstance) -> None:
-    assert list(naf.netapp_api.get_single_check("fan")("0/2", section)) == [
+    assert list(netapp_api.get_single_check("fan")("0/2", section)) == [
         Result(state=State.CRIT, summary="Error in fan 2"),
     ]
 
 
 def test_check_summary(section: netapp_api.SectionSingleInstance) -> None:
-    assert list(naf.netapp_api.get_summary_check("fan")("Summary", section)) == [
+    assert list(netapp_api.get_summary_check("fan")("Summary", section)) == [
         Result(state=State.OK, summary="OK: 3 of 4"),
         Result(state=State.CRIT, summary="Failed: 1 (0/2)"),
     ]

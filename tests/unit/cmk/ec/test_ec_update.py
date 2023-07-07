@@ -11,7 +11,8 @@ from tests.unit.cmk.ec.helpers import FakeStatusSocket
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.ec.main import Event, EventStatus, StatusServer
+from cmk.ec.event import Event
+from cmk.ec.main import EventStatus, StatusServer
 from cmk.ec.query import MKClientError
 
 

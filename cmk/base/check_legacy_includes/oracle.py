@@ -5,7 +5,7 @@
 
 # pylint: disable=no-else-continue
 
-from cmk.base.check_api import MKGeneralException
+from cmk.utils.exceptions import MKGeneralException
 
 
 # This function must be executed for each agent line which has been

@@ -57,13 +57,14 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.view_utils import CSSClass
 
-from cmk.bi.data_fetcher import (
+from cmk.bi.lib import (
     BIHostSpec,
     BIHostStatusInfoRow,
     BIServiceWithFullState,
     BIStatusInfo,
+    NodeComputeResult,
+    NodeResultBundle,
 )
-from cmk.bi.lib import NodeComputeResult, NodeResultBundle
 from cmk.bi.trees import BICompiledAggregation, BICompiledRule
 
 AVMode = str  # TODO: Improve this type

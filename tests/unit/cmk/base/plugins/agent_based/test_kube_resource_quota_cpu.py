@@ -6,16 +6,14 @@
 from pydantic_factories import ModelFactory
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.kube_resource_quota_cpu import (
-    check_resource_quota_resource,
-    Params,
-    RESOURCE_QUOTA_DEFAULT_PARAMS,
-)
 from cmk.base.plugins.agent_based.utils.kube import Cpu, PerformanceUsage
 from cmk.base.plugins.agent_based.utils.kube_resources import (
+    check_resource_quota_resource,
     cpu_render_func,
     HardResourceRequirement,
+    Params,
     performance_cpu,
+    RESOURCE_QUOTA_DEFAULT_PARAMS,
 )
 
 

@@ -7,6 +7,8 @@ from collections.abc import Sequence
 
 import pytest
 
+from cmk.utils.exceptions import MKGeneralException
+
 import cmk.gui.metrics as metrics
 import cmk.gui.plugins.metrics.graph_templates as gt
 from cmk.gui.plugins.metrics.utils import GraphTemplate
@@ -36,7 +38,7 @@ def test_rpn_consolidation(
 def test_rpn_consolidation_exception(
     expression: MetricExpression, enforced_consolidation_function: GraphConsoldiationFunction | None
 ) -> None:
-    with pytest.raises(gt.MKGeneralException):
+    with pytest.raises(MKGeneralException):
         list(gt.iter_rpn_expression(expression, enforced_consolidation_function))
 
 
@@ -199,5 +201,5 @@ def test_metric_unit_color_exception(
     metric: MetricExpression, perf_string: str, check_command: str | None
 ) -> None:
     translated_metrics = metrics.translate_perf_data(perf_string, check_command)
-    with pytest.raises(gt.MKGeneralException):
+    with pytest.raises(MKGeneralException):
         gt.metric_unit_color(metric, translated_metrics, ["test"])

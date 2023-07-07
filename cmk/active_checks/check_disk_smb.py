@@ -169,8 +169,8 @@ class _SMBShareDiskUsage:
         ip_address: str | None = None,
         configfile: str | None = None,
     ) -> ErrorResult | SMBShare:
-        return self._analyse_completed_result(
-            self._execute_disk_usage_command(
+        return _analyse_completed_result(
+            _execute_disk_usage_command(
                 share=share,
                 hostname=hostname,
                 user=user,
@@ -184,132 +184,131 @@ class _SMBShareDiskUsage:
             share,
         )
 
-    @staticmethod
-    def _execute_disk_usage_command(
-        *,
-        share: str,
-        hostname: str,
-        user: str,
-        password: str,
-        workgroup: str | None = None,
-        port: int | None = None,
-        ip_address: str | None = None,
-        configfile: str | None = None,
-    ) -> str:
-        smbclient = shutil.which("smbclient")
 
-        cmd = [
-            smbclient or "/usr/bin/smbclient",
-            f"//{hostname}/{share}",
-            "-U",
-            f"{user}%{password}",
-            "-c",
-            "du",
-        ]
+def _execute_disk_usage_command(
+    *,
+    share: str,
+    hostname: str,
+    user: str,
+    password: str,
+    workgroup: str | None = None,
+    port: int | None = None,
+    ip_address: str | None = None,
+    configfile: str | None = None,
+) -> str:
+    smbclient = shutil.which("smbclient")
 
-        if workgroup:
-            cmd += ["-W", workgroup]
-        if port:
-            cmd += ["-p", str(port)]
-        if configfile:
-            cmd += ["-s", configfile]
-        if ip_address:
-            cmd += ["-I", ip_address]
+    cmd = [
+        smbclient or "/usr/bin/smbclient",
+        f"//{hostname}/{share}",
+        "-U",
+        f"{user}%{password}",
+        "-c",
+        "du",
+    ]
 
-        try:
-            return subprocess.run(
-                cmd,
-                capture_output=True,
-                encoding="utf8",
-                check=True,
-            ).stdout
+    if workgroup:
+        cmd += ["-W", workgroup]
+    if port:
+        cmd += ["-p", str(port)]
+    if configfile:
+        cmd += ["-s", configfile]
+    if ip_address:
+        cmd += ["-I", ip_address]
 
-        except subprocess.CalledProcessError as e:
-            return e.stderr or e.stdout
+    try:
+        return subprocess.run(
+            cmd,
+            capture_output=True,
+            encoding="utf8",
+            check=True,
+        ).stdout
 
-    def _analyse_completed_result(
-        self, completed_result: str, hostname: str, share: str
-    ) -> ErrorResult | SMBShare:
-        result_lines = self._cleanup_result(completed_result)
+    except subprocess.CalledProcessError as e:
+        return e.stderr or e.stdout
 
-        for line in result_lines:
-            if disk_usage := re.search(
-                r"\s*(\d*) blocks of size (\d*)\. (\d*) blocks available", line
-            ):
-                # The line matches the regex
-                return self._extract_data_from_matching_line(
-                    block_count=int(disk_usage[1]),
-                    block_size=int(disk_usage[2]),
-                    available_blocks=int(disk_usage[3]),
-                    hostname=hostname,
-                    share=share,
-                )
 
-        # No line matches the regex
-        return self._extract_data_from_not_matching_lines(result_lines, hostname, share)
+def _analyse_completed_result(
+    completed_result: str, hostname: str, share: str
+) -> ErrorResult | SMBShare:
+    result_lines = _cleanup_result(completed_result)
 
-    @staticmethod
-    def _cleanup_result(completed_result: str) -> Sequence[str]:
-        # Remove \t and split on \n
-        result_lines = completed_result.replace("\t", "").splitlines()
+    for line in result_lines:
+        if disk_usage := re.search(r"\s*(\d*) blocks of size (\d*)\. (\d*) blocks available", line):
+            # The line matches the regex
+            return _extract_data_from_matching_line(
+                block_count=int(disk_usage[1]),
+                block_size=int(disk_usage[2]),
+                available_blocks=int(disk_usage[3]),
+                hostname=hostname,
+                share=share,
+            )
 
-        if len(result_lines) == 1:  # If there is an error, there will be only one sentence.
-            return result_lines
-        return [
-            line for line in result_lines[:-1] if line
-        ]  # We don't need the last line and empty lines
+    # No line matches the regex
+    return _extract_data_from_not_matching_lines(result_lines, hostname, share)
 
-    @staticmethod
-    def _extract_data_from_matching_line(
-        *,
-        block_count: int,
-        block_size: int,
-        available_blocks: int,
-        hostname: str,
-        share: str,
-    ) -> SMBShare:
-        """
-        >>> _SMBShareDiskUsage._extract_data_from_matching_line(block_count=100, block_size=1024, available_blocks=50, hostname="hostname", share="share")
-        SMBShare(mountpoint='\\\\\\\\hostname\\\\share', total_bytes=102400, available_bytes=51200)
-        """
 
-        return SMBShare(
-            mountpoint=f"\\\\{hostname}\\{share}",
-            total_bytes=block_size * block_count,
-            available_bytes=block_size * available_blocks,
-        )
+def _cleanup_result(completed_result: str) -> Sequence[str]:
+    # Remove \t and split on \n
+    result_lines = completed_result.replace("\t", "").splitlines()
 
-    @staticmethod
-    def _extract_data_from_not_matching_lines(
-        result_lines: Sequence[str], hostname: str, share: str
-    ) -> ErrorResult:
-        """
-        >>> _SMBShareDiskUsage._extract_data_from_not_matching_lines(["session setup failed: NT_STATUS_LOGON_FAILURE"], "hostname", "share")
-        ErrorResult(state=2, summary='Access Denied')
-        >>> _SMBShareDiskUsage._extract_data_from_not_matching_lines(["do_connect: Connection to 192.168.0.11 failed (Error NT_STATUS_HOST_UNREACHABLE)"], "hostname", "share")
-        ErrorResult(state=2, summary='Connection to 192.168.0.11 failed')
-        >>> _SMBShareDiskUsage._extract_data_from_not_matching_lines(["tree connect failed: NT_STATUS_BAD_NETWORK_NAME"], "hostname", "share")
-        ErrorResult(state=2, summary='Invalid share name \\\\\\\\hostname\\\\share')
-        >>> _SMBShareDiskUsage._extract_data_from_not_matching_lines(["some other error"], "hostname", "share")
-        ErrorResult(state=3, summary='Result from smbclient not suitable')
-        """
-        # Default case
-        state, summary = 3, "Result from smbclient not suitable"
+    if len(result_lines) == 1:  # If there is an error, there will be only one sentence.
+        return result_lines
+    return [
+        line for line in result_lines[:-1] if line
+    ]  # We don't need the last line and empty lines
 
-        for line in result_lines:
-            # access denied or logon failure
-            if re.search(r"(Access denied|NT_STATUS_LOGON_FAILURE|NT_STATUS_ACCESS_DENIED)", line):
-                return ErrorResult(2, "Access Denied")
 
-            # unknown host or connection failure
-            if (error := re.search(r"(Unknown host \w*|Connection.*failed)", line)) is not None:
-                return ErrorResult(2, error[0])
+def _extract_data_from_matching_line(
+    *,
+    block_count: int,
+    block_size: int,
+    available_blocks: int,
+    hostname: str,
+    share: str,
+) -> SMBShare:
+    """
+    >>> _extract_data_from_matching_line(block_count=100, block_size=1024, available_blocks=50, hostname="hostname", share="share")
+    SMBShare(mountpoint='\\\\\\\\hostname\\\\share', total_bytes=102400, available_bytes=51200)
+    """
 
-            # invalid share name
-            if re.search(r"(You specified an invalid share name|NT_STATUS_BAD_NETWORK_NAME)", line):
-                return ErrorResult(2, f"Invalid share name \\\\{hostname}\\{share}")
+    return SMBShare(
+        mountpoint=f"\\\\{hostname}\\{share}",
+        total_bytes=block_size * block_count,
+        available_bytes=block_size * available_blocks,
+    )
 
-        return ErrorResult(state, summary)
+
+def _extract_data_from_not_matching_lines(
+    result_lines: Sequence[str], hostname: str, share: str
+) -> ErrorResult:
+    """
+    >>> _extract_data_from_not_matching_lines(["session setup failed: NT_STATUS_LOGON_FAILURE"], "hostname", "share")
+    ErrorResult(state=2, summary='Access Denied')
+    >>> _extract_data_from_not_matching_lines(["do_connect: Connection to 192.168.0.11 failed (Error NT_STATUS_HOST_UNREACHABLE)"], "hostname", "share")
+    ErrorResult(state=2, summary='Connection to 192.168.0.11 failed')
+    >>> _extract_data_from_not_matching_lines(["tree connect failed: NT_STATUS_BAD_NETWORK_NAME"], "hostname", "share")
+    ErrorResult(state=2, summary='Invalid share name \\\\\\\\hostname\\\\share')
+    >>> _extract_data_from_not_matching_lines(["some other error"], "hostname", "share")
+    ErrorResult(state=3, summary='Result from smbclient not suitable')
+    """
+    # Default case
+    state, summary = 3, "Result from smbclient not suitable"
+
+    for line in result_lines:
+        # access denied or logon failure
+        if re.search(r"(Access denied|NT_STATUS_LOGON_FAILURE|NT_STATUS_ACCESS_DENIED)", line):
+            return ErrorResult(2, "Access Denied")
+
+        # unknown host or connection failure
+        if (error := re.search(r"(Unknown host \w*|Connection.*failed)", line)) is not None:
+            return ErrorResult(2, error[0])
+
+        # invalid share name
+        if re.search(r"(You specified an invalid share name|NT_STATUS_BAD_NETWORK_NAME)", line):
+            return ErrorResult(2, f"Invalid share name \\\\{hostname}\\{share}")
+
+    return ErrorResult(state, summary)
 
 
 def _check_smb_share(

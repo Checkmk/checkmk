@@ -6,7 +6,7 @@
 # pylint: disable=redefined-outer-name
 import pytest
 
-from cmk.utils.version import is_cloud_edition, is_raw_edition
+from tests.testlib.utils import is_cloud_repo, is_enterprise_repo
 
 import cmk.gui.watolib.host_attributes as attrs
 
@@ -284,7 +284,7 @@ expected_attributes = {
                 "topic": "Monitoring agents",
             },
         }
-        if is_cloud_edition()
+        if is_cloud_repo()
         else {}
     ),
     **(
@@ -302,7 +302,7 @@ expected_attributes = {
                 "topic": "Monitoring agents",
             },
         }
-        if not is_raw_edition()
+        if is_enterprise_repo()
         else {}
     ),
     "tag_snmp_ds": {
@@ -548,8 +548,7 @@ def test_host_attributes(for_what: str, new: bool) -> None:
         ],
         "monitoring_agents": [
             "tag_agent",
-            *(("cmk_agent_connection",) if is_cloud_edition() else ()),
-            *(("bake_agent_package",) if not is_raw_edition() else ()),
+            *(("cmk_agent_connection", "bake_agent_package") if is_enterprise_repo() else ()),
             "tag_snmp_ds",
             "snmp_community",
             "tag_piggyback",

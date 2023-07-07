@@ -6,7 +6,7 @@
 from collections.abc import Sequence
 from typing import Final
 
-from cmk.utils.version import is_cloud_edition
+from cmk.utils.version import edition, Edition
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
@@ -35,7 +35,7 @@ CCE_GCP_SERVICES: Final = [
 
 
 def get_gcp_services() -> Sequence[tuple[str, str]]:
-    if is_cloud_edition():
+    if edition() is Edition.CCE:
         return RAW_GCP_SERVICES + CCE_GCP_SERVICES
 
     return RAW_GCP_SERVICES

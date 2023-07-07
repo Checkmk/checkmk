@@ -13,7 +13,7 @@ from livestatus import MultiSiteConnection, SiteId
 from cmk.utils import version
 from cmk.utils.livestatus_helpers.queries import detailed_connection, Query
 from cmk.utils.livestatus_helpers.tables.hosts import Hosts
-from cmk.utils.version import is_managed_edition
+from cmk.utils.version import edition, Edition
 
 from cmk.gui.exceptions import MKHTTPException
 from cmk.gui.groups import GroupSpec, GroupSpecs, GroupType, load_group_information
@@ -24,7 +24,7 @@ from cmk.gui.plugins.openapi.utils import ProblemException
 from cmk.gui.watolib.groups import edit_group
 from cmk.gui.watolib.hosts_and_folders import CREFolder
 
-if is_managed_edition():
+if edition() is Edition.CME:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
     from cmk.gui.cme.helpers import default_customer_id  # pylint: disable=no-name-in-module
 
@@ -33,7 +33,7 @@ GroupName = Literal["host_group_config", "contact_group_config", "service_group_
 
 
 def complement_customer(details):
-    if not is_managed_edition():
+    if edition() is not Edition.CME:
         return details
 
     if "customer" in details:
@@ -77,7 +77,7 @@ def serialize_group(name: GroupName) -> Any:
         if "customer" in group:
             customer_id = group["customer"]
             extensions["customer"] = "global" if customer_id is None else customer_id
-        elif is_managed_edition():
+        elif edition() is Edition.CME:
             extensions["customer"] = default_customer_id()
 
         extensions["alias"] = group["alias"]

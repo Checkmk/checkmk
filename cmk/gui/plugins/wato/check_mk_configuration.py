@@ -11,7 +11,7 @@ from typing import Any, Literal
 import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
-from cmk.utils.version import is_cloud_edition, is_raw_edition
+from cmk.utils.version import edition, Edition
 
 from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
 
@@ -322,7 +322,7 @@ class ConfigVariableLogLevels(ConfigVariable):
             ("cmk.web.slow-views", _("Slow views"), _slow_view_logging_help()),
         ]
 
-        if not is_raw_edition():
+        if edition() is not Edition.CRE:
             loggers.extend(
                 [
                     (
@@ -4678,7 +4678,7 @@ def _valuespec_automatic_host_removal() -> CascadingDropdown:
                     filename="wato.py",
                 )
             )
-            if is_cloud_edition()
+            if edition() is Edition.CCE
             else ""
         ),
         sorted=False,

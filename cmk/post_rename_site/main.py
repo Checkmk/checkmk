@@ -12,7 +12,7 @@ import cmk.utils.plugin_registry
 import cmk.utils.site
 from cmk.utils.log import VERBOSE
 from cmk.utils.plugin_loader import load_plugins_with_exceptions, PluginFailures
-from cmk.utils.version import is_cloud_edition, is_raw_edition
+from cmk.utils.version import edition, Edition
 
 # This special script needs persistence and conversion code from different places of Checkmk. We may
 # centralize the conversion and move the persistence to a specific layer in the future, but for the
@@ -62,9 +62,9 @@ def load_plugins() -> None:
 
 def _load_plugins() -> PluginFailures:
     yield from load_plugins_with_exceptions("cmk.post_rename_site.plugins.actions")
-    if not is_raw_edition():
+    if edition() is not Edition.CRE:
         yield from load_plugins_with_exceptions("cmk.post_rename_site.cee.plugins.actions")
-    if is_cloud_edition():
+    if edition() is Edition.CCE:
         yield from load_plugins_with_exceptions("cmk.post_rename_site.cce.plugins.actions")
 
 

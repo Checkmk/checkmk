@@ -5,7 +5,7 @@
 
 from typing import Final
 
-from cmk.utils.version import is_cloud_edition
+from cmk.utils.version import edition, Edition
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import RulespecGroupVMCloudContainer
@@ -54,7 +54,7 @@ CCE_AZURE_SERVICES: Final = [
 
 
 def get_azure_services() -> list[tuple[str, str]]:
-    if is_cloud_edition():
+    if edition() is Edition.CCE:
         return RAW_AZURE_SERVICES + CCE_AZURE_SERVICES
 
     return RAW_AZURE_SERVICES

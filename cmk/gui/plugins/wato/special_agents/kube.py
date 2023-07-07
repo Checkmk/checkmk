@@ -6,7 +6,7 @@
 
 import pydantic
 
-from cmk.utils.version import Edition, is_cloud_edition, mark_edition_only
+from cmk.utils.version import Edition, edition, mark_edition_only
 
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
@@ -120,7 +120,7 @@ def _is_cre_spec(k: str, vs: object) -> bool:
 
 
 def _migrate_cce2cre(p: dict[str, object]) -> dict[str, object]:
-    return p if is_cloud_edition() else {k: v for k, v in p.items() if _is_cre_spec(k, v)}
+    return p if edition() is Edition.CCE else {k: v for k, v in p.items() if _is_cre_spec(k, v)}
 
 
 def _migrate_old_style_url(p: dict[str, object]) -> dict[str, object]:
@@ -255,7 +255,7 @@ def _valuespec_special_agents_kube():
                     ),
                 ),
                 _api_endpoint(),
-                _usage_endpoint(is_cloud_edition()),
+                _usage_endpoint(edition() is Edition.CCE),
                 (
                     "monitored-objects",
                     ListChoice(

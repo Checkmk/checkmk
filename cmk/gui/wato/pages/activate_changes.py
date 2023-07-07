@@ -23,7 +23,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.licensing.registry import get_licensing_user_effect
 from cmk.utils.licensing.usage import get_license_usage_report_validity, LicenseUsageReportValidity
 from cmk.utils.setup_search_index import request_index_rebuild
-from cmk.utils.version import is_cloud_edition
+from cmk.utils.version import edition, Edition
 
 import cmk.gui.forms as forms
 import cmk.gui.watolib.changes as _changes
@@ -214,7 +214,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         return True
 
     def _license_allows_activation(self):
-        if is_cloud_edition():
+        if edition() is Edition.CCE:
             # TODO: move to CCE handler to avoid is_cloud_edition check
             license_usage_report_valid = (
                 self._license_usage_report_validity
@@ -462,7 +462,7 @@ class ModeActivateChanges(WatoMode, activate_changes.ActivateChanges):
         ).block:
             errors.append(block_effect.message_html)
 
-        if is_cloud_edition():
+        if edition() is Edition.CCE:
             # TODO move to CCE handler to avoid is_cloud_edition check
             if (
                 self._license_usage_report_validity

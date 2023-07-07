@@ -11,7 +11,7 @@ import pytest
 from pytest_mock import MockerFixture
 
 from cmk.utils.rulesets.ruleset_matcher import RulesetName
-from cmk.utils.version import is_raw_edition
+from cmk.utils.version import edition, Edition
 
 from cmk.checkengine.checking import CheckPluginName
 
@@ -268,7 +268,11 @@ def test_remove_removed_check_plugins_from_ignored_checks() -> None:
                 "checkgroup_parameters:ntp_time": {
                     "ntp_levels": (10, 200.0, 500.0),
                 },
-                **({} if is_raw_edition() else {"extra_service_conf:_sla_config": "i am skipped"}),
+                **(
+                    {}
+                    if edition() is Edition.CRE
+                    else {"extra_service_conf:_sla_config": "i am skipped"}
+                ),
             },
             0,
             id="valid configuration",

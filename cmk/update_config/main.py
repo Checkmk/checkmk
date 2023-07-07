@@ -20,7 +20,7 @@ from cmk.utils import debug, log, paths, tty
 from cmk.utils.log import VERBOSE
 from cmk.utils.plugin_loader import load_plugins_with_exceptions
 from cmk.utils.redis import disable_redis
-from cmk.utils.version import is_raw_edition
+from cmk.utils.version import edition, Edition
 
 # This special script needs persistence and conversion code from different
 # places of Checkmk. We may centralize the conversion and move the persistance
@@ -156,7 +156,7 @@ def _load_plugins(logger: logging.Logger) -> None:
     for plugin, exc in chain(
         load_plugins_with_exceptions("cmk.update_config.plugins.actions"),
         []
-        if is_raw_edition()
+        if edition() is Edition.CRE
         else load_plugins_with_exceptions("cmk.update_config.cee.plugins.actions"),
     ):
         logger.error("Error in action plugin %s: %s\n", plugin, exc)

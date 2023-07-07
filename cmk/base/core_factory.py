@@ -3,13 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 from cmk.utils.licensing.handler import LicensingHandler
-from cmk.utils.version import is_raw_edition
+from cmk.utils.version import edition, Edition
 
 from cmk.base.core_config import MonitoringCore
 
 
 def get_licensing_handler_type() -> type[LicensingHandler]:
-    if is_raw_edition():
+    if edition() is Edition.CRE:
         from cmk.utils.licensing.registry import get_available_licensing_handler_type
     else:
         from cmk.utils.cee.licensing.registry import (  # type: ignore  # pylint: disable=no-name-in-module,import-error

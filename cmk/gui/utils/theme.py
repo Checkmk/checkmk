@@ -10,7 +10,7 @@ from pathlib import Path
 from flask import current_app
 
 import cmk.utils.paths
-from cmk.utils.version import is_managed_edition
+from cmk.utils.version import edition, Edition
 
 from cmk.gui.ctx_stack import request_local_attr
 from cmk.gui.exceptions import MKInternalError
@@ -106,7 +106,8 @@ class Theme:
         See CMESnapshotDataCollector._update_customer_sidebar_top.
         """
         return (
-            is_managed_edition() and self.base_dir().joinpath("images", f"{logo_name}.png").exists()
+            edition() is Edition.CME
+            and self.base_dir().joinpath("images", f"{logo_name}.png").exists()
         )
 
 

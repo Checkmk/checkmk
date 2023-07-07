@@ -6,7 +6,7 @@
 from collections.abc import Container, Iterable
 from typing import TypeVar
 
-from cmk.utils.version import is_cloud_edition
+from cmk.utils.version import edition, Edition
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.special_agents.common import (
@@ -436,7 +436,7 @@ class AWSSpecialAgentValuespecBuilder:
 
 
 def _valuespec_special_agents_aws() -> Migrate:
-    valuespec_builder = AWSSpecialAgentValuespecBuilder(is_cloud_edition())
+    valuespec_builder = AWSSpecialAgentValuespecBuilder(edition() is Edition.CCE)
     global_services = valuespec_builder.get_global_services()
     regional_services = valuespec_builder.get_regional_services()
     regional_services_default_keys = [service[0] for service in regional_services]

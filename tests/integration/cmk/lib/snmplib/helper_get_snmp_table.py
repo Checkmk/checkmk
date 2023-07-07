@@ -11,14 +11,14 @@ from typing import Any
 
 import cmk.utils.paths
 from cmk.utils.sectionname import SectionName
-from cmk.utils.version import is_raw_edition
+from cmk.utils.version import edition, Edition
 
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.type_defs import BackendSNMPTree, SNMPBackend, SNMPBackendEnum, SNMPHostConfig
 
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 
-if not is_raw_edition():
+if edition() is not Edition.CRE:
     from cmk.fetchers.cee.snmp_backend.inline import (  # type: ignore[import] # pylint: disable=import-error,no-name-in-module
         InlineSNMPBackend,
     )

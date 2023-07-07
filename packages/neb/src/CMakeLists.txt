@@ -20,6 +20,19 @@ set(neb_headers
 set(neb_sources MacroExpander.cc module.cc NebCore.cc NebHost.cc NebService.cc
                 TimeperiodsCache.cc)
 
+# variables for build
+execute_process(COMMAND uname -n OUTPUT_VARIABLE CURRENT_BUILD_HOST)
+string(REPLACE "\n" "" CURRENT_BUILD_HOST ${CURRENT_BUILD_HOST})
+execute_process(COMMAND ${CMAKE_CXX_COMPILER} --version
+                OUTPUT_VARIABLE BUILD_CXX)
+string(REPLACE "\n" ";" BUILD_CXX ${BUILD_CXX})
+list(GET BUILD_CXX 0 BCXX)
+
+# TODO(sk): Find better method because this variable is updated only after ./run
+# --clean`
+execute_process(COMMAND date -R OUTPUT_VARIABLE CURRENT_BUILD_DATE)
+string(REPLACE "\n" "" CURRENT_BUILD_DATE ${CURRENT_BUILD_DATE})
+
 include(FetchContent)
 # Forbids option redefine in subproject: in the case to prevent re2::testing
 # build
@@ -61,8 +74,11 @@ target_include_directories(
   neb PUBLIC ../include ../third_party/include ${asio_ext_include}
              ${root_repo_dir}/packages/livestatus/include)
 
-target_compile_definitions(neb PRIVATE VERSION="1.0" BUILD_HOSTNAME="Host"
-                                       BUILD_CXX="cxx" BUILD_DATE="22-33-44")
+target_compile_definitions(
+  neb
+  PRIVATE VERSION="${CMAKE_PROJECT_VERSION}"
+          BUILD_HOSTNAME="${CURRENT_BUILD_HOST}" BUILD_CXX="${BCXX}"
+          BUILD_DATE="${CURRENT_BUILD_DATE}")
 
 target_link_libraries(
   neb

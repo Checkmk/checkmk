@@ -147,7 +147,7 @@ PERL_MODULES_LIST_2 = {
     },
     "Text-ParseWords-3.29.tar.gz": {
         "sha256": "8c45f72afa412d532182963782609517bc42ceb9ccee551aab23459d79959b9a",
-        "url": "http://mirrors.ircam.fr/pub/devil-linux/devel/sources/1.6/perl-ext/Text-ParseWords-3.29.tar.gz",
+        "url": "https://mirrors.ircam.fr/pub/devil-linux/devel/sources/1.6/perl-ext/Text-ParseWords-3.29.tar.gz",
     },
     "Time-HiRes-1.9726.tar.gz": {
         "sha256": "ff662ad9b1f6c75a149db7fa1bfc7a161ac8b271e5f3980345e08b734769109e",

@@ -35,7 +35,6 @@ MONITORING_PLUGINS = (
     MonitoringPlugin("check_dhcp"),
     MonitoringPlugin("check_dig"),
     MonitoringPlugin("check_disk"),
-    MonitoringPlugin("check_disk_smb"),
     MonitoringPlugin("check_dns"),
     MonitoringPlugin("check_dummy"),
     MonitoringPlugin("check_file_age"),
@@ -143,6 +142,11 @@ MONITORING_PLUGINS = (
         "check_traceroute",
         cmd_line_option="-h",
         expected="check_traceroute",
+    ),
+    MonitoringPlugin(
+        "check_disk_smb",
+        cmd_line_option="-h",
+        expected="usage: check_disk_smb",
     ),
     MonitoringPlugin(
         "check_uniserv",

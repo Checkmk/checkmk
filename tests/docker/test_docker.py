@@ -17,6 +17,7 @@ import requests
 import requests.exceptions
 from docker.models.containers import Container  # type: ignore[import]
 from docker.models.images import Image  # type: ignore[import]
+from pytest import LogCaptureFixture
 
 import tests.testlib as testlib
 from tests.testlib.utils import cmk_path
@@ -399,11 +400,15 @@ def test_start_with_custom_command(
 
 # Test that the local deb package is used by making the build fail because of an empty file
 def test_build_using_local_deb(
-    request: pytest.FixtureRequest, client: docker.DockerClient, version: CMKVersion
+    request: pytest.FixtureRequest,
+    client: docker.DockerClient,
+    version: CMKVersion,
+    caplog: LogCaptureFixture,
 ) -> None:
     package_path = Path(build_path, _package_name(version))
     package_path.write_bytes(b"")
     with pytest.raises(docker.errors.BuildError):
+        caplog.set_level(logging.CRITICAL)  # avoid error messages in the log
         _build(request, client, version, prepare_package=False)
     os.unlink(str(package_path))
     _prepare_package(version)
@@ -411,7 +416,10 @@ def test_build_using_local_deb(
 
 # Test that the local GPG file is used by making the build fail because of an empty file
 def test_build_using_local_gpg_pubkey(
-    request: pytest.FixtureRequest, client: docker.DockerClient, version: CMKVersion
+    request: pytest.FixtureRequest,
+    client: docker.DockerClient,
+    version: CMKVersion,
+    caplog: LogCaptureFixture,
 ) -> None:
     pkg_path = os.path.join(build_path, "Check_MK-pubkey.gpg")
     pkg_path_sav = os.path.join(build_path, "Check_MK-pubkey.gpg.sav")
@@ -422,6 +430,7 @@ def test_build_using_local_gpg_pubkey(
             f.write("")
 
         with pytest.raises(docker.errors.BuildError):
+            caplog.set_level(logging.CRITICAL)  # avoid error messages in the log
             _build(request, client, version)
     finally:
         os.unlink(pkg_path)

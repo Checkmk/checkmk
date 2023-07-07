@@ -903,10 +903,41 @@ def _inv_filter_info():
 
 @dataclass
 class _RelatedRawHints:
-    for_node: InventoryHintSpec = field(default_factory=dict)
-    for_table: InventoryHintSpec = field(default_factory=dict)
+    for_node: InventoryHintSpec = field(
+        default_factory=lambda: InventoryHintSpec()  # pylint: disable=unnecessary-lambda
+    )
+    for_table: InventoryHintSpec = field(
+        default_factory=lambda: InventoryHintSpec()  # pylint: disable=unnecessary-lambda
+    )
     by_columns: dict[str, InventoryHintSpec] = field(default_factory=dict)
     by_attributes: dict[str, InventoryHintSpec] = field(default_factory=dict)
+
+
+# TODO Workaround for InventoryHintSpec (TypedDict)
+# https://github.com/python/mypy/issues/7178
+_ALLOWED_KEYS: Sequence[
+    Literal[
+        "title",
+        "short",
+        "icon",
+        "paint",
+        "view",
+        "keyorder",
+        "sort",
+        "filter",
+        "is_show_more",
+    ]
+] = [
+    "title",
+    "short",
+    "icon",
+    "paint",
+    "view",
+    "keyorder",
+    "sort",
+    "filter",
+    "is_show_more",
+]
 
 
 class DisplayHints:
@@ -961,11 +992,17 @@ class DisplayHints:
             if not path:
                 continue
 
+            node_or_table_hints = InventoryHintSpec()
+            for key in _ALLOWED_KEYS:
+                if (value := related_raw_hints.for_table.get(key)) is not None:
+                    node_or_table_hints[key] = value
+                elif (value := related_raw_hints.for_node.get(key)) is not None:
+                    node_or_table_hints[key] = value
+
             table_keys = self._complete_key_order(
                 related_raw_hints.for_table.get("keyorder", []),
                 set(related_raw_hints.by_columns),
             )
-
             attributes_keys = self._complete_key_order(
                 related_raw_hints.for_node.get("keyorder", []),
                 set(related_raw_hints.by_attributes),
@@ -980,15 +1017,8 @@ class DisplayHints:
                     # - real nodes, eg. ".hardware.chassis.",
                     # - nodes with attributes, eg. ".hardware.cpu." or
                     # - nodes with a table, eg. ".software.packages:"
-                    node_hint=NodeDisplayHint.from_raw(
-                        path,
-                        {**related_raw_hints.for_node, **related_raw_hints.for_table},
-                    ),
-                    table_hint=TableDisplayHint.from_raw(
-                        path,
-                        {**related_raw_hints.for_node, **related_raw_hints.for_table},
-                        table_keys,
-                    ),
+                    node_hint=NodeDisplayHint.from_raw(path, node_or_table_hints),
+                    table_hint=TableDisplayHint.from_raw(path, node_or_table_hints, table_keys),
                     column_hints=OrderedDict(
                         {
                             key: ColumnDisplayHint.from_raw(

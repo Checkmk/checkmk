@@ -3,8 +3,21 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from typing import Any
+from collections.abc import Sequence
+from typing import Any, TypedDict
 
-InventoryHintSpec = dict[str, Any]
+
+class InventoryHintSpec(TypedDict, total=False):
+    title: Any
+    short: Any
+    icon: str
+    paint: str
+    view: str
+    keyorder: Sequence[str]
+    sort: Any
+    filter: Any
+    is_show_more: bool
+
+
 InventoryHintRegistry = dict[str, InventoryHintSpec]
 inventory_displayhints: InventoryHintRegistry = {}

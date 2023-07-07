@@ -1,0 +1,18 @@
+Title: ntop_alerts: introduce pagination to ntop alerts dashboard backend
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1689078608
+Edition: cee
+Knowledge: doc
+Level: 3
+Version: 2.3.0b1
+
+Previously the alerts dashboard would fetch 5 hours of alert data
+by default or the time range selected by the user via the time series
+graphs.  This caused performance issues since the number of alerts
+could vary greatly, often resulting in timeouts. This werk addresses
+this problem by introducing pagination on the backend.  We now only
+fetch 20 alerts in any given api call. The user can then request more
+using the next button.
+

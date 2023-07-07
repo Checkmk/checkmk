@@ -1,0 +1,14 @@
+Title: ntop_alerts: rename alert tabs in ntop alerts dashboard
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1689078220
+Edition: cee
+Knowledge: doc
+Level: 3
+Version: 2.3.0b1
+
+
+Previously, the alert tabs were named Engaged, Host, Flow.  This didn't
+align correctly with ntopng's own dashboard. They have now been renamed
+to Engaged Host, Past Host and Past Flow.

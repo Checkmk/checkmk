@@ -8,7 +8,9 @@ from typing import Generic
 
 from cmk.snmplib.type_defs import TRawData
 
-from .host_sections import HostSections, TRawDataSection
+from cmk.fetchers.cache import TRawDataSection
+
+from .host_sections import HostSections
 from .type_defs import SectionNameCollection
 
 __all__ = ["Parser"]

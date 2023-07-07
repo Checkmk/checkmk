@@ -33,7 +33,12 @@ from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_external_link, PageMenuEntry, PageMenuTopic
 from cmk.gui.painter.v0.base import Cell, columns_of_cells
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
+from cmk.gui.plugins.visuals.utils import (
+    Filter,
+    filters_allowed_for_infos,
+    get_livestatus_filter_headers,
+    get_only_sites_from_context,
+)
 from cmk.gui.type_defs import (
     ColumnName,
     PainterParameters,
@@ -72,7 +77,7 @@ def page_show_view() -> None:
         view = View(view_name, view_spec, context)
         view.row_limit = get_limit()
 
-        view.only_sites = visuals.get_only_sites_from_context(context)
+        view.only_sites = get_only_sites_from_context(context)
 
         view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
         view.want_checkboxes = get_want_checkboxes()
@@ -372,7 +377,7 @@ def _show_view(view_renderer: ABCViewRenderer, unfiltered_amount_of_rows: int, r
 
 def _get_all_active_filters(view: View) -> list[Filter]:
     # Always allow the users to specify all allowed filters using the URL
-    use_filters = list(visuals.filters_allowed_for_infos(view.datasource.infos).values())
+    use_filters = list(filters_allowed_for_infos(view.datasource.infos).values())
 
     # See process_view() for more information about this hack
     if _is_ec_unrelated_host_view(view.spec):

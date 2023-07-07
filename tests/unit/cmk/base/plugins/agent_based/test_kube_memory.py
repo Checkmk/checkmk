@@ -13,14 +13,16 @@ from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import AgentSectionPlugin
 from cmk.base.plugins.agent_based import kube_memory
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
-from cmk.base.plugins.agent_based.kube_memory import (
+from cmk.base.plugins.agent_based.kube_memory import check_kube_memory
+from cmk.base.plugins.agent_based.utils.kube import Memory, PerformanceUsage
+from cmk.base.plugins.agent_based.utils.kube_resources import (
     AllocatableResource,
-    check_kube_memory,
     DEFAULT_PARAMS,
     Params,
+    parse_performance_usage,
+    parse_resources,
     Resources,
 )
-from cmk.base.plugins.agent_based.utils.kube import Memory, PerformanceUsage
 
 from cmk.gui.plugins.wato.check_parameters.kube_resources import _parameter_valuespec_memory
 
@@ -166,7 +168,7 @@ def test_register_agent_memory_section_calls(
 ) -> None:
     assert str(agent_performance_section.name) == "kube_performance_memory_v1"
     assert str(agent_performance_section.parsed_section_name) == "kube_performance_memory"
-    assert agent_performance_section.parse_function == kube_memory.parse_performance_usage
+    assert agent_performance_section.parse_function == parse_performance_usage
 
 
 def test_register_agent_memory_resources_section_calls(
@@ -174,7 +176,7 @@ def test_register_agent_memory_resources_section_calls(
 ) -> None:
     assert str(agent_resources_section.name) == "kube_memory_resources_v1"
     assert str(agent_resources_section.parsed_section_name) == "kube_memory_resources"
-    assert agent_resources_section.parse_function == kube_memory.parse_resources
+    assert agent_resources_section.parse_function == parse_resources
 
 
 def test_register_check_plugin_calls(check_plugin) -> None:  # type: ignore[no-untyped-def]

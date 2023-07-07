@@ -5,9 +5,8 @@
 
 from typing import Literal, TypedDict
 
-from cmk.gui.type_defs import FilterName, GraphRenderOptions, SingleInfos, VisualContext
+from cmk.gui.type_defs import FilterName, GraphRenderOptions, SingleInfos, Visual, VisualContext
 from cmk.gui.valuespec import TimerangeValue
-from cmk.gui.visuals import Visual
 
 DashboardName = str
 DashletId = int

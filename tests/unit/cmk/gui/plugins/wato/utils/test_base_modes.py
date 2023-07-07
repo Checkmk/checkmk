@@ -10,13 +10,9 @@ import pytest
 from cmk.gui.breadcrumb import BreadcrumbItem
 from cmk.gui.plugins.wato.utils import base_modes
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
-from cmk.gui.plugins.wato.utils.main_menu import (
-    ABCMainModule,
-    MainModuleTopic,
-    MainModuleTopicHosts,
-)
+from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopicHosts
 from cmk.gui.type_defs import Icon, PermissionName
-from cmk.gui.watolib.main_menu import MainModuleRegistry
+from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry, MainModuleTopic
 
 module_registry = MainModuleRegistry()
 

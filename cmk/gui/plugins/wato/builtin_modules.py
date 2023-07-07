@@ -26,9 +26,9 @@ from cmk.gui.plugins.wato.utils import (
     MainModuleTopicServices,
     MainModuleTopicUsers,
 )
-from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopic
 from cmk.gui.type_defs import Icon
 from cmk.gui.utils.urls import makeuri_contextless, makeuri_contextless_rulespec_group
+from cmk.gui.watolib.main_menu import MainModuleTopic
 
 
 @main_module_registry.register

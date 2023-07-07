@@ -17,6 +17,7 @@ from livestatus import SiteId
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
+from cmk.utils.metrics import MetricName
 from cmk.utils.prediction import livestatus_lql, TimeSeries, TimeSeriesValues
 from cmk.utils.servicename import ServiceName
 
@@ -27,7 +28,6 @@ from cmk.gui.plugins.metrics.utils import (
     CheckMetricEntry,
     CombinedGraphMetricSpec,
     find_matching_translation,
-    GraphConsoldiationFunction,
     GraphDataRange,
     GraphRecipe,
     metric_info,
@@ -36,7 +36,13 @@ from cmk.gui.plugins.metrics.utils import (
     RRDDataKey,
     unit_info,
 )
-from cmk.gui.type_defs import ColumnName, CombinedGraphSpec, GraphMetric, MetricName, RPNExpression
+from cmk.gui.type_defs import (
+    ColumnName,
+    CombinedGraphSpec,
+    GraphConsoldiationFunction,
+    GraphMetric,
+    RPNExpression,
+)
 
 
 def fetch_rrd_data_for_graph(

@@ -14,6 +14,7 @@ from cmk.utils.crypto.password import Password
 from cmk.utils.user import UserId
 
 import cmk.gui.key_mgmt as key_mgmt
+from cmk.gui.type_defs import Key
 
 
 @pytest.mark.usefixtures("request_context")
@@ -23,7 +24,7 @@ def test_key_mgmt_create_key(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) ->
     key = key_mgmt.generate_key(
         "älias", Password("passphra$e"), UserId("dingdöng"), SiteId("test-site")
     )
-    assert isinstance(key, key_mgmt.Key)
+    assert isinstance(key, Key)
     assert key.alias == "älias"
     assert key.date == 123
     assert key.owner == "dingdöng"

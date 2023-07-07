@@ -16,9 +16,9 @@ from cmk.utils.site import omd_site
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
-from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopic
 from cmk.gui.type_defs import Icon, PermissionName
 from cmk.gui.utils.urls import DocReference
+from cmk.gui.watolib.main_menu import MainModuleTopic
 
 try:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module

@@ -25,7 +25,7 @@ from cmk.gui.page_menu_utils import collect_context_links
 from cmk.gui.pagetypes import PagetypeTopics
 from cmk.gui.painter_options import PainterOptions
 from cmk.gui.plugins.userdb.utils import active_connections_by_type
-from cmk.gui.plugins.visuals.utils import Filter
+from cmk.gui.plugins.visuals.utils import Filter, get_only_sites_from_context
 from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 from cmk.gui.utils.html import HTML
@@ -244,7 +244,7 @@ def page_index() -> None:
 
             view = View(view_name, view_spec, context)
             view.row_limit = get_limit()
-            view.only_sites = visuals.get_only_sites_from_context(context)
+            view.only_sites = get_only_sites_from_context(context)
             view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
             view.want_checkboxes = get_want_checkboxes()
 
@@ -294,7 +294,7 @@ def page_view() -> None:
 
     view = View(view_name, view_spec, context)
     view.row_limit = get_limit()
-    view.only_sites = visuals.get_only_sites_from_context(context)
+    view.only_sites = get_only_sites_from_context(context)
     view.user_sorters = get_user_sorters(view.spec["sorters"], view.row_cells)
     view.want_checkboxes = get_want_checkboxes()
 

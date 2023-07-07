@@ -9,6 +9,8 @@ from unittest.mock import Mock
 
 import pytest
 
+from cmk.utils.metrics import MetricName
+
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
 import cmk.base.config as config
@@ -80,7 +82,7 @@ def test_boundaries(
 )
 def test_check_levels(  # type: ignore[no-untyped-def]
     value: float,
-    dsname: check_api.MetricName | None,
+    dsname: MetricName | None,
     params: None | tuple[float, ...],
     kwargs,
     result: check_api.ServiceCheckResult,

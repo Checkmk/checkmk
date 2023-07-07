@@ -12,12 +12,12 @@ from livestatus import SiteId
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
+from cmk.utils.metrics import MetricName
 from cmk.utils.prediction import TimeSeries, TimeSeriesValues
 
 import cmk.gui.plugins.metrics.rrd_fetch as rf
 from cmk.gui.config import active_config
 from cmk.gui.plugins.metrics.utils import GraphDataRange, TemplateGraphRecipe
-from cmk.gui.type_defs import MetricName
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 

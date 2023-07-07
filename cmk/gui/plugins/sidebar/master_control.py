@@ -46,7 +46,7 @@ class MasterControlSnapin(SidebarSnapin):
         items = self._core_toggles()
         sites.update_site_states_from_dead_sites()
 
-        site_status_info: dict[sites.SiteId, list] = {}
+        site_status_info: dict[SiteId, list] = {}
         try:
             sites.live().set_prepend_site(True)
             for row in sites.live().query(
@@ -93,8 +93,8 @@ class MasterControlSnapin(SidebarSnapin):
 
     def _show_master_control_site(
         self,
-        site_id: sites.SiteId,
-        site_status_info: dict[sites.SiteId, list],
+        site_id: SiteId,
+        site_status_info: dict[SiteId, list],
         items: list[tuple[str, str]],
     ) -> None:
         site_state = sites.states().get(site_id)

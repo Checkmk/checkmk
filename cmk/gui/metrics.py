@@ -43,10 +43,15 @@ from cmk.gui.plugins.metrics.utils import (
     parse_perf_data,
     perfometer_info,
     translate_metrics,
-    TranslatedMetrics,
     unit_info,
 )
-from cmk.gui.type_defs import CombinedGraphSpec, MetricExpression, PerfometerSpec, UnitInfo
+from cmk.gui.type_defs import (
+    CombinedGraphSpec,
+    MetricExpression,
+    PerfometerSpec,
+    TranslatedMetrics,
+    UnitInfo,
+)
 from cmk.gui.view_utils import get_themed_perfometer_bg_color
 
 PerfometerExpression = str | int | float

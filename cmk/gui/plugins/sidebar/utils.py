@@ -10,6 +10,8 @@ import traceback
 from collections.abc import Sequence
 from typing import Any
 
+from livestatus import SiteId
+
 import cmk.utils.plugin_registry
 from cmk.utils.site import url_prefix
 
@@ -22,7 +24,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.permissions import declare_permission, permission_section_registry, PermissionSection
-from cmk.gui.sites import filter_available_site_choices, SiteId
+from cmk.gui.sites import filter_available_site_choices
 from cmk.gui.type_defs import (
     Choices,
     Icon,

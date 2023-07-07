@@ -27,9 +27,16 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.painter_options import paint_age, PainterOption, PainterOptionRegistry, PainterOptions
-from cmk.gui.plugins.metrics.utils import metric_info, render_color_icon, TranslatedMetrics
+from cmk.gui.plugins.metrics.utils import metric_info, render_color_icon
 from cmk.gui.site_config import get_site_config
-from cmk.gui.type_defs import ColumnName, PainterParameters, Row, SorterName, VisualLinkSpec
+from cmk.gui.type_defs import (
+    ColumnName,
+    PainterParameters,
+    Row,
+    SorterName,
+    TranslatedMetrics,
+    VisualLinkSpec,
+)
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.output_funnel import output_funnel

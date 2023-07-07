@@ -46,11 +46,11 @@ from cmk.utils.site import omd_site
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui.config import active_config
-from cmk.gui.plugins.wato.utils.main_menu import MainModuleTopic
 from cmk.gui.type_defs import Icon, PermissionName
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
+from cmk.gui.watolib.main_menu import MainModuleTopic
 from cmk.gui.watolib.mkeventd import (
     export_mkp_rule_pack,
     get_rule_stats_from_ec,

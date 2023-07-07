@@ -15,6 +15,7 @@ import cmk.gui.plugins.visuals.utils as utils
 import cmk.gui.views
 import cmk.gui.visuals as visuals
 from cmk.gui.http import request
+from cmk.gui.plugins.visuals.utils import filters_allowed_for_info, filters_allowed_for_infos
 from cmk.gui.type_defs import SingleInfos, VisualContext
 
 
@@ -30,13 +31,13 @@ def test_get_not_existing_filter() -> None:
 
 # TODO: The Next two are really poor tests. Put something better
 def test_filters_allowed_for_info() -> None:
-    allowed = dict(visuals.filters_allowed_for_info("host"))
+    allowed = dict(filters_allowed_for_info("host"))
     assert isinstance(allowed["host"], cmk.gui.plugins.visuals.filters.AjaxDropdownFilter)
     assert "service" not in allowed
 
 
 def test_filters_allowed_for_infos() -> None:
-    allowed = visuals.filters_allowed_for_infos(["host", "service"])
+    allowed = filters_allowed_for_infos(["host", "service"])
     assert isinstance(allowed["host"], cmk.gui.plugins.visuals.filters.AjaxDropdownFilter)
     assert isinstance(allowed["service"], cmk.gui.plugins.visuals.filters.AjaxDropdownFilter)
 

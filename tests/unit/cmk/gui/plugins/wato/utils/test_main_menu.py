@@ -6,7 +6,7 @@
 from pytest import MonkeyPatch
 
 import cmk.gui.plugins.wato.utils.main_menu as main_menu
-from cmk.gui.watolib.main_menu import MainModuleRegistry
+from cmk.gui.watolib.main_menu import ABCMainModule, MainModuleRegistry
 
 
 def test_register_modules(monkeypatch: MonkeyPatch) -> None:
@@ -24,7 +24,7 @@ def test_register_modules(monkeypatch: MonkeyPatch) -> None:
     modules = main_menu.get_modules()
     assert len(modules) == 1
     registered = modules[0]
-    assert isinstance(registered, main_menu.ABCMainModule)
+    assert isinstance(registered, ABCMainModule)
     assert registered.mode_or_url == "dang"
     assert registered.description == "descr"
     assert registered.permission == "icons"

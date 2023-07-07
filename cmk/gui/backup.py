@@ -61,7 +61,6 @@ from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.key_mgmt import Key
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import (
     make_simple_form_page_menu,
@@ -73,7 +72,7 @@ from cmk.gui.page_menu import (
 )
 from cmk.gui.plugins.wato.utils import IndividualOrStoredPassword
 from cmk.gui.table import table_element
-from cmk.gui.type_defs import ActionResult
+from cmk.gui.type_defs import ActionResult, Key
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import (
@@ -1825,7 +1824,7 @@ class PageBackupKeyManagement(key_mgmt.PageKeyManagement):
         show_key_download_warning(self.key_store.load())
         super().page()
 
-    def _key_in_use(self, key_id: int, key: key_mgmt.Key) -> bool:
+    def _key_in_use(self, key_id: int, key: Key) -> bool:
         for job in Config.load().jobs.values():
             if (job_key_id := job.key_ident()) and str(key_id) == job_key_id:
                 return True
@@ -1885,7 +1884,7 @@ class PageBackupDownloadKey(key_mgmt.PageDownloadKey):
     def title(self) -> str:
         return _("Download backup key")
 
-    def _send_download(self, keys: dict[int, key_mgmt.Key], key_id: int) -> None:
+    def _send_download(self, keys: dict[int, Key], key_id: int) -> None:
         super()._send_download(keys, key_id)
         keys[key_id].not_downloaded = True
         self.key_store.save(keys)
@@ -1894,7 +1893,7 @@ class PageBackupDownloadKey(key_mgmt.PageDownloadKey):
         return f"Check_MK-{hostname()}-{omd_site()}-backup_key-{key_id}.pem"
 
 
-def show_key_download_warning(keys: dict[int, key_mgmt.Key]) -> None:
+def show_key_download_warning(keys: dict[int, Key]) -> None:
     to_load = [k.alias for k in keys.values() if k.not_downloaded]
     if to_load:
         html.show_warning(

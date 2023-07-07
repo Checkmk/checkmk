@@ -7,6 +7,7 @@ import abc
 import json
 from typing import cast
 
+from cmk.gui.dashboard.type_defs import DashletSize
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.figures import create_figures_response, FigureResponseData
 from cmk.gui.htmllib.html import html
@@ -18,7 +19,7 @@ from cmk.gui.utils.urls import urlencode_vars
 from cmk.gui.valuespec import Dictionary, DictionaryElements, MigrateNotUpdated
 
 from ..store import get_permitted_dashboards
-from .base import Dashlet, DashletSize, T
+from .base import Dashlet, T
 from .registry import dashlet_registry
 
 __all__ = ["FigureDashletPage", "ABCFigureDashlet"]

@@ -20,11 +20,9 @@ from cmk.gui.plugins.metrics.utils import (
     get_graph_range,
     get_graph_template,
     get_graph_templates,
-    GraphConsoldiationFunction,
     GraphRecipeBase,
     GraphTemplate,
     horizontal_rules_from_thresholds,
-    MetricExpression,
     metrics_used_in_expression,
     MetricUnitColor,
     replace_expressions,
@@ -32,9 +30,17 @@ from cmk.gui.plugins.metrics.utils import (
     stack_resolver,
     TemplateGraphRecipe,
     translated_metrics_from_row,
+)
+from cmk.gui.type_defs import (
+    GraphConsoldiationFunction,
+    GraphMetric,
+    MetricDefinition,
+    MetricExpression,
+    Row,
+    RPNExpression,
+    TemplateGraphSpec,
     TranslatedMetrics,
 )
-from cmk.gui.type_defs import GraphMetric, MetricDefinition, Row, RPNExpression, TemplateGraphSpec
 
 
 # Performance graph dashlets already use graph_id, but for example in reports, we still use

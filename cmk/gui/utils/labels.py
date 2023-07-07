@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import enum
 import json
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Literal, NamedTuple
 
 from livestatus import LivestatusResponse, lqencode, quote_dict, SiteId
@@ -16,7 +16,7 @@ import cmk.gui.sites as sites
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.type_defs import FilterHTTPVariables, Sequence
+from cmk.gui.type_defs import FilterHTTPVariables
 
 
 class Label(NamedTuple):

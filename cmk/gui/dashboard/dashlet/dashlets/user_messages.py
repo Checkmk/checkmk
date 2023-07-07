@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from cmk.gui.dashboard.dashlet.base import Dashlet
+from cmk.gui.dashboard.type_defs import DashletConfig
 from cmk.gui.i18n import _
 from cmk.gui.user_message import render_user_message_table
-
-from ..base import Dashlet, DashletConfig
 
 
 class MessageUsersDashletConfig(DashletConfig):

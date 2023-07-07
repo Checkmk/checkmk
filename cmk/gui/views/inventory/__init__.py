@@ -2304,7 +2304,7 @@ class TreeRenderer:
     def _get_header(self, title: str, key_info: str) -> HTML:
         header = HTML(title)
         if self._show_internal_tree_paths:
-            header += " " + HTMLWriter.render_span("(%s)" % key_info, css="muted-text")
+            header += " " + HTMLWriter.render_span("(%s)" % key_info, css="muted_text")
         return header
 
     def _show_attributes(

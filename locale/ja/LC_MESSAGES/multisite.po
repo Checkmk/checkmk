@@ -6507,6 +6507,10 @@ msgstr "属性"
 msgid "Attribute Sync Plugins"
 msgstr "属性同期プラグイン"
 
+#, fuzzy
+msgid "Attribute match value"
+msgstr "設定する属性"
+
 msgid "Attribute sync plugins"
 msgstr "属性同期プラグイン"
 
@@ -12408,6 +12412,10 @@ msgstr "連絡先"
 msgid "Contact group (effective)"
 msgstr "連絡先グループ(有効)"
 
+#, fuzzy
+msgid "Contact group claim name"
+msgstr "連絡先グループ属性"
+
 msgid "Contact groups"
 msgstr "連絡先グループ"
 
@@ -12430,9 +12438,6 @@ msgstr ""
 msgid "Contact groups are used to assign users to hosts and services"
 msgstr ""
 "連絡先グループは、ユーザーをホストとサービスに割り当てるために使用されます"
-
-msgid "Contact groups attribute"
-msgstr "連絡先グループ属性"
 
 msgid "Contact groups defined in rule"
 msgstr "ルールで定義された連絡先グループ"
@@ -17260,6 +17265,10 @@ msgstr "タイトルを表示しない"
 msgid "Do not status data inventory"
 msgstr "データインベントリのステータスを設定しない"
 
+#, fuzzy
+msgid "Do not synchronize contact group memberships"
+msgstr "コンタクトグループメンバーシップ"
+
 msgid "Do not transfer context"
 msgstr "コンテキストを転送しない"
 
@@ -19000,6 +19009,29 @@ msgstr ""
 "これは、Checkmk が稼働しているサーバーの URL を指します。例: https://"
 "mycheckmkserver.com IDプロバイダからアクセスできる必要はありません。このエン"
 "ドポイントでは、信頼できる証明書を指定する HTTPS のみをサポートしています。"
+
+msgid ""
+"Enter the claim name whose attribute value you expect to be a distinguished "
+"name (DN) and whose common name (CN) you want to use as contact group. A "
+"contact group with the identical name must exist in Checkmk. Otherwise they "
+"can't be mapped."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Enter the claim name whose attribute value you want to use to map your "
+"identity provider to a contact group. A contact group with the identical "
+"name must exist in Checkmk. Otherwise they cannot be mapped."
+msgstr ""
+"IDプロバイダとCheckmkの間でコンタクトグループをマッピングするために使用される"
+"属性です。連絡先グループは、マッピングするためにCheckmkに存在する必要があるこ"
+"とに注意してください。"
+
+msgid ""
+"Enter the claim name whose attribute value you want to use. The user will "
+"only be assigned to contact groups in case of a match between the specified "
+"attribute match value and the returned claim attribute value."
+msgstr ""
 
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr "終了コードを10桁の小文字の16進値(0x00000000など)で入力します。"
@@ -24811,6 +24843,9 @@ msgstr "このフォルダ内のホスト"
 
 msgid "Hosts not using Inline-SNMP"
 msgstr "Inline-SNMPを使用しないホスト"
+
+msgid "Hosts or sites, depending on context"
+msgstr ""
 
 msgid "Hosts that contacted us during the last 24 hours"
 msgstr "過去24時間に私たちに連絡したホスト"
@@ -32489,6 +32524,14 @@ msgstr "管理状態(<tt> ifAdminStatus </tt>)を監視状態にマップしま�
 msgid ""
 "Map the operational state (<tt>ifOperStatus</tt>) to a monitoring state."
 msgstr "運用状態(<tt>ifOperStatus</tt>)を監視状態にマッピングします。"
+
+#, fuzzy
+msgid "Map to contact groups"
+msgstr "連絡先グループと一致する"
+
+#, fuzzy
+msgid "Map value to specific groups"
+msgstr "明示的に指定されたグループ"
 
 msgid "Mapped data"
 msgstr "マップされたデータ"
@@ -46784,6 +46827,10 @@ msgstr "マンページを表示"
 msgid "Show Setup icon"
 msgstr "に現れる"
 
+#, fuzzy
+msgid "Show State of"
+msgstr "タイトルを表示"
+
 msgid "Show a colored status label"
 msgstr "色付きのステータスラベルを表示する"
 
@@ -48184,6 +48231,10 @@ msgstr "スペアディスク"
 
 msgid "Special Agent"
 msgstr "特別なエージェント"
+
+#, fuzzy
+msgid "Specific Mappings"
+msgstr "特定のサイト"
 
 msgid "Specific date"
 msgstr "特定の日付"
@@ -52162,15 +52213,6 @@ msgstr ""
 
 msgid "The attribute used to identify users group memberships."
 msgstr "ユーザーグループのメンバーシップを識別するために使用される属性。"
-
-msgid ""
-"The attribute used to map contact groups between your identity provider and "
-"Checkmk. Note that contact groups need to exist in Checkmk to be able to be "
-"mapped."
-msgstr ""
-"IDプロバイダとCheckmkの間でコンタクトグループをマッピングするために使用される"
-"属性です。連絡先グループは、マッピングするためにCheckmkに存在する必要があるこ"
-"とに注意してください。"
 
 #, python-format
 msgid ""
@@ -62776,6 +62818,9 @@ msgstr ""
 "<tt>\\1</tt>, <tt>\\2</tt>などを使用して一致するサブグループを置き換え、<tt>"
 "\\0</tt>を使用して元のホスト名に挿入します"
 
+msgid "Use CN from LDAP distinguished name (DN) string"
+msgstr ""
+
 #, fuzzy
 msgid "Use CSV export"
 msgstr "使用されるSNATポート"
@@ -62935,6 +62980,10 @@ msgstr "サービスに代替表示名を使用する"
 #, fuzzy
 msgid "Use any network address"
 msgstr "ネットワークアドレス"
+
+#, fuzzy
+msgid "Use attribute value"
+msgstr "ユーザーID属性"
 
 msgid "Use backup code"
 msgstr "バックアップコードを使用"

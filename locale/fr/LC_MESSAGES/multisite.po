@@ -6715,6 +6715,10 @@ msgstr "Attribut"
 msgid "Attribute Sync Plugins"
 msgstr "Plugins de synchronisation d'attributs"
 
+#, fuzzy
+msgid "Attribute match value"
+msgstr "Attribut à définir"
+
 msgid "Attribute sync plugins"
 msgstr "Plugins de synchronisation des attributs"
 
@@ -12782,6 +12786,10 @@ msgstr "Nom du contact"
 msgid "Contact group (effective)"
 msgstr "Groupe de contact (effectif)"
 
+#, fuzzy
+msgid "Contact group claim name"
+msgstr "Attribut des groupes de contact"
+
 msgid "Contact groups"
 msgstr "Groupes de contact"
 
@@ -12807,9 +12815,6 @@ msgid "Contact groups are used to assign users to hosts and services"
 msgstr ""
 "Les groupes de contacts sont utilisés pour affecter les utilisateurs aux "
 "hôtes et aux services"
-
-msgid "Contact groups attribute"
-msgstr "Attribut des groupes de contact"
 
 msgid "Contact groups defined in rule"
 msgstr "Groupes de contacts définis dans une règle"
@@ -17727,6 +17732,10 @@ msgstr "Ne pas montrer le titre"
 msgid "Do not status data inventory"
 msgstr "Ne pas faire l'inventaire des données"
 
+#, fuzzy
+msgid "Do not synchronize contact group memberships"
+msgstr "Membres du groupe de contact"
+
 msgid "Do not transfer context"
 msgstr "Ne pas transférer le contexte"
 
@@ -19502,6 +19511,29 @@ msgstr ""
 "<br>Le serveur n'a pas besoin d'être accessible par votre fournisseur "
 "d'identité. Nous ne prenons en charge que HTTPS pour ce point de "
 "terminaison, ce qui implique un certificat de confiance."
+
+msgid ""
+"Enter the claim name whose attribute value you expect to be a distinguished "
+"name (DN) and whose common name (CN) you want to use as contact group. A "
+"contact group with the identical name must exist in Checkmk. Otherwise they "
+"can't be mapped."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Enter the claim name whose attribute value you want to use to map your "
+"identity provider to a contact group. A contact group with the identical "
+"name must exist in Checkmk. Otherwise they cannot be mapped."
+msgstr ""
+"L'attribut utilisé pour mapper les groupes de contacts entre votre "
+"fournisseur d'identité et Checkmk. Notez que les groupes de contacts doivent "
+"exister dans Checkmk pour pouvoir être mappés."
+
+msgid ""
+"Enter the claim name whose attribute value you want to use. The user will "
+"only be assigned to contact groups in case of a match between the specified "
+"attribute match value and the returned claim attribute value."
+msgstr ""
 
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr ""
@@ -25451,6 +25483,9 @@ msgstr "Hôtes dans ce dossier"
 
 msgid "Hosts not using Inline-SNMP"
 msgstr "Hôtes n'utilisant pas Inline-SNMP"
+
+msgid "Hosts or sites, depending on context"
+msgstr ""
 
 msgid "Hosts that contacted us during the last 24 hours"
 msgstr "Hôtes qui nous ont contactés au cours des dernières 24 heures"
@@ -33365,6 +33400,14 @@ msgid ""
 msgstr ""
 "Mettez en correspondance l'état opérationnel (<tt>ifOperStatus</tt>) avec un "
 "état de surveillance."
+
+#, fuzzy
+msgid "Map to contact groups"
+msgstr "Faire correspondre les groupes de contact"
+
+#, fuzzy
+msgid "Map value to specific groups"
+msgstr "les groupes explicitement spécifiés"
 
 msgid "Mapped data"
 msgstr "Données cartographiées"
@@ -47902,6 +47945,10 @@ msgstr "Afficher la page d'accueil"
 msgid "Show Setup icon"
 msgstr "Afficher l'icône de configuration"
 
+#, fuzzy
+msgid "Show State of"
+msgstr "Afficher le titre"
+
 msgid "Show a colored status label"
 msgstr "Afficher une étiquette d'état en couleur"
 
@@ -49346,6 +49393,10 @@ msgstr "Disque de rechange"
 
 msgid "Special Agent"
 msgstr "Agent spécial"
+
+#, fuzzy
+msgid "Specific Mappings"
+msgstr "Sites spécifiques"
 
 msgid "Specific date"
 msgstr "Date précise"
@@ -53501,15 +53552,6 @@ msgstr ""
 msgid "The attribute used to identify users group memberships."
 msgstr ""
 "L'attribut utilisé pour identifier les membres du groupe d'utilisateurs."
-
-msgid ""
-"The attribute used to map contact groups between your identity provider and "
-"Checkmk. Note that contact groups need to exist in Checkmk to be able to be "
-"mapped."
-msgstr ""
-"L'attribut utilisé pour mapper les groupes de contacts entre votre "
-"fournisseur d'identité et Checkmk. Notez que les groupes de contacts doivent "
-"exister dans Checkmk pour pouvoir être mappés."
 
 #, python-format
 msgid ""
@@ -64766,6 +64808,9 @@ msgstr ""
 "Utilisez <tt>\\1</tt>, <tt>\\2</tt> etc. pour remplacer les sous-groupes "
 "correspondants, <tt>\\0</tt> pour insérer le nom d'hôte d'origine"
 
+msgid "Use CN from LDAP distinguished name (DN) string"
+msgstr ""
+
 msgid "Use CSV export"
 msgstr "Utiliser l'exportation CSV"
 
@@ -64922,6 +64967,10 @@ msgstr "Utiliser un nom d'affichage alternatif pour les services"
 #, fuzzy
 msgid "Use any network address"
 msgstr "Adresse du réseau"
+
+#, fuzzy
+msgid "Use attribute value"
+msgstr "Attribut User-ID"
 
 msgid "Use backup code"
 msgstr "Utiliser le code de sauvegarde"

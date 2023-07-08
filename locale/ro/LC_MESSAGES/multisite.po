@@ -6689,6 +6689,10 @@ msgstr "Atributul"
 msgid "Attribute Sync Plugins"
 msgstr "Plugin-uri de sincronizare a atributelor"
 
+#, fuzzy
+msgid "Attribute match value"
+msgstr "Atributul de setat"
+
 msgid "Attribute sync plugins"
 msgstr "Plugin-uri de sincronizare a atributelor"
 
@@ -12731,6 +12735,10 @@ msgstr "Nume de contact"
 msgid "Contact group (effective)"
 msgstr "Grupul de contact (efectiv)"
 
+#, fuzzy
+msgid "Contact group claim name"
+msgstr "Atributul grupurilor de contacte"
+
 msgid "Contact groups"
 msgstr "Grupuri de contact"
 
@@ -12755,9 +12763,6 @@ msgid "Contact groups are used to assign users to hosts and services"
 msgstr ""
 "Grupurile de contact sunt utilizate pentru a atribui utilizatori la gazde și "
 "servicii."
-
-msgid "Contact groups attribute"
-msgstr "Atributul grupurilor de contacte"
 
 msgid "Contact groups defined in rule"
 msgstr "Grupuri de contacte definite în regulă"
@@ -17665,6 +17670,10 @@ msgstr "Nu afișați titlul"
 msgid "Do not status data inventory"
 msgstr "Nu faceți inventarul datelor de stare"
 
+#, fuzzy
+msgid "Do not synchronize contact group memberships"
+msgstr "Membru al grupului de contact"
+
 msgid "Do not transfer context"
 msgstr "Nu transferați contextul"
 
@@ -19422,6 +19431,29 @@ msgstr ""
 "<br>Serverul nu trebuie să fie accesibil de către furnizorul dvs. de "
 "identitate. Acceptăm doar HTTPS pentru acest punct final, care specifică un "
 "certificat de încredere."
+
+msgid ""
+"Enter the claim name whose attribute value you expect to be a distinguished "
+"name (DN) and whose common name (CN) you want to use as contact group. A "
+"contact group with the identical name must exist in Checkmk. Otherwise they "
+"can't be mapped."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Enter the claim name whose attribute value you want to use to map your "
+"identity provider to a contact group. A contact group with the identical "
+"name must exist in Checkmk. Otherwise they cannot be mapped."
+msgstr ""
+"Atributul utilizat pentru a cartografia grupurile de contacte între "
+"furnizorul dvs. de identitate și Checkmk. Rețineți că grupurile de contacte "
+"trebuie să existe în Checkmk pentru a putea fi mapate."
+
+msgid ""
+"Enter the claim name whose attribute value you want to use. The user will "
+"only be assigned to contact groups in case of a match between the specified "
+"attribute match value and the returned claim attribute value."
+msgstr ""
 
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr ""
@@ -25348,6 +25380,9 @@ msgstr "Gazdele din acest dosar"
 
 msgid "Hosts not using Inline-SNMP"
 msgstr "Gazde care nu utilizează Inline-SNMP"
+
+msgid "Hosts or sites, depending on context"
+msgstr ""
 
 msgid "Hosts that contacted us during the last 24 hours"
 msgstr "Gazdele care ne-au contactat în ultimele 24 de ore"
@@ -33232,6 +33267,14 @@ msgid ""
 msgstr ""
 "Maparea stării operaționale (<tt>ifOperStatus</tt>) într-o stare de "
 "monitorizare."
+
+#, fuzzy
+msgid "Map to contact groups"
+msgstr "Potriviți grupurile de contact"
+
+#, fuzzy
+msgid "Map value to specific groups"
+msgstr "grupuri specificate în mod explicit"
 
 msgid "Mapped data"
 msgstr "Date cartografiate"
@@ -47743,6 +47786,10 @@ msgstr "Arată pagina de manual"
 msgid "Show Setup icon"
 msgstr "Afișați pictograma de configurare"
 
+#, fuzzy
+msgid "Show State of"
+msgstr "Arată titlul"
+
 msgid "Show a colored status label"
 msgstr "Afișați o etichetă de stare colorată"
 
@@ -49184,6 +49231,10 @@ msgstr "Discul de rezervă"
 
 msgid "Special Agent"
 msgstr "Agent special"
+
+#, fuzzy
+msgid "Specific Mappings"
+msgstr "Situri specifice"
 
 msgid "Specific date"
 msgstr "Data specifică"
@@ -53323,15 +53374,6 @@ msgstr ""
 msgid "The attribute used to identify users group memberships."
 msgstr ""
 "Atributul utilizat pentru a identifica apartenența utilizatorilor la grupuri."
-
-msgid ""
-"The attribute used to map contact groups between your identity provider and "
-"Checkmk. Note that contact groups need to exist in Checkmk to be able to be "
-"mapped."
-msgstr ""
-"Atributul utilizat pentru a cartografia grupurile de contacte între "
-"furnizorul dvs. de identitate și Checkmk. Rețineți că grupurile de contacte "
-"trebuie să existe în Checkmk pentru a putea fi mapate."
 
 #, python-format
 msgid ""
@@ -64530,6 +64572,9 @@ msgstr ""
 "Utilizați <tt>\\1</tt>, <tt>\\2</tt> etc. pentru a înlocui subgrupurile "
 "potrivite, <tt>\\0</tt> pentru a insera la numele original al gazdei"
 
+msgid "Use CN from LDAP distinguished name (DN) string"
+msgstr ""
+
 msgid "Use CSV export"
 msgstr "Utilizați exportul CSV"
 
@@ -64686,6 +64731,10 @@ msgstr "Utilizați un nume de afișare alternativ pentru servicii"
 #, fuzzy
 msgid "Use any network address"
 msgstr "Adresa de rețea"
+
+#, fuzzy
+msgid "Use attribute value"
+msgstr "Atributul ID utilizator"
 
 msgid "Use backup code"
 msgstr "Utilizați codul de rezervă"

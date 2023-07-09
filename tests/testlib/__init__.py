@@ -114,7 +114,6 @@ def fake_version_and_paths() -> None:
         lambda: not (is_enterprise_repo() and is_managed_repo() and is_cloud_repo()),
     )
     monkeypatch.setattr(cmk_version, "is_managed_edition", is_managed_repo)
-    monkeypatch.setattr(cmk_version, "is_cloud_edition", is_cloud_repo)
 
     original_omd_root = Path(cmk.utils.paths.omd_root)
     for name, value in vars(cmk.utils.paths).items():

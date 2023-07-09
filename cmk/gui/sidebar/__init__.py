@@ -593,7 +593,7 @@ class SidebarRenderer:
 
         MainMenuRenderer().show()
 
-        if cmk_version.is_saas_edition():
+        if cmk_version.edition() is cmk_version.Edition.CSE:
             self._show_saas_link()
 
         html.open_div(

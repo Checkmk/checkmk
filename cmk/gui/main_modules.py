@@ -101,16 +101,16 @@ def _import_main_module_plugins(main_modules: list[ModuleType]) -> None:
 def _plugin_package_names(main_module_name: str) -> Iterator[str]:
     yield f"cmk.gui.plugins.{main_module_name}"
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         yield f"cmk.gui.cee.plugins.{main_module_name}"
 
-    if cmk_version.is_managed_edition():
+    if cmk_version.edition() is cmk_version.Edition.CME:
         yield f"cmk.gui.cme.plugins.{main_module_name}"
 
-    if cmk_version.is_cloud_edition():
+    if cmk_version.edition() is cmk_version.Edition.CCE:
         yield f"cmk.gui.cce.plugins.{main_module_name}"
 
-    if cmk_version.is_saas_edition():
+    if cmk_version.edition() is cmk_version.Edition.CSE:
         yield f"cmk.gui.cse.plugins.{main_module_name}"
 
 

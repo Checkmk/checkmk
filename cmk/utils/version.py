@@ -68,10 +68,6 @@ def is_managed_edition() -> bool:
     return edition() is Edition.CME
 
 
-def is_saas_edition() -> bool:
-    return edition() is Edition.CSE
-
-
 def is_cma() -> bool:
     return os.path.exists("/etc/cma/cma.conf")
 

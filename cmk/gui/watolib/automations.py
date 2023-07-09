@@ -496,7 +496,10 @@ def do_site_login(site: SiteConfiguration, name: UserId, password: str) -> str:
     except SyntaxError:
         raise MKAutomationException(response)
     if isinstance(eval_response, dict):
-        if cmk_version.is_managed_edition() and eval_response["edition_short"] != "cme":
+        if (
+            cmk_version.edition() is cmk_version.Edition.CME
+            and eval_response["edition_short"] != "cme"
+        ):
             raise MKUserError(
                 None,
                 _(

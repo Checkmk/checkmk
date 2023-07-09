@@ -622,7 +622,7 @@ def make_cme(
     monkeypatch: MonkeyPatch, user_id: UserId, set_config: SetConfig
 ) -> Generator[None, None, None]:
     monkeypatch.setattr(cmk.utils.version, "omd_version", lambda: "2.0.0i1.cme")
-    assert cmk.utils.version.is_managed_edition()
+    assert cmk.utils.version.edition() is cmk.utils.version.Edition.CME
 
     with set_config(current_customer="test-customer"):
         # Fix CRE mypy tests that do not have this attribute defined

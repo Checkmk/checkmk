@@ -79,7 +79,7 @@ from cmk.gui.watolib.users import (
     verify_password_policy,
 )
 
-if cmk_version.is_managed_edition():
+if cmk_version.edition() is cmk_version.Edition.CME:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
     from cmk.gui.cme.helpers import default_customer_id  # pylint: disable=no-name-in-module
 else:
@@ -445,7 +445,7 @@ class ModeUsers(WatoMode):
                     else:
                         html.write_text(_("Never logged in"))
 
-                if cmk_version.is_managed_edition():
+                if cmk_version.edition() is cmk_version.Edition.CME:
                     table.cell(_("Customer"), managed.get_customer_name(user_spec))
 
                 # Connection
@@ -614,7 +614,7 @@ class ModeEditUser(WatoMode):
         self._roles = userdb_utils.load_roles()
         self._user_id: UserId | None
 
-        if cmk_version.is_managed_edition():
+        if cmk_version.edition() is cmk_version.Edition.CME:
             self._vs_customer = managed.vs_customer()
 
     def _from_vars(self):
@@ -807,7 +807,7 @@ class ModeEditUser(WatoMode):
         # Pager
         user_attrs["pager"] = request.get_str_input_mandatory("pager", "").strip()
 
-        if cmk_version.is_managed_edition():
+        if cmk_version.edition() is cmk_version.Edition.CME:
             customer = self._vs_customer.from_html_vars("customer")
             self._vs_customer.validate_value(customer, "customer")
 
@@ -927,7 +927,7 @@ class ModeEditUser(WatoMode):
         lockable_input("pager", "")
         html.help(_("The pager address is optional "))
 
-        if cmk_version.is_managed_edition():
+        if cmk_version.edition() is cmk_version.Edition.CME:
             forms.section(self._vs_customer.title())
             self._vs_customer.render_input("customer", managed.get_customer_id(self._user))
 

@@ -57,7 +57,7 @@ from cmk.gui.watolib.mkeventd import (
     save_mkeventd_rules,
 )
 
-if cmk_version.is_managed_edition():
+if cmk_version.edition() is cmk_version.Edition.CME:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 else:
     managed = None  # type: ignore[assignment]
@@ -522,7 +522,7 @@ def vs_mkeventd_rule_pack(
         ),
     )
 
-    if cmk_version.is_managed_edition():
+    if cmk_version.edition() is cmk_version.Edition.CME:
         elements += managed.customer_choice_element(deflt=managed.SCOPE_GLOBAL)
 
     return Dictionary(
@@ -549,7 +549,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
         ),
     ] + rule_option_elements()
 
-    if cmk_version.is_managed_edition():
+    if cmk_version.edition() is cmk_version.Edition.CME:
         if customer:
             # Enforced by rule pack
             elements += [
@@ -2086,7 +2086,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 table.cell(_("ID"), id_)
                 table.cell(_("Title"), rule_pack["title"])
 
-                if cmk_version.is_managed_edition():
+                if cmk_version.edition() is cmk_version.Edition.CME:
                     table.cell(_("Customer"))
                     if "customer" in rule_pack:
                         html.write_text(managed.get_customer_name(rule_pack))
@@ -2412,7 +2412,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 
                 table.cell(_("ID"), HTMLWriter.render_a(rule["id"], edit_url))
 
-                if cmk_version.is_managed_edition():
+                if cmk_version.edition() is cmk_version.Edition.CME:
                     table.cell(_("Customer"))
                     if "customer" in self._rule_pack:
                         html.write_text(
@@ -2784,7 +2784,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                         )
             num_repl -= 1
 
-        if cmk_version.is_managed_edition() and "customer" in self._rule_pack:
+        if cmk_version.edition() is cmk_version.Edition.CME and "customer" in self._rule_pack:
             try:
                 del self._rule["customer"]
             except KeyError:

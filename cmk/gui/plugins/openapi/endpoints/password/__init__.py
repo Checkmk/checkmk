@@ -78,7 +78,7 @@ def create_password(params: Mapping[str, Any]) -> Response:
             )
         },
     )
-    if version.is_managed_edition():
+    if version.edition() is version.Edition.CME:
         password_details = update_customer_info(password_details, body["customer"])
     password_details["owned_by"] = None if body["owned_by"] == "admin" else body["owned_by"]
     save_password(ident, password_details, new_password=True)

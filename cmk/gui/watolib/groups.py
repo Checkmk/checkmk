@@ -54,7 +54,7 @@ from cmk.gui.watolib.hosts_and_folders import Folder, folder_preserving_link, fo
 from cmk.gui.watolib.notifications import load_notification_rules, load_user_notification_rules
 from cmk.gui.watolib.rulesets import AllRulesets
 
-if cmk_version.is_managed_edition():
+if cmk_version.edition() is cmk_version.Edition.CME:
     import cmk.gui.cme.helpers as managed_helpers  # pylint: disable=no-name-in-module
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
@@ -94,7 +94,7 @@ def edit_group(name: GroupName, group_type: GroupType, extra_info: GroupSpec) ->
     old_group_backup = copy.deepcopy(groups[name])
 
     _set_group(all_groups, group_type, name, extra_info)
-    if cmk_version.is_managed_edition():
+    if cmk_version.edition() is cmk_version.Edition.CME:
         old_customer = managed.get_customer_id(old_group_backup)
         new_customer = managed.get_customer_id(extra_info)
         if old_customer != new_customer:
@@ -164,7 +164,7 @@ def delete_group(name: GroupName, group_type: GroupType) -> None:
 # by the CME code for better encapsulation.
 def _add_group_change(group: GroupSpec, action_name: str, text: LazyString) -> None:
     group_sites = None
-    if cmk_version.is_managed_edition():
+    if cmk_version.edition() is cmk_version.Edition.CME:
         cid = managed.get_customer_id(group)
         if not managed.is_global(cid):
             if cid is None:  # conditional caused by bad typing

@@ -432,7 +432,7 @@ class ModeEditGlobals(ABCGlobalSettingsMode):
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         dropdowns = []
 
-        if cmk_version.is_managed_edition():
+        if cmk_version.edition() is cmk_version.Edition.CME:
             import cmk.gui.cme.plugins.wato.cme_global_settings  # pylint: disable=no-name-in-module,import-outside-toplevel
 
             dropdowns.append(

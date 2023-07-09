@@ -715,7 +715,7 @@ def test_update_url_prefix_400(clients: ClientRegistry) -> None:
 
 def test_post_site_config_customer_field(clients: ClientRegistry) -> None:
     config = _default_config()
-    if version.is_managed_edition():
+    if version.edition() is version.Edition.CME:
         r = clients.SiteManagement.create(site_config=config)
         assert "customer" in r.json["extensions"]["basic_settings"]
         del config["basic_settings"]["customer"]

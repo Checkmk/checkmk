@@ -49,7 +49,7 @@ from cmk.gui.watolib.tags import load_tag_group
 
 from cmk.fields import base, DateTime, validators
 
-if version.is_managed_edition():
+if version.edition() is version.Edition.CME:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 
@@ -1035,7 +1035,7 @@ class SiteField(base.String):
 
 
 def customer_field(**kw):
-    if version.is_managed_edition():
+    if version.edition() is version.Edition.CME:
         return _CustomerField(**kw)
     return None
 

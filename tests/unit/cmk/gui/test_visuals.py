@@ -5253,7 +5253,7 @@ def test_get_context_specs_no_info_limit() -> None:
         "invkernelconfig",
         "invswpac",
     ]
-    if cmk_version.is_managed_edition():
+    if cmk_version.edition() is cmk_version.Edition.CME:
         expected += ["customer"]
 
     assert sorted([r[0] for r in result]) == sorted(expected)

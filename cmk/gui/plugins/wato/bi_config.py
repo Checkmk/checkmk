@@ -1720,7 +1720,7 @@ class BIModeEditAggregation(ABCBIMode):
 
     @classmethod
     def get_vs_aggregation(cls, aggregation_id: str | None):  # type: ignore[no-untyped-def]
-        if cmk_version.is_managed_edition():
+        if cmk_version.edition() is cmk_version.Edition.CME:
             cme_elements = managed.customer_choice_element()
         else:
             cme_elements = []
@@ -2194,7 +2194,7 @@ class BIModeAggregations(ABCBIMode):
 
                 table.cell(_("ID"), aggregation_id)
 
-                if cmk_version.is_managed_edition():
+                if cmk_version.edition() is cmk_version.Edition.CME:
                     table.cell(_("Customer"))
                     if bi_aggregation.customer:
                         html.write_text(managed.get_customer_name_by_id(bi_aggregation.customer))

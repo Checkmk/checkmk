@@ -16,7 +16,7 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 from cmk.gui.plugins.openapi.endpoints.downtime import _with_defaulted_timezone
 
-managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
+managedtest = pytest.mark.skipif(version.edition() is not version.Edition.CME, reason="see #7213")
 
 
 @pytest.mark.usefixtures("suppress_remote_automation_calls", "with_host")

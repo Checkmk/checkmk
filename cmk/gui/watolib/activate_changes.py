@@ -1454,7 +1454,7 @@ class ActivateChangesSchedulerBackgroundJob(BackgroundJob):
         queued_jobs: list[ActivateChangesSite] = []
 
         file_filter_func = None
-        if version.is_managed_edition():
+        if version.edition() is version.Edition.CME:
             import cmk.gui.cme.managed_snapshots as managed_snapshots  # pylint: disable=no-name-in-module
 
             file_filter_func = managed_snapshots.customer_user_files_filter()

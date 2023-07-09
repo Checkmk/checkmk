@@ -42,7 +42,7 @@ from cmk.gui.watolib.audit_log import LogMessage
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.hosts_and_folders import folder_preserving_link, make_action_link
 
-if cmk_version.is_managed_edition():
+if cmk_version.edition() is cmk_version.Edition.CME:
     import cmk.gui.cme.helpers as managed_helpers  # pylint: disable=no-name-in-module
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
@@ -192,7 +192,7 @@ def render_connections_page(
             table.cell(_("ID"), connection_id)
             table.cell(_("Name"), connection.get("name", connection_id))
 
-            if cmk_version.is_managed_edition():
+            if cmk_version.edition() is cmk_version.Edition.CME:
                 table.cell(_("Customer"), managed.get_customer_name(connection))
 
             table.cell(_("Description"))
@@ -210,7 +210,7 @@ def add_change(action_name: str, text: LogMessage, sites: list[SiteId]) -> None:
 
 
 def get_affected_sites(connection: UserConnectionSpec) -> list[SiteId]:
-    if cmk_version.is_managed_edition():
+    if cmk_version.edition() is cmk_version.Edition.CME:
         return list(managed_helpers.get_sites_of_customer(connection["customer"]).keys())
     return get_login_sites()
 

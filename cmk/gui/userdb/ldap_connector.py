@@ -96,7 +96,7 @@ from cmk.gui.valuespec import (
     Tuple,
 )
 
-if cmk_version.is_managed_edition():
+if cmk_version.edition() is cmk_version.Edition.CME:
     from cmk.gui.cme.helpers import default_customer_id  # pylint: disable=no-name-in-module
 else:
     default_customer_id = None  # type: ignore[assignment]
@@ -1296,7 +1296,7 @@ class LDAPUserConnector(UserConnector):
             else:
                 user = new_user_template(self.id)
                 mode_create = True
-                if cmk_version.is_managed_edition():
+                if cmk_version.edition() is cmk_version.Edition.CME:
                     user["customer"] = self._config.get("customer", default_customer_id)
 
             return mode_create, user

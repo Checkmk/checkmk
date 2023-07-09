@@ -40,7 +40,7 @@ from cmk.gui.watolib.config_domain_name import ABCConfigDomain
 from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.sites import SiteManagementFactory
 
-if version.is_managed_edition():
+if version.edition() is version.Edition.CME:
     from cmk.gui.cme.helpers import default_customer_id  # pylint: disable=no-name-in-module
 
 
@@ -331,7 +331,7 @@ class BasicSettings:
 
     @classmethod
     def from_internal(cls, site_id: SiteId, internal_config: SiteConfiguration) -> BasicSettings:
-        if version.is_managed_edition():
+        if version.edition() is version.Edition.CME:
             return cls(
                 alias=internal_config["alias"],
                 site_id=site_id,
@@ -342,12 +342,12 @@ class BasicSettings:
     def to_external(self) -> Iterator[tuple[str, str]]:
         yield "alias", self.alias
         yield "site_id", self.site_id
-        if version.is_managed_edition() and self.customer is not None:
+        if version.edition() is version.Edition.CME and self.customer is not None:
             yield "customer", self.customer
 
     def to_internal(self) -> SiteConfiguration:
         configid: SiteConfiguration = {"alias": self.alias, "id": SiteId(self.site_id)}
-        if version.is_managed_edition() and self.customer is not None:
+        if version.edition() is version.Edition.CME and self.customer is not None:
             configid["customer"] = self.customer
 
         return configid

@@ -71,7 +71,7 @@ def test_registered_modules() -> None:
             "saml_config",
         ]
 
-    if cmk_version.is_managed_edition():
+    if cmk_version.edition() is cmk_version.Edition.CME:
         expected_modules += [
             "customer_management",
         ]

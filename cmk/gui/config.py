@@ -35,7 +35,7 @@ else:
         pass
 
 
-if cmk_version.is_managed_edition():
+if cmk_version.edition() is cmk_version.Edition.CME:
     from cmk.gui.cme.plugins.config.cme import CMEConfig  # pylint: disable=no-name-in-module
 else:
     # Stub needed for non managed services edition

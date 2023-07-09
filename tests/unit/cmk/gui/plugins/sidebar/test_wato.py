@@ -76,7 +76,7 @@ def expected_items() -> dict[str, list[str]]:
     ]
 
     users_items = []
-    if cmk_version.is_managed_edition():
+    if cmk_version.edition() is cmk_version.Edition.CME:
         users_items.append("customer_management")
     users_items.extend(
         [

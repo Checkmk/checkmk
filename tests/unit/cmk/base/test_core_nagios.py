@@ -226,7 +226,7 @@ def test_format_nagios_object() -> None:
 def test_create_nagios_host_spec(
     hostname_str: str, result: dict[str, str], monkeypatch: MonkeyPatch
 ) -> None:
-    if cmk_version.is_managed_edition():
+    if cmk_version.edition() is cmk_version.Edition.CME:
         result = result.copy()
         result["_CUSTOMER"] = "provider"
 

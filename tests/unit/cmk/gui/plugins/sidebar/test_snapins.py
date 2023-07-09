@@ -37,7 +37,7 @@ def test_registered_snapins() -> None:
             "reports",
         ]
 
-    if cmk_version.is_managed_edition():
+    if cmk_version.edition() is cmk_version.Edition.CME:
         expected_snapins += [
             "customers",
         ]

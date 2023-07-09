@@ -30,7 +30,7 @@ def test_get_needed_join_columns(view: View) -> None:
         "service_description",
     ]
 
-    if cmk_version.is_managed_edition():
+    if cmk_version.edition() is cmk_version.Edition.CME:
         expected_columns += [
             "host_custom_variable_names",
             "host_custom_variable_values",

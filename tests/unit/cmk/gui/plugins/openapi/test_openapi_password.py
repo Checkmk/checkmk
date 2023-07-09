@@ -13,7 +13,7 @@ from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
 from cmk.utils import password_store, version
 
-managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
+managedtest = pytest.mark.skipif(version.edition() is not version.Edition.CME, reason="see #7213")
 
 
 @managedtest

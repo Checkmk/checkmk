@@ -37,7 +37,7 @@ from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import DualListChoice, LabelGroups
 
-if cmk_version.is_managed_edition():
+if cmk_version.edition() is cmk_version.Edition.CME:
     from cmk.gui.cme.plugins.visuals.managed_site_filters import (  # pylint: disable=no-name-in-module
         filter_cme_heading_info,
     )
@@ -1072,7 +1072,7 @@ class SiteFilter(Filter):
         )
 
     def heading_info(self, value: FilterHTTPVariables) -> str | None:
-        if cmk_version.is_managed_edition():
+        if cmk_version.edition() is cmk_version.Edition.CME:
             return filter_cme_heading_info(value)
         return filter_cre_heading_info(value)
 

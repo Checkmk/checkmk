@@ -108,8 +108,6 @@ def fake_version_and_paths() -> None:
     )
 
     # Unit test context: load all available modules
-    monkeypatch.setattr(cmk_version, "is_managed_edition", is_managed_repo)
-
     original_omd_root = Path(cmk.utils.paths.omd_root)
     for name, value in vars(cmk.utils.paths).items():
         if name.startswith("_") or not isinstance(value, (str, Path)) or name in _UNPATCHED_PATHS:

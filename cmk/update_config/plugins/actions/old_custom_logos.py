@@ -11,7 +11,7 @@ import cmk.utils.paths
 from cmk.utils import version
 from cmk.utils.exceptions import MKGeneralException
 
-if version.is_managed_edition():
+if version.edition() is version.Edition.CME:
     from cmk.gui.cme.type_defs import CustomerId  # pylint: disable=no-name-in-module,import-error
     from cmk.gui.cme.managed import (  # pylint: disable=no-name-in-module,import-error
         Customer,
@@ -27,7 +27,7 @@ class RemoveOldCustomLogos(UpdateAction):
     def __call__(self, logger: Logger, update_action_state: UpdateActionState) -> None:
         """Remove old custom logo occurrences, i.e. local image files "mk-logo.png" and customer
         config "globals" entries with key "logo"."""
-        if not version.is_managed_edition():
+        if version.edition() is not version.Edition.CME:
             return
 
         themes_path: Path = Path(cmk.utils.paths.local_web_dir, "htdocs/themes/")

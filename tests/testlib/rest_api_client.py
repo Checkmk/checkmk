@@ -1405,7 +1405,7 @@ class GroupConfig(RestApiClient):
         expect_ok: bool = True,
     ) -> Response:
         body = {"name": name, "alias": alias}
-        if version.is_managed_edition():
+        if version.edition() is version.Edition.CME:
             body.update({"customer": customer})
 
         return self.request(

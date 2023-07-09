@@ -115,7 +115,7 @@ def prepare_groups(group_type: GroupType, entries: list[dict[str, Any]]) -> Grou
             already_existing.append(name)
             continue
         group_details: GroupSpec = {"alias": details["alias"]}
-        if version.is_managed_edition():
+        if version.edition() is version.Edition.CME:
             group_details = update_customer_info(group_details, details["customer"])
         groups[name] = group_details
 
@@ -252,7 +252,7 @@ def update_customer_info(attributes, customer_id, remove_provider=False):
 def group_edit_details(body) -> GroupSpec:  # type: ignore[no-untyped-def]
     group_details = {k: v for k, v in body.items() if k != "customer"}
 
-    if version.is_managed_edition() and "customer" in body:
+    if version.edition() is version.Edition.CME and "customer" in body:
         group_details = update_customer_info(group_details, body["customer"])
     return group_details
 

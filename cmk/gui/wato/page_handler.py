@@ -30,7 +30,7 @@ from cmk.gui.watolib.activate_changes import update_config_generation
 from cmk.gui.watolib.git import do_git_commit
 from cmk.gui.watolib.sidebar_reload import is_sidebar_reload_needed
 
-if cmk_version.is_managed_edition():
+if cmk_version.edition() is cmk_version.Edition.CME:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 else:
     managed = None  # type: ignore[assignment]
@@ -76,7 +76,7 @@ def page_handler() -> None:
     # chance to configure a backup for remote sites.
     # config.current_customer can not be checked with CRE repos
     if (
-        cmk_version.is_managed_edition()
+        cmk_version.edition() is cmk_version.Edition.CME
         and not managed.is_provider(active_config.current_customer)
         and not current_mode.startswith(("backup", "edit_backup"))
     ):

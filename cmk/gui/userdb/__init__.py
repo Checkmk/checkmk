@@ -194,7 +194,7 @@ def create_non_existing_user(connection_id: str, username: UserId, now: datetime
 
 
 def is_customer_user_allowed_to_login(user_id: UserId) -> bool:
-    if not cmk_version.is_managed_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CME:
         return True
 
     try:

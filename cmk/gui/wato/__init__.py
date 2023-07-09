@@ -183,7 +183,7 @@ from cmk.gui.wato.pages.user_migrate import ModeUserMigrate
 from cmk.gui.wato.pages.users import ModeEditUser, ModeUsers
 from cmk.gui.watolib.activate_changes import update_config_generation
 
-if cmk_version.is_managed_edition():
+if cmk_version.edition() is cmk_version.Edition.CME:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 else:
     managed = None  # type: ignore[assignment]

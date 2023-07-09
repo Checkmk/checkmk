@@ -30,7 +30,7 @@ from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 
-managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
+managedtest = pytest.mark.skipif(version.edition() is not version.Edition.CME, reason="see #7213")
 
 
 def test_openapi_missing_host(clients: ClientRegistry) -> None:

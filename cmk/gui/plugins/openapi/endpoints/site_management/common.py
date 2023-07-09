@@ -58,7 +58,7 @@ def default_config_example() -> SiteConfig:
         },
     }
 
-    if version.is_managed_edition():
+    if version.edition() is version.Edition.CME:
         r["basic_settings"] = {
             "alias": "Die remote site 1",
             "site_id": "site_id_1",

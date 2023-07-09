@@ -72,7 +72,7 @@ from cmk.gui.wato.pages.userdb_common import (
     render_connections_page,
 )
 
-if cmk_version.is_managed_edition():
+if cmk_version.edition() is cmk_version.Edition.CME:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 # .
@@ -164,7 +164,7 @@ class LDAPConnectionValuespec(MigrateNotUpdated):
 
         general_elements += [id_element]
 
-        if cmk_version.is_managed_edition():
+        if cmk_version.edition() is cmk_version.Edition.CME:
             general_elements += managed.customer_choice_element()
 
         general_elements += rule_option_elements()

@@ -115,7 +115,7 @@ def _create_test_sync_config(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
         f.write("DUMMY_PWD_ENTRY \n")
 
     with monkeypatch.context() as m:
-        if cmk_version.is_managed_edition():
+        if cmk_version.edition() is cmk_version.Edition.CME:
             m.setattr(
                 active_config,
                 "customers",

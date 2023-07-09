@@ -817,7 +817,7 @@ def test_registered_painters() -> None:
             "deployment_target_hash",
         ]
 
-    if cmk_version.is_managed_edition():
+    if cmk_version.edition() is cmk_version.Edition.CME:
         expected_painters += [
             "host_customer",
             "customer_id",

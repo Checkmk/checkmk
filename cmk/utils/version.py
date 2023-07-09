@@ -56,10 +56,6 @@ def edition() -> Edition:
         return Edition.CRE
 
 
-def is_enterprise_edition() -> bool:
-    return edition() is Edition.CEE
-
-
 def is_cloud_edition() -> bool:
     return edition() is Edition.CCE
 

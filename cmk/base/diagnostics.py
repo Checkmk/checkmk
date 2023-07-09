@@ -62,7 +62,7 @@ from cmk.utils.site import omd_site
 from cmk.utils.structured_data import load_tree, SDRawTree
 from cmk.utils.user import UserId
 
-if cmk_version.is_enterprise_edition():
+if cmk_version.edition() is cmk_version.Edition.CEE:
     from cmk.base.cee.diagnostics import (  # type: ignore[import]  # pylint: disable=no-name-in-module,import-error
         cmc_specific_attrs,
     )

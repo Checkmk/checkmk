@@ -386,16 +386,18 @@ MERGED_SECTION_RAWEDITION = {
 
 
 @pytest.mark.parametrize(
-    "is_raw_edition, merged_sections",
+    "edition, merged_sections",
     [
-        (False, MERGED_SECTION_ENTERPRISE),
-        (True, MERGED_SECTION_RAWEDITION),
+        (cmk_version.Edition.CEE, MERGED_SECTION_ENTERPRISE),
+        (cmk_version.Edition.CRE, MERGED_SECTION_RAWEDITION),
     ],
 )
 def test_merge_sections(
-    monkeypatch: pytest.MonkeyPatch, is_raw_edition: bool, merged_sections: Mapping[str, object]
+    monkeypatch: pytest.MonkeyPatch,
+    edition: cmk_version.Edition,
+    merged_sections: Mapping[str, object],
 ) -> None:
-    monkeypatch.setattr(cmk_version, "is_raw_edition", lambda: is_raw_edition)
+    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
     assert merged_sections == inv_checkmk.merge_sections(
         SECTION_LIVESTATUS_STATUS, SECTION_OMD_STATUS, SECTION_OMD_INFO
     )

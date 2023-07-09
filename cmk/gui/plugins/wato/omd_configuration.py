@@ -102,7 +102,7 @@ class ConfigVariableSiteCore(ConfigVariable):
 
     def _monitoring_core_choices(self):
         cores = []
-        if not cmk_version.is_raw_edition():
+        if cmk_version.edition() is not cmk_version.Edition.CRE:
             cores.append(("cmc", _("Checkmk Micro Core")))
 
         cores += [

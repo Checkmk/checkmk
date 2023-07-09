@@ -12,7 +12,7 @@ from cmk.gui.background_job import BackgroundJobAlreadyRunning
 
 
 def has_agent_bakery() -> bool:
-    return not cmk_version.is_raw_edition()
+    return cmk_version.edition() is not cmk_version.Edition.CRE
 
 
 def try_bake_agents_for_hosts(hosts: Sequence[HostName]) -> None:

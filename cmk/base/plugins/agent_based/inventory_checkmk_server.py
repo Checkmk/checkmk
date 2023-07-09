@@ -75,7 +75,7 @@ def merge_sections(
         }
 
     # SECTION: omd_status
-    if cmk_version.is_raw_edition():
+    if cmk_version.edition() is cmk_version.Edition.CRE:
         services = [
             "nagios",
             "npcd",

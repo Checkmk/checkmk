@@ -182,7 +182,7 @@ class DiagnosticsDump:
             optional_elements.append(CheckmkLogFilesDiagnosticsElement(rel_checkmk_log_files))
 
         # CEE options
-        if not cmk_version.is_raw_edition():
+        if cmk_version.edition() is not cmk_version.Edition.CRE:
             rel_checkmk_core_files = parameters.get(OPT_CHECKMK_CORE_FILES)
             if rel_checkmk_core_files:
                 optional_elements.append(CheckmkCoreFilesDiagnosticsElement(rel_checkmk_core_files))

@@ -1129,7 +1129,7 @@ def test_filters_filter_table(test: FilterTableTest, monkeypatch: pytest.MonkeyP
             "zzz": {},
         }[host_name]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         import cmk.gui.cee.agent_bakery as agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel,no-name-in-module
 
         monkeypatch.setattr(agent_bakery, "get_cached_deployment_status", deployment_states)
@@ -1144,7 +1144,10 @@ def test_filters_filter_table(test: FilterTableTest, monkeypatch: pytest.MonkeyP
         context: VisualContext = {test.ident: dict(test.request_vars)}
 
         # TODO: Fix this for real...
-        if not cmk_version.is_raw_edition() or test.ident != "deployment_has_agent":
+        if (
+            cmk_version.edition() is not cmk_version.Edition.CRE
+            or test.ident != "deployment_has_agent"
+        ):
             filt = filter_registry[test.ident]
             assert filt.filter_table(context, test.rows) == test.expected_rows
 
@@ -1280,7 +1283,7 @@ def test_filters_filter_inv_table(test: FilterTableTest) -> None:
         context: VisualContext = {test.ident: dict(test.request_vars)}
 
         # TODO: Fix this for real...
-        if not cmk_version.is_raw_edition():
+        if cmk_version.edition() is not cmk_version.Edition.CRE:
             rows = filter_registry[test.ident].filter_table(context, test.rows)
             assert len(rows) == len(test.expected_rows)
             for row, expected_row in zip(rows, test.expected_rows):

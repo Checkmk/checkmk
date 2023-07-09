@@ -246,7 +246,7 @@ def _slow_view_logging_help():
 
 def _add_saml_log_level(params: dict[str, int]) -> dict[str, int]:
     """Update version 2.1 -> 2.2"""
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         params.setdefault("cmk.web.saml2", 30)
     return params
 

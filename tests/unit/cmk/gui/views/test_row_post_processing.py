@@ -19,7 +19,7 @@ def test_post_processor_registrations() -> None:
         "inventory_row_post_processor",
         "join_service_row_post_processor",
     ]
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected.append("sla_row_post_processor")
     assert sorted(names) == sorted(expected)
 

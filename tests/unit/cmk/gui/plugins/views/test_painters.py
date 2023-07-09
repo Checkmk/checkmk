@@ -798,7 +798,7 @@ def test_registered_painters() -> None:
         "wato_folder_rel",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_painters += [
             "svc_metrics_forecast",
             "svc_metrics_hist",

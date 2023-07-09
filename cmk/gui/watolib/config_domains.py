@@ -175,7 +175,10 @@ class ConfigDomainLiveproxy(ABCConfigDomain):
 
     @classmethod
     def enabled(cls):
-        return not cmk_version.is_raw_edition() and active_config.liveproxyd_enabled
+        return (
+            cmk_version.edition() is not cmk_version.Edition.CRE
+            and active_config.liveproxyd_enabled
+        )
 
     def config_dir(self):
         return liveproxyd_config_dir()

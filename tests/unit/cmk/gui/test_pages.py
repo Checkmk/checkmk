@@ -158,7 +158,7 @@ def test_registered_pages() -> None:
         "noauth:ajax_graph_images",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_pages += [
             "ajax_host_overview_tooltip",
             "ajax_pagetype_add_element",

@@ -293,7 +293,7 @@ def get_av_display_options(what: AVObjectType) -> AVOptionValueSpecs:
             ("service_groups", _("By Service group")),
         ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         ruleset_search_url = makeuri_contextless(
             request,
             [

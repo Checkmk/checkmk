@@ -478,7 +478,7 @@ def _page_menu_entries_export_data() -> Iterator[PageMenuEntry]:
 
 
 def _page_menu_entries_export_reporting() -> Iterator[PageMenuEntry]:
-    if cmk_version.is_raw_edition():
+    if cmk_version.edition() is cmk_version.Edition.CRE:
         return
 
     if not user.may("general.reporting") or not user.may("general.instant_reports"):
@@ -1119,7 +1119,7 @@ def show_annotations(annotations, av_rawdata, what, avoptions, omit_service):
             )
             table.cell(_("Author"), annotation["author"])
             table.cell(_("Entry"), render_date(annotation["date"]), css=["nobr narrow"])
-            if not cmk_version.is_raw_edition():
+            if cmk_version.edition() is not cmk_version.Edition.CRE:
                 table.cell(
                     _("Hide in report"), _("Yes") if annotation.get("hide_from_report") else _("No")
                 )
@@ -1285,7 +1285,7 @@ def _vs_annotation():
     ]
     extra_elements: list[DictionaryEntry] = (
         []
-        if cmk_version.is_raw_edition()
+        if cmk_version.edition() is cmk_version.Edition.CRE
         else [("hide_from_report", Checkbox(title=_("Hide annotation in report")))]
     )
     return Dictionary(

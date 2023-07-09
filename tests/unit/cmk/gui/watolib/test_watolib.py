@@ -33,7 +33,7 @@ def test_registered_config_domains() -> None:
         "rrdcached",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_config_domains += [
             "dcd",
             "mknotifyd",
@@ -67,7 +67,7 @@ def test_registered_automation_commands() -> None:
         "rename-hosts-uuid-link",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_automation_commands += [
             "execute-dcd-command",
             "get-agent-requests",
@@ -205,7 +205,7 @@ def test_registered_configvars() -> None:
         "default_temperature_unit",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_vars += [
             "agent_bakery_logging",
             "agent_deployment_enabled",
@@ -299,7 +299,7 @@ def test_registered_configvar_groups() -> None:
         "Support",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_groups += [
             "Dynamic configuration",
             "Automatic agent updates",

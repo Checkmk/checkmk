@@ -453,7 +453,7 @@ def _get_combined_graphs_entry(
 
 
 def _show_combined_graphs_context_button(view: View) -> bool:
-    if cmk_version.is_raw_edition():
+    if cmk_version.edition() is cmk_version.Edition.CRE:
         return False
 
     if view.name == "service":

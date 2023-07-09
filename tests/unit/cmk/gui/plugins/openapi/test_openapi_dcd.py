@@ -30,7 +30,9 @@ mocked_phase_one_result = {
 }
 
 
-@pytest.mark.skipif(cmk_version.is_raw_edition(), reason="DCD not available in raw edition")
+@pytest.mark.skipif(
+    cmk_version.edition() is cmk_version.Edition.CRE, reason="DCD not available in raw edition"
+)
 def test_dcd_fetch_phase_one_result(
     aut_user_auth_wsgi_app: WebTestAppForCMK,
     mocker: MockerFixture,

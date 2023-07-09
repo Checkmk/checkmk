@@ -84,7 +84,7 @@ def page_menu_dropdown_add_to_visual(add_type: str, name: str) -> list[PageMenuD
             )
         )
 
-    if add_type == "pnpgraph" and not cmk_version.is_raw_edition():
+    if add_type == "pnpgraph" and cmk_version.edition() is not cmk_version.Edition.CRE:
         visual_topics.append(
             PageMenuTopic(
                 title=_("Export"),

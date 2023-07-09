@@ -52,7 +52,7 @@ def test_builtin_icons_and_actions() -> None:
         "wato",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_icons_and_actions += [
             "agent_deployment",
             "deployment_status",

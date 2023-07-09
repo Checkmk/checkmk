@@ -1338,7 +1338,7 @@ def _page_menu_entries_related(current_type_name: str) -> Iterator[PageMenuEntry
 
 
 def _has_reporting() -> bool:
-    return not cmk_version.is_raw_edition()
+    return cmk_version.edition() is not cmk_version.Edition.CRE
 
 
 def vs_no_permission_to_publish(type_title: str, title: str) -> FixedValue:

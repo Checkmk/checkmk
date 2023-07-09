@@ -5134,7 +5134,7 @@ builtin_views["cmk_servers"] = {
 
 def cmk_sites_painters() -> Sequence[ColumnSpec]:
     service_painters: list[Any] = []
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         service_painters += [
             ColumnSpec(name="invcmksites_cmc"),
             ColumnSpec(name="invcmksites_dcd"),
@@ -5155,7 +5155,7 @@ def cmk_sites_painters() -> Sequence[ColumnSpec]:
         ColumnSpec(name="invcmksites_stunnel"),
     ]
 
-    if cmk_version.is_raw_edition():
+    if cmk_version.edition() is cmk_version.Edition.CRE:
         service_painters += [
             ColumnSpec(name="invcmksites_npcd"),
         ]

@@ -67,7 +67,7 @@ def test_dashlet_registry_plugins() -> None:
         "snapin",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_plugins += [
             "alerts_bar_chart",
             "alert_overview",
@@ -109,7 +109,7 @@ def _expected_intervals() -> list[tuple[str, Literal[False] | int]]:
         ("linked_view", False),
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected += [
             ("custom_graph", 60),
             ("combined_graph", 60),

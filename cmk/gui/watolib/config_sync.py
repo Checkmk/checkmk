@@ -675,7 +675,7 @@ def _create_distributed_wato_file_for_base(
 
 
 def _create_distributed_wato_file_for_dcd(base_dir: Path, is_remote: bool) -> None:
-    if cmk_version.is_raw_edition():
+    if cmk_version.edition() is cmk_version.Edition.CRE:
         return
 
     output = wato_fileheader()

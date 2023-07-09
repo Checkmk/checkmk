@@ -62,7 +62,7 @@ def _expected_visual_types():
         },
     }
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_visual_types.update(
             {
                 "reports": {

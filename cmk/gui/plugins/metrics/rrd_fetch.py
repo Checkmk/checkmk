@@ -152,7 +152,7 @@ def needed_elements_of_expression(
     elif expression[0] in ["operator", "transformation"]:
         for operand in expression[2]:
             yield from needed_elements_of_expression(operand, resolve_combined_single_metric_spec)
-    elif expression[0] == "combined" and not cmk_version.is_raw_edition():
+    elif expression[0] == "combined" and cmk_version.edition() is not cmk_version.Edition.CRE:
         raw_spec = expression[1]
         metrics = resolve_combined_single_metric_spec(
             CombinedSingleMetricSpec(

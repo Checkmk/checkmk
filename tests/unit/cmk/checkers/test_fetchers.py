@@ -452,7 +452,7 @@ class TestSNMPFetcherDeserialization:
                 character_encoding=None,
                 snmp_backend=(
                     SNMPBackendEnum.INLINE
-                    if not cmk_version.is_raw_edition()
+                    if cmk_version.edition() is not cmk_version.Edition.CRE
                     else SNMPBackendEnum.CLASSIC
                 ),
             ),
@@ -461,7 +461,9 @@ class TestSNMPFetcherDeserialization:
     def test_fetcher_inline_backend_deserialization(self, fetcher_inline: SNMPFetcher) -> None:
         other = type(fetcher_inline).from_json(json_identity(fetcher_inline.to_json()))
         assert other.snmp_config.snmp_backend == (
-            SNMPBackendEnum.INLINE if not cmk_version.is_raw_edition() else SNMPBackendEnum.CLASSIC
+            SNMPBackendEnum.INLINE
+            if cmk_version.edition() is not cmk_version.Edition.CRE
+            else SNMPBackendEnum.CLASSIC
         )
 
     def test_repr(self, fetcher: SNMPFetcher) -> None:

@@ -88,7 +88,10 @@ def evaluate_time_series_expression(  # type: ignore[no-untyped-def]
     try:
         expression_func = time_series_expression_registry[ident]
     except KeyError:
-        if cmk_version.is_raw_edition() and ident in ["combined", "transformation"]:
+        if cmk_version.edition() is cmk_version.Edition.CRE and ident in [
+            "combined",
+            "transformation",
+        ]:
             raise MKGeneralException(
                 _(
                     "Metric transformations and combinations like Forecasts calculations, "

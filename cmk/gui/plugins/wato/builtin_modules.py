@@ -1199,7 +1199,7 @@ class MainModuleAgentsLinux(ABCMainModule):
 
 # Register the builtin agent download page on the top level of Setup only when the agent bakery
 # does not exist (e.g. when using CRE)
-if cmk_version.is_raw_edition():
+if cmk_version.edition() is cmk_version.Edition.CRE:
     main_module_registry.register(MainModuleAgentsWindows)
     main_module_registry.register(MainModuleAgentsLinux)
 

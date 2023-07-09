@@ -136,7 +136,7 @@ def load_plugins() -> None:
         # the individual user permissions. Only the problem graphs are not able to respect these
         # permissions. To not confuse the users we make the "main" dashboard in the enterprise
         # editions only visible to the roles that have the "general.see_all" permission.
-        if name == "main" and not cmk_version.is_raw_edition():
+        if name == "main" and cmk_version.edition() is not cmk_version.Edition.CRE:
             # Please note: This permitts the following roles: ["admin", "guest"]. Even if the user
             # overrides the permissions of these builtin roles in his configuration , this can not
             # be respected here. This is because the config of the user is not loaded yet. The user

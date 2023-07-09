@@ -21,7 +21,7 @@ from cmk.gui.utils.ntop import (
 
 @pytest.mark.usefixtures("load_config")
 def test_is_ntop_available() -> None:
-    assert is_ntop_available() != cmk_version.is_raw_edition()
+    assert is_ntop_available() != (cmk_version.edition() is cmk_version.Edition.CRE)
 
 
 @pytest.mark.usefixtures("load_config")
@@ -65,7 +65,7 @@ def test_is_ntop_configured_and_reason(
     answer: bool,
     reason: str,
 ) -> None:
-    if cmk_version.is_raw_edition():
+    if cmk_version.edition() is cmk_version.Edition.CRE:
         assert not is_ntop_configured()
         assert get_ntop_misconfiguration_reason() == "ntopng integration is only available in CEE"
     else:

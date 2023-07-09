@@ -746,7 +746,7 @@ def serialize_host(host: Host, effective_attributes: bool) -> dict[str, Any]:
     }
 
     agent_links = []
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         from cmk.cee.bakery.type_defs import (  # pylint: disable=import-error,no-name-in-module
             AgentPackagePlatform,
         )

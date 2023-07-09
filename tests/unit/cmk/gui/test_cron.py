@@ -23,7 +23,7 @@ def test_registered_jobs() -> None:
         "cmk.gui.watolib.autodiscovery.execute_autodiscovery",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected += [
             "cmk.gui.cce.plugins.wato.agent_registration.background_jobs.execute_host_registration_background_job",
             "cmk.gui.cce.plugins.wato.agent_registration.background_jobs.execute_discover_registered_hosts_background_job",

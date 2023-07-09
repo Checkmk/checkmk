@@ -1553,7 +1553,7 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
     def _get_rule_pack_to_mkp_map(self) -> dict[str, Any]:
         return (
             {}
-            if cmk_version.is_raw_edition()
+            if cmk_version.edition() is cmk_version.Edition.CRE
             else cmk.utils.packaging.id_to_mkp(
                 cmk.utils.packaging.Installer(cmk.utils.paths.installed_packages_dir),
                 cmk.utils.packaging.all_rule_pack_files(ec.mkp_rule_pack_dir()),
@@ -1957,7 +1957,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 rules_url = makeuri_contextless(request, rules_url_vars)
                 html.icon_button(rules_url, _("Edit the rules in this pack"), "rules")
 
-                if not cmk_version.is_raw_edition():
+                if cmk_version.edition() is not cmk_version.Edition.CRE:
                     # Icons for mkp export (CEE/CME only)
                     if type_ == ec.RulePackType.internal:
                         export_url = make_action_link(

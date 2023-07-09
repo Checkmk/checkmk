@@ -3407,7 +3407,7 @@ class ConfigCache:
 
     @staticmethod
     def _is_inline_backend_supported() -> bool:
-        return "netsnmp" in sys.modules and not cmk_version.is_raw_edition()
+        return "netsnmp" in sys.modules and cmk_version.edition() is not cmk_version.Edition.CRE
 
     def get_snmp_backend(self, host_name: HostName | HostAddress) -> SNMPBackendEnum:
         if self.in_binary_hostlist(host_name, usewalk_hosts):
@@ -4438,7 +4438,9 @@ class ConfigCache:
 def get_config_cache() -> ConfigCache:
     config_cache = _config_cache.get("config_cache")
     if not config_cache:
-        cache_class = ConfigCache if cmk_version.is_raw_edition() else CEEConfigCache
+        cache_class = (
+            ConfigCache if cmk_version.edition() is cmk_version.Edition.CRE else CEEConfigCache
+        )
         config_cache["cache"] = cache_class().initialize()
     return config_cache["cache"]
 

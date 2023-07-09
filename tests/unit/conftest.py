@@ -143,7 +143,7 @@ def patch_omd_site(monkeypatch):
     store.makedirs(cmk.utils.paths.default_config_dir + "/mkeventd.d/wato")
     store.makedirs(cmk.utils.paths.local_dashboards_dir)
     store.makedirs(cmk.utils.paths.local_views_dir)
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         # needed for visuals.load()
         store.makedirs(cmk.utils.paths.local_reports_dir)
     _touch(cmk.utils.paths.default_config_dir + "/mkeventd.mk")

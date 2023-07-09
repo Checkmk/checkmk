@@ -696,7 +696,7 @@ class _RuleHelper:
         pytest.param(
             _RuleHelper(_RuleHelper.ssh_rule, "sshkey", ("new_priv", "public_key"), "runas"),
             marks=pytest.mark.skipif(
-                version.is_raw_edition(),
+                version.edition() is version.Edition.CRE,
                 reason="lnx_remote_alert_handlers is not available in raw edition",
             ),
         ),

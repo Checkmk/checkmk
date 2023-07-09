@@ -230,7 +230,7 @@ class ModeUsers(WatoMode):
             item=make_simple_link(folder_preserving_link([("mode", "ldap_config")])),
         )
 
-        if not cmk_version.is_raw_edition():
+        if cmk_version.edition() is not cmk_version.Edition.CRE:
             yield PageMenuEntry(
                 title=_("SAML authentication"),
                 icon_name="saml",

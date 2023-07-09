@@ -59,7 +59,7 @@ def test_registered_background_jobs() -> None:
         "AutodiscoveryBackgroundJob",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_jobs += [
             "HostRegistrationBackgroundJob",
             "DiscoverRegisteredHostsBackgroundJob",

@@ -2779,7 +2779,7 @@ def _get_diagnostics_dump_sub_options() -> list[Option]:
         ),
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         sub_options.append(
             Option(
                 long_option=OPT_PERFORMANCE_GRAPHS,

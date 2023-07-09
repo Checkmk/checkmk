@@ -53,13 +53,13 @@ def test_registered_modules() -> None:
         "wato.py?group=eventconsole&mode=rulesets",
     ]
 
-    if cmk_version.is_raw_edition():
+    if cmk_version.edition() is cmk_version.Edition.CRE:
         expected_modules += [
             "download_agents_linux",
             "download_agents_windows",
         ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_modules += [
             "agent_registration",
             "agents",

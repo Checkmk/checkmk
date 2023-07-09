@@ -552,10 +552,7 @@ def test_synchronize_site(
         body="True",
     )
 
-    monkeypatch.setattr(cmk_version, "is_raw_edition", lambda: edition is cmk_version.Edition.CRE)
-    monkeypatch.setattr(
-        cmk_version, "is_managed_edition", lambda: edition is cmk_version.Edition.CME
-    )
+    monkeypatch.setattr(cmk_version, "edition", lambda: edition)
 
     with _get_activation_manager(monkeypatch, SiteId("unit_remote_1")) as activation_manager:
         assert activation_manager._activation_id is not None

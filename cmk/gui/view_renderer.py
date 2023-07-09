@@ -58,7 +58,7 @@ from cmk.gui.views.command import Command, do_actions, get_command_groups, shoul
 from cmk.gui.visuals import view_title
 from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
 
-if not cmk_version.is_raw_edition():
+if cmk_version.edition() is not cmk_version.Edition.CRE:
     from cmk.gui.cee.ntop.connector import get_cache  # pylint: disable=no-name-in-module
 
 
@@ -460,7 +460,7 @@ class GUIViewRenderer(ABCViewRenderer):
         )
 
     def _page_menu_entries_export_reporting(self, rows: Rows) -> Iterator[PageMenuEntry]:
-        if cmk_version.is_raw_edition():
+        if cmk_version.edition() is cmk_version.Edition.CRE:
             return
 
         if not user.may("general.instant_reports"):

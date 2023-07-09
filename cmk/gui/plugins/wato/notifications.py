@@ -312,7 +312,7 @@ class NotificationParameterMail(NotificationParameter):
             ]
         )
 
-        if not cmk_version.is_raw_edition():
+        if cmk_version.edition() is not cmk_version.Edition.CRE:
             import cmk.gui.cee.plugins.wato.syncsmtp  # pylint: disable=no-name-in-module
 
             elements += cmk.gui.cee.plugins.wato.syncsmtp.cee_html_mail_smtp_sync_option

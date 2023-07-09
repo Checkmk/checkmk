@@ -28,7 +28,7 @@ from cmk.gui.watolib.user_scripts import (
     user_script_title,
 )
 
-if not cmk_version.is_raw_edition():
+if cmk_version.edition() is not cmk_version.Edition.CRE:
     from cmk.gui.cee.plugins.watolib.dcd import (  # pylint: disable=no-name-in-module
         ConfigDomainDCD,
         used_dcd_rest_api_user,

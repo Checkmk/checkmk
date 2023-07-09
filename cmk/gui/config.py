@@ -27,7 +27,7 @@ from cmk.gui.i18n import _
 from cmk.gui.plugins.config.base import CREConfig
 from cmk.gui.type_defs import Key, RoleName
 
-if not cmk_version.is_raw_edition():
+if cmk_version.edition() is not cmk_version.Edition.CRE:
     from cmk.gui.cee.plugins.config.cee import CEEConfig  # pylint: disable=no-name-in-module
 else:
     # Stub needed for non enterprise edition

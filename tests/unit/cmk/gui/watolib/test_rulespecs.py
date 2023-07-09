@@ -1306,7 +1306,7 @@ def _expected_rulespec_group_choices():
         ("vm_cloud_container", "VM, Cloud, Container"),
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected += [
             ("agents/agent_plugins", "&nbsp;&nbsp;\u2319 Agent Plugins"),
             ("agents/automatic_updates", "&nbsp;&nbsp;\u2319 Automatic Updates"),
@@ -1435,7 +1435,7 @@ def test_rulespec_get_all_groups() -> None:
         "eventconsole",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_rulespec_groups += [
             "agents/automatic_updates",
             "agents/linux_agent",
@@ -1472,7 +1472,7 @@ def test_rulespec_get_host_groups() -> None:
         "vm_cloud_container",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_rulespec_host_groups += [
             "agents/agent_plugins",
             "agents/automatic_updates",

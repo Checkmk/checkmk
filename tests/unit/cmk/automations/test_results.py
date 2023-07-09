@@ -27,7 +27,9 @@ from cmk.base.automations import automations
 def test_result_type_registry_completeness() -> None:
     # ensures that all automation calls registered in cmk.base have a corresponding result type
     # registered in cmk.automations
-    automations_missing = {"bake-agents"} if cmk_version.is_raw_edition() else set()
+    automations_missing = (
+        {"bake-agents"} if cmk_version.edition() is cmk_version.Edition.CRE else set()
+    )
     assert set(result_type_registry) - automations_missing == set(automations._automations)
 
 

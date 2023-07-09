@@ -16,7 +16,7 @@ from cmk.gui.watolib.search import MatchItem
 def expected_items() -> dict[str, list[str]]:
     agents_items = []
 
-    if cmk_version.is_raw_edition():
+    if cmk_version.edition() is cmk_version.Edition.CRE:
         agents_items += [
             "download_agents_linux",
             "download_agents_windows",
@@ -30,7 +30,7 @@ def expected_items() -> dict[str, list[str]]:
         "download_agents",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         agents_items.append("agent_registration")
 
     agents_items += [
@@ -45,12 +45,12 @@ def expected_items() -> dict[str, list[str]]:
         "mkeventd_rule_packs",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         events_items.append("alert_handlers")
 
     maintenance_items = ["backup"]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         maintenance_items.append("licensing")
         maintenance_items.append("mkps")
 
@@ -66,7 +66,7 @@ def expected_items() -> dict[str, list[str]]:
         "tags",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         hosts_items.append("dcd_connections")
 
     hosts_items += [
@@ -86,7 +86,7 @@ def expected_items() -> dict[str, list[str]]:
             "ldap_config",
         ]
     )
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         users_items.append("saml_config")
     users_items.append("user_attrs")
 
@@ -119,7 +119,7 @@ def expected_items() -> dict[str, list[str]]:
         "users": users_items,
     }
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_items_dict.update({"exporter": ["influxdb_connections"]})
 
     return expected_items_dict

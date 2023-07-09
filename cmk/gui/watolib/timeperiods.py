@@ -244,7 +244,7 @@ def _find_usages_in_notification_rule(
 
 def _find_usages_in_alert_handler_rules(time_period_name: str) -> list[TimeperiodUsage]:
     used_in: list[TimeperiodUsage] = []
-    if version.is_raw_edition():
+    if version.edition() is version.Edition.CRE:
         return used_in
     for index, rule in enumerate(cee_wato.alert_handling.load_alert_handler_rules()):
         if rule.get("match_timeperiod") == time_period_name:

@@ -400,7 +400,7 @@ class SiteManagement:
 class SiteManagementFactory:
     @staticmethod
     def factory() -> SiteManagement:
-        if cmk_version.is_raw_edition():
+        if cmk_version.edition() is cmk_version.Edition.CRE:
             cls: type[SiteManagement] = CRESiteManagement
         else:
             cls = CEESiteManagement

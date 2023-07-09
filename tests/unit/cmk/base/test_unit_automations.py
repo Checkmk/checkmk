@@ -48,7 +48,7 @@ def test_registered_automations() -> None:
         "update-host-labels",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         needed_automations += [
             "bake-agents",
         ]

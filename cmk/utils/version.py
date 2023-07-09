@@ -39,6 +39,10 @@ class Edition(_EditionValue, enum.Enum):
     CSE = _EditionValue("cse", "saas", "Checkmk Saas Edition")
     CME = _EditionValue("cme", "managed", "Checkmk Managed Services Edition")
 
+    @classmethod
+    def from_version_string(cls, raw: str) -> Edition:
+        return cls[raw.split(".")[-1].upper()]
+
 
 @cache
 def omd_version() -> str:
@@ -49,15 +53,11 @@ def omd_version() -> str:
 @cache
 def edition() -> Edition:
     try:
-        return Edition[omd_version().split(".")[-1].upper()]
+        return Edition.from_version_string(omd_version())
     except KeyError:
         # Without this fallback CI jobs may fail.
         # The last job known to fail was we the building of the sphinx documentation
         return Edition.CRE
-
-
-def is_raw_edition() -> bool:
-    return edition() is Edition.CRE
 
 
 def is_managed_edition() -> bool:

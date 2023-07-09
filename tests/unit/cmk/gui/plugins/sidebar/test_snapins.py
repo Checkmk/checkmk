@@ -31,7 +31,7 @@ def test_registered_snapins() -> None:
         "wato_foldertree",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_snapins += [
             "cmc_stats",
             "reports",
@@ -57,7 +57,7 @@ def test_refresh_snapins() -> None:
         "time",
     ]
 
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         expected_refresh_snapins += [
             "cmc_stats",
         ]

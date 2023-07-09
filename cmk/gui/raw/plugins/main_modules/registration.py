@@ -70,7 +70,7 @@ def register_painters() -> None:
 
 
 def register() -> None:
-    if not cmk_version.is_raw_edition():
+    if cmk_version.edition() is not cmk_version.Edition.CRE:
         return
 
     register_pages()

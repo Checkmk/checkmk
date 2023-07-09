@@ -29,7 +29,7 @@ from cmk.gui.plugins.sidebar.utils import (
 from cmk.gui.type_defs import MegaMenu, TopicMenuTopic, Visual
 from cmk.gui.views.store import get_permitted_views
 
-if not cmk_version.is_raw_edition():
+if cmk_version.edition() is not cmk_version.Edition.CRE:
     import cmk.gui.cee.reporting as reporting  # pylint: disable=no-name-in-module
 else:
     reporting = None  # type: ignore[assignment]

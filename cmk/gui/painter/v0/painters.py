@@ -713,7 +713,7 @@ class PainterSvcMetrics(Painter):
             html.td(render_color_icon(metric["color"]), class_="color")
             html.td(f'{metric["title"]}{optional_metric_id}:')
             html.td(metric["unit"]["render"](metric["value"]), class_="value")
-            if not cmk_version.is_raw_edition():
+            if cmk_version.edition() is not cmk_version.Edition.CRE:
                 html.td(
                     html.render_popup_trigger(
                         html.render_icon(

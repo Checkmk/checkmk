@@ -133,6 +133,8 @@ class ConfigDomainGUI(ABCConfigDomain):
             users = load_users()
             for ident, user_config in users.items():
                 lang: str = user_config.get("language", "en")
+                if lang is None:
+                    lang = "en"
                 if is_community_translation(lang):
                     warnings.append(
                         f"For user '{ident}': Resetting the language '{get_language_alias(lang)}' to the default "

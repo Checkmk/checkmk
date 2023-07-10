@@ -1,0 +1,14 @@
+Title: Fixed "PosixPath error" exception on activate changes
+Class: fix
+Compatible: compat
+Component: multisite
+Date: 1688973750
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+If the preferred language setting of some user were set to <tt>None</tt> an exception was shown during activate changes.
+In earlier versions <tt>None</tt> was used as "Use fallback english", but this behaviour was changed recently.
+

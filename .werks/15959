@@ -1,0 +1,15 @@
+Title: ntop_alerts: populate alert type dropdown list in alerts dashboards
+Class: fix
+Compatible: compat
+Component: cmc
+Date: 1689085683
+Edition: cee
+Knowledge: doc
+Level: 3
+Version: 2.3.0b1
+
+This werk fixes an issue with the alert type dropdown menu in the alerts
+dashboards.  Previously, it was only populated with All, meaning you
+couldn't filter the alerts on alert type.  Now the dropdown is populated
+with all possible alert type values.
+

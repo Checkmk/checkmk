@@ -112,13 +112,11 @@ def get_relevant_raw_sections(
     parsed_section_names: set[ParsedSectionName] = set()
 
     for check_plugin_name in check_plugin_names:
-        check_plugin = get_check_plugin(check_plugin_name)
-        if check_plugin:
+        if check_plugin := get_check_plugin(check_plugin_name):
             parsed_section_names.update(check_plugin.sections)
 
     for inventory_plugin_name in inventory_plugin_names:
-        inventory_plugin = get_inventory_plugin(inventory_plugin_name)
-        if inventory_plugin:
+        if inventory_plugin := get_inventory_plugin(inventory_plugin_name):
             parsed_section_names.update(inventory_plugin.sections)
 
     return {

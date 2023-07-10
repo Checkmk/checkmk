@@ -78,12 +78,13 @@ def _validate_parse_function(
         )
 
     arg = parameters["string_table"]
-    if arg.annotation is not arg.empty:  # why is inspect._empty trueish?!
-        if arg.annotation != expected_annotation[0]:
-            raise TypeError(
-                "expected parse function argument annotation %r, got %r"
-                % (expected_annotation[1], arg.annotation)
-            )
+    if (
+        arg.annotation is not arg.empty and arg.annotation != expected_annotation[0]
+    ):  # why is inspect._empty trueish?
+        raise TypeError(
+            "expected parse function argument annotation %r, got %r"
+            % (expected_annotation[1], arg.annotation)
+        )
 
 
 def _validate_host_label_kwargs(
@@ -141,7 +142,7 @@ def _create_snmp_parse_function(
 def _validate_supersedings(own_name: SectionName, supersedes: list[SectionName]) -> None:
     set_supersedes = set(supersedes)
     if own_name in set_supersedes:
-        raise ValueError("cannot supersede myself: '%s'" % own_name)
+        raise ValueError(f"cannot supersede myself: '{own_name}'")
     if len(supersedes) != len(set_supersedes):
         raise ValueError("duplicate supersedes entry")
 
@@ -153,7 +154,7 @@ def _validate_detect_spec(detect_spec: SNMPDetectBaseType) -> None:
         raise TypeError("value of 'detect' keyword must be a list of lists of 3-tuples")
 
     for atom in itertools.chain(*detect_spec):
-        if not isinstance(atom, tuple) or not len(atom) == 3:
+        if not isinstance(atom, tuple) or len(atom) != 3:
             raise TypeError("value of 'detect' keyword must be a list of lists of 3-tuples")
         oid_string, expression, expected_match = atom
 
@@ -171,7 +172,7 @@ def _validate_detect_spec(detect_spec: SNMPDetectBaseType) -> None:
             try:
                 _ = regex(expression)
             except MKGeneralException as exc:
-                raise ValueError("invalid regex in value of 'detect' keyword: %s" % exc)
+                raise ValueError(f"invalid regex in value of 'detect' keyword: {exc}")
 
         if not isinstance(expected_match, bool):
             raise TypeError(
@@ -269,9 +270,7 @@ def create_agent_section_plugin(
 
     return AgentSectionPlugin(
         name=section_name,
-        parsed_section_name=ParsedSectionName(
-            parsed_section_name if parsed_section_name else str(section_name)
-        ),
+        parsed_section_name=ParsedSectionName(parsed_section_name or str(section_name)),
         parse_function=_create_agent_parse_function(parse_function),
         host_label_function=_create_host_label_function(host_label_function),
         host_label_default_parameters=host_label_default_parameters,
@@ -335,9 +334,7 @@ def create_snmp_section_plugin(
 
     return SNMPSectionPlugin(
         name=section_name,
-        parsed_section_name=ParsedSectionName(
-            parsed_section_name if parsed_section_name else str(section_name)
-        ),
+        parsed_section_name=ParsedSectionName(parsed_section_name or str(section_name)),
         parse_function=_create_snmp_parse_function(parse_function, isinstance(fetch, SNMPTree)),
         host_label_function=_create_host_label_function(host_label_function),
         host_label_default_parameters=host_label_default_parameters,
@@ -362,21 +359,21 @@ def validate_section_supersedes(all_supersedes: dict[SectionName, set[SectionNam
     """
 
     for name, explicitly in all_supersedes.items():
-        transitivly = {
+        transitively = {
             n for section_name in explicitly for n in all_supersedes.get(section_name, ())
         }
-        implicitly = transitivly - explicitly
+        implicitly = transitively - explicitly
         if name in implicitly:
             raise ValueError(
                 "Section plugin '%s' implicitly supersedes section(s) %s. "
                 "This leads to a cyclic superseding!"
-                % (name, ", ".join("'%s'" % n for n in sorted(implicitly)))
+                % (name, ", ".join(f"'{n}'" for n in sorted(implicitly)))
             )
         if implicitly:
             raise ValueError(
                 "Section plugin '%s' implicitly supersedes section(s) %s. "
                 "You must add those to the supersedes keyword argument."
-                % (name, ", ".join("'%s'" % n for n in sorted(implicitly)))
+                % (name, ", ".join(f"'{n}'" for n in sorted(implicitly)))
             )
 
 

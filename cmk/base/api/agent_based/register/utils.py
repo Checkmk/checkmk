@@ -22,9 +22,9 @@ from cmk.base.api.agent_based.checking_classes import CheckPlugin
 
 TypeLabel = Literal["check", "cluster_check", "discovery", "host_label", "inventory"]
 
-ITEM_VARIABLE = "%s"
+ITEM_VARIABLE: Final = "%s"
 
-_NONE_TYPE = type(None)
+_NONE_TYPE: Final = type(None)
 
 _ALLOWED_EDITION_FOLDERS: Final = {e.short for e in Edition}
 
@@ -82,7 +82,7 @@ def validate_function_arguments(
     if len(sections) == 1:
         expected_params.append("section")
     else:
-        expected_params.extend("section_%s" % s for s in sections)
+        expected_params.extend(f"section_{s}" for s in sections)
 
     parameters = inspect.signature(function).parameters
     present_params = list(parameters)
@@ -107,7 +107,7 @@ def _raise_appropriate_type_error(
     type_label: TypeLabel,
     has_item: bool,
 ) -> NoReturn:
-    # We know we must raise. Dispatch for a better error message:
+    """Raise with appropriate error message:"""
 
     if set(expected_params) == set(present_params):  # not len()!
         exp_str = ", ".join(expected_params)
@@ -149,13 +149,14 @@ def _validate_optional_section_annotation(
         return  # no typing used in plugin
 
     if type_label == "cluster_check":
-        desired = " cluster sections must be of type `Mapping[str, Optional[<NodeSection>]]`"
         if not all(
             str(p.annotation).startswith("typing.Mapping[str, ")
             and _NONE_TYPE in get_args(get_args(p.annotation)[1])
             for p in section_args
         ):
-            raise TypeError(f"Wrong type annotation: {desired}")
+            raise TypeError(
+                "Wrong type annotation: cluster sections must be of type `Mapping[str, Optional[<NodeSection>]]`"
+            )
         return
 
     if len(section_args) <= 1:
@@ -202,7 +203,7 @@ def validate_default_parameters(
         raise TypeError(f"default {params_type} parameters must be dict")
 
     if ruleset_name is None and params_type != "check":
-        raise TypeError("missing ruleset name for default %s parameters" % (params_type))
+        raise TypeError(f"missing ruleset name for default {params_type} parameters")
 
 
 def validate_check_ruleset_item_consistency(
@@ -221,7 +222,7 @@ def validate_check_ruleset_item_consistency(
     if not present_check_plugins:
         return
 
-    # Trying to detect whether or not the check has an item. But this mechanism is not
+    # Try to detect whether the check has an item. But this mechanism is not
     # 100% reliable since Checkmk appends an item to the service_description when "%s"
     # is not in the checks service_description template.
     # Maybe we need to define a new rule which enforces the developer to use the %s in

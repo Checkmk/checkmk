@@ -8,14 +8,17 @@ from typing import Any
 
 from cmk.gui.i18n import _
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupActiveChecks
-from cmk.gui.plugins.wato.utils import HostRulespec, rulespec_registry
+from cmk.gui.plugins.wato.utils import (
+    HostRulespec,
+    MigrateToIndividualOrStoredPassword,
+    rulespec_registry,
+)
 from cmk.gui.valuespec import (
     CascadingDropdown,
     Dictionary,
     HostAddress,
     Migrate,
     NetworkPort,
-    Password,
     Percentage,
     TextInput,
     Tuple,
@@ -129,7 +132,14 @@ def _valuespec_active_checks_disk_smb() -> Migrate:
                         title=_("Authorization"),
                         elements=[
                             TextInput(title=_("Username"), allow_empty=False, size=24),
-                            Password(title=_("Password"), allow_empty=False, size=12),
+                            MigrateToIndividualOrStoredPassword(
+                                help=_(
+                                    "For security reasons it is recommended to use the password store for setting the password."
+                                ),
+                                title=_("Password"),
+                                allow_empty=False,
+                                size=12,
+                            ),
                         ],
                     ),
                 ),

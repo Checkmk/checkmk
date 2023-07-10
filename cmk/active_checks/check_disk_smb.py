@@ -13,6 +13,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
+from cmk.utils.password_store import replace_passwords
 from cmk.utils.render import fmt_bytes, percent
 
 
@@ -20,6 +21,7 @@ def main(
     argv: Sequence[str] | None = None,
     smb_share: SMBShareDiskUsageProto | None = None,
 ) -> int:
+    replace_passwords()
     exitcode, summary, perfdata = _check_disk_usage_main(
         argv or sys.argv[1:],
         smb_share or _SMBShareDiskUsage(),

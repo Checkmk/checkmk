@@ -104,7 +104,10 @@ def test_postgres_windows_config_with_instance(mk_postgres, monkeypatch, is_wind
 @patch("subprocess.Popen")
 def test_postgres_linux_binary_path_fallback(mock_Popen, mk_postgres, is_linux):
     process_mock = Mock()
-    attrs = {'communicate.side_effect': [('usr/mydb-12.3/bin', None)]}
+    attrs = {
+        'communicate.side_effect': [('usr/mydb-12.3/bin', None)],
+        'returncode': 0,
+    }
     process_mock.configure_mock(**attrs)
     mock_Popen.return_value = process_mock
     instance = {
@@ -125,7 +128,8 @@ def test_postgres_factory_linux_without_instance(mock_Popen, mk_postgres, is_lin
     process_mock = Mock()
     attrs = {
         'communicate.side_effect': [('/usr/lib/postgres/psql', None), ('postgres\ndb1', None),
-                                    ('12.3', None)]
+                                    ('12.3', None)],
+        'returncode': 0,
     }
     process_mock.configure_mock(**attrs)
     mock_Popen.return_value = process_mock
@@ -151,7 +155,10 @@ def test_postgres_factory_linux_without_instance(mock_Popen, mk_postgres, is_lin
 @patch('subprocess.Popen')
 def test_postgres_factory_win_without_instance(mock_Popen, mock_isfile, mk_postgres, is_windows):
     process_mock = Mock()
-    attrs = {'communicate.side_effect': [(b'postgres\ndb1', b'ok'), (b'12.1', b'ok')]}
+    attrs = {
+        'communicate.side_effect': [(b'postgres\ndb1', b'ok'), (b'12.1', b'ok')],
+        'returncode': 0,
+    }
     process_mock.configure_mock(**attrs)
     mock_Popen.return_value = process_mock
     instance = {
@@ -190,7 +197,8 @@ def test_postgres_factory_linux_with_instance(mock_Popen, mock_isfile, monkeypat
         'communicate.side_effect': [
             ('postgres\ndb1', None),
             ('12.3.6', None),
-        ]
+        ],
+        'returncode': 0,
     }
     process_mock.configure_mock(**attrs)
     mock_Popen.return_value = process_mock
@@ -226,7 +234,10 @@ def test_postgres_factory_windows_with_instance(
         "pg_version": "12.1",
     }
     process_mock = Mock()
-    attrs = {'communicate.side_effect': [(b'postgres\ndb1', b'ok'), (b'12.1.5', b'ok')]}
+    attrs = {
+        'communicate.side_effect': [(b'postgres\ndb1', b'ok'), (b'12.1.5', b'ok')],
+        'returncode': 0,
+    }
     process_mock.configure_mock(**attrs)
     mock_Popen.return_value = process_mock
 
@@ -260,7 +271,8 @@ def test_get_instances(mock_Popen, mk_postgres):
             ("/usr/lib/postgres/psql", None),
             ("postgres\ndb1", None),
             ("12.3.6", None),
-        ]
+        ],
+        "returncode": 0,
     }
     process_mock.configure_mock(**attrs)
     mock_Popen.return_value = process_mock
@@ -275,6 +287,7 @@ def test_get_instances(mock_Popen, mk_postgres):
             ]),
             None,
         )],
+        "returncode": 0,
     }
     process_mock.configure_mock(**attrs)
     mock_Popen.return_value = process_mock
@@ -308,7 +321,8 @@ def test_get_instances_case_sensitivity(mock_Popen, mk_postgres, instance_name, 
             ("/usr/lib/postgres/psql", None),
             ("postgres\ndb1", None),
             ("12.3.6", None),
-        ]
+        ],
+        "returncode": 0,
     }
     process_mock.configure_mock(**attrs)
     mock_Popen.return_value = process_mock
@@ -322,7 +336,10 @@ def test_get_instances_case_sensitivity(mock_Popen, mk_postgres, instance_name, 
             "3190 postgres: 13/%s logger" % ps_instance,
             "785150 /usr/lib/postgresql/13/bin/postgres -D /var/lib/postgresql/13/%s " % ps_instance
         ])
-    attrs = {"communicate.side_effect": [("\n".join(proc_list), None)]}
+    attrs = {
+        "communicate.side_effect": [("\n".join(proc_list), None)],
+        "returncode": 0,
+    }
     process_mock.configure_mock(**attrs)
     mock_Popen.return_value = process_mock
 

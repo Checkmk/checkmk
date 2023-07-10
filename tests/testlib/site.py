@@ -653,7 +653,7 @@ class Site:
                 self._enable_cmc_debug_logging()
                 self._enable_cmc_tooling(tool=None)
                 self._disable_cmc_log_rotation()
-                self._enabled_liveproxyd_debug_logging()
+                self._enable_liveproxyd_debug_logging()
             self._enable_mkeventd_debug_logging()
             self._enable_gui_debug_logging()
             self._tune_nagios()
@@ -776,7 +776,7 @@ class Site:
         p = self.execute(["cmk", "-U"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         assert p.wait() == 0, "Failed to execute 'cmk -U': %s" % p.communicate()[0]
 
-    def _enabled_liveproxyd_debug_logging(self) -> None:
+    def _enable_liveproxyd_debug_logging(self) -> None:
         self.makedirs("etc/check_mk/liveproxyd.d")
         # 15 = verbose
         # 10 = debug

@@ -1,0 +1,16 @@
+{
+    "host_name": "deb_agent_docker",
+    "check_command": "check_mk-mkeventd_status",
+    "check_command_expanded": "",
+    "check_options": 0,
+    "check_period": "24X7",
+    "check_type": 1,
+    "description": "OMD update_central Event Console",
+    "display_name": "OMD update_central Event Console",
+    "has_been_checked": 1,
+    "labels": {},
+    "plugin_output": "Current events: 0, Virtual memory: 186 MiB, Overall event limit inactive, No hosts event limit active, No rules event limit active, Received messages: 0.00/s, Rule hits: 0.00/s, Rule tries: 0.00/s, Message drops: 0.00/s, Created events: 0.00/s, Client connects: 0.00/s, Rule hit ratio: -, Processing time per message: -, Time per client request: 0.13 ms",
+    "state": 0,
+    "state_type": 1,
+    "tags": {}
+}

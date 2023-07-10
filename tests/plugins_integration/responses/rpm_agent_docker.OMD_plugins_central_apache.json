@@ -1,0 +1,16 @@
+{
+    "host_name": "rpm_agent_docker",
+    "check_command": "check_mk-omd_apache",
+    "check_command_expanded": "",
+    "check_options": 0,
+    "check_period": "24X7",
+    "check_type": 1,
+    "description": "OMD plugins_central apache",
+    "display_name": "OMD plugins_central apache",
+    "has_been_checked": 1,
+    "labels": {},
+    "plugin_output": "Requests: 1.08/s, Seconds serving: 0.03/s, Sent: 112 kB/s",
+    "state": 0,
+    "state_type": 1,
+    "tags": {}
+}

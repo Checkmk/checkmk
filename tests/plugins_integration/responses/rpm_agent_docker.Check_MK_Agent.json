@@ -1,0 +1,16 @@
+{
+    "host_name": "rpm_agent_docker",
+    "check_command": "check_mk-checkmk_agent",
+    "check_command_expanded": "",
+    "check_options": 0,
+    "check_period": "24X7",
+    "check_type": 1,
+    "description": "Check_MK Agent",
+    "display_name": "Check_MK Agent",
+    "has_been_checked": 1,
+    "labels": {},
+    "plugin_output": "Version: 2023.07.10, OS: linux, Agent plugins: 0, Local checks: 0",
+    "state": 0,
+    "state_type": 1,
+    "tags": {}
+}

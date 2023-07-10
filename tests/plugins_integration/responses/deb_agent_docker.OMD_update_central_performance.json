@@ -1,0 +1,16 @@
+{
+    "host_name": "deb_agent_docker",
+    "check_command": "check_mk-livestatus_status",
+    "check_command_expanded": "",
+    "check_options": 0,
+    "check_period": "24X7",
+    "check_type": 1,
+    "description": "OMD update_central performance",
+    "display_name": "OMD update_central performance",
+    "has_been_checked": 1,
+    "labels": {},
+    "plugin_output": "Livestatus version: 2.2.0, Host checks: 0.0/s, Service checks: 0.0/s",
+    "state": 0,
+    "state_type": 1,
+    "tags": {}
+}

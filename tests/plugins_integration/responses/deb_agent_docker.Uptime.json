@@ -1,5 +1,5 @@
 {
-    "host_name": "test_agent_plugin_injected",
+    "host_name": "deb_agent_docker",
     "check_command": "check_mk-uptime",
     "check_command_expanded": "",
     "check_options": 0,
@@ -9,7 +9,7 @@
     "display_name": "Uptime",
     "has_been_checked": 1,
     "labels": {},
-    "plugin_output": "Up since Jul 03 2023 07:17:00, Uptime: 1 hour 21 minutes",
+    "plugin_output": "Up since Jul 10 2023 12:23:22, Uptime: 1 hour 16 minutes",
     "state": 0,
     "state_type": 1,
     "tags": {}

@@ -1,5 +1,5 @@
 {
-    "host_name": "test_agent_plugin_injected",
+    "host_name": "rpm_agent_docker",
     "check_command": "check-mk",
     "check_command_expanded": "",
     "check_options": 0,

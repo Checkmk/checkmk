@@ -1,0 +1,16 @@
+{
+    "host_name": "rpm_agent_docker",
+    "check_command": "check_mk-mknotifyd",
+    "check_command_expanded": "",
+    "check_options": 0,
+    "check_period": "24X7",
+    "check_type": 1,
+    "description": "OMD plugins_central Notification Spooler",
+    "display_name": "OMD plugins_central Notification Spooler",
+    "has_been_checked": 1,
+    "labels": {},
+    "plugin_output": "Version: 2023.07.10, Spooler running",
+    "state": 0,
+    "state_type": 1,
+    "tags": {}
+}

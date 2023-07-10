@@ -1,5 +1,5 @@
 {
-    "host_name": "test_agent_plugin_injected",
+    "host_name": "dummy_agent",
     "check_command": "check-mk-inventory",
     "check_command_expanded": "check-mk-inventory!",
     "check_options": 0,

@@ -1,0 +1,16 @@
+{
+    "host_name": "deb_agent_docker",
+    "check_command": "check_mk-omd_diskusage",
+    "check_command_expanded": "",
+    "check_options": 0,
+    "check_period": "24X7",
+    "check_type": 1,
+    "description": "OMD plugins_central disk usage",
+    "display_name": "OMD plugins_central disk usage",
+    "has_been_checked": 1,
+    "labels": {},
+    "plugin_output": "Total: 49.2 MiB, Agents: 41.5 MiB, Core: 1.40 MiB, History: 0 B, Inventory: 0 B, Local: 316 KiB, Logs: 132 KiB, PNP4Nagios: 20.0 KiB, RRDs: 4.00 KiB, Tmp: 3.73 KiB",
+    "state": 0,
+    "state_type": 1,
+    "tags": {}
+}

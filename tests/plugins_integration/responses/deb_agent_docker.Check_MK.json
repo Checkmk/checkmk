@@ -1,0 +1,16 @@
+{
+    "host_name": "deb_agent_docker",
+    "check_command": "check-mk",
+    "check_command_expanded": "",
+    "check_options": 0,
+    "check_period": "24X7",
+    "check_type": 0,
+    "description": "Check_MK",
+    "display_name": "Check_MK",
+    "has_been_checked": 1,
+    "labels": {},
+    "plugin_output": "[agent] Success, [piggyback] Success (but no data found for this host), execution time 0.0 sec ",
+    "state": 0,
+    "state_type": 1,
+    "tags": {}
+}

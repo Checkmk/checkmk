@@ -1,0 +1,330 @@
+<<<check_mk>>>
+Version: 2023.07.10
+AgentOS: linux
+Hostname: 80464e0b1106
+AgentDirectory: /etc/check_mk
+DataDirectory: /var/lib/check_mk_agent
+SpoolDirectory: /var/lib/check_mk_agent/spool
+PluginsDirectory: /usr/lib/check_mk_agent/plugins
+LocalDirectory: /usr/lib/check_mk_agent/local
+FailedPythonReason: 
+SSHClient: 
+<<<cmk_agent_ctl_status:sep(0)>>>
+{"version":"2023.07.10","agent_socket_operational":true,"ip_allowlist":[],"allow_legacy_pull":false,"connections":[]}
+<<<checkmk_agent_plugins_lnx:sep(0)>>>
+pluginsdir /usr/lib/check_mk_agent/plugins
+localdir /usr/lib/check_mk_agent/local
+<<<labels:sep(0)>>>
+{"cmk/device_type":"container"}
+<<<systemd_units>>>
+[list-unit-files]
+[status]
+[all]
+<<<nfsmounts_v2:sep(0)>>>
+<<<cifsmounts>>>
+<<<mounts>>>
+/dev/mapper/vgubuntu-root /usr/sbin/docker-init ext4 ro,relatime,errors=remount-ro 0 0
+/dev/mapper/vgubuntu-root /git-lowerdir ext4 ro,relatime,errors=remount-ro 0 0
+/dev/mapper/vgubuntu-root /root/.cmk-credentials ext4 ro,relatime,errors=remount-ro 0 0
+/dev/mapper/vgubuntu-root /etc/resolv.conf ext4 rw,relatime,errors=remount-ro 0 0
+/dev/mapper/vgubuntu-root /etc/hostname ext4 rw,relatime,errors=remount-ro 0 0
+/dev/mapper/vgubuntu-root /etc/hosts ext4 rw,relatime,errors=remount-ro 0 0
+/dev/mapper/vgubuntu-root /home/jenkins/.cmk-credentials ext4 rw,relatime,errors=remount-ro 0 0
+/dev/mapper/vgubuntu-root /home/matteostifano/.cmk-credentials ext4 rw,relatime,errors=remount-ro 0 0
+/dev/mapper/vgubuntu-root /home/matteostifano/dev/check_mk_master ext4 rw,relatime,errors=remount-ro 0 0
+/dev/mapper/vgubuntu-root /home/jenkins/workspace/checkmk/master/nightly-enterprise/test-composition/checkout ext4 rw,relatime,errors=remount-ro 0 0
+/dev/mapper/vgubuntu-root /home/jenkins/workspace/checkmk/master/nightly-enterprise/test-composition/packages ext4 rw,relatime,errors=remount-ro 0 0
+<<<ps_lnx>>>
+[time]
+1688991569
+[processes]
+[header] CGROUP USER VSZ RSS TIME ELAPSED PID COMMAND
+- root 1136 4 00:00:00 02:32 1 /sbin/docker-init -- /bin/bash
+- root 4828 3780 00:00:00 02:32 7 /bin/bash
+- root 4728 3840 00:00:00 02:18 123 /bin/bash /git/scripts/run-pipenv shell
+- root 60928 54968 00:00:00 02:18 136 /opt/Python-3.11.2/bin/python3.11 /usr/bin/pipenv shell
+- root 4968 4024 00:00:00 02:17 137 /bin/bash -i
+- root 199412 169604 00:00:10 01:49 156 /git/.venv/bin/python /git/.venv/bin/pytest -T plugins_integration test_generate_dumps.py -v --log-cli-level=INFO
+- plugins_central 41152 29516 00:00:00 01:37 2723 gunicorn: master [agent_receiver.main:main_app()]
+- plugins_central 60552 50160 00:00:00 01:37 2728 gunicorn: worker [agent_receiver.main:main_app()]
+- plugins_central 197616 36572 00:00:00 01:37 2730 python3 /omd/sites/plugins_central/bin/mkeventd
+- plugins_central 35324 22004 00:00:00 01:37 2738 liveproxyd[master]
+- plugins_central 32280 19100 00:00:00 01:37 2752 python3 /omd/sites/plugins_central/bin/mknotifyd
+- plugins_central 67180 2920 00:00:00 01:37 2756 /omd/sites/plugins_central/bin/rrdcached -t 4 -w 3600 -z 1800 -f 7200 -s plugins_central -m 660 -l unix:/omd/sites/plugins_central/tmp/run/rrdcached.sock -p /omd/sites/plugins_central/tmp/rrdcached.pid -j /omd/sites/plugins_central/var/rrdcached -o /omd/sites/plugins_central/var/log/rrdcached.log
+- plugins_central 1804932 12228 00:00:00 01:37 2778 /omd/sites/plugins_central/bin/cmc /omd/sites/plugins_central/var/check_mk/core/config.pb
+- plugins_central 119644 97052 00:00:01 01:37 2802 python3 /omd/sites/plugins_central/bin/cmk --create-rrd --keepalive
+- plugins_central 105884 93160 00:00:01 01:37 2804 python3 /omd/sites/plugins_central/bin/cmk --handle-alerts --keepalive
+- plugins_central 24412 7800 00:00:00 01:37 2808 /omd/sites/plugins_central/lib/cmc/checkhelper
+- plugins_central 24412 7844 00:00:00 01:37 2809 /omd/sites/plugins_central/lib/cmc/checkhelper
+- plugins_central 110508 98112 00:00:01 01:37 2810 python3 /omd/sites/plugins_central/bin/cmk -v --checker
+- plugins_central 110508 98044 00:00:01 01:37 2811 python3 /omd/sites/plugins_central/bin/cmk -v --checker
+- plugins_central 104720 92976 00:00:01 01:37 2812 python3 /omd/sites/plugins_central/bin/cmk -v --keepalive --real-time-checks
+- plugins_central 45648 33844 00:00:00 01:37 2813 python3 /omd/sites/plugins_central/bin/fetcher
+- plugins_central 45648 33584 00:00:00 01:37 2814 python3 /omd/sites/plugins_central/bin/fetcher
+- plugins_central 64120 53060 00:00:00 01:37 2815 python3 /omd/sites/plugins_central/bin/cmk --notify --keepalive
+- plugins_central 4908 1528 00:00:00 01:37 2816 /omd/sites/plugins_central/lib/cmc/icmpsender 8 0 1000
+- plugins_central 8120 1992 00:00:00 01:37 2817 /omd/sites/plugins_central/lib/cmc/icmpreceiver
+- plugins_central 17848 6656 00:00:00 01:36 2845 /usr/sbin/httpd -f /omd/sites/plugins_central/etc/apache/apache.conf
+- plugins_central 17824 2636 00:00:00 01:36 2848 /usr/sbin/httpd -f /omd/sites/plugins_central/etc/apache/apache.conf
+- plugins_central 254832 226728 00:00:02 01:36 2849 /usr/sbin/httpd -f /omd/sites/plugins_central/etc/apache/apache.conf
+- plugins_central 130620 39584 00:00:00 01:36 2865 dcd
+- plugins_central 73288 13200 00:00:00 01:36 2871 /omd/sites/plugins_central/bin/redis-server unixsocket:/omd/sites/plugins_central/tmp/run/redis
+- plugins_central 6988 2292 00:00:00 01:36 2884 /omd/sites/plugins_central/var/tmp/xinetd -pidfile /omd/sites/plugins_central/tmp/run/xinetd.pid -filelog /omd/sites/plugins_central/var/log/xinetd.log -f /omd/sites/plugins_central/etc/xinetd.conf
+- plugins_central 259052 230536 00:00:02 01:33 3323 /usr/sbin/httpd -f /omd/sites/plugins_central/etc/apache/apache.conf
+- root 198836 147256 00:00:00 01:19 3989 /git/.venv/bin/python /git/.venv/bin/pytest -T plugins_integration test_generate_dumps.py -v --log-cli-level=INFO
+- cmk-agent 15636 2872 00:00:00 01:19 3990 /usr/bin/cmk-agent-ctl daemon
+- root 4860 4040 00:00:00 00:12 3994 bash
+- cmk-agent 9392 2872 00:00:00 00:00 4017 cmk-agent-ctl dump
+- root 5652 4436 00:00:00 00:00 4018 /bin/bash /usr/bin/check_mk_agent
+- root 5780 3368 00:00:00 00:00 4037 /bin/bash /usr/bin/check_mk_agent
+- root 5652 2744 00:00:00 00:00 4038 /bin/bash /usr/bin/check_mk_agent
+- root 5480 1332 00:00:00 00:00 4040 /usr/bin/coreutils --coreutils-prog-shebang=cat /usr/bin/cat
+- root 5780 2636 00:00:00 00:00 4066 /bin/bash /usr/bin/check_mk_agent
+- root 7600 3424 00:00:00 00:00 4067 ps ax -ww -o cgroup:512,user:32,vsz,rss,cputime,etime,pid,command
+- root 5344 1276 00:00:00 00:00 4068 /usr/bin/coreutils --coreutils-prog-shebang=tr /usr/bin/tr -s 
+<<<docker_container_mem_cgroupv2>>>
+anon 1288712192
+file 1252700160
+kernel 181030912
+kernel_stack 1327104
+pagetables 5861376
+percpu 5976
+sock 4096
+vmalloc 4096
+shmem 943697920
+zswap 0
+zswapped 0
+file_mapped 43757568
+file_dirty 16384
+file_writeback 0
+swapcached 0
+anon_thp 0
+file_thp 0
+shmem_thp 0
+inactive_anon 2204409856
+active_anon 27881472
+inactive_file 177045504
+active_file 131956736
+unevictable 0
+slab_reclaimable 132940400
+slab_unreclaimable 40075696
+slab 173016096
+workingset_refault_anon 0
+workingset_refault_file 0
+workingset_activate_anon 0
+workingset_activate_file 0
+workingset_restore_anon 0
+workingset_restore_file 0
+workingset_nodereclaim 0
+pgfault 2152312
+pgmajfault 1313
+pgrefill 0
+pgscan 0
+pgsteal 0
+pgactivate 40799
+pgdeactivate 0
+pglazyfree 2862
+pglazyfreed 0
+zswpin 0
+zswpout 0
+thp_fault_alloc 0
+thp_collapse_alloc 0
+memory.current 2723536896
+memory.max max
+MemTotal:       65560804 kB
+<<<docker_container_cpu_cgroupv2>>>
+uptime 17806.86 278035.99
+num_cpus 16
+usage_usec 52803220
+user_usec 44548961
+system_usec 8254259
+nr_periods 0
+nr_throttled 0
+throttled_usec 0
+nr_bursts 0
+burst_usec 0
+<<<uptime>>>
+152
+<<<lnx_if:sep(58)>>>
+    lo: 6813615     639    0    0    0     0          0         0  6813615     639    0    0    0     0       0          0
+  eth0:   17717      72    0    0    0     0          0         0     5239      29    0    0    0     0       0          0
+[lo]
+Address: 00:00:00:00:00:00
+[eth0]
+Speed: 10000Mb/s
+Address: 02:42:ac:11:00:02
+<<<tcp_conn_stats>>>
+08 1
+0A 3
+<<<docker_container_diskstat_cgroupv2>>>
+[time]
+1688991569
+[io.stat]
+259:0 rbytes=194461696 wbytes=0 rios=3443 wios=1 dbytes=0 dios=0
+253:0 rbytes=194461696 wbytes=91848704 rios=3442 wios=466 dbytes=0 dios=0
+253:1 rbytes=194461696 wbytes=154460160 rios=3442 wios=2272 dbytes=0 dios=0
+[names]
+dm-0 253:0
+dm-1 253:1
+dm-2 253:2
+loop0 7:0
+loop1 7:1
+loop10 7:10
+loop11 7:11
+loop12 7:12
+loop13 7:13
+loop14 7:14
+loop15 7:15
+loop16 7:16
+loop17 7:17
+loop18 7:18
+loop19 7:19
+loop2 7:2
+loop20 7:20
+loop21 7:21
+loop22 7:22
+loop23 7:23
+loop24 7:24
+loop25 7:25
+loop3 7:3
+loop4 7:4
+loop5 7:5
+loop6 7:6
+loop7 7:7
+loop8 7:8
+loop9 7:9
+nvme0n1 259:0
+sda 8:0
+<<<md>>>
+Personalities : 
+unused devices: <none>
+<<<vbox_guest>>>
+<<<postfix_mailq_status:sep(58)>>>
+postfix:the Postfix mail system is not running
+<<<livestatus_status:sep(59)>>>
+[plugins_central]
+accept_passive_host_checks;accept_passive_service_checks;average_latency_checker;average_latency_fetcher;average_latency_generic;average_latency_real_time;average_runnable_jobs_checker;average_runnable_jobs_fetcher;cached_log_messages;carbon_bytes_sent;carbon_bytes_sent_rate;carbon_overflows;carbon_overflows_rate;carbon_queue_usage;carbon_queue_usage_rate;check_external_commands;check_host_freshness;check_service_freshness;connections;connections_rate;core_pid;edition;enable_event_handlers;enable_flap_detection;enable_notifications;execute_host_checks;execute_service_checks;external_command_buffer_max;external_command_buffer_slots;external_command_buffer_usage;external_commands;external_commands_rate;forks;forks_rate;has_event_handlers;helper_usage_checker;helper_usage_fetcher;helper_usage_generic;helper_usage_real_time;host_checks;host_checks_rate;influxdb_bytes_sent;influxdb_bytes_sent_rate;influxdb_overflows;influxdb_overflows_rate;influxdb_queue_usage;influxdb_queue_usage_rate;interval_length;last_command_check;last_log_rotation;license_usage_history;livechecks;livechecks_rate;livestatus_active_connections;livestatus_overflows;livestatus_overflows_rate;livestatus_queued_connections;livestatus_threads;livestatus_usage;livestatus_version;log_messages;log_messages_rate;metrics_count;metrics_count_rate;mk_inventory_last;nagios_pid;neb_callbacks;neb_callbacks_rate;num_hosts;num_queued_alerts;num_queued_notifications;num_services;obsess_over_hosts;obsess_over_services;perf_data_count;perf_data_count_rate;process_performance_data;program_start;program_version;requests;requests_rate;rrdcached_bytes_sent;rrdcached_bytes_sent_rate;rrdcached_overflows;rrdcached_overflows_rate;rrdcached_queue_usage;rrdcached_queue_usage_rate;service_checks;service_checks_rate;state_file_created
+1;1;0;0;0;0;0;0;0;0;0;0;0;0;0;1;1;1;6;0.00488602;2778;enterprise;1;1;1;1;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;60;0;1688991472;LQ't#$x~}Qi Qa]`Q[ Q9:DE@CJQi ,LQ:?DE2?460:5Qi Q7faad6`d\e_4f\cb`4\h76_\e7e2fb42fbecQ[ QD:E6092D9Qi Q6e4gd63f73cg5d5ecd6`h736gbd2756heb2dfefff`2`2d`f`ha3bha7b5`b_chgQ[ QG6CD:@?Qi Qa_ab]_f]`_]466Q[ Q65:E:@?Qi Q466Q[ QA=2E7@C>Qi Qp=>2{:?FI C6=62D6 h]_ Wt>6C2=5 !F>2XQ[ Q:D04>2Qi 72=D6[ QD2>A=60E:>6Qi `egghcfa__[ QE:>6K@?6Qi Q&%rQ[ Q?F>09@DEDQi _[ Q?F>09@DED04=@F5Qi _[ Q?F>09@DED0D925@HQi _[ Q?F>09@DED06I4=F565Qi _[ Q?F>0D6CG:46DQi _[ Q?F>0D6CG:46D04=@F5Qi _[ Q?F>0D6CG:46D0D925@HQi _[ Q?F>0D6CG:46D06I4=F565Qi _[ Q6IE6?D:@?0?E@AQi 72=D6N.N;0;0;1;0;0;0;20;0;2023.07.10;6;0.00526186;0;0;0;2778;0;0;0;0;0;0;0;0;0;0;1;1688991480;Check_MK 2023.07.10;16;0.0154097;0;0;0;0;0;0;0;0;0
+<<<livestatus_ssl_certs:sep(124)>>>
+[plugins_central]
+/omd/sites/plugins_central/etc/ssl/ca.pem|33214364263
+/omd/sites/plugins_central/etc/ssl/sites/plugins_central.pem|33214364263
+<<<mkeventd_status:sep(0)>>>
+["plugins_central"]
+[["status_config_load_time", "status_num_open_events", "status_virtual_memory_size", "status_messages", "status_message_rate", "status_average_message_rate", "status_rule_tries", "status_rule_trie_rate", "status_average_rule_trie_rate", "status_rule_hits", "status_rule_hit_rate", "status_average_rule_hit_rate", "status_drops", "status_drop_rate", "status_average_drop_rate", "status_overflows", "status_overflow_rate", "status_average_overflow_rate", "status_events", "status_event_rate", "status_average_event_rate", "status_connects", "status_connect_rate", "status_average_connect_rate", "status_average_processing_time", "status_average_sync_time", "status_average_request_time", "status_replication_slavemode", "status_replication_last_sync", "status_replication_success", "status_event_limit_host", "status_event_limit_rule", "status_event_limit_overall", "status_event_limit_active_hosts", "status_event_limit_active_rules", "status_event_limit_active_overall"], [1688991472.1234243, 0, 202358784, 0, 0.0, 0.0, 0, 0.0, 0.0, 0, 0.0, 0.0, 0, 0.0, 0.0, 0, 0.0, 0.0, 0, 0.0, 0.0, 2, 0.0, 0.0, 0.0, 0.0, 0.00047326087951660156, "master", 0.0, false, 1000, 1000, 10000, [], [], false]]
+<<<cmk_site_statistics:sep(59)>>>
+[plugins_central]
+0;0;0;0
+0;0;0;0;0;0
+<<<job>>>
+<<<mknotifyd:sep(0)>>>
+1688991572
+[plugins_central]
+Version:         2023.07.10
+Updated:         1688991553 (2023-07-10 12:19:13)
+Started:         1688991472 (2023-07-10 12:17:52, 81 sec ago)
+Configuration:   1688991472 (2023-07-10 12:17:52, 81 sec ago)
+Listening FD:    None
+
+Spool:           New
+Count:           0
+Oldest:          -
+Youngest:        -
+
+Spool:           Deferred
+Count:           0
+Oldest:          -
+Youngest:        -
+
+Spool:           Corrupted
+Count:           0
+Oldest:          -
+Youngest:        -
+<<<omd_apache:sep(124)>>>
+[plugins_central]
+/plugins_central/check_mk/|302|297|36454
+/plugins_central/check_mk/login.py?_origtarget=index.py|200|2134|13648
+/plugins_central/check_mk/themes/facelift/images/checkmk_logo.svg|200|2742|170
+/plugins_central/check_mk/js/main_min-2023.07.10.js|200|1773834|496
+/plugins_central/check_mk/login.py|302|239|192719
+/plugins_central/check_mk/|200|56581|48836
+/plugins_central/check_mk/themes/facelift/images/icon_checkmk_logo.svg|200|2631|166
+/plugins_central/check_mk/themes/modern-dark/images/icon_main_monitoring.svg|200|985|70
+/plugins_central/check_mk/themes/facelift/images/icon_main_monitoring_active.svg|200|1009|47
+/plugins_central/check_mk/themes/facelift/images/icon_collapse_arrow.png|200|612|86
+/plugins_central/check_mk/themes/facelift/images/icon_topic_overview.png|200|2121|72
+/plugins_central/check_mk/themes/facelift/images/icon_topic_problems.png|200|3939|78
+/plugins_central/check_mk/themes/facelift/images/icon_topic_history.png|200|4130|63
+/plugins_central/check_mk/themes/facelift/images/icon_topic_checkmk.svg|200|1372|47
+/plugins_central/check_mk/themes/facelift/images/icon_topic_events.png|200|4014|57
+/plugins_central/check_mk/themes/facelift/images/icon_topic_applications.png|200|2296|77
+/plugins_central/check_mk/themes/facelift/images/icon_topic_inventory.png|200|3109|98
+/plugins_central/check_mk/themes/facelift/images/icon_topic_analyze.png|200|4156|97
+/plugins_central/check_mk/themes/modern-dark/images/icon_main_customize.svg|200|1170|56
+/plugins_central/check_mk/themes/facelift/images/icon_main_customize_active.svg|200|1202|65
+/plugins_central/check_mk/themes/facelift/images/icon_topic_general.png|200|3939|51
+/plugins_central/check_mk/themes/facelift/images/icon_topic_visualization.png|200|2296|51
+/plugins_central/check_mk/themes/facelift/images/icon_topic_graphs.png|200|4156|74
+/plugins_central/check_mk/themes/facelift/images/icon_topic_reporting.svg|200|939|72
+/plugins_central/check_mk/themes/modern-dark/images/icon_main_setup.svg|200|1231|57
+/plugins_central/check_mk/themes/facelift/images/icon_main_setup_active.svg|200|1265|46
+/plugins_central/check_mk/themes/facelift/images/icon_topic_hosts.png|200|2010|53
+/plugins_central/check_mk/themes/facelift/images/icon_topic_services.png|200|4485|74
+/plugins_central/check_mk/themes/facelift/images/icon_topic_bi.png|200|4485|83
+/plugins_central/check_mk/themes/facelift/images/icon_topic_agents.png|200|3862|100
+/plugins_central/check_mk/themes/facelift/images/icon_topic_users.png|200|4747|72
+/plugins_central/check_mk/themes/facelift/images/icon_topic_maintenance.png|200|2221|49
+/plugins_central/check_mk/themes/facelift/images/icon_topic_exporter.svg|200|716|43
+/plugins_central/check_mk/themes/modern-dark/images/icon_main_help.svg|200|898|58
+/plugins_central/check_mk/themes/facelift/images/icon_main_help_active.svg|200|904|43
+/plugins_central/check_mk/themes/facelift/images/icon_learning_checkmk.svg|200|985|72
+/plugins_central/check_mk/themes/facelift/images/icon_developer_resources.svg|200|1215|66
+/plugins_central/check_mk/themes/facelift/images/icon_about_checkmk.svg|200|1546|57
+/plugins_central/check_mk/themes/modern-dark/images/icon_main_user.svg|200|2505|45
+/plugins_central/check_mk/themes/facelift/images/icon_main_user_active.svg|200|1260|45
+/plugins_central/check_mk/themes/facelift/images/icon_topic_user_interface.svg|200|1392|44
+/plugins_central/check_mk/themes/facelift/images/icon_topic_profile.png|200|3938|45
+/plugins_central/check_mk/themes/modern-dark/images/icon_sidebar_folded.svg|200|997|82
+/plugins_central/check_mk/themes/facelift/images/icon_sidebar.svg|200|997|60
+/plugins_central/check_mk/themes/modern-dark/images/icon_close.svg|200|1001|80
+/plugins_central/check_mk/themes/facelift/images/icon_toggle_on.svg|200|986|46
+/plugins_central/check_mk/themes/facelift/images/icon_add.png|200|1058|59
+/plugins_central/check_mk/js/side_min-2023.07.10.js|200|557861|223
+/plugins_central/check_mk/user_profile.py|200|25080|20071
+/plugins_central/check_mk/themes/facelift/images/icon_save.svg|200|1573|136
+/plugins_central/check_mk/themes/facelift/images/icon_topic_change_password.png|200|4747|76
+/plugins_central/check_mk/themes/facelift/images/icon_missing.svg|200|755|56
+/plugins_central/check_mk/themes/modern-dark/images/icon_toggle_off.svg|200|982|53
+/plugins_central/check_mk/themes/modern-dark/images/icon_manual.svg|200|1173|50
+/plugins_central/check_mk/themes/modern-dark/images/icon_suggestion.svg|200|937|51
+/plugins_central/check_mk/themes/modern-dark/images/tree_closed.svg|200|700|85
+/plugins_central/check_mk/themes/facelift/images/icon_info.svg|200|662|110
+/plugins_central/check_mk/api/1.0/objects/user_config/cmkadmin|200|1003|95469
+/plugins_central/check_mk/api/1.0/objects/user_config/cmkadmin|200|1021|32679
+/plugins_central/check_mk/user_profile.py|200|25080|35114
+/plugins_central/check_mk/api/1.0/domain-types/rule/collections/all|200|797|40296
+/plugins_central/check_mk/api/1.0/domain-types/activation_run/actions/activate-changes/invoke|302|0|80987
+/plugins_central/check_mk/api/1.0/objects/activation_run/630dd997-bc34-4f40-b8a9-737e78d9ab12/actions/wait-for-completion/invoke|302|0|518048
+/plugins_central/check_mk/api/1.0/objects/activation_run/630dd997-bc34-4f40-b8a9-737e78d9ab12/actions/wait-for-completion/invoke|204|0|511588
+/plugins_central/check_mk/api/1.0/domain-types/agent/actions/download_by_host/invoke?agent_type=generic&os_type=linux_rpm|200|4149605|23250
+
+<<<omd_diskusage:sep(0)>>>
+[site plugins_central]
+49632934	/omd/sites/plugins_central
+135686	/omd/sites/plugins_central/var/log
+4096	/omd/sites/plugins_central/var/check_mk/rrd
+20480	/omd/sites/plugins_central/var/pnp4nagios/
+4031	/omd/sites/plugins_central/tmp/
+323595	/omd/sites/plugins_central/local/
+43531571	/omd/sites/plugins_central/var/check_mk/agents/
+0 /omd/sites/plugins_central/var/mkeventd/history/
+497349	/omd/sites/plugins_central/var/check_mk/core/
+0 /omd/sites/plugins_central/var/check_mk/inventory_archive/
+<<<omd_info:sep(59)>>>
+[versions]
+version;number;edition;demo
+2023.07.10.cee;2023.07.10;cee;0
+[sites]
+site;used_version;autostart
+plugins_central;2023.07.10.cee;1
+<<<local:sep(0)>>>

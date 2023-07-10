@@ -1,0 +1,16 @@
+{
+    "host_name": "deb_agent_docker",
+    "check_command": "check_mk-cpu_utilization_os",
+    "check_command_expanded": "",
+    "check_options": 0,
+    "check_period": "24X7",
+    "check_type": 1,
+    "description": "CPU utilization",
+    "display_name": "CPU utilization",
+    "has_been_checked": 0,
+    "labels": {},
+    "plugin_output": "",
+    "state": 0,
+    "state_type": 1,
+    "tags": {}
+}

@@ -1,0 +1,16 @@
+{
+    "host_name": "rpm_agent_docker",
+    "check_command": "check_mk-systemd_units_sockets_summary",
+    "check_command_expanded": "",
+    "check_options": 0,
+    "check_period": "24X7",
+    "check_type": 1,
+    "description": "Systemd Socket Summary",
+    "display_name": "Systemd Socket Summary",
+    "has_been_checked": 1,
+    "labels": {},
+    "plugin_output": "Total: 0, Disabled: 0, Failed: 0",
+    "state": 0,
+    "state_type": 1,
+    "tags": {}
+}

@@ -98,7 +98,10 @@ class TestLinux:
     @patch("subprocess.Popen")
     def test_postgres_binary_path_fallback(self, mock_Popen):
         process_mock = Mock()
-        attrs = {"communicate.side_effect": [("usr/mydb-12.3/bin", None)]}
+        attrs = {
+            "communicate.side_effect": [("usr/mydb-12.3/bin", None)],
+            "returncode": 0,
+        }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
         instance = {
@@ -146,7 +149,8 @@ class TestLinux:
                 ("/usr/lib/postgres/psql", None),
                 ("postgres\x00db1".encode("utf-8"), None),
                 ("12.3", None),
-            ]
+            ],
+            "returncode": 0,
         }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
@@ -188,7 +192,8 @@ class TestLinux:
             "communicate.side_effect": [
                 ("postgres\x00db1".encode("utf-8"), None),
                 ("12.3.6", None),
-            ]
+            ],
+            "returncode": 0,
         }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
@@ -225,7 +230,8 @@ class TestLinux:
                 ("/usr/lib/postgres/psql", None),
                 ("postgres\x00db1".encode("utf-8"), None),
                 ("12.3.6", None),
-            ]
+            ],
+            "returncode": 0,
         }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
@@ -245,6 +251,7 @@ class TestLinux:
                     None,
                 ),
             ],
+            "returncode": 0,
         }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
@@ -283,7 +290,8 @@ class TestLinux:
                 ("/usr/lib/postgres/psql", None),
                 ("postgres\ndb1", None),
                 ("12.3.6", None),
-            ]
+            ],
+            "returncode": 0,
         }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
@@ -300,7 +308,10 @@ class TestLinux:
                     % ps_instance,
                 ]
             )
-        attrs = {"communicate.side_effect": [("\n".join(proc_list), None)]}
+        attrs = {
+            "communicate.side_effect": [("\n".join(proc_list), None)],
+            "returncode": 0,
+        }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
 
@@ -368,7 +379,8 @@ class TestWindows:
             "communicate.side_effect": [
                 ("postgres\x00db1\x00".encode("utf-8"), b"ok"),
                 (b"12.1", b"ok"),
-            ]
+            ],
+            "returncode": 0,
         }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock
@@ -412,7 +424,8 @@ class TestWindows:
             "communicate.side_effect": [
                 (b"postgres\x00db1\x00", b"ok"),
                 (b"12.1.5\x00", b"ok"),
-            ]
+            ],
+            "returncode": 0,
         }
         process_mock.configure_mock(**attrs)
         mock_Popen.return_value = process_mock

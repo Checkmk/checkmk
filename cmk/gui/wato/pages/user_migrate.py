@@ -25,7 +25,12 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.plugins.userdb.utils import connections_by_type, ConnectorType, get_connection
+from cmk.gui.plugins.userdb.utils import (
+    connections_by_type,
+    ConnectorType,
+    get_connection,
+    get_user_attributes,
+)
 from cmk.gui.plugins.wato.utils import mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.type_defs import ActionResult, PermissionName, Users
 from cmk.gui.utils.flashed_messages import flash
@@ -262,7 +267,7 @@ def _get_attribute_choices() -> list[tuple[str, str]]:
     ]
 
     builtin_attribute_choices: list[tuple[str, str]] = []
-    for name, attr in userdb.get_user_attributes():
+    for name, attr in get_user_attributes():
         builtin_attribute_choices.append((name, attr.valuespec().title() or attr.name()))
 
     return default_choices + builtin_attribute_choices

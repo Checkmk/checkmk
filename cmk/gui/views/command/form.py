@@ -20,7 +20,8 @@ from cmk.gui.logged_in import user
 from cmk.gui.type_defs import InfoName, Row, Rows, ViewSpec
 from cmk.gui.utils.confirm_with_preview import confirm_with_preview
 
-from .base import Command, CommandExecutor, CommandGroup, CommandSpec
+from .base import Command, CommandExecutor, CommandSpec
+from .group import CommandGroup
 from .registry import command_registry
 
 

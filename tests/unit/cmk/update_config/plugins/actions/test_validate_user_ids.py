@@ -8,8 +8,10 @@ from typing import Any
 
 import pytest
 
+from cmk.utils.store import save_to_mk_file
+
 from cmk.gui.userdb import load_multisite_users
-from cmk.gui.userdb.store import _multisite_dir, save_to_mk_file
+from cmk.gui.userdb.store import _multisite_dir
 
 from cmk.update_config.plugins.actions.validate_user_ids import ValidateUserIds
 

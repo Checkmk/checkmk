@@ -8,14 +8,10 @@ from math import ceil
 
 from cmk.base.check_api import check_levels, get_age_human_readable, get_rate
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.utils.wmi import get_wmi_time
 from cmk.base.plugins.agent_based.utils.wmi import parse_wmi_table as parse_wmi_table_migrated
-from cmk.base.plugins.agent_based.utils.wmi import (
-    required_tables_missing,
-    StringTable,
-    WMISection,
-    WMITable,
-)
+from cmk.base.plugins.agent_based.utils.wmi import required_tables_missing, WMISection, WMITable
 
 _Metric = tuple[str, float, float | None, float | None, float | None, float | None]
 LegacyCheckFunctionGenerator = Generator[tuple[int, str, list[_Metric]], None, None]

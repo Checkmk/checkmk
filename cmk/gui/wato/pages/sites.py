@@ -22,6 +22,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.licensing.handler import LicenseState
 from cmk.utils.licensing.registry import is_free
 from cmk.utils.site import omd_site
+from cmk.utils.user import UserId
 
 import cmk.gui.forms as forms
 import cmk.gui.log as log
@@ -53,7 +54,7 @@ from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
 from cmk.gui.site_config import has_wato_slave_sites, is_wato_slave_site, site_is_local
 from cmk.gui.sites import SiteStatus
 from cmk.gui.table import Table, table_element
-from cmk.gui.type_defs import ActionResult, PermissionName, UserId
+from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.compatibility import make_site_version_info
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.html import HTML

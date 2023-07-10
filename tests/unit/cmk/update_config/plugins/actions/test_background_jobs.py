@@ -8,10 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from cmk.gui.background_job import BackgroundJobDefines
+from cmk.gui.background_job import BackgroundJobDefines, JobStatusStore
 
 from cmk.update_config.plugins.actions.background_jobs import (
-    JobStatusStore,
     migrate_job_status_spec,
     update_job_status,
     UpdateBackgroundJobStatusSpec,

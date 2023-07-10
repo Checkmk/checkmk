@@ -43,7 +43,13 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.plugins.userdb.utils import active_connections, get_connection, UserAttribute
+from cmk.gui.plugins.userdb.utils import (
+    active_connections,
+    get_connection,
+    get_user_attributes,
+    new_user_template,
+    UserAttribute,
+)
 from cmk.gui.plugins.wato.utils import (
     flash,
     make_confirm_delete_link,
@@ -348,7 +354,7 @@ class ModeUsers(WatoMode):
 
     def _show_user_list(self) -> None:  # pylint: disable=too-many-branches``
         visible_custom_attrs = [
-            (name, attr) for name, attr in userdb.get_user_attributes() if attr.show_in_table()
+            (name, attr) for name, attr in get_user_attributes() if attr.show_in_table()
         ]
 
         users = userdb.load_users()
@@ -635,7 +641,7 @@ class ModeEditUser(WatoMode):
         # TODO: Nuke the field below? It effectively hides facts about _user_id for mypy.
         self._is_new_user: bool = self._user_id is None
         self._users = userdb.load_users(lock=transactions.is_transaction())
-        new_user = userdb.new_user_template("htpasswd")
+        new_user = new_user_template("htpasswd")
 
         if self._user_id is not None:
             self._user = self._users.get(self._user_id, new_user)
@@ -852,7 +858,7 @@ class ModeEditUser(WatoMode):
         user_attrs["fallback_contact"] = html.get_checkbox("fallback_contact")
 
         # Custom user attributes
-        for name, attr in userdb.get_user_attributes():
+        for name, attr in get_user_attributes():
             value = attr.valuespec().from_html_vars("ua_" + name)
             # TODO: Dynamically fiddling around with a TypedDict is a bit questionable
             user_attrs[name] = value  # type: ignore[literal-required]

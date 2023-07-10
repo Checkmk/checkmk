@@ -8,6 +8,7 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.base import item_state
+from cmk.base.api.agent_based.utils import GetRateError
 
 
 @pytest.mark.parametrize(
@@ -23,7 +24,7 @@ def test_get_rate_raises(
     pre_state: tuple[int, int] | None, time: int, value: int, errmsg: str
 ) -> None:
     item_state.set_item_state("foo", pre_state)
-    with pytest.raises(item_state.GetRateError, match=errmsg):
+    with pytest.raises(GetRateError, match=errmsg):
         item_state.get_rate("foo", time, value, onwrap=item_state.RAISE)
 
 

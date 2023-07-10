@@ -14,6 +14,7 @@ from cmk.utils import version as cmk_version
 
 from cmk.automations.results import ABCAutomationResult, ResultTypeRegistry, SerializedResult
 
+from cmk.gui.http import request
 from cmk.gui.watolib import automations
 
 RESULT: object = None
@@ -84,7 +85,7 @@ class TestCheckmkAutomationBackgroundJob:
     )
     def test_execute_automation_current_version(self, monkeypatch: pytest.MonkeyPatch) -> None:
         with monkeypatch.context() as m:
-            m.setattr(automations.request, "headers", {"x-checkmk-version": "2.2.0i1"})
+            m.setattr(request, "headers", {"x-checkmk-version": "2.2.0i1"})
             api_request = automations.CheckmkAutomationRequest(
                 command="test",
                 args=None,
@@ -112,7 +113,7 @@ class TestCheckmkAutomationBackgroundJob:
     ) -> None:
         with monkeypatch.context() as m:
             if set_version:
-                m.setattr(automations.request, "headers", {"x-checkmk-version": "2.1.0p10"})
+                m.setattr(request, "headers", {"x-checkmk-version": "2.1.0p10"})
             api_request = automations.CheckmkAutomationRequest(
                 command="test",
                 args=None,

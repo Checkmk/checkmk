@@ -1321,7 +1321,7 @@ def test_host_config_static_checks(
             module=None,
         )
 
-    monkeypatch.setattr(config.agent_based_register, "get_check_plugin", make_plugin)
+    monkeypatch.setattr(agent_based_register, "get_check_plugin", make_plugin)
 
     ts = Scenario()
     ts.add_host(hostname)

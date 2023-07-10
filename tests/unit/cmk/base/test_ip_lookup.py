@@ -13,6 +13,7 @@ from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
+from cmk.utils.exceptions import MKIPAddressLookupError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.tags import TagGroupID, TagID
 
@@ -205,7 +206,7 @@ def test_cached_dns_lookup_raises_once(monkeypatch: MonkeyPatch) -> None:
     patch_persisted_cache(monkeypatch, persisted_cache)
     patch_actual_lookup(monkeypatch, {})
 
-    with pytest.raises(ip_lookup.MKIPAddressLookupError):
+    with pytest.raises(MKIPAddressLookupError):
         _ = ip_lookup.cached_dns_lookup(
             HostName("test_host"),
             family=socket.AF_INET,

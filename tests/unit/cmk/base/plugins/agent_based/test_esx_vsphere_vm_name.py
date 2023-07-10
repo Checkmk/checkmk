@@ -8,6 +8,7 @@ from tests.unit.cmk.base.plugins.agent_based.esx_vsphere_vm_util import esx_vm_s
 
 from cmk.base.plugins.agent_based import esx_vsphere_vm, esx_vsphere_vm_name
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, Result, State
+from cmk.base.plugins.agent_based.utils.esx_vsphere import ESXVm
 
 
 def test_parse_esx_vsphere_name():
@@ -30,5 +31,5 @@ def test_check_name_missing() -> None:
         list(esx_vsphere_vm_name.check_name(_esx_vm_section(name)))
 
 
-def _esx_vm_section(name: str | None) -> esx_vsphere_vm.ESXVm:
+def _esx_vm_section(name: str | None) -> ESXVm:
     return esx_vm_section(name=name)

@@ -9,6 +9,7 @@ from typing import cast
 import cmk.utils.version as cmk_version
 from cmk.utils.crypto.password import Password, PasswordPolicy
 from cmk.utils.object_diff import make_diff_text
+from cmk.utils.user import UserId
 
 import cmk.gui.userdb as userdb
 from cmk.gui.config import active_config
@@ -16,7 +17,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.userdb.utils import add_internal_attributes
-from cmk.gui.type_defs import UserId, UserObject, Users, UserSpec
+from cmk.gui.type_defs import UserObject, Users, UserSpec
 from cmk.gui.valuespec import Age, Alternative, EmailAddress, FixedValue, UserID
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.changes import add_change

@@ -29,6 +29,7 @@ from cmk.gui.watolib._host_attributes import register as _register_host_attribut
 from cmk.gui.watolib.activate_changes import (
     execute_activation_cleanup_background_job as _execute_activation_cleanup_background_job,
 )
+from cmk.gui.watolib.config_domain_name import ABCConfigDomain as _ABCConfigDomain
 from cmk.gui.watolib.config_domain_name import config_domain_registry as _config_domain_registry
 from cmk.gui.watolib.host_attributes import ABCHostAttribute
 from cmk.gui.watolib.host_attributes import host_attribute_registry as _host_attributes_registry
@@ -66,7 +67,7 @@ def _register_gui_background_jobs() -> None:
 
 
 def _register_config_domains() -> None:
-    clss: Sequence[type[_config_domains.ABCConfigDomain]] = (
+    clss: Sequence[type[_ABCConfigDomain]] = (
         _config_domains.ConfigDomainCore,
         _config_domains.ConfigDomainGUI,
         _config_domains.ConfigDomainLiveproxy,

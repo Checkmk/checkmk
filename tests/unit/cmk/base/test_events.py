@@ -6,12 +6,13 @@
 import pytest
 from pytest import MonkeyPatch
 
+from cmk.utils.notify_types import EventContext
+
 import cmk.base.events
 from cmk.base.core_config import CollectedHostLabels
 from cmk.base.events import (
     _update_raw_context_with_labels,
     add_to_event_context,
-    EventContext,
     raw_context_from_string,
 )
 

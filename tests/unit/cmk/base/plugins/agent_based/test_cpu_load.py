@@ -6,7 +6,7 @@
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.cpu import parse_cpu
-from cmk.base.plugins.agent_based.cpu_load import check_cpu_load
+from cmk.base.plugins.agent_based.utils.cpu_load import check_cpu_load
 
 STRING_TABLE: StringTable = [["0.88", "0.83", "0.87", "2/2148", "21050", "8"]]
 

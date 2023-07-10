@@ -82,7 +82,7 @@ def _create_sync_snapshot(
     tmp_path: Path,
     remote_site: SiteId,
     edition: cmk_version.Edition,
-) -> Iterator[activate_changes.SnapshotSettings]:
+) -> Iterator[config_sync.SnapshotSettings]:
     with _create_test_sync_config(monkeypatch):
         yield _generate_sync_snapshot(
             activation_manager,
@@ -239,7 +239,7 @@ def _generate_sync_snapshot(
     remote_site: SiteId,
     *,
     edition: cmk_version.Edition,
-) -> activate_changes.SnapshotSettings:
+) -> config_sync.SnapshotSettings:
     snapshot_data_collector_class = (
         "CMESnapshotDataCollector"
         if edition is cmk_version.Edition.CME

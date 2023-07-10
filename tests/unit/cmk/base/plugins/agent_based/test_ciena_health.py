@@ -10,6 +10,7 @@ from typing import Iterable  # We MUST use the Iterable from typing because of t
 import pytest
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 from cmk.base.plugins.agent_based.ciena_health import (
     _REFERENCES_5142,
     _REFERENCES_5171,
@@ -17,7 +18,6 @@ from cmk.base.plugins.agent_based.ciena_health import (
     parse_ciena_health,
     Section,
     SNMPData,
-    StringTable,
 )
 from cmk.base.plugins.agent_based.utils.ciena_ces import (
     FanStatus,

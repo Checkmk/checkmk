@@ -18,10 +18,11 @@ from cmk.utils.tags import TagGroupID, TagID
 from cmk.checkengine.discovery import AutocheckEntry
 
 import cmk.base.config as config
+from cmk.base._autochecks import AutochecksManager
 from cmk.base.config import ConfigCache
 
 
-class _AutochecksMocker(config.AutochecksManager):
+class _AutochecksMocker(AutochecksManager):
     def __init__(self) -> None:
         super().__init__()
         self.raw_autochecks: dict[HostName, Sequence[AutocheckEntry]] = {}

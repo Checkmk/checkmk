@@ -5,7 +5,7 @@
 
 from typing import Optional, Tuple
 
-from .agent_based_api.v1 import get_value_store, register, Result, State, type_defs
+from .agent_based_api.v1 import get_value_store, register, Result, Service, State, type_defs
 from .utils.cmciii import (
     discovery_default_parameters,
     DiscoveryParams,
@@ -13,7 +13,6 @@ from .utils.cmciii import (
     get_sensor,
     Section,
     Sensor,
-    Service,
 )
 from .utils.temperature import check_temperature, TempParamDict
 

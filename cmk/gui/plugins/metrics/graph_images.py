@@ -25,7 +25,7 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.plugins.metrics import artwork, html_render
-from cmk.gui.plugins.metrics.artwork import GraphArtwork, GraphDataRange
+from cmk.gui.plugins.metrics.artwork import GraphArtwork
 from cmk.gui.plugins.metrics.graph_pdf import (
     compute_pdf_graph_data_range,
     get_mm_per_ex,
@@ -36,6 +36,7 @@ from cmk.gui.plugins.metrics.utils import (
     CombinedGraphMetricRecipe,
     CombinedSingleMetricSpec,
     get_graph_data_from_livestatus,
+    GraphDataRange,
     GraphRecipe,
 )
 from cmk.gui.session import SuperUserContext

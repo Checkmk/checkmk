@@ -55,8 +55,8 @@ from cmk.gui.userdb import (
     is_two_factor_login_enabled,
     load_two_factor_credentials,
     make_two_factor_backup_codes,
-    save_two_factor_credentials,
 )
+from cmk.gui.userdb.store import save_two_factor_credentials
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions

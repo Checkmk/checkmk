@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 from werkzeug import datastructures as werkzeug_datastructures
 
-import tests.testlib as testlib
+import tests.testlib.utils as testlibutils
 
 from livestatus import SiteConfiguration, SiteId
 
@@ -133,7 +133,7 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
     # We cannot fix that in the short (or even mid) term because the
     # precondition is a more cleanly separated structure.
 
-    if testlib.is_enterprise_repo() and edition is cmk_version.Edition.CRE:
+    if testlibutils.is_enterprise_repo() and edition is cmk_version.Edition.CRE:
         # CEE paths are added when the CEE plugins for WATO are available, i.e.
         # when the "enterprise/" path is present.
         expected += [
@@ -142,7 +142,7 @@ def _expected_replication_paths(edition: cmk_version.Edition) -> list[Replicatio
             ReplicationPath("dir", "liveproxyd", "etc/check_mk/liveproxyd.d/wato/", []),
         ]
 
-    if testlib.is_managed_repo() and edition is not cmk_version.Edition.CME:
+    if testlibutils.is_managed_repo() and edition is not cmk_version.Edition.CME:
         # CME paths are added when the CME plugins for WATO are available, i.e.
         # when the "managed/" path is present.
         expected += [

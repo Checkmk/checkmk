@@ -9,7 +9,6 @@ from collections.abc import Collection
 
 import cmk.utils.version as cmk_version
 
-import cmk.gui.userdb as userdb
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -858,7 +857,7 @@ class ModeEditLDAPConnection(WatoMode):
                 )
             )
         else:
-            connection = userdb.get_connection(self._connection_id)
+            connection = get_connection(self._connection_id)
             assert isinstance(connection, LDAPUserConnector)
 
             for address in connection.servers():

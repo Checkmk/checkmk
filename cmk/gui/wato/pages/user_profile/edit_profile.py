@@ -15,7 +15,11 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _u, localize
 from cmk.gui.logged_in import user
 from cmk.gui.pages import page_registry
-from cmk.gui.plugins.userdb.utils import get_user_attributes_by_topic, UserAttribute
+from cmk.gui.plugins.userdb.utils import (
+    get_user_attributes,
+    get_user_attributes_by_topic,
+    UserAttribute,
+)
 from cmk.gui.type_defs import UserSpec
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.language_cookie import set_language_cookie
@@ -62,7 +66,7 @@ class UserProfile(ABCUserProfilePage):
 
         # Custom attributes
         if user.may("general.edit_user_attributes"):
-            for name, attr in userdb.get_user_attributes():
+            for name, attr in get_user_attributes():
                 if not attr.user_editable():
                     continue
 

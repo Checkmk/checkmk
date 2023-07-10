@@ -33,8 +33,8 @@ from cmk.gui.type_defs import Choices, Row, Rows
 from cmk.gui.valuespec import AbsoluteDate, Age
 from cmk.gui.watolib.downtime import determine_downtime_mode, DowntimeSchedule
 
-from .base import Command, CommandActionResult, CommandGroup, CommandSpec
-from .group import CommandGroupRegistry
+from .base import Command, CommandActionResult, CommandSpec
+from .group import CommandGroup, CommandGroupRegistry
 from .registry import CommandRegistry
 
 

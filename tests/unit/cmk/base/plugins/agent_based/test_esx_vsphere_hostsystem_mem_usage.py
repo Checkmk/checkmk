@@ -14,8 +14,8 @@ from cmk.base.plugins.agent_based.esx_vsphere_hostsystem_mem_usage import (
     check_esx_vsphere_hostsystem_mem_usage,
     cluster_check_esx_vsphere_hostsystem_mem_usage,
     discover_esx_vsphere_hostsystem_mem_usage,
-    Section,
 )
+from cmk.base.plugins.agent_based.utils.esx_vsphere import Section
 
 
 @pytest.mark.parametrize(

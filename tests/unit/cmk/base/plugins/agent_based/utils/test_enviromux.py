@@ -16,8 +16,8 @@ from cmk.base.plugins.agent_based.utils.enviromux import (
     discover_enviromux_temperature,
     discover_enviromux_voltage,
     parse_enviromux,
-    TempParamType,
 )
+from cmk.base.plugins.agent_based.utils.temperature import TempParamType
 
 STRING_TABLE = [
     ["0", "1", "Internal Temperature", "292", "100", "500"],

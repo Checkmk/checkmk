@@ -16,9 +16,10 @@ import ldap  # type: ignore[import]
 import pytest
 from pytest_mock import MockerFixture
 
+from cmk.utils.crypto.password import Password
 from cmk.utils.user import UserId
 
-from cmk.gui.type_defs import Password, Users
+from cmk.gui.type_defs import Users
 from cmk.gui.userdb.ldap_connector import LDAPUserConnector
 
 

@@ -7,7 +7,8 @@ from __future__ import annotations
 from functools import partial
 from typing import Any, assert_never, Literal, TypeVar
 
-from flask import g, request, session  # pylint: disable=unused-import  # noqa: F401
+from flask import g as g  # pylint: disable=unused-import  # noqa: F401
+from flask import request, session
 from werkzeug.local import LocalProxy
 
 T = TypeVar("T")

@@ -5,6 +5,7 @@
 
 import cmk.gui.metrics as metrics
 from cmk.gui.log import logger
+from cmk.gui.plugins.metrics.utils import parse_perf_data, translate_metrics
 from cmk.gui.type_defs import Perfdata, PerfometerSpec, Row, TranslatedMetrics
 from cmk.gui.utils.html import HTML
 
@@ -26,11 +27,11 @@ class Perfometer:
         if not perf_data_string:
             return
 
-        self._perf_data, self._check_command = metrics.parse_perf_data(
+        self._perf_data, self._check_command = parse_perf_data(
             perf_data_string, self._row["service_check_command"]
         )
 
-        self._translated_metrics = metrics.translate_metrics(self._perf_data, self._check_command)
+        self._translated_metrics = translate_metrics(self._perf_data, self._check_command)
 
     def render(self) -> tuple[str | None, HTML | None]:
         """Renders the HTML code of a perfometer

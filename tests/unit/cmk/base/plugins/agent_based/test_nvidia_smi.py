@@ -14,6 +14,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     State,
     type_defs,
 )
+from cmk.base.plugins.agent_based.utils.temperature import TempParamType
 
 STRING_TABLE = [
     ['<?xml version="1.0" ?>'],
@@ -316,7 +317,7 @@ def test_discover_nvidia_smi_temperature(
 )
 def test_check_nvidia_smi_temperature(
     item: str,
-    params: nvidia_smi.TempParamType,
+    params: TempParamType,
     section: nvidia_smi.Section,
     expected_result: type_defs.CheckResult,
 ) -> None:

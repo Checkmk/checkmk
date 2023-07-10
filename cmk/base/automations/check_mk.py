@@ -106,8 +106,12 @@ from cmk.fetchers.snmp import make_backend as make_snmp_backend
 
 from cmk.checkengine import parse_raw_data, plugin_contexts, SourceType
 from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
-from cmk.checkengine.discovery import AutocheckEntry, AutocheckServiceWithNodes, DiscoveryMode
-from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
+from cmk.checkengine.discovery import (
+    AutocheckEntry,
+    AutocheckServiceWithNodes,
+    DiscoveryMode,
+    DiscoveryResult,
+)
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.checkengine.summarize import summarize
 from cmk.checkengine.type_defs import NO_SELECTION
@@ -123,7 +127,6 @@ import cmk.base.nagios_utils
 import cmk.base.notify as notify
 import cmk.base.parent_scan
 import cmk.base.sources as sources
-from cmk.base.agent_based.discovery.autodiscovery import DiscoveryResult
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.checkers import (
     CheckPluginMapper,
@@ -221,7 +224,7 @@ class AutomationDiscovery(DiscoveryAutomation):
 
         config_cache = config.get_config_cache()
 
-        results: dict[HostName, SingleHostDiscoveryResult] = {}
+        results: dict[HostName, DiscoveryResult] = {}
 
         parser = CMKParser(
             config_cache,

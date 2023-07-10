@@ -33,6 +33,7 @@ from cmk.gui import userdb
 from cmk.gui.config import active_config
 from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.logged_in import user as logged_in_user
 from cmk.gui.watolib.bakery import has_agent_bakery
 from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.search import MatchItem
@@ -511,9 +512,7 @@ def test_recursive_subfolder_choices(
     expected: list[tuple[str, str]],
 ) -> None:
     with monkeypatch.context() as m:
-        m.setattr(
-            hosts_and_folders.active_config, "wato_hide_folders_without_read_permissions", True
-        )
+        m.setattr(active_config, "wato_hide_folders_without_read_permissions", True)
         assert actual_builder().recursive_subfolder_choices() == expected
 
 
@@ -523,9 +522,7 @@ def test_recursive_subfolder_choices_function_calls(
 ) -> None:
     """Every folder should only be visited once"""
     with monkeypatch.context() as m:
-        m.setattr(
-            hosts_and_folders.active_config, "wato_hide_folders_without_read_permissions", True
-        )
+        m.setattr(active_config, "wato_hide_folders_without_read_permissions", True)
         spy = mocker.spy(hosts_and_folders.Folder, "_walk_tree")
         tree = three_levels_leaf_permissions()
         tree.recursive_subfolder_choices()
@@ -895,9 +892,7 @@ def _run_num_host_test(
         )
 
         # Old mechanism
-        with patch.dict(
-            hosts_and_folders.user._attributes, {"contactgroups": user_test.contactgroups}
-        ):
+        with patch.dict(logged_in_user._attributes, {"contactgroups": user_test.contactgroups}):
             assert (
                 wato_folder.num_hosts_recursively()
                 == expected_host_count + legacy_base_folder_host_offset

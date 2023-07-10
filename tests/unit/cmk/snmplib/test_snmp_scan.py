@@ -15,7 +15,7 @@ from tests.testlib.base import Scenario
 
 from tests.unit.conftest import FixPluginLegacy
 
-from cmk.utils.exceptions import OnError
+from cmk.utils.exceptions import MKSNMPError, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import logger
 from cmk.utils.paths import snmp_scan_cache_dir
@@ -190,7 +190,7 @@ def cache_oids(backend):
 def test_snmp_scan_prefetch_description_object__oid_missing(oid: OID, backend: SNMPBackend) -> None:
     snmp_cache.single_oid_cache()[oid] = None
 
-    with pytest.raises(snmp_scan.MKSNMPError, match=r"Cannot fetch [\w ]+ OID %s" % oid):
+    with pytest.raises(MKSNMPError, match=r"Cannot fetch [\w ]+ OID %s" % oid):
         snmp_scan._prefetch_description_object(backend=backend)
 
 

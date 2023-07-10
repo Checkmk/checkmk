@@ -5,7 +5,8 @@
 
 from cmk.utils.structured_data import SDPath
 
-from cmk.gui.views.inventory import _RelatedRawHints, DisplayHints, inventory_displayhints
+from cmk.gui.views.inventory import _RelatedRawHints, DisplayHints
+from cmk.gui.views.inventory.registry import inventory_displayhints
 
 
 def test_display_hint_titles() -> None:

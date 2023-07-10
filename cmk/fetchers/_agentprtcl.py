@@ -151,15 +151,22 @@ def validate_agent_protocol(
         return
 
     if is_registered:
-        raise MKFetcherError("Refused: Host is registered for TLS but not using it")
+        raise MKFetcherError(
+            "Refused: A TLS connection is registered on the monitoring server "
+            "but the agent is not providing it"
+        )
 
     match encryption_handling:
         case TCPEncryptionHandling.TLS_ENCRYPTED_ONLY:
-            raise MKFetcherError("Refused: TLS is enforced but host is not using it")
+            raise MKFetcherError(
+                "Refused: TLS is enforced on the monitoring server "
+                "but the agent is not providing it"
+            )
         case TCPEncryptionHandling.ANY_ENCRYPTED:
             if protocol is TransportProtocol.PLAIN:
                 raise MKFetcherError(
-                    "Refused: Encryption is enforced but agent output is plaintext"
+                    "Refused: Encryption is enforced on the monitoring server "
+                    "but agent is only providing plaintext"
                 )
         case TCPEncryptionHandling.ANY_AND_PLAIN:
             pass

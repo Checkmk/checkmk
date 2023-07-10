@@ -3,7 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import re
 from datetime import datetime
 from functools import cache
 
@@ -26,35 +25,8 @@ from dateutil.relativedelta import relativedelta
 from .site_context import agent_ca_path, site_ca_path
 
 
-def _load_combined_file_content(container: bytes) -> tuple[Certificate, RSAPrivateKey]:
-    """Load a certificate and private key from a "combined" file, i.e. a pem encoded certificate
-    concatenated with a pem encoded plaintext private key (or vice versa).
-
-    This code is duplicated from CertificateWithPrivateKey.load_combined_file_content in
-    cmk.utils.crypto.certificate.
-    """
-    if (
-        cert_match := re.search(
-            rb"-----BEGIN CERTIFICATE-----[\s\w+/=]+-----END CERTIFICATE-----", container
-        )
-    ) is None:
-        raise ValueError("Could not find certificate")
-    cert = load_pem_x509_certificate(cert_match.group(0))
-
-    if (
-        key_match := re.search(
-            rb"-----BEGIN PRIVATE KEY-----[\s\w+/=]+-----END PRIVATE KEY-----", container
-        )
-    ) is None:
-        raise ValueError("Could not find private key")
-    key = load_pem_private_key(key_match.group(0), None)
-
-    return (cert, key)
-
-
 def site_root_certificate() -> Certificate:
-    cert, _key = _load_combined_file_content(site_ca_path().read_bytes())
-    return cert
+    return load_pem_x509_certificate(site_ca_path().read_bytes())
 
 
 def sign_agent_csr(
@@ -101,4 +73,5 @@ def extract_cn_from_csr(csr: CertificateSigningRequest) -> str:
 
 @cache
 def agent_root_ca() -> tuple[Certificate, RSAPrivateKey]:
-    return _load_combined_file_content(agent_ca_path().read_bytes())
+    pem_bytes = agent_ca_path().read_bytes()
+    return load_pem_x509_certificate(pem_bytes), load_pem_private_key(pem_bytes, None)

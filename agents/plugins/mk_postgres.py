@@ -7,6 +7,16 @@ r"""Check_MK Agent Plugin: mk_postgres
 
 This is a Check_MK Agent plugin. If configured, it will be called by the
 agent without any arguments.
+
+Can be configured with $MK_CONFDIR/postgres.cfg
+Example for postgres.cfg file:
+
+-----postgres.cfg-----------------------------------------
+DBUSER=postgres
+INSTANCE=/home/postgres/db1.env:USER_NAME:/PATH/TO/.pgpass
+INSTANCE=/home/postgres/db2.env:USER_NAME:/PATH/TO/.pgpass
+INSTANCE=...
+----------------------------------------------------------
 """
 
 __version__ = "2.1.0p31"
@@ -772,12 +782,12 @@ class PostgresLinux(PostgresBase):
 
     def _default_psql_binary_path(self):
         # type: () -> str
-        try:
-            proc = subprocess.Popen(  # pylint: disable=consider-using-with
-                ["which", self.psql_binary_name], stdout=subprocess.PIPE
-            )
-            out = ensure_str(proc.communicate()[0])
-        except subprocess.CalledProcessError:
+        proc = subprocess.Popen(  # pylint: disable=consider-using-with
+            ["which", self.psql_binary_name], stdout=subprocess.PIPE
+        )
+        out = ensure_str(proc.communicate()[0])
+
+        if proc.returncode != 0:
             raise RuntimeError("Could not determine %s executable." % self.psql_binary_name)
 
         return out.strip()
@@ -1173,11 +1183,7 @@ def parse_postgres_cfg(postgres_cfg, config_separator):
     # type: (List[str], str) -> Tuple[str, List[Dict[str, Optional[str]]]]
     """
     Parser for Postgres config. x-Plattform compatible.
-
-    Example for .cfg file:
-    DBUSER=postgres
-    INSTANCE=/home/postgres/db1.env:USER_NAME:/PATH/TO/.pgpass
-    INSTANCE=/home/postgres/db2.env:USER_NAME:/PATH/TO/.pgpass
+    See comment at the beginning of this file for an example.
     """
     dbuser = None
     instances = []

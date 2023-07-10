@@ -614,13 +614,13 @@ def _update_check_mk(target_dir, tar_file):
     (need to retain user notification rules)"""
     site_vars: dict[str, Any] = {"contacts": {}}
     with Path(target_dir).joinpath("contacts.mk").open(encoding="utf-8") as f:
-        exec(f.read(), {}, site_vars)
+        exec(f.read(), {}, site_vars)  # nosec B102 # BNS:aee528
 
     _wipe_directory(target_dir)
     tar_file.extractall(target_dir)  # nosec B202
 
     master_vars: dict[str, Any] = {"contacts": {}}
-    exec(tar_file.extractfile("./contacts.mk").read(), {}, master_vars)
+    exec(tar_file.extractfile("./contacts.mk").read(), {}, master_vars)  # nosec B102 # BNS:aee528
 
     site_contacts = _update_contacts_dict(master_vars["contacts"], site_vars["contacts"])
     store.save_to_mk_file(os.path.join(target_dir, "contacts.mk"), "contacts", site_contacts)

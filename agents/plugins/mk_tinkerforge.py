@@ -285,7 +285,7 @@ def read_config(env):
 
     if os.path.isfile(cfg_path):
         with open(cfg_path) as opened_file:
-            exec(opened_file.read(), settings, settings)
+            exec(opened_file.read(), settings, settings)  # nosec B102 # BNS:a29406
     return settings
 
 

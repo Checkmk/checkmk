@@ -345,7 +345,7 @@ class ABCHostsStorageLoader(abc.ABC, Generic[THostsReadData]):
 
 class StandardStorageLoader(ABCHostsStorageLoader[str]):
     def apply(self, data: str, global_dict: dict[str, Any]) -> bool:
-        exec(data, global_dict, global_dict)
+        exec(data, global_dict, global_dict)  # nosec B102 # BNS:aee528
         return True
 
 

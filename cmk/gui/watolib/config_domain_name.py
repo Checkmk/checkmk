@@ -112,7 +112,7 @@ class ABCConfigDomain(abc.ABC):
 
         try:
             with filename.open("rb") as f:
-                exec(f.read(), {}, settings)
+                exec(f.read(), {}, settings)  # nosec B102 # BNS:aee528
 
             return settings
 

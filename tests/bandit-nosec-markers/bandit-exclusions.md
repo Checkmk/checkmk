@@ -23,3 +23,5 @@ Note that Bandit is picky about the exact format.
 | `BNS:c29b0e` | `B103` | A python file is compiled and marked as executable |
 | `BNS:ce45cd` | `B103` | Creates a spoolfile, this is probably ought to be deleted by the other process |
 | `BNS:7e6b08` | `B103` | We set the traverse permission on a folder, since there are files which needs to be world accessible |
+| `BNS:a29406` | `B102` | User defined input expected within executed files such as custom entries within agent plugin .cfg files |
+| `BNS:aee528` | `B102` | Config file data would be in an expected format however alternatives handle process threads different which may impact timings or cause hanging when loading configurations |

@@ -66,7 +66,7 @@ def get_config():
     }
     if os.path.exists(config_file):
         with open(config_file) as config_file_obj:
-            exec(config_file_obj.read(), config)
+            exec(config_file_obj.read(), config)  # nosec B102 # BNS:a29406
     return config
 
 

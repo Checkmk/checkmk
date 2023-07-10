@@ -63,7 +63,7 @@ class KeypairStore:
 
         variables: dict[str, dict[int, dict[str, Any]]] = {self._attr: {}}
         with self._path.open("rb") as f:
-            exec(f.read(), variables, variables)
+            exec(f.read(), variables, variables)  # nosec B102 # BNS:aee528
         return self._parse(variables[self._attr])
 
     def save(self, keys: Mapping[int, Key]) -> None:

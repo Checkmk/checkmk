@@ -136,7 +136,7 @@ def _load_config_file_to(path: str, raw_config: dict[str, Any]) -> None:
     """Load the given GUI configuration file"""
     try:
         with Path(path).open("rb") as f:
-            exec(f.read(), {}, raw_config)
+            exec(f.read(), {}, raw_config)  # nosec B102 # BNS:aee528
     except FileNotFoundError:
         pass
     except Exception as e:

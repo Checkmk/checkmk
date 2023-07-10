@@ -285,7 +285,7 @@ def get_last_werk() -> int:
 def load_config() -> None:
     global g_last_werk, valid_choices
     with open("config") as f_config:
-        exec(f_config.read(), globals(), globals())
+        exec(f_config.read(), globals(), globals())  # nosec B102 # BNS:aee528
     try:
         with open(".last") as f_last:
             g_last_werk = int(f_last.read())

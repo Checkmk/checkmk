@@ -127,7 +127,7 @@ def load_config(settings: Settings) -> ConfigFromWATO:  # pylint: disable=too-ma
         settings.paths.config_dir.value.glob("**/*.mk")
     ):
         with open(str(path), mode="rb") as file_object:
-            exec(file_object.read(), global_context)  # pylint: disable=exec-used
+            exec(file_object.read(), global_context)  # nosec B102 # BNS:aee528
     assert isinstance(global_context["rule_packs"], Iterable)
     assert isinstance(global_context["mkp_rule_packs"], Mapping)
     _bind_to_rule_pack_proxies(global_context["rule_packs"], global_context["mkp_rule_packs"])

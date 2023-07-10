@@ -244,7 +244,7 @@ def enumerate_callback(
 def read_config():
     settings = DEFAULT_SETTINGS
     if (cfg_path := Path(os.getenv("MK_CONFDIR", "/etc/check_mk"), "tinkerforge.cfg")).is_file():
-        exec(cfg_path.read_text(), settings, settings)
+        exec(cfg_path.read_text(), settings, settings)  # nosec B102 # BNS:aee528
     return settings
 
 

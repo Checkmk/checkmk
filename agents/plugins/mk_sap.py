@@ -136,7 +136,7 @@ config_file = MK_CONFDIR + "/sap.cfg"
 cfg = {}  # type: Union[List[Dict[Any, Any]], Dict[Any, Any]]
 if os.path.exists(config_file):
     with open(config_file) as opened_file:
-        exec(opened_file.read())
+        exec(opened_file.read())  # nosec B102 # BNS:a29406
     if isinstance(cfg, dict):
         cfg = [cfg]
 else:

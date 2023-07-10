@@ -257,7 +257,7 @@ class ConfigDomainDiskspace(ABCConfigDomain):
         filename = cmk.utils.paths.omd_root / "bin/diskspace"
         with filename.open(encoding="utf-8") as f:
             code = compile(f.read(), str(filename), "exec")
-            exec(code, {}, diskspace_context)
+            exec(code, {}, diskspace_context)  # nosec B102 # BNS:aee528
         return {
             "diskspace_cleanup": diskspace_context["default_config"],
         }

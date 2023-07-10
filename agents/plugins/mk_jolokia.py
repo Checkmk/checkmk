@@ -728,7 +728,7 @@ def load_config(custom_config):
     conffile = os.path.join(os.getenv("MK_CONFDIR", "/etc/check_mk"), "jolokia.cfg")
     if os.path.exists(conffile):
         with open(conffile) as conf:
-            exec(conf.read(), {}, custom_config)
+            exec(conf.read(), {}, custom_config)  # nosec B102 # BNS:a29406
     return custom_config
 
 

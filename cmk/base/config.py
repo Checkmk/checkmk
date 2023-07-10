@@ -679,7 +679,7 @@ class SetFolderPathDict(SetFolderPathAbstract, dict):
 
 
 def _load_config_file(file_to_load: Path, into_dict: dict[str, Any]) -> None:
-    exec(file_to_load.read_text(), into_dict, into_dict)
+    exec(file_to_load.read_text(), into_dict, into_dict)  # nosec B102 # BNS:aee528
 
 
 def _load_config(with_conf_d: bool, exclude_parents_mk: bool) -> set[str]:
@@ -1843,7 +1843,9 @@ def load_precompiled_plugin(path: str, check_context: CheckContext) -> bool:
         # The original file is from the version so the calculated mode is world readable...
         os.chmod(precompiled_path, 0o640)
 
-    exec(marshal.loads(Path(precompiled_path).read_bytes()[_PYCHeader.SIZE :]), check_context)
+    exec(
+        marshal.loads(Path(precompiled_path).read_bytes()[_PYCHeader.SIZE :]), check_context
+    )  # nosec B102 # BNS:aee528
 
     return do_compile
 

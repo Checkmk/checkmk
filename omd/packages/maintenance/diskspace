@@ -60,7 +60,7 @@ def _read_config() -> None:
     globals().update(default_config)
 
     try:
-        exec(config_file.read_text(), globals(), globals())
+        exec(config_file.read_text(), globals(), globals())  # nosec B102 # BNS:aee528
     except OSError:
         pass  # ignore non existant config
     except Exception as e:
@@ -127,7 +127,7 @@ def _load_plugins() -> None:
             path = base_dir / file_name
             _verbose("Loading plugin: %s" % path)
             try:
-                exec(
+                exec(  # nosec B102 # BNS:aee528
                     path.read_text(),
                     plugins[file_name],
                     plugins[file_name],
@@ -310,7 +310,7 @@ def _get_configured_hosts() -> tuple[set, set, bool]:
     if (
         distr_wato_filepath := Path("~/etc/check_mk/conf.d/distributed_wato.mk").expanduser()
     ).exists():
-        exec(
+        exec(  # nosec B102 # BNS:aee528
             distr_wato_filepath.read_text(),
             file_vars,
             file_vars,

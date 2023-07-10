@@ -91,7 +91,7 @@ tests:
 skips:
   - B415  # pyghmi is needed by our core
 # medium severity tests excluded for now; enable step-by-step
-  - B102  # exec_used
+
   - B104  # hardcoded_bind_all_interfaces
   - B108  # hardcoded_tmp_directory
   - B302  # marshal

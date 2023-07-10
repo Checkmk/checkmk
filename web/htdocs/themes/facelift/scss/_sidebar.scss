@@ -173,11 +173,16 @@ body.main .popup_menu #side_header > span {
 
 #side_fold,
 #saas {
-  margin: $spacing 0;
+  padding: $spacing 4px $spacing 0;
   font-size: $font-size-small;
   color: $font-color;
   text-align: center;
   cursor: pointer;
+  border-left: 4px solid $navigation-bg-color;
+
+  &:hover {
+    border-left-color: $success;
+  }
 
   img {
     margin-bottom: 8px;

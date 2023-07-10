@@ -15,11 +15,9 @@ from hashlib import sha256
 from pathlib import Path
 from typing import Any, assert_never, Final, Iterator, Literal, NamedTuple
 
-import cmk.utils.rulesets.ruleset_matcher as ruleset_matcher
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel, HostLabelValueDict
 from cmk.utils.object_diff import make_diff_text
-from cmk.utils.rulesets.conditions import HostOrServiceConditions
 from cmk.utils.store import ObjectStore, TextSerializer
 from cmk.utils.version import __version__, Version
 
@@ -40,27 +38,19 @@ from cmk.gui.background_job import (
     JobStatusSpec,
     JobStatusStates,
 )
-from cmk.gui.config import active_config
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.watolib.activate_changes import sync_changes_before_remote_automation
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import (
-    get_services_labels,
     local_discovery,
     local_discovery_preview,
     set_autochecks,
     update_host_labels,
 )
-from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost
-from cmk.gui.watolib.rulesets import (
-    AllRulesets,
-    Rule,
-    RuleConditions,
-    Ruleset,
-    service_description_to_condition,
-)
+from cmk.gui.watolib.hosts_and_folders import CREHost
+from cmk.gui.watolib.rulesets import EnabledDisabledServicesEditor
 from cmk.gui.watolib.utils import may_edit_ruleset
 
 
@@ -308,7 +298,7 @@ class Discovery:
             need_sync = False
             if remove_disabled_rule or add_disabled_rule:
                 add_disabled_rule = add_disabled_rule - remove_disabled_rule - saved_services
-                self._save_host_service_enable_disable_rules(
+                EnabledDisabledServicesEditor(self._host).save_host_service_enable_disable_rules(
                     remove_disabled_rule, add_disabled_rule
                 )
                 need_sync = True
@@ -341,118 +331,6 @@ class Discovery:
             self._host.name(),
             checks,
         )
-
-    def _save_host_service_enable_disable_rules(self, to_enable, to_disable):
-        self._save_service_enable_disable_rules(to_enable, value=False)
-        self._save_service_enable_disable_rules(to_disable, value=True)
-
-    def _save_service_enable_disable_rules(self, services, value):
-        """
-        Load all disabled services rules from the folder, then check whether or not there is a
-        rule for that host and check whether or not it currently disabled the services in question.
-        if so, remove them and save the rule again.
-        Then check whether or not the services are still disabled (by other rules). If so, search
-        for an existing host dedicated negative rule that enables services. Modify this or create
-        a new rule to override the disabling of other rules.
-
-        Do the same vice versa for disabling services.
-        """
-        if not services:
-            return
-
-        rulesets = AllRulesets.load_all_rulesets()
-
-        try:
-            ruleset = rulesets.get("ignored_services")
-        except KeyError:
-            ruleset = Ruleset(
-                "ignored_services", ruleset_matcher.get_tag_to_group_map(active_config.tags)
-            )
-
-        modified_folders = []
-
-        service_patterns: HostOrServiceConditions = [
-            service_description_to_condition(s) for s in services
-        ]
-        modified_folders += self._remove_from_rule_of_host(
-            ruleset, service_patterns, value=not value
-        )
-
-        # Check whether or not the service still needs a host specific setting after removing
-        # the host specific setting above and remove all services from the service list
-        # that are fine without an additional change.
-        services_labels = get_services_labels(self._host.site_id(), self._host.name(), services)
-        for service in list(services):
-            service_labels = services_labels.labels[service]
-            value_without_host_rule, _ = ruleset.analyse_ruleset(
-                self._host.name(),
-                service,
-                service,
-                service_labels=service_labels,
-            )
-            if (
-                not value and value_without_host_rule in [None, False]
-            ) or value == value_without_host_rule:
-                services.remove(service)
-
-        service_patterns = [service_description_to_condition(s) for s in services]
-        modified_folders += self._update_rule_of_host(ruleset, service_patterns, value=value)
-
-        for folder in modified_folders:
-            rulesets.save_folder(folder)
-
-    def _remove_from_rule_of_host(self, ruleset, service_patterns, value):
-        other_rule = self._get_rule_of_host(ruleset, value)
-        if other_rule and isinstance(other_rule.conditions.service_description, list):
-            for service_condition in service_patterns:
-                if service_condition in other_rule.conditions.service_description:
-                    other_rule.conditions.service_description.remove(service_condition)
-
-            if not other_rule.conditions.service_description:
-                ruleset.delete_rule(other_rule)
-
-            return [other_rule.folder]
-
-        return []
-
-    def _update_rule_of_host(
-        self, ruleset: Ruleset, service_patterns: HostOrServiceConditions, value: Any
-    ) -> list[CREFolder]:
-        folder = self._host.folder()
-        rule = self._get_rule_of_host(ruleset, value)
-
-        if rule:
-            for service_condition in service_patterns:
-                if service_condition not in rule.conditions.service_description:
-                    rule.conditions.service_description.append(service_condition)
-
-        elif service_patterns:
-            rule = Rule.from_ruleset_defaults(folder, ruleset)
-
-            # mypy is wrong here vor some reason:
-            # Invalid index type "str" for "Union[Dict[str, str], str]"; expected type "Union[int, slice]"  [index]
-            conditions = RuleConditions(
-                folder.path(),
-                host_name=[self._host.name()],
-                service_description=sorted(service_patterns, key=lambda x: x["$regex"]),
-            )
-            rule.update_conditions(conditions)
-
-            rule.value = value
-            ruleset.prepend_rule(folder, rule)
-
-        if rule:
-            return [rule.folder]
-        return []
-
-    def _get_rule_of_host(self, ruleset, value):
-        for _folder, _index, rule in ruleset.get_rules():
-            if rule.is_disabled():
-                continue
-
-            if rule.is_discovery_rule_of(self._host) and rule.value == value:
-                return rule
-        return None
 
     def _get_table_target(self, entry: CheckPreviewEntry) -> str:
         if self._action == DiscoveryAction.FIX_ALL or (

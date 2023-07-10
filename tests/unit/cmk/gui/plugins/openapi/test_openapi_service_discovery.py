@@ -921,7 +921,7 @@ def test_openapi_discovery_disable_and_re_enable_one_service(
 ) -> None:
     mocker.patch(
         # one would like to mock the call in the library and not the import. WHY????
-        "cmk.gui.watolib.services.get_services_labels",
+        "cmk.gui.watolib.rulesets.get_services_labels",
         return_value=GetServicesLabelsResult(labels=defaultdict(lambda: {})),
     )
     aut_user_auth_wsgi_app.call_method(

@@ -90,7 +90,9 @@ def _resolve_string_parameters(
         # Since Checkmk 2.0 we have a better API and need it only for compatibility. The parameters
         # are resolved now *before* they are written to the autochecks file, and earlier autochecks
         # files are resolved during cmk-update-config.
-        return eval(params_unresolved, context, context)  # pylint: disable=eval-used
+        return eval(  # nosec B307 # BNS:1c6cc2 # pylint: disable=eval-used
+            params_unresolved, context, context
+        )
     except Exception:
         raise ValueError(
             "Invalid check parameter string '%s' found in discovered service %r"

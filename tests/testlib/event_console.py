@@ -83,7 +83,7 @@ class CMKEventConsoleStatus:
             if not chunk:
                 break
 
-        return eval(response_text)  # pylint: disable=eval-used
+        return eval(response_text)  # nosec B307 # BNS:1c6cc2 # pylint: disable=eval-used
 
     def query_table_assoc(self, query: bytes) -> list[dict]:
         response = self.query(query)

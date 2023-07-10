@@ -20,8 +20,10 @@ Note that Bandit is picky about the exact format.
 | `BNS:c3c5e9` | `B301` | `PackedConfigStore` loads a config from file via `pickle.load`. The path is hard-coded to `cmk.utils.paths.core_helper_config_dir` in `ConfigPath`, which is only writable by the site user. |
 | `BNS:e9bfaa` | `B303` | Only used to display fingerprints and in testing. |
 | `BNS:f6c1b9` | `B605` | Shell command has been reviewed. |
-| `BNS:c29b0e` | `B103` | A python file is compiled and marked as executable |
-| `BNS:ce45cd` | `B103` | Creates a spoolfile, this is probably ought to be deleted by the other process |
-| `BNS:7e6b08` | `B103` | We set the traverse permission on a folder, since there are files which needs to be world accessible |
-| `BNS:a29406` | `B102` | User defined input expected within executed files such as custom entries within agent plugin .cfg files |
-| `BNS:aee528` | `B102` | Config file data would be in an expected format however alternatives handle process threads different which may impact timings or cause hanging when loading configurations |
+| `BNS:c29b0e` | `B103` | A python file is compiled and marked as executable. |
+| `BNS:ce45cd` | `B103` | Creates a spoolfile, this is probably ought to be deleted by the other process. |
+| `BNS:7e6b08` | `B103` | We set the traverse permission on a folder, since there are files which needs to be world accessible.|
+| `BNS:a29406` | `B102` | User defined input expected within executed files such as custom entries within agent plugin .cfg files. |
+| `BNS:aee528` | `B102` | Config file data would be in an expected format however alternatives handle process threads different which may impact timings or cause hanging when loading configurations. |
+| `BNS:9666b8` | `B307` | Used to validate that literal_eval still replicates the desired results expected from eval. |
+| `BNS:1c6cc2` | `B307` | Literal_eval cannot be used evaluate non-string fields. |

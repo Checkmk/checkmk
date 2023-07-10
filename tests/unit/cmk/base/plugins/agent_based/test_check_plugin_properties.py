@@ -105,7 +105,9 @@ def test_no_plugins_with_trivial_sections(fix_register: FixRegister) -> None:
     trivial section without a parse_function is sufficient for your plugin you have to add it
     to the known exceptions below.
     """
-    known_exceptions: set[ParsedSectionName] = set()  # currently no exceptions!
+    known_exceptions = {
+        ParsedSectionName("statgrab_net"),
+    }
 
     # fix_register does not include trivial sections created by the trivial_section_factory
     registered_sections = {

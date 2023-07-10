@@ -6,7 +6,10 @@
 from typing import Dict, Sequence
 
 from .agent_based_api.v1 import register, type_defs
+from .agent_based_api.v1.type_defs import InventoryResult
 from .utils import interfaces
+from .utils.inventory_interfaces import Interface as InterfaceInv
+from .utils.inventory_interfaces import inventorize_interfaces
 
 Section = Sequence[interfaces.InterfaceWithCounters]
 
@@ -45,4 +48,53 @@ register.agent_section(
     name="statgrab_net",
     parse_function=parse_statgrab_net,
     parsed_section_name="interfaces",
+)
+
+
+def inventory_statgrab_net(section: Section) -> InventoryResult:
+    if not section:
+        return
+
+    yield from inventorize_interfaces(
+        {
+            "usage_port_types": [
+                "6",
+                "32",
+                "62",
+                "117",
+                "127",
+                "128",
+                "129",
+                "180",
+                "181",
+                "182",
+                "205",
+                "229",
+            ],
+        },
+        (
+            InterfaceInv(
+                index=interface.attributes.index,
+                descr=interface.attributes.descr,
+                alias=interface.attributes.alias,
+                type=interface.attributes.type,
+                speed=int(interface.attributes.speed),
+                oper_status=int(interface.attributes.oper_status)
+                if isinstance(interface.attributes.oper_status, str)
+                else None,
+                phys_address=interfaces.render_mac_address(interface.attributes.phys_address),
+            )
+            for interface in sorted(section, key=lambda i: i.attributes.index)
+            if interface.attributes.speed
+        ),
+        len(section),
+    )
+
+
+register.inventory_plugin(
+    name="statgrab_net",
+    inventory_function=inventory_statgrab_net,
+    # TODO use 'inv_if'
+    # inventory_ruleset_name="inv_if",
+    # inventory_default_parameters={},
 )

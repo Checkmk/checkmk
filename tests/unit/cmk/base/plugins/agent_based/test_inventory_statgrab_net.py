@@ -3,9 +3,18 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+import pytest
 
-from cmk.base.plugins.agent_based.if_statgrab_net import parse_statgrab_net
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Attributes, TableRow
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import InventoryResult
+from cmk.base.plugins.agent_based.inventory_statgrab_net import (
+    inventory_statgrab_net,
+    parse_statgrab_net,
+    Section,
+)
 from cmk.base.plugins.agent_based.utils import interfaces
+
+from .utils_inventory import sort_inventory_result
 
 _SECTION = [
     interfaces.InterfaceWithCounters(
@@ -146,4 +155,52 @@ def test_parse_statgrab_net() -> None:
             ]
         )
         == _SECTION
+    )
+
+
+@pytest.mark.parametrize(
+    "section, expected_result",
+    [
+        (
+            [],
+            [],
+        ),
+        (
+            _SECTION,
+            [
+                TableRow(
+                    path=["networking", "interfaces"],
+                    key_columns={
+                        "index": 3,
+                        "description": "vnet0",
+                        "alias": "vnet0",
+                    },
+                    inventory_columns={
+                        "speed": 10000000,
+                        "phys_address": "",
+                        "oper_status": 1,
+                        "port_type": 6,
+                        "available": False,
+                    },
+                    status_columns={},
+                ),
+                Attributes(
+                    path=["networking"],
+                    inventory_attributes={
+                        "available_ethernet_ports": 0,
+                        "total_ethernet_ports": 1,
+                        "total_interfaces": 3,
+                    },
+                    status_attributes={},
+                ),
+            ],
+        ),
+    ],
+)
+def test_inventory_statgrab_net(
+    section: Section,
+    expected_result: InventoryResult,
+) -> None:
+    assert sort_inventory_result(inventory_statgrab_net(section)) == sort_inventory_result(
+        expected_result
     )

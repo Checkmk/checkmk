@@ -624,19 +624,20 @@ class MutableTree:
             )
         )
 
-    def add_pairs(self, *, path: SDPath, pairs: Sequence[Mapping[SDKey, SDValue]]) -> None:
-        node = self.setdefault_node(path)
-        for p in pairs:
-            node.attributes.add(p)
-
-    def add_rows(
+    def add(
         self,
         *,
         path: SDPath,
-        key_columns: Sequence[SDKey],
-        rows: Sequence[Mapping[SDKey, SDValue]],
+        pairs: Sequence[Mapping[SDKey, SDValue]] | None = None,
+        key_columns: Sequence[SDKey] | None = None,
+        rows: Sequence[Mapping[SDKey, SDValue]] | None = None,
     ) -> None:
-        self.setdefault_node(path).table.add(key_columns, rows)
+        node = self.setdefault_node(path)
+        if pairs:
+            for p in pairs:
+                node.attributes.add(p)
+        if key_columns and rows:
+            node.table.add(key_columns, rows)
 
     def update_pairs(
         self,

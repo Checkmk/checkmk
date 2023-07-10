@@ -207,11 +207,11 @@ def inventorize_cluster(
 
 def _inventorize_cluster(*, nodes: Sequence[HostName]) -> MutableTree:
     tree = MutableTree()
-    tree.add_pairs(
+    tree.add(
         path=("software", "applications", "check_mk", "cluster"),
         pairs=[{"is_cluster": True}],
     )
-    tree.add_rows(
+    tree.add(
         path=("software", "applications", "check_mk", "cluster", "nodes"),
         key_columns=["name"],
         rows=[{"name": name} for name in nodes],
@@ -259,7 +259,7 @@ def _inventorize_real_host(
     )
 
     if trees.inventory:
-        trees.inventory.add_pairs(
+        trees.inventory.add(
             path=("software", "applications", "check_mk", "cluster"),
             pairs=[{"is_cluster": False}],
         )
@@ -406,17 +406,16 @@ def _create_trees_from_inventory_plugin_items(
     inventory_tree = MutableTree()
     status_data_tree = MutableTree()
     for path, collection in collection_by_path.items():
-        inventory_tree.add_pairs(path=path, pairs=collection.inventory_pairs)
-        status_data_tree.add_pairs(path=path, pairs=collection.status_data_pairs)
-
         key_columns = sorted(set(collection.key_columns))
-        inventory_tree.add_rows(
+        inventory_tree.add(
             path=path,
+            pairs=collection.inventory_pairs,
             key_columns=key_columns,
             rows=collection.inventory_rows,
         )
-        status_data_tree.add_rows(
+        status_data_tree.add(
             path=path,
+            pairs=collection.status_data_pairs,
             key_columns=key_columns,
             rows=collection.status_data_rows,
         )

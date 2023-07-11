@@ -6,11 +6,12 @@
 
 # mypy: disable-error-code="var-annotated"
 
+import json
 import time
 from calendar import timegm
 
 from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
-from cmk.base.check_legacy_includes.azure import AZURE_AGENT_SEPARATOR, json
+from cmk.base.check_legacy_includes.azure import AZURE_AGENT_SEPARATOR
 from cmk.base.config import check_info
 
 

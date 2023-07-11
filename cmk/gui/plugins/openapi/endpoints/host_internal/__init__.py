@@ -33,10 +33,9 @@ from cmk.gui.plugins.openapi.endpoints.host_internal.response_schemas import (
     ConnectionMode,
     HostConfigSchemaInternal,
 )
-from cmk.gui.plugins.openapi.endpoints.utils import ProblemException
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
-from cmk.gui.plugins.openapi.utils import serve_json
+from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
 from cmk.gui.watolib.hosts_and_folders import CREHost, Host
 
 permission_registry.register(

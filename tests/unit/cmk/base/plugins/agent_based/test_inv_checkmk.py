@@ -8,6 +8,8 @@ from typing import Any
 
 import pytest
 
+import cmk.utils.version as cmk_version
+
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.plugins.agent_based import inventory_checkmk_server as inv_checkmk
 
@@ -393,7 +395,7 @@ MERGED_SECTION_RAWEDITION = {
 def test_merge_sections(
     monkeypatch: pytest.MonkeyPatch, is_raw_edition: bool, merged_sections: Mapping[str, object]
 ) -> None:
-    monkeypatch.setattr(inv_checkmk.cmk_version, "is_raw_edition", lambda: is_raw_edition)
+    monkeypatch.setattr(cmk_version, "is_raw_edition", lambda: is_raw_edition)
     assert merged_sections == inv_checkmk.merge_sections(
         SECTION_LIVESTATUS_STATUS, SECTION_OMD_STATUS, SECTION_OMD_INFO
     )

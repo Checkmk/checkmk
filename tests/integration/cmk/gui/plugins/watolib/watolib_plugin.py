@@ -4,11 +4,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.utils.paths
+from cmk.utils.config_warnings import ConfigurationWarnings
 
 from cmk.gui.watolib.config_domain_name import (
     ABCConfigDomain,
     config_domain_registry,
-    ConfigurationWarnings,
     SerializedSettings,
 )
 

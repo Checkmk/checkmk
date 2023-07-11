@@ -15,7 +15,7 @@ from typing import Any, cast, NamedTuple, TypeAlias
 
 import black
 import jinja2
-from apispec.ext.marshmallow import resolve_schema_instance
+from apispec.ext.marshmallow import resolve_schema_instance  # type: ignore[attr-defined]
 from marshmallow import Schema
 
 from cmk.utils.site import omd_site
@@ -548,7 +548,7 @@ def format_nicely(obj: object) -> str:
         A string of the object, formatted nicely.
 
     """
-    return black.format_str(str(obj), mode=black.Mode(line_length=50))
+    return black.format_str(str(obj), mode=black.Mode(line_length=50))  # type: ignore[attr-defined]
 
 
 def _get_schema(schema: str | type[Schema] | None) -> Schema | None:

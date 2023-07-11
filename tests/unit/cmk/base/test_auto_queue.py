@@ -9,7 +9,6 @@ from pathlib import Path
 import pytest
 from pytest_mock import MockerFixture
 
-import cmk.utils.auto_queue
 from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.hostaddress import HostName
 
@@ -53,7 +52,7 @@ class TestAutoQueue:
         auto_queue = AutoQueue(tmpdir / "dir2")
         auto_queue.add(HostName("most"))
 
-        mock_touch = mocker.patch.object(cmk.utils.auto_queue.Path, "touch")
+        mock_touch = mocker.patch.object(Path, "touch")
         auto_queue.add(HostName("most"))
 
         mock_touch.assert_not_called()

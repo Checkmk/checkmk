@@ -10,7 +10,7 @@ from pathlib import Path
 import cmk.utils.paths
 from cmk.utils.site import omd_site
 
-from cmk.automations.results import SingleHostDiscoveryResult
+from cmk.checkengine.discovery import DiscoveryResult as SingleHostDiscoveryResult
 
 from cmk.gui.background_job import BackgroundJob, BackgroundProcessInterface, InitialStatusArgs
 from cmk.gui.i18n import _

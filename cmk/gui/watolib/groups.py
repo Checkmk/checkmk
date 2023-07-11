@@ -35,13 +35,14 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.logged_in import user
+from cmk.gui.type_defs import GlobalSettings
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import DualListChoice
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.config_domain_name import config_variable_registry
-from cmk.gui.watolib.global_settings import GlobalSettings, load_configuration_settings
+from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.group_writer import save_group_information
 from cmk.gui.watolib.host_attributes import (
     ABCHostAttribute,

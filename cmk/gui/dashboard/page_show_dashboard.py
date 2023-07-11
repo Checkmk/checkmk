@@ -42,7 +42,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.metrics.utils import MKCombinedGraphLimitExceededError
-from cmk.gui.plugins.visuals.utils import Filter
+from cmk.gui.plugins.visuals.utils import Filter, visual_info_registry
 from cmk.gui.type_defs import InfoName, VisualContext
 from cmk.gui.utils.html import HTML, HTMLInput
 from cmk.gui.utils.ntop import is_ntop_configured
@@ -398,7 +398,7 @@ def _get_mandatory_filters(
 ) -> Iterable[str]:
     # Get required single info keys (the ones that are not set by the config)
     for info_key in unconfigured_single_infos:
-        for info, _unused in visuals.visual_info_registry[info_key]().single_spec:
+        for info, _unused in visual_info_registry[info_key]().single_spec:
             yield info
 
     # Get required context filters set in the dashboard config

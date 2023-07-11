@@ -31,7 +31,7 @@ from cmk.gui.views import command
 from cmk.gui.views.command import command_group_registry, command_registry
 from cmk.gui.views.command import group as group_module
 from cmk.gui.views.command import registry as registry_module
-from cmk.gui.views.inventory import inventory_displayhints
+from cmk.gui.views.inventory.registry import inventory_displayhints
 from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.page_show_view import get_limit
 from cmk.gui.views.sorter import sorter_registry

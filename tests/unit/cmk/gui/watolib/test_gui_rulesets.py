@@ -26,9 +26,9 @@ import cmk.gui.watolib.rulesets as rulesets
 from cmk.gui.config import active_config
 from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_local
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
-from cmk.gui.wato.pages.rulesets import Rule
 from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, folder_tree
-from cmk.gui.watolib.rulesets import RuleOptions, Ruleset, RuleValue
+from cmk.gui.watolib.rulesets import Rule, RuleOptions, Ruleset, RuleValue
+from cmk.gui.watolib.utils import NEGATE
 
 
 def _ruleset(ruleset_name: RulesetName) -> rulesets.Ruleset:
@@ -126,10 +126,7 @@ def test_rule_from_config_unhandled_format(
         ),
         (
             "only_hosts",
-            (
-                rulesets.NEGATE,
-                ["HOSTLIST"],
-            ),
+            (NEGATE, ["HOSTLIST"]),
         ),
         # non-binary service ruleset
         (
@@ -143,7 +140,7 @@ def test_rule_from_config_unhandled_format(
         ),
         (
             "clustered_services",
-            (rulesets.NEGATE, ["HOSTLIST"], ["SVC", "LIST"]),
+            (NEGATE, ["HOSTLIST"], ["SVC", "LIST"]),
         ),
     ],
 )

@@ -4,11 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 from collections.abc import Mapping
 
+from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.plugins.wato.special_agents.common import (
-    MKUserError,
-    RulespecGroupDatasourceProgramsApps,
-)
+from cmk.gui.plugins.wato.special_agents.common import RulespecGroupDatasourceProgramsApps
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
     HTTPProxyReference,

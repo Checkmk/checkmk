@@ -16,6 +16,7 @@ from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 
 from cmk.automations.results import GetConfigurationResult
 
+from cmk.gui.i18n import localize
 from cmk.gui.logged_in import LoggedInNobody, user
 from cmk.gui.plugins.wato.omd_configuration import (
     ConfigDomainApache,
@@ -33,7 +34,6 @@ from cmk.gui.watolib.search import (
     IndexNotFoundException,
     IndexSearcher,
     is_url_permitted,
-    localize,
 )
 from cmk.gui.watolib.search import (
     match_item_generator_registry as real_match_item_generator_registry,

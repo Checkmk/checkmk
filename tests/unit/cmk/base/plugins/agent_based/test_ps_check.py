@@ -14,7 +14,7 @@ from tests.testlib import set_timezone
 
 import cmk.base.plugins.agent_based.agent_based_api.v1.type_defs as type_defs
 from cmk.base.plugins.agent_based import ps_check, ps_section
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, render, Result, Service, State
 from cmk.base.plugins.agent_based.utils import ps as ps_utils
 
 
@@ -1322,7 +1322,7 @@ def test_cpu_util_single_process_levels(cpu_cores: int) -> None:
     output = run_check_ps_common_with_elapsed_time(60, 2)
 
     cpu_util = 200.0 / cpu_cores
-    cpu_util_s = ps_utils.render.percent(cpu_util)
+    cpu_util_s = render.percent(cpu_util)
     single_msg = "firefox with PID 25898 CPU: %s (warn/crit at 45.00%%/80.00%%)" % cpu_util_s
     reference = [
         Result(state=State.OK, summary="Processes: 4"),

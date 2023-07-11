@@ -10,9 +10,9 @@ from typing import Any, Literal, Mapping, Optional
 from .agent_based_api.v1 import register, TableRow, type_defs
 from .agent_based_api.v1.type_defs import InventoryResult
 from .utils import bonding, interfaces
+from .utils.interfaces import InterfaceWithCounters
 from .utils.inventory_interfaces import Interface as InterfaceInv
 from .utils.inventory_interfaces import inventorize_interfaces
-from .utils.lnx_if import InterfaceWithCounters
 
 # Example output from agent:
 

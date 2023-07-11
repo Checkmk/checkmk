@@ -32,12 +32,8 @@ import cmk.gui.forms as forms
 import cmk.gui.plugins.wato.bi_valuespecs as bi_valuespecs
 import cmk.gui.watolib.changes as _changes
 import cmk.gui.weblib as weblib
-from cmk.gui.bi import (
-    all_sites_with_id_and_online,
-    bi_livestatus_query,
-    BIManager,
-    get_cached_bi_packs,
-)
+from cmk.gui.bi import get_cached_bi_packs
+from cmk.gui.bi.bi_manager import all_sites_with_id_and_online, bi_livestatus_query, BIManager
 from cmk.gui.breadcrumb import Breadcrumb
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKAuthException, MKUserError

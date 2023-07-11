@@ -12,8 +12,8 @@ from cmk.utils.plugin_registry import Registry
 from cmk.utils.servicename import ServiceName
 
 from cmk.bi.data_fetcher import BIStatusFetcher
-from cmk.bi.lib import RequiredBIElement
-from cmk.bi.trees import BICompiledAggregation, BICompiledRule, NodeResultBundle
+from cmk.bi.lib import NodeResultBundle, RequiredBIElement
+from cmk.bi.trees import BICompiledAggregation, BICompiledRule
 
 
 class BIAggregationFilter(NamedTuple):

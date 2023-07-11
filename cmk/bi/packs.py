@@ -22,13 +22,14 @@ from cmk.bi.actions import (
     BIStateOfServiceAction,
 )
 from cmk.bi.aggregation import BIAggregation, BIAggregationSchema
-from cmk.bi.lib import ReqBoolean, ReqList, ReqNested, ReqString, String
+from cmk.bi.lib import ReqBoolean, ReqList, ReqNested, ReqString
 from cmk.bi.node_generator import BINodeGenerator
 from cmk.bi.rule import BIRule, BIRuleSchema
 from cmk.bi.rule_interface import bi_rule_id_registry
 from cmk.bi.sample_configs import bi_sample_config
 from cmk.bi.schema import Schema
 from cmk.bi.search import BIHostSearch, BIServiceSearch
+from cmk.fields import String
 
 
 class DeleteErrorUsedByAggregation(MKGeneralException):

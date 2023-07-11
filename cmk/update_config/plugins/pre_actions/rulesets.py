@@ -11,10 +11,9 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
 from cmk.gui.watolib.hosts_and_folders import CREFolder
-from cmk.gui.watolib.rulesets import Ruleset, RulesetCollection
+from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
-from cmk.update_config.plugins.actions.rulesets import AllRulesets
 from cmk.update_config.plugins.pre_actions.utils import (
     ConflictMode,
     NEED_USER_INPUT_MODES,

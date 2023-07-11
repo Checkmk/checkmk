@@ -15,10 +15,10 @@ from cmk.base.check_legacy_includes.wmi import (
     wmi_yield_raw_average_timer,
     wmi_yield_raw_counter,
     wmi_yield_raw_persec,
-    WMISection,
 )
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+from cmk.base.plugins.agent_based.utils.wmi import WMISection
 
 
 def parse_skype(string_table: StringTable) -> WMISection:

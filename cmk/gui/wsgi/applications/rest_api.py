@@ -25,8 +25,9 @@ from werkzeug.routing import Map, Rule, Submount
 import cmk.utils.version as cmk_version
 from cmk.utils import crash_reporting, paths
 from cmk.utils.exceptions import MKException
+from cmk.utils.site import omd_site
 
-from cmk.gui import config, session
+from cmk.gui import session
 from cmk.gui.exceptions import MKAuthException, MKHTTPException, MKUserError
 from cmk.gui.http import request, Response
 from cmk.gui.logged_in import LoggedInNobody, user
@@ -73,7 +74,7 @@ def _get_header_name(header: Mapping[str, ma_fields.String]) -> str:
 
 
 def crash_report_response(exc: Exception) -> WSGIApplication:
-    site = config.omd_site()
+    site = omd_site()
     details: dict[str, Any] = {}
 
     if isinstance(exc, GeneralRestAPIException):

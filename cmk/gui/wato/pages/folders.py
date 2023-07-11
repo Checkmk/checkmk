@@ -46,7 +46,7 @@ from cmk.gui.plugins.wato.utils import (
 )
 from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_folder_status_link
-from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
+from cmk.gui.plugins.wato.utils.main_menu import MainMenu
 from cmk.gui.table import show_row_count, Table, table_element
 from cmk.gui.type_defs import ActionResult, Choices, PermissionName
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
@@ -82,6 +82,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     make_action_link,
     SearchFolder,
 )
+from cmk.gui.watolib.main_menu import MenuItem
 
 
 def make_folder_breadcrumb(folder: CREFolder | SearchFolder) -> Breadcrumb:

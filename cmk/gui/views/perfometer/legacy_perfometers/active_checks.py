@@ -3,9 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui.type_defs import Row
+from cmk.gui.type_defs import Perfdata, Row
 
-from .utils import LegacyPerfometerResult, Perfdata, perfometer_logarithmic, perfometers
+from .utils import LegacyPerfometerResult, perfometer_logarithmic, perfometers
 
 
 def register() -> None:

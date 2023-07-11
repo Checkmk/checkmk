@@ -20,7 +20,6 @@ from cmk.bi.lib import (
     create_nested_schema,
     create_nested_schema_for_class,
     ReqString,
-    String,
 )
 from cmk.bi.node_generator import BINodeGenerator
 from cmk.bi.node_vis import BIAggregationVisualizationSchema
@@ -28,6 +27,7 @@ from cmk.bi.rule import BIRule
 from cmk.bi.schema import Schema
 from cmk.bi.trees import BICompiledAggregation, BICompiledRule
 from cmk.bi.type_defs import AggrConfigDict
+from cmk.fields import String
 
 SCOPE_GLOBAL = None
 

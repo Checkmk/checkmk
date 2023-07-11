@@ -4,8 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.query_filters as query_filters
-from cmk.gui.plugins.visuals.filters import InputTextFilter
-from cmk.gui.plugins.visuals.utils import filter_registry
+from cmk.gui.plugins.visuals.utils import filter_registry, InputTextFilter
 
 filter_registry.register(
     InputTextFilter(

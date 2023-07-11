@@ -9,9 +9,9 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.plugins.sidebar.search import (
     ABCLabelMatchPlugin,
     HostLabelMatchPlugin,
-    Label,
     ServiceLabelMatchPlugin,
 )
+from cmk.gui.utils.labels import Label
 
 
 class TestLabelMatchPlugin:

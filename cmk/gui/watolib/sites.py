@@ -54,6 +54,7 @@ from cmk.gui.watolib.config_domains import (
     ConfigDomainGUI,
     ConfigDomainLiveproxy,
 )
+from cmk.gui.watolib.config_sync import create_distributed_wato_files
 from cmk.gui.watolib.global_settings import load_configuration_settings
 from cmk.gui.watolib.utils import multisite_dir
 
@@ -730,7 +731,7 @@ def _update_distributed_wato_file(sites):
         if site.get("replication"):
             distributed = True
         if site_is_local(siteid):
-            cmk.gui.watolib.activate_changes.create_distributed_wato_files(
+            create_distributed_wato_files(
                 base_dir=cmk.utils.paths.omd_root,
                 site_id=siteid,
                 is_remote=False,

@@ -37,7 +37,7 @@ from cmk.gui.type_defs import SessionId, SessionInfo, TwoFactorCredentials, WebA
 from cmk.gui.userdb import ldap_connector as ldap
 from cmk.gui.userdb.htpasswd import hash_password
 from cmk.gui.userdb.session import is_valid_user_session, load_session_infos
-from cmk.gui.userdb.store import load_custom_attr, save_users
+from cmk.gui.userdb.store import load_custom_attr, save_two_factor_credentials, save_users
 from cmk.gui.valuespec import Dictionary
 
 if TYPE_CHECKING:
@@ -772,7 +772,7 @@ def test_save_two_factor_credentials(user_id: UserId) -> None:
             ],
         }
     )
-    userdb.save_two_factor_credentials(user_id, credentials)
+    save_two_factor_credentials(user_id, credentials)
     assert userdb.load_two_factor_credentials(user_id) == credentials
 
 
@@ -792,7 +792,7 @@ def test_disable_two_factor_authentication(user_id: UserId) -> None:
             "backup_codes": [],
         }
     )
-    userdb.save_two_factor_credentials(user_id, credentials)
+    save_two_factor_credentials(user_id, credentials)
 
     assert userdb.is_two_factor_login_enabled(user_id)
     userdb.disable_two_factor_authentication(user_id)
@@ -814,7 +814,7 @@ def test_is_two_factor_backup_code_valid_matches(user_id: UserId) -> None:
     codes = userdb.make_two_factor_backup_codes()
     credentials = userdb.load_two_factor_credentials(user_id)
     credentials["backup_codes"] = [pwhashed for _password, pwhashed in codes]
-    userdb.save_two_factor_credentials(user_id, credentials)
+    save_two_factor_credentials(user_id, credentials)
     assert len(credentials["backup_codes"]) == 10
 
     valid = userdb.is_two_factor_backup_code_valid(user_id, codes[3][0])

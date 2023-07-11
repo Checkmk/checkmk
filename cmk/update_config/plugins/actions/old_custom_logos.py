@@ -12,9 +12,9 @@ from cmk.utils import version
 from cmk.utils.exceptions import MKGeneralException
 
 if version.is_managed_edition():
+    from cmk.gui.cme.type_defs import CustomerId  # pylint: disable=no-name-in-module,import-error
     from cmk.gui.cme.managed import (  # pylint: disable=no-name-in-module,import-error
         Customer,
-        CustomerId,
         load_customers,
         save_customers,
     )

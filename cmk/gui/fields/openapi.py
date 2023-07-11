@@ -99,7 +99,7 @@ def field_properties(field: fields.Field) -> FieldProperties:
     return properties
 
 
-class CheckmkOpenAPIConverter(marshmallow.OpenAPIConverter):
+class CheckmkOpenAPIConverter(marshmallow.OpenAPIConverter):  # type: ignore[name-defined]
     def schema2jsonschema(self, schema):
         if not is_value_typed_dict(schema):
             return super().schema2jsonschema(schema)

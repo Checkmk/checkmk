@@ -33,7 +33,8 @@ from ._parts import PackageOperationCallbacks as PackageOperationCallbacks
 from ._parts import PathConfig as PathConfig
 from ._parts import permissions as permissions
 from ._parts import ui_title as ui_title
-from ._reporter import all_local_files, all_rule_pack_files
+from ._reporter import all_local_files as all_local_files
+from ._reporter import all_rule_pack_files as all_rule_pack_files
 from ._type_defs import PackageError as PackageError
 from ._type_defs import PackageID as PackageID
 from ._type_defs import PackageName as PackageName

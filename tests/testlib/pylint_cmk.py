@@ -5,7 +5,7 @@
 
 from pylint.lint import PyLinter  # type: ignore[import]
 
-from tests.testlib import is_enterprise_repo
+from tests.testlib.utils import is_enterprise_repo
 
 
 # Is called by pylint to load this plugin

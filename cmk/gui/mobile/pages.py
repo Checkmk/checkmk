@@ -33,9 +33,9 @@ from cmk.gui.utils.login import show_saml2_login, show_user_errors
 from cmk.gui.utils.urls import makeuri, requested_file_name
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.view import View
+from cmk.gui.view_renderer import ABCViewRenderer
 from cmk.gui.views.command import command_registry, CommandSpec, core_command
 from cmk.gui.views.page_show_view import (
-    ABCViewRenderer,
     get_limit,
     get_row_count,
     get_user_sorters,

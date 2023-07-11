@@ -7,7 +7,7 @@ import cmk.gui.query_filters as query_filters
 from cmk.gui.plugins.visuals import (  # type: ignore[attr-defined]  # pylint: disable=no-name-in-module
     filter_registry,
 )
-from cmk.gui.plugins.visuals.filters import InputTextFilter
+from cmk.gui.plugins.visuals.utils import InputTextFilter
 
 filter_registry.register(
     InputTextFilter(

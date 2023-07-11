@@ -422,7 +422,7 @@ Keys 'optional1', 'required1' occur more than once.
         nested: typing.Sequence[type[Schema] | Schema],
         mode: typing.Literal["anyOf", "allOf"] = "anyOf",
         *,
-        default: typing.Any = fields.missing_,
+        default: typing.Any = fields.missing_,  # type: ignore[attr-defined]
         only: types.StrSequenceOrSet | None = None,
         exclude: types.StrSequenceOrSet = (),
         many: bool = False,

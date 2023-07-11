@@ -13,6 +13,7 @@ from collections.abc import Mapping
 from typing import Any, cast
 
 from cmk.utils import version
+from cmk.utils.password_store import Password
 
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
@@ -29,7 +30,6 @@ from cmk.gui.watolib.passwords import (
     load_password,
     load_password_to_modify,
     load_passwords,
-    Password,
     remove_password,
     save_password,
 )

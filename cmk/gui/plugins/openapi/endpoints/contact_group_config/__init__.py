@@ -41,7 +41,6 @@ from cmk.gui.plugins.openapi.endpoints.utils import (
     fetch_group,
     fetch_specific_groups,
     prepare_groups,
-    ProblemException,
     serialize_group,
     serialize_group_list,
     serve_group,
@@ -57,7 +56,7 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.parameters import GROUP_NAME_FIELD
-from cmk.gui.plugins.openapi.utils import serve_json
+from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
 from cmk.gui.session import SuperUserContext
 from cmk.gui.watolib.groups import (
     add_group,

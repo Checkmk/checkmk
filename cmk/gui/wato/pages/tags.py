@@ -37,7 +37,7 @@ from cmk.gui.plugins.wato.utils import (
     WatoMode,
 )
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
-from cmk.gui.plugins.wato.utils.main_menu import MainMenu, MenuItem
+from cmk.gui.plugins.wato.utils.main_menu import MainMenu
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.html import HTML
@@ -64,6 +64,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     folder_tree,
     make_action_link,
 )
+from cmk.gui.watolib.main_menu import MenuItem
 from cmk.gui.watolib.rulesets import Ruleset
 from cmk.gui.watolib.tags import (
     ABCOperation,

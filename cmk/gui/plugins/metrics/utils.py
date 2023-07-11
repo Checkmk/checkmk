@@ -67,7 +67,7 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
-from cmk.gui.valuespec import DropdownChoiceWithHostAndServiceHints, ValueSpecText
+from cmk.gui.valuespec import DropdownChoiceWithHostAndServiceHints
 
 LegacyPerfometer = tuple[str, Any]
 
@@ -191,10 +191,13 @@ class ForecastGraphRecipeBase(GraphRecipeBase):
     model_params: dict[str, Any]
 
 
-class ForecastGraphRecipe(ForecastGraphRecipeBase):
+class _ForecastGraphRecipeMandatory(ForecastGraphRecipeBase):
     specification: ForecastGraphIdentifier
-    model_params_repr: ValueSpecText
-    metric_id: NotRequired[tuple[HostName, ServiceName, MetricName_, str]]
+    model_params_html: str
+
+
+class ForecastGraphRecipe(_ForecastGraphRecipeMandatory, total=False):
+    metric_id: tuple[HostName, ServiceName, MetricName_, str]
 
 
 class CustomGraphRecipe(GraphRecipeBase):

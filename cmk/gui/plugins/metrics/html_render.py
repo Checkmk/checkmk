@@ -337,7 +337,7 @@ def _show_graph_html_content(
     ):
         html.open_div(align="center")
         html.h2(_("Forecast Parametrization"))
-        html.write_html(HTML(graph_definition["model_params_repr"]))
+        html.write_html(HTML(graph_definition["model_params_html"]))
         html.close_div()
 
     html.close_div()

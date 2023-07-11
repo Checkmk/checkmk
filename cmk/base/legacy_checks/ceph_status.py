@@ -6,6 +6,7 @@
 
 import json
 import time
+from typing import Mapping
 
 from cmk.base.check_api import (
     check_levels,
@@ -20,9 +21,12 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_value_store,
     render,
 )
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+Section = Mapping
 
 
-def parse_ceph_status(string_table):
+def parse_ceph_status(string_table: StringTable) -> Section:
     joined_lines = [" ".join(line) for line in string_table]
     section = json.loads("".join(joined_lines))
 
@@ -66,7 +70,7 @@ def ceph_check_epoch(id_, epoch, params):
 # Suggested by customer: 1,3 per 30 min
 
 
-def inventory_ceph_status(section):
+def discovery_ceph_status(section):
     return [(None, {})]
 
 
@@ -108,7 +112,7 @@ def check_ceph_status(_no_item, params, section):
 check_info["ceph_status"] = LegacyCheckDefinition(
     parse_function=parse_ceph_status,
     service_name="Ceph Status",
-    discovery_function=inventory_ceph_status,
+    discovery_function=discovery_ceph_status,
     check_function=check_ceph_status,
     check_default_parameters={
         "epoch": (1, 3, 30),

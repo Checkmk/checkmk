@@ -93,3 +93,8 @@
     Status: Success, Size \(total\): 7.21 TiB,
     Last backup: ([0-9]+ (year|month|day|hour|minute|second)s? ?)+ ago\(!!\) \(Warn/Crit: 1 day 6 hours/2 days 0 hours\),
     Duration: 35 minutes 48 seconds, Average Speed: 409 MB/s
+'.*\.OMD_.*_apache':
+  plugin_output: >-2
+    Requests: [0-9]+(\.[0-9]+)?/s,
+    Seconds serving: [0-9]+(\.[0-9]+)?/s,
+    Sent: [0-9]+(\.[0-9]+)? [kmgtpezyKMGTPEZY]?B/s

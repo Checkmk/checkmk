@@ -12,8 +12,8 @@ import multiprocessing
 import pprint
 import queue
 import urllib.parse
-from collections.abc import Mapping
-from typing import Any, cast, Literal, NoReturn, Sequence, TypedDict
+from collections.abc import Mapping, Sequence
+from typing import Any, cast, Literal, NoReturn, TypedDict
 
 from cmk.utils import version
 from cmk.utils.type_defs import HTTPMethod
@@ -346,19 +346,6 @@ class RestApiClient:
         )
 
 
-CLIENTS: dict = {}
-
-
-def register_client(client):
-    CLIENTS[client.__name__.replace("Client", "")] = client
-
-    def client_register():
-        return client
-
-    return client_register
-
-
-@register_client
 class LicensingClient(RestApiClient):
     domain: API_DOMAIN = "licensing"
 
@@ -381,7 +368,6 @@ class LicensingClient(RestApiClient):
         )
 
 
-@register_client
 class ActivateChangesClient(RestApiClient):
     domain: API_DOMAIN = "activation_run"
 
@@ -484,7 +470,6 @@ class ActivateChangesClient(RestApiClient):
         return set_if_match_header(etag)
 
 
-@register_client
 class UserClient(RestApiClient):
     domain: API_DOMAIN = "user_config"
 
@@ -581,7 +566,6 @@ class UserClient(RestApiClient):
         return set_if_match_header(etag)
 
 
-@register_client
 class HostConfigClient(RestApiClient):
     domain: API_DOMAIN = "host_config"
 
@@ -724,7 +708,6 @@ class HostConfigClient(RestApiClient):
         )
 
 
-@register_client
 class FolderClient(RestApiClient):
     domain: API_DOMAIN = "folder_config"
 
@@ -785,7 +768,6 @@ class FolderClient(RestApiClient):
         )
 
 
-@register_client
 class AuxTagClient(RestApiClient):
     domain: API_DOMAIN = "aux_tag"
 
@@ -842,7 +824,6 @@ class AuxTagClient(RestApiClient):
         )
 
 
-@register_client
 class TimePeriodClient(RestApiClient):
     domain: API_DOMAIN = "time_period"
 
@@ -890,7 +871,6 @@ class TimePeriodClient(RestApiClient):
         )
 
 
-@register_client
 class RuleClient(RestApiClient):
     domain: API_DOMAIN = "rule"
 
@@ -958,7 +938,6 @@ class RuleClient(RestApiClient):
         )
 
 
-@register_client
 class RulesetClient(RestApiClient):
     domain: API_DOMAIN = "ruleset"
 
@@ -1000,7 +979,6 @@ class RulesetClient(RestApiClient):
         return self.request("get", url=url, expect_ok=expect_ok)
 
 
-@register_client
 class HostTagGroupClient(RestApiClient):
     domain: API_DOMAIN = "host_tag_group"
 
@@ -1065,7 +1043,6 @@ class HostTagGroupClient(RestApiClient):
         )
 
 
-@register_client
 class PasswordClient(RestApiClient):
     domain: API_DOMAIN = "password"
 
@@ -1128,7 +1105,6 @@ class PasswordClient(RestApiClient):
         )
 
 
-@register_client
 class AgentClient(RestApiClient):
     domain: API_DOMAIN = "agent"
 
@@ -1155,7 +1131,6 @@ class AgentClient(RestApiClient):
         )
 
 
-@register_client
 class DowntimeClient(RestApiClient):
     domain: API_DOMAIN = "downtime"
 
@@ -1259,22 +1234,18 @@ class GroupConfig(RestApiClient):
         )
 
 
-@register_client
 class HostGroupClient(GroupConfig):
     domain: Literal["host_group_config"] = "host_group_config"
 
 
-@register_client
 class ServiceGroupClient(GroupConfig):
     domain: Literal["service_group_config"] = "service_group_config"
 
 
-@register_client
 class ContactGroupClient(GroupConfig):
     domain: Literal["contact_group_config"] = "contact_group_config"
 
 
-@register_client
 class SiteManagementClient(RestApiClient):
     domain: API_DOMAIN = "site_connection"
 
@@ -1331,7 +1302,6 @@ class SiteManagementClient(RestApiClient):
         )
 
 
-@register_client
 class HostClient(RestApiClient):
     domain: Literal["host"] = "host"
 
@@ -1361,7 +1331,6 @@ class HostClient(RestApiClient):
         )
 
 
-@register_client
 class RuleNotificationClient(RestApiClient):
     domain: API_DOMAIN = "notification_rule"
 
@@ -1430,5 +1399,23 @@ class ClientRegistry:
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
     return ClientRegistry(
-        **{name: cls(request_handler, url_prefix) for name, cls in CLIENTS.items()}
+        Licensing=LicensingClient(request_handler, url_prefix),
+        ActivateChanges=ActivateChangesClient(request_handler, url_prefix),
+        User=UserClient(request_handler, url_prefix),
+        HostConfig=HostConfigClient(request_handler, url_prefix),
+        Host=HostClient(request_handler, url_prefix),
+        Folder=FolderClient(request_handler, url_prefix),
+        AuxTag=AuxTagClient(request_handler, url_prefix),
+        TimePeriod=TimePeriodClient(request_handler, url_prefix),
+        Rule=RuleClient(request_handler, url_prefix),
+        Ruleset=RulesetClient(request_handler, url_prefix),
+        HostTagGroup=HostTagGroupClient(request_handler, url_prefix),
+        Password=PasswordClient(request_handler, url_prefix),
+        Agent=AgentClient(request_handler, url_prefix),
+        Downtime=DowntimeClient(request_handler, url_prefix),
+        HostGroup=HostGroupClient(request_handler, url_prefix),
+        ServiceGroup=ServiceGroupClient(request_handler, url_prefix),
+        ContactGroup=ContactGroupClient(request_handler, url_prefix),
+        SiteManagement=SiteManagementClient(request_handler, url_prefix),
+        RuleNotification=RuleNotificationClient(request_handler, url_prefix),
     )

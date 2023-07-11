@@ -1430,8 +1430,8 @@ def test_update_from_previous_1() -> None:
                 ],
                 "Retentions": {
                     ("KC",): {
-                        "c1": (1, 2, 3),
-                        "c2": (1, 2, 3),
+                        "c1": _RetentionInterval(1, 2, 3),
+                        "c2": _RetentionInterval(1, 2, 3),
                     }
                 },
             },
@@ -1478,8 +1478,8 @@ def test_update_from_previous_2() -> None:
                 ],
                 "Retentions": {
                     ("KC",): {
-                        "c1": (1, 2, 3),
-                        "c2": (1, 2, 3),
+                        "c1": _RetentionInterval(1, 2, 3),
+                        "c2": _RetentionInterval(1, 2, 3),
                     }
                 },
             },

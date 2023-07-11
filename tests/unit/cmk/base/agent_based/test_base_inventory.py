@@ -20,6 +20,8 @@ from cmk.utils.structured_data import (
     ImmutableTable,
     ImmutableTree,
     MutableTree,
+    SDKey,
+    SDRowIdent,
     UpdateResult,
 )
 
@@ -230,9 +232,16 @@ def test__inventorize_real_host_only_items() -> None:
 @pytest.mark.parametrize(
     "attrs_choices, attrs_expected_retentions",
     [
-        ("all", {"foo0": (10, 0, 3), "foo1": (10, 0, 3), "foo2": (10, 0, 3)}),
+        (
+            "all",
+            {
+                "foo0": _RetentionInterval(10, 0, 3),
+                "foo1": _RetentionInterval(10, 0, 3),
+                "foo2": _RetentionInterval(10, 0, 3),
+            },
+        ),
         ("nothing", {}),
-        (("choices", ["foo0"]), {"foo0": (10, 0, 3)}),
+        (("choices", ["foo0"]), {"foo0": _RetentionInterval(10, 0, 3)}),
         (("choices", ["unknown"]), {}),
     ],
 )
@@ -242,12 +251,26 @@ def test__inventorize_real_host_only_items() -> None:
         (
             "all",
             {
-                ("bar0",): {"foo": (10, 0, 5), "col0": (10, 0, 5), "col1": (10, 0, 5)},
-                ("bar1",): {"foo": (10, 0, 5), "col0": (10, 0, 5), "col1": (10, 0, 5)},
+                ("bar0",): {
+                    "foo": _RetentionInterval(10, 0, 5),
+                    "col0": _RetentionInterval(10, 0, 5),
+                    "col1": _RetentionInterval(10, 0, 5),
+                },
+                ("bar1",): {
+                    "foo": _RetentionInterval(10, 0, 5),
+                    "col0": _RetentionInterval(10, 0, 5),
+                    "col1": _RetentionInterval(10, 0, 5),
+                },
             },
         ),
         ("nothing", {}),
-        (("choices", ["col0"]), {("bar0",): {"col0": (10, 0, 5)}, ("bar1",): {"col0": (10, 0, 5)}}),
+        (
+            ("choices", ["col0"]),
+            {
+                ("bar0",): {"col0": _RetentionInterval(10, 0, 5)},
+                ("bar1",): {"col0": _RetentionInterval(10, 0, 5)},
+            },
+        ),
         (("choices", ["unknown"]), {}),
     ],
 )
@@ -413,9 +436,16 @@ def test__inventorize_real_host_only_intervals(
 @pytest.mark.parametrize(
     "attrs_choices, attrs_expected_retentions",
     [
-        ("all", {"foo0": (1, 2, 3), "foo1": (1, 2, 3), "foo2": (1, 2, 3)}),
+        (
+            "all",
+            {
+                "foo0": _RetentionInterval(1, 2, 3),
+                "foo1": _RetentionInterval(1, 2, 3),
+                "foo2": _RetentionInterval(1, 2, 3),
+            },
+        ),
         ("nothing", {}),
-        (("choices", ["foo0"]), {"foo0": (1, 2, 3)}),
+        (("choices", ["foo0"]), {"foo0": _RetentionInterval(1, 2, 3)}),
         (("choices", ["unknown"]), {}),
     ],
 )
@@ -425,20 +455,34 @@ def test__inventorize_real_host_only_intervals(
         (
             "all",
             {
-                ("bar0",): {"foo": (1, 2, 5), "col0": (1, 2, 5), "col1": (1, 2, 5)},
-                ("bar1",): {"foo": (1, 2, 5), "col0": (1, 2, 5), "col1": (1, 2, 5)},
+                ("bar0",): {
+                    "foo": _RetentionInterval(1, 2, 5),
+                    "col0": _RetentionInterval(1, 2, 5),
+                    "col1": _RetentionInterval(1, 2, 5),
+                },
+                ("bar1",): {
+                    "foo": _RetentionInterval(1, 2, 5),
+                    "col0": _RetentionInterval(1, 2, 5),
+                    "col1": _RetentionInterval(1, 2, 5),
+                },
             },
         ),
         ("nothing", {}),
-        (("choices", ["col0"]), {("bar0",): {"col0": (1, 2, 5)}, ("bar1",): {"col0": (1, 2, 5)}}),
+        (
+            ("choices", ["col0"]),
+            {
+                ("bar0",): {"col0": _RetentionInterval(1, 2, 5)},
+                ("bar1",): {"col0": _RetentionInterval(1, 2, 5)},
+            },
+        ),
         (("choices", ["unknown"]), {}),
     ],
 )
 def test__inventorize_real_host_raw_cache_info_and_only_intervals(
     attrs_choices: Literal["all"] | tuple[str, list[str]],
-    attrs_expected_retentions: dict[str, tuple[int, int, int]],
+    attrs_expected_retentions: Mapping[SDKey, _RetentionInterval],
     table_choices: Literal["all"] | tuple[str, list[str]],
-    table_expected_retentions: dict[str, tuple[int, int, int]],
+    table_expected_retentions: Mapping[SDRowIdent, Mapping[SDKey, _RetentionInterval]],
 ) -> None:
     trees, update_result = _inventorize_real_host(
         now=10,
@@ -595,8 +639,8 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
 
 def _make_tree_or_items(
     *,
-    previous_attributes_retentions: dict,
-    previous_table_retentions: dict,
+    previous_attributes_retentions: Mapping[SDKey, _RetentionInterval],
+    previous_table_retentions: Mapping[SDRowIdent, Mapping[SDKey, _RetentionInterval]],
     raw_cache_info: tuple[int, int] | None,
 ) -> tuple[ImmutableTree, list[ItemsOfInventoryPlugin]]:
     previous_tree = ImmutableTree.deserialize(
@@ -745,10 +789,10 @@ def test__inventorize_real_host_no_items(
 )
 def test_updater_merge_previous_attributes(
     choices: tuple[str, list[str]],
-    expected_retentions: dict,
+    expected_retentions: Mapping[SDKey, _RetentionInterval],
 ) -> None:
     previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
-        previous_attributes_retentions={"old": (1, 2, 3)},
+        previous_attributes_retentions={"old": _RetentionInterval(1, 2, 3)},
         previous_table_retentions={},
         raw_cache_info=(-1, -2),
     )
@@ -788,7 +832,7 @@ def test_updater_merge_previous_attributes(
 )
 def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str]]) -> None:
     previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
-        previous_attributes_retentions={"old": (1, 2, 3)},
+        previous_attributes_retentions={"old": _RetentionInterval(1, 2, 3)},
         previous_table_retentions={},
         raw_cache_info=(-1, -2),
     )
@@ -828,13 +872,13 @@ def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str
 )
 def test_updater_merge_previous_tables(
     choices: tuple[str, list[str]],
-    expected_retentions: dict,
+    expected_retentions: Mapping[SDRowIdent, Mapping[SDKey, _RetentionInterval]],
 ) -> None:
     previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
         previous_attributes_retentions={},
         previous_table_retentions={
-            ("Ident 1",): {"old": (1, 2, 3)},
-            ("Ident 2",): {"old": (1, 2, 3)},
+            ("Ident 1",): {"old": _RetentionInterval(1, 2, 3)},
+            ("Ident 2",): {"old": _RetentionInterval(1, 2, 3)},
         },
         raw_cache_info=(-1, -2),
     )
@@ -877,8 +921,8 @@ def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]]) 
     previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
         previous_attributes_retentions={},
         previous_table_retentions={
-            ("Ident 1",): {"old": (1, 2, 3)},
-            ("Ident 2",): {"old": (1, 2, 3)},
+            ("Ident 1",): {"old": _RetentionInterval(1, 2, 3)},
+            ("Ident 2",): {"old": _RetentionInterval(1, 2, 3)},
         },
         raw_cache_info=(-1, -2),
     )
@@ -919,12 +963,12 @@ def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]]) 
 )
 def test_updater_merge_attributes(
     choices: tuple[str, list[str]],
-    expected_retentions: dict,
+    expected_retentions: Mapping[SDKey, _RetentionInterval],
 ) -> None:
     previous_tree, items_of_inventory_plugins = _make_tree_or_items(
         previous_attributes_retentions={
-            "old": (1, 2, 3),
-            "keys": (1, 2, 3),
+            "old": _RetentionInterval(1, 2, 3),
+            "keys": _RetentionInterval(1, 2, 3),
         },
         previous_table_retentions={},
         raw_cache_info=(4, 5),
@@ -972,12 +1016,12 @@ def test_updater_merge_attributes(
 )
 def test_updater_merge_attributes_outdated(
     choices: tuple[str, list[str]],
-    expected_retentions: dict,
+    expected_retentions: Mapping[SDKey, _RetentionInterval],
 ) -> None:
     previous_tree, items_of_inventory_plugins = _make_tree_or_items(
         previous_attributes_retentions={
-            "old": (1, 2, 3),
-            "keys": (1, 2, 3),
+            "old": _RetentionInterval(1, 2, 3),
+            "keys": _RetentionInterval(1, 2, 3),
         },
         previous_table_retentions={},
         raw_cache_info=(4, 5),
@@ -1032,18 +1076,18 @@ def test_updater_merge_attributes_outdated(
 )
 def test_updater_merge_tables(
     choices: tuple[str, list[str]],
-    expected_retentions: dict,
+    expected_retentions: Mapping[SDRowIdent, Mapping[SDKey, _RetentionInterval]],
 ) -> None:
     previous_tree, items_of_inventory_plugins = _make_tree_or_items(
         previous_attributes_retentions={},
         previous_table_retentions={
             ("Ident 1",): {
-                "old": (1, 2, 3),
-                "keys": (1, 2, 3),
+                "old": _RetentionInterval(1, 2, 3),
+                "keys": _RetentionInterval(1, 2, 3),
             },
             ("Ident 2",): {
-                "old": (1, 2, 3),
-                "keys": (1, 2, 3),
+                "old": _RetentionInterval(1, 2, 3),
+                "keys": _RetentionInterval(1, 2, 3),
             },
         },
         raw_cache_info=(4, 5),
@@ -1102,13 +1146,13 @@ def test_updater_merge_tables(
 )
 def test_updater_merge_tables_outdated(
     choices: tuple[str, list[str]],
-    expected_retentions: dict,
+    expected_retentions: Mapping[SDRowIdent, Mapping[SDKey, _RetentionInterval]],
 ) -> None:
     previous_tree, items_of_inventory_plugins = _make_tree_or_items(
         previous_attributes_retentions={},
         previous_table_retentions={
-            ("Ident 1",): {"old": (1, 2, 3), "keys": (1, 2, 3)},
-            ("Ident 2",): {"old": (1, 2, 3), "keys": (1, 2, 3)},
+            ("Ident 1",): {"old": _RetentionInterval(1, 2, 3), "keys": _RetentionInterval(1, 2, 3)},
+            ("Ident 2",): {"old": _RetentionInterval(1, 2, 3), "keys": _RetentionInterval(1, 2, 3)},
         },
         raw_cache_info=(4, 5),
     )

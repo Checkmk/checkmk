@@ -15,11 +15,11 @@ from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
 from cmk.utils.structured_data import (
+    _RetentionInterval,
     ImmutableAttributes,
     ImmutableTable,
     ImmutableTree,
     MutableTree,
-    RetentionInterval,
     UpdateResult,
 )
 
@@ -740,7 +740,7 @@ def test__inventorize_real_host_no_items(
     "choices, expected_retentions",
     [
         (("choices", ["unknown", "keyz"]), {}),
-        (("choices", ["old", "keyz"]), {"old": RetentionInterval(1, 2, 3)}),
+        (("choices", ["old", "keyz"]), {"old": _RetentionInterval(1, 2, 3)}),
     ],
 )
 def test_updater_merge_previous_attributes(
@@ -820,8 +820,8 @@ def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str
         (
             ("choices", ["old", "keyz"]),
             {
-                ("Ident 1",): {"old": RetentionInterval(1, 2, 3)},
-                ("Ident 2",): {"old": RetentionInterval(1, 2, 3)},
+                ("Ident 1",): {"old": _RetentionInterval(1, 2, 3)},
+                ("Ident 2",): {"old": _RetentionInterval(1, 2, 3)},
             },
         ),
     ],
@@ -910,9 +910,9 @@ def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]]) 
         (
             ("choices", ["old", "and", "new", "keys"]),
             {
-                "old": RetentionInterval(1, 2, 3),
-                "new": RetentionInterval(4, 5, 6),
-                "keys": RetentionInterval(4, 5, 6),
+                "old": _RetentionInterval(1, 2, 3),
+                "new": _RetentionInterval(4, 5, 6),
+                "keys": _RetentionInterval(4, 5, 6),
             },
         ),
     ],
@@ -964,8 +964,8 @@ def test_updater_merge_attributes(
         (
             ("choices", ["old", "and", "new", "keys"]),
             {
-                "new": RetentionInterval(4, 5, 6),
-                "keys": RetentionInterval(4, 5, 6),
+                "new": _RetentionInterval(4, 5, 6),
+                "keys": _RetentionInterval(4, 5, 6),
             },
         ),
     ],
@@ -1017,14 +1017,14 @@ def test_updater_merge_attributes_outdated(
             ("choices", ["old", "and", "new", "keys"]),
             {
                 ("Ident 1",): {
-                    "old": RetentionInterval(1, 2, 3),
-                    "new": RetentionInterval(4, 5, 6),
-                    "keys": RetentionInterval(4, 5, 6),
+                    "old": _RetentionInterval(1, 2, 3),
+                    "new": _RetentionInterval(4, 5, 6),
+                    "keys": _RetentionInterval(4, 5, 6),
                 },
                 ("Ident 2",): {
-                    "old": RetentionInterval(1, 2, 3),
-                    "new": RetentionInterval(4, 5, 6),
-                    "keys": RetentionInterval(4, 5, 6),
+                    "old": _RetentionInterval(1, 2, 3),
+                    "new": _RetentionInterval(4, 5, 6),
+                    "keys": _RetentionInterval(4, 5, 6),
                 },
             },
         ),
@@ -1089,12 +1089,12 @@ def test_updater_merge_tables(
             ("choices", ["old", "and", "new", "keys"]),
             {
                 ("Ident 1",): {
-                    "new": RetentionInterval(4, 5, 6),
-                    "keys": RetentionInterval(4, 5, 6),
+                    "new": _RetentionInterval(4, 5, 6),
+                    "keys": _RetentionInterval(4, 5, 6),
                 },
                 ("Ident 2",): {
-                    "new": RetentionInterval(4, 5, 6),
-                    "keys": RetentionInterval(4, 5, 6),
+                    "new": _RetentionInterval(4, 5, 6),
+                    "keys": _RetentionInterval(4, 5, 6),
                 },
             },
         ),

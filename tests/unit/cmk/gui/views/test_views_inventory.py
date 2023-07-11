@@ -9,13 +9,13 @@ from collections.abc import Sequence
 import pytest
 
 from cmk.utils.structured_data import (
+    _RetentionInterval,
     ImmutableAttributes,
     ImmutableDeltaAttributes,
     ImmutableDeltaTable,
     ImmutableDeltaTree,
     ImmutableTable,
     ImmutableTree,
-    RetentionInterval,
     SDPath,
 )
 
@@ -491,7 +491,7 @@ def test_make_node_displayhint_from_hint(
                     (None,): {"sid": None, "flashback": None, "other": None},
                 },
                 retentions={
-                    ("SID 2",): {"sid": RetentionInterval(1, 2, 3)},
+                    ("SID 2",): {"sid": _RetentionInterval(1, 2, 3)},
                 },
             ),
             [
@@ -725,7 +725,7 @@ def test_make_column_displayhint_from_hint(raw_path: str, expected: ColumnDispla
                     "c": "C",
                     "a": "A",
                 },
-                retentions={"c": RetentionInterval(1, 2, 3)},
+                retentions={"c": _RetentionInterval(1, 2, 3)},
             ),
             [
                 _InventoryTreeValueInfo("a", "A", None),

@@ -16,13 +16,13 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.structured_data import (
     _MutableAttributes,
     _MutableTable,
+    _RetentionInterval,
     ImmutableAttributes,
     ImmutableDeltaTree,
     ImmutableTable,
     ImmutableTree,
     MutableTree,
     parse_visible_raw_path,
-    RetentionInterval,
     SDFilterChoice,
     SDNodeName,
     SDPath,
@@ -1456,10 +1456,10 @@ def test_update_from_previous_1() -> None:
     assert current_tree.table.key_columns == ["kc"]
     assert current_tree.table.retentions == {
         ("KC",): {
-            "c1": RetentionInterval(4, 5, 6),
-            "c2": RetentionInterval(1, 2, 3),
-            "c3": RetentionInterval(4, 5, 6),
-            "kc": RetentionInterval(4, 5, 6),
+            "c1": _RetentionInterval(4, 5, 6),
+            "c2": _RetentionInterval(1, 2, 3),
+            "c3": _RetentionInterval(4, 5, 6),
+            "kc": _RetentionInterval(4, 5, 6),
         }
     }
     assert current_tree.get_rows(()) == [
@@ -1504,8 +1504,8 @@ def test_update_from_previous_2() -> None:
     assert current_tree.table.key_columns == ["kc"]
     assert current_tree.table.retentions == {
         ("KC",): {
-            "c2": RetentionInterval(1, 2, 3),
-            "c3": RetentionInterval(4, 5, 6),
+            "c2": _RetentionInterval(1, 2, 3),
+            "c3": _RetentionInterval(4, 5, 6),
         }
     }
     assert current_tree.get_rows(()) == [{"c2": "C2: only prev", "c3": "C3: only cur", "kc": "KC"}]

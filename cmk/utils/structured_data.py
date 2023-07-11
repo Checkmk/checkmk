@@ -125,25 +125,14 @@ class RawIntervalFromConfig(_RawIntervalFromConfigMandatory, total=False):
     columns: Literal["all"] | tuple[str, list[str]]
 
 
-class RetentionInterval(NamedTuple):
+class _RetentionInterval(NamedTuple):
     cached_at: int
     cache_interval: int
     retention_interval: int
 
-    @classmethod
-    def make(cls, cache_info: tuple[int, int], interval: int) -> RetentionInterval:
-        return cls(cache_info[0], cache_info[1], interval)
-
     @property
     def keep_until(self) -> int:
         return self.cached_at + self.cache_interval + self.retention_interval
-
-    def serialize(self) -> tuple[int, int, int]:
-        return self.cached_at, self.cache_interval, self.retention_interval
-
-    @classmethod
-    def deserialize(cls, raw_interval: tuple[int, int, int]) -> RetentionInterval:
-        return cls(*raw_interval)
 
 
 @dataclass(frozen=True)
@@ -360,7 +349,7 @@ def _make_filter_tree(filters: Iterable[SDFilterChoice]) -> _FilterTree:
 def _make_retentions_filter_func(
     *,
     filter_func: Callable[[SDKey], bool],
-    intervals_by_key: Mapping[SDKey, RetentionInterval] | None,
+    intervals_by_key: Mapping[SDKey, _RetentionInterval] | None,
     now: int,
 ) -> Callable[[SDKey], bool]:
     return lambda k: bool(
@@ -385,7 +374,7 @@ def _make_retentions_filter_func(
 @dataclass(kw_only=True)
 class _MutableAttributes:
     pairs: dict[SDKey, SDValue] = field(default_factory=dict)
-    retentions: Mapping[SDKey, RetentionInterval] = field(default_factory=dict)
+    retentions: Mapping[SDKey, _RetentionInterval] = field(default_factory=dict)
 
     def __len__(self) -> int:
         # The attribute 'pairs' is decisive. Other attributes like 'retentions' have no impact
@@ -409,7 +398,7 @@ class _MutableAttributes:
         choice: _SDRetentionFilterChoice,
     ) -> UpdateResult:
         filter_func = _make_filter_func(choice.choice)
-        retention_interval = RetentionInterval(*choice.cache_info, interval)
+        retention_interval = _RetentionInterval(*choice.cache_info, interval)
         compared_keys = _DictKeys.compare(
             left=set(
                 _get_filtered_dict(
@@ -425,7 +414,7 @@ class _MutableAttributes:
         )
 
         pairs: dict[SDKey, SDValue] = {}
-        retentions: dict[SDKey, RetentionInterval] = {}
+        retentions: dict[SDKey, _RetentionInterval] = {}
         for key in compared_keys.only_old:
             pairs.setdefault(key, other.pairs[key])
             retentions[key] = other.retentions[key]
@@ -450,11 +439,8 @@ class _MutableAttributes:
         raw_attributes: SDRawAttributes = {}
         if self.pairs:
             raw_attributes["Pairs"] = self.pairs
-
         if self.retentions:
-            raw_attributes["Retentions"] = {
-                key: interval.serialize() for key, interval in self.retentions.items()
-            }
+            raw_attributes["Retentions"] = self.retentions
         return raw_attributes
 
     @property
@@ -467,7 +453,9 @@ class _MutableAttributes:
 class _MutableTable:
     key_columns: Sequence[SDKey] = field(default_factory=list)
     rows_by_ident: dict[SDRowIdent, dict[SDKey, SDValue]] = field(default_factory=dict)
-    retentions: Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]] = field(default_factory=dict)
+    retentions: Mapping[SDRowIdent, Mapping[SDKey, _RetentionInterval]] = field(
+        default_factory=dict
+    )
 
     def __len__(self) -> int:
         # The attribute 'rows' is decisive. Other attributes like 'key_columns' or 'retentions'
@@ -511,7 +499,7 @@ class _MutableTable:
         choice: _SDRetentionFilterChoice,
     ) -> UpdateResult:
         filter_func = _make_filter_func(choice.choice)
-        retention_interval = RetentionInterval(*choice.cache_info, interval)
+        retention_interval = _RetentionInterval(*choice.cache_info, interval)
         self._add_key_columns(other.key_columns)
         old_filtered_rows = {
             ident: filtered_row
@@ -537,7 +525,7 @@ class _MutableTable:
             right=set(self_filtered_rows),
         )
 
-        retentions: dict[SDRowIdent, dict[SDKey, RetentionInterval]] = {}
+        retentions: dict[SDRowIdent, dict[SDKey, _RetentionInterval]] = {}
         update_result = UpdateResult()
         for ident in compared_row_idents.only_old:
             old_row: dict[SDKey, SDValue] = {}
@@ -600,12 +588,8 @@ class _MutableTable:
                     "Rows": list(self.rows_by_ident.values()),
                 }
             )
-
         if self.retentions:
-            raw_table["Retentions"] = {
-                ident: {key: interval.serialize() for key, interval in intervals_by_key.items()}
-                for ident, intervals_by_key in self.retentions.items()
-            }
+            raw_table["Retentions"] = self.retentions
         return raw_table
 
     @property
@@ -1101,7 +1085,7 @@ def _compare_trees(left: ImmutableTree, right: ImmutableTree) -> ImmutableDeltaT
 @dataclass(frozen=True, kw_only=True)
 class ImmutableAttributes:
     pairs: Mapping[SDKey, SDValue] = field(default_factory=dict)
-    retentions: Mapping[SDKey, RetentionInterval] = field(default_factory=dict)
+    retentions: Mapping[SDKey, _RetentionInterval] = field(default_factory=dict)
 
     def __len__(self) -> int:
         # The attribute 'pairs' is decisive. Other attributes like 'retentions' have no impact
@@ -1118,8 +1102,8 @@ class ImmutableAttributes:
         return ImmutableAttributes(
             pairs=raw_attributes.get("Pairs", {}),
             retentions={
-                key: RetentionInterval.deserialize(interval)
-                for key, interval in raw_attributes.get("Retentions", {}).items()
+                key: _RetentionInterval(*raw_retention_interval)
+                for key, raw_retention_interval in raw_attributes.get("Retentions", {}).items()
             },
         )
 
@@ -1127,11 +1111,8 @@ class ImmutableAttributes:
         raw_attributes: SDRawAttributes = {}
         if self.pairs:
             raw_attributes["Pairs"] = self.pairs
-
         if self.retentions:
-            raw_attributes["Retentions"] = {
-                key: interval.serialize() for key, interval in self.retentions.items()
-            }
+            raw_attributes["Retentions"] = self.retentions
         return raw_attributes
 
     @property
@@ -1144,7 +1125,9 @@ class ImmutableAttributes:
 class ImmutableTable:
     key_columns: Sequence[SDKey] = field(default_factory=list)
     rows_by_ident: Mapping[SDRowIdent, Mapping[SDKey, SDValue]] = field(default_factory=dict)
-    retentions: Mapping[SDRowIdent, Mapping[SDKey, RetentionInterval]] = field(default_factory=dict)
+    retentions: Mapping[SDRowIdent, Mapping[SDKey, _RetentionInterval]] = field(
+        default_factory=dict
+    )
 
     def __len__(self) -> int:
         # The attribute 'rows' is decisive. Other attributes like 'key_columns' or 'retentions'
@@ -1185,8 +1168,8 @@ class ImmutableTable:
             rows_by_ident=rows_by_ident,
             retentions={
                 ident: {
-                    key: RetentionInterval.deserialize(interval)
-                    for key, interval in raw_intervals_by_key.items()
+                    key: _RetentionInterval(*raw_retention_interval)
+                    for key, raw_retention_interval in raw_intervals_by_key.items()
                 }
                 for ident, raw_intervals_by_key in raw_table.get("Retentions", {}).items()
             },
@@ -1201,12 +1184,8 @@ class ImmutableTable:
                     "Rows": list(self.rows_by_ident.values()),
                 }
             )
-
         if self.retentions:
-            raw_table["Retentions"] = {
-                ident: {key: interval.serialize() for key, interval in intervals_by_key.items()}
-                for ident, intervals_by_key in self.retentions.items()
-            }
+            raw_table["Retentions"] = self.retentions
         return raw_table
 
     @property

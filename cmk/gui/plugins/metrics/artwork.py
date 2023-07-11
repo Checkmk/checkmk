@@ -12,6 +12,7 @@ from itertools import zip_longest
 from typing import Literal, TypedDict, TypeVar
 
 from dateutil.relativedelta import relativedelta
+from pydantic import BaseModel
 
 import cmk.utils.render
 from cmk.utils.prediction import Seconds, TimeRange, TimeSeries, TimeSeriesValue, Timestamp
@@ -77,7 +78,7 @@ class CurveValue(TypedDict):
     rendered_value: tuple[TimeSeriesValue, str]
 
 
-class GraphArtwork(TypedDict):
+class GraphArtwork(BaseModel):
     # Labelling, size, layout
     title: str | None
     width: int
@@ -241,35 +242,35 @@ def compute_graph_artwork(
     except IndexError:  # Empty graph
         (start_time, end_time), step = graph_data_range["time_range"], 60
 
-    return {
+    return GraphArtwork(
         # Labelling, size, layout
-        "title": graph_recipe.get("title"),
-        "width": width,  # in widths of lower case 'x'
-        "height": height,
-        "mirrored": mirrored,
+        title=graph_recipe.get("title"),
+        width=width,  # in widths of lower case 'x'
+        height=height,
+        mirrored=mirrored,
         # Actual data and axes
-        "curves": layouted_curves,
-        "horizontal_rules": graph_recipe["horizontal_rules"],
-        "vertical_axis": compute_graph_v_axis(
+        curves=layouted_curves,
+        horizontal_rules=graph_recipe["horizontal_rules"],
+        vertical_axis=compute_graph_v_axis(
             graph_recipe, graph_data_range, height, layouted_curves, mirrored
         ),
-        "time_axis": compute_graph_t_axis(start_time, end_time, width, step),
+        time_axis=compute_graph_t_axis(start_time, end_time, width, step),
         # Displayed range
-        "start_time": start_time,
-        "end_time": end_time,
-        "step": step,
-        "explicit_vertical_range": graph_recipe["explicit_vertical_range"],
-        "requested_vrange": graph_data_range.get("vertical_range"),
-        "requested_start_time": graph_data_range["time_range"][0],
-        "requested_end_time": graph_data_range["time_range"][1],
-        "requested_step": graph_data_range["step"],
-        "pin_time": pin_time,
+        start_time=start_time,
+        end_time=end_time,
+        step=step,
+        explicit_vertical_range=graph_recipe["explicit_vertical_range"],
+        requested_vrange=graph_data_range.get("vertical_range"),
+        requested_start_time=graph_data_range["time_range"][0],
+        requested_end_time=graph_data_range["time_range"][1],
+        requested_step=graph_data_range["step"],
+        pin_time=pin_time,
         # Definition itself, for reproducing the graph
-        "definition": graph_recipe,
+        definition=graph_recipe,
         # Display id to avoid mixups in our JS code when rendering the same graph multiple times in
         # graph collections and dashboards. Often set to the empty string when not needed.
-        "display_id": graph_display_id,
-    }
+        display_id=graph_display_id,
+    )
 
 
 # .

@@ -169,7 +169,7 @@ def render_graph_html(
         "cmk.graphs.create_graph(%s, %s, %s, %s);"
         % (
             json.dumps(html_code),
-            json.dumps(graph_artwork),
+            graph_artwork.json(),
             json.dumps(graph_render_options),
             json.dumps(graph_ajax_context(graph_artwork, graph_data_range, graph_render_options)),
         )
@@ -186,10 +186,10 @@ def graph_ajax_context(
     graph_render_options: GraphRenderOptions,
 ) -> dict[str, Any]:
     return {
-        "definition": graph_artwork["definition"],
+        "definition": graph_artwork.definition,
         "data_range": graph_data_range,
         "render_options": graph_render_options,
-        "display_id": graph_artwork["display_id"],
+        "display_id": graph_artwork.display_id,
     }
 
 
@@ -219,11 +219,11 @@ def _render_graph_title_elements(
 
     title_format = migrate_graph_render_options_title_format(graph_render_options["title_format"])
 
-    if "plain" in title_format and graph_artwork["title"]:
-        title_elements.append((graph_artwork["title"], None))
+    if "plain" in title_format and graph_artwork.title:
+        title_elements.append((graph_artwork.title, None))
 
     # Only add host/service information for template based graphs
-    specification = graph_artwork["definition"]["specification"]
+    specification = graph_artwork.definition["specification"]
     if specification[0] != "template":
         return title_elements
 
@@ -286,7 +286,7 @@ def _show_html_graph_title(
 def _graph_legend_enabled(
     graph_render_options: GraphRenderOptions, graph_artwork: GraphArtwork
 ) -> bool:
-    return bool(graph_render_options["show_legend"] and graph_artwork["curves"])
+    return bool(graph_render_options["show_legend"] and graph_artwork.curves)
 
 
 def _show_graph_html_content(
@@ -310,14 +310,14 @@ def _show_graph_html_content(
     if graph_render_options["show_controls"]:
         _show_graph_add_to_icon_for_popup(graph_artwork, graph_data_range, graph_render_options)
 
-    v_axis_label = graph_artwork["vertical_axis"]["axis_label"]
+    v_axis_label = graph_artwork.vertical_axis["axis_label"]
     if v_axis_label:
         html.div(v_axis_label, class_="v_axis_label")
 
     # Add the floating elements
     if graph_render_options["show_graph_time"] and not graph_render_options["preview"]:
         html.div(
-            graph_artwork["time_axis"]["title"] or "",
+            graph_artwork.time_axis["title"] or "",
             css=["time"] + (["inline"] if graph_render_options["show_title"] == "inline" else []),
         )
 
@@ -331,7 +331,7 @@ def _show_graph_html_content(
     if _graph_legend_enabled(graph_render_options, graph_artwork):
         _show_graph_legend(graph_artwork, graph_render_options)
 
-    graph_definition = graph_artwork["definition"]
+    graph_definition = graph_artwork.definition
     if graph_definition["specification"][0] == "forecast" and graph_definition["model_params"].get(
         "display_model_parametrization"
     ):
@@ -385,15 +385,12 @@ def show_pin_time(graph_artwork: GraphArtwork, graph_render_options: GraphRender
     if not graph_render_options["show_pin"]:
         return False
 
-    timestamp = graph_artwork["pin_time"]
-    return (
-        timestamp is not None
-        and graph_artwork["start_time"] <= timestamp <= graph_artwork["end_time"]
-    )
+    timestamp = graph_artwork.pin_time
+    return timestamp is not None and graph_artwork.start_time <= timestamp <= graph_artwork.end_time
 
 
 def render_pin_time_label(graph_artwork: GraphArtwork) -> str:
-    timestamp = graph_artwork["pin_time"]
+    timestamp = graph_artwork.pin_time
     return cmk.utils.render.date_and_time(timestamp)[:-3]
 
 
@@ -406,7 +403,7 @@ def get_scalars(
         ("max", _("Maximum")),
         ("average", _("Average")),
     ]:
-        consolidation_function = graph_artwork["definition"]["consolidation_function"]
+        consolidation_function = graph_artwork.definition["consolidation_function"]
         inactive = consolidation_function is not None and consolidation_function != scalar
 
         scalars.append((scalar, title, inactive))
@@ -454,20 +451,20 @@ def _show_graph_legend(  # pylint: disable=too-many-branches
     html.th("")
     for scalar, title, inactive in scalars:
         classes = ["scalar", scalar]
-        if inactive and graph_artwork["step"] != 60:
+        if inactive and graph_artwork.step != 60:
             descr = _(
                 'This graph is based on data consolidated with the function "%s". The '
                 'values in this column are the "%s" values of the "%s" values '
                 "aggregated in %s steps. Assuming a check interval of 1 minute, the %s "
                 "values here are based on the %s value out of %d raw values."
             ) % (
-                graph_artwork["definition"]["consolidation_function"],
+                graph_artwork.definition["consolidation_function"],
                 scalar,
-                graph_artwork["definition"]["consolidation_function"],
-                artwork.get_step_label(graph_artwork["step"]),
+                graph_artwork.definition["consolidation_function"],
+                artwork.get_step_label(graph_artwork.step),
                 scalar,
-                graph_artwork["definition"]["consolidation_function"],
-                (graph_artwork["step"] / 60),
+                graph_artwork.definition["consolidation_function"],
+                (graph_artwork.step / 60),
             )
 
             descr += (
@@ -484,8 +481,8 @@ def _show_graph_legend(  # pylint: disable=too-many-branches
 
     # Render the curve related rows
     for curve in order_graph_curves_for_legend_and_mouse_hover(
-        graph_artwork["definition"],
-        graph_curves_to_be_painted(graph_artwork["curves"]),
+        graph_artwork.definition,
+        graph_curves_to_be_painted(graph_artwork.curves),
     ):
         html.open_tr()
         html.open_td(style=font_size_style)
@@ -498,7 +495,7 @@ def _show_graph_legend(  # pylint: disable=too-many-branches
                 continue
 
             classes = ["scalar"]
-            if inactive and graph_artwork["step"] != 60:
+            if inactive and graph_artwork.step != 60:
                 classes.append("inactive")
 
             html.td(curve["scalars"][scalar][1], class_=classes, style=font_size_style)
@@ -506,9 +503,9 @@ def _show_graph_legend(  # pylint: disable=too-many-branches
         html.close_tr()
 
     # Render scalar values
-    if graph_artwork["horizontal_rules"]:
+    if graph_artwork.horizontal_rules:
         first = True
-        for _value, readable, color, rule_title in graph_artwork["horizontal_rules"]:
+        for _value, readable, color, rule_title in graph_artwork.horizontal_rules:
             html.open_tr(class_=["scalar"] + (["first"] if first else []))
             html.open_td(style=font_size_style)
             html.write_html(render_color_icon(color))
@@ -633,7 +630,7 @@ def render_ajax_graph(
 
     return {
         "html": html_code,
-        "graph": graph_artwork,
+        "graph": graph_artwork.dict(),
         "context": {
             "graph_id": context["graph_id"],
             "definition": graph_recipe,
@@ -1027,8 +1024,8 @@ def graph_legend_height_ex(
     return (
         3.0
         + (
-            len(list(graph_curves_to_be_painted(graph_artwork["curves"])))
-            + len(graph_artwork["horizontal_rules"])
+            len(list(graph_curves_to_be_painted(graph_artwork.curves)))
+            + len(graph_artwork.horizontal_rules)
         )
         * 1.3
     )
@@ -1140,7 +1137,7 @@ def host_service_graph_dashlet_cmk(
             graph_render_options,
             resolve_combined_single_metric_spec,
         )
-        if graph_artwork["curves"]:
+        if graph_artwork.curves:
             legend_height = graph_legend_height_ex(graph_render_options, graph_artwork)
             graph_render_options["size"] = (width, height - legend_height)
 

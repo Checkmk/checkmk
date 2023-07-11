@@ -33,7 +33,7 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
 ) -> None:
     pdf_document = instance["document"]
 
-    logger.debug("  Render graph %r", graph_artwork["definition"]["specification"])
+    logger.debug("  Render graph %r", graph_artwork.definition["specification"])
 
     if pos_left is None:  # floating element
         pdf_document.margin(2.5)
@@ -110,7 +110,7 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
     # Regular title (above graph area)
     if graph_render_options["show_title"] is True:
         title_left_margin = left + right_margin
-        if vertical_axis_label := graph_artwork.get("vertical_axis", {}).get("axis_label"):
+        if vertical_axis_label := graph_artwork.vertical_axis.get("axis_label"):
             title_left_margin = left + left_border + left_margin
 
         pdf_document.render_aligned_text(
@@ -118,7 +118,7 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
             top - title_height,
             width,
             title_height,
-            graph_artwork["title"],
+            graph_artwork.title,
             align="left",
             bold=True,
             color=foreground_color,
@@ -130,14 +130,14 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
     bottom_border = _graph_bottom_border(graph_render_options)
 
     # Prepare position and translation of origin
-    t_range_from = graph_artwork["time_axis"]["range"][0]
-    t_range_to = graph_artwork["time_axis"]["range"][1]
+    t_range_from = graph_artwork.time_axis["range"][0]
+    t_range_to = graph_artwork.time_axis["range"][1]
     t_range = t_range_to - t_range_from
     t_mm = width - left_border - left_margin - right_margin
     t_mm_per_second = 1.0 * t_mm / t_range
 
-    v_range_from = graph_artwork["vertical_axis"]["range"][0]
-    v_range_to = graph_artwork["vertical_axis"]["range"][1]
+    v_range_from = graph_artwork.vertical_axis["range"][0]
+    v_range_to = graph_artwork.vertical_axis["range"][1]
     v_range = v_range_to - v_range_from
     v_mm = height - top_margin - bottom_border - bottom_margin
     v_mm_per_unit = 1.0 * v_mm / v_range
@@ -164,9 +164,9 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
     # Paint curves
     pdf_document.save_state()
     pdf_document.add_clip_rect(t_orig, v_orig, t_mm, v_mm)
-    step = graph_artwork["step"] // 2
-    for curve in graph_curves_to_be_painted(graph_artwork["curves"]):
-        t = graph_artwork["start_time"]
+    step = graph_artwork.step // 2
+    for curve in graph_curves_to_be_painted(graph_artwork.curves):
+        t = graph_artwork.start_time
         color = parse_color(curve["color"])
 
         if is_area_layouted_curve(curve):
@@ -243,7 +243,7 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
             title_top,
             width,
             mm_per_ex_by_render_options(graph_render_options) * 2,
-            graph_artwork["title"],
+            graph_artwork.title,
             align="center",
             bold=True,
             color=foreground_color,
@@ -256,7 +256,7 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
             title_top,
             width,
             mm_per_ex_by_render_options(graph_render_options) * 2,
-            graph_artwork["time_axis"]["title"],
+            graph_artwork.time_axis["title"],
             align="right",
             bold=True,
             color=foreground_color,
@@ -265,7 +265,7 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
     # Paint the vertical axis
     if graph_render_options["show_vertical_axis"]:
         # Render optional vertical axis label
-        vertical_axis_label = graph_artwork["vertical_axis"]["axis_label"]
+        vertical_axis_label = graph_artwork.vertical_axis["axis_label"]
         if vertical_axis_label:
             pdf_document.render_aligned_text(
                 left + left_margin,
@@ -278,7 +278,7 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
                 color=foreground_color,
             )
 
-    for position, label, line_width in graph_artwork["vertical_axis"]["labels"]:
+    for position, label, line_width in graph_artwork.vertical_axis["labels"]:
         if line_width > 0:
             pdf_document.render_line(
                 t_orig,
@@ -303,7 +303,7 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
             )
 
     # Paint time axis
-    for position, label, line_width in graph_artwork["time_axis"]["labels"]:
+    for position, label, line_width in graph_artwork.time_axis["labels"]:
         t_pos_mm = trans_t(position)
         if line_width > 0 and t_pos_mm > t_orig:
             pdf_document.render_line(
@@ -328,7 +328,7 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
             )
 
     # Paint horizontal rules like warn and crit
-    rules = graph_artwork["horizontal_rules"]
+    rules = graph_artwork.horizontal_rules
     for position, label, color_from_rule, title in rules:
         if v_range_from <= position <= v_range_to:
             pdf_document.render_line(
@@ -385,23 +385,23 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
         paint_legend_line(None, scalars_legend_line + [x[1] for x in scalars])
         pdf_document.render_line(t_orig, legend_top, t_orig + t_mm, legend_top)
 
-        for curve in graph_artwork["curves"]:
+        for curve in graph_artwork.curves:
             legend_top -= legend_lineskip
             texts = [str(curve["title"])]
             for scalar, title in scalars:
                 texts.append(curve["scalars"][scalar][1])
             paint_legend_line(parse_color(curve["color"]), texts)
 
-        if graph_artwork["horizontal_rules"]:
+        if graph_artwork.horizontal_rules:
             pdf_document.render_line(t_orig, legend_top, t_orig + t_mm, legend_top)
-            for value, readable, color_from_artwork, title in graph_artwork["horizontal_rules"]:
+            for value, readable, color_from_artwork, title in graph_artwork.horizontal_rules:
                 legend_top -= legend_lineskip
                 paint_legend_line(
                     parse_color(color_from_artwork), [str(title), None, None, None, readable]
                 )
 
-    if graph_artwork["definition"].get("is_forecast"):
-        pin = trans_t(graph_artwork["requested_end_time"])
+    if graph_artwork.definition.get("is_forecast"):
+        pin = trans_t(graph_artwork.requested_end_time)
         pdf_document.render_line(pin, v_orig, pin, trans_v(v_range_to), color=(0.0, 1.0, 0.0))
 
     pdf_document.restore_state()
@@ -524,7 +524,7 @@ def graph_legend_height(
         legend_lineskip
         * (
             1
-            + len(list(graph_curves_to_be_painted(graph_artwork["curves"])))
-            + len(graph_artwork["horizontal_rules"])
+            + len(list(graph_curves_to_be_painted(graph_artwork.curves)))
+            + len(graph_artwork.horizontal_rules)
         )
     )

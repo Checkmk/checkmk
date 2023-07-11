@@ -644,16 +644,25 @@ run_cached() {
     fi
 
     if ${MK_RUN_ASYNC_PARTS}; then
-
-        # Check if the process is running too long (cache file not accessed for more than TIMEOUT seconds).
-        # If so, kill the process and remove the cache files (both)
+        # Kill the process if it is running too long (cache file not accessed for more than TIMEOUT seconds).
+        # If killing succeeds, remove CACHFILE.new.PID.
+        # Remove CACHEFILE unconditionally.
+        # Write info about the timed out process and the kill attempt to CACHEFILE.fail.
+        # CACHEFILE.fail will be deleted as soon as the plugin/local check is functional again.
         for cfile in "${CACHEFILE}.new."*; do
             [ -e "${cfile}" ] || break # no match
             if [ $((NOW - $(get_file_atime "${cfile}"))) -ge "${TIMEOUT}" ]; then
-                pid="${cfile##*.new.}"
-                kill -9 "${pid}" && sleep 2 # TODO: what about child processes?
-                [ -n "$(ps -o args= -p "${pid}")" ] || rm -f "${cfile}"
-                rm -f "${CACHEFILE}"
+                {
+                    printf "Timeout: %s\n" "${NAME}"
+                    pid="${cfile##*.new.}"
+                    kill -9 "${pid}" >/dev/null 2>&1 && sleep 2 # TODO: what about child processes?
+                    if [ -n "$(ps -o args= -p "${pid}")" ]; then
+                        printf "KillFailed: %s" "${NAME}"
+                    else
+                        rm -f "${cfile}"
+                    fi
+                    rm -f "${CACHEFILE}"
+                } >"${CACHEFILE}".fail 2>&1
             fi
         done
 
@@ -671,7 +680,7 @@ run_cached() {
             cat <<HERE | nohup "${CURRENT_SHELL}" >/dev/null 2>&1 &
 eval '${MK_DEFINE_LOG_SECTION_TIME}'
 exec > "${CACHEFILE}.new.\$\$" || exit 1
-$* && mv -f "${CACHEFILE}.new.\$\$" "${CACHEFILE}" || rm -f "${CACHEFILE}" "${CACHEFILE}.new.\$\$"
+$* && mv -f "${CACHEFILE}.new.\$\$" "${CACHEFILE}" && rm -f "${CACHEFILE}.fail" || rm -f "${CACHEFILE}" "${CACHEFILE}.new.\$\$"
 HERE
         fi
 

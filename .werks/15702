@@ -19,3 +19,5 @@ the agent created new processes unlimitedly.
 
 This situation is now mitigated by checking for success after terminating a timed out process.<br>
 If the termination failed, no further process of the same plugin will be started.
+
+Intermediary step: Only log to CACHEFILE.fail. as long as the termination is pending.

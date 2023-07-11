@@ -568,48 +568,26 @@ def custom_host_attribute_ctx(attrs: dict[str, list[CustomAttr]]) -> Iterator[No
         save_custom_attrs_to_mk_file({})
 
 
-def test_openapi_host_created_timestamp(
-    base: str, aut_user_auth_wsgi_app: WebTestAppForCMK
-) -> None:
-    json_data = {
-        "folder": "/",
-        "host_name": "foobar.com",
-        "attributes": {
-            "ipaddress": "192.168.0.123",
-        },
-    }
+def test_openapi_host_created_timestamp(clients: ClientRegistry) -> None:
+    HOSTNAME = "foobar.com"
 
-    resp_post = aut_user_auth_wsgi_app.call_method(
-        "post",
-        base + "/domain-types/host_config/collections/all",
-        params=json.dumps(json_data),
-        status=200,
-        content_type="application/json",
-        headers={"Accept": "application/json"},
+    # Create host
+    response = clients.HostConfig.create(
+        host_name=HOSTNAME, folder="/", attributes={"ipaddress": "192.168.0.123"}
     )
+    created_at_create = response.json["extensions"]["attributes"]["meta_data"]["created_at"]
 
-    created_at_post = resp_post.json["extensions"]["attributes"]["meta_data"]["created_at"]
+    # Get host
+    response = clients.HostConfig.get(host_name=HOSTNAME)
+    created_at_get = response.json["extensions"]["attributes"]["meta_data"]["created_at"]
 
-    resp_get = aut_user_auth_wsgi_app.call_method(
-        "get",
-        base + "/objects/host_config/foobar.com",
-        status=200,
-        headers={"Accept": "application/json"},
+    # Update host
+    response = clients.HostConfig.edit(
+        host_name=HOSTNAME, attributes={"ipaddress": "192.168.0.124"}
     )
+    created_at_update = response.json["extensions"]["attributes"]["meta_data"]["created_at"]
 
-    created_at_get = resp_get.json["extensions"]["attributes"]["meta_data"]["created_at"]
-
-    resp_put = aut_user_auth_wsgi_app.call_method(
-        "put",
-        base + "/objects/host_config/foobar.com",
-        status=200,
-        params='{"attributes": {"ipaddress": "192.168.0.124"}}',
-        content_type="application/json",
-        headers={"If-Match": resp_get.headers["ETag"], "Accept": "application/json"},
-    )
-
-    created_at_put = resp_put.json["extensions"]["attributes"]["meta_data"]["created_at"]
-    assert created_at_post == created_at_get == created_at_put
+    assert created_at_create == created_at_get == created_at_update
 
 
 @pytest.mark.usefixtures("custom_host_attribute")

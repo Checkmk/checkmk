@@ -15,6 +15,42 @@ from types import ModuleType
 PluginFailures = Generator[tuple[str, BaseException], None, None]
 
 
+def load_plugins(
+    package_name: str,
+) -> Generator[tuple[str, ModuleType | BaseException], None, None]:
+    """Load all specified packages
+
+    This function accepts a package name in Pythons dotted syntax (e.g. requests.exceptions).
+
+    Args:
+        package_name:
+            A valid module path in Python's dotted syntax.
+
+    Returns:
+        A generator of 2-tuples of plugin-name and module or exception,
+        when a plugin failed to import.
+
+    Raises:
+        Nothing explicit. Possibly ImportErrors.
+
+    """
+    walk_errors: list[tuple[str, BaseException]] = []
+
+    def onerror_func(name: str) -> None:
+        if exc := sys.exc_info()[1]:
+            walk_errors.append((name, exc))
+
+    __import__(package_name)
+    for full_name in _find_modules(sys.modules[package_name], onerror=onerror_func):
+        name = full_name.removeprefix(f"{package_name}.")
+        try:
+            yield name, importlib.import_module(full_name)
+        except Exception as exc:
+            yield name, exc
+
+    yield from walk_errors
+
+
 def load_plugins_with_exceptions(package_name: str) -> PluginFailures:
     """Load all specified packages
 
@@ -37,20 +73,7 @@ def load_plugins_with_exceptions(package_name: str) -> PluginFailures:
         ...     print("Importing %s failed: %s" % (mod_name, exc))
 
     """
-    walk_errors: list[tuple[str, BaseException]] = []
-
-    def onerror_func(name: str) -> None:
-        if exc := sys.exc_info()[1]:
-            walk_errors.append((name, exc))
-
-    __import__(package_name)
-    for full_name in _find_modules(sys.modules[package_name], onerror=onerror_func):
-        try:
-            importlib.import_module(full_name)
-        except Exception as exc:
-            yield full_name.removeprefix(f"{package_name}."), exc
-
-    yield from walk_errors
+    yield from ((n, e) for n, e in load_plugins(package_name) if isinstance(e, BaseException))
 
 
 def _find_modules(pkg: ModuleType, onerror: Callable[[str], None]) -> list[str]:

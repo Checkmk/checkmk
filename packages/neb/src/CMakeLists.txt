@@ -62,6 +62,7 @@ ExternalProject_Add(
   SOURCE_DIR ${root_repo_dir}/packages/livestatus
   BINARY_DIR ${root_repo_dir}/packages/livestatus/build
   CONFIGURE_COMMAND ""
+  BUILD_ALWAYS 1
   BUILD_COMMAND ${root_repo_dir}/packages/livestatus/run --build
   INSTALL_COMMAND "")
 ExternalProject_Get_Property(livestatus BINARY_DIR)

@@ -28,6 +28,7 @@ from cmk.utils.structured_data import (
     SDPath,
     SDRetentionFilterChoices,
     TreeStore,
+    UpdateResult,
 )
 
 
@@ -1449,8 +1450,14 @@ def test_update_from_previous_1() -> None:
     choices = SDRetentionFilterChoices(path=(), interval=6)
     choices.add_columns_choice(choice="all", cache_info=(4, 5))
 
-    results = list(current_tree_.update(now=0, previous_tree=previous_tree, choices=choices))
-    assert bool(results)
+    update_result = UpdateResult()
+    current_tree_.update(
+        now=0,
+        previous_tree=previous_tree,
+        choices=choices,
+        update_result=update_result,
+    )
+    assert bool(update_result)
 
     current_tree = _make_immutable_tree(current_tree_)
     assert current_tree.table.key_columns == ["kc"]
@@ -1497,8 +1504,14 @@ def test_update_from_previous_2() -> None:
     choices = SDRetentionFilterChoices(path=(), interval=6)
     choices.add_columns_choice(choice=["c2", "c3"], cache_info=(4, 5))
 
-    results = list(current_tree_.update(now=0, previous_tree=previous_tree, choices=choices))
-    assert bool(results)
+    update_result = UpdateResult()
+    current_tree_.update(
+        now=0,
+        previous_tree=previous_tree,
+        choices=choices,
+        update_result=update_result,
+    )
+    assert bool(update_result)
 
     current_tree = _make_immutable_tree(current_tree_)
     assert current_tree.table.key_columns == ["kc"]

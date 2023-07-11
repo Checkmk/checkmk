@@ -493,15 +493,15 @@ def _may_update(
                 ),
             )
 
-    return UpdateResult.from_results(
-        (
-            result
-            for choices in choices_by_path.values()
-            for result in inventory_tree.update(
-                now=now, previous_tree=previous_tree, choices=choices
-            )
+    update_result = UpdateResult()
+    for choices in choices_by_path.values():
+        inventory_tree.update(
+            now=now,
+            previous_tree=previous_tree,
+            choices=choices,
+            update_result=update_result,
         )
-    )
+    return update_result
 
 
 def _check_fetched_data_or_trees(

@@ -13,7 +13,7 @@ import gzip
 import io
 import pprint
 from collections import Counter
-from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Generic, Literal, NamedTuple, Self, TypedDict, TypeVar
@@ -142,14 +142,6 @@ class UpdateResult:
     @property
     def save_tree(self) -> bool:
         return bool(self.reasons_by_path)
-
-    @classmethod
-    def from_results(cls, results: Iterable[UpdateResult]) -> UpdateResult:
-        update_result = cls()
-        for result in results:
-            for path, reasons in result.reasons_by_path.items():
-                update_result.reasons_by_path.setdefault(path, []).extend(reasons)
-        return update_result
 
     def add_attr_reason(self, path: SDPath, title: str, iterable: Iterable[str]) -> None:
         self.reasons_by_path.setdefault(path, []).append(
@@ -396,7 +388,8 @@ class _MutableAttributes:
         path: SDPath,
         interval: int,
         choice: _SDRetentionFilterChoice,
-    ) -> UpdateResult:
+        update_result: UpdateResult,
+    ) -> None:
         filter_func = _make_filter_func(choice.choice)
         retention_interval = _RetentionInterval(*choice.cache_info, interval)
         compared_keys = _DictKeys.compare(
@@ -422,7 +415,6 @@ class _MutableAttributes:
         for key in compared_keys.both.union(compared_keys.only_new):
             retentions[key] = retention_interval
 
-        update_result = UpdateResult()
         if pairs:
             self.add(pairs)
             update_result.add_attr_reason(path, "Added pairs", pairs)
@@ -432,8 +424,6 @@ class _MutableAttributes:
             update_result.add_attr_reason(
                 path, "Keep until", [f"{k} ({v.keep_until})" for k, v in retentions.items()]
             )
-
-        return update_result
 
     def serialize(self) -> SDRawAttributes:
         raw_attributes: SDRawAttributes = {}
@@ -497,7 +487,8 @@ class _MutableTable:
         path: SDPath,
         interval: int,
         choice: _SDRetentionFilterChoice,
-    ) -> UpdateResult:
+        update_result: UpdateResult,
+    ) -> None:
         filter_func = _make_filter_func(choice.choice)
         retention_interval = _RetentionInterval(*choice.cache_info, interval)
         self._add_key_columns(other.key_columns)
@@ -526,7 +517,6 @@ class _MutableTable:
         )
 
         retentions: dict[SDRowIdent, dict[SDKey, _RetentionInterval]] = {}
-        update_result = UpdateResult()
         for ident in compared_row_idents.only_old:
             old_row: dict[SDKey, SDValue] = {}
             for key, value in old_filtered_rows[ident].items():
@@ -576,8 +566,6 @@ class _MutableTable:
                     "Keep until",
                     [f"{k} ({v.keep_until})" for k, v in intervals_by_key.items()],
                 )
-
-        return update_result
 
     def serialize(self) -> SDRawTable:
         raw_table: SDRawTable = {}
@@ -662,24 +650,27 @@ class MutableTree:
         now: int,
         previous_tree: ImmutableTree,
         choices: SDRetentionFilterChoices,
-    ) -> Iterator[UpdateResult]:
+        update_result: UpdateResult,
+    ) -> None:
         node = self.setdefault_node(choices.path)
         previous_node = previous_tree.get_tree(choices.path)
         for choice in choices.pairs:
-            yield node.attributes.update(
+            node.attributes.update(
                 now,
                 previous_node.attributes,
                 choices.path,
                 choices.interval,
                 choice,
+                update_result,
             )
         for choice in choices.columns:
-            yield node.table.update(
+            node.table.update(
                 now,
                 previous_node.table,
                 choices.path,
                 choices.interval,
                 choice,
+                update_result,
             )
 
     def setdefault_node(self, path: SDPath) -> MutableTree:

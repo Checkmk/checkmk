@@ -229,8 +229,7 @@ run_unit_tests() {
         VALGRIND="valgrind --quiet --num-callers=30 --error-exitcode=42"
     fi
     (
-        cd build/test
-        GTEST_OUTPUT=xml ${VALGRIND} ./test
+        cd build/test && GTEST_OUTPUT=xml ${VALGRIND} ./test
     )
 }
 

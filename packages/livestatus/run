@@ -228,7 +228,9 @@ run_unit_tests() {
     if test -z ${VALGRIND+x} && command -v valgrind >/dev/null; then
         VALGRIND="valgrind --quiet --num-callers=30 --error-exitcode=42"
     fi
-    GTEST_OUTPUT=xml ${VALGRIND} build/test/test
+    (
+        cd build/test && GTEST_OUTPUT=xml ${VALGRIND} ./test
+    )
 }
 
 run_iwyu() {

@@ -3,9 +3,9 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
+// IWYU pragma: no_include <type_traits>
 #include "neb/TimeperiodsCache.h"
 
-#include <type_traits>
 #include <utility>
 
 #include "livestatus/Logger.h"

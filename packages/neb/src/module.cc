@@ -3,6 +3,7 @@
 // terms and conditions defined in the file COPYING, which is part of this
 // source code package.
 
+// IWYU pragma: no_include <type_traits>
 // Needed for S_ISSOCK
 // NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
 #define _XOPEN_SOURCE 500
@@ -30,7 +31,6 @@
 #include <optional>
 #include <sstream>
 #include <string>
-#include <type_traits>
 #include <utility>
 #include <vector>
 

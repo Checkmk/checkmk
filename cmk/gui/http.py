@@ -624,6 +624,12 @@ class Response(flask.Response):
             "Content-Security-Policy"
         ] = f"form-action 'self' javascript: 'unsafe-inline' {form_action};"
 
+    def set_caching_headers(self) -> None:
+        if "Cache-Control" in self.headers:
+            # Do not override previous set settings
+            return
+        self.headers["Cache-Control"] = "no-store"
+
 
 # From request context
 request: Request = cast(Request, flask_request)

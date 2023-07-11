@@ -969,6 +969,7 @@ def get_fake_setup_redis_client(
 @pytest.mark.usefixtures("with_admin_login")
 def test_load_redis_folders_on_demand(monkeypatch: MonkeyPatch) -> None:
     wato_folder = make_monkeyfree_folder(group_tree_structure)
+    folder_tree().invalidate_caches()
     with get_fake_setup_redis_client(
         monkeypatch, _convert_folder_tree_to_all_folders(wato_folder), []
     ):

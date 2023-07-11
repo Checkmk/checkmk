@@ -1077,7 +1077,6 @@ class FolderTree:
 
     def __init__(self, root_dir: str | None = None) -> None:
         self._root_dir = _ensure_trailing_slash(root_dir) if root_dir else wato_root_dir()
-        self._root_folder = self.folder("")
 
     def all_folders(self) -> Mapping[PathWithoutSlash, CREFolder]:
         if "wato_folders" not in g:
@@ -1086,12 +1085,12 @@ class FolderTree:
 
     def folder_choices(self) -> Sequence[tuple[str, str]]:
         if "folder_choices" not in g:
-            g.folder_choices = self._root_folder.recursive_subfolder_choices()
+            g.folder_choices = self.root_folder().recursive_subfolder_choices()
         return g.folder_choices
 
     def folder_choices_fulltitle(self) -> Sequence[tuple[str, str]]:
         if "folder_choices_full_title" not in g:
-            g.folder_choices_full_title = self._root_folder.recursive_subfolder_choices(
+            g.folder_choices_full_title = self.root_folder().recursive_subfolder_choices(
                 pretty=False
             )
         return g.folder_choices_full_title
@@ -1102,7 +1101,7 @@ class FolderTree:
         raise MKGeneralException("No Setup folder %s." % folder_path)
 
     def create_missing_folders(self, folder_path: PathWithoutSlash) -> None:
-        folder = self._root_folder
+        folder = self.root_folder()
         for subfolder_name in FolderTree._split_folder_path(folder_path):
             if (existing_folder := folder.subfolder(subfolder_name)) is None:
                 folder = folder.create_subfolder(subfolder_name, subfolder_name, {})
@@ -1122,10 +1121,10 @@ class FolderTree:
         return os.path.exists(self._root_dir + folder_path)
 
     def root_folder(self) -> CREFolder:
-        return self._root_folder
+        return self.folder("")
 
     def invalidate_caches(self) -> None:
-        self._root_folder.drop_caches()
+        self.root_folder().drop_caches()
         if may_use_redis():
             get_wato_redis_client(self).clear_cached_folders()
         g.pop("wato_folders", {})

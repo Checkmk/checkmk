@@ -2,7 +2,6 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from unittest.mock import MagicMock
 
 import pytest
 
@@ -86,9 +85,7 @@ def test_api_node_alloctable_pods() -> None:
     assert actual == expected
 
 
-def test_write_api_nodes_api_sections_registers_sections_to_be_written(
-    write_sections_mock: MagicMock,
-) -> None:
+def test_write_api_nodes_api_sections_registers_sections_to_be_written() -> None:
     api_node = api_to_agent_node(APINodeFactory.build())
     sections = create_api_sections(
         api_node,

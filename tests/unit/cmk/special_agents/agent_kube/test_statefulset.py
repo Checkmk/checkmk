@@ -3,9 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from unittest.mock import MagicMock
-
 import pytest
+import pytest_mock
 
 from tests.unit.cmk.special_agents.agent_kube.factory import (
     api_to_agent_statefulset,
@@ -34,8 +33,9 @@ def statefulsets_api_sections() -> set[str]:
 
 
 def test_write_statefulsets_api_sections_registers_sections_to_be_written(
-    write_writeable_sections_mock: MagicMock,
+    mocker: pytest_mock.MockFixture,
 ) -> None:
+    write_sections_mock = mocker.patch("cmk.special_agents.utils_kubernetes.common.write_sections")
     statefulset = api_to_agent_statefulset(APIStatefulSetFactory.build())
     sections = create_api_sections(
         statefulset,
@@ -48,9 +48,9 @@ def test_write_statefulsets_api_sections_registers_sections_to_be_written(
     )
     agent_kube.common.write_sections(sections)
 
-    assert write_writeable_sections_mock.call_count == 1
+    assert write_sections_mock.call_count == 1
     assert {
-        entry.section_name for entry in write_writeable_sections_mock.call_args[0][0]
+        entry.section_name for entry in write_sections_mock.call_args[0][0]
     } == statefulsets_api_sections()
 
 

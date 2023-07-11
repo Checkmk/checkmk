@@ -2,8 +2,8 @@
 # Copyright (C) 2022 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-from unittest.mock import MagicMock
 
+import pytest_mock
 from pydantic_factories import ModelFactory
 
 from tests.unit.cmk.special_agents.agent_kube.factory import (
@@ -65,8 +65,9 @@ def test_deployment_conditions() -> None:
 
 
 def test_write_deployments_api_sections_registers_sections_to_be_written(
-    write_writeable_sections_mock: MagicMock,
+    mocker: pytest_mock.MockFixture,
 ) -> None:
+    write_sections_mock = mocker.patch("cmk.special_agents.utils_kubernetes.common.write_sections")
     deployment = api_to_agent_deployment(APIDeploymentFactory.build(), pods=[APIPodFactory.build()])
     deployment_sections = deployment_handler.create_api_sections(
         deployment,
@@ -79,5 +80,5 @@ def test_write_deployments_api_sections_registers_sections_to_be_written(
     )
     agent.common.write_sections(deployment_sections)
     assert {
-        section.section_name for section in write_writeable_sections_mock.call_args[0][0]
+        section.section_name for section in write_sections_mock.call_args[0][0]
     } == deployments_api_sections()

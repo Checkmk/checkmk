@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from unittest.mock import MagicMock
+import pytest_mock
 
 from tests.unit.cmk.special_agents.agent_kube.factory import (
     api_to_agent_daemonset,
@@ -32,8 +32,9 @@ def daemon_sets_api_sections() -> set[str]:
 
 
 def test_write_daemon_sets_api_sections_registers_sections_to_be_written(
-    write_writeable_sections_mock: MagicMock,
+    mocker: pytest_mock.MockFixture,
 ) -> None:
+    write_sections_mock = mocker.patch("cmk.special_agents.utils_kubernetes.common.write_sections")
     daemon_set = api_to_agent_daemonset(APIDaemonSetFactory.build(), pods=[APIPodFactory.build()])
     sections = create_api_sections(
         daemon_set,
@@ -46,6 +47,6 @@ def test_write_daemon_sets_api_sections_registers_sections_to_be_written(
     )
     agent_kube.common.write_sections(sections)
     assert {
-        section.section_name for section in list(write_writeable_sections_mock.call_args[0][0])
+        section.section_name for section in list(write_sections_mock.call_args[0][0])
     } == daemon_sets_api_sections()
-    assert write_writeable_sections_mock.call_count == 1
+    assert write_sections_mock.call_count == 1

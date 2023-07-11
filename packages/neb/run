@@ -212,6 +212,7 @@ run_build_unit_tests() {
         COMPILED_SOURCES+=("$line")
     done < <(find build/test/CMakeFiles -name "*.o" -newer build/.run-build-unit-tests-stamp |
         sed 's,^build/test/CMakeFiles/test.dir/\(.*\)\.o,test/\1,' |
+        sed 's,^build/test/CMakeFiles/NagiosMockup.dir/\(.*\)\.o,test/\1,' |
         sort)
 }
 

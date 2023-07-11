@@ -661,6 +661,12 @@ class Response(flask.Response):
             raise ValueError("Invalid file extension: Have you set the Content-Type header?")
         self.headers["Content-Disposition"] = f'{header_type}; filename="{filename}"'
 
+    def set_caching_headers(self) -> None:
+        if "Cache-Control" in self.headers:
+            # Do not override previous set settings
+            return
+        self.headers["Cache-Control"] = "no-store"
+
 
 # From request context
 request: Request = cast(Request, flask_request)

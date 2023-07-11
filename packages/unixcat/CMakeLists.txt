@@ -22,3 +22,4 @@ project(
 
 # SUB-DIRS:
 add_subdirectory(src)
+add_subdirectory(test)

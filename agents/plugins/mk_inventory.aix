@@ -45,7 +45,7 @@ _get_epoch() {
 
 _insert_persist_option() {
     # insert the persist(...) option, if it is not already present.
-    sed -e '/^<<<.*\(:persist(\).*>>>/{p;d;}; s/^<<<\([^>]*\)>>>$/<<<\1:persist('"${1}"')>>>/'
+    sed -e '/^<<<.*\(:persist(\).*>>>/{p;d;}' -e 's/^<<<\([^>]*\)>>>$/<<<\1:persist('"${1}"')>>>/'
 }
 
 run_persisted() {

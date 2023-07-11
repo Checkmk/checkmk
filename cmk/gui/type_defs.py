@@ -662,12 +662,16 @@ class GraphSpec(TypedDict):
     pass
 
 
-class TemplateGraphSpec(GraphSpec):
+class _TemplateGraphSpecMandatory(GraphSpec):
     site: SiteId | None
     host_name: HostName
     service_description: ServiceName
-    graph_index: NotRequired[int | None]
-    graph_id: NotRequired[str | None]
+
+
+# optional keys specified via inheritance due to pydantic 1.x not understanding NotRequired
+class TemplateGraphSpec(_TemplateGraphSpecMandatory, total=False):
+    graph_index: int | None
+    graph_id: str | None
 
 
 class ExplicitGraphSpec(GraphSpec):
@@ -682,14 +686,18 @@ class ExplicitGraphSpec(GraphSpec):
     metrics: Sequence[GraphMetric]
 
 
-class CombinedGraphSpec(GraphSpec):
+class _CombinedGraphSpecMandatory(GraphSpec):
     datasource: str
     single_infos: SingleInfos
     presentation: GraphPresentation
     context: VisualContext
     graph_template: str
-    selected_metric: NotRequired[MetricDefinitionWithoutTitle]
-    consolidation_function: NotRequired[GraphConsoldiationFunction]
+
+
+# optional keys specified via inheritance due to pydantic 1.x not understanding NotRequired
+class CombinedGraphSpec(_CombinedGraphSpecMandatory, total=False):
+    selected_metric: MetricDefinitionWithoutTitle
+    consolidation_function: GraphConsoldiationFunction
 
 
 class _SingleTimeseriesGraphSpecMandatory(GraphSpec):
@@ -697,6 +705,7 @@ class _SingleTimeseriesGraphSpecMandatory(GraphSpec):
     metric: MetricName
 
 
+# optional keys specified via inheritance due to pydantic 1.x not understanding NotRequired
 class SingleTimeseriesGraphSpec(_SingleTimeseriesGraphSpecMandatory, total=False):
     host: HostName
     service: ServiceName

@@ -21,8 +21,8 @@ usage() {
     echo
     echo "  -c, --clean             remove artifacts first"
     echo "  -F, --check-format      check for correct formatting"
-    echo "  -b, --build             build neb module"
-    echo "  -U, --build-unit-tests  build neb tests"
+    echo "  -b, --build             build Livestatus NEB"
+    echo "  -U, --build-unit-tests  build unit tests"
     echo "  -u, --unit-tests        run unit tests"
     echo "  -i, --iwyu              check C/C++ includes via include-what-you-use"
     echo "  -t, --clang-tidy        check sources with clang-tidy linter"
@@ -167,7 +167,7 @@ run_clang_format() {
     # NOTE: FILES_TO_USE contains no headers, so we format everything when FILES
     # is not given. This is fast enough while maintaining correctness.
     # shellcheck disable=SC2068 # Yes, we want splitting for FILES.
-    find ${FILES[@]:-src} -type f \( -name "*.h" -o -name "*.cc" \) -print0 |
+    find ${FILES[@]:-src test include} -type f \( -name "*.h" -o -name "*.cc" \) -print0 |
         xargs --no-run-if-empty --null "clang-format-${CLANG_VERSION}" -style=file "$@"
 }
 
@@ -237,7 +237,6 @@ run_unit_tests() {
 run_iwyu() {
     test ${#FILES_TO_USE[@]} -eq 0 && return
     update_cmake_artifacts
-    iwyu --version
     # shellcheck disable=SC2086 # Yes, we want splitting for IWYU_EXTRA_ARGS.
     python3 "$(command -v iwyu_tool.py)" \
         --jobs="${JOBS}" \

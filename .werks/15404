@@ -1,0 +1,17 @@
+Title: mk_inventory: Fix persistence of inventory data on Solaris
+Class: fix
+Compatible: compat
+Component: inv
+Date: 1689077925
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The <tt>mk_inventory</tt> agent plugin outputs inventory data every four hours (by
+default). This output is marked as <tt>persisted</tt> and stored on a Checkmk site
+for longer use.
+
+If the persisted option is missing, especially for only-inventory data, then
+there might be a flapping effect of the HW/SW Inventory service and superfluous
+history entries are added.

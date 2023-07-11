@@ -13,6 +13,7 @@ from pytest import MonkeyPatch
 
 from tests.testlib.base import Scenario
 
+from cmk.utils.caching import config_cache as config_cache_
 from cmk.utils.exceptions import MKIPAddressLookupError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.tags import TagGroupID, TagID
@@ -34,7 +35,7 @@ _PatchMapping = Mapping[ip_lookup.IPLookupCacheId, str | None]
 
 
 def patch_config_cache(monkeypatch: MonkeyPatch, cache: _PatchMapping) -> None:
-    monkeypatch.setattr(ip_lookup._config_cache, "get", lambda _x: cache)
+    monkeypatch.setattr(config_cache_, "get", lambda _x: cache)
 
 
 def patch_persisted_cache(monkeypatch: MonkeyPatch, cache: _PatchMapping) -> None:
@@ -253,10 +254,9 @@ def test_filecache_beats_failing_lookup(monkeypatch: MonkeyPatch) -> None:
 # tests/unit/cmk/base/conftest.py::clear_config_caches() then cares about this.
 @pytest.fixture(autouse=True, scope="function")
 def clear_config_caches_ip_lookup(monkeypatch: MonkeyPatch) -> None:
-    from cmk.utils.caching import config_cache as _config_cache
     from cmk.utils.caching import runtime_cache as _runtime_cache
 
-    _config_cache.clear()
+    config_cache_.clear()
     _runtime_cache.clear()
 
 

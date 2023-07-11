@@ -81,6 +81,7 @@ from cmk.gui.watolib.users import (
 
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+    from cmk.gui.cme.helpers import default_customer_id  # pylint: disable=no-name-in-module
 else:
     managed = None  # type: ignore[assignment]
 
@@ -810,7 +811,7 @@ class ModeEditUser(WatoMode):
             customer = self._vs_customer.from_html_vars("customer")
             self._vs_customer.validate_value(customer, "customer")
 
-            if customer != managed.default_customer_id():
+            if customer != default_customer_id():
                 user_attrs["customer"] = customer
             elif "customer" in user_attrs:
                 del user_attrs["customer"]

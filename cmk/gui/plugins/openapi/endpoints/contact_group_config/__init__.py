@@ -24,6 +24,7 @@ from typing import Any
 
 from cmk.utils import version
 
+from cmk.gui.groups import load_contact_group_information
 from cmk.gui.http import Response
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.openapi.endpoints.contact_group_config.request_schemas import (
@@ -64,7 +65,6 @@ from cmk.gui.watolib.groups import (
     delete_group,
     edit_group,
     GroupInUseException,
-    load_contact_group_information,
     UnknownGroupException,
 )
 

@@ -13,8 +13,9 @@ from cmk.utils.rulesets.conditions import HostOrServiceConditions
 from cmk.utils.rulesets.ruleset_matcher import TagConditionNE
 from cmk.utils.tags import TagConfig, TagGroupID, TagID
 
+from cmk.gui.config import active_config
 from cmk.gui.utils.html import HTML
-from cmk.gui.wato.pages.rulesets import active_config, RuleConditionRenderer
+from cmk.gui.wato.pages.rulesets import RuleConditionRenderer
 from cmk.gui.watolib.hosts_and_folders import FolderLookupCache, Host
 
 

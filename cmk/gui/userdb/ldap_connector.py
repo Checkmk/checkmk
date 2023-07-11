@@ -97,9 +97,9 @@ from cmk.gui.valuespec import (
 )
 
 if cmk_version.is_managed_edition():
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+    from cmk.gui.cme.helpers import default_customer_id  # pylint: disable=no-name-in-module
 else:
-    managed = None  # type: ignore[assignment]
+    default_customer_id = None  # type: ignore[assignment]
 
 # LDAP attributes are case insensitive, we only use lower case!
 # Please note: This are only default values. The user might override this
@@ -1297,7 +1297,7 @@ class LDAPUserConnector(UserConnector):
                 user = new_user_template(self.id)
                 mode_create = True
                 if cmk_version.is_managed_edition():
-                    user["customer"] = self._config.get("customer", managed.default_customer_id)
+                    user["customer"] = self._config.get("customer", default_customer_id)
 
             return mode_create, user
 

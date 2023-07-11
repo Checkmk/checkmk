@@ -78,7 +78,8 @@ def test_write_deployments_api_sections_registers_sections_to_be_written(
         ),
         "deployment",
     )
-    agent.common.write_sections(deployment_sections)
+    # Too much monkeypatching/mocking, the typing error isn't worth fixing.
+    agent.common.write_sections(deployment_sections)  # type: ignore[attr-defined]
     assert {
         section.section_name for section in write_sections_mock.call_args[0][0]
     } == deployments_api_sections()

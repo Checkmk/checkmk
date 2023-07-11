@@ -41,7 +41,7 @@ from cmk.gui.watolib.config_domains import ConfigDomainGUI
 from cmk.gui.watolib.sites import SiteManagementFactory
 
 if version.is_managed_edition():
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+    from cmk.gui.cme.helpers import default_customer_id  # pylint: disable=no-name-in-module
 
 
 class SiteDoesNotExistException(Exception):
@@ -335,7 +335,7 @@ class BasicSettings:
             return cls(
                 alias=internal_config["alias"],
                 site_id=site_id,
-                customer=internal_config.get("customer", managed.default_customer_id()),
+                customer=internal_config.get("customer", default_customer_id()),
             )
         return cls(alias=internal_config["alias"], site_id=site_id)
 

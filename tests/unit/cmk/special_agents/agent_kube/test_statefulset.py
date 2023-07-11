@@ -46,7 +46,8 @@ def test_write_statefulsets_api_sections_registers_sections_to_be_written(
         ),
         "statefulset",
     )
-    agent_kube.common.write_sections(sections)
+    # Too much monkeypatching/mocking, the typing error isn't worth fixing.
+    agent_kube.common.write_sections(sections)  # type: ignore[attr-defined]
 
     assert write_sections_mock.call_count == 1
     assert {

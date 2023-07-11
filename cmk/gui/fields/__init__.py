@@ -12,7 +12,7 @@
 # warnings.simplefilter("error", RemovedInMarshmallow4Warning)
 
 
-from marshmallow.fields import missing_  # mypy: ignore[attr-defined]
+from marshmallow.fields import missing_  # type: ignore[attr-defined]
 from marshmallow.fields import Field
 
 from cmk.gui.fields.attributes import (

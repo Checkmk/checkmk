@@ -9,7 +9,6 @@ from typing import Any
 from marshmallow import fields as _fields
 from marshmallow import post_load
 
-import cmk.gui.userdb as userdb
 from cmk.gui import fields as gui_fields
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.fields.base import MultiNested, ValueTypedDictSchema
@@ -19,6 +18,7 @@ from cmk.gui.plugins.openapi.restful_objects.response_schemas import (
     DomainObject,
     DomainObjectCollection,
 )
+from cmk.gui.plugins.userdb.utils import get_user_attributes
 
 from cmk import fields
 from cmk.fields import base
@@ -204,7 +204,7 @@ class CustomUserAttributes(ValueTypedDictSchema):
         # because our own data can be inherently inconsistent.
 
         # use the user_attribute_registry directly?
-        db_user_attributes = dict(userdb.get_user_attributes())
+        db_user_attributes = dict(get_user_attributes())
         for name, value in user_attributes.items():
             try:
                 attribute = db_user_attributes[name].valuespec()

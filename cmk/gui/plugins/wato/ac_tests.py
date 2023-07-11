@@ -27,6 +27,7 @@ import cmk.gui.utils
 from cmk.gui.backup import Config as BackupConfig
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.plugins.userdb.utils import active_connections as active_connections_
 from cmk.gui.site_config import (
     get_site_config,
     has_wato_slave_sites,
@@ -298,10 +299,10 @@ class ACTestLDAPSecured(ACTest):
 
     # TODO: Only test master site?
     def is_relevant(self) -> bool:
-        return bool([c for _cid, c in userdb.active_connections() if c.type() == "ldap"])
+        return bool([c for _cid, c in active_connections_() if c.type() == "ldap"])
 
     def execute(self) -> Iterator[ACSingleResult]:
-        for connection_id, connection in userdb.active_connections():
+        for connection_id, connection in active_connections_():
             if connection.type() != "ldap":
                 continue
 

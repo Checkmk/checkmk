@@ -45,7 +45,8 @@ def test_write_daemon_sets_api_sections_registers_sections_to_be_written(
         ),
         "daemonset",
     )
-    agent_kube.common.write_sections(sections)
+    # Too much monkeypatching/mocking, the typing error isn't worth fixing.
+    agent_kube.common.write_sections(sections)  # type: ignore[attr-defined]
     assert {
         section.section_name for section in list(write_sections_mock.call_args[0][0])
     } == daemon_sets_api_sections()

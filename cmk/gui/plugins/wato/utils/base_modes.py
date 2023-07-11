@@ -18,10 +18,10 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import PageMenu
-from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
 from cmk.gui.type_defs import ActionResult, HTTPVariables, MegaMenu, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri_contextless
+from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.mode_permissions import mode_permissions_ensurance_registry
 
 

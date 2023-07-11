@@ -105,4 +105,4 @@ def test_config_updater_executes_plugins(
 
 def test_load_plugins() -> None:
     main._load_plugins(logging.getLogger())
-    assert main.update_action_registry
+    assert registry.update_action_registry

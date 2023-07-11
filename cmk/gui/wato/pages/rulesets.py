@@ -63,7 +63,6 @@ from cmk.gui.plugins.wato.utils import (
     search_form,
     WatoMode,
 )
-from cmk.gui.plugins.wato.utils.main_menu import main_module_registry
 from cmk.gui.site_config import wato_slave_sites
 from cmk.gui.table import Foldable, show_row_count, Table, table_element
 from cmk.gui.type_defs import ActionResult, HTTPVariables, PermissionName
@@ -100,6 +99,7 @@ from cmk.gui.watolib.hosts_and_folders import (
     Host,
     make_action_link,
 )
+from cmk.gui.watolib.main_menu import main_module_registry
 from cmk.gui.watolib.predefined_conditions import PredefinedConditionStore
 from cmk.gui.watolib.rulesets import (
     AllRulesets,

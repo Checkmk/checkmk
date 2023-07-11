@@ -55,6 +55,7 @@ from cmk.gui.livestatus_utils.testing import mock_livestatus
 from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.session import session, SuperUserContext, UserContext
 from cmk.gui.type_defs import SessionInfo
+from cmk.gui.userdb.session import load_session_infos
 from cmk.gui.utils import get_failed_plugins
 from cmk.gui.utils.json import patch_json
 from cmk.gui.utils.script_helpers import session_wsgi_app
@@ -360,7 +361,7 @@ def single_auth_request(flask_app: Flask, auth_request: http.Request) -> SingleR
     def caller(*, in_the_past: int = 0) -> tuple[UserId, SessionInfo]:
         with flask_app.test_client() as client:
             client.get(auth_request)
-            infos = userdb.load_session_infos(session.user.ident)
+            infos = load_session_infos(session.user.ident)
 
             # When `in_the_past` is a positive integer, the resulting session will have happened
             # that many seconds in the past.

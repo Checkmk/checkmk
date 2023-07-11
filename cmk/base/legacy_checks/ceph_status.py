@@ -24,13 +24,13 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 
 def parse_ceph_status(string_table):
     joined_lines = [" ".join(line) for line in string_table]
-    parsed = json.loads("".join(joined_lines))
+    section = json.loads("".join(joined_lines))
 
     # ceph health' JSON format has changed in luminous
-    if "health" in parsed and "status" not in parsed["health"]:
-        parsed["health"]["status"] = parsed["health"].get("overall_status")
+    if "health" in section and "status" not in section["health"]:
+        section["health"]["status"] = section["health"].get("overall_status")
 
-    return parsed
+    return section
 
 
 def ceph_check_epoch(id_, epoch, params):
@@ -66,13 +66,13 @@ def ceph_check_epoch(id_, epoch, params):
 # Suggested by customer: 1,3 per 30 min
 
 
-def inventory_ceph_status(parsed):
+def inventory_ceph_status(section):
     return [(None, {})]
 
 
-def _extract_error_messages(parsed):
+def _extract_error_messages(section):
     error_messages = []
-    for err in parsed.get("health", {}).get("checks", {}).values():
+    for err in section.get("health", {}).get("checks", {}).values():
         err_msg = err.get("summary", {}).get("message")
         if err_msg:
             error_messages.append(err_msg)
@@ -80,7 +80,7 @@ def _extract_error_messages(parsed):
 
 
 # TODO genereller Status -> ceph health (Ausnahmen für "too many PGs per OSD" als Option ermöglichen)
-def check_ceph_status(_no_item, params, parsed):
+def check_ceph_status(_no_item, params, section):
     map_health_states = {
         "HEALTH_OK": (0, "OK"),
         "HEALTH_WARN": (1, "warning"),
@@ -88,7 +88,7 @@ def check_ceph_status(_no_item, params, parsed):
         "HEALTH_ERR": (2, "error"),
     }
 
-    overall_status = parsed.get("health", {}).get("status")
+    overall_status = section.get("health", {}).get("status")
     if not overall_status:
         return
 
@@ -97,12 +97,12 @@ def check_ceph_status(_no_item, params, parsed):
         (3, "unknown[%s]" % overall_status),
     )
     if state:
-        error_messages = _extract_error_messages(parsed)
+        error_messages = _extract_error_messages(section)
         if error_messages:
             state_readable += " (%s)" % (", ".join(error_messages))
 
     yield state, "Health: %s" % state_readable
-    yield ceph_check_epoch("ceph_status", parsed["election_epoch"], params)
+    yield ceph_check_epoch("ceph_status", section["election_epoch"], params)
 
 
 check_info["ceph_status"] = LegacyCheckDefinition(
@@ -128,15 +128,15 @@ check_info["ceph_status"] = LegacyCheckDefinition(
 # Suggested by customer: 50, 100 per 15 min
 
 
-def inventory_ceph_status_osds(parsed):
-    if "osdmap" in parsed:
+def discovery_ceph_status_osds(section):
+    if "osdmap" in section:
         return [(None, {})]
     return []
 
 
-def check_ceph_status_osds(_no_item, params, parsed):
+def check_ceph_status_osds(_no_item, params, section):
     # some instances of ceph give out osdmap data in a flat structure
-    data = parsed["osdmap"].get("osdmap") or parsed["osdmap"]
+    data = section["osdmap"].get("osdmap") or section["osdmap"]
     num_osds = int(data["num_osds"])
     yield ceph_check_epoch("ceph_osds", data["epoch"], params)
 
@@ -174,9 +174,9 @@ def check_ceph_status_osds(_no_item, params, parsed):
 
 
 check_info["ceph_status.osds"] = LegacyCheckDefinition(
-    service_name="Ceph OSDs",
     sections=["ceph_status"],
-    discovery_function=inventory_ceph_status_osds,
+    service_name="Ceph OSDs",
+    discovery_function=discovery_ceph_status_osds,
     check_function=check_ceph_status_osds,
     check_ruleset_name="ceph_osds",
     check_default_parameters={
@@ -197,13 +197,13 @@ check_info["ceph_status.osds"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def inventory_ceph_status_pgs(parsed):
-    if "pgmap" in parsed:
+def discovery_ceph_status_pgs(section):
+    if "pgmap" in section:
         return [(None, {})]
     return []
 
 
-def check_ceph_status_pgs(_no_item, params, parsed):
+def check_ceph_status_pgs(_no_item, params, section):
     # Suggested by customer
     map_pg_states = {
         "active": (0, "active"),
@@ -233,7 +233,7 @@ def check_ceph_status_pgs(_no_item, params, parsed):
         "wait_backfill": (0, "wait backfill"),
     }
 
-    data = parsed["pgmap"]
+    data = section["pgmap"]
     num_pgs = data["num_pgs"]
     pgs_info = "PGs: %s" % num_pgs
     states = [0]
@@ -251,9 +251,9 @@ def check_ceph_status_pgs(_no_item, params, parsed):
 
 
 check_info["ceph_status.pgs"] = LegacyCheckDefinition(
-    service_name="Ceph PGs",
     sections=["ceph_status"],
-    discovery_function=inventory_ceph_status_pgs,
+    service_name="Ceph PGs",
+    discovery_function=discovery_ceph_status_pgs,
     check_function=check_ceph_status_pgs,
 )
 
@@ -270,23 +270,23 @@ check_info["ceph_status.pgs"] = LegacyCheckDefinition(
 # Suggested by customer: 1, 2 per 5 min
 
 
-def inventory_ceph_status_mgrs(parsed):
-    if "epoch" in parsed.get("mgrmap", {}):
+def discovery_ceph_status_mgrs(section):
+    if "epoch" in section.get("mgrmap", {}):
         return [(None, {})]
     return []
 
 
-def check_ceph_status_mgrs(_no_item, params, parsed):
-    epoch = parsed.get("mgrmap", {}).get("epoch")
+def check_ceph_status_mgrs(_no_item, params, section):
+    epoch = section.get("mgrmap", {}).get("epoch")
     if epoch is None:
         return
     yield ceph_check_epoch("ceph_mgrs", epoch, params)
 
 
 check_info["ceph_status.mgrs"] = LegacyCheckDefinition(
-    service_name="Ceph MGRs",
     sections=["ceph_status"],
-    discovery_function=inventory_ceph_status_mgrs,
+    service_name="Ceph MGRs",
+    discovery_function=discovery_ceph_status_mgrs,
     check_function=check_ceph_status_mgrs,
     check_ruleset_name="ceph_mgrs",
     check_default_parameters={

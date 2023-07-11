@@ -11,7 +11,7 @@ from collections.abc import Callable, Sequence
 from cmk.utils.exceptions import MKBailOut, MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
-from cmk.utils.plugin_loader import load_plugins
+from cmk.utils.plugin_loader import import_plugins
 from cmk.utils.tags import TagID
 
 import cmk.base.config as config
@@ -426,4 +426,4 @@ keepalive_option = Option(
 
 modes = Modes()
 
-load_plugins(__file__, __package__)
+import_plugins(__file__, __package__)

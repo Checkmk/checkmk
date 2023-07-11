@@ -97,7 +97,7 @@ def _discover_path_importables(
         )
 
 
-def load_plugins(
+def import_plugins(
     init_file_path: str,
     package_name: str,
 ) -> None:

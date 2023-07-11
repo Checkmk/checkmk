@@ -20,4 +20,6 @@ the agent created new processes unlimitedly.
 This situation is now mitigated by checking for success after terminating a timed out process.<br>
 If the termination failed, no further process of the same plugin will be started.
 
-Intermediary step: Only log to CACHEFILE.fail. as long as the termination is pending.
+Additionally, timed out processes, as well as processes that failed to be terminated,
+will now be reported to the monitoring server.<br>
+Affected plugins will be displayed at the "Check_MK Agent" service, alongside a <tt>WARN</tt> state.

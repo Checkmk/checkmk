@@ -1086,18 +1086,22 @@ run_cached() {
     NOW="$(get_epoch)"
     MTIME="$(get_file_mtime "${CACHEFILE}" 2>/dev/null)" || MTIME=0
 
-    if ${MK_RUN_SYNC_PARTS} && [ -s "${CACHEFILE}" ]; then
-
-        # Output the file (even if it is outdated)
-        CACHE_INFO="cached(${MTIME},${MAXAGE})"
-        # prefix or insert cache info, unless already present.
-        # WATCH OUT: AIX does not allow us to pass this as a single '-e' option!
-        if [ "${NAME%%_*}" = "local" ] || [ "${NAME%%_*}" = "mrpe" ]; then
-            sed -e '/^<<<.*>>>/{p;d;}' -e '/^cached([0-9]*,[0-9]*) /{p;d;}' -e "s/^/${CACHE_INFO} /" "${CACHEFILE}"
-        else
-            sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}' -e 's/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
+    if ${MK_RUN_SYNC_PARTS}; then
+        if [ -s "${CACHEFILE}" ]; then
+            # Output the file (even if it is outdated)
+            CACHE_INFO="cached(${MTIME},${MAXAGE})"
+            # prefix or insert cache info, unless already present.
+            # WATCH OUT: AIX does not allow us to pass this as a single '-e' option!
+            if [ "${NAME%%_*}" = "local" ] || [ "${NAME%%_*}" = "mrpe" ]; then
+                sed -e '/^<<<.*>>>/{p;d;}' -e '/^cached([0-9]*,[0-9]*) /{p;d;}' -e "s/^/${CACHE_INFO} /" "${CACHEFILE}"
+            else
+                sed -e '/^<<<.*\(:cached(\).*>>>/{p;d;}' -e 's/^<<<\([^>]*\)>>>$/<<<\1:'"${CACHE_INFO}"'>>>/' "${CACHEFILE}"
+            fi
         fi
 
+        # Error information about plugin, if available.
+        # Output independent of cachefile existance
+        [ -s "${CACHEFILE}.fail" ] && cat "${CACHEFILE}.fail"
     fi
 
     if ${MK_RUN_ASYNC_PARTS}; then
@@ -1105,11 +1109,13 @@ run_cached() {
         # If killing succeeds, remove CACHFILE.new.PID.
         # Remove CACHEFILE unconditionally.
         # Write info about the timed out process and the kill attempt to CACHEFILE.fail.
+        # It will be reported to the Check_MK agent service later on, by the sync part.
         # CACHEFILE.fail will be deleted as soon as the plugin/local check is functional again.
         for cfile in "${CACHEFILE}.new."*; do
             [ -e "${cfile}" ] || break # no match
             if [ $((NOW - $(get_file_atime "${cfile}"))) -ge "${TIMEOUT}" ]; then
                 {
+                    echo "<<<checkmk_cached_plugins>>>"
                     printf "Timeout: %s\n" "${NAME}"
                     pid="${cfile##*.new.}"
                     kill -9 "${pid}" >/dev/null 2>&1 && sleep 2 # TODO: what about child processes?

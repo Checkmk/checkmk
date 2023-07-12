@@ -78,6 +78,17 @@ def test_openapi_get_bi_rule(wsgi_app, with_automation_user):
     assert rule["id"] == rule_id
 
 
+def test_openapi_get_bi_rule_non_existing_id(wsgi_app, with_automation_user):
+    username, secret = with_automation_user
+    wsgi_app.set_authorization(('Bearer', username + " " + secret))
+
+    base = '/NO_SITE/check_mk/api/1.0'
+    postfix = '/domain-types/objects/bi_rule/'
+    url = f'{base}{postfix}NO_I_DONT_EXIST'
+
+    wsgi_app.get(url=url, status=404)
+
+
 def test_openapi_modify_bi_aggregation(wsgi_app, with_automation_user):
     username, secret = with_automation_user
     wsgi_app.set_authorization(('Bearer', username + " " + secret))

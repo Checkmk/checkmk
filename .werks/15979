@@ -1,0 +1,14 @@
+Title: bi: return 404 status code when trying to retrieve a non existing rule
+Class: fix
+Compatible: compat
+Component: rest-api
+Date: 1689169736
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.0.0p38
+
+
+Prior to this werk, the get bi rule endpoint returned a 500 status code whenever
+the user tried to get a non existing rule. This werk fixes this and returns a
+404 status code instead.

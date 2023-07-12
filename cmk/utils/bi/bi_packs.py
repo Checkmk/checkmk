@@ -56,6 +56,7 @@ RuleReferencesResult = NamedTuple("RuleReferencesResult", [
     ("rule_refs", int),
     ("level", int),
 ])
+
 #   .--Packs---------------------------------------------------------------.
 #   |                      ____            _                               |
 #   |                     |  _ \ __ _  ___| | _____                        |
@@ -176,7 +177,7 @@ class BIAggregationPacks:
         bi_rule = self.get_rule(rule_id)
         if bi_rule:
             return bi_rule
-        assert False
+        raise KeyError(_("The requested BI rule does not exist."))
 
     def delete_rule(self, rule_id: str) -> None:
         # Only delete a rule if it is not referenced by other rules/aggregations

@@ -25,7 +25,7 @@ from cmk.utils.structured_data import (
     UpdateResult,
 )
 
-from cmk.snmplib.type_defs import SNMPRawData
+from cmk.snmplib.type_defs import SNMPRawDataSection
 
 from cmk.fetchers import FetcherType
 
@@ -1208,9 +1208,18 @@ def test_inventorize_host(failed_state: int | None, expected: int) -> None:
         ]
 
     def parser(
-        fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
+        fetched: Iterable[
+            tuple[
+                SourceInfo,
+                result.Result[
+                    AgentRawData | Mapping[SectionName, Sequence[SNMPRawDataSection]], Exception
+                ],
+            ]
+        ],
     ) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]:
-        def parse(header: AgentRawData | SNMPRawData) -> Mapping[SectionName, str]:
+        def parse(
+            header: AgentRawData | Mapping[SectionName, Sequence[SNMPRawDataSection]]
+        ) -> Mapping[SectionName, str]:
             assert isinstance(header, bytes)
             txt = header.decode()
             return {SectionName(txt[3:-3]): txt}

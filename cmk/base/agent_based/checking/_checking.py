@@ -8,7 +8,7 @@ import itertools
 from collections import defaultdict
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from contextlib import suppress
-from typing import DefaultDict, NamedTuple
+from typing import DefaultDict, NamedTuple, TypeAlias
 
 import cmk.utils.debug
 import cmk.utils.paths
@@ -26,7 +26,7 @@ from cmk.utils.servicename import ServiceName
 from cmk.utils.structured_data import TreeStore
 from cmk.utils.timeperiod import check_timeperiod, timeperiod_active, TimeperiodName
 
-from cmk.snmplib.type_defs import SNMPRawData
+from cmk.snmplib.type_defs import SNMPRawDataSection
 
 from cmk.fetchers import FetcherType
 
@@ -88,6 +88,8 @@ __all__ = [
     "get_aggregated_result",
 ]
 
+_SNMPRawData: TypeAlias = Mapping[SectionName, Sequence[SNMPRawDataSection]]
+
 
 class _AggregatedResult(NamedTuple):
     service: ConfiguredService
@@ -101,7 +103,7 @@ def execute_checkmk_checks(
     *,
     hostname: HostName,
     config_cache: ConfigCache,
-    fetched: Sequence[tuple[SourceInfo, Result[AgentRawData | SNMPRawData, Exception], Snapshot]],
+    fetched: Sequence[tuple[SourceInfo, Result[AgentRawData | _SNMPRawData, Exception], Snapshot]],
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, SectionPlugin],

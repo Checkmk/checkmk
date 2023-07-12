@@ -6,21 +6,25 @@
 from __future__ import annotations
 
 import ast
+from collections.abc import Mapping, Sequence
+from typing import TypeAlias
 
 from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib.type_defs import SNMPRawData
+from cmk.snmplib.type_defs import SNMPRawDataSection
 
 from ._cache import FileCache
 
 __all__ = ["SNMPFileCache"]
 
+_RawData: TypeAlias = Mapping[SectionName, Sequence[SNMPRawDataSection]]
 
-class SNMPFileCache(FileCache[SNMPRawData]):
+
+class SNMPFileCache(FileCache[_RawData]):
     @staticmethod
-    def _from_cache_file(raw_data: bytes) -> SNMPRawData:
+    def _from_cache_file(raw_data: bytes) -> _RawData:
         return {SectionName(k): v for k, v in ast.literal_eval(raw_data.decode("utf-8")).items()}
 
     @staticmethod
-    def _to_cache_file(raw_data: SNMPRawData) -> bytes:
+    def _to_cache_file(raw_data: _RawData) -> bytes:
         return (repr({str(k): v for k, v in raw_data.items()}) + "\n").encode("utf-8")

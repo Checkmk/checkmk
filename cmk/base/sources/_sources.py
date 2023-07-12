@@ -5,14 +5,15 @@
 
 # TODO This module should be freed from base deps.
 
-from collections.abc import Mapping
-from typing import Final
+from collections.abc import Mapping, Sequence
+from typing import Final, TypeAlias
 
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib.type_defs import SNMPRawData
+from cmk.snmplib.type_defs import SNMPRawDataSection
 
 from cmk.fetchers import Fetcher, FetcherType, NoFetcher, NoFetcherError, ProgramFetcher
 from cmk.fetchers.config import make_file_cache_path_template
@@ -48,8 +49,10 @@ __all__ = [
     "MissingSourceSource",
 ]
 
+_SNMPRawData: TypeAlias = Mapping[SectionName, Sequence[SNMPRawDataSection]]
 
-class SNMPSource(Source[SNMPRawData]):
+
+class SNMPSource(Source[_SNMPRawData]):
     fetcher_type: Final = FetcherType.SNMP
     source_type: Final = SourceType.HOST
 
@@ -80,7 +83,7 @@ class SNMPSource(Source[SNMPRawData]):
             self.source_type,
         )
 
-    def fetcher(self) -> Fetcher[SNMPRawData]:
+    def fetcher(self) -> Fetcher[_SNMPRawData]:
         return self.config_cache.make_snmp_fetcher(
             self.host_name,
             self.ipaddress,
@@ -93,7 +96,7 @@ class SNMPSource(Source[SNMPRawData]):
 
     def file_cache(
         self, *, simulation: bool, file_cache_options: FileCacheOptions
-    ) -> FileCache[SNMPRawData]:
+    ) -> FileCache[_SNMPRawData]:
         return SNMPFileCache(
             self.host_name,
             path_template=make_file_cache_path_template(
@@ -107,7 +110,7 @@ class SNMPSource(Source[SNMPRawData]):
         )
 
 
-class MgmtSNMPSource(Source[SNMPRawData]):
+class MgmtSNMPSource(Source[_SNMPRawData]):
     fetcher_type: Final = FetcherType.SNMP
     source_type: Final = SourceType.MANAGEMENT
 
@@ -138,7 +141,7 @@ class MgmtSNMPSource(Source[SNMPRawData]):
             self.source_type,
         )
 
-    def fetcher(self) -> Fetcher[SNMPRawData]:
+    def fetcher(self) -> Fetcher[_SNMPRawData]:
         return self.config_cache.make_snmp_fetcher(
             self.host_name,
             self.ipaddress,
@@ -151,7 +154,7 @@ class MgmtSNMPSource(Source[SNMPRawData]):
 
     def file_cache(
         self, *, simulation: bool, file_cache_options: FileCacheOptions
-    ) -> FileCache[SNMPRawData]:
+    ) -> FileCache[_SNMPRawData]:
         return SNMPFileCache(
             self.host_name,
             path_template=make_file_cache_path_template(

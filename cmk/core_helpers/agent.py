@@ -318,22 +318,20 @@ class ParserState(abc.ABC):
             return self
 
         try:
-            if not line.startswith(b"<<<"):
-                return self.do_action(line)
-            if PiggybackMarker.is_header(line):
-                return self.on_piggyback_header(line)
-            if PiggybackMarker.is_footer(line):
-                return self.on_piggyback_footer(line)
-            if SectionMarker.is_header(line):
-                return self.on_section_header(line)
-            if SectionMarker.is_footer(line):
-                return self.on_section_footer(line)
+            if line.startswith(b"<<<") and line.endswith(b">>>"):
+                if PiggybackMarker.is_header(line):
+                    return self.on_piggyback_header(line)
+                if PiggybackMarker.is_footer(line):
+                    return self.on_piggyback_footer(line)
+                if SectionMarker.is_header(line):
+                    return self.on_section_header(line)
+                if SectionMarker.is_footer(line):
+                    return self.on_section_footer(line)
+            return self.do_action(line)
         except Exception:
             if cmk.utils.debug.enabled():
                 raise
             return self.to_error(line)
-
-        return self
 
 
 class NOOPParser(ParserState):

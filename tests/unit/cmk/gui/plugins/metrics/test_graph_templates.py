@@ -13,8 +13,30 @@ from cmk.gui.plugins.metrics.utils import GraphTemplate
 from cmk.gui.type_defs import TemplateGraphSpec
 
 _GRAPH_TEMPLATES = [
-    {"id": "1", "title": "Graph 1"},
-    {"id": "2", "title": "Graph 2"},
+    GraphTemplate(
+        id="1",
+        title="Graph 1",
+        scalars=[],
+        conflicting_metrics=[],
+        optional_metrics=[],
+        presentation=None,
+        consolidation_function=None,
+        range=None,
+        omit_zero_metrics=False,
+        metrics=[],
+    ),
+    GraphTemplate(
+        id="2",
+        title="Graph 2",
+        scalars=[],
+        conflicting_metrics=[],
+        optional_metrics=[],
+        presentation=None,
+        consolidation_function=None,
+        range=None,
+        omit_zero_metrics=False,
+        metrics=[],
+    ),
 ]
 
 

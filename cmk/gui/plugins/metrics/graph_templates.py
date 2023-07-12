@@ -102,7 +102,7 @@ class TemplateGraphRecipeBuilder:
         # use graph_index. We should switch to graph_id everywhere (CMK-7308). Once this is
         # done, we can remove the line below.
         spec_info["graph_index"] = index
-        spec_info["graph_id"] = graph_template_tuned["id"]
+        spec_info["graph_id"] = graph_template_tuned.id
 
         return TemplateGraphRecipe(
             title=graph_recipe["title"],
@@ -156,7 +156,7 @@ def matching_graph_templates(
         (index, graph_template)
         for index, graph_template in enumerate(get_graph_templates(translated_metrics))
         if (graph_index is None or index == graph_index)
-        and (graph_id is None or graph_template["id"] == graph_id)
+        and (graph_id is None or graph_template.id == graph_id)
     )
 
 
@@ -172,7 +172,7 @@ def create_graph_recipe_from_template(
                     metric_definition[0],
                     translated_metrics,
                     row,
-                    graph_template.get("consolidation_function", "max"),
+                    graph_template.consolidation_function or "max",
                 ),
             }
         )
@@ -187,20 +187,20 @@ def create_graph_recipe_from_template(
             )
         return metric
 
-    metrics = list(map(_metric, graph_template["metrics"]))
+    metrics = list(map(_metric, graph_template.metrics))
     units = {m["unit"] for m in metrics}
     if len(units) > 1:
         raise MKGeneralException(
             _("Cannot create graph with metrics of different units '%s'") % ", ".join(units)
         )
 
-    title = replace_expressions(str(graph_template.get("title", "")), translated_metrics)
+    title = replace_expressions(graph_template.title or "", translated_metrics)
     if not title:
         title = next((m["title"] for m in metrics if m["title"]), "")
 
     painter_options = PainterOptions.get_instance()
     if painter_options.get("show_internal_graph_and_metric_ids"):
-        title = title + f" (Graph ID: {graph_template['id']})"
+        title = title + f" (Graph ID: {graph_template.id})"
 
     return {
         "title": title,
@@ -208,10 +208,10 @@ def create_graph_recipe_from_template(
         "unit": units.pop(),
         "explicit_vertical_range": get_graph_range(graph_template, translated_metrics),
         "horizontal_rules": horizontal_rules_from_thresholds(
-            graph_template.get("scalars", []), translated_metrics
+            graph_template.scalars, translated_metrics
         ),  # e.g. lines for WARN and CRIT
-        "omit_zero_metrics": graph_template.get("omit_zero_metrics", False),
-        "consolidation_function": graph_template.get("consolidation_function", "max"),
+        "omit_zero_metrics": graph_template.omit_zero_metrics,
+        "consolidation_function": graph_template.consolidation_function or "max",
     }
 
 
@@ -313,7 +313,7 @@ def metric_line_title(
     if len(metric_definition) >= 3:
         # mypy does not understand the variable length (Tuple index out of range)
         metric_title = metric_definition[2]  # type: ignore[misc]
-        return str(metric_title)
+        return metric_title
 
     metric_name = next(metrics_used_in_expression(metric_definition[0]))
     return translated_metrics[metric_name]["title"]

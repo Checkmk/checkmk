@@ -25,7 +25,11 @@ from cmk.gui.plugins.metrics.html_render import (
     default_dashlet_graph_render_options,
     GraphDestinations,
 )
-from cmk.gui.plugins.metrics.utils import graph_info, metric_info, MKCombinedGraphLimitExceededError
+from cmk.gui.plugins.metrics.utils import (
+    graph_templates_internal,
+    metric_info,
+    MKCombinedGraphLimitExceededError,
+)
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
 from cmk.gui.type_defs import Choices, SingleInfos, VisualContext
@@ -94,14 +98,9 @@ class AvailableGraphs(DropdownChoiceWithHostAndServiceHints):
                 (
                     (
                         graph_id,
-                        str(
-                            graph_detail.get(
-                                "title",
-                                graph_id,
-                            )
-                        ),
+                        graph_detail.title or graph_id,
                     )
-                    for graph_id, graph_detail in graph_info.items()
+                    for graph_id, graph_detail in graph_templates_internal().items()
                     if graph_id == value
                 ),
                 (

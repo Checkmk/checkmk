@@ -340,7 +340,7 @@ def test_get_graph_templates(
 ) -> None:
     perfdata: Perfdata = [(n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, check_command)
-    assert set(graph_ids) == {t["id"] for t in utils.get_graph_templates(translated_metrics)}
+    assert set(graph_ids) == {t.id for t in utils.get_graph_templates(translated_metrics)}
 
 
 def test_replace_expression() -> None:
@@ -531,7 +531,9 @@ def test_stack_resolver_exception_missing_operator_arguments() -> None:
 
 def test_graph_titles() -> None:
     graphs_without_title = sorted(
-        graph_id for graph_id, graph_info in utils.graph_info.items() if not graph_info.get("title")
+        graph_id
+        for graph_id, graph_info in utils.graph_templates_internal().items()
+        if not graph_info.title
     )
     assert (
         not graphs_without_title

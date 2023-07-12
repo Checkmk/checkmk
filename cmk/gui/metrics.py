@@ -39,7 +39,6 @@ from cmk.gui.plugins.metrics.utils import (
     CombinedGraphMetricRecipe,
     CombinedSingleMetricSpec,
     evaluate,
-    graph_info,
     LegacyPerfometer,
     parse_perf_data,
     perfometer_info,
@@ -70,7 +69,6 @@ def load_plugins() -> None:
     _register_pre_21_plugin_api()
     utils.load_web_plugins("metrics", globals())
 
-    fixup_graph_info()
     fixup_perfometer_info()
 
 
@@ -133,12 +131,6 @@ def _register_pre_21_plugin_api() -> None:
             "check_metrics": plugin_utils.check_metrics,
         }
     )
-
-
-def fixup_graph_info() -> None:
-    # create back link from each graph to its id.
-    for graph_id, graph in graph_info.items():
-        graph["id"] = graph_id
 
 
 def fixup_perfometer_info() -> None:

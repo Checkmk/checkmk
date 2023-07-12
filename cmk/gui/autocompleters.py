@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import re
-from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
+from collections.abc import Callable, Collection, Iterable, Sequence
 from itertools import chain
 
 from livestatus import LivestatusColumn, MultiSiteConnection
@@ -20,7 +20,7 @@ from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
 from cmk.gui.plugins.metrics.utils import (
     get_graph_templates,
-    graph_info,
+    graph_templates_internal,
     metric_info,
     metrics_of_query,
     registered_metrics,
@@ -288,13 +288,10 @@ def _graph_choices_from_livestatus_row(  # type: ignore[no-untyped-def]
         metric_id = metric_or_graph_id.replace("METRIC_", "")
         return str(metric_info.get(metric_id, {}).get("title", metric_id))
 
-    def _graph_template_title(graph_template: Mapping) -> str:
-        return str(graph_template.get("title", "")) or _metric_title_from_id(graph_template["id"])
-
     yield from (
         (
-            template["id"],
-            _graph_template_title(template),
+            template.id,
+            template.title or _metric_title_from_id(template.id),
         )
         for template in get_graph_templates(translated_metrics_from_row(row))
     )
@@ -309,14 +306,9 @@ def graph_templates_autocompleter(value: str, params: dict) -> Choices:
         choices: Iterable[tuple[str, str]] = (
             (
                 graph_id,
-                str(
-                    graph_details.get(
-                        "title",
-                        graph_id,
-                    )
-                ),
+                graph_details.title or graph_details.id,
             )
-            for graph_id, graph_details in graph_info.items()
+            for graph_id, graph_details in graph_templates_internal().items()
         )
 
     else:

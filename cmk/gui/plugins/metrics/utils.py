@@ -111,16 +111,11 @@ GraphRange = tuple[float | None, float | None]
 SizeEx = int
 
 
-class _GraphTemplateMandatory(TypedDict):
-    metrics: Sequence[MetricDefinition]
+class _GraphTemplateRegistrationMandatory(TypedDict):
+    metrics: Sequence[MetricDefinition | tuple[MetricExpression, LineType, LazyString]]
 
 
-class GraphTemplate(_GraphTemplateMandatory, total=False):
-    # The 'id' is not defined by the plugin, but derived from the graph_info key. But after the
-    # plugin loading we always have this field set. So we essentially want to have this:
-    # - In the plugins it is clear that the user should not define it
-    # - During runtime the field is always there and set
-    id: str
+class GraphTemplateRegistration(_GraphTemplateRegistrationMandatory, total=False):
     # All attributes here are optional
     title: str | LazyString
     scalars: Sequence[ScalarDefinition]
@@ -130,6 +125,20 @@ class GraphTemplate(_GraphTemplateMandatory, total=False):
     consolidation_function: GraphConsoldiationFunction
     range: GraphRangeSpec
     omit_zero_metrics: bool
+
+
+@dataclass(frozen=True)
+class GraphTemplate:
+    id: str
+    title: str | None
+    scalars: Sequence[ScalarDefinition]
+    conflicting_metrics: Sequence[str]
+    optional_metrics: Sequence[str]
+    presentation: GraphPresentation | None
+    consolidation_function: GraphConsoldiationFunction | None
+    range: GraphRangeSpec | None
+    omit_zero_metrics: bool
+    metrics: Sequence[MetricDefinition]
 
 
 class CombinedMetric(GraphMetric):
@@ -264,7 +273,7 @@ class TranslationInfo(TypedDict):
     auto_graph: bool
 
 
-class AutomaticDict(OrderedDict[str, GraphTemplate]):
+class AutomaticDict(OrderedDict[str, GraphTemplateRegistration]):
     """Dictionary class with the ability of appending items like provided
     by a list."""
 
@@ -273,7 +282,7 @@ class AutomaticDict(OrderedDict[str, GraphTemplate]):
         self._list_identifier = list_identifier or "item"
         self._item_index = start_index or 0
 
-    def append(self, item: GraphTemplate) -> None:
+    def append(self, item: GraphTemplateRegistration) -> None:
         self["%s_%i" % (self._list_identifier, self._item_index)] = item
         self._item_index += 1
 
@@ -995,16 +1004,49 @@ time_series_expression_registry = TimeSeriesExpressionRegistry()
 #   '----------------------------------------------------------------------'
 
 
+def graph_templates_internal() -> dict[str, GraphTemplate]:
+    return {
+        template_id: GraphTemplate(
+            id=template_id,
+            title=str(template["title"]) if "title" in template else None,
+            scalars=template.get("scalars", []),
+            conflicting_metrics=template.get("conflicting_metrics", []),
+            optional_metrics=template.get("optional_metrics", []),
+            presentation=template.get("presentation"),
+            consolidation_function=template.get("consolidation_function"),
+            range=template.get("range"),
+            omit_zero_metrics=template.get("omit_zero_metrics", False),
+            # mypy cannot infere types based on tuple length, so we would need two typeguards here ...
+            # https://github.com/python/mypy/issues/1178
+            metrics=[
+                (
+                    metric  # type: ignore[return-value]
+                    if len(metric) == 2
+                    else (
+                        metric[0],
+                        metric[1],
+                        str(
+                            metric[2],  # type: ignore[misc]
+                        ),
+                    )
+                )
+                for metric in template["metrics"]
+            ],
+        )
+        for template_id, template in graph_info.items()
+    }
+
+
 def get_graph_range(
     graph_template: GraphTemplate, translated_metrics: TranslatedMetrics
 ) -> GraphRange:
-    if "range" not in graph_template:
+    if not graph_template.range:
         return None, None  # Compute range of displayed data points
 
     try:
         return (
-            evaluate(graph_template["range"][0], translated_metrics)[0],
-            evaluate(graph_template["range"][1], translated_metrics)[0],
+            evaluate(graph_template.range[0], translated_metrics)[0],
+            evaluate(graph_template.range[1], translated_metrics)[0],
         )
     except Exception:
         return None, None
@@ -1028,7 +1070,8 @@ def get_graph_template_choices() -> list[tuple[str, str]]:
     # TODO: v.get("title", k): Use same algorithm as used in
     # GraphIdentificationTemplateBased._parse_template_metric()
     return sorted(
-        [(k, str(v.get("title", k))) for k, v in graph_info.items()], key=lambda k_v: k_v[1]
+        [(k, v.title or k) for k, v in graph_templates_internal().items()],
+        key=lambda k_v: k_v[1],
     )
 
 
@@ -1036,21 +1079,28 @@ def get_graph_template(template_id: str) -> GraphTemplate:
     if template_id.startswith("METRIC_"):
         return generic_graph_template(template_id[7:])
     if template_id in graph_info:
-        return graph_info[template_id]
+        return graph_templates_internal()[template_id]
     raise MKGeneralException(_("There is no graph template with the id '%s'") % template_id)
 
 
 def generic_graph_template(metric_name: str) -> GraphTemplate:
-    return {
-        "id": "METRIC_" + metric_name,
-        "metrics": [
+    return GraphTemplate(
+        id="METRIC_" + metric_name,
+        title=None,
+        metrics=[
             (metric_name, "area"),
         ],
-        "scalars": [
+        scalars=[
             metric_name + ":warn",
             metric_name + ":crit",
         ],
-    }
+        conflicting_metrics=[],
+        optional_metrics=[],
+        presentation=None,
+        consolidation_function=None,
+        range=None,
+        omit_zero_metrics=False,
+    )
 
 
 def get_graph_templates(translated_metrics: TranslatedMetrics) -> Iterator[GraphTemplate]:
@@ -1067,16 +1117,25 @@ def get_graph_templates(translated_metrics: TranslatedMetrics) -> Iterator[Graph
 
 
 def _get_explicit_graph_templates(translated_metrics: TranslatedMetrics) -> Iterable[GraphTemplate]:
-    for graph_template in graph_info.values():
+    for graph_template in graph_templates_internal().values():
         if metrics := applicable_metrics(
-            metrics_to_consider=graph_template["metrics"],
-            conflicting_metrics=graph_template.get("conflicting_metrics", []),
-            optional_metrics=graph_template.get("optional_metrics", []),
+            metrics_to_consider=graph_template.metrics,
+            conflicting_metrics=graph_template.conflicting_metrics,
+            optional_metrics=graph_template.optional_metrics,
             translated_metrics=translated_metrics,
         ):
-            gt = graph_template.copy()
-            gt["metrics"] = metrics
-            yield gt
+            yield GraphTemplate(
+                id=graph_template.id,
+                title=graph_template.title,
+                scalars=graph_template.scalars,
+                conflicting_metrics=graph_template.conflicting_metrics,
+                optional_metrics=graph_template.optional_metrics,
+                presentation=graph_template.presentation,
+                consolidation_function=graph_template.consolidation_function,
+                range=graph_template.range,
+                omit_zero_metrics=graph_template.omit_zero_metrics,
+                metrics=metrics,
+            )
 
 
 def _get_graphed_metrics(graph_templates: Iterable[GraphTemplate]) -> set[str]:
@@ -1093,7 +1152,7 @@ def _get_implicit_graph_templates(
 
 
 def _metrics_used_by_graph(graph_template: GraphTemplate) -> Iterable[str]:
-    for metric_definition in graph_template["metrics"]:
+    for metric_definition in graph_template.metrics:
         yield from metrics_used_in_expression(metric_definition[0])
 
 

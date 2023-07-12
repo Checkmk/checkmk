@@ -66,8 +66,7 @@ target_compile_definitions(neb PRIVATE VERSION="${CMAKE_PROJECT_VERSION}")
 
 target_link_libraries(
   neb
-  PRIVATE -static-libstdc++
-  PRIVATE -lpthread
+  PRIVATE -static-libstdc++ -lpthread
   PUBLIC ${livestatus_lib})
 
 target_compile_features(neb PUBLIC cxx_std_17)

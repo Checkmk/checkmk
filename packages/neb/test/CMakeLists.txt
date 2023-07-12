@@ -30,15 +30,11 @@ add_executable(
   test_utilities.cc
   test_utilities.h)
 
-# TODO(sk): consider move to the separate folder. This is not a test just
-# verification
 add_executable(NagiosMockup NagiosMockup.cc)
-target_include_directories(NagiosMockup PRIVATE ../include
-                                                ../third_party/include)
+target_include_directories(NagiosMockup PRIVATE ../include)
 target_link_options(NagiosMockup PRIVATE -rdynamic -static-libstdc++)
 target_link_libraries(NagiosMockup PRIVATE neb pthread stdc++)
-
-add_dependencies(test NagiosMockup neb)
+add_dependencies(test NagiosMockup)
 
 target_include_directories(test PUBLIC ../include ${googletest_ext_include})
 target_compile_features(test PRIVATE cxx_std_17)

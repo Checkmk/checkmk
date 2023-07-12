@@ -21,8 +21,7 @@ __all__ = ["NO_SELECTION", "SectionNameCollection"]
 #
 # What would be useful is a Mapping[SectionName, AgentRawData],
 # analogous to SNMPRawData = Mapping[SectionName, SNMPRawData],
-# that would generalize to `Mapping[SectionName, TRawDataContent]` or
-# `Mapping[SectionName, TRawData]` depending on which name we keep.
+# that would generalize to `Mapping[SectionName, TRawData]`
 AgentRawDataSection = Sequence[str]
 
 

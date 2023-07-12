@@ -10,7 +10,7 @@ from collections.abc import Mapping, Sequence
 from typing import Final, Generic, no_type_check
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import HostSection, SectionName
 
 from cmk.fetchers.cache import TRawDataSection
 
@@ -20,16 +20,14 @@ class HostSections(Generic[TRawDataSection], abc.ABC):
 
     def __init__(
         self,
-        sections: Mapping[SectionName, Sequence[TRawDataSection]] | None = None,
+        sections: HostSection[TRawDataSection] | None = None,
         *,
         cache_info: Mapping[SectionName, tuple[int, int]] | None = None,
         # For `piggybacked_raw_data`, Sequence[bytes] is equivalent to AgentRawData.
         piggybacked_raw_data: Mapping[HostName, Sequence[bytes]] | None = None,
     ) -> None:
         super().__init__()
-        self.sections: Mapping[SectionName, Sequence[TRawDataSection]] = (
-            sections if sections else {}
-        )
+        self.sections: HostSection[TRawDataSection] = sections if sections else {}
         self.cache_info: Final = cache_info if cache_info else {}
         self.piggybacked_raw_data: Final = piggybacked_raw_data if piggybacked_raw_data else {}
 

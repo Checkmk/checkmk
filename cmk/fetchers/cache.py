@@ -4,12 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from collections.abc import Callable, Iterator, Mapping, MutableMapping, Sequence
+from collections.abc import Callable, Iterator, MutableMapping, Sequence
 from pathlib import Path
 from typing import Final, Generic, TypeVar
 
 import cmk.utils.store as _store
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import HostSection, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawData
 
@@ -55,7 +55,7 @@ class PersistedSections(  # pylint: disable=too-many-ancestors
     def from_sections(
         cls,
         *,
-        sections: Mapping[SectionName, Sequence[TRawDataSection]],
+        sections: HostSection[TRawDataSection],
         lookup_persist: Callable[[SectionName], tuple[int, int] | None],
     ) -> "PersistedSections[TRawDataSection]":
         return cls(
@@ -109,12 +109,12 @@ class SectionStore(Generic[TRawDataSection]):
 
     def update(
         self,
-        sections: Mapping[SectionName, Sequence[TRawDataSection]],
+        sections: HostSection[TRawDataSection],
         cache_info: MutableMapping[SectionName, tuple[int, int]],
         lookup_persist: Callable[[SectionName], tuple[int, int] | None],
         now: int,
         keep_outdated: bool,
-    ) -> Mapping[SectionName, Sequence[TRawDataSection]]:
+    ) -> HostSection[TRawDataSection]:
         persisted_sections = self._update(
             sections,
             lookup_persist,
@@ -129,7 +129,7 @@ class SectionStore(Generic[TRawDataSection]):
 
     def _update(
         self,
-        sections: Mapping[SectionName, Sequence[TRawDataSection]],
+        sections: HostSection[TRawDataSection],
         lookup_persist: Callable[[SectionName], tuple[int, int] | None],
         *,
         now: int,
@@ -156,10 +156,10 @@ class SectionStore(Generic[TRawDataSection]):
 
     def _add_persisted_sections(
         self,
-        sections: Mapping[SectionName, Sequence[TRawDataSection]],
+        sections: HostSection[TRawDataSection],
         cache_info: MutableMapping[SectionName, tuple[int, int]],
         persisted_sections: PersistedSections[TRawDataSection],
-    ) -> Mapping[SectionName, Sequence[TRawDataSection]]:
+    ) -> HostSection[TRawDataSection]:
         cache_info.update(
             {
                 section_name: (created_at, valid_until - created_at)

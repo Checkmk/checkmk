@@ -5,6 +5,7 @@
 
 import pytest
 
+from cmk.base.api.agent_based.checking_classes import CheckResult
 from cmk.base.plugins.agent_based import cisco_temperature as ct
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, Service, State
 
@@ -17,6 +18,33 @@ def test_defect_sensor() -> None:
     (defect_result,) = ct.check_cisco_temperature("Chassis 1", {}, section)
     assert isinstance(defect_result, Result)
     assert defect_result.state is not State.OK
+
+
+@pytest.fixture(name="section_not_ok_sensors", scope="module")
+def _section_not_ok_sensors() -> ct.Section:
+    return ct.parse_cisco_temperature(
+        [
+            [
+                ["1107", "TenGigabitEthernet2/1/7 Module Temperature Sensor"],
+                ["1110", "TenGigabitEthernet2/1/7 Transmit Power Sensor"],
+                ["1111", "TenGigabitEthernet2/1/7 Receive Power Sensor"],
+                ["1129", "TenGigabitEthernet1/1/7 Module Temperature Sensor"],
+                ["1132", "TenGigabitEthernet1/1/7 Transmit Power Sensor"],
+                ["1133", "TenGigabitEthernet1/1/7 Receive Power Sensor"],
+            ],
+            [
+                ["1107", "8", "9", "1", "245", "3"],
+                ["1110", "14", "9", "1", "-19", "3"],
+                ["1111", "14", "9", "1", "-47", "3"],
+                ["1129", "8", "9", "1", "245", "2"],
+                ["1132", "14", "9", "1", "-19", "2"],
+                ["1133", "14", "9", "1", "-47", "2"],
+            ],
+            [],
+            [],
+            [],
+        ],
+    )
 
 
 @pytest.fixture(name="section_dom", scope="module")
@@ -90,6 +118,13 @@ def test_discovery_dom(section_dom: ct.Section) -> None:
             Service(item="Ethernet1/4 Lane 1 Transceiver Receive Power Sensor"),
             Service(item="Ethernet1/4 Lane 1 Transceiver Transmit Power Sensor"),
         ]
+    )
+
+
+def test_discovery_not_ok_sensors(section_not_ok_sensors: ct.Section) -> None:
+    assert not list(ct.discover_cisco_temperature(section_not_ok_sensors))
+    assert not list(
+        ct.discover_cisco_temperature_dom({"admin_states": ["1", "3"]}, section_not_ok_sensors)
     )
 
 
@@ -228,3 +263,43 @@ def test_check_temp(section_temp: ct.Section) -> None:
             notice="Configuration: prefer user levels over device levels (used device levels)",
         ),
     ]
+
+
+@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.parametrize(
+    ["item", "expected_result"],
+    [
+        pytest.param(
+            "TenGigabitEthernet1/1/7 Module Temperature Sensor",
+            [Result(state=State.UNKNOWN, notice="Status: unavailable")],
+        ),
+        pytest.param(
+            "TenGigabitEthernet2/1/7 Module Temperature Sensor",
+            [Result(state=State.CRIT, notice="Status: non-operational")],
+        ),
+    ],
+)
+def test_check_temp_not_ok_sensors(
+    item: str, expected_result: CheckResult, section_not_ok_sensors: ct.Section
+) -> None:
+    assert list(ct.check_cisco_temperature(item, {}, section_not_ok_sensors)) == expected_result
+
+
+@pytest.mark.usefixtures("initialised_item_state")
+@pytest.mark.parametrize(
+    ["item", "expected_result"],
+    [
+        pytest.param(
+            "TenGigabitEthernet1/1/7 Transmit Power Sensor",
+            [Result(state=State.UNKNOWN, notice="Status: unavailable")],
+        ),
+        pytest.param(
+            "TenGigabitEthernet2/1/7 Transmit Power Sensor",
+            [Result(state=State.CRIT, notice="Status: non-operational")],
+        ),
+    ],
+)
+def test_check_dom_not_ok_sensors(
+    item: str, expected_result: CheckResult, section_not_ok_sensors: ct.Section
+) -> None:
+    assert list(ct.check_cisco_temperature_dom(item, {}, section_not_ok_sensors)) == expected_result

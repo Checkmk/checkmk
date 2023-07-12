@@ -339,23 +339,7 @@ class ModeFolder(WatoMode):
         if not user.may("wato.edit_hosts") and not user.may("wato.manage_hosts"):
             return
 
-        hostnames = sorted(self._folder.hosts().keys(), key=key_num_split)
         is_enabled = bool(self._folder.has_hosts())
-        search_text = request.var("search")
-
-        # Remember if that host has a target folder (i.e. was imported with
-        # a folder information but not yet moved to that folder). If at least
-        # one host has a target folder, then we show an additional bulk action.
-        at_least_one_imported = False
-        for hostname in hostnames:
-            if search_text and (search_text.lower() not in hostname.lower()):
-                continue
-
-            host = self._folder.load_host(hostname)
-            effective = host.effective_attributes()
-
-            if effective.get("imported_folder"):
-                at_least_one_imported = True
 
         if not self._folder.locked_hosts() and user.may("wato.edit_hosts"):
             yield PageMenuEntry(
@@ -388,25 +372,6 @@ class ModeFolder(WatoMode):
                     item=PageMenuPopup(self._render_bulk_move_form()),
                     is_enabled=is_enabled,
                 )
-
-                if at_least_one_imported:
-                    yield PageMenuEntry(
-                        title=_("Move to target folders"),
-                        icon_name="move",
-                        item=make_confirmed_form_submit_link(
-                            form_name="hosts",
-                            button_name="_bulk_movetotarget",
-                            title=_("Move selected hosts"),
-                            message=_(
-                                "You are going to move the selected hosts to folders "
-                                "representing their original folder location in the system "
-                                "you did the import from.<br><br>Please make sure that you have "
-                                "done an <b>inventory</b> before moving the hosts."
-                            ),
-                            confirm_button=_("Move"),
-                        ),
-                        is_enabled=is_enabled,
-                    )
 
             if user.may("wato.parentscan"):
                 yield PageMenuEntry(
@@ -625,11 +590,6 @@ class ModeFolder(WatoMode):
             target_folder = folder_tree().folder(target_folder_path)
             self._folder.move_hosts(selected_host_names, target_folder)
             flash(_("Moved %d hosts to %s") % (len(selected_host_names), target_folder.title()))
-            return redirect(folder_url)
-
-        # Move to target folder (from import)
-        if request.var("_bulk_movetotarget"):
-            self._move_to_imported_folders(selected_host_names)
             return redirect(folder_url)
 
         # Deletion
@@ -1142,31 +1102,6 @@ class ModeFolder(WatoMode):
             dropdown.render_input("_bulk_moveto", "")
             html.button("_bulk_move", _("Move"), form=form_name)
             return HTML(output_funnel.drain())
-
-    def _move_to_imported_folders(self, host_names_to_move: Sequence[HostName]) -> None:
-        # Create groups of hosts with the same target folder
-        target_folder_names: dict[str, list[HostName]] = {}
-        for host_name in host_names_to_move:
-            host = self._folder.load_host(host_name)
-            imported_folder_name = host.attributes.get("imported_folder")
-            assert isinstance(imported_folder_name, str)
-            if imported_folder_name is None:
-                continue
-            target_folder_names.setdefault(imported_folder_name, []).append(host_name)
-
-            # Remove target folder information, now that the hosts are
-            # at their target position.
-            del host.attributes["imported_folder"]
-
-        # Now handle each target folder
-        for imported_folder, host_names in target_folder_names.items():
-            # Next problem: The folder path in imported_folder refers
-            # to the Alias of the folders, not to the internal file
-            # name. And we need to create folders not yet existing.
-            target_folder = self._create_target_folder_from_aliaspath(imported_folder)
-            self._folder.move_hosts(host_names, target_folder)
-
-        flash(_("Successfully moved hosts to their original folder destinations."))
 
     def _create_target_folder_from_aliaspath(self, aliaspath):
         # The alias path is a '/' separated path of folder titles.

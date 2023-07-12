@@ -1177,8 +1177,7 @@ CLANG_OPTIONS          = -std=c++17 \
                          -isystem includes/asio \
                          -DASIO_DISABLE_CONCEPTS \
                          -DVERSION=\"2.3.0b1\" \
-                         -DBUILD_CXX=\"some C++ compiler\" \
-                         -DBUILD_DATE=\"right now\"
+                         -DBUILD_CXX=\"some C++ compiler\"
 
 # If clang assisted parsing is enabled you can provide the clang parser with the
 # path to the directory containing a file called compile_commands.json. This

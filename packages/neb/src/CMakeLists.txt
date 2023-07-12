@@ -26,11 +26,6 @@ execute_process(COMMAND ${CMAKE_CXX_COMPILER} --version
 string(REPLACE "\n" ";" BUILD_CXX ${BUILD_CXX})
 list(GET BUILD_CXX 0 BCXX)
 
-# TODO(sk): Find better method because this variable is updated only after ./run
-# --clean`
-execute_process(COMMAND date -R OUTPUT_VARIABLE CURRENT_BUILD_DATE)
-string(REPLACE "\n" "" CURRENT_BUILD_DATE ${CURRENT_BUILD_DATE})
-
 include(FetchContent)
 # Forbids option redefine in subproject: in the case to prevent re2::testing
 # build
@@ -73,9 +68,8 @@ target_include_directories(
   neb PUBLIC ../include ../third_party/include ${asio_ext_include}
              ${root_repo_dir}/packages/livestatus/include)
 
-target_compile_definitions(
-  neb PRIVATE VERSION="${CMAKE_PROJECT_VERSION}" BUILD_CXX="${BCXX}"
-              BUILD_DATE="${CURRENT_BUILD_DATE}")
+target_compile_definitions(neb PRIVATE VERSION="${CMAKE_PROJECT_VERSION}"
+                                       BUILD_CXX="${BCXX}")
 
 target_link_libraries(
   neb

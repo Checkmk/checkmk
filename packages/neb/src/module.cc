@@ -1066,7 +1066,10 @@ void livestatus_parse_arguments(Logger *logger, const char *args_orig) {
 void omd_advertize(Logger *logger) {
     Notice(logger) << "Livestatus by Checkmk GmbH started with PID "
                    << getpid();
-    Notice(logger) << "version " << VERSION << " compiled " << BUILD_DATE
+#ifndef __TIMESTAMP__
+#define __TIMESTAMP__ (__DATE__ " " __TIME__)
+#endif
+    Notice(logger) << "version " << VERSION << " compiled " << __TIMESTAMP__
                    << " with " << BUILD_CXX << ", using " << RegExp::engine()
                    << " regex engine";
     Notice(logger) << "please visit us at https://checkmk.com/";

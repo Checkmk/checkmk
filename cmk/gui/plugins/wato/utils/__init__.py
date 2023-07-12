@@ -1559,15 +1559,15 @@ def configure_attributes(  # pylint: disable=too-many-branches
                 if not host:
                     continue
 
-                locked_by = host.attribute("locked_by")
-                locked_attributes = host.attribute("locked_attributes")
+                locked_by = host.attributes.get("locked_by")
+                locked_attributes = host.attributes.get("locked_attributes")
                 if locked_by and locked_attributes and attrname in locked_attributes:
                     num_have_locked_it += 1
 
-                if host.has_explicit_attribute(attrname):
+                if attrname in host.attributes:
                     num_haveit += 1
-                    if host.attribute(attrname) not in values:
-                        values.append(host.attribute(attrname))
+                    if host.attributes.get(attrname) not in values:
+                        values.append(host.attributes.get(attrname))
 
             # The value of this attribute is unique amongst all hosts if
             # either no host has a value for this attribute, or all have
@@ -1594,13 +1594,13 @@ def configure_attributes(  # pylint: disable=too-many-branches
 
                 container = parent  # container is of type Folder
                 while container:
-                    if attrname in container.attributes():
+                    if attrname in container.attributes:
                         url = container.edit_url()
                         inherited_from = escape_to_html(_("Inherited from ")) + HTMLWriter.render_a(
                             container.title(), href=url
                         )
 
-                        inherited_value = container.attributes()[attrname]
+                        inherited_value = container.attributes[attrname]
                         has_inherited = True
                         if attr.is_tag_attribute:
                             inherited_tags["attr_%s" % attrname] = inherited_value
@@ -1654,9 +1654,9 @@ def configure_attributes(  # pylint: disable=too-many-branches
             elif for_what == "bulk":
                 active = unique and len(values) > 0
             elif for_what == "folder" and myself:
-                active = myself.has_explicit_attribute(attrname)
+                active = attrname in myself.attributes
             elif for_what in ["host", "cluster"] and host:  # "host"
-                active = host.has_explicit_attribute(attrname)
+                active = attrname in host.attributes
             else:
                 active = False
 
@@ -1801,17 +1801,17 @@ def configure_attributes(  # pylint: disable=too-many-branches
 # Check if at least one host in a folder (or its subfolders)
 # has not set a certain attribute. This is needed for the validation
 # of mandatory attributes.
-def some_host_hasnt_set(folder, attrname):
+def some_host_hasnt_set(folder: CREFolder, attrname: str) -> bool:
     # Check subfolders
     for subfolder in folder.subfolders():
         # If the attribute is not set in the subfolder, we need
         # to check all hosts and that folder.
-        if attrname not in subfolder.attributes() and some_host_hasnt_set(subfolder, attrname):
+        if attrname not in subfolder.attributes and some_host_hasnt_set(subfolder, attrname):
             return True
 
     # Check hosts in this folder
     for host in folder.hosts().values():
-        if not host.has_explicit_attribute(attrname):
+        if attrname not in host.attributes:
             return True
 
     return False

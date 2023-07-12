@@ -177,8 +177,8 @@ def _do_network_scan(folder):
 
 
 def _ip_addresses_to_scan(folder):
-    ip_range_specs = folder.attribute("network_scan")["ip_ranges"]
-    exclude_specs = folder.attribute("network_scan")["exclude_ranges"]
+    ip_range_specs = folder.attributes["network_scan"]["ip_ranges"]
+    exclude_specs = folder.attributes["network_scan"]["exclude_ranges"]
 
     to_scan = _ip_addresses_of_ranges(ip_range_specs)
     exclude = _ip_addresses_of_ranges(exclude_specs)
@@ -306,7 +306,7 @@ def _scan_ip_addresses(folder, ip_addresses):
 
     # dont start more threads than needed
     parallel_pings = min(
-        folder.attribute("network_scan").get("max_parallel_pings", 100), num_addresses
+        folder.attributes["network_scan"].get("max_parallel_pings", 100), num_addresses
     )
 
     # Initalize all workers

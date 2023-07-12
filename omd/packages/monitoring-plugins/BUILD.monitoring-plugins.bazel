@@ -88,7 +88,9 @@ configure_make(
         #   we achieve the same result
 
         # remove files we don't want to be deployed
-        rm -f "$INSTALLDIR/libexec/check_ifoperstatus" "$INSTALLDIR/libexec/check_ifstatus"
+        # check_disk_smb is being deployed with check_mk.make, because it was migrated to Python
+        rm -f "$INSTALLDIR/libexec/check_ifoperstatus" "$INSTALLDIR/libexec/check_ifstatus" \
+        "$INSTALLDIR/libexec/check_disk_smb"
 
         mkdir -p "$INSTALLDIR/share/doc/monitoring-plugins"
         cp ACKNOWLEDGEMENTS AUTHORS CODING COPYING FAQ NEWS README REQUIREMENTS SUPPORT THANKS \

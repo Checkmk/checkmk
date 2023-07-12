@@ -4,15 +4,17 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import ast
+import csv
 import json
 import logging
 import re
 import warnings
+from collections import defaultdict
 from collections.abc import Iterable
 from functools import cache
 from itertools import chain
 from pathlib import Path
-from typing import NewType
+from typing import NamedTuple, NewType
 
 import isort
 import pytest
@@ -21,15 +23,49 @@ from pipfile import Pipfile  # type: ignore[import]
 from tests.testlib import repo_path
 from tests.testlib.utils import branch_from_env, current_base_branch_name, is_enterprise_repo
 
-IGNORED_LIBS = {"cmk", "livestatus", "mk_jolokia", "cmc_proto"}  # our stuff
+IGNORED_LIBS = {
+    "agent_receiver",
+    "cmc_proto",
+    "cmk",
+    "livestatus",
+    "mk_jolokia",
+    "omdlib",
+}  # our stuff
 IGNORED_LIBS |= isort.stdlibs._all.stdlib  # builtin stuff
 IGNORED_LIBS |= {"__future__"}  # other builtin stuff
 
-BUILD_DIRS = {repo_path() / "agent-receiver/build"}
+BUILD_DIRS = {
+    repo_path() / "agent-receiver/build",
+    repo_path() / "packages/livestatus/build",
+    repo_path() / "packages/neb/build",
+    repo_path() / "omd" / "build",
+}
 
 PackageName = NewType("PackageName", str)  # Name in Pip(file)
-NormalizedPackageName = NewType("NormalizedPackageName", str)
 ImportName = NewType("ImportName", str)  # Name in Source (import ...)
+
+
+class NormalizedPackageName:
+    def __init__(self, name: str) -> None:
+        self.normalized = re.sub(r"[-_.]+", "-", name).lower()
+        self.original = name
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, NormalizedPackageName):
+            return False
+        return self.normalized == other.normalized
+
+    def __hash__(self) -> int:
+        return hash(self.normalized)
+
+
+class Import(NamedTuple):
+    name: ImportName
+    paths: set[Path]
+
+    @property
+    def normalized_name(self) -> NormalizedPackageName:
+        return NormalizedPackageName(self.name)
 
 
 @pytest.fixture(name="loaded_pipfile")
@@ -86,61 +122,60 @@ def iter_sourcefiles(basepath: Path) -> Iterable[Path]:
             continue
         if sub_path.is_file() and sub_path.name.endswith(".py"):
             yield sub_path
+
         # Given the fact that the googletest directory contains a hash, it is
         # easier to filter out here than in prune_build_artifacts later.
         if sub_path.is_dir() and not sub_path.name.startswith("googletest-"):
             yield from iter_sourcefiles(sub_path)
 
 
-def prune_build_artifacts(basepath: Path, paths: Iterable[Path]) -> Iterable[Path]:
-    omd_build = basepath / "omd" / "build"
-    yield from (p for p in paths if not p.is_relative_to(omd_build))
+def iter_relevant_files(basepath: Path) -> Iterable[Path]:
+    exclusions = (
+        basepath / "tests",
+        basepath / "agents",  # There are so many optional imports...
+        basepath / "agent-receiver",  # uses setup.py
+        basepath / "enterprise/core/src/test",  # test files
+        basepath / "omd/license_sources",  # update_licenses.py contains imports
+    )
+
+    for source_file_path in iter_sourcefiles(basepath):
+        if any(source_file_path.is_relative_to(e) for e in exclusions):
+            continue
+
+        yield source_file_path
 
 
-def imports_for_node(node: ast.AST) -> Iterable[ImportName]:
-    if isinstance(node, ast.Import):
-        return {ImportName(n.name) for n in node.names}
-    if isinstance(node, ast.ImportFrom) and node.level == 0:  # ignore relative imports
-        assert node.module is not None
-        return {ImportName(node.module)}
-    return set()
-
-
-def toplevel_importname(name: ImportName) -> ImportName:
-    """return top level import
-
-    >>> toplevel_importname("foo")
-    'foo'
-    >>> toplevel_importname("foo.bar")
-    'foo'
-    >>> toplevel_importname("foo.bar.baz")
-    'foo'
-    """
-    try:
-        top_level_lib, _sub_libs = name.split(".", maxsplit=1)
-        return ImportName(top_level_lib)
-    except ValueError:
-        return name
-
-
-def prune_imports(imports: Iterable[ImportName]) -> set[ImportName]:
-    """throw out all our own libraries and use only top-level names"""
-    return {
-        top_level_lib
-        for import_name in imports
-        for top_level_lib in [toplevel_importname(import_name)]
-        if top_level_lib not in IGNORED_LIBS
-    }
-
-
-@cache
 def imports_for_file(path: Path) -> set[ImportName]:
+    def imports_for_node(node: ast.AST) -> Iterable[ImportName]:
+        if isinstance(node, ast.Import):
+            return {ImportName(n.name) for n in node.names}
+        if isinstance(node, ast.ImportFrom) and node.level == 0:  # ignore relative imports
+            assert node.module is not None
+            return {ImportName(node.module)}
+        return set()
+
+    def toplevel_importname(name: ImportName) -> ImportName:
+        """return top level import
+
+        >>> toplevel_importname("foo")
+        'foo'
+        >>> toplevel_importname("foo.bar")
+        'foo'
+        >>> toplevel_importname("foo.bar.baz")
+        'foo'
+        """
+        try:
+            top_level_lib, _sub_libs = name.split(".", maxsplit=1)
+            return ImportName(top_level_lib)
+        except ValueError:
+            return name
+
     # We don't care about warnings from 3rd party packages
     with path.open("rb") as source_file, warnings.catch_warnings():
         try:
             # NOTE: In summary, this takes quite some time: parse: 5s, scan: 3.3s
             return {
-                imp
+                toplevel_importname(imp)
                 for node in ast.walk(ast.parse(source_file.read(), str(path)))
                 for imp in imports_for_node(node)
             }
@@ -153,23 +188,23 @@ def imports_for_file(path: Path) -> set[ImportName]:
             return set()
 
 
-def get_imported_libs(repopath: Path) -> set[ImportName]:
+@cache
+def get_imported_libs(repopath: Path) -> list[Import]:
     """Scan the repo for import statements, return only non local ones"""
-    return prune_imports(
-        imp
-        for path in prune_build_artifacts(repopath, iter_sourcefiles(repopath))
-        for imp in imports_for_file(path)
-    )
+    imports_to_files: dict[ImportName, set[Path]] = defaultdict(set)
+
+    for path in iter_relevant_files(repopath):
+        for imp in imports_for_file(path):
+            imports_to_files[imp].add(path)
+
+    return [
+        Import(name, paths) for name, paths in imports_to_files.items() if name not in IGNORED_LIBS
+    ]
 
 
-def normalize_packagename(name: str) -> NormalizedPackageName:
-    """there are some normalizations to make before comparing
-    https://peps.python.org/pep-0503/#normalized-names"""
-
-    return NormalizedPackageName(re.sub(r"[-_.]+", "-", name).lower())
-
-
-def packagenames_to_libnames(repopath: Path) -> dict[NormalizedPackageName, list[ImportName]]:
+def packagenames_to_libnames(
+    repopath: Path,
+) -> dict[NormalizedPackageName, list[NormalizedPackageName]]:
     """scan the site-packages folder for package infos"""
 
     def packagename_for(path: Path) -> NormalizedPackageName:
@@ -177,18 +212,44 @@ def packagenames_to_libnames(repopath: Path) -> dict[NormalizedPackageName, list
         with path.open() as metadata:
             for line in metadata.readlines():
                 if line.startswith("Name:"):
-                    return normalize_packagename(line[5:].strip())
+                    return NormalizedPackageName(line[5:].strip())
 
         raise NotImplementedError("No 'Name:' in METADATA file")
 
-    def importnames_for(packagename: NormalizedPackageName, path: Path) -> list[ImportName]:
+    def importnames_for(
+        packagename: NormalizedPackageName, path: Path
+    ) -> list[NormalizedPackageName]:
         """return a list of importable libs which belong to the package"""
         top_level_txt_path = path.with_name("top_level.txt")
-        if not top_level_txt_path.is_file():
-            return [ImportName(packagename)]
+        if top_level_txt_path.is_file():
+            with top_level_txt_path.open() as top_level_file:
+                return [
+                    NormalizedPackageName(x.strip())
+                    for x in top_level_file.readlines()
+                    if x.strip()
+                ]
+        record_path = path.with_name("RECORD")
+        if record_path.is_file():
+            names = set()
+            # https://packaging.python.org/en/latest/specifications/recording-installed-packages/#the-record-file
+            with record_path.open() as record_file:
+                reader = csv.reader(record_file, delimiter=",", quotechar='"')
+                for file_path_str, _file_hash, _file_size in reader:
+                    first_part = Path(file_path_str).parts[0]
+                    if (
+                        first_part == "/"
+                        or first_part.endswith(".dist-info")
+                        or first_part == ".."
+                        or first_part == "__pycache__"
+                    ):
+                        continue
+                    if first_part.endswith(".py"):
+                        names.add(NormalizedPackageName(first_part.removesuffix(".py")))
+                    else:
+                        names.add(NormalizedPackageName(first_part))
+            return list(names)
 
-        with top_level_txt_path.open() as top_level_file:
-            return [ImportName(x.strip()) for x in top_level_file.readlines() if x.strip()]
+        return [packagename]
 
     return {
         packagename: importnames_for(packagename, metadata_path)
@@ -198,7 +259,7 @@ def packagenames_to_libnames(repopath: Path) -> dict[NormalizedPackageName, list
 
 
 @cache
-def get_pipfile_libs(repopath: Path) -> dict[PackageName, list[ImportName]]:
+def get_pipfile_libs(repopath: Path) -> dict[PackageName, list[NormalizedPackageName]]:
     """Collect info from Pipfile with additions from site-packages
 
     The dict has as key the Pipfile package name and as value a list with all import names
@@ -207,7 +268,7 @@ def get_pipfile_libs(repopath: Path) -> dict[PackageName, list[ImportName]]:
     packagenames may differ from the import names,
     also the site-package folder can be different."""
     site_packages = packagenames_to_libnames(repopath)
-    pipfile_to_libs: dict[PackageName, list[ImportName]] = {}
+    pipfile_to_libs: dict[PackageName, list[NormalizedPackageName]] = {}
 
     parsed_pipfile = Pipfile.load(filename=repopath / "Pipfile")
     for name, details in parsed_pipfile.data["default"].items():
@@ -215,8 +276,8 @@ def get_pipfile_libs(repopath: Path) -> dict[PackageName, list[ImportName]]:
             # Ignoring some of our own sub-packages e.g. agent-receiver
             continue
 
-        if normalize_packagename(name) in site_packages:
-            pipfile_to_libs[name] = site_packages[normalize_packagename(name)]
+        if (normalized_name := NormalizedPackageName(name)) in site_packages:
+            pipfile_to_libs[name] = site_packages[normalized_name]
             continue
 
         raise NotImplementedError("Could not find package %s in site_packages" % name)
@@ -225,20 +286,24 @@ def get_pipfile_libs(repopath: Path) -> dict[PackageName, list[ImportName]]:
 
 def get_unused_dependencies() -> Iterable[PackageName]:
     """Iterate over declared dependencies which are not imported"""
-    imported_libs = get_imported_libs(repo_path())
+    imported_libs = {d.normalized_name for d in get_imported_libs(repo_path())}
     pipfile_libs = get_pipfile_libs(repo_path())
     for packagename, import_names in pipfile_libs.items():
         if set(import_names).isdisjoint(imported_libs):
             yield packagename
 
 
-def get_undeclared_dependencies() -> Iterable[ImportName]:
+def get_undeclared_dependencies() -> Iterable[Import]:
     """Iterate over imported dependencies which could not be found in the Pipfile"""
-    imported_libs = get_imported_libs(repo_path() / "cmk")
+    imported_libs = get_imported_libs(repo_path())
     pipfile_libs = get_pipfile_libs(repo_path())
     declared_libs = set(chain.from_iterable(pipfile_libs.values()))
 
-    yield from imported_libs - declared_libs
+    yield from (
+        imported_lib
+        for imported_lib in imported_libs
+        if imported_lib.normalized_name not in declared_libs
+    )
 
 
 CEE_UNUSED_PACKAGES = [
@@ -258,10 +323,11 @@ CEE_UNUSED_PACKAGES = [
     "importlib-metadata",
     "itsdangerous",
     "jmespath",
+    "jsonschema",  # TODO: move to dev-deps
     "markupsafe",
     "more-itertools",
     "multidict",
-    "openapi-spec-validator",
+    "mypy-extensions",  # TODO: Can that be removed? looks like it
     "ordered-set",
     "pbr",
     "ply",
@@ -274,13 +340,13 @@ CEE_UNUSED_PACKAGES = [
     "pynacl",
     "pyprof2calltree",
     "pyrsistent",
-    "pysaml2",
     "requests-kerberos",
     "requests-toolbelt",
     "s3transfer",
     "setuptools-scm",
     "snmpsim",
     "tenacity",
+    "uvicorn",  # TODO: move to agent-receiver/setup.py
     "websocket-client",
     "wrapt",
     "yarl",
@@ -288,39 +354,51 @@ CEE_UNUSED_PACKAGES = [
 ]
 
 
-@pytest.mark.skip
 def test_dependencies_are_used() -> None:
-    unused_packages = CEE_UNUSED_PACKAGES
+    known_unused_packages = set(CEE_UNUSED_PACKAGES)
     if not is_enterprise_repo():
-        unused_packages += ["PyPDF3", "numpy", "roman"]
-    unused_packages += ["docstring-parser"]  # TODO: Bug in the test code, it *is* used!
+        known_unused_packages.update(("PyPDF3", "numpy", "roman"))
 
-    assert sorted(get_unused_dependencies()) == sorted(unused_packages)
+    unused_dependencies = set(get_unused_dependencies())
+
+    assert (
+        unused_dependencies >= known_unused_packages
+    ), "The exceptionlist is outdated, these are the 'offenders':" + str(
+        known_unused_packages - unused_dependencies
+    )
+
+    unused_dependencies -= known_unused_packages
+    assert (
+        unused_dependencies == set()
+    ), f"There are dependencies that are declared in the Pipfile but not used: {unused_dependencies}"
 
 
-@pytest.mark.skip
 def test_dependencies_are_declared() -> None:
     """Test for unknown imports which could not be mapped to the Pipfile
 
     mostly optional imports and OMD-only shiped packages."""
+    undeclared_dependencies = list(get_undeclared_dependencies())
+    undeclared_dependencies_str = {d.name for d in undeclared_dependencies}
+    known_undeclared_dependencies = {
+        "matplotlib",  # Disabled debug code in enterprise/cmk/gui/cee/sla.py
+        "mpld3",  # Disabled debug code in enterprise/cmk/gui/cee/sla.py
+        "netsnmp",  # We ship it with omd/packages
+        "pymongo",  # Optional except ImportError...
+        "pytest",  # In __main__ guarded section in cmk/special_agents/utils/misc.py
+        "tinkerforge",  # agents/plugins/mk_tinkerforge.py has its own install routine
+        "_typeshed",  # used by mypy within typing.TYPE_CHECKING
+        "docker",  # optional
+    }
     assert (
-        set(str(_) for _ in get_undeclared_dependencies())
-        - {
-            "NaElement",  # Optional import cmk/special_agents/agent_netapp.py
-            "NaServer",  # Optional import cmk/special_agents/agent_netapp.py
-            "matplotlib",  # Disabled debug code in enterprise/cmk/gui/cee/sla.py
-            "mpld3",  # Disabled debug code in enterprise/cmk/gui/cee/sla.py
-            "netsnmp",  # We ship it with omd/packages
-            "pymongo",  # Optional except ImportError...
-            "pytest",  # In __main__ guarded section in cmk/special_agents/utils/misc.py
-            "tinkerforge",  # agents/plugins/mk_tinkerforge.py has its own install routine
-            "_typeshed",  # used by mypy within typing.TYPE_CHECKING
-            "openapi_spec_validator",  # called "openapi-spec-validator" in the Pipfile
-            "docstring_parser",  # TODO: Bug in the test code, it *is* used!
-            "saml2",
-            "jwt",
-        }
-        == set()
+        undeclared_dependencies_str >= known_undeclared_dependencies
+    ), "The exceptionlist is outdated, these are the 'offenders':" + str(
+        known_undeclared_dependencies - undeclared_dependencies_str
+    )
+    undeclared_dependencies_str -= known_undeclared_dependencies
+    assert (
+        undeclared_dependencies_str == set()
+    ), "There are imports that are not declared in the Pipfile:\n    " + "\n    ".join(
+        str(d) for d in undeclared_dependencies if d.name not in known_undeclared_dependencies
     )
 
 

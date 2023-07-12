@@ -20,7 +20,7 @@ __all__ = ["NO_SELECTION", "SectionNameCollection"]
 # Moreover, the type is not useful.
 #
 # What would be useful is a Mapping[SectionName, AgentRawData],
-# analogous to SNMPRawData = Mapping[SectionName, SNMPRawDataSection],
+# analogous to SNMPRawData = Mapping[SectionName, SNMPRawData],
 # that would generalize to `Mapping[SectionName, TRawDataContent]` or
 # `Mapping[SectionName, TRawData]` depending on which name we keep.
 AgentRawDataSection = Sequence[str]

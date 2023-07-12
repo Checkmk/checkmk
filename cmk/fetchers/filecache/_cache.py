@@ -50,7 +50,7 @@ import copy
 import enum
 import logging
 import os
-from collections.abc import Mapping
+from collections.abc import Mapping, Sized
 from pathlib import Path
 from typing import Any, Final, Generic, NamedTuple, NoReturn, TypeVar
 
@@ -60,8 +60,6 @@ import cmk.utils.store as _store
 from cmk.utils.exceptions import MKFetcherError, MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
-
-from cmk.snmplib.type_defs import TRawData
 
 from .._abstract import Mode
 
@@ -75,6 +73,7 @@ __all__ = [
 
 
 TFileCache = TypeVar("TFileCache", bound="FileCache")
+_TRawData = TypeVar("_TRawData", bound=Sized)
 
 
 class MaxAge(NamedTuple):
@@ -109,7 +108,7 @@ class FileCacheMode(enum.IntFlag):
     READ_WRITE = READ | WRITE
 
 
-class FileCache(Generic[TRawData], abc.ABC):
+class FileCache(Generic[_TRawData], abc.ABC):
     def __init__(
         self,
         hostname: HostName,
@@ -180,12 +179,12 @@ class FileCache(Generic[TRawData], abc.ABC):
 
     @staticmethod
     @abc.abstractmethod
-    def _from_cache_file(raw_data: bytes) -> TRawData:
+    def _from_cache_file(raw_data: bytes) -> _TRawData:
         raise NotImplementedError()
 
     @staticmethod
     @abc.abstractmethod
-    def _to_cache_file(raw_data: TRawData) -> bytes:
+    def _to_cache_file(raw_data: _TRawData) -> bytes:
         raise NotImplementedError()
 
     def _do_cache(self, mode: Mode) -> bool:
@@ -203,7 +202,7 @@ class FileCache(Generic[TRawData], abc.ABC):
 
         return True
 
-    def read(self, mode: Mode) -> TRawData | None:
+    def read(self, mode: Mode) -> _TRawData | None:
         self._logger.debug("Read from cache: %r", self)
         raw_data = self._read(mode)
         if raw_data is not None:
@@ -226,7 +225,7 @@ class FileCache(Generic[TRawData], abc.ABC):
         # creation, that's fine with me.
         return Path(template.format(mode=mode.name.lower(), hostname=hostname))
 
-    def _read(self, mode: Mode) -> TRawData | None:
+    def _read(self, mode: Mode) -> _TRawData | None:
         if FileCacheMode.READ not in self.file_cache_mode or not self._do_cache(mode):
             return None
 
@@ -260,7 +259,7 @@ class FileCache(Generic[TRawData], abc.ABC):
         self._logger.log(VERBOSE, "Using data from cache file %s", path)
         return self._from_cache_file(cache_file)
 
-    def write(self, raw_data: TRawData, mode: Mode) -> None:
+    def write(self, raw_data: _TRawData, mode: Mode) -> None:
         if FileCacheMode.WRITE not in self.file_cache_mode or not self._do_cache(mode):
             return
 
@@ -277,7 +276,7 @@ class FileCache(Generic[TRawData], abc.ABC):
             raise MKGeneralException(f"Cannot write cache file {path}: {e}")
 
 
-class NoCache(FileCache[TRawData]):
+class NoCache(FileCache[_TRawData]):
     def __init__(self, hostname: HostName, *args: object, **kw: object) -> None:
         super().__init__(
             hostname,
@@ -293,7 +292,7 @@ class NoCache(FileCache[TRawData]):
         raise TypeError("NoCache")
 
     @staticmethod
-    def _to_cache_file(raw_data: TRawData) -> NoReturn:
+    def _to_cache_file(raw_data: _TRawData) -> NoReturn:
         raise TypeError("NoCache")
 
 

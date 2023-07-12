@@ -5,14 +5,20 @@
 
 from __future__ import annotations
 
-from collections.abc import Container
+from collections.abc import Container, Mapping, Sequence
+from typing import TypeVar
 
 from cmk.utils.validatedstr import ValidatedString
 
-__all__ = ["SectionName"]
+__all__ = ["SectionName", "HostSection"]
 
 
 class SectionName(ValidatedString):
     @classmethod
     def exceptions(cls) -> Container[str]:
         return super().exceptions()
+
+
+_T_co = TypeVar("_T_co", covariant=True)
+
+HostSection = Mapping[SectionName, Sequence[_T_co]]

@@ -11,7 +11,7 @@ import socket
 from collections.abc import Sequence
 from pathlib import Path
 from types import TracebackType
-from typing import Any, Literal, NamedTuple
+from typing import Any, Generic, Literal, NamedTuple, Sized, TypeVar
 from unittest import mock
 from zlib import compress
 
@@ -24,7 +24,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.exceptions import MKFetcherError, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import HostSection, SectionName
 
 from cmk.snmplib import snmp_table
 from cmk.snmplib.type_defs import (
@@ -35,7 +35,6 @@ from cmk.snmplib.type_defs import (
     SNMPHostConfig,
     SNMPRawData,
     SNMPTable,
-    TRawData,
 )
 
 import cmk.fetchers._snmp as snmp
@@ -151,7 +150,7 @@ class TestAgentFileCache_and_SNMPFileCache:
         self,
         file_cache: FileCache,
         path: Path,
-        raw_data: AgentRawData | SNMPRawData,
+        raw_data: AgentRawData | HostSection[SNMPRawData],
     ) -> None:
         mode = Mode.DISCOVERY
         file_cache.file_cache_mode = FileCacheMode.READ_WRITE
@@ -174,7 +173,7 @@ class TestAgentFileCache_and_SNMPFileCache:
         self,
         file_cache: FileCache,
         path: Path,
-        raw_data: TRawData,
+        raw_data: object,
     ) -> None:
         mode = Mode.DISCOVERY
         file_cache.file_cache_mode = FileCacheMode.READ
@@ -186,7 +185,7 @@ class TestAgentFileCache_and_SNMPFileCache:
         assert not path.exists()
         assert file_cache.read(mode) is None
 
-    def test_write_only(self, file_cache: FileCache, path: Path, raw_data: TRawData) -> None:
+    def test_write_only(self, file_cache: FileCache, path: Path, raw_data: object) -> None:
         mode = Mode.DISCOVERY
         file_cache.file_cache_mode = FileCacheMode.WRITE
 
@@ -197,25 +196,28 @@ class TestAgentFileCache_and_SNMPFileCache:
         assert file_cache.read(mode) is None
 
 
-class StubFileCache(FileCache[TRawData]):
+_TRawData = TypeVar("_TRawData", bound=Sized)
+
+
+class StubFileCache(Generic[_TRawData], FileCache[_TRawData]):
     """Holds the data to be cached in-memory for testing"""
 
     def __init__(self, *args, **kwargs) -> None:  # type: ignore[no-untyped-def]
         super().__init__(*args, **kwargs)
-        self.cache: TRawData | None = None
+        self.cache: _TRawData | None = None
 
     @staticmethod
-    def _from_cache_file(raw_data: bytes) -> TRawData:
+    def _from_cache_file(raw_data: bytes) -> _TRawData:
         assert 0, "unreachable"
 
     @staticmethod
-    def _to_cache_file(raw_data: TRawData) -> bytes:
+    def _to_cache_file(raw_data: _TRawData) -> bytes:
         assert 0, "unreachable"
 
-    def write(self, raw_data: TRawData, mode: Mode) -> None:
+    def write(self, raw_data: _TRawData, mode: Mode) -> None:
         self.cache = raw_data
 
-    def read(self, mode: Mode) -> TRawData | None:
+    def read(self, mode: Mode) -> _TRawData | None:
         return self.cache
 
 
@@ -795,7 +797,7 @@ class TestSNMPFetcherFetchCache:
         return fetcher
 
     def test_fetch_reading_cache_in_discovery_mode(self, fetcher: SNMPFetcher) -> None:
-        file_cache = StubFileCache[SNMPRawData](
+        file_cache = StubFileCache[HostSection[SNMPRawData]](
             HostName("hostname"),
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),

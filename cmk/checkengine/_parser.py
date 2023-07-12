@@ -4,9 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import abc
-from typing import Generic
-
-from cmk.snmplib.type_defs import TRawData
+from typing import Generic, TypeVar
 
 from cmk.fetchers.cache import TRawDataSection
 
@@ -15,12 +13,14 @@ from .type_defs import SectionNameCollection
 
 __all__ = ["Parser"]
 
+_TRawData = TypeVar("_TRawData")
 
-class Parser(Generic[TRawData, TRawDataSection], abc.ABC):
+
+class Parser(Generic[_TRawData, TRawDataSection], abc.ABC):
     """Parse raw data into host sections."""
 
     @abc.abstractmethod
     def parse(
-        self, raw_data: TRawData, *, selection: SectionNameCollection
+        self, raw_data: _TRawData, *, selection: SectionNameCollection
     ) -> HostSections[TRawDataSection]:
         raise NotImplementedError

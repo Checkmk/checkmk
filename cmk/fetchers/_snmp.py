@@ -12,11 +12,11 @@ from pathlib import Path
 from typing import Any, Final
 
 from cmk.utils.exceptions import MKFetcherError, OnError
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import HostSection, SectionName
 
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.snmp_scan import gather_available_raw_section_names
-from cmk.snmplib.type_defs import SNMPBackend, SNMPHostConfig, SNMPRawData, SNMPRawDataSection
+from cmk.snmplib.type_defs import SNMPBackend, SNMPHostConfig, SNMPRawData
 
 from cmk.fetchers import Fetcher, Mode
 
@@ -57,7 +57,7 @@ class SNMPSectionMeta:
         return cls(**serialized)
 
 
-class SNMPFetcher(Fetcher[SNMPRawData]):
+class SNMPFetcher(Fetcher[HostSection[SNMPRawData]]):
     CPU_SECTIONS_WITHOUT_CPU_IN_NAME = {
         SectionName("brocade_sys"),
         SectionName("bvip_util"),
@@ -80,7 +80,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         self.missing_sys_description: Final = missing_sys_description
         self.do_status_data_inventory: Final = do_status_data_inventory
         self.snmp_config: Final = snmp_config
-        self._section_store = SectionStore[SNMPRawDataSection](
+        self._section_store = SectionStore[SNMPRawData](
             section_store_path,
             logger=self._logger,
         )
@@ -199,7 +199,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
 
         return frozenset()
 
-    def _fetch_from_io(self, mode: Mode) -> SNMPRawData:
+    def _fetch_from_io(self, mode: Mode) -> HostSection[SNMPRawData]:
         """Select the sections we need to fetch and do that
 
         Note:
@@ -230,7 +230,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
         persisted_sections = (
             self._section_store.load()
             if mode is Mode.CHECKING
-            else PersistedSections[SNMPRawDataSection]({})
+            else PersistedSections[SNMPRawData]({})
         )
         section_names = self._get_selection(mode)
         section_names |= self._detect(
@@ -254,7 +254,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
             walk_cache.clear()
             walk_cache_msg = "SNMP walk cache cleared"
 
-        fetched_data: dict[SectionName, Sequence[SNMPRawDataSection]] = {}
+        fetched_data: dict[SectionName, Sequence[SNMPRawData]] = {}
         for section_name in self._sort_section_names(section_names):
             try:
                 _from, until, _section = persisted_sections[section_name]

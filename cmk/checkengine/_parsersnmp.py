@@ -9,9 +9,9 @@ from collections.abc import Mapping, MutableMapping
 from typing import Final
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import HostSection, SectionName
 
-from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
+from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.fetchers.cache import SectionStore
 
@@ -22,7 +22,7 @@ from .type_defs import SectionNameCollection
 __all__ = ["SNMPParser"]
 
 
-class SNMPParser(Parser[SNMPRawData, SNMPRawDataSection]):
+class SNMPParser(Parser[HostSection[SNMPRawData], SNMPRawData]):
     """A parser for SNMP data.
 
     Note:
@@ -33,7 +33,7 @@ class SNMPParser(Parser[SNMPRawData, SNMPRawDataSection]):
     def __init__(
         self,
         hostname: HostName,
-        section_store: SectionStore[SNMPRawDataSection],
+        section_store: SectionStore[SNMPRawData],
         *,
         check_intervals: Mapping[SectionName, int | None],
         keep_outdated: bool,
@@ -48,12 +48,12 @@ class SNMPParser(Parser[SNMPRawData, SNMPRawDataSection]):
 
     def parse(
         self,
-        raw_data: SNMPRawData,
+        raw_data: HostSection[SNMPRawData],
         *,
         # The selection argument is ignored: Selection is done
         # in the fetcher for SNMP.
         selection: SectionNameCollection,
-    ) -> HostSections[SNMPRawDataSection]:
+    ) -> HostSections[SNMPRawData]:
         sections = dict(raw_data)
         now = int(time.time())
 
@@ -70,4 +70,4 @@ class SNMPParser(Parser[SNMPRawData, SNMPRawDataSection]):
             now=now,
             keep_outdated=self.keep_outdated,
         )
-        return HostSections[SNMPRawDataSection](new_sections, cache_info=cache_info)
+        return HostSections[SNMPRawData](new_sections, cache_info=cache_info)

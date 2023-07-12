@@ -11,13 +11,13 @@ from typing import Final, Generic, TypeVar
 import cmk.utils.store as _store
 from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib.type_defs import SNMPRawDataSection
+from cmk.snmplib.type_defs import SNMPRawData
 
 __all__ = ["SectionStore", "PersistedSections", "TRawDataSection"]
 
 _AgentRawDataSection = Sequence[str]
 
-TRawDataSection = TypeVar("TRawDataSection", _AgentRawDataSection, SNMPRawDataSection)
+TRawDataSection = TypeVar("TRawDataSection", _AgentRawDataSection, SNMPRawData)
 
 
 class PersistedSections(  # pylint: disable=too-many-ancestors

@@ -8,9 +8,8 @@ import copy
 import enum
 import logging
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import Any, cast, Literal, NamedTuple, TypeVar, Union
+from typing import Any, cast, Literal, NamedTuple, Union
 
-from cmk.utils.agentdatatype import AgentRawData as _AgentRawData
 from cmk.utils.hostaddress import HostAddress as _HostAddress
 from cmk.utils.hostaddress import HostName as _HostName
 from cmk.utils.sectionname import SectionName as _SectionName
@@ -22,13 +21,7 @@ SNMPDecodedValues = SNMPDecodedString | SNMPDecodedBinary
 SNMPValueEncoding = Literal["string", "binary"]
 SNMPTable = Sequence[SNMPDecodedValues]
 SNMPContext = str | None
-SNMPRawDataSection = SNMPTable | Sequence[SNMPTable]
-# The SNMPRawData type is not useful.  See comments to `AgentRawDataSection`.
-#
-#     **WE DO NOT WANT `NewType` HERE** because this prevents us to
-#     type some classes correctly.  The type should be *REMOVED* instead!
-#
-SNMPRawData = Mapping[_SectionName, Sequence[SNMPRawDataSection]]
+SNMPRawData = SNMPTable | Sequence[SNMPTable]
 OID = str
 OIDFunction = Callable[
     [OID, SNMPDecodedString | None, _SectionName | None], SNMPDecodedString | None
@@ -65,8 +58,6 @@ SNMPCredentials = SNMPCommunity | tuple[str, ...]
 SNMPTiming = dict
 
 SNMPDetectAtom = tuple[str, str, bool]  # (oid, regex_pattern, expected_match)
-
-TRawData = TypeVar("TRawData", _AgentRawData, SNMPRawData)
 
 
 class SNMPBackendEnum(enum.Enum):

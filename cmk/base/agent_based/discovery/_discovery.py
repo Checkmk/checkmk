@@ -15,7 +15,7 @@ from cmk.utils.auto_queue import AutoQueue
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import HostSection, SectionName
 from cmk.utils.servicename import ServiceName
 
 from cmk.snmplib.type_defs import SNMPRawData
@@ -52,7 +52,9 @@ def execute_check_discovery(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
+    fetched: Iterable[
+        tuple[SourceInfo, result.Result[AgentRawData | HostSection[SNMPRawData], Exception]]
+    ],
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, SectionPlugin],

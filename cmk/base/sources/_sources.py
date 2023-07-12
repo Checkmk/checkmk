@@ -11,6 +11,7 @@ from typing import Final
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.sectionname import HostSection
 
 from cmk.snmplib.type_defs import SNMPRawData
 
@@ -49,7 +50,7 @@ __all__ = [
 ]
 
 
-class SNMPSource(Source[SNMPRawData]):
+class SNMPSource(Source[HostSection[SNMPRawData]]):
     fetcher_type: Final = FetcherType.SNMP
     source_type: Final = SourceType.HOST
 
@@ -80,7 +81,7 @@ class SNMPSource(Source[SNMPRawData]):
             self.source_type,
         )
 
-    def fetcher(self) -> Fetcher[SNMPRawData]:
+    def fetcher(self) -> Fetcher[HostSection[SNMPRawData]]:
         return self.config_cache.make_snmp_fetcher(
             self.host_name,
             self.ipaddress,
@@ -93,7 +94,7 @@ class SNMPSource(Source[SNMPRawData]):
 
     def file_cache(
         self, *, simulation: bool, file_cache_options: FileCacheOptions
-    ) -> FileCache[SNMPRawData]:
+    ) -> FileCache[HostSection[SNMPRawData]]:
         return SNMPFileCache(
             self.host_name,
             path_template=make_file_cache_path_template(
@@ -107,7 +108,7 @@ class SNMPSource(Source[SNMPRawData]):
         )
 
 
-class MgmtSNMPSource(Source[SNMPRawData]):
+class MgmtSNMPSource(Source[HostSection[SNMPRawData]]):
     fetcher_type: Final = FetcherType.SNMP
     source_type: Final = SourceType.MANAGEMENT
 
@@ -138,7 +139,7 @@ class MgmtSNMPSource(Source[SNMPRawData]):
             self.source_type,
         )
 
-    def fetcher(self) -> Fetcher[SNMPRawData]:
+    def fetcher(self) -> Fetcher[HostSection[SNMPRawData]]:
         return self.config_cache.make_snmp_fetcher(
             self.host_name,
             self.ipaddress,
@@ -151,7 +152,7 @@ class MgmtSNMPSource(Source[SNMPRawData]):
 
     def file_cache(
         self, *, simulation: bool, file_cache_options: FileCacheOptions
-    ) -> FileCache[SNMPRawData]:
+    ) -> FileCache[HostSection[SNMPRawData]]:
         return SNMPFileCache(
             self.host_name,
             path_template=make_file_cache_path_template(

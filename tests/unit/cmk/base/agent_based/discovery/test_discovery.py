@@ -22,7 +22,7 @@ from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib.type_defs import SNMPRawDataSection
+from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.fetchers import Mode
 from cmk.fetchers.filecache import FileCacheOptions
@@ -801,7 +801,7 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
         HostKey(HostName("test_node"), SourceType.MANAGEMENT): (
             ParsedSectionsResolver(
                 SectionsParser(
-                    host_sections=HostSections[SNMPRawDataSection](
+                    host_sections=HostSections[SNMPRawData](
                         {
                             # host & mgmt:
                             SectionName("uptime"): [["123"]],

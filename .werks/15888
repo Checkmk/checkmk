@@ -1,0 +1,57 @@
+Title: folder_config: update endpoint now requires which update option you want
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1686123252
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+Previously when calling update folder, you could pass any combination of
+
+replace all attributes
+update some attributes
+delete some attributes
+
+Some of these combinations didn't make much sense and could lead to errors.
+This werk simplifies this by only allowing one of the options when calling
+update folder or bulk update folders.
+
+For update_folder, previously you could do the following
+
+C+:
+{
+    "title": "Virtual Servers.",
+    "attributes": {"tag_networking": "wan"},
+    "update_attributes": {"tag_criticality": "prod"},
+    "remove_attributes": ["tag_foobar"],
+}
+C-:
+
+This werk modifies this behaviour by forcing the client to select only one action.
+
+C+:
+{
+    "title": "Virtual Servers.",
+    "attributes": {"tag_networking": "wan"},
+}
+C-:
+
+OR
+
+C+:
+{
+    "title": "Virtual Servers.",
+    "update_attributes": {"tag_criticality": "prod"},
+}
+C-:
+
+OR
+
+C+:
+{
+    "title": "Virtual Servers.",
+    "remove_attributes": ["tag_foobar"],
+}
+C-:

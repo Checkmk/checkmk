@@ -814,3 +814,70 @@ def test_openapi_bulk_update_actions(clients: ClientRegistry) -> None:
     # check label was removed
     resp = clients.Folder.get("~new_folder")
     assert "tag_address_family" not in resp.json["extensions"]["attributes"]
+
+
+@pytest.mark.usefixtures("suppress_remote_automation_calls")
+def test_openapi_only_one_edit_action(clients: ClientRegistry) -> None:
+    clients.Folder.create(
+        parent="~",
+        folder_name="new_folder",
+        title="foo",
+        attributes={"tag_address_family": "ip-v6-only"},
+    )
+
+    resp1 = clients.Folder.edit(
+        folder_name="~new_folder",
+        title="foobar",
+        attributes={},
+        remove_attributes=["tag_agent", "tag_piggyback"],
+        update_attributes={"tag_address_family": "ip-v4-only"},
+        etag=None,
+        expect_ok=False,
+    )
+    resp1.assert_status_code(400)
+    assert (
+        "This endpoint only allows 1 action (set/update/remove) per call, you specified"
+        in resp1.json["fields"]["_schema"][0]
+    )
+
+    resp2 = clients.Folder.edit(
+        folder_name="~new_folder",
+        title="foobar",
+        remove_attributes=["tag_agent", "tag_piggyback"],
+        update_attributes={"tag_address_family": "ip-v4-only"},
+        etag=None,
+        expect_ok=False,
+    )
+    resp2.assert_status_code(400)
+    assert (
+        "This endpoint only allows 1 action (set/update/remove) per call, you specified"
+        in resp1.json["fields"]["_schema"][0]
+    )
+
+    resp3 = clients.Folder.edit(
+        folder_name="~new_folder",
+        title="foobar",
+        attributes={},
+        update_attributes={"tag_address_family": "ip-v4-only"},
+        etag=None,
+        expect_ok=False,
+    )
+    resp3.assert_status_code(400)
+    assert (
+        "This endpoint only allows 1 action (set/update/remove) per call, you specified"
+        in resp1.json["fields"]["_schema"][0]
+    )
+
+    resp4 = clients.Folder.edit(
+        folder_name="~new_folder",
+        title="foobar",
+        attributes={},
+        remove_attributes=["tag_agent", "tag_piggyback"],
+        etag=None,
+        expect_ok=False,
+    )
+    resp4.assert_status_code(400)
+    assert (
+        "This endpoint only allows 1 action (set/update/remove) per call, you specified"
+        in resp1.json["fields"]["_schema"][0]
+    )

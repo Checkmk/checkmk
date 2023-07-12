@@ -34,6 +34,7 @@ class BaseSchema(Schema):
         ordered = True  # we want to have documentation in definition-order
 
     cast_to_dict: bool = False
+    schema_example: dict[str, typing.Any] | None = None
 
     # Marshmallow removed dump-validation starting from 3.0.0rc9. When we want to verify we don't
     # try to dump (superfluous fields are filtered anyway) we need to do it ourselves.

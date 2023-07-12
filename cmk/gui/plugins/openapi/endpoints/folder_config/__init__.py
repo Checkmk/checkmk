@@ -155,39 +155,33 @@ def update(params: Mapping[str, Any]) -> Response:
     constructors.require_etag(hash_of_folder(folder))
 
     post_body = params["body"]
-    if "title" in post_body:
-        title = post_body["title"]
-    else:
-        title = folder.title()
-    replace_attributes = post_body["attributes"]
-    update_attributes = post_body["update_attributes"]
-    remove_attributes = post_body["remove_attributes"]
 
     attributes = folder.attributes.copy()
 
-    if replace_attributes:
+    if replace_attributes := post_body.get("attributes"):
         attributes = replace_attributes
 
-    if update_attributes:
+    if update_attributes := post_body.get("update_attributes"):
         attributes.update(update_attributes)
 
-    faulty_attributes = []
-    for attribute in remove_attributes:
-        try:
-            # Mypy can not help here with the dynamic key access
-            attributes.pop(attribute)  # type: ignore[misc]
-        except KeyError:
-            faulty_attributes.append(attribute)
+    if remove_attributes := post_body.get("remove_attributes"):
+        faulty_attributes = []
+        for attribute in remove_attributes:
+            try:
+                # Mypy can not help here with the dynamic key access
+                attributes.pop(attribute)  # type: ignore[misc]
+            except KeyError:
+                faulty_attributes.append(attribute)
 
-    if faulty_attributes:
-        return problem(
-            status=400,
-            title="The folder was not updated",
-            detail=f"The following attributes did not exist and could therefore"
-            f"not be removed: {', '.join(faulty_attributes)}",
-        )
+        if faulty_attributes:
+            return problem(
+                status=400,
+                title="The folder was not updated",
+                detail=f"The following attributes did not exist and could therefore"
+                f"not be removed: {', '.join(faulty_attributes)}",
+            )
 
-    folder.edit(title, attributes)
+    folder.edit(folder.title() if not "title" in post_body else post_body["title"], attributes)
 
     return _serve_folder(folder)
 
@@ -214,34 +208,30 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
     folders = []
 
     faulty_folders = []
-
     for update_details in entries:
         folder: CREFolder = update_details["folder"]
-        current_title = folder.title()
-        title = update_details.get("title", current_title)
-        replace_attributes = update_details["attributes"]
-        update_attributes = update_details["update_attributes"]
-        remove_attributes = update_details["remove_attributes"]
+        title = folder.title() if not "title" in update_details else update_details["title"]
         attributes = folder.attributes.copy()
 
-        if replace_attributes:
+        if replace_attributes := update_details.get("attributes"):
             attributes = replace_attributes
 
-        if update_attributes:
+        if update_attributes := update_details.get("update_attributes"):
             attributes.update(update_attributes)
 
-        faulty_attempt = False
-        for attribute in remove_attributes:
-            try:
-                # Mypy can not help here with the dynamic key access
-                attributes.pop(attribute)  # type: ignore[misc]
-            except KeyError:
-                faulty_attempt = True
-                break
+        if remove_attributes := update_details.get("remove_attributes"):
+            faulty_attempt = False
+            for attribute in remove_attributes:
+                try:
+                    # Mypy can not help here with the dynamic key access
+                    attributes.pop(attribute)  # type: ignore[misc]
+                except KeyError:
+                    faulty_attempt = True
+                    break
 
-        if faulty_attempt:
-            faulty_folders.append(current_title)
-            continue
+            if faulty_attempt:
+                faulty_folders.append(title)
+                continue
 
         folder.edit(title, attributes)
         folders.append(folder)

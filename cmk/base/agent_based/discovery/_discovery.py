@@ -6,7 +6,7 @@
 import itertools
 from collections import Counter
 from collections.abc import Callable, Iterable, Mapping, Sequence
-from typing import Literal, TypeAlias
+from typing import Literal
 
 import cmk.utils.paths
 import cmk.utils.resulttype as result
@@ -18,7 +18,7 @@ from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import ServiceName
 
-from cmk.snmplib.type_defs import SNMPRawDataSection
+from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.checkengine import ParserFunction, SectionPlugin, SourceInfo, SummarizerFunction
 from cmk.checkengine.checking import CheckPluginName, Item
@@ -47,14 +47,12 @@ from .autodiscovery import get_host_services, ServicesByTransition
 
 __all__ = ["execute_check_discovery"]
 
-_SNMPRawData: TypeAlias = Mapping[SectionName, Sequence[SNMPRawDataSection]]
-
 
 def execute_check_discovery(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
-    fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | _SNMPRawData, Exception]]],
+    fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     section_plugins: Mapping[SectionName, SectionPlugin],

@@ -9,14 +9,14 @@ import logging
 import time
 from collections.abc import Collection, Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, Final, TypeAlias
+from typing import Any, Final
 
 from cmk.utils.exceptions import MKFetcherError, OnError
 from cmk.utils.sectionname import SectionName
 
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.snmp_scan import gather_available_raw_section_names
-from cmk.snmplib.type_defs import SNMPBackend, SNMPHostConfig, SNMPRawDataSection
+from cmk.snmplib.type_defs import SNMPBackend, SNMPHostConfig, SNMPRawData, SNMPRawDataSection
 
 from cmk.fetchers import Fetcher, Mode
 
@@ -24,9 +24,6 @@ from .cache import PersistedSections, SectionStore
 from .snmp import make_backend, SNMPPluginStore
 
 __all__ = ["SNMPFetcher", "SNMPSectionMeta"]
-
-
-_RawData: TypeAlias = Mapping[SectionName, Sequence[SNMPRawDataSection]]
 
 
 @dataclasses.dataclass(init=False)
@@ -60,7 +57,7 @@ class SNMPSectionMeta:
         return cls(**serialized)
 
 
-class SNMPFetcher(Fetcher[_RawData]):
+class SNMPFetcher(Fetcher[SNMPRawData]):
     CPU_SECTIONS_WITHOUT_CPU_IN_NAME = {
         SectionName("brocade_sys"),
         SectionName("bvip_util"),
@@ -202,7 +199,7 @@ class SNMPFetcher(Fetcher[_RawData]):
 
         return frozenset()
 
-    def _fetch_from_io(self, mode: Mode) -> _RawData:
+    def _fetch_from_io(self, mode: Mode) -> SNMPRawData:
         """Select the sections we need to fetch and do that
 
         Note:

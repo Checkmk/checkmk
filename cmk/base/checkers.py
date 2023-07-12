@@ -11,7 +11,7 @@ import itertools
 import logging
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from functools import partial
-from typing import Final, TypeAlias
+from typing import Final
 
 import cmk.utils.resulttype as result
 import cmk.utils.tty as tty
@@ -23,7 +23,7 @@ from cmk.utils.log import console
 from cmk.utils.piggyback import PiggybackTimeSettings
 from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib.type_defs import SNMPRawDataSection
+from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.fetchers import Fetcher, get_raw_data, Mode
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
@@ -56,12 +56,10 @@ __all__ = [
     "SectionPluginMapper",
 ]
 
-_SNMPRawData: TypeAlias = Mapping[SectionName, Sequence[SNMPRawDataSection]]
-
 
 def _fetch_all(
     sources: Iterable[Source], *, simulation: bool, file_cache_options: FileCacheOptions, mode: Mode
-) -> Sequence[tuple[SourceInfo, result.Result[AgentRawData | _SNMPRawData, Exception], Snapshot]]:
+) -> Sequence[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]]:
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
     return [
         _do_fetch(
@@ -80,7 +78,7 @@ def _do_fetch(
     fetcher: Fetcher,
     *,
     mode: Mode,
-) -> tuple[SourceInfo, result.Result[AgentRawData | _SNMPRawData, Exception], Snapshot]:
+) -> tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]:
     console.vverbose(f"  Source: {source_info}\n")
     with CPUTracker() as tracker:
         raw_data = get_raw_data(file_cache, fetcher, mode)
@@ -103,7 +101,7 @@ class CMKParser:
 
     def __call__(
         self,
-        fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | _SNMPRawData, Exception]]],
+        fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
     ) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]:
         """Parse fetched data."""
         console.vverbose("%s+%s %s\n", tty.yellow, tty.normal, "Parse fetcher results".upper())
@@ -219,7 +217,7 @@ class CMKFetcher:
     def __call__(
         self, host_name: HostName, *, ip_address: HostAddress | None
     ) -> Sequence[
-        tuple[SourceInfo, result.Result[AgentRawData | _SNMPRawData, Exception], Snapshot]
+        tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
     ]:
         nodes = self.config_cache.nodes_of(host_name)
         if nodes is None:

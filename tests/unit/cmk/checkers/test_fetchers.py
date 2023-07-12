@@ -33,7 +33,7 @@ from cmk.snmplib.type_defs import (
     SNMPBackendEnum,
     SNMPDetectSpec,
     SNMPHostConfig,
-    SNMPRawDataSection,
+    SNMPRawData,
     SNMPTable,
     TRawData,
 )
@@ -151,7 +151,7 @@ class TestAgentFileCache_and_SNMPFileCache:
         self,
         file_cache: FileCache,
         path: Path,
-        raw_data: AgentRawData | dict[SectionName, list[SNMPRawDataSection]],
+        raw_data: AgentRawData | SNMPRawData,
     ) -> None:
         mode = Mode.DISCOVERY
         file_cache.file_cache_mode = FileCacheMode.READ_WRITE
@@ -795,7 +795,7 @@ class TestSNMPFetcherFetchCache:
         return fetcher
 
     def test_fetch_reading_cache_in_discovery_mode(self, fetcher: SNMPFetcher) -> None:
-        file_cache = StubFileCache[dict[SectionName, list[SNMPRawDataSection]]](
+        file_cache = StubFileCache[SNMPRawData](
             HostName("hostname"),
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),

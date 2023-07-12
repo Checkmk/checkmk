@@ -13,9 +13,8 @@ from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib.type_defs import SNMPRawDataSection
+from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataSection
 
 from ._parser import Parser
 from ._typedefs import SourceInfo
@@ -37,13 +36,7 @@ class FetcherFunction(Protocol):
     def __call__(
         self, host_name: HostName, *, ip_address: HostAddress | None
     ) -> Sequence[
-        tuple[
-            SourceInfo,
-            result.Result[
-                AgentRawData | Mapping[SectionName, Sequence[SNMPRawDataSection]], Exception
-            ],
-            Snapshot,
-        ]
+        tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot]
     ]:
         ...
 
@@ -51,14 +44,7 @@ class FetcherFunction(Protocol):
 class ParserFunction(Protocol):
     def __call__(
         self,
-        fetched: Iterable[
-            tuple[
-                SourceInfo,
-                result.Result[
-                    AgentRawData | Mapping[SectionName, Sequence[SNMPRawDataSection]], Exception
-                ],
-            ]
-        ],
+        fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
     ) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]:
         ...
 
@@ -82,9 +68,7 @@ class CheckPlugin:
 
 def parse_raw_data(
     parser: Parser,
-    raw_data: result.Result[
-        AgentRawData | Mapping[SectionName, Sequence[SNMPRawDataSection]], Exception
-    ],
+    raw_data: result.Result[AgentRawData | SNMPRawData, Exception],
     *,
     selection: SectionNameCollection,
 ) -> result.Result[HostSections[AgentRawDataSection | SNMPRawDataSection], Exception]:

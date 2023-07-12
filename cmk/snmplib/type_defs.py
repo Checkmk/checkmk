@@ -23,6 +23,12 @@ SNMPValueEncoding = Literal["string", "binary"]
 SNMPTable = Sequence[SNMPDecodedValues]
 SNMPContext = str | None
 SNMPRawDataSection = SNMPTable | Sequence[SNMPTable]
+# The SNMPRawData type is not useful.  See comments to `AgentRawDataSection`.
+#
+#     **WE DO NOT WANT `NewType` HERE** because this prevents us to
+#     type some classes correctly.  The type should be *REMOVED* instead!
+#
+SNMPRawData = Mapping[_SectionName, Sequence[SNMPRawDataSection]]
 OID = str
 OIDFunction = Callable[
     [OID, SNMPDecodedString | None, _SectionName | None], SNMPDecodedString | None
@@ -60,7 +66,7 @@ SNMPTiming = dict
 
 SNMPDetectAtom = tuple[str, str, bool]  # (oid, regex_pattern, expected_match)
 
-TRawData = TypeVar("TRawData", _AgentRawData, Mapping[_SectionName, Sequence[SNMPRawDataSection]])
+TRawData = TypeVar("TRawData", _AgentRawData, SNMPRawData)
 
 
 class SNMPBackendEnum(enum.Enum):

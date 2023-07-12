@@ -1069,6 +1069,14 @@ void omd_advertize(Logger *logger) {
 #ifndef __TIMESTAMP__
 #define __TIMESTAMP__ (__DATE__ " " __TIME__)
 #endif
+
+#ifdef __GNUC__
+#define BUILD_CXX ("g++ " __VERSION__)
+#elif defined(__VERSION)
+#define BUILD_CXX __VERSION__
+#else
+#define BUILD_CXX "unknown C++ compiler"
+#endif
     Notice(logger) << "version " << VERSION << " compiled " << __TIMESTAMP__
                    << " with " << BUILD_CXX << ", using " << RegExp::engine()
                    << " regex engine";

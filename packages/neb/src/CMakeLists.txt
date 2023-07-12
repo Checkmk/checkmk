@@ -20,12 +20,6 @@ set(neb_headers
 set(neb_sources MacroExpander.cc module.cc NebCore.cc NebHost.cc NebService.cc
                 TimeperiodsCache.cc)
 
-# variables for build
-execute_process(COMMAND ${CMAKE_CXX_COMPILER} --version
-                OUTPUT_VARIABLE BUILD_CXX)
-string(REPLACE "\n" ";" BUILD_CXX ${BUILD_CXX})
-list(GET BUILD_CXX 0 BCXX)
-
 include(FetchContent)
 # Forbids option redefine in subproject: in the case to prevent re2::testing
 # build
@@ -68,8 +62,7 @@ target_include_directories(
   neb PUBLIC ../include ../third_party/include ${asio_ext_include}
              ${root_repo_dir}/packages/livestatus/include)
 
-target_compile_definitions(neb PRIVATE VERSION="${CMAKE_PROJECT_VERSION}"
-                                       BUILD_CXX="${BCXX}")
+target_compile_definitions(neb PRIVATE VERSION="${CMAKE_PROJECT_VERSION}")
 
 target_link_libraries(
   neb

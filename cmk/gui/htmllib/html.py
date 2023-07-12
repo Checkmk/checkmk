@@ -209,17 +209,15 @@ class HTMLGenerator(HTMLWriter):
         if self.link_target:
             self.base(target=self.link_target)
 
-        fname = HTMLGenerator._css_filename_for_browser(theme.url("theme"))
-        if fname is not None:
-            self.stylesheet(fname)
+        css_filename_for_browser = HTMLGenerator._css_filename_for_browser(theme.url("theme"))
+        self.stylesheet(css_filename_for_browser)
 
         self._add_custom_style_sheet()
 
         # Load all scripts
         for js in javascripts:
             filename_for_browser = self.javascript_filename_for_browser(js)
-            if filename_for_browser:
-                self.javascript_file(filename_for_browser)
+            self.javascript_file(filename_for_browser)
 
         self.set_js_csrf_token()
 
@@ -274,7 +272,7 @@ class HTMLGenerator(HTMLWriter):
             raise FileNotFoundError(f"Neither {path} nor {local_path} exist.")
 
     @staticmethod
-    def _css_filename_for_browser(css: str) -> str | None:
+    def _css_filename_for_browser(css: str) -> str:
         if current_app.debug:
             HTMLGenerator._verify_file_exists_in_web_dirs(f"htdocs/{css}.css")
         return f"{css}-{cmk_version.__version__}.css"

@@ -747,11 +747,21 @@ class FolderClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
-    def get_all(self, parent: str | None = None, expect_ok: bool = True) -> Response:
+    def get_all(
+        self,
+        parent: str | None = None,
+        expect_ok: bool = True,
+        recursive: bool = False,
+        show_hosts: bool = False,
+    ) -> Response:
+        query_params: dict[str, Any] = {"recursive": recursive, "show_hosts": show_hosts}
+        if parent:
+            query_params.update({"parent": parent})
+
         return self.request(
             "get",
             url=f"/domain-types/{self.domain}/collections/all",
-            query_params={"parent": parent} if parent is not None else {},
+            query_params=query_params,
             expect_ok=expect_ok,
         )
 
@@ -778,23 +788,74 @@ class FolderClient(RestApiClient):
             expect_ok=expect_ok,
         )
 
+    def bulk_edit(
+        self,
+        entries: list[dict[str, Any]],
+        expect_ok: bool = True,
+    ) -> Response:
+        return self.request(
+            "put",
+            url=f"/domain-types/{self.domain}/actions/bulk-update/invoke",
+            body={"entries": entries},
+            expect_ok=expect_ok,
+        )
+
     def edit(
         self,
         folder_name: str,
-        title: str,
+        title: str | None = None,
         attributes: Mapping[str, Any] | None = None,
+        update_attributes: Mapping[str, Any] | None = None,
+        remove_attributes: list[str] | None = None,
         expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
     ) -> Response:
-        etag = self.get(folder_name).headers["ETag"]
-        headers = {"IF-Match": etag}
-        body = {"title": title, "attributes": attributes}
+        body: dict[str, Any] = {"title": title} if title is not None else {}
+
+        if attributes is not None:
+            body["attributes"] = attributes
+
+        if remove_attributes is not None:
+            body["remove_attributes"] = remove_attributes
+
+        if update_attributes is not None:
+            body["update_attributes"] = update_attributes
+
         return self.request(
             "put",
             url=f"/objects/{self.domain}/{folder_name}",
-            headers=headers,
-            body={k: v for k, v in body.items() if v is not None},
+            headers=self._set_etag_header(folder_name, etag),
+            body=body,
             expect_ok=expect_ok,
         )
+
+    def move(
+        self,
+        folder_name: str,
+        destination: str,
+        expect_ok: bool = True,
+        etag: IF_MATCH_HEADER_OPTIONS = "star",
+    ) -> Response:
+        return self.request(
+            "post",
+            url=f"/objects/{self.domain}/{folder_name}/actions/move/invoke",
+            body={"destination": destination},
+            expect_ok=expect_ok,
+            headers=self._set_etag_header(folder_name, etag),
+        )
+
+    def delete(self, folder_name: str) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{folder_name}",
+        )
+
+    def _set_etag_header(
+        self, folder_name: str, etag: IF_MATCH_HEADER_OPTIONS
+    ) -> Mapping[str, str] | None:
+        if etag == "valid_etag":
+            return {"If-Match": self.get(folder_name=folder_name).headers["ETag"]}
+        return set_if_match_header(etag)
 
 
 class AuxTagClient(RestApiClient):

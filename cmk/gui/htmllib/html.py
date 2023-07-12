@@ -291,7 +291,6 @@ class HTMLGenerator(HTMLWriter):
     def html_head(
         self,
         title: str,
-        additional_javascripts: Sequence[str] | None = None,
         main_javascript: str = "main",
         force: bool = False,
     ) -> None:
@@ -300,19 +299,17 @@ class HTMLGenerator(HTMLWriter):
             self.open_html()
             self._head(
                 title,
-                [main_javascript]
-                + list(additional_javascripts if additional_javascripts is not None else []),
+                [main_javascript],
             )
             self._header_sent = True
 
     def body_start(
         self,
         title: str = "",
-        additional_javascripts: Sequence[str] | None = None,
         main_javascript: Literal["main", "side"] = "main",
         force: bool = False,
     ) -> None:
-        self.html_head(title, additional_javascripts, main_javascript, force)
+        self.html_head(title, main_javascript, force)
         self.open_body(class_=self._get_body_css_classes(), data_theme=theme.get())
 
     def _get_body_css_classes(self) -> list[str]:  # TODO: Sequence!

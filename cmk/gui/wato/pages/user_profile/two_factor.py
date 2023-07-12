@@ -592,7 +592,7 @@ class UserLoginTwoFactor(Page):
         html.render_headfoot = False
         html.add_body_css_class("login")
         html.add_body_css_class("two_factor")
-        make_header(html, _("Two-factor authentication"), Breadcrumb(), javascripts=[])
+        make_header(html, _("Two-factor authentication"), Breadcrumb())
 
         html.open_div(id_="login")
 

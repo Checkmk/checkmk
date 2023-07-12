@@ -21,8 +21,6 @@ set(neb_sources MacroExpander.cc module.cc NebCore.cc NebHost.cc NebService.cc
                 TimeperiodsCache.cc)
 
 # variables for build
-execute_process(COMMAND uname -n OUTPUT_VARIABLE CURRENT_BUILD_HOST)
-string(REPLACE "\n" "" CURRENT_BUILD_HOST ${CURRENT_BUILD_HOST})
 execute_process(COMMAND ${CMAKE_CXX_COMPILER} --version
                 OUTPUT_VARIABLE BUILD_CXX)
 string(REPLACE "\n" ";" BUILD_CXX ${BUILD_CXX})
@@ -76,10 +74,8 @@ target_include_directories(
              ${root_repo_dir}/packages/livestatus/include)
 
 target_compile_definitions(
-  neb
-  PRIVATE VERSION="${CMAKE_PROJECT_VERSION}"
-          BUILD_HOSTNAME="${CURRENT_BUILD_HOST}" BUILD_CXX="${BCXX}"
-          BUILD_DATE="${CURRENT_BUILD_DATE}")
+  neb PRIVATE VERSION="${CMAKE_PROJECT_VERSION}" BUILD_CXX="${BCXX}"
+              BUILD_DATE="${CURRENT_BUILD_DATE}")
 
 target_link_libraries(
   neb

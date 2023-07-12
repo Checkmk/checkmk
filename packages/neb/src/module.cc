@@ -1067,9 +1067,8 @@ void omd_advertize(Logger *logger) {
     Notice(logger) << "Livestatus by Checkmk GmbH started with PID "
                    << getpid();
     Notice(logger) << "version " << VERSION << " compiled " << BUILD_DATE
-                   << " on " << BUILD_HOSTNAME;
-    Notice(logger) << "built with " << BUILD_CXX << ", using "
-                   << RegExp::engine() << " regex engine";
+                   << " with " << BUILD_CXX << ", using " << RegExp::engine()
+                   << " regex engine";
     Notice(logger) << "please visit us at https://checkmk.com/";
     if (char *omd_site = getenv("OMD_SITE")) {
         Informational(logger)

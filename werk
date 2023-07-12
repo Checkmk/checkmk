@@ -250,9 +250,9 @@ def get_tty_size() -> Tuple[int, int]:
     return (24, 99999)
 
 
-def bail_out(text: str) -> NoReturn:
+def bail_out(text: str, exit_code: int = 1) -> NoReturn:
     sys.stderr.write(text + "\n")
-    sys.exit(1)
+    sys.exit(exit_code)
 
 
 g_base_dir = ""
@@ -583,7 +583,8 @@ def main_list(args: argparse.Namespace, fmt: str) -> None:
         if not hit:
             bail_out(
                 "No such edition, component, state, class, knowledge state or target version: %s"
-                % a
+                % a,
+                0,
             )
 
     # Filter

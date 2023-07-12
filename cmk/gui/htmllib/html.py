@@ -259,19 +259,10 @@ class HTMLGenerator(HTMLWriter):
                         plugin_stylesheets.add(entry.name)
         return plugin_stylesheets
 
-    # Make the browser load specified javascript files. We have some special handling here:
-    # a) files which can not be found shall not be loaded
-    # b) in OMD environments, add the Checkmk version to the version (prevents update problems)
-    def javascript_filename_for_browser(self, jsname: str) -> str | None:
+    def javascript_filename_for_browser(self, jsname: str) -> str:
+        if current_app.debug:
+            HTMLGenerator._verify_file_exists_in_web_dirs(f"htdocs/js/{jsname}_min.js")
         filename_for_browser = f"js/{jsname}_min-{cmk_version.__version__}.js"
-        try:
-            if current_app.debug:
-                HTMLGenerator._verify_file_exists_in_web_dirs(filename_for_browser)
-        except FileNotFoundError:
-            if current_app.debug:
-                raise RuntimeError(f"{jsname} could not be found.")
-            return None
-
         return filename_for_browser
 
     @staticmethod

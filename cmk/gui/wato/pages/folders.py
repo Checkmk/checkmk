@@ -6,7 +6,7 @@
 
 import abc
 import operator
-from collections.abc import Collection, Iterator
+from collections.abc import Collection, Iterator, Sequence
 from typing import Any
 
 from cmk.utils.hostaddress import HostName
@@ -17,6 +17,7 @@ import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
+from cmk.gui.type_defs import HTTPVariables
 from cmk.gui.groups import load_contact_group_information
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
@@ -71,6 +72,7 @@ from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
 from cmk.gui.watolib.hosts_and_folders import (
+    CREHost,
     BaseFolder,
     check_wato_foldername,
     CREFolder,
@@ -731,7 +733,7 @@ class ModeFolder(WatoMode):
 
         MainMenu(menu_items).show()
 
-    def _show_subfolders_of(self):
+    def _show_subfolders_of(self) -> None:
         if self._folder.has_subfolders():
             html.open_div(
                 class_="folders"
@@ -749,9 +751,9 @@ class ModeFolder(WatoMode):
             html.close_div()
             html.div("", class_="folder_foot")
 
-    def _show_subfolder(self, subfolder):
+    def _show_subfolder(self, subfolder: CREFolder) -> None:
         html.open_div(
-            class_=["floatfolder", "unlocked" if subfolder.may("read") else "locked"],
+            class_=["floatfolder", "unlocked" if subfolder.permissions.may("read") else "locked"],
             id_="folder_%s" % subfolder.name(),
             onclick="cmk.wato.open_folder(event, '%s');" % subfolder.url(),
         )
@@ -760,9 +762,9 @@ class ModeFolder(WatoMode):
         self._show_subfolder_title(subfolder)
         html.close_div()  # floatfolder
 
-    def _show_subfolder_hoverarea(self, subfolder):
+    def _show_subfolder_hoverarea(self, subfolder: CREFolder) -> None:
         # Only make folder openable when permitted to edit
-        if subfolder.may("read"):
+        if subfolder.permissions.may("read"):
             html.open_div(
                 class_="hoverarea",
                 onmouseover="cmk.wato.toggle_folder(event, this, true);",
@@ -771,30 +773,32 @@ class ModeFolder(WatoMode):
             self._show_subfolder_buttons(subfolder)
             html.close_div()  # hoverarea
         else:
-            html.icon("autherr", subfolder.reason_why_may_not("read"), class_=["autherr"])
+            html.icon(
+                "autherr", subfolder.permissions.reason_why_may_not("read"), class_=["autherr"]
+            )
             html.div("", class_="hoverarea")
 
-    def _show_subfolder_title(self, subfolder):
+    def _show_subfolder_title(self, subfolder: CREFolder) -> None:
         title = subfolder.title()
         if not active_config.wato_hide_filenames:
             title += " (%s)" % subfolder.name()
 
         html.open_div(class_="title", title=title)
-        if subfolder.may("read"):
+        if subfolder.permissions.may("read"):
             html.a(subfolder.title(), href=subfolder.url())
         else:
             html.write_text(subfolder.title())
         html.close_div()
 
-    def _show_subfolder_buttons(self, subfolder):
+    def _show_subfolder_buttons(self, subfolder: CREFolder) -> None:
         self._show_subfolder_edit_button(subfolder)
 
         if not subfolder.locked_subfolders() and not subfolder.locked():
-            if subfolder.may("write") and user.may("wato.manage_folders"):
+            if subfolder.permissions.may("write") and user.may("wato.manage_folders"):
                 self._show_move_to_folder_action(subfolder)
                 self._show_subfolder_delete_button(subfolder)
 
-    def _show_subfolder_edit_button(self, subfolder):
+    def _show_subfolder_edit_button(self, subfolder: CREFolder) -> None:
         html.icon_button(
             subfolder.edit_url(subfolder.parent()),
             _("Edit the properties of this folder"),
@@ -804,7 +808,7 @@ class ModeFolder(WatoMode):
             style="display:none",
         )
 
-    def _show_subfolder_delete_button(self, subfolder):
+    def _show_subfolder_delete_button(self, subfolder: CREFolder) -> None:
         confirm_message: str = ""
         num_hosts = subfolder.num_hosts_recursively()
         if num_hosts:
@@ -832,7 +836,7 @@ class ModeFolder(WatoMode):
             style="display:none",
         )
 
-    def _show_subfolder_infos(self, subfolder):
+    def _show_subfolder_infos(self, subfolder: CREFolder) -> None:
         html.open_div(class_="infos")
         html.open_div(class_="infos_content")
         groups = load_contact_group_information()
@@ -858,17 +862,19 @@ class ModeFolder(WatoMode):
         html.close_div()
         html.close_div()
 
-    def _show_move_to_folder_action(self, obj):
+    def _show_move_to_folder_action(self, obj: CREFolder | CREHost) -> None:
         if isinstance(obj, Host):
             what = "host"
             what_title = _("host")
-            ident = obj.name()
+            ident = str(obj.name())
             style = None
-        else:
+        elif isinstance(obj, CREFolder):
             what = "folder"
             what_title = _("folder")
             ident = obj.path()
             style = "display:none"
+        else:
+            raise NotImplementedError()
 
         html.popup_trigger(
             html.render_icon(
@@ -1075,7 +1081,7 @@ class ModeFolder(WatoMode):
         display_name = contact_group_names.get(c, {"alias": c})["alias"]
         return HTMLWriter.render_a(display_name, "wato.py?mode=edit_contact_group&edit=%s" % c)
 
-    def _show_host_actions(self, host):
+    def _show_host_actions(self, host: CREHost) -> None:
         html.icon_button(host.edit_url(), _("Edit the properties of this host"), "edit")
         if user.may("wato.rulesets"):
             html.icon_button(
@@ -1084,7 +1090,7 @@ class ModeFolder(WatoMode):
                 "rulesets",
             )
 
-        if host.may("read"):
+        if host.permissions.may("read"):
             if user.may("wato.services"):
                 msg = _("Run service discovery")
             else:
@@ -1115,7 +1121,7 @@ class ModeFolder(WatoMode):
             action_menu_show_flags.append("show_remove_tls_link")
 
         if action_menu_show_flags:
-            url_vars = [
+            url_vars: HTTPVariables = [
                 ("hostname", host.name()),
                 *[(flag_name, True) for flag_name in action_menu_show_flags],
             ]
@@ -1125,7 +1131,7 @@ class ModeFolder(WatoMode):
                 MethodAjax(endpoint="host_action_menu", url_vars=url_vars),
             )
 
-    def _delete_hosts(self, host_names) -> ActionResult:  # type: ignore[no-untyped-def]
+    def _delete_hosts(self, host_names: Sequence[HostName]) -> ActionResult:
         self._folder.delete_hosts(host_names, automation=delete_hosts)
         flash(_("Successfully deleted %d hosts") % len(host_names))
         return redirect(self._folder.url())
@@ -1138,7 +1144,7 @@ class ModeFolder(WatoMode):
             html.button("_bulk_move", _("Move"), form=form_name)
             return HTML(output_funnel.drain())
 
-    def _move_to_imported_folders(self, host_names_to_move) -> None:  # type: ignore[no-untyped-def]
+    def _move_to_imported_folders(self, host_names_to_move: Sequence[HostName]) -> None:
         # Create groups of hosts with the same target folder
         target_folder_names: dict[str, list[HostName]] = {}
         for host_name in host_names_to_move:

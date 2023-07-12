@@ -149,7 +149,35 @@ class TestAgentParser:
         assert ahs.piggybacked_raw_data == {}
         assert store.load() == {}
 
-    def test_merge_split_raw_sections(self, parser, store) -> None:  # type:ignore[no-untyped-def]
+    def test_partial_header_is_not_a_header(
+        self, parser: AgentParser, store: SectionStore[AgentRawDataSection]
+    ) -> None:
+        raw_data = AgentRawData(
+            b"\n".join(
+                (
+                    b"<<<a_section>>>",
+                    b"<<< first line",
+                    b">>> second line",
+                    b"third line >>>",
+                    b"forth line <<<",
+                )
+            )
+        )
+
+        ahs = parser.parse(raw_data, selection=NO_SELECTION)
+        assert ahs.sections == {
+            SectionName("a_section"): [
+                ["<<<", "first", "line"],
+                [">>>", "second", "line"],
+                ["third", "line", ">>>"],
+                ["forth", "line", "<<<"],
+            ]
+        }
+        assert ahs.cache_info == {}
+        assert ahs.piggybacked_raw_data == {}
+        assert not store.load()
+
+    def test_merge_split_raw_sections(self, parser, store):  # type: ignore[no-untyped-def]
         raw_data = AgentRawData(
             b"\n".join(
                 (

@@ -10,7 +10,7 @@ import pprint
 import re
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import Any, overload
+from typing import Any, Literal, overload
 
 from flask import current_app, session
 
@@ -69,7 +69,6 @@ class HTMLGenerator(HTMLWriter):
         self._logger = log.logger.getChild("html")
         self._header_sent = False
         self._body_classes = ["main"]
-        self._default_javascripts = ["main"]
         self.have_help = False
 
         # Forms
@@ -92,9 +91,6 @@ class HTMLGenerator(HTMLWriter):
 
     def set_focus_by_id(self, dom_id: str) -> None:
         self.final_javascript("cmk.utils.set_focus_by_id(%s)" % (json.dumps(dom_id)))
-
-    def clear_default_javascript(self) -> None:
-        del self._default_javascripts[:]
 
     def immediate_browser_redirect(self, secs: float, url: str) -> None:
         self.javascript(f"cmk.utils.set_reload({secs}, '{url}');")
@@ -220,7 +216,7 @@ class HTMLGenerator(HTMLWriter):
         self._add_custom_style_sheet()
 
         # Load all scripts
-        for js in self._default_javascripts + list(javascripts):
+        for js in javascripts:
             filename_for_browser = self.javascript_filename_for_browser(js)
             if filename_for_browser:
                 self.javascript_file(filename_for_browser)
@@ -293,18 +289,30 @@ class HTMLGenerator(HTMLWriter):
         return f"{css}-{cmk_version.__version__}.css"
 
     def html_head(
-        self, title: str, javascripts: Sequence[str] | None = None, force: bool = False
+        self,
+        title: str,
+        additional_javascripts: Sequence[str] | None = None,
+        main_javascript: str = "main",
+        force: bool = False,
     ) -> None:
         if force or not self._header_sent:
             self.write_html(HTML("<!DOCTYPE HTML>\n"))
             self.open_html()
-            self._head(title, javascripts)
+            self._head(
+                title,
+                [main_javascript]
+                + list(additional_javascripts if additional_javascripts is not None else []),
+            )
             self._header_sent = True
 
     def body_start(
-        self, title: str = "", javascripts: Sequence[str] | None = None, force: bool = False
+        self,
+        title: str = "",
+        additional_javascripts: Sequence[str] | None = None,
+        main_javascript: Literal["main", "side"] = "main",
+        force: bool = False,
     ) -> None:
-        self.html_head(title, javascripts, force)
+        self.html_head(title, additional_javascripts, main_javascript, force)
         self.open_body(class_=self._get_body_css_classes(), data_theme=theme.get())
 
     def _get_body_css_classes(self) -> list[str]:  # TODO: Sequence!

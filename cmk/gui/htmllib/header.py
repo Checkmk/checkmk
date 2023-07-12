@@ -28,7 +28,7 @@ def make_header(
 
     if not writer._header_sent:
         if show_body_start:
-            writer.body_start(title, javascripts=javascripts, force=force)
+            writer.body_start(title, additional_javascripts=javascripts, force=force)
 
         writer._header_sent = True
 

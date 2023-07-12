@@ -1068,8 +1068,15 @@ def get_graph_templates(translated_metrics: TranslatedMetrics) -> Iterator[Graph
 
 def _get_explicit_graph_templates(translated_metrics: TranslatedMetrics) -> Iterable[GraphTemplate]:
     for graph_template in graph_info.values():
-        if template := graph_template_for_metrics(graph_template, translated_metrics):
-            yield template
+        if metrics := applicable_metrics(
+            metrics_to_consider=graph_template["metrics"],
+            conflicting_metrics=graph_template.get("conflicting_metrics", []),
+            optional_metrics=graph_template.get("optional_metrics", []),
+            translated_metrics=translated_metrics,
+        ):
+            gt = graph_template.copy()
+            gt["metrics"] = metrics
+            yield gt
 
 
 def _get_graphed_metrics(graph_templates: Iterable[GraphTemplate]) -> set[str]:
@@ -1103,32 +1110,30 @@ def drop_metric_consolidation_advice(expression: MetricExpression) -> str:
     return expression
 
 
-def graph_template_for_metrics(
-    graph_template: GraphTemplate,
+def applicable_metrics(
+    *,
+    metrics_to_consider: Sequence[MetricDefinition],
+    conflicting_metrics: Iterable[str],
+    optional_metrics: Sequence[str],
     translated_metrics: TranslatedMetrics,
-) -> GraphTemplate | None:
+) -> list[MetricDefinition] | None:
     # Skip early on conflicting_metrics
-    for var in graph_template.get("conflicting_metrics", []):
+    for var in conflicting_metrics:
         if var in translated_metrics:
             return None
 
     try:
         reduced_metrics = list(
             _filter_renderable_graph_metrics(
-                graph_template["metrics"],
+                metrics_to_consider,
                 translated_metrics,
-                graph_template.get("optional_metrics", []),
+                optional_metrics,
             )
         )
     except KeyError:
         return None
 
-    if reduced_metrics:
-        reduced_graph_template = graph_template.copy()
-        reduced_graph_template["metrics"] = reduced_metrics
-        return reduced_graph_template
-
-    return None
+    return reduced_metrics or None
 
 
 def _filter_renderable_graph_metrics(

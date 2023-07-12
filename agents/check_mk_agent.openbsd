@@ -181,8 +181,8 @@ section_misc_sections() {
 
     # adjust internal field separator to get lines from netstat and backup it before
     OFS=$IFS
-    IFS='
-'
+    IFS=''
+
     # collect netstat values and interface number
     for NS in $NETSTAT_OUTPUT; do
         NI=$((NI + 1))

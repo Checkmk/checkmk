@@ -209,15 +209,19 @@ class HTMLGenerator(HTMLWriter):
         if self.link_target:
             self.base(target=self.link_target)
 
-        css_filename_for_browser = HTMLGenerator._css_filename_for_browser(theme.url("theme"))
-        self.stylesheet(css_filename_for_browser)
+        css_filepath = theme.url("theme.css")
+        if current_app.debug:
+            HTMLGenerator._verify_file_exists_in_web_dirs(css_filepath)
+        self.stylesheet(HTMLGenerator._append_cache_busting_query(css_filepath))
 
         self._add_custom_style_sheet()
 
         # Load all scripts
         for js in javascripts:
-            filename_for_browser = self.javascript_filename_for_browser(js)
-            self.javascript_file(filename_for_browser)
+            js_filepath = f"js/{js}_min.js"
+            if current_app.debug:
+                HTMLGenerator._verify_file_exists_in_web_dirs(js_filepath)
+            self.javascript_file(HTMLGenerator._append_cache_busting_query(js_filepath))
 
         self.set_js_csrf_token()
 
@@ -257,12 +261,6 @@ class HTMLGenerator(HTMLWriter):
                         plugin_stylesheets.add(entry.name)
         return plugin_stylesheets
 
-    def javascript_filename_for_browser(self, jsname: str) -> str:
-        if current_app.debug:
-            HTMLGenerator._verify_file_exists_in_web_dirs(f"js/{jsname}_min.js")
-        filename_for_browser = f"js/{jsname}_min-{cmk_version.__version__}.js"
-        return filename_for_browser
-
     @staticmethod
     def _verify_file_exists_in_web_dirs(file_path: str) -> None:
         path = _path(cmk.utils.paths.web_dir) / "htdocs" / file_path
@@ -272,10 +270,8 @@ class HTMLGenerator(HTMLWriter):
             raise FileNotFoundError(f"Neither {path} nor {local_path} exist.")
 
     @staticmethod
-    def _css_filename_for_browser(css: str) -> str:
-        if current_app.debug:
-            HTMLGenerator._verify_file_exists_in_web_dirs(f"{css}.css")
-        return f"{css}-{cmk_version.__version__}.css"
+    def _append_cache_busting_query(filename: str) -> str:
+        return f"{filename}?v={cmk_version.__version__}"
 
     def html_head(
         self,

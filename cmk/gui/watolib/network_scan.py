@@ -10,7 +10,7 @@ import subprocess
 import threading
 import time
 import traceback
-from typing import NamedTuple
+from typing import Literal, NamedTuple, Sequence, TypeGuard
 
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
@@ -27,7 +27,7 @@ from cmk.gui.session import UserContext
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
-from cmk.gui.watolib.host_attributes import NetworkScanResult
+from cmk.gui.watolib.host_attributes import ExcludeIPRange, IPRange, NetworkScanResult
 from cmk.gui.watolib.hosts_and_folders import CREFolder, folder_tree, Host, update_metadata
 
 NetworkScanFoundHosts = list[tuple[HostName, HostAddress]]
@@ -72,9 +72,11 @@ def execute_network_scan_job() -> None:
             if site_is_local(folder.site_id()):
                 found = _do_network_scan(folder)
             else:
-                found = do_remote_automation(
+                raw_response = do_remote_automation(
                     get_site_config(folder.site_id()), "network-scan", [("folder", folder.path())]
                 )
+                assert isinstance(raw_response, list)
+                found = raw_response
 
             if not isinstance(found, list):
                 raise MKGeneralException(_("Received an invalid network scan result: %r") % found)
@@ -165,7 +167,7 @@ def _save_network_scan_result(folder: CREFolder, result: NetworkScanResult) -> N
 
 @automation_command_registry.register
 class AutomationNetworkScan(AutomationCommand):
-    def command_name(self):
+    def command_name(self) -> str:
         return "network-scan"
 
     def get_request(self) -> NetworkScanRequest:
@@ -174,20 +176,18 @@ class AutomationNetworkScan(AutomationCommand):
             raise MKGeneralException(_("Folder path is missing"))
         return NetworkScanRequest(folder_path=folder_path)
 
-    def execute(self, api_request):
+    def execute(self, api_request: NetworkScanRequest) -> list[tuple[HostName, HostAddress]]:
         folder = folder_tree().folder(api_request.folder_path)
         return _do_network_scan(folder)
 
 
 # This is executed in the site the host is assigned to.
-# A list of tuples is returned where each tuple represents a new found host:
-# [(hostname, ipaddress), ...]
-def _do_network_scan(folder):
+def _do_network_scan(folder: CREFolder) -> list[tuple[HostName, HostAddress]]:
     ip_addresses = _ip_addresses_to_scan(folder)
     return _scan_ip_addresses(folder, ip_addresses)
 
 
-def _ip_addresses_to_scan(folder):
+def _ip_addresses_to_scan(folder: CREFolder) -> set[HostAddress]:
     ip_range_specs = folder.attributes["network_scan"]["ip_ranges"]
     exclude_specs = folder.attributes["network_scan"]["exclude_ranges"]
 
@@ -207,26 +207,45 @@ def _ip_addresses_to_scan(folder):
     return to_scan
 
 
-def _ip_addresses_of_ranges(ip_ranges):
+def _ip_addresses_of_ranges(ip_ranges: list[IPRange] | list[ExcludeIPRange]) -> set[HostAddress]:
     addresses = set()
 
-    for ty, spec in ip_ranges:
-        if ty == "ip_range":
-            addresses.update(_ip_addresses_of_range(spec))
+    for ip_range in ip_ranges:
+        # Silently skip unhandled type ip_regex_list for excludes
+        if _type_guard_ip_range(ip_range):
+            addresses.update(_ip_addresses_of_range(ip_range[1]))
 
-        elif ty == "ip_network":
-            addresses.update(_ip_addresses_of_network(spec))
+        elif _type_guard_ip_network(ip_range):
+            addresses.update(_ip_addresses_of_network(ip_range[1]))
 
-        elif ty == "ip_list":
-            addresses.update(spec)
+        elif _type_guard_ip_list(ip_range):
+            addresses.update(ip_range[1])
 
     return addresses
+
+
+def _type_guard_ip_range(
+    spec: IPRange | ExcludeIPRange,
+) -> TypeGuard[tuple[Literal["ip_range"], tuple[str, str]]]:
+    return spec[0] == "ip_range"
+
+
+def _type_guard_ip_network(
+    spec: IPRange | ExcludeIPRange,
+) -> TypeGuard[tuple[Literal["ip_network"], tuple[str, int]]]:
+    return spec[0] == "ip_network"
+
+
+def _type_guard_ip_list(
+    spec: IPRange | ExcludeIPRange,
+) -> TypeGuard[tuple[Literal["ip_list"], Sequence[HostAddress]]]:
+    return spec[0] == "ip_list"
 
 
 _FULL_IPV4 = (2**32) - 1
 
 
-def _ip_addresses_of_range(spec):
+def _ip_addresses_of_range(spec: tuple[str, str]) -> list[HostAddress]:
     first_int, last_int = map(_ip_int_from_string, spec)
 
     addresses: list[HostAddress] = []
@@ -259,7 +278,7 @@ def _string_from_ip_int(ip_int: int) -> HostAddress:
     return HostAddress(".".join(octets))
 
 
-def _ip_addresses_of_network(spec):
+def _ip_addresses_of_network(spec: tuple[str, int]) -> list[HostAddress]:
     net_addr, net_bits = spec
 
     ip_int = _ip_int_from_string(net_addr)
@@ -270,12 +289,12 @@ def _ip_addresses_of_network(spec):
     return [_string_from_ip_int(i) for i in range(first + 1, last - 1)]
 
 
-def _mask_bits_to_int(n):
+def _mask_bits_to_int(n: int) -> int:
     return (1 << (32 - n)) - 1
 
 
 # This will not scale well. Do you have a better idea?
-def _known_ip_addresses():
+def _known_ip_addresses() -> set[HostAddress]:
     addresses = set()
 
     for host in Host.all().values():
@@ -290,11 +309,15 @@ def _known_ip_addresses():
     return addresses
 
 
-def _excludes_by_regexes(addresses, exclude_specs):
+def _excludes_by_regexes(
+    addresses: set[HostAddress],
+    exclude_specs: list[IPRange | tuple[Literal["ip_regex_list"], Sequence[str]]],
+) -> list[HostAddress]:
     patterns = []
     for ty, spec in exclude_specs:
         if ty == "ip_regex_list":
             for p in spec:
+                assert isinstance(p, str)
                 patterns.append(re.compile(p))
 
     if not patterns:
@@ -312,7 +335,9 @@ def _excludes_by_regexes(addresses, exclude_specs):
 
 # Start ping threads till max parallel pings let threads do their work till all are done.
 # let threds also do name resolution. Return list of tuples (hostname, address).
-def _scan_ip_addresses(folder, ip_addresses):
+def _scan_ip_addresses(
+    folder: CREFolder, ip_addresses: set[HostAddress]
+) -> list[tuple[HostName, HostAddress]]:
     num_addresses = len(ip_addresses)
 
     # dont start more threads than needed

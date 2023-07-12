@@ -134,6 +134,7 @@ module = [
     "cmk.gui.wato.pages.folders",
     "cmk.gui.watolib.bulk_discovery",
     "cmk.gui.watolib.main_menu",
+    "cmk.gui.watolib.network_scan",
     "cmk.gui.plugins.wato.utils.main_menu",
     "cmk.notification_plugins.*",
     "cmk.update_config.*",

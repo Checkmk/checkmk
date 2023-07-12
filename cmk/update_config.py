@@ -34,6 +34,7 @@ from typing import (
     Final,
     Iterable,
     List,
+    Literal,
     Mapping,
     MutableMapping,
     Optional,
@@ -192,6 +193,30 @@ REMOVED_CHECK_PLUGIN_MAP = {
     CheckPluginName("lnx_bonding"): CheckPluginName("bonding"),
     CheckPluginName("windows_os_bonding"): CheckPluginName("bonding"),
 }
+
+CLUSTER_BEHAVIOR: Iterable[tuple[str, str, Literal["failover", "worst", "best"]]] = (
+    ("apache_status", "Apache .* Status", "failover"),
+    ("cmk_site_statistics", "Site .* statistics", "failover"),
+    ("f5_bigip_vcmpguests", "BIG-IP vCMP Guests", "worst"),
+    ("infoblox_node_services", "Node service .*", "best"),
+    ("livestatus_status", "OMD .* performance", "failover"),
+    ("mssql_counters_file_sizes", "MSSQL .* File Sizes", "worst"),
+    ("mssql_counters_locks", "MSSQL .* Locks", "worst"),
+    ("mssql_counters_locks_per_batch", "MSSQL .* Locks per Batch", "worst"),
+    ("mssql_counters_pageactivity", "MSSQL .* Page Activity", "worst"),
+    ("mssql_counters_transactions", "MSSQL .* Transactions", "worst"),
+    ("mssql_tablespaces", "MSSQL .* Sizes", "failover"),
+    ("mssql_datafiles", "MSSQL Datafile .*", "failover"),
+    ("mssql_transactionlogs", "MSSQL Transactionlog .*", "failover"),
+    ("netscaler_sslcertificates", "SSL Certificate .*", "worst"),
+    ("sap_hana_diskusage", "SAP HANA Disk .*", "best"),
+    ("sap_hana_ess", "SAP HANA ESS .*", "best"),
+    ("sap_hana_events", "SAP HANA Events .*", "best"),
+    ("sap_hana_instance_status", "SAP HANA Instance Status .*", "best"),
+    ("sap_hana_memrate", "SAP HANA Memory .*", "best"),
+    ("sap_hana_proc", "SAP HANA Process .*", "best"),
+    ("sap_hana_replication_status", "SAP HANA Replication Status .*", "best"),
+)
 
 # List[(old_config_name, new_config_name, replacement_dict{old: new})]
 REMOVED_GLOBALS_MAP: List[Tuple[str, str, Dict]] = [
@@ -728,6 +753,7 @@ class UpdateConfig:
             all_rulesets,
             REMOVED_CHECK_PLUGIN_MAP,
         )
+        self._add_default_cluster_aggregation_rules(all_rulesets, CLUSTER_BEHAVIOR)
         self._validate_rule_values(all_rulesets)
         all_rulesets.save()
 
@@ -1200,6 +1226,40 @@ class UpdateConfig:
                     rule,
                     create_change=False,
                 )
+
+    def _add_default_cluster_aggregation_rules(
+        self,
+        all_rulesets: RulesetCollection,
+        cluster_behaviour: Iterable[tuple[str, str, Literal["failover", "best", "worst"]]],
+    ) -> None:
+        clustered_services_configuration = all_rulesets.get("clustered_services_configuration")
+        if not clustered_services_configuration.is_empty():
+            return
+
+        root_folder = cmk.gui.watolib.hosts_and_folders.CREFolder.from_path_for_rule_matching(
+            "/wato/"
+        )
+        for plugin, description_pattern, aggregation_mode in cluster_behaviour:
+            clustered_services_configuration.append_rule(
+                root_folder,
+                cmk.gui.watolib.rulesets.Rule.from_config(
+                    root_folder,
+                    clustered_services_configuration,
+                    {
+                        "id": cmk.gui.watolib.rulesets.utils.gen_id(),
+                        "value": (aggregation_mode, {}),
+                        "condition": {"service_description": [{"$regex": description_pattern}]},
+                        "options": {
+                            "comment": (
+                                f"{time.strftime('%Y-%m-%d %H:%M', time.localtime())} - Checkmk: "
+                                "automatically created during upgrade. "
+                                f"This is meant to restore the cluster behavior of the plugin '{plugin}' as described in Werk #12908. "
+                                "Please review if this rule can be deleted."
+                            )
+                        },
+                    },
+                ),
+            )
 
     def _check_failed_gui_plugins(self) -> None:
         failed_plugins = cmk.gui.utils.get_failed_plugins()

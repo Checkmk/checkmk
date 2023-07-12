@@ -18,6 +18,10 @@ This can be done using the ruleset
 All services written against the old API are affected, and few
 of the modern plugins (see below for a list of the latter).
 
+Please also refer to <a href="https://checkmk.com/werk/15863">Werk #15863</a> with a mitigation of the incompatibility of this issue.
+
+<b>In detail:</b>
+
 Since this is the second time the behaviour of clustered services
 changes (1.6 to 2.0 and 2.0 to 2.1), we provide an overview.
 Note that we must consider four types of plugins here:

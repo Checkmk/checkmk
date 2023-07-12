@@ -1,0 +1,46 @@
+Title: Add default aggregation modes for some clustered services during update
+Class: fix
+Compatible: incomp
+Component: checks
+Date: 1689160311
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.1.0p31
+
+This Werk affects all users that monitor Checkmk clusters using the services listed below.
+It mitigates some of the incompatibilites listed in <a href="https://checkmk.com/werk/12908">Werk #12908</a> (please read the werk for full context).
+
+During upgrade from Checkmk 2.0 to 2.1 we add some rules to restore the former behavior of clustered services.
+
+<b>Note:</b>
+
+We can not do this for all affected plugins.
+The rules match on the service description, not on the plugin names.
+Consider for instance <tt>mrpe</tt>: we can't know what your service description looks like.
+
+The following cluster aggregation modes are configured during update (service description pattern / aggregation mode):
+
+LI: "Apache .* Status": <i>failover</i>
+LI: "Site .* statistics": <i>failover</i>
+LI: "BIG-IP vCMP Guests": <i>worst</i>
+LI: "Node service .*": <i>best</i>
+LI: "OMD .* performance": <i>failover</i>
+LI: "MSSQL .* File Sizes": <i>worst</i>
+LI: "MSSQL .* Locks": <i>worst</i>
+LI: "MSSQL .* Locks per Batch": <i>worst</i>
+LI: "MSSQL .* Page Activity": <i>worst</i>
+LI: "MSSQL .* Transactions": <i>worst</i>
+LI: "MSSQL .* Sizes": <i>failover</i>
+LI: "MSSQL Datafile .*": <i>failover</i>
+LI: "MSSQL Transactionlog .*": <i>failover</i>
+LI: "SSL Certificate .*": <i>worst</i>
+LI: "SAP HANA Disk .*": <i>best</i>
+LI: "SAP HANA ESS .*": <i>best</i>
+LI: "SAP HANA Events .*": <i>best</i>
+LI: "SAP HANA Instance Status .*": <i>best</i>
+LI: "SAP HANA Memory .*": <i>best</i>
+LI: "SAP HANA Process .*": <i>best</i>
+LI: "SAP HANA Replication Status .*": <i>best</i>
+
+Please review the rules to see if they suit your needs.

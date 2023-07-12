@@ -6,21 +6,17 @@
 import abc
 from typing import Generic, TypeVar
 
-from cmk.fetchers.cache import TRawDataSection
-
-from .host_sections import HostSections
 from .type_defs import SectionNameCollection
 
 __all__ = ["Parser"]
 
-_TRawData = TypeVar("_TRawData")
+_Tin = TypeVar("_Tin")
+_Tout = TypeVar("_Tout")
 
 
-class Parser(Generic[_TRawData, TRawDataSection], abc.ABC):
+class Parser(Generic[_Tin, _Tout], abc.ABC):
     """Parse raw data into host sections."""
 
     @abc.abstractmethod
-    def parse(
-        self, raw_data: _TRawData, *, selection: SectionNameCollection
-    ) -> HostSections[TRawDataSection]:
+    def parse(self, raw_data: _Tin, *, selection: SectionNameCollection) -> _Tout:
         raise NotImplementedError

@@ -468,7 +468,7 @@ class HostSectionParser(ParserState):
         return self.to_noop_parser()
 
 
-class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
+class AgentParser(Parser[AgentRawData, HostSections[AgentRawDataSection]]):
     """A parser for agent data."""
 
     def __init__(

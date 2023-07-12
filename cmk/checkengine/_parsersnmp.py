@@ -22,7 +22,7 @@ from .type_defs import SectionNameCollection
 __all__ = ["SNMPParser"]
 
 
-class SNMPParser(Parser[HostSection[SNMPRawData], SNMPRawData]):
+class SNMPParser(Parser[HostSection[SNMPRawData], HostSections[SNMPRawData]]):
     """A parser for SNMP data.
 
     Note:

@@ -174,7 +174,8 @@ def update(params: Mapping[str, Any]) -> Response:
     faulty_attributes = []
     for attribute in remove_attributes:
         try:
-            attributes.pop(attribute)
+            # Mypy can not help here with the dynamic key access
+            attributes.pop(attribute)  # type: ignore[misc]
         except KeyError:
             faulty_attributes.append(attribute)
 
@@ -232,7 +233,8 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
         faulty_attempt = False
         for attribute in remove_attributes:
             try:
-                attributes.pop(attribute)
+                # Mypy can not help here with the dynamic key access
+                attributes.pop(attribute)  # type: ignore[misc]
             except KeyError:
                 faulty_attempt = True
                 break

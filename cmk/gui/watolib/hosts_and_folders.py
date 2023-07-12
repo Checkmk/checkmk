@@ -17,7 +17,7 @@ from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, S
 from contextlib import contextmanager, suppress
 from enum import Enum
 from pathlib import Path
-from typing import Any, Final, Literal, NamedTuple, TypedDict
+from typing import Any, Final, Literal, NamedTuple, NotRequired, TypedDict
 
 from redis.client import Pipeline
 
@@ -107,6 +107,12 @@ if cmk_version.is_managed_edition():
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 
 SearchCriteria = Mapping[str, Any]
+
+
+class CollectedHostAttributes(HostAttributes):
+    path: str
+    # Seems to be added during runtime in some cases. Clean this up
+    edit_url: NotRequired[str]
 
 
 class WATOFolderInfo(TypedDict, total=False):
@@ -244,6 +250,7 @@ def _get_permitted_groups_of_all_folders(
             parent_tokens = parent_tokens[:-1]
 
         if contactgroups := all_folders["/".join(tokens[1:])].attributes.get("contactgroups"):
+            assert isinstance(contactgroups, dict)
             configured_contactgroups = contactgroups.get("groups")
             inherit_groups = contactgroups["recurse_perms"]
         else:
@@ -735,13 +742,13 @@ class _WATOInfoStorageManager:
 class EffectiveAttributes:
     """A memoized access to the effective attributes of hosts and folders"""
 
-    def __init__(self, compute_attributes: Callable[[], dict[str, Any]]) -> None:
+    def __init__(self, compute_attributes: Callable[[], HostAttributes]) -> None:
         self._compute_attributes = compute_attributes
-        self._effective_attributes: dict[str, Any] | None = None
+        self._effective_attributes: HostAttributes | None = None
 
     # Built this way to stay compatible with the former API.
     # Might be cleaned up in a follow up action.
-    def __call__(self) -> dict[str, Any]:
+    def __call__(self) -> HostAttributes:
         if self._effective_attributes is None:
             self._effective_attributes = self._compute_attributes()
         # Would be nice if we could avoid the copies here. But we would need stricter typing to be
@@ -935,9 +942,9 @@ class BaseFolder:
 
 
 def update_metadata(
-    attributes: Mapping[str, Any],
+    attributes: HostAttributes,
     created_by: str | None = None,
-) -> dict[str, Any]:
+) -> HostAttributes:
     """Update meta_data timestamps and set created_by if provided.
 
     Args:
@@ -962,7 +969,8 @@ def update_metadata(
             Key 'updated_at' in 'meta_data' added for use in the REST API.
 
     """
-    attributes_updated: dict[str, Any] = {"meta_data": {}, **attributes}
+    # Mypy can not help here with the dynamic key
+    attributes_updated = HostAttributes({"meta_data": {}, **attributes})  # type: ignore[misc]
 
     now_ = time.time()
     last_update = attributes_updated["meta_data"].get("updated_at", None)
@@ -993,7 +1001,7 @@ def get_wato_redis_client(tree: FolderTree) -> _RedisHelper:
 
 class WATOHosts(TypedDict):
     locked: bool
-    host_attributes: HostAttributes
+    host_attributes: Mapping[HostName, HostAttributes]
     all_hosts: list[HostName]
     clusters: dict[HostName, list[HostName]]
 
@@ -1200,12 +1208,12 @@ def _search_folder_from_request() -> SearchFolder | None:
     if request.has_var("host_search"):
         tree = folder_tree()
         base_folder = tree.folder(request.get_str_input_mandatory("folder", ""))
-        search_criteria = {".name": request.var("host_search_host")}
-        search_criteria.update(
-            collect_attributes(
+        search_criteria = {
+            ".name": request.var("host_search_host"),
+            **collect_attributes(
                 "host_search", new=False, do_validate=False, varprefix="host_search_"
-            )
-        )
+            ),
+        }
         return SearchFolder(tree, base_folder, search_criteria)
     return None
 
@@ -1235,7 +1243,7 @@ class CREFolder(BaseFolder):
         name: str,
         parent_folder: CREFolder,
         title: str | None = None,
-        attributes: dict[str, Any] | None = None,
+        attributes: HostAttributes | None = None,
     ) -> CREFolder:
         return cls(
             tree=tree,
@@ -1244,7 +1252,7 @@ class CREFolder(BaseFolder):
             folder_id=uuid.uuid4().hex,
             folder_path=(folder_path := os.path.join(parent_folder.path(), name)),
             title=title or _fallback_title(folder_path),
-            attributes=update_metadata(attributes or {}),
+            attributes=update_metadata(attributes or HostAttributes()),
             locked=False,
             locked_subfolders=False,
             num_hosts=0,
@@ -1272,7 +1280,8 @@ class CREFolder(BaseFolder):
             folder_id=serialized["__id"] if "__id" in serialized else uuid.uuid4().hex,
             folder_path=folder_path,
             title=serialized.get("title", _fallback_title(folder_path)),
-            attributes=dict(serialized.get("attributes", {})),
+            # Need to add parsing to get rid of this suppression
+            attributes=HostAttributes(serialized.get("attributes", {})),  # type: ignore[misc]
             # Can either be set to True or a string (which will be used as host lock message)
             locked=serialized.get("lock", False),
             # Can either be set to True or a string (which will be used as host lock message)
@@ -1291,7 +1300,7 @@ class CREFolder(BaseFolder):
         folder_path: str,
         parent_folder: CREFolder | None,
         title: str,
-        attributes: dict[str, Any],
+        attributes: HostAttributes,
         locked: bool,
         locked_subfolders: bool,
         num_hosts: int,
@@ -1900,8 +1909,8 @@ class CREFolder(BaseFolder):
         tp = self.title_path() if show_main else self.title_path_without_root()
         return " / ".join(str(p) for p in tp)
 
-    def _compute_effective_attributes(self) -> dict[str, object]:
-        effective = {}
+    def _compute_effective_attributes(self) -> HostAttributes:
+        effective = HostAttributes()
         for folder in self.parent_folder_chain():
             effective.update(folder.attributes)
         effective.update(self.attributes)
@@ -1910,7 +1919,8 @@ class CREFolder(BaseFolder):
         for host_attribute in host_attribute_registry.attributes():
             attrname = host_attribute.name()
             if attrname not in effective:
-                effective.setdefault(attrname, host_attribute.default_value())
+                # Mypy can not help here with the dynamic key
+                effective.setdefault(attrname, host_attribute.default_value())  # type: ignore[misc]
 
         return effective
 
@@ -2306,7 +2316,7 @@ class CREFolder(BaseFolder):
         need_sidebar_reload()
         folder_lookup_cache().delete()
 
-    def edit(self, new_title: str, new_attributes: dict[str, Any]) -> None:
+    def edit(self, new_title: str, new_attributes: HostAttributes) -> None:
         # 1. Check preconditions
         user.need_permission("wato.edit_folders")
         self.permissions.need_permission("write")
@@ -2386,7 +2396,7 @@ class CREFolder(BaseFolder):
 
     def create_validated_hosts(
         self,
-        entries: Collection[tuple[HostName, dict[str, object], Sequence[HostName] | None]],
+        entries: Collection[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
     ) -> None:
         # 2. Actual modification
         self._load_hosts_on_demand()
@@ -2402,7 +2412,7 @@ class CREFolder(BaseFolder):
     @staticmethod
     def verify_and_update_host_details(
         name: HostName, attributes: HostAttributes
-    ) -> dict[str, object]:
+    ) -> HostAttributes:
         # MKAuthException, MKUserError
         _must_be_in_contactgroups(_get_cgconf_from_attributes(attributes)["groups"])
         validate_host_uniqueness("host", name)
@@ -2411,7 +2421,7 @@ class CREFolder(BaseFolder):
     def propagate_hosts_changes(
         self,
         host_name: HostName,
-        attributes: dict[str, object],
+        attributes: HostAttributes,
         cluster_nodes: Sequence[HostName] | None,
     ) -> None:
         host = Host(self, host_name, attributes, cluster_nodes)
@@ -2585,7 +2595,8 @@ class CREFolder(BaseFolder):
     def rename_parent(self, oldname, newname):
         # Must not fail because of auth problems. Auth is check at the
         # actually renamed host.
-        changed = rename_host_in_list(self.attributes["parents"], oldname, newname)
+        new_parents = [str(p) for p in self.attributes["parents"]]
+        changed = rename_host_in_list(new_parents, oldname, newname)
         if not changed:
             return False
 
@@ -3043,7 +3054,7 @@ class CREHost:
         self,
         folder: CREFolder,
         host_name: HostName,
-        attributes: dict[str, Any],
+        attributes: HostAttributes,
         cluster_nodes: Sequence[HostName] | None,
     ) -> None:
         super().__init__()
@@ -3103,7 +3114,7 @@ class CREHost:
     def site_id(self) -> SiteId:
         return self.attributes.get("site") or self.folder().site_id()
 
-    def parents(self) -> list[HostName]:
+    def parents(self) -> Sequence[HostName]:
         return self.effective_attributes().get("parents", [])
 
     def tag_groups(self) -> Mapping[TagGroupID, TagID]:
@@ -3189,7 +3200,7 @@ class CREHost:
             return errors
         return []
 
-    def _compute_effective_attributes(self) -> dict[str, object]:
+    def _compute_effective_attributes(self) -> HostAttributes:
         effective = self.folder().effective_attributes()
         effective.update(self.attributes)
         return effective
@@ -3199,7 +3210,7 @@ class CREHost:
 
         The labels of all parent folders and the host are added together. When multiple
         objects define the same tag group, the nearest to the host wins."""
-        labels = {}
+        labels: dict[str, str] = {}
         for obj in self.folder().parent_folder_chain() + [self.folder()]:
             labels.update(obj.attributes.get("labels", {}).items())
         labels.update(self.attributes.get("labels", {}).items())
@@ -3288,7 +3299,7 @@ class CREHost:
     # | want to modify hosts. See details at the comment header in Folder. |
     # '--------------------------------------------------------------------'
 
-    def edit(self, attributes: dict[str, Any], cluster_nodes: Sequence[HostName] | None) -> None:
+    def edit(self, attributes: HostAttributes, cluster_nodes: Sequence[HostName] | None) -> None:
         # 1. Check preconditions
         if attributes.get("contactgroups") != self.attributes.get("contactgroups"):
             self._need_folder_write_permissions()
@@ -3318,7 +3329,7 @@ class CREHost:
             domain_settings=_generate_domain_settings("check_mk", [self.name()]),
         )
 
-    def update_attributes(self, changed_attributes: Mapping[str, object]) -> None:
+    def update_attributes(self, changed_attributes: HostAttributes) -> None:
         new_attributes = self.attributes.copy()
         new_attributes.update(changed_attributes)
         self.edit(new_attributes, self._cluster_nodes)
@@ -3335,7 +3346,8 @@ class CREHost:
         affected_sites = [self.site_id()]
         for attrname in attrnames_to_clean:
             if attrname in self.attributes:
-                del self.attributes[attrname]
+                # Mypy can not help here with the dynamic key access
+                del self.attributes[attrname]  # type: ignore[misc]
         affected_sites = list(set(affected_sites + [self.site_id()]))
         self.folder().save_hosts()
         add_change(
@@ -3404,10 +3416,12 @@ class CREHost:
 
     def rename_parent(self, oldname: HostName, newname: HostName) -> bool:
         # Same is with rename_cluster_node()
-        changed = rename_host_in_list(self.attributes["parents"], oldname, newname)
+        new_parents = [str(e) for e in self.attributes["parents"]]
+        changed = rename_host_in_list(new_parents, oldname, newname)
         if not changed:
             return False
 
+        self.attributes["parents"] = [HostName(h) for h in new_parents]
         add_change(
             "rename-parent",
             _l("Renamed parent from %s into %s.") % (oldname, newname),
@@ -3734,7 +3748,7 @@ class CMEFolder(CREFolder):
 
 
 class CMEHost(CREHost):
-    def edit(self, attributes: dict[str, object], cluster_nodes: Sequence[HostName] | None) -> None:
+    def edit(self, attributes: HostAttributes, cluster_nodes: Sequence[HostName] | None) -> None:
         f = self.folder()
         if isinstance(f, CMEFolder):
             f.check_modify_host(self.name(), attributes)
@@ -3790,14 +3804,16 @@ def validate_all_hosts(  # type: ignore[no-untyped-def]
     return {}
 
 
-def collect_all_hosts() -> Mapping[HostName, HostAttributes]:
+def collect_all_hosts() -> Mapping[HostName, CollectedHostAttributes]:
     return _collect_hosts(folder_tree().root_folder())
 
 
-def _collect_hosts(folder: CREFolder) -> Mapping[HostName, HostAttributes]:
+def _collect_hosts(folder: CREFolder) -> Mapping[HostName, CollectedHostAttributes]:
     hosts_attributes = {}
     for host_name, host in folder.all_hosts_recursively().items():
-        hosts_attributes[host_name] = host.effective_attributes()
+        # Mypy can currently not help here (we have dynamic attributes, so we can not map
+        # explicitly). Would need something more powerful than typed dicts to clean this up.
+        hosts_attributes[host_name] = CollectedHostAttributes(host.effective_attributes())  # type: ignore[misc]
         hosts_attributes[host_name]["path"] = host.folder().path()
         hosts_attributes[host_name]["edit_url"] = host.edit_url()
     return hosts_attributes
@@ -3873,7 +3889,7 @@ class MatchItemGeneratorHosts(ABCMatchItemGenerator):
     def __init__(
         self,
         name: str,
-        host_collector: Callable[[], Mapping[HostName, HostAttributes]],
+        host_collector: Callable[[], Mapping[HostName, CollectedHostAttributes]],
     ) -> None:
         super().__init__(name)
         self._host_collector = host_collector
@@ -3882,14 +3898,20 @@ class MatchItemGeneratorHosts(ABCMatchItemGenerator):
     def _get_additional_match_texts(host_attributes: HostAttributes) -> Iterable[str]:
         yield from (
             val
-            for key in ["alias", "ipaddress", "ipv6address"]
-            for val in [host_attributes[key]]
+            for val in [
+                host_attributes["alias"],
+                host_attributes["ipaddress"],
+                host_attributes["ipv6address"],
+            ]
             if val
         )
         yield from (
-            ip_address
-            for key in ["additional_ipv4addresses", "additional_ipv6addresses"]
-            for ip_address in host_attributes[key]
+            str(ip_address)
+            for ip_addresses in [
+                host_attributes["additional_ipv4addresses"],
+                host_attributes["additional_ipv6addresses"],
+            ]
+            for ip_address in ip_addresses
         )
 
     def generate_match_items(self) -> MatchItems:

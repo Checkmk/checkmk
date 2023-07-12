@@ -16,6 +16,8 @@ from tests.testlib.rest_api_client import ClientRegistry
 
 from tests.unit.cmk.gui.conftest import WebTestAppForCMK
 
+from livestatus import SiteId
+
 from cmk.utils import version
 from cmk.utils.hostaddress import HostName
 
@@ -25,6 +27,7 @@ import cmk.gui.watolib.bakery as bakery
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.type_defs import CustomAttr
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file
+from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, folder_tree, Host
 
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
@@ -1128,7 +1131,7 @@ def test_openapi_all_hosts_with_non_existing_site(
             "foo": CREHost(
                 folder=folder_tree().root_folder(),
                 host_name=HostName("foo"),
-                attributes={"site": "a_non_existing_site"},
+                attributes=HostAttributes({"site": SiteId("a_non_existing_site")}),
                 cluster_nodes=None,
             )
         }
@@ -1151,7 +1154,7 @@ def test_openapi_host_with_non_existing_site(
         return CREHost(
             folder=folder_tree().root_folder(),
             host_name=HostName("foo"),
-            attributes={"site": "a_non_existing_site"},
+            attributes=HostAttributes({"site": SiteId("a_non_existing_site")}),
             cluster_nodes=None,
         )
 

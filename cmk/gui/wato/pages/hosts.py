@@ -137,7 +137,7 @@ class ABCHostMode(WatoMode, abc.ABC):
             Host(
                 folder_from_request(),
                 self._host.name(),
-                dict(collect_attributes("cluster", new=False)),
+                collect_attributes("cluster", new=False),
                 [],
             ).tag_groups()
         )
@@ -393,7 +393,7 @@ class ModeEditHost(ABCHostMode):
             flash(f"Host {self._host.name()} could not be found.")
             return None
 
-        host.edit(dict(attributes), self._get_cluster_nodes())
+        host.edit(attributes, self._get_cluster_nodes())
         self._host = folder.load_host(self._host.name())
 
         if request.var("_save"):
@@ -407,10 +407,9 @@ class ModeEditHost(ABCHostMode):
         return redirect(mode_url("folder", folder=folder.path()))
 
     def _should_use_dns_cache(self) -> bool:
-        site = self._host.effective_attributes().get("site")
+        site = self._host.effective_attributes()["site"]
         return watolib.sites.get_effective_global_setting(
-            # Can be cleaned up later once HostAttributes is typed
-            site,  # type: ignore[arg-type]
+            site,
             is_wato_slave_site(),
             "use_dns_cache",
         )

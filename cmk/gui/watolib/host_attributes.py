@@ -11,15 +11,24 @@ import abc
 import functools
 import re
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, TypedDict
+from typing import Any, Literal, NotRequired, TypedDict
 
 from marshmallow import fields
 
+from livestatus import SiteId
+
 import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.hostaddress import HostName
+from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.labels import Labels
 from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
+from cmk.utils.translations import TranslationOptionsSpec
+from cmk.utils.user import UserId
+
+from cmk.snmplib.type_defs import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
+
+from cmk.fetchers import IPMICredentials
 
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
@@ -42,7 +51,87 @@ class HostContactGroupSpec(TypedDict):
     recurse_use: bool
 
 
-HostAttributes = Mapping[str, Any]
+IPRange = (
+    tuple[Literal["ip_range"], tuple[str, str]]
+    | tuple[Literal["ip_network"], tuple[str, int]]
+    | tuple[Literal["ip_list"], Sequence[str]]
+)
+
+
+class NetworkScanSpec(TypedDict):
+    ip_ranges: list[IPRange]
+    exclude_ranges: list[IPRange | tuple[Literal["ip_regex_list"], Sequence[str]]]
+    scan_interval: int
+    time_allowed: Sequence[tuple[tuple[int, int], tuple[int, int]]]
+    set_ipaddress: bool
+    tag_criticality: NotRequired[str]
+    max_parallel_pings: NotRequired[int]
+    run_as: UserId
+    translate_names: NotRequired[TranslationOptionsSpec]
+
+
+class NetworkScanResult(TypedDict):
+    start: float | None
+    end: float | Literal[True] | None
+    state: bool | None
+    output: str
+
+
+class MetaData(TypedDict):
+    # All the NotRequired should be investigated and cleaned up via cmk-update-config
+    created_at: NotRequired[float]
+    created_by: NotRequired[UserId]
+    updated_at: NotRequired[float]
+
+
+# Possible improvements for the future:
+# - Might help to differentiate between effective attributes and non effective attributes, since
+#   in effective attributes many more attributes are mandatory
+# - Some attributes are actually folder specific (see ABCHostAttribute.show_in_folder)
+# - How to represent the tag group attributes?
+#   -> Builtin tags can be defined here while custom(izable) tag groups can not
+# - How to represent custom host attributes?
+#   -> The values are always of type str, but can have arbritary keys
+class HostAttributes(TypedDict, total=False):
+    """All builtin host attributes to
+
+    Host attributes are set on folders (mostly for inheritance to folders) and on hosts
+    directly.
+    """
+
+    alias: str
+    ipaddress: HostAddress
+    ipv6address: HostAddress
+    additional_ipv4addresses: Sequence[HostAddress]
+    additional_ipv6addresses: Sequence[HostAddress]
+    snmp_community: SNMPCredentials
+    parents: Sequence[HostName]
+    network_scan: NetworkScanSpec
+    network_scan_result: NetworkScanResult
+    management_address: HostAddress
+    management_protocol: Literal["snmp", "ipmi"] | None
+    management_snmp_community: SNMPCredentials
+    management_ipmi_credentials: IPMICredentials
+    site: SiteId
+    # This is a list of 3 elements. tuple[SiteId, str, str] would be better.
+    locked_by: Sequence[str]
+    locked_attributes: Sequence[str]
+    meta_data: MetaData
+    inventory_failed: bool
+    labels: Labels
+    contactgroups: HostContactGroupSpec
+    # Enterprise editions only
+    bake_agent_package: bool
+    # Enterprise editions only
+    cmk_agent_connection: Literal["push-agent", "pull-agent"]
+    # Builtin tag groups
+    tag_agent: Literal["cmk-agent", "all-agents", "special-agents", "no-agent"]
+    tag_piggyback: Literal["auto-piggyback", "piggyback", "no-piggyback"]
+    tag_snmp_ds: Literal["no-snmp", "snmp-v2", "snmp-v1"]
+    tag_address_family: Literal["ip-v4-only", "ip-v6-only", "ip-v4v6", "no-ip"]
+    # Shipped tag attributes, but could be changed or even removed by users.
+    # So we don't define the shipped literals here
+    tag_criticality: str
 
 
 class HostAttributeTopic(abc.ABC):
@@ -756,7 +845,7 @@ def collect_attributes(
     for_what: str, new: bool, do_validate: bool = True, varprefix: str = ""
 ) -> HostAttributes:
     """Read attributes from HTML variables"""
-    host = {}
+    host = HostAttributes()
     for attr in host_attribute_registry.attributes():
         attrname = attr.name()
         if not request.var(for_what + "_change_%s" % attrname, ""):
@@ -767,7 +856,8 @@ def collect_attributes(
         if do_validate and attr.needs_validation(for_what, new):
             attr.validate_input(value, varprefix)
 
-        host[attrname] = value
+        # Mypy can not help here with the dynamic key
+        host[attrname] = value  # type: ignore[literal-required]
     return host
 
 

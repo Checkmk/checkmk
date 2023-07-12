@@ -783,19 +783,6 @@ def serialize_host(host: CREHost, effective_attributes: bool) -> dict[str, Any]:
     )
 
 
-def _except_keys(dict_: dict[str, Any], exclude_keys: list[str]) -> dict[str, Any]:
-    """Removes some keys from a dict.
-
-    Examples:
-        >>> _except_keys({'a': 'b', 'remove_me': 'hurry up'}, ['remove_me'])
-        {'a': 'b'}
-
-    """
-    if not exclude_keys:
-        return dict_
-    return {key: value for key, value in dict_.items() if key not in exclude_keys}
-
-
 def _require_host_etag(host: CREHost) -> None:
     etag_values = _host_etag_values(host)
     constructors.require_etag(
@@ -810,7 +797,7 @@ def _host_etag_values(host: CREHost) -> dict[str, Any]:
     #        reported ETag a different one than the one which is accepted by the endpoint.
     return {
         "name": host.name(),
-        "attributes": _except_keys(host.attributes, ["meta_data"]),
+        "attributes": {k: v for k, v in host.attributes.items() if k != "meta_data"},
         "cluster_nodes": host.cluster_nodes(),
     }
 

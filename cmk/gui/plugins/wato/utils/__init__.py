@@ -1590,7 +1590,8 @@ def configure_attributes(  # pylint: disable=too-many-branches
                             container.title(), href=url
                         )
 
-                        inherited_value = container.attributes[attrname]
+                        # Mypy can not help here with the dynamic key
+                        inherited_value = container.attributes[attrname]  # type: ignore[literal-required]
                         has_inherited = True
                         if attr.is_tag_attribute:
                             inherited_tags["attr_%s" % attrname] = inherited_value
@@ -2469,7 +2470,7 @@ def _search_text_matches(
         str(host.effective_attributes().get("ipaddress")),
         str(host.effective_attributes().get("alias")),
         host.site_id(),
-        get_site_config(host.site_id())["alias"],
+        str(get_site_config(host.site_id())["alias"]),
         str(host.tag_groups()),
         str(host.labels()),
     ]:

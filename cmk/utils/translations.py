@@ -5,7 +5,7 @@
 
 import ipaddress
 from collections.abc import Iterable
-from typing import cast, Literal, TypedDict
+from typing import cast, Literal, NotRequired, TypedDict
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.regex import regex
@@ -23,9 +23,9 @@ class TranslationOptions(TypedDict, total=False):
 
 # Similar to TranslationOptions, but not the same. This aims to
 # cover exactly the structure that is configured with the valuespec.
-class TranslationOptionsSpec(TypedDict, total=False):
+class TranslationOptionsSpec(TypedDict):
     case: Literal["lower", "upper"] | None
-    drop_domain: bool
+    drop_domain: NotRequired[bool]
     mapping: list[tuple[str, str]]
     regex: list[tuple[str, str]]
 

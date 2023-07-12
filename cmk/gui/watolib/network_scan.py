@@ -10,12 +10,12 @@ import subprocess
 import threading
 import time
 import traceback
-from typing import Any, NamedTuple
+from typing import NamedTuple
 
 from cmk.utils import store
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.translations import translate_hostname
+from cmk.utils.translations import translate_hostname, TranslationOptions
 from cmk.utils.user import UserId
 
 import cmk.gui.watolib.bakery as bakery
@@ -27,10 +27,10 @@ from cmk.gui.session import UserContext
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_local
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
+from cmk.gui.watolib.host_attributes import NetworkScanResult
 from cmk.gui.watolib.hosts_and_folders import CREFolder, folder_tree, Host, update_metadata
 
 NetworkScanFoundHosts = list[tuple[HostName, HostAddress]]
-NetworkScanResult = dict[str, Any]
 
 
 class NetworkScanRequest(NamedTuple):
@@ -118,7 +118,18 @@ def _add_scanned_hosts_to_folder(folder: CREFolder, found: NetworkScanFoundHosts
     if (network_scan_properties := folder.attributes.get("network_scan")) is None:
         return
 
-    translation = network_scan_properties.get("translate_names", {})
+    translate_names = network_scan_properties.get("translate_names")
+    if translate_names is None:
+        translation = TranslationOptions({})
+    else:
+        translation = TranslationOptions(
+            {
+                "case": translate_names["case"],
+                "mapping": translate_names["mapping"],
+                "drop_domain": translate_names.get("drop_domain", False),
+                "regex": translate_names["regex"],
+            }
+        )
 
     entries = []
     for host_name, ipaddr in found:

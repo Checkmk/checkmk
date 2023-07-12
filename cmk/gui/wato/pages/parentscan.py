@@ -11,7 +11,7 @@ from livestatus import SiteId
 
 import cmk.utils.store as store
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.hostaddress import HostName
+from cmk.utils.hostaddress import HostAddress, HostName
 
 from cmk.automations.results import Gateway
 
@@ -44,6 +44,7 @@ from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.check_mk_automations import scan_parents
+from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import (
     CREFolder,
     disk_or_search_base_folder_from_request,
@@ -309,10 +310,12 @@ class ParentScanBackgroundJob(BackgroundJob):
         settings: ParentScanSettings,
         gateway: ParentScanResult,
         gw_folder: CREFolder,
-    ) -> dict:
-        new_host_attributes = {
-            "ipaddress": gateway.ip,
-        }
+    ) -> HostAttributes:
+        new_host_attributes = HostAttributes(
+            {
+                "ipaddress": HostAddress(gateway.ip),
+            }
+        )
 
         if settings.alias:
             new_host_attributes["alias"] = settings.alias

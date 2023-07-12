@@ -391,22 +391,26 @@ def _change_host_tags_in_host_or_folder(
         if attrname in attributes:
             affected.append(host_or_folder)
             if mode != TagCleanupMode.CHECK:
-                del attributes[attrname]
+                # Mypy can not help here with the dynamic key access
+                del attributes[attrname]  # type: ignore[misc]
         return affected
 
     if not isinstance(operation, OperationReplaceGroupedTags):
         raise NotImplementedError()
 
     # Deletion or replacement of a tag choice
-    current = attributes[attrname]
+    # Mypy can not help here with the dynamic key access
+    current = attributes[attrname]  # type: ignore[literal-required]
     if current in operation.remove_tag_ids or current in operation.replace_tag_ids:
         affected.append(host_or_folder)
         if mode != TagCleanupMode.CHECK:
             if current in operation.remove_tag_ids:
-                del attributes[attrname]
+                # Mypy can not help here with the dynamic key access
+                del attributes[attrname]  # type: ignore[misc]
             elif current in operation.replace_tag_ids:
                 new_tag = operation.replace_tag_ids[current]
-                attributes[attrname] = new_tag
+                # Mypy can not help here with the dynamic key access
+                attributes[attrname] = new_tag  # type: ignore[literal-required]
             else:
                 raise NotImplementedError()
 

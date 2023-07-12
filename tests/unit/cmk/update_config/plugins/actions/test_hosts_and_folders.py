@@ -23,7 +23,8 @@ def run_plugin() -> None:
 
 def test_update_tuple_contact_groups_in_folder() -> None:
     folder = folder_tree().root_folder()
-    folder.attributes["contactgroups"] = (False, [])
+    # Old data format which is not handled by our code
+    folder.attributes["contactgroups"] = (False, [])  # type: ignore[typeddict-item]
 
     run_plugin()
 
@@ -41,7 +42,8 @@ def test_update_tuple_contact_groups_in_host(with_admin_login: UserId) -> None:
     hostname = HostName("testhost")
     folder.create_hosts([(hostname, {}, [])])
     host = folder.load_host(hostname)
-    host.attributes["contactgroups"] = (True, ["a", "b"])
+    # Old data format which is not handled by our code
+    host.attributes["contactgroups"] = (True, ["a", "b"])  # type: ignore[typeddict-item]
 
     run_plugin()
 

@@ -10,11 +10,10 @@ import shutil
 import sys
 import time
 import uuid
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from itertools import count
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 import freezegun
@@ -23,8 +22,10 @@ from pytest import MonkeyPatch
 
 from tests.testlib import on_time
 
+from livestatus import SiteId
+
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.hostaddress import HostName
+from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.redis import disable_redis
 from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.user import UserId
@@ -36,6 +37,7 @@ from cmk.gui.ctx_stack import g
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.logged_in import user as logged_in_user
 from cmk.gui.watolib.bakery import has_agent_bakery
+from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import EffectiveAttributes, Folder, folder_tree
 from cmk.gui.watolib.search import MatchItem
 
@@ -43,8 +45,8 @@ from cmk.gui.watolib.search import MatchItem
 def test_effective_attributes() -> None:
     counter = count()
 
-    def compute_attributes() -> dict[str, int]:
-        return {"a": next(counter)}
+    def compute_attributes() -> HostAttributes:
+        return {"alias": str(next(counter))}
 
     attributes = EffectiveAttributes(compute_attributes)
     first_attributes = attributes()
@@ -84,11 +86,14 @@ def fake_start_bake_agents(monkeypatch: MonkeyPatch) -> None:
     "attributes,expected_tags",
     [
         (
-            {
-                "tag_snmp": "no-snmp",
-                "tag_agent": "no-agent",
-                "site": "ding",
-            },
+            # Old key tag_snmp is mgrated to tag_snmp_ds
+            HostAttributes(  # type: ignore[typeddict-unknown-key]
+                {
+                    "tag_snmp": "no-snmp",
+                    "tag_agent": "no-agent",
+                    "site": SiteId("ding"),
+                }
+            ),
             {
                 "address_family": "ip-v4-only",
                 "agent": "no-agent",
@@ -100,11 +105,14 @@ def fake_start_bake_agents(monkeypatch: MonkeyPatch) -> None:
             },
         ),
         (
-            {
-                "tag_snmp": "no-snmp",
-                "tag_agent": "no-agent",
-                "tag_address_family": "no-ip",
-            },
+            # Old key tag_snmp is mgrated to tag_snmp_ds
+            HostAttributes(  # type: ignore[typeddict-unknown-key]
+                {
+                    "tag_snmp": "no-snmp",
+                    "tag_agent": "no-agent",
+                    "tag_address_family": "no-ip",
+                }
+            ),
             {
                 "address_family": "no-ip",
                 "agent": "no-agent",
@@ -114,9 +122,11 @@ def fake_start_bake_agents(monkeypatch: MonkeyPatch) -> None:
             },
         ),
         (
-            {
-                "site": False,
-            },
+            HostAttributes(
+                {
+                    "site": SiteId(""),
+                }
+            ),
             {
                 "address_family": "ip-v4-only",
                 "agent": "cmk-agent",
@@ -130,7 +140,7 @@ def fake_start_bake_agents(monkeypatch: MonkeyPatch) -> None:
         ),
     ],
 )
-def test_host_tags(attributes: dict, expected_tags: dict[str, str]) -> None:
+def test_host_tags(attributes: HostAttributes, expected_tags: dict[str, str]) -> None:
     folder = folder_tree().root_folder()
     host = hosts_and_folders.Host(folder, HostName("test-host"), attributes, cluster_nodes=None)
 
@@ -141,30 +151,36 @@ def test_host_tags(attributes: dict, expected_tags: dict[str, str]) -> None:
     "attributes,result",
     [
         (
-            {
-                "tag_snmp_ds": "no-snmp",
-                "tag_agent": "no-agent",
-            },
+            HostAttributes(
+                {
+                    "tag_snmp_ds": "no-snmp",
+                    "tag_agent": "no-agent",
+                }
+            ),
             True,
         ),
         (
-            {
-                "tag_snmp_ds": "no-snmp",
-                "tag_agent": "cmk-agent",
-            },
+            HostAttributes(
+                {
+                    "tag_snmp_ds": "no-snmp",
+                    "tag_agent": "cmk-agent",
+                }
+            ),
             False,
         ),
         (
-            {
-                "tag_snmp_ds": "no-snmp",
-                "tag_agent": "no-agent",
-                "tag_address_family": "no-ip",
-            },
+            HostAttributes(
+                {
+                    "tag_snmp_ds": "no-snmp",
+                    "tag_agent": "no-agent",
+                    "tag_address_family": "no-ip",
+                }
+            ),
             False,
         ),
     ],
 )
-def test_host_is_ping_host(attributes: dict[str, object], result: bool) -> None:
+def test_host_is_ping_host(attributes: HostAttributes, result: bool) -> None:
     folder = folder_tree().root_folder()
     host = hosts_and_folders.Host(folder, HostName("test-host"), attributes, cluster_nodes=None)
 
@@ -174,15 +190,17 @@ def test_host_is_ping_host(attributes: dict[str, object], result: bool) -> None:
 @pytest.mark.parametrize(
     "attributes",
     [
-        {
-            "tag_snmp_ds": "no-snmp",
-            "tag_agent": "no-agent",
-            "alias": "testalias",
-            "parents": ["ding", "dong"],
-        }
+        HostAttributes(
+            {
+                "tag_snmp_ds": "no-snmp",
+                "tag_agent": "no-agent",
+                "alias": "testalias",
+                "parents": [HostName("ding"), HostName("dong")],
+            }
+        )
     ],
 )
-def test_write_and_read_host_attributes(attributes: dict[str, str | list[str]]) -> None:
+def test_write_and_read_host_attributes(attributes: HostAttributes) -> None:
     tree = folder_tree()
     # Used to write the data
     write_data_folder = hosts_and_folders.Folder.load(
@@ -252,44 +270,21 @@ def test_eq_operation(request_context: None) -> None:
         assert folder1 not in [folder2]
 
 
-@pytest.mark.parametrize(
-    "protocol,host_attribute,base_variable,credentials,folder_credentials",
-    [
-        ("snmp", "management_snmp_community", "management_snmp_credentials", "HOST", "FOLDER"),
-        (
-            "ipmi",
-            "management_ipmi_credentials",
-            "management_ipmi_credentials",
-            {
-                "username": "USER",
-                "password": "PASS",
-            },
-            {
-                "username": "FOLDERUSER",
-                "password": "FOLDERPASS",
-            },
-        ),
-    ],
-)
-def test_mgmt_inherit_credentials_explicit_host(
-    protocol: str,
-    host_attribute: str,
-    base_variable: str,
-    credentials: str | dict[str, str],
-    folder_credentials: str | dict[str, str],
-) -> None:
+def test_mgmt_inherit_credentials_explicit_host_snmp() -> None:
     folder = folder_tree().root_folder()
-    folder.attributes[host_attribute] = folder_credentials
+    folder.attributes["management_snmp_community"] = "FOLDER"
 
     folder.create_hosts(
         [
             (
                 HostName("test-host"),
-                {
-                    "ipaddress": "127.0.0.1",
-                    "management_protocol": protocol,
-                    host_attribute: credentials,
-                },
+                HostAttributes(
+                    {
+                        "ipaddress": HostAddress("127.0.0.1"),
+                        "management_protocol": "snmp",
+                        "management_snmp_community": "HOST",
+                    }
+                ),
                 [],
             )
         ],
@@ -297,41 +292,56 @@ def test_mgmt_inherit_credentials_explicit_host(
 
     data = folder._load_hosts_file()
     assert data is not None
-    assert data["management_protocol"]["test-host"] == protocol
-    assert data[base_variable]["test-host"] == credentials
+    assert data["management_protocol"]["test-host"] == "snmp"
+    assert data["management_snmp_credentials"]["test-host"] == "HOST"
 
 
-@pytest.mark.parametrize(
-    "protocol,host_attribute,base_variable,folder_credentials",
-    [
-        ("snmp", "management_snmp_community", "management_snmp_credentials", "FOLDER"),
-        (
-            "ipmi",
-            "management_ipmi_credentials",
-            "management_ipmi_credentials",
-            {
-                "username": "FOLDERUSER",
-                "password": "FOLDERPASS",
-            },
-        ),
-    ],
-)
-def test_mgmt_inherit_credentials(
-    protocol: str,
-    host_attribute: str,
-    base_variable: str,
-    folder_credentials: str | dict[str, str],
-) -> None:
+def test_mgmt_inherit_credentials_explicit_host_ipmi() -> None:
     folder = folder_tree().root_folder()
-    folder.attributes[host_attribute] = folder_credentials
+    folder.attributes["management_ipmi_credentials"] = {
+        "username": "FOLDERUSER",
+        "password": "FOLDERPASS",
+    }
+
+    folder.create_hosts(
+        [
+            (
+                HostName("test-host"),
+                HostAttributes(
+                    {
+                        "ipaddress": HostAddress("127.0.0.1"),
+                        "management_protocol": "ipmi",
+                        "management_ipmi_credentials": {
+                            "username": "USER",
+                            "password": "PASS",
+                        },
+                    }
+                ),
+                [],
+            )
+        ],
+    )
+
+    data = folder._load_hosts_file()
+    assert data is not None
+    assert data["management_protocol"]["test-host"] == "ipmi"
+    assert data["management_ipmi_credentials"]["test-host"] == {
+        "username": "USER",
+        "password": "PASS",
+    }
+
+
+def test_mgmt_inherit_credentials_snmp() -> None:
+    folder = folder_tree().root_folder()
+    folder.attributes["management_snmp_community"] = "FOLDER"
 
     folder.create_hosts(
         [
             (
                 HostName("mgmt-host"),
                 {
-                    "ipaddress": "127.0.0.1",
-                    "management_protocol": protocol,
+                    "ipaddress": HostAddress("127.0.0.1"),
+                    "management_protocol": "snmp",
                 },
                 [],
             )
@@ -340,48 +350,52 @@ def test_mgmt_inherit_credentials(
 
     data = folder._load_hosts_file()
     assert data is not None
-    assert data["management_protocol"]["mgmt-host"] == protocol
-    assert data[base_variable]["mgmt-host"] == folder_credentials
+    assert data["management_protocol"]["mgmt-host"] == "snmp"
+    assert data["management_snmp_credentials"]["mgmt-host"] == "FOLDER"
 
 
-@pytest.mark.parametrize(
-    "protocol,host_attribute,base_variable,credentials,folder_credentials",
-    [
-        ("snmp", "management_snmp_community", "management_snmp_credentials", "HOST", "FOLDER"),
-        (
-            "ipmi",
-            "management_ipmi_credentials",
-            "management_ipmi_credentials",
-            {
-                "username": "USER",
-                "password": "PASS",
-            },
-            {
-                "username": "FOLDERUSER",
-                "password": "FOLDERPASS",
-            },
-        ),
-    ],
-)
-def test_mgmt_inherit_protocol_explicit_host(
-    protocol: str,
-    host_attribute: str,
-    base_variable: str,
-    credentials: str | dict[str, str],
-    folder_credentials: str | dict[str, str],
-) -> None:
+def test_mgmt_inherit_credentials_ipmi() -> None:
+    folder = folder_tree().root_folder()
+    folder.attributes["management_ipmi_credentials"] = {
+        "username": "FOLDERUSER",
+        "password": "FOLDERPASS",
+    }
+
+    folder.create_hosts(
+        [
+            (
+                HostName("mgmt-host"),
+                {
+                    "ipaddress": HostAddress("127.0.0.1"),
+                    "management_protocol": "ipmi",
+                },
+                [],
+            )
+        ],
+    )
+
+    data = folder._load_hosts_file()
+    assert data is not None
+    assert data["management_protocol"]["mgmt-host"] == "ipmi"
+    assert data["management_ipmi_credentials"]["mgmt-host"] == {
+        "username": "FOLDERUSER",
+        "password": "FOLDERPASS",
+    }
+
+
+def test_mgmt_inherit_protocol_explicit_host_snmp() -> None:
     folder = folder_tree().root_folder()
     folder.attributes["management_protocol"] = None
-    folder.attributes[host_attribute] = folder_credentials
+    folder.attributes["management_snmp_community"] = "FOLDER"
 
     folder.create_hosts(
         [
             (
                 HostName("mgmt-host"),
                 {
-                    "ipaddress": "127.0.0.1",
-                    "management_protocol": protocol,
-                    host_attribute: credentials,
+                    "ipaddress": HostAddress("127.0.0.1"),
+                    "management_protocol": "snmp",
+                    "management_snmp_community": "HOST",
                 },
                 [],
             )
@@ -390,41 +404,29 @@ def test_mgmt_inherit_protocol_explicit_host(
 
     data = folder._load_hosts_file()
     assert data is not None
-    assert data["management_protocol"]["mgmt-host"] == protocol
-    assert data[base_variable]["mgmt-host"] == credentials
+    assert data["management_protocol"]["mgmt-host"] == "snmp"
+    assert data["management_snmp_credentials"]["mgmt-host"] == "HOST"
 
 
-@pytest.mark.parametrize(
-    "protocol,host_attribute,base_variable,folder_credentials",
-    [
-        ("snmp", "management_snmp_community", "management_snmp_credentials", "FOLDER"),
-        (
-            "ipmi",
-            "management_ipmi_credentials",
-            "management_ipmi_credentials",
-            {
-                "username": "FOLDERUSER",
-                "password": "FOLDERPASS",
-            },
-        ),
-    ],
-)
-def test_mgmt_inherit_protocol(
-    protocol: str,
-    host_attribute: str,
-    base_variable: str,
-    folder_credentials: str | dict[str, str],
-) -> None:
+def test_mgmt_inherit_protocol_explicit_host_ipmi() -> None:
     folder = folder_tree().root_folder()
-    folder.attributes["management_protocol"] = protocol
-    folder.attributes[host_attribute] = folder_credentials
+    folder.attributes["management_protocol"] = None
+    folder.attributes["management_ipmi_credentials"] = {
+        "username": "FOLDERUSER",
+        "password": "FOLDERPASS",
+    }
 
     folder.create_hosts(
         [
             (
                 HostName("mgmt-host"),
                 {
-                    "ipaddress": "127.0.0.1",
+                    "ipaddress": HostAddress("127.0.0.1"),
+                    "management_protocol": "ipmi",
+                    "management_ipmi_credentials": {
+                        "username": "USER",
+                        "password": "PASS",
+                    },
                 },
                 [],
             )
@@ -433,8 +435,11 @@ def test_mgmt_inherit_protocol(
 
     data = folder._load_hosts_file()
     assert data is not None
-    assert data["management_protocol"]["mgmt-host"] == protocol
-    assert data[base_variable]["mgmt-host"] == folder_credentials
+    assert data["management_protocol"]["mgmt-host"] == "ipmi"
+    assert data["management_ipmi_credentials"]["mgmt-host"] == {
+        "username": "USER",
+        "password": "PASS",
+    }
 
 
 @pytest.fixture(name="patch_may")
@@ -561,10 +566,11 @@ def test_match_item_generator_hosts() -> None:
                 HostName("host"): {
                     "edit_url": "some_url",
                     "alias": "alias",
-                    "ipaddress": "1.2.3.4",
-                    "ipv6address": "",
-                    "additional_ipv4addresses": ["5.6.7.8"],
+                    "ipaddress": HostAddress("1.2.3.4"),
+                    "ipv6address": HostAddress(""),
+                    "additional_ipv4addresses": [HostAddress("5.6.7.8")],
                     "additional_ipv6addresses": [],
+                    "path": "",
                 },
             },
         ).generate_match_items()
@@ -581,7 +587,7 @@ def test_match_item_generator_hosts() -> None:
 @dataclass
 class _TreeStructure:
     path: str
-    attributes: dict[str, Any]
+    attributes: HostAttributes
     subfolders: list["_TreeStructure"]
     num_hosts: int = 0
 
@@ -798,16 +804,18 @@ def hide_folders_without_permission(do_hide: bool) -> Iterator[None]:
         active_config.wato_hide_folders_without_read_permissions = old_value
 
 
-def _default_groups(configured_groups: list[ContactgroupName]) -> dict[str, Any]:
-    return {
-        "contactgroups": {
-            "groups": configured_groups,
-            "recurse_perms": False,
-            "use": False,
-            "use_for_services": False,
-            "recurse_use": False,
+def _default_groups(configured_groups: list[ContactgroupName]) -> HostAttributes:
+    return HostAttributes(
+        {
+            "contactgroups": {
+                "groups": configured_groups,
+                "recurse_perms": False,
+                "use": False,
+                "use_for_services": False,
+                "recurse_use": False,
+            }
         }
-    }
+    )
 
 
 group_tree_structure = _TreeStructure(
@@ -1084,7 +1092,7 @@ def test_new_loaded_folder(monkeypatch: pytest.MonkeyPatch) -> None:
     ],
 )
 def test_next_network_scan_at(
-    allowed: object,
+    allowed: Sequence[tuple[tuple[int, int], tuple[int, int]]],
     last_end: float | None,
     next_time: float,
 ) -> None:
@@ -1094,20 +1102,25 @@ def test_next_network_scan_at(
         parent_folder=tree.root_folder(),
         name="bla",
         title="Bla",
-        attributes={
-            "network_scan": {
-                "exclude_ranges": [],
-                "ip_ranges": [("ip_range", ("10.3.1.1", "10.3.1.100"))],
-                "run_as": UserId("cmkadmin"),
-                "scan_interval": 300,
-                "set_ipaddress": True,
-                "tag_criticality": "offline",
-                "time_allowed": allowed,
-            },
-            "network_scan_result": {
-                "end": last_end,
-            },
-        },
+        attributes=HostAttributes(
+            {
+                "network_scan": {
+                    "exclude_ranges": [],
+                    "ip_ranges": [("ip_range", ("10.3.1.1", "10.3.1.100"))],
+                    "run_as": UserId("cmkadmin"),
+                    "scan_interval": 300,
+                    "set_ipaddress": True,
+                    "tag_criticality": "offline",
+                    "time_allowed": allowed,
+                },
+                "network_scan_result": {
+                    "start": last_end - 10 if last_end is not None else None,
+                    "end": last_end,
+                    "state": True,
+                    "output": "",
+                },
+            }
+        ),
     )
 
     with on_time("2018-01-10 02:00:00", "CET"):

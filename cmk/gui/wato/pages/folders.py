@@ -969,7 +969,8 @@ class ModeFolder(WatoMode):
             if attr.show_in_table():
                 attrname = attr.name()
                 if attrname in host.attributes:
-                    tdclass, tdcontent = attr.paint(host.attributes[attrname], hostname)
+                    # Mypy can not help here with the dynamic key
+                    tdclass, tdcontent = attr.paint(host.attributes[attrname], hostname)  # type: ignore[literal-required]
                 else:
                     tdclass, tdcontent = attr.paint(effective.get(attrname), hostname)
                     tdclass += " inherited"

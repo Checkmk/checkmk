@@ -6,8 +6,12 @@
 
 import json
 from collections.abc import Collection
+from typing import NotRequired, TypedDict
 
 from cmk.utils.exceptions import MKGeneralException
+from cmk.utils.hostaddress import HostAddress, HostName
+
+from cmk.snmplib.type_defs import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.forms as forms
 from cmk.gui.breadcrumb import Breadcrumb
@@ -29,20 +33,25 @@ from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.user_errors import user_errors
-from cmk.gui.valuespec import (
-    Dictionary,
-    DropdownChoice,
-    FixedValue,
-    Float,
-    HostAddress,
-    Integer,
-    Password,
-)
+from cmk.gui.valuespec import Dictionary, DropdownChoice, FixedValue, Float
+from cmk.gui.valuespec import HostAddress as VSHostAddress
+from cmk.gui.valuespec import Integer, Password
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
-from cmk.gui.watolib.attributes import SNMPCredentials
+from cmk.gui.watolib.attributes import SNMPCredentials as VSSNMPCredentials
 from cmk.gui.watolib.check_mk_automations import diag_host
-from cmk.gui.watolib.host_attributes import host_attribute_registry
+from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, folder_preserving_link, Host
+
+SNMPv3NoAuthNoPriv = tuple[str, str]
+SNMPv3AuthNoPriv = tuple[str, str, str, str]
+SNMPv3AuthPriv = tuple[str, str, str, str, str, str]
+
+
+class HostSpec(TypedDict):
+    hostname: HostName
+    ipaddress: NotRequired[HostAddress]
+    snmp_community: NotRequired[SNMPCredentials]
+    snmp_v3_credentials: NotRequired[SNMPv3NoAuthNoPriv | SNMPv3AuthNoPriv | SNMPv3AuthPriv]
 
 
 @mode_registry.register
@@ -143,27 +152,28 @@ class ModeDiagHost(WatoMode):
         if request.var("go_to_properties"):
             # Save the ipaddress and/or community
             vs_host = self._vs_host()
-            new = vs_host.from_html_vars("vs_host")
+            new: HostSpec = vs_host.from_html_vars("vs_host")
             vs_host.validate_value(new, "vs_host")
 
-            # If both snmp types have credentials set - snmpv3 takes precedence
             return_message = []
+            attributes = HostAttributes()
+
             if "ipaddress" in new:
                 return_message.append(_("IP address"))
+                attributes["ipaddress"] = new["ipaddress"]
+
+            # If both SNMP types have credentials set - SNMPv3 takes precedence
             if "snmp_v3_credentials" in new:
                 if "snmp_community" in new:
                     return_message.append(_("SNMPv3 credentials (SNMPv2 community was discarded)"))
                 else:
                     return_message.append(_("SNMPv3 credentials"))
-                new["snmp_community"] = new["snmp_v3_credentials"]
+                attributes["snmp_community"] = new["snmp_v3_credentials"]
             elif "snmp_community" in new:
                 return_message.append(_("SNMP credentials"))
+                attributes["snmp_community"] = new["snmp_community"]
 
-            # Remove fields in this page that are not host attributes in order to avoid
-            # data corruption.
-            self._host.update_attributes(
-                {k: v for k, v in new.items() if k in host_attribute_registry}
-            )
+            self._host.update_attributes(attributes)
 
             flash(_("Updated attributes: ") + ", ".join(return_message))
             return redirect(
@@ -197,7 +207,7 @@ class ModeDiagHost(WatoMode):
 
         forms.section(legend=False)
 
-        # The diagnose page shows both snmp variants at the same time
+        # The diagnose page shows both SNMP variants at the same time
         # We need to analyse the preconfigured community and set either the
         # snmp_community or the snmp_v3_credentials
         vs_dict: dict[str, object] = {}
@@ -302,7 +312,7 @@ class ModeDiagHost(WatoMode):
                 ),
                 (
                     "ipaddress",
-                    HostAddress(
+                    VSHostAddress(
                         title=_("IPv4 address"),
                         allow_empty=False,
                         allow_ipv6_address=False,
@@ -317,7 +327,7 @@ class ModeDiagHost(WatoMode):
                 ),
                 (
                     "snmp_v3_credentials",
-                    SNMPCredentials(
+                    VSSNMPCredentials(
                         default_value=None,
                         only_v3=True,
                     ),

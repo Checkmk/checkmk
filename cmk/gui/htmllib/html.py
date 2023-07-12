@@ -283,10 +283,15 @@ class HTMLGenerator(HTMLWriter):
 
     @staticmethod
     def _exists_in_web_dirs(file_name: str) -> None:
+        """
+        show error message about missing files, if in debug mode
+        """
+        if not current_app.debug:
+            return
         path = _path(cmk.utils.paths.web_dir) / file_name
         local_path = _path(cmk.utils.paths.local_web_dir) / file_name
         file_missing = not (path.exists() or local_path.exists())
-        if file_missing and current_app.debug:
+        if file_missing:
             raise FileNotFoundError(f"Neither {path} nor {local_path} exist.")
 
     @staticmethod

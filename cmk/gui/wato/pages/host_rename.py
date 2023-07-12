@@ -191,7 +191,7 @@ class ModeBulkRenameHost(WatoMode):
         entries = []
         for host_name, host in folder.hosts().items():
             target_name = self._host_renamed_into(host_name, renaming_config)
-            if target_name and host.may("write"):
+            if target_name and host.permissions.may("write"):
                 entries.append((folder, host_name, target_name))
         if renaming_config["recurse"]:
             for subfolder in folder.subfolders():

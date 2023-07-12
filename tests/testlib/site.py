@@ -1251,7 +1251,7 @@ class SiteFactory:
         enforce_english_gui: bool = True,
     ) -> None:
         self.version = version
-        self._base_ident = prefix or "s_%s_" % version.branch[:6]
+        self._base_ident = prefix if prefix is not None else "s_%s_" % version.branch[:6]
         self._sites: MutableMapping[str, Site] = {}
         self._index = 1
         self._update_from_git = update_from_git
@@ -1360,6 +1360,7 @@ class SiteFactory:
             return self._sites[name]
 
         site_id = f"{self._base_ident}{name}"
+
         return Site(
             version=self.version,
             site_id=site_id,

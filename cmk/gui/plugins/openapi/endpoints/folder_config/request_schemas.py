@@ -3,6 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
+from typing import Any
+
+from marshmallow import validates_schema, ValidationError
+
 from cmk.utils.regex import WATO_FOLDER_PATH_NAME_REGEX
 
 from cmk.gui import fields as gui_fields
@@ -84,6 +88,8 @@ class BulkCreateFolder(BaseSchema):
 class UpdateFolder(BaseSchema):
     """Updating a folder"""
 
+    schema_example = {"title": "Virtual Servers", "attributes": {"tag_networking": "wan"}}
+
     title = fields.String(
         example="Virtual Servers.",
         required=False,
@@ -95,10 +101,12 @@ class UpdateFolder(BaseSchema):
         "inbound",
         description=(
             "Replace all attributes with the ones given in this field. Already set"
-            "attributes, not given here, will be removed."
+            "attributes, not given here, will be removed. Can't be used together with "
+            "update_attributes or remove_attributes fields."
         ),
         example={"tag_networking": "wan"},
         required=False,
+        load_default=None,
     )
     update_attributes = gui_fields.host_attributes_field(
         "folder",
@@ -106,18 +114,34 @@ class UpdateFolder(BaseSchema):
         "inbound",
         description=(
             "Only set the attributes which are given in this field. Already set "
-            "attributes will not be touched."
+            "attributes will not be touched. Can't be used together with attributes "
+            "or remove_attributes fields."
         ),
         example={"tag_criticality": "prod"},
         required=False,
+        load_default=None,
     )
     remove_attributes = fields.List(
         fields.String(),
-        description="A list of attributes which should be removed.",
+        description=(
+            "A list of attributes which should be removed. Can't be used together "
+            "with attributes or update_attributes fields."
+        ),
         example=["tag_foobar"],
         required=False,
-        load_default=list,
     )
+
+    @validates_schema
+    def validate_attributes(self, data: dict[str, Any], **kwargs: Any) -> dict:
+        """Only one of the attributes fields is allowed at a time"""
+        only_one_of = {"attributes", "update_attributes", "remove_attributes"}
+
+        attribute_fields_sent = only_one_of & set(data)
+        if len(attribute_fields_sent) > 1:
+            raise ValidationError(
+                f"This endpoint only allows 1 action (set/update/remove) per call, you specified {len(attribute_fields_sent)} actions: {', '.join(attribute_fields_sent)}."
+            )
+        return data
 
 
 class UpdateFolderEntry(UpdateFolder):

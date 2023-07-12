@@ -96,10 +96,6 @@ class HTMLGenerator(HTMLWriter):
     def clear_default_javascript(self) -> None:
         del self._default_javascripts[:]
 
-    def add_default_javascript(self, name: str) -> None:
-        if name not in self._default_javascripts:
-            self._default_javascripts.append(name)
-
     def immediate_browser_redirect(self, secs: float, url: str) -> None:
         self.javascript(f"cmk.utils.set_reload({secs}, '{url}');")
 

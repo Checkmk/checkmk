@@ -1,0 +1,26 @@
+Title: Remove HTMLGenerator.add_default_javascript function
+Class: feature
+Compatible: incomp
+Component: wato
+Date: 1689161902
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+MKPs that use custom javascript code may be affected by this change. A typical
+usage of this function may look like:
+
+C+:
+html.add_default_javascript("custom_id")
+C-:
+
+There is no 1:1 replacement for this call, but several ways to do similar things:
+
+C+:
+html.javascript("inlined_javascript_code();")
+C-:
+
+C+:
+html.javascript_file("browser/path/to_javascriptfile.js")
+C-:

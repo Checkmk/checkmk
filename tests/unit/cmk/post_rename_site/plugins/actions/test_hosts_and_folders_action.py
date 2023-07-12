@@ -10,6 +10,7 @@ from pytest import MonkeyPatch
 from livestatus import SiteId
 
 import cmk.utils.paths
+from cmk.utils.hostaddress import HostName
 from cmk.utils.tags import TagGroupID
 
 import cmk.gui.watolib.hosts_and_folders
@@ -82,9 +83,11 @@ host_attributes.update(
 """
     )
 
-    assert folder_tree().root_folder().load_host("ag").attributes.get("site") == "stable"
+    assert folder_tree().root_folder().load_host(HostName("ag")).attributes.get("site") == "stable"
     update_hosts_and_folders(SiteId("stable"), SiteId("dingdong"), logger)
-    assert folder_tree().root_folder().load_host("ag").attributes.get("site") == "dingdong"
+    assert (
+        folder_tree().root_folder().load_host(HostName("ag")).attributes.get("site") == "dingdong"
+    )
 
     # also verify that the attributes (host_tags) not read by WATO have been updated
     hosts_config = folder_tree().root_folder()._load_hosts_file()
@@ -133,8 +136,8 @@ host_attributes.update(
     root_folder = tree.root_folder()
 
     assert root_folder.attributes.get("site") is None
-    assert root_folder.load_host("ag").attributes.get("site") is None
-    assert root_folder.load_host("ag").site_id() == "NO_SITE"
+    assert root_folder.load_host(HostName("ag")).attributes.get("site") is None
+    assert root_folder.load_host(HostName("ag")).site_id() == "NO_SITE"
 
     # Simulate changed omd_site that we would have in application code in the moment the rename
     # action is executed.
@@ -146,9 +149,9 @@ host_attributes.update(
     tree.invalidate_caches()
 
     assert root_folder.attributes.get("site") is None
-    assert root_folder.load_host("ag").attributes.get("site") is None
-    assert root_folder.load_host("ag").site_id() == "dingdong"
-    assert root_folder.load_host("ag").tag_groups()[TagGroupID("site")] == "dingdong"
+    assert root_folder.load_host(HostName("ag")).attributes.get("site") is None
+    assert root_folder.load_host(HostName("ag")).site_id() == "dingdong"
+    assert root_folder.load_host(HostName("ag")).tag_groups()[TagGroupID("site")] == "dingdong"
 
     # also verify that the attributes (host_tags) not read by WATO have been updated
     hosts_config = root_folder._load_hosts_file()

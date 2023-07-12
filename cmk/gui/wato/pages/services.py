@@ -123,8 +123,10 @@ class ModeDiscovery(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditHost
 
-    def _from_vars(self):
-        self._host = folder_from_request().load_host(request.get_ascii_input_mandatory("host"))
+    def _from_vars(self) -> None:
+        self._host = folder_from_request().load_host(
+            HostName(request.get_ascii_input_mandatory("host"))
+        )
         if not self._host:
             raise MKUserError("host", _("You called this page with an invalid host name."))
 
@@ -182,7 +184,7 @@ class ModeDiscovery(WatoMode):
         html.open_div(id_=f"{name}_container", style=("display:none" if hidden else ""))
         html.close_div()
 
-    def _async_progress_msg_container(self):
+    def _async_progress_msg_container(self) -> None:
         html.open_div(id_="async_progress_msg")
         html.show_message(_("Discovery running. Please standby."))
         html.close_div()
@@ -198,7 +200,7 @@ class _AutomationServiceDiscoveryRequest(NamedTuple):
 class AutomationServiceDiscoveryJob(AutomationCommand):
     """Is called by _get_check_table() to execute the background job on a remote site"""
 
-    def command_name(self):
+    def command_name(self) -> str:
         return "service-discovery-job"
 
     def get_request(self) -> _AutomationServiceDiscoveryRequest:

@@ -80,8 +80,8 @@ class ModeDiagHost(WatoMode):
             ("traceroute", _("Traceroute")),
         ]
 
-    def _from_vars(self):
-        self._hostname = request.get_ascii_input_mandatory("host")
+    def _from_vars(self) -> None:
+        self._hostname = HostName(request.get_ascii_input_mandatory("host"))
         self._host = folder_from_request().load_host(self._hostname)
         self._host.permissions.need_permission("read")
 

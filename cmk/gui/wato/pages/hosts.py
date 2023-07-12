@@ -328,7 +328,7 @@ class ModeEditHost(ABCHostMode):
         return self.mode_url(host=self._host.name())
 
     def _init_host(self) -> CREHost:
-        hostname = request.get_ascii_input_mandatory("host")
+        hostname = HostName(request.get_ascii_input_mandatory("host"))
         folder = folder_from_request()
         if not folder.has_host(hostname):
             raise MKUserError("host", _("You called this page with an invalid host name."))
@@ -592,7 +592,7 @@ class CreateHostMode(ABCHostMode):
     def _verify_host_type(cls, host):
         raise NotImplementedError()
 
-    def _from_vars(self):
+    def _from_vars(self) -> None:
         if request.var("clone"):
             self._mode = "clone"
         else:
@@ -603,9 +603,9 @@ class CreateHostMode(ABCHostMode):
         if not clonename:
             return self._init_new_host_object()
         folder = folder_from_request()
-        if not folder.has_host(clonename):
+        if not folder.has_host(HostName(clonename)):
             raise MKUserError("host", _("You called this page with an invalid host name."))
-        host = folder.load_host(clonename)
+        host = folder.load_host(HostName(clonename))
         self._verify_host_type(host)
         return host
 

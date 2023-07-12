@@ -393,8 +393,8 @@ class ModeRenameHost(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeEditHost
 
-    def _from_vars(self):
-        host_name = request.get_ascii_input_mandatory("host")
+    def _from_vars(self) -> None:
+        host_name = HostName(request.get_ascii_input_mandatory("host"))
 
         folder = folder_from_request()
         if not folder.has_host(host_name):

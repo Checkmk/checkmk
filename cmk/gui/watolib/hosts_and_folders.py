@@ -804,7 +804,7 @@ class BaseFolder:
             name = "%s-%d" % (basename, c)
         return name
 
-    def hosts(self):
+    def hosts(self) -> Mapping[HostName, CREHost]:
         raise NotImplementedError()
 
     def delete_hosts(
@@ -829,18 +829,18 @@ class BaseFolder:
         return breadcrumb
 
     def host_names(self) -> Sequence[HostName]:
-        return self.hosts().keys()
+        return list(self.hosts().keys())
 
-    def load_host(self, host_name: str) -> CREHost:
+    def load_host(self, host_name: HostName) -> CREHost:
         try:
             return self.hosts()[host_name]
         except KeyError:
             raise MKUserError(None, f"The host {host_name} could not be found.")
 
-    def host(self, host_name: str) -> CREHost | None:
+    def host(self, host_name: HostName) -> CREHost | None:
         return self.hosts().get(host_name)
 
-    def has_host(self, host_name) -> bool:  # type: ignore[no-untyped-def]
+    def has_host(self, host_name: HostName) -> bool:
         return host_name in self.hosts()
 
     def has_hosts(self) -> bool:
@@ -858,17 +858,21 @@ class BaseFolder:
     def has_parent(self) -> bool:
         return self.parent() is not None
 
-    def parent(self):
+    def parent(self) -> CREFolder | None:
         raise NotImplementedError()
 
-    def is_same_as(self, folder) -> bool:  # type: ignore[no-untyped-def]
+    def is_same_as(self, folder: CREFolder | None) -> bool:
+        if folder is None:
+            return False
         return self == folder or self.path() == folder.path()
 
-    def path(self):
+    def path(self) -> str:
         raise NotImplementedError()
 
-    def __eq__(self, other):
-        return id(self) == id(other) or self.path() == other.path()
+    def __eq__(self, other: object) -> bool:
+        return id(self) == id(other) or (
+            isinstance(other, CREFolder) and self.path() == other.path()
+        )
 
     def __hash__(self) -> int:
         return id(self)
@@ -876,13 +880,17 @@ class BaseFolder:
     def is_current_folder(self) -> bool:
         return self.is_same_as(folder_from_request())
 
-    def is_parent_of(self, maybe_child) -> bool:  # type: ignore[no-untyped-def]
-        return maybe_child.parent() == self
+    def is_transitive_parent_of(self, maybe_child: CREFolder) -> bool:
+        if self.is_same_as(maybe_child):
+            return True
 
-    def is_transitive_parent_of(self, maybe_child) -> bool:  # type: ignore[no-untyped-def]
-        return self.is_same_as(maybe_child) or (
-            maybe_child.has_parent() and self.is_transitive_parent_of(maybe_child.parent())
-        )
+        if not maybe_child.has_parent():
+            return False
+
+        if parent := maybe_child.parent():
+            return self.is_transitive_parent_of(parent)
+
+        return False
 
     def is_root(self) -> bool:
         return not self.has_parent()
@@ -901,34 +909,34 @@ class BaseFolder:
     def title(self) -> str:
         raise NotImplementedError()
 
-    def subfolders(self, only_visible=False):
+    def subfolders(self, only_visible: bool = False) -> list[CREFolder]:
         raise NotImplementedError()
 
-    def subfolder_by_title(self, title):
+    def subfolder_by_title(self, title: str) -> CREFolder | None:
         raise NotImplementedError()
 
-    def subfolder(self, name):
+    def subfolder(self, name: str) -> CREFolder | None:
         raise NotImplementedError()
 
     def has_subfolders(self) -> bool:
         raise NotImplementedError()
 
-    def subfolder_choices(self):
+    def subfolder_choices(self) -> list[tuple[str, str]]:
         raise NotImplementedError()
 
-    def move_subfolder_to(self, subfolder, target_folder):
+    def move_subfolder_to(self, subfolder: CREFolder, target_folder: CREFolder) -> None:
         raise NotImplementedError()
 
-    def create_subfolder(self, name, title, attributes):
+    def create_subfolder(self, name: str, title: str, attributes: HostAttributes) -> CREFolder:
         raise NotImplementedError()
 
-    def edit_url(self, backfolder=None):
+    def edit_url(self, backfolder: CREFolder | None = None) -> str:
         raise NotImplementedError()
 
-    def edit(self, new_title, new_attributes):
+    def edit(self, new_title: str, new_attributes: HostAttributes) -> None:
         raise NotImplementedError()
 
-    def locked(self):
+    def locked(self) -> bool | str:
         raise NotImplementedError()
 
     def create_hosts(
@@ -937,7 +945,7 @@ class BaseFolder:
     ) -> None:
         raise NotImplementedError()
 
-    def site_id(self):
+    def site_id(self) -> SiteId:
         raise NotImplementedError()
 
 
@@ -1678,7 +1686,7 @@ class CREFolder(BaseFolder):
     def object_ref(self) -> ObjectRef:
         return ObjectRef(ObjectRefType.Folder, self.path())
 
-    def hosts(self) -> dict[HostName, CREHost]:
+    def hosts(self) -> Mapping[HostName, CREHost]:
         self._load_hosts_on_demand()
         assert self._hosts is not None
         return self._hosts
@@ -1968,7 +1976,7 @@ class CREFolder(BaseFolder):
 
         return permitted_groups, host_contact_groups, cgconf.get("use_for_services", False)
 
-    def find_host_recursively(self, host_name: str) -> CREHost | None:
+    def find_host_recursively(self, host_name: HostName) -> CREHost | None:
         host: CREHost | None = self.host(host_name)
         if host:
             return host

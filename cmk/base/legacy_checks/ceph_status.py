@@ -6,7 +6,7 @@
 
 import json
 import time
-from typing import Mapping
+from typing import Any, Iterable, Mapping, Sequence
 
 from cmk.base.check_api import (
     check_levels,
@@ -23,6 +23,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
+DiscoveryResult = Iterable[tuple[str | None, dict]]
+CheckResult = Iterable[tuple[int, str]]
+
 Section = Mapping
 
 
@@ -37,7 +40,7 @@ def parse_ceph_status(string_table: StringTable) -> Section:
     return section
 
 
-def ceph_check_epoch(id_, epoch, params):
+def ceph_check_epoch(id_: str, epoch: float, params: Mapping[str, Any]) -> tuple[int, str]:
     warn, crit, avg_interval_min = params.get("epoch", (None, None, 1))
     now = time.time()
     value_store = get_value_store()
@@ -70,11 +73,11 @@ def ceph_check_epoch(id_, epoch, params):
 # Suggested by customer: 1,3 per 30 min
 
 
-def discovery_ceph_status(section):
-    return [(None, {})]
+def discovery_ceph_status(section: Section) -> DiscoveryResult:
+    yield None, {}
 
 
-def _extract_error_messages(section):
+def _extract_error_messages(section: Section) -> Sequence[str]:
     error_messages = []
     for err in section.get("health", {}).get("checks", {}).values():
         err_msg = err.get("summary", {}).get("message")
@@ -84,7 +87,7 @@ def _extract_error_messages(section):
 
 
 # TODO genereller Status -> ceph health (Ausnahmen für "too many PGs per OSD" als Option ermöglichen)
-def check_ceph_status(_no_item, params, section):
+def check_ceph_status(_no_item: None, params: Mapping[str, Any], section: Section) -> CheckResult:
     map_health_states = {
         "HEALTH_OK": (0, "OK"),
         "HEALTH_WARN": (1, "warning"),
@@ -132,13 +135,14 @@ check_info["ceph_status"] = LegacyCheckDefinition(
 # Suggested by customer: 50, 100 per 15 min
 
 
-def discovery_ceph_status_osds(section):
+def discovery_ceph_status_osds(section: Section) -> DiscoveryResult:
     if "osdmap" in section:
-        return [(None, {})]
-    return []
+        yield None, {}
 
 
-def check_ceph_status_osds(_no_item, params, section):
+def check_ceph_status_osds(
+    _no_item: None, params: Mapping[str, Any], section: Section
+) -> CheckResult:
     # some instances of ceph give out osdmap data in a flat structure
     data = section["osdmap"].get("osdmap") or section["osdmap"]
     num_osds = int(data["num_osds"])
@@ -201,13 +205,14 @@ check_info["ceph_status.osds"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 
-def discovery_ceph_status_pgs(section):
+def discovery_ceph_status_pgs(section: Section) -> DiscoveryResult:
     if "pgmap" in section:
-        return [(None, {})]
-    return []
+        yield None, {}
 
 
-def check_ceph_status_pgs(_no_item, params, section):
+def check_ceph_status_pgs(
+    _no_item: None, params: Mapping[str, Any], section: Section
+) -> CheckResult:
     # Suggested by customer
     map_pg_states = {
         "active": (0, "active"),
@@ -251,7 +256,7 @@ def check_ceph_status_pgs(_no_item, params, section):
             statetexts.append(f"{state_readable}{state_markers[state]}")
         infotexts.append("Status '{}': {}".format("+".join(statetexts), pgs_by_state["count"]))
 
-    return max(states), "{}, {}".format(pgs_info, ", ".join(infotexts))
+    yield max(states), "{}, {}".format(pgs_info, ", ".join(infotexts))
 
 
 check_info["ceph_status.pgs"] = LegacyCheckDefinition(
@@ -274,13 +279,14 @@ check_info["ceph_status.pgs"] = LegacyCheckDefinition(
 # Suggested by customer: 1, 2 per 5 min
 
 
-def discovery_ceph_status_mgrs(section):
+def discovery_ceph_status_mgrs(section: Section) -> DiscoveryResult:
     if "epoch" in section.get("mgrmap", {}):
-        return [(None, {})]
-    return []
+        yield None, {}
 
 
-def check_ceph_status_mgrs(_no_item, params, section):
+def check_ceph_status_mgrs(
+    _no_item: None, params: Mapping[str, Any], section: Section
+) -> CheckResult:
     epoch = section.get("mgrmap", {}).get("epoch")
     if epoch is None:
         return

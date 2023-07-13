@@ -27,3 +27,4 @@ Note that Bandit is picky about the exact format.
 | `BNS:aee528` | `B102` | Config file data would be in an expected format however alternatives handle process threads different which may impact timings or cause hanging when loading configurations. |
 | `BNS:9666b8` | `B307` | Used to validate that literal_eval still replicates the desired results expected from eval. |
 | `BNS:1c6cc2` | `B307` | Literal_eval cannot be used evaluate non-string fields. |
+| `BNS:eb967b` | `B324` | Sha1 hmac is fine and is the prefered standard for totp, bandit only sees the use of sha1. |

@@ -16,7 +16,7 @@ import cmk.utils.debug
 import cmk.utils.misc
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostName
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import HostSection, SectionName
 from cmk.utils.translations import TranslationOptions
 
 from cmk.fetchers.cache import SectionStore
@@ -468,7 +468,7 @@ class HostSectionParser(ParserState):
         return self.to_noop_parser()
 
 
-class AgentParser(Parser[AgentRawData, HostSections[Sequence[AgentRawDataSection]]]):
+class AgentParser(Parser[AgentRawData, HostSections[HostSection[Sequence[AgentRawDataSection]]]]):
     """A parser for agent data."""
 
     def __init__(
@@ -499,7 +499,7 @@ class AgentParser(Parser[AgentRawData, HostSections[Sequence[AgentRawDataSection
         raw_data: AgentRawData,
         *,
         selection: SectionNameCollection,
-    ) -> HostSections[Sequence[AgentRawDataSection]]:
+    ) -> HostSections[HostSection[Sequence[AgentRawDataSection]]]:
         if self.simulation:
             raw_data = agent_simulator.process(raw_data)
 
@@ -582,7 +582,7 @@ class AgentParser(Parser[AgentRawData, HostSections[Sequence[AgentRawDataSection
             now=now,
             keep_outdated=self.keep_outdated,
         )
-        return HostSections[Sequence[AgentRawDataSection]](
+        return HostSections[HostSection[Sequence[AgentRawDataSection]]](
             new_sections,
             cache_info=cache_info,
             piggybacked_raw_data=piggybacked_raw_data,

@@ -9,7 +9,7 @@ from copy import deepcopy
 import pytest
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import HostSection, SectionName
 
 from cmk.checkengine.host_sections import HostSections
 from cmk.checkengine.type_defs import AgentRawDataSection
@@ -17,11 +17,11 @@ from cmk.checkengine.type_defs import AgentRawDataSection
 
 class TestHostSections:
     @pytest.fixture
-    def host_sections(self) -> HostSections:
+    def host_sections(self) -> HostSections[HostSection[Sequence[AgentRawDataSection]]]:
         return self._get_some_section()
 
-    def _get_some_section(self) -> HostSections:
-        return HostSections[Sequence[AgentRawDataSection]](
+    def _get_some_section(self) -> HostSections[HostSection[Sequence[AgentRawDataSection]]]:
+        return HostSections[HostSection[Sequence[AgentRawDataSection]]](
             {
                 SectionName("section0"): [["first", "line"], ["second", "line"]],
                 SectionName("section1"): [["third", "line"], ["forth", "line"]],
@@ -36,9 +36,11 @@ class TestHostSections:
             },
         )
 
-    def test_add_self_extends_sections(self, host_sections: HostSections) -> None:
+    def test_add_self_extends_sections(
+        self, host_sections: HostSections[HostSection[Sequence[AgentRawDataSection]]]
+    ) -> None:
         # host_sections will be modified inline, so copy here to compare later
-        orig = HostSections(
+        orig = HostSections[HostSection[Sequence[AgentRawDataSection]]](
             sections=deepcopy(host_sections.sections),
             cache_info=deepcopy(host_sections.cache_info),
             piggybacked_raw_data=deepcopy(host_sections.piggybacked_raw_data),
@@ -58,7 +60,7 @@ class TestHostSections:
             )
 
     def test_add_other_adds_sections(self, host_sections: HostSections) -> None:
-        other = HostSections[Sequence[AgentRawDataSection]](
+        other = HostSections[HostSection[Sequence[AgentRawDataSection]]](
             {
                 SectionName("section2"): [["first", "line"], ["second", "line"]],
                 SectionName("section3"): [["third", "line"], ["forth", "line"]],

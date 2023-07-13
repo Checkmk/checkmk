@@ -8,7 +8,7 @@ from collections.abc import Callable, Iterable, Sequence
 from pytest import MonkeyPatch
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import HostSection, SectionName
 
 from cmk.checkengine import SectionPlugin
 from cmk.checkengine.host_sections import HostSections
@@ -71,7 +71,7 @@ NODE_2: Sequence[AgentRawDataSection] = [
 
 def make_parser() -> SectionsParser:
     return SectionsParser(
-        HostSections[Sequence[AgentRawDataSection]](
+        HostSections[HostSection[Sequence[AgentRawDataSection]]](
             sections={
                 SectionName("one"): NODE_1,
                 SectionName("four"): NODE_1,

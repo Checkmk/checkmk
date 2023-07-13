@@ -13,6 +13,7 @@ from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.rulesets import RuleSetName
+from cmk.utils.sectionname import HostSection
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataElem
 
@@ -80,7 +81,10 @@ def parse_raw_data(
     raw_data: result.Result[AgentRawData | SNMPRawData, Exception],
     *,
     selection: SectionNameCollection,
-) -> result.Result[HostSections[Sequence[AgentRawDataSection] | SNMPRawDataElem], Exception]:
+) -> result.Result[
+    HostSections[HostSection[Sequence[AgentRawDataSection]] | HostSection[SNMPRawDataElem]],
+    Exception,
+]:
     try:
         return raw_data.map(partial(parser.parse, selection=selection))
     except Exception as exc:

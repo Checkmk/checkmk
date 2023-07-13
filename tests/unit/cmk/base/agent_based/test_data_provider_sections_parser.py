@@ -10,7 +10,7 @@ import pytest
 
 import cmk.utils.debug
 from cmk.utils.hostaddress import HostName
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import HostSection, SectionName
 
 from cmk.checkengine import crash_reporting
 from cmk.checkengine.host_sections import HostSections
@@ -32,7 +32,7 @@ class TestSectionsParser:
     @pytest.fixture
     def sections_parser(self) -> SectionsParser[AgentRawDataSection]:
         return SectionsParser[AgentRawDataSection](
-            host_sections=HostSections[AgentRawDataSection](
+            host_sections=HostSections[HostSection[AgentRawDataSection]](
                 sections={
                     SectionName("one"): [],
                     SectionName("two"): [],

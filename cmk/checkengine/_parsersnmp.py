@@ -9,7 +9,7 @@ from collections.abc import Mapping, MutableMapping
 from typing import Final
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import HostSection, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataElem
 
@@ -22,7 +22,7 @@ from .type_defs import SectionNameCollection
 __all__ = ["SNMPParser"]
 
 
-class SNMPParser(Parser[SNMPRawData, HostSections[SNMPRawDataElem]]):
+class SNMPParser(Parser[SNMPRawData, HostSections[HostSection[SNMPRawDataElem]]]):
     """A parser for SNMP data.
 
     Note:
@@ -53,7 +53,7 @@ class SNMPParser(Parser[SNMPRawData, HostSections[SNMPRawDataElem]]):
         # The selection argument is ignored: Selection is done
         # in the fetcher for SNMP.
         selection: SectionNameCollection,
-    ) -> HostSections[SNMPRawDataElem]:
+    ) -> HostSections[HostSection[SNMPRawDataElem]]:
         sections = dict(raw_data)
         now = int(time.time())
 
@@ -70,4 +70,4 @@ class SNMPParser(Parser[SNMPRawData, HostSections[SNMPRawDataElem]]):
             now=now,
             keep_outdated=self.keep_outdated,
         )
-        return HostSections[SNMPRawDataElem](new_sections, cache_info=cache_info)
+        return HostSections[HostSection[SNMPRawDataElem]](new_sections, cache_info=cache_info)

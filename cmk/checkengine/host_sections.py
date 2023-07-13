@@ -7,20 +7,20 @@ from __future__ import annotations
 
 import abc
 from collections.abc import Mapping, Sequence
-from typing import Final, Generic, no_type_check, TypeVar
+from typing import Final, Generic, no_type_check, Self, TypeVar
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import HostSection, SectionName
 
-_TSec = TypeVar("_TSec", bound=Sequence)
+_T = TypeVar("_T", bound=HostSection[Sequence])
 
 
-class HostSections(Generic[_TSec], abc.ABC):
+class HostSections(Generic[_T], abc.ABC):
     """Host informations from the sources."""
 
     def __init__(
         self,
-        sections: HostSection[_TSec],
+        sections: _T,
         *,
         cache_info: Mapping[SectionName, tuple[int, int]] | None = None,
         # For `piggybacked_raw_data`, Sequence[bytes] is equivalent to AgentRawData.
@@ -40,7 +40,7 @@ class HostSections(Generic[_TSec], abc.ABC):
         )
 
     @no_type_check
-    def update(self, other: HostSections[_TSec]) -> None:
+    def update(self, other: Self) -> None:
         for section_name, section_content in other.sections.items():
             self.sections.setdefault(section_name, []).extend(section_content)
         for hostname, raw_lines in other.piggybacked_raw_data.items():

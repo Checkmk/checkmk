@@ -28,13 +28,13 @@ def check_dell_compellent_folder(item, params, info):
 
 check_info["dell_compellent_folder"] = LegacyCheckDefinition(
     detect=DETECT_DELL_COMPELLENT,
-    discovery_function=inventory_dell_compellent_folder,
-    check_function=check_dell_compellent_folder,
-    service_name="Folder %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.11000.2000.500.1.2.32.1",
         oids=["2", "5", "6"],
     ),
+    service_name="Folder %s",
+    discovery_function=inventory_dell_compellent_folder,
+    check_function=check_dell_compellent_folder,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

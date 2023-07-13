@@ -69,12 +69,12 @@ def check_dell_om_fans(item, params, info):
 
 check_info["dell_om_fans"] = LegacyCheckDefinition(
     detect=DETECT_OPENMANAGE,
-    check_function=check_dell_om_fans,
-    discovery_function=inventory_dell_om_fans,
-    service_name="Fan %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.1.700.12.1",
         oids=["2", "5", "6", "8", "10", "11", "12", "13"],
     ),
+    service_name="Fan %s",
+    discovery_function=inventory_dell_om_fans,
+    check_function=check_dell_om_fans,
     check_ruleset_name="hw_fans",
 )

@@ -44,11 +44,11 @@ def check_dell_chassis_powersupplies(item, _no_params, info):
 
 check_info["dell_chassis_powersupplies"] = LegacyCheckDefinition(
     detect=DETECT_CHASSIS,
-    check_function=check_dell_chassis_powersupplies,
-    discovery_function=inventory_dell_chassis_powersupplies,
-    service_name="Power Supply %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.2.4.2.1",
         oids=[OIDEnd(), "5", "6", "7"],
     ),
+    service_name="Power Supply %s",
+    discovery_function=inventory_dell_chassis_powersupplies,
+    check_function=check_dell_chassis_powersupplies,
 )

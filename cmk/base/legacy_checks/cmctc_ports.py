@@ -107,10 +107,6 @@ def check_cmctc_ports(item, _no_params, parsed):
 
 check_info["cmctc_ports"] = LegacyCheckDefinition(
     detect=DETECT_CMCTC,
-    parse_function=parse_cmctc_ports,
-    discovery_function=inventory_cmctc_ports,
-    check_function=check_cmctc_ports,
-    service_name="Port %s",
     fetch=[
         SNMPTree(
             base=f".1.3.6.1.4.1.2606.4.2.{unit}",
@@ -123,4 +119,8 @@ check_info["cmctc_ports"] = LegacyCheckDefinition(
             "6",  # cmcTcStatusSensorUnit4
         ]
     ],
+    parse_function=parse_cmctc_ports,
+    service_name="Port %s",
+    discovery_function=inventory_cmctc_ports,
+    check_function=check_cmctc_ports,
 )

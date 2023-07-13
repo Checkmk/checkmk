@@ -49,9 +49,9 @@ def check_cisco_prime_wifi_access_points(item, params, parsed):
 
 check_info["cisco_prime_wifi_access_points"] = LegacyCheckDefinition(
     parse_function=parse_cisco_prime_wifi_access_points,
+    service_name="Cisco Prime WiFi Access Points",
     discovery_function=discover_cisco_prime_wifi_access_points,
     check_function=check_cisco_prime_wifi_access_points,
-    service_name="Cisco Prime WiFi Access Points",
     check_ruleset_name="cisco_prime_wifi_access_points",
     check_default_parameters={
         "levels": (20, 40),

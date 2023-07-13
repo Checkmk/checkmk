@@ -44,15 +44,15 @@ def check_couchbase_nodes_operations(item, params, parsed):
 
 check_info["couchbase_nodes_operations"] = LegacyCheckDefinition(
     parse_function=parse_couchbase_nodes_operations,
+    service_name="Couchbase %s Operations",
     discovery_function=discover_couchbase_buckets_nodes_operations,
     check_function=check_couchbase_nodes_operations,
-    service_name="Couchbase %s Operations",
     check_ruleset_name="couchbase_ops",
 )
 
 check_info["couchbase_nodes_operations.total"] = LegacyCheckDefinition(
+    service_name="Couchbase Total Operations",
     discovery_function=discover_couchbase_buckets_nodes_operations_total,
     check_function=check_couchbase_nodes_operations,
-    service_name="Couchbase Total Operations",
     check_ruleset_name="couchbase_ops_nodes",
 )

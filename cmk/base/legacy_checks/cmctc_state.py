@@ -30,11 +30,11 @@ def check_cmctc_state(_no_item, _no_params, info):
 
 check_info["cmctc_state"] = LegacyCheckDefinition(
     detect=DETECT_CMCTC,
-    discovery_function=inventory_cmctc_state,
-    check_function=check_cmctc_state,
-    service_name="TC unit state",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2606.4.2",
         oids=["1", "2"],
     ),
+    service_name="TC unit state",
+    discovery_function=inventory_cmctc_state,
+    check_function=check_cmctc_state,
 )

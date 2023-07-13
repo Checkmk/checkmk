@@ -43,11 +43,11 @@ def check_dell_chassis_slots(item, _no_params, info):
 
 check_info["dell_chassis_slots"] = LegacyCheckDefinition(
     detect=DETECT_CHASSIS,
-    check_function=check_dell_chassis_slots,
-    discovery_function=inventory_dell_chassis_slots,
-    service_name="Slot %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.2.5.1.1",
         oids=["2", "3", "4", "5"],
     ),
+    service_name="Slot %s",
+    discovery_function=inventory_dell_chassis_slots,
+    check_function=check_dell_chassis_slots,
 )

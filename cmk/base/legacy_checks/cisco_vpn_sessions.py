@@ -39,8 +39,8 @@ def discover_cisco_vpn_sessions(section):
 
 
 check_info["cisco_vpn_sessions"] = LegacyCheckDefinition(
+    service_name="VPN Sessions %s",
     discovery_function=discover_cisco_vpn_sessions,
     check_function=check_cisco_vpn_sessions,
-    service_name="VPN Sessions %s",
     check_ruleset_name="cisco_vpn_sessions",
 )

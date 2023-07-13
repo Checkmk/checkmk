@@ -46,14 +46,14 @@ def discover_emc_datadomain_mtree(section):
 
 check_info["emc_datadomain_mtree"] = LegacyCheckDefinition(
     detect=DETECT_DATADOMAIN,
-    parse_function=parse_emc_datadomain_mtree,
-    check_function=check_emc_datadomain_mtree,
-    discovery_function=discover_emc_datadomain_mtree,
-    service_name="MTree %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.19746.1.15.2.1.1",
         oids=["2", "3", "4"],
     ),
+    parse_function=parse_emc_datadomain_mtree,
+    service_name="MTree %s",
+    discovery_function=discover_emc_datadomain_mtree,
+    check_function=check_emc_datadomain_mtree,
     check_ruleset_name="emc_datadomain_mtree",
     check_default_parameters={
         "deleted": 2,

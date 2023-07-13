@@ -98,9 +98,6 @@ check_info["dell_powerconnect_psu"] = LegacyCheckDefinition(
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10895"),
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.6027.1.3.22"),
     ),
-    check_function=check_dell_powerconnect_psu,
-    discovery_function=inventory_dell_powerconnect_psu,
-    service_name="Sensor %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.674.10895.3000.1.2.100.1",
@@ -111,4 +108,7 @@ check_info["dell_powerconnect_psu"] = LegacyCheckDefinition(
             oids=["1", "2", "3", "4"],
         ),
     ],
+    service_name="Sensor %s",
+    discovery_function=inventory_dell_powerconnect_psu,
+    check_function=check_dell_powerconnect_psu,
 )

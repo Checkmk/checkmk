@@ -33,13 +33,13 @@ def check_cisco_ucs_temp_cpu(item, params, info):
 
 check_info["cisco_ucs_temp_cpu"] = LegacyCheckDefinition(
     detect=DETECT,
-    discovery_function=inventory_cisco_ucs_temp_cpu,
-    check_function=check_cisco_ucs_temp_cpu,
-    service_name="Temperature CPU %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.719.1.41.2.1",
         oids=["2", "10"],
     ),
+    service_name="Temperature CPU %s",
+    discovery_function=inventory_cisco_ucs_temp_cpu,
+    check_function=check_cisco_ucs_temp_cpu,
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (75.0, 85.0),

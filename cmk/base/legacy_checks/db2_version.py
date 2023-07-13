@@ -32,6 +32,6 @@ def check_db2_version(item, _no_params, info):
 
 check_info["db2_version"] = LegacyCheckDefinition(
     service_name="DB2 Instance %s",
-    check_function=check_db2_version,
     discovery_function=inventory_db2_version,
+    check_function=check_db2_version,
 )

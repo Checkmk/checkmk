@@ -99,9 +99,9 @@ def discover_esx_vsphere_datastores(section):
 
 check_info["esx_vsphere_datastores"] = LegacyCheckDefinition(
     parse_function=parse_esx_vsphere_datastores,
+    service_name="Filesystem %s",
     discovery_function=discover_esx_vsphere_datastores,
     check_function=check_esx_vsphere_datastores,
-    service_name="Filesystem %s",
     check_ruleset_name="esx_vsphere_datastores",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

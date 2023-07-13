@@ -66,11 +66,11 @@ def check_cmctc_config(_no_item, _no_params, info):
 
 check_info["cmctc_config"] = LegacyCheckDefinition(
     detect=DETECT_CMCTC,
-    discovery_function=inventory_cmctc_config,
-    check_function=check_cmctc_config,
-    service_name="TC configuration",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2606.4.3.1",
         oids=["1", "2", "3", "4", "5"],
     ),
+    service_name="TC configuration",
+    discovery_function=inventory_cmctc_config,
+    check_function=check_cmctc_config,
 )

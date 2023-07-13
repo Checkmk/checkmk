@@ -110,13 +110,13 @@ def check_cmciii_lcp_water(item, params, parsed):
 
 check_info["cmciii_lcp_water"] = LegacyCheckDefinition(
     detect=DETECT_CMCIII_LCP,
-    parse_function=parse_cmciii_lcp_water,
-    check_function=check_cmciii_lcp_water,
-    discovery_function=inventory_cmciii_lcp_water,
-    service_name="Temperature Water LCP %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2606.7.4.2.2.1.10",
         oids=["2"],
     ),
+    parse_function=parse_cmciii_lcp_water,
+    service_name="Temperature Water LCP %s",
+    discovery_function=inventory_cmciii_lcp_water,
+    check_function=check_cmciii_lcp_water,
     check_ruleset_name="temperature",
 )

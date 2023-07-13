@@ -73,11 +73,11 @@ def check_cisco_stackpower(item, params, info):
 
 check_info["cisco_stackpower"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.516"),
-    discovery_function=inventory_cisco_stackpower,
-    check_function=check_cisco_stackpower,
-    service_name="Stackpower Interface %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.500.1.3.2.1",
         oids=[OIDEnd(), "2", "5", "7"],
     ),
+    service_name="Stackpower Interface %s",
+    discovery_function=inventory_cisco_stackpower,
+    check_function=check_cisco_stackpower,
 )

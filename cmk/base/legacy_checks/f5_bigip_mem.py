@@ -61,14 +61,14 @@ def check_f5_bigip_mem(_item, params, parsed):
 
 check_info["f5_bigip_mem"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3375"),
-    parse_function=parse_f5_bigip_mem,
-    discovery_function=discover_f5_bigip_mem,
-    check_function=check_f5_bigip_mem,
-    service_name="Memory",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.1",
         oids=["7.1.1", "7.1.2", "1.2.1.143", "1.2.1.144"],
     ),
+    parse_function=parse_f5_bigip_mem,
+    service_name="Memory",
+    discovery_function=discover_f5_bigip_mem,
+    check_function=check_f5_bigip_mem,
     check_ruleset_name="memory_simple",
     check_default_parameters={"levels": ("perc_used", (80.0, 90.0))},
 )
@@ -94,9 +94,9 @@ def check_f5_bigip_mem_tmm(_item, params, parsed):
 
 
 check_info["f5_bigip_mem.tmm"] = LegacyCheckDefinition(
+    service_name="Memory",
     discovery_function=discover_f5_bigip_mem_tmm,
     check_function=check_f5_bigip_mem_tmm,
-    service_name="Memory",
     check_ruleset_name="memory_simple",
     check_default_parameters={"levels": ("perc_used", (80.0, 90.0))},
 )

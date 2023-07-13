@@ -68,11 +68,11 @@ def check_datapower_pdrive(item, _no_params, info):
 
 check_info["datapower_pdrive"] = LegacyCheckDefinition(
     detect=DETECT,
-    discovery_function=inventory_datapower_pdrive,
-    check_function=check_datapower_pdrive,
-    service_name="Physical Drive %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14685.3.1.260.1",
         oids=["1", "2", "4", "6", "7", "8", "14", "15", "18"],
     ),
+    service_name="Physical Drive %s",
+    discovery_function=inventory_datapower_pdrive,
+    check_function=check_datapower_pdrive,
 )

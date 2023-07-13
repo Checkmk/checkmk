@@ -80,11 +80,11 @@ def check_cisco_power(item, _no_params, info):
 
 check_info["cisco_power"] = LegacyCheckDefinition(
     detect=DETECT_CISCO,
-    check_function=check_cisco_power,
-    discovery_function=inventory_cisco_power,
-    service_name="Power %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.13.1.5.1",
         oids=[OIDEnd(), "2", "3", "4"],
     ),
+    service_name="Power %s",
+    discovery_function=inventory_cisco_power,
+    check_function=check_cisco_power,
 )

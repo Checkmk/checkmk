@@ -65,9 +65,9 @@ def check_esx_vsphere_counters_uptime(_no_item, params, parsed):
 
 
 check_info["esx_vsphere_counters.uptime"] = LegacyCheckDefinition(
+    service_name="Uptime",
     discovery_function=inventory_esx_vsphere_counters_uptime,
     check_function=check_esx_vsphere_counters_uptime,
-    service_name="Uptime",
     check_ruleset_name="uptime",
 )
 
@@ -115,7 +115,7 @@ def check_esx_vsphere_counters_swap(item, params, parsed):
 
 
 check_info["esx_vsphere_counters.swap"] = LegacyCheckDefinition(
+    service_name="VMKernel Swap",
     discovery_function=inventory_esx_vsphere_counters_swap,
     check_function=check_esx_vsphere_counters_swap,
-    service_name="VMKernel Swap",
 )

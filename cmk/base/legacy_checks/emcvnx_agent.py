@@ -34,7 +34,7 @@ def check_emcvnx_agent(item, _no_params, parsed):
 
 check_info["emcvnx_agent"] = LegacyCheckDefinition(
     parse_function=parse_emcvnx_agent,
+    service_name="EMC VNX Agent",
     discovery_function=inventory_emcvnx_agent,
     check_function=check_emcvnx_agent,
-    service_name="EMC VNX Agent",
 )

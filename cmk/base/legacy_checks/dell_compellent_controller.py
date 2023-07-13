@@ -33,11 +33,11 @@ def check_dell_compellent_controller(item, _no_params, info):
 
 check_info["dell_compellent_controller"] = LegacyCheckDefinition(
     detect=DETECT_DELL_COMPELLENT,
-    discovery_function=dell_compellent.discover,
-    check_function=check_dell_compellent_controller,
-    service_name="Controller %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.11000.2000.500.1.2.13.1",
         oids=["2", "3", "4", "5", "7"],
     ),
+    service_name="Controller %s",
+    discovery_function=dell_compellent.discover,
+    check_function=check_dell_compellent_controller,
 )

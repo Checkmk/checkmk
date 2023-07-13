@@ -93,15 +93,15 @@ def check_couchbase_buckets_operations(item, params, parsed):
 
 check_info["couchbase_buckets_operations"] = LegacyCheckDefinition(
     parse_function=parse_couchbase_buckets_operations,
+    service_name="Couchbase Bucket %s Operations",
     discovery_function=discover_couchbase_buckets_operations,
     check_function=check_couchbase_buckets_operations,
-    service_name="Couchbase Bucket %s Operations",
     check_ruleset_name="couchbase_ops",
 )
 
 check_info["couchbase_buckets_operations.total"] = LegacyCheckDefinition(
+    service_name="Couchbase Bucket Operations",
     discovery_function=discover_couchbase_buckets_operations,
     check_function=check_couchbase_buckets_operations,
-    service_name="Couchbase Bucket Operations",
     check_ruleset_name="couchbase_ops_buckets",
 )

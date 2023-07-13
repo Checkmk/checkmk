@@ -98,8 +98,8 @@ def check_ddn_s2a_errors(item, params, parsed):
 
 check_info["ddn_s2a_errors"] = LegacyCheckDefinition(
     parse_function=parse_ddn_s2a_errors,
+    service_name="DDN S2A Port Errors %s",
     discovery_function=inventory_ddn_s2a_errors,
     check_function=check_ddn_s2a_errors,
-    service_name="DDN S2A Port Errors %s",
     check_ruleset_name="ddn_s2a_port_errors",
 )

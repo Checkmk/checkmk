@@ -151,9 +151,9 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
 
 check_info["ddn_s2a_statsdelay"] = LegacyCheckDefinition(
     parse_function=parse_ddn_s2a_statsdelay,
+    service_name="DDN S2A Delay %s",
     discovery_function=inventory_ddn_s2a_statsdelay,
     check_function=check_ddn_s2a_statsdelay,
-    service_name="DDN S2A Delay %s",
     check_ruleset_name="ddn_s2a_wait",
     check_default_parameters={
         "read_avg": (0.1, 0.2),

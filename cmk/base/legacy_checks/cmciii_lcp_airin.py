@@ -17,14 +17,14 @@ from cmk.base.plugins.agent_based.utils.cmciii import DETECT_CMCIII_LCP
 
 check_info["cmciii_lcp_airin"] = LegacyCheckDefinition(
     detect=DETECT_CMCIII_LCP,
-    check_function=check_cmciii_lcp_fanunit,
-    discovery_function=lambda info: inventory_cmciii_lcp_fanunit("Air", "In", info),
-    service_name="Temperature %s",
-    check_ruleset_name="temperature",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2606.7.4.2.2.1.10.2",
         oids=["6", "13", "15", "23", "21", "20", "19", "18", "17", "7", "8", "9"],
     ),
+    service_name="Temperature %s",
+    discovery_function=lambda info: inventory_cmciii_lcp_fanunit("Air", "In", info),
+    check_function=check_cmciii_lcp_fanunit,
+    check_ruleset_name="temperature",
 )
 #
 # .1.3.6.1.4.1.2606.7.4.2.2.1.3.2.6 Air.Temperature.DescName

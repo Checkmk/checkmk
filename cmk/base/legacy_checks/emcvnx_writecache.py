@@ -34,7 +34,7 @@ def check_emcvnx_writecache(item, params, info):
 
 
 check_info["emcvnx_writecache"] = LegacyCheckDefinition(
+    service_name="Write Cache State %s",
     discovery_function=inventory_emcvnx_writecache,
     check_function=check_emcvnx_writecache,
-    service_name="Write Cache State %s",
 )

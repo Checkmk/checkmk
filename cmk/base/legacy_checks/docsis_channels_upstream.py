@@ -167,10 +167,6 @@ check_info["docsis_channels_upstream"] = LegacyCheckDefinition(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4998.2.1"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.20858.2.600"),
     ),
-    parse_function=parse_docsis_channels_upstream,
-    discovery_function=inventory_docsis_channels_upstream,
-    check_function=check_docsis_channels_upstream,
-    service_name="Upstream Channel %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.10.127.1.1.2.1",
@@ -185,6 +181,10 @@ check_info["docsis_channels_upstream"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "3", "4", "5", "7"],
         ),
     ],
+    parse_function=parse_docsis_channels_upstream,
+    service_name="Upstream Channel %s",
+    discovery_function=inventory_docsis_channels_upstream,
+    check_function=check_docsis_channels_upstream,
     check_ruleset_name="docsis_channels_upstream",
     check_default_parameters={
         "signal_noise": (10.0, 5.0),  # dB

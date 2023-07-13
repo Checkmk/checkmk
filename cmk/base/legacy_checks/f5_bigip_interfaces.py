@@ -55,11 +55,11 @@ check_info["f5_bigip_interfaces"] = LegacyCheckDefinition(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3375.2.1.3.4.10"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3375.2.1.3.4.20"),
     ),
-    check_function=check_f5_bigip_interfaces,
-    discovery_function=lambda info: [(x[0], {"state": 0}) for x in info if int(x[1]) == 0],
-    service_name="f5 Interface %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.1.2.4",
         oids=["4.3.1.1", "1.2.1.17", "4.3.1.3", "4.3.1.5"],
     ),
+    service_name="f5 Interface %s",
+    discovery_function=lambda info: [(x[0], {"state": 0}) for x in info if int(x[1]) == 0],
+    check_function=check_f5_bigip_interfaces,
 )

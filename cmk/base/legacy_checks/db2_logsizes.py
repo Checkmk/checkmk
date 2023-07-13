@@ -95,8 +95,8 @@ def check_db2_logsizes(item, params, parsed):
 check_info["db2_logsizes"] = LegacyCheckDefinition(
     parse_function=parse_db2_logsizes,
     service_name="DB2 Logsize %s",
-    check_function=check_db2_logsizes,
     discovery_function=inventory_db2_logsizes,
+    check_function=check_db2_logsizes,
     check_ruleset_name="db2_logsize",
     check_default_parameters={
         "levels": (-20.0, -10.0),  # Interpreted as free space in df_check_filesystem_single

@@ -56,14 +56,14 @@ def isilon_temp_item_name(sensor_name):
 
 check_info["emc_isilon_temp"] = LegacyCheckDefinition(
     detect=DETECT_ISILON,
-    discovery_function=lambda info: inventory_isilon_temp(info, is_cpu=False),
-    check_function=check_isilon_temp,
-    service_name="Temperature %s",
-    check_ruleset_name="temperature",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12124.2.54.1",
         oids=["3", "4"],
     ),
+    service_name="Temperature %s",
+    discovery_function=lambda info: inventory_isilon_temp(info, is_cpu=False),
+    check_function=check_isilon_temp,
+    check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (28.0, 33.0),  # assumed useful levels for ambient / air temperature
     },
@@ -86,9 +86,9 @@ check_info["emc_isilon_temp"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 check_info["emc_isilon_temp.cpu"] = LegacyCheckDefinition(
+    service_name="Temperature %s",
     discovery_function=lambda info: inventory_isilon_temp(info, is_cpu=True),
     check_function=check_isilon_temp,
-    service_name="Temperature %s",
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (75.0, 85.0),  # assumed useful levels for ambient / air temperature

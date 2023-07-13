@@ -50,11 +50,11 @@ def check_datapower_ldrive(item, _no_params, info):
 
 check_info["datapower_ldrive"] = LegacyCheckDefinition(
     detect=DETECT,
-    discovery_function=inventory_datapower_ldrive,
-    check_function=check_datapower_ldrive,
-    service_name="Logical Drive %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14685.3.1.259.1",
         oids=["1", "2", "4", "5", "6"],
     ),
+    service_name="Logical Drive %s",
+    discovery_function=inventory_datapower_ldrive,
+    check_function=check_datapower_ldrive,
 )

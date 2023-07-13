@@ -32,13 +32,13 @@ def check_enterasys_temp(item, params, info):
 
 check_info["enterasys_temp"] = LegacyCheckDefinition(
     detect=DETECT_ENTERASYS,
-    check_function=check_enterasys_temp,
-    discovery_function=inventory_enterasys_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.52.4.1.1.8.1",
         oids=["1"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_enterasys_temp,
+    check_function=check_enterasys_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (30.0, 35.0)},
 )

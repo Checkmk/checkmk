@@ -52,9 +52,6 @@ def check_emc_datadomain_disks(item, _no_params, info):
 
 check_info["emc_datadomain_disks"] = LegacyCheckDefinition(
     detect=DETECT_DATADOMAIN,
-    check_function=check_emc_datadomain_disks,
-    discovery_function=inventory_emc_datadomain_disks,
-    service_name="Hard Disk %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.19746.1.6.1.1.1",
@@ -65,4 +62,7 @@ check_info["emc_datadomain_disks"] = LegacyCheckDefinition(
             oids=["6"],
         ),
     ],
+    service_name="Hard Disk %s",
+    discovery_function=inventory_emc_datadomain_disks,
+    check_function=check_emc_datadomain_disks,
 )

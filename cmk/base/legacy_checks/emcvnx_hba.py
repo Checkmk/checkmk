@@ -116,7 +116,7 @@ def check_emcvnx_hba(item, _no_params, parsed):
 
 check_info["emcvnx_hba"] = LegacyCheckDefinition(
     parse_function=parse_emcvnx_hba,
+    service_name="HBA %s",
     discovery_function=inventory_emcvnx_hba,
     check_function=check_emcvnx_hba,
-    service_name="HBA %s",
 )

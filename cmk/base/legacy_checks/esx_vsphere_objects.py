@@ -92,9 +92,9 @@ def check_esx_vsphere_objects(item, params, parsed):
 
 check_info["esx_vsphere_objects"] = LegacyCheckDefinition(
     parse_function=parse_esx_vsphere_objects,
+    service_name="%s",
     discovery_function=inventory_esx_vsphere_objects,
     check_function=check_esx_vsphere_objects,
-    service_name="%s",
     check_ruleset_name="esx_vsphere_objects",
     check_default_parameters={
         "states": {
@@ -136,8 +136,8 @@ def check_esx_vsphere_objects_count(_no_item, params, parsed):
 
 
 check_info["esx_vsphere_objects.count"] = LegacyCheckDefinition(
+    service_name="Object count",
     discovery_function=inventory_esx_vsphere_objects_count,
     check_function=check_esx_vsphere_objects_count,
-    service_name="Object count",
     check_ruleset_name="esx_vsphere_objects_count",
 )

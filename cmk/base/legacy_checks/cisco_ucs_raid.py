@@ -46,12 +46,12 @@ def check_cisco_ucs_raid(_no_item, _no_params, section):
 
 check_info["cisco_ucs_raid"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_cisco_ucs_raid,
-    check_function=check_cisco_ucs_raid,
-    discovery_function=discover_cisco_ucs_raid,
-    service_name="RAID Controller",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.719.1.45.1.1",
         oids=["5", "7", "14", "17"],
     ),
+    parse_function=parse_cisco_ucs_raid,
+    service_name="RAID Controller",
+    discovery_function=discover_cisco_ucs_raid,
+    check_function=check_cisco_ucs_raid,
 )

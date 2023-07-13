@@ -78,13 +78,13 @@ def check_eltek_outdoor_temp(item, params, info):
 
 check_info["eltek_outdoor_temp"] = LegacyCheckDefinition(
     detect=DETECT_ELTEK,
-    discovery_function=inventory_eltek_outdoor_temp,
-    check_function=check_eltek_outdoor_temp,
-    service_name="Temperature Outdoor %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12148.9.1.17.3.1",
         oids=["1", "2", "3"],
     ),
+    service_name="Temperature Outdoor %s",
+    discovery_function=inventory_eltek_outdoor_temp,
+    check_function=check_eltek_outdoor_temp,
     check_default_parameters={
         "levels": (35, 40),
     },

@@ -68,12 +68,12 @@ def check_cisco_ucs_hdd(item: str, _no_params, section: Section):
 
 check_info["cisco_ucs_hdd"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_cisco_ucs_hdd,
-    discovery_function=discover_cisco_ucs_hdd,
-    check_function=check_cisco_ucs_hdd,
-    service_name="HDD %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.719.1.45.4.1",
         oids=["6", "7", "9", "12", "13", "14", "18"],
     ),
+    parse_function=parse_cisco_ucs_hdd,
+    service_name="HDD %s",
+    discovery_function=discover_cisco_ucs_hdd,
+    check_function=check_cisco_ucs_hdd,
 )

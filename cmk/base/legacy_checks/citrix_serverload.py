@@ -37,8 +37,8 @@ def check_citrix_serverload(_no_item, params, info):
 
 
 check_info["citrix_serverload"] = LegacyCheckDefinition(
-    check_ruleset_name="citrix_load",
-    check_function=check_citrix_serverload,
-    discovery_function=inventory_citrix_serverload,
     service_name="Citrix Serverload",
+    discovery_function=inventory_citrix_serverload,
+    check_function=check_citrix_serverload,
+    check_ruleset_name="citrix_load",
 )

@@ -42,8 +42,8 @@ def discover_docker_node_disk_usage(section):
 
 check_info["docker_node_disk_usage"] = LegacyCheckDefinition(
     parse_function=parse_docker_node_disk_usage,
+    service_name="Docker disk usage - %s",
     discovery_function=discover_docker_node_disk_usage,
     check_function=check_docker_node_disk_usage,
-    service_name="Docker disk usage - %s",
     check_ruleset_name="docker_node_disk_usage",
 )

@@ -23,13 +23,13 @@ def check_climaveneta_fan(item, params, info):
 
 check_info["climaveneta_fan"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.1.0", "pCO Gateway"),
-    check_function=check_climaveneta_fan,
-    discovery_function=inventory_climaveneta_fan,
-    service_name="Fan %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9839.2.1.2",
         oids=["42", "43"],
     ),
+    service_name="Fan %s",
+    discovery_function=inventory_climaveneta_fan,
+    check_function=check_climaveneta_fan,
     check_ruleset_name="hw_fans",
     check_default_parameters={
         "lower": (200, 100),

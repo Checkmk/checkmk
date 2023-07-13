@@ -58,11 +58,11 @@ def check_datapower_raid_bat(item, _no_params, info):
 
 check_info["datapower_raid_bat"] = LegacyCheckDefinition(
     detect=DETECT,
-    discovery_function=inventory_datapower_raid_bat,
-    check_function=check_datapower_raid_bat,
-    service_name="Raid Battery %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14685.3.1.258.1",
         oids=["1", "2", "3", "4", "5"],
     ),
+    service_name="Raid Battery %s",
+    discovery_function=inventory_datapower_raid_bat,
+    check_function=check_datapower_raid_bat,
 )

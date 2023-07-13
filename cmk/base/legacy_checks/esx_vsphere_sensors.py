@@ -56,8 +56,8 @@ def check_esx_vsphere_sensors(_no_item, params, info):
 
 
 check_info["esx_vsphere_sensors"] = LegacyCheckDefinition(
+    service_name="Hardware Sensors",
     discovery_function=inventory_esx_vsphere_sensors,
     check_function=check_esx_vsphere_sensors,
-    service_name="Hardware Sensors",
     check_ruleset_name="hostsystem_sensors",
 )

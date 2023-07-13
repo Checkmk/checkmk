@@ -68,10 +68,6 @@ check_info["etherbox2_temp"] = LegacyCheckDefinition(
     detect=all_of(
         equals(".1.3.6.1.2.1.1.1.0", ""), contains(".1.3.6.1.4.1.14848.2.1.1.1.0", "Version 1.2")
     ),
-    parse_function=parse_etherbox2_temp,
-    discovery_function=inventory_etherbox2_temp,
-    check_function=check_etherbox2_temp,
-    service_name="Temperature %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.14848.2.1.7.1",
@@ -82,6 +78,10 @@ check_info["etherbox2_temp"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "2"],
         ),
     ],
+    parse_function=parse_etherbox2_temp,
+    service_name="Temperature %s",
+    discovery_function=inventory_etherbox2_temp,
+    check_function=check_etherbox2_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (30.0, 35.0),

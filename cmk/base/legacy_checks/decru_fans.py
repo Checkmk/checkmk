@@ -33,11 +33,11 @@ def check_decru_fans(item, params, info):
 
 check_info["decru_fans"] = LegacyCheckDefinition(
     detect=DETECT_DECRU,
-    check_function=check_decru_fans,
-    discovery_function=inventory_decru_fans,
-    service_name="FAN %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12962.1.2.3.1",
         oids=["2", "3"],
     ),
+    service_name="FAN %s",
+    discovery_function=inventory_decru_fans,
+    check_function=check_decru_fans,
 )

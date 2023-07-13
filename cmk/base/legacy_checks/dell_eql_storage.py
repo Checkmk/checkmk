@@ -87,9 +87,6 @@ check_info["dell_eql_storage"] = LegacyCheckDefinition(
         contains(".1.3.6.1.2.1.1.1.0", "EQL-SUP"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12740.17"),
     ),
-    check_function=check_dell_eql_storage,
-    discovery_function=inventory_dell_eql_storage,
-    service_name="Storage %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12740.2.1",
         oids=[
@@ -103,4 +100,7 @@ check_info["dell_eql_storage"] = LegacyCheckDefinition(
             "10.1.2.1",
         ],
     ),
+    service_name="Storage %s",
+    discovery_function=inventory_dell_eql_storage,
+    check_function=check_dell_eql_storage,
 )

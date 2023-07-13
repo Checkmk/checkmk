@@ -99,10 +99,6 @@ check_info["cisco_secure"] = LegacyCheckDefinition(
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"), exists(".1.3.6.1.4.1.9.9.315.1.2.1.1.1.*")
     ),
-    parse_function=parse_cisco_secure,
-    check_function=check_cisco_secure,
-    discovery_function=inventory_cisco_secure,
-    service_name="Port Security",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.2.2.1",
@@ -113,4 +109,8 @@ check_info["cisco_secure"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "1", "2", "9", "10"],
         ),
     ],
+    parse_function=parse_cisco_secure,
+    service_name="Port Security",
+    discovery_function=inventory_cisco_secure,
+    check_function=check_cisco_secure,
 )

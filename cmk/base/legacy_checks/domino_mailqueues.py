@@ -46,14 +46,14 @@ def discover_domino_mailqueues(section):
 
 check_info["domino_mailqueues"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_domino_mailqueues,
-    discovery_function=discover_domino_mailqueues,
-    check_function=check_domino_mailqueues,
-    service_name="Domino Queue %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.334.72.1.1.4",
         oids=["1", "6", "21", "31", "34"],
     ),
+    parse_function=parse_domino_mailqueues,
+    service_name="Domino Queue %s",
+    discovery_function=discover_domino_mailqueues,
+    check_function=check_domino_mailqueues,
     check_ruleset_name="domino_mailqueues",
     check_default_parameters={"queue_length": (300, 350)},
 )

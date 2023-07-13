@@ -79,11 +79,11 @@ check_info["dell_powerconnect_fans"] = LegacyCheckDefinition(
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10895"),
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.6027.1.3.22"),
     ),
-    check_function=check_dell_powerconnect_fans,
-    discovery_function=inventory_dell_powerconnect_fans,
-    service_name="Sensor %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10895.3000.1.2.110.7.1.1",
         oids=["1", "2", "3"],
     ),
+    service_name="Sensor %s",
+    discovery_function=inventory_dell_powerconnect_fans,
+    check_function=check_dell_powerconnect_fans,
 )

@@ -42,11 +42,11 @@ def check_domino_info(_no_item, _no_params, info):
 
 check_info["domino_info"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_domino_info,
-    discovery_function=inventory_domino_info,
-    service_name="Domino Info",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.334.72",
         oids=["2.2", "1.1.4.8", "1.1.6.2.1", "1.1.6.2.4"],
     ),
+    service_name="Domino Info",
+    discovery_function=inventory_domino_info,
+    check_function=check_domino_info,
 )

@@ -36,12 +36,12 @@ def check_domino_transactions(_no_item, params, info):
 
 check_info["domino_transactions"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_domino_transactions,
-    discovery_function=inventory_domino_transactions,
-    service_name="Domino Server Transactions",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.334.72.1.1.6.3",
         oids=["2"],
     ),
+    service_name="Domino Server Transactions",
+    discovery_function=inventory_domino_transactions,
+    check_function=check_domino_transactions,
     check_ruleset_name="domino_transactions",
 )

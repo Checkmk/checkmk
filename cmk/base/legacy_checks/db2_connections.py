@@ -58,8 +58,8 @@ def check_db2_connections(item, params, parsed):
 check_info["db2_connections"] = LegacyCheckDefinition(
     parse_function=parse_db2_dbs,
     service_name="DB2 Connections %s",
-    check_function=check_db2_connections,
     discovery_function=inventory_db2_connections,
+    check_function=check_db2_connections,
     check_ruleset_name="db2_connections",
     check_default_parameters={
         "levels_total": (150, 200),

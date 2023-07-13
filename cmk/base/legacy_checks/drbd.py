@@ -352,10 +352,10 @@ def check_drbd_general(item, params, info):  # pylint: disable=too-many-branches
 
 
 check_info["drbd"] = LegacyCheckDefinition(
+    service_name="DRBD %s status",
     discovery_function=lambda info: inventory_drbd(info, "drbd"),
     check_function=check_drbd_general,
     check_ruleset_name="drbd",
-    service_name="DRBD %s status",
 )
 
 
@@ -388,10 +388,10 @@ def check_drbd_net(item, params, info):
 
 
 check_info["drbd.net"] = LegacyCheckDefinition(
+    service_name="DRBD %s net",
     discovery_function=lambda info: inventory_drbd(info, "drbd.net"),
     check_function=check_drbd_net,
     check_ruleset_name="drbd.net",
-    service_name="DRBD %s net",
 )
 
 
@@ -413,10 +413,10 @@ def check_drbd_disk(item, params, info):
 
 
 check_info["drbd.disk"] = LegacyCheckDefinition(
+    service_name="DRBD %s disk",
     discovery_function=lambda info: inventory_drbd(info, "drbd.disk"),
     check_function=check_drbd_disk,
     check_ruleset_name="drbd.disk",
-    service_name="DRBD %s disk",
 )
 
 
@@ -450,8 +450,8 @@ def check_drbd_stats(item, params, info):
 
 
 check_info["drbd.stats"] = LegacyCheckDefinition(
+    service_name="DRBD %s stats",
     discovery_function=lambda info: inventory_drbd(info, "drbd.stats"),
     check_function=check_drbd_stats,
     check_ruleset_name="drbd.stats",
-    service_name="DRBD %s stats",
 )

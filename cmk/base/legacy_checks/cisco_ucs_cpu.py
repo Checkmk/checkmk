@@ -40,11 +40,11 @@ def check_cisco_ucs_cpu(item, _no_params, info):
 
 check_info["cisco_ucs_cpu"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_cisco_ucs_cpu,
-    discovery_function=inventory_cisco_ucs_cpu,
-    service_name="CPU %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.719.1.41.9.1",
         oids=["3", "13", "15", "8", "10"],
     ),
+    service_name="CPU %s",
+    discovery_function=inventory_cisco_ucs_cpu,
+    check_function=check_cisco_ucs_cpu,
 )

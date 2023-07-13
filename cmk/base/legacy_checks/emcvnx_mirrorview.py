@@ -137,7 +137,7 @@ def check_emcvnx_mirrorview(item, params, parsed):
 
 check_info["emcvnx_mirrorview"] = LegacyCheckDefinition(
     parse_function=parse_emcvnx_mirrorview,
+    service_name="Mirror view %s",
     discovery_function=inventory_emcvnx_mirrorview,
     check_function=check_emcvnx_mirrorview,
-    service_name="Mirror view %s",
 )

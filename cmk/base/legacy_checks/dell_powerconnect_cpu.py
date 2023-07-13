@@ -68,11 +68,11 @@ def check_dell_powerconnect_cpu(item, params, info):
 
 check_info["dell_powerconnect_cpu"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10895"),
-    check_function=check_dell_powerconnect_cpu,
-    discovery_function=inventory_dell_powerconnect_cpu,
-    service_name="CPU utilization",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.89.1",
         oids=["6", "7", "8", "9"],
     ),
+    service_name="CPU utilization",
+    discovery_function=inventory_dell_powerconnect_cpu,
+    check_function=check_dell_powerconnect_cpu,
 )

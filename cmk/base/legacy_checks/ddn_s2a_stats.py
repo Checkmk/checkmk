@@ -64,9 +64,9 @@ def check_ddn_s2a_stats_readhits(item, params, parsed):
 
 
 check_info["ddn_s2a_stats.readhits"] = LegacyCheckDefinition(
+    service_name="DDN S2A Read Hits %s",
     discovery_function=inventory_ddn_s2a_stats_readhits,
     check_function=check_ddn_s2a_stats_readhits,
-    service_name="DDN S2A Read Hits %s",
     check_ruleset_name="read_hits",
 )
 
@@ -131,9 +131,9 @@ def check_ddn_s2a_stats_io(item, params, parsed):
 
 
 check_info["ddn_s2a_stats.io"] = LegacyCheckDefinition(
+    service_name="DDN S2A IO %s",
     discovery_function=inventory_ddn_s2a_stats_io,
     check_function=check_ddn_s2a_stats_io,
-    service_name="DDN S2A IO %s",
     check_ruleset_name="storage_iops",
     check_default_parameters={
         "total": (28000, 33000),
@@ -204,9 +204,9 @@ def check_ddn_s2a_stats(item, params, parsed):
 
 check_info["ddn_s2a_stats"] = LegacyCheckDefinition(
     parse_function=parse_ddn_s2a_stats,
+    service_name="DDN S2A Data Rate %s",
     discovery_function=inventory_ddn_s2a_stats,
     check_function=check_ddn_s2a_stats,
-    service_name="DDN S2A Data Rate %s",
     check_ruleset_name="storage_throughput",
     check_default_parameters={
         "total": (4800 * 1024 * 1024, 5500 * 1024 * 1024),

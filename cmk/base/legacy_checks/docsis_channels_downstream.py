@@ -62,13 +62,13 @@ check_info["docsis_channels_downstream"] = LegacyCheckDefinition(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4998.2.1"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.20858.2.600"),
     ),
-    check_function=check_docsis_channels_downstream,
-    discovery_function=inventory_docsis_channels_downstream,
-    service_name="Downstream Channel %s",
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.10.127.1.1.1.1",
         oids=["1", "2", "6"],
     ),
+    service_name="Downstream Channel %s",
+    discovery_function=inventory_docsis_channels_downstream,
+    check_function=check_docsis_channels_downstream,
     check_ruleset_name="docsis_channels_downstream",
     check_default_parameters={
         "power": (5.0, 1.0),

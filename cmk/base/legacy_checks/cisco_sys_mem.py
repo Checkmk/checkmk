@@ -36,12 +36,12 @@ def check_cisco_sys_mem(_no_item, params, info):
 
 check_info["cisco_sys_mem"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.1.0", "Cisco NX-OS"),
-    check_function=check_cisco_sys_mem,
-    discovery_function=inventory_cisco_sys_mem,
-    service_name="Supervisor Mem Used",
-    check_ruleset_name="cisco_supervisor_mem",  # seperate group since only percentage
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.305.1.1.2",
         oids=["0"],
     ),
+    service_name="Supervisor Mem Used",
+    discovery_function=inventory_cisco_sys_mem,
+    check_function=check_cisco_sys_mem,
+    check_ruleset_name="cisco_supervisor_mem",  # seperate group since only percentage,
 )

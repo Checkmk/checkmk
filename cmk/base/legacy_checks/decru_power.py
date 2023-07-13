@@ -26,11 +26,11 @@ def check_decru_power(item, params, info):
 
 check_info["decru_power"] = LegacyCheckDefinition(
     detect=DETECT_DECRU,
-    check_function=check_decru_power,
-    discovery_function=inventory_decru_power,
-    service_name="POWER %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12962.1.2.6.1",
         oids=["2", "3"],
     ),
+    service_name="POWER %s",
+    discovery_function=inventory_decru_power,
+    check_function=check_decru_power,
 )

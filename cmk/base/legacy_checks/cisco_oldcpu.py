@@ -27,13 +27,13 @@ check_info["cisco_oldcpu"] = LegacyCheckDefinition(
         exists(".1.3.6.1.4.1.9.9.109.1.1.1.1.2.*"),
         exists(".1.3.6.1.4.1.9.2.1.57.0"),
     ),
-    discovery_function=inventory_cisco_oldcpu,
-    check_function=check_cisco_oldcpu,
-    service_name="CPU utilization",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.2.1",
         oids=["57"],
     ),
+    service_name="CPU utilization",
+    discovery_function=inventory_cisco_oldcpu,
+    check_function=check_cisco_oldcpu,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (80.0, 90.0)},
 )

@@ -55,7 +55,7 @@ def check_esx_vsphere_vm_mounted_devices(item, params, section):
 
 
 check_info["esx_vsphere_vm.mounted_devices"] = LegacyCheckDefinition(
+    service_name="ESX Mounted Devices",
     discovery_function=inventory_esx_vsphere_vm_mounted_devices,
     check_function=check_esx_vsphere_vm_mounted_devices,
-    service_name="ESX Mounted Devices",
 )

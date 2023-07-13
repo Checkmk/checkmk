@@ -62,10 +62,6 @@ def discover_dell_compellent_disks(section):
 
 check_info["dell_compellent_disks"] = LegacyCheckDefinition(
     detect=DETECT_DELL_COMPELLENT,
-    parse_function=parse_dell_compellent_disks,
-    discovery_function=discover_dell_compellent_disks,
-    check_function=check_dell_compellent_disks,
-    service_name="Disk %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.674.11000.2000.500.1.2.14.1",
@@ -76,4 +72,8 @@ check_info["dell_compellent_disks"] = LegacyCheckDefinition(
             oids=["2", "3"],
         ),
     ],
+    parse_function=parse_dell_compellent_disks,
+    service_name="Disk %s",
+    discovery_function=discover_dell_compellent_disks,
+    check_function=check_dell_compellent_disks,
 )

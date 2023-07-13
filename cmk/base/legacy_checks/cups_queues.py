@@ -127,9 +127,9 @@ def check_cups_queues(item, params, parsed):
 
 check_info["cups_queues"] = LegacyCheckDefinition(
     parse_function=parse_cups_queues,
+    service_name="CUPS Queue %s",
     discovery_function=inventory_cups_queues,
     check_function=check_cups_queues,
-    service_name="CUPS Queue %s",
     check_ruleset_name="cups_queues",
     check_default_parameters={
         "job_count": (5, 10),  # warn/crit for queue entries

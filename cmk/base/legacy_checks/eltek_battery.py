@@ -61,14 +61,14 @@ def check_eltek_battery(_no_item, _no_params, parsed):
 
 check_info["eltek_battery"] = LegacyCheckDefinition(
     detect=DETECT_ELTEK,
-    parse_function=parse_eltek_battery,
-    discovery_function=inventory_eltek_battery,
-    check_function=check_eltek_battery,
-    service_name="Battery Breaker Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12148.9.3",
         oids=["2", "3", "4", "5"],
     ),
+    parse_function=parse_eltek_battery,
+    service_name="Battery Breaker Status",
+    discovery_function=inventory_eltek_battery,
+    check_function=check_eltek_battery,
 )
 
 # .
@@ -98,9 +98,9 @@ def check_eltek_battery_temp(item, params, parsed):
 
 
 check_info["eltek_battery.temp"] = LegacyCheckDefinition(
+    service_name="Temperature %s",
     discovery_function=inventory_eltek_battery_temp,
     check_function=check_eltek_battery_temp,
-    service_name="Temperature %s",
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (27.0, 35.0),
@@ -123,9 +123,9 @@ def discover_eltek_battery_supply(section):
 
 
 check_info["eltek_battery.supply"] = LegacyCheckDefinition(
+    service_name="Battery %s",
     discovery_function=discover_eltek_battery_supply,
     check_function=lambda item, params, parsed: check_elphase(item, params, parsed["supply"]),
-    service_name="Battery %s",
     check_ruleset_name="el_inphase",
     check_default_parameters={
         # suggested by customer

@@ -67,8 +67,8 @@ def check_db2_mem(item, params, info):  # pylint: disable=too-many-branches
 
 
 check_info["db2_mem"] = LegacyCheckDefinition(
-    check_function=check_db2_mem,
-    discovery_function=inventory_db2_mem,
     service_name="Memory %s",
+    discovery_function=inventory_db2_mem,
+    check_function=check_db2_mem,
     check_ruleset_name="db2_mem",
 )

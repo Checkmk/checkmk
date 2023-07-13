@@ -69,12 +69,11 @@ def check_dell_om_processors(item, _no_params, info):
 
 check_info["dell_om_processors"] = LegacyCheckDefinition(
     detect=DETECT_OPENMANAGE,
-    check_function=check_dell_om_processors,
-    discovery_function=inventory_dell_om_processors,
-    service_name="Processor %s",
-    # There is no other way to find out that openmanage is present.
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.1.1100",
         oids=["30.1.2", "30.1.5", "30.1.8", "30.1.9", "32.1.6"],
     ),
+    service_name="Processor %s",
+    discovery_function=inventory_dell_om_processors,
+    check_function=check_dell_om_processors,
 )

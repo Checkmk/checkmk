@@ -32,10 +32,6 @@ def check_cmc_temp(item, params, info):
 
 check_info["cmc_temp"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2606.1"),
-    discovery_function=inventory_cmc_temp,
-    check_function=check_cmc_temp,
-    check_ruleset_name="temperature",
-    service_name="Temperature Sensor %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2606.1.1",
@@ -46,6 +42,10 @@ check_info["cmc_temp"] = LegacyCheckDefinition(
             oids=["4", "5", "6", "7"],
         ),
     ],
+    service_name="Temperature Sensor %s",
+    discovery_function=inventory_cmc_temp,
+    check_function=check_cmc_temp,
+    check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (45.0, 50.0),
     },

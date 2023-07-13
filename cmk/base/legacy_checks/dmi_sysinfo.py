@@ -40,7 +40,7 @@ def check_dmi_sysinfo(item, param, info):
 
 
 check_info["dmi_sysinfo"] = LegacyCheckDefinition(
-    check_function=check_dmi_sysinfo,
-    discovery_function=inventory_dmi_sysinfo,
     service_name="DMI Sysinfo",
+    discovery_function=inventory_dmi_sysinfo,
+    check_function=check_dmi_sysinfo,
 )

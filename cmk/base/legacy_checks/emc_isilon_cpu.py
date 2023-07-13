@@ -50,12 +50,12 @@ def check_emc_isilon_cpu_utilization(item, params, info):
 
 check_info["emc_isilon_cpu"] = LegacyCheckDefinition(
     detect=DETECT_ISILON,
-    check_function=check_emc_isilon_cpu_utilization,
-    discovery_function=inventory_emc_isilon_cpu_utilization,
-    service_name="Node CPU utilization",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12124.2.2.3",
         oids=["1", "2", "3", "4"],
     ),
+    service_name="Node CPU utilization",
+    discovery_function=inventory_emc_isilon_cpu_utilization,
+    check_function=check_emc_isilon_cpu_utilization,
     check_ruleset_name="cpu_utilization",
 )

@@ -40,11 +40,11 @@ def check_emc_datadomain_fans(item, _no_params, info):
 
 check_info["emc_datadomain_fans"] = LegacyCheckDefinition(
     detect=DETECT_DATADOMAIN,
-    check_function=check_emc_datadomain_fans,
-    discovery_function=inventory_emc_datadomain_fans,
-    service_name="FAN %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.19746.1.1.3.1.1.1",
         oids=["1", "2", "4", "5", "6"],
     ),
+    service_name="FAN %s",
+    discovery_function=inventory_emc_datadomain_fans,
+    check_function=check_emc_datadomain_fans,
 )

@@ -56,8 +56,8 @@ def check_citrix_sessions(_no_item, params, info):
 
 
 check_info["citrix_sessions"] = LegacyCheckDefinition(
-    check_ruleset_name="citrix_sessions",
-    check_function=check_citrix_sessions,
-    discovery_function=inventory_citrix_sessions,
     service_name="Citrix Sessions",
+    discovery_function=inventory_citrix_sessions,
+    check_function=check_citrix_sessions,
+    check_ruleset_name="citrix_sessions",
 )

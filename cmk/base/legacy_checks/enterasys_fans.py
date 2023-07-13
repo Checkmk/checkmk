@@ -34,11 +34,11 @@ def check_enterasys_fans(item, _no_params, info):
 
 check_info["enterasys_fans"] = LegacyCheckDefinition(
     detect=DETECT_ENTERASYS,
-    check_function=check_enterasys_fans,
-    discovery_function=inventory_enterasys_fans,
-    service_name="FAN %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.52.4.3.1.3.1.1",
         oids=[OIDEnd(), "2"],
     ),
+    service_name="FAN %s",
+    discovery_function=inventory_enterasys_fans,
+    check_function=check_enterasys_fans,
 )

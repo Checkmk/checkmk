@@ -101,11 +101,11 @@ def check_cisco_redundancy(_no_item, params, info):
 
 check_info["cisco_redundancy"] = LegacyCheckDefinition(
     detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "cisco"), exists(".1.3.6.1.4.1.9.9.176.1.1.*")),
-    discovery_function=inventory_cisco_redundancy,
-    check_function=check_cisco_redundancy,
-    service_name="Redundancy Framework Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.176.1.1",
         oids=["1", "2", "3", "4", "6", "8"],
     ),
+    service_name="Redundancy Framework Status",
+    discovery_function=inventory_cisco_redundancy,
+    check_function=check_cisco_redundancy,
 )

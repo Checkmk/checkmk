@@ -34,11 +34,11 @@ def check_dell_chassis_fans(_no_item, _no_params, info):
 
 check_info["dell_chassis_fans"] = LegacyCheckDefinition(
     detect=DETECT_CHASSIS,
-    check_function=check_dell_chassis_fans,
-    discovery_function=inventory_dell_chassis_fans,
-    service_name="Overall Fan Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.2.3.1",
         oids=["6"],
     ),
+    service_name="Overall Fan Status",
+    discovery_function=inventory_dell_chassis_fans,
+    check_function=check_dell_chassis_fans,
 )

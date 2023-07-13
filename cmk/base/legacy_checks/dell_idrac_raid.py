@@ -34,9 +34,6 @@ def check_dell_idrac_raid(item, _no_params, info):
 
 check_info["dell_idrac_raid"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10892.5"),
-    discovery_function=inventory_dell_idrac_raid,
-    check_function=check_dell_idrac_raid,
-    service_name="Raid Controller %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.674.10892.5.5.1.20.130.1.1",
@@ -47,6 +44,9 @@ check_info["dell_idrac_raid"] = LegacyCheckDefinition(
             oids=["1", "4", "6", "21"],
         ),
     ],
+    service_name="Raid Controller %s",
+    discovery_function=inventory_dell_idrac_raid,
+    check_function=check_dell_idrac_raid,
 )
 
 
@@ -73,7 +73,7 @@ def check_dell_idrac_raid_bbu(item, params, info):
 
 
 check_info["dell_idrac_raid.bbu"] = LegacyCheckDefinition(
+    service_name="Raid BBU %s",
     discovery_function=inventory_dell_idrac_raid_bbu,
     check_function=check_dell_idrac_raid_bbu,
-    service_name="Raid BBU %s",
 )

@@ -35,11 +35,11 @@ def check_decru_cpu(item, _no_params, info):
 
 check_info["decru_cpu"] = LegacyCheckDefinition(
     detect=DETECT_DECRU,
-    check_function=check_decru_cpu,
-    discovery_function=inventory_decru_cpu,
-    service_name="CPU utilization",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12962.1.1",
         oids=["8"],
     ),
+    service_name="CPU utilization",
+    discovery_function=inventory_decru_cpu,
+    check_function=check_decru_cpu,
 )

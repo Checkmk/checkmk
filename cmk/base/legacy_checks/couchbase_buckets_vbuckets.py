@@ -80,15 +80,15 @@ def check_couchbase_buckets_vbuckets_replica(item, params, parsed):
 
 check_info["couchbase_buckets_vbuckets"] = LegacyCheckDefinition(
     parse_function=parse_couchbase_lines,
+    service_name="Couchbase Bucket %s active vBuckets",
     discovery_function=discover_couchbase_buckets_vbuckets,
     check_function=check_couchbase_buckets_vbuckets,
-    service_name="Couchbase Bucket %s active vBuckets",
     check_ruleset_name="couchbase_vbuckets",
 )
 
 check_info["couchbase_buckets_vbuckets.replica"] = LegacyCheckDefinition(
+    service_name="Couchbase Bucket %s replica vBuckets",
     discovery_function=discover_couchbase_buckets_vbuckets,
     check_function=check_couchbase_buckets_vbuckets_replica,
-    service_name="Couchbase Bucket %s replica vBuckets",
     check_ruleset_name="couchbase_vbuckets",
 )

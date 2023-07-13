@@ -196,10 +196,6 @@ def check_cmctc_output(item, params, parsed):
 
 check_info["cmctc_output"] = LegacyCheckDefinition(
     detect=DETECT_CMCTC,
-    parse_function=parse_cmctc_output,
-    discovery_function=inventory_cmctc_output,
-    check_function=check_cmctc_output,
-    service_name="%s",
     fetch=[
         SNMPTree(
             base=f".1.3.6.1.4.1.2606.4.2.{table}.6.2.1",
@@ -207,4 +203,8 @@ check_info["cmctc_output"] = LegacyCheckDefinition(
         )
         for table in _TABLES
     ],
+    parse_function=parse_cmctc_output,
+    service_name="%s",
+    discovery_function=inventory_cmctc_output,
+    check_function=check_cmctc_output,
 )

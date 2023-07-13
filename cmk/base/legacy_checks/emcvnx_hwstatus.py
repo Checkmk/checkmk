@@ -127,7 +127,7 @@ def check_emcvnx_hwstatus(item, _no_params, info):
 
 
 check_info["emcvnx_hwstatus"] = LegacyCheckDefinition(
+    service_name="Enclosure %s",  # Example for Item: "0/1 Power A",
     discovery_function=inventory_emcvnx_hwstatus,
     check_function=check_emcvnx_hwstatus,
-    service_name="Enclosure %s",  # Example for Item: "0/1 Power A"
 )

@@ -25,7 +25,7 @@ def check_ddn_s2a_version(_no_item, _no_params, parsed):
 
 check_info["ddn_s2a_version"] = LegacyCheckDefinition(
     parse_function=parse_ddn_s2a_version,
+    service_name="DDN S2A Version",
     discovery_function=inventory_ddn_s2a_version,
     check_function=check_ddn_s2a_version,
-    service_name="DDN S2A Version",
 )

@@ -79,13 +79,13 @@ def check_f5_bigip_conns(item, params, info):  # pylint: disable=too-many-branch
 
 check_info["f5_bigip_conns"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_f5_bigip_conns,
-    discovery_function=inventory_f5_bigip_conns,
-    service_name="Open Connections",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.1.1.2",
         oids=["1.8", "9.2", "9.6", "9.9", "1.56"],
     ),
+    service_name="Open Connections",
+    discovery_function=inventory_f5_bigip_conns,
+    check_function=check_f5_bigip_conns,
     check_ruleset_name="f5_connections",
     check_default_parameters={
         "conns": (25000, 30000),

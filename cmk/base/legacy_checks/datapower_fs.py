@@ -43,13 +43,13 @@ def check_datapower_fs(item, params, info):
 
 check_info["datapower_fs"] = LegacyCheckDefinition(
     detect=DETECT,
-    discovery_function=inventory_datapower_fs,
-    check_function=check_datapower_fs,
-    service_name="Filesystem %s",
-    check_ruleset_name="filesystem",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14685.3.1.29",
         oids=["1", "2", "3", "4", "5", "6", "7", "8"],
     ),
+    service_name="Filesystem %s",
+    discovery_function=inventory_datapower_fs,
+    check_function=check_datapower_fs,
+    check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

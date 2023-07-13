@@ -105,8 +105,8 @@ def check_db2_tablespaces(item, params, parsed):
 check_info["db2_tablespaces"] = LegacyCheckDefinition(
     parse_function=parse_db2_dbs,
     service_name="DB2 Tablespace %s",
-    check_function=check_db2_tablespaces,
     discovery_function=inventory_db2_tablespaces,
+    check_function=check_db2_tablespaces,
     check_ruleset_name="db2_tablespaces",
     check_default_parameters={
         "levels": (10.0, 5.0),

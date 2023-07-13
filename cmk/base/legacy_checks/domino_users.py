@@ -36,12 +36,12 @@ def check_domino_users(_no_item, params, info):
 
 check_info["domino_users"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_domino_users,
-    discovery_function=inventory_domino_users,
-    service_name="Domino Users",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.334.72.1.1.6.3",
         oids=["6"],
     ),
+    service_name="Domino Users",
+    discovery_function=inventory_domino_users,
+    check_function=check_domino_users,
     check_ruleset_name="domino_users",
 )

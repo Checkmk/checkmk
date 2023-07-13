@@ -91,6 +91,6 @@ def check_db2_bp_hitratios(item, _no_params, parsed):
 check_info["db2_bp_hitratios"] = LegacyCheckDefinition(
     parse_function=parse_db2_bp_hitratios,
     service_name="DB2 BP-Hitratios %s",
-    check_function=check_db2_bp_hitratios,
     discovery_function=inventory_db2_bp_hitratios,
+    check_function=check_db2_bp_hitratios,
 )

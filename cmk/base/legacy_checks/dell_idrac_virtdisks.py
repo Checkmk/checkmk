@@ -69,11 +69,11 @@ def check_dell_idrac_virtdisks(item, _no_params, info):
 
 check_info["dell_idrac_virtdisks"] = LegacyCheckDefinition(
     detect=DETECT_IDRAC_POWEREDGE,
-    check_function=check_dell_idrac_virtdisks,
-    discovery_function=inventory_dell_idrac_virtdisks,
-    service_name="Virtual Disk %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.5.5.1.20.140.1.1",
         oids=["2", "4", "13", "20", "34"],
     ),
+    service_name="Virtual Disk %s",
+    discovery_function=inventory_dell_idrac_virtdisks,
+    check_function=check_dell_idrac_virtdisks,
 )

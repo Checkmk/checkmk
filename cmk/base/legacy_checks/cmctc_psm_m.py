@@ -79,10 +79,6 @@ def check_cmctc_psm_m(item, _no_params, section):
 
 check_info["cmctc_psm_m"] = LegacyCheckDefinition(
     detect=DETECT_CMCTC,
-    parse_function=parse_cmctc_psm_m,
-    check_function=check_cmctc_psm_m,
-    discovery_function=inventory_cmctc_psm_m,
-    service_name="CMC %s",
     fetch=[
         SNMPTree(
             # Base to all IO units
@@ -102,4 +98,8 @@ check_info["cmctc_psm_m"] = LegacyCheckDefinition(
         )
         for idx in _SUBTREES
     ],
+    parse_function=parse_cmctc_psm_m,
+    service_name="CMC %s",
+    discovery_function=inventory_cmctc_psm_m,
+    check_function=check_cmctc_psm_m,
 )

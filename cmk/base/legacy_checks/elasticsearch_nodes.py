@@ -73,9 +73,9 @@ def discover_elasticsearch_nodes(section):
 
 check_info["elasticsearch_nodes"] = LegacyCheckDefinition(
     parse_function=parse_elasticsearch_nodes,
-    check_function=check_elasticsearch_nodes,
-    discovery_function=discover_elasticsearch_nodes,
     service_name="Elasticsearch Node %s",
+    discovery_function=discover_elasticsearch_nodes,
+    check_function=check_elasticsearch_nodes,
     check_ruleset_name="elasticsearch_nodes",
     check_default_parameters={"cpu_levels": (75.0, 90.0)},
 )

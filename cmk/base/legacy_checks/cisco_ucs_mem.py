@@ -72,11 +72,11 @@ def check_cisco_ucs_mem(item, _no_params, info):
 
 check_info["cisco_ucs_mem"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_cisco_ucs_mem,
-    discovery_function=inventory_cisco_ucs_mem,
-    service_name="Memory %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.719.1.30.11.1",
         oids=["3", "19", "23", "6", "14", "17"],
     ),
+    service_name="Memory %s",
+    discovery_function=inventory_cisco_ucs_mem,
+    check_function=check_cisco_ucs_mem,
 )

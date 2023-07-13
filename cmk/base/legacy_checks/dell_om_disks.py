@@ -104,12 +104,11 @@ def check_dell_om_disks(item, _no_params, info):
 
 check_info["dell_om_disks"] = LegacyCheckDefinition(
     detect=DETECT_OPENMANAGE,
-    check_function=check_dell_om_disks,
-    discovery_function=inventory_dell_om_disks,
-    service_name="Physical Disk %s",
-    # There is no other way to find out that openmanage is present.
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10893.1.20.130.4.1",
         oids=["2", "4", "6", "9", "10", "15", "11", "21", "22", "31", "35"],
     ),
+    service_name="Physical Disk %s",
+    discovery_function=inventory_dell_om_disks,
+    check_function=check_dell_om_disks,
 )

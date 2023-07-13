@@ -78,11 +78,6 @@ def check_f5_bigip_fans(item, params, parsed):
 
 check_info["f5_bigip_fans"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_f5_bigip_fans,
-    discovery_function=inventory_f5_bigip_fans,
-    parse_function=parse_f5_bigip_fans,
-    service_name="FAN %s",
-    check_ruleset_name="hw_fans",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.3375.2.1.3.2.1.2.1",
@@ -93,4 +88,9 @@ check_info["f5_bigip_fans"] = LegacyCheckDefinition(
             oids=["4", "3"],
         ),
     ],
+    parse_function=parse_f5_bigip_fans,
+    service_name="FAN %s",
+    discovery_function=inventory_f5_bigip_fans,
+    check_function=check_f5_bigip_fans,
+    check_ruleset_name="hw_fans",
 )

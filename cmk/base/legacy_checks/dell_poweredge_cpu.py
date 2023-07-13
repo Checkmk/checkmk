@@ -15,9 +15,6 @@ from cmk.base.plugins.agent_based.utils.dell import DETECT_IDRAC_POWEREDGE
 
 check_info["dell_poweredge_cpu"] = LegacyCheckDefinition(
     detect=DETECT_IDRAC_POWEREDGE,
-    check_function=check_dell_poweredge_cpu,
-    discovery_function=inventory_dell_poweredge_cpu,
-    service_name="%s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.674.10892.5.4.1100.32.1",
@@ -28,4 +25,7 @@ check_info["dell_poweredge_cpu"] = LegacyCheckDefinition(
             oids=["1", "2", "23"],
         ),
     ],
+    service_name="%s",
+    discovery_function=inventory_dell_poweredge_cpu,
+    check_function=check_dell_poweredge_cpu,
 )

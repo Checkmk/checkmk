@@ -37,11 +37,11 @@ check_info["cisco_temp"] = LegacyCheckDefinition(
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"), not_exists(".1.3.6.1.4.1.9.9.13.1.3.1.3.*")
     ),
-    check_function=check_cisco_temp,
-    discovery_function=inventory_cisco_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.13.1.3.1",
         oids=["2", "6"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_cisco_temp,
+    check_function=check_cisco_temp,
 )

@@ -41,14 +41,14 @@ def check_cisco_ucs_temp_env(item, params, info):
 
 check_info["cisco_ucs_temp_env"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_cisco_ucs_temp_env,
-    discovery_function=inventory_cisco_ucs_temp_env,
-    check_function=check_cisco_ucs_temp_env,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.719.1.9.44.1",
         oids=["4", "8", "13", "21"],
     ),
+    parse_function=parse_cisco_ucs_temp_env,
+    service_name="Temperature %s",
+    discovery_function=inventory_cisco_ucs_temp_env,
+    check_function=check_cisco_ucs_temp_env,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (30.0, 35.0)},
 )

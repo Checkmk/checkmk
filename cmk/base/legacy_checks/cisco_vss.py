@@ -114,9 +114,6 @@ check_info["cisco_vss"] = LegacyCheckDefinition(
         ),
         exists(".1.3.6.1.4.1.9.9.388.1.1.1.0"),
     ),
-    check_function=check_cisco_vss,
-    discovery_function=inventory_cisco_vss,
-    service_name="VSS Status",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.388.1.2.2.1",
@@ -127,4 +124,7 @@ check_info["cisco_vss"] = LegacyCheckDefinition(
             oids=["2", "3", "5", "6"],
         ),
     ],
+    service_name="VSS Status",
+    discovery_function=inventory_cisco_vss,
+    check_function=check_cisco_vss,
 )

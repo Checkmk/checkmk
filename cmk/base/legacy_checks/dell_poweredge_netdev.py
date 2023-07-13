@@ -15,11 +15,11 @@ from cmk.base.plugins.agent_based.utils.dell import DETECT_IDRAC_POWEREDGE
 
 check_info["dell_poweredge_netdev"] = LegacyCheckDefinition(
     detect=DETECT_IDRAC_POWEREDGE,
-    check_function=check_dell_poweredge_netdev,
-    discovery_function=inventory_dell_poweredge_netdev,
-    service_name="%s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.5.4.1100.90.1",
         oids=["3", "4", "6", "15", "30"],
     ),
+    service_name="%s",
+    discovery_function=inventory_dell_poweredge_netdev,
+    check_function=check_dell_poweredge_netdev,
 )

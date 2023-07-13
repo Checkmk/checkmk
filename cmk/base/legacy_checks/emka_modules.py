@@ -209,10 +209,6 @@ check_info["emka_modules"] = LegacyCheckDefinition(
         contains(".1.3.6.1.2.1.1.1.0", "emka"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13595"),
     ),
-    parse_function=parse_emka_modules,
-    discovery_function=inventory_emka_modules,
-    check_function=check_emka_modules,
-    service_name="Module %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.13595.2.1.3.3.1",
@@ -238,6 +234,10 @@ check_info["emka_modules"] = LegacyCheckDefinition(
             oids=[OIDEnd(), OIDBytes("18")],
         ),
     ],
+    parse_function=parse_emka_modules,
+    service_name="Module %s",
+    discovery_function=inventory_emka_modules,
+    check_function=check_emka_modules,
 )
 
 # .
@@ -272,9 +272,9 @@ def check_emka_modules_alarm(item, params, parsed):
 
 
 check_info["emka_modules.alarm"] = LegacyCheckDefinition(
+    service_name="Alarm %s",
     discovery_function=inventory_emka_modules_alarm,
     check_function=check_emka_modules_alarm,
-    service_name="Alarm %s",
 )
 
 # .
@@ -310,9 +310,9 @@ def check_emka_modules_handle(item, params, parsed):
 
 
 check_info["emka_modules.handle"] = LegacyCheckDefinition(
+    service_name="Handle %s",
     discovery_function=inventory_emka_modules_handle,
     check_function=check_emka_modules_handle,
-    service_name="Handle %s",
 )
 
 # .
@@ -340,9 +340,9 @@ def check_emka_modules_sensor_volt(item, params, parsed):
 
 
 check_info["emka_modules.sensor_volt"] = LegacyCheckDefinition(
+    service_name="Phase %s",
     discovery_function=inventory_emka_modules_sensor_volt,
     check_function=check_emka_modules_sensor_volt,
-    service_name="Phase %s",
     check_ruleset_name="el_inphase",
 )
 
@@ -377,9 +377,9 @@ def check_emka_modules_sensor_temp(item, params, parsed):
 
 
 check_info["emka_modules.sensor_temp"] = LegacyCheckDefinition(
+    service_name="Temperature %s",
     discovery_function=inventory_emka_modules_sensor_temp,
     check_function=check_emka_modules_sensor_temp,
-    service_name="Temperature %s",
     check_ruleset_name="temperature",
 )
 
@@ -408,9 +408,9 @@ def check_emka_modules_sensor_humid(item, params, parsed):
 
 
 check_info["emka_modules.sensor_humid"] = LegacyCheckDefinition(
+    service_name="Humidity %s",
     discovery_function=inventory_emka_modules_sensor_humid,
     check_function=check_emka_modules_sensor_humid,
-    service_name="Humidity %s",
     check_ruleset_name="humidity",
 )
 
@@ -444,7 +444,7 @@ def check_emka_modules_relay(item, params, parsed):
 
 
 check_info["emka_modules.relay"] = LegacyCheckDefinition(
+    service_name="Relay %s",
     discovery_function=inventory_emka_modules_relay,
     check_function=check_emka_modules_relay,
-    service_name="Relay %s",
 )

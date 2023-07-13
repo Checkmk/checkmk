@@ -48,13 +48,13 @@ def check_climaveneta_temp(item, params, info):
 
 check_info["climaveneta_temp"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.1.0", "pCO Gateway"),
-    check_function=check_climaveneta_temp,
-    discovery_function=inventory_climaveneta_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9839.2.1",
         oids=[OIDEnd(), "2"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_climaveneta_temp,
+    check_function=check_climaveneta_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (28.0, 30.0)},
 )

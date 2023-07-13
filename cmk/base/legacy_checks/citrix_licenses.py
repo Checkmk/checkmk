@@ -52,8 +52,8 @@ def check_citrix_licenses(item, params, parsed):
 
 check_info["citrix_licenses"] = LegacyCheckDefinition(
     parse_function=parse_citrix_licenses,
-    check_function=check_citrix_licenses,
-    discovery_function=inventory_citrix_licenses,
     service_name="Citrix Licenses %s",
+    discovery_function=inventory_citrix_licenses,
+    check_function=check_citrix_licenses,
     check_ruleset_name="citrix_licenses",
 )

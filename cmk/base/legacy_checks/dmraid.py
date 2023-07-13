@@ -56,13 +56,13 @@ def check_dmraid_ldisks(item, _no_params, info):
 
 
 check_info["dmraid.ldisks"] = LegacyCheckDefinition(
-    check_function=check_dmraid_ldisks,
-    discovery_function=inventory_dmraid_ldisks,
     service_name="RAID LDisk %s",
+    discovery_function=inventory_dmraid_ldisks,
+    check_function=check_dmraid_ldisks,
 )
 
 check_info["dmraid.pdisks"] = LegacyCheckDefinition(
-    check_function=check_dmraid_pdisks,
-    discovery_function=inventory_dmraid_pdisks,
     service_name="RAID PDisk %s",
+    discovery_function=inventory_dmraid_pdisks,
+    check_function=check_dmraid_pdisks,
 )

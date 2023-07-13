@@ -50,12 +50,12 @@ def check_dell_idrac_fans(item, params, info):
 check_info["dell_idrac_fans"] = LegacyCheckDefinition(
     # use cmk.base.plugins.agent_based.utils.dell.DETECT_IDRAC ?
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10892.5"),
-    discovery_function=inventory_dell_idrac_fans,
-    check_function=check_dell_idrac_fans,
-    service_name="Fan %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.5.4.700.12.1",
         oids=["2", "5", "6", "8", "10", "11", "12", "13"],
     ),
+    service_name="Fan %s",
+    discovery_function=inventory_dell_idrac_fans,
+    check_function=check_dell_idrac_fans,
     check_ruleset_name="hw_fans",
 )

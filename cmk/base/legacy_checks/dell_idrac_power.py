@@ -35,9 +35,6 @@ def check_dell_idrac_power(item, _no_params, info):
 
 check_info["dell_idrac_power"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.674.10892.5"),
-    discovery_function=inventory_dell_idrac_power,
-    check_function=check_dell_idrac_power,
-    service_name="Power Supply Redundancy %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.674.10892.5.4.600.10.1",
@@ -48,6 +45,9 @@ check_info["dell_idrac_power"] = LegacyCheckDefinition(
             oids=["2", "5", "7", "8"],
         ),
     ],
+    service_name="Power Supply Redundancy %s",
+    discovery_function=inventory_dell_idrac_power,
+    check_function=check_dell_idrac_power,
 )
 
 
@@ -92,7 +92,7 @@ def check_dell_idrac_power_unit(item, _no_params, info):
 
 
 check_info["dell_idrac_power.unit"] = LegacyCheckDefinition(
+    service_name="Power Supply %s",
     discovery_function=inventory_dell_idrac_power_unit,
     check_function=check_dell_idrac_power_unit,
-    service_name="Power Supply %s",
 )

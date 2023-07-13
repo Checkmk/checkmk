@@ -59,8 +59,8 @@ def check_couchbase_bucket_mem(item, params, parsed):
 
 check_info["couchbase_buckets_mem"] = LegacyCheckDefinition(
     parse_function=parse_couchbase_lines,
+    service_name="Couchbase Bucket %s Memory",
     discovery_function=discover_couchbase_buckets_mem,
     check_function=check_couchbase_bucket_mem,
-    service_name="Couchbase Bucket %s Memory",
     check_ruleset_name="memory_multiitem",
 )

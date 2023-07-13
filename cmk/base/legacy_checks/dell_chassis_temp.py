@@ -36,13 +36,13 @@ def check_dell_chassis_temp(item, params, info):
 
 check_info["dell_chassis_temp"] = LegacyCheckDefinition(
     detect=DETECT_CHASSIS,
-    check_function=check_dell_chassis_temp,
-    discovery_function=inventory_dell_chassis_temp,
-    service_name="Temperature %s",
-    check_ruleset_name="temperature",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.674.10892.2.3.1",
         oids=["10", "11", "12"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_dell_chassis_temp,
+    check_function=check_dell_chassis_temp,
+    check_ruleset_name="temperature",
     check_default_parameters={"levels": (60.0, 80.0)},
 )

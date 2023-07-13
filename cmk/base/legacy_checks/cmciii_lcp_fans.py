@@ -63,9 +63,6 @@ def check_cmciii_lcp_fans(item, params, info):
 
 check_info["cmciii_lcp_fans"] = LegacyCheckDefinition(
     detect=DETECT_CMCIII_LCP,
-    check_function=check_cmciii_lcp_fans,
-    discovery_function=inventory_cmciii_lcp_fans,
-    service_name="LCP Fanunit FAN %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2606.7.4.2.2.1.10.2",
         oids=[
@@ -95,4 +92,7 @@ check_info["cmciii_lcp_fans"] = LegacyCheckDefinition(
             "57",
         ],
     ),
+    service_name="LCP Fanunit FAN %s",
+    discovery_function=inventory_cmciii_lcp_fans,
+    check_function=check_cmciii_lcp_fans,
 )

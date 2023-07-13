@@ -96,13 +96,13 @@ def check_eltek_fans(item, params, info):
 
 check_info["eltek_fans"] = LegacyCheckDefinition(
     detect=DETECT_ELTEK,
-    discovery_function=inventory_eltek_fans,
-    check_function=check_eltek_fans,
-    service_name="Fan %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12148.9.1.17.3.1",
         oids=["1", "4", "6"],
     ),
+    service_name="Fan %s",
+    discovery_function=inventory_eltek_fans,
+    check_function=check_eltek_fans,
     check_ruleset_name="hw_fans_perc",
     check_default_parameters={
         "levels": (99, 100),

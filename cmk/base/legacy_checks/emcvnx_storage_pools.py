@@ -138,9 +138,9 @@ def check_emcvnx_storage_pools(item, params, parsed):
 
 check_info["emcvnx_storage_pools"] = LegacyCheckDefinition(
     parse_function=parse_emcvnx_storage_pools,
+    service_name="Pool %s General",
     discovery_function=inventory_emcvnx_storage_pools,
     check_function=check_emcvnx_storage_pools,
-    service_name="Pool %s General",
     check_ruleset_name="emcvnx_storage_pools",
     check_default_parameters={"percent_full": (70.0, 90.0)},
 )
@@ -229,9 +229,9 @@ def check_emcvnx_storage_pools_tiering(item, params, parsed):
 
 
 check_info["emcvnx_storage_pools.tiering"] = LegacyCheckDefinition(
+    service_name="Pool %s Tiering Status",
     discovery_function=inventory_emcvnx_storage_pools_tiering,
     check_function=check_emcvnx_storage_pools_tiering,
-    service_name="Pool %s Tiering Status",
     check_ruleset_name="emcvnx_storage_pools_tiering",
     check_default_parameters={
         "time_to_complete": (21 * 60 * 60 * 24, 28 * 60 * 60 * 24),
@@ -317,9 +317,9 @@ def check_emcvnx_storage_pools_tieringtypes(item, params, parsed):
 
 
 check_info["emcvnx_storage_pools.tieringtypes"] = LegacyCheckDefinition(
+    service_name="Pool %s tiering",
     discovery_function=inventory_emcvnx_storage_pools_tieringtypes,
     check_function=check_emcvnx_storage_pools_tieringtypes,
-    service_name="Pool %s tiering",
 )
 
 # .
@@ -377,7 +377,7 @@ def check_emcvnx_storage_pools_deduplication(item, _no_params, parsed):
 
 
 check_info["emcvnx_storage_pools.deduplication"] = LegacyCheckDefinition(
+    service_name="Pool %s Deduplication",
     discovery_function=inventory_emcvnx_storage_pools,
     check_function=check_emcvnx_storage_pools_deduplication,
-    service_name="Pool %s Deduplication",
 )

@@ -29,9 +29,8 @@ from cmk.snmplib.type_defs import SNMPRawData
 
 from cmk.fetchers import FetcherType
 
-from cmk.checkengine import SectionPlugin, SourceInfo, SourceType
+from cmk.checkengine import HostSections, SectionPlugin, SourceInfo, SourceType
 from cmk.checkengine.checkresults import ActiveCheckResult
-from cmk.checkengine.host_sections import HostSections
 from cmk.checkengine.inventory import (
     _check_fetched_data_or_trees,
     _create_trees_from_inventory_plugin_items,

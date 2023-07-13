@@ -22,8 +22,7 @@ from cmk.utils.translations import TranslationOptions
 from cmk.fetchers.cache import SectionStore
 
 from ._markers import PiggybackMarker, SectionMarker
-from ._parser import Parser
-from .host_sections import HostSections
+from ._parser import HostSections, Parser
 from .type_defs import (
     AgentRawDataSection,
     AgentRawDataSectionElem,
@@ -473,7 +472,7 @@ class HostSectionParser(ParserState):
         return self.to_noop_parser()
 
 
-class AgentParser(Parser[AgentRawData, HostSections[AgentRawDataSection]]):
+class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
     """A parser for agent data."""
 
     def __init__(

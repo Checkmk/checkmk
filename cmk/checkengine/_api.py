@@ -16,10 +16,9 @@ from cmk.utils.rulesets import RuleSetName
 
 from cmk.snmplib.type_defs import SNMPRawData
 
-from ._parser import Parser
+from ._parser import HostSections, Parser
 from ._typedefs import SourceInfo
 from .checkresults import ActiveCheckResult
-from .host_sections import HostSections
 from .sectionparser import ParsedSectionName, SectionPlugin
 from .type_defs import AgentRawDataSection, SectionNameCollection
 

@@ -34,9 +34,9 @@ from cmk.utils.structured_data import (
 from cmk.utils.validatedstr import ValidatedString
 
 from ._api import FetcherFunction, ParserFunction, SectionPlugin, SummarizerFunction
+from ._parser import HostSections
 from ._typedefs import HostKey, SourceType
 from .checkresults import ActiveCheckResult
-from .host_sections import HostSections
 from .sectionparser import (
     filter_out_errors,
     make_providers,

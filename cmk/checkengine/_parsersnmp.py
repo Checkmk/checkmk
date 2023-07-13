@@ -15,18 +15,17 @@ from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataElem
 
 from cmk.fetchers.cache import SectionStore
 
-from ._parser import Parser
-from .host_sections import HostSections
+from ._parser import HostSections, Parser
 from .type_defs import SectionNameCollection
 
 __all__ = ["SNMPParser"]
 
 
-class SNMPParser(Parser[SNMPRawData, HostSections[SNMPRawData]]):
+class SNMPParser(Parser[SNMPRawData, SNMPRawData]):
     """A parser for SNMP data.
 
     Note:
-        It is forbidden to add base dependencies to this class.
+        It's not a parser, there's nothing to parse here.
 
     """
 

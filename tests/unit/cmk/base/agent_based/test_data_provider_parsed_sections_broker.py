@@ -10,8 +10,7 @@ from pytest import MonkeyPatch
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
 
-from cmk.checkengine import SectionPlugin
-from cmk.checkengine.host_sections import HostSections
+from cmk.checkengine import HostSections, SectionPlugin
 from cmk.checkengine.sectionparser import ParsedSectionName, ParsedSectionsResolver, SectionsParser
 from cmk.checkengine.type_defs import AgentRawDataSection, AgentRawDataSectionElem
 

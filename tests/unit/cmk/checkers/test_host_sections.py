@@ -8,7 +8,7 @@ import pytest
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
 
-from cmk.checkengine.host_sections import HostSections
+from cmk.checkengine import HostSections
 from cmk.checkengine.type_defs import AgentRawDataSection
 
 

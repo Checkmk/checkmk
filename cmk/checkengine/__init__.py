@@ -37,7 +37,7 @@ from ._api import (
     SummarizerFunction,
 )
 from ._markers import PiggybackMarker, SectionMarker
-from ._parser import Parser
+from ._parser import HostSections, Parser
 from ._parseragent import AgentParser
 from ._parsersnmp import SNMPParser
 from ._typedefs import HostKey, Parameters, SourceInfo, SourceType
@@ -48,6 +48,7 @@ __all__ = [
     "checking",
     "FetcherFunction",
     "HostKey",
+    "HostSections",
     "inventory",
     "Parameters",
     "parse_raw_data",

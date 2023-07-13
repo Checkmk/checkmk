@@ -589,10 +589,10 @@ def versions_compatible(
 
     Specific patch release requirements
 
-    >>> isinstance(c(Version("2.1.0p29"), Version("2.2.0i1")), VersionsCompatible)
+    >>> isinstance(c(Version("2.1.0p31"), Version("2.2.0i1")), VersionsCompatible)
     True
-    >>> str(c(Version("2.1.0p4"), Version("2.2.0i1")))
-    'This target version requires at least 2.1.0p29'
+    >>> str(c(Version("2.1.0p30"), Version("2.2.0i1")))
+    'This target version requires at least 2.1.0p31'
     """
 
     # Daily builds of the master branch (format: YYYY.MM.DD) are always treated to be compatbile
@@ -685,6 +685,9 @@ _REQUIRED_PATCH_RELEASES_MAP: Final = {
         Version("2.1.0p23"),  # fixup of broken global settings migration (Werk #14304)
         Version("2.1.0p25"),  # fix Alternative.transform_value (CMK-12694)
         Version("2.1.0p29"),  # fix update for static_checks:cpu_load (Werk #15270)
+        Version(
+            "2.1.0p31"
+        ),  # 15863 FIX Add default aggregation modes for some clustered services during update
     ),
 }
 

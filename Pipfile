@@ -96,6 +96,7 @@ botocore-stubs = "==1.29.105"  # used for type checking, keep version in sync wi
 boto3-stubs = "==1.26.105"  # used for type checking, keep version in sync with boto3
 pexpect = "*" # used for update testing
 dill = "*"
+jsonschema = "==4.17.3"
 
 [packages]
 setuptools-scm = "==4.1.2"  # needed by various setup.py
@@ -138,7 +139,6 @@ importlib-metadata = "==6.1.0"  # needed by jsonschema
 pyrsistent = "==0.19.3"  # needed by jsonschema
 click = "==8.1.3"  # needed by flask
 werkzeug = "==2.2.3"  # direct dependency and needed by flask
-jsonschema = "==4.17.3"  # needed by openapi-spec-validator
 flask = "==2.2.3"  # direct dependency
 pytz = "==2023.3"  # direct dependency
 openapi-spec-validator = "==0.5.6"  # direct dependency
@@ -174,7 +174,6 @@ psycopg2-binary = "==2.9.6"  # needed by check_sql active check
 apispec = "==5.2.2"  # direct dependency
 marshmallow = "==3.19.0"  # direct dependency
 marshmallow-oneofschema = "==3.0.1"  # direct dependency
-mypy-extensions = "==1.0.0" # direct dependency, NOTE: This should really be unpinned, because it must work with the unpinned mypy version! Otherwise e.g. the mypy LSP integration can break silently etc. But we have a silly test enforcing the pinning here... :-P * * *
 apispec-oneofschema = "==3.0.0"  # direct dependency
 pydantic = "==1.10.9"
 paho-mqtt = "==1.6.1"  # needed for MQTT special agent

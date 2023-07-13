@@ -324,11 +324,9 @@ CEE_UNUSED_PACKAGES = [
     "importlib-metadata",
     "itsdangerous",
     "jmespath",
-    "jsonschema",  # TODO: move to dev-deps
     "markupsafe",
     "more-itertools",
     "multidict",
-    "mypy-extensions",  # TODO: Can that be removed? looks like it
     "ordered-set",
     "pbr",
     "ply",

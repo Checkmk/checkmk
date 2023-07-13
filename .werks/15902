@@ -7,7 +7,7 @@ Edition: cre
 Knowledge: doc
 Level: 1
 State: unknown
-Version: 2.2.0p6
+Version: 2.2.0p7
 
 Currently, the cores shown for the per core utilization are numbered starting at 1, while elsewhere the numbering starts at 0.
 This has been made consistent by changing the start to 0 for the per core utilization as well.

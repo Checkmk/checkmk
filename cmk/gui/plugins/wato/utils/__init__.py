@@ -1464,33 +1464,35 @@ def sort_sites(sites: SiteConfigurations) -> list[tuple[SiteId, SiteConfiguratio
     )
 
 
-# Show HTML form for editing attributes.
-#
-# new: Boolean flag if this is a creation step or editing
-# for_what can be:
 #   "host"        -> normal host edit dialog
 #   "cluster"     -> normal host edit dialog
 #   "folder"      -> properties of folder or file
 #   "host_search" -> host search dialog
 #   "bulk"        -> bulk change
-# parent: The parent folder of the objects to configure
-# myself: For mode "folder" the folder itself or None, if we edit a new folder
-#         This is needed for handling mandatory attributes.
-#
-# This is the counterpart of "collect_attributes". Another place which
-# is related to these HTTP variables and so on is SearchFolder.
-#
+DialogIdent = Literal["host", "cluster", "folder", "host_search", "bulk"]
+
+
 # TODO: Wow, this function REALLY has to be cleaned up
 def configure_attributes(  # pylint: disable=too-many-branches
-    new,
-    hosts,
-    for_what,
-    parent,
-    myself=None,
-    without_attributes=None,
-    varprefix="",
-    basic_attributes=None,
-):
+    new: bool,
+    hosts: Mapping[str, CREHost | CREFolder | None],
+    for_what: DialogIdent,
+    parent: CREFolder | SearchFolder | None,
+    myself: CREFolder | None = None,
+    without_attributes: Sequence[str] | None = None,
+    varprefix: str = "",
+    basic_attributes: Sequence[tuple[str, ValueSpec, object]] | None = None,
+) -> None:
+    """Show HTML form for editing attributes.
+
+    new: Boolean flag if this is a creation step or editing
+    parent: The parent folder of the objects to configure
+    myself: For mode "folder" the folder itself or None, if we edit a new folder
+            This is needed for handling mandatory attributes.
+
+    This is the counterpart of "collect_attributes". Another place which
+    is related to these HTTP variables and so on is SearchFolder.
+    """
     if without_attributes is None:
         without_attributes = []
     if basic_attributes is None:
@@ -1522,7 +1524,10 @@ def configure_attributes(  # pylint: disable=too-many-branches
 
         if topic_id == "basic":
             for attr_varprefix, vs, default_value in basic_attributes:
-                forms.section(_u(vs.title()), is_required=not vs.allow_empty())
+                forms.section(
+                    _u(title) if (title := vs.title()) is not None else None,
+                    is_required=not vs.allow_empty(),
+                )
                 vs.render_input(attr_varprefix, default_value)
 
         for attr in topic_attributes:
@@ -1552,22 +1557,7 @@ def configure_attributes(  # pylint: disable=too-many-branches
                 hide_attributes.append(attr.name())
 
             # "bulk": determine, if this attribute has the same setting for all hosts.
-            values = []
-            num_have_locked_it = 0
-            num_haveit = 0
-            for host in hosts.values():
-                if not host:
-                    continue
-
-                locked_by = host.attributes.get("locked_by")
-                locked_attributes = host.attributes.get("locked_attributes")
-                if locked_by and locked_attributes and attrname in locked_attributes:
-                    num_have_locked_it += 1
-
-                if attrname in host.attributes:
-                    num_haveit += 1
-                    if host.attributes.get(attrname) not in values:
-                        values.append(host.attributes.get(attrname))
+            values, num_have_locked_it, num_haveit = _determine_attribute_settings(attrname, hosts)
 
             # The value of this attribute is unique amongst all hosts if
             # either no host has a value for this attribute, or all have
@@ -1576,7 +1566,7 @@ def configure_attributes(  # pylint: disable=too-many-branches
 
             if for_what in ["host", "cluster", "folder"]:
                 if hosts:
-                    host = list(hosts.values())[0]
+                    host: CREHost | CREFolder | None = list(hosts.values())[0]
                 else:
                     host = None
 
@@ -1670,7 +1660,7 @@ def configure_attributes(  # pylint: disable=too-many-branches
                 else:
                     disabled = True
 
-            if (for_what in ["host", "cluster"] and parent.locked_hosts()) or (
+            if (for_what in ["host", "cluster"] and parent and parent.locked_hosts()) or (
                 for_what == "folder" and myself and myself.locked()
             ):
                 checkbox_code = None
@@ -1796,6 +1786,28 @@ def configure_attributes(  # pylint: disable=too-many-branches
         "cmk.wato.prepare_edit_dialog(%s);"
         "cmk.wato.fix_visibility();" % json.dumps(dialog_properties)
     )
+
+
+def _determine_attribute_settings(
+    attrname: str, hosts: Mapping[str, CREHost | CREFolder | None]
+) -> tuple[list[object], int, int]:
+    values = []
+    num_have_locked_it = 0
+    num_haveit = 0
+    for host in hosts.values():
+        if not host:
+            continue
+
+        locked_by = host.attributes.get("locked_by")
+        locked_attributes = host.attributes.get("locked_attributes")
+        if locked_by and locked_attributes and attrname in locked_attributes:
+            num_have_locked_it += 1
+
+        if attrname in host.attributes:
+            num_haveit += 1
+            if host.attributes.get(attrname) not in values:
+                values.append(host.attributes.get(attrname))
+    return values, num_have_locked_it, num_haveit
 
 
 # Check if at least one host in a folder (or its subfolders)

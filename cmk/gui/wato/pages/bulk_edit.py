@@ -80,7 +80,7 @@ class ModeBulkEdit(WatoMode):
 
     def page(self) -> None:
         host_names = get_hostnames_from_checkboxes(self._folder)
-        hosts = {host_name: self._folder.host(host_name) for host_name in host_names}
+        hosts = {host_name: self._folder.load_host(host_name) for host_name in host_names}
         current_host_hash = sha256(repr(hosts).encode()).hexdigest()
 
         # When bulk edit has been made with some hosts, then other hosts have been selected
@@ -115,7 +115,9 @@ class ModeBulkEdit(WatoMode):
         html.begin_form("edit_host", method="POST")
         html.prevent_password_auto_completion()
         html.hidden_field("host_hash", current_host_hash)
-        configure_attributes(False, hosts, "bulk", parent=self._folder)
+        configure_attributes(
+            False, {str(k): v for k, v in hosts.items()}, "bulk", parent=self._folder
+        )
         forms.end()
         html.hidden_fields()
         html.end_form()

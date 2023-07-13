@@ -5,13 +5,13 @@
 
 import logging
 import time
-from collections.abc import Mapping, MutableMapping, Sequence
+from collections.abc import Mapping, MutableMapping
 from typing import Final
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.sectionname import HostSection, SectionName
+from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib.type_defs import SNMPRawData
+from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataElem
 
 from cmk.fetchers.cache import SectionStore
 
@@ -22,7 +22,7 @@ from .type_defs import SectionNameCollection
 __all__ = ["SNMPParser"]
 
 
-class SNMPParser(Parser[HostSection[Sequence[SNMPRawData]], HostSections[Sequence[SNMPRawData]]]):
+class SNMPParser(Parser[SNMPRawData, HostSections[SNMPRawDataElem]]):
     """A parser for SNMP data.
 
     Note:
@@ -33,7 +33,7 @@ class SNMPParser(Parser[HostSection[Sequence[SNMPRawData]], HostSections[Sequenc
     def __init__(
         self,
         hostname: HostName,
-        section_store: SectionStore[Sequence[SNMPRawData]],
+        section_store: SectionStore[SNMPRawDataElem],
         *,
         check_intervals: Mapping[SectionName, int | None],
         keep_outdated: bool,
@@ -48,12 +48,12 @@ class SNMPParser(Parser[HostSection[Sequence[SNMPRawData]], HostSections[Sequenc
 
     def parse(
         self,
-        raw_data: HostSection[Sequence[SNMPRawData]],
+        raw_data: SNMPRawData,
         *,
         # The selection argument is ignored: Selection is done
         # in the fetcher for SNMP.
         selection: SectionNameCollection,
-    ) -> HostSections[Sequence[SNMPRawData]]:
+    ) -> HostSections[SNMPRawDataElem]:
         sections = dict(raw_data)
         now = int(time.time())
 
@@ -70,4 +70,4 @@ class SNMPParser(Parser[HostSection[Sequence[SNMPRawData]], HostSections[Sequenc
             now=now,
             keep_outdated=self.keep_outdated,
         )
-        return HostSections[Sequence[SNMPRawData]](new_sections, cache_info=cache_info)
+        return HostSections[SNMPRawDataElem](new_sections, cache_info=cache_info)

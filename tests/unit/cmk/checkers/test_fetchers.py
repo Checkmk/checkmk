@@ -24,7 +24,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.exceptions import MKFetcherError, OnError
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.sectionname import HostSection, SectionName
+from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import snmp_table
 from cmk.snmplib.type_defs import (
@@ -117,7 +117,7 @@ class TestNoCache:
 
 
 # This is horrible to type since the AgentFileCache needs the AgentRawData and the
-# SNMPFileCache needs SNMPRawData, this matches here (I think) but the Union types would not
+# SNMPFileCache needs SNMPRawDataElem, this matches here (I think) but the Union types would not
 # help anybody... And mypy cannot handle the conditions so we would need to ignore the errors
 # anyways...
 class TestAgentFileCache_and_SNMPFileCache:
@@ -150,7 +150,7 @@ class TestAgentFileCache_and_SNMPFileCache:
         self,
         file_cache: FileCache,
         path: Path,
-        raw_data: AgentRawData | HostSection[Sequence[SNMPRawData]],
+        raw_data: AgentRawData | SNMPRawData,
     ) -> None:
         mode = Mode.DISCOVERY
         file_cache.file_cache_mode = FileCacheMode.READ_WRITE
@@ -797,7 +797,7 @@ class TestSNMPFetcherFetchCache:
         return fetcher
 
     def test_fetch_reading_cache_in_discovery_mode(self, fetcher: SNMPFetcher) -> None:
-        file_cache = StubFileCache[HostSection[Sequence[SNMPRawData]]](
+        file_cache = StubFileCache[SNMPRawData](
             HostName("hostname"),
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),

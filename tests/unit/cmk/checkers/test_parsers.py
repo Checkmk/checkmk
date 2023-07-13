@@ -19,10 +19,10 @@ import pytest
 import cmk.utils.debug
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostName
-from cmk.utils.sectionname import HostSection, SectionName
+from cmk.utils.sectionname import SectionName
 from cmk.utils.translations import TranslationOptions
 
-from cmk.snmplib.type_defs import SNMPRawData
+from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataElem
 
 from cmk.fetchers.cache import SectionStore
 
@@ -802,7 +802,7 @@ class TestSNMPParser:
         )
 
     def test_empty_raw_data(self, parser: SNMPParser) -> None:
-        raw_data: HostSection[Sequence[SNMPRawData]] = {}
+        raw_data: SNMPRawData = {}
 
         host_sections = parser.parse(raw_data, selection=NO_SELECTION)
         assert host_sections.sections == {}
@@ -1087,7 +1087,7 @@ class TestSNMPPersistedSectionHandling:
 
     def test_update_with_empty_store_and_persisted(self, logger: logging.Logger) -> None:
         section_store = MockStore("/dev/null", {}, logger=logger)
-        raw_data: HostSection[Sequence[SNMPRawData]] = {}
+        raw_data: SNMPRawData = {}
         parser = SNMPParser(
             HostName("testhost"),
             section_store,
@@ -1108,7 +1108,7 @@ class TestSNMPPersistedSectionHandling:
             {SectionName("stored"): (0, 0, [["old"]])},
             logger=logger,
         )
-        raw_data: HostSection[Sequence[SNMPRawData]] = {}
+        raw_data: SNMPRawData = {}
         parser = SNMPParser(
             HostName("testhost"),
             section_store,
@@ -1127,8 +1127,8 @@ class TestSNMPPersistedSectionHandling:
 
     def test_update_with_empty_store(self, logger: logging.Logger) -> None:
         section_store = MockStore("/dev/null", {}, logger=logger)
-        _new: Sequence[SNMPRawData] = [["new"]]  # For the type checker only
-        raw_data: HostSection[Sequence[SNMPRawData]] = {SectionName("fresh"): _new}
+        _new: SNMPRawDataElem = [["new"]]  # For the type checker only
+        raw_data: SNMPRawData = {SectionName("fresh"): _new}
         parser = SNMPParser(
             HostName("testhost"),
             section_store,
@@ -1149,8 +1149,8 @@ class TestSNMPPersistedSectionHandling:
             {SectionName("stored"): (0, 0, [["old"]])},
             logger=logger,
         )
-        _new: Sequence[SNMPRawData] = [["new"]]  # For the type checker only
-        raw_data: HostSection[Sequence[SNMPRawData]] = {SectionName("fresh"): _new}
+        _new: SNMPRawDataElem = [["new"]]  # For the type checker only
+        raw_data: SNMPRawData = {SectionName("fresh"): _new}
         parser = SNMPParser(
             HostName("testhost"),
             section_store,
@@ -1180,8 +1180,8 @@ class TestSNMPPersistedSectionHandling:
             {SectionName("section"): (0, 0, [["old"]])},
             logger=logger,
         )
-        _new: Sequence[SNMPRawData] = [["new"]]  # For the type checker only
-        raw_data: HostSection[Sequence[SNMPRawData]] = {SectionName("section"): _new}
+        _new: SNMPRawDataElem = [["new"]]  # For the type checker only
+        raw_data: SNMPRawData = {SectionName("section"): _new}
         parser = SNMPParser(
             HostName("testhost"),
             section_store,

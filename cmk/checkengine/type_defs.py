@@ -16,12 +16,6 @@ __all__ = ["NO_SELECTION", "SectionNameCollection"]
 # Note that the inner Sequence[str] to AgentRawDataSection
 # is only **artificially** different from AgentRawData and
 # obtained approximatively with `raw_data.decode("utf-8").split()`!
-#
-# Moreover, the type is not useful.
-#
-# What would be useful is a Mapping[SectionName, AgentRawData],
-# analogous to SNMPRawData = Mapping[SectionName, SNMPRawData],
-# that would generalize to `Mapping[SectionName, TRawData]`
 AgentRawDataSection = Sequence[str]
 
 

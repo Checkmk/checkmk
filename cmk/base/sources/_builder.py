@@ -17,7 +17,7 @@ from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPRawData
+from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPRawDataElem
 
 from cmk.fetchers import FetcherType, SNMPFetcher
 from cmk.fetchers.cache import SectionStore
@@ -63,7 +63,7 @@ def make_parser(
     if source.fetcher_type is FetcherType.SNMP:
         return SNMPParser(
             hostname,
-            SectionStore[Sequence[SNMPRawData]](
+            SectionStore[SNMPRawDataElem](
                 make_persisted_section_dir(
                     source.hostname,
                     fetcher_type=source.fetcher_type,

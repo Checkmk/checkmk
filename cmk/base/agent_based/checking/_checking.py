@@ -21,7 +21,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
 from cmk.utils.regex import regex
 from cmk.utils.resulttype import Result
-from cmk.utils.sectionname import HostSection, SectionName
+from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import ServiceName
 from cmk.utils.structured_data import TreeStore
 from cmk.utils.timeperiod import check_timeperiod, timeperiod_active, TimeperiodName
@@ -104,7 +104,7 @@ def execute_checkmk_checks(
     fetched: Sequence[
         tuple[
             SourceInfo,
-            Result[AgentRawData | HostSection[Sequence[SNMPRawData]], Exception],
+            Result[AgentRawData | SNMPRawData, Exception],
             Snapshot,
         ]
     ],

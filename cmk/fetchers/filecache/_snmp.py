@@ -6,9 +6,8 @@
 from __future__ import annotations
 
 import ast
-from collections.abc import Sequence
 
-from cmk.utils.sectionname import HostSection, SectionName
+from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib.type_defs import SNMPRawData
 
@@ -17,11 +16,11 @@ from ._cache import FileCache
 __all__ = ["SNMPFileCache"]
 
 
-class SNMPFileCache(FileCache[HostSection[Sequence[SNMPRawData]]]):
+class SNMPFileCache(FileCache[SNMPRawData]):
     @staticmethod
-    def _from_cache_file(raw_data: bytes) -> HostSection[Sequence[SNMPRawData]]:
+    def _from_cache_file(raw_data: bytes) -> SNMPRawData:
         return {SectionName(k): v for k, v in ast.literal_eval(raw_data.decode("utf-8")).items()}
 
     @staticmethod
-    def _to_cache_file(raw_data: HostSection[Sequence[SNMPRawData]]) -> bytes:
+    def _to_cache_file(raw_data: SNMPRawData) -> bytes:
         return (repr({str(k): v for k, v in raw_data.items()}) + "\n").encode("utf-8")

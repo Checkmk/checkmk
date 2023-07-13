@@ -12,6 +12,7 @@ from typing import Any, cast, Literal, NamedTuple, Union
 
 from cmk.utils.hostaddress import HostAddress as _HostAddress
 from cmk.utils.hostaddress import HostName as _HostName
+from cmk.utils.sectionname import HostSection as _HostSection
 from cmk.utils.sectionname import SectionName as _SectionName
 
 SNMPContextName = str
@@ -21,7 +22,8 @@ SNMPDecodedValues = SNMPDecodedString | SNMPDecodedBinary
 SNMPValueEncoding = Literal["string", "binary"]
 SNMPTable = Sequence[SNMPDecodedValues]
 SNMPContext = str | None
-SNMPRawData = SNMPTable | Sequence[SNMPTable]
+SNMPRawDataElem = Sequence[SNMPTable | Sequence[SNMPTable]]
+SNMPRawData = _HostSection[SNMPRawDataElem]
 OID = str
 OIDFunction = Callable[
     [OID, SNMPDecodedString | None, _SectionName | None], SNMPDecodedString | None

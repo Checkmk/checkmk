@@ -21,7 +21,7 @@ from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
 from cmk.utils.piggyback import PiggybackTimeSettings
-from cmk.utils.sectionname import HostSection, SectionName
+from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib.type_defs import SNMPRawData
 
@@ -59,13 +59,7 @@ __all__ = [
 
 def _fetch_all(
     sources: Iterable[Source], *, simulation: bool, file_cache_options: FileCacheOptions, mode: Mode
-) -> Sequence[
-    tuple[
-        SourceInfo,
-        result.Result[AgentRawData | HostSection[Sequence[SNMPRawData]], Exception],
-        Snapshot,
-    ]
-]:
+) -> Sequence[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot,]]:
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
     return [
         _do_fetch(
@@ -84,11 +78,7 @@ def _do_fetch(
     fetcher: Fetcher,
     *,
     mode: Mode,
-) -> tuple[
-    SourceInfo,
-    result.Result[AgentRawData | HostSection[Sequence[SNMPRawData]], Exception],
-    Snapshot,
-]:
+) -> tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception], Snapshot,]:
     console.vverbose(f"  Source: {source_info}\n")
     with CPUTracker() as tracker:
         raw_data = get_raw_data(file_cache, fetcher, mode)
@@ -114,7 +104,7 @@ class CMKParser:
         fetched: Iterable[
             tuple[
                 SourceInfo,
-                result.Result[AgentRawData | HostSection[Sequence[SNMPRawData]], Exception],
+                result.Result[AgentRawData | SNMPRawData, Exception],
             ]
         ],
     ) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]:
@@ -234,7 +224,7 @@ class CMKFetcher:
     ) -> Sequence[
         tuple[
             SourceInfo,
-            result.Result[AgentRawData | HostSection[Sequence[SNMPRawData]], Exception],
+            result.Result[AgentRawData | SNMPRawData, Exception],
             Snapshot,
         ]
     ]:

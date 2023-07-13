@@ -244,9 +244,16 @@ def test__inventorize_real_host_only_items() -> None:
 @pytest.mark.parametrize(
     "attrs_choices, attrs_expected_retentions",
     [
-        ("all", {"foo0": (10, 0, 3), "foo1": (10, 0, 3), "foo2": (10, 0, 3)}),
+        (
+            "all",
+            {
+                "foo0": (10, 0, 3, "current"),
+                "foo1": (10, 0, 3, "current"),
+                "foo2": (10, 0, 3, "current"),
+            },
+        ),
         ("nothing", {}),
-        (("choices", ["foo0"]), {"foo0": (10, 0, 3)}),
+        (("choices", ["foo0"]), {"foo0": (10, 0, 3, "current")}),
         (("choices", ["unknown"]), {}),
     ],
 )
@@ -256,20 +263,34 @@ def test__inventorize_real_host_only_items() -> None:
         (
             "all",
             {
-                ("bar0",): {"foo": (10, 0, 5), "col0": (10, 0, 5), "col1": (10, 0, 5)},
-                ("bar1",): {"foo": (10, 0, 5), "col0": (10, 0, 5), "col1": (10, 0, 5)},
+                ("bar0",): {
+                    "foo": (10, 0, 5, "current"),
+                    "col0": (10, 0, 5, "current"),
+                    "col1": (10, 0, 5, "current"),
+                },
+                ("bar1",): {
+                    "foo": (10, 0, 5, "current"),
+                    "col0": (10, 0, 5, "current"),
+                    "col1": (10, 0, 5, "current"),
+                },
             },
         ),
         ("nothing", {}),
-        (("choices", ["col0"]), {("bar0",): {"col0": (10, 0, 5)}, ("bar1",): {"col0": (10, 0, 5)}}),
+        (
+            ("choices", ["col0"]),
+            {
+                ("bar0",): {"col0": (10, 0, 5, "current")},
+                ("bar1",): {"col0": (10, 0, 5, "current")},
+            },
+        ),
         (("choices", ["unknown"]), {}),
     ],
 )
 def test__inventorize_real_host_only_intervals(
     attrs_choices: Literal["all"] | tuple[str, list[str]],
-    attrs_expected_retentions: dict[str, tuple[int, int, int]],
+    attrs_expected_retentions: dict[str, tuple[int, int, int, Literal["previous", "current"]]],
     table_choices: Literal["all"] | tuple[str, list[str]],
-    table_expected_retentions: dict[str, tuple[int, int, int]],
+    table_expected_retentions: dict[str, tuple[int, int, int, Literal["previous", "current"]]],
 ) -> None:
     trees, update_result = _inventorize_real_host(
         now=10,
@@ -427,9 +448,16 @@ def test__inventorize_real_host_only_intervals(
 @pytest.mark.parametrize(
     "attrs_choices, attrs_expected_retentions",
     [
-        ("all", {"foo0": (1, 2, 3), "foo1": (1, 2, 3), "foo2": (1, 2, 3)}),
+        (
+            "all",
+            {
+                "foo0": (1, 2, 3, "current"),
+                "foo1": (1, 2, 3, "current"),
+                "foo2": (1, 2, 3, "current"),
+            },
+        ),
         ("nothing", {}),
-        (("choices", ["foo0"]), {"foo0": (1, 2, 3)}),
+        (("choices", ["foo0"]), {"foo0": (1, 2, 3, "current")}),
         (("choices", ["unknown"]), {}),
     ],
 )
@@ -439,20 +467,31 @@ def test__inventorize_real_host_only_intervals(
         (
             "all",
             {
-                ("bar0",): {"foo": (1, 2, 5), "col0": (1, 2, 5), "col1": (1, 2, 5)},
-                ("bar1",): {"foo": (1, 2, 5), "col0": (1, 2, 5), "col1": (1, 2, 5)},
+                ("bar0",): {
+                    "foo": (1, 2, 5, "current"),
+                    "col0": (1, 2, 5, "current"),
+                    "col1": (1, 2, 5, "current"),
+                },
+                ("bar1",): {
+                    "foo": (1, 2, 5, "current"),
+                    "col0": (1, 2, 5, "current"),
+                    "col1": (1, 2, 5, "current"),
+                },
             },
         ),
         ("nothing", {}),
-        (("choices", ["col0"]), {("bar0",): {"col0": (1, 2, 5)}, ("bar1",): {"col0": (1, 2, 5)}}),
+        (
+            ("choices", ["col0"]),
+            {("bar0",): {"col0": (1, 2, 5, "current")}, ("bar1",): {"col0": (1, 2, 5, "current")}},
+        ),
         (("choices", ["unknown"]), {}),
     ],
 )
 def test__inventorize_real_host_raw_cache_info_and_only_intervals(
     attrs_choices: Literal["all"] | tuple[str, list[str]],
-    attrs_expected_retentions: dict[str, tuple[int, int, int]],
+    attrs_expected_retentions: dict[str, tuple[int, int, int, Literal["previous", "current"]]],
     table_choices: Literal["all"] | tuple[str, list[str]],
-    table_expected_retentions: dict[str, tuple[int, int, int]],
+    table_expected_retentions: dict[str, tuple[int, int, int, Literal["previous", "current"]]],
 ) -> None:
     trees, update_result = _inventorize_real_host(
         now=10,
@@ -753,12 +792,12 @@ def test__inventorize_real_host_no_items(
     "choices, expected_retentions",
     [
         (("choices", ["unknown", "keyz"]), {}),
-        (("choices", ["old", "keyz"]), {"old": RetentionIntervals(1, 2, 3)}),
+        (("choices", ["old", "keyz"]), {"old": RetentionIntervals(1, 2, 3, "previous")}),
     ],
 )
 def test_updater_merge_previous_attributes(  # type:ignore[no-untyped-def]
     choices: tuple[str, list[str]],
-    expected_retentions: dict,
+    expected_retentions: dict[str, tuple[int, int, int, Literal["previous", "current"]]],
 ):
     previous_tree, _items_of_inventory_plugins = _make_tree_or_items(
         previous_attributes_retentions={"old": (1, 2, 3)},
@@ -844,8 +883,8 @@ def test_updater_merge_previous_attributes_outdated(choices: tuple[str, list[str
         (
             ("choices", ["old", "keyz"]),
             {
-                ("Ident 1",): {"old": RetentionIntervals(1, 2, 3)},
-                ("Ident 2",): {"old": RetentionIntervals(1, 2, 3)},
+                ("Ident 1",): {"old": RetentionIntervals(1, 2, 3, "previous")},
+                ("Ident 2",): {"old": RetentionIntervals(1, 2, 3, "previous")},
             },
         ),
     ],
@@ -945,9 +984,9 @@ def test_updater_merge_previous_tables_outdated(choices: tuple[str, list[str]]) 
         (
             ("choices", ["old", "and", "new", "keys"]),
             {
-                "old": RetentionIntervals(1, 2, 3),
-                "new": RetentionIntervals(4, 5, 6),
-                "keys": RetentionIntervals(4, 5, 6),
+                "old": RetentionIntervals(1, 2, 3, "previous"),
+                "new": RetentionIntervals(4, 5, 6, "current"),
+                "keys": RetentionIntervals(4, 5, 6, "current"),
             },
         ),
     ],
@@ -1005,8 +1044,8 @@ def test_updater_merge_attributes(
         (
             ("choices", ["old", "and", "new", "keys"]),
             {
-                "new": RetentionIntervals(4, 5, 6),
-                "keys": RetentionIntervals(4, 5, 6),
+                "new": RetentionIntervals(4, 5, 6, "current"),
+                "keys": RetentionIntervals(4, 5, 6, "current"),
             },
         ),
     ],
@@ -1064,14 +1103,14 @@ def test_updater_merge_attributes_outdated(
             ("choices", ["old", "and", "new", "keys"]),
             {
                 ("Ident 1",): {
-                    "old": RetentionIntervals(1, 2, 3),
-                    "new": RetentionIntervals(4, 5, 6),
-                    "keys": RetentionIntervals(4, 5, 6),
+                    "old": RetentionIntervals(1, 2, 3, "previous"),
+                    "new": RetentionIntervals(4, 5, 6, "current"),
+                    "keys": RetentionIntervals(4, 5, 6, "current"),
                 },
                 ("Ident 2",): {
-                    "old": RetentionIntervals(1, 2, 3),
-                    "new": RetentionIntervals(4, 5, 6),
-                    "keys": RetentionIntervals(4, 5, 6),
+                    "old": RetentionIntervals(1, 2, 3, "previous"),
+                    "new": RetentionIntervals(4, 5, 6, "current"),
+                    "keys": RetentionIntervals(4, 5, 6, "current"),
                 },
             },
         ),
@@ -1141,12 +1180,12 @@ def test_updater_merge_tables(
             ("choices", ["old", "and", "new", "keys"]),
             {
                 ("Ident 1",): {
-                    "new": RetentionIntervals(4, 5, 6),
-                    "keys": RetentionIntervals(4, 5, 6),
+                    "new": RetentionIntervals(4, 5, 6, "current"),
+                    "keys": RetentionIntervals(4, 5, 6, "current"),
                 },
                 ("Ident 2",): {
-                    "new": RetentionIntervals(4, 5, 6),
-                    "keys": RetentionIntervals(4, 5, 6),
+                    "new": RetentionIntervals(4, 5, 6, "current"),
+                    "keys": RetentionIntervals(4, 5, 6, "current"),
                 },
             },
         ),

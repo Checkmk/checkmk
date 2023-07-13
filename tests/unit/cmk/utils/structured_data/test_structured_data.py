@@ -7,7 +7,7 @@ import gzip
 import shutil
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
-from typing import NamedTuple
+from typing import Literal, NamedTuple
 
 import pytest
 
@@ -1515,7 +1515,7 @@ def test__is_table() -> None:
 
 def test_add_attributes() -> None:
     path = ("path-to", "node")
-    retentions = {"key": RetentionIntervals(1, 2, 3)}
+    retentions = {"key": RetentionIntervals(1, 2, 3, "current")}
 
     node = StructuredDataNode(name="node", path=path)
     attributes = Attributes(retentions=retentions)
@@ -1529,7 +1529,7 @@ def test_add_table() -> None:
     path = ("path-to", "node")
     key_columns = ["key-0"]
     retentions: TableRetentions = {
-        ("Value 0",): {"key-1": RetentionIntervals(1, 2, 3)},
+        ("Value 0",): {"key-1": RetentionIntervals(1, 2, 3, "current")},
     }
 
     node = StructuredDataNode(name="node", path=path)
@@ -1549,8 +1549,8 @@ def test_table_update_from_previous() -> None:
         key_columns=["kc"],
         retentions={
             ("KC",): {
-                "c1": RetentionIntervals(1, 2, 3),
-                "c2": RetentionIntervals(1, 2, 3),
+                "c1": RetentionIntervals(1, 2, 3, "current"),
+                "c2": RetentionIntervals(1, 2, 3, "current"),
             }
         },
     )
@@ -1563,16 +1563,16 @@ def test_table_update_from_previous() -> None:
         0,
         previous_table,
         lambda k: True,
-        RetentionIntervals(4, 5, 6),
+        RetentionIntervals(4, 5, 6, "current"),
     )
 
     assert current_table.key_columns == ["kc"]
     assert current_table.retentions == {
         ("KC",): {
-            "c1": RetentionIntervals(4, 5, 6),
-            "c2": RetentionIntervals(1, 2, 3),
-            "c3": RetentionIntervals(4, 5, 6),
-            "kc": RetentionIntervals(4, 5, 6),
+            "c1": RetentionIntervals(4, 5, 6, "current"),
+            "c2": RetentionIntervals(1, 2, 3, "previous"),
+            "c3": RetentionIntervals(4, 5, 6, "current"),
+            "kc": RetentionIntervals(4, 5, 6, "current"),
         }
     }
     assert current_table.rows == [
@@ -1585,8 +1585,8 @@ def test_table_update_from_previous_filtered() -> None:
         key_columns=["kc"],
         retentions={
             ("KC",): {
-                "c1": RetentionIntervals(1, 2, 3),
-                "c2": RetentionIntervals(1, 2, 3),
+                "c1": RetentionIntervals(1, 2, 3, "current"),
+                "c2": RetentionIntervals(1, 2, 3, "current"),
             }
         },
     )
@@ -1597,13 +1597,29 @@ def test_table_update_from_previous_filtered() -> None:
         0,
         previous_table,
         lambda k: k in ["c2", "c3"],
-        RetentionIntervals(4, 5, 6),
+        RetentionIntervals(4, 5, 6, "current"),
     )
     assert current_table.key_columns == ["kc"]
     assert current_table.retentions == {
         ("KC",): {
-            "c2": RetentionIntervals(1, 2, 3),
-            "c3": RetentionIntervals(4, 5, 6),
+            "c2": RetentionIntervals(1, 2, 3, "previous"),
+            "c3": RetentionIntervals(4, 5, 6, "current"),
         }
     }
     assert current_table.rows == [{"c2": "C2: only prev", "c3": "C3: only cur", "kc": "KC"}]
+
+
+@pytest.mark.parametrize(
+    "raw_retention_interval, expected_retention_interval",
+    [
+        ((1, 2, 3), RetentionIntervals(1, 2, 3, "current")),
+        ((4, 5, 6, "previous"), RetentionIntervals(4, 5, 6, "previous")),
+        ((7, 8, 9, "current"), RetentionIntervals(7, 8, 9, "current")),
+    ],
+)
+def test_deserialize_retention_interval(
+    raw_retention_interval: tuple[int, int, int]
+    | tuple[int, int, int, Literal["previous", "current"]],
+    expected_retention_interval: RetentionIntervals,
+) -> None:
+    assert RetentionIntervals.deserialize(raw_retention_interval) == expected_retention_interval

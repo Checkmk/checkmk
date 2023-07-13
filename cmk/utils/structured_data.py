@@ -93,6 +93,17 @@ class RetentionIntervals(NamedTuple):
     cached_at: int
     cache_interval: int
     retention_interval: int
+    source: Literal["previous", "current"]
+
+    @classmethod
+    def from_previous(cls, other: RetentionIntervals) -> RetentionIntervals:
+        return cls(*other[:3], "previous")
+
+    @classmethod
+    def from_config(
+        cls, cached_at: int, cache_interval: int, retention_interval: int
+    ) -> RetentionIntervals:
+        return cls(cached_at, cache_interval, retention_interval, "current")
 
     @property
     def valid_until(self) -> int:
@@ -102,15 +113,20 @@ class RetentionIntervals(NamedTuple):
     def keep_until(self) -> int:
         return self.cached_at + self.cache_interval + self.retention_interval
 
-    def serialize(self) -> tuple[int, int, int]:
-        return self.cached_at, self.cache_interval, self.retention_interval
+    def serialize(self) -> tuple[int, int, int, Literal["previous", "current"]]:
+        return self.cached_at, self.cache_interval, self.retention_interval, self.source
 
     @classmethod
-    def deserialize(cls, raw_intervals: tuple[int, int, int]) -> RetentionIntervals:
-        return cls(*raw_intervals)
+    def deserialize(
+        cls,
+        raw_intervals: tuple[int, int, int, Literal["previous", "current"]] | tuple[int, int, int],
+    ) -> RetentionIntervals:
+        return (
+            cls(*raw_intervals) if len(raw_intervals) == 4 else cls(*raw_intervals[:3], "current")
+        )
 
 
-RawRetentionIntervalsByKeys = dict[SDKey, tuple[int, int, int]]
+RawRetentionIntervalsByKeys = dict[SDKey, tuple[int, int, int, Literal["previous", "current"]]]
 RetentionIntervalsByKeys = dict[SDKey, RetentionIntervals]
 
 
@@ -804,7 +820,9 @@ class Table:
             old_row: SDRow = {}
             for key, value in old_filtered_rows[ident].items():
                 old_row.setdefault(key, value)
-                retentions.setdefault(ident, {})[key] = other.retentions[ident][key]
+                retentions.setdefault(ident, {})[key] = RetentionIntervals.from_previous(
+                    other.retentions[ident][key]
+                )
 
             if old_row:
                 # Update row with key column entries
@@ -820,7 +838,9 @@ class Table:
             row: SDRow = {}
             for key in compared_filtered_keys.only_old:
                 row.setdefault(key, other._rows[ident][key])
-                retentions.setdefault(ident, {})[key] = other.retentions[ident][key]
+                retentions.setdefault(ident, {})[key] = RetentionIntervals.from_previous(
+                    other.retentions[ident][key]
+                )
 
             for key in compared_filtered_keys.both.union(compared_filtered_keys.only_new):
                 retentions.setdefault(ident, {})[key] = inv_intervals
@@ -1038,7 +1058,7 @@ class Attributes:
         retentions: RetentionIntervalsByKeys = {}
         for key in compared_filtered_keys.only_old:
             pairs.setdefault(key, other.pairs[key])
-            retentions[key] = other.retentions[key]
+            retentions[key] = RetentionIntervals.from_previous(other.retentions[key])
 
         for key in compared_filtered_keys.both.union(compared_filtered_keys.only_new):
             retentions[key] = inv_intervals

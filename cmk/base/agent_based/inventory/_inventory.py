@@ -527,7 +527,7 @@ def _may_update(
                     now,
                     previous_node.attributes,
                     make_filter_from_choice(choices_for_attributes),
-                    RetentionIntervals(
+                    RetentionIntervals.from_config(
                         cached_at=raw_cache_info[0],
                         cache_interval=raw_cache_info[1],
                         retention_interval=entry["interval"],
@@ -542,7 +542,7 @@ def _may_update(
                     now,
                     previous_node.table,
                     make_filter_from_choice(choices_for_table),
-                    RetentionIntervals(
+                    RetentionIntervals.from_config(
                         cached_at=raw_cache_info[0],
                         cache_interval=raw_cache_info[1],
                         retention_interval=entry["interval"],

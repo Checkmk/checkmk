@@ -2386,7 +2386,9 @@ class ABCNodeRenderer(abc.ABC):
     @staticmethod
     def _is_outdated(retention_intervals: RetentionIntervals | None) -> bool:
         return (
-            False if retention_intervals is None else time.time() > retention_intervals.keep_until
+            False
+            if retention_intervals is None or retention_intervals.source == "current"
+            else time.time() > retention_intervals.keep_until
         )
 
 

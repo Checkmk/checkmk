@@ -78,16 +78,13 @@ class QualifiedDiscovery(Generic[_DiscoveredItem]):
     def chain_with_qualifier(
         self,
     ) -> Iterable[tuple[Literal["vanished", "old", "new"], _DiscoveredItem]]:
-        for i in self.vanished:
-            yield "vanished", i
-        for i in self.old:
-            yield "old", i
-        for i in self.new:
-            yield "new", i
+        yield from (("vanished", value) for value in self.vanished)
+        yield from (("old", value) for value in self.old)
+        yield from (("new", value) for value in self.new)
 
     def kept(self) -> Sequence[_DiscoveredItem]:
         # TODO (mo): Clean this up, the logic is all backwards:
         # It seems we always keep the vanished ones here.
         # However: If we do not load the existing ones, nothing will be classified as 'vanished',
         # and the ones that *are* in fact vanished are dropped silently.
-        return [*self.vanished, *self.present]
+        return self.vanished + self.present

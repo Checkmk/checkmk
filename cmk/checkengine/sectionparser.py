@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence, Set
 from dataclasses import dataclass
-from typing import Any, Final, Generic, NamedTuple
+from typing import Any, Final, Generic, NamedTuple, TypeVar
 
 import cmk.utils.piggyback
 import cmk.utils.resulttype as result
@@ -16,8 +16,6 @@ from cmk.utils.log import console
 from cmk.utils.sectionname import SectionName
 from cmk.utils.validatedstr import ValidatedString
 
-from cmk.fetchers.cache import TRawDataSection
-
 from ._typedefs import HostKey, SourceInfo, SourceType
 from .crash_reporting import create_section_crash_dump
 from .host_sections import HostSections
@@ -25,6 +23,8 @@ from .host_sections import HostSections
 _CacheInfo = tuple[int, int]
 
 ParsedSectionContent = object  # the parse function may return *anything*.
+
+_T = TypeVar("_T")
 
 
 class ParsedSectionName(ValidatedString):
@@ -72,16 +72,16 @@ class ResolvedResult(NamedTuple):
     cache_info: _CacheInfo | None
 
 
-class SectionsParser(Generic[TRawDataSection]):
+class SectionsParser(Generic[_T]):
     """Call the sections parse function and return the parsing result."""
 
     def __init__(
         self,
-        host_sections: HostSections[TRawDataSection],
+        host_sections: HostSections[_T],
         host_name: HostName,
     ) -> None:
         super().__init__()
-        self._host_sections: HostSections[TRawDataSection] = host_sections
+        self._host_sections: HostSections[_T] = host_sections
         self.parsing_errors: list[str] = []
         self._memoized_results: dict[SectionName, _ParsingResult | None] = {}
         self._host_name = host_name
@@ -94,7 +94,7 @@ class SectionsParser(Generic[TRawDataSection]):
         )
 
     def parse(
-        self, section_name: SectionName, parse_function: Callable[[Sequence[TRawDataSection]], Any]
+        self, section_name: SectionName, parse_function: Callable[[Sequence[_T]], Any]
     ) -> _ParsingResult | None:
         if section_name in self._memoized_results:
             return self._memoized_results[section_name]
@@ -114,7 +114,7 @@ class SectionsParser(Generic[TRawDataSection]):
             self._memoized_results[section_name] = None
 
     def _parse_raw_data(
-        self, section_name: SectionName, parse_function: Callable[[Sequence[TRawDataSection]], Any]
+        self, section_name: SectionName, parse_function: Callable[[Sequence[_T]], Any]
     ) -> Any:  # yes *ANY*
         try:
             raw_data = self._host_sections.sections[section_name]

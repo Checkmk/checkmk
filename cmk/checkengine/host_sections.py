@@ -7,27 +7,27 @@ from __future__ import annotations
 
 import abc
 from collections.abc import Mapping, Sequence
-from typing import Final, Generic, no_type_check
+from typing import Final, Generic, no_type_check, TypeVar
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import HostSection, SectionName
 
-from cmk.fetchers.cache import TRawDataSection
+_T = TypeVar("_T")
 
 
-class HostSections(Generic[TRawDataSection], abc.ABC):
+class HostSections(Generic[_T], abc.ABC):
     """Host informations from the sources."""
 
     def __init__(
         self,
-        sections: HostSection[TRawDataSection] | None = None,
+        sections: HostSection[_T] | None = None,
         *,
         cache_info: Mapping[SectionName, tuple[int, int]] | None = None,
         # For `piggybacked_raw_data`, Sequence[bytes] is equivalent to AgentRawData.
         piggybacked_raw_data: Mapping[HostName, Sequence[bytes]] | None = None,
     ) -> None:
         super().__init__()
-        self.sections: HostSection[TRawDataSection] = sections if sections else {}
+        self.sections: HostSection[_T] = sections if sections else {}
         self.cache_info: Final = cache_info if cache_info else {}
         self.piggybacked_raw_data: Final = piggybacked_raw_data if piggybacked_raw_data else {}
 
@@ -40,7 +40,7 @@ class HostSections(Generic[TRawDataSection], abc.ABC):
         )
 
     @no_type_check
-    def update(self, other: HostSections[TRawDataSection]) -> None:
+    def update(self, other: HostSections[_T]) -> None:
         for section_name, section_content in other.sections.items():
             self.sections.setdefault(section_name, []).extend(section_content)
         for hostname, raw_lines in other.piggybacked_raw_data.items():

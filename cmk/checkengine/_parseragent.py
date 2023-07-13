@@ -16,7 +16,7 @@ import cmk.utils.debug
 import cmk.utils.misc
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostName
-from cmk.utils.sectionname import HostSection, SectionName
+from cmk.utils.sectionname import SectionName
 from cmk.utils.translations import TranslationOptions
 
 from cmk.fetchers.cache import SectionStore
@@ -24,7 +24,12 @@ from cmk.fetchers.cache import SectionStore
 from ._markers import PiggybackMarker, SectionMarker
 from ._parser import Parser
 from .host_sections import HostSections
-from .type_defs import AgentRawDataSection, NO_SELECTION, SectionNameCollection
+from .type_defs import (
+    AgentRawDataSection,
+    AgentRawDataSectionElem,
+    NO_SELECTION,
+    SectionNameCollection,
+)
 
 
 class SectionWithHeader(NamedTuple):
@@ -468,13 +473,13 @@ class HostSectionParser(ParserState):
         return self.to_noop_parser()
 
 
-class AgentParser(Parser[AgentRawData, HostSections[HostSection[Sequence[AgentRawDataSection]]]]):
+class AgentParser(Parser[AgentRawData, HostSections[AgentRawDataSection]]):
     """A parser for agent data."""
 
     def __init__(
         self,
         hostname: HostName,
-        section_store: SectionStore[Sequence[AgentRawDataSection]],
+        section_store: SectionStore[Sequence[AgentRawDataSectionElem]],
         *,
         check_interval: int,
         keep_outdated: bool,
@@ -499,7 +504,7 @@ class AgentParser(Parser[AgentRawData, HostSections[HostSection[Sequence[AgentRa
         raw_data: AgentRawData,
         *,
         selection: SectionNameCollection,
-    ) -> HostSections[HostSection[Sequence[AgentRawDataSection]]]:
+    ) -> HostSections[AgentRawDataSection]:
         if self.simulation:
             raw_data = agent_simulator.process(raw_data)
 
@@ -514,8 +519,8 @@ class AgentParser(Parser[AgentRawData, HostSections[HostSection[Sequence[AgentRa
 
         def decode_sections(
             sections: ImmutableSection,
-        ) -> MutableMapping[SectionName, list[AgentRawDataSection]]:
-            out: MutableMapping[SectionName, list[AgentRawDataSection]] = {}
+        ) -> MutableMapping[SectionName, list[AgentRawDataSectionElem]]:
+            out: MutableMapping[SectionName, list[AgentRawDataSectionElem]] = {}
             for header, content in sections:
                 out.setdefault(header.name, []).extend(header.parse_line(line) for line in content)
             return out
@@ -582,7 +587,7 @@ class AgentParser(Parser[AgentRawData, HostSections[HostSection[Sequence[AgentRa
             now=now,
             keep_outdated=self.keep_outdated,
         )
-        return HostSections[HostSection[Sequence[AgentRawDataSection]]](
+        return HostSections[AgentRawDataSection](
             new_sections,
             cache_info=cache_info,
             piggybacked_raw_data=piggybacked_raw_data,

@@ -8,12 +8,12 @@ from collections.abc import Callable, Iterable, Sequence
 from pytest import MonkeyPatch
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.sectionname import HostSection, SectionName
+from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine import SectionPlugin
 from cmk.checkengine.host_sections import HostSections
 from cmk.checkengine.sectionparser import ParsedSectionName, ParsedSectionsResolver, SectionsParser
-from cmk.checkengine.type_defs import AgentRawDataSection
+from cmk.checkengine.type_defs import AgentRawDataSection, AgentRawDataSectionElem
 
 
 def _test_section(
@@ -58,12 +58,12 @@ SECTION_FOUR = _test_section(
     supersedes={"one"},
 )
 
-NODE_1: Sequence[AgentRawDataSection] = [
+NODE_1: Sequence[AgentRawDataSectionElem] = [
     ["node1", "data 1"],
     ["node1", "data 2"],
 ]
 
-NODE_2: Sequence[AgentRawDataSection] = [
+NODE_2: Sequence[AgentRawDataSectionElem] = [
     ["node2", "data 1"],
     ["node2", "data 2"],
 ]
@@ -71,7 +71,7 @@ NODE_2: Sequence[AgentRawDataSection] = [
 
 def make_parser() -> SectionsParser:
     return SectionsParser(
-        HostSections[HostSection[Sequence[AgentRawDataSection]]](
+        HostSections[AgentRawDataSection](
             sections={
                 SectionName("one"): NODE_1,
                 SectionName("four"): NODE_1,

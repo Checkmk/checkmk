@@ -132,7 +132,7 @@ from cmk.checkengine.error_handling import ExitSpec
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
-from cmk.checkengine.type_defs import AgentRawDataSection, NO_SELECTION, SectionNameCollection
+from cmk.checkengine.type_defs import AgentRawDataSectionElem, NO_SELECTION, SectionNameCollection
 
 import cmk.base._autochecks as autochecks
 import cmk.base.api.agent_based.register as agent_based_register
@@ -2424,7 +2424,7 @@ class ConfigCache:
     def make_agent_parser(
         self,
         host_name: HostName,
-        section_store: SectionStore[Sequence[AgentRawDataSection]],
+        section_store: SectionStore[Sequence[AgentRawDataSectionElem]],
         *,
         keep_outdated: bool,
         logger: logging.Logger,

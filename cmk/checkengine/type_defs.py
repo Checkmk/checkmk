@@ -8,15 +8,16 @@ import enum
 from collections.abc import Sequence
 from typing import Final
 
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import HostSection, SectionName
 
 __all__ = ["NO_SELECTION", "SectionNameCollection"]
 
 
-# Note that the inner Sequence[str] to AgentRawDataSection
+# Note that the inner Sequence[str] to AgentRawDataSectionElem
 # is only **artificially** different from AgentRawData and
 # obtained approximatively with `raw_data.decode("utf-8").split()`!
-AgentRawDataSection = Sequence[str]
+AgentRawDataSectionElem = Sequence[str]
+AgentRawDataSection = HostSection[Sequence[AgentRawDataSectionElem]]
 
 
 class SelectionType(enum.Enum):

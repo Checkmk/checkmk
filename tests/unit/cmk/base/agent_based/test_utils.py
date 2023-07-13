@@ -9,7 +9,7 @@ from typing import Any
 import pytest
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.sectionname import HostSection, SectionName
+from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine import HostKey, SectionPlugin, SourceType
 from cmk.checkengine.checkresults import ActiveCheckResult
@@ -20,7 +20,7 @@ from cmk.checkengine.sectionparserutils import (
     get_section_cluster_kwargs,
     get_section_kwargs,
 )
-from cmk.checkengine.type_defs import AgentRawDataSection
+from cmk.checkengine.type_defs import AgentRawDataSection, AgentRawDataSectionElem
 
 
 def _test_section(
@@ -65,12 +65,12 @@ SECTION_FOUR = _test_section(
     supersedes={"one"},
 )
 
-NODE_1: Sequence[AgentRawDataSection] = [
+NODE_1: Sequence[AgentRawDataSectionElem] = [
     ["node1", "data 1"],
     ["node1", "data 2"],
 ]
 
-NODE_2: Sequence[AgentRawDataSection] = [
+NODE_2: Sequence[AgentRawDataSectionElem] = [
     ["node2", "data 1"],
     ["node2", "data 2"],
 ]
@@ -97,7 +97,7 @@ NODE_2: Sequence[AgentRawDataSection] = [
 def test_get_section_kwargs(
     required_sections: Sequence[str], expected_result: dict[str, dict[str, str]]
 ) -> None:
-    node_sections = HostSections[HostSection[Sequence[AgentRawDataSection]]](
+    node_sections = HostSections[AgentRawDataSection](
         sections={
             SectionName("one"): NODE_1,
             SectionName("two"): NODE_1,
@@ -164,7 +164,7 @@ def test_get_section_kwargs(
 def test_get_section_cluster_kwargs(
     required_sections: Sequence[str], expected_result: dict[str, Any]
 ) -> None:
-    node1_sections = HostSections[HostSection[Sequence[AgentRawDataSection]]](
+    node1_sections = HostSections[AgentRawDataSection](
         sections={
             SectionName("one"): NODE_1,
             SectionName("two"): NODE_1,
@@ -172,7 +172,7 @@ def test_get_section_cluster_kwargs(
         }
     )
 
-    node2_sections = HostSections[HostSection[Sequence[AgentRawDataSection]]](
+    node2_sections = HostSections[AgentRawDataSection](
         sections={
             SectionName("two"): NODE_2,
             SectionName("three"): NODE_2,

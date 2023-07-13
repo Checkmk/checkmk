@@ -25,7 +25,7 @@ from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
 from cmk.checkengine import Parser, SNMPParser, SourceInfo
-from cmk.checkengine.type_defs import AgentRawDataSection, NO_SELECTION, SectionNameCollection
+from cmk.checkengine.type_defs import AgentRawDataSectionElem, NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
@@ -81,7 +81,7 @@ def make_parser(
 
     return config_cache.make_agent_parser(
         hostname,
-        SectionStore[Sequence[AgentRawDataSection]](
+        SectionStore[Sequence[AgentRawDataSectionElem]](
             make_persisted_section_dir(
                 source.hostname, fetcher_type=source.fetcher_type, ident=source.ident
             ),

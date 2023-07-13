@@ -15,11 +15,11 @@ from cmk.utils.sectionname import HostSection, SectionName
 from cmk.checkengine import crash_reporting
 from cmk.checkengine.host_sections import HostSections
 from cmk.checkengine.sectionparser import SectionsParser
-from cmk.checkengine.type_defs import AgentRawDataSection
+from cmk.checkengine.type_defs import AgentRawDataSectionElem
 
 from cmk.base.api.agent_based.register.section_plugins import trivial_section_factory
 
-_ParseFunction = Callable[[Sequence[AgentRawDataSection]], Any]
+_ParseFunction = Callable[[Sequence[AgentRawDataSectionElem]], Any]
 
 
 def _section(name: str, parse_function: Callable) -> tuple[SectionName, _ParseFunction]:
@@ -30,9 +30,9 @@ def _section(name: str, parse_function: Callable) -> tuple[SectionName, _ParseFu
 
 class TestSectionsParser:
     @pytest.fixture
-    def sections_parser(self) -> SectionsParser[AgentRawDataSection]:
-        return SectionsParser[AgentRawDataSection](
-            host_sections=HostSections[HostSection[AgentRawDataSection]](
+    def sections_parser(self) -> SectionsParser[AgentRawDataSectionElem]:
+        return SectionsParser[AgentRawDataSectionElem](
+            host_sections=HostSections[HostSection[AgentRawDataSectionElem]](
                 sections={
                     SectionName("one"): [],
                     SectionName("two"): [],
@@ -43,7 +43,7 @@ class TestSectionsParser:
 
     @staticmethod
     def test_parse_function_called_once(
-        sections_parser: SectionsParser[AgentRawDataSection],
+        sections_parser: SectionsParser[AgentRawDataSectionElem],
     ) -> None:
         counter = iter((1,))
         section_name, parse_function = _section("one", lambda x: next(counter))
@@ -57,7 +57,7 @@ class TestSectionsParser:
     @staticmethod
     def test_parsing_errors(
         monkeypatch: pytest.MonkeyPatch,
-        sections_parser: SectionsParser[AgentRawDataSection],
+        sections_parser: SectionsParser[AgentRawDataSectionElem],
     ) -> None:
         monkeypatch.setattr(
             crash_reporting,
@@ -75,7 +75,7 @@ class TestSectionsParser:
         )
 
     @staticmethod
-    def test_parse(sections_parser: SectionsParser[AgentRawDataSection]) -> None:
+    def test_parse(sections_parser: SectionsParser[AgentRawDataSectionElem]) -> None:
         parsed_data = object()
         section_name, parse_function = _section("one", lambda x: parsed_data)
         parsing_result = sections_parser.parse(section_name, parse_function)
@@ -85,7 +85,7 @@ class TestSectionsParser:
         assert parsing_result.cache_info is None
 
     @staticmethod
-    def test_disable(sections_parser: SectionsParser[AgentRawDataSection]) -> None:
+    def test_disable(sections_parser: SectionsParser[AgentRawDataSectionElem]) -> None:
         section_name, parse_function = _section("one", lambda x: 42)
         sections_parser.disable([section_name])
 
@@ -93,7 +93,7 @@ class TestSectionsParser:
 
     @staticmethod
     def test_parse_missing_section(
-        sections_parser: SectionsParser[AgentRawDataSection],
+        sections_parser: SectionsParser[AgentRawDataSectionElem],
     ) -> None:
         section_name, parse_function = _section(
             "missing_section", lambda x: 42
@@ -103,7 +103,7 @@ class TestSectionsParser:
 
     @staticmethod
     def test_parse_section_returns_none(
-        sections_parser: SectionsParser[AgentRawDataSection],
+        sections_parser: SectionsParser[AgentRawDataSectionElem],
     ) -> None:
         section_name, parse_function = _section("one", lambda x: None)
 

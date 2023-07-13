@@ -7,6 +7,7 @@ import gzip
 import shutil
 from collections.abc import Iterable, Mapping, Sequence
 from pathlib import Path
+from typing import Literal
 
 import pytest
 
@@ -1426,15 +1427,8 @@ def test_update_from_previous_1() -> None:
             "Attributes": {},
             "Table": {
                 "KeyColumns": ["kc"],
-                "Rows": [
-                    {"kc": "KC", "c1": "C1: prev C1", "c2": "C2: only prev"},
-                ],
-                "Retentions": {
-                    ("KC",): {
-                        "c1": _RetentionInterval(1, 2, 3),
-                        "c2": _RetentionInterval(1, 2, 3),
-                    }
-                },
+                "Rows": [{"kc": "KC", "c1": "C1: prev C1", "c2": "C2: only prev"}],
+                "Retentions": {("KC",): {"c1": (1, 2, 3), "c2": (1, 2, 3)}},
             },
             "Nodes": {},
         }
@@ -1463,10 +1457,10 @@ def test_update_from_previous_1() -> None:
     assert current_tree.table.key_columns == ["kc"]
     assert current_tree.table.retentions == {
         ("KC",): {
-            "c1": _RetentionInterval(4, 5, 6),
-            "c2": _RetentionInterval(1, 2, 3),
-            "c3": _RetentionInterval(4, 5, 6),
-            "kc": _RetentionInterval(4, 5, 6),
+            "c1": _RetentionInterval(4, 5, 6, "current"),
+            "c2": _RetentionInterval(1, 2, 3, "previous"),
+            "c3": _RetentionInterval(4, 5, 6, "current"),
+            "kc": _RetentionInterval(4, 5, 6, "current"),
         }
     }
     assert current_tree.get_rows(()) == [
@@ -1480,15 +1474,8 @@ def test_update_from_previous_2() -> None:
             "Attributes": {},
             "Table": {
                 "KeyColumns": ["kc"],
-                "Rows": [
-                    {"kc": "KC", "c1": "C1: prev C1", "c2": "C2: only prev"},
-                ],
-                "Retentions": {
-                    ("KC",): {
-                        "c1": _RetentionInterval(1, 2, 3),
-                        "c2": _RetentionInterval(1, 2, 3),
-                    }
-                },
+                "Rows": [{"kc": "KC", "c1": "C1: prev C1", "c2": "C2: only prev"}],
+                "Retentions": {("KC",): {"c1": (1, 2, 3), "c2": (1, 2, 3)}},
             },
             "Nodes": {},
         }
@@ -1517,16 +1504,38 @@ def test_update_from_previous_2() -> None:
     assert current_tree.table.key_columns == ["kc"]
     assert current_tree.table.retentions == {
         ("KC",): {
-            "c2": _RetentionInterval(1, 2, 3),
-            "c3": _RetentionInterval(4, 5, 6),
+            "c2": _RetentionInterval(1, 2, 3, "previous"),
+            "c3": _RetentionInterval(4, 5, 6, "current"),
         }
     }
     assert current_tree.get_rows(()) == [{"c2": "C2: only prev", "c3": "C3: only cur", "kc": "KC"}]
 
 
-def test_deserialize_retention_interval() -> None:
-    assert _RetentionInterval.deserialize((1, 2, 3)) == _RetentionInterval(1, 2, 3)
+@pytest.mark.parametrize(
+    "raw_retention_interval, expected_retention_interval",
+    [
+        ((1, 2, 3), _RetentionInterval(1, 2, 3, "current")),
+        ((4, 5, 6, "previous"), _RetentionInterval(4, 5, 6, "previous")),
+        ((7, 8, 9, "current"), _RetentionInterval(7, 8, 9, "current")),
+    ],
+)
+def test_deserialize_retention_interval(
+    raw_retention_interval: tuple[int, int, int]
+    | tuple[int, int, int, Literal["previous", "current"]],
+    expected_retention_interval: _RetentionInterval,
+) -> None:
+    assert _RetentionInterval.deserialize(raw_retention_interval) == expected_retention_interval
 
 
-def test_serialize_retention_interval() -> None:
-    assert _RetentionInterval(1, 2, 3).serialize() == (1, 2, 3)
+@pytest.mark.parametrize(
+    "retention_interval, expected_raw_retention_interval",
+    [
+        (_RetentionInterval(1, 2, 3, "previous"), (1, 2, 3, "previous")),
+        (_RetentionInterval(4, 5, 6, "current"), (4, 5, 6, "current")),
+    ],
+)
+def test_serialize_retention_interval(
+    retention_interval: _RetentionInterval,
+    expected_raw_retention_interval: tuple[int, int, int, Literal["previous", "current"]],
+) -> None:
+    assert retention_interval.serialize() == expected_raw_retention_interval

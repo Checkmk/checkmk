@@ -51,24 +51,28 @@ SDRowIdent = tuple[SDValue, ...]
 
 class SDRawAttributes(TypedDict, total=False):
     Pairs: Mapping[SDKey, SDValue]
-    Retentions: Mapping[SDKey, tuple[int, int, int]]
+    Retentions: Mapping[SDKey, tuple[int, int, int, Literal["previous", "current"]]]
 
 
 class SDBareAttributes(TypedDict):
     Pairs: Mapping[SDKey, SDValue]
-    Retentions: Mapping[SDKey, tuple[int, int, int]]
+    Retentions: Mapping[SDKey, tuple[int, int, int, Literal["previous", "current"]]]
 
 
 class SDRawTable(TypedDict, total=False):
     KeyColumns: Sequence[SDKey]
     Rows: Sequence[Mapping[SDKey, SDValue]]
-    Retentions: Mapping[SDRowIdent, Mapping[SDKey, tuple[int, int, int]]]
+    Retentions: Mapping[
+        SDRowIdent, Mapping[SDKey, tuple[int, int, int, Literal["previous", "current"]]]
+    ]
 
 
 class SDBareTable(TypedDict):
     KeyColumns: Sequence[SDKey]
     RowsByIdent: Mapping[SDRowIdent, Mapping[SDKey, SDValue]]
-    Retentions: Mapping[SDRowIdent, Mapping[SDKey, tuple[int, int, int]]]
+    Retentions: Mapping[
+        SDRowIdent, Mapping[SDKey, tuple[int, int, int, Literal["previous", "current"]]]
+    ]
 
 
 class SDRawTree(TypedDict):
@@ -129,17 +133,36 @@ class _RetentionInterval(NamedTuple):
     cached_at: int
     cache_interval: int
     retention_interval: int
+    source: Literal["previous", "current"]
+
+    @classmethod
+    def from_previous(cls, other: _RetentionInterval) -> _RetentionInterval:
+        return cls(*other[:3], "previous")
+
+    @classmethod
+    def from_config(
+        cls, cached_at: int, cache_interval: int, retention_interval: int
+    ) -> _RetentionInterval:
+        return cls(cached_at, cache_interval, retention_interval, "current")
 
     @property
     def keep_until(self) -> int:
         return self.cached_at + self.cache_interval + self.retention_interval
 
     @classmethod
-    def deserialize(cls, raw_retention_interval: tuple[int, int, int]) -> _RetentionInterval:
-        return cls(*raw_retention_interval)
+    def deserialize(
+        cls,
+        raw_retention_interval: tuple[int, int, int]
+        | tuple[int, int, int, Literal["previous", "current"]],
+    ) -> _RetentionInterval:
+        return (
+            cls(*raw_retention_interval)
+            if len(raw_retention_interval) == 4
+            else cls(*raw_retention_interval[:3], "current")
+        )
 
-    def serialize(self) -> tuple[int, int, int]:
-        return self.cached_at, self.cache_interval, self.retention_interval
+    def serialize(self) -> tuple[int, int, int, Literal["previous", "current"]]:
+        return self.cached_at, self.cache_interval, self.retention_interval, self.source
 
 
 @dataclass(frozen=True)
@@ -398,7 +421,7 @@ class _MutableAttributes:
         update_result: UpdateResult,
     ) -> None:
         filter_func = _make_filter_func(choice.choice)
-        retention_interval = _RetentionInterval(*choice.cache_info, interval)
+        retention_interval = _RetentionInterval.from_config(*choice.cache_info, interval)
         compared_keys = _DictKeys.compare(
             left=set(
                 _get_filtered_dict(
@@ -417,7 +440,7 @@ class _MutableAttributes:
         retentions: dict[SDKey, _RetentionInterval] = {}
         for key in compared_keys.only_old:
             pairs.setdefault(key, other.pairs[key])
-            retentions[key] = other.retentions[key]
+            retentions[key] = _RetentionInterval.from_previous(other.retentions[key])
 
         for key in compared_keys.both.union(compared_keys.only_new):
             retentions[key] = retention_interval
@@ -500,7 +523,7 @@ class _MutableTable:
         update_result: UpdateResult,
     ) -> None:
         filter_func = _make_filter_func(choice.choice)
-        retention_interval = _RetentionInterval(*choice.cache_info, interval)
+        retention_interval = _RetentionInterval.from_config(*choice.cache_info, interval)
         self._add_key_columns(other.key_columns)
         old_filtered_rows = {
             ident: filtered_row
@@ -531,7 +554,9 @@ class _MutableTable:
             old_row: dict[SDKey, SDValue] = {}
             for key, value in old_filtered_rows[ident].items():
                 old_row.setdefault(key, value)
-                retentions.setdefault(ident, {})[key] = other.retentions[ident][key]
+                retentions.setdefault(ident, {})[key] = _RetentionInterval.from_previous(
+                    other.retentions[ident][key]
+                )
 
             if old_row:
                 # Update row with key column entries
@@ -547,7 +572,9 @@ class _MutableTable:
             row: dict[SDKey, SDValue] = {}
             for key in compared_keys.only_old:
                 row.setdefault(key, other.rows_by_ident[ident][key])
-                retentions.setdefault(ident, {})[key] = other.retentions[ident][key]
+                retentions.setdefault(ident, {})[key] = _RetentionInterval.from_previous(
+                    other.retentions[ident][key]
+                )
 
             for key in compared_keys.both.union(compared_keys.only_new):
                 retentions.setdefault(ident, {})[key] = retention_interval
@@ -1107,7 +1134,7 @@ class ImmutableAttributes:
         return ImmutableAttributes(
             pairs=raw_attributes.get("Pairs", {}),
             retentions={
-                key: _RetentionInterval(*raw_retention_interval)
+                key: _RetentionInterval.deserialize(raw_retention_interval)
                 for key, raw_retention_interval in raw_attributes.get("Retentions", {}).items()
             },
         )
@@ -1176,7 +1203,7 @@ class ImmutableTable:
             rows_by_ident=rows_by_ident,
             retentions={
                 ident: {
-                    key: _RetentionInterval(*raw_retention_interval)
+                    key: _RetentionInterval.deserialize(raw_retention_interval)
                     for key, raw_retention_interval in raw_intervals_by_key.items()
                 }
                 for ident, raw_intervals_by_key in raw_table.get("Retentions", {}).items()

@@ -2100,7 +2100,9 @@ def _sort_pairs(
         _InventoryTreeValueInfo(
             k,
             attributes.pairs[k],
-            None if (ri := attributes.retentions.get(k)) is None else ri.keep_until,
+            None
+            if (ri := attributes.retentions.get(k)) is None or ri.source == "current"
+            else ri.keep_until,
         )
         for k in sorted_keys
         if k in attributes.pairs
@@ -2117,7 +2119,9 @@ def _sort_rows(
             _InventoryTreeValueInfo(
                 c,
                 row.get(c),
-                None if (ri := table.retentions.get(ident, {}).get(c)) is None else ri.keep_until,
+                None
+                if (ri := table.retentions.get(ident, {}).get(c)) is None or ri.source == "current"
+                else ri.keep_until,
             )
             for c in columns
         ]

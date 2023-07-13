@@ -61,12 +61,12 @@ def discover_poseidon_inputs(section):
 
 check_info["poseidon_inputs"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21796.3"),
-    parse_function=parse_poseidon_inputs,
-    check_function=check_poseidon_inputs,
-    discovery_function=discover_poseidon_inputs,
-    service_name="%s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21796.3.3.1.1",
         oids=["2", "3", "4", "5"],
     ),
+    parse_function=parse_poseidon_inputs,
+    service_name="%s",
+    discovery_function=discover_poseidon_inputs,
+    check_function=check_poseidon_inputs,
 )

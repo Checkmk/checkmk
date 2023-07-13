@@ -12,9 +12,6 @@ from cmk.base.plugins.agent_based.utils.perle import DETECT_PERLE
 
 check_info["perle_modules_cm1110"] = LegacyCheckDefinition(
     detect=DETECT_PERLE,
-    discovery_function=inventory_perle_cm_modules,
-    check_function=check_perle_cm_modules,
-    service_name="Chassis slot %s CM1110",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1966.21.1.1.1.1.4.3",
         oids=[
@@ -31,4 +28,7 @@ check_info["perle_modules_cm1110"] = LegacyCheckDefinition(
             "1.1.28",
         ],
     ),
+    service_name="Chassis slot %s CM1110",
+    discovery_function=inventory_perle_cm_modules,
+    check_function=check_perle_cm_modules,
 )

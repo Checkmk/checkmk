@@ -28,11 +28,11 @@ def check_packeteer_fan_status(item, _no_params, info):
 
 check_info["packeteer_fan_status"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2334"),
-    discovery_function=inventory_packeteer_fan_status,
-    check_function=check_packeteer_fan_status,
-    service_name="Fan Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2334.2.1.5",
         oids=["12", "14", "22", "24"],
     ),
+    service_name="Fan Status",
+    discovery_function=inventory_packeteer_fan_status,
+    check_function=check_packeteer_fan_status,
 )

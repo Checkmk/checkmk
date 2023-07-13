@@ -28,11 +28,11 @@ def check_juniper_screenos_fan(item, params, info):
 
 check_info["juniper_screenos_fan"] = LegacyCheckDefinition(
     detect=DETECT_JUNIPER_SCREENOS,
-    check_function=check_juniper_screenos_fan,
-    discovery_function=inventory_juniper_screenos_fan,
-    service_name="FAN %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3224.21.2.1",
         oids=["3", "2"],
     ),
+    service_name="FAN %s",
+    discovery_function=inventory_juniper_screenos_fan,
+    check_function=check_juniper_screenos_fan,
 )

@@ -165,11 +165,11 @@ def check_lgp_pdu_aux(item, params, info):
 
 check_info["lgp_pdu_aux"] = LegacyCheckDefinition(
     detect=DETECT_LGP,
-    check_function=check_lgp_pdu_aux,
-    discovery_function=inventory_lgp_pdu_aux,
-    service_name="Liebert PDU AUX %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.476.1.42.3.8.60.15",
         oids=[OIDEnd(), "1"],
     ),
+    service_name="Liebert PDU AUX %s",
+    discovery_function=inventory_lgp_pdu_aux,
+    check_function=check_lgp_pdu_aux,
 )

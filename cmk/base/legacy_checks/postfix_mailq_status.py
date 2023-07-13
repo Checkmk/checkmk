@@ -60,7 +60,7 @@ def check_postfix_mailq_status(item, params, parsed):
 
 check_info["postfix_mailq_status"] = LegacyCheckDefinition(
     parse_function=parse_postfix_mailq_status,
+    service_name="Postfix status %s",
     discovery_function=inventory_postfix_mailq_status,
     check_function=check_postfix_mailq_status,
-    service_name="Postfix status %s",
 )

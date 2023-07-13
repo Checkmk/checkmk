@@ -34,10 +34,10 @@ def check_netapp_api_aggr(item, params, parsed):
 
 
 check_info["netapp_api_aggr"] = LegacyCheckDefinition(
-    check_function=check_netapp_api_aggr,
     parse_function=netapp_api_parse_lines,
-    discovery_function=inventory_netapp_api_aggr,
     service_name="Aggregation %s",
+    discovery_function=inventory_netapp_api_aggr,
+    check_function=check_netapp_api_aggr,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

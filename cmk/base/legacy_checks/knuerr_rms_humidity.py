@@ -24,12 +24,12 @@ def check_knuerr_rms_humidity(_no_item, params, info):
 
 check_info["knuerr_rms_humidity"] = LegacyCheckDefinition(
     detect=DETECT_KNUERR,
-    check_function=check_knuerr_rms_humidity,
-    discovery_function=inventory_knuerr_rms_humidity,
-    service_name="Humidity",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3711.15.1.1.1.2",
         oids=["2", "4"],
     ),
+    service_name="Humidity",
+    discovery_function=inventory_knuerr_rms_humidity,
+    check_function=check_knuerr_rms_humidity,
     check_ruleset_name="single_humidity",
 )

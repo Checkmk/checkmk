@@ -36,12 +36,11 @@ def check_juniper_alarm(item, params, info):
 
 check_info["juniper_alarm"] = LegacyCheckDefinition(
     detect=DETECT_JUNIPER,
-    discovery_function=inventory_juniper_alarm,
-    check_function=check_juniper_alarm,
-    service_name="Chassis",
-    # Use utils.juniper.DETECT when migrating
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2636.3.1.10.1",
         oids=["8"],
     ),
+    service_name="Chassis",
+    discovery_function=inventory_juniper_alarm,
+    check_function=check_juniper_alarm,
 )

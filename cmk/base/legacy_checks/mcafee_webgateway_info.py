@@ -23,11 +23,11 @@ def check_mcafee_webgateway_info(_no_item, _no_params, info):
 
 check_info["mcafee_webgateway_info"] = LegacyCheckDefinition(
     detect=mcafee_gateway.DETECT_WEB_GATEWAY,
-    discovery_function=inventory_mcafee_webgateway_info,
-    check_function=check_mcafee_webgateway_info,
-    service_name="Web gateway info",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1230.2.7.1",
         oids=["3", "9"],
     ),
+    service_name="Web gateway info",
+    discovery_function=inventory_mcafee_webgateway_info,
+    check_function=check_mcafee_webgateway_info,
 )

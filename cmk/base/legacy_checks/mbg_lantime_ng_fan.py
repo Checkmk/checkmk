@@ -69,12 +69,12 @@ def check_mbg_lantime_ng_fan(item, _no_params, parsed):
 
 check_info["mbg_lantime_ng_fan"] = LegacyCheckDefinition(
     detect=DETECT_MBG_LANTIME_NG,
-    check_function=check_mbg_lantime_ng_fan,
-    parse_function=parse_mbg_lantime_ng_fan,
-    discovery_function=discover_mbg_lantime_ng_fan,
-    service_name="Fan %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.30.0.5.1.2.1",
         oids=["1", "2", "3"],
     ),
+    parse_function=parse_mbg_lantime_ng_fan,
+    service_name="Fan %s",
+    discovery_function=discover_mbg_lantime_ng_fan,
+    check_function=check_mbg_lantime_ng_fan,
 )

@@ -30,10 +30,9 @@ def check_netapp_api_disk_summary(_no_item, params, section):
 
 
 check_info["netapp_api_disk.summary"] = LegacyCheckDefinition(
-    # section is already migrated!
-    check_function=check_netapp_api_disk_summary,
-    discovery_function=inventory_netapp_api_disk_summary,
     service_name="NetApp Disks Summary",
+    discovery_function=inventory_netapp_api_disk_summary,
+    check_function=check_netapp_api_disk_summary,
     check_ruleset_name="netapp_disks",
     check_default_parameters=FILER_DISKS_CHECK_DEFAULT_PARAMETERS,
 )

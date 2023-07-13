@@ -33,7 +33,7 @@ def check_netapp_api_info(item, _no_params, info):
 
 
 check_info["netapp_api_info"] = LegacyCheckDefinition(
-    check_function=check_netapp_api_info,
-    discovery_function=inventory_netapp_api_info,
     service_name="NetApp Version",
+    discovery_function=inventory_netapp_api_info,
+    check_function=check_netapp_api_info,
 )

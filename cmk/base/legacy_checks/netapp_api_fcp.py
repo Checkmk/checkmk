@@ -220,8 +220,8 @@ def parse_netapp_api_fcp(info):
 
 check_info["netapp_api_fcp"] = LegacyCheckDefinition(
     parse_function=parse_netapp_api_fcp,
+    service_name="Interface FCP %s",
     discovery_function=inventory_netapp_api_fcp,
     check_function=check_netapp_api_fcp,
-    service_name="Interface FCP %s",
     check_ruleset_name="fcp",
 )

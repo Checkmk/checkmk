@@ -204,9 +204,9 @@ def _calculate_replication_lag(start_operation_time, secondary_operation_time):
 
 check_info["mongodb_replica_set"] = LegacyCheckDefinition(
     parse_function=parse_mongodb_replica_set,
+    service_name="MongoDB Replication Lag",
     discovery_function=discover_mongodb_replica_set,
     check_function=check_mongodb_replica_set_lag,
-    service_name="MongoDB Replication Lag",
     check_ruleset_name="mongodb_replica_set",
     check_default_parameters={"levels_mongdb_replication_lag": (10, 60, 3600)},
 )
@@ -296,9 +296,9 @@ def _get_primary_election_time(primary):
 
 
 check_info["mongodb_replica_set.election"] = LegacyCheckDefinition(
+    service_name="MongoDB Replica Set Primary Election",
     discovery_function=discover_mongodb_replica_set,
     check_function=check_mongodb_primary_election,
-    service_name="MongoDB Replica Set Primary Election",
     check_ruleset_name="mongodb_replica_set",
 )
 

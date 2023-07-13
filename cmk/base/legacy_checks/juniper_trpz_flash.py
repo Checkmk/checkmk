@@ -47,12 +47,12 @@ def check_juniper_trpz_flash(_no_item, params, info):
 
 check_info["juniper_trpz_flash"] = LegacyCheckDefinition(
     detect=DETECT_JUNIPER_TRPZ,
-    check_function=check_juniper_trpz_flash,
-    discovery_function=inventory_juniper_trpz_flash,
-    service_name="Flash",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14525.4.8.1.1",
         oids=["3", "4"],
     ),
+    service_name="Flash",
+    discovery_function=inventory_juniper_trpz_flash,
+    check_function=check_juniper_trpz_flash,
     check_ruleset_name="general_flash_usage",
 )

@@ -24,7 +24,7 @@ def check_oracle_crs_version(_no_item, _no_params, info):
 
 
 check_info["oracle_crs_version"] = LegacyCheckDefinition(
-    check_function=check_oracle_crs_version,
-    discovery_function=inventory_oracle_crs_version,
     service_name="ORA-GI Version",
+    discovery_function=inventory_oracle_crs_version,
+    check_function=check_oracle_crs_version,
 )

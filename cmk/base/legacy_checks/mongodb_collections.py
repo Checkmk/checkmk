@@ -220,9 +220,9 @@ def _mongodb_collections_get_as_int(data, key):
 
 check_info["mongodb_collections"] = LegacyCheckDefinition(
     parse_function=parse_mongodb_collections,
+    service_name="MongoDB Collection: %s",
     discovery_function=inventory_mongodb_collections,
     check_function=check_mongodb_collections,
-    service_name="MongoDB Collection: %s",
     check_ruleset_name="mongodb_collections",
     check_default_parameters={"levels_nindexes": (62, 65)},
 )

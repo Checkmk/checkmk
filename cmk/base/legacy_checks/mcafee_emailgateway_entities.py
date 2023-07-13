@@ -84,10 +84,6 @@ def check_mcafee_emailgateway_entities(item, params, parsed):
 
 check_info["mcafee_emailgateway_entities"] = LegacyCheckDefinition(
     detect=DETECT_EMAIL_GATEWAY,
-    parse_function=parse_mcafee_emailgateway_entities,
-    discovery_function=inventory_mcafee_emailgateway_entities,
-    check_function=check_mcafee_emailgateway_entities,
-    service_name="Entity %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.1230.2.4.1.2.3.2",
@@ -124,4 +120,8 @@ check_info["mcafee_emailgateway_entities"] = LegacyCheckDefinition(
             oids=["1", "2", "3", "4", "5", "6"],
         ),
     ],
+    parse_function=parse_mcafee_emailgateway_entities,
+    service_name="Entity %s",
+    discovery_function=inventory_mcafee_emailgateway_entities,
+    check_function=check_mcafee_emailgateway_entities,
 )

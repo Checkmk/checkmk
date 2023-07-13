@@ -62,10 +62,6 @@ def check_kentix_temp(
 
 check_info["kentix_temp"] = LegacyCheckDefinition(
     detect=DETECT_KENTIX,
-    parse_function=parse_kentix_temp,
-    check_function=check_kentix_temp,
-    discovery_function=inventory_kentix_temp,
-    service_name="Temperature %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.37954.2.1.1",
@@ -76,5 +72,9 @@ check_info["kentix_temp"] = LegacyCheckDefinition(
             oids=["1", "2", "3"],
         ),
     ],
+    parse_function=parse_kentix_temp,
+    service_name="Temperature %s",
+    discovery_function=inventory_kentix_temp,
+    check_function=check_kentix_temp,
     check_ruleset_name="temperature",
 )

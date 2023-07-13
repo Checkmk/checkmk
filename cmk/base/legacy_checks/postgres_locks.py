@@ -74,8 +74,8 @@ def check_postgres_locks(item, params, parsed):
 
 check_info["postgres_locks"] = LegacyCheckDefinition(
     parse_function=postgres.parse_dbs,
-    check_function=check_postgres_locks,
-    discovery_function=inventory_postgres_locks,
     service_name="PostgreSQL Locks %s",
+    discovery_function=inventory_postgres_locks,
+    check_function=check_postgres_locks,
     check_ruleset_name="postgres_locks",
 )

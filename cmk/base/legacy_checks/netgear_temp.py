@@ -107,10 +107,6 @@ def check_netgear_temp(item, params, parsed):
 
 check_info["netgear_temp"] = LegacyCheckDefinition(
     detect=DETECT_NETGEAR,
-    parse_function=parse_netgear_temp,
-    discovery_function=inventory_netgear_temp,
-    check_function=check_netgear_temp,
-    service_name="Temperature %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.4526.10.1.1.1",
@@ -121,5 +117,9 @@ check_info["netgear_temp"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "2", "3", "4", "5"],
         ),
     ],
+    parse_function=parse_netgear_temp,
+    service_name="Temperature %s",
+    discovery_function=inventory_netgear_temp,
+    check_function=check_netgear_temp,
     check_ruleset_name="temperature",
 )

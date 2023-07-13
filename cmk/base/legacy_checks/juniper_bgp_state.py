@@ -79,12 +79,12 @@ def discover_juniper_bgp_state(section):
 
 check_info["juniper_bgp_state"] = LegacyCheckDefinition(
     detect=DETECT_JUNIPER,
-    parse_function=parse_juniper_bgp_state,
-    check_function=check_juniper_bgp_state,
-    discovery_function=discover_juniper_bgp_state,
-    service_name="BGP Status Peer %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2636.5.1.1.2.1.1.1",
         oids=["2", "3", OIDBytes("11")],
     ),
+    parse_function=parse_juniper_bgp_state,
+    service_name="BGP Status Peer %s",
+    discovery_function=discover_juniper_bgp_state,
+    check_function=check_juniper_bgp_state,
 )

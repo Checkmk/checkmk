@@ -33,11 +33,11 @@ def check_mcafee_emailgateway_av_authentium(item, params, info):
 
 check_info["mcafee_emailgateway_av_authentium"] = LegacyCheckDefinition(
     detect=DETECT_EMAIL_GATEWAY,
-    discovery_function=inventory_mcafee_emailgateway_av_authentium,
-    check_function=check_mcafee_emailgateway_av_authentium,
-    service_name="AV Authentium",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1230.2.4.1.2.3.6",
         oids=["4", "5", "6"],
     ),
+    service_name="AV Authentium",
+    discovery_function=inventory_mcafee_emailgateway_av_authentium,
+    check_function=check_mcafee_emailgateway_av_authentium,
 )

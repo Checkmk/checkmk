@@ -110,10 +110,10 @@ def check_msexch_database(item, params, parsed):
 
 
 check_info["msexch_database"] = LegacyCheckDefinition(
-    discovery_function=inventory_msexch_database,
-    check_function=check_msexch_database,
     parse_function=parse_msexch_database,
     service_name="Exchange Database %s",
+    discovery_function=inventory_msexch_database,
+    check_function=check_msexch_database,
     check_ruleset_name="msx_database",
     check_default_parameters={
         "read_attached_latency": (200.0, 250.0),

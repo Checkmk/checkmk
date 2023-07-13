@@ -41,7 +41,7 @@ def check_netapp_api_protocol(item, _no_params, parsed):
 
 check_info["netapp_api_protocol"] = LegacyCheckDefinition(
     parse_function=netapp_api_parse_lines,
-    check_function=check_netapp_api_protocol,
-    discovery_function=inventory_netapp_api_protocol,
     service_name="Protocol %s",
+    discovery_function=inventory_netapp_api_protocol,
+    check_function=check_netapp_api_protocol,
 )

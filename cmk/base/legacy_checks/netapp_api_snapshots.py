@@ -74,9 +74,9 @@ def check_netapp_api_snapshots(item, params, parsed):
 
 check_info["netapp_api_snapshots"] = LegacyCheckDefinition(
     parse_function=parse_netapp_api_snapshots,
-    check_function=check_netapp_api_snapshots,
-    discovery_function=inventory_netapp_api_snapshots,
     service_name="Snapshots Volume %s",
+    discovery_function=inventory_netapp_api_snapshots,
+    check_function=check_netapp_api_snapshots,
     check_ruleset_name="netapp_snapshots",
     check_default_parameters={"levels": (85.0, 90.0)},
 )

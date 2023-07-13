@@ -45,13 +45,13 @@ def check_netscaler_cpu(item, params, info):
 
 check_info["netscaler_cpu"] = LegacyCheckDefinition(
     detect=SNMP_DETECT,
-    check_function=check_netscaler_cpu,
-    discovery_function=inventory_netscaler_cpu,
-    service_name="CPU Utilization %s",
-    check_ruleset_name="cpu_utilization_multiitem",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5951.4.1.1.41.6.1",
         oids=["1", "2"],
     ),
+    service_name="CPU Utilization %s",
+    discovery_function=inventory_netscaler_cpu,
+    check_function=check_netscaler_cpu,
+    check_ruleset_name="cpu_utilization_multiitem",
     check_default_parameters={"levels": (90.0, 95.0)},
 )

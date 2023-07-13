@@ -94,11 +94,11 @@ check_info["netapp_cluster"] = LegacyCheckDefinition(
         contains(".1.3.6.1.2.1.1.1.0", "netapp release"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.789"),
     ),
-    check_function=check_netapp_cluster,
-    discovery_function=inventory_netapp_cluster,
-    service_name="metrocluster_w_%s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.789.1.2.3",
         oids=["1", "2", "3", "4", "6", "8"],
     ),
+    service_name="metrocluster_w_%s",
+    discovery_function=inventory_netapp_cluster,
+    check_function=check_netapp_cluster,
 )

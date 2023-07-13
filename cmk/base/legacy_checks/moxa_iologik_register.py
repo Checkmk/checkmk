@@ -34,14 +34,14 @@ check_info["moxa_iologik_register"] = LegacyCheckDefinition(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8691."),
         startswith(".1.3.6.1.4.1.8691.10.2242.2.0", "E2242-T"),
     ),
-    check_function=check_iologik_register,
-    discovery_function=inventory_iologik_register,
-    service_name="Moxa Register",
-    check_ruleset_name="iologik_register",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.8691.10.2242.10.4.1.1",
         oids=["1", "2", "3"],
     ),
+    service_name="Moxa Register",
+    discovery_function=inventory_iologik_register,
+    check_function=check_iologik_register,
+    check_ruleset_name="iologik_register",
 )
 
 # DIOEntry

@@ -80,17 +80,17 @@ def check_kentix_amp_sensors_temperature(item, params, parsed):
 
 check_info["kentix_amp_sensors"] = LegacyCheckDefinition(
     detect=DETECT_KENTIX,
-    parse_function=parse_kentix_amp_sensors,
-    discovery_function=lambda parsed: inventory_kentix_amp_sensors(parsed, {}),
-    check_function=check_kentix_amp_sensors_temperature,
-    service_name="Temperature %s",
-    check_ruleset_name="temperature",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.37954.1",
             oids=["2"],
         )
     ],
+    parse_function=parse_kentix_amp_sensors,
+    service_name="Temperature %s",
+    discovery_function=lambda parsed: inventory_kentix_amp_sensors(parsed, {}),
+    check_function=check_kentix_amp_sensors_temperature,
+    check_ruleset_name="temperature",
 )
 
 # .
@@ -111,9 +111,9 @@ def check_kentix_amp_sensors_humidity(item, params, parsed):
 
 
 check_info["kentix_amp_sensors.humidity"] = LegacyCheckDefinition(
+    service_name="Humidity %s",
     discovery_function=lambda parsed: inventory_kentix_amp_sensors(parsed, {}),
     check_function=check_kentix_amp_sensors_humidity,
-    service_name="Humidity %s",
     check_ruleset_name="humidity",
 )
 
@@ -157,11 +157,11 @@ def check_kentix_amp_sensors_smoke(item, params, parsed):
 
 
 check_info["kentix_amp_sensors.smoke"] = LegacyCheckDefinition(
+    service_name="Smoke Detector %s",
     discovery_function=lambda parsed: inventory_kentix_amp_sensors(
         parsed, kentix_amp_sensors_smoke_default_levels
     ),
     check_function=check_kentix_amp_sensors_smoke,
-    service_name="Smoke Detector %s",
     check_ruleset_name="smoke",
 )
 
@@ -185,9 +185,9 @@ def check_kentix_amp_sensors_leakage(item, params, parsed):
 
 
 check_info["kentix_amp_sensors.leakage"] = LegacyCheckDefinition(
+    service_name="Leakage %s",
     discovery_function=lambda i: inventory_kentix_amp_sensors(i, None),
     check_function=check_kentix_amp_sensors_leakage,
-    service_name="Leakage %s",
 )
 
 # .

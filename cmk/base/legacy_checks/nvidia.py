@@ -36,17 +36,17 @@ def check_nvidia_temp(item, params, info):
 
 
 check_info["nvidia.temp"] = LegacyCheckDefinition(
-    check_function=check_nvidia_temp,
-    discovery_function=lambda info: inventory_nvidia_temp(False, info),
     service_name="Temperature %s",
+    discovery_function=lambda info: inventory_nvidia_temp(False, info),
+    check_function=check_nvidia_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (60.0, 65.0)},
 )
 
 check_info["nvidia.temp_core"] = LegacyCheckDefinition(
-    check_function=check_nvidia_temp,
-    discovery_function=lambda info: inventory_nvidia_temp(True, info),
     service_name="Temperature %s",
+    discovery_function=lambda info: inventory_nvidia_temp(True, info),
+    check_function=check_nvidia_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (90.0, 95.0)},
 )
@@ -70,8 +70,8 @@ def check_nvidia_errors(_no_item, _no_params, info):
 
 
 check_info["nvidia.errors"] = LegacyCheckDefinition(
-    check_function=check_nvidia_errors,
-    discovery_function=inventory_nvidia_errors,
     service_name="NVIDIA GPU Errors",
+    discovery_function=inventory_nvidia_errors,
+    check_function=check_nvidia_errors,
     check_ruleset_name="hw_errors",
 )

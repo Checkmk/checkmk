@@ -190,14 +190,14 @@ def check_openbsd_sensors(item, params, parsed):
 
 check_info["openbsd_sensors"] = LegacyCheckDefinition(
     detect=exists(".1.3.6.1.4.1.30155.2.1.1.0"),
-    parse_function=parse_openbsd_sensors,
-    discovery_function=lambda parsed: inventory_openbsd_sensors(parsed, "temp"),
-    check_function=check_openbsd_sensors,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.30155.2.1.2.1",
         oids=["2", "3", "5", "6", "7"],
     ),
+    parse_function=parse_openbsd_sensors,
+    service_name="Temperature %s",
+    discovery_function=lambda parsed: inventory_openbsd_sensors(parsed, "temp"),
+    check_function=check_openbsd_sensors,
     check_ruleset_name="temperature",
 )
 
@@ -221,9 +221,9 @@ def check_openbsd_sensors_fan(item, params, parsed):
 
 
 check_info["openbsd_sensors.fan"] = LegacyCheckDefinition(
+    service_name="Fan %s",
     discovery_function=lambda parsed: inventory_openbsd_sensors(parsed, "fan"),
     check_function=check_openbsd_sensors_fan,
-    service_name="Fan %s",
     check_ruleset_name="hw_fans",
     check_default_parameters={
         "lower": (500, 300),
@@ -256,9 +256,9 @@ def check_openbsd_sensors_voltage(item, params, parsed):
 
 
 check_info["openbsd_sensors.voltage"] = LegacyCheckDefinition(
+    service_name="Voltage Type %s",
     discovery_function=lambda parsed: inventory_openbsd_sensors(parsed, "voltage"),
     check_function=check_openbsd_sensors_voltage,
-    service_name="Voltage Type %s",
     check_ruleset_name="el_inphase",
 )
 # .
@@ -281,9 +281,9 @@ def check_openbsd_sensors_powersupply(item, _no_params, parsed):
 
 
 check_info["openbsd_sensors.powersupply"] = LegacyCheckDefinition(
+    service_name="Powersupply %s",
     discovery_function=lambda parsed: inventory_openbsd_sensors(parsed, "powersupply"),
     check_function=check_openbsd_sensors_powersupply,
-    service_name="Powersupply %s",
 )
 # .
 #   .--indicator-----------------------------------------------------------.
@@ -305,9 +305,9 @@ def check_openbsd_sensors_indicator(item, params, parsed):
 
 
 check_info["openbsd_sensors.indicator"] = LegacyCheckDefinition(
+    service_name="Indicator %s",
     discovery_function=lambda parsed: inventory_openbsd_sensors(parsed, "indicator"),
     check_function=check_openbsd_sensors_indicator,
-    service_name="Indicator %s",
 )
 # .
 #   .--drive---------------------------------------------------------------.
@@ -329,8 +329,8 @@ def check_openbsd_sensors_drive(item, params, parsed):
 
 
 check_info["openbsd_sensors.drive"] = LegacyCheckDefinition(
+    service_name="Drive %s",
     discovery_function=lambda parsed: inventory_openbsd_sensors(parsed, "drive"),
     check_function=check_openbsd_sensors_drive,
-    service_name="Drive %s",
 )
 # .

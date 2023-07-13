@@ -41,12 +41,12 @@ def check_mikrotik_signal(item, params, info):
 
 check_info["mikrotik_signal"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14988.1"),
-    check_ruleset_name="signal_quality",
-    check_function=check_mikrotik_signal,
-    discovery_function=inventory_mikrotik_signal,
-    service_name="Signal %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14988.1.1.1.1.1",
         oids=["5.2", "4.2", "8.2"],
     ),
+    service_name="Signal %s",
+    discovery_function=inventory_mikrotik_signal,
+    check_function=check_mikrotik_signal,
+    check_ruleset_name="signal_quality",
 )

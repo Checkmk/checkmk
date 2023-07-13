@@ -23,14 +23,14 @@ def check_mbg_lantime_ng_temp(item, params, info):
 
 check_info["mbg_lantime_ng_temp"] = LegacyCheckDefinition(
     detect=DETECT_MBG_LANTIME_NG,
-    check_function=check_mbg_lantime_ng_temp,
-    discovery_function=inventory_mbg_lantime_ng_temp,
-    service_name="Temperature %s",
-    check_ruleset_name="temperature",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.30.0.5.2",
         oids=["1"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_mbg_lantime_ng_temp,
+    check_function=check_mbg_lantime_ng_temp,
+    check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (80.0, 90.0),  # levels for system temperature
     },

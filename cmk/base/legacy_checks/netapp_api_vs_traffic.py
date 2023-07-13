@@ -224,7 +224,7 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
 
 check_info["netapp_api_vs_traffic"] = LegacyCheckDefinition(
     parse_function=parse_netapp_api_vs_traffic,
+    service_name="Traffic vServer %s",
     discovery_function=inventory_netapp_api_vs_traffic,
     check_function=check_netapp_api_vs_traffic,
-    service_name="Traffic vServer %s",
 )

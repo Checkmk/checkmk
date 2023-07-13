@@ -88,8 +88,8 @@ def check_jolokia_jvm_garbagecollectors(item, params, parsed):
 
 
 check_info["jolokia_jvm_garbagecollectors"] = LegacyCheckDefinition(
-    service_name="JVM %s",
     parse_function=parse_jolokia_jvm_garbagecollectors,
+    service_name="JVM %s",
     discovery_function=discover_jolokia_jvm_garbagecollectors,
     check_function=check_jolokia_jvm_garbagecollectors,
     check_ruleset_name="jvm_gc",

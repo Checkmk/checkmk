@@ -42,10 +42,6 @@ def discover_liebert_temp_general(section):
 
 check_info["liebert_temp_general"] = LegacyCheckDefinition(
     detect=DETECT_LIEBERT,
-    parse_function=parse_liebert_float,
-    discovery_function=discover_liebert_temp_general,
-    check_function=check_liebert_temp_general,
-    service_name="%s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.476.1.42.3.9.20.1",
         oids=[
@@ -69,5 +65,9 @@ check_info["liebert_temp_general"] = LegacyCheckDefinition(
             "30.1.2.1.5519",
         ],
     ),
+    parse_function=parse_liebert_float,
+    service_name="%s",
+    discovery_function=discover_liebert_temp_general,
+    check_function=check_liebert_temp_general,
     check_ruleset_name="temperature",
 )

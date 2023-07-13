@@ -79,9 +79,9 @@ def check_oracle_longactivesessions(item, params, info):
 
 
 check_info["oracle_longactivesessions"] = LegacyCheckDefinition(
-    check_function=check_oracle_longactivesessions,
-    discovery_function=inventory_oracle_longactivesessions,
     service_name="ORA %s Long Active Sessions",
+    discovery_function=inventory_oracle_longactivesessions,
+    check_function=check_oracle_longactivesessions,
     check_ruleset_name="oracle_longactivesessions",
     check_default_parameters={
         "levels": (500, 1000),

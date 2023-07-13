@@ -79,8 +79,8 @@ def check_mounts(item, targetopts, info):
 
 
 check_info["mounts"] = LegacyCheckDefinition(
-    check_function=check_mounts,
-    discovery_function=discovery_mounts,
     service_name="Mount options of %s",
+    discovery_function=discovery_mounts,
+    check_function=check_mounts,
     check_ruleset_name="fs_mount_options",
 )

@@ -36,14 +36,14 @@ def discover_liebert_compressor(section):
 
 check_info["liebert_compressor"] = LegacyCheckDefinition(
     detect=DETECT_LIEBERT,
-    parse_function=parse_liebert_float,
-    discovery_function=discover_liebert_compressor,
-    check_function=check_liebert_compressor,
-    service_name="%s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.476.1.42.3.9.20.1",
         oids=["10.1.2.1.5266", "20.1.2.1.5266", "30.1.2.1.5266"],
     ),
+    parse_function=parse_liebert_float,
+    service_name="%s",
+    discovery_function=discover_liebert_compressor,
+    check_function=check_liebert_compressor,
     check_default_parameters={
         "levels": (8, 12),
     },

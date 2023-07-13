@@ -70,8 +70,8 @@ def _is_int(key_list, info_dict) -> bool:
 
 check_info["mongodb_connections"] = LegacyCheckDefinition(
     service_name="MongoDB %s",
-    check_function=check_mongodb_connections,
     discovery_function=inventory_mongodb_connections,
+    check_function=check_mongodb_connections,
     check_ruleset_name="db_connections_mongodb",
     check_default_parameters={
         "levels_perc": (80.0, 90.0),  # Levels at 80%/90% of maximum

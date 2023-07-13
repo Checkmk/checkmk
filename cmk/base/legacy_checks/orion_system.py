@@ -83,14 +83,14 @@ def check_orion_system_temp(item, params, parsed):
 
 check_info["orion_system"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.20246"),
-    parse_function=parse_orion_system,
-    discovery_function=inventory_orion_system_temp,
-    check_function=check_orion_system_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.20246.2.3.1.1.1.2.3",
         oids=["1", "2", "3", "4", "5", "6", "7", "8"],
     ),
+    parse_function=parse_orion_system,
+    service_name="Temperature %s",
+    discovery_function=inventory_orion_system_temp,
+    check_function=check_orion_system_temp,
     check_ruleset_name="temperature",
 )
 
@@ -108,9 +108,9 @@ def check_orion_system_charging(item, params, parsed):
 
 
 check_info["orion_system.charging"] = LegacyCheckDefinition(
+    service_name="Charge %s",
     discovery_function=inventory_orion_system_charging,
     check_function=check_orion_system_charging,
-    service_name="Charge %s",
 )
 
 
@@ -124,8 +124,8 @@ def check_orion_system_electrical(item, params, parsed):
 
 
 check_info["orion_system.dc"] = LegacyCheckDefinition(
+    service_name="Direct Current %s",
     discovery_function=discover_orion_system_electrical,
     check_function=check_orion_system_electrical,
-    service_name="Direct Current %s",
     check_ruleset_name="ups_outphase",
 )

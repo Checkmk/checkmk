@@ -81,8 +81,8 @@ def _get_missing_keys(key_list, info_dict):
 
 
 check_info["mongodb_flushing"] = LegacyCheckDefinition(
+    service_name="MongoDB Flushing",
     discovery_function=inventory_mongodb_flushing,
     check_function=check_mongodb_flushing,
-    service_name="MongoDB Flushing",
     check_ruleset_name="mongodb_flushing",
 )

@@ -63,8 +63,8 @@ def check_mongodb_mem(_no_item, params, parsed):
 
 check_info["mongodb_mem"] = LegacyCheckDefinition(
     parse_function=parse_mongodb_mem,
+    service_name="Memory used MongoDB",
     discovery_function=discover_mongodb_mem,
     check_function=check_mongodb_mem,
-    service_name="Memory used MongoDB",
     check_ruleset_name="mongodb_mem",
 )

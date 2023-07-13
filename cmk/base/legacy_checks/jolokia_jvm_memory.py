@@ -90,9 +90,9 @@ def check_jolokia_jvm_memory(item, params, parsed):
 
 check_info["jolokia_jvm_memory"] = LegacyCheckDefinition(
     parse_function=parse_jolokia_jvm_memory,
+    service_name="JVM %s Memory",
     discovery_function=discover_jolokia_jvm_memory,
     check_function=check_jolokia_jvm_memory,
-    service_name="JVM %s Memory",
     check_ruleset_name="jvm_memory",
     check_default_parameters={
         "perc_heap": (80.0, 90.0),
@@ -151,9 +151,9 @@ def check_jolokia_jvm_memory_pools(item, params, parsed):
 
 
 check_info["jolokia_jvm_memory.pools"] = LegacyCheckDefinition(
+    service_name="JVM %s",
     discovery_function=discover_jolokia_jvm_memory_pools,
     check_function=check_jolokia_jvm_memory_pools,
-    service_name="JVM %s",
     check_ruleset_name="jvm_memory_pools",
     check_default_parameters={
         "perc_used": (80.0, 90.0),

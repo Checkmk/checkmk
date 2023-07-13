@@ -129,9 +129,9 @@ def check_oracle_locks(item, params, info):  # pylint: disable=too-many-branches
 
 
 check_info["oracle_locks"] = LegacyCheckDefinition(
-    check_function=check_oracle_locks,
-    discovery_function=inventory_oracle_locks,
     service_name="ORA %s Locks",
+    discovery_function=inventory_oracle_locks,
+    check_function=check_oracle_locks,
     check_ruleset_name="oracle_locks",
     check_default_parameters={
         "levels": (1800, 3600),

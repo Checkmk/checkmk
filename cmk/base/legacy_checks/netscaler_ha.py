@@ -86,11 +86,11 @@ def check_netscaler_ha(_no_item, _no_params, info):
 
 check_info["netscaler_ha"] = LegacyCheckDefinition(
     detect=SNMP_DETECT,
-    check_function=check_netscaler_ha,
-    discovery_function=inventory_netscaler_ha,
-    service_name="HA Node Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5951.4.1.1.23",
         oids=["3", "23", "24"],
     ),
+    service_name="HA Node Status",
+    discovery_function=inventory_netscaler_ha,
+    check_function=check_netscaler_ha,
 )

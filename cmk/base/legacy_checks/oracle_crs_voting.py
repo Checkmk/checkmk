@@ -47,7 +47,7 @@ def check_oracle_crs_voting(_no_item, _no_params, info):
 
 
 check_info["oracle_crs_voting"] = LegacyCheckDefinition(
-    check_function=check_oracle_crs_voting,
-    discovery_function=inventory_oracle_crs_voting,
     service_name="ORA-GI Voting",
+    discovery_function=inventory_oracle_crs_voting,
+    check_function=check_oracle_crs_voting,
 )

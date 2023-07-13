@@ -83,7 +83,7 @@ def check_netapp_api_cluster(item, params, info):
 
 
 check_info["netapp_api_cluster"] = LegacyCheckDefinition(
-    check_function=check_netapp_api_cluster,
-    discovery_function=inventory_netapp_api_cluster,
     service_name="Cluster with %s",
+    discovery_function=inventory_netapp_api_cluster,
+    check_function=check_netapp_api_cluster,
 )

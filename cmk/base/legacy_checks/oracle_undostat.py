@@ -62,9 +62,9 @@ def check_oracle_undostat(item, params, parsed):
 
 check_info["oracle_undostat"] = LegacyCheckDefinition(
     parse_function=parse_oracle_undostat,
-    check_function=check_oracle_undostat,
-    discovery_function=discover_oracle_undostat,
     service_name="ORA %s Undo Retention",
+    discovery_function=discover_oracle_undostat,
+    check_function=check_oracle_undostat,
     check_ruleset_name="oracle_undostat",
     check_default_parameters={
         "levels": (600, 300),

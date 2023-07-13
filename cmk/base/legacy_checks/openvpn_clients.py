@@ -49,7 +49,7 @@ def check_openvpn_clients(item, _no_params, info):
 
 
 check_info["openvpn_clients"] = LegacyCheckDefinition(
-    check_function=check_openvpn_clients,
-    discovery_function=inventory_openvpn_clients,
     service_name="OpenVPN Client %s",
+    discovery_function=inventory_openvpn_clients,
+    check_function=check_openvpn_clients,
 )

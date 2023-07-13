@@ -103,7 +103,7 @@ def check_omd_apache(item, _no_params, parsed):
 
 # This check uses the section defined in cmk/base/plugins/agent_based/omd_apache.py!
 check_info["omd_apache"] = LegacyCheckDefinition(
+    service_name="OMD %s apache",
     discovery_function=inventory_omd_apache,
     check_function=check_omd_apache,
-    service_name="OMD %s apache",
 )

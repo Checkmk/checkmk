@@ -47,9 +47,9 @@ check_info["netapp_fcpio"] = LegacyCheckDefinition(
         base=".1.3.6.1.4.1.789.1.17",
         oids=["20", "21"],
     ),
-    check_function=check_netapp_fcpio,
-    discovery_function=lambda info: [(None, {})],
     service_name="FCP I/O",
+    discovery_function=lambda info: [(None, {})],
+    check_function=check_netapp_fcpio,
     check_ruleset_name="netapp_fcportio",
     check_default_parameters={},
 )

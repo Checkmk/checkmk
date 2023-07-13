@@ -23,13 +23,13 @@ def parse_juniper_screenos_mem(info):
 
 check_info["juniper_screenos_mem"] = LegacyCheckDefinition(
     detect=DETECT_JUNIPER_SCREENOS,
-    parse_function=parse_juniper_screenos_mem,
-    check_function=check_juniper_mem_generic,
-    discovery_function=inventory_juniper_mem_generic,
-    check_ruleset_name="juniper_mem",
-    service_name="Memory",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3224.16.2",
         oids=["1.0", "2.0"],
     ),
+    parse_function=parse_juniper_screenos_mem,
+    service_name="Memory",
+    discovery_function=inventory_juniper_mem_generic,
+    check_function=check_juniper_mem_generic,
+    check_ruleset_name="juniper_mem",
 )

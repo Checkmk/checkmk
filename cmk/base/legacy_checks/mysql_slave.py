@@ -83,8 +83,8 @@ def check_mysql_slave(item, params, parsed):
 
 check_info["mysql_slave"] = LegacyCheckDefinition(
     parse_function=parse_mysql_slave,
+    service_name="MySQL DB Slave %s",
     discovery_function=discover_mysql_slave,
     check_function=check_mysql_slave,
-    service_name="MySQL DB Slave %s",
     check_ruleset_name="mysql_slave",
 )

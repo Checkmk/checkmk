@@ -60,9 +60,9 @@ def check_oracle_logswitches(item, params, info):
 
 
 check_info["oracle_logswitches"] = LegacyCheckDefinition(
-    check_function=check_oracle_logswitches,
-    discovery_function=inventory_oracle_logswitches,
     service_name="ORA %s Logswitches",
+    discovery_function=inventory_oracle_logswitches,
+    check_function=check_oracle_logswitches,
     check_ruleset_name="oracle_logswitches",
     check_default_parameters={
         "levels": (50, 100),

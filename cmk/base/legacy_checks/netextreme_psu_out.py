@@ -57,14 +57,14 @@ def discover_netextreme_psu_out(section):
 
 check_info["netextreme_psu_out"] = LegacyCheckDefinition(
     detect=DETECT_NETEXTREME,
-    parse_function=parse_netextreme_psu_out,
-    discovery_function=discover_netextreme_psu_out,
-    check_function=check_elphase,
-    service_name="Power Supply %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1916.1.1.1.38.1",
         oids=[OIDEnd(), "3", "4", "5"],
     ),
+    parse_function=parse_netextreme_psu_out,
+    service_name="Power Supply %s",
+    discovery_function=discover_netextreme_psu_out,
+    check_function=check_elphase,
     check_ruleset_name="el_inphase",
     check_default_parameters={
         "voltage": (11, 10),

@@ -22,11 +22,11 @@ def check_liebert_chiller_status(_no_item, _no_params, info):
 
 check_info["liebert_chiller_status"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.476.1.42.4.3.20"),
-    check_function=check_liebert_chiller_status,
-    discovery_function=inventory_liebert_chiller_status,
-    service_name="Chiller status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.476.1.42.4.3.20.1.1.20",
         oids=["2"],
     ),
+    service_name="Chiller status",
+    discovery_function=inventory_liebert_chiller_status,
+    check_function=check_liebert_chiller_status,
 )

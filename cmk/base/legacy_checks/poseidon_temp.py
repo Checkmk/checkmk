@@ -52,14 +52,14 @@ def discover_poseidon_temp(section):
 
 check_info["poseidon_temp"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21796.3"),
-    parse_function=parse_poseidon_temp,
-    check_function=check_poseidon_temp,
-    discovery_function=discover_poseidon_temp,
-    service_name="Temperatur: %s",
-    check_ruleset_name="temperature",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21796.3.3.3.1",
         oids=["2", "4", "5"],
     ),
+    parse_function=parse_poseidon_temp,
+    service_name="Temperatur: %s",
+    discovery_function=discover_poseidon_temp,
+    check_function=check_poseidon_temp,
+    check_ruleset_name="temperature",
     check_default_parameters={},
 )

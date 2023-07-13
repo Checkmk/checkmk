@@ -100,9 +100,9 @@ def discover_msoffice_licenses(section):
 
 check_info["msoffice_licenses"] = LegacyCheckDefinition(
     parse_function=parse_msoffice_licenses,
+    service_name="MS Office Licenses %s",
     discovery_function=discover_msoffice_licenses,
     check_function=check_msoffice_licenses,
-    service_name="MS Office Licenses %s",
     check_ruleset_name="msoffice_licenses",
     check_default_parameters={
         "usage": (80.0, 90.0),

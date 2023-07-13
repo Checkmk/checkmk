@@ -28,11 +28,11 @@ def check_orion_backup(item, params, info):
 
 check_info["orion_backup"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.20246"),
-    discovery_function=inventory_orion_backup,
-    check_function=check_orion_backup,
-    service_name="Backup",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.20246.2.3.1.1.1.2.5.3.3",
         oids=["2", "3"],
     ),
+    service_name="Backup",
+    discovery_function=inventory_orion_backup,
+    check_function=check_orion_backup,
 )

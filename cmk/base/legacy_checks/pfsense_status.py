@@ -27,11 +27,11 @@ def check_pfsense_status(_no_item, params, info):
 
 check_info["pfsense_status"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "pfsense"),
-    discovery_function=inventory_pfsense_status,
-    check_function=check_pfsense_status,
-    service_name="pfSense Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12325.1.200.1.1",
         oids=["1"],
     ),
+    service_name="pfSense Status",
+    discovery_function=inventory_pfsense_status,
+    check_function=check_pfsense_status,
 )

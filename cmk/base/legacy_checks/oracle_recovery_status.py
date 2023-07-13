@@ -205,8 +205,8 @@ def check_oracle_recovery_status(item, params, info):  # pylint: disable=too-man
 
 
 check_info["oracle_recovery_status"] = LegacyCheckDefinition(
-    check_function=check_oracle_recovery_status,
-    discovery_function=inventory_oracle_recovery_status,
     service_name="ORA %s Recovery Status",
+    discovery_function=inventory_oracle_recovery_status,
+    check_function=check_oracle_recovery_status,
     check_ruleset_name="oracle_recovery_status",
 )

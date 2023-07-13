@@ -276,9 +276,9 @@ def check_lantime_ng_refclock_gps(item, params, info):
 
 
 check_info["mbg_lantime_ng_refclock.gps"] = LegacyCheckDefinition(
-    check_function=check_lantime_ng_refclock_gps,
-    discovery_function=inventory_lantime_ng_refclock_gps,
     service_name="LANTIME Refclock %s",
+    discovery_function=inventory_lantime_ng_refclock_gps,
+    check_function=check_lantime_ng_refclock_gps,
 )
 
 # .
@@ -338,11 +338,11 @@ def check_lantime_ng_refclock(item, _no_params, info):
 
 check_info["mbg_lantime_ng_refclock"] = LegacyCheckDefinition(
     detect=DETECT_MBG_LANTIME_NG,
-    check_function=check_lantime_ng_refclock,
-    discovery_function=inventory_lantime_ng_refclock,
-    service_name="LANTIME Refclock %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.30.0.1.2.1",
         oids=["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"],
     ),
+    service_name="LANTIME Refclock %s",
+    discovery_function=inventory_lantime_ng_refclock,
+    check_function=check_lantime_ng_refclock,
 )

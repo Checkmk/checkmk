@@ -25,13 +25,13 @@ def check_netextreme_temp(item, params, info):
 
 check_info["netextreme_temp"] = LegacyCheckDefinition(
     detect=DETECT_NETEXTREME,
-    discovery_function=inventory_netextreme_temp,
-    check_function=check_netextreme_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1916.1.1.1",
         oids=["8"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_netextreme_temp,
+    check_function=check_netextreme_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (45.0, 50.0),

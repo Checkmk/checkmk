@@ -142,9 +142,9 @@ def check_mkbackup_system(item, _no_params, parsed):
 
 check_info["mkbackup"] = LegacyCheckDefinition(
     parse_function=parse_mkbackup,
+    service_name="Backup %s",
     discovery_function=inventory_mkbackup_system,
     check_function=check_mkbackup_system,
-    service_name="Backup %s",
 )
 
 
@@ -164,7 +164,7 @@ def check_mkbackup_site(item, _no_params, parsed):
 
 
 check_info["mkbackup.site"] = LegacyCheckDefinition(
+    service_name="OMD %s",
     discovery_function=inventory_mkbackup_site,
     check_function=check_mkbackup_site,
-    service_name="OMD %s",
 )

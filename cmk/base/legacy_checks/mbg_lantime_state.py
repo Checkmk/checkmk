@@ -36,13 +36,13 @@ check_info["mbg_lantime_state"] = LegacyCheckDefinition(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5597.3"),
         not_exists(".1.3.6.1.4.1.5597.30.0.2.*"),
     ),
-    check_function=check_mbg_lantime_state,
-    discovery_function=inventory_mbg_lantime_state,
-    service_name="LANTIME State",
-    check_ruleset_name="mbg_lantime_state",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.3.1",
         oids=["2", "3", "5", "7"],
     ),
+    service_name="LANTIME State",
+    discovery_function=inventory_mbg_lantime_state,
+    check_function=check_mbg_lantime_state,
+    check_ruleset_name="mbg_lantime_state",
     check_default_parameters=MBG_LANTIME_STATE_CHECK_DEFAULT_PARAMETERS,
 )

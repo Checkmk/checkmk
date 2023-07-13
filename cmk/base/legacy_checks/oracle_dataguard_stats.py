@@ -154,9 +154,9 @@ def check_oracle_dataguard_stats(item, params, parsed):  # pylint: disable=too-m
 
 check_info["oracle_dataguard_stats"] = LegacyCheckDefinition(
     # section is already migrated!
-    check_function=check_oracle_dataguard_stats,
-    discovery_function=inventory_oracle_dataguard_stats,
     service_name="ORA %s Dataguard-Stats",
+    discovery_function=inventory_oracle_dataguard_stats,
+    check_function=check_oracle_dataguard_stats,
     check_ruleset_name="oracle_dataguard_stats",
     check_default_parameters={
         "apply_lag": (3600, 14400),

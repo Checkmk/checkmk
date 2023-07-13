@@ -36,11 +36,11 @@ def check_juniper_trpz_power(item, _no_params, info):
 
 check_info["juniper_trpz_power"] = LegacyCheckDefinition(
     detect=DETECT_JUNIPER_TRPZ,
-    check_function=check_juniper_trpz_power,
-    discovery_function=inventory_juniper_trpz_power,
-    service_name="PSU %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14525.4.8.1.1.13.1.2.1",
         oids=["3", "2"],
     ),
+    service_name="PSU %s",
+    discovery_function=inventory_juniper_trpz_power,
+    check_function=check_juniper_trpz_power,
 )

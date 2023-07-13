@@ -59,9 +59,9 @@ def discover_lvm_lvs(section):
 
 check_info["lvm_lvs"] = LegacyCheckDefinition(
     parse_function=parse_lvm_lvs,
+    service_name="LVM LV Pool %s",
     discovery_function=discover_lvm_lvs,
     check_function=check_lvm_lvs,
-    service_name="LVM LV Pool %s",
     check_ruleset_name="lvm_lvs_pools",
     check_default_parameters={
         "levels_data": (80.0, 90.0),

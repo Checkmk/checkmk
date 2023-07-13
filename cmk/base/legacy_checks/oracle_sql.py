@@ -125,8 +125,8 @@ def check_oracle_sql(item, params, parsed):
 
 check_info["oracle_sql"] = LegacyCheckDefinition(
     parse_function=parse_oracle_sql,
+    service_name="ORA %s",
     discovery_function=inventory_oracle_sql,
     check_function=check_oracle_sql,
-    service_name="ORA %s",
     check_ruleset_name="oracle_sql",
 )

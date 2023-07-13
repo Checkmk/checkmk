@@ -42,7 +42,7 @@ def discover_mysql_ping(section):
 
 check_info["mysql_ping"] = LegacyCheckDefinition(
     parse_function=parse_mysql_ping,
+    service_name="MySQL Instance %s",
     discovery_function=discover_mysql_ping,
     check_function=check_mysql_ping,
-    service_name="MySQL Instance %s",
 )

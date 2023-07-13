@@ -21,7 +21,7 @@ def check_plesk_domains(_no_item, _no_params, info):
 
 
 check_info["plesk_domains"] = LegacyCheckDefinition(
-    check_function=check_plesk_domains,
-    discovery_function=inventory_plesk_domains,
     service_name="Plesk Domains",
+    discovery_function=inventory_plesk_domains,
+    check_function=check_plesk_domains,
 )

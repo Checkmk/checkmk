@@ -68,8 +68,8 @@ def discover_netapp_api_systemtime(section):
 
 check_info["netapp_api_systemtime"] = LegacyCheckDefinition(
     parse_function=parse_netapp_api_systemtime,
+    service_name="Systemtime %s",
     discovery_function=discover_netapp_api_systemtime,
     check_function=check_netapp_api_systemtime,
-    service_name="Systemtime %s",
     check_ruleset_name="netapp_systemtime",
 )

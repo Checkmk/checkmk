@@ -30,7 +30,7 @@ def check_mongodb_counters(item, _no_params, parsed):
 
 
 check_info["mongodb_counters"] = LegacyCheckDefinition(
+    service_name="MongoDB Counters %s",
     discovery_function=inventory_mongodb_counters,
     check_function=check_mongodb_counters,
-    service_name="MongoDB Counters %s",
 )

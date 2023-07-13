@@ -39,8 +39,8 @@ def check_mongodb_locks(_no_item, params, info):
 
 
 check_info["mongodb_locks"] = LegacyCheckDefinition(
+    service_name="MongoDB Locks",
     discovery_function=inventory_mongodb_locks,
     check_function=check_mongodb_locks,
-    service_name="MongoDB Locks",
     check_ruleset_name="mongodb_locks",
 )

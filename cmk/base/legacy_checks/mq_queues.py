@@ -70,9 +70,9 @@ def check_mq_queues(item, params, info):
 
 
 check_info["mq_queues"] = LegacyCheckDefinition(
-    check_function=check_mq_queues,
-    discovery_function=inventory_mq_queues,
     service_name="Queue %s",
+    discovery_function=inventory_mq_queues,
+    check_function=check_mq_queues,
     check_ruleset_name="mq_queues",
     check_default_parameters={
         "size": (None, None),

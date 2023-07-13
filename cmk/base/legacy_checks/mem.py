@@ -139,9 +139,9 @@ def camelcase_to_underscored(name):
 
 
 check_info["mem.linux"] = LegacyCheckDefinition(
+    service_name="Memory",
     discovery_function=inventory_mem_linux,
     check_function=check_mem_linux,
-    service_name="Memory",
     check_ruleset_name="memory_linux",
     check_default_parameters={
         "levels_virtual": ("perc_used", (80.0, 90.0)),
@@ -349,9 +349,9 @@ def check_mem_windows(_no_item, params, section):
 
 
 check_info["mem.win"] = LegacyCheckDefinition(
-    check_function=check_mem_windows,
-    discovery_function=inventory_mem_win,
     service_name="Memory",
+    discovery_function=inventory_mem_win,
+    check_function=check_mem_windows,
     check_ruleset_name="memory_pagefile_win",
     check_default_parameters={
         "memory": (80.0, 90.0),
@@ -432,7 +432,7 @@ def check_mem_vmalloc(_item, params, section):
 
 
 check_info["mem.vmalloc"] = LegacyCheckDefinition(
+    service_name="Vmalloc address space",
     discovery_function=inventory_mem_vmalloc,
     check_function=check_mem_vmalloc,
-    service_name="Vmalloc address space",
 )

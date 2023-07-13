@@ -29,8 +29,8 @@ def discover_jolokia_jvm_runtime(section):
 
 check_info["jolokia_jvm_runtime"] = LegacyCheckDefinition(
     parse_function=parse_jolokia_jvm_runtime,
+    service_name="JVM %s Uptime",
     discovery_function=discover_jolokia_jvm_runtime,
     check_function=check_jolokia_jvm_runtime_uptime,
-    service_name="JVM %s Uptime",
     check_ruleset_name="jvm_uptime",
 )

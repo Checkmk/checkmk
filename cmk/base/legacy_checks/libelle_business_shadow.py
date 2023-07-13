@@ -286,9 +286,9 @@ def check_libelle_business_shadow_info(_no_item, _no_params, info):
 
 
 check_info["libelle_business_shadow.info"] = LegacyCheckDefinition(
-    check_function=check_libelle_business_shadow_info,
-    discovery_function=inventory_libelle_business_shadow_info,
     service_name="Libelle Business Shadow Info",
+    discovery_function=inventory_libelle_business_shadow_info,
+    check_function=check_libelle_business_shadow_info,
 )
 
 # .
@@ -324,9 +324,9 @@ def check_libelle_business_shadow_status(_no_item, _no_params, info):
 
 
 check_info["libelle_business_shadow.status"] = LegacyCheckDefinition(
-    check_function=check_libelle_business_shadow_status,
-    discovery_function=inventory_libelle_business_shadow_status,
     service_name="Libelle Business Shadow Status",
+    discovery_function=inventory_libelle_business_shadow_status,
+    check_function=check_libelle_business_shadow_status,
 )
 
 # .
@@ -365,9 +365,9 @@ def check_libelle_business_shadow_process(_no_item, _no_params, info):
 
 
 check_info["libelle_business_shadow.process"] = LegacyCheckDefinition(
-    check_function=check_libelle_business_shadow_process,
-    discovery_function=inventory_libelle_business_shadow_process,
     service_name="Libelle Business Shadow Process",
+    discovery_function=inventory_libelle_business_shadow_process,
+    check_function=check_libelle_business_shadow_process,
 )
 
 # .
@@ -398,9 +398,9 @@ def check_libelle_business_shadow_archive_dir(item, params, info):
 
 
 check_info["libelle_business_shadow.archive_dir"] = LegacyCheckDefinition(
-    check_function=check_libelle_business_shadow_archive_dir,
-    discovery_function=inventory_libelle_business_shadow_archive_dir,
     service_name="Libelle Business Shadow %s",
+    discovery_function=inventory_libelle_business_shadow_archive_dir,
+    check_function=check_libelle_business_shadow_archive_dir,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

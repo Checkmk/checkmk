@@ -148,9 +148,9 @@ def check_postgres_bloat(item, params, parsed):  # pylint: disable=too-many-bran
 
 check_info["postgres_bloat"] = LegacyCheckDefinition(
     parse_function=postgres.parse_dbs,
-    check_function=check_postgres_bloat,
-    discovery_function=inventory_postgres_bloat,
     service_name="PostgreSQL Bloat %s",
+    discovery_function=inventory_postgres_bloat,
+    check_function=check_postgres_bloat,
     check_ruleset_name="db_bloat",
     check_default_parameters={
         "table_bloat_perc": (180.0, 200.0),  # WARN at 180%, CRIT at 200%

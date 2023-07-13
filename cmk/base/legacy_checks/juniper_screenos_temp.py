@@ -29,13 +29,13 @@ def check_juniper_screenos_temp(item, params, info):
 
 check_info["juniper_screenos_temp"] = LegacyCheckDefinition(
     detect=DETECT_JUNIPER_SCREENOS,
-    check_function=check_juniper_screenos_temp,
-    discovery_function=inventory_juniper_screenos_temp,
-    check_ruleset_name="temperature",
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3224.21.4.1",
         oids=["4", "3"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_juniper_screenos_temp,
+    check_function=check_juniper_screenos_temp,
+    check_ruleset_name="temperature",
     check_default_parameters={"levels": (70.0, 80.0)},
 )

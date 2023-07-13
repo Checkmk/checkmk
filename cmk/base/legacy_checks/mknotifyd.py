@@ -229,9 +229,9 @@ def check_mknotifyd(item, _no_params, parsed):
 
 check_info["mknotifyd"] = LegacyCheckDefinition(
     parse_function=parse_mknotifyd,
+    service_name="OMD %s Notification Spooler",
     discovery_function=inventory_mknotifyd,
     check_function=check_mknotifyd,
-    service_name="OMD %s Notification Spooler",
 )
 
 #   .--Connections---------------------------------------------------------.
@@ -290,7 +290,7 @@ def check_mknotifyd_connection(item, _no_params, parsed):
 
 
 check_info["mknotifyd.connection"] = LegacyCheckDefinition(
+    service_name="OMD %s Notify Connection",
     discovery_function=inventory_mknotifyd_connection,
     check_function=check_mknotifyd_connection,
-    service_name="OMD %s Notify Connection",
 )

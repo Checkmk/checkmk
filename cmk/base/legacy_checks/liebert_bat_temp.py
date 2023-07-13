@@ -32,13 +32,13 @@ def check_liebert_bat_temp(item, params, parsed):
 
 check_info["liebert_bat_temp"] = LegacyCheckDefinition(
     detect=DETECT_LGP,
-    parse_function=parse_liebert_bat_temp,
-    discovery_function=discover_liebert_bat_temp,
-    check_function=check_liebert_bat_temp,
-    service_name="Temperature %s",
-    check_ruleset_name="temperature",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.476.1.42.3.4.1.3.3.1.3",
         oids=["1"],
     ),
+    parse_function=parse_liebert_bat_temp,
+    service_name="Temperature %s",
+    discovery_function=discover_liebert_bat_temp,
+    check_function=check_liebert_bat_temp,
+    check_ruleset_name="temperature",
 )

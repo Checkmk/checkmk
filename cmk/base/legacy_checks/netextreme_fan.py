@@ -32,13 +32,13 @@ def check_netextreme_fan(item, params, info):
 
 check_info["netextreme_fan"] = LegacyCheckDefinition(
     detect=DETECT_NETEXTREME,
-    discovery_function=inventory_netextreme_fan,
-    check_function=check_netextreme_fan,
-    service_name="Fan %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1916.1.1.1.9.1",
         oids=["1", "2", "4"],
     ),
+    service_name="Fan %s",
+    discovery_function=inventory_netextreme_fan,
+    check_function=check_netextreme_fan,
     check_ruleset_name="hw_fans",
     check_default_parameters={
         "lower": (2000, 1000),

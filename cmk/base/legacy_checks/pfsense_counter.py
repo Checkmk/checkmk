@@ -85,14 +85,14 @@ def check_pfsense_counter(_no_item, params, parsed):
 
 check_info["pfsense_counter"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "pfsense"),
-    parse_function=parse_pfsense_counter,
-    discovery_function=inventory_pfsense_counter,
-    check_function=check_pfsense_counter,
-    service_name="pfSense Firewall Packet Rates",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12325.1.200.1",
         oids=[OIDEnd(), "2"],
     ),
+    parse_function=parse_pfsense_counter,
+    service_name="pfSense Firewall Packet Rates",
+    discovery_function=inventory_pfsense_counter,
+    check_function=check_pfsense_counter,
     check_ruleset_name="pfsense_counter",
     check_default_parameters={
         "badoffset": (100.0, 10000.0),

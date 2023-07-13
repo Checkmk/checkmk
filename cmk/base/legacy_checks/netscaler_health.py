@@ -66,9 +66,9 @@ def check_netscaler_health_fan(item, params, info):
 
 
 check_info["netscaler_health.fan"] = LegacyCheckDefinition(
+    service_name="FAN %s",
     discovery_function=inventory_netscaler_health_fan,
     check_function=check_netscaler_health_fan,
-    service_name="FAN %s",
     check_ruleset_name="hw_fans",
     check_default_parameters={
         "lower": (3500, 3000),
@@ -101,9 +101,9 @@ def check_netscaler_health_temp(item, params, info):
 
 
 check_info["netscaler_health.temp"] = LegacyCheckDefinition(
-    check_function=check_netscaler_health_temp,
-    discovery_function=inventory_netscaler_health_temp,
     service_name="Temperature %s",
+    discovery_function=inventory_netscaler_health_temp,
+    check_function=check_netscaler_health_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (80.0, 90.0),
@@ -147,7 +147,7 @@ def check_netscaler_health_psu(item, _no_params, info):
 
 
 check_info["netscaler_health.psu"] = LegacyCheckDefinition(
-    check_function=check_netscaler_health_psu,
-    discovery_function=inventory_netscaler_health_psu,
     service_name="Power Supply %s",
+    discovery_function=inventory_netscaler_health_psu,
+    check_function=check_netscaler_health_psu,
 )

@@ -30,7 +30,7 @@ def check_netapp_api_status(item, _no_params, info):
 
 
 check_info["netapp_api_status"] = LegacyCheckDefinition(
-    check_function=check_netapp_api_status,
-    discovery_function=inventory_netapp_api_status,
     service_name="Diagnosis Status",
+    discovery_function=inventory_netapp_api_status,
+    check_function=check_netapp_api_status,
 )

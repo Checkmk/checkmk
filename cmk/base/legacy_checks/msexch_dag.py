@@ -146,9 +146,9 @@ def check_msexch_dag_dbcopy(item, params, info):
 
 
 check_info["msexch_dag.dbcopy"] = LegacyCheckDefinition(
+    service_name="Exchange DAG DBCopy for %s",
     discovery_function=inventory_msexch_dag_dbcopy,
     check_function=check_msexch_dag_dbcopy,
-    service_name="Exchange DAG DBCopy for %s",
 )
 
 # .
@@ -185,9 +185,9 @@ def check_msexch_dag_contentindex(item, _no_params, info):
 
 
 check_info["msexch_dag.contentindex"] = LegacyCheckDefinition(
+    service_name="Exchange DAG ContentIndex of %s",
     discovery_function=inventory_msexch_dag_contentindex,
     check_function=check_msexch_dag_contentindex,
-    service_name="Exchange DAG ContentIndex of %s",
 )
 
 # .
@@ -233,8 +233,8 @@ def check_msexch_dag_copyqueue(item, params, info):
 
 
 check_info["msexch_dag.copyqueue"] = LegacyCheckDefinition(
+    service_name="Exchange DAG CopyQueue of %s",
     discovery_function=inventory_msexch_dag_copyqueue,
     check_function=check_msexch_dag_copyqueue,
-    service_name="Exchange DAG CopyQueue of %s",
     check_ruleset_name="msexch_copyqueue",
 )

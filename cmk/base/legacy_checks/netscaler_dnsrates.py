@@ -46,14 +46,14 @@ def check_netscaler_dnsrates(_no_item, params, info):
 
 check_info["netscaler_dnsrates"] = LegacyCheckDefinition(
     detect=SNMP_DETECT,
-    check_function=check_netscaler_dnsrates,
-    discovery_function=inventory_netscaler_dnsrates,
-    service_name="DNS rates",
-    check_ruleset_name="netscaler_dnsrates",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5951.4.1.1.53.1",
         oids=["1", "2"],
     ),
+    service_name="DNS rates",
+    discovery_function=inventory_netscaler_dnsrates,
+    check_function=check_netscaler_dnsrates,
+    check_ruleset_name="netscaler_dnsrates",
     check_default_parameters={
         "query": (1500.0, 2000.0),
         "answer": (1500.0, 2000.0),

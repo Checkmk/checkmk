@@ -117,10 +117,6 @@ def check_nimble_latency_reads(item, params, parsed):
 
 check_info["nimble_latency"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.37447.3.1"),
-    parse_function=parse_nimble_read_latency,
-    discovery_function=lambda parsed: inventory_nimble_latency(parsed, NimbleReadsType),
-    check_function=check_nimble_latency_reads,
-    service_name="Volume %s Read IO",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.37447.1.2.1",
         oids=[
@@ -155,6 +151,10 @@ check_info["nimble_latency"] = LegacyCheckDefinition(
             "51",
         ],
     ),
+    parse_function=parse_nimble_read_latency,
+    service_name="Volume %s Read IO",
+    discovery_function=lambda parsed: inventory_nimble_latency(parsed, NimbleReadsType),
+    check_function=check_nimble_latency_reads,
     check_ruleset_name="nimble_latency",
     check_default_parameters={
         # The latency range that is used to start measuring against levels.
@@ -175,9 +175,9 @@ def check_nimble_latency_writes(item, params, parsed):
 
 
 check_info["nimble_latency.write"] = LegacyCheckDefinition(
+    service_name="Volume %s Write IO",
     discovery_function=lambda parsed: inventory_nimble_latency(parsed, NimbleWritesType),
     check_function=check_nimble_latency_writes,
-    service_name="Volume %s Write IO",
     check_ruleset_name="nimble_latency",
     check_default_parameters={
         # The latency range that is used to start measuring against levels.

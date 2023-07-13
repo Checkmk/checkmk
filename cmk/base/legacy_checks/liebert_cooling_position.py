@@ -33,14 +33,14 @@ def check_liebert_cooling_position(item, params, parsed):
 
 check_info["liebert_cooling_position"] = LegacyCheckDefinition(
     detect=DETECT_LIEBERT,
-    parse_function=parse_liebert_float,
-    discovery_function=discover_liebert_cooling_position,
-    check_function=check_liebert_cooling_position,
-    service_name="%s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.476.1.42.3.9.20.1",
         oids=["10.1.2.1.5303", "20.1.2.1.5303", "30.1.2.1.5303"],
     ),
+    parse_function=parse_liebert_float,
+    service_name="%s",
+    discovery_function=discover_liebert_cooling_position,
+    check_function=check_liebert_cooling_position,
     check_ruleset_name="liebert_cooling_position",
     check_default_parameters={
         "min_capacity": (90, 80),

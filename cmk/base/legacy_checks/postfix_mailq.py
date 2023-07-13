@@ -160,9 +160,9 @@ def check_postfix_mailq(item, params, parsed):
 
 check_info["postfix_mailq"] = LegacyCheckDefinition(
     parse_function=parse_postfix_mailq,
+    service_name="Postfix Queue %s",
     discovery_function=inventory_postfix_mailq,
     check_function=check_postfix_mailq,
-    service_name="Postfix Queue %s",
     check_ruleset_name="mail_queue_length",
     check_default_parameters={
         "deferred": (10, 20),

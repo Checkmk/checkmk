@@ -101,8 +101,8 @@ def check_plesk_backups(item, params, info):  # pylint: disable=too-many-branche
 
 
 check_info["plesk_backups"] = LegacyCheckDefinition(
-    check_function=check_plesk_backups,
-    discovery_function=inventory_plesk_backups,
     service_name="Plesk Backup %s",
+    discovery_function=inventory_plesk_backups,
+    check_function=check_plesk_backups,
     check_ruleset_name="plesk_backups",
 )

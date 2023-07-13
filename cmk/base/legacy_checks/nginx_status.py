@@ -92,8 +92,8 @@ def discover_nginx_status(section):
 
 check_info["nginx_status"] = LegacyCheckDefinition(
     parse_function=parse_nginx_status,
-    check_function=check_nginx_status,
-    discovery_function=discover_nginx_status,
     service_name="Nginx %s Status",
+    discovery_function=discover_nginx_status,
+    check_function=check_nginx_status,
     check_ruleset_name="nginx_status",
 )

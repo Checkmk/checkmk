@@ -44,7 +44,7 @@ def check_perle_chassis_slots(item, _no_params, info):
 
 check_info["perle_chassis_slots"] = LegacyCheckDefinition(
     # section is already migrated!
+    service_name="Chassis status slot %s",
     discovery_function=inventory_perle_chassis_slots,
     check_function=check_perle_chassis_slots,
-    service_name="Chassis status slot %s",
 )

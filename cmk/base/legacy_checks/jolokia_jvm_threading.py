@@ -68,9 +68,9 @@ def check_jolokia_jvm_threading(item, params, parsed):
 
 check_info["jolokia_jvm_threading"] = LegacyCheckDefinition(
     parse_function=parse_jolokia_jvm_threading,
+    service_name="JVM %s Threading",
     discovery_function=discover_jolokia_jvm_threading,
     check_function=check_jolokia_jvm_threading,
-    service_name="JVM %s Threading",
     check_ruleset_name="jvm_threading",
 )
 
@@ -115,9 +115,9 @@ def check_jolokia_jvm_threading_pool(item, params, parsed):
 
 
 check_info["jolokia_jvm_threading.pool"] = LegacyCheckDefinition(
+    service_name="JVM %s",
     discovery_function=discover_jolokia_jvm_threading_pool,
     check_function=check_jolokia_jvm_threading_pool,
-    service_name="JVM %s",
     check_ruleset_name="jvm_tp",
     check_default_parameters={
         "currentThreadsBusy": (80, 90),

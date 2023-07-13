@@ -27,11 +27,11 @@ def check_knuerr_sensors(item, _no_params, info):
 
 check_info["knuerr_sensors"] = LegacyCheckDefinition(
     detect=DETECT_KNUERR,
-    check_function=check_knuerr_sensors,
-    discovery_function=inventory_knuerr_sensors,
-    service_name="Sensor %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3711.15.1.1.2",
         oids=["1", "5"],
     ),
+    service_name="Sensor %s",
+    discovery_function=inventory_knuerr_sensors,
+    check_function=check_knuerr_sensors,
 )

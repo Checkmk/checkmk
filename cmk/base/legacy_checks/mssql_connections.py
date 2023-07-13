@@ -46,9 +46,9 @@ def check_mssql_connections(item, params, parsed):
 
 check_info["mssql_connections"] = LegacyCheckDefinition(
     parse_function=parse_mssql_connections,
+    service_name="MSSQL Connections %s",
     discovery_function=inventory_mssql_connections,
     check_function=check_mssql_connections,
-    service_name="MSSQL Connections %s",
     check_ruleset_name="mssql_connections",
     check_default_parameters={
         "levels": (None, None),

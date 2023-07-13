@@ -69,9 +69,9 @@ def check_jolokia_generic_string(item, params, parsed):
 
 
 check_info["jolokia_generic.string"] = LegacyCheckDefinition(
+    service_name="JVM %s",
     discovery_function=discover_type("string"),
     check_function=check_jolokia_generic_string,
-    service_name="JVM %s",
     check_ruleset_name="generic_string",
 )
 
@@ -95,9 +95,9 @@ def check_jolokia_generic_rate(item, params, parsed):
 
 
 check_info["jolokia_generic.rate"] = LegacyCheckDefinition(
+    service_name="JVM %s",
     discovery_function=discover_type("rate"),
     check_function=check_jolokia_generic_rate,
-    service_name="JVM %s",
     check_ruleset_name="generic_rate",
 )
 
@@ -121,9 +121,9 @@ def check_jolokia_generic(item, params, parsed):
 
 
 check_info["jolokia_generic"] = LegacyCheckDefinition(
-    discovery_function=discover_type("number"),
-    check_function=check_jolokia_generic,
     parse_function=parse_jolokia_generic,
     service_name="JVM %s",
+    discovery_function=discover_type("number"),
+    check_function=check_jolokia_generic,
     check_ruleset_name="generic_number",
 )

@@ -43,6 +43,6 @@ def discover_jolokia_info(section):
 check_info["jolokia_info"] = LegacyCheckDefinition(
     parse_function=parse_jolokia_info,
     service_name="JVM %s",
-    check_function=check_jolokia_info,
     discovery_function=discover_jolokia_info,
+    check_function=check_jolokia_info,
 )

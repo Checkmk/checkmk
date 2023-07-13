@@ -119,15 +119,14 @@ def check_juniper_fru(item, _no_params, parsed):
 
 check_info["juniper_fru"] = LegacyCheckDefinition(
     detect=DETECT_JUNIPER,
-    parse_function=parse_juniper_fru,
-    discovery_function=lambda info: inventory_juniper_fru(info, ("7", "18")),
-    check_function=check_juniper_fru,
-    service_name="Power Supply FRU %s",
-    # Use utils.juniper.DETECT when migrating
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2636.3.1.15.1",
         oids=["5", "6", "8"],
     ),
+    parse_function=parse_juniper_fru,
+    service_name="Power Supply FRU %s",
+    discovery_function=lambda info: inventory_juniper_fru(info, ("7", "18")),
+    check_function=check_juniper_fru,
 )
 
 # .
@@ -141,7 +140,7 @@ check_info["juniper_fru"] = LegacyCheckDefinition(
 #   '----------------------------------------------------------------------'
 
 check_info["juniper_fru.fan"] = LegacyCheckDefinition(
+    service_name="Fan FRU %s",
     discovery_function=lambda info: inventory_juniper_fru(info, ("13",)),
     check_function=check_juniper_fru,
-    service_name="Fan FRU %s",
 )

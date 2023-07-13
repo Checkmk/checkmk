@@ -145,8 +145,8 @@ def _get_as_int(data, key):
 
 check_info["mongodb_replication_info"] = LegacyCheckDefinition(
     parse_function=parse_mongodb_replication_info,
+    service_name="MongoDB Replication Info",
     discovery_function=discover_mongodb_replication_info,
     check_function=check_mongodb_replication_info,
-    service_name="MongoDB Replication Info",
     check_ruleset_name="mongodb_replication_info",
 )

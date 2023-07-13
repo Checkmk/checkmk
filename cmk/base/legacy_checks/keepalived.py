@@ -51,9 +51,6 @@ def check_keepalived(item, params, info):
 
 check_info["keepalived"] = LegacyCheckDefinition(
     detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "linux"), exists(".1.3.6.1.4.1.9586.100.5.1.1.0")),
-    discovery_function=inventory_keepalived,
-    check_function=check_keepalived,
-    service_name="VRRP Instance %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9586.100.5.2.3.1",
@@ -64,6 +61,9 @@ check_info["keepalived"] = LegacyCheckDefinition(
             oids=["3"],
         ),
     ],
+    service_name="VRRP Instance %s",
+    discovery_function=inventory_keepalived,
+    check_function=check_keepalived,
     check_ruleset_name="keepalived",
     check_default_parameters={
         "master": "0",

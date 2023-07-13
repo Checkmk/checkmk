@@ -61,9 +61,9 @@ def check_oracle_recovery_area(item, params, info):
 
 
 check_info["oracle_recovery_area"] = LegacyCheckDefinition(
-    check_function=check_oracle_recovery_area,
-    discovery_function=inventory_oracle_recovery_area,
     service_name="ORA %s Recovery Area",
+    discovery_function=inventory_oracle_recovery_area,
+    check_function=check_oracle_recovery_area,
     check_ruleset_name="oracle_recovery_area",
     check_default_parameters={
         "levels": (70.0, 90.0),

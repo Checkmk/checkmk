@@ -15,12 +15,12 @@ from cmk.base.plugins.agent_based.utils.juniper import DETECT_JUNIPER_TRPZ
 
 check_info["juniper_trpz_mem"] = LegacyCheckDefinition(
     detect=DETECT_JUNIPER_TRPZ,
-    check_function=check_juniper_mem_generic,
-    discovery_function=inventory_juniper_mem_generic,
-    service_name="Memory",
-    check_ruleset_name="juniper_mem",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14525.4.8.1.1",
         oids=["12.1", "6"],
     ),
+    service_name="Memory",
+    discovery_function=inventory_juniper_mem_generic,
+    check_function=check_juniper_mem_generic,
+    check_ruleset_name="juniper_mem",
 )

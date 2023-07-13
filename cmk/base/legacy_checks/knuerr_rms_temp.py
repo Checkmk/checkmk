@@ -21,13 +21,13 @@ def check_knuerr_rms_temp(_no_item, params, info):
 
 check_info["knuerr_rms_temp"] = LegacyCheckDefinition(
     detect=DETECT_KNUERR,
-    check_function=check_knuerr_rms_temp,
-    discovery_function=inventory_knuerr_rms_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3711.15.1.1.1.1",
         oids=["4"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_knuerr_rms_temp,
+    check_function=check_knuerr_rms_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (30.0, 35.0),

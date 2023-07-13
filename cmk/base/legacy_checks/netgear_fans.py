@@ -123,10 +123,6 @@ def check_netgear_fans(item, params, parsed):
 
 check_info["netgear_fans"] = LegacyCheckDefinition(
     detect=DETECT_NETGEAR,
-    parse_function=parse_netgear_fans,
-    discovery_function=inventory_netgear_fans,
-    check_function=check_netgear_fans,
-    service_name="Fan %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.4526.10.1.1.1",
@@ -137,6 +133,10 @@ check_info["netgear_fans"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "3", "4"],
         ),
     ],
+    parse_function=parse_netgear_fans,
+    service_name="Fan %s",
+    discovery_function=inventory_netgear_fans,
+    check_function=check_netgear_fans,
     check_ruleset_name="hw_fans",
     check_default_parameters={
         "lower": (1500, 1200),

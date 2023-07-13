@@ -44,12 +44,12 @@ def check_netgear_powersupplies(item, params, parsed):
 
 check_info["netgear_powersupplies"] = LegacyCheckDefinition(
     detect=DETECT_NETGEAR,
-    parse_function=parse_netgear_powersupplies,
-    discovery_function=inventory_netgear_powersupplies,
-    check_function=check_netgear_powersupplies,
-    service_name="Power Supply %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.4526.10.43.1.7.1",
         oids=[OIDEnd(), "3"],
     ),
+    parse_function=parse_netgear_powersupplies,
+    service_name="Power Supply %s",
+    discovery_function=inventory_netgear_powersupplies,
+    check_function=check_netgear_powersupplies,
 )

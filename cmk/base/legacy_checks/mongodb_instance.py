@@ -25,7 +25,7 @@ def check_mongodb_instance(_no_item, _no_params, info):
 
 
 check_info["mongodb_instance"] = LegacyCheckDefinition(
-    check_function=check_mongodb_instance,
-    discovery_function=inventory_mongodb_instance,
     service_name="MongoDB Instance",
+    discovery_function=inventory_mongodb_instance,
+    check_function=check_mongodb_instance,
 )

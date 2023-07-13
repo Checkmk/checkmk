@@ -51,7 +51,7 @@ def check_netapp_api_vs_status(item, _no_params, parsed):
 
 check_info["netapp_api_vs_status"] = LegacyCheckDefinition(
     parse_function=parse_netapp_api_vs_status,
+    service_name="vServer Status %s",
     discovery_function=discover_netapp_api_vs_status,
     check_function=check_netapp_api_vs_status,
-    service_name="vServer Status %s",
 )

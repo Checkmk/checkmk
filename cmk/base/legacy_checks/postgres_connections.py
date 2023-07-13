@@ -124,9 +124,9 @@ def check_postgres_connections(item, params, parsed):
 
 check_info["postgres_connections"] = LegacyCheckDefinition(
     parse_function=postgres.parse_dbs,
-    check_function=check_postgres_connections,
-    discovery_function=inventory_postgres_connections,
     service_name="PostgreSQL Connections %s",
+    discovery_function=inventory_postgres_connections,
+    check_function=check_postgres_connections,
     check_ruleset_name="db_connections",
     check_default_parameters={
         "levels_perc_active": (80.0, 90.0),  # Levels at 80%/90% of maximum

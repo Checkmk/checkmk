@@ -261,9 +261,9 @@ def check_oracle_jobs(item, params, info):  # pylint: disable=too-many-branches
 
 check_info["oracle_jobs"] = LegacyCheckDefinition(
     service_name="ORA %s Job",
-    check_ruleset_name="oracle_jobs",
-    check_function=check_oracle_jobs,
     discovery_function=inventory_oracle_jobs,
+    check_function=check_oracle_jobs,
+    check_ruleset_name="oracle_jobs",
     check_default_parameters={
         "consider_job_status": "ignore",
         "missinglog": 1,

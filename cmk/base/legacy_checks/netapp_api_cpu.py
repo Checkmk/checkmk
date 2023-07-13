@@ -70,21 +70,21 @@ def check_netapp_api_cpu_utilization(item, params, parsed, mode):
 
 # Clustermode CPU utilization
 check_info["netapp_api_cpu"] = LegacyCheckDefinition(
+    service_name="CPU utilization Node %s",
     discovery_function=inventory_netapp_api_cpu,
     check_function=lambda item, params, parsed: check_netapp_api_cpu_utilization(
         item, params, parsed, "clustermode"
     ),
-    service_name="CPU utilization Node %s",
     check_ruleset_name="cpu_utilization_multiitem",
 )
 
 # 7Mode CPU utilization
 check_info["netapp_api_cpu.utilization"] = LegacyCheckDefinition(
+    service_name="CPU utilization",
     discovery_function=inventory_netapp_api_cpu_utilization,
     check_function=lambda item, params, parsed: check_netapp_api_cpu_utilization(
         item, params, parsed, "7mode"
     ),
-    service_name="CPU utilization",
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (90.0, 95.0)},
 )
@@ -120,7 +120,7 @@ def check_netapp_api_nvram_bat(item, _no_params, parsed):
 
 # Clustermode NVRAM Bat
 check_info["netapp_api_cpu.nvram_bat"] = LegacyCheckDefinition(
+    service_name="NVRAM Battery %s",
     discovery_function=inventory_netapp_api_nvram_bat,
     check_function=check_netapp_api_nvram_bat,
-    service_name="NVRAM Battery %s",
 )

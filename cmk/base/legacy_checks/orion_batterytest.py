@@ -37,11 +37,11 @@ def check_orion_batterytest(item, params, info):
 
 check_info["orion_batterytest"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.20246"),
-    discovery_function=inventory_orion_batterytest,
-    check_function=check_orion_batterytest,
-    service_name="Battery Test",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.20246.2.3.1.1.1.2.5.2.2",
         oids=["1", "2"],
     ),
+    service_name="Battery Test",
+    discovery_function=inventory_orion_batterytest,
+    check_function=check_orion_batterytest,
 )

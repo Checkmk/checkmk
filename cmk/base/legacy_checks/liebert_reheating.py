@@ -29,14 +29,14 @@ def check_liebert_reheating(_no_item, params, parsed):
 
 check_info["liebert_reheating"] = LegacyCheckDefinition(
     detect=DETECT_LIEBERT,
-    parse_function=parse_liebert_float,
-    discovery_function=inventory_liebert_reheating,
-    check_function=check_liebert_reheating,
-    service_name="Reheating Utilization",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.476.1.42.3.9.20.1",
         oids=["10.1.2.1.5080", "20.1.2.1.5080", "30.1.2.1.5080"],
     ),
+    parse_function=parse_liebert_float,
+    service_name="Reheating Utilization",
+    discovery_function=inventory_liebert_reheating,
+    check_function=check_liebert_reheating,
     check_default_parameters={
         "levels": (80, 90),
     },

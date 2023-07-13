@@ -86,11 +86,11 @@ def check_mbg_lantime_refclock(item, params, info):
 
 check_info["mbg_lantime_refclock"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5597.3"),
-    check_function=check_mbg_lantime_refclock,
-    discovery_function=inventory_mbg_lantime_refclock,
-    service_name="LANTIME Refclock",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.5597.3.2",
         oids=["4", "6", "7", "9", "10", "16"],
     ),
+    service_name="LANTIME Refclock",
+    discovery_function=inventory_mbg_lantime_refclock,
+    check_function=check_mbg_lantime_refclock,
 )

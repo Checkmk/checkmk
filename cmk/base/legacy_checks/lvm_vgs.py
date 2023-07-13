@@ -24,9 +24,9 @@ def check_lvm_vgs(item, params, info):
 
 
 check_info["lvm_vgs"] = LegacyCheckDefinition(
-    check_function=check_lvm_vgs,
-    discovery_function=inventory_lvm_vgs,
     service_name="LVM VG %s",
+    discovery_function=inventory_lvm_vgs,
+    check_function=check_lvm_vgs,
     check_ruleset_name="volume_groups",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

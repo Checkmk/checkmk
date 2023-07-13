@@ -37,10 +37,9 @@ def check_lparstat(_no_item, _no_params, section: Section):
 
 
 check_info["lparstat_aix"] = LegacyCheckDefinition(
-    # section migrated already!
-    check_function=check_lparstat,
-    discovery_function=inventory_lparstat,
     service_name="lparstat",
+    discovery_function=inventory_lparstat,
+    check_function=check_lparstat,
 )
 
 
@@ -89,9 +88,8 @@ def check_lparstat_aix_cpu(_no_item, params, section: Section):
 
 
 check_info["lparstat_aix.cpu_util"] = LegacyCheckDefinition(
-    # section migrated already!
-    check_function=check_lparstat_aix_cpu,
-    discovery_function=inventory_lparstat_aix_cpu,
     service_name="CPU utilization",
+    discovery_function=inventory_lparstat_aix_cpu,
+    check_function=check_lparstat_aix_cpu,
     check_ruleset_name="cpu_iowait",
 )

@@ -41,10 +41,10 @@ def check_msexch_isstore(item, params, parsed):
 
 
 check_info["msexch_isstore"] = LegacyCheckDefinition(
-    discovery_function=discover_msexch_isstore,
-    check_function=check_msexch_isstore,
     parse_function=parse_wmi_table,
     service_name="Exchange IS Store %s",
+    discovery_function=discover_msexch_isstore,
+    check_function=check_msexch_isstore,
     check_ruleset_name="msx_info_store",
     check_default_parameters={
         # attention! those three dictionaries are tuples when returned by wato!

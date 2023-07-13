@@ -80,7 +80,7 @@ class SNMPFetcher(Fetcher[HostSection[Sequence[SNMPRawData]]]):
         self.missing_sys_description: Final = missing_sys_description
         self.do_status_data_inventory: Final = do_status_data_inventory
         self.snmp_config: Final = snmp_config
-        self._section_store = SectionStore[SNMPRawData](
+        self._section_store = SectionStore[Sequence[SNMPRawData]](
             section_store_path,
             logger=self._logger,
         )

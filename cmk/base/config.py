@@ -2424,7 +2424,7 @@ class ConfigCache:
     def make_agent_parser(
         self,
         host_name: HostName,
-        section_store: SectionStore[AgentRawDataSection],
+        section_store: SectionStore[Sequence[AgentRawDataSection]],
         *,
         keep_outdated: bool,
         logger: logging.Logger,

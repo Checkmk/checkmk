@@ -474,7 +474,7 @@ class AgentParser(Parser[AgentRawData, HostSections[AgentRawDataSection]]):
     def __init__(
         self,
         hostname: HostName,
-        section_store: SectionStore[AgentRawDataSection],
+        section_store: SectionStore[Sequence[AgentRawDataSection]],
         *,
         check_interval: int,
         keep_outdated: bool,

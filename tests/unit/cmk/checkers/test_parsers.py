@@ -55,11 +55,14 @@ class TestAgentParser:
 
     @pytest.fixture
     def store(self, store_path, logger):
-        return SectionStore[AgentRawDataSection](store_path, logger=logger)
+        return SectionStore[Sequence[AgentRawDataSection]](store_path, logger=logger)
 
     @pytest.fixture
     def parser(
-        self, hostname: HostName, store: SectionStore[AgentRawDataSection], logger: logging.Logger
+        self,
+        hostname: HostName,
+        store: SectionStore[Sequence[AgentRawDataSection]],
+        logger: logging.Logger,
     ) -> AgentParser:
         return AgentParser(
             hostname,
@@ -73,7 +76,7 @@ class TestAgentParser:
         )
 
     def test_missing_host_header(
-        self, parser: AgentParser, store: SectionStore[AgentRawDataSection]
+        self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSection]]
     ) -> None:
         raw_data = AgentRawData(
             b"\n".join(
@@ -92,7 +95,10 @@ class TestAgentParser:
         assert not store.load()
 
     def test_piggy_name_as_hostname_is_not_piggybacked(
-        self, parser: AgentParser, store: SectionStore[AgentRawDataSection], hostname: HostName
+        self,
+        parser: AgentParser,
+        store: SectionStore[Sequence[AgentRawDataSection]],
+        hostname: HostName,
     ) -> None:
         host_name_bytes = str(hostname).encode("ascii")
         raw_data = AgentRawData(
@@ -113,7 +119,7 @@ class TestAgentParser:
         assert not store.load()
 
     def test_no_section_header_after_piggyback(
-        self, parser: AgentParser, store: SectionStore[AgentRawDataSection]
+        self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSection]]
     ) -> None:
         raw_data = AgentRawData(
             b"\n".join(
@@ -133,7 +139,7 @@ class TestAgentParser:
         assert not store.load()
 
     def test_raw_section_populates_sections(
-        self, parser: AgentParser, store: SectionStore[AgentRawDataSection]
+        self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSection]]
     ) -> None:
         raw_data = AgentRawData(
             b"\n".join(
@@ -160,7 +166,7 @@ class TestAgentParser:
         assert not store.load()
 
     def test_partial_header_is_not_a_header(
-        self, parser: AgentParser, store: SectionStore[AgentRawDataSection]
+        self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSection]]
     ) -> None:
         raw_data = AgentRawData(
             b"\n".join(
@@ -188,7 +194,7 @@ class TestAgentParser:
         assert not store.load()
 
     def test_merge_split_raw_sections(
-        self, parser: AgentParser, store: SectionStore[AgentRawDataSection]
+        self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSection]]
     ) -> None:
         raw_data = AgentRawData(
             b"\n".join(
@@ -234,7 +240,7 @@ class TestAgentParser:
         assert not store.load()
 
     def test_nameless_sections_are_skipped(
-        self, parser: AgentParser, store: SectionStore[AgentRawDataSection]
+        self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSection]]
     ) -> None:
         raw_data = AgentRawData(
             b"\n".join(
@@ -271,7 +277,7 @@ class TestAgentParser:
     def test_nameless_piggybacked_sections_are_skipped(
         self,
         parser: AgentParser,
-        store: SectionStore[AgentRawDataSection],
+        store: SectionStore[Sequence[AgentRawDataSection]],
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
@@ -315,7 +321,7 @@ class TestAgentParser:
         assert not store.load()
 
     def test_closing_piggyback_out_of_piggyback_section_closes_section(
-        self, parser: AgentParser, store: SectionStore[AgentRawDataSection]
+        self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSection]]
     ) -> None:
         raw_data = AgentRawData(
             b"\n".join(
@@ -350,7 +356,7 @@ class TestAgentParser:
     def test_piggyback_populates_piggyback_raw_data(
         self,
         parser: AgentParser,
-        store: SectionStore[AgentRawDataSection],
+        store: SectionStore[Sequence[AgentRawDataSection]],
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
@@ -414,7 +420,7 @@ class TestAgentParser:
     def test_merge_split_piggyback_sections(
         self,
         parser: AgentParser,
-        store: SectionStore[AgentRawDataSection],
+        store: SectionStore[Sequence[AgentRawDataSection]],
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
@@ -467,7 +473,7 @@ class TestAgentParser:
     def test_persist_option_populates_cache_info(
         self,
         parser: AgentParser,
-        store: SectionStore[AgentRawDataSection],
+        store: SectionStore[Sequence[AgentRawDataSection]],
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
@@ -494,7 +500,7 @@ class TestAgentParser:
     def test_persist_option_and_persisted_sections(
         self,
         parser: AgentParser,
-        store: SectionStore[AgentRawDataSection],
+        store: SectionStore[Sequence[AgentRawDataSection]],
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
@@ -536,7 +542,7 @@ class TestAgentParser:
     def test_section_filtering_and_merging_host(
         self,
         parser: AgentParser,
-        store: SectionStore[AgentRawDataSection],
+        store: SectionStore[Sequence[AgentRawDataSection]],
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
@@ -587,7 +593,7 @@ class TestAgentParser:
     def test_section_filtering_and_merging_piggyback(
         self,
         parser: AgentParser,
-        store: SectionStore[AgentRawDataSection],
+        store: SectionStore[Sequence[AgentRawDataSection]],
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         monkeypatch.setattr(time, "time", lambda c=itertools.count(1000, 50): next(c))
@@ -628,7 +634,7 @@ class TestAgentParser:
         assert not store.load()
 
     def test_section_lines_are_correctly_ordered_with_different_separators(
-        self, parser: AgentParser, store: SectionStore[AgentRawDataSection]
+        self, parser: AgentParser, store: SectionStore[Sequence[AgentRawDataSection]]
     ) -> None:
         raw_data = AgentRawData(
             b"\n".join(

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import logging
-from collections.abc import Callable, MutableMapping, Sequence
+from collections.abc import Callable, MutableMapping
 from pathlib import Path
 from typing import Final, Generic, TypeVar
 
@@ -30,7 +30,7 @@ class SectionStore(Generic[_T]):
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.path!r}, logger={self._logger!r})"
 
-    def store(self, sections: MutableMapping[SectionName, tuple[int, int, Sequence[_T]]]) -> None:
+    def store(self, sections: MutableMapping[SectionName, tuple[int, int, _T]]) -> None:
         if not sections:
             self._logger.debug("No persisted sections")
             self.path.unlink(missing_ok=True)
@@ -44,18 +44,18 @@ class SectionStore(Generic[_T]):
         )
         self._logger.debug("Stored persisted sections: %s", ", ".join(str(s) for s in sections))
 
-    def load(self) -> MutableMapping[SectionName, tuple[int, int, Sequence[_T]]]:
+    def load(self) -> MutableMapping[SectionName, tuple[int, int, _T]]:
         raw_sections_data = _store.load_object_from_file(self.path, default={})
         return {SectionName(k): v for k, v in raw_sections_data.items()}
 
     def update(
         self,
-        sections: HostSection[Sequence[_T]],
+        sections: HostSection[_T],
         cache_info: MutableMapping[SectionName, tuple[int, int]],
         lookup_persist: Callable[[SectionName], tuple[int, int] | None],
         now: int,
         keep_outdated: bool,
-    ) -> HostSection[Sequence[_T]]:
+    ) -> HostSection[_T]:
         persisted_sections = self._update(
             sections,
             lookup_persist,
@@ -70,12 +70,12 @@ class SectionStore(Generic[_T]):
 
     def _update(
         self,
-        sections: HostSection[Sequence[_T]],
+        sections: HostSection[_T],
         lookup_persist: Callable[[SectionName], tuple[int, int] | None],
         *,
         now: int,
         keep_outdated: bool,
-    ) -> MutableMapping[SectionName, tuple[int, int, Sequence[_T]]]:
+    ) -> MutableMapping[SectionName, tuple[int, int, _T]]:
         # TODO: This is not race condition free when modifying the data. Either remove
         # the possible write here and simply ignore the outdated sections or lock when
         # reading and unlock after writing
@@ -98,10 +98,10 @@ class SectionStore(Generic[_T]):
 
     def _add_persisted_sections(
         self,
-        sections: HostSection[Sequence[_T]],
+        sections: HostSection[_T],
         cache_info: MutableMapping[SectionName, tuple[int, int]],
-        persisted_sections: MutableMapping[SectionName, tuple[int, int, Sequence[_T]]],
-    ) -> HostSection[Sequence[_T]]:
+        persisted_sections: MutableMapping[SectionName, tuple[int, int, _T]],
+    ) -> HostSection[_T]:
         cache_info.update(
             {
                 section_name: (created_at, valid_until - created_at)
@@ -109,7 +109,7 @@ class SectionStore(Generic[_T]):
                 if section_name not in sections
             }
         )
-        result: MutableMapping[SectionName, Sequence[_T]] = dict(sections.items())
+        result: MutableMapping[SectionName, _T] = dict(sections.items())
         for section_name, entry in persisted_sections.items():
             if len(entry) == 2:
                 continue  # Skip entries of "old" format

@@ -63,7 +63,7 @@ def make_parser(
     if source.fetcher_type is FetcherType.SNMP:
         return SNMPParser(
             hostname,
-            SectionStore[SNMPRawData](
+            SectionStore[Sequence[SNMPRawData]](
                 make_persisted_section_dir(
                     source.hostname,
                     fetcher_type=source.fetcher_type,
@@ -81,7 +81,7 @@ def make_parser(
 
     return config_cache.make_agent_parser(
         hostname,
-        SectionStore[AgentRawDataSection](
+        SectionStore[Sequence[AgentRawDataSection]](
             make_persisted_section_dir(
                 source.hostname, fetcher_type=source.fetcher_type, ident=source.ident
             ),

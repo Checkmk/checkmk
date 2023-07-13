@@ -33,7 +33,7 @@ class SNMPParser(Parser[HostSection[Sequence[SNMPRawData]], HostSections[SNMPRaw
     def __init__(
         self,
         hostname: HostName,
-        section_store: SectionStore[SNMPRawData],
+        section_store: SectionStore[Sequence[SNMPRawData]],
         *,
         check_intervals: Mapping[SectionName, int | None],
         keep_outdated: bool,

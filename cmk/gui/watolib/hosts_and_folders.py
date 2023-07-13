@@ -2658,7 +2658,7 @@ class CREFolder(BaseFolder):
     # | HTML Generation                                                       |
     # '-----------------------------------------------------------------------'
 
-    def show_locking_information(self):
+    def show_locking_information(self) -> None:
         self._load_hosts_on_demand()
         lock_messages: list[str] = []
 

@@ -57,7 +57,7 @@ class ModeBulkDiscovery(WatoMode):
     def parent_mode(cls) -> type[WatoMode] | None:
         return ModeFolder
 
-    def _from_vars(self):
+    def _from_vars(self) -> None:
         self._start = bool(request.var("_save"))
         self._all = bool(request.var("all"))
         self._just_started = False
@@ -65,7 +65,7 @@ class ModeBulkDiscovery(WatoMode):
         self._job = BulkDiscoveryBackgroundJob()
         self._folder = disk_or_search_folder_from_request()
 
-    def _get_bulk_discovery_params(self):
+    def _get_bulk_discovery_params(self) -> None:
         self._bulk_discovery_params = copy.deepcopy(active_config.bulk_discovery_default_settings)
 
         if self._start:
@@ -146,7 +146,7 @@ class ModeBulkDiscovery(WatoMode):
 
         self._show_start_form()
 
-    def _show_start_form(self):
+    def _show_start_form(self) -> None:
         html.begin_form("bulkinventory", method="POST")
 
         msgs = []
@@ -241,7 +241,7 @@ class ModeBulkDiscovery(WatoMode):
                 entries += self._recurse_hosts(subfolder)
         return entries
 
-    def _find_hosts_with_failed_discovery_check(self):
+    def _find_hosts_with_failed_discovery_check(self) -> list[HostName]:
         # Old service name "Check_MK inventory" needs to be kept because old
         # installations may still use that name
         return sites.live().query_column(
@@ -253,7 +253,7 @@ class ModeBulkDiscovery(WatoMode):
             "Columns: host_name"
         )
 
-    def _find_hosts_with_failed_agent(self):
+    def _find_hosts_with_failed_agent(self) -> list[HostName]:
         return sites.live().query_column(
             "GET services\n"
             "Filter: description = Check_MK\n"

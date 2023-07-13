@@ -18,8 +18,14 @@ from cmk.gui.utils.urls import makeuri_contextless
 
 
 class MenuItem:
-    def __init__(  # type: ignore[no-untyped-def]
-        self, mode_or_url, title, icon, permission, description, sort_index=20
+    def __init__(
+        self,
+        mode_or_url: str,
+        title: str,
+        icon: Icon,
+        permission: str | None,
+        description: str,
+        sort_index: int = 20,
     ) -> None:
         self._mode_or_url = mode_or_url
         self._title = title
@@ -56,7 +62,7 @@ class MenuItem:
     def enabled(self) -> bool:
         return True
 
-    def may_see(self):
+    def may_see(self) -> bool:
         """Whether or not the currently logged in user is allowed to see this module"""
         if not self.enabled:
             return False
@@ -71,7 +77,7 @@ class MenuItem:
 
         return user.may(permission) or user.may("wato.seeall")
 
-    def get_url(self):
+    def get_url(self) -> str:
         mode_or_url = self.mode_or_url
         if "?" in mode_or_url or "/" in mode_or_url or mode_or_url.endswith(".py"):
             return mode_or_url
@@ -111,12 +117,11 @@ class ABCMainModule(MenuItem, abc.ABC):
     def __init__(self) -> None:
         # TODO: Cleanup hierarchy
         super().__init__(
-            mode_or_url=None,
-            title=None,
-            icon=None,
+            mode_or_url="",
+            title="",
+            icon="menu",
             permission=None,
-            description=None,
-            sort_index=None,
+            description="",
         )
 
     @property
@@ -172,7 +177,7 @@ class ABCMainModule(MenuItem, abc.ABC):
 
 
 class MainModuleRegistry(cmk.utils.plugin_registry.Registry[type[ABCMainModule]]):
-    def plugin_name(self, instance):
+    def plugin_name(self, instance: type[ABCMainModule]) -> str:
         return instance().mode_or_url
 
 

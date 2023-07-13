@@ -6,7 +6,7 @@
 cleanup is implemented here: the bulk removal of explicit attribute
 values."""
 
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from hashlib import sha256
 
 import cmk.gui.forms as forms
@@ -27,9 +27,14 @@ from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.flashed_messages import flash
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.wato.pages.folders import ModeFolder
-from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
+from cmk.gui.watolib.host_attributes import (
+    ABCHostAttribute,
+    collect_attributes,
+    host_attribute_registry,
+)
 from cmk.gui.watolib.hosts_and_folders import (
     CREFolder,
+    CREHost,
     disk_or_search_folder_from_request,
     SearchFolder,
 )
@@ -174,7 +179,7 @@ class ModeBulkCleanup(WatoMode):
 
         return redirect(self._folder.url())
 
-    def _bulk_collect_cleaned_attributes(self):
+    def _bulk_collect_cleaned_attributes(self) -> list[str]:
         to_clean = []
         for attr in host_attribute_registry.attributes():
             attrname = attr.name()
@@ -201,7 +206,7 @@ class ModeBulkCleanup(WatoMode):
         html.hidden_fields()
         html.end_form()
 
-    def _select_attributes_for_bulk_cleanup(self, hosts):
+    def _select_attributes_for_bulk_cleanup(self, hosts: Sequence[CREHost]) -> None:
         attributes = self._get_attributes_for_bulk_cleanup(hosts)
 
         for attr, is_inherited, num_haveit in attributes:
@@ -227,7 +232,9 @@ class ModeBulkCleanup(WatoMode):
         if not attributes:
             html.write_text(_("The selected hosts have no explicit attributes"))
 
-    def _get_attributes_for_bulk_cleanup(self, hosts):
+    def _get_attributes_for_bulk_cleanup(
+        self, hosts: Sequence[CREHost]
+    ) -> list[tuple[ABCHostAttribute, bool, int]]:
         attributes = []
         for attr in host_attribute_registry.get_sorted_host_attributes():
             attrname = attr.name()

@@ -5,7 +5,7 @@
 """Mode for automatic scan of parents (similar to cmk --scan-parents)"""
 
 from collections.abc import Collection, Sequence
-from typing import Any, NamedTuple
+from typing import NamedTuple
 
 from livestatus import SiteId
 
@@ -47,15 +47,17 @@ from cmk.gui.watolib.check_mk_automations import scan_parents
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import (
     CREFolder,
+    CREHost,
     disk_or_search_base_folder_from_request,
     disk_or_search_folder_from_request,
     folder_tree,
+    SearchFolder,
 )
 
 
 class ParentScanTask(NamedTuple):
     site_id: SiteId
-    folder_path: Any
+    folder_path: str
     host_name: HostName
 
 
@@ -65,11 +67,17 @@ class ParentScanResult(NamedTuple):
     dns_name: HostName
 
 
+# select: 'noexplicit' -> no explicit parents
+#         'no'         -> no implicit parents
+#         'ignore'     -> not important
+SelectChoices = str  # Literal["noexplicit", "no", "ignore"]
+
+
 class ParentScanSettings(NamedTuple):
     where: str
     alias: str
     recurse: bool
-    select: str
+    select: SelectChoices
     timeout: int
     probes: int
     max_ttl: int
@@ -83,7 +91,7 @@ class ParentScanBackgroundJob(BackgroundJob):
     job_prefix = "parent_scan"
 
     @classmethod
-    def gui_title(cls):
+    def gui_title(cls) -> str:
         return _("Parent scan")
 
     def __init__(self) -> None:
@@ -96,7 +104,7 @@ class ParentScanBackgroundJob(BackgroundJob):
             ),
         )
 
-    def _back_url(self):
+    def _back_url(self) -> str:
         return disk_or_search_folder_from_request().url()
 
     def do_execute(
@@ -370,7 +378,7 @@ class ModeParentScan(WatoMode):
 
         return menu
 
-    def _from_vars(self):
+    def _from_vars(self) -> None:
         self._start = bool(request.var("_start"))
         # 'all' not set -> only scan checked hosts in current folder, no recursion
         # otherwise: all host in this folder, maybe recursively
@@ -434,10 +442,7 @@ class ModeParentScan(WatoMode):
             tasks.append(ParentScanTask(host.site_id(), host.folder().path(), host.name()))
         return tasks
 
-    # select: 'noexplicit' -> no explicit parents
-    #         'no'         -> no implicit parents
-    #         'ignore'     -> not important
-    def _include_host(self, host, select):
+    def _include_host(self, host: CREHost, select: SelectChoices) -> bool:
         if select == "noexplicit" and "parents" in host.attributes:
             return False
         if select == "no":
@@ -445,7 +450,9 @@ class ModeParentScan(WatoMode):
                 return False
         return True
 
-    def _recurse_hosts(self, folder, recurse, select):
+    def _recurse_hosts(
+        self, folder: CREFolder | SearchFolder, recurse: bool, select: SelectChoices
+    ) -> list[CREHost]:
         entries = []
         for host in folder.hosts().values():
             if self._include_host(host, select):
@@ -467,7 +474,7 @@ class ModeParentScan(WatoMode):
         self._show_start_form()
 
     # TODO: Refactor to be valuespec based
-    def _show_start_form(self):
+    def _show_start_form(self) -> None:
         html.begin_form("parentscan", method="POST")
         html.hidden_fields()
 

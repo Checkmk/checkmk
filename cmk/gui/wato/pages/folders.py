@@ -6,10 +6,13 @@
 
 import abc
 import operator
-from collections.abc import Collection, Iterator, Sequence
-from typing import Any
+from collections.abc import Collection, Iterator, Mapping, Sequence
+from typing import TypeVar
 
 from cmk.utils.hostaddress import HostName
+from cmk.utils.labels import Labels
+from cmk.utils.store.host_storage import ContactgroupName
+from cmk.utils.tags import TagGroupID, TagID
 
 import cmk.gui.forms as forms
 import cmk.gui.view_utils
@@ -17,7 +20,7 @@ import cmk.gui.weblib as weblib
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
-from cmk.gui.groups import load_contact_group_information
+from cmk.gui.groups import GroupSpecs, load_contact_group_information
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import mandatory_parameter, request
@@ -69,7 +72,11 @@ from cmk.gui.valuespec import DropdownChoice, TextInput, ValueSpec, WatoFolderCh
 from cmk.gui.watolib.agent_registration import remove_tls_registration
 from cmk.gui.watolib.audit_log_url import make_object_audit_log_url
 from cmk.gui.watolib.check_mk_automations import delete_hosts
-from cmk.gui.watolib.host_attributes import collect_attributes, host_attribute_registry
+from cmk.gui.watolib.host_attributes import (
+    collect_attributes,
+    host_attribute_registry,
+    HostAttributes,
+)
 from cmk.gui.watolib.hosts_and_folders import (
     BaseFolder,
     check_wato_foldername,
@@ -84,6 +91,8 @@ from cmk.gui.watolib.hosts_and_folders import (
     SearchFolder,
 )
 from cmk.gui.watolib.main_menu import MenuItem
+
+TagsOrLabels = TypeVar("TagsOrLabels", Mapping[TagGroupID, TagID], Labels)
 
 
 def make_folder_breadcrumb(folder: CREFolder | SearchFolder) -> Breadcrumb:
@@ -123,7 +132,7 @@ class ModeFolder(WatoMode):
     def title(self) -> str:
         return self._folder.title()
 
-    def breadcrumb(self):
+    def breadcrumb(self) -> Breadcrumb:
         return make_folder_breadcrumb(self._folder)
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -641,7 +650,7 @@ class ModeFolder(WatoMode):
             elif not self._folder.has_subfolders() and self._folder.permissions.may("write"):
                 self._show_empty_folder_menu()
 
-    def _show_empty_folder_menu(self):
+    def _show_empty_folder_menu(self) -> None:
         menu_items = []
 
         if not self._folder.locked_hosts():
@@ -910,7 +919,7 @@ class ModeFolder(WatoMode):
         hostname: HostName,
         colspan: int,
         host_errors: dict[HostName, list[str]],
-        contact_group_names: dict[str, dict[str, Any]],
+        contact_group_names: GroupSpecs,
     ) -> None:
         host = self._folder.load_host(hostname)
         rendered_hosts.append(hostname)
@@ -1028,7 +1037,7 @@ class ModeFolder(WatoMode):
             table.cell(_("Folder"))
             html.a(host.folder().alias_path(), href=host.folder().url())
 
-    def _limit_labels(self, labels):
+    def _limit_labels(self, labels: TagsOrLabels) -> tuple[TagsOrLabels, HTML]:
         show_all, limit = HTML(""), 3
         if len(labels) > limit and request.var("_show_all") != "1":
             show_all = HTML(" ") + HTMLWriter.render_a(
@@ -1037,7 +1046,7 @@ class ModeFolder(WatoMode):
             labels = dict(sorted(labels.items())[:limit])
         return labels, show_all
 
-    def _render_contact_group(self, contact_group_names, c) -> HTML:  # type: ignore[no-untyped-def]
+    def _render_contact_group(self, contact_group_names: GroupSpecs, c: ContactgroupName) -> HTML:
         display_name = contact_group_names.get(c, {"alias": c})["alias"]
         return HTMLWriter.render_a(display_name, "wato.py?mode=edit_contact_group&edit=%s" % c)
 
@@ -1104,35 +1113,13 @@ class ModeFolder(WatoMode):
             html.button("_bulk_move", _("Move"), form=form_name)
             return HTML(output_funnel.drain())
 
-    def _create_target_folder_from_aliaspath(self, aliaspath):
-        # The alias path is a '/' separated path of folder titles.
-        # An empty path is interpreted as root path. The actual file
-        # name is the host list with the name "Hosts".
-        tree = folder_tree()
-        if aliaspath in ("", "/"):
-            folder = tree.root_folder()
-        else:
-            parts = aliaspath.strip("/").split("/")
-            folder = tree.root_folder()
-            while len(parts) > 0:
-                # Look in the current folder for a subfolder with the target title
-                subfolder = folder.subfolder_by_title(parts[0])
-                if subfolder is not None:
-                    folder = subfolder
-                else:
-                    name = BaseFolder.find_available_folder_name(parts[0], folder)
-                    folder = folder.create_subfolder(name, parts[0], {})
-                parts = parts[1:]
-
-        return folder
-
 
 # TODO: Split this into one base class and one subclass for folder and hosts
 @page_registry.register_page("ajax_popup_move_to_folder")
 class ModeAjaxPopupMoveToFolder(AjaxPage):
     """Renders the popup menu contents for either moving a host or a folder to another folder"""
 
-    def _from_vars(self):
+    def _from_vars(self) -> None:
         self._what = request.var("what")
         if self._what not in ["host", "folder"]:
             raise NotImplementedError()
@@ -1166,12 +1153,12 @@ class ModeAjaxPopupMoveToFolder(AjaxPage):
         )
         return None
 
-    def _move_title(self):
+    def _move_title(self) -> str:
         if self._what == "host":
             return _("Move this host to:")
         return _("Move this folder to:")
 
-    def _get_choices(self):
+    def _get_choices(self) -> Choices:
         choices: Choices = [
             ("@", _("(select target folder)")),
         ]
@@ -1202,13 +1189,13 @@ class ABCFolderMode(WatoMode, abc.ABC):
         self._folder = self._init_folder()
 
     @abc.abstractmethod
-    def _init_folder(self):
+    def _init_folder(self) -> CREFolder:
         # TODO: Needed to make pylint know the correct type of the return value.
         # Will be cleaned up in future when typing is established
         return folder_tree().root_folder()
 
     @abc.abstractmethod
-    def _save(self, title, attributes):
+    def _save(self, title: str, attributes: HostAttributes) -> None:
         raise NotImplementedError()
 
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
@@ -1309,13 +1296,13 @@ class ModeEditFolder(ABCFolderMode):
     def __init__(self) -> None:
         super().__init__(is_new=False)
 
-    def _init_folder(self):
+    def _init_folder(self) -> CREFolder:
         return folder_from_request()
 
     def title(self) -> str:
         return _("Folder properties")
 
-    def _save(self, title, attributes):
+    def _save(self, title: str, attributes: HostAttributes) -> None:
         self._folder.edit(title, attributes)
 
 
@@ -1332,13 +1319,13 @@ class ModeCreateFolder(ABCFolderMode):
     def __init__(self) -> None:
         super().__init__(is_new=True)
 
-    def _init_folder(self):
+    def _init_folder(self) -> CREFolder:
         return folder_tree().root_folder()
 
     def title(self) -> str:
         return _("Add folder")
 
-    def _save(self, title, attributes):
+    def _save(self, title: str, attributes: HostAttributes) -> None:
         if not active_config.wato_hide_filenames:
             name = request.get_ascii_input_mandatory("name", "").strip()
             check_wato_foldername("name", name)

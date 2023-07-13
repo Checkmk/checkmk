@@ -27,7 +27,12 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, Integer, Tuple, ValueSpec
 from cmk.gui.watolib.changes import add_service_change
 from cmk.gui.watolib.check_mk_automations import discovery
-from cmk.gui.watolib.hosts_and_folders import disk_or_search_folder_from_request, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import (
+    CREHost,
+    disk_or_search_folder_from_request,
+    folder_tree,
+    Host,
+)
 
 DiscoveryMode = NewType("DiscoveryMode", str)
 DoFullScan = NewType("DoFullScan", bool)
@@ -48,7 +53,7 @@ class DiscoveryTask(NamedTuple):
     host_names: list
 
 
-def vs_bulk_discovery(render_form=False, include_subfolders=True):
+def vs_bulk_discovery(render_form: bool = False, include_subfolders: bool = True) -> Dictionary:
     selection_elements: list[ValueSpec] = []
 
     if include_subfolders:
@@ -115,7 +120,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
     job_prefix = "bulk_discovery"
 
     @classmethod
-    def gui_title(cls):
+    def gui_title(cls) -> str:
         return _("Bulk Discovery")
 
     def __init__(self) -> None:
@@ -128,7 +133,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
             ),
         )
 
-    def _back_url(self):
+    def _back_url(self) -> str:
         return disk_or_search_folder_from_request().url()
 
     def do_execute(
@@ -174,7 +179,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
 
         job_interface.send_result_message(_("Bulk discovery successful"))
 
-    def _initialize_statistics(self, *, num_hosts_total: int):  # type: ignore[no-untyped-def]
+    def _initialize_statistics(self, *, num_hosts_total: int) -> None:
         self._num_hosts_total = num_hosts_total
         self._num_hosts_processed = 0
         self._num_hosts_succeeded = 0
@@ -187,14 +192,14 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         self._num_host_labels_total = 0
         self._num_host_labels_added = 0
 
-    def _bulk_discover_item(  # type: ignore[no-untyped-def]
+    def _bulk_discover_item(
         self,
         task: DiscoveryTask,
         mode: DiscoveryMode,
         do_scan: DoFullScan,
         ignore_errors: IgnoreErrors,
-        job_interface,
-    ):
+        job_interface: BackgroundProcessInterface,
+    ) -> None:
         try:
             response = discovery(
                 task.site_id,
@@ -234,7 +239,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
             for count, hostname in enumerate(task.host_names, self._num_hosts_processed + 1):
                 self._process_service_counts_for_host(response.hosts[hostname])
                 msg = self._process_discovery_result_for_host(
-                    folder.host(hostname), response.hosts[hostname]
+                    folder.load_host(hostname), response.hosts[hostname]
                 )
                 job_interface.send_progress_update(
                     f"[{count}/{self._num_hosts_total}] {hostname}: {msg}"
@@ -248,9 +253,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         self._num_host_labels_added += result.self_new_host_labels
         self._num_host_labels_total += result.self_total_host_labels
 
-    def _process_discovery_result_for_host(  # type: ignore[no-untyped-def]
-        self, host, result: DiscoveryResult
-    ) -> str:
+    def _process_discovery_result_for_host(self, host: CREHost, result: DiscoveryResult) -> str:
         if result.error_text == "":
             self._num_hosts_skipped += 1
             return _("discovery skipped: host not monitored")

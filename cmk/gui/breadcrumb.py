@@ -6,6 +6,7 @@
 
 Cares about rendering the breadcrumb which is shown at the top of all pages
 """
+from __future__ import annotations
 
 from collections.abc import Iterable, MutableSequence
 from typing import NamedTuple
@@ -41,7 +42,7 @@ class Breadcrumb(MutableSequence[BreadcrumbItem]):  # pylint: disable=too-many-a
     def insert(self, index, value):
         self._items.insert(index, value)
 
-    def __add__(self, other):
+    def __add__(self, other: Breadcrumb) -> Breadcrumb:
         return Breadcrumb(list(self) + list(other))
 
 

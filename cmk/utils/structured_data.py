@@ -134,6 +134,13 @@ class _RetentionInterval(NamedTuple):
     def keep_until(self) -> int:
         return self.cached_at + self.cache_interval + self.retention_interval
 
+    @classmethod
+    def deserialize(cls, raw_retention_interval: tuple[int, int, int]) -> _RetentionInterval:
+        return cls(*raw_retention_interval)
+
+    def serialize(self) -> tuple[int, int, int]:
+        return self.cached_at, self.cache_interval, self.retention_interval
+
 
 @dataclass(frozen=True)
 class UpdateResult:
@@ -430,13 +437,16 @@ class _MutableAttributes:
         if self.pairs:
             raw_attributes["Pairs"] = self.pairs
         if self.retentions:
-            raw_attributes["Retentions"] = self.retentions
+            raw_attributes["Retentions"] = {k: v.serialize() for k, v in self.retentions.items()}
         return raw_attributes
 
     @property
     def bare(self) -> SDBareAttributes:
         # Useful for debugging; no restrictions
-        return {"Pairs": self.pairs, "Retentions": self.retentions}
+        return {
+            "Pairs": self.pairs,
+            "Retentions": {k: v.serialize() for k, v in self.retentions.items()},
+        }
 
 
 @dataclass(kw_only=True)
@@ -577,7 +587,9 @@ class _MutableTable:
                 }
             )
         if self.retentions:
-            raw_table["Retentions"] = self.retentions
+            raw_table["Retentions"] = {
+                i: {k: v.serialize() for k, v in ri.items()} for i, ri in self.retentions.items()
+            }
         return raw_table
 
     @property
@@ -586,7 +598,9 @@ class _MutableTable:
         return {
             "KeyColumns": self.key_columns,
             "RowsByIdent": self.rows_by_ident,
-            "Retentions": self.retentions,
+            "Retentions": {
+                i: {k: v.serialize() for k, v in ri.items()} for i, ri in self.retentions.items()
+            },
         }
 
 
@@ -1103,13 +1117,16 @@ class ImmutableAttributes:
         if self.pairs:
             raw_attributes["Pairs"] = self.pairs
         if self.retentions:
-            raw_attributes["Retentions"] = self.retentions
+            raw_attributes["Retentions"] = {k: v.serialize() for k, v in self.retentions.items()}
         return raw_attributes
 
     @property
     def bare(self) -> SDBareAttributes:
         # Useful for debugging; no restrictions
-        return {"Pairs": self.pairs, "Retentions": self.retentions}
+        return {
+            "Pairs": self.pairs,
+            "Retentions": {k: v.serialize() for k, v in self.retentions.items()},
+        }
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -1176,7 +1193,9 @@ class ImmutableTable:
                 }
             )
         if self.retentions:
-            raw_table["Retentions"] = self.retentions
+            raw_table["Retentions"] = {
+                i: {k: v.serialize() for k, v in ri.items()} for i, ri in self.retentions.items()
+            }
         return raw_table
 
     @property
@@ -1185,7 +1204,9 @@ class ImmutableTable:
         return {
             "KeyColumns": self.key_columns,
             "RowsByIdent": self.rows_by_ident,
-            "Retentions": self.retentions,
+            "Retentions": {
+                i: {k: v.serialize() for k, v in ri.items()} for i, ri in self.retentions.items()
+            },
         }
 
 

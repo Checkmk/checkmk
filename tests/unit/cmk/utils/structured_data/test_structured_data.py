@@ -1522,3 +1522,11 @@ def test_update_from_previous_2() -> None:
         }
     }
     assert current_tree.get_rows(()) == [{"c2": "C2: only prev", "c3": "C3: only cur", "kc": "KC"}]
+
+
+def test_deserialize_retention_interval() -> None:
+    assert _RetentionInterval.deserialize((1, 2, 3)) == _RetentionInterval(1, 2, 3)
+
+
+def test_serialize_retention_interval() -> None:
+    assert _RetentionInterval(1, 2, 3).serialize() == (1, 2, 3)

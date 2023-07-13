@@ -6,15 +6,10 @@
 import copy
 import json
 import logging
-from collections.abc import Sequence
-
-from cmk.utils.sectionname import SectionName
 
 from cmk.fetchers import Mode
-from cmk.fetchers.cache import PersistedSections, SectionStore
+from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.filecache import MaxAge
-
-from cmk.checkengine.type_defs import AgentRawDataSection
 
 
 class MockStore:
@@ -27,27 +22,6 @@ class MockStore:
 
     def load(self):
         return copy.copy(self._data)
-
-
-class TestPersistedSections:
-    def test_from_sections(self) -> None:
-        section_a = SectionName("section_a")
-        content_a: Sequence[AgentRawDataSection] = [["first", "line"], ["second", "line"]]
-        section_b = SectionName("section_b")
-        content_b: Sequence[AgentRawDataSection] = [["third", "line"], ["forth", "line"]]
-        sections = {section_a: content_a, section_b: content_b}
-        cached_at = 69
-        fetch_interval = 42
-        persist_info = {section_a: (cached_at, cached_at + fetch_interval), section_b: None}
-
-        persisted_sections = PersistedSections[AgentRawDataSection].from_sections(
-            sections=sections,
-            lookup_persist=persist_info.get,
-        )
-
-        assert persisted_sections == {  # type: ignore[comparison-overlap]
-            section_a: (cached_at, cached_at + fetch_interval, content_a)
-        }
 
 
 class TestSectionStore:

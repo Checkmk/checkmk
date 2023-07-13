@@ -20,7 +20,7 @@ from cmk.snmplib.type_defs import SNMPBackend, SNMPHostConfig, SNMPRawData
 
 from cmk.fetchers import Fetcher, Mode
 
-from .cache import PersistedSections, SectionStore
+from .cache import SectionStore
 from .snmp import make_backend, SNMPPluginStore
 
 __all__ = ["SNMPFetcher", "SNMPSectionMeta"]
@@ -227,11 +227,7 @@ class SNMPFetcher(Fetcher[HostSection[SNMPRawData]]):
             raise MKFetcherError("missing backend")
 
         now = int(time.time())
-        persisted_sections = (
-            self._section_store.load()
-            if mode is Mode.CHECKING
-            else PersistedSections[SNMPRawData]({})
-        )
+        persisted_sections = self._section_store.load() if mode is Mode.CHECKING else {}
         section_names = self._get_selection(mode)
         section_names |= self._detect(
             select_from=self._get_detected_sections(mode) - section_names, backend=self._backend

@@ -5,7 +5,7 @@
 
 # TODO This module should be freed from base deps.
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from typing import Final
 
 from cmk.utils.agentdatatype import AgentRawData
@@ -50,7 +50,7 @@ __all__ = [
 ]
 
 
-class SNMPSource(Source[HostSection[SNMPRawData]]):
+class SNMPSource(Source[HostSection[Sequence[SNMPRawData]]]):
     fetcher_type: Final = FetcherType.SNMP
     source_type: Final = SourceType.HOST
 
@@ -81,7 +81,7 @@ class SNMPSource(Source[HostSection[SNMPRawData]]):
             self.source_type,
         )
 
-    def fetcher(self) -> Fetcher[HostSection[SNMPRawData]]:
+    def fetcher(self) -> Fetcher[HostSection[Sequence[SNMPRawData]]]:
         return self.config_cache.make_snmp_fetcher(
             self.host_name,
             self.ipaddress,
@@ -94,7 +94,7 @@ class SNMPSource(Source[HostSection[SNMPRawData]]):
 
     def file_cache(
         self, *, simulation: bool, file_cache_options: FileCacheOptions
-    ) -> FileCache[HostSection[SNMPRawData]]:
+    ) -> FileCache[HostSection[Sequence[SNMPRawData]]]:
         return SNMPFileCache(
             self.host_name,
             path_template=make_file_cache_path_template(
@@ -108,7 +108,7 @@ class SNMPSource(Source[HostSection[SNMPRawData]]):
         )
 
 
-class MgmtSNMPSource(Source[HostSection[SNMPRawData]]):
+class MgmtSNMPSource(Source[HostSection[Sequence[SNMPRawData]]]):
     fetcher_type: Final = FetcherType.SNMP
     source_type: Final = SourceType.MANAGEMENT
 
@@ -139,7 +139,7 @@ class MgmtSNMPSource(Source[HostSection[SNMPRawData]]):
             self.source_type,
         )
 
-    def fetcher(self) -> Fetcher[HostSection[SNMPRawData]]:
+    def fetcher(self) -> Fetcher[HostSection[Sequence[SNMPRawData]]]:
         return self.config_cache.make_snmp_fetcher(
             self.host_name,
             self.ipaddress,
@@ -152,7 +152,7 @@ class MgmtSNMPSource(Source[HostSection[SNMPRawData]]):
 
     def file_cache(
         self, *, simulation: bool, file_cache_options: FileCacheOptions
-    ) -> FileCache[HostSection[SNMPRawData]]:
+    ) -> FileCache[HostSection[Sequence[SNMPRawData]]]:
         return SNMPFileCache(
             self.host_name,
             path_template=make_file_cache_path_template(

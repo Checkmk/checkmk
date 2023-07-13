@@ -60,7 +60,11 @@ __all__ = [
 def _fetch_all(
     sources: Iterable[Source], *, simulation: bool, file_cache_options: FileCacheOptions, mode: Mode
 ) -> Sequence[
-    tuple[SourceInfo, result.Result[AgentRawData | HostSection[SNMPRawData], Exception], Snapshot]
+    tuple[
+        SourceInfo,
+        result.Result[AgentRawData | HostSection[Sequence[SNMPRawData]], Exception],
+        Snapshot,
+    ]
 ]:
     console.verbose("%s+%s %s\n", tty.yellow, tty.normal, "Fetching data".upper())
     return [
@@ -80,7 +84,11 @@ def _do_fetch(
     fetcher: Fetcher,
     *,
     mode: Mode,
-) -> tuple[SourceInfo, result.Result[AgentRawData | HostSection[SNMPRawData], Exception], Snapshot]:
+) -> tuple[
+    SourceInfo,
+    result.Result[AgentRawData | HostSection[Sequence[SNMPRawData]], Exception],
+    Snapshot,
+]:
     console.vverbose(f"  Source: {source_info}\n")
     with CPUTracker() as tracker:
         raw_data = get_raw_data(file_cache, fetcher, mode)
@@ -104,7 +112,10 @@ class CMKParser:
     def __call__(
         self,
         fetched: Iterable[
-            tuple[SourceInfo, result.Result[AgentRawData | HostSection[SNMPRawData], Exception]]
+            tuple[
+                SourceInfo,
+                result.Result[AgentRawData | HostSection[Sequence[SNMPRawData]], Exception],
+            ]
         ],
     ) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]:
         """Parse fetched data."""
@@ -222,7 +233,9 @@ class CMKFetcher:
         self, host_name: HostName, *, ip_address: HostAddress | None
     ) -> Sequence[
         tuple[
-            SourceInfo, result.Result[AgentRawData | HostSection[SNMPRawData], Exception], Snapshot
+            SourceInfo,
+            result.Result[AgentRawData | HostSection[Sequence[SNMPRawData]], Exception],
+            Snapshot,
         ]
     ]:
         nodes = self.config_cache.nodes_of(host_name)

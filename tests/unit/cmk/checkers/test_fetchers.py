@@ -150,7 +150,7 @@ class TestAgentFileCache_and_SNMPFileCache:
         self,
         file_cache: FileCache,
         path: Path,
-        raw_data: AgentRawData | HostSection[SNMPRawData],
+        raw_data: AgentRawData | HostSection[Sequence[SNMPRawData]],
     ) -> None:
         mode = Mode.DISCOVERY
         file_cache.file_cache_mode = FileCacheMode.READ_WRITE
@@ -797,7 +797,7 @@ class TestSNMPFetcherFetchCache:
         return fetcher
 
     def test_fetch_reading_cache_in_discovery_mode(self, fetcher: SNMPFetcher) -> None:
-        file_cache = StubFileCache[HostSection[SNMPRawData]](
+        file_cache = StubFileCache[HostSection[Sequence[SNMPRawData]]](
             HostName("hostname"),
             path_template=os.devnull,
             max_age=MaxAge.unlimited(),

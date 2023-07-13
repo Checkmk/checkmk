@@ -53,7 +53,9 @@ def execute_check_discovery(
     *,
     config_cache: ConfigCache,
     fetched: Iterable[
-        tuple[SourceInfo, result.Result[AgentRawData | HostSection[SNMPRawData], Exception]]
+        tuple[
+            SourceInfo, result.Result[AgentRawData | HostSection[Sequence[SNMPRawData]], Exception]
+        ]
     ],
     parser: ParserFunction,
     summarizer: SummarizerFunction,

@@ -5,7 +5,7 @@
 
 import logging
 import time
-from collections.abc import Mapping, MutableMapping
+from collections.abc import Mapping, MutableMapping, Sequence
 from typing import Final
 
 from cmk.utils.hostaddress import HostName
@@ -22,7 +22,7 @@ from .type_defs import SectionNameCollection
 __all__ = ["SNMPParser"]
 
 
-class SNMPParser(Parser[HostSection[SNMPRawData], HostSections[SNMPRawData]]):
+class SNMPParser(Parser[HostSection[Sequence[SNMPRawData]], HostSections[SNMPRawData]]):
     """A parser for SNMP data.
 
     Note:
@@ -48,7 +48,7 @@ class SNMPParser(Parser[HostSection[SNMPRawData], HostSections[SNMPRawData]]):
 
     def parse(
         self,
-        raw_data: HostSection[SNMPRawData],
+        raw_data: HostSection[Sequence[SNMPRawData]],
         *,
         # The selection argument is ignored: Selection is done
         # in the fetcher for SNMP.

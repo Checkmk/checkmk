@@ -57,7 +57,7 @@ class SNMPSectionMeta:
         return cls(**serialized)
 
 
-class SNMPFetcher(Fetcher[HostSection[SNMPRawData]]):
+class SNMPFetcher(Fetcher[HostSection[Sequence[SNMPRawData]]]):
     CPU_SECTIONS_WITHOUT_CPU_IN_NAME = {
         SectionName("brocade_sys"),
         SectionName("bvip_util"),
@@ -199,7 +199,7 @@ class SNMPFetcher(Fetcher[HostSection[SNMPRawData]]):
 
         return frozenset()
 
-    def _fetch_from_io(self, mode: Mode) -> HostSection[SNMPRawData]:
+    def _fetch_from_io(self, mode: Mode) -> HostSection[Sequence[SNMPRawData]]:
         """Select the sections we need to fetch and do that
 
         Note:

@@ -1231,10 +1231,15 @@ def test_inventorize_host(failed_state: int | None, expected: int) -> None:
 
     def parser(
         fetched: Iterable[
-            tuple[SourceInfo, result.Result[AgentRawData | HostSection[SNMPRawData], Exception]]
+            tuple[
+                SourceInfo,
+                result.Result[AgentRawData | HostSection[Sequence[SNMPRawData]], Exception],
+            ]
         ],
     ) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]:
-        def parse(header: AgentRawData | HostSection[SNMPRawData]) -> Mapping[SectionName, str]:
+        def parse(
+            header: AgentRawData | HostSection[Sequence[SNMPRawData]],
+        ) -> Mapping[SectionName, str]:
             assert isinstance(header, bytes)
             txt = header.decode()
             return {SectionName(txt[3:-3]): txt}

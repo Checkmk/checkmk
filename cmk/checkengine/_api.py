@@ -38,7 +38,9 @@ class FetcherFunction(Protocol):
         self, host_name: HostName, *, ip_address: HostAddress | None
     ) -> Sequence[
         tuple[
-            SourceInfo, result.Result[AgentRawData | HostSection[SNMPRawData], Exception], Snapshot
+            SourceInfo,
+            result.Result[AgentRawData | HostSection[Sequence[SNMPRawData]], Exception],
+            Snapshot,
         ]
     ]:
         ...
@@ -48,7 +50,10 @@ class ParserFunction(Protocol):
     def __call__(
         self,
         fetched: Iterable[
-            tuple[SourceInfo, result.Result[AgentRawData | HostSection[SNMPRawData], Exception]]
+            tuple[
+                SourceInfo,
+                result.Result[AgentRawData | HostSection[Sequence[SNMPRawData]], Exception],
+            ]
         ],
     ) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]:
         ...
@@ -73,7 +78,7 @@ class CheckPlugin:
 
 def parse_raw_data(
     parser: Parser,
-    raw_data: result.Result[AgentRawData | HostSection[SNMPRawData], Exception],
+    raw_data: result.Result[AgentRawData | HostSection[Sequence[SNMPRawData]], Exception],
     *,
     selection: SectionNameCollection,
 ) -> result.Result[HostSections[AgentRawDataSection | SNMPRawData], Exception]:

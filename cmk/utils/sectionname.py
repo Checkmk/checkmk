@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Container, Mapping, Sequence
+from collections.abc import Container, Mapping
 from typing import TypeVar
 
 from cmk.utils.validatedstr import ValidatedString
@@ -21,4 +21,4 @@ class SectionName(ValidatedString):
 
 _T_co = TypeVar("_T_co", covariant=True)
 
-HostSection = Mapping[SectionName, Sequence[_T_co]]
+HostSection = Mapping[SectionName, _T_co]

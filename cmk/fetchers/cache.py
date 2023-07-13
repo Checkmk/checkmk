@@ -50,12 +50,12 @@ class SectionStore(Generic[_T]):
 
     def update(
         self,
-        sections: HostSection[_T],
+        sections: HostSection[Sequence[_T]],
         cache_info: MutableMapping[SectionName, tuple[int, int]],
         lookup_persist: Callable[[SectionName], tuple[int, int] | None],
         now: int,
         keep_outdated: bool,
-    ) -> HostSection[_T]:
+    ) -> HostSection[Sequence[_T]]:
         persisted_sections = self._update(
             sections,
             lookup_persist,
@@ -70,7 +70,7 @@ class SectionStore(Generic[_T]):
 
     def _update(
         self,
-        sections: HostSection[_T],
+        sections: HostSection[Sequence[_T]],
         lookup_persist: Callable[[SectionName], tuple[int, int] | None],
         *,
         now: int,
@@ -98,10 +98,10 @@ class SectionStore(Generic[_T]):
 
     def _add_persisted_sections(
         self,
-        sections: HostSection[_T],
+        sections: HostSection[Sequence[_T]],
         cache_info: MutableMapping[SectionName, tuple[int, int]],
         persisted_sections: MutableMapping[SectionName, tuple[int, int, Sequence[_T]]],
-    ) -> HostSection[_T]:
+    ) -> HostSection[Sequence[_T]]:
         cache_info.update(
             {
                 section_name: (created_at, valid_until - created_at)

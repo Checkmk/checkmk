@@ -102,7 +102,11 @@ def execute_checkmk_checks(
     hostname: HostName,
     config_cache: ConfigCache,
     fetched: Sequence[
-        tuple[SourceInfo, Result[AgentRawData | HostSection[SNMPRawData], Exception], Snapshot]
+        tuple[
+            SourceInfo,
+            Result[AgentRawData | HostSection[Sequence[SNMPRawData]], Exception],
+            Snapshot,
+        ]
     ],
     parser: ParserFunction,
     summarizer: SummarizerFunction,

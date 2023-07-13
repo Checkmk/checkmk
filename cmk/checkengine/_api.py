@@ -15,7 +15,7 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.sectionname import HostSection
 
-from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataElem
+from cmk.snmplib.type_defs import SNMPRawData
 
 from ._parser import Parser
 from ._typedefs import SourceInfo
@@ -82,7 +82,7 @@ def parse_raw_data(
     *,
     selection: SectionNameCollection,
 ) -> result.Result[
-    HostSections[HostSection[Sequence[AgentRawDataSection]] | HostSection[SNMPRawDataElem]],
+    HostSections[HostSection[Sequence[AgentRawDataSection]] | SNMPRawData],
     Exception,
 ]:
     try:

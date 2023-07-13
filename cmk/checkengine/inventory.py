@@ -220,7 +220,7 @@ def _inventorize_cluster(*, nodes: Sequence[HostName]) -> MutableTree:
 
 
 def _no_data_or_files(host_name: HostName, host_sections: Iterable[HostSections]) -> bool:
-    if any(host_sections):
+    if any(hs.sections or hs.piggybacked_raw_data for hs in host_sections):
         return False
 
     if Path(cmk.utils.paths.inventory_output_dir, str(host_name)).exists():

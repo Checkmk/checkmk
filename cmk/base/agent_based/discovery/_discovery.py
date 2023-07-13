@@ -2,7 +2,7 @@
 # Copyright (C) 2019 Checkmk GmbH - License: GNU General Public License v2
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
-
+import enum
 import itertools
 from collections import Counter
 from collections.abc import Callable, Iterable, Mapping, Sequence
@@ -46,6 +46,29 @@ from cmk.base.config import ConfigCache, DiscoveryCheckParameters
 from .autodiscovery import get_host_services, ServicesByTransition
 
 __all__ = ["execute_check_discovery"]
+
+
+class _Transition(enum.Enum):
+    NEW = enum.auto()
+    VANISHED = enum.auto()
+
+    @property
+    def title(self) -> str:
+        match self:
+            case _Transition.NEW:
+                return "Unmonitored"
+            case _Transition.VANISHED:
+                return "Vanished"
+
+    def need_discovery(self, discovery_mode: DiscoveryMode) -> bool:
+        return (
+            self is _Transition.NEW
+            and discovery_mode in (DiscoveryMode.NEW, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH)
+        ) or (
+            self is _Transition.VANISHED
+            and discovery_mode
+            in (DiscoveryMode.REMOVE, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH)
+        )
 
 
 def execute_check_discovery(
@@ -162,102 +185,79 @@ def _check_service_lists(
     subresults = []
     need_rediscovery = False
 
-    for transition, t_services, title, severity, service_filter in _iter_output_services(
+    for transition, discovered_services, severity, service_filter in _iter_output_services(
         services_by_transition,
         params,
         service_filters,
     ):
-        affected_check_plugin_names: Counter[CheckPluginName] = Counter()
-        unfiltered = False
+        affected_check_plugins: Counter[CheckPluginName] = Counter()
+        filtered = True
 
-        for discovered_service, _found_on_nodes in t_services:
-            affected_check_plugin_names[discovered_service.check_plugin_name] += 1
-
-            if not unfiltered and service_filter(
-                find_service_description(host_name, *discovered_service.id())
-            ):
-                unfiltered = True
-
+        for service, _found_on_nodes in discovered_services:
+            affected_check_plugins[service.check_plugin_name] += 1
+            filtered &= not service_filter(find_service_description(host_name, *service.id()))
             subresults.append(
-                ActiveCheckResult(
-                    0,
-                    "",
-                    [
-                        "%s service: %s: %s"
-                        % (
-                            title.capitalize(),
-                            discovered_service.check_plugin_name,
-                            find_service_description(host_name, *discovered_service.id()),
-                        )
-                    ],
+                _make_active_check_result(
+                    transition,
+                    service.check_plugin_name,
+                    service_description=find_service_description(host_name, *service.id()),
                 )
             )
 
-        if affected_check_plugin_names:
-            info = ", ".join(["%s: %d" % e for e in affected_check_plugin_names.items()])
-            count = sum(affected_check_plugin_names.values())
+        if affected_check_plugins:
+            info = ", ".join([f"{k}: {v}" for k, v in affected_check_plugins.items()])
+            count = sum(affected_check_plugins.values())
             subresults.append(
-                ActiveCheckResult(severity, f"{title.capitalize()} services: {count} ({info})")
+                ActiveCheckResult(severity, f"{transition.title} services: {count} ({info})")
             )
+            need_rediscovery |= not filtered and transition.need_discovery(discovery_mode)
 
-            if unfiltered and (
-                (
-                    transition == "new"
-                    and discovery_mode
-                    in (DiscoveryMode.NEW, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH)
-                )
-                or (
-                    transition == "vanished"
-                    and discovery_mode
-                    in (DiscoveryMode.REMOVE, DiscoveryMode.FIXALL, DiscoveryMode.REFRESH)
-                )
-            ):
-                need_rediscovery = True
-
-    for discovered_service, _found_on_nodes in services_by_transition.get("ignored", []):
-        subresults.append(
-            ActiveCheckResult(
-                0,
-                "",
-                [
-                    "Ignored service: %s: %s"
-                    % (
-                        discovered_service.check_plugin_name,
-                        find_service_description(host_name, *discovered_service.id()),
-                    )
-                ],
-            )
+    subresults.extend(
+        _make_ignored_active_check_result(
+            ignored_service.check_plugin_name,
+            service_description=find_service_description(host_name, *ignored_service.id()),
         )
-
+        for ignored_service, _found_on_nodes in services_by_transition.get("ignored", [])
+    )
     if not any(s.summary for s in subresults):
         subresults.insert(0, ActiveCheckResult(0, "Services: all up to date"))
     return subresults, need_rediscovery
+
+
+def _make_active_check_result(
+    transition: _Transition, check_plugin_name: CheckPluginName, *, service_description: str
+) -> ActiveCheckResult:
+    return ActiveCheckResult(
+        0,
+        "",
+        [f"{transition.title} service: {check_plugin_name}: {service_description}"],
+    )
+
+
+def _make_ignored_active_check_result(
+    check_plugin_name: CheckPluginName, *, service_description: str
+) -> ActiveCheckResult:
+    return ActiveCheckResult(
+        0,
+        "",
+        [f"Ignored service: {check_plugin_name}: {service_description}"],
+    )
 
 
 def _iter_output_services(
     services_by_transition: ServicesByTransition,
     params: DiscoveryCheckParameters,
     service_filters: _ServiceFilters,
-) -> Iterable[
-    tuple[
-        Literal["new", "vanished"],
-        Sequence[AutocheckServiceWithNodes],
-        str,
-        int,
-        _ServiceFilter,
-    ]
-]:
+) -> Iterable[tuple[_Transition, Sequence[AutocheckServiceWithNodes], int, _ServiceFilter,]]:
     yield (
-        "new",
+        _Transition.NEW,
         services_by_transition.get("new", []),
-        "unmonitored",
         params.severity_new_services,
         service_filters.new,
     )
     yield (
-        "vanished",
+        _Transition.VANISHED,
         services_by_transition.get("vanished", []),
-        "vanished",
         params.severity_vanished_services,
         service_filters.vanished,
     )
@@ -287,7 +287,7 @@ def _check_host_labels(
 
 
 def _make_labels_result(
-    qualifier: str, labels: Sequence[HostLabel], severity: int
+    qualifier: Literal["new", "vanished"], labels: Sequence[HostLabel], severity: int
 ) -> ActiveCheckResult:
     plugin_count = Counter(l.plugin_name for l in labels)
     info = ", ".join(f"{key}: {count}" for key, count in plugin_count.items())

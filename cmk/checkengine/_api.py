@@ -81,7 +81,7 @@ def parse_raw_data(
     raw_data: result.Result[AgentRawData | HostSection[Sequence[SNMPRawData]], Exception],
     *,
     selection: SectionNameCollection,
-) -> result.Result[HostSections[AgentRawDataSection | SNMPRawData], Exception]:
+) -> result.Result[HostSections[Sequence[AgentRawDataSection | SNMPRawData]], Exception]:
     try:
         return raw_data.map(partial(parser.parse, selection=selection))
     except Exception as exc:

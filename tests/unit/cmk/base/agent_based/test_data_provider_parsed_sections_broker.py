@@ -71,7 +71,7 @@ NODE_2: Sequence[AgentRawDataSection] = [
 
 def make_parser() -> SectionsParser:
     return SectionsParser(
-        HostSections[AgentRawDataSection](
+        HostSections[Sequence[AgentRawDataSection]](
             sections={
                 SectionName("one"): NODE_1,
                 SectionName("four"): NODE_1,

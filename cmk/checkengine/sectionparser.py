@@ -24,7 +24,7 @@ _CacheInfo = tuple[int, int]
 
 ParsedSectionContent = object  # the parse function may return *anything*.
 
-_T = TypeVar("_T")
+_TSeq = TypeVar("_TSeq", bound=Sequence)
 
 
 class ParsedSectionName(ValidatedString):
@@ -72,16 +72,16 @@ class ResolvedResult(NamedTuple):
     cache_info: _CacheInfo | None
 
 
-class SectionsParser(Generic[_T]):
+class SectionsParser(Generic[_TSeq]):
     """Call the sections parse function and return the parsing result."""
 
     def __init__(
         self,
-        host_sections: HostSections[_T],
+        host_sections: HostSections[_TSeq],
         host_name: HostName,
     ) -> None:
         super().__init__()
-        self._host_sections: HostSections[_T] = host_sections
+        self._host_sections: HostSections[_TSeq] = host_sections
         self.parsing_errors: list[str] = []
         self._memoized_results: dict[SectionName, _ParsingResult | None] = {}
         self._host_name = host_name
@@ -94,7 +94,7 @@ class SectionsParser(Generic[_T]):
         )
 
     def parse(
-        self, section_name: SectionName, parse_function: Callable[[Sequence[_T]], Any]
+        self, section_name: SectionName, parse_function: Callable[[Sequence[_TSeq]], Any]
     ) -> _ParsingResult | None:
         if section_name in self._memoized_results:
             return self._memoized_results[section_name]
@@ -114,7 +114,7 @@ class SectionsParser(Generic[_T]):
             self._memoized_results[section_name] = None
 
     def _parse_raw_data(
-        self, section_name: SectionName, parse_function: Callable[[Sequence[_T]], Any]
+        self, section_name: SectionName, parse_function: Callable[[Sequence[_TSeq]], Any]
     ) -> Any:  # yes *ANY*
         try:
             raw_data = self._host_sections.sections[section_name]

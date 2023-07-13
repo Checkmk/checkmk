@@ -22,7 +22,7 @@ from .type_defs import SectionNameCollection
 __all__ = ["SNMPParser"]
 
 
-class SNMPParser(Parser[HostSection[Sequence[SNMPRawData]], HostSections[SNMPRawData]]):
+class SNMPParser(Parser[HostSection[Sequence[SNMPRawData]], HostSections[Sequence[SNMPRawData]]]):
     """A parser for SNMP data.
 
     Note:
@@ -53,7 +53,7 @@ class SNMPParser(Parser[HostSection[Sequence[SNMPRawData]], HostSections[SNMPRaw
         # The selection argument is ignored: Selection is done
         # in the fetcher for SNMP.
         selection: SectionNameCollection,
-    ) -> HostSections[SNMPRawData]:
+    ) -> HostSections[Sequence[SNMPRawData]]:
         sections = dict(raw_data)
         now = int(time.time())
 
@@ -70,4 +70,4 @@ class SNMPParser(Parser[HostSection[Sequence[SNMPRawData]], HostSections[SNMPRaw
             now=now,
             keep_outdated=self.keep_outdated,
         )
-        return HostSections[SNMPRawData](new_sections, cache_info=cache_info)
+        return HostSections[Sequence[SNMPRawData]](new_sections, cache_info=cache_info)

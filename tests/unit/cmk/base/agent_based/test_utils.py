@@ -97,7 +97,7 @@ NODE_2: Sequence[AgentRawDataSection] = [
 def test_get_section_kwargs(
     required_sections: Sequence[str], expected_result: dict[str, dict[str, str]]
 ) -> None:
-    node_sections = HostSections[AgentRawDataSection](
+    node_sections = HostSections[Sequence[AgentRawDataSection]](
         sections={
             SectionName("one"): NODE_1,
             SectionName("two"): NODE_1,
@@ -164,7 +164,7 @@ def test_get_section_kwargs(
 def test_get_section_cluster_kwargs(
     required_sections: Sequence[str], expected_result: dict[str, Any]
 ) -> None:
-    node1_sections = HostSections[AgentRawDataSection](
+    node1_sections = HostSections[Sequence[AgentRawDataSection]](
         sections={
             SectionName("one"): NODE_1,
             SectionName("two"): NODE_1,
@@ -172,7 +172,7 @@ def test_get_section_cluster_kwargs(
         }
     )
 
-    node2_sections = HostSections[AgentRawDataSection](
+    node2_sections = HostSections[Sequence[AgentRawDataSection]](
         sections={
             SectionName("two"): NODE_2,
             SectionName("three"): NODE_2,

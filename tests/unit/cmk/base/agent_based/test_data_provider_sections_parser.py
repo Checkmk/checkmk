@@ -56,7 +56,8 @@ class TestSectionsParser:
 
     @staticmethod
     def test_parsing_errors(
-        monkeypatch: pytest.MonkeyPatch, sections_parser: SectionsParser[AgentRawDataSection]
+        monkeypatch: pytest.MonkeyPatch,
+        sections_parser: SectionsParser[AgentRawDataSection],
     ) -> None:
         monkeypatch.setattr(
             crash_reporting,
@@ -91,7 +92,9 @@ class TestSectionsParser:
         assert sections_parser.parse(section_name, parse_function) is None
 
     @staticmethod
-    def test_parse_missing_section(sections_parser: SectionsParser[AgentRawDataSection]) -> None:
+    def test_parse_missing_section(
+        sections_parser: SectionsParser[AgentRawDataSection],
+    ) -> None:
         section_name, parse_function = _section(
             "missing_section", lambda x: 42
         )  # function does not matter

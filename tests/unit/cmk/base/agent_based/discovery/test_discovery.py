@@ -784,7 +784,7 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
         HostKey(HostName("test_node"), SourceType.HOST): (
             ParsedSectionsResolver(
                 SectionsParser(
-                    host_sections=HostSections[AgentRawDataSection](
+                    host_sections=HostSections[Sequence[AgentRawDataSection]](
                         {
                             SectionName("kernel"): [],  # host only
                             SectionName("uptime"): [["123"]],  # host & mgmt
@@ -801,7 +801,7 @@ def test__find_candidates(monkeypatch: MonkeyPatch) -> None:
         HostKey(HostName("test_node"), SourceType.MANAGEMENT): (
             ParsedSectionsResolver(
                 SectionsParser(
-                    host_sections=HostSections[SNMPRawData](
+                    host_sections=HostSections[Sequence[SNMPRawData]](
                         {
                             # host & mgmt:
                             SectionName("uptime"): [["123"]],
@@ -1052,7 +1052,7 @@ def _realhost_scenario(monkeypatch: MonkeyPatch) -> RealHostScenario:
         HostKey(hostname=hostname, source_type=SourceType.HOST): (
             ParsedSectionsResolver(
                 SectionsParser(
-                    host_sections=HostSections[AgentRawDataSection](
+                    host_sections=HostSections[Sequence[AgentRawDataSection]](
                         sections={
                             SectionName("labels"): [
                                 [
@@ -1149,7 +1149,7 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
         HostKey(hostname=node1_hostname, source_type=SourceType.HOST): (
             ParsedSectionsResolver(
                 SectionsParser(
-                    host_sections=HostSections[AgentRawDataSection](
+                    host_sections=HostSections[Sequence[AgentRawDataSection]](
                         sections={
                             SectionName("labels"): [
                                 [
@@ -1189,7 +1189,7 @@ def _cluster_scenario(monkeypatch: pytest.MonkeyPatch) -> ClusterScenario:
         HostKey(hostname=node2_hostname, source_type=SourceType.HOST): (
             ParsedSectionsResolver(
                 SectionsParser(
-                    host_sections=HostSections[AgentRawDataSection](
+                    host_sections=HostSections[Sequence[AgentRawDataSection]](
                         sections={
                             SectionName("labels"): [
                                 [

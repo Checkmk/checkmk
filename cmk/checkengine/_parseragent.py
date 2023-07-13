@@ -468,7 +468,7 @@ class HostSectionParser(ParserState):
         return self.to_noop_parser()
 
 
-class AgentParser(Parser[AgentRawData, HostSections[AgentRawDataSection]]):
+class AgentParser(Parser[AgentRawData, HostSections[Sequence[AgentRawDataSection]]]):
     """A parser for agent data."""
 
     def __init__(
@@ -499,7 +499,7 @@ class AgentParser(Parser[AgentRawData, HostSections[AgentRawDataSection]]):
         raw_data: AgentRawData,
         *,
         selection: SectionNameCollection,
-    ) -> HostSections[AgentRawDataSection]:
+    ) -> HostSections[Sequence[AgentRawDataSection]]:
         if self.simulation:
             raw_data = agent_simulator.process(raw_data)
 
@@ -582,7 +582,7 @@ class AgentParser(Parser[AgentRawData, HostSections[AgentRawDataSection]]):
             now=now,
             keep_outdated=self.keep_outdated,
         )
-        return HostSections[AgentRawDataSection](
+        return HostSections[Sequence[AgentRawDataSection]](
             new_sections,
             cache_info=cache_info,
             piggybacked_raw_data=piggybacked_raw_data,

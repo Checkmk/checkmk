@@ -23,11 +23,6 @@ ARTIFACT_STORAGE   := https://artifacts.lan.tribe29.com
 PIPENV             := PIPENV_PYPI_MIRROR=$(PIPENV_PYPI_MIRROR) scripts/run-pipenv
 BLACK              := scripts/run-black
 
-M4_DEPS            := $(wildcard m4/*) configure.ac
-CONFIGURE_DEPS     := $(M4_DEPS) aclocal.m4
-CONFIG_DEPS        := ar-lib compile config.guess config.sub install-sh missing depcomp configure
-DIST_DEPS          := $(CONFIG_DEPS)
-
 LIVESTATUS_API_SOURCES := api/c++/{Makefile,*.{h,cc}} \
                       api/perl/* \
                       api/python/{README,*.py}
@@ -131,7 +126,7 @@ $(SOURCE_BUILT_OHM) $(SOURCE_BUILT_WINDOWS):
 # is currently not used by most distros
 # Would also use --exclude-vcs, but this is also not available
 # And --transform is also missing ...
-dist: $(LIVESTATUS_INTERMEDIATE_ARCHIVE) config.h.in $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) $(DIST_DEPS) protobuf-files $(JAVASCRIPT_MINI) $(THEME_RESOURCES)
+dist: $(LIVESTATUS_INTERMEDIATE_ARCHIVE) $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_AGENT_UPDATER) protobuf-files $(JAVASCRIPT_MINI) $(THEME_RESOURCES)
 	$(MAKE) -C agents/plugins
 	set -e -o pipefail ; EXCLUDES= ; \
 	if [ -d .git ]; then \
@@ -423,98 +418,26 @@ setup:
 linesofcode:
 	@wc -l $$(find -type f -name "*.py" -o -name "*.js" -o -name "*.cc" -o -name "*.h" -o -name "*.css" | grep -v openhardwaremonitor | grep -v jquery ) | sort -n
 
-ar-lib compile config.guess config.sub install-sh missing depcomp: configure.ac
-ifeq ($(ENTERPRISE),yes)
-	autoreconf --install --include=m4
-	touch ar-lib compile config.guess config.sub install-sh missing depcomp
-endif
-
-# TODO(sp): We should really detect and use our own packages in a less hacky way...
-# NOTE: --recheck in some cases doesn't produce Makefile(see automake docu am->in->Makefile).
-# The precise reason is not known, because it happens only on CI in some cases(retrigger, for example).
-# This code will be removed in any case together with a automake. Alternative: investigation why CI in
-# some cases has no Makefile but have Makefile.in is complicated.
-config.status: $(CONFIG_DEPS)
-ifeq ($(ENTERPRISE),yes)
-	@echo "Build $@ (newer targets: $?)"
-	@if test -f config.status; then \
-	  echo "configure CXXFLAGS=\"$(CXX_FLAGS)\" \"$$RRD_OPT\"" ; \
-	  ./configure CXXFLAGS="$(CXX_FLAGS)" "$$RRD_OPT" ; \
-	else \
-	  if test -d "omd/rrdtool-$(RRDTOOL_VERS)/src/.libs"; then \
-	    RRD_OPT="LDFLAGS=-L$(realpath omd/rrdtool-$(RRDTOOL_VERS)/src/.libs)" ; \
-	  else \
-	    RRD_OPT="DUMMY2=" ; \
-	  fi ; \
-	  echo "configure CXXFLAGS=\"$(CXX_FLAGS)\" \"$$RRD_OPT\"" ; \
-	  ./configure CXXFLAGS="$(CXX_FLAGS)" "$$RRD_OPT" ; \
-	fi
-endif
-
 protobuf-files:
 ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise protobuf-files
 endif
 
-configure: $(CONFIGURE_DEPS)
-ifeq ($(ENTERPRISE),yes)
-	autoconf
-endif
-
-aclocal.m4: $(M4_DEPS)
-ifeq ($(ENTERPRISE),yes)
-	aclocal
-endif
-
-config.h.in: $(CONFIGURE_DEPS)
-ifeq ($(ENTERPRISE),yes)
-	autoheader
-	rm -f stamp-h1
-	touch $@
-endif
-
-config.h: stamp-h1
-ifeq ($(ENTERPRISE),yes)
-	@test -f $@ || rm -f stamp-h1
-	@test -f $@ || $(MAKE) stamp-h1
-endif
-
-stamp-h1: config.h.in config.status
-ifeq ($(ENTERPRISE),yes)
-	@rm -f stamp-h1
-	./config.status config.h
-endif
-
-GTAGS: config.h
-# automake generates "gtags -i ...", but incremental updates seem to be a bit
-# fragile, so let's start from scratch, gtags is quite fast.
-	$(RM) GTAGS GRTAGS GSYMS GPATH
-# Note: Even if we descend into livestatus, gtags is run on the top level (next
-# to configure.ac).
-	$(MAKE) -C livestatus GTAGS
-
-# TODO(sk): remove this target/merge to compile-neb-cmc after moving cmc into packages
-compile-neb:
+compile-neb-cmc: test-format-c compile-neb
 	packages/neb/run --build
-
-compile-neb-cmc: config.status test-format-c compile-neb
 ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C packages/cmc -j4
+	packages/cmc/run --build
 endif
 
 
 compile-neb-cmc-docker:
 	scripts/run-in-docker.sh make compile-neb-cmc
 
-tidy: config.h
-ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C packages/cmc tidy
-endif
+tidy:
+	echo Nothing todo, delete this target
 
-iwyu: config.status
-ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C packages/cmc iwyu
-endif
+iwyu:
+	echo Nothing todo, delete this target
 
 format: format-python format-c format-shell format-js format-css format-bazel
 
@@ -523,7 +446,7 @@ format-c:
 	packages/unixcat/run --format
 	packages/neb/run --format
 ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C packages/cmc format
+	packages/cmc/run --format
 endif
 
 test-format-c:
@@ -531,7 +454,7 @@ test-format-c:
 	packages/unixcat/run --check-format
 	packages/neb/run --check-format
 ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C packages/cmc check-format
+	packages/cmc/run --check-format
 endif
 
 format-python: format-python-isort format-python-black
@@ -559,11 +482,8 @@ format-css:
 format-bazel:
 	scripts/run-buildifier --lint=fix --mode=fix
 
-# Note: You need the doxygen and graphviz packages.
-documentation: config.h
-ifeq ($(ENTERPRISE),yes)
-	$(MAKE) -C packages/cmc/src documentation
-endif
+documentation:
+	echo Nothing to do here remove this target
 
 sw-documentation-docker:
 	scripts/run-in-docker.sh scripts/run-pipenv run make -C doc/documentation html

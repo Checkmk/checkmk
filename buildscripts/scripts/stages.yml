@@ -351,33 +351,13 @@ STAGES:
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/neb.txt"
 
-    - NAME: 'Unit Test CMC'
+    - NAME: 'Test - CMC'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
-      DIR: 'packages/cmc/test'
-      COMMAND: "./.f12 &> ${RESULTS}/cmc-unit.txt"
+      DIR: 'packages/cmc'
+      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmc.txt"
       TEXT_ON_SKIP: 'No CMC files changed'
       RESULT_CHECK_TYPE: "GCC"
-      RESULT_CHECK_FILE_PATTERN: "results/cmc-unit.txt"
-
-    - NAME: 'IWYU CMC'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_TESTS_MAKEFILE,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
-      DIR: 'tests'
-      ENV_VARS:
-        GERRIT_PATCHSET_REVISION: "${PATCHSET_REVISION}"
-      COMMAND: "make test-iwyu-core-docker &> ${RESULTS}/cmc-iwyu.txt"
-      TEXT_ON_SKIP: 'No CMC files changed'
-      RESULT_CHECK_TYPE: "GCC"
-      RESULT_CHECK_FILE_PATTERN: "results/cmc-iwyu.txt"
-
-    - NAME: 'Clang Tidy CMC'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_TESTS_MAKEFILE,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
-      DIR: 'tests'
-      ENV_VARS:
-        GERRIT_PATCHSET_REVISION: "${PATCHSET_REVISION}"
-      COMMAND: "make test-tidy-core-docker &> ${RESULTS}/cmc-tidy.txt"
-      TEXT_ON_SKIP: 'No core files changed'
-      RESULT_CHECK_TYPE: "CLANG"
-      RESULT_CHECK_FILE_PATTERN: "results/cmc-tidy.txt"
+      RESULT_CHECK_FILE_PATTERN: "results/cmc.txt"
 
     - NAME: 'Software Documentation Generation'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_SW_DOC_FILES,CHANGED_MAKEFILE

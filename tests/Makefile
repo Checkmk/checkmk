@@ -70,7 +70,7 @@ AGENT_PLUGIN_UNIT_TEST_FILES_PY2 := $(subst agent-plugin-unit,agent-plugin-unit/
 	test-unit test-unit-docker test-unit-resilience test-unit-resilience-docker test-unit-coverage-html \
 	test-unit-shell test-unit-shell-docker test-shellcheck test-cycles test-cycles-docker \
 	test-tidy-core test-tidy-docker test-iwyu-core test-iwyu-docker \
-	test-unit-neb test-unit-core %-core-docker
+	test-unit-neb test-unit-core
 
 clean:
 	$(RM) -r .mypy_cache $(AGENT_PLUGIN_UNIT_TEST_FILES_PY2)
@@ -114,12 +114,8 @@ help:
 	@echo "test-unit-coverage-html             - Create HTML coverage report for unit tests"
 	@echo "test-unit-shell                     - Run shell unit tests"
 	@echo "test-unit-shell-docker              - Run shell unit tests in docker"
-	@echo "test-tidy-core                      - Run clang tidy for core"
-	@echo "test-tidy-docker                    - Run clang tidy for core in docker"
-	@echo "test-iwyu-core                      - Run the iwyu tool for the core"
-	@echo "test-iwyu-docker                    - Run the iwyu tool for both in docker"
 	@echo "test-unit-neb                       - Run unit tests for neb"
-	@echo "test-unit-core                      - Run unit tests for core"
+	@echo "test-unit-cmc                       - Run unit tests for cmc"
 
 bandit.ini:
 	( echo -n -e "[bandit]\ntargets: "; \
@@ -392,25 +388,10 @@ test-unit-shell:
 test-unit-shell-docker:
 	../scripts/run-in-docker.sh make test-unit-shell
 
-%-core-docker:
-	../scripts/run-in-docker.sh make GERRIT_PATCHSET_REVISION=$(GERRIT_PATCHSET_REVISION) IWYU_EXTRA_ARGS="--gcc-toolchain=$(GCC_TOOLCHAIN)" CLANG_TIDY_EXTRA_ARGS="-extra-arg-before=--gcc-toolchain=$(GCC_TOOLCHAIN)" $*-core
-
-test-tidy-core:
-	cd ../packages/cmc && ../../scripts/run-cxx-linter tidy $(GERRIT_PATCHSET_REVISION)
-
-test-tidy-docker:
-	../scripts/run-in-docker.sh make -C .. tidy CLANG_TIDY_EXTRA_ARGS="-extra-arg-before=--gcc-toolchain=$(GCC_TOOLCHAIN)"
-
-test-iwyu-core:
-	cd ../packages/cmc && ../../scripts/run-cxx-linter iwyu $(GERRIT_PATCHSET_REVISION)
-
-test-iwyu-docker:
-	../scripts/run-in-docker.sh make -C .. iwyu IWYU_EXTRA_ARGS="--gcc-toolchain=$(GCC_TOOLCHAIN)"
-
 test-unit-neb:
 	cd ../packages/neb/test && ./.f12
 
-test-unit-core:
+test-unit-cmc:
 	cd ../packages/cmc/test && ./.f12
 
 test-find-dirty-files-in-git:

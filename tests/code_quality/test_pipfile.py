@@ -38,6 +38,7 @@ BUILD_DIRS = {
     repo_path() / "agent-receiver/build",
     repo_path() / "packages/livestatus/build",
     repo_path() / "packages/neb/build",
+    repo_path() / "packages/cmc/test",
     repo_path() / "omd" / "build",
 }
 

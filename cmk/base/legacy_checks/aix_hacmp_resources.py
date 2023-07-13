@@ -67,9 +67,9 @@ def check_aix_hacmp_resources(item, params, parsed):
 
 check_info["aix_hacmp_resources"] = LegacyCheckDefinition(
     parse_function=parse_aix_hacmp_resources,
+    service_name="HACMP RG %s",
     discovery_function=inventory_aix_hacmp_resources,
     check_function=check_aix_hacmp_resources,
-    service_name="HACMP RG %s",
     check_ruleset_name="hacmp_resources",
     check_default_parameters={
         "expect_online_on": "first",

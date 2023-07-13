@@ -42,9 +42,9 @@ def discover_aws_rds_limits(section):
 
 check_info["aws_rds_limits"] = LegacyCheckDefinition(
     parse_function=parse_aws_rds_limits,
+    service_name="AWS/RDS Limits %s",
     discovery_function=discover_aws_rds_limits,
     check_function=check_aws_rds_limits,
-    service_name="AWS/RDS Limits %s",
     check_ruleset_name="aws_rds_limits",
     check_default_parameters={
         "db_instances": (None, 80.0, 90.0),

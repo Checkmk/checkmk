@@ -51,12 +51,12 @@ def inventory_blade_bx_temp(info):
 
 check_info["blade_bx_temp"] = LegacyCheckDefinition(
     detect=DETECT_BLADE_BX,
-    check_function=check_blade_bx_temp,
-    discovery_function=inventory_blade_bx_temp,
-    service_name="Temperature Blade %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.7244.1.1.1.3.4.1.1",
         oids=["1", "2", "3", "4", "5", "6", "7"],
     ),
+    service_name="Temperature Blade %s",
+    discovery_function=inventory_blade_bx_temp,
+    check_function=check_blade_bx_temp,
     check_ruleset_name="temperature",
 )

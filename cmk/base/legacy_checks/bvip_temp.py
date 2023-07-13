@@ -27,13 +27,13 @@ def check_bvip_temp(item, params, info):
 
 check_info["bvip_temp"] = LegacyCheckDefinition(
     detect=DETECT_BVIP,
-    check_function=check_bvip_temp,
-    discovery_function=inventory_bvip_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3967.1.1.7.1",
         oids=[OIDEnd(), "1"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_bvip_temp,
+    check_function=check_bvip_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (50.0, 60.0)},
 )

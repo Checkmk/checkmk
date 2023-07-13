@@ -50,11 +50,6 @@ def check_casa_cpu_mem(item, params, parsed):
 
 check_info["casa_cpu_mem"] = LegacyCheckDefinition(
     detect=DETECT_CASA,
-    parse_function=parse_casa_cpu_mem,
-    discovery_function=inventory_casa_cpu_mem,
-    check_function=check_casa_cpu_mem,
-    service_name="Memory %s",
-    check_ruleset_name="memory_multiitem",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.47.1.1.1.1",
@@ -73,4 +68,9 @@ check_info["casa_cpu_mem"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "1"],
         ),
     ],
+    parse_function=parse_casa_cpu_mem,
+    service_name="Memory %s",
+    discovery_function=inventory_casa_cpu_mem,
+    check_function=check_casa_cpu_mem,
+    check_ruleset_name="memory_multiitem",
 )

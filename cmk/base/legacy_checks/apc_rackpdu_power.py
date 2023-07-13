@@ -14,8 +14,8 @@ def discover_apc_rackpdu_power(section):
 
 
 check_info["apc_rackpdu_power"] = LegacyCheckDefinition(
+    service_name="PDU %s",
     discovery_function=discover_apc_rackpdu_power,
     check_function=check_elphase,
-    service_name="PDU %s",
     check_ruleset_name="el_inphase",
 )

@@ -82,9 +82,9 @@ def check_aws_s3_objects(item, params, parsed):
 
 check_info["aws_s3"] = LegacyCheckDefinition(
     parse_function=parse_aws_s3,
+    service_name="AWS/S3 Objects %s",
     discovery_function=lambda p: inventory_aws_generic(p, ["BucketSizeBytes", "NumberOfObjects"]),
     check_function=check_aws_s3_objects,
-    service_name="AWS/S3 Objects %s",
     check_ruleset_name="aws_s3_buckets_objects",
 )
 
@@ -130,8 +130,8 @@ def check_aws_s3_summary(item, params, parsed):
 
 
 check_info["aws_s3.summary"] = LegacyCheckDefinition(
+    service_name="AWS/S3 Summary",
     discovery_function=discover_aws_s3_summary,
     check_function=check_aws_s3_summary,
-    service_name="AWS/S3 Summary",
     check_ruleset_name="aws_s3_buckets",
 )

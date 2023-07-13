@@ -98,9 +98,9 @@ def check_ceph_status(_no_item, params, parsed):
 
 check_info["ceph_status"] = LegacyCheckDefinition(
     parse_function=parse_ceph_status,
+    service_name="Ceph Status",
     discovery_function=inventory_ceph_status,
     check_function=check_ceph_status,
-    service_name="Ceph Status",
     check_default_parameters={
         "epoch": (1, 3, 30),
     },
@@ -165,9 +165,9 @@ def check_ceph_status_osds(_no_item, params, parsed):
 
 
 check_info["ceph_status.osds"] = LegacyCheckDefinition(
+    service_name="Ceph OSDs",
     discovery_function=inventory_ceph_status_osds,
     check_function=check_ceph_status_osds,
-    service_name="Ceph OSDs",
     check_ruleset_name="ceph_osds",
     check_default_parameters={
         "epoch": (50, 100, 15),
@@ -241,9 +241,9 @@ def check_ceph_status_pgs(_no_item, params, parsed):
 
 
 check_info["ceph_status.pgs"] = LegacyCheckDefinition(
+    service_name="Ceph PGs",
     discovery_function=inventory_ceph_status_pgs,
     check_function=check_ceph_status_pgs,
-    service_name="Ceph PGs",
 )
 
 # .
@@ -273,9 +273,9 @@ def check_ceph_status_mgrs(_no_item, params, parsed):
 
 
 check_info["ceph_status.mgrs"] = LegacyCheckDefinition(
+    service_name="Ceph MGRs",
     discovery_function=inventory_ceph_status_mgrs,
     check_function=check_ceph_status_mgrs,
-    service_name="Ceph MGRs",
     check_ruleset_name="ceph_mgrs",
     check_default_parameters={
         "epoch": (1, 2, 5),

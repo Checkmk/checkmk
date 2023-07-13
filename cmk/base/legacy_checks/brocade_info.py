@@ -77,9 +77,6 @@ check_info["brocade_info"] = LegacyCheckDefinition(
         ),
         exists(".1.3.6.1.4.1.1588.2.1.1.1.1.6.0"),
     ),
-    check_function=check_brocade_info,
-    discovery_function=inventory_brocade_info,
-    service_name="Brocade Info",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.47.1.1.1.1.2",
@@ -94,4 +91,7 @@ check_info["brocade_info"] = LegacyCheckDefinition(
             oids=["1"],
         ),
     ],
+    service_name="Brocade Info",
+    discovery_function=inventory_brocade_info,
+    check_function=check_brocade_info,
 )

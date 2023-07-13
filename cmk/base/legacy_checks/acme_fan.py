@@ -37,12 +37,12 @@ def check_acme_fan(item, params, info):
 
 check_info["acme_fan"] = LegacyCheckDefinition(
     detect=DETECT_ACME,
-    discovery_function=inventory_acme_fan,
-    check_function=check_acme_fan,
-    service_name="Fan %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9148.3.3.1.4.1.1",
         oids=["3", "4", "5"],
     ),
+    service_name="Fan %s",
+    discovery_function=inventory_acme_fan,
+    check_function=check_acme_fan,
     check_ruleset_name="hw_fans_perc",
 )

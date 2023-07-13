@@ -25,11 +25,11 @@ def check_bvip_info(_no_item, _no_params, info):
 
 check_info["bvip_info"] = LegacyCheckDefinition(
     detect=DETECT_BVIP,
-    check_function=check_bvip_info,
-    discovery_function=inventory_bvip_info,
-    service_name="System Info",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3967.1.1.1",
         oids=["1", "2"],
     ),
+    service_name="System Info",
+    discovery_function=inventory_bvip_info,
+    check_function=check_bvip_info,
 )

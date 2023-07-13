@@ -28,12 +28,12 @@ def check_bvip_fans(item, params, info):
 
 check_info["bvip_fans"] = LegacyCheckDefinition(
     detect=DETECT_BVIP,
-    check_function=check_bvip_fans,
-    discovery_function=inventory_bvip_fans,
-    service_name="Fan %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3967.1.1.8.1",
         oids=[OIDEnd(), "1"],
     ),
+    service_name="Fan %s",
+    discovery_function=inventory_bvip_fans,
+    check_function=check_bvip_fans,
     check_ruleset_name="hw_fans",
 )

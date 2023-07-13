@@ -53,11 +53,11 @@ check_info["carel_uniflair_cooling"] = LegacyCheckDefinition(
     # All the OIDs of this checks seems to be wrong for the current version
     # of this device, so the detection is disbaled until we have better information
     detect=DETECT_NEVER,
-    check_function=check_carel_uniflair_cooling,
-    discovery_function=inventory_carel_uniflair_cooling,
-    service_name="Carel uniflair cooling",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9839.2.1",
         oids=["1.31.0", "1.51.0", "1.67.0", "2.6.0"],
     ),
+    service_name="Carel uniflair cooling",
+    discovery_function=inventory_carel_uniflair_cooling,
+    check_function=check_carel_uniflair_cooling,
 )

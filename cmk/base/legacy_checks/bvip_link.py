@@ -46,13 +46,13 @@ def check_bvip_link(_no_item, params, info):
 
 check_info["bvip_link"] = LegacyCheckDefinition(
     detect=DETECT_BVIP,
-    check_function=check_bvip_link,
-    discovery_function=inventory_bvip_link,
-    service_name="Network Link",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3967.1.5.1.8",
         oids=["1"],
     ),
+    service_name="Network Link",
+    discovery_function=inventory_bvip_link,
+    check_function=check_bvip_link,
     check_ruleset_name="bvip_link",
     check_default_parameters={
         "ok_states": [0, 4, 5],

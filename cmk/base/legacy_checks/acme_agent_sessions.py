@@ -33,11 +33,11 @@ def check_acme_agent_sessions(item, _no_params, info):
 
 check_info["acme_agent_sessions"] = LegacyCheckDefinition(
     detect=DETECT_ACME,
-    discovery_function=inventory_acme_agent_sessions,
-    check_function=check_acme_agent_sessions,
-    service_name="Agent sessions %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9148.3.2.1.2.2.1",
         oids=["2", "3", "22"],
     ),
+    service_name="Agent sessions %s",
+    discovery_function=inventory_acme_agent_sessions,
+    check_function=check_acme_agent_sessions,
 )

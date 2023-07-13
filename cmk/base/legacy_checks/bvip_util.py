@@ -34,12 +34,12 @@ def check_bvip_util(item, params, info):
 
 check_info["bvip_util"] = LegacyCheckDefinition(
     detect=DETECT_BVIP,
-    check_function=check_bvip_util,
-    discovery_function=inventory_bvip_util,
-    service_name="CPU utilization %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3967.1.1.9.1",
         oids=["1", "2", "3"],
     ),
+    service_name="CPU utilization %s",
+    discovery_function=inventory_bvip_util,
+    check_function=check_bvip_util,
     check_ruleset_name="cpu_utilization_multiitem",
 )

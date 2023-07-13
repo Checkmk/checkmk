@@ -54,7 +54,7 @@ def check_aws_dynamodb_summary(item, params, parsed):
 
 check_info["aws_dynamodb_summary"] = LegacyCheckDefinition(
     parse_function=parse_aws,
+    service_name="AWS/DynamoDB Summary",
     discovery_function=discover_aws_dynamodb_summary,
     check_function=check_aws_dynamodb_summary,
-    service_name="AWS/DynamoDB Summary",
 )

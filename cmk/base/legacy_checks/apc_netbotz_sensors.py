@@ -136,12 +136,6 @@ _OIDS = [
 
 check_info["apc_netbotz_sensors"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5528.100.20.10"),
-    parse_function=parse_apc_netbotz_sensors,
-    discovery_function=lambda parsed: inventory_apc_netbotz_sensors_temp(parsed, "temp"),
-    check_function=lambda item, params, parsed: check_apc_netbotz_sensors_temp(
-        item, params, parsed, "temp"
-    ),
-    service_name="Temperature %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.5528.100.4.1.1.1",
@@ -156,6 +150,12 @@ check_info["apc_netbotz_sensors"] = LegacyCheckDefinition(
             oids=["1", "2", "4", "7"],
         ),
     ],
+    parse_function=parse_apc_netbotz_sensors,
+    service_name="Temperature %s",
+    discovery_function=lambda parsed: inventory_apc_netbotz_sensors_temp(parsed, "temp"),
+    check_function=lambda item, params, parsed: check_apc_netbotz_sensors_temp(
+        item, params, parsed, "temp"
+    ),
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (30.0, 35.0),
@@ -176,11 +176,11 @@ check_info["apc_netbotz_sensors"] = LegacyCheckDefinition(
 # Suggested by customer
 
 check_info["apc_netbotz_sensors.dewpoint"] = LegacyCheckDefinition(
+    service_name="Dew point %s",
     discovery_function=lambda parsed: inventory_apc_netbotz_sensors_temp(parsed, "dewpoint"),
     check_function=lambda item, params, info: check_apc_netbotz_sensors_temp(
         item, params, info, "dewpoint"
     ),
-    service_name="Dew point %s",
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (18.0, 25.0),
@@ -217,8 +217,8 @@ def check_apc_netbotz_sensors_humidity(item, params, parsed):
 
 
 check_info["apc_netbotz_sensors.humidity"] = LegacyCheckDefinition(
+    service_name="Humidity %s",
     discovery_function=inventory_apc_netbotz_sensors_humidity,
     check_function=check_apc_netbotz_sensors_humidity,
-    service_name="Humidity %s",
     check_ruleset_name="humidity",
 )

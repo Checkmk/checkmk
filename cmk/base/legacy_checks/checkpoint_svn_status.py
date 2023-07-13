@@ -28,11 +28,11 @@ def check_checkpoint_svn_status(item, params, info):
 
 check_info["checkpoint_svn_status"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_checkpoint_svn_status,
-    discovery_function=inventory_checkpoint_svn_status,
-    service_name="SVN Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2620.1.6",
         oids=["2", "3", "101", "103"],
     ),
+    service_name="SVN Status",
+    discovery_function=inventory_checkpoint_svn_status,
+    check_function=check_checkpoint_svn_status,
 )

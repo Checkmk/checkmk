@@ -29,13 +29,13 @@ def discover_apc_symmetra_input(section):
 
 check_info["apc_symmetra_input"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_apc_symmetra_input,
-    discovery_function=discover_apc_symmetra_input,
-    check_function=check_elphase,
-    service_name="Phase %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.1.3.2",
         oids=["1"],
     ),
+    parse_function=parse_apc_symmetra_input,
+    service_name="Phase %s",
+    discovery_function=discover_apc_symmetra_input,
+    check_function=check_elphase,
     check_ruleset_name="el_inphase",
 )

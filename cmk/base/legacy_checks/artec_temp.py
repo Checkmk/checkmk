@@ -28,13 +28,13 @@ check_info["artec_temp"] = LegacyCheckDefinition(
         contains(".1.3.6.1.2.1.1.1.0", "version"),
         contains(".1.3.6.1.2.1.1.1.0", "serial"),
     ),
-    discovery_function=inventory_artec_temp,
-    check_function=check_artec_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.31560.3.1.1.1",
         oids=["48"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_artec_temp,
+    check_function=check_artec_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (36.0, 40.0),

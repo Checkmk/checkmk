@@ -85,8 +85,8 @@ def check_appdynamics_web_container(item, params, info):  # pylint: disable=too-
 
 
 check_info["appdynamics_web_container"] = LegacyCheckDefinition(
+    service_name="AppDynamics Web Container %s",
     discovery_function=inventory_appdynamics_web_container,
     check_function=check_appdynamics_web_container,
-    service_name="AppDynamics Web Container %s",
     check_ruleset_name="jvm_threads",
 )

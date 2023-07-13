@@ -65,9 +65,9 @@ def check_brocade_fan(item, params, info):
 
 
 check_info["brocade.fan"] = LegacyCheckDefinition(
-    check_function=check_brocade_fan,
-    discovery_function=inventory_brocade_fan,
     service_name="FAN %s",
+    discovery_function=inventory_brocade_fan,
+    check_function=check_brocade_fan,
     check_ruleset_name="hw_fans",
 )
 
@@ -90,9 +90,9 @@ def check_brocade_power(item, _no_params, info):
 
 
 check_info["brocade.power"] = LegacyCheckDefinition(
-    check_function=check_brocade_power,
-    discovery_function=inventory_brocade_power,
     service_name="Power supply %s",
+    discovery_function=inventory_brocade_power,
+    check_function=check_brocade_power,
 )
 
 
@@ -110,9 +110,9 @@ def check_brocade_temp(item, params, info):
 
 
 check_info["brocade.temp"] = LegacyCheckDefinition(
-    check_function=check_brocade_temp,
-    discovery_function=inventory_brocade_temp,
     service_name="Temperature Ambient %s",
+    discovery_function=inventory_brocade_temp,
+    check_function=check_brocade_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (55.0, 60.0)},
 )

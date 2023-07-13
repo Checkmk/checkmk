@@ -25,7 +25,7 @@ def check_cisco_fru_module_status(item, _no_params, parsed):
 
 
 check_info["cisco_fru_module_status"] = LegacyCheckDefinition(
+    service_name="FRU Module Status %s",
     discovery_function=inventory_cisco_fru_module_status,
     check_function=check_cisco_fru_module_status,
-    service_name="FRU Module Status %s",
 )

@@ -44,14 +44,14 @@ def check_apc_inrow_temp(item, params, parsed):
 
 check_info["apc_inrow_temp"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_apc_inrow_temp,
-    discovery_function=inventory_apc_inrow_temp,
-    check_function=check_apc_inrow_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.13.3.2.2.2",
         oids=["7", "9", "11", "24", "26"],
     ),
+    parse_function=parse_apc_inrow_temp,
+    service_name="Temperature %s",
+    discovery_function=inventory_apc_inrow_temp,
+    check_function=check_apc_inrow_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (30.0, 35.0)},
 )

@@ -58,7 +58,7 @@ def check_aws_wafv2_summary(item, params, parsed):
 
 check_info["aws_wafv2_summary"] = LegacyCheckDefinition(
     parse_function=parse_aws,
+    service_name="AWS/WAFV2 Summary",
     discovery_function=discover_aws_wafv2_summary,
     check_function=check_aws_wafv2_summary,
-    service_name="AWS/WAFV2 Summary",
 )

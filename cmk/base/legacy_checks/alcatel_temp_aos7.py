@@ -57,11 +57,6 @@ def discover_alcatel_temp_aos7(section):
 
 check_info["alcatel_temp_aos7"] = LegacyCheckDefinition(
     detect=DETECT_ALCATEL_AOS7,
-    parse_function=parse_alcatel_aos7_temp,
-    discovery_function=discover_alcatel_temp_aos7,
-    check_function=check_alcatel_aos7_temp,
-    service_name="Temperature Board %s",
-    check_ruleset_name="temperature",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6486.801.1.1.1.3.1.1.3.1",
         oids=[
@@ -83,5 +78,10 @@ check_info["alcatel_temp_aos7"] = LegacyCheckDefinition(
             "23",
         ],
     ),
+    parse_function=parse_alcatel_aos7_temp,
+    service_name="Temperature Board %s",
+    discovery_function=discover_alcatel_temp_aos7,
+    check_function=check_alcatel_aos7_temp,
+    check_ruleset_name="temperature",
     check_default_parameters=ALCATEL_TEMP_CHECK_DEFAULT_PARAMETERS,
 )

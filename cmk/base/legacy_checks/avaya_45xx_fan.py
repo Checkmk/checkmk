@@ -39,12 +39,12 @@ def check_avaya_45xx_fan(item, params, info):
 
 check_info["avaya_45xx_fan"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.45.3"),
-    check_function=check_avaya_45xx_fan,
-    discovery_function=inventory_avaya_45xx_fan,
-    service_name="Fan Chassis %s",
-    # S5-CHASSIS-MIB
+    # S5-CHASSIS-MIB,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.45.1.6.3.3.1.1.10",
         oids=["6"],
     ),
+    service_name="Fan Chassis %s",
+    discovery_function=inventory_avaya_45xx_fan,
+    check_function=check_avaya_45xx_fan,
 )

@@ -136,10 +136,6 @@ def check_checkpoint_vsx(item, _no_params, parsed):
 
 check_info["checkpoint_vsx"] = LegacyCheckDefinition(
     detect=DETECT_NEVER,
-    parse_function=parse_checkpoint_vsx,
-    discovery_function=discover_key("vs_name"),
-    check_function=check_checkpoint_vsx,
-    service_name="VS %s Info",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2620.1.16.22.1.1",
@@ -150,6 +146,10 @@ check_info["checkpoint_vsx"] = LegacyCheckDefinition(
             oids=["2", "4", "5", "6", "7", "8", "9", "10", "11", "12"],
         ),
     ],
+    parse_function=parse_checkpoint_vsx,
+    service_name="VS %s Info",
+    discovery_function=discover_key("vs_name"),
+    check_function=check_checkpoint_vsx,
 )
 # .
 #   .--connections---------------------------------------------------------.
@@ -195,9 +195,9 @@ def check_checkpoint_vsx_connections(item, params, parsed):
 
 
 check_info["checkpoint_vsx.connections"] = LegacyCheckDefinition(
+    service_name="VS %s Connections",
     discovery_function=discover_key("conn_num"),
     check_function=check_checkpoint_vsx_connections,
-    service_name="VS %s Connections",
     check_ruleset_name="checkpoint_vsx_connections",
     check_default_parameters={
         "levels_perc": (90.0, 95.0),
@@ -245,9 +245,9 @@ def check_checkpoint_vsx_packets(item, params, parsed):
 
 
 check_info["checkpoint_vsx.packets"] = LegacyCheckDefinition(
+    service_name="VS %s Packets",
     discovery_function=discover_key("packets"),
     check_function=check_checkpoint_vsx_packets,
-    service_name="VS %s Packets",
     check_ruleset_name="checkpoint_vsx_packets",
 )
 # .
@@ -289,9 +289,9 @@ def check_checkpoint_vsx_traffic(item, params, parsed):
 
 
 check_info["checkpoint_vsx.traffic"] = LegacyCheckDefinition(
+    service_name="VS %s Traffic",
     discovery_function=discover_key("bytes_accepted"),
     check_function=check_checkpoint_vsx_traffic,
-    service_name="VS %s Traffic",
     check_ruleset_name="checkpoint_vsx_traffic",
 )
 # .
@@ -342,9 +342,9 @@ def check_checkpoint_vsx_status(item, _no_params, parsed):
 
 
 check_info["checkpoint_vsx.status"] = LegacyCheckDefinition(
+    service_name="VS %s Status",
     discovery_function=discover_key("vs_ha_status"),
     check_function=check_checkpoint_vsx_status,
-    service_name="VS %s Status",
     check_ruleset_name="checkpoint_vsx_traffic_status",
 )
 # .

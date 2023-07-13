@@ -21,9 +21,9 @@ def discover_aws_dynamodb_limits(section):
 
 check_info["aws_dynamodb_limits"] = LegacyCheckDefinition(
     parse_function=parse_aws_limits_generic,
+    service_name="AWS/DynamoDB Limits %s",
     discovery_function=discover_aws_dynamodb_limits,
     check_function=check_aws_dynamodb_limits,
-    service_name="AWS/DynamoDB Limits %s",
     check_ruleset_name="aws_dynamodb_limits",
     check_default_parameters={
         "number_of_tables": (None, 80.0, 90.0),

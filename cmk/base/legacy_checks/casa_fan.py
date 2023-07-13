@@ -36,9 +36,6 @@ def check_casa_fan(item, _no_params, info):
 
 check_info["casa_fan"] = LegacyCheckDefinition(
     detect=DETECT_CASA,
-    check_function=check_casa_fan,
-    discovery_function=inventory_casa_fan,
-    service_name="Fan %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.20858.10.31.1.1.1",
@@ -49,4 +46,7 @@ check_info["casa_fan"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "4"],
         ),
     ],
+    service_name="Fan %s",
+    discovery_function=inventory_casa_fan,
+    check_function=check_casa_fan,
 )

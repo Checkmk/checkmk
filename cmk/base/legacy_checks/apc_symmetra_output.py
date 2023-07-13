@@ -39,14 +39,14 @@ def discover_apc_symmetra_output(section):
 
 check_info["apc_symmetra_output"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_apc_symmetra_output,
-    discovery_function=discover_apc_symmetra_output,
-    check_function=check_elphase,
-    service_name="Phase %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.1.4.2",
         oids=["1", "4", "3"],
     ),
+    parse_function=parse_apc_symmetra_output,
+    service_name="Phase %s",
+    discovery_function=discover_apc_symmetra_output,
+    check_function=check_elphase,
     check_ruleset_name="ups_outphase",
     check_default_parameters={
         "voltage": (220, 220),

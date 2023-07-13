@@ -54,9 +54,9 @@ def check_aws_rds_summary(item, params, parsed):
 
 check_info["aws_rds_summary"] = LegacyCheckDefinition(
     parse_function=parse_aws_rds_summary,
+    service_name="AWS/RDS Summary",
     discovery_function=discover_aws_rds_summary,
     check_function=check_aws_rds_summary,
-    service_name="AWS/RDS Summary",
 )
 
 # .
@@ -95,7 +95,7 @@ def check_aws_rds_summary_db(item, params, parsed):
 
 
 check_info["aws_rds_summary.db_status"] = LegacyCheckDefinition(
+    service_name="AWS/RDS %s Info",
     discovery_function=lambda p: inventory_aws_generic(p, ["DBInstanceStatus"]),
     check_function=check_aws_rds_summary_db,
-    service_name="AWS/RDS %s Info",
 )

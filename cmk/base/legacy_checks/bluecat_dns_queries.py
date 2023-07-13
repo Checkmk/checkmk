@@ -26,11 +26,11 @@ def check_bluecat_dns_queries(item, _no_params, info):
 
 check_info["bluecat_dns_queries"] = LegacyCheckDefinition(
     detect=DETECT_BLUECAT,
-    check_function=check_bluecat_dns_queries,
-    discovery_function=inventory_bluecat_dns_queries,
-    service_name="DNS Queries",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13315.3.1.2.2.2.1",
         oids=["1", "2", "3", "4", "5", "6"],
     ),
+    service_name="DNS Queries",
+    discovery_function=inventory_bluecat_dns_queries,
+    check_function=check_bluecat_dns_queries,
 )

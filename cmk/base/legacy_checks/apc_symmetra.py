@@ -280,10 +280,6 @@ def check_apc_symmetra(_no_item, params, parsed):  # pylint: disable=too-many-br
 
 check_info["apc_symmetra"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_apc_symmetra,
-    discovery_function=inventory_apc_symmetra,
-    check_function=check_apc_symmetra,
-    service_name="APC Symmetra status",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.318.1.1.10.4.2.3.1",
@@ -306,6 +302,10 @@ check_info["apc_symmetra"] = LegacyCheckDefinition(
             ],
         ),
     ],
+    parse_function=parse_apc_symmetra,
+    service_name="APC Symmetra status",
+    discovery_function=inventory_apc_symmetra,
+    check_function=check_apc_symmetra,
     check_ruleset_name="apc_symentra",
     check_default_parameters={
         "capacity": (95, 80),
@@ -347,9 +347,9 @@ def check_apc_symmetra_temp(item, params, parsed):
 
 
 check_info["apc_symmetra.temp"] = LegacyCheckDefinition(
+    service_name="Temperature %s",
     discovery_function=inventory_apc_symmetra_temp,
     check_function=check_apc_symmetra_temp,
-    service_name="Temperature %s",
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels_battery": (50, 60),
@@ -378,9 +378,9 @@ def check_apc_symmetra_elphase(item, params, parsed):
 
 
 check_info["apc_symmetra.elphase"] = LegacyCheckDefinition(
+    service_name="Phase %s",
     discovery_function=inventory_apc_symmetra_elphase,
     check_function=check_apc_symmetra_elphase,
-    service_name="Phase %s",
     check_ruleset_name="ups_outphase",
     check_default_parameters={},
 )

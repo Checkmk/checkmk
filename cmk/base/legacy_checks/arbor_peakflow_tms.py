@@ -41,11 +41,6 @@ def parse_peakflow_tms(info):
 
 check_info["arbor_peakflow_tms"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.1.0", "Peakflow"),
-    check_function=check_arbor_memory,
-    discovery_function=inventory_arbor_memory,
-    parse_function=parse_peakflow_tms,
-    service_name="Memory",
-    check_ruleset_name="memory_arbor",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9694.1.5.2",
@@ -56,21 +51,26 @@ check_info["arbor_peakflow_tms"] = LegacyCheckDefinition(
             oids=["1.2.0", "2.1.0"],
         ),
     ],
+    parse_function=parse_peakflow_tms,
+    service_name="Memory",
+    discovery_function=inventory_arbor_memory,
+    check_function=check_arbor_memory,
+    check_ruleset_name="memory_arbor",
     check_default_parameters=ARBOR_MEMORY_CHECK_DEFAULT_PARAMETERS,
 )
 
 check_info["arbor_peakflow_tms.disk_usage"] = LegacyCheckDefinition(
-    check_function=check_arbor_disk_usage,
-    discovery_function=inventory_arbor_disk_usage,
     service_name="Disk Usage %s",
+    discovery_function=inventory_arbor_disk_usage,
+    check_function=check_arbor_disk_usage,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
 
 check_info["arbor_peakflow_tms.host_fault"] = LegacyCheckDefinition(
-    check_function=check_arbor_host_fault,
-    discovery_function=inventory_arbor_host_fault,
     service_name="Host Fault",
+    discovery_function=inventory_arbor_host_fault,
+    check_function=check_arbor_host_fault,
 )
 
 
@@ -86,7 +86,7 @@ def check_peakflow_tms_updates(item, _no_params, parsed):
 
 
 check_info["arbor_peakflow_tms.updates"] = LegacyCheckDefinition(
-    check_function=check_peakflow_tms_updates,
-    discovery_function=inventory_peakflow_tms_updates,
     service_name="Config Update %s",
+    discovery_function=inventory_peakflow_tms_updates,
+    check_function=check_peakflow_tms_updates,
 )

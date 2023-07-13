@@ -51,14 +51,14 @@ def check_bluecat_ntp(item, params, info):
 
 check_info["bluecat_ntp"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13315"),
-    check_function=check_bluecat_ntp,
-    discovery_function=inventory_bluecat_ntp,
-    service_name="NTP",
-    check_ruleset_name="bluecat_ntp",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13315.3.1.4.2",
         oids=["1.1", "2.1", "2.2"],
     ),
+    service_name="NTP",
+    discovery_function=inventory_bluecat_ntp,
+    check_function=check_bluecat_ntp,
+    check_ruleset_name="bluecat_ntp",
     check_default_parameters={
         "oper_states": {
             "warning": [2, 3, 4],

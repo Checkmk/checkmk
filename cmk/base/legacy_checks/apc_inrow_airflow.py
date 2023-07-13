@@ -55,12 +55,12 @@ def check_apc_inrow_airflow(_no_item, params, info):
 
 check_info["apc_inrow_airflow"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_apc_inrow_airflow,
-    discovery_function=inventory_apc_inrow_airflow,
-    service_name="Airflow",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.13.3.2.2.2",
         oids=["5"],
     ),
+    service_name="Airflow",
+    discovery_function=inventory_apc_inrow_airflow,
+    check_function=check_apc_inrow_airflow,
     check_ruleset_name="airflow",
 )

@@ -52,10 +52,6 @@ def check_brocade_mlx_power(item, _no_params, parsed):
 
 check_info["brocade_mlx_power"] = LegacyCheckDefinition(
     detect=DETECT_MLX,
-    parse_function=parse_brocade_mlx_power,
-    check_function=check_brocade_mlx_power,
-    discovery_function=inventory_brocade_mlx_power,
-    service_name="Power supply %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.1991.1.1.1.2.1.1",
@@ -66,4 +62,8 @@ check_info["brocade_mlx_power"] = LegacyCheckDefinition(
             oids=["2", "3", "4"],
         ),
     ],
+    parse_function=parse_brocade_mlx_power,
+    service_name="Power supply %s",
+    discovery_function=inventory_brocade_mlx_power,
+    check_function=check_brocade_mlx_power,
 )

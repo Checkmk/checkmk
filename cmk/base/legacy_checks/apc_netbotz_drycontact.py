@@ -84,12 +84,12 @@ def discover_apc_netbotz_drycontact(section):
 
 check_info["apc_netbotz_drycontact"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_apc_netbotz_drycontact,
-    discovery_function=discover_apc_netbotz_drycontact,
-    check_function=check_apc_netbotz_drycontact,
-    service_name="DryContact %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.10.4.3.2.1",
         oids=[OIDEnd(), "3", "4", "5"],
     ),
+    parse_function=parse_apc_netbotz_drycontact,
+    service_name="DryContact %s",
+    discovery_function=discover_apc_netbotz_drycontact,
+    check_function=check_apc_netbotz_drycontact,
 )

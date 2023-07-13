@@ -114,7 +114,7 @@ def discover_aix_hacmp_services(section):
 
 check_info["aix_hacmp_services"] = LegacyCheckDefinition(
     parse_function=parse_aix_hacmp_services,
+    service_name="HACMP Service %s",
     discovery_function=discover_aix_hacmp_services,
     check_function=check_aix_hacmp_services,
-    service_name="HACMP Service %s",
 )

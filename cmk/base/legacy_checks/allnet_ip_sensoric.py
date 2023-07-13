@@ -103,9 +103,9 @@ def check_allnet_ip_sensoric_tension(item, _no_params, parsed):
 
 check_info["allnet_ip_sensoric.tension"] = LegacyCheckDefinition(
     # section already migrated!
-    check_function=check_allnet_ip_sensoric_tension,
-    discovery_function=inventory_allnet_ip_sensoric_tension,
     service_name="Electric Tension %s",
+    discovery_function=inventory_allnet_ip_sensoric_tension,
+    check_function=check_allnet_ip_sensoric_tension,
 )
 
 # .
@@ -140,9 +140,9 @@ def check_allnet_ip_sensoric_temp(item, params, parsed):
 
 check_info["allnet_ip_sensoric.temp"] = LegacyCheckDefinition(
     # section already migrated!
-    check_function=check_allnet_ip_sensoric_temp,
-    discovery_function=inventory_allnet_ip_sensoric_temp,
     service_name="Temperature %s",
+    discovery_function=inventory_allnet_ip_sensoric_temp,
+    check_function=check_allnet_ip_sensoric_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (35.0, 40.0)},
 )
@@ -181,9 +181,9 @@ def check_allnet_ip_sensoric_humidity(item, params, parsed):
 
 check_info["allnet_ip_sensoric.humidity"] = LegacyCheckDefinition(
     # section already migrated!
-    check_function=check_allnet_ip_sensoric_humidity,
-    discovery_function=inventory_allnet_ip_sensoric_humidity,
     service_name="Humidity %s",
+    discovery_function=inventory_allnet_ip_sensoric_humidity,
+    check_function=check_allnet_ip_sensoric_humidity,
     check_ruleset_name="humidity",
 )
 
@@ -221,9 +221,9 @@ def check_allnet_ip_sensoric_pressure(item, _no_params, parsed):
 
 check_info["allnet_ip_sensoric.pressure"] = LegacyCheckDefinition(
     # section already migrated!
-    check_function=check_allnet_ip_sensoric_pressure,
-    discovery_function=inventory_allnet_ip_sensoric_pressure,
     service_name="Pressure %s",
+    discovery_function=inventory_allnet_ip_sensoric_pressure,
+    check_function=check_allnet_ip_sensoric_pressure,
 )
 
 # .

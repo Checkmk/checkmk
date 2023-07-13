@@ -173,11 +173,6 @@ check_info["cisco_ip_sla"] = LegacyCheckDefinition(
         contains(".1.3.6.1.2.1.1.1.0", "ios"),
         exists(".1.3.6.1.4.1.9.9.42.1.2.2.1.37.*"),
     ),
-    parse_function=parse_cisco_ip_sla,
-    discovery_function=inventory_cisco_ip_sla,
-    check_function=check_cisco_ip_sla,
-    service_name="Cisco IP SLA %s",
-    check_ruleset_name="cisco_ip_sla",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.42.1.2.2.1",
@@ -196,6 +191,11 @@ check_info["cisco_ip_sla"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "1", "2"],
         ),
     ],
+    parse_function=parse_cisco_ip_sla,
+    service_name="Cisco IP SLA %s",
+    discovery_function=inventory_cisco_ip_sla,
+    check_function=check_cisco_ip_sla,
+    check_ruleset_name="cisco_ip_sla",
     check_default_parameters={
         "state": "active",
         "connection_lost_occured": "no",

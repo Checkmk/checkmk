@@ -75,12 +75,12 @@ def check_alcatel_power(item, _no_params, parsed):
 
 check_info["alcatel_power"] = LegacyCheckDefinition(
     detect=DETECT_ALCATEL,
-    parse_function=parse_alcatel_power,
-    check_function=check_alcatel_power,
-    discovery_function=discover_alcatel_power,
-    service_name="Power Supply %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6486.800.1.1.1.1.1.1.1",
         oids=[OIDEnd(), "2", "36"],
     ),
+    parse_function=parse_alcatel_power,
+    service_name="Power Supply %s",
+    discovery_function=discover_alcatel_power,
+    check_function=check_alcatel_power,
 )

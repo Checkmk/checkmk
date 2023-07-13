@@ -66,9 +66,9 @@ def discover_aix_paging(section):
 
 check_info["aix_paging"] = LegacyCheckDefinition(
     parse_function=parse_aix_paging,
+    service_name="Page Space %s",
     discovery_function=discover_aix_paging,
     check_function=check_aix_paging,
-    service_name="Page Space %s",
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

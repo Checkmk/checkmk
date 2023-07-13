@@ -46,11 +46,11 @@ def check_bintec_brrp_status(item, _no_params, info):
 
 check_info["bintec_brrp_status"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.272.4"),
-    check_function=check_bintec_brrp_status,
-    discovery_function=inventory_bintec_brrp_status,
-    service_name="BRRP Status %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.272.4.40.1.1",
         oids=[OIDEnd(), "4"],
     ),
+    service_name="BRRP Status %s",
+    discovery_function=inventory_bintec_brrp_status,
+    check_function=check_bintec_brrp_status,
 )

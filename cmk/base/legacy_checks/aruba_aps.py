@@ -25,11 +25,11 @@ def check_aruba_aps(_no_item, _params, info):
 
 check_info["aruba_aps"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14823"),
-    discovery_function=inventory_aruba_aps,
-    check_function=check_aruba_aps,
-    service_name="Access Points",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14823.2.2.1.1.3",
         oids=["1"],
     ),
+    service_name="Access Points",
+    discovery_function=inventory_aruba_aps,
+    check_function=check_aruba_aps,
 )

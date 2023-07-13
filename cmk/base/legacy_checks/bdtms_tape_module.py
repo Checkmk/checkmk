@@ -31,11 +31,11 @@ def check_bdtms_tape_module(item, _no_params, info):
 
 check_info["bdtms_tape_module"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.20884.77.83.1"),
-    discovery_function=inventory_bdtms_tape_module,
-    check_function=check_bdtms_tape_module,
-    service_name="Tape Library Module %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.20884.2.4.1",
         oids=[OIDEnd(), "4", "5", "6"],
     ),
+    service_name="Tape Library Module %s",
+    discovery_function=inventory_bdtms_tape_module,
+    check_function=check_bdtms_tape_module,
 )

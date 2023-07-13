@@ -44,7 +44,7 @@ def check_bi_aggregation_connection(_no_item, _no_params, parsed):
 
 check_info["bi_aggregation_connection"] = LegacyCheckDefinition(
     parse_function=parse_bi_aggregation_connection,
+    service_name="BI Datasource Connection",
     discovery_function=discover_bi_aggregation_connection,
     check_function=check_bi_aggregation_connection,
-    service_name="BI Datasource Connection",
 )

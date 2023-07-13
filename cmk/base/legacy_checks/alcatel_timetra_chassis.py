@@ -65,11 +65,11 @@ def check_alcatel_timetra_chassis(item, _no_params, info):
 
 check_info["alcatel_timetra_chassis"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "TiMOS"),
-    check_function=check_alcatel_timetra_chassis,
-    discovery_function=inventory_alcatel_timetra_chassis,
-    service_name="Device %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6527.3.1.2.2.1.8.1",
         oids=["8", "15", "16", "24"],
     ),
+    service_name="Device %s",
+    discovery_function=inventory_alcatel_timetra_chassis,
+    check_function=check_alcatel_timetra_chassis,
 )

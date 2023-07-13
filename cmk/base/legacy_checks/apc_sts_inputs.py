@@ -54,11 +54,6 @@ def discover_apc_sts_inputs(section):
 
 check_info["apc_sts_inputs"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705.2.2"),
-    parse_function=parse_apc_sts_inputs,
-    discovery_function=discover_apc_sts_inputs,
-    check_function=check_elphase,
-    service_name="Input %s",
-    check_ruleset_name="el_inphase",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.705.2.3.2.1",
@@ -69,5 +64,10 @@ check_info["apc_sts_inputs"] = LegacyCheckDefinition(
             oids=["2", "3", "4"],
         ),
     ],
+    parse_function=parse_apc_sts_inputs,
+    service_name="Input %s",
+    discovery_function=discover_apc_sts_inputs,
+    check_function=check_elphase,
+    check_ruleset_name="el_inphase",
     check_default_parameters={},
 )

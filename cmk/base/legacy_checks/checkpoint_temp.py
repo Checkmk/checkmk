@@ -43,13 +43,13 @@ def check_checkpoint_temp(item, params, info):
 
 check_info["checkpoint_temp"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_checkpoint_temp,
-    discovery_function=inventory_checkpoint_temp,
-    service_name="Temperature %s",
-    check_ruleset_name="temperature",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2620.1.6.7.8.1.1",
         oids=["2", "3", "4", "6"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_checkpoint_temp,
+    check_function=check_checkpoint_temp,
+    check_ruleset_name="temperature",
     check_default_parameters={"levels": (50.0, 60.0)},
 )

@@ -21,9 +21,9 @@ def discover_aws_cloudwatch_alarms_limits(section):
 
 check_info["aws_cloudwatch_alarms_limits"] = LegacyCheckDefinition(
     parse_function=parse_aws_limits_generic,
+    service_name="AWS/CloudWatch Alarms Limits %s",
     discovery_function=discover_aws_cloudwatch_alarms_limits,
     check_function=check_aws_cloudwatch_alarms_limits,
-    service_name="AWS/CloudWatch Alarms Limits %s",
     check_ruleset_name="aws_cloudwatch_alarms_limits",
     check_default_parameters={
         "cloudwatch_alarms": (None, 80.0, 90.0),

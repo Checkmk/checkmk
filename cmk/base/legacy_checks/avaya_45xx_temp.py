@@ -24,19 +24,19 @@ def check_avaya_45xx_temp(item, params, info):
 
 check_info["avaya_45xx_temp"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.45.3"),
-    check_function=check_avaya_45xx_temp,
-    discovery_function=inventory_avaya_45xx_temp,
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.45.1.6.3.7.1.1.5",
+        oids=["5"],
+    ),
     service_name="Temperature Chassis %s",
+    discovery_function=inventory_avaya_45xx_temp,
+    check_function=check_avaya_45xx_temp,
     check_ruleset_name="temperature",
     # S5-CHASSIS-MIB::s5ChasTmpSnrTmpValue
     # The current temperature value of the temperature
     # sensor. This is measured in units of a half degree
     # centigrade, e.g. a value of 121 indicates a temperature
-    # of 60.5 degrees C.
-    fetch=SNMPTree(
-        base=".1.3.6.1.4.1.45.1.6.3.7.1.1.5",
-        oids=["5"],
-    ),
+    # of 60.5 degrees C.,
     check_default_parameters={
         "levels": (55.0, 60.0),
     },

@@ -91,9 +91,9 @@ def check_aws_s3_requests(item, params, metrics):
 
 check_info["aws_s3_requests"] = LegacyCheckDefinition(
     parse_function=parse_aws_s3,
+    service_name="AWS/S3 Requests %s",
     discovery_function=lambda p: inventory_aws_generic(p, ["AllRequests"]),
     check_function=check_aws_s3_requests,
-    service_name="AWS/S3 Requests %s",
     check_ruleset_name="aws_s3_requests",
 )
 
@@ -120,11 +120,11 @@ def check_aws_s3_http_errors(item, params, metrics):
 
 
 check_info["aws_s3_requests.http_errors"] = LegacyCheckDefinition(
+    service_name="AWS/S3 HTTP Errors %s",
     discovery_function=lambda p: inventory_aws_generic(
         p, ["AllRequests", "4xxErrors", "5xxErrors"]
     ),
     check_function=check_aws_s3_http_errors,
-    service_name="AWS/S3 HTTP Errors %s",
     check_ruleset_name="aws_s3_http_errors",
 )
 
@@ -171,9 +171,9 @@ def check_aws_s3_latency(item, params, metrics):
 
 
 check_info["aws_s3_requests.latency"] = LegacyCheckDefinition(
+    service_name="AWS/S3 Latency %s",
     discovery_function=lambda p: inventory_aws_generic(p, ["TotalRequestLatency"]),
     check_function=check_aws_s3_latency,
-    service_name="AWS/S3 Latency %s",
     check_ruleset_name="aws_s3_latency",
 )
 
@@ -207,9 +207,9 @@ def check_aws_s3_traffic_stats(item, params, metrics):
 
 
 check_info["aws_s3_requests.traffic_stats"] = LegacyCheckDefinition(
+    service_name="AWS/S3 Traffic Stats %s",
     discovery_function=lambda p: inventory_aws_generic(p, ["BytesDownloaded", "BytesUploaded"]),
     check_function=check_aws_s3_traffic_stats,
-    service_name="AWS/S3 Traffic Stats %s",
 )
 
 # .
@@ -242,9 +242,9 @@ def check_aws_s3_select_object(item, params, metrics):
 
 
 check_info["aws_s3_requests.select_object"] = LegacyCheckDefinition(
+    service_name="AWS/S3 SELECT Object %s",
     discovery_function=lambda p: inventory_aws_generic(
         p, ["SelectBytesScanned", "SelectBytesReturned"]
     ),
     check_function=check_aws_s3_select_object,
-    service_name="AWS/S3 SELECT Object %s",
 )

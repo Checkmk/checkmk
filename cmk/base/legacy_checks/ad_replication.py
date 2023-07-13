@@ -179,8 +179,8 @@ def check_ad_replication(item, params, info):
 
 
 check_info["ad_replication"] = LegacyCheckDefinition(
-    check_function=check_ad_replication,
-    discovery_function=inventory_ad_replication,
     service_name="AD Replication %s",
+    discovery_function=inventory_ad_replication,
+    check_function=check_ad_replication,
     check_ruleset_name="ad_replication",
 )

@@ -21,9 +21,9 @@ def discover_aws_s3_limits(section):
 
 check_info["aws_s3_limits"] = LegacyCheckDefinition(
     parse_function=parse_aws_limits_generic,
+    service_name="AWS/S3 Limits %s",
     discovery_function=discover_aws_s3_limits,
     check_function=check_aws_s3_limits,
-    service_name="AWS/S3 Limits %s",
     check_ruleset_name="aws_s3_limits",
     check_default_parameters={
         "buckets": (None, 80.0, 90.0),

@@ -21,9 +21,9 @@ def discover_aws_elb_limits(section):
 
 check_info["aws_elb_limits"] = LegacyCheckDefinition(
     parse_function=parse_aws_limits_generic,
+    service_name="AWS/ELB Limits %s",
     discovery_function=discover_aws_elb_limits,
     check_function=check_aws_elb_limits,
-    service_name="AWS/ELB Limits %s",
     check_ruleset_name="aws_elb_limits",
     check_default_parameters={
         "load_balancers": (None, 80.0, 90.0),

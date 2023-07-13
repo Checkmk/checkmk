@@ -34,9 +34,9 @@ def check_aws_elbv2_summary_application(item, params, parsed):
 
 check_info["aws_elbv2_summary"] = LegacyCheckDefinition(
     parse_function=parse_aws_elbv2_summary,
+    service_name="AWS/ApplicationELB Summary",
     discovery_function=inventory_aws_elbv2_summary_application,
     check_function=check_aws_elbv2_summary_application,
-    service_name="AWS/ApplicationELB Summary",
 )
 
 
@@ -53,7 +53,7 @@ def check_aws_elbv2_summary_network(item, params, parsed):
 
 
 check_info["aws_elbv2_summary.network"] = LegacyCheckDefinition(
+    service_name="AWS/NetworkELB Summary",
     discovery_function=inventory_aws_elbv2_summary_network,
     check_function=check_aws_elbv2_summary_network,
-    service_name="AWS/NetworkELB Summary",
 )

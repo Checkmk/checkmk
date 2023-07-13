@@ -45,9 +45,6 @@ check_info["akcp_daisy_temp"] = LegacyCheckDefinition(
         not_exists(".1.3.6.1.4.1.3854.2.*"),
         exists(".1.3.6.1.4.1.3854.1.2.2.1.19.*"),
     ),
-    check_function=check_akcp_daisy_temp,
-    discovery_function=inventory_akcp_daisy_temp,
-    service_name="Temperature %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.3854.1.2.2.1.19.33.1.2.1",
@@ -82,6 +79,9 @@ check_info["akcp_daisy_temp"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "1", "2", "14"],
         ),
     ],
+    service_name="Temperature %s",
+    discovery_function=inventory_akcp_daisy_temp,
+    check_function=check_akcp_daisy_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (28.0, 32.0)},
 )

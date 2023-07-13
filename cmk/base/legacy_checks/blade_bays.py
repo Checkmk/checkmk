@@ -72,10 +72,6 @@ def check_blade_bays(item, params, parsed):
 
 check_info["blade_bays"] = LegacyCheckDefinition(
     detect=DETECT_BLADE,
-    parse_function=parse_blade_bays,
-    discovery_function=inventory_blade_bays,
-    check_function=check_blade_bays,
-    service_name="BAY %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2.3.51.2.2.10.2.1.1",
@@ -86,4 +82,8 @@ check_info["blade_bays"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "5", "6", "2", "1", "7", "8"],
         ),
     ],
+    parse_function=parse_blade_bays,
+    service_name="BAY %s",
+    discovery_function=inventory_blade_bays,
+    check_function=check_blade_bays,
 )

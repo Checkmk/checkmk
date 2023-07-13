@@ -40,7 +40,7 @@ def check_aws_ec2_summary(item, params, parsed):
 
 check_info["aws_ec2_summary"] = LegacyCheckDefinition(
     parse_function=parse_aws,
+    service_name="AWS/EC2 Summary",
     discovery_function=discover_aws_ec2_summary,
     check_function=check_aws_ec2_summary,
-    service_name="AWS/EC2 Summary",
 )

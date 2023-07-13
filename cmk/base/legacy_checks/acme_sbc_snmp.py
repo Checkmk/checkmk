@@ -58,13 +58,13 @@ def check_acme_sbc_snmp(_no_item, params, info):
 
 check_info["acme_sbc_snmp"] = LegacyCheckDefinition(
     detect=DETECT_ACME,
-    discovery_function=inventory_acme_sbc_snmp,
-    check_function=check_acme_sbc_snmp,
-    service_name="ACME SBC health",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9148.3.2.1.1",
         oids=["3", "4"],
     ),
+    service_name="ACME SBC health",
+    discovery_function=inventory_acme_sbc_snmp,
+    check_function=check_acme_sbc_snmp,
     check_ruleset_name="acme_sbc_snmp",
     check_default_parameters={
         "levels_lower": (99, 75),

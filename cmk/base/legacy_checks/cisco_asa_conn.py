@@ -71,10 +71,6 @@ check_info["cisco_asa_conn"] = LegacyCheckDefinition(
         startswith(".1.3.6.1.2.1.1.1.0", "cisco firewall services"),
         contains(".1.3.6.1.2.1.1.1.0", "cisco pix security"),
     ),
-    parse_function=parse_cisco_asa_conn,
-    discovery_function=inventory_cisco_asa_conn,
-    check_function=check_cisco_asa_conn,
-    service_name="Connection %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.31.1.1.1",
@@ -89,4 +85,8 @@ check_info["cisco_asa_conn"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "7", "8"],
         ),
     ],
+    parse_function=parse_cisco_asa_conn,
+    service_name="Connection %s",
+    discovery_function=inventory_cisco_asa_conn,
+    check_function=check_cisco_asa_conn,
 )

@@ -39,11 +39,11 @@ def check_bdt_tape_status(_no_item, _no_params, info):
 
 check_info["bdt_tape_status"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.20884.10893.2.101"),
-    discovery_function=inventory_bdt_tape_status,
-    check_function=check_bdt_tape_status,
-    service_name="Tape Library Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.20884.10893.2.101.2",
         oids=["1"],
     ),
+    service_name="Tape Library Status",
+    discovery_function=inventory_bdt_tape_status,
+    check_function=check_bdt_tape_status,
 )

@@ -40,12 +40,12 @@ check_info["aironet_errors"] = LegacyCheckDefinition(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1034"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.1247"),
     ),
-    check_function=check_aironet_errors,
-    discovery_function=inventory_aironet_errors,
-    service_name="MAC CRC errors radio %s",
-    # CISCO-DOT11-IF-MIB::cd11IfRecFrameMacCrcErrors
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.272.1.2.1.1.1",
         oids=[OIDEnd(), "2"],
     ),
+    service_name="MAC CRC errors radio %s",
+    # CISCO-DOT11-IF-MIB::cd11IfRecFrameMacCrcErrors,
+    discovery_function=inventory_aironet_errors,
+    check_function=check_aironet_errors,
 )

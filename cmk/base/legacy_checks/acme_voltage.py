@@ -72,12 +72,12 @@ def check_acme_voltage(item, params, info):
 
 check_info["acme_voltage"] = LegacyCheckDefinition(
     detect=DETECT_ACME,
-    discovery_function=inventory_acme_voltage,
-    check_function=check_acme_voltage,
-    service_name="Voltage %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9148.3.3.1.2.1.1",
         oids=["3", "4", "5"],
     ),
+    service_name="Voltage %s",
+    discovery_function=inventory_acme_voltage,
+    check_function=check_acme_voltage,
     check_ruleset_name="el_inphase",
 )

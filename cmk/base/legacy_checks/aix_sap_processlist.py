@@ -106,7 +106,7 @@ def check_aix_sap_processlist(item, _no_params, parsed):
 
 check_info["aix_sap_processlist"] = LegacyCheckDefinition(
     parse_function=parse_aix_sap_processlist,
+    service_name="SAP Process %s",
     discovery_function=inventory_aix_sap_processlist,
     check_function=check_aix_sap_processlist,
-    service_name="SAP Process %s",
 )

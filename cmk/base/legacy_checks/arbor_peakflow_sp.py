@@ -42,22 +42,22 @@ def parse_peakflow_sp(info):
 
 check_info["arbor_peakflow_sp"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.1.0", "Peakflow SP"),
-    check_function=check_arbor_memory,
-    discovery_function=inventory_arbor_memory,
-    parse_function=parse_peakflow_sp,
-    service_name="Memory",
-    check_ruleset_name="memory_arbor",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9694.1.4.2.1",
         oids=["4.0", "7.0", "10.0", "12.0"],
     ),
+    parse_function=parse_peakflow_sp,
+    service_name="Memory",
+    discovery_function=inventory_arbor_memory,
+    check_function=check_arbor_memory,
+    check_ruleset_name="memory_arbor",
     check_default_parameters=ARBOR_MEMORY_CHECK_DEFAULT_PARAMETERS,
 )
 
 check_info["arbor_peakflow_sp.disk_usage"] = LegacyCheckDefinition(
-    check_function=check_arbor_disk_usage,
-    discovery_function=inventory_arbor_disk_usage,
     service_name="Disk Usage %s",
+    discovery_function=inventory_arbor_disk_usage,
+    check_function=check_arbor_disk_usage,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )
@@ -75,7 +75,7 @@ def check_arbor_peakflow_sp_flows(_no_item, params, parsed):
 
 
 check_info["arbor_peakflow_sp.flows"] = LegacyCheckDefinition(
-    check_function=check_arbor_peakflow_sp_flows,
-    discovery_function=inventory_arbor_peakflow_sp_flows,
     service_name="Flow Count",
+    discovery_function=inventory_arbor_peakflow_sp_flows,
+    check_function=check_arbor_peakflow_sp_flows,
 )

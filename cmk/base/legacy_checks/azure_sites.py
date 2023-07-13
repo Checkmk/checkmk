@@ -38,9 +38,9 @@ def discover_azure_sites(section):
 
 check_info["azure_sites"] = LegacyCheckDefinition(
     parse_function=parse_resources,
+    service_name="Site %s",
     discovery_function=discover_azure_sites,
     check_function=check_azure_sites,
-    service_name="Site %s",
     check_ruleset_name="webserver",
     check_default_parameters={
         # https://www.nngroup.com/articles/response-times-3-important-limits/

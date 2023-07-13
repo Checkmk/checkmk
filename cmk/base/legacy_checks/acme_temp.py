@@ -57,12 +57,12 @@ def check_acme_temp(item, params, info):
 
 check_info["acme_temp"] = LegacyCheckDefinition(
     detect=DETECT_ACME,
-    discovery_function=inventory_acme_temp,
-    check_function=check_acme_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9148.3.3.1.3.1.1",
         oids=["3", "4", "5"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_acme_temp,
+    check_function=check_acme_temp,
     check_ruleset_name="temperature",
 )

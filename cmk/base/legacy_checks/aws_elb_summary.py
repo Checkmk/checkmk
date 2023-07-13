@@ -18,7 +18,7 @@ def discover_aws_elb_summary(section: GenericAWSSection) -> Iterable[tuple[None,
 
 check_info["aws_elb_summary"] = LegacyCheckDefinition(
     parse_function=parse_aws,
+    service_name="AWS/ELB Summary",
     discovery_function=discover_aws_elb_summary,
     check_function=check_aws_elb_summary_generic,
-    service_name="AWS/ELB Summary",
 )

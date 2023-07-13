@@ -77,9 +77,9 @@ def check_aws_elbv2_application_lcu(item, params, parsed):
 
 check_info["aws_elbv2_application"] = LegacyCheckDefinition(
     parse_function=parse_aws_elbv2_application,
+    service_name="AWS/ApplicationELB LCUs",
     discovery_function=lambda p: inventory_aws_generic_single(p, ["ConsumedLCUs"]),
     check_function=check_aws_elbv2_application_lcu,
-    service_name="AWS/ApplicationELB LCUs",
     check_ruleset_name="aws_elbv2_lcu",
 )
 
@@ -131,11 +131,11 @@ def check_aws_elbv2_application_connections(item, params, parsed):
 
 
 check_info["aws_elbv2_application.connections"] = LegacyCheckDefinition(
+    service_name="AWS/ApplicationELB Connections",
     discovery_function=lambda p: inventory_aws_generic_single(
         p, _aws_elbv2_application_connection_types, requirement=any
     ),
     check_function=check_aws_elbv2_application_connections,
-    service_name="AWS/ApplicationELB Connections",
 )
 
 # .
@@ -159,9 +159,9 @@ def check_aws_elbv2_application_http_elb(item, params, parsed):
 
 
 check_info["aws_elbv2_application.http_elb"] = LegacyCheckDefinition(
+    service_name="AWS/ApplicationELB HTTP ELB",
     discovery_function=lambda p: inventory_aws_generic_single(p, ["RequestCount"]),
     check_function=check_aws_elbv2_application_http_elb,
-    service_name="AWS/ApplicationELB HTTP ELB",
     check_ruleset_name="aws_elb_http",
 )
 
@@ -204,11 +204,11 @@ def check_aws_elbv2_application_http_redirects(item, params, parsed):
 
 
 check_info["aws_elbv2_application.http_redirects"] = LegacyCheckDefinition(
+    service_name="AWS/ApplicationELB HTTP Redirects",
     discovery_function=lambda p: inventory_aws_generic_single(
         p, _aws_elbv2_application_http_redirects_metrics, requirement=any
     ),
     check_function=check_aws_elbv2_application_http_redirects,
-    service_name="AWS/ApplicationELB HTTP Redirects",
 )
 
 # .
@@ -259,9 +259,9 @@ def check_aws_elbv2_application_statistics(item, params, parsed):
 
 
 check_info["aws_elbv2_application.statistics"] = LegacyCheckDefinition(
+    service_name="AWS/ApplicationELB Statistics",
     discovery_function=lambda p: inventory_aws_generic_single(
         p, _aws_elbv2_application_statistics_metrics, requirement=any
     ),
     check_function=check_aws_elbv2_application_statistics,
-    service_name="AWS/ApplicationELB Statistics",
 )

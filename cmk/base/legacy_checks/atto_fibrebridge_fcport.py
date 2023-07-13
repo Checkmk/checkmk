@@ -36,14 +36,14 @@ def check_atto_fibrebridge_fcport(item, params, info):
 
 check_info["atto_fibrebridge_fcport"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4547"),
-    discovery_function=inventory_atto_fibrebridge_fcport,
-    check_function=check_atto_fibrebridge_fcport,
-    service_name="FC Port %s",
-    check_ruleset_name="fcport_words",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.4547.2.3.3.2.1",
         oids=[OIDEnd(), "2", "3"],
     ),
+    service_name="FC Port %s",
+    discovery_function=inventory_atto_fibrebridge_fcport,
+    check_function=check_atto_fibrebridge_fcport,
+    check_ruleset_name="fcport_words",
     check_default_parameters={
         "fc_tx_words": None,
         "fc_rx_words": None,

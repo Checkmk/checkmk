@@ -73,7 +73,7 @@ def check_cadvisor_memory(_item, _params, parsed):
 
 check_info["cadvisor_memory"] = LegacyCheckDefinition(
     parse_function=parse_cadvisor_memory,
+    service_name="Memory",
     discovery_function=discover_cadvisor_memory,
     check_function=check_cadvisor_memory,
-    service_name="Memory",
 )

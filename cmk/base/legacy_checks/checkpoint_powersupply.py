@@ -29,11 +29,11 @@ def check_checkpoint_powersupply(item, params, info):
 
 check_info["checkpoint_powersupply"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_checkpoint_powersupply,
-    discovery_function=inventory_checkpoint_powersupply,
-    service_name="Power Supply %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2620.1.6.7.9.1.1",
         oids=["1", "2"],
     ),
+    service_name="Power Supply %s",
+    discovery_function=inventory_checkpoint_powersupply,
+    check_function=check_checkpoint_powersupply,
 )

@@ -29,11 +29,11 @@ def check_checkpoint_fan(item, params, info):
 
 check_info["checkpoint_fan"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_checkpoint_fan,
-    discovery_function=inventory_checkpoint_fan,
-    service_name="Fan %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2620.1.6.7.8.2.1",
         oids=["2", "3", "4", "6"],
     ),
+    service_name="Fan %s",
+    discovery_function=inventory_checkpoint_fan,
+    check_function=check_checkpoint_fan,
 )

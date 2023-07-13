@@ -46,16 +46,16 @@ def check_barracuda_mailqueues(_no_item, params, info):
 
 check_info["barracuda_mailqueues"] = LegacyCheckDefinition(
     detect=DETECT_BARRACUDA,
-    discovery_function=inventory_barracuda_mailqueues,
-    check_function=check_barracuda_mailqueues,
-    service_name="Mail Queue %s",
-    # The barracuda spam firewall does not response or returns a timeout error
-    # executing 'snmpwalk' on whole tables. But we can workaround here specifying
-    # all needed OIDs. Then we can use 'snmpget' and 'snmpwalk' on these single OIDs.
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.20632.2",
         oids=["2", "3", "4", "60"],
     ),
+    service_name="Mail Queue %s",
+    # The barracuda spam firewall does not response or returns a timeout error
+    # executing 'snmpwalk' on whole tables. But we can workaround here specifying
+    # all needed OIDs. Then we can use 'snmpget' and 'snmpwalk' on these single OIDs.,
+    discovery_function=inventory_barracuda_mailqueues,
+    check_function=check_barracuda_mailqueues,
     check_ruleset_name="mail_queue_length",
     check_default_parameters={
         "deferred": (80, 100),

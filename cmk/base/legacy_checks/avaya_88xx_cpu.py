@@ -25,13 +25,13 @@ def check_avaya_88xx_cpu(_no_item, params, info):
 
 check_info["avaya_88xx_cpu"] = LegacyCheckDefinition(
     detect=DETECT_AVAYA,
-    check_function=check_avaya_88xx_cpu,
-    discovery_function=inventory_avaya_88xx_cpu,
-    service_name="CPU utilization",
-    check_ruleset_name="cpu_utilization",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2272.1.1",
         oids=["20"],
     ),
+    service_name="CPU utilization",
+    discovery_function=inventory_avaya_88xx_cpu,
+    check_function=check_avaya_88xx_cpu,
+    check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (90.0, 95.0)},
 )

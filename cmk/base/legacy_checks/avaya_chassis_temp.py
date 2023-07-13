@@ -23,14 +23,14 @@ def check_avaya_chassis_temp(item, params, info):
 
 check_info["avaya_chassis_temp"] = LegacyCheckDefinition(
     detect=DETECT_AVAYA,
-    check_function=check_avaya_chassis_temp,
-    discovery_function=inventory_avaya_chassis_temp,
-    service_name="Temperature %s",
-    check_ruleset_name="temperature",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2272.1.100.1",
         oids=["2"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_avaya_chassis_temp,
+    check_function=check_avaya_chassis_temp,
+    check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (55.0, 60.0),
     },

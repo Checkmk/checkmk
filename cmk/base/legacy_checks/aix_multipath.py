@@ -60,7 +60,7 @@ def check_aix_multipath(item, params, info):
 
 
 check_info["aix_multipath"] = LegacyCheckDefinition(
-    check_function=check_aix_multipath,
-    discovery_function=inventory_aix_multipath,
     service_name="Multipath %s",
+    discovery_function=inventory_aix_multipath,
+    check_function=check_aix_multipath,
 )

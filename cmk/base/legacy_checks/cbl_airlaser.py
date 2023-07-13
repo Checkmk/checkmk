@@ -171,8 +171,6 @@ def check_cbl_airlaser_status(item, _no_params, info):
 
 
 check_info["cbl_airlaser"] = LegacyCheckDefinition(
-    # .1.3.6.1.2.1.1.1.0 = "AirLaser IP1000"  < matches airlaser
-    # .1.3.6.1.4.1.2800.2.1.1.0 3             < Version of management agent ( exists )
     detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "airlaser"), exists(".1.3.6.1.4.1.2800.2.1.1.0")),
     fetch=[
         SNMPTree(
@@ -203,13 +201,13 @@ check_info["cbl_airlaser"] = LegacyCheckDefinition(
 )
 
 check_info["cbl_airlaser.status"] = LegacyCheckDefinition(
-    check_function=check_cbl_airlaser_status,
-    discovery_function=inventory_cbl_airlaser,
     service_name="CBL Airlaser Status",
+    discovery_function=inventory_cbl_airlaser,
+    check_function=check_cbl_airlaser_status,
 )
 
 check_info["cbl_airlaser.hardware"] = LegacyCheckDefinition(
-    check_function=check_cbl_airlaser_hw,
-    discovery_function=inventory_cbl_airlaser,
     service_name="CBL Airlaser Hardware",
+    discovery_function=inventory_cbl_airlaser,
+    check_function=check_cbl_airlaser_hw,
 )

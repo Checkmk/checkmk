@@ -51,9 +51,9 @@ def discover_aws_ec2_limits(section):
 
 check_info["aws_ec2_limits"] = LegacyCheckDefinition(
     parse_function=parse_aws_limits_generic,
+    service_name="AWS/EC2 Limits %s",
     discovery_function=discover_aws_ec2_limits,
     check_function=check_aws_ec2_limits,
-    service_name="AWS/EC2 Limits %s",
     check_ruleset_name="aws_ec2_limits",
     check_default_parameters={
         "vpc_elastic_ip_addresses": (None, 80.0, 90.0),

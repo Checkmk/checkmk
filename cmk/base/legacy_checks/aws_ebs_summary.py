@@ -73,9 +73,9 @@ def check_aws_ebs_summary(item, params, parsed):
 
 check_info["aws_ebs_summary"] = LegacyCheckDefinition(
     parse_function=parse_aws_summary,
+    service_name="AWS/EBS Summary",
     discovery_function=discover_aws_ebs_summary,
     check_function=check_aws_ebs_summary,
-    service_name="AWS/EBS Summary",
 )
 
 # .
@@ -100,7 +100,7 @@ def check_aws_ebs_summary_health(item, params, parsed):
 
 
 check_info["aws_ebs_summary.health"] = LegacyCheckDefinition(
+    service_name="AWS/EBS Health %s",
     discovery_function=lambda p: inventory_aws_generic(p, ["VolumeStatus"]),
     check_function=check_aws_ebs_summary_health,
-    service_name="AWS/EBS Health %s",
 )

@@ -48,14 +48,14 @@ def check_arris_cmts_mem(item, params, parsed):
 
 check_info["arris_cmts_mem"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4998.2.1"),
-    parse_function=parse_arris_cmts_mem,
-    discovery_function=inventory_arris_cmts_mem,
-    check_function=check_arris_cmts_mem,
-    service_name="Memory Module %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.4998.1.1.5.3.2.1.1",
         oids=[OIDEnd(), "2", "3"],
     ),
+    parse_function=parse_arris_cmts_mem,
+    service_name="Memory Module %s",
+    discovery_function=inventory_arris_cmts_mem,
+    check_function=check_arris_cmts_mem,
     check_ruleset_name="memory_multiitem",
     check_default_parameters={
         "levels": (80.0, 90.0),

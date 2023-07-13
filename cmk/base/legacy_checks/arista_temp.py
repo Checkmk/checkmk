@@ -52,13 +52,13 @@ def discover_arista_temp(section):
 
 check_info["arista_temp"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.1.0", "arista networks"),
-    parse_function=parse_arista_temp,
-    check_function=check_arista_temp,
-    discovery_function=discover_arista_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.2.1",
         oids=["47.1.1.1.1.2", "99.1.1.1.3", "99.1.1.1.4"],
     ),
+    parse_function=parse_arista_temp,
+    service_name="Temperature %s",
+    discovery_function=discover_arista_temp,
+    check_function=check_arista_temp,
     check_ruleset_name="temperature",
 )

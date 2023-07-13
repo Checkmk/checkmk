@@ -65,11 +65,6 @@ def check_checkpoint_packets(_no_item, params, parsed):
 
 check_info["checkpoint_packets"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_checkpoint_packets,
-    check_function=check_checkpoint_packets,
-    discovery_function=inventory_checkpoint_packets,
-    service_name="Packet Statistics",
-    check_ruleset_name="checkpoint_packets",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2620.1.1",
@@ -80,6 +75,11 @@ check_info["checkpoint_packets"] = LegacyCheckDefinition(
             oids=["5", "6"],
         ),
     ],
+    parse_function=parse_checkpoint_packets,
+    service_name="Packet Statistics",
+    discovery_function=inventory_checkpoint_packets,
+    check_function=check_checkpoint_packets,
+    check_ruleset_name="checkpoint_packets",
     check_default_parameters={
         "accepted": (100000, 200000),
         "rejected": (100000, 200000),

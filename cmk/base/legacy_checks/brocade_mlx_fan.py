@@ -40,11 +40,11 @@ def check_brocade_mlx_fan(item, _no_params, info):
 
 check_info["brocade_mlx_fan"] = LegacyCheckDefinition(
     detect=DETECT_MLX,
-    check_function=check_brocade_mlx_fan,
-    discovery_function=inventory_brocade_mlx_fan,
-    service_name="Fan %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1991.1.1.1.3.1.1",
         oids=["1", "2", "3"],
     ),
+    service_name="Fan %s",
+    discovery_function=inventory_brocade_mlx_fan,
+    check_function=check_brocade_mlx_fan,
 )

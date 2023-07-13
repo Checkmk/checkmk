@@ -47,14 +47,14 @@ def check_bluenet_sensor_temp(item, params, info):
 
 check_info["bluenet_sensor"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21695.1"),
-    discovery_function=inventory_bluenet_sensor_temp,
-    check_function=check_bluenet_sensor_temp,
-    service_name="Temperature %s",
-    check_ruleset_name="temperature",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21695.1.10.7.3.1",
         oids=["1", "2", "4", "5"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_bluenet_sensor_temp,
+    check_function=check_bluenet_sensor_temp,
+    check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (28.0, 35.0),
         "levels_lower": (13.0, 17.0),
@@ -99,8 +99,8 @@ def check_bluenet_sensor_hum(item, params, info):
 
 
 check_info["bluenet_sensor.hum"] = LegacyCheckDefinition(
+    service_name="Humidity %s",
     discovery_function=inventory_bluenet_sensor_hum,
     check_function=check_bluenet_sensor_hum,
-    service_name="Humidity %s",
     check_ruleset_name="humidity",
 )

@@ -86,11 +86,11 @@ def check_blade_blades(item, _no_params, info):
 
 check_info["blade_blades"] = LegacyCheckDefinition(
     detect=DETECT_BLADE,
-    discovery_function=inventory_blade_blades,
-    check_function=check_blade_blades,
-    service_name="Blade %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2.3.51.2.22.1.5.1.1",
         oids=["2", "3", "4", "5", "6"],
     ),
+    service_name="Blade %s",
+    discovery_function=inventory_blade_blades,
+    check_function=check_blade_blades,
 )

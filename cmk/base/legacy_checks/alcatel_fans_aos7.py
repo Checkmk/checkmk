@@ -11,11 +11,11 @@ from cmk.base.plugins.agent_based.utils.alcatel import DETECT_ALCATEL_AOS7
 
 check_info["alcatel_fans_aos7"] = LegacyCheckDefinition(
     detect=DETECT_ALCATEL_AOS7,
-    check_function=check_alcatel_fans,
-    discovery_function=inventory_alcatel_fans,
-    service_name="Fan %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6486.801.1.1.1.3.1.1.11.1",
         oids=["2"],
     ),
+    service_name="Fan %s",
+    discovery_function=inventory_alcatel_fans,
+    check_function=check_alcatel_fans,
 )

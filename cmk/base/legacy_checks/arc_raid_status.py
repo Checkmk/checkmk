@@ -53,7 +53,7 @@ def check_arc_raid_status(item, params, info):
 
 
 check_info["arc_raid_status"] = LegacyCheckDefinition(
-    check_function=check_arc_raid_status,
-    discovery_function=inventory_arc_raid_status,
     service_name="Raid Array #%s",
+    discovery_function=inventory_arc_raid_status,
+    check_function=check_arc_raid_status,
 )

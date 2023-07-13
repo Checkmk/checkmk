@@ -50,11 +50,11 @@ def check_apc_inputs(item, params, info):
 
 check_info["apc_inputs"] = LegacyCheckDefinition(
     detect=DETECT,
-    discovery_function=inventory_apc_inputs,
-    check_function=check_apc_inputs,
-    service_name="Input %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.25.2.2.1",
         oids=["3", "4", "5", "6"],
     ),
+    service_name="Input %s",
+    discovery_function=inventory_apc_inputs,
+    check_function=check_apc_inputs,
 )

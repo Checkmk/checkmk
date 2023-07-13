@@ -26,11 +26,11 @@ def check_checkpoint_voltage(item, params, info):
 
 check_info["checkpoint_voltage"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_checkpoint_voltage,
-    discovery_function=inventory_checkpoint_voltage,
-    service_name="Voltage %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2620.1.6.7.8.3.1",
         oids=["2", "3", "4", "6"],
     ),
+    service_name="Voltage %s",
+    discovery_function=inventory_checkpoint_voltage,
+    check_function=check_checkpoint_voltage,
 )

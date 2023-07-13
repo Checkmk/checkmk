@@ -34,11 +34,11 @@ def check_apc_sts_source(_not_item, params, info):
 
 check_info["apc_sts_source"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705.2.2"),
-    discovery_function=inventory_apc_sts_source,
-    check_function=check_apc_sts_source,
-    service_name="Source",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.705.2",
         oids=["3.5", "4.5"],
     ),
+    service_name="Source",
+    discovery_function=inventory_apc_sts_source,
+    check_function=check_apc_sts_source,
 )

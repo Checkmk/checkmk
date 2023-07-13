@@ -39,11 +39,11 @@ def check_cisco_fan(item, params, info):
 
 check_info["cisco_fan"] = LegacyCheckDefinition(
     detect=DETECT_CISCO,
-    check_function=check_cisco_fan,
-    discovery_function=inventory_cisco_fan,
-    service_name="FAN %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.13.1.4.1",
         oids=["2", "3", OIDEnd()],
     ),
+    service_name="FAN %s",
+    discovery_function=inventory_cisco_fan,
+    check_function=check_cisco_fan,
 )

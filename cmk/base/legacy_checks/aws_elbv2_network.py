@@ -70,9 +70,9 @@ def check_aws_elbv2_network_lcu(item, params, parsed):
 
 check_info["aws_elbv2_network"] = LegacyCheckDefinition(
     parse_function=parse_aws_elbv2_network,
+    service_name="AWS/NetworkELB LCUs",
     discovery_function=lambda p: inventory_aws_generic_single(p, ["ConsumedLCUs"]),
     check_function=check_aws_elbv2_network_lcu,
-    service_name="AWS/NetworkELB LCUs",
     check_ruleset_name="aws_elbv2_lcu",
 )
 
@@ -117,11 +117,11 @@ def check_aws_elbv2_network_connections(item, params, parsed):
 
 
 check_info["aws_elbv2_network.connections"] = LegacyCheckDefinition(
+    service_name="AWS/NetworkELB Connections",
     discovery_function=lambda p: inventory_aws_generic_single(
         p, _aws_elbv2_network_connection_types, requirement=any
     ),
     check_function=check_aws_elbv2_network_connections,
-    service_name="AWS/NetworkELB Connections",
 )
 
 # .
@@ -217,11 +217,11 @@ def check_aws_elbv2_network_tls_handshakes(item, params, parsed):
 
 
 check_info["aws_elbv2_network.tls_handshakes"] = LegacyCheckDefinition(
+    service_name="AWS/NetworkELB TLS Handshakes",
     discovery_function=lambda p: inventory_aws_generic_single(
         p, _aws_elbv2_network_tls_types, requirement=any
     ),
     check_function=check_aws_elbv2_network_tls_handshakes,
-    service_name="AWS/NetworkELB TLS Handshakes",
 )
 
 # .
@@ -263,11 +263,11 @@ def check_aws_elbv2_network_rst_packets(item, params, parsed):
 
 
 check_info["aws_elbv2_network.rst_packets"] = LegacyCheckDefinition(
+    service_name="AWS/NetworkELB Reset Packets",
     discovery_function=lambda p: inventory_aws_generic_single(
         p, _aws_elbv2_network_rst_packets_types, requirement=any
     ),
     check_function=check_aws_elbv2_network_rst_packets,
-    service_name="AWS/NetworkELB Reset Packets",
 )
 
 # .
@@ -307,9 +307,9 @@ def check_aws_elbv2_network_statistics(item, params, parsed):
 
 
 check_info["aws_elbv2_network.statistics"] = LegacyCheckDefinition(
+    service_name="AWS/NetworkELB Statistics",
     discovery_function=lambda p: inventory_aws_generic_single(
         p, _aws_elbv2_network_statistics_metric_names, requirement=any
     ),
     check_function=check_aws_elbv2_network_statistics,
-    service_name="AWS/NetworkELB Statistics",
 )

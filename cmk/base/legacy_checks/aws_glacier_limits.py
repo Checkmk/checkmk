@@ -31,9 +31,9 @@ def discover_aws_glacier_limits(section):
 
 check_info["aws_glacier_limits"] = LegacyCheckDefinition(
     parse_function=parse_aws_limits_generic,
+    service_name="AWS/Glacier Limits %s",
     discovery_function=discover_aws_glacier_limits,
     check_function=check_aws_glacier_limits,
-    service_name="AWS/Glacier Limits %s",
     check_ruleset_name="aws_glacier_limits",
     check_default_parameters={
         "number_of_vaults": (None, 80.0, 90.0),

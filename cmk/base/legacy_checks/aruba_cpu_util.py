@@ -37,14 +37,14 @@ def discover_aruba_cpu_util(section):
 
 check_info["aruba_cpu_util"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.14823"),
-    parse_function=parse_aruba_cpu_util,
-    check_function=check_aruba_cpu_util,
-    discovery_function=discover_aruba_cpu_util,
-    service_name="CPU utilization %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14823.2.2.1.1.1.9.1",
         oids=["2", "3"],
     ),
+    parse_function=parse_aruba_cpu_util,
+    service_name="CPU utilization %s",
+    discovery_function=discover_aruba_cpu_util,
+    check_function=check_aruba_cpu_util,
     check_ruleset_name="cpu_utilization_multiitem",
     check_default_parameters={
         "levels": (80.0, 90.0),

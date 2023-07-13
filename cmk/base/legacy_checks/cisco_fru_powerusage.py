@@ -78,10 +78,6 @@ def inventory_cisco_fru_powerusage(parsed):
 
 check_info["cisco_fru_powerusage"] = LegacyCheckDefinition(
     detect=DETECT_CISCO,
-    parse_function=parse_cisco_fru_powerusage,
-    discovery_function=inventory_cisco_fru_powerusage,
-    check_function=check_elphase,
-    service_name="FRU power usage %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.117.1.1.1.1",
@@ -92,5 +88,9 @@ check_info["cisco_fru_powerusage"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "1", "2", "3", "4"],
         ),
     ],
+    parse_function=parse_cisco_fru_powerusage,
+    service_name="FRU power usage %s",
+    discovery_function=inventory_cisco_fru_powerusage,
+    check_function=check_elphase,
     check_ruleset_name="el_inphase",
 )

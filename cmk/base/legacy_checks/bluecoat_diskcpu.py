@@ -25,11 +25,11 @@ def check_bluecoat_diskcpu(item, _no_params, info):
 
 check_info["bluecoat_diskcpu"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", "1.3.6.1.4.1.3417.1.1"),
-    check_function=check_bluecoat_diskcpu,
-    discovery_function=inventory_bluecoat_diskcpu,
-    service_name="%s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3417.2.4.1.1.1",
         oids=["3", "4", "6"],
     ),
+    service_name="%s",
+    discovery_function=inventory_bluecoat_diskcpu,
+    check_function=check_bluecoat_diskcpu,
 )

@@ -69,10 +69,10 @@ def check_aws_wafv2_web_acl(item, params, parsed):
 
 check_info["aws_wafv2_web_acl"] = LegacyCheckDefinition(
     parse_function=parse_aws_wafv2_web_acl,
+    service_name="AWS/WAFV2 Web ACL Requests",
     discovery_function=lambda p: inventory_aws_generic_single(
         p, ["AllowedRequests", "BlockedRequests"], requirement=any
     ),
     check_function=check_aws_wafv2_web_acl,
-    service_name="AWS/WAFV2 Web ACL Requests",
     check_ruleset_name="aws_wafv2_web_acl",
 )

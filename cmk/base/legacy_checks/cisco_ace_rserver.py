@@ -86,11 +86,11 @@ def check_cisco_ace_rserver(item, _no_params, info):
 
 check_info["cisco_ace_rserver"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.9.1.824"),
-    discovery_function=inventory_cisco_ace_rserver,
-    check_function=check_cisco_ace_rserver,
-    service_name="ACE RServer %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9.9.470.1.1.1.1",
         oids=["1", "3", OIDBytes("4"), "5", "12", "13", "19"],
     ),
+    service_name="ACE RServer %s",
+    discovery_function=inventory_cisco_ace_rserver,
+    check_function=check_cisco_ace_rserver,
 )

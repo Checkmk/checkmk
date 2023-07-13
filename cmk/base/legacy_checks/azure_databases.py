@@ -34,9 +34,9 @@ def check_azure_databases_storage(_item, params, resource):
 
 
 check_info["azure_databases.storage"] = LegacyCheckDefinition(
+    service_name="DB %s Storage",
     discovery_function=discover_azure_by_metrics("average_storage_percent"),
     check_function=check_azure_databases_storage,
-    service_name="DB %s Storage",
     check_ruleset_name="azure_databases",
     check_default_parameters={
         "storage_percent_levels": (85.0, 95.0),
@@ -56,9 +56,9 @@ def check_azure_databases_deadlock(_item, params, resource):
 
 
 check_info["azure_databases.deadlock"] = LegacyCheckDefinition(
+    service_name="DB %s Deadlocks",
     discovery_function=discover_azure_by_metrics("average_deadlock"),
     check_function=check_azure_databases_deadlock,
-    service_name="DB %s Deadlocks",
     check_ruleset_name="azure_databases",
     check_default_parameters={
         "storage_percent_levels": (85.0, 95.0),
@@ -82,9 +82,9 @@ def check_azure_databases_cpu(_item, params, resource):
 
 
 check_info["azure_databases.cpu"] = LegacyCheckDefinition(
+    service_name="DB %s CPU",
     discovery_function=discover_azure_by_metrics("average_cpu_percent"),
     check_function=check_azure_databases_cpu,
-    service_name="DB %s CPU",
     check_ruleset_name="azure_databases",
     check_default_parameters={
         "storage_percent_levels": (85.0, 95.0),
@@ -110,9 +110,9 @@ def check_azure_databases_dtu(_item, params, resource):
 
 
 check_info["azure_databases.dtu"] = LegacyCheckDefinition(
+    service_name="DB %s DTU",
     discovery_function=discover_azure_by_metrics("average_dtu_consumption_percent"),
     check_function=check_azure_databases_dtu,
-    service_name="DB %s DTU",
     check_ruleset_name="azure_databases",
     check_default_parameters={
         "storage_percent_levels": (85.0, 95.0),
@@ -138,11 +138,11 @@ def check_azure_databases_connections(_item, params, resource):
 
 
 check_info["azure_databases.connections"] = LegacyCheckDefinition(
+    service_name="DB %s Connections",
     discovery_function=discover_azure_by_metrics(
         "average_connection_successful", "average_connection_failed"
     ),
     check_function=check_azure_databases_connections,
-    service_name="DB %s Connections",
     check_ruleset_name="azure_databases",
     check_default_parameters={
         "storage_percent_levels": (85.0, 95.0),
@@ -164,9 +164,9 @@ def discover_azure_databases(section):
 
 check_info["azure_databases"] = LegacyCheckDefinition(
     parse_function=parse_resources,
+    service_name="DB %s",
     discovery_function=discover_azure_databases,
     check_function=check_azure_databases,
-    service_name="DB %s",
     check_ruleset_name="azure_databases",
     check_default_parameters={
         "storage_percent_levels": (85.0, 95.0),

@@ -68,8 +68,8 @@ def check_appdynamics_sessions(item, params, info):
 
 
 check_info["appdynamics_sessions"] = LegacyCheckDefinition(
+    service_name="AppDynamics Sessions %s",
     discovery_function=inventory_appdynamics_sessions,
     check_function=check_appdynamics_sessions,
-    service_name="AppDynamics Sessions %s",
     check_ruleset_name="jvm_sessions",
 )

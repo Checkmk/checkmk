@@ -57,8 +57,8 @@ def check_cadvisor_cpu(_item, params, parsed):
 
 check_info["cadvisor_cpu"] = LegacyCheckDefinition(
     parse_function=parse_cadvisor_cpu,
+    service_name="CPU utilization",
     discovery_function=discover_cadvisor_cpu,
     check_function=check_cadvisor_cpu,
-    service_name="CPU utilization",
     check_ruleset_name="cpu_utilization",
 )

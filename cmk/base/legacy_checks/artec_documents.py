@@ -38,11 +38,11 @@ check_info["artec_documents"] = LegacyCheckDefinition(
         contains(".1.3.6.1.2.1.1.1.0", "version"),
         contains(".1.3.6.1.2.1.1.1.0", "serial"),
     ),
-    discovery_function=inventory_artec_documents,
-    check_function=check_artec_documents,
-    service_name="Documents",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.31560.0.0.3.1",
         oids=["3", "1"],
     ),
+    service_name="Documents",
+    discovery_function=inventory_artec_documents,
+    check_function=check_artec_documents,
 )

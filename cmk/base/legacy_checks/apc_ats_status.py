@@ -71,11 +71,11 @@ def check_apc_ats_status(_no_item, source, info):
 
 check_info["apc_ats_status"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.318.1.3.11"),
-    check_function=check_apc_ats_status,
-    discovery_function=inventory_apc_ats_status,
-    service_name="ATS Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.8.5.1",
         oids=["1.0", "2.0", "3.0", "4.0", "5.0", "6.0"],
     ),
+    service_name="ATS Status",
+    discovery_function=inventory_apc_ats_status,
+    check_function=check_apc_ats_status,
 )

@@ -109,10 +109,6 @@ check_info["cisco_fantray"] = LegacyCheckDefinition(
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "cisco"), not_exists(".1.3.6.1.4.1.9.9.13.1.4.1.2.*")
     ),
-    parse_function=parse_cisco_fantray,
-    discovery_function=inventory_cisco_fantray,
-    check_function=check_cisco_fantray,
-    service_name="Fan %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.9.9.117.1.4.1.1",
@@ -123,4 +119,8 @@ check_info["cisco_fantray"] = LegacyCheckDefinition(
             oids=[OIDEnd(), OIDCached("7")],
         ),
     ],
+    parse_function=parse_cisco_fantray,
+    service_name="Fan %s",
+    discovery_function=inventory_cisco_fantray,
+    check_function=check_cisco_fantray,
 )

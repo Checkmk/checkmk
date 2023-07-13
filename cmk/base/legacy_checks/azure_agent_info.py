@@ -161,9 +161,9 @@ def check_azure_agent_info(_no_item, params, parsed):
 
 check_info["azure_agent_info"] = LegacyCheckDefinition(
     parse_function=parse_azure_agent_info,
+    service_name="Azure Agent Info",
     discovery_function=discovery_azure_agent_info,
     check_function=check_azure_agent_info,
-    service_name="Azure Agent Info",
     check_ruleset_name="azure_agent_info",
     check_default_parameters={
         "warning_levels": (1, 10),

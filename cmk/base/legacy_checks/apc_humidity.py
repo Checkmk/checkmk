@@ -26,13 +26,13 @@ def check_apc_humidity(item, params, info):
 
 check_info["apc_humidity"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_apc_humidity,
-    discovery_function=inventory_apc_humidity,
-    service_name="Humidity %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.10.4.2.3.1",
         oids=["3", "6"],
     ),
+    service_name="Humidity %s",
+    discovery_function=inventory_apc_humidity,
+    check_function=check_apc_humidity,
     check_ruleset_name="humidity",
     check_default_parameters={
         "levels": (40, 35),

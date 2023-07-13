@@ -84,7 +84,7 @@ def check_aix_hacmp_nodes(item, _no_params, parsed):
 
 check_info["aix_hacmp_nodes"] = LegacyCheckDefinition(
     parse_function=parse_aix_hacmp_nodes,
+    service_name="HACMP Node %s",
     discovery_function=inventory_aix_hacmp_nodes,
     check_function=check_aix_hacmp_nodes,
-    service_name="HACMP Node %s",
 )

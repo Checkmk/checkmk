@@ -32,13 +32,13 @@ check_info["bintec_info"] = LegacyCheckDefinition(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.272.4.200.83.88.67.66.0.0"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.272.4.158.82.78.66.48.0.0"),
     ),
-    check_function=check_bintec_info,
-    discovery_function=inventory_bintec_info,
-    service_name="Bintec Info",
     # 1.3.6.1.4.1.272.4.1.31.0 S/N
-    # 1.3.6.1.4.1.272.4.1.26.0 SW Version
+    # 1.3.6.1.4.1.272.4.1.26.0 SW Version,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.272.4.1",
         oids=["26.0", "31.0"],
     ),
+    service_name="Bintec Info",
+    discovery_function=inventory_bintec_info,
+    check_function=check_bintec_info,
 )

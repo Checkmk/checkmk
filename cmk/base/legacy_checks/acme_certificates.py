@@ -59,13 +59,13 @@ def check_acme_certificates(item, params, info):
 
 check_info["acme_certificates"] = LegacyCheckDefinition(
     detect=DETECT_ACME,
-    discovery_function=inventory_acme_certificates,
-    check_function=check_acme_certificates,
-    service_name="Certificate %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.9148.3.9.1.10.1",
         oids=["3", "5", "6", "7"],
     ),
+    service_name="Certificate %s",
+    discovery_function=inventory_acme_certificates,
+    check_function=check_acme_certificates,
     check_ruleset_name="acme_certificates",
     check_default_parameters={
         "expire_lower": (604800, 2592000),  # 1 week, 30 days, suggested by customer

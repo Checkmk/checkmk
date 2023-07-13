@@ -50,9 +50,9 @@ def check_atto_fibrebridge_chassis_temp(item, params, parsed):
 
 
 check_info["atto_fibrebridge_chassis.temp"] = LegacyCheckDefinition(
+    service_name="Temperature %s",
     discovery_function=inventory_atto_fibrebridge_chassis_temp,
     check_function=check_atto_fibrebridge_chassis_temp,
-    service_name="Temperature %s",
     check_ruleset_name="temperature",
 )
 
@@ -82,12 +82,12 @@ def check_atto_fibrebridge_chassis(_no_item, _no_params, parsed):
 
 check_info["atto_fibrebridge_chassis"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.4547"),
-    parse_function=parse_atto_fibrebridge_chassis,
-    discovery_function=inventory_atto_fibrebridge_chassis,
-    check_function=check_atto_fibrebridge_chassis,
-    service_name="Throughput Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.4547.2.3.2",
         oids=["4", "5", "8", "11"],
     ),
+    parse_function=parse_atto_fibrebridge_chassis,
+    service_name="Throughput Status",
+    discovery_function=inventory_atto_fibrebridge_chassis,
+    check_function=check_atto_fibrebridge_chassis,
 )

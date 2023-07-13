@@ -69,10 +69,10 @@ def check_acme_sbc(_no_item, _no_params, parsed):
 
 
 check_info["acme_sbc"] = LegacyCheckDefinition(
-    check_function=check_acme_sbc,
-    discovery_function=inventory_acme_sbc,
-    service_name="Status",
     parse_function=acme_sbc_parse_function,
+    service_name="Status",
+    discovery_function=inventory_acme_sbc,
+    check_function=check_acme_sbc,
 )
 
 
@@ -90,7 +90,7 @@ def check_acme_sbc_settings(_no_item, params, parsed):
 
 
 check_info["acme_sbc.settings"] = LegacyCheckDefinition(
-    check_function=check_acme_sbc_settings,
-    discovery_function=inventory_acme_sbc_settings,
     service_name="Settings",
+    discovery_function=inventory_acme_sbc_settings,
+    check_function=check_acme_sbc_settings,
 )

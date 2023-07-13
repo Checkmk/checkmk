@@ -57,11 +57,11 @@ def check_checkpoint_ha_status(_no_item, _no_params, info):
 
 check_info["checkpoint_ha_status"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_checkpoint_ha_status,
-    discovery_function=inventory_checkpoint_ha_status,
-    service_name="HA Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2620.1.5",
         oids=["2", "3", "4", "5", "6", "7", "101", "103"],
     ),
+    service_name="HA Status",
+    discovery_function=inventory_checkpoint_ha_status,
+    check_function=check_checkpoint_ha_status,
 )

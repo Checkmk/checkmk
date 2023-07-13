@@ -23,11 +23,11 @@ def check_apc_inrow_fanspeed(_no_item, _no_params, info):
 
 check_info["apc_inrow_fanspeed"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_apc_inrow_fanspeed,
-    discovery_function=inventory_apc_inrow_fanspeed,
-    service_name="Fanspeed",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.318.1.1.13.3.2.2.2",
         oids=["16"],
     ),
+    service_name="Fanspeed",
+    discovery_function=inventory_apc_inrow_fanspeed,
+    check_function=check_apc_inrow_fanspeed,
 )

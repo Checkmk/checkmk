@@ -31,13 +31,13 @@ def discover_bluenet_meter(section):
 
 check_info["bluenet_meter"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.21695.1"),
-    parse_function=parse_bluenet_meter,
-    discovery_function=discover_bluenet_meter,
-    check_function=check_elphase,
-    service_name="Powermeter %s",
-    check_ruleset_name="ups_outphase",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21695.1.10.7.2.1",
         oids=["1", "5", "7", "8", "9"],
     ),
+    parse_function=parse_bluenet_meter,
+    service_name="Powermeter %s",
+    discovery_function=discover_bluenet_meter,
+    check_function=check_elphase,
+    check_ruleset_name="ups_outphase",
 )

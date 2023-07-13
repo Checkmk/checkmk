@@ -1578,7 +1578,9 @@ function handle_graph_hover_popup_update(
         popup_data = JSON.parse(ajax_response);
     } catch (e) {
         console.log(e);
-        alert("Failed to parse graph hover update response: " + ajax_response);
+        console.error(
+            "Failed to parse graph hover update response: " + ajax_response
+        );
         g_graph_update_in_process = false;
         return;
     }
@@ -1831,7 +1833,9 @@ function handle_graph_update(
         response = JSON.parse(ajax_response);
     } catch (e) {
         console.log(e);
-        alert("Failed to parse graph update response: " + ajax_response);
+        console.error(
+            "Failed to parse graph update response: " + ajax_response
+        );
         return;
     }
     // Structure of response:

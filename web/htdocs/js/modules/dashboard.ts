@@ -1112,7 +1112,7 @@ function persist_dashlet_pos(nr: number) {
         !Number.isInteger(dashlet.w) ||
         !Number.isInteger(dashlet.h)
     ) {
-        alert(
+        console.error(
             "Error: Invalid element coordinates found. Please report " +
                 "this issue (" +
                 JSON.stringify(dashlet) +
@@ -1146,7 +1146,7 @@ function persist_dashlet_pos(nr: number) {
 function handle_dashlet_post_response(_unused: any, response_text: string) {
     const parts = response_text.split(" ");
     if (parts[0] != "OK") {
-        alert("Error: " + response_text);
+        console.error("Error: " + response_text);
     } else {
         dashboard_properties.dashboard_mtime = parseInt(parts[1]);
     }

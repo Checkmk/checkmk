@@ -422,7 +422,7 @@ export function add_to_visual(visual_type: string, visual_name: string) {
             if (response_body.substr(0, 2) == "OK") {
                 window.location.href = response_body.substr(3);
             } else {
-                alert("Failed to add element: " + response_body);
+                console.error("Failed to add element: " + response_body);
             }
         },
     });

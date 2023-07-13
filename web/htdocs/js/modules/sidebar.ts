@@ -1178,7 +1178,7 @@ function handle_update_messages(_data: any, response_text: string) {
 
     update_message_trigger(messages_text, messages_count);
     result.popup_messages.forEach(msg => {
-        alert(msg.text);
+        console.error(msg.text);
         mark_message_read(msg.id, messages_text, messages_count);
     });
 }

@@ -55,7 +55,9 @@ export function execute_javascript_by_object(obj: HTMLElement) {
                 eval(aScripts[i].text);
                 current_script = null;
             } catch (e) {
-                alert(aScripts[i].text + "\nError:" + (e as any).message);
+                console.error(
+                    aScripts[i].text + "\nError:" + (e as any).message
+                );
             }
         }
     }

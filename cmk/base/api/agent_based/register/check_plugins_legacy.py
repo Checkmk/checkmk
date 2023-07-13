@@ -295,6 +295,9 @@ def create_check_plugin_from_legacy(
         )
 
     new_check_name = maincheckify(check_plugin_name)
+    sections = [check_plugin_name.split(".", 1)[0]]
+    if "." in check_plugin_name:
+        assert sections == check_info_element["sections"]
 
     discovery_function = _create_discovery_function(
         check_plugin_name,
@@ -309,7 +312,7 @@ def create_check_plugin_from_legacy(
 
     return create_check_plugin(
         name=new_check_name,
-        sections=[check_plugin_name.split(".", 1)[0]],
+        sections=sections,
         service_name=check_info_element["service_name"],
         discovery_function=discovery_function,
         discovery_default_parameters=None,  # legacy madness!

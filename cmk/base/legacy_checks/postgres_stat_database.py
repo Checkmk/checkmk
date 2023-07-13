@@ -128,6 +128,7 @@ def check_postgres_stat_database_size(item, params, parsed):
 
 check_info["postgres_stat_database.size"] = LegacyCheckDefinition(
     service_name="PostgreSQL DB %s Size",
+    sections=["postgres_stat_database"],
     discovery_function=inventory_postgres_stat_database,
     check_function=check_postgres_stat_database_size,
     check_ruleset_name="postgres_stat_database",

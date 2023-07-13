@@ -141,6 +141,7 @@ check_info["juniper_fru"] = LegacyCheckDefinition(
 
 check_info["juniper_fru.fan"] = LegacyCheckDefinition(
     service_name="Fan FRU %s",
+    sections=["juniper_fru"],
     discovery_function=lambda info: inventory_juniper_fru(info, ("13",)),
     check_function=check_juniper_fru,
 )

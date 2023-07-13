@@ -109,6 +109,7 @@ def check_aws_network_elb_target_groups(item, params, parsed):
 
 check_info["aws_elbv2_target_groups.network"] = LegacyCheckDefinition(
     service_name="AWS/NetworkELB Target Groups",
+    sections=["aws_elbv2_target_groups"],
     discovery_function=inventory_aws_network_elb_target_groups,
     check_function=check_aws_network_elb_target_groups,
 )

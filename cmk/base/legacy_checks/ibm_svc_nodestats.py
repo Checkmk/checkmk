@@ -196,6 +196,7 @@ def check_ibm_svc_nodestats_diskio(item, _no_params, info):
 
 check_info["ibm_svc_nodestats.diskio"] = LegacyCheckDefinition(
     service_name="Disk IO %s",
+    sections=["ibm_svc_nodestats"],
     discovery_function=inventory_ibm_svc_nodestats_diskio,
     check_function=check_ibm_svc_nodestats_diskio,
 )
@@ -233,6 +234,7 @@ def check_ibm_svc_nodestats_iops(item, _no_params, info):
 
 check_info["ibm_svc_nodestats.iops"] = LegacyCheckDefinition(
     service_name="Disk IOPS %s",
+    sections=["ibm_svc_nodestats"],
     discovery_function=inventory_ibm_svc_nodestats_iops,
     check_function=check_ibm_svc_nodestats_iops,
 )
@@ -270,6 +272,7 @@ def check_ibm_svc_nodestats_disk_latency(item, _no_params, info):
 
 check_info["ibm_svc_nodestats.disk_latency"] = LegacyCheckDefinition(
     service_name="Disk Latency %s",
+    sections=["ibm_svc_nodestats"],
     discovery_function=inventory_ibm_svc_nodestats_disk_latency,
     check_function=check_ibm_svc_nodestats_disk_latency,
 )
@@ -305,6 +308,7 @@ def check_ibm_svc_nodestats_cpu(item, params, info):
 
 check_info["ibm_svc_nodestats.cpu_util"] = LegacyCheckDefinition(
     service_name="CPU utilization %s",
+    sections=["ibm_svc_nodestats"],
     discovery_function=inventory_ibm_svc_nodestats_cpu,
     check_function=check_ibm_svc_nodestats_cpu,
     check_ruleset_name="cpu_utilization_multiitem",
@@ -350,6 +354,7 @@ def check_ibm_svc_nodestats_cache(item, _no_params, info):
 
 check_info["ibm_svc_nodestats.cache"] = LegacyCheckDefinition(
     service_name="Cache %s",
+    sections=["ibm_svc_nodestats"],
     discovery_function=inventory_ibm_svc_nodestats_cache,
     check_function=check_ibm_svc_nodestats_cache,
 )

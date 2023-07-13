@@ -89,6 +89,7 @@ def check_safenet_hsm_events(_no_item, params, parsed):
 
 check_info["safenet_hsm.events"] = LegacyCheckDefinition(
     service_name="HSM Safenet Event Stats",
+    sections=["safenet_hsm"],
     discovery_function=inventory_safenet_hsm_events,
     check_function=check_safenet_hsm_events,
     check_ruleset_name="safenet_hsm_eventstats",

@@ -54,6 +54,7 @@ def check_safenet_ntls_connrate(item, _no_params, parsed):
 
 check_info["safenet_ntls.connrate"] = LegacyCheckDefinition(
     service_name="NTLS Connection Rate: %s",
+    sections=["safenet_ntls"],
     discovery_function=inventory_safenet_ntls_connrate,
     check_function=check_safenet_ntls_connrate,
 )
@@ -87,6 +88,7 @@ def check_safenet_ntls_expiration(_no_item, _no_params, parsed):
 
 check_info["safenet_ntls.expiration"] = LegacyCheckDefinition(
     service_name="NTLS Expiration Date",
+    sections=["safenet_ntls"],
     discovery_function=inventory_safenet_ntls_expiration,
     check_function=check_safenet_ntls_expiration,
 )
@@ -116,6 +118,7 @@ def check_safenet_ntls_links(_no_item, params, parsed):
 
 check_info["safenet_ntls.links"] = LegacyCheckDefinition(
     service_name="NTLS Links",
+    sections=["safenet_ntls"],
     discovery_function=inventory_safenet_ntls_links,
     check_function=check_safenet_ntls_links,
     check_ruleset_name="safenet_ntls_links",
@@ -156,6 +159,7 @@ def check_safenet_ntls_clients(_no_item, params, parsed):
 
 check_info["safenet_ntls.clients"] = LegacyCheckDefinition(
     service_name="NTLS Clients",
+    sections=["safenet_ntls"],
     discovery_function=inventory_safenet_ntls_clients,
     check_function=check_safenet_ntls_clients,
     check_ruleset_name="safenet_ntls_clients",

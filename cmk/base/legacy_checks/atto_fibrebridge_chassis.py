@@ -51,6 +51,7 @@ def check_atto_fibrebridge_chassis_temp(item, params, parsed):
 
 check_info["atto_fibrebridge_chassis.temp"] = LegacyCheckDefinition(
     service_name="Temperature %s",
+    sections=["atto_fibrebridge_chassis"],
     discovery_function=inventory_atto_fibrebridge_chassis_temp,
     check_function=check_atto_fibrebridge_chassis_temp,
     check_ruleset_name="temperature",

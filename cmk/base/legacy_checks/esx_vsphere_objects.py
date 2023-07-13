@@ -137,6 +137,7 @@ def check_esx_vsphere_objects_count(_no_item, params, parsed):
 
 check_info["esx_vsphere_objects.count"] = LegacyCheckDefinition(
     service_name="Object count",
+    sections=["esx_vsphere_objects"],
     discovery_function=inventory_esx_vsphere_objects_count,
     check_function=check_esx_vsphere_objects_count,
     check_ruleset_name="esx_vsphere_objects_count",

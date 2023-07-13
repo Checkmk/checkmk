@@ -72,6 +72,7 @@ def check_ibm_svc_enclosurestats_temp(item, params, info):
 
 check_info["ibm_svc_enclosurestats.temp"] = LegacyCheckDefinition(
     service_name="Temperature Enclosure %s",
+    sections=["ibm_svc_enclosurestats"],
     discovery_function=inventory_ibm_svc_enclosurestats_temp,
     check_function=check_ibm_svc_enclosurestats_temp,
     check_ruleset_name="temperature",
@@ -106,6 +107,7 @@ def check_ibm_svc_enclosurestats_power(item, _no_params, info):
 
 check_info["ibm_svc_enclosurestats.power"] = LegacyCheckDefinition(
     service_name="Power Enclosure %s",
+    sections=["ibm_svc_enclosurestats"],
     discovery_function=inventory_ibm_svc_enclosurestats_power,
     check_function=check_ibm_svc_enclosurestats_power,
 )

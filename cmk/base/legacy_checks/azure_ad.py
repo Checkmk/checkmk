@@ -131,6 +131,7 @@ def check_azure_sync(item, params, parsed):
 
 check_info["azure_ad.sync"] = LegacyCheckDefinition(
     service_name="AD Sync %s",
+    sections=["azure_ad"],
     discovery_function=discover_sync,
     check_function=check_azure_sync,
     check_ruleset_name="azure_ad",

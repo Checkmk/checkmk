@@ -46,6 +46,7 @@ def check_emc_isilon_clusterhealth(item, _no_params, info):
 
 check_info["emc_isilon.clusterhealth"] = LegacyCheckDefinition(
     service_name="Cluster Health",
+    sections=["emc_isilon"],
     discovery_function=inventory_emc_isilon_clusterhealth,
     check_function=check_emc_isilon_clusterhealth,
 )
@@ -74,6 +75,7 @@ def check_emc_isilon_nodehealth(item, _no_params, info):
 
 check_info["emc_isilon.nodehealth"] = LegacyCheckDefinition(
     service_name="Node Health",
+    sections=["emc_isilon"],
     discovery_function=inventory_emc_isilon_nodehealth,
     check_function=check_emc_isilon_nodehealth,
 )
@@ -97,6 +99,7 @@ def check_emc_isilon_nodes(item, _no_params, info):
 
 check_info["emc_isilon.nodes"] = LegacyCheckDefinition(
     service_name="Nodes",
+    sections=["emc_isilon"],
     discovery_function=inventory_emc_isilon_nodes,
     check_function=check_emc_isilon_nodes,
 )
@@ -115,6 +118,7 @@ def check_emc_isilon_names(item, _no_params, info):
 
 check_info["emc_isilon.names"] = LegacyCheckDefinition(
     service_name="Isilon Info",
+    sections=["emc_isilon"],
     discovery_function=inventory_emc_isilon_names,
     check_function=check_emc_isilon_names,
 )

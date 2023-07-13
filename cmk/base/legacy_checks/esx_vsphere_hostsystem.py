@@ -51,6 +51,7 @@ def check_esx_vsphere_hostsystem_state(_no_item, _no_params, parsed):
 
 check_info["esx_vsphere_hostsystem.state"] = LegacyCheckDefinition(
     service_name="Overall state",
+    sections=["esx_vsphere_hostsystem"],
     discovery_function=inventory_esx_vsphere_hostsystem_state,
     check_function=check_esx_vsphere_hostsystem_state,
 )
@@ -92,6 +93,7 @@ def check_esx_vsphere_hostsystem_maintenance(_no_item, params, parsed):
 
 check_info["esx_vsphere_hostsystem.maintenance"] = LegacyCheckDefinition(
     service_name="Maintenance Mode",
+    sections=["esx_vsphere_hostsystem"],
     discovery_function=inventory_esx_vsphere_hostsystem_maintenance,
     check_function=check_esx_vsphere_hostsystem_maintenance,
     check_ruleset_name="esx_hostystem_maintenance",
@@ -217,6 +219,7 @@ def check_esx_vsphere_hostsystem_multipath(  # pylint: disable=too-many-branches
 
 check_info["esx_vsphere_hostsystem.multipath"] = LegacyCheckDefinition(
     service_name="Multipath %s",
+    sections=["esx_vsphere_hostsystem"],
     discovery_function=inventory_esx_vsphere_hostsystem_multipath,
     check_function=check_esx_vsphere_hostsystem_multipath,
     check_ruleset_name="multipath_count",

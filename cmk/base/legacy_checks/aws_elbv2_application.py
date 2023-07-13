@@ -132,6 +132,7 @@ def check_aws_elbv2_application_connections(item, params, parsed):
 
 check_info["aws_elbv2_application.connections"] = LegacyCheckDefinition(
     service_name="AWS/ApplicationELB Connections",
+    sections=["aws_elbv2_application"],
     discovery_function=lambda p: inventory_aws_generic_single(
         p, _aws_elbv2_application_connection_types, requirement=any
     ),
@@ -160,6 +161,7 @@ def check_aws_elbv2_application_http_elb(item, params, parsed):
 
 check_info["aws_elbv2_application.http_elb"] = LegacyCheckDefinition(
     service_name="AWS/ApplicationELB HTTP ELB",
+    sections=["aws_elbv2_application"],
     discovery_function=lambda p: inventory_aws_generic_single(p, ["RequestCount"]),
     check_function=check_aws_elbv2_application_http_elb,
     check_ruleset_name="aws_elb_http",
@@ -205,6 +207,7 @@ def check_aws_elbv2_application_http_redirects(item, params, parsed):
 
 check_info["aws_elbv2_application.http_redirects"] = LegacyCheckDefinition(
     service_name="AWS/ApplicationELB HTTP Redirects",
+    sections=["aws_elbv2_application"],
     discovery_function=lambda p: inventory_aws_generic_single(
         p, _aws_elbv2_application_http_redirects_metrics, requirement=any
     ),
@@ -260,6 +263,7 @@ def check_aws_elbv2_application_statistics(item, params, parsed):
 
 check_info["aws_elbv2_application.statistics"] = LegacyCheckDefinition(
     service_name="AWS/ApplicationELB Statistics",
+    sections=["aws_elbv2_application"],
     discovery_function=lambda p: inventory_aws_generic_single(
         p, _aws_elbv2_application_statistics_metrics, requirement=any
     ),

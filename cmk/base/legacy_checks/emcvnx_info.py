@@ -165,6 +165,7 @@ def check_emcvnx_storage(item, params, parsed):
 
 check_info["emcvnx_info.storage"] = LegacyCheckDefinition(
     service_name="EMC VNX Storage Processor",
+    sections=["emcvnx_info"],
     discovery_function=lambda x: inventory_emcvnx_info(x, "storage"),
     check_function=check_emcvnx_storage,
 )
@@ -190,6 +191,7 @@ def check_emcvnx_link(item, params, parsed):
 
 check_info["emcvnx_info.link"] = LegacyCheckDefinition(
     service_name="EMC VNX Link",
+    sections=["emcvnx_info"],
     discovery_function=lambda x: inventory_emcvnx_info(x, "link"),
     check_function=check_emcvnx_link,
 )
@@ -212,6 +214,7 @@ def check_emcvnx_config(item, params, parsed):
 
 check_info["emcvnx_info.config"] = LegacyCheckDefinition(
     service_name="EMC VNX Config",
+    sections=["emcvnx_info"],
     discovery_function=lambda x: inventory_emcvnx_info(x, "config"),
     check_function=check_emcvnx_config,
 )
@@ -237,6 +240,7 @@ def check_emcvnx_io(item, params, parsed):
 
 check_info["emcvnx_info.io"] = LegacyCheckDefinition(
     service_name="EMC VNX IO",
+    sections=["emcvnx_info"],
     discovery_function=lambda x: inventory_emcvnx_info(x, "io"),
     check_function=check_emcvnx_io,
 )

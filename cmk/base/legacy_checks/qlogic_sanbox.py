@@ -103,6 +103,7 @@ def check_qlogic_sanbox_temp(item, _no_params, info):
 
 check_info["qlogic_sanbox.temp"] = LegacyCheckDefinition(
     service_name="Temperature Sensor %s",
+    sections=["qlogic_sanbox"],
     discovery_function=inventory_qlogic_sanbox_temp,
     check_function=check_qlogic_sanbox_temp,
 )
@@ -167,6 +168,7 @@ def check_qlogic_sanbox_psu(item, _no_params, info):
 
 check_info["qlogic_sanbox.psu"] = LegacyCheckDefinition(
     service_name="PSU %s",
+    sections=["qlogic_sanbox"],
     discovery_function=inventory_qlogic_sanbox_psu,
     check_function=check_qlogic_sanbox_psu,
 )

@@ -70,6 +70,7 @@ def check_scaleio_pd_status(item, _no_params, parsed):
 
 check_info["scaleio_pd.status"] = LegacyCheckDefinition(
     service_name="ScaleIO PD status %s",
+    sections=["scaleio_pd"],
     discovery_function=inventory_scaleio_pd_status,
     check_function=check_scaleio_pd_status,
 )

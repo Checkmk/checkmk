@@ -203,6 +203,7 @@ def check_websphere_mq_manager(item, params, parsed):  # pylint: disable=too-man
 
 check_info["websphere_mq_instance.manager"] = LegacyCheckDefinition(
     service_name="MQ Manager %s",
+    sections=["websphere_mq_instance"],
     discovery_function=inventory_websphere_mq_manager,
     check_function=check_websphere_mq_manager,
     check_ruleset_name="websphere_mq_manager",

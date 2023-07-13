@@ -146,6 +146,7 @@ def check_hp_hh3c_ext_states(item, params, parsed):
 
 check_info["hp_hh3c_ext.states"] = LegacyCheckDefinition(
     service_name="Status %s",
+    sections=["hp_hh3c_ext"],
     discovery_function=inventory_hp_hh3c_ext_states,
     check_function=check_hp_hh3c_ext_states,
     check_ruleset_name="hp_hh3c_ext_states",
@@ -179,6 +180,7 @@ def check_hp_hh3c_ext_cpu(item, params, parsed):
 
 check_info["hp_hh3c_ext.cpu"] = LegacyCheckDefinition(
     service_name="CPU utilization %s",
+    sections=["hp_hh3c_ext"],
     discovery_function=inventory_hp_hh3c_ext_cpu,
     check_function=check_hp_hh3c_ext_cpu,
     check_ruleset_name="cpu_utilization_multiitem",
@@ -220,6 +222,7 @@ def check_hp_hh3c_ext_mem(item, params, parsed):
 
 check_info["hp_hh3c_ext.mem"] = LegacyCheckDefinition(
     service_name="Memory %s",
+    sections=["hp_hh3c_ext"],
     discovery_function=inventory_hp_hh3c_ext_mem,
     check_function=check_hp_hh3c_ext_mem,
     check_ruleset_name="memory_multiitem",

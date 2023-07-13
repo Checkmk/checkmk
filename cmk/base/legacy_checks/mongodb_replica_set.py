@@ -297,6 +297,7 @@ def _get_primary_election_time(primary):
 
 check_info["mongodb_replica_set.election"] = LegacyCheckDefinition(
     service_name="MongoDB Replica Set Primary Election",
+    sections=["mongodb_replica_set"],
     discovery_function=discover_mongodb_replica_set,
     check_function=check_mongodb_primary_election,
     check_ruleset_name="mongodb_replica_set",

@@ -105,6 +105,7 @@ def check_hp_msa_psu(item, params, parsed):
 
 check_info["hp_msa_psu.sensor"] = LegacyCheckDefinition(
     service_name="Power Supply Voltage %s",
+    sections=["hp_msa_psu"],
     discovery_function=inventory_hp_msa_psu,
     check_function=check_hp_msa_psu,
     check_ruleset_name="hp_msa_psu_voltage",
@@ -137,6 +138,7 @@ def check_hp_msa_psu_temp(item, params, parsed):
 
 check_info["hp_msa_psu.temp"] = LegacyCheckDefinition(
     service_name="Temperature Power Supply %s",
+    sections=["hp_msa_psu"],
     discovery_function=inventory_hp_msa_psu,
     check_function=check_hp_msa_psu_temp,
     check_ruleset_name="temperature",

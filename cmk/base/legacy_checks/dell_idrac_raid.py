@@ -74,6 +74,7 @@ def check_dell_idrac_raid_bbu(item, params, info):
 
 check_info["dell_idrac_raid.bbu"] = LegacyCheckDefinition(
     service_name="Raid BBU %s",
+    sections=["dell_idrac_raid"],
     discovery_function=inventory_dell_idrac_raid_bbu,
     check_function=check_dell_idrac_raid_bbu,
 )

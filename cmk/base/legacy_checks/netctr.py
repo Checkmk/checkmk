@@ -106,6 +106,7 @@ def check_netctr_combined(nic, params, info):
 
 check_info["netctr.combined"] = LegacyCheckDefinition(
     service_name="NIC %s counters",
+    sections=["netctr"],
     discovery_function=inventory_netctr_combined,
     check_function=check_netctr_combined,
 )

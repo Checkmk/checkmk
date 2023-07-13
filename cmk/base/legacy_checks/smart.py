@@ -47,6 +47,7 @@ def check_smart_temp(item, params, section):
 check_info["smart.temp"] = LegacyCheckDefinition(
     # section already migrated!
     service_name="Temperature SMART %s",
+    sections=["smart"],
     discovery_function=inventory_smart_temp,
     check_function=check_smart_temp,
     check_ruleset_name="temperature",

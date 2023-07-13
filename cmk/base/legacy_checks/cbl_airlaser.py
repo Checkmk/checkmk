@@ -202,12 +202,14 @@ check_info["cbl_airlaser"] = LegacyCheckDefinition(
 
 check_info["cbl_airlaser.status"] = LegacyCheckDefinition(
     service_name="CBL Airlaser Status",
+    sections=["cbl_airlaser"],
     discovery_function=inventory_cbl_airlaser,
     check_function=check_cbl_airlaser_status,
 )
 
 check_info["cbl_airlaser.hardware"] = LegacyCheckDefinition(
     service_name="CBL Airlaser Hardware",
+    sections=["cbl_airlaser"],
     discovery_function=inventory_cbl_airlaser,
     check_function=check_cbl_airlaser_hw,
 )

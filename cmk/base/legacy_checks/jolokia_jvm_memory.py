@@ -152,6 +152,7 @@ def check_jolokia_jvm_memory_pools(item, params, parsed):
 
 check_info["jolokia_jvm_memory.pools"] = LegacyCheckDefinition(
     service_name="JVM %s",
+    sections=["jolokia_jvm_memory"],
     discovery_function=discover_jolokia_jvm_memory_pools,
     check_function=check_jolokia_jvm_memory_pools,
     check_ruleset_name="jvm_memory_pools",

@@ -111,6 +111,7 @@ check_info["oracle_diva_csm"] = LegacyCheckDefinition(
 
 check_info["oracle_diva_csm.drive"] = LegacyCheckDefinition(
     service_name="DIVA Status %s",
+    sections=["oracle_diva_csm"],
     discovery_function=lambda info: inventory_oracle_diva_csm_status("Drive", 1, info),
     check_function=lambda item, params, info: check_oracle_diva_csm_status(
         "Drive", 1, item, params, info
@@ -119,6 +120,7 @@ check_info["oracle_diva_csm.drive"] = LegacyCheckDefinition(
 
 check_info["oracle_diva_csm.actor"] = LegacyCheckDefinition(
     service_name="DIVA Status %s",
+    sections=["oracle_diva_csm"],
     discovery_function=lambda info: inventory_oracle_diva_csm_status("Actor", 2, info),
     check_function=lambda item, params, info: check_oracle_diva_csm_status(
         "Actor", 2, item, params, info
@@ -127,6 +129,7 @@ check_info["oracle_diva_csm.actor"] = LegacyCheckDefinition(
 
 check_info["oracle_diva_csm.archive"] = LegacyCheckDefinition(
     service_name="DIVA Status %s",
+    sections=["oracle_diva_csm"],
     discovery_function=lambda info: inventory_oracle_diva_csm_status("Manager", 3, info),
     check_function=lambda item, params, info: check_oracle_diva_csm_status(
         "Manager", 3, item, params, info
@@ -186,6 +189,7 @@ def check_oracle_diva_csm_objects(item, params, info):
 
 check_info["oracle_diva_csm.objects"] = LegacyCheckDefinition(
     service_name="DIVA Managed Objects",
+    sections=["oracle_diva_csm"],
     discovery_function=inventory_oracle_diva_csm_objects,
     check_function=check_oracle_diva_csm_objects,
 )
@@ -224,6 +228,7 @@ def check_oracle_diva_csm_tapes(item, params, info):
 
 check_info["oracle_diva_csm.tapes"] = LegacyCheckDefinition(
     service_name="DIVA Blank Tapes",
+    sections=["oracle_diva_csm"],
     discovery_function=inventory_oracle_diva_csm_tapes,
     check_function=check_oracle_diva_csm_tapes,
     check_ruleset_name="blank_tapes",

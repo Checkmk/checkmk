@@ -173,6 +173,7 @@ def check_janitza_umg_freq(item, params, parsed):
 
 check_info["janitza_umg.freq"] = LegacyCheckDefinition(
     service_name="Frequency %s",
+    sections=["janitza_umg"],
     discovery_function=inventory_janitza_umg_freq,
     check_function=check_janitza_umg_freq,
     check_ruleset_name="efreq",
@@ -199,6 +200,7 @@ def check_janitza_umg_temp(item, params, parsed):
 
 check_info["janitza_umg.temp"] = LegacyCheckDefinition(
     service_name="Temperature External %s",
+    sections=["janitza_umg"],
     discovery_function=inventory_janitza_umg_temp,
     check_function=check_janitza_umg_temp,
     check_ruleset_name="temperature",

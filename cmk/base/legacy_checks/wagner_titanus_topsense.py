@@ -104,6 +104,7 @@ def check_wagner_titanus_topsense_info(item, _no_params, info):
 
 check_info["wagner_titanus_topsense.info"] = LegacyCheckDefinition(
     service_name="Topsense Info",
+    sections=["wagner_titanus_topsense"],
     discovery_function=inventory_wagner_titanus_topsense_info,
     check_function=check_wagner_titanus_topsense_info,
 )
@@ -138,6 +139,7 @@ def check_wagner_titanus_topsense_overall_status(item, _no_params, info):
 
 check_info["wagner_titanus_topsense.overall_status"] = LegacyCheckDefinition(
     service_name="Overall Status",
+    sections=["wagner_titanus_topsense"],
     discovery_function=inventory_wagner_titanus_topsense_overall_status,
     check_function=check_wagner_titanus_topsense_overall_status,
 )
@@ -187,6 +189,7 @@ def check_wagner_titanus_topsense_alarm(item, _no_params, info):
 
 check_info["wagner_titanus_topsense.alarm"] = LegacyCheckDefinition(
     service_name="Alarm Detector %s",
+    sections=["wagner_titanus_topsense"],
     discovery_function=inventory_wagner_titanus_topsense_alarm,
     check_function=check_wagner_titanus_topsense_alarm,
 )
@@ -228,6 +231,7 @@ def check_wagner_titanus_topsense_smoke(item, _no_params, info):
 
 check_info["wagner_titanus_topsense.smoke"] = LegacyCheckDefinition(
     service_name="Smoke Detector %s",
+    sections=["wagner_titanus_topsense"],
     discovery_function=inventory_wagner_titanus_topsense_smoke,
     check_function=check_wagner_titanus_topsense_smoke,
 )
@@ -263,6 +267,7 @@ def check_wagner_titanus_topsense_chamber_deviation(item, _no_params, info):
 
 check_info["wagner_titanus_topsense.chamber_deviation"] = LegacyCheckDefinition(
     service_name="Chamber Deviation Detector %s",
+    sections=["wagner_titanus_topsense"],
     discovery_function=inventory_wagner_titanus_topsense_chamber_deviation,
     check_function=check_wagner_titanus_topsense_chamber_deviation,
 )
@@ -310,6 +315,7 @@ def check_wagner_titanus_topsense_airflow_deviation(item, params, info):
 
 check_info["wagner_titanus_topsense.airflow_deviation"] = LegacyCheckDefinition(
     service_name="Airflow Deviation Detector %s",
+    sections=["wagner_titanus_topsense"],
     discovery_function=inventory_wagner_titanus_topsense_airflow_deviation,
     check_function=check_wagner_titanus_topsense_airflow_deviation,
     check_ruleset_name="airflow_deviation",
@@ -347,6 +353,7 @@ def check_wagner_titanus_topsense_temp(item, params, info):
 
 check_info["wagner_titanus_topsense.temp"] = LegacyCheckDefinition(
     service_name="Temperature %s",
+    sections=["wagner_titanus_topsense"],
     discovery_function=inventory_wagner_titanus_topsense_temp,
     check_function=check_wagner_titanus_topsense_temp,
     check_ruleset_name="temperature",

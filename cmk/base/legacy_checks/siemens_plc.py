@@ -60,6 +60,7 @@ def check_siemens_plc_temp(item, params, info):
 
 check_info["siemens_plc.temp"] = LegacyCheckDefinition(
     service_name="Temperature %s",
+    sections=["siemens_plc"],
     discovery_function=inventory_siemens_plc_temp,
     check_function=check_siemens_plc_temp,
     check_ruleset_name="temperature",
@@ -102,6 +103,7 @@ def check_siemens_plc_flag(item, params, info):
 
 check_info["siemens_plc.flag"] = LegacyCheckDefinition(
     service_name="Flag %s",
+    sections=["siemens_plc"],
     discovery_function=inventory_siemens_plc_flag,
     check_function=check_siemens_plc_flag,
     check_ruleset_name="siemens_plc_flag",
@@ -165,6 +167,7 @@ def check_siemens_plc_duration(item, params, info):
 
 check_info["siemens_plc.duration"] = LegacyCheckDefinition(
     service_name="Duration %s",
+    sections=["siemens_plc"],
     discovery_function=inventory_siemens_plc_duration,
     check_function=check_siemens_plc_duration,
     check_ruleset_name="siemens_plc_duration",
@@ -212,6 +215,7 @@ def check_siemens_plc_counter(item, params, info):
 
 check_info["siemens_plc.counter"] = LegacyCheckDefinition(
     service_name="Counter %s",
+    sections=["siemens_plc"],
     discovery_function=inventory_siemens_plc_counter,
     check_function=check_siemens_plc_counter,
     check_ruleset_name="siemens_plc_counter",
@@ -243,6 +247,7 @@ def check_siemens_plc_info(item, _no_params, info):
 
 check_info["siemens_plc.info"] = LegacyCheckDefinition(
     service_name="Info %s",
+    sections=["siemens_plc"],
     discovery_function=inventory_siemens_plc_info,
     check_function=check_siemens_plc_info,
 )

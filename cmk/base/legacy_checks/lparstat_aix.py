@@ -89,6 +89,7 @@ def check_lparstat_aix_cpu(_no_item, params, section: Section):
 
 check_info["lparstat_aix.cpu_util"] = LegacyCheckDefinition(
     service_name="CPU utilization",
+    sections=["lparstat_aix"],
     discovery_function=inventory_lparstat_aix_cpu,
     check_function=check_lparstat_aix_cpu,
     check_ruleset_name="cpu_iowait",

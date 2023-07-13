@@ -61,6 +61,7 @@ check_info["arbor_peakflow_tms"] = LegacyCheckDefinition(
 
 check_info["arbor_peakflow_tms.disk_usage"] = LegacyCheckDefinition(
     service_name="Disk Usage %s",
+    sections=["arbor_peakflow_tms"],
     discovery_function=inventory_arbor_disk_usage,
     check_function=check_arbor_disk_usage,
     check_ruleset_name="filesystem",
@@ -69,6 +70,7 @@ check_info["arbor_peakflow_tms.disk_usage"] = LegacyCheckDefinition(
 
 check_info["arbor_peakflow_tms.host_fault"] = LegacyCheckDefinition(
     service_name="Host Fault",
+    sections=["arbor_peakflow_tms"],
     discovery_function=inventory_arbor_host_fault,
     check_function=check_arbor_host_fault,
 )
@@ -87,6 +89,7 @@ def check_peakflow_tms_updates(item, _no_params, parsed):
 
 check_info["arbor_peakflow_tms.updates"] = LegacyCheckDefinition(
     service_name="Config Update %s",
+    sections=["arbor_peakflow_tms"],
     discovery_function=inventory_peakflow_tms_updates,
     check_function=check_peakflow_tms_updates,
 )

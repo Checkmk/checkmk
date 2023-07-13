@@ -109,6 +109,7 @@ def check_orion_system_charging(item, params, parsed):
 
 check_info["orion_system.charging"] = LegacyCheckDefinition(
     service_name="Charge %s",
+    sections=["orion_system"],
     discovery_function=inventory_orion_system_charging,
     check_function=check_orion_system_charging,
 )
@@ -125,6 +126,7 @@ def check_orion_system_electrical(item, params, parsed):
 
 check_info["orion_system.dc"] = LegacyCheckDefinition(
     service_name="Direct Current %s",
+    sections=["orion_system"],
     discovery_function=discover_orion_system_electrical,
     check_function=check_orion_system_electrical,
     check_ruleset_name="ups_outphase",

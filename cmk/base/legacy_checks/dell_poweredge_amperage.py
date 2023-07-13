@@ -24,12 +24,14 @@ check_info["dell_poweredge_amperage"] = LegacyCheckDefinition(
 
 check_info["dell_poweredge_amperage.power"] = LegacyCheckDefinition(
     service_name="%s",
+    sections=["dell_poweredge_amperage"],
     discovery_function=inventory_dell_poweredge_amperage_power,
     check_function=check_dell_poweredge_amperage,
 )
 
 check_info["dell_poweredge_amperage.current"] = LegacyCheckDefinition(
     service_name="%s",
+    sections=["dell_poweredge_amperage"],
     discovery_function=inventory_dell_poweredge_amperage_current,
     check_function=check_dell_poweredge_amperage,
 )

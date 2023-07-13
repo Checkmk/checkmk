@@ -105,6 +105,7 @@ def check_dell_om_power_unit(item, _no_params, info):
 
 check_info["dell_om_power.unit"] = LegacyCheckDefinition(
     service_name="Power Supply %s",
+    sections=["dell_om_power"],
     discovery_function=inventory_dell_om_power_unit,
     check_function=check_dell_om_power_unit,
 )

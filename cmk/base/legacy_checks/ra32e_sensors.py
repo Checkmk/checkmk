@@ -173,6 +173,7 @@ def check_ra32e_humidity_sensors(item, params, parsed):
 
 check_info["ra32e_sensors.humidity"] = LegacyCheckDefinition(
     service_name="Humidity %s",
+    sections=["ra32e_sensors"],
     discovery_function=lambda x: inventory_ra32e_sensors(x, "humidity"),
     check_function=check_ra32e_humidity_sensors,
     check_ruleset_name="humidity",
@@ -198,6 +199,7 @@ def check_ra32e_sensors_voltage(item, params, parsed):
 
 check_info["ra32e_sensors.voltage"] = LegacyCheckDefinition(
     service_name="Voltage %s",
+    sections=["ra32e_sensors"],
     discovery_function=lambda x: inventory_ra32e_sensors(x, "voltage"),
     check_function=check_ra32e_sensors_voltage,
     check_ruleset_name="ups_outphase",
@@ -223,6 +225,7 @@ def check_ra32e_power_sensors(item, params, parsed):
 
 check_info["ra32e_sensors.power"] = LegacyCheckDefinition(
     service_name="Power State %s",
+    sections=["ra32e_sensors"],
     discovery_function=lambda x: inventory_ra32e_sensors(x, "power"),
     check_function=check_ra32e_power_sensors,
     check_ruleset_name="ups_outphase",

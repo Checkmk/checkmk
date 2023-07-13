@@ -177,6 +177,7 @@ def check_rstcli_pdisks(item, _no_params, parsed):
 
 check_info["rstcli.pdisks"] = LegacyCheckDefinition(
     service_name="RAID Disk %s",
+    sections=["rstcli"],
     discovery_function=inventory_rstcli_pdisks,
     check_function=check_rstcli_pdisks,
 )

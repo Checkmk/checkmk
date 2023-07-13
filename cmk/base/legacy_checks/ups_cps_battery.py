@@ -50,6 +50,7 @@ def check_ups_cps_battery_temp(item, params, parsed):
 
 check_info["ups_cps_battery.temp"] = LegacyCheckDefinition(
     service_name="Temperature %s",
+    sections=["ups_cps_battery"],
     discovery_function=inventory_ups_cps_battery_temp,
     check_function=check_ups_cps_battery_temp,
     check_ruleset_name="temperature",

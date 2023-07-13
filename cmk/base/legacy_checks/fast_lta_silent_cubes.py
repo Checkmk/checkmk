@@ -49,6 +49,7 @@ check_info["fast_lta_silent_cubes"] = LegacyCheckDefinition(
 
 check_info["fast_lta_silent_cubes.capacity"] = LegacyCheckDefinition(
     service_name="Fast LTA SC Capacity %s",
+    sections=["fast_lta_silent_cubes"],
     discovery_function=inventory_fast_lta_silent_cubes_status,
     check_function=check_fast_lta_silent_cubes_status,
     check_ruleset_name="filesystem",

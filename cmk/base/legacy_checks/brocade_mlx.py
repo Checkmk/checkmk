@@ -81,6 +81,7 @@ def check_brocade_mlx_module(item, _no_params, info):
 
 check_info["brocade_mlx.module_status"] = LegacyCheckDefinition(
     service_name="Status Module %s",
+    sections=["brocade_mlx"],
     discovery_function=inventory_brocade_mlx_module,
     check_function=check_brocade_mlx_module,
 )
@@ -168,6 +169,7 @@ def check_brocade_mlx_module_mem(item, params, info):
 
 check_info["brocade_mlx.module_mem"] = LegacyCheckDefinition(
     service_name="Memory Module %s",
+    sections=["brocade_mlx"],
     discovery_function=inventory_brocade_mlx_module_mem,
     check_function=check_brocade_mlx_module_mem,
     check_ruleset_name="memory_multiitem",
@@ -257,6 +259,7 @@ def check_brocade_mlx_module_cpu(item, params, info):
 
 check_info["brocade_mlx.module_cpu"] = LegacyCheckDefinition(
     service_name="CPU utilization Module %s",
+    sections=["brocade_mlx"],
     discovery_function=inventory_brocade_mlx_module_cpu,
     check_function=check_brocade_mlx_module_cpu,
     check_ruleset_name="cpu_utilization_multiitem",

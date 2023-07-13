@@ -90,6 +90,7 @@ def inventory_didactum_sensors_analog_humid(parsed):
 
 check_info["didactum_sensors_analog.humidity"] = LegacyCheckDefinition(
     service_name="Humidity %s",
+    sections=["didactum_sensors_analog"],
     discovery_function=inventory_didactum_sensors_analog_humid,
     check_function=check_didactum_sensors_humidity,
     check_ruleset_name="humidity",
@@ -112,6 +113,7 @@ def inventory_didactum_sensors_analog_volt(parsed):
 
 check_info["didactum_sensors_analog.voltage"] = LegacyCheckDefinition(
     service_name="Phase %s",
+    sections=["didactum_sensors_analog"],
     discovery_function=inventory_didactum_sensors_analog_volt,
     check_function=check_didactum_sensors_voltage,
     check_ruleset_name="el_inphase",

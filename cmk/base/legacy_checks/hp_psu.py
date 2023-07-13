@@ -49,6 +49,7 @@ def check_hp_psu_temp(item, params, parsed):
 
 check_info["hp_psu.temp"] = LegacyCheckDefinition(
     service_name="Temperature Power Supply %s",
+    sections=["hp_psu"],
     discovery_function=inventory_hp_psu_temp,
     check_function=check_hp_psu_temp,
     check_ruleset_name="temperature",

@@ -178,6 +178,7 @@ def check_skype_mcu(_no_item, _no_params, parsed):
 
 check_info["skype.mcu"] = LegacyCheckDefinition(
     service_name="Skype MCU Health",
+    sections=["skype"],
     discovery_function=lambda parsed: inventory_wmi_table_total(
         parsed,
         required_tables=[
@@ -226,6 +227,7 @@ def check_skype_conferencing(_no_item, params, parsed):
 
 check_info["skype.conferencing"] = LegacyCheckDefinition(
     service_name="Skype Conferencing",
+    sections=["skype"],
     discovery_function=lambda table: inventory_wmi_table_total(
         table,
         required_tables=[
@@ -393,6 +395,7 @@ def check_skype_sip_stack(_no_item, params, parsed):
 
 check_info["skype.sip_stack"] = LegacyCheckDefinition(
     service_name="Skype SIP Stack",
+    sections=["skype"],
     discovery_function=discover_skype_sip_stack,
     check_function=check_skype_sip_stack,
     check_ruleset_name="skype_sip",
@@ -459,6 +462,7 @@ def check_skype_mediation_server(_no_item, params, parsed):
 
 check_info["skype.mediation_server"] = LegacyCheckDefinition(
     service_name="Skype Mediation Server",
+    sections=["skype"],
     discovery_function=lambda parsed: inventory_wmi_table_total(
         parsed,
         required_tables=[
@@ -493,6 +497,7 @@ def check_skype_edge_auth(_no_item, params, parsed):
 
 check_info["skype.edge_auth"] = LegacyCheckDefinition(
     service_name="Skype Edge Authentification",
+    sections=["skype"],
     discovery_function=lambda parsed: inventory_wmi_table_total(
         parsed, required_tables=["LS:A/V Auth - Requests"]
     ),
@@ -568,6 +573,7 @@ def check_skype_av_edge(item, params, parsed):
 
 check_info["skype.edge"] = LegacyCheckDefinition(
     service_name="Skype AV Edge %s",
+    sections=["skype"],
     discovery_function=lambda parsed: inventory_wmi_table_instances(
         parsed, required_tables=["LS:A/V Edge - TCP Counters", "LS:A/V Edge - UDP Counters"]
     ),
@@ -603,6 +609,7 @@ def check_skype_data_proxy(item, params, parsed):
 
 check_info["skype.data_proxy"] = LegacyCheckDefinition(
     service_name="Skype Data Proxy %s",
+    sections=["skype"],
     discovery_function=lambda parsed: inventory_wmi_table_instances(
         parsed, required_tables=["LS:DATAPROXY - Server Connections"]
     ),
@@ -638,6 +645,7 @@ def check_skype_xmpp_proxy(_no_item, params, parsed):
 
 check_info["skype.xmpp_proxy"] = LegacyCheckDefinition(
     service_name="Skype XMPP Proxy",
+    sections=["skype"],
     discovery_function=lambda parsed: inventory_wmi_table_total(
         parsed, required_tables=["LS:XmppFederationProxy - Streams"]
     ),
@@ -684,6 +692,7 @@ def check_skype_mobile(_no_item, params, parsed):
 
 check_info["skype.mobile"] = LegacyCheckDefinition(
     service_name="Skype Mobile Sessions",
+    sections=["skype"],
     discovery_function=lambda parsed: inventory_wmi_table_total(
         parsed,
         required_tables=[

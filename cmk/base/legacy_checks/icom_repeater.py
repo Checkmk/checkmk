@@ -127,6 +127,7 @@ def check_icom_repeater_ps_volt(_no_item, params, parsed):
 
 check_info["icom_repeater.ps_volt"] = LegacyCheckDefinition(
     service_name="Power Supply Voltage",
+    sections=["icom_repeater"],
     discovery_function=inventory_icom_repeater_ps_volt,
     check_function=check_icom_repeater_ps_volt,
     check_ruleset_name="ps_voltage",
@@ -189,6 +190,7 @@ def check_icom_repeater_pll_volt(item, params, parsed):
 
 check_info["icom_repeater.pll_volt"] = LegacyCheckDefinition(
     service_name="%s PLL Lock Voltage",
+    sections=["icom_repeater"],
     discovery_function=inventory_icom_repeater_pll_volt,
     check_function=check_icom_repeater_pll_volt,
     check_ruleset_name="pll_lock_voltage",
@@ -225,6 +227,7 @@ def check_icom_repeater_temp(_no_item, params, parsed):
 
 check_info["icom_repeater.temp"] = LegacyCheckDefinition(
     service_name="Temperature %s",
+    sections=["icom_repeater"],
     discovery_function=inventory_icom_repeater_temp,
     check_function=check_icom_repeater_temp,
     check_ruleset_name="temperature",

@@ -35,6 +35,7 @@ def check_azure_databases_storage(_item, params, resource):
 
 check_info["azure_databases.storage"] = LegacyCheckDefinition(
     service_name="DB %s Storage",
+    sections=["azure_databases"],
     discovery_function=discover_azure_by_metrics("average_storage_percent"),
     check_function=check_azure_databases_storage,
     check_ruleset_name="azure_databases",
@@ -57,6 +58,7 @@ def check_azure_databases_deadlock(_item, params, resource):
 
 check_info["azure_databases.deadlock"] = LegacyCheckDefinition(
     service_name="DB %s Deadlocks",
+    sections=["azure_databases"],
     discovery_function=discover_azure_by_metrics("average_deadlock"),
     check_function=check_azure_databases_deadlock,
     check_ruleset_name="azure_databases",
@@ -83,6 +85,7 @@ def check_azure_databases_cpu(_item, params, resource):
 
 check_info["azure_databases.cpu"] = LegacyCheckDefinition(
     service_name="DB %s CPU",
+    sections=["azure_databases"],
     discovery_function=discover_azure_by_metrics("average_cpu_percent"),
     check_function=check_azure_databases_cpu,
     check_ruleset_name="azure_databases",
@@ -111,6 +114,7 @@ def check_azure_databases_dtu(_item, params, resource):
 
 check_info["azure_databases.dtu"] = LegacyCheckDefinition(
     service_name="DB %s DTU",
+    sections=["azure_databases"],
     discovery_function=discover_azure_by_metrics("average_dtu_consumption_percent"),
     check_function=check_azure_databases_dtu,
     check_ruleset_name="azure_databases",
@@ -139,6 +143,7 @@ def check_azure_databases_connections(_item, params, resource):
 
 check_info["azure_databases.connections"] = LegacyCheckDefinition(
     service_name="DB %s Connections",
+    sections=["azure_databases"],
     discovery_function=discover_azure_by_metrics(
         "average_connection_successful", "average_connection_failed"
     ),

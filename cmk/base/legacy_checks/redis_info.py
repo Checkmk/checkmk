@@ -220,6 +220,7 @@ def check_redis_info_persistence(item, params, item_data):
 
 check_info["redis_info.persistence"] = LegacyCheckDefinition(
     service_name="Redis %s Persistence",
+    sections=["redis_info"],
     discovery_function=discover_redis_info_persistence,
     check_function=check_redis_info_persistence,
     check_ruleset_name="redis_info_persistence",
@@ -287,6 +288,7 @@ def check_redis_info_clients(item, params, item_data):
 
 check_info["redis_info.clients"] = LegacyCheckDefinition(
     service_name="Redis %s Clients",
+    sections=["redis_info"],
     discovery_function=discover_redis_info_clients,
     check_function=check_redis_info_clients,
     check_ruleset_name="redis_info_clients",

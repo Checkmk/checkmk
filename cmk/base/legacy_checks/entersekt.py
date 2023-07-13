@@ -94,6 +94,7 @@ def check_entersekt_emrerrors(item, params, info):
 
 check_info["entersekt.emrerrors"] = LegacyCheckDefinition(
     service_name="Entersekt http EMR Errors",
+    sections=["entersekt"],
     discovery_function=inventory_entersekt_emrerrors,
     check_function=check_entersekt_emrerrors,
     check_ruleset_name="entersekt_emrerrors",
@@ -145,6 +146,7 @@ def check_entersekt_ecerterrors(item, params, info):
 
 check_info["entersekt.ecerterrors"] = LegacyCheckDefinition(
     service_name="Entersekt http Ecert Errors",
+    sections=["entersekt"],
     discovery_function=inventory_entersekt_ecerterrors,
     check_function=check_entersekt_ecerterrors,
     check_ruleset_name="entersekt_ecerterrors",
@@ -195,6 +197,7 @@ def check_entersekt_soaperrors(item, params, info):
 
 check_info["entersekt.soaperrors"] = LegacyCheckDefinition(
     service_name="Entersekt Soap Service Errors",
+    sections=["entersekt"],
     discovery_function=inventory_entersekt_soaperrors,
     check_function=check_entersekt_soaperrors,
     check_ruleset_name="entersekt_soaperrors",
@@ -258,6 +261,7 @@ def check_entersekt_certexpiry(item, params, info):
 
 check_info["entersekt.certexpiry"] = LegacyCheckDefinition(
     service_name="Entersekt Certificate Expiration",
+    sections=["entersekt"],
     discovery_function=inventory_entersekt_certexpiry,
     check_function=check_entersekt_certexpiry,
     check_ruleset_name="entersekt_certexpiry",

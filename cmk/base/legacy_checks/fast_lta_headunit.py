@@ -86,6 +86,7 @@ def check_fast_lta_headunit_status(item, _no_params, info):
 
 check_info["fast_lta_headunit.status"] = LegacyCheckDefinition(
     service_name="Fast LTA Headunit Status",
+    sections=["fast_lta_headunit"],
     discovery_function=inventory_fast_lta_headunit_status,
     check_function=check_fast_lta_headunit_status,
 )
@@ -136,6 +137,7 @@ def check_fast_lta_headunit_replication(item, _no_params, info):
 
 check_info["fast_lta_headunit.replication"] = LegacyCheckDefinition(
     service_name="Fast LTA Replication",
+    sections=["fast_lta_headunit"],
     discovery_function=inventory_fast_lta_headunit_replication,
     check_function=check_fast_lta_headunit_replication,
 )

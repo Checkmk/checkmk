@@ -118,6 +118,7 @@ def check_aws_costs_and_usage_per_service(item, params, parsed):
 
 check_info["aws_costs_and_usage.per_service"] = LegacyCheckDefinition(
     service_name="AWS/CE %s",
+    sections=["aws_costs_and_usage"],
     discovery_function=inventory_aws_costs_and_usage_per_service,
     check_function=check_aws_costs_and_usage_per_service,
     check_ruleset_name="aws_costs_and_usage",

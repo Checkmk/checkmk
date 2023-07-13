@@ -139,6 +139,7 @@ def check_hepta_time_sync(item, params, parsed):
 
 check_info["hepta.syncmoduletimesyncstate"] = LegacyCheckDefinition(
     service_name="%s",
+    sections=["hepta"],
     discovery_function=inventory_hepta_time_sync,
     check_function=check_hepta_time_sync,
 )
@@ -178,6 +179,7 @@ def check_hepta_ntpsysstratum(item, params, parsed):
 
 check_info["hepta.ntpsysstratum"] = LegacyCheckDefinition(
     service_name="%s",
+    sections=["hepta"],
     discovery_function=inventory_hepta_ntpsysstratum,
     check_function=check_hepta_ntpsysstratum,
 )
@@ -210,6 +212,7 @@ def check_hepta_syncmoduletimelocal(item, params, parsed):
 
 check_info["hepta.syncmoduletimelocal"] = LegacyCheckDefinition(
     service_name="%s",
+    sections=["hepta"],
     discovery_function=inventory_hepta_syncmoduletimelocal,
     check_function=check_hepta_syncmoduletimelocal,
 )

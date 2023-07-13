@@ -34,6 +34,7 @@ def check_vms_system_ios(_no_item, _no_params, info):
 
 check_info["vms_system.ios"] = LegacyCheckDefinition(
     service_name="IOs",
+    sections=["vms_system"],
     discovery_function=inventory_vms_system,
     check_function=check_vms_system_ios,
 )
@@ -56,6 +57,7 @@ def check_vms_system_procs(_no_item, params, info):
 
 check_info["vms_system.procs"] = LegacyCheckDefinition(
     service_name="Number of processes",
+    sections=["vms_system"],
     discovery_function=inventory_vms_system,
     check_function=check_vms_system_procs,
     check_ruleset_name="vms_procs",

@@ -59,6 +59,7 @@ def check_brocade_sys_mem(item, params, parsed):
 
 check_info["brocade_sys.mem"] = LegacyCheckDefinition(
     service_name="Memory",
+    sections=["brocade_sys"],
     discovery_function=inventory_brocade_sys_mem,
     check_function=check_brocade_sys_mem,
     check_ruleset_name="memory_relative",

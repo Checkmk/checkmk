@@ -65,6 +65,7 @@ check_info["raritan_px2_sensors"] = LegacyCheckDefinition(
 
 check_info["raritan_px2_sensors.airflow"] = LegacyCheckDefinition(
     service_name="Air flow %s",
+    sections=["raritan_px2_sensors"],
     discovery_function=lambda parsed: inventory_raritan_sensors(parsed, "airflow"),
     check_function=check_raritan_sensors,
 )
@@ -81,6 +82,7 @@ check_info["raritan_px2_sensors.airflow"] = LegacyCheckDefinition(
 
 check_info["raritan_px2_sensors.humidity"] = LegacyCheckDefinition(
     service_name="Humidity %s",
+    sections=["raritan_px2_sensors"],
     discovery_function=lambda parsed: inventory_raritan_sensors(parsed, "humidity"),
     check_function=check_raritan_sensors,
 )
@@ -97,6 +99,7 @@ check_info["raritan_px2_sensors.humidity"] = LegacyCheckDefinition(
 
 check_info["raritan_px2_sensors.pressure"] = LegacyCheckDefinition(
     service_name="Pressure %s",
+    sections=["raritan_px2_sensors"],
     discovery_function=lambda parsed: inventory_raritan_sensors(parsed, "pressure"),
     check_function=check_raritan_sensors,
 )

@@ -300,6 +300,7 @@ def discover_filestats_single(section):
 
 check_info["filestats.single"] = LegacyCheckDefinition(
     service_name="File %s",
+    sections=["filestats"],
     discovery_function=discover_filestats_single,
     check_function=check_filestats_single,
     check_ruleset_name="filestats_single",

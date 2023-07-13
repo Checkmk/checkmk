@@ -176,6 +176,7 @@ def check_nimble_latency_writes(item, params, parsed):
 
 check_info["nimble_latency.write"] = LegacyCheckDefinition(
     service_name="Volume %s Write IO",
+    sections=["nimble_latency"],
     discovery_function=lambda parsed: inventory_nimble_latency(parsed, NimbleWritesType),
     check_function=check_nimble_latency_writes,
     check_ruleset_name="nimble_latency",

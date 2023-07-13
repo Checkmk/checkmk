@@ -139,6 +139,7 @@ check_info["raritan_px_sensors"] = LegacyCheckDefinition(
 
 check_info["raritan_px_sensors.humidity"] = LegacyCheckDefinition(
     service_name="Humidity %s",
+    sections=["raritan_px_sensors"],
     discovery_function=lambda parsed: inventory_raritan_sensors(parsed, "humidity"),
     check_function=check_raritan_sensors,
 )
@@ -155,6 +156,7 @@ check_info["raritan_px_sensors.humidity"] = LegacyCheckDefinition(
 
 check_info["raritan_px_sensors.binary"] = LegacyCheckDefinition(
     service_name="Contact %s",
+    sections=["raritan_px_sensors"],
     discovery_function=lambda parsed: inventory_raritan_sensors(parsed, "binary"),
     check_function=check_raritan_sensors_binary,
 )

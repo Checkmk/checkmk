@@ -277,6 +277,7 @@ def check_lantime_ng_refclock_gps(item, params, info):
 
 check_info["mbg_lantime_ng_refclock.gps"] = LegacyCheckDefinition(
     service_name="LANTIME Refclock %s",
+    sections=["mbg_lantime_ng_refclock"],
     discovery_function=inventory_lantime_ng_refclock_gps,
     check_function=check_lantime_ng_refclock_gps,
 )

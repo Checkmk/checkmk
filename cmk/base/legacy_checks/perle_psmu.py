@@ -41,6 +41,7 @@ def check_perle_psmu_fans(item, _no_params, parsed):
 
 check_info["perle_psmu.fan"] = LegacyCheckDefinition(
     service_name="Fan %s",
+    sections=["perle_psmu"],
     discovery_function=lambda info: inventory_perle_psmu(info, "fanstate"),
     check_function=check_perle_psmu_fans,
 )

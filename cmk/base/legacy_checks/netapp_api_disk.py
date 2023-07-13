@@ -31,6 +31,7 @@ def check_netapp_api_disk_summary(_no_item, params, section):
 
 check_info["netapp_api_disk.summary"] = LegacyCheckDefinition(
     service_name="NetApp Disks Summary",
+    sections=["netapp_api_disk"],
     discovery_function=inventory_netapp_api_disk_summary,
     check_function=check_netapp_api_disk_summary,
     check_ruleset_name="netapp_disks",

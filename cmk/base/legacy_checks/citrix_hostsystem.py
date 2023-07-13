@@ -57,6 +57,7 @@ def check_citrix_hostsystem_vms(_no_item, _no_params, parsed):
 
 check_info["citrix_hostsystem.vms"] = LegacyCheckDefinition(
     service_name="Citrix VMs",
+    sections=["citrix_hostsystem"],
     discovery_function=inventory_citrix_hostsystem_vms,
     check_function=check_citrix_hostsystem_vms,
 )

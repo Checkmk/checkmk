@@ -205,6 +205,7 @@ def check_openhardwaremonitor_temperature(item, params, parsed):
 
 check_info["openhardwaremonitor.temperature"] = LegacyCheckDefinition(
     service_name="Temperature %s",
+    sections=["openhardwaremonitor"],
     discovery_function=lambda parsed: inventory_openhardwaremonitor("Temperature", parsed),
     check_function=check_openhardwaremonitor_temperature,
     check_ruleset_name="temperature",
@@ -227,6 +228,7 @@ check_info["openhardwaremonitor.temperature"] = LegacyCheckDefinition(
 
 check_info["openhardwaremonitor.power"] = LegacyCheckDefinition(
     service_name="Power %s",
+    sections=["openhardwaremonitor"],
     discovery_function=lambda parsed: inventory_openhardwaremonitor("Power", parsed),
     check_function=lambda item, params, parsed: check_openhardwaremonitor(
         "Power", item, params, parsed
@@ -254,6 +256,7 @@ def check_openhardwaremonitor_fan(item, params, parsed):
 
 check_info["openhardwaremonitor.fan"] = LegacyCheckDefinition(
     service_name="Fan %s",
+    sections=["openhardwaremonitor"],
     discovery_function=lambda parsed: inventory_openhardwaremonitor("Fan", parsed),
     check_function=check_openhardwaremonitor_fan,
     check_ruleset_name="hw_fans",
@@ -318,6 +321,7 @@ def check_openhardwaremonitor_smart(item, params, parsed):
 # reported as a temperature item)
 check_info["openhardwaremonitor.smart"] = LegacyCheckDefinition(
     service_name="SMART %s Stats",
+    sections=["openhardwaremonitor"],
     discovery_function=inventory_openhardwaremonitor_smart,
     check_function=check_openhardwaremonitor_smart,
     check_ruleset_name="openhardwaremonitor_smart",

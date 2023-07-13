@@ -87,6 +87,7 @@ check_info["emc_isilon_temp"] = LegacyCheckDefinition(
 
 check_info["emc_isilon_temp.cpu"] = LegacyCheckDefinition(
     service_name="Temperature %s",
+    sections=["emc_isilon_temp"],
     discovery_function=lambda info: inventory_isilon_temp(info, is_cpu=True),
     check_function=check_isilon_temp,
     check_ruleset_name="temperature",

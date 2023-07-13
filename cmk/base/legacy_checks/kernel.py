@@ -116,6 +116,7 @@ def check_kernel_performance(_no_item, params, parsed):
 
 check_info["kernel.performance"] = LegacyCheckDefinition(
     service_name="Kernel Performance",
+    sections=["kernel"],
     discovery_function=inventory_kernel_performance,
     check_function=check_kernel_performance,
     check_ruleset_name="kernel_performance",

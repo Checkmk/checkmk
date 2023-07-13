@@ -222,6 +222,7 @@ def check_rabbitmq_nodes_filedesc(item, params, parsed):
 
 check_info["rabbitmq_nodes.filedesc"] = LegacyCheckDefinition(
     service_name="RabbitMQ Node %s Filedesc",
+    sections=["rabbitmq_nodes"],
     discovery_function=discover_key("fd"),
     check_function=check_rabbitmq_nodes_filedesc,
     check_ruleset_name="rabbitmq_nodes_filedesc",
@@ -246,6 +247,7 @@ def check_rabbitmq_nodes_sockets(item, params, parsed):
 
 check_info["rabbitmq_nodes.sockets"] = LegacyCheckDefinition(
     service_name="RabbitMQ Node %s Sockets",
+    sections=["rabbitmq_nodes"],
     discovery_function=discover_key("sockets"),
     check_function=check_rabbitmq_nodes_sockets,
     check_ruleset_name="rabbitmq_nodes_sockets",
@@ -270,6 +272,7 @@ def check_rabbitmq_nodes_proc(item, params, parsed):
 
 check_info["rabbitmq_nodes.proc"] = LegacyCheckDefinition(
     service_name="RabbitMQ Node %s Processes",
+    sections=["rabbitmq_nodes"],
     discovery_function=discover_key("proc"),
     check_function=check_rabbitmq_nodes_proc,
     check_ruleset_name="rabbitmq_nodes_proc",
@@ -304,6 +307,7 @@ def check_rabbitmq_nodes_mem(item, params, parsed):
 
 check_info["rabbitmq_nodes.mem"] = LegacyCheckDefinition(
     service_name="RabbitMQ Node %s Memory",
+    sections=["rabbitmq_nodes"],
     discovery_function=discover_key("mem"),
     check_function=check_rabbitmq_nodes_mem,
     check_ruleset_name="memory_multiitem",
@@ -358,6 +362,7 @@ def check_rabbitmq_nodes_uptime(item, params, parsed):
 
 check_info["rabbitmq_nodes.uptime"] = LegacyCheckDefinition(
     service_name="RabbitMQ Node %s Uptime",
+    sections=["rabbitmq_nodes"],
     discovery_function=discover_key("uptime"),
     check_function=check_rabbitmq_nodes_uptime,
     check_ruleset_name="rabbitmq_nodes_uptime",
@@ -409,6 +414,7 @@ def _handle_output(params, value, total, info_text, perf_key):
 
 check_info["rabbitmq_nodes.gc"] = LegacyCheckDefinition(
     service_name="RabbitMQ Node %s GC",
+    sections=["rabbitmq_nodes"],
     discovery_function=discover_key("gc"),
     check_function=check_rabbitmq_nodes_gc,
     check_ruleset_name="rabbitmq_nodes_gc",

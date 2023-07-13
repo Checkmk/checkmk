@@ -183,6 +183,7 @@ def check_graylog_cluster_stats_elastic(  # pylint: disable=too-many-branches
 
 check_info["graylog_cluster_stats.elastic"] = LegacyCheckDefinition(
     service_name="Graylog Cluster Elasticsearch Stats",
+    sections=["graylog_cluster_stats"],
     discovery_function=inventory_graylog_cluster_stats_elastic,
     check_function=check_graylog_cluster_stats_elastic,
     check_ruleset_name="graylog_cluster_stats_elastic",
@@ -256,6 +257,7 @@ def check_graylog_cluster_stats_mongodb(_no_item, params, parsed):
 
 check_info["graylog_cluster_stats.mongodb"] = LegacyCheckDefinition(
     service_name="Graylog Cluster MongoDB Stats",
+    sections=["graylog_cluster_stats"],
     discovery_function=inventory_graylog_cluster_stats_mongodb,
     check_function=check_graylog_cluster_stats_mongodb,
     check_ruleset_name="graylog_cluster_stats_mongodb",

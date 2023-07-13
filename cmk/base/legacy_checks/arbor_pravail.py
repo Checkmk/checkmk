@@ -56,6 +56,7 @@ check_info["arbor_pravail"] = LegacyCheckDefinition(
 
 check_info["arbor_pravail.disk_usage"] = LegacyCheckDefinition(
     service_name="Disk Usage %s",
+    sections=["arbor_pravail"],
     discovery_function=inventory_arbor_disk_usage,
     check_function=check_arbor_disk_usage,
     check_ruleset_name="filesystem",
@@ -64,12 +65,14 @@ check_info["arbor_pravail.disk_usage"] = LegacyCheckDefinition(
 
 check_info["arbor_pravail.host_fault"] = LegacyCheckDefinition(
     service_name="Host Fault",
+    sections=["arbor_pravail"],
     discovery_function=inventory_arbor_host_fault,
     check_function=check_arbor_host_fault,
 )
 
 check_info["arbor_pravail.drop_rate"] = LegacyCheckDefinition(
     service_name="%s drop rate",
+    sections=["arbor_pravail"],
     discovery_function=inventory_arbor_drop_rate,
     check_function=check_arbor_drop_rate,
     check_ruleset_name="generic_rate",

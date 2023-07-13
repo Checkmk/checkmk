@@ -88,6 +88,7 @@ check_info["couchbase_buckets_vbuckets"] = LegacyCheckDefinition(
 
 check_info["couchbase_buckets_vbuckets.replica"] = LegacyCheckDefinition(
     service_name="Couchbase Bucket %s replica vBuckets",
+    sections=["couchbase_buckets_vbuckets"],
     discovery_function=discover_couchbase_buckets_vbuckets,
     check_function=check_couchbase_buckets_vbuckets_replica,
     check_ruleset_name="couchbase_vbuckets",

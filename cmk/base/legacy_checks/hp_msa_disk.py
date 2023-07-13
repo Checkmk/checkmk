@@ -186,6 +186,7 @@ def check_hp_msa_disk_temp(item, params, parsed):
 
 check_info["hp_msa_disk.temp"] = LegacyCheckDefinition(
     service_name="Temperature %s",
+    sections=["hp_msa_disk"],
     discovery_function=inventory_hp_msa_disk_temp,
     check_function=check_hp_msa_disk_temp,
     check_ruleset_name="temperature",

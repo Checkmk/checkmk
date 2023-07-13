@@ -86,6 +86,7 @@ check_info["hpux_snmp_cs"] = LegacyCheckDefinition(
 
 check_info["hpux_snmp_cs.cpu"] = LegacyCheckDefinition(
     service_name="CPU utilization",
+    sections=["hpux_snmp_cs"],
     discovery_function=inventory_hpux_snmp_cpu,
     check_function=check_hpux_snmp_cpu,
 )

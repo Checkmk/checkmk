@@ -121,6 +121,7 @@ def check_ucs_bladecenter_fans_temp(item, params, parsed):
 
 check_info["ucs_bladecenter_fans.temp"] = LegacyCheckDefinition(
     service_name="Temperature %s",
+    sections=["ucs_bladecenter_fans"],
     discovery_function=inventory_ucs_bladecenter_fans_temp,
     check_function=check_ucs_bladecenter_fans_temp,
     check_ruleset_name="temperature",

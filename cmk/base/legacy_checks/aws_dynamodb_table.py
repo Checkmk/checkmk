@@ -173,6 +173,7 @@ def check_aws_dynamodb_latency(item, params, parsed):
 
 check_info["aws_dynamodb_table.read_capacity"] = LegacyCheckDefinition(
     service_name="AWS/DynamoDB Read Capacity",
+    sections=["aws_dynamodb_table"],
     discovery_function=lambda p: inventory_aws_generic_single(p, ["Sum_ConsumedReadCapacityUnits"]),
     check_function=check_aws_dynamodb_read_capacity,
     check_ruleset_name="aws_dynamodb_capacity",
@@ -183,6 +184,7 @@ check_info["aws_dynamodb_table.read_capacity"] = LegacyCheckDefinition(
 
 check_info["aws_dynamodb_table.write_capacity"] = LegacyCheckDefinition(
     service_name="AWS/DynamoDB Write Capacity",
+    sections=["aws_dynamodb_table"],
     discovery_function=lambda p: inventory_aws_generic_single(
         p, ["Sum_ConsumedWriteCapacityUnits"]
     ),
@@ -195,6 +197,7 @@ check_info["aws_dynamodb_table.write_capacity"] = LegacyCheckDefinition(
 
 check_info["aws_dynamodb_table.latency"] = LegacyCheckDefinition(
     service_name="AWS/DynamoDB Latency",
+    sections=["aws_dynamodb_table"],
     discovery_function=inventory_aws_dynamodb_latency,
     check_function=check_aws_dynamodb_latency,
     check_ruleset_name="aws_dynamodb_latency",

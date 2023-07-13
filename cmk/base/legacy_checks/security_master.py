@@ -182,6 +182,7 @@ def check_security_master_humidity(item, params, parsed):
 
 check_info["security_master.humidity"] = LegacyCheckDefinition(
     service_name="Sensor %s",
+    sections=["security_master"],
     discovery_function=lambda parsed: inventory_security_master_sensors(parsed, "humidity"),
     check_function=check_security_master_humidity,
     check_ruleset_name="humidity",
@@ -218,6 +219,7 @@ def check_security_master_temperature(item, params, parsed):
 
 check_info["security_master.temp"] = LegacyCheckDefinition(
     service_name="Sensor %s",
+    sections=["security_master"],
     discovery_function=lambda parsed: inventory_security_master_sensors(parsed, "temp"),
     check_function=check_security_master_temperature,
     check_ruleset_name="temperature",

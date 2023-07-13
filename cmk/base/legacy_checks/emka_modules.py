@@ -273,6 +273,7 @@ def check_emka_modules_alarm(item, params, parsed):
 
 check_info["emka_modules.alarm"] = LegacyCheckDefinition(
     service_name="Alarm %s",
+    sections=["emka_modules"],
     discovery_function=inventory_emka_modules_alarm,
     check_function=check_emka_modules_alarm,
 )
@@ -311,6 +312,7 @@ def check_emka_modules_handle(item, params, parsed):
 
 check_info["emka_modules.handle"] = LegacyCheckDefinition(
     service_name="Handle %s",
+    sections=["emka_modules"],
     discovery_function=inventory_emka_modules_handle,
     check_function=check_emka_modules_handle,
 )
@@ -341,6 +343,7 @@ def check_emka_modules_sensor_volt(item, params, parsed):
 
 check_info["emka_modules.sensor_volt"] = LegacyCheckDefinition(
     service_name="Phase %s",
+    sections=["emka_modules"],
     discovery_function=inventory_emka_modules_sensor_volt,
     check_function=check_emka_modules_sensor_volt,
     check_ruleset_name="el_inphase",
@@ -378,6 +381,7 @@ def check_emka_modules_sensor_temp(item, params, parsed):
 
 check_info["emka_modules.sensor_temp"] = LegacyCheckDefinition(
     service_name="Temperature %s",
+    sections=["emka_modules"],
     discovery_function=inventory_emka_modules_sensor_temp,
     check_function=check_emka_modules_sensor_temp,
     check_ruleset_name="temperature",
@@ -409,6 +413,7 @@ def check_emka_modules_sensor_humid(item, params, parsed):
 
 check_info["emka_modules.sensor_humid"] = LegacyCheckDefinition(
     service_name="Humidity %s",
+    sections=["emka_modules"],
     discovery_function=inventory_emka_modules_sensor_humid,
     check_function=check_emka_modules_sensor_humid,
     check_ruleset_name="humidity",
@@ -445,6 +450,7 @@ def check_emka_modules_relay(item, params, parsed):
 
 check_info["emka_modules.relay"] = LegacyCheckDefinition(
     service_name="Relay %s",
+    sections=["emka_modules"],
     discovery_function=inventory_emka_modules_relay,
     check_function=check_emka_modules_relay,
 )

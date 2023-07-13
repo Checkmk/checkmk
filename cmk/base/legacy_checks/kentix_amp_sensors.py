@@ -112,6 +112,7 @@ def check_kentix_amp_sensors_humidity(item, params, parsed):
 
 check_info["kentix_amp_sensors.humidity"] = LegacyCheckDefinition(
     service_name="Humidity %s",
+    sections=["kentix_amp_sensors"],
     discovery_function=lambda parsed: inventory_kentix_amp_sensors(parsed, {}),
     check_function=check_kentix_amp_sensors_humidity,
     check_ruleset_name="humidity",
@@ -158,6 +159,7 @@ def check_kentix_amp_sensors_smoke(item, params, parsed):
 
 check_info["kentix_amp_sensors.smoke"] = LegacyCheckDefinition(
     service_name="Smoke Detector %s",
+    sections=["kentix_amp_sensors"],
     discovery_function=lambda parsed: inventory_kentix_amp_sensors(
         parsed, kentix_amp_sensors_smoke_default_levels
     ),
@@ -186,6 +188,7 @@ def check_kentix_amp_sensors_leakage(item, params, parsed):
 
 check_info["kentix_amp_sensors.leakage"] = LegacyCheckDefinition(
     service_name="Leakage %s",
+    sections=["kentix_amp_sensors"],
     discovery_function=lambda i: inventory_kentix_amp_sensors(i, None),
     check_function=check_kentix_amp_sensors_leakage,
 )

@@ -222,6 +222,7 @@ def check_openbsd_sensors_fan(item, params, parsed):
 
 check_info["openbsd_sensors.fan"] = LegacyCheckDefinition(
     service_name="Fan %s",
+    sections=["openbsd_sensors"],
     discovery_function=lambda parsed: inventory_openbsd_sensors(parsed, "fan"),
     check_function=check_openbsd_sensors_fan,
     check_ruleset_name="hw_fans",
@@ -257,6 +258,7 @@ def check_openbsd_sensors_voltage(item, params, parsed):
 
 check_info["openbsd_sensors.voltage"] = LegacyCheckDefinition(
     service_name="Voltage Type %s",
+    sections=["openbsd_sensors"],
     discovery_function=lambda parsed: inventory_openbsd_sensors(parsed, "voltage"),
     check_function=check_openbsd_sensors_voltage,
     check_ruleset_name="el_inphase",
@@ -282,6 +284,7 @@ def check_openbsd_sensors_powersupply(item, _no_params, parsed):
 
 check_info["openbsd_sensors.powersupply"] = LegacyCheckDefinition(
     service_name="Powersupply %s",
+    sections=["openbsd_sensors"],
     discovery_function=lambda parsed: inventory_openbsd_sensors(parsed, "powersupply"),
     check_function=check_openbsd_sensors_powersupply,
 )
@@ -306,6 +309,7 @@ def check_openbsd_sensors_indicator(item, params, parsed):
 
 check_info["openbsd_sensors.indicator"] = LegacyCheckDefinition(
     service_name="Indicator %s",
+    sections=["openbsd_sensors"],
     discovery_function=lambda parsed: inventory_openbsd_sensors(parsed, "indicator"),
     check_function=check_openbsd_sensors_indicator,
 )
@@ -330,6 +334,7 @@ def check_openbsd_sensors_drive(item, params, parsed):
 
 check_info["openbsd_sensors.drive"] = LegacyCheckDefinition(
     service_name="Drive %s",
+    sections=["openbsd_sensors"],
     discovery_function=lambda parsed: inventory_openbsd_sensors(parsed, "drive"),
     check_function=check_openbsd_sensors_drive,
 )

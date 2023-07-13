@@ -54,6 +54,7 @@ def check_aws_elbv2_summary_network(item, params, parsed):
 
 check_info["aws_elbv2_summary.network"] = LegacyCheckDefinition(
     service_name="AWS/NetworkELB Summary",
+    sections=["aws_elbv2_summary"],
     discovery_function=inventory_aws_elbv2_summary_network,
     check_function=check_aws_elbv2_summary_network,
 )

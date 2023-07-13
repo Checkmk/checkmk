@@ -99,6 +99,7 @@ def check_eltek_battery_temp(item, params, parsed):
 
 check_info["eltek_battery.temp"] = LegacyCheckDefinition(
     service_name="Temperature %s",
+    sections=["eltek_battery"],
     discovery_function=inventory_eltek_battery_temp,
     check_function=check_eltek_battery_temp,
     check_ruleset_name="temperature",
@@ -124,6 +125,7 @@ def discover_eltek_battery_supply(section):
 
 check_info["eltek_battery.supply"] = LegacyCheckDefinition(
     service_name="Battery %s",
+    sections=["eltek_battery"],
     discovery_function=discover_eltek_battery_supply,
     check_function=lambda item, params, parsed: check_elphase(item, params, parsed["supply"]),
     check_ruleset_name="el_inphase",

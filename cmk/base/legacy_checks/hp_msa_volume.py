@@ -205,6 +205,7 @@ def check_hp_msa_volume_df(item, params, parsed):
 
 check_info["hp_msa_volume.df"] = LegacyCheckDefinition(
     service_name="Filesystem %s",
+    sections=["hp_msa_volume"],
     discovery_function=inventory_hp_msa_volume_df,
     check_function=check_hp_msa_volume_df,
     check_ruleset_name="filesystem",

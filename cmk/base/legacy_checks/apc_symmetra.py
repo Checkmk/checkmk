@@ -348,6 +348,7 @@ def check_apc_symmetra_temp(item, params, parsed):
 
 check_info["apc_symmetra.temp"] = LegacyCheckDefinition(
     service_name="Temperature %s",
+    sections=["apc_symmetra"],
     discovery_function=inventory_apc_symmetra_temp,
     check_function=check_apc_symmetra_temp,
     check_ruleset_name="temperature",
@@ -379,6 +380,7 @@ def check_apc_symmetra_elphase(item, params, parsed):
 
 check_info["apc_symmetra.elphase"] = LegacyCheckDefinition(
     service_name="Phase %s",
+    sections=["apc_symmetra"],
     discovery_function=inventory_apc_symmetra_elphase,
     check_function=check_apc_symmetra_elphase,
     check_ruleset_name="ups_outphase",

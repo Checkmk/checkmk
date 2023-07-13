@@ -79,6 +79,7 @@ def check_ibm_storage_ts_status(_no_item, _no_params, info):
 
 check_info["ibm_storage_ts.status"] = LegacyCheckDefinition(
     service_name="Status",
+    sections=["ibm_storage_ts"],
     discovery_function=inventory_ibm_storage_ts_status,
     check_function=check_ibm_storage_ts_status,
 )
@@ -112,6 +113,7 @@ def check_ibm_storage_ts_library(item, _no_params, info):
 
 check_info["ibm_storage_ts.library"] = LegacyCheckDefinition(
     service_name="Library %s",
+    sections=["ibm_storage_ts"],
     discovery_function=inventory_ibm_storage_ts_library,
     check_function=check_ibm_storage_ts_library,
 )
@@ -140,6 +142,7 @@ def check_ibm_storage_ts_drive(item, params, info):
 
 check_info["ibm_storage_ts.drive"] = LegacyCheckDefinition(
     service_name="Drive %s",
+    sections=["ibm_storage_ts"],
     discovery_function=inventory_ibm_storage_ts_drive,
     check_function=check_ibm_storage_ts_drive,
 )

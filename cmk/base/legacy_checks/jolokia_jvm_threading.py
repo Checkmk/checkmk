@@ -116,6 +116,7 @@ def check_jolokia_jvm_threading_pool(item, params, parsed):
 
 check_info["jolokia_jvm_threading.pool"] = LegacyCheckDefinition(
     service_name="JVM %s",
+    sections=["jolokia_jvm_threading"],
     discovery_function=discover_jolokia_jvm_threading_pool,
     check_function=check_jolokia_jvm_threading_pool,
     check_ruleset_name="jvm_tp",

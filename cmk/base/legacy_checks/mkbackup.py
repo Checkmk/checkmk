@@ -165,6 +165,7 @@ def check_mkbackup_site(item, _no_params, parsed):
 
 check_info["mkbackup.site"] = LegacyCheckDefinition(
     service_name="OMD %s",
+    sections=["mkbackup"],
     discovery_function=inventory_mkbackup_site,
     check_function=check_mkbackup_site,
 )

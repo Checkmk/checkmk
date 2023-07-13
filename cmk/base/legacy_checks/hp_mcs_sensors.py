@@ -89,6 +89,7 @@ def check_hp_mcs_sensors_fan(item, params, parsed):
 
 check_info["hp_mcs_sensors.fan"] = LegacyCheckDefinition(
     service_name="Sensor %s",
+    sections=["hp_mcs_sensors"],
     discovery_function=inventory_hp_mcs_sensors_fan,
     check_function=check_hp_mcs_sensors_fan,
     check_ruleset_name="hw_fans",

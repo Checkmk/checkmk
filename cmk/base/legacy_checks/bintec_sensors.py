@@ -47,6 +47,7 @@ def check_bintec_sensors_fan(item, params, info):
 
 check_info["bintec_sensors.fan"] = LegacyCheckDefinition(
     service_name="%s",
+    sections=["bintec_sensors"],
     discovery_function=inventory_bintec_sensors_fan,
     check_function=check_bintec_sensors_fan,
     check_ruleset_name="hw_fans",
@@ -82,6 +83,7 @@ def check_bintec_sensors_temp(item, params, info):
 
 check_info["bintec_sensors.temp"] = LegacyCheckDefinition(
     service_name="Temperature %s",
+    sections=["bintec_sensors"],
     discovery_function=inventory_bintec_sensors_temp,
     check_function=check_bintec_sensors_temp,
     check_ruleset_name="temperature",
@@ -122,6 +124,7 @@ def check_bintec_sensors_voltage(item, _no_params, info):
 
 check_info["bintec_sensors.voltage"] = LegacyCheckDefinition(
     service_name="Voltage %s",
+    sections=["bintec_sensors"],
     discovery_function=inventory_bintec_sensors_voltage,
     check_function=check_bintec_sensors_voltage,
 )

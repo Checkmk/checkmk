@@ -56,6 +56,7 @@ check_info["arbor_peakflow_sp"] = LegacyCheckDefinition(
 
 check_info["arbor_peakflow_sp.disk_usage"] = LegacyCheckDefinition(
     service_name="Disk Usage %s",
+    sections=["arbor_peakflow_sp"],
     discovery_function=inventory_arbor_disk_usage,
     check_function=check_arbor_disk_usage,
     check_ruleset_name="filesystem",
@@ -76,6 +77,7 @@ def check_arbor_peakflow_sp_flows(_no_item, params, parsed):
 
 check_info["arbor_peakflow_sp.flows"] = LegacyCheckDefinition(
     service_name="Flow Count",
+    sections=["arbor_peakflow_sp"],
     discovery_function=inventory_arbor_peakflow_sp_flows,
     check_function=check_arbor_peakflow_sp_flows,
 )

@@ -56,6 +56,7 @@ def check_docker_node_containers(_no_item, params, parsed):
 
 check_info["docker_node_info.containers"] = LegacyCheckDefinition(
     service_name="Docker containers",
+    sections=["docker_node_info"],
     discovery_function=discover_docker_node_info,
     check_function=check_docker_node_containers,
     check_ruleset_name="docker_node_containers",

@@ -189,6 +189,7 @@ def check_watchdog_sensors_temp(item, params, parsed):
 
 check_info["watchdog_sensors.temp"] = LegacyCheckDefinition(
     service_name="%s ",
+    sections=["watchdog_sensors"],
     discovery_function=inventory_watchdog_sensors_temp,
     check_function=check_watchdog_sensors_temp,
     check_ruleset_name="temperature",
@@ -236,6 +237,7 @@ def check_watchdog_sensors_humidity(item, params, parsed):
 
 check_info["watchdog_sensors.humidity"] = LegacyCheckDefinition(
     service_name="%s",
+    sections=["watchdog_sensors"],
     discovery_function=inventory_watchdog_sensors_humidity,
     check_function=check_watchdog_sensors_humidity,
     check_ruleset_name="humidity",
@@ -278,6 +280,7 @@ def check_watchdog_sensors_dew(item, params, parsed):
 
 check_info["watchdog_sensors.dew"] = LegacyCheckDefinition(
     service_name="%s",
+    sections=["watchdog_sensors"],
     discovery_function=inventory_watchdog_sensors_dew,
     check_function=check_watchdog_sensors_dew,
     check_ruleset_name="temperature",

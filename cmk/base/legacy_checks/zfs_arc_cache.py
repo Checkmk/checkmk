@@ -361,6 +361,7 @@ def check_zfs_arc_cache_l2(_no_item, _no_params, parsed):
 
 check_info["zfs_arc_cache.l2"] = LegacyCheckDefinition(
     service_name="ZFS arc cache L2",
+    sections=["zfs_arc_cache"],
     discovery_function=inventory_zfs_arc_cache_l2,
     check_function=check_zfs_arc_cache_l2,
 )

@@ -17,6 +17,7 @@ _DiscoveredParameters = Mapping | tuple | str | None
 class LegacyCheckDefinition(TypedDict):
     detect: NotRequired[SNMPDetectSpecification]
     fetch: NotRequired[list[SNMPTree] | SNMPTree]
+    sections: NotRequired[list[str]]
     check_function: NotRequired[Callable]
     discovery_function: NotRequired[
         Callable[..., None | Iterable[tuple[str | None, _DiscoveredParameters]] | Iterable[Service]]

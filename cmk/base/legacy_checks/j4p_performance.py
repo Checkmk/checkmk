@@ -132,6 +132,7 @@ def check_j4p_performance_mem(item, params, info):
 
 check_info["j4p_performance.mem"] = LegacyCheckDefinition(
     service_name="JMX %s Memory",
+    sections=["j4p_performance"],
     discovery_function=lambda i: inventory_j4p_performance(i, "mem"),
     check_function=check_j4p_performance_mem,
     check_ruleset_name="j4p_performance.mem",
@@ -171,6 +172,7 @@ def check_j4p_performance_threads(item, params, info):
 
 check_info["j4p_performance.threads"] = LegacyCheckDefinition(
     service_name="JMX %s Threads",
+    sections=["j4p_performance"],
     discovery_function=lambda i: inventory_j4p_performance(i, "threads"),
     check_function=check_j4p_performance_threads,
     check_ruleset_name="j4p_performance.threads",
@@ -199,6 +201,7 @@ def check_j4p_performance_uptime(item, _unused, info):
 
 check_info["j4p_performance.uptime"] = LegacyCheckDefinition(
     service_name="JMX %s Uptime",
+    sections=["j4p_performance"],
     discovery_function=lambda i: inventory_j4p_performance(i, "uptime"),
     check_function=check_j4p_performance_uptime,
     check_ruleset_name="j4p_performance.uptime",
@@ -217,6 +220,7 @@ def check_j4p_performance_app_state(item, _unused, info):
 
 check_info["j4p_performance.app_state"] = LegacyCheckDefinition(
     service_name="JMX %s State",
+    sections=["j4p_performance"],
     discovery_function=lambda i: inventory_j4p_performance_apps(i, "app_state"),
     check_function=check_j4p_performance_app_state,
     check_ruleset_name="j4p_performance.app_state",
@@ -254,6 +258,7 @@ def check_j4p_performance_app_sess(item, params, info):
 
 check_info["j4p_performance.app_sess"] = LegacyCheckDefinition(
     service_name="JMX %s Sessions",
+    sections=["j4p_performance"],
     discovery_function=lambda i: inventory_j4p_performance_apps(i, "app_sess"),
     check_function=check_j4p_performance_app_sess,
     check_ruleset_name="j4p_performance.app_sess",
@@ -293,6 +298,7 @@ def check_j4p_performance_serv_req(item, params, info):
 
 check_info["j4p_performance.serv_req"] = LegacyCheckDefinition(
     service_name="JMX %s Requests",
+    sections=["j4p_performance"],
     discovery_function=lambda i: inventory_j4p_performance_serv(i, "serv_req"),
     check_function=check_j4p_performance_serv_req,
     check_ruleset_name="j4p_performance.serv_req",

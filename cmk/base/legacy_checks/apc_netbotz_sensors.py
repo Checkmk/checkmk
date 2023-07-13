@@ -177,6 +177,7 @@ check_info["apc_netbotz_sensors"] = LegacyCheckDefinition(
 
 check_info["apc_netbotz_sensors.dewpoint"] = LegacyCheckDefinition(
     service_name="Dew point %s",
+    sections=["apc_netbotz_sensors"],
     discovery_function=lambda parsed: inventory_apc_netbotz_sensors_temp(parsed, "dewpoint"),
     check_function=lambda item, params, info: check_apc_netbotz_sensors_temp(
         item, params, info, "dewpoint"
@@ -218,6 +219,7 @@ def check_apc_netbotz_sensors_humidity(item, params, parsed):
 
 check_info["apc_netbotz_sensors.humidity"] = LegacyCheckDefinition(
     service_name="Humidity %s",
+    sections=["apc_netbotz_sensors"],
     discovery_function=inventory_apc_netbotz_sensors_humidity,
     check_function=check_apc_netbotz_sensors_humidity,
     check_ruleset_name="humidity",

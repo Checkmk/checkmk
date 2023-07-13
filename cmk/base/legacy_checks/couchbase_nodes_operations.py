@@ -52,6 +52,7 @@ check_info["couchbase_nodes_operations"] = LegacyCheckDefinition(
 
 check_info["couchbase_nodes_operations.total"] = LegacyCheckDefinition(
     service_name="Couchbase Total Operations",
+    sections=["couchbase_nodes_operations"],
     discovery_function=discover_couchbase_buckets_nodes_operations_total,
     check_function=check_couchbase_nodes_operations,
     check_ruleset_name="couchbase_ops_nodes",

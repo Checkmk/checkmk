@@ -480,6 +480,7 @@ def _mongodb_cluster_split_namespace(namespace):
 
 check_info["mongodb_cluster.collections"] = LegacyCheckDefinition(
     service_name="MongoDB Cluster: %s",
+    sections=["mongodb_cluster"],
     discovery_function=inventory_mongodb_cluster_shards,
     check_function=check_mongodb_cluster_shards,
     check_ruleset_name="mongodb_cluster",
@@ -514,6 +515,7 @@ def check_mongodb_cluster_balancer(_item, _params, databases_dict):
 
 check_info["mongodb_cluster.balancer"] = LegacyCheckDefinition(
     service_name="MongoDB Balancer",
+    sections=["mongodb_cluster"],
     discovery_function=discover_mongodb_cluster_balancer,
     check_function=check_mongodb_cluster_balancer,
 )

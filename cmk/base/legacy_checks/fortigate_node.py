@@ -143,6 +143,7 @@ def check_fortigate_node_cpu(item, params, parsed):
 
 check_info["fortigate_node.cpu"] = LegacyCheckDefinition(
     service_name="CPU utilization %s",
+    sections=["fortigate_node"],
     discovery_function=inventory_fortigate_node_cpu,
     check_function=check_fortigate_node_cpu,
 )
@@ -175,6 +176,7 @@ def check_fortigate_node_ses(item, params, parsed):
 
 check_info["fortigate_node.sessions"] = LegacyCheckDefinition(
     service_name="Sessions %s",
+    sections=["fortigate_node"],
     discovery_function=inventory_fortigate_node_ses,
     check_function=check_fortigate_node_ses,
     check_ruleset_name="fortigate_node_sessions",

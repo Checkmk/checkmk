@@ -101,6 +101,7 @@ check_info["couchbase_buckets_operations"] = LegacyCheckDefinition(
 
 check_info["couchbase_buckets_operations.total"] = LegacyCheckDefinition(
     service_name="Couchbase Bucket Operations",
+    sections=["couchbase_buckets_operations"],
     discovery_function=discover_couchbase_buckets_operations,
     check_function=check_couchbase_buckets_operations,
     check_ruleset_name="couchbase_ops_buckets",

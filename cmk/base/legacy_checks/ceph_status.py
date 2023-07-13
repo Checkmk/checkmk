@@ -166,6 +166,7 @@ def check_ceph_status_osds(_no_item, params, parsed):
 
 check_info["ceph_status.osds"] = LegacyCheckDefinition(
     service_name="Ceph OSDs",
+    sections=["ceph_status"],
     discovery_function=inventory_ceph_status_osds,
     check_function=check_ceph_status_osds,
     check_ruleset_name="ceph_osds",
@@ -242,6 +243,7 @@ def check_ceph_status_pgs(_no_item, params, parsed):
 
 check_info["ceph_status.pgs"] = LegacyCheckDefinition(
     service_name="Ceph PGs",
+    sections=["ceph_status"],
     discovery_function=inventory_ceph_status_pgs,
     check_function=check_ceph_status_pgs,
 )
@@ -274,6 +276,7 @@ def check_ceph_status_mgrs(_no_item, params, parsed):
 
 check_info["ceph_status.mgrs"] = LegacyCheckDefinition(
     service_name="Ceph MGRs",
+    sections=["ceph_status"],
     discovery_function=inventory_ceph_status_mgrs,
     check_function=check_ceph_status_mgrs,
     check_ruleset_name="ceph_mgrs",

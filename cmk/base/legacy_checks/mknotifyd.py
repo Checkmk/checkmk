@@ -291,6 +291,7 @@ def check_mknotifyd_connection(item, _no_params, parsed):
 
 check_info["mknotifyd.connection"] = LegacyCheckDefinition(
     service_name="OMD %s Notify Connection",
+    sections=["mknotifyd"],
     discovery_function=inventory_mknotifyd_connection,
     check_function=check_mknotifyd_connection,
 )

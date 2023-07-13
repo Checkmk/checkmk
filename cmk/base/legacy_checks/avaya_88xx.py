@@ -80,6 +80,7 @@ check_info["avaya_88xx"] = LegacyCheckDefinition(
 
 check_info["avaya_88xx.fan"] = LegacyCheckDefinition(
     service_name="Fan %s Status",
+    sections=["avaya_88xx"],
     discovery_function=inventory_avaya_88xx_fan,
     check_function=check_avaya_88xx_fan,
 )

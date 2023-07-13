@@ -111,6 +111,7 @@ def check_scaleio_sds_status(item, _no_params, parsed):
 
 check_info["scaleio_sds.status"] = LegacyCheckDefinition(
     service_name="ScaleIO SDS status %s",
+    sections=["scaleio_sds"],
     discovery_function=inventory_scaleio_sds_status,
     check_function=check_scaleio_sds_status,
 )

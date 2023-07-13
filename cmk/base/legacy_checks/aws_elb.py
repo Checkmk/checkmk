@@ -125,6 +125,7 @@ def check_aws_elb_latency(item, params, parsed):
 
 check_info["aws_elb.latency"] = LegacyCheckDefinition(
     service_name="AWS/ELB Latency",
+    sections=["aws_elb"],
     discovery_function=lambda p: inventory_aws_generic_single(p, ["Latency"]),
     check_function=check_aws_elb_latency,
     check_ruleset_name="aws_elb_latency",
@@ -152,6 +153,7 @@ def check_aws_elb_http_elb(item, params, parsed):
 
 check_info["aws_elb.http_elb"] = LegacyCheckDefinition(
     service_name="AWS/ELB HTTP ELB",
+    sections=["aws_elb"],
     discovery_function=lambda p: inventory_aws_generic_single(p, ["RequestCount"]),
     check_function=check_aws_elb_http_elb,
     check_ruleset_name="aws_elb_http",
@@ -179,6 +181,7 @@ def check_aws_elb_http_backend(item, params, parsed):
 
 check_info["aws_elb.http_backend"] = LegacyCheckDefinition(
     service_name="AWS/ELB HTTP Backend",
+    sections=["aws_elb"],
     discovery_function=lambda p: inventory_aws_generic_single(p, ["RequestCount"]),
     check_function=check_aws_elb_http_backend,
     check_ruleset_name="aws_elb_http",
@@ -240,6 +243,7 @@ def check_aws_elb_healthy_hosts(item, params, parsed):
 
 check_info["aws_elb.healthy_hosts"] = LegacyCheckDefinition(
     service_name="AWS/ELB Healthy Hosts",
+    sections=["aws_elb"],
     discovery_function=lambda p: inventory_aws_generic_single(
         p, ["HealthyHostCount", "UnHealthyHostCount"]
     ),
@@ -280,6 +284,7 @@ def check_aws_elb_backend_connection_errors(item, params, parsed):
 
 check_info["aws_elb.backend_connection_errors"] = LegacyCheckDefinition(
     service_name="AWS/ELB Backend Connection Errors",
+    sections=["aws_elb"],
     discovery_function=lambda p: inventory_aws_generic_single(p, ["BackendConnectionErrors"]),
     check_function=check_aws_elb_backend_connection_errors,
     check_ruleset_name="aws_elb_backend_connection_errors",

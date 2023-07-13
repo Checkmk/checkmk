@@ -100,6 +100,7 @@ def check_bluenet_sensor_hum(item, params, info):
 
 check_info["bluenet_sensor.hum"] = LegacyCheckDefinition(
     service_name="Humidity %s",
+    sections=["bluenet_sensor"],
     discovery_function=inventory_bluenet_sensor_hum,
     check_function=check_bluenet_sensor_hum,
     check_ruleset_name="humidity",

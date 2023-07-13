@@ -93,6 +93,7 @@ def check_fireeye_raid_disks(item, _no_params, parsed):
 
 check_info["fireeye_raid.disks"] = LegacyCheckDefinition(
     service_name="Disk status %s",
+    sections=["fireeye_raid"],
     discovery_function=lambda parsed: inventory_fireeye_generic(parsed.get("disks", []), True),
     check_function=check_fireeye_raid_disks,
 )

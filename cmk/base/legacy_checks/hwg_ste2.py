@@ -34,6 +34,7 @@ check_info["hwg_ste2"] = LegacyCheckDefinition(
 
 check_info["hwg_ste2.humidity"] = LegacyCheckDefinition(
     service_name="Humidity %s",
+    sections=["hwg_ste2"],
     discovery_function=inventory_hwg_humidity,
     check_function=check_hwg_humidity,
     check_ruleset_name="humidity",

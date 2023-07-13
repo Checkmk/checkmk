@@ -95,6 +95,7 @@ def check_f5_bigip_mem_tmm(_item, params, parsed):
 
 check_info["f5_bigip_mem.tmm"] = LegacyCheckDefinition(
     service_name="Memory",
+    sections=["f5_bigip_mem"],
     discovery_function=discover_f5_bigip_mem_tmm,
     check_function=check_f5_bigip_mem_tmm,
     check_ruleset_name="memory_simple",

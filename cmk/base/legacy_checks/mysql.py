@@ -138,6 +138,7 @@ def check_mysql_sessions(item, params, parsed):
 
 check_info["mysql.sessions"] = LegacyCheckDefinition(
     service_name="MySQL Sessions %s",
+    sections=["mysql"],
     discovery_function=discover_mysql_sessions,
     check_function=check_mysql_sessions,
     check_ruleset_name="mysql_sessions",
@@ -166,6 +167,7 @@ def check_mysql_iostat(item, params, parsed):
 
 check_info["mysql.innodb_io"] = LegacyCheckDefinition(
     service_name="MySQL InnoDB IO %s",
+    sections=["mysql"],
     discovery_function=_discover_keys({"Innodb_data_read"}),
     check_function=check_mysql_iostat,
     check_ruleset_name="mysql_innodb_io",
@@ -245,6 +247,7 @@ def check_mysql_connections(item, params, parsed):
 
 check_info["mysql.connections"] = LegacyCheckDefinition(
     service_name="MySQL Connections %s",
+    sections=["mysql"],
     discovery_function=_discover_keys(
         {"Max_used_connections", "max_connections", "Threads_connected"}
     ),
@@ -295,6 +298,7 @@ def check_mysql_galerasync(item, _no_params, parsed):
 
 check_info["mysql.galerasync"] = LegacyCheckDefinition(
     service_name="MySQL Galera Sync %s",
+    sections=["mysql"],
     discovery_function=inventory_mysql_galerasync,
     check_function=check_mysql_galerasync,
 )
@@ -336,6 +340,7 @@ def check_mysql_galeradonor(item, params, parsed):
 
 check_info["mysql.galeradonor"] = LegacyCheckDefinition(
     service_name="MySQL Galera Donor %s",
+    sections=["mysql"],
     discovery_function=inventory_mysql_galeradonor,
     check_function=check_mysql_galeradonor,
     check_default_parameters={},
@@ -373,6 +378,7 @@ def check_mysql_galerastartup(item, _no_params, parsed):
 
 check_info["mysql.galerastartup"] = LegacyCheckDefinition(
     service_name="MySQL Galera Startup %s",
+    sections=["mysql"],
     discovery_function=inventory_mysql_galerastartup,
     check_function=check_mysql_galerastartup,
 )
@@ -420,6 +426,7 @@ def check_mysql_galerasize(item, params, parsed):
 
 check_info["mysql.galerasize"] = LegacyCheckDefinition(
     service_name="MySQL Galera Size %s",
+    sections=["mysql"],
     discovery_function=inventory_mysql_galerasize,
     check_function=check_mysql_galerasize,
     check_default_parameters={},
@@ -458,6 +465,7 @@ def check_mysql_galerastatus(item, _no_params, parsed):
 
 check_info["mysql.galerastatus"] = LegacyCheckDefinition(
     service_name="MySQL Galera Status %s",
+    sections=["mysql"],
     discovery_function=inventory_mysql_galerastatus,
     check_function=check_mysql_galerastatus,
 )

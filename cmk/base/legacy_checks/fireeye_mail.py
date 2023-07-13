@@ -124,6 +124,7 @@ def check_fireeye_attachment(_no_item, params, info):
 
 check_info["fireeye_mail.attachment"] = LegacyCheckDefinition(
     service_name="Mails Containing Attachment",
+    sections=["fireeye_mail"],
     discovery_function=lambda info: inventory_fireeye_generic(info, False, True),
     check_function=check_fireeye_attachment,
     check_ruleset_name="fireeye_mail",
@@ -159,6 +160,7 @@ def check_fireeye_url(_no_item, params, info):
 
 check_info["fireeye_mail.url"] = LegacyCheckDefinition(
     service_name="Mails Containing URL",
+    sections=["fireeye_mail"],
     discovery_function=lambda info: inventory_fireeye_generic(info, False, True),
     check_function=check_fireeye_url,
     check_ruleset_name="fireeye_mail",
@@ -216,6 +218,7 @@ def check_fireeye_mail_statistics(_no_item, params, info):
 
 check_info["fireeye_mail.statistics"] = LegacyCheckDefinition(
     service_name="Mail Processing Statistics",
+    sections=["fireeye_mail"],
     discovery_function=lambda info: inventory_fireeye_generic(info, False, True),
     check_function=check_fireeye_mail_statistics,
     check_ruleset_name="fireeye_mail",
@@ -247,6 +250,7 @@ def check_fireeye_mail_received(_no_item, params, info):
 
 check_info["fireeye_mail.received"] = LegacyCheckDefinition(
     service_name="Mails Received",
+    sections=["fireeye_mail"],
     discovery_function=lambda info: inventory_fireeye_generic(info, False, True),
     check_function=check_fireeye_mail_received,
     check_default_parameters={"rate": (6000, 7000)},

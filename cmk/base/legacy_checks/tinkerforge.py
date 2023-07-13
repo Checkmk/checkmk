@@ -146,6 +146,7 @@ check_info["tinkerforge"] = LegacyCheckDefinition(
 
 check_info["tinkerforge.temperature"] = LegacyCheckDefinition(
     service_name="Temperature %s",
+    sections=["tinkerforge"],
     discovery_function=lambda parsed: inventory_tinkerforge("temperature", parsed),
     check_function=check_tinkerforge_temperature,
     check_ruleset_name="temperature",
@@ -153,6 +154,7 @@ check_info["tinkerforge.temperature"] = LegacyCheckDefinition(
 
 check_info["tinkerforge.ambient"] = LegacyCheckDefinition(
     service_name="Ambient Light %s",
+    sections=["tinkerforge"],
     discovery_function=lambda parsed: inventory_tinkerforge("ambient", parsed),
     check_function=check_tinkerforge_ambient,
     check_ruleset_name="brightness",
@@ -160,6 +162,7 @@ check_info["tinkerforge.ambient"] = LegacyCheckDefinition(
 
 check_info["tinkerforge.humidity"] = LegacyCheckDefinition(
     service_name="Humidity %s",
+    sections=["tinkerforge"],
     discovery_function=lambda parsed: inventory_tinkerforge("humidity", parsed),
     check_function=check_tinkerforge_humidity,
     check_ruleset_name="humidity",
@@ -167,6 +170,7 @@ check_info["tinkerforge.humidity"] = LegacyCheckDefinition(
 
 check_info["tinkerforge.motion"] = LegacyCheckDefinition(
     service_name="Motion Detector %s",
+    sections=["tinkerforge"],
     discovery_function=lambda parsed: inventory_tinkerforge("motion", parsed),
     check_function=check_tinkerforge_motion,
     check_ruleset_name="motion",

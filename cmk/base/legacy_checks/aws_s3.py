@@ -131,6 +131,7 @@ def check_aws_s3_summary(item, params, parsed):
 
 check_info["aws_s3.summary"] = LegacyCheckDefinition(
     service_name="AWS/S3 Summary",
+    sections=["aws_s3"],
     discovery_function=discover_aws_s3_summary,
     check_function=check_aws_s3_summary,
     check_ruleset_name="aws_s3_buckets",

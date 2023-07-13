@@ -118,6 +118,7 @@ def check_aws_elbv2_network_connections(item, params, parsed):
 
 check_info["aws_elbv2_network.connections"] = LegacyCheckDefinition(
     service_name="AWS/NetworkELB Connections",
+    sections=["aws_elbv2_network"],
     discovery_function=lambda p: inventory_aws_generic_single(
         p, _aws_elbv2_network_connection_types, requirement=any
     ),
@@ -218,6 +219,7 @@ def check_aws_elbv2_network_tls_handshakes(item, params, parsed):
 
 check_info["aws_elbv2_network.tls_handshakes"] = LegacyCheckDefinition(
     service_name="AWS/NetworkELB TLS Handshakes",
+    sections=["aws_elbv2_network"],
     discovery_function=lambda p: inventory_aws_generic_single(
         p, _aws_elbv2_network_tls_types, requirement=any
     ),
@@ -264,6 +266,7 @@ def check_aws_elbv2_network_rst_packets(item, params, parsed):
 
 check_info["aws_elbv2_network.rst_packets"] = LegacyCheckDefinition(
     service_name="AWS/NetworkELB Reset Packets",
+    sections=["aws_elbv2_network"],
     discovery_function=lambda p: inventory_aws_generic_single(
         p, _aws_elbv2_network_rst_packets_types, requirement=any
     ),
@@ -308,6 +311,7 @@ def check_aws_elbv2_network_statistics(item, params, parsed):
 
 check_info["aws_elbv2_network.statistics"] = LegacyCheckDefinition(
     service_name="AWS/NetworkELB Statistics",
+    sections=["aws_elbv2_network"],
     discovery_function=lambda p: inventory_aws_generic_single(
         p, _aws_elbv2_network_statistics_metric_names, requirement=any
     ),

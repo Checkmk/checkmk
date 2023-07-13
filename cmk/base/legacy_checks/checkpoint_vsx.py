@@ -196,6 +196,7 @@ def check_checkpoint_vsx_connections(item, params, parsed):
 
 check_info["checkpoint_vsx.connections"] = LegacyCheckDefinition(
     service_name="VS %s Connections",
+    sections=["checkpoint_vsx"],
     discovery_function=discover_key("conn_num"),
     check_function=check_checkpoint_vsx_connections,
     check_ruleset_name="checkpoint_vsx_connections",
@@ -246,6 +247,7 @@ def check_checkpoint_vsx_packets(item, params, parsed):
 
 check_info["checkpoint_vsx.packets"] = LegacyCheckDefinition(
     service_name="VS %s Packets",
+    sections=["checkpoint_vsx"],
     discovery_function=discover_key("packets"),
     check_function=check_checkpoint_vsx_packets,
     check_ruleset_name="checkpoint_vsx_packets",
@@ -290,6 +292,7 @@ def check_checkpoint_vsx_traffic(item, params, parsed):
 
 check_info["checkpoint_vsx.traffic"] = LegacyCheckDefinition(
     service_name="VS %s Traffic",
+    sections=["checkpoint_vsx"],
     discovery_function=discover_key("bytes_accepted"),
     check_function=check_checkpoint_vsx_traffic,
     check_ruleset_name="checkpoint_vsx_traffic",
@@ -343,6 +346,7 @@ def check_checkpoint_vsx_status(item, _no_params, parsed):
 
 check_info["checkpoint_vsx.status"] = LegacyCheckDefinition(
     service_name="VS %s Status",
+    sections=["checkpoint_vsx"],
     discovery_function=discover_key("vs_ha_status"),
     check_function=check_checkpoint_vsx_status,
     check_ruleset_name="checkpoint_vsx_traffic_status",

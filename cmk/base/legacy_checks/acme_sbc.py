@@ -91,6 +91,7 @@ def check_acme_sbc_settings(_no_item, params, parsed):
 
 check_info["acme_sbc.settings"] = LegacyCheckDefinition(
     service_name="Settings",
+    sections=["acme_sbc"],
     discovery_function=inventory_acme_sbc_settings,
     check_function=check_acme_sbc_settings,
 )

@@ -29,11 +29,11 @@ def check_infoblox_grid_status(_no_item, _no_params, info):
 
 check_info["infoblox_grid_status"] = LegacyCheckDefinition(
     detect=DETECT_INFOBLOX,
-    discovery_function=inventory_infoblox_grid_status,
-    check_function=check_infoblox_grid_status,
-    service_name="Grid replication",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.7779.3.1.1.2.1",
         oids=["15", "16"],
     ),
+    service_name="Grid replication",
+    discovery_function=inventory_infoblox_grid_status,
+    check_function=check_infoblox_grid_status,
 )

@@ -148,9 +148,9 @@ def check_jenkins_queue(_no_item, params, parsed):
 
 check_info["jenkins_queue"] = LegacyCheckDefinition(
     parse_function=parse_jenkins_queue,
-    check_function=check_jenkins_queue,
-    discovery_function=inventory_jenkins_queue,
     service_name="Jenkins Queue",
+    discovery_function=inventory_jenkins_queue,
+    check_function=check_jenkins_queue,
     check_ruleset_name="jenkins_queue",
     check_default_parameters={
         "in_queue_since": (3600, 7200),

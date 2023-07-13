@@ -24,14 +24,14 @@ check_info["fortigate_cpu"] = LegacyCheckDefinition(
         exists(".1.3.6.1.4.1.12356.1.8.0"),
         not_exists(".1.3.6.1.4.1.12356.101.4.1.3.0"),
     ),
-    discovery_function=inventory_fortigate_cpu,
-    check_function=check_fortigate_cpu,
-    service_name="CPU utilization",
-    check_ruleset_name="cpu_utilization",
-    # uses mib FORTINET-MIB-280
+    # uses mib FORTINET-MIB-280,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.1",
         oids=["8"],
     ),
+    service_name="CPU utilization",
+    discovery_function=inventory_fortigate_cpu,
+    check_function=check_fortigate_cpu,
+    check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (80.0, 90.0)},
 )

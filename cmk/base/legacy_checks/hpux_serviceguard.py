@@ -52,7 +52,7 @@ def check_hpux_serviceguard(item, _no_params, info):
 
 
 check_info["hpux_serviceguard"] = LegacyCheckDefinition(
-    check_function=check_hpux_serviceguard,
-    discovery_function=inventory_hpux_serviceguard,
     service_name="Serviceguard %s",
+    discovery_function=inventory_hpux_serviceguard,
+    check_function=check_hpux_serviceguard,
 )

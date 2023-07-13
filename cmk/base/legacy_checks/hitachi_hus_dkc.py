@@ -15,11 +15,11 @@ check_info["hitachi_hus_dkc"] = LegacyCheckDefinition(
         contains(".1.3.6.1.2.1.1.1.0", "hm800"),
         contains(".1.3.6.1.2.1.1.1.0", "hm850"),
     ),
-    discovery_function=inventory_hitachi_hus,
-    check_function=check_hitachi_hus,
-    service_name="HUS DKC Chassis %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.116.5.11.4.1.1.6.1",
         oids=["1", "2", "3", "4", "5", "6", "7", "8", "9"],
     ),
+    service_name="HUS DKC Chassis %s",
+    discovery_function=inventory_hitachi_hus,
+    check_function=check_hitachi_hus,
 )

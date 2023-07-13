@@ -48,10 +48,6 @@ def check_huawei_switch_psu(
 
 check_info["huawei_switch_psu"] = LegacyCheckDefinition(
     detect=DETECT_HUAWEI_SWITCH,
-    parse_function=parse_huawei_switch_psu,
-    discovery_function=discover_huawei_switch_psu,
-    check_function=check_huawei_switch_psu,
-    service_name="Powersupply %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.47.1.1.1.1",
@@ -62,4 +58,8 @@ check_info["huawei_switch_psu"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "2"],
         ),
     ],
+    parse_function=parse_huawei_switch_psu,
+    service_name="Powersupply %s",
+    discovery_function=discover_huawei_switch_psu,
+    check_function=check_huawei_switch_psu,
 )

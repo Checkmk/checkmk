@@ -61,7 +61,7 @@ def check_informix_status(item, params, parsed):
 
 check_info["informix_status"] = LegacyCheckDefinition(
     parse_function=parse_informix_status,
+    service_name="Informix Instance %s",
     discovery_function=inventory_informix_status,
     check_function=check_informix_status,
-    service_name="Informix Instance %s",
 )

@@ -70,9 +70,9 @@ def check_ibm_svc_mdisk(item, params, parsed):
 
 check_info["ibm_svc_mdisk"] = LegacyCheckDefinition(
     parse_function=parse_ibm_svc_mdisk,
-    check_function=check_ibm_svc_mdisk,
-    discovery_function=inventory_ibm_svc_mdisk,
     service_name="MDisk %s",
+    discovery_function=inventory_ibm_svc_mdisk,
+    check_function=check_ibm_svc_mdisk,
     check_ruleset_name="ibm_svc_mdisk",
     check_default_parameters={
         "online_state": 0,  # online state is OK

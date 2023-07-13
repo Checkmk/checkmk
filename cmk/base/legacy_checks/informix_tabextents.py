@@ -63,9 +63,9 @@ def check_informix_tabextents(item, params, parsed):
 
 check_info["informix_tabextents"] = LegacyCheckDefinition(
     parse_function=parse_informix_tabextents,
+    service_name="Informix Table Extents %s",
     discovery_function=inventory_informix_tabextents,
     check_function=check_informix_tabextents,
-    service_name="Informix Table Extents %s",
     check_ruleset_name="informix_tabextents",
     check_default_parameters={
         "levels": (40, 70),

@@ -83,10 +83,6 @@ def check_genua_pfstate(item, params, info):
 
 check_info["genua_pfstate"] = LegacyCheckDefinition(
     detect=DETECT_GENUA,
-    discovery_function=inventory_genua_pfstate,
-    check_function=check_genua_pfstate,
-    service_name="Paketfilter Status",
-    check_ruleset_name="pf_used_states",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.3717.2.1.1.6",
@@ -97,4 +93,8 @@ check_info["genua_pfstate"] = LegacyCheckDefinition(
             oids=["1", "2", "3"],
         ),
     ],
+    service_name="Paketfilter Status",
+    discovery_function=inventory_genua_pfstate,
+    check_function=check_genua_pfstate,
+    check_ruleset_name="pf_used_states",
 )

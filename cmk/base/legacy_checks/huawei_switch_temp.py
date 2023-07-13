@@ -40,10 +40,6 @@ def check_huawei_switch_temp(
 
 check_info["huawei_switch_temp"] = LegacyCheckDefinition(
     detect=DETECT_HUAWEI_SWITCH,
-    parse_function=parse_huawei_switch_temp,
-    discovery_function=discover_huawei_switch_temp,
-    check_function=check_huawei_switch_temp,
-    service_name="Temperature %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.47.1.1.1.1",
@@ -54,6 +50,10 @@ check_info["huawei_switch_temp"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "11"],
         ),
     ],
+    parse_function=parse_huawei_switch_temp,
+    service_name="Temperature %s",
+    discovery_function=discover_huawei_switch_temp,
+    check_function=check_huawei_switch_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (80.0, 90.0),

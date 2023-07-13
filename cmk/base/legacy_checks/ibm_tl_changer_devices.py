@@ -30,11 +30,11 @@ def check_ibm_tl_changer_devices(item, params, info):
 
 check_info["ibm_tl_changer_devices"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.32925.1"),
-    discovery_function=inventory_ibm_tl_changer_devices,
-    check_function=check_ibm_tl_changer_devices,
-    service_name="Changer device %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.14851.3.1.11.2.1",
         oids=["4", "8", "9"],
     ),
+    service_name="Changer device %s",
+    discovery_function=inventory_ibm_tl_changer_devices,
+    check_function=check_ibm_tl_changer_devices,
 )

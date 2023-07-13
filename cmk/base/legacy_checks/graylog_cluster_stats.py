@@ -80,9 +80,9 @@ def check_graylog_cluster_stats(_no_item, params, parsed):
 
 check_info["graylog_cluster_stats"] = LegacyCheckDefinition(
     parse_function=deserialize_and_merge_json,
-    check_function=check_graylog_cluster_stats,
-    discovery_function=discover_graylog_cluster_stats,
     service_name="Graylog Cluster Stats",
+    discovery_function=discover_graylog_cluster_stats,
+    check_function=check_graylog_cluster_stats,
     check_ruleset_name="graylog_cluster_stats",
 )
 
@@ -182,9 +182,9 @@ def check_graylog_cluster_stats_elastic(  # pylint: disable=too-many-branches
 
 
 check_info["graylog_cluster_stats.elastic"] = LegacyCheckDefinition(
-    check_function=check_graylog_cluster_stats_elastic,
-    discovery_function=inventory_graylog_cluster_stats_elastic,
     service_name="Graylog Cluster Elasticsearch Stats",
+    discovery_function=inventory_graylog_cluster_stats_elastic,
+    check_function=check_graylog_cluster_stats_elastic,
     check_ruleset_name="graylog_cluster_stats_elastic",
     check_default_parameters={
         "green": 0,
@@ -255,8 +255,8 @@ def check_graylog_cluster_stats_mongodb(_no_item, params, parsed):
 
 
 check_info["graylog_cluster_stats.mongodb"] = LegacyCheckDefinition(
-    check_function=check_graylog_cluster_stats_mongodb,
-    discovery_function=inventory_graylog_cluster_stats_mongodb,
     service_name="Graylog Cluster MongoDB Stats",
+    discovery_function=inventory_graylog_cluster_stats_mongodb,
+    check_function=check_graylog_cluster_stats_mongodb,
     check_ruleset_name="graylog_cluster_stats_mongodb",
 )

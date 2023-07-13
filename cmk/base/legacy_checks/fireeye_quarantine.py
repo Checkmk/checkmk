@@ -30,13 +30,13 @@ def check_fireeye_quarantine(_no_item, params, info):
 
 check_info["fireeye_quarantine"] = LegacyCheckDefinition(
     detect=DETECT,
-    discovery_function=discover_fireeye_quarantine,
-    check_function=check_fireeye_quarantine,
-    service_name="Quarantine Usage",
-    check_ruleset_name="fireeye_quarantine",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.13.1.40",
         oids=["0"],
     ),
+    service_name="Quarantine Usage",
+    discovery_function=discover_fireeye_quarantine,
+    check_function=check_fireeye_quarantine,
+    check_ruleset_name="fireeye_quarantine",
     check_default_parameters={"usage": (70, 80)},
 )

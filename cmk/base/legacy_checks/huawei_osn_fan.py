@@ -33,11 +33,11 @@ def check_huawei_osn_fan(item, params, info):
 
 check_info["huawei_osn_fan"] = LegacyCheckDefinition(
     detect=DETECT_HUAWEI_OSN,
-    discovery_function=inventory_huawei_osn_fan,
-    check_function=check_huawei_osn_fan,
-    service_name="Unit %s (Fan)",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2011.2.25.4.70.20.10.10.1",
         oids=["1", "2"],
     ),
+    service_name="Unit %s (Fan)",
+    discovery_function=inventory_huawei_osn_fan,
+    check_function=check_huawei_osn_fan,
 )

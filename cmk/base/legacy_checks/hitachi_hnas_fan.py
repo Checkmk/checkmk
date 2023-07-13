@@ -62,11 +62,11 @@ def check_hitachi_hnas_fan(item, _no_params, info):
 
 check_info["hitachi_hnas_fan"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_hitachi_hnas_fan,
-    discovery_function=inventory_hitachi_hnas_fan,
-    service_name="Fan %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11096.6.1.1.1.2.1.11.1",
         oids=["1", "2", "3", "4", "5"],
     ),
+    service_name="Fan %s",
+    discovery_function=inventory_hitachi_hnas_fan,
+    check_function=check_hitachi_hnas_fan,
 )

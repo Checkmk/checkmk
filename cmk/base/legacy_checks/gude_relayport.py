@@ -48,10 +48,6 @@ def discover_gude_relayport(section):
 
 check_info["gude_relayport"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.38"),
-    parse_function=parse_gude_relayport,
-    discovery_function=discover_gude_relayport,
-    check_function=check_elphase,
-    service_name="Relay port %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.28507.38.1",
         oids=[
@@ -64,6 +60,10 @@ check_info["gude_relayport"] = LegacyCheckDefinition(
             "5.5.2.1.10",
         ],
     ),
+    parse_function=parse_gude_relayport,
+    service_name="Relay port %s",
+    discovery_function=discover_gude_relayport,
+    check_function=check_elphase,
     check_ruleset_name="el_inphase",
     check_default_parameters={
         "voltage": (220, 210),

@@ -105,11 +105,6 @@ check_info["janitza_umg"] = LegacyCheckDefinition(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34278.10.1"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.34278.10.4"),
     ),
-    parse_function=parse_janitza_umg_inphase,
-    discovery_function=inventory_janitza_umg_inphase,
-    check_function=check_elphase,
-    service_name="Input %s",
-    check_ruleset_name="el_inphase",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.1.2",
@@ -148,6 +143,11 @@ check_info["janitza_umg"] = LegacyCheckDefinition(
             oids=["8"],
         ),
     ],
+    parse_function=parse_janitza_umg_inphase,
+    service_name="Input %s",
+    discovery_function=inventory_janitza_umg_inphase,
+    check_function=check_elphase,
+    check_ruleset_name="el_inphase",
     check_default_parameters={},
 )
 
@@ -172,9 +172,9 @@ def check_janitza_umg_freq(item, params, parsed):
 
 
 check_info["janitza_umg.freq"] = LegacyCheckDefinition(
+    service_name="Frequency %s",
     discovery_function=inventory_janitza_umg_freq,
     check_function=check_janitza_umg_freq,
-    service_name="Frequency %s",
     check_ruleset_name="efreq",
     check_default_parameters={"levels_lower": (0, 0)},
 )
@@ -198,9 +198,9 @@ def check_janitza_umg_temp(item, params, parsed):
 
 
 check_info["janitza_umg.temp"] = LegacyCheckDefinition(
+    service_name="Temperature External %s",
     discovery_function=inventory_janitza_umg_temp,
     check_function=check_janitza_umg_temp,
-    service_name="Temperature External %s",
     check_ruleset_name="temperature",
     check_default_parameters={},
 )

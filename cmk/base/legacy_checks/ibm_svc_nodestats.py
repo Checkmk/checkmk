@@ -195,9 +195,9 @@ def check_ibm_svc_nodestats_diskio(item, _no_params, info):
 
 
 check_info["ibm_svc_nodestats.diskio"] = LegacyCheckDefinition(
-    check_function=check_ibm_svc_nodestats_diskio,
-    discovery_function=inventory_ibm_svc_nodestats_diskio,
     service_name="Disk IO %s",
+    discovery_function=inventory_ibm_svc_nodestats_diskio,
+    check_function=check_ibm_svc_nodestats_diskio,
 )
 
 # .
@@ -232,9 +232,9 @@ def check_ibm_svc_nodestats_iops(item, _no_params, info):
 
 
 check_info["ibm_svc_nodestats.iops"] = LegacyCheckDefinition(
-    check_function=check_ibm_svc_nodestats_iops,
-    discovery_function=inventory_ibm_svc_nodestats_iops,
     service_name="Disk IOPS %s",
+    discovery_function=inventory_ibm_svc_nodestats_iops,
+    check_function=check_ibm_svc_nodestats_iops,
 )
 
 # .
@@ -269,9 +269,9 @@ def check_ibm_svc_nodestats_disk_latency(item, _no_params, info):
 
 
 check_info["ibm_svc_nodestats.disk_latency"] = LegacyCheckDefinition(
-    check_function=check_ibm_svc_nodestats_disk_latency,
-    discovery_function=inventory_ibm_svc_nodestats_disk_latency,
     service_name="Disk Latency %s",
+    discovery_function=inventory_ibm_svc_nodestats_disk_latency,
+    check_function=check_ibm_svc_nodestats_disk_latency,
 )
 
 # .
@@ -304,9 +304,9 @@ def check_ibm_svc_nodestats_cpu(item, params, info):
 
 
 check_info["ibm_svc_nodestats.cpu_util"] = LegacyCheckDefinition(
-    check_function=check_ibm_svc_nodestats_cpu,
-    discovery_function=inventory_ibm_svc_nodestats_cpu,
     service_name="CPU utilization %s",
+    discovery_function=inventory_ibm_svc_nodestats_cpu,
+    check_function=check_ibm_svc_nodestats_cpu,
     check_ruleset_name="cpu_utilization_multiitem",
 )
 
@@ -349,7 +349,7 @@ def check_ibm_svc_nodestats_cache(item, _no_params, info):
 
 
 check_info["ibm_svc_nodestats.cache"] = LegacyCheckDefinition(
-    check_function=check_ibm_svc_nodestats_cache,
-    discovery_function=inventory_ibm_svc_nodestats_cache,
     service_name="Cache %s",
+    discovery_function=inventory_ibm_svc_nodestats_cache,
+    check_function=check_ibm_svc_nodestats_cache,
 )

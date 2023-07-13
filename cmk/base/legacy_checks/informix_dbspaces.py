@@ -87,9 +87,9 @@ def check_informix_dbspaces(item, params, parsed):
 
 check_info["informix_dbspaces"] = LegacyCheckDefinition(
     parse_function=parse_informix_dbspaces,
+    service_name="Informix Tablespace %s",
     discovery_function=inventory_informix_dbspaces,
     check_function=check_informix_dbspaces,
-    service_name="Informix Tablespace %s",
     check_ruleset_name="informix_dbspaces",
     check_default_parameters={"levels_perc": (80.0, 85.0)},
 )

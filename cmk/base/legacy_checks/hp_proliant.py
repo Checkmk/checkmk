@@ -49,11 +49,11 @@ check_info["hp_proliant"] = LegacyCheckDefinition(
             exists(".1.3.6.1.4.1.232.11.1.3.0"),
         ),
     ),
-    discovery_function=inventory_proliant_general,
-    check_function=check_proliant_general,
-    service_name="General Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232",
         oids=["11.1.3.0", "11.2.14.1.1.5.0", "2.2.2.1.0"],
     ),
+    service_name="General Status",
+    discovery_function=inventory_proliant_general,
+    check_function=check_proliant_general,
 )

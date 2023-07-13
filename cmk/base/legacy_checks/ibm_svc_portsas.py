@@ -92,9 +92,9 @@ def check_ibm_svc_portsas(item, params, parsed):
 
 check_info["ibm_svc_portsas"] = LegacyCheckDefinition(
     parse_function=parse_ibm_svc_portsas,
-    check_function=check_ibm_svc_portsas,
-    discovery_function=inventory_ibm_svc_portsas,
     service_name="SAS %s",
+    discovery_function=inventory_ibm_svc_portsas,
+    check_function=check_ibm_svc_portsas,
     check_default_parameters={
         "current_state": "offline",
     },

@@ -69,12 +69,12 @@ def check_h3c_lanswitch_cpu(item, params, info):
 
 check_info["h3c_lanswitch_cpu"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "3com s"),
-    discovery_function=inventory_h3c_lanswitch_cpu,
-    check_function=check_h3c_lanswitch_cpu,
-    service_name="CPU Utilization %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.43.45.1.6.1.1.1",
         oids=[OIDEnd(), "3"],
     ),
+    service_name="CPU Utilization %s",
+    discovery_function=inventory_h3c_lanswitch_cpu,
+    check_function=check_h3c_lanswitch_cpu,
     check_default_parameters={"levels": (50, 75)},
 )

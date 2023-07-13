@@ -43,12 +43,12 @@ def check_fireeye_temp(item, params, info):
 
 check_info["fireeye_temp"] = LegacyCheckDefinition(
     detect=DETECT,
-    discovery_function=inventory_fireeye_temp,
-    check_function=check_fireeye_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.11.1.1",
         oids=["4", "5", "6"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_fireeye_temp,
+    check_function=check_fireeye_temp,
     check_ruleset_name="temperature",
 )

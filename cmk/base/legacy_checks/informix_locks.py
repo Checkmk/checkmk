@@ -46,9 +46,9 @@ def check_informix_locks(item, params, parsed):
 
 check_info["informix_locks"] = LegacyCheckDefinition(
     parse_function=parse_informix_locks,
+    service_name="Informix Locks %s",
     discovery_function=inventory_informix_locks,
     check_function=check_informix_locks,
-    service_name="Informix Locks %s",
     check_ruleset_name="informix_locks",
     check_default_parameters={
         "levels": (70, 80),

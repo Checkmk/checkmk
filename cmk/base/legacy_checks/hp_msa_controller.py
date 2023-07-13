@@ -63,9 +63,9 @@ def check_hp_msa_controller_cpu(item, params, parsed):
 
 check_info["hp_msa_controller"] = LegacyCheckDefinition(
     parse_function=parse_hp_msa,
+    service_name="CPU Utilization %s",
     discovery_function=inventory_hp_msa_controller_cpu,
     check_function=check_hp_msa_controller_cpu,
-    service_name="CPU Utilization %s",
     check_ruleset_name="cpu_utilization_multiitem",
     check_default_parameters={
         "levels": (80.0, 90.0),

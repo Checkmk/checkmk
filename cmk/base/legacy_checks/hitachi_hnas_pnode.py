@@ -47,11 +47,11 @@ def check_hitachi_hnas_pnode(item, _no_params, info):
 
 check_info["hitachi_hnas_pnode"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_hitachi_hnas_pnode,
-    discovery_function=inventory_hitachi_hnas_pnode,
-    service_name="PNode %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11096.6.1.1.1.2.5.9.1",
         oids=["1", "2", "4"],
     ),
+    service_name="PNode %s",
+    discovery_function=inventory_hitachi_hnas_pnode,
+    check_function=check_hitachi_hnas_pnode,
 )

@@ -91,9 +91,9 @@ def check_hivemanager_devices(item, params, info):  # pylint: disable=too-many-b
 
 
 check_info["hivemanager_devices"] = LegacyCheckDefinition(
-    check_function=check_hivemanager_devices,
-    discovery_function=inventory_hivemanager_devices,
     service_name="Client %s",
+    discovery_function=inventory_hivemanager_devices,
+    check_function=check_hivemanager_devices,
     check_ruleset_name="hivemanager_devices",
     check_default_parameters={
         "alert_on_loss": True,

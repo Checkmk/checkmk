@@ -72,14 +72,14 @@ def check_fortigate_signatures(_no_item, params, parsed):
 
 check_info["fortigate_signatures"] = LegacyCheckDefinition(
     detect=DETECT_FORTIGATE,
-    parse_function=parse_fortigate_signatures,
-    discovery_function=inventory_fortigate_signatures,
-    check_function=check_fortigate_signatures,
-    service_name="Signatures",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.101.4.2",
         oids=["1", "2", "3", "4"],
     ),
+    parse_function=parse_fortigate_signatures,
+    service_name="Signatures",
+    discovery_function=inventory_fortigate_signatures,
+    check_function=check_fortigate_signatures,
     check_ruleset_name="fortinet_signatures",
     check_default_parameters={
         "av_age": (86400, 172800),

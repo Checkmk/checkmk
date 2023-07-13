@@ -345,9 +345,9 @@ check_info["fc_port"] = LegacyCheckDefinition(
             # Count of disparity errors received at this port.
         ],
     ),
-    check_function=check_fc_port,
-    discovery_function=inventory_fc_port,
     service_name="FC Interface %s",
+    discovery_function=inventory_fc_port,
+    check_function=check_fc_port,
     check_ruleset_name="fc_port",
     check_default_parameters={
         "rxcrcs": (3.0, 20.0),  # allowed percentage of CRC errors

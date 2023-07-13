@@ -76,11 +76,11 @@ def check_hp_blade_blades(item, params, info):
 
 check_info["hp_blade_blades"] = LegacyCheckDefinition(
     detect=DETECT_HP_BLADE,
-    check_function=check_hp_blade_blades,
-    discovery_function=inventory_hp_blade_blades,
-    service_name="Blade %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.22.2.4.1.1.1",
         oids=["3", "12", "21", "17", "4", "16"],
     ),
+    service_name="Blade %s",
+    discovery_function=inventory_hp_blade_blades,
+    check_function=check_hp_blade_blades,
 )

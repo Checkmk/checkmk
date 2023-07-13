@@ -49,11 +49,11 @@ def check_ibm_rsa_health(_no_item, _no_params, info):
 
 check_info["ibm_rsa_health"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "Remote Supervisor Adapter"),
-    check_function=check_ibm_rsa_health,
-    discovery_function=inventory_ibm_rsa_health,
-    service_name="System health",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2.3.51.1.2",
         oids=["7"],
     ),
+    service_name="System health",
+    discovery_function=inventory_ibm_rsa_health,
+    check_function=check_ibm_rsa_health,
 )

@@ -28,11 +28,11 @@ def parse_huawei_wlc_devs(info):
 
 check_info["huawei_wlc_devs"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2011.2.240.17"),
-    parse_function=parse_huawei_wlc_devs,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2011.5.25.31.1.1",
         oids=["2.1.13", "1.1.5", "1.1.7"],
     ),
+    parse_function=parse_huawei_wlc_devs,
 )
 
 
@@ -58,9 +58,9 @@ def check_huawei_wlc_devs_mem(item, params, parsed):
 
 
 check_info["huawei_wlc_devs.mem"] = LegacyCheckDefinition(
+    service_name="Device %s Memory",
     discovery_function=discovery_huawei_wlc_devs_mem,
     check_function=check_huawei_wlc_devs_mem,
-    service_name="Device %s Memory",
     check_default_parameters={"levels": (80.0, 90.0)},
 )
 
@@ -83,8 +83,8 @@ def check_huawei_wlc_devs_cpu(item, params, parsed):
 
 
 check_info["huawei_wlc_devs.cpu"] = LegacyCheckDefinition(
+    service_name="Device %s CPU",
     discovery_function=discovery_huawei_wlc_devs_cpu,
     check_function=check_huawei_wlc_devs_cpu,
-    service_name="Device %s CPU",
     check_default_parameters={"levels": (80.0, 90.0)},
 )

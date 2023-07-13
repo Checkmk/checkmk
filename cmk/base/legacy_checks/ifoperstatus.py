@@ -50,13 +50,12 @@ def check_ifoperstatus(item, targetstate, info):
 # Never inventorize automatically. let if/if64 be the default
 
 check_info["ifoperstatus"] = LegacyCheckDefinition(
-    # Never inventorize automatically. let if/if64 be the default
     detect=DETECT_NEVER,
-    check_function=check_ifoperstatus,
-    discovery_function=inventory_ifoperstatus,
-    service_name="Interface %s",
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.2.2.1",
         oids=["2", "3", "8"],
     ),
+    service_name="Interface %s",
+    discovery_function=inventory_ifoperstatus,
+    check_function=check_ifoperstatus,
 )

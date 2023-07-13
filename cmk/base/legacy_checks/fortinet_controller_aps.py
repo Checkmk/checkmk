@@ -117,10 +117,6 @@ def check_fortinet_controller_aps(item, params, parsed):
 
 check_info["fortinet_controller_aps"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.15983"),
-    parse_function=parse_fortinet_controller_aps,
-    discovery_function=inventory_fortinet_controller_aps,
-    check_function=check_fortinet_controller_aps,
-    service_name="AP %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.15983.1.1.4.2.1.1",
@@ -131,4 +127,8 @@ check_info["fortinet_controller_aps"] = LegacyCheckDefinition(
             oids=["5", "9"],
         ),
     ],
+    parse_function=parse_fortinet_controller_aps,
+    service_name="AP %s",
+    discovery_function=inventory_fortinet_controller_aps,
+    check_function=check_fortinet_controller_aps,
 )

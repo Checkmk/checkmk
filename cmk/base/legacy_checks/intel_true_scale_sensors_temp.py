@@ -133,10 +133,6 @@ def check_intel_true_scale_sensors_temp(item, params, parsed):
 
 check_info["intel_true_scale_sensors_temp"] = LegacyCheckDefinition(
     detect=DETECT_INTEL_TRUE_SCALE,
-    parse_function=parse_intel_true_scale_sensors,
-    discovery_function=inventory_intel_true_scale_sensors_temp,
-    check_function=check_intel_true_scale_sensors_temp,
-    service_name="Temperature sensors %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.10222.2.1.2.9.1",
@@ -147,4 +143,8 @@ check_info["intel_true_scale_sensors_temp"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "2", "3", "7", "8"],
         ),
     ],
+    parse_function=parse_intel_true_scale_sensors,
+    service_name="Temperature sensors %s",
+    discovery_function=inventory_intel_true_scale_sensors_temp,
+    check_function=check_intel_true_scale_sensors_temp,
 )

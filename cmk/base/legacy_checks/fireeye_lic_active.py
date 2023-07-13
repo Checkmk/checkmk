@@ -26,11 +26,11 @@ def check_fireeye_lic_active(_no_item, _no_params, info):
 
 check_info["fireeye_lic_active"] = LegacyCheckDefinition(
     detect=DETECT,
-    discovery_function=lambda info: inventory_fireeye_generic(info, False),
-    check_function=check_fireeye_lic_active,
-    service_name="Active Licenses",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.11.5.1",
         oids=["10", "11", "12"],
     ),
+    service_name="Active Licenses",
+    discovery_function=lambda info: inventory_fireeye_generic(info, False),
+    check_function=check_fireeye_lic_active,
 )

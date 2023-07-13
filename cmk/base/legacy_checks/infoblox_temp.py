@@ -82,10 +82,6 @@ def check_infoblox_temp(item, params, parsed):
 
 check_info["infoblox_temp"] = LegacyCheckDefinition(
     detect=DETECT_INFOBLOX,
-    parse_function=parse_infoblox_temp,
-    discovery_function=inventory_infoblox_temp,
-    check_function=check_infoblox_temp,
-    service_name="Temperature %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.7779.3.1.1.2.1.10.1.2",
@@ -96,6 +92,10 @@ check_info["infoblox_temp"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "39", "40", "41"],
         ),
     ],
+    parse_function=parse_infoblox_temp,
+    service_name="Temperature %s",
+    discovery_function=inventory_infoblox_temp,
+    check_function=check_infoblox_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (40.0, 50.0),

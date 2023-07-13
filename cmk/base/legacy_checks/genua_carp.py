@@ -123,9 +123,6 @@ def check_genua_carp(item, _no_params, info):  # pylint: disable=too-many-branch
 
 check_info["genua_carp"] = LegacyCheckDefinition(
     detect=DETECT_GENUA,
-    discovery_function=inventory_genua_carp,
-    check_function=check_genua_carp,
-    service_name="Carp Interface %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.3137.2.1.2.1",
@@ -136,4 +133,7 @@ check_info["genua_carp"] = LegacyCheckDefinition(
             oids=["2", "4", "7"],
         ),
     ],
+    service_name="Carp Interface %s",
+    discovery_function=inventory_genua_carp,
+    check_function=check_genua_carp,
 )

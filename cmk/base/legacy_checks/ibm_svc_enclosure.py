@@ -101,9 +101,9 @@ def discover_ibm_svc_enclosure(section):
 
 check_info["ibm_svc_enclosure"] = LegacyCheckDefinition(
     parse_function=parse_ibm_svc_enclosure,
-    check_function=check_ibm_svc_enclosure,
-    discovery_function=discover_ibm_svc_enclosure,
     service_name="Enclosure %s",
+    discovery_function=discover_ibm_svc_enclosure,
+    check_function=check_ibm_svc_enclosure,
     check_ruleset_name="ibm_svc_enclosure",
 )
 

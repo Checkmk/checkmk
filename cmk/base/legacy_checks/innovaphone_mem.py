@@ -20,8 +20,8 @@ def check_innovaphone_mem(_no_item, params, info):
 
 
 check_info["innovaphone_mem"] = LegacyCheckDefinition(
-    check_function=check_innovaphone_mem,
-    discovery_function=inventory_innovaphone_mem,
     service_name="Memory",
+    discovery_function=inventory_innovaphone_mem,
+    check_function=check_innovaphone_mem,
     check_ruleset_name="innovaphone_mem",
 )

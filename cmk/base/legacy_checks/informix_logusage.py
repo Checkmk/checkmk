@@ -93,9 +93,9 @@ def check_informix_logusage(item, params, parsed):
 
 check_info["informix_logusage"] = LegacyCheckDefinition(
     parse_function=parse_informix_logusage,
+    service_name="Informix Log Usage %s",
     discovery_function=inventory_informix_logusage,
     check_function=check_informix_logusage,
-    service_name="Informix Log Usage %s",
     check_ruleset_name="informix_logusage",
     check_default_parameters={"levels_perc": (80.0, 85.0)},
 )

@@ -19,23 +19,23 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
 check_info["hwg_ste2"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "STE2"),
-    parse_function=parse_hwg,
-    check_function=check_hwg_temp,
-    discovery_function=inventory_hwg_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21796.4.9.3.1",
         oids=["1", "2", "3", "4", "7"],
     ),
+    parse_function=parse_hwg,
+    service_name="Temperature %s",
+    discovery_function=inventory_hwg_temp,
+    check_function=check_hwg_temp,
     check_ruleset_name="temperature",
     check_default_parameters=HWG_TEMP_DEFAULTLEVELS,
 )
 
 
 check_info["hwg_ste2.humidity"] = LegacyCheckDefinition(
-    check_function=check_hwg_humidity,
-    discovery_function=inventory_hwg_humidity,
     service_name="Humidity %s",
+    discovery_function=inventory_hwg_humidity,
+    check_function=check_hwg_humidity,
     check_ruleset_name="humidity",
     check_default_parameters=HWG_HUMIDITY_DEFAULTLEVELS,
 )

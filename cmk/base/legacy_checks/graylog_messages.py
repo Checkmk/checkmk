@@ -29,8 +29,8 @@ def check_graylog_messages(_no_item, params, parsed):
 
 check_info["graylog_messages"] = LegacyCheckDefinition(
     parse_function=parse_graylog_agent_data,
-    check_function=check_graylog_messages,
-    discovery_function=inventory_graylog_messages,
     service_name="Graylog Messages",
+    discovery_function=inventory_graylog_messages,
+    check_function=check_graylog_messages,
     check_ruleset_name="graylog_messages",
 )

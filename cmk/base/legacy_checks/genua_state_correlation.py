@@ -76,9 +76,6 @@ def check_genua_state(item, _no_params, info):
 
 check_info["genua_state_correlation"] = LegacyCheckDefinition(
     detect=DETECT_GENUA,
-    discovery_function=inventory_genua_state,
-    check_function=check_genua_state,
-    service_name="Carp Correlation",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.3717.2.1.2.1",
@@ -89,4 +86,7 @@ check_info["genua_state_correlation"] = LegacyCheckDefinition(
             oids=["1", "2", "3", "4", "7"],
         ),
     ],
+    service_name="Carp Correlation",
+    discovery_function=inventory_genua_state,
+    check_function=check_genua_state,
 )

@@ -105,11 +105,11 @@ def check_hp_blade_psu(item, params, info):
 
 check_info["hp_blade_psu"] = LegacyCheckDefinition(
     detect=DETECT_HP_BLADE,
-    check_function=check_hp_blade_psu,
-    discovery_function=inventory_hp_blade_psu,
-    service_name="PSU %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.22.2.5.1.1.1",
         oids=["3", "16", "17", "10", "14", "15", "5"],
     ),
+    service_name="PSU %s",
+    discovery_function=inventory_hp_blade_psu,
+    check_function=check_hp_blade_psu,
 )

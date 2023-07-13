@@ -60,11 +60,6 @@ def discover_fortigate_sslvpn(section):
 
 check_info["fortigate_sslvpn"] = LegacyCheckDefinition(
     detect=DETECT_FORTIGATE,
-    discovery_function=discover_fortigate_sslvpn,
-    check_function=check_fortigate_sslvpn,
-    parse_function=parse_fortigate_sslvpn,
-    service_name="VPN SSL %s",
-    check_ruleset_name="fortigate_sslvpn",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.12356.101.3.2.1.1",
@@ -75,4 +70,9 @@ check_info["fortigate_sslvpn"] = LegacyCheckDefinition(
             oids=["1", "2", "4", "6", "7"],
         ),
     ],
+    parse_function=parse_fortigate_sslvpn,
+    service_name="VPN SSL %s",
+    discovery_function=discover_fortigate_sslvpn,
+    check_function=check_fortigate_sslvpn,
+    check_ruleset_name="fortigate_sslvpn",
 )

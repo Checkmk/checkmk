@@ -61,7 +61,7 @@ def check_jenkins_instance(_no_item, _no_params, parsed):
 
 check_info["jenkins_instance"] = LegacyCheckDefinition(
     parse_function=parse_jenkins_instance,
-    check_function=check_jenkins_instance,
-    discovery_function=inventory_jenkins_instance,
     service_name="Jenkins Instance",
+    discovery_function=inventory_jenkins_instance,
+    check_function=check_jenkins_instance,
 )

@@ -156,9 +156,9 @@ def check_ibm_svc_mdiskgrp(item, params, parsed):
 
 check_info["ibm_svc_mdiskgrp"] = LegacyCheckDefinition(
     parse_function=parse_ibm_svc_mdiskgrp,
-    check_function=check_ibm_svc_mdiskgrp,
-    discovery_function=inventory_ibm_svc_mdiskgrp,
     service_name="Pool Capacity %s",
+    discovery_function=inventory_ibm_svc_mdiskgrp,
+    check_function=check_ibm_svc_mdiskgrp,
     check_ruleset_name="ibm_svc_mdiskgrp",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

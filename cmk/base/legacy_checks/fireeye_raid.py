@@ -55,10 +55,6 @@ def check_fireeye_raid(_no_item, _no_params, parsed):
 
 check_info["fireeye_raid"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_fireeye_raid,
-    discovery_function=lambda parsed: inventory_fireeye_generic(parsed.get("raid", []), False),
-    check_function=check_fireeye_raid,
-    service_name="RAID status",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.25597.11.2.1",
@@ -69,6 +65,10 @@ check_info["fireeye_raid"] = LegacyCheckDefinition(
             oids=["2", "3", "4"],
         ),
     ],
+    parse_function=parse_fireeye_raid,
+    service_name="RAID status",
+    discovery_function=lambda parsed: inventory_fireeye_generic(parsed.get("raid", []), False),
+    check_function=check_fireeye_raid,
 )
 
 # .
@@ -92,7 +92,7 @@ def check_fireeye_raid_disks(item, _no_params, parsed):
 
 
 check_info["fireeye_raid.disks"] = LegacyCheckDefinition(
+    service_name="Disk status %s",
     discovery_function=lambda parsed: inventory_fireeye_generic(parsed.get("disks", []), True),
     check_function=check_fireeye_raid_disks,
-    service_name="Disk status %s",
 )

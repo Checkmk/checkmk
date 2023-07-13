@@ -155,9 +155,9 @@ from cmk.base.config import check_info
 
 check_info["hp_msa_disk"] = LegacyCheckDefinition(
     parse_function=parse_hp_msa,
+    service_name="Disk Health %s",
     discovery_function=inventory_hp_msa_health,
     check_function=check_hp_msa_health,
-    service_name="Disk Health %s",
 )
 
 
@@ -185,9 +185,9 @@ def check_hp_msa_disk_temp(item, params, parsed):
 
 
 check_info["hp_msa_disk.temp"] = LegacyCheckDefinition(
+    service_name="Temperature %s",
     discovery_function=inventory_hp_msa_disk_temp,
     check_function=check_hp_msa_disk_temp,
-    service_name="Temperature %s",
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (40.0, 45.0),  # just an assumption

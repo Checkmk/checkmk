@@ -38,10 +38,6 @@ def discover_huawei_switch_mem(section):
 
 check_info["huawei_switch_mem"] = LegacyCheckDefinition(
     detect=DETECT_HUAWEI_SWITCH,
-    parse_function=parse_huawei_switch_mem,
-    discovery_function=discover_huawei_switch_mem,
-    check_function=check_huawei_switch_mem,
-    service_name="Memory %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.47.1.1.1.1",
@@ -52,6 +48,10 @@ check_info["huawei_switch_mem"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "7"],
         ),
     ],
+    parse_function=parse_huawei_switch_mem,
+    service_name="Memory %s",
+    discovery_function=discover_huawei_switch_mem,
+    check_function=check_huawei_switch_mem,
     check_ruleset_name="memory_percentage_used_multiitem",
     check_default_parameters={
         "levels": (80.0, 90.0),

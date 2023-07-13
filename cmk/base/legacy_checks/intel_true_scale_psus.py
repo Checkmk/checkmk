@@ -87,13 +87,13 @@ def check_intel_true_scale_psus(item, params, parsed):
 
 check_info["intel_true_scale_psus"] = LegacyCheckDefinition(
     detect=DETECT_INTEL_TRUE_SCALE,
-    parse_function=parse_intel_true_scale_psus,
-    discovery_function=inventory_intel_true_scale_psus,
-    check_function=check_intel_true_scale_psus,
-    service_name="Power supply %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.10222.2.1.4.7.1",
         oids=["2", "3", "4", "5", "6"],
     ),
+    parse_function=parse_intel_true_scale_psus,
+    service_name="Power supply %s",
+    discovery_function=inventory_intel_true_scale_psus,
+    check_function=check_intel_true_scale_psus,
     check_ruleset_name="el_inphase",
 )

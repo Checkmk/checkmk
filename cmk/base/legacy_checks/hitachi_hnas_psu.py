@@ -46,11 +46,11 @@ def check_hitachi_hnas_psu(item, _no_params, info):
 
 check_info["hitachi_hnas_psu"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_hitachi_hnas_psu,
-    discovery_function=inventory_hitachi_hnas_psu,
-    service_name="PSU %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11096.6.1.1.1.2.1.13.1",
         oids=["1", "2", "3"],
     ),
+    service_name="PSU %s",
+    discovery_function=inventory_hitachi_hnas_psu,
+    check_function=check_hitachi_hnas_psu,
 )

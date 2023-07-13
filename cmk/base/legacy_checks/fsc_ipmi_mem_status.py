@@ -54,7 +54,7 @@ def check_fsc_ipmi_mem_status(name, _no_params, info):
 
 
 check_info["fsc_ipmi_mem_status"] = LegacyCheckDefinition(
-    check_function=check_fsc_ipmi_mem_status,
-    discovery_function=inventory_fsc_ipmi_mem_status,
     service_name="IPMI Memory status %s",
+    discovery_function=inventory_fsc_ipmi_mem_status,
+    check_function=check_fsc_ipmi_mem_status,
 )

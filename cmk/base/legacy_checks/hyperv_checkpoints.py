@@ -53,8 +53,8 @@ def check_hyperv_checkpoints(item, params, info):
 
 
 check_info["hyperv_checkpoints"] = LegacyCheckDefinition(
-    check_function=check_hyperv_checkpoints,
-    discovery_function=inventory_hyperv_checkpoints,
     service_name="HyperV Checkpoints",
+    discovery_function=inventory_hyperv_checkpoints,
+    check_function=check_hyperv_checkpoints,
     check_ruleset_name="vm_snapshots",
 )

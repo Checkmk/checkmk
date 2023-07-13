@@ -54,11 +54,11 @@ def check_hitachi_hnas_vnode(item, _no_params, info):
 
 check_info["hitachi_hnas_vnode"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_hitachi_hnas_vnode,
-    discovery_function=inventory_hitachi_hnas_vnode,
-    service_name="EVS %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11096.6.1.1.1.2.5.11.1",
         oids=["1", "2", "4", "5", "6"],
     ),
+    service_name="EVS %s",
+    discovery_function=inventory_hitachi_hnas_vnode,
+    check_function=check_hitachi_hnas_vnode,
 )

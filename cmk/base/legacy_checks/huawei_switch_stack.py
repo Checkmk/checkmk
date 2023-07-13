@@ -53,10 +53,6 @@ def check_huawei_switch_stack(item, params, parsed):
 
 check_info["huawei_switch_stack"] = LegacyCheckDefinition(
     detect=DETECT_HUAWEI_SWITCH,
-    parse_function=parse_huawei_switch_stack,
-    discovery_function=inventory_huawei_switch_stack,
-    check_function=check_huawei_switch_stack,
-    service_name="Stack role %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2011.5.25.183.1",
@@ -67,4 +63,8 @@ check_info["huawei_switch_stack"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "3"],
         ),
     ],
+    parse_function=parse_huawei_switch_stack,
+    service_name="Stack role %s",
+    discovery_function=inventory_huawei_switch_stack,
+    check_function=check_huawei_switch_stack,
 )

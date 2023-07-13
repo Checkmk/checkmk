@@ -30,11 +30,11 @@ def check_fireeye_sys_image(_no_item, _no_params, info):
 
 check_info["fireeye_sys_image"] = LegacyCheckDefinition(
     detect=DETECT,
-    discovery_function=lambda info: inventory_fireeye_generic(info, False),
-    check_function=check_fireeye_sys_image,
-    service_name="System image",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.11.5.1",
         oids=["1", "2", "3", "4"],
     ),
+    service_name="System image",
+    discovery_function=lambda info: inventory_fireeye_generic(info, False),
+    check_function=check_fireeye_sys_image,
 )

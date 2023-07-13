@@ -31,11 +31,11 @@ def check_hp_mcs_system(item, _no_params, info):
 
 check_info["hp_mcs_system"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.232.167"),
-    discovery_function=inventory_hp_mcs_system,
-    check_function=check_hp_mcs_system,
-    service_name="%s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232",
         oids=["2.2.4.2", OIDBytes("11.2.10.1"), "11.2.10.3"],
     ),
+    service_name="%s",
+    discovery_function=inventory_hp_mcs_system,
+    check_function=check_hp_mcs_system,
 )

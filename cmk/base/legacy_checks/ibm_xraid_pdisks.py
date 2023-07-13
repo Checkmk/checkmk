@@ -53,15 +53,15 @@ check_info["ibm_xraid_pdisks"] = LegacyCheckDefinition(
         ),
         exists(".1.3.6.1.4.1.795.14.1.100.1.0"),
     ),
-    check_function=check_ibm_xraid_pdisks,
+    fetch=SNMPTree(
+        base=".1.3.6.1.4.1.795.14.1",
+        oids=["503.1.1.4", "400.1.1.1", "400.1.1.5", "400.1.1.11", "400.1.1.12"],
+    ),
     service_name="RAID PDisk %s",
     discovery_function=inventory_ibm_xraid_pdisks,
     # there is no information about the ext mib in the right place
     # (at least on windows)
     # this means the check has to fetch a specific oid. Limit this
-    # effect to relevant systems to lessen useless scanning.
-    fetch=SNMPTree(
-        base=".1.3.6.1.4.1.795.14.1",
-        oids=["503.1.1.4", "400.1.1.1", "400.1.1.5", "400.1.1.11", "400.1.1.12"],
-    ),
+    # effect to relevant systems to lessen useless scanning.,
+    check_function=check_ibm_xraid_pdisks,
 )

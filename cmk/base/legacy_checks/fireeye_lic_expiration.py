@@ -33,14 +33,14 @@ def check_fireeye_lic_expiration(item, params, info):
 
 check_info["fireeye_lic_expiration"] = LegacyCheckDefinition(
     detect=DETECT,
-    discovery_function=inventory_fireeye_lic_expiration,
-    check_function=check_fireeye_lic_expiration,
-    service_name="License Expiration %s",
-    check_ruleset_name="fireeye_lic",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.11.5.1.16.1",
         oids=["1", "5"],
     ),
+    service_name="License Expiration %s",
+    discovery_function=inventory_fireeye_lic_expiration,
+    check_function=check_fireeye_lic_expiration,
+    check_ruleset_name="fireeye_lic",
     check_default_parameters={
         "days": (120, 90),
     },

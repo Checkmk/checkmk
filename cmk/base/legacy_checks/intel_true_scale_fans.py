@@ -78,11 +78,11 @@ def check_intel_true_scale_fans(item, _no_params, info):
 
 check_info["intel_true_scale_fans"] = LegacyCheckDefinition(
     detect=DETECT_INTEL_TRUE_SCALE,
-    discovery_function=inventory_intel_true_scale_fans,
-    check_function=check_intel_true_scale_fans,
-    service_name="Fan %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.10222.2.1.6.5.1",
         oids=["2", "3", "4"],
     ),
+    service_name="Fan %s",
+    discovery_function=inventory_intel_true_scale_fans,
+    check_function=check_intel_true_scale_fans,
 )

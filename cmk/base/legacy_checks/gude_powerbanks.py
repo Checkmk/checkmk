@@ -79,10 +79,6 @@ check_info["gude_powerbanks"] = LegacyCheckDefinition(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.19"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.38"),
     ),
-    parse_function=parse_gude_powerbanks,
-    discovery_function=inventory_gude_powerbanks,
-    check_function=check_elphase,
-    service_name="Powerbank %s",
     fetch=[
         SNMPTree(
             base=f".1.3.6.1.4.1.28507.{table}.1.3.1.2.1",
@@ -97,6 +93,10 @@ check_info["gude_powerbanks"] = LegacyCheckDefinition(
         )
         for table in _TABLES
     ],
+    parse_function=parse_gude_powerbanks,
+    service_name="Powerbank %s",
+    discovery_function=inventory_gude_powerbanks,
+    check_function=check_elphase,
     check_ruleset_name="el_inphase",
     check_default_parameters={
         "voltage": (220, 210),

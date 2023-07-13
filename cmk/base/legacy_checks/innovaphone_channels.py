@@ -32,8 +32,8 @@ def check_innovaphone_channels(item, params, info):
 
 
 check_info["innovaphone_channels"] = LegacyCheckDefinition(
-    check_function=check_innovaphone_channels,
-    discovery_function=inventory_innovaphone_channels,
     service_name="Channel %s",
+    discovery_function=inventory_innovaphone_channels,
+    check_function=check_innovaphone_channels,
     check_ruleset_name="hw_single_channelserature",
 )

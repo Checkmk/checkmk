@@ -13,7 +13,7 @@ def check_ironport_misc(item, params, info):
 
 
 check_info["ironport_misc"] = LegacyCheckDefinition(
-    check_function=check_ironport_misc,
     service_name="%s",
+    check_function=check_ironport_misc,
     check_ruleset_name="obsolete",
 )

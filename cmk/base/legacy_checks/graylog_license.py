@@ -109,9 +109,9 @@ def _handle_readable_output(value):
 
 check_info["graylog_license"] = LegacyCheckDefinition(
     parse_function=parse_graylog_agent_data,
-    check_function=check_graylog_license,
-    discovery_function=inventory_graylog_license,
     service_name="Graylog License",
+    discovery_function=inventory_graylog_license,
+    check_function=check_graylog_license,
     check_ruleset_name="graylog_license",
     check_default_parameters={
         "no_enterprise": 0,

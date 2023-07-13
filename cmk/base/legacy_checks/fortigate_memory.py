@@ -64,13 +64,13 @@ def check_fortigate_memory(item, params, current_reading):
 
 check_info["fortigate_memory"] = LegacyCheckDefinition(
     detect=all_of(contains(".1.3.6.1.2.1.1.1.0", "fortigate"), exists(".1.3.6.1.4.1.12356.1.9.0")),
-    parse_function=parse_fortigate_memory,
-    check_function=check_fortigate_memory,
-    discovery_function=inventory_fortigate_memory,
-    service_name="Memory",
-    check_ruleset_name="memory",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.1",
         oids=["9"],
     ),
+    parse_function=parse_fortigate_memory,
+    service_name="Memory",
+    discovery_function=inventory_fortigate_memory,
+    check_function=check_fortigate_memory,
+    check_ruleset_name="memory",
 )

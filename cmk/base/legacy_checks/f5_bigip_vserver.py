@@ -215,11 +215,6 @@ def check_f5_bigip_vserver(item, params, parsed):
 
 check_info["f5_bigip_vserver"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_f5_bigip_vserver,
-    check_function=check_f5_bigip_vserver,
-    discovery_function=inventory_f5_bigip_vserver,
-    check_ruleset_name="f5_bigip_vserver",
-    service_name="Virtual Server %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.2.10",
         oids=[
@@ -240,4 +235,9 @@ check_info["f5_bigip_vserver"] = LegacyCheckDefinition(
             "2.3.1.25",
         ],
     ),
+    parse_function=parse_f5_bigip_vserver,
+    service_name="Virtual Server %s",
+    discovery_function=inventory_f5_bigip_vserver,
+    check_function=check_f5_bigip_vserver,
+    check_ruleset_name="f5_bigip_vserver",
 )

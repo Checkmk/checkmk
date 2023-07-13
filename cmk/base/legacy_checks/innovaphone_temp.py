@@ -18,9 +18,9 @@ def check_innovaphone_temp(item, params, info):
 
 
 check_info["innovaphone_temp"] = LegacyCheckDefinition(
-    check_function=check_innovaphone_temp,
-    discovery_function=inventory_innovaphone_temp,
     service_name="Temperature %s",
+    discovery_function=inventory_innovaphone_temp,
+    check_function=check_innovaphone_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (45.0, 50.0)},
 )

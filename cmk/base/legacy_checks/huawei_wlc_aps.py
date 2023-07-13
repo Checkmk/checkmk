@@ -90,7 +90,6 @@ def parse_huawei_wlc_aps(info):
 
 check_info["huawei_wlc_aps"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2011.2.240.17"),
-    parse_function=parse_huawei_wlc_aps,
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2011.6.139.13.3.3.1",
@@ -101,6 +100,7 @@ check_info["huawei_wlc_aps"] = LegacyCheckDefinition(
             oids=["3", "6", "25", "40"],
         ),
     ],
+    parse_function=parse_huawei_wlc_aps,
 )
 
 
@@ -149,9 +149,9 @@ def check_huawei_wlc_aps_status(item, params, parsed):
 
 
 check_info["huawei_wlc_aps.status"] = LegacyCheckDefinition(
+    service_name="AP %s Status",
     discovery_function=discovery_huawei_wlc_aps_status,
     check_function=check_huawei_wlc_aps_status,
-    service_name="AP %s Status",
     check_default_parameters={"levels": (80.0, 90.0)},
 )
 
@@ -173,9 +173,9 @@ def check_huawei_wlc_aps_cpu(item, params, parsed):
 
 
 check_info["huawei_wlc_aps.cpu"] = LegacyCheckDefinition(
-    check_function=check_huawei_wlc_aps_cpu,
-    discovery_function=discovery_huawei_wlc_aps_cpu,
     service_name="AP %s CPU",
+    discovery_function=discovery_huawei_wlc_aps_cpu,
+    check_function=check_huawei_wlc_aps_cpu,
     check_default_parameters={"levels": (80.0, 90.0)},
 )
 
@@ -201,9 +201,9 @@ def check_huawei_wlc_aps_mem(item, params, parsed):
 
 
 check_info["huawei_wlc_aps.mem"] = LegacyCheckDefinition(
-    check_function=check_huawei_wlc_aps_mem,
-    discovery_function=discovery_huawei_wlc_aps_mem,
     service_name="AP %s Memory",
+    discovery_function=discovery_huawei_wlc_aps_mem,
+    check_function=check_huawei_wlc_aps_mem,
     check_default_parameters={"levels": (80.0, 90.0)},
 )
 
@@ -227,7 +227,7 @@ def check_huawei_wlc_aps_temp(item, params, parsed):
 
 
 check_info["huawei_wlc_aps.temp"] = LegacyCheckDefinition(
-    check_function=check_huawei_wlc_aps_temp,
-    discovery_function=discovery_huawei_wlc_aps_temp,
     service_name="AP %s Temperature",
+    discovery_function=discovery_huawei_wlc_aps_temp,
+    check_function=check_huawei_wlc_aps_temp,
 )

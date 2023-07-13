@@ -64,7 +64,7 @@ def parse_hp_msa_system(info):
 
 check_info["hp_msa_system"] = LegacyCheckDefinition(
     parse_function=parse_hp_msa_system,
+    service_name="System Health %s",
     discovery_function=inventory_hp_msa_health,
     check_function=check_hp_msa_health,
-    service_name="System Health %s",
 )

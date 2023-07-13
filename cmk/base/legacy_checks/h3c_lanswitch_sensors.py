@@ -42,10 +42,6 @@ def check_h3c_lanswitch_sensors(
 
 check_info["h3c_lanswitch_sensors"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "3com s"),
-    parse_function=parse_h3c_lanswitch_sensors,
-    discovery_function=inventory_h3c_lanswitch_sensors,
-    check_function=check_h3c_lanswitch_sensors,
-    service_name="%s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.43.45.1.2.23.1.9.1.1.1",
@@ -56,6 +52,10 @@ check_info["h3c_lanswitch_sensors"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "2"],
         ),
     ],
+    parse_function=parse_h3c_lanswitch_sensors,
+    service_name="%s",
+    discovery_function=inventory_h3c_lanswitch_sensors,
+    check_function=check_h3c_lanswitch_sensors,
 )
 
 

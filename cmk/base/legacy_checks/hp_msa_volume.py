@@ -170,9 +170,9 @@ def parse_hp_msa_volume(info):
 
 check_info["hp_msa_volume"] = LegacyCheckDefinition(
     parse_function=parse_hp_msa_volume,
+    service_name="Volume Health %s",
     discovery_function=inventory_hp_msa_health,
     check_function=check_hp_msa_volume_health,
-    service_name="Volume Health %s",
 )
 
 # .
@@ -204,9 +204,9 @@ def check_hp_msa_volume_df(item, params, parsed):
 
 
 check_info["hp_msa_volume.df"] = LegacyCheckDefinition(
+    service_name="Filesystem %s",
     discovery_function=inventory_hp_msa_volume_df,
     check_function=check_hp_msa_volume_df,
-    service_name="Filesystem %s",
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

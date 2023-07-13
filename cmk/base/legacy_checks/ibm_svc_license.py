@@ -56,9 +56,9 @@ def check_ibm_svc_license(item, params, parsed):
 
 
 check_info["ibm_svc_license"] = LegacyCheckDefinition(
-    check_function=check_ibm_svc_license,
-    discovery_function=inventory_ibm_svc_license,
     parse_function=parse_ibm_svc_license,
     service_name="License %s",
+    discovery_function=inventory_ibm_svc_license,
+    check_function=check_ibm_svc_license,
     check_ruleset_name="ibmsvc_licenses",
 )

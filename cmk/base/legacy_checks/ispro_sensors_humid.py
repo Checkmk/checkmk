@@ -29,12 +29,12 @@ def check_ispro_sensors_humid(item, params, info):
 
 check_info["ispro_sensors_humid"] = LegacyCheckDefinition(
     detect=DETECT_ISPRO_SENSORS,
-    discovery_function=inventory_ispro_sensors_humid,
-    check_function=check_ispro_sensors_humid,
-    service_name="Humidity %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.19011.1.3.2.1.3.1.2.1",
         oids=["2", "3", "4"],
     ),
+    service_name="Humidity %s",
+    discovery_function=inventory_ispro_sensors_humid,
+    check_function=check_ispro_sensors_humid,
     check_ruleset_name="humidity",
 )

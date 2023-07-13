@@ -112,9 +112,8 @@ def check_ibm_mq_managers(item, params, parsed):  # pylint: disable=too-many-bra
 
 
 check_info["ibm_mq_managers"] = LegacyCheckDefinition(
-    # section is already migrated!
-    check_function=check_ibm_mq_managers,
-    discovery_function=inventory_ibm_mq_managers,
     service_name="IBM MQ Manager %s",
+    discovery_function=inventory_ibm_mq_managers,
+    check_function=check_ibm_mq_managers,
     check_ruleset_name="ibm_mq_managers",
 )

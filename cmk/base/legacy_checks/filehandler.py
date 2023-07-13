@@ -41,9 +41,9 @@ def check_filehandler(_no_item, params, info):
 
 
 check_info["filehandler"] = LegacyCheckDefinition(
-    check_function=check_filehandler,
-    discovery_function=inventory_filehandler,
     service_name="Filehandler",
+    discovery_function=inventory_filehandler,
+    check_function=check_filehandler,
     check_ruleset_name="filehandler",
     check_default_parameters={"levels": (80.0, 90.0)},
 )

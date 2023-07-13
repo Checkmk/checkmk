@@ -75,10 +75,6 @@ check_info["hp_hh3c_ext"] = LegacyCheckDefinition(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25506.11.1.239"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.25506.11.1.87"),
     ),
-    parse_function=parse_hp_hh3c_ext,
-    discovery_function=inventory_hp_hh3c_ext,
-    check_function=check_hp_hh3c_ext,
-    service_name="Temperature %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.25506.2.6.1.1.1.1",
@@ -89,6 +85,10 @@ check_info["hp_hh3c_ext"] = LegacyCheckDefinition(
             oids=[OIDEnd(), OIDCached("2")],
         ),
     ],
+    parse_function=parse_hp_hh3c_ext,
+    service_name="Temperature %s",
+    discovery_function=inventory_hp_hh3c_ext,
+    check_function=check_hp_hh3c_ext,
     check_ruleset_name="temperature",
 )
 
@@ -145,9 +145,9 @@ def check_hp_hh3c_ext_states(item, params, parsed):
 
 
 check_info["hp_hh3c_ext.states"] = LegacyCheckDefinition(
+    service_name="Status %s",
     discovery_function=inventory_hp_hh3c_ext_states,
     check_function=check_hp_hh3c_ext_states,
-    service_name="Status %s",
     check_ruleset_name="hp_hh3c_ext_states",
 )
 
@@ -178,9 +178,9 @@ def check_hp_hh3c_ext_cpu(item, params, parsed):
 
 
 check_info["hp_hh3c_ext.cpu"] = LegacyCheckDefinition(
+    service_name="CPU utilization %s",
     discovery_function=inventory_hp_hh3c_ext_cpu,
     check_function=check_hp_hh3c_ext_cpu,
-    service_name="CPU utilization %s",
     check_ruleset_name="cpu_utilization_multiitem",
 )
 
@@ -219,9 +219,9 @@ def check_hp_hh3c_ext_mem(item, params, parsed):
 
 
 check_info["hp_hh3c_ext.mem"] = LegacyCheckDefinition(
+    service_name="Memory %s",
     discovery_function=inventory_hp_hh3c_ext_mem,
     check_function=check_hp_hh3c_ext_mem,
-    service_name="Memory %s",
     check_ruleset_name="memory_multiitem",
     check_default_parameters={
         "levels": (80.0, 90.0),

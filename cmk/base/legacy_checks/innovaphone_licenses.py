@@ -33,7 +33,7 @@ def check_innovaphone_licenses(_no_item, params, info):
 
 
 check_info["innovaphone_licenses"] = LegacyCheckDefinition(
-    check_function=check_innovaphone_licenses,
-    discovery_function=inventory_innovaphone_licenses,
     service_name="Licenses",
+    discovery_function=inventory_innovaphone_licenses,
+    check_function=check_innovaphone_licenses,
 )

@@ -36,13 +36,13 @@ def check_huawei_osn_power(item, params, info):
 
 check_info["huawei_osn_power"] = LegacyCheckDefinition(
     detect=DETECT_HUAWEI_OSN,
-    discovery_function=inventory_huawei_osn_power,
-    check_function=check_huawei_osn_power,
-    service_name="Unit %s (Power)",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2011.2.25.4.70.20.20.10.1",
         oids=["1", "2"],
     ),
+    service_name="Unit %s (Power)",
+    discovery_function=inventory_huawei_osn_power,
+    check_function=check_huawei_osn_power,
     check_default_parameters={
         "levels": (700, 730),
     },

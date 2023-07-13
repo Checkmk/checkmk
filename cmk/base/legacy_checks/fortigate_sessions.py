@@ -35,13 +35,13 @@ check_info["fortigate_sessions"] = LegacyCheckDefinition(
         exists(".1.3.6.1.4.1.12356.1.10.0"),
         not_exists(".1.3.6.1.4.1.12356.101.4.1.8.0"),
     ),
-    discovery_function=inventory_fortigate_sessions,
-    check_function=check_fortigate_sessions,
-    check_ruleset_name="fortigate_sessions",
-    service_name="Sessions",
-    # uses mib FORTINET-MIB-280
+    # uses mib FORTINET-MIB-280,
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.1",
         oids=["10"],
     ),
+    service_name="Sessions",
+    discovery_function=inventory_fortigate_sessions,
+    check_function=check_fortigate_sessions,
+    check_ruleset_name="fortigate_sessions",
 )

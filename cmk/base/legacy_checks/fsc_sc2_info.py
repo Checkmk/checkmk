@@ -12,11 +12,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 check_info["fsc_sc2_info"] = LegacyCheckDefinition(
     detect=DETECT_FSC_SC2,
-    discovery_function=inventory_fsc_sc2_info,
-    check_function=check_fsc_sc2_info,
-    service_name="Server Info",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.231.2.10.2.2.10",
         oids=["2.3.1.5.1", "2.3.1.7.1", "4.1.1.11.1"],
     ),
+    service_name="Server Info",
+    discovery_function=inventory_fsc_sc2_info,
+    check_function=check_fsc_sc2_info,
 )

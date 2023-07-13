@@ -59,9 +59,9 @@ from cmk.base.config import check_info
 
 check_info["hp_msa_psu"] = LegacyCheckDefinition(
     parse_function=parse_hp_msa,
+    service_name="Power Supply Health %s",
     discovery_function=inventory_hp_msa_health,
     check_function=check_hp_msa_health,
-    service_name="Power Supply Health %s",
 )
 
 # .
@@ -104,9 +104,9 @@ def check_hp_msa_psu(item, params, parsed):
 
 
 check_info["hp_msa_psu.sensor"] = LegacyCheckDefinition(
+    service_name="Power Supply Voltage %s",
     discovery_function=inventory_hp_msa_psu,
     check_function=check_hp_msa_psu,
-    service_name="Power Supply Voltage %s",
     check_ruleset_name="hp_msa_psu_voltage",
     check_default_parameters={
         "levels_33v_lower": (3.25, 3.20),
@@ -136,9 +136,9 @@ def check_hp_msa_psu_temp(item, params, parsed):
 
 
 check_info["hp_msa_psu.temp"] = LegacyCheckDefinition(
+    service_name="Temperature Power Supply %s",
     discovery_function=inventory_hp_msa_psu,
     check_function=check_hp_msa_psu_temp,
-    service_name="Temperature Power Supply %s",
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (40.0, 45.0),  # Just assumed

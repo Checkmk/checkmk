@@ -18,13 +18,13 @@ def discover_fsc_sc2_power_consumption(section):
 
 check_info["fsc_sc2_power_consumption"] = LegacyCheckDefinition(
     detect=DETECT_FSC_SC2,
-    parse_function=parse_fsc_sc2_power_consumption,
-    discovery_function=discover_fsc_sc2_power_consumption,
-    check_function=check_elphase,
-    service_name="Power Comsumption %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.231.2.10.2.2.10.6.7.1",
         oids=["4", "5"],
     ),
+    parse_function=parse_fsc_sc2_power_consumption,
+    service_name="Power Comsumption %s",
+    discovery_function=discover_fsc_sc2_power_consumption,
+    check_function=check_elphase,
     check_ruleset_name="el_inphase",
 )

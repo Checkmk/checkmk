@@ -15,11 +15,11 @@ from cmk.base.plugins.agent_based.utils.hp_proliant import DETECT
 
 check_info["hp_proliant_da_cntlr"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_hp_proliant_da_cntlr,
-    discovery_function=inventory_hp_proliant_da_cntlr,
-    service_name="HW Controller %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.3.2.2.1.1",
         oids=["1", "2", "5", "6", "9", "10", "12", "15"],
     ),
+    service_name="HW Controller %s",
+    discovery_function=inventory_hp_proliant_da_cntlr,
+    check_function=check_hp_proliant_da_cntlr,
 )

@@ -15,11 +15,11 @@ from cmk.base.plugins.agent_based.utils.hp_proliant import DETECT
 
 check_info["hp_proliant_fans"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_hp_proliant_fans,
-    discovery_function=inventory_hp_proliant_fans,
-    service_name="HW FAN%s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.6.2.6.7.1",
         oids=["2", "3", "4", "6", "9", "12"],
     ),
+    service_name="HW FAN%s",
+    discovery_function=inventory_hp_proliant_fans,
+    check_function=check_hp_proliant_fans,
 )

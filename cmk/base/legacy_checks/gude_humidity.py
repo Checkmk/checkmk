@@ -53,10 +53,6 @@ check_info["gude_humidity"] = LegacyCheckDefinition(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.66"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.28507.67"),
     ),
-    parse_function=parse_gude_humidity,
-    discovery_function=inventory_gude_humidity,
-    check_function=check_gude_humidity,
-    service_name="Humidity %s",
     fetch=[
         SNMPTree(
             base=f".1.3.6.1.4.1.28507.{table}.1.6.1.1",
@@ -64,5 +60,9 @@ check_info["gude_humidity"] = LegacyCheckDefinition(
         )
         for table in ["19", "38", "66", "67"]
     ],
+    parse_function=parse_gude_humidity,
+    service_name="Humidity %s",
+    discovery_function=inventory_gude_humidity,
+    check_function=check_gude_humidity,
     check_ruleset_name="humidity",
 )

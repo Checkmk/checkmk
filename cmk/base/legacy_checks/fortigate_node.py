@@ -101,10 +101,6 @@ check_info["fortigate_node"] = LegacyCheckDefinition(
         contains(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12356.101.1"),
         not_equals(".1.3.6.1.4.1.12356.101.13.1.1.0", "1"),
     ),
-    parse_function=parse_fortigate_node,
-    discovery_function=inventory_fortigate_cluster,
-    check_function=check_fortigate_cluster,
-    service_name="Cluster Info",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.12356.101.13.1",
@@ -115,6 +111,10 @@ check_info["fortigate_node"] = LegacyCheckDefinition(
             oids=["11", "3", "4", "6", OIDEnd()],
         ),
     ],
+    parse_function=parse_fortigate_node,
+    service_name="Cluster Info",
+    discovery_function=inventory_fortigate_cluster,
+    check_function=check_fortigate_cluster,
 )
 
 # .
@@ -142,9 +142,9 @@ def check_fortigate_node_cpu(item, params, parsed):
 
 
 check_info["fortigate_node.cpu"] = LegacyCheckDefinition(
+    service_name="CPU utilization %s",
     discovery_function=inventory_fortigate_node_cpu,
     check_function=check_fortigate_node_cpu,
-    service_name="CPU utilization %s",
 )
 
 # .
@@ -174,8 +174,8 @@ def check_fortigate_node_ses(item, params, parsed):
 
 
 check_info["fortigate_node.sessions"] = LegacyCheckDefinition(
+    service_name="Sessions %s",
     discovery_function=inventory_fortigate_node_ses,
     check_function=check_fortigate_node_ses,
-    service_name="Sessions %s",
     check_ruleset_name="fortigate_node_sessions",
 )

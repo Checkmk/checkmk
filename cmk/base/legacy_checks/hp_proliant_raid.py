@@ -88,12 +88,12 @@ def check_hp_proliant_raid(item, _no_params, parsed):
 
 check_info["hp_proliant_raid"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_hp_proliant_raid,
-    check_function=check_hp_proliant_raid,
-    discovery_function=inventory_hp_proliant_raid,
-    service_name="Logical Device %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.3.2.3.1.1",
         oids=["2", "14", "4", "9", "12"],
     ),
+    parse_function=parse_hp_proliant_raid,
+    service_name="Logical Device %s",
+    discovery_function=inventory_hp_proliant_raid,
+    check_function=check_hp_proliant_raid,
 )

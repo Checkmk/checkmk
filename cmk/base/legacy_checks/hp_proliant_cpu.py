@@ -15,11 +15,11 @@ from cmk.base.plugins.agent_based.utils.hp_proliant import DETECT
 
 check_info["hp_proliant_cpu"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_hp_proliant_cpu,
-    discovery_function=inventory_hp_proliant_cpu,
-    service_name="HW CPU %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.1.2.2.1.1",
         oids=["1", "2", "3", "6"],
     ),
+    service_name="HW CPU %s",
+    discovery_function=inventory_hp_proliant_cpu,
+    check_function=check_hp_proliant_cpu,
 )

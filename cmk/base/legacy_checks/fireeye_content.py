@@ -68,13 +68,13 @@ def check_fireeye_content(_no_item, params, parsed):
 
 check_info["fireeye_content"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_fireeye_content,
-    discovery_function=discover_fireeye_content,
-    check_function=check_fireeye_content,
-    service_name="Security content",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.25597.11.5.1",
         oids=["5", "6", "7"],
     ),
+    parse_function=parse_fireeye_content,
+    service_name="Security content",
+    discovery_function=discover_fireeye_content,
+    check_function=check_fireeye_content,
     check_ruleset_name="fireeye_content",
 )

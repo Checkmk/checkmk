@@ -62,14 +62,14 @@ def check_hp_mcs_sensors(item, params, parsed):
 
 check_info["hp_mcs_sensors"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.232.167"),
-    parse_function=parse_hp_mcs_sensors,
-    discovery_function=inventory_hp_mcs_sensors,
-    check_function=check_hp_mcs_sensors,
-    service_name="Sensor %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.167.2.4.5.2.1",
         oids=["1", "2", "3", "4", "5", "6", "7"],
     ),
+    parse_function=parse_hp_mcs_sensors,
+    service_name="Sensor %s",
+    discovery_function=inventory_hp_mcs_sensors,
+    check_function=check_hp_mcs_sensors,
     check_ruleset_name="temperature",
 )
 
@@ -88,9 +88,9 @@ def check_hp_mcs_sensors_fan(item, params, parsed):
 
 
 check_info["hp_mcs_sensors.fan"] = LegacyCheckDefinition(
+    service_name="Sensor %s",
     discovery_function=inventory_hp_mcs_sensors_fan,
     check_function=check_hp_mcs_sensors_fan,
-    service_name="Sensor %s",
     check_ruleset_name="hw_fans",
     check_default_parameters={
         "lower": (1000, 500),

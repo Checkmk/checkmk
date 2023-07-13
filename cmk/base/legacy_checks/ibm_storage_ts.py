@@ -20,9 +20,6 @@ def check_ibm_storage_ts(_no_item, _no_params, info):
 
 check_info["ibm_storage_ts"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.2.6.210"),
-    check_function=check_ibm_storage_ts,
-    discovery_function=inventory_ibm_storage_ts,
-    service_name="Info",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.2.6.210.1",
@@ -41,6 +38,9 @@ check_info["ibm_storage_ts"] = LegacyCheckDefinition(
             oids=["1", "10", "15", "16", "17", "18"],
         ),
     ],
+    service_name="Info",
+    discovery_function=inventory_ibm_storage_ts,
+    check_function=check_ibm_storage_ts,
 )
 
 
@@ -78,9 +78,9 @@ def check_ibm_storage_ts_status(_no_item, _no_params, info):
 
 
 check_info["ibm_storage_ts.status"] = LegacyCheckDefinition(
-    check_function=check_ibm_storage_ts_status,
-    discovery_function=inventory_ibm_storage_ts_status,
     service_name="Status",
+    discovery_function=inventory_ibm_storage_ts_status,
+    check_function=check_ibm_storage_ts_status,
 )
 
 
@@ -111,9 +111,9 @@ def check_ibm_storage_ts_library(item, _no_params, info):
 
 
 check_info["ibm_storage_ts.library"] = LegacyCheckDefinition(
-    check_function=check_ibm_storage_ts_library,
-    discovery_function=inventory_ibm_storage_ts_library,
     service_name="Library %s",
+    discovery_function=inventory_ibm_storage_ts_library,
+    check_function=check_ibm_storage_ts_library,
 )
 
 
@@ -139,7 +139,7 @@ def check_ibm_storage_ts_drive(item, params, info):
 
 
 check_info["ibm_storage_ts.drive"] = LegacyCheckDefinition(
-    check_function=check_ibm_storage_ts_drive,
-    discovery_function=inventory_ibm_storage_ts_drive,
     service_name="Drive %s",
+    discovery_function=inventory_ibm_storage_ts_drive,
+    check_function=check_ibm_storage_ts_drive,
 )

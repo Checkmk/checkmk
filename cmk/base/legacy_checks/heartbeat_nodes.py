@@ -53,7 +53,7 @@ def check_heartbeat_nodes(item, params, info):
 
 
 check_info["heartbeat_nodes"] = LegacyCheckDefinition(
-    check_function=check_heartbeat_nodes,
-    discovery_function=inventory_heartbeat_nodes,
     service_name="Heartbeat Node %s",
+    discovery_function=inventory_heartbeat_nodes,
+    check_function=check_heartbeat_nodes,
 )

@@ -94,7 +94,7 @@ def check_ibm_svc_system(item, _no_params, info):
 
 
 check_info["ibm_svc_system"] = LegacyCheckDefinition(
-    check_function=check_ibm_svc_system,
-    discovery_function=inventory_ibm_svc_system,
     service_name="Info",
+    discovery_function=inventory_ibm_svc_system,
+    check_function=check_ibm_svc_system,
 )

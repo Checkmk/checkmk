@@ -53,11 +53,11 @@ def check_innovaphone_priports_l2(item, params, info):
 
 check_info["innovaphone_priports_l2"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.6666"),
-    check_function=check_innovaphone_priports_l2,
-    discovery_function=inventory_innovaphone_priports_l2,
-    service_name="Port L2 %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.6666.1.1.1",
         oids=["1", "2", "3"],
     ),
+    service_name="Port L2 %s",
+    discovery_function=inventory_innovaphone_priports_l2,
+    check_function=check_innovaphone_priports_l2,
 )

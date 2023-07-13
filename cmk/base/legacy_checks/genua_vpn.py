@@ -60,11 +60,11 @@ def check_genua_vpn(item, params, info):
 
 check_info["genua_vpn"] = LegacyCheckDefinition(
     detect=DETECT_GENUA,
-    discovery_function=inventory_genua_vpn,
-    check_function=check_genua_vpn,
-    service_name="VPN %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3717.2.1.3.1",
         oids=["1", "2", "3", "4", "5", "6"],
     ),
+    service_name="VPN %s",
+    discovery_function=inventory_genua_vpn,
+    check_function=check_genua_vpn,
 )

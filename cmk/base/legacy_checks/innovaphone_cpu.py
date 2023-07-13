@@ -19,9 +19,9 @@ def check_innovaphone_cpu(_no_item, params, info):
 
 
 check_info["innovaphone_cpu"] = LegacyCheckDefinition(
-    check_function=check_innovaphone_cpu,
-    discovery_function=inventory_innovaphone_cpu,
     service_name="CPU utilization",
+    discovery_function=inventory_innovaphone_cpu,
+    check_function=check_innovaphone_cpu,
     check_ruleset_name="cpu_utilization",
     check_default_parameters={"util": (90.0, 95.0)},
 )

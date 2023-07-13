@@ -115,13 +115,13 @@ def check_f5_bigip_snat(item, params, parsed):
 
 check_info["f5_bigip_snat"] = LegacyCheckDefinition(
     detect=DETECT,
-    parse_function=parse_f5_bigip_snat,
-    check_function=check_f5_bigip_snat,
-    discovery_function=inventory_f5_bigip_snat,
-    check_ruleset_name="f5_bigip_snat",
-    service_name="Source NAT %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3375.2.2.9.2.3.1",
         oids=["1", "2", "3", "4", "5", "7", "8"],
     ),
+    parse_function=parse_f5_bigip_snat,
+    service_name="Source NAT %s",
+    discovery_function=inventory_f5_bigip_snat,
+    check_function=check_f5_bigip_snat,
+    check_ruleset_name="f5_bigip_snat",
 )

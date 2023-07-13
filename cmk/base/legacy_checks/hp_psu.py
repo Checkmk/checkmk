@@ -48,9 +48,9 @@ def check_hp_psu_temp(item, params, parsed):
 
 
 check_info["hp_psu.temp"] = LegacyCheckDefinition(
+    service_name="Temperature Power Supply %s",
     discovery_function=inventory_hp_psu_temp,
     check_function=check_hp_psu_temp,
-    service_name="Temperature Power Supply %s",
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (70.0, 80.0),
@@ -95,12 +95,12 @@ check_info["hp_psu"] = LegacyCheckDefinition(
             contains(".1.3.6.1.2.1.1.1.0", "5406rzl2"), contains(".1.3.6.1.2.1.1.1.0", "5412rzl2")
         ),
     ),
-    parse_function=parse_hp_psu,
-    discovery_function=inventory_hp_psu,
-    check_function=check_hp_psu,
-    service_name="Power Supply Status %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11.2.14.11.5.1.55.1.1.1",
         oids=[OIDEnd(), "2", "4"],
     ),
+    parse_function=parse_hp_psu,
+    service_name="Power Supply Status %s",
+    discovery_function=inventory_hp_psu,
+    check_function=check_hp_psu,
 )

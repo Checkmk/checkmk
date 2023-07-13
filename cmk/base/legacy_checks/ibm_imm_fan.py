@@ -53,13 +53,13 @@ def check_ibm_imm_fan(item, params, info):  # pylint: disable=too-many-branches
 
 check_info["ibm_imm_fan"] = LegacyCheckDefinition(
     detect=DETECT_IBM_IMM,
-    check_function=check_ibm_imm_fan,
-    discovery_function=inventory_ibm_imm_fan,
-    service_name="Fan %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2.3.51.3.1.3.2.1",
         oids=["2", "3"],
     ),
+    service_name="Fan %s",
+    discovery_function=inventory_ibm_imm_fan,
+    check_function=check_ibm_imm_fan,
     check_ruleset_name="hw_fans_perc",
     check_default_parameters={
         "levels_lower": (28, 25),  # Just a guess. Please give feedback.

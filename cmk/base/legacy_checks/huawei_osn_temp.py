@@ -26,13 +26,13 @@ def check_huawei_osn_temp(item, params, info):
 
 check_info["huawei_osn_temp"] = LegacyCheckDefinition(
     detect=DETECT_HUAWEI_OSN,
-    discovery_function=inventory_huawei_osn_temp,
-    check_function=check_huawei_osn_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2011.2.25.3.40.50.76.10.1",
         oids=["2.190", "6.190"],
     ),
+    service_name="Temperature %s",
+    discovery_function=inventory_huawei_osn_temp,
+    check_function=check_huawei_osn_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (70.0, 80.0),

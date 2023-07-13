@@ -38,12 +38,12 @@ def check_hitachi_hnas_bossock(item, params, info):
 
 check_info["hitachi_hnas_bossock"] = LegacyCheckDefinition(
     detect=DETECT,
-    check_function=check_hitachi_hnas_bossock,
-    discovery_function=inventory_hitachi_hnas_bossock,
-    service_name="Bossock Fibers on Node %s",
-    check_ruleset_name="bossock_fibers",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11096.6.1.1.6.7.4.1",
         oids=["1", "2"],
     ),
+    service_name="Bossock Fibers on Node %s",
+    discovery_function=inventory_hitachi_hnas_bossock,
+    check_function=check_hitachi_hnas_bossock,
+    check_ruleset_name="bossock_fibers",
 )

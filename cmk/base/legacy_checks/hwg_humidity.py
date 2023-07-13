@@ -16,14 +16,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
 check_info["hwg_humidity"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "hwg"),
-    parse_function=parse_hwg,
-    check_function=check_hwg_humidity,
-    discovery_function=inventory_hwg_humidity,
-    service_name="Humidity %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21796.4.1.3.1",
         oids=["1", "2", "3", "4", "7"],
     ),
+    parse_function=parse_hwg,
+    service_name="Humidity %s",
+    discovery_function=inventory_hwg_humidity,
+    check_function=check_hwg_humidity,
     check_ruleset_name="humidity",
     check_default_parameters=HWG_HUMIDITY_DEFAULTLEVELS,
 )

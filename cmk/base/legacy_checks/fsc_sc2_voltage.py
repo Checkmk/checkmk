@@ -18,13 +18,13 @@ def discover_fsc_sc2_voltage(section):
 
 check_info["fsc_sc2_voltage"] = LegacyCheckDefinition(
     detect=DETECT_FSC_SC2,
-    parse_function=parse_fsc_sc2_voltage,
-    discovery_function=discover_fsc_sc2_voltage,
-    check_function=check_elphase,
-    service_name="Voltage %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.231.2.10.2.2.10.6.3.1",
         oids=["3", "4", "5", "7", "8"],
     ),
+    parse_function=parse_fsc_sc2_voltage,
+    service_name="Voltage %s",
+    discovery_function=discover_fsc_sc2_voltage,
+    check_function=check_elphase,
     check_ruleset_name="el_inphase",
 )

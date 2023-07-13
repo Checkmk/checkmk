@@ -51,7 +51,7 @@ def check_hpux_lvm(item, params, info):
 
 
 check_info["hpux_lvm"] = LegacyCheckDefinition(
-    check_function=check_hpux_lvm,
-    discovery_function=inventory_hpux_lvm,
     service_name="Logical Volume %s",
+    discovery_function=inventory_hpux_lvm,
+    check_function=check_hpux_lvm,
 )

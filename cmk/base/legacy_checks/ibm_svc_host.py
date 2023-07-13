@@ -112,8 +112,8 @@ def check_ibm_svc_host(item, params, parsed):  # pylint: disable=too-many-branch
 
 check_info["ibm_svc_host"] = LegacyCheckDefinition(
     parse_function=parse_ibm_svc_host,
-    check_function=check_ibm_svc_host,
-    discovery_function=discover_ibm_svc_host,
     service_name="Hosts",
+    discovery_function=discover_ibm_svc_host,
+    check_function=check_ibm_svc_host,
     check_ruleset_name="ibm_svc_host",
 )

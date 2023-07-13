@@ -32,10 +32,6 @@ def discover_huawei_switch_cpu(section):
 
 check_info["huawei_switch_cpu"] = LegacyCheckDefinition(
     detect=DETECT_HUAWEI_SWITCH,
-    parse_function=parse_huawei_switch_cpu,
-    discovery_function=discover_huawei_switch_cpu,
-    check_function=check_huawei_switch_cpu,
-    service_name="CPU utilization %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.47.1.1.1.1",
@@ -46,6 +42,10 @@ check_info["huawei_switch_cpu"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "5"],
         ),
     ],
+    parse_function=parse_huawei_switch_cpu,
+    service_name="CPU utilization %s",
+    discovery_function=discover_huawei_switch_cpu,
+    check_function=check_huawei_switch_cpu,
     check_ruleset_name="cpu_utilization_multiitem",
     check_default_parameters={
         "levels": (80.0, 90.0),

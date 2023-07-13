@@ -67,13 +67,13 @@ def check_fortisandbox_queues(item, params, parsed):
 
 check_info["fortisandbox_queues"] = LegacyCheckDefinition(
     detect=DETECT_FORTISANDBOX,
-    parse_function=parse_fortisandbox_queues,
-    discovery_function=inventory_fortisandbox_queues,
-    check_function=check_fortisandbox_queues,
-    service_name="Pending %s files",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.118.5.1",
         oids=["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"],
     ),
+    parse_function=parse_fortisandbox_queues,
+    service_name="Pending %s files",
+    discovery_function=inventory_fortisandbox_queues,
+    check_function=check_fortisandbox_queues,
     check_ruleset_name="fortisandbox_queues",
 )

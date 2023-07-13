@@ -132,9 +132,9 @@ def check_hyperv_vms(item, params, parsed):
 
 check_info["hyperv_vms"] = LegacyCheckDefinition(
     parse_function=parse_hyperv_vms,
-    check_function=check_hyperv_vms,
-    discovery_function=inventory_hyperv_vms,
     service_name="VM %s",
+    discovery_function=inventory_hyperv_vms,
+    check_function=check_hyperv_vms,
     check_ruleset_name="hyperv_vms",
     check_default_parameters={
         "FastSaved": 0,

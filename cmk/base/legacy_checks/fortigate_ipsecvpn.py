@@ -70,13 +70,13 @@ def check_fortigate_ipsecvpn(item, params, info):
 
 check_info["fortigate_ipsecvpn"] = LegacyCheckDefinition(
     detect=DETECT_FORTIGATE,
-    discovery_function=inventory_fortigate_ipsecvpn,
-    check_function=check_fortigate_ipsecvpn,
-    service_name="VPN IPSec Tunnels",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12356.101.12.2.2.1",
         oids=["3", "20"],
     ),
+    service_name="VPN IPSec Tunnels",
+    discovery_function=inventory_fortigate_ipsecvpn,
+    check_function=check_fortigate_ipsecvpn,
     check_ruleset_name="ipsecvpn",
     check_default_parameters={
         "levels": (1, 2),

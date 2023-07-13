@@ -46,11 +46,11 @@ def check_hp_blade_general(item, params, info):
 
 check_info["hp_blade"] = LegacyCheckDefinition(
     detect=DETECT_HP_BLADE,
-    check_function=check_hp_blade_general,
-    discovery_function=inventory_hp_blade_general,
-    service_name="General Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.232.22.2.3.1.1.1",
         oids=["8", "16", "7"],
     ),
+    service_name="General Status",
+    discovery_function=inventory_hp_blade_general,
+    check_function=check_hp_blade_general,
 )

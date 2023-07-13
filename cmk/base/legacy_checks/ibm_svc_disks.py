@@ -106,9 +106,9 @@ def check_ibm_svc_disks(_no_item, params, parsed):
 
 check_info["ibm_svc_disks"] = LegacyCheckDefinition(
     parse_function=parse_ibm_svc_disks,
-    check_function=check_ibm_svc_disks,
-    discovery_function=discover_ibm_svc_disks,
     service_name="Disk Summary",
+    discovery_function=discover_ibm_svc_disks,
+    check_function=check_ibm_svc_disks,
     check_ruleset_name="netapp_disks",
     check_default_parameters=FILER_DISKS_CHECK_DEFAULT_PARAMETERS,
 )

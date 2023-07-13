@@ -81,7 +81,7 @@ def check_hp_msa_fan(item, params, parsed):
 
 check_info["hp_msa_fan"] = LegacyCheckDefinition(
     parse_function=parse_hp_msa,
+    service_name="Fan %s",
     discovery_function=inventory_hp_msa_fan,
     check_function=check_hp_msa_fan,
-    service_name="Fan %s",
 )

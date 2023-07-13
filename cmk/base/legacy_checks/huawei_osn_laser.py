@@ -59,13 +59,13 @@ def check_huawei_osn_laser(item, params, info):
 
 check_info["huawei_osn_laser"] = LegacyCheckDefinition(
     detect=DETECT_HUAWEI_OSN,
-    discovery_function=inventory_huawei_osn_laser,
-    check_function=check_huawei_osn_laser,
-    service_name="Laser %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2011.2.25.3.40.50.119.10.1",
         oids=["6.200", "2.200", "2.203", "2.252", "2.253"],
     ),
+    service_name="Laser %s",
+    discovery_function=inventory_huawei_osn_laser,
+    check_function=check_huawei_osn_laser,
     check_ruleset_name="huawei_osn_laser",
     check_default_parameters={
         "levels_low_in": (-160.0, -180.0),

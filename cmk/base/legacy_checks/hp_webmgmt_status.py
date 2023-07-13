@@ -41,9 +41,6 @@ check_info["hp_webmgmt_status"] = LegacyCheckDefinition(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.11"),
         exists(".1.3.6.1.4.1.11.2.36.1.1.5.1.1.*"),
     ),
-    check_function=check_hp_webmgmt_status,
-    discovery_function=inventory_hp_webmgmt_status,
-    service_name="Status %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.11.2.36.1.1.5.1.1",
@@ -58,4 +55,7 @@ check_info["hp_webmgmt_status"] = LegacyCheckDefinition(
             oids=["1"],
         ),
     ],
+    service_name="Status %s",
+    discovery_function=inventory_hp_webmgmt_status,
+    check_function=check_hp_webmgmt_status,
 )

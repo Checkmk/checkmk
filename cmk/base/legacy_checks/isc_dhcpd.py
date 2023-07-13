@@ -103,8 +103,8 @@ def check_isc_dhcpd(item, params, parsed):
 
 check_info["isc_dhcpd"] = LegacyCheckDefinition(
     parse_function=parse_isc_dhcpd,
+    service_name="DHCP Pool %s",
     discovery_function=inventory_isc_dhcpd,
     check_function=check_isc_dhcpd,
-    service_name="DHCP Pool %s",
     check_ruleset_name="win_dhcp_pools",
 )

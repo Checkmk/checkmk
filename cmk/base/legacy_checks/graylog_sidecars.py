@@ -164,9 +164,9 @@ def discover_graylog_sidecars(section):
 
 check_info["graylog_sidecars"] = LegacyCheckDefinition(
     parse_function=parse_graylog_sidecars,
-    check_function=check_graylog_sidecars,
-    discovery_function=discover_graylog_sidecars,
     service_name="Graylog Sidecar %s",
+    discovery_function=discover_graylog_sidecars,
+    check_function=check_graylog_sidecars,
     check_ruleset_name="graylog_sidecars",
     check_default_parameters={
         "running_lower": (1, 0),

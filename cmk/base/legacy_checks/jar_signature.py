@@ -111,6 +111,6 @@ def check_jar_signature(item, _no_params, info):  # pylint: disable=too-many-bra
 
 check_info["jar_signature"] = LegacyCheckDefinition(
     service_name="Jar-Signature %s",
-    check_function=check_jar_signature,
     discovery_function=inventory_jar_signature,
+    check_function=check_jar_signature,
 )

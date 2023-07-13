@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence, Set
 from dataclasses import dataclass
-from typing import Any, Final, Generic, NamedTuple, TypeVar
+from typing import Any, Final, Generic, NamedTuple, no_type_check, TypeVar
 
 import cmk.utils.piggyback
 import cmk.utils.resulttype as result
@@ -42,6 +42,20 @@ class SectionPlugin:
     parsed_section_name: ParsedSectionName
 
 
+@no_type_check
+def _update_sections(lhs: HostSections, rhs: HostSections) -> None:
+    for section_name, section_content in rhs.sections.items():
+        lhs.sections.setdefault(section_name, []).extend(section_content)
+    for hostname, raw_lines in rhs.piggybacked_raw_data.items():
+        lhs.piggybacked_raw_data.setdefault(hostname, []).extend(raw_lines)
+    # TODO: It should be supported that different sources produce equal sections.
+    # this is handled for the lhs.sections data by simply concatenating the lines
+    # of the sections, but for the lhs.cache_info this is not done. Why?
+    # TODO: checking._execute_check() is using the oldest cached_at and the largest interval.
+    #       Would this be correct here?
+    lhs.cache_info.update(rhs.cache_info)
+
+
 def filter_out_errors(
     host_sections: Iterable[tuple[SourceInfo, result.Result[HostSections, Exception]]]
 ) -> Mapping[HostKey, HostSections]:
@@ -55,7 +69,7 @@ def filter_out_errors(
                 "  -> Add sections: %s\n"
                 % sorted([str(s) for s in host_section.ok.sections.keys()])
             )
-            output[host_key].update(host_section.ok)
+            _update_sections(output[host_key], host_section.ok)
         else:
             console.vverbose("  -> Not adding sections: %s\n" % host_section.error)
     return output

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import abc
 from collections.abc import Mapping, Sequence
-from typing import Final, Generic, no_type_check, Self, TypeVar
+from typing import Final, Generic, TypeVar
 
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import HostSection, SectionName
@@ -38,19 +38,6 @@ class HostSections(Generic[_T], abc.ABC):
             self.cache_info,
             self.piggybacked_raw_data,
         )
-
-    @no_type_check
-    def update(self, other: Self) -> None:
-        for section_name, section_content in other.sections.items():
-            self.sections.setdefault(section_name, []).extend(section_content)
-        for hostname, raw_lines in other.piggybacked_raw_data.items():
-            self.piggybacked_raw_data.setdefault(hostname, []).extend(raw_lines)
-        # TODO: It should be supported that different sources produce equal sections.
-        # this is handled for the self.sections data by simply concatenating the lines
-        # of the sections, but for the self.cache_info this is not done. Why?
-        # TODO: checking._execute_check() is using the oldest cached_at and the largest interval.
-        #       Would this be correct here?
-        self.cache_info.update(other.cache_info)
 
     def __bool__(self) -> bool:
         # This is needed in order to decide whether a host has inventory data or not, see:

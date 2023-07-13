@@ -3,8 +3,6 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from copy import deepcopy
-
 import pytest
 
 from cmk.utils.hostaddress import HostName
@@ -33,56 +31,4 @@ class TestHostSections:
                 HostName("host0"): [b"first line", b"second line"],
                 HostName("host1"): [b"third line", b"forth line"],
             },
-        )
-
-    def test_add_self_extends_sections(
-        self, host_sections: HostSections[AgentRawDataSection]
-    ) -> None:
-        # host_sections will be modified inline, so copy here to compare later
-        orig = HostSections[AgentRawDataSection](
-            sections=deepcopy(host_sections.sections),
-            cache_info=deepcopy(host_sections.cache_info),
-            piggybacked_raw_data=deepcopy(host_sections.piggybacked_raw_data),
-        )
-
-        host_sections.update(host_sections)
-        assert host_sections.sections.keys() == orig.sections.keys()
-        assert host_sections.cache_info.keys() == orig.cache_info.keys()
-        assert host_sections.piggybacked_raw_data.keys() == orig.piggybacked_raw_data.keys()
-
-        for section in host_sections.sections:
-            assert host_sections.sections[section] == 2 * list(orig.sections[section])
-        assert host_sections.cache_info == orig.cache_info
-        for host_name in host_sections.piggybacked_raw_data:
-            assert host_sections.piggybacked_raw_data[host_name] == 2 * list(
-                orig.piggybacked_raw_data[host_name]
-            )
-
-    def test_add_other_adds_sections(self, host_sections: HostSections) -> None:
-        other = HostSections[AgentRawDataSection](
-            {
-                SectionName("section2"): [["first", "line"], ["second", "line"]],
-                SectionName("section3"): [["third", "line"], ["forth", "line"]],
-                SectionName("section4"): [["fifth", "line"], ["sixth", "line"]],
-            },
-            cache_info={
-                SectionName("section2"): (1, 2),
-                SectionName("section3"): (3, 4),
-            },
-            piggybacked_raw_data={
-                HostName("host2"): [b"first line", b"second line"],
-                HostName("host3"): [b"third line", b"forth line"],
-            },
-        )
-
-        num_previous_sections = len(host_sections.sections)
-        num_previous_piggyback = len(host_sections.piggybacked_raw_data)
-        num_previous_cache_info = len(host_sections.cache_info)
-
-        # host_sections will be modified inline
-        host_sections.update(other)
-        assert len(host_sections.sections) == num_previous_sections + len(other.sections)
-        assert len(host_sections.cache_info) == num_previous_cache_info + len(other.cache_info)
-        assert len(host_sections.piggybacked_raw_data) == num_previous_piggyback + len(
-            other.piggybacked_raw_data
         )

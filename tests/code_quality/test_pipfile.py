@@ -345,7 +345,6 @@ CEE_UNUSED_PACKAGES = [
     "setuptools-scm",
     "snmpsim",
     "tenacity",
-    "uvicorn",  # TODO: move to agent-receiver/setup.py
     "websocket-client",
     "wrapt",
     "yarl",

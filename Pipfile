@@ -191,7 +191,6 @@ tenacity = "==8.2.2"  # needed by opsgenie-sdk
 opsgenie-sdk = "==2.1.5"  # needed by opsgenie_issues
 protobuf = "==3.20.1"  # For development, Runtime modules are shipped by omd/packages/protobuf
 semver = "==3.0.0"
-uvicorn = "==0.20.0"  # used for running agent-receiver server, UPGRADES MIGHT BREAK agent-receiver/agent_receiver/worker.py
 gunicorn= "==20.1.0" # used for running agent-receiver server
 agent-receiver = {editable = true, path = "./agent-receiver"}
 pysmb = "==1.2.9.1"  # used by SMB share special agent

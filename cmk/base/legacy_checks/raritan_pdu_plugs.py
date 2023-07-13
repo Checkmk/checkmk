@@ -48,13 +48,13 @@ check_info["raritan_pdu_plugs"] = LegacyCheckDefinition(
             startswith(".1.3.6.1.4.1.13742.6.3.2.1.1.3.1", "PX3"),
         ),
     ),
-    discovery_function=inventory_raritan_pdu_plugs,
-    parse_function=parse_raritan_pdu_plugs,
-    check_function=check_raritan_pdu_plugs,
-    service_name="Plug %s",
-    check_ruleset_name="plugs",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13742.6",
         oids=["3.5.3.1.2", "3.5.3.1.3", "4.1.2.1.3"],
     ),
+    parse_function=parse_raritan_pdu_plugs,
+    service_name="Plug %s",
+    discovery_function=inventory_raritan_pdu_plugs,
+    check_function=check_raritan_pdu_plugs,
+    check_ruleset_name="plugs",
 )

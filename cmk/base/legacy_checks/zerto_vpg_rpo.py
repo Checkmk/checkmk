@@ -49,8 +49,8 @@ def discover_zerto_vpg_rpo(section):
 
 check_info["zerto_vpg_rpo"] = LegacyCheckDefinition(
     parse_function=parse_zerto_vpg,
+    service_name="Zerto VPG RPO %s",
     discovery_function=discover_zerto_vpg_rpo,
     check_function=check_zerto_vpg_rpo,
-    service_name="Zerto VPG RPO %s",
     check_ruleset_name="zerto_vpg_rpo",
 )

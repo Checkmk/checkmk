@@ -52,7 +52,7 @@ def discover_postgres_version(section):
 
 check_info["postgres_version"] = LegacyCheckDefinition(
     parse_function=parse_postgres_version,
+    service_name="PostgreSQL Version %s",
     discovery_function=discover_postgres_version,
     check_function=check_postgres_version,
-    service_name="PostgreSQL Version %s",
 )

@@ -39,7 +39,7 @@ def check_storeonce4x_d2d_services(_item, _params, parsed):
 
 check_info["storeonce4x_d2d_services"] = LegacyCheckDefinition(
     parse_function=parse_storeonce4x_d2d_services,
+    service_name="D2D Services",
     discovery_function=discover_storeonce4x_d2d_services,
     check_function=check_storeonce4x_d2d_services,
-    service_name="D2D Services",
 )

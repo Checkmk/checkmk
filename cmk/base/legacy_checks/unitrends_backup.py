@@ -57,7 +57,7 @@ def check_unitrends_backup(item, _no_params, info):
 
 
 check_info["unitrends_backup"] = LegacyCheckDefinition(
-    check_function=check_unitrends_backup,
-    discovery_function=inventory_unitrends_backup,
     service_name="Schedule %s",
+    discovery_function=inventory_unitrends_backup,
+    check_function=check_unitrends_backup,
 )

@@ -135,8 +135,8 @@ def discover_rabbitmq_queues(section):
 
 check_info["rabbitmq_queues"] = LegacyCheckDefinition(
     parse_function=parse_rabbitmq_queues,
-    check_function=check_rabbitmq_queues,
-    discovery_function=discover_rabbitmq_queues,
     service_name="RabbitMQ Queue %s",
+    discovery_function=discover_rabbitmq_queues,
+    check_function=check_rabbitmq_queues,
     check_ruleset_name="rabbitmq_queues",
 )

@@ -308,9 +308,9 @@ def check_zfs_arc_cache(_no_item, _no_params, parsed):
 
 check_info["zfs_arc_cache"] = LegacyCheckDefinition(
     parse_function=parse_zfs_arc_cache,
-    check_function=check_zfs_arc_cache,
-    discovery_function=inventory_zfs_arc_cache,
     service_name="ZFS arc cache",
+    discovery_function=inventory_zfs_arc_cache,
+    check_function=check_zfs_arc_cache,
 )
 
 # .
@@ -360,7 +360,7 @@ def check_zfs_arc_cache_l2(_no_item, _no_params, parsed):
 
 
 check_info["zfs_arc_cache.l2"] = LegacyCheckDefinition(
-    check_function=check_zfs_arc_cache_l2,
-    discovery_function=inventory_zfs_arc_cache_l2,
     service_name="ZFS arc cache L2",
+    discovery_function=inventory_zfs_arc_cache_l2,
+    check_function=check_zfs_arc_cache_l2,
 )

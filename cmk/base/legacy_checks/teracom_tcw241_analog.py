@@ -90,10 +90,6 @@ def discover_teracom_tcw241_analog(section):
 
 check_info["teracom_tcw241_analog"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "Teracom"),
-    parse_function=parse_tcw241_analog,
-    check_function=check_tcw241_analog,
-    discovery_function=discover_teracom_tcw241_analog,
-    service_name="Analog Sensor %s",
     fetch=[
         *(
             SNMPTree(
@@ -111,4 +107,8 @@ check_info["teracom_tcw241_analog"] = LegacyCheckDefinition(
             oids=["1.0", "2.0", "3.0", "4.0"],
         ),
     ],
+    parse_function=parse_tcw241_analog,
+    service_name="Analog Sensor %s",
+    discovery_function=discover_teracom_tcw241_analog,
+    check_function=check_tcw241_analog,
 )

@@ -81,9 +81,9 @@ def check_ucs_bladecenter_fans(item, _no_params, parsed):
 
 check_info["ucs_bladecenter_fans"] = LegacyCheckDefinition(
     parse_function=parse_ucs_bladecenter_fans,
+    service_name="Fans %s",
     discovery_function=inventory_ucs_bladecenter_fans,
     check_function=check_ucs_bladecenter_fans,
-    service_name="Fans %s",
 )
 
 # .
@@ -120,9 +120,9 @@ def check_ucs_bladecenter_fans_temp(item, params, parsed):
 
 
 check_info["ucs_bladecenter_fans.temp"] = LegacyCheckDefinition(
+    service_name="Temperature %s",
     discovery_function=inventory_ucs_bladecenter_fans_temp,
     check_function=check_ucs_bladecenter_fans_temp,
-    service_name="Temperature %s",
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (40.0, 50.0),

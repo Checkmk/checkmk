@@ -69,7 +69,7 @@ def check_ucs_c_rack_server_topsystem(item, _no_params, data):
 
 check_info["ucs_c_rack_server_topsystem"] = LegacyCheckDefinition(
     parse_function=parse_ucs_c_rack_server_topsystem,
+    service_name="UCS C-Series Rack Server TopSystem Info",
     discovery_function=inventory_ucs_c_rack_server_topsystem,
     check_function=check_ucs_c_rack_server_topsystem,
-    service_name="UCS C-Series Rack Server TopSystem Info",
 )

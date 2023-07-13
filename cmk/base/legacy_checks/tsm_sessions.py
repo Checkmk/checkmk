@@ -42,7 +42,7 @@ def check_tsm_sessions(item, params, info):
 
 
 check_info["tsm_sessions"] = LegacyCheckDefinition(
-    check_function=check_tsm_sessions,
-    discovery_function=inventory_tsm_sessions,
     service_name="tsm_sessions",
+    discovery_function=inventory_tsm_sessions,
+    check_function=check_tsm_sessions,
 )

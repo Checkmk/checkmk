@@ -30,9 +30,9 @@ def discover_ucs_c_rack_server_led(section):
 
 
 check_info["ucs_c_rack_server_led"] = LegacyCheckDefinition(
+    service_name="LED %s",
     discovery_function=discover_ucs_c_rack_server_led,
     check_function=check_ucs_c_rack_server_led,
-    service_name="LED %s",
     check_ruleset_name="ucs_c_rack_server_led",
     check_default_parameters={
         "amber": 1,

@@ -78,11 +78,6 @@ def check_raritan_pdu_ocprot(item, params, parsed):
 
 check_info["raritan_pdu_ocprot"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.2.0", "13742"),
-    parse_function=parse_raritan_pdu_ocprot,
-    discovery_function=discover_raritan_pdu_ocprot,
-    check_function=check_raritan_pdu_ocprot,
-    service_name="Overcurrent Protector %s",
-    check_ruleset_name="ocprot_current",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.13742.6.5.3.3.1",
@@ -93,4 +88,9 @@ check_info["raritan_pdu_ocprot"] = LegacyCheckDefinition(
             oids=["7"],
         ),
     ],
+    parse_function=parse_raritan_pdu_ocprot,
+    service_name="Overcurrent Protector %s",
+    discovery_function=discover_raritan_pdu_ocprot,
+    check_function=check_raritan_pdu_ocprot,
+    check_ruleset_name="ocprot_current",
 )

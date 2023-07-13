@@ -51,13 +51,13 @@ def check_pse_poe(item, params, parsed):
 
 check_info["pse_poe"] = LegacyCheckDefinition(
     detect=exists(".1.3.6.1.2.1.105.1.3.1.1.*"),
-    parse_function=parse_pse_poe,
-    check_function=check_pse_poe,
-    discovery_function=inventory_pse_poe,
-    service_name="POE%s consumption ",
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.105.1.3.1.1",
         oids=[OIDEnd(), "2", "3", "4"],
     ),
+    parse_function=parse_pse_poe,
+    service_name="POE%s consumption ",
+    discovery_function=inventory_pse_poe,
+    check_function=check_pse_poe,
     check_default_parameters={"levels": (90.0, 95.0)},
 )

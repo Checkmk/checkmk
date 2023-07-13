@@ -30,13 +30,13 @@ def check_rms200_temp(item, params, info):
 
 check_info["rms200_temp"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1909.13"),
-    check_function=check_rms200_temp,
-    discovery_function=inventory_rms200_temp,
-    service_name="Temperature %s ",
-    check_ruleset_name="temperature",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1909.13.1.1.1",
         oids=["1", "2", "5"],
     ),
+    service_name="Temperature %s ",
+    discovery_function=inventory_rms200_temp,
+    check_function=check_rms200_temp,
+    check_ruleset_name="temperature",
     check_default_parameters={"levels": (25.0, 28.0)},
 )

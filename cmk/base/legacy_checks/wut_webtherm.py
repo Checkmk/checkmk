@@ -70,10 +70,6 @@ def check_wut_webtherm(item, params, parsed):
 
 check_info["wut_webtherm"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.5040.1.2."),
-    parse_function=parse_wut_webtherm,
-    discovery_function=inventory_wut_webtherm,
-    check_function=check_wut_webtherm,
-    service_name="Temperature %s",
     fetch=[
         SNMPTree(
             base=f".1.3.6.1.4.1.5040.1.2.{idx}.1",
@@ -85,6 +81,10 @@ check_info["wut_webtherm"] = LegacyCheckDefinition(
         )
         for idx in _TYPE_TABLE_IDX
     ],
+    parse_function=parse_wut_webtherm,
+    service_name="Temperature %s",
+    discovery_function=inventory_wut_webtherm,
+    check_function=check_wut_webtherm,
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (30.0, 35.0),
@@ -117,9 +117,9 @@ def check_wut_webtherm_pressure(item, _no_params, parsed):
 
 
 check_info["wut_webtherm.pressure"] = LegacyCheckDefinition(
+    service_name="Pressure %s",
     discovery_function=inventory_wut_webtherm_pressure,
     check_function=check_wut_webtherm_pressure,
-    service_name="Pressure %s",
 )
 
 # .
@@ -150,9 +150,9 @@ def check_wut_webtherm_humidity(item, params, parsed):
 
 
 check_info["wut_webtherm.humidity"] = LegacyCheckDefinition(
+    service_name="Humidity %s",
     discovery_function=inventory_wut_webtherm_humidity,
     check_function=check_wut_webtherm_humidity,
-    service_name="Humidity %s",
     check_ruleset_name="humidity",
 )
 

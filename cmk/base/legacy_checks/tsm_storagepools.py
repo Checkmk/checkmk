@@ -62,7 +62,7 @@ def check_tsm_storagepools(item, _no_params, parsed):
 
 check_info["tsm_storagepools"] = LegacyCheckDefinition(
     parse_function=parse_tsm_storagepools,
+    service_name="TSM Storagepool %s",
     discovery_function=inventory_tsm_storagepools,
     check_function=check_tsm_storagepools,
-    service_name="TSM Storagepool %s",
 )

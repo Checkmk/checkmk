@@ -29,7 +29,7 @@ def check_sansymphony_serverstatus(_no_item, _no_params, info):
 
 
 check_info["sansymphony_serverstatus"] = LegacyCheckDefinition(
-    check_function=check_sansymphony_serverstatus,
-    discovery_function=inventory_sansymphony_serverstatus,
     service_name="sansymphony Serverstatus",
+    discovery_function=inventory_sansymphony_serverstatus,
+    check_function=check_sansymphony_serverstatus,
 )

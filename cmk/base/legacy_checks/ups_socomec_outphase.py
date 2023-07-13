@@ -35,16 +35,16 @@ def discover_ups_socomec_outphase(section):
 
 check_info["ups_socomec_outphase"] = LegacyCheckDefinition(
     detect=DETECT_SOCOMEC,
-    parse_function=parse_ups_socomec_outphase,
-    discovery_function=discover_ups_socomec_outphase,
-    check_function=check_ups_socomec_outphase,
-    service_name="Output %s",
-    check_ruleset_name="ups_outphase",
-    # Phase Index, Voltage/dV, Current/dA, Load/%
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.4555.1.1.1.1.4.4.1",
         oids=["1", "2", "3", "4"],
     ),
+    parse_function=parse_ups_socomec_outphase,
+    service_name="Output %s",
+    discovery_function=discover_ups_socomec_outphase,
+    check_function=check_ups_socomec_outphase,
+    check_ruleset_name="ups_outphase",
+    # Phase Index, Voltage/dV, Current/dA, Load/%,
     check_default_parameters={
         "voltage": (210, 200),
         "output_load": (80, 90),

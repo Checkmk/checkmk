@@ -124,8 +124,8 @@ def discover_rabbitmq_vhosts(section):
 
 check_info["rabbitmq_vhosts"] = LegacyCheckDefinition(
     parse_function=parse_rabbitmq_vhosts,
-    check_function=check_rabbitmq_vhosts,
-    discovery_function=discover_rabbitmq_vhosts,
     service_name="RabbitMQ Vhost %s",
+    discovery_function=discover_rabbitmq_vhosts,
+    check_function=check_rabbitmq_vhosts,
     check_ruleset_name="rabbitmq_vhosts",
 )

@@ -34,7 +34,7 @@ def check_solaris_prtdiag_status(_no_item, _no_params, info):
 
 
 check_info["solaris_prtdiag_status"] = LegacyCheckDefinition(
+    service_name="Hardware Overall State",
     discovery_function=inventory_solaris_prtdiag_status,
     check_function=check_solaris_prtdiag_status,
-    service_name="Hardware Overall State",
 )

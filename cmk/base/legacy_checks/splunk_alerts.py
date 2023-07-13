@@ -29,8 +29,8 @@ def check_splunk_alerts(_no_item, params, info):
 
 
 check_info["splunk_alerts"] = LegacyCheckDefinition(
-    check_function=check_splunk_alerts,
-    discovery_function=inventory_splunk_alerts,
     service_name="Splunk Alerts",
+    discovery_function=inventory_splunk_alerts,
+    check_function=check_splunk_alerts,
     check_ruleset_name="splunk_alerts",
 )

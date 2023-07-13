@@ -30,10 +30,6 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, OIDEnd, SNMP
 
 check_info["raritan_emx_sensors"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.13742.8"),
-    parse_function=parse_raritan_sensors,
-    discovery_function=lambda parsed: inventory_raritan_sensors(parsed, "binary" or ""),
-    check_function=check_raritan_sensors_binary,
-    service_name="Contact %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13742.8",
         oids=[
@@ -51,6 +47,10 @@ check_info["raritan_emx_sensors"] = LegacyCheckDefinition(
             "1.2.1.1.23",
         ],
     ),
+    parse_function=parse_raritan_sensors,
+    service_name="Contact %s",
+    discovery_function=lambda parsed: inventory_raritan_sensors(parsed, "binary" or ""),
+    check_function=check_raritan_sensors_binary,
 )
 
 # .
@@ -64,9 +64,9 @@ check_info["raritan_emx_sensors"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 check_info["raritan_emx_sensors.temp"] = LegacyCheckDefinition(
+    service_name="Temperature %s",
     discovery_function=lambda parsed: inventory_raritan_sensors_temp(parsed, "temp"),
     check_function=check_raritan_sensors_temp,
-    service_name="Temperature %s",
     check_ruleset_name="temperature",
 )
 
@@ -81,9 +81,9 @@ check_info["raritan_emx_sensors.temp"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 check_info["raritan_emx_sensors.airflow"] = LegacyCheckDefinition(
+    service_name="Air flow %s",
     discovery_function=lambda parsed: inventory_raritan_sensors(parsed, "airflow"),
     check_function=check_raritan_sensors,
-    service_name="Air flow %s",
 )
 
 # .
@@ -97,9 +97,9 @@ check_info["raritan_emx_sensors.airflow"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 check_info["raritan_emx_sensors.humidity"] = LegacyCheckDefinition(
+    service_name="Humidity %s",
     discovery_function=lambda parsed: inventory_raritan_sensors(parsed, "humidity"),
     check_function=check_raritan_sensors,
-    service_name="Humidity %s",
 )
 
 # .
@@ -113,7 +113,7 @@ check_info["raritan_emx_sensors.humidity"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 check_info["raritan_emx_sensors.pressure"] = LegacyCheckDefinition(
+    service_name="Pressure %s",
     discovery_function=lambda parsed: inventory_raritan_sensors(parsed, "pressure"),
     check_function=check_raritan_sensors,
-    service_name="Pressure %s",
 )

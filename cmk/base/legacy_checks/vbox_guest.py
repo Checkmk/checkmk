@@ -45,8 +45,8 @@ def inventory_vbox_guest(info):
 
 
 check_info["vbox_guest"] = LegacyCheckDefinition(
-    check_function=check_vbox_guest,
-    discovery_function=inventory_vbox_guest,
     service_name="VBox Guest Additions",
+    discovery_function=inventory_vbox_guest,
+    check_function=check_vbox_guest,
     check_ruleset_name="vm_state",
 )

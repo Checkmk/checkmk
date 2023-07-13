@@ -94,13 +94,13 @@ check_info["stormshield_cluster_node"] = LegacyCheckDefinition(
         ),
         exists(".1.3.6.1.4.1.11256.1.11.*"),
     ),
-    discovery_function=inventory_stormshield_cluster_node,
-    check_function=check_stormshield_cluster_node,
-    service_name="HA Member %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11256.1.11.7.1",
         oids=["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"],
     ),
+    service_name="HA Member %s",
+    discovery_function=inventory_stormshield_cluster_node,
+    check_function=check_stormshield_cluster_node,
     check_ruleset_name="stormshield_quality",
     check_default_parameters={
         "quality": (80, 50),

@@ -63,7 +63,7 @@ def check_veeam_jobs(item, _no_params, info):
 
 
 check_info["veeam_jobs"] = LegacyCheckDefinition(
-    check_function=check_veeam_jobs,
-    discovery_function=inventory_veeam_jobs,
     service_name="VEEAM Job %s",
+    discovery_function=inventory_veeam_jobs,
+    check_function=check_veeam_jobs,
 )

@@ -24,12 +24,12 @@ def check_tplink_poe_summary(_no_item, params, info):
 
 check_info["tplink_poe_summary"] = LegacyCheckDefinition(
     detect=DETECT_TPLINK,
-    check_function=check_tplink_poe_summary,
-    discovery_function=inventory_tplink_poe_summary,
-    service_name="POE Power",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11863.6.56.1.1.1",
         oids=["3"],
     ),
+    service_name="POE Power",
+    discovery_function=inventory_tplink_poe_summary,
+    check_function=check_tplink_poe_summary,
     check_ruleset_name="epower_single",
 )

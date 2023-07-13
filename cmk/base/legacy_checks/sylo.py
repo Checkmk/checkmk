@@ -104,7 +104,7 @@ def check_sylo(item, params, info):
 
 
 check_info["sylo"] = LegacyCheckDefinition(
-    check_function=check_sylo,
-    discovery_function=inventory_sylo,
     service_name="Sylo",
+    discovery_function=inventory_sylo,
+    check_function=check_sylo,
 )

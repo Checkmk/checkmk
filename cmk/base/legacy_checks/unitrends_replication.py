@@ -34,7 +34,7 @@ def check_unitrends_replication(item, _no_params, info):
 
 
 check_info["unitrends_replication"] = LegacyCheckDefinition(
-    check_function=check_unitrends_replication,
-    discovery_function=inventory_unitrends_replication,
     service_name="Replicaion %s",
+    discovery_function=inventory_unitrends_replication,
+    check_function=check_unitrends_replication,
 )

@@ -59,6 +59,6 @@ def check_vmstat_aix(item, params, parsed):
 
 check_info["vmstat_aix"] = LegacyCheckDefinition(
     parse_function=parse_vmstat_aix,
-    check_function=check_vmstat_aix,
     service_name="vmstat %s",
+    check_function=check_vmstat_aix,
 )

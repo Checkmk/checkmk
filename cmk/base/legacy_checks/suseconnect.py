@@ -112,7 +112,7 @@ def check_suseconnect(_no_item, params, section: Section):
 
 check_info["suseconnect"] = LegacyCheckDefinition(
     service_name="SLES license",
-    # section is migrated already!
+    # section is migrated already!,
     discovery_function=inventory_suseconnect,
     check_function=check_suseconnect,
     check_ruleset_name="sles_license",

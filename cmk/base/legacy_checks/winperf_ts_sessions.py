@@ -55,8 +55,8 @@ def check_winperf_ts_sessions(_unused, params, info):
 
 
 check_info["winperf_ts_sessions"] = LegacyCheckDefinition(
-    check_function=check_winperf_ts_sessions,
-    discovery_function=inventory_winperf_ts_sessions,
     service_name="Sessions",
+    discovery_function=inventory_winperf_ts_sessions,
+    check_function=check_winperf_ts_sessions,
     check_ruleset_name="winperf_ts_sessions",
 )

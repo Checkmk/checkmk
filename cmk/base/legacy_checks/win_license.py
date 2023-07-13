@@ -82,8 +82,8 @@ def check_win_license(_item, params, parsed):
 
 
 check_info["win_license"] = LegacyCheckDefinition(
-    service_name="Windows License",
     parse_function=parse_win_license,
+    service_name="Windows License",
     discovery_function=inventory_win_license,
     check_function=check_win_license,
     check_ruleset_name="win_license",

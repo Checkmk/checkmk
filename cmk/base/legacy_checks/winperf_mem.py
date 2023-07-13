@@ -77,8 +77,8 @@ def check_winperf_mem(_unused, params, info):
 
 
 check_info["winperf_mem"] = LegacyCheckDefinition(
-    check_function=check_winperf_mem,
-    discovery_function=inventory_winperf_mem,
     service_name="Memory Pages",
+    discovery_function=inventory_winperf_mem,
+    check_function=check_winperf_mem,
     check_ruleset_name="mem_pages",
 )

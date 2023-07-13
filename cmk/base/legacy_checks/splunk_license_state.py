@@ -106,9 +106,9 @@ def discover_splunk_license_state(section):
 
 check_info["splunk_license_state"] = LegacyCheckDefinition(
     parse_function=parse_splunk_license_state,
-    check_function=check_splunk_license_state,
-    discovery_function=discover_splunk_license_state,
     service_name="Splunk License %s",
+    discovery_function=discover_splunk_license_state,
+    check_function=check_splunk_license_state,
     check_ruleset_name="splunk_license_state",
     check_default_parameters={
         "state": 2,

@@ -29,13 +29,13 @@ def check_sophos_memory(_item, params, parsed):
 
 check_info["sophos_memory"] = LegacyCheckDefinition(
     detect=DETECT_SOPHOS,
-    parse_function=parse_sophos_memory,
-    discovery_function=lambda parsed: [(None, {})] if parsed is not None else None,
-    check_function=check_sophos_memory,
-    service_name="Memory",
-    check_ruleset_name="sophos_memory",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21067.2.1.2.4",
         oids=["2"],
     ),
+    parse_function=parse_sophos_memory,
+    service_name="Memory",
+    discovery_function=lambda parsed: [(None, {})] if parsed is not None else None,
+    check_function=check_sophos_memory,
+    check_ruleset_name="sophos_memory",
 )

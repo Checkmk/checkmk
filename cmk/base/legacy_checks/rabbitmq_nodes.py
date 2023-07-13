@@ -166,9 +166,9 @@ def check_rabbitmq_nodes(item, params, parsed):
 
 check_info["rabbitmq_nodes"] = LegacyCheckDefinition(
     parse_function=parse_rabbitmq_nodes,
-    check_function=check_rabbitmq_nodes,
-    discovery_function=discover_rabbitmq_nodes,
     service_name="RabbitMQ Node %s",
+    discovery_function=discover_rabbitmq_nodes,
+    check_function=check_rabbitmq_nodes,
     check_ruleset_name="rabbitmq_nodes",
     check_default_parameters={
         "state": 2,
@@ -221,9 +221,9 @@ def check_rabbitmq_nodes_filedesc(item, params, parsed):
 
 
 check_info["rabbitmq_nodes.filedesc"] = LegacyCheckDefinition(
-    check_function=check_rabbitmq_nodes_filedesc,
-    discovery_function=discover_key("fd"),
     service_name="RabbitMQ Node %s Filedesc",
+    discovery_function=discover_key("fd"),
+    check_function=check_rabbitmq_nodes_filedesc,
     check_ruleset_name="rabbitmq_nodes_filedesc",
 )
 
@@ -245,9 +245,9 @@ def check_rabbitmq_nodes_sockets(item, params, parsed):
 
 
 check_info["rabbitmq_nodes.sockets"] = LegacyCheckDefinition(
-    check_function=check_rabbitmq_nodes_sockets,
-    discovery_function=discover_key("sockets"),
     service_name="RabbitMQ Node %s Sockets",
+    discovery_function=discover_key("sockets"),
+    check_function=check_rabbitmq_nodes_sockets,
     check_ruleset_name="rabbitmq_nodes_sockets",
 )
 
@@ -269,9 +269,9 @@ def check_rabbitmq_nodes_proc(item, params, parsed):
 
 
 check_info["rabbitmq_nodes.proc"] = LegacyCheckDefinition(
-    check_function=check_rabbitmq_nodes_proc,
-    discovery_function=discover_key("proc"),
     service_name="RabbitMQ Node %s Processes",
+    discovery_function=discover_key("proc"),
+    check_function=check_rabbitmq_nodes_proc,
     check_ruleset_name="rabbitmq_nodes_proc",
 )
 
@@ -303,9 +303,9 @@ def check_rabbitmq_nodes_mem(item, params, parsed):
 
 
 check_info["rabbitmq_nodes.mem"] = LegacyCheckDefinition(
-    check_function=check_rabbitmq_nodes_mem,
-    discovery_function=discover_key("mem"),
     service_name="RabbitMQ Node %s Memory",
+    discovery_function=discover_key("mem"),
+    check_function=check_rabbitmq_nodes_mem,
     check_ruleset_name="memory_multiitem",
 )
 
@@ -357,9 +357,9 @@ def check_rabbitmq_nodes_uptime(item, params, parsed):
 
 
 check_info["rabbitmq_nodes.uptime"] = LegacyCheckDefinition(
-    check_function=check_rabbitmq_nodes_uptime,
-    discovery_function=discover_key("uptime"),
     service_name="RabbitMQ Node %s Uptime",
+    discovery_function=discover_key("uptime"),
+    check_function=check_rabbitmq_nodes_uptime,
     check_ruleset_name="rabbitmq_nodes_uptime",
 )
 
@@ -408,8 +408,8 @@ def _handle_output(params, value, total, info_text, perf_key):
 
 
 check_info["rabbitmq_nodes.gc"] = LegacyCheckDefinition(
-    check_function=check_rabbitmq_nodes_gc,
-    discovery_function=discover_key("gc"),
     service_name="RabbitMQ Node %s GC",
+    discovery_function=discover_key("gc"),
+    check_function=check_rabbitmq_nodes_gc,
     check_ruleset_name="rabbitmq_nodes_gc",
 )

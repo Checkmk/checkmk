@@ -21,7 +21,7 @@ def check_tsm_paths(item, _no_params, info):
 
 
 check_info["tsm_paths"] = LegacyCheckDefinition(
-    check_function=check_tsm_paths,
-    discovery_function=inventory_tsm_paths,
     service_name="TSM Paths",
+    discovery_function=inventory_tsm_paths,
+    check_function=check_tsm_paths,
 )

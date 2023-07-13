@@ -199,9 +199,9 @@ def check_windows_tasks(item, params, parsed):
 
 check_info["windows_tasks"] = LegacyCheckDefinition(
     parse_function=parse_windows_tasks,
-    check_function=check_windows_tasks,
-    discovery_function=inventory_windows_tasks,
     service_name="Task %s",
+    discovery_function=inventory_windows_tasks,
+    check_function=check_windows_tasks,
     check_ruleset_name="windows_tasks",
     check_default_parameters={
         # This list is overruled by a ruleset, if configured.

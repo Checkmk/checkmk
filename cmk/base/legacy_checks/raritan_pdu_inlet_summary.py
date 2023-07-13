@@ -34,13 +34,13 @@ def discover_raritan_pdu_inlet_summary(section):
 
 check_info["raritan_pdu_inlet_summary"] = LegacyCheckDefinition(
     detect=DETECT_RARITAN,
-    parse_function=parse_raritan_pdu_inlet_summary,
-    discovery_function=discover_raritan_pdu_inlet_summary,
-    check_function=check_elphase,
-    service_name="Input %s",
-    check_ruleset_name="el_inphase",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13742.6",
         oids=[OIDEnd(), "3.3.4.1.7.1.1", "5.2.3.1.2.1.1", "5.2.3.1.3.1.1", "5.2.3.1.4.1.1"],
     ),
+    parse_function=parse_raritan_pdu_inlet_summary,
+    service_name="Input %s",
+    discovery_function=discover_raritan_pdu_inlet_summary,
+    check_function=check_elphase,
+    check_ruleset_name="el_inphase",
 )

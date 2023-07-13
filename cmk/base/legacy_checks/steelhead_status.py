@@ -24,11 +24,11 @@ def check_steelhead_status(item, params, info):
 
 check_info["steelhead_status"] = LegacyCheckDefinition(
     detect=DETECT_STEELHEAD,
-    check_function=check_steelhead_status,
-    discovery_function=inventory_steelhead_status,
-    service_name="Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.17163.1.1.2",
         oids=["2", "3"],
     ),
+    service_name="Status",
+    discovery_function=inventory_steelhead_status,
+    check_function=check_steelhead_status,
 )

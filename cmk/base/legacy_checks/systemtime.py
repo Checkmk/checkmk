@@ -38,9 +38,9 @@ def check_systemtime(item, params, parsed):
 
 
 check_info["systemtime"] = LegacyCheckDefinition(
-    check_function=check_systemtime,
-    discovery_function=discover_systemtime,
     service_name="System Time",
+    discovery_function=discover_systemtime,
+    check_function=check_systemtime,
     check_ruleset_name="systemtime",
     check_default_parameters={"levels": (30, 60)},
 )

@@ -68,8 +68,8 @@ def check_solaris_multipath(item, params, info):  # pylint: disable=too-many-bra
 
 
 check_info["solaris_multipath"] = LegacyCheckDefinition(
+    service_name="Multipath %s",
     discovery_function=inventory_solaris_multipath,
     check_function=check_solaris_multipath,
-    service_name="Multipath %s",
     check_ruleset_name="multipath",
 )

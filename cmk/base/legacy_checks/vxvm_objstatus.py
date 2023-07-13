@@ -59,7 +59,7 @@ def check_vxvm_objstatus(item, params, info):
 
 
 check_info["vxvm_objstatus"] = LegacyCheckDefinition(
-    check_function=check_vxvm_objstatus,
-    discovery_function=inventory_vxvm_objstatus,
     service_name="VXVM objstatus %s",
+    discovery_function=inventory_vxvm_objstatus,
+    check_function=check_vxvm_objstatus,
 )

@@ -41,14 +41,14 @@ def discover_ups_modulys_inphase(section):
 
 check_info["ups_modulys_inphase"] = LegacyCheckDefinition(
     detect=DETECT_UPS_MODULYS,
-    parse_function=parse_ups_modulys_inphase,
-    discovery_function=discover_ups_modulys_inphase,
-    check_function=check_elphase,
-    service_name="Input %s",
-    check_ruleset_name="el_inphase",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2254.2.4.4",
         oids=["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
     ),
+    parse_function=parse_ups_modulys_inphase,
+    service_name="Input %s",
+    discovery_function=discover_ups_modulys_inphase,
+    check_function=check_elphase,
+    check_ruleset_name="el_inphase",
     check_default_parameters={},
 )

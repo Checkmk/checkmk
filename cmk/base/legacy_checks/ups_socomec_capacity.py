@@ -73,13 +73,13 @@ def check_ups_socomec_capacity(item, params, info):
 
 check_info["ups_socomec_capacity"] = LegacyCheckDefinition(
     detect=DETECT_SOCOMEC,
-    check_function=check_ups_socomec_capacity,
-    discovery_function=inventory_ups_socomec_capacity,
-    service_name="Battery capacity",
-    check_ruleset_name="ups_capacity",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.4555.1.1.1.1.2",
         oids=["2", "3", "4"],
     ),
+    service_name="Battery capacity",
+    discovery_function=inventory_ups_socomec_capacity,
+    check_function=check_ups_socomec_capacity,
+    check_ruleset_name="ups_capacity",
     check_default_parameters={"battime": (0, 0), "capacity": (95, 90)},
 )

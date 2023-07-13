@@ -23,13 +23,13 @@ def check_sophos_cpu(item, params, parsed):
 
 check_info["sophos_cpu"] = LegacyCheckDefinition(
     detect=DETECT_SOPHOS,
-    parse_function=parse_sophos_cpu,
-    discovery_function=lambda parsed: [(None, {})] if parsed is not None else None,
-    check_function=check_sophos_cpu,
-    service_name="CPU usage",
-    check_ruleset_name="sophos_cpu",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.21067.2.1.2.2",
         oids=["1"],
     ),
+    parse_function=parse_sophos_cpu,
+    service_name="CPU usage",
+    discovery_function=lambda parsed: [(None, {})] if parsed is not None else None,
+    check_function=check_sophos_cpu,
+    check_ruleset_name="sophos_cpu",
 )

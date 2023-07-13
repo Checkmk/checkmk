@@ -31,12 +31,12 @@ check_info["raritan_pdu_outletcount"] = LegacyCheckDefinition(
             startswith(".1.3.6.1.4.1.13742.6.3.2.1.1.3.1", "PX3"),
         ),
     ),
-    discovery_function=inventory_raritan_pdu_outletcount,
-    check_function=check_raritan_pdu_outletcount,
-    service_name="Outlet Count",
-    check_ruleset_name="plug_count",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13742.6.3.2.2.1.4",
         oids=["1"],
     ),
+    service_name="Outlet Count",
+    discovery_function=inventory_raritan_pdu_outletcount,
+    check_function=check_raritan_pdu_outletcount,
+    check_ruleset_name="plug_count",
 )

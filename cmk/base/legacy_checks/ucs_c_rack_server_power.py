@@ -71,10 +71,10 @@ def discover_ucs_c_rack_server_power(section):
 
 check_info["ucs_c_rack_server_power"] = LegacyCheckDefinition(
     parse_function=parse_ucs_c_rack_server_power,
+    service_name="Motherboard Power Statistics %s",
     discovery_function=discover_ucs_c_rack_server_power,
     check_function=check_ucs_c_rack_server_power,
     check_ruleset_name="power_multiitem",
-    service_name="Motherboard Power Statistics %s",
     check_default_parameters={
         "power_upper_levels": (90, 100),
     },

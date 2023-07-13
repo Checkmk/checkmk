@@ -80,8 +80,8 @@ def check_veeam_tapejobs(item, params, parsed):
 
 check_info["veeam_tapejobs"] = LegacyCheckDefinition(
     parse_function=parse_veeam_tapejobs,
+    service_name="VEEAM Tape Job %s",
     discovery_function=inventory_veeam_tapejobs,
     check_function=check_veeam_tapejobs,
-    service_name="VEEAM Tape Job %s",
     check_ruleset_name="veeam_tapejobs",
 )

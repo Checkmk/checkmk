@@ -39,7 +39,7 @@ def check_vms_users(item, params, info):
 
 
 check_info["vms_users"] = LegacyCheckDefinition(
-    check_function=check_vms_users,
-    discovery_function=inventory_vms_users,
     service_name="VMS Users",
+    discovery_function=inventory_vms_users,
+    check_function=check_vms_users,
 )

@@ -34,14 +34,14 @@ def discover_qnap_hdd_temp(section):
 
 check_info["qnap_hdd_temp"] = LegacyCheckDefinition(
     detect=DETECT_QNAP,
-    discovery_function=discover_qnap_hdd_temp,
-    parse_function=parse_qnap_hdd_temp,
-    check_function=check_qqnap_hdd_temp,
-    service_name="QNAP %s Temperature",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.24681.1.2.11.1",
         oids=["2", "3"],
     ),
+    parse_function=parse_qnap_hdd_temp,
+    service_name="QNAP %s Temperature",
+    discovery_function=discover_qnap_hdd_temp,
+    check_function=check_qqnap_hdd_temp,
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (40.0, 45.0),

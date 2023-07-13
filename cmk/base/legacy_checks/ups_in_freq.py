@@ -46,14 +46,14 @@ def check_ups_in_freq(item, params, parsed):
 
 check_info["ups_in_freq"] = LegacyCheckDefinition(
     detect=DETECT_UPS_GENERIC,
-    parse_function=parse_ups_in_freq,
-    discovery_function=discover_ups_in_freq,
-    check_function=check_ups_in_freq,
-    service_name="IN frequency phase %s",
-    check_ruleset_name="efreq",
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.33.1.3.3.1",
         oids=[OIDEnd(), "2"],
     ),
+    parse_function=parse_ups_in_freq,
+    service_name="IN frequency phase %s",
+    discovery_function=discover_ups_in_freq,
+    check_function=check_ups_in_freq,
+    check_ruleset_name="efreq",
     check_default_parameters={"levels_lower": (45, 40)},
 )

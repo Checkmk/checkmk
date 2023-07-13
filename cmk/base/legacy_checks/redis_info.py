@@ -121,9 +121,9 @@ def check_redis_info(item, params, parsed):
 
 check_info["redis_info"] = LegacyCheckDefinition(
     parse_function=parse_redis_info,
-    check_function=check_redis_info,
-    discovery_function=discover_redis_info,
     service_name="Redis %s Server Info",
+    discovery_function=discover_redis_info,
+    check_function=check_redis_info,
     check_ruleset_name="redis_info",
 )
 # .
@@ -219,9 +219,9 @@ def check_redis_info_persistence(item, params, item_data):
 
 
 check_info["redis_info.persistence"] = LegacyCheckDefinition(
-    check_function=check_redis_info_persistence,
-    discovery_function=discover_redis_info_persistence,
     service_name="Redis %s Persistence",
+    discovery_function=discover_redis_info_persistence,
+    check_function=check_redis_info_persistence,
     check_ruleset_name="redis_info_persistence",
     check_default_parameters={
         "rdb_last_bgsave": 1,
@@ -286,9 +286,9 @@ def check_redis_info_clients(item, params, item_data):
 
 
 check_info["redis_info.clients"] = LegacyCheckDefinition(
-    check_function=check_redis_info_clients,
-    discovery_function=discover_redis_info_clients,
     service_name="Redis %s Clients",
+    discovery_function=discover_redis_info_clients,
+    check_function=check_redis_info_clients,
     check_ruleset_name="redis_info_clients",
 )
 # .

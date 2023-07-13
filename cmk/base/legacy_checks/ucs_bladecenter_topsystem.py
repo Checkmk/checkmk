@@ -23,7 +23,7 @@ def check_ucs_bladecenter_topsystem(item, _no_params, info):
 
 
 check_info["ucs_bladecenter_topsystem"] = LegacyCheckDefinition(
+    service_name="UCS TopSystem Info",
     discovery_function=inventory_ucs_bladecenter_topsystem,
     check_function=check_ucs_bladecenter_topsystem,
-    service_name="UCS TopSystem Info",
 )

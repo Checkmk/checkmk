@@ -127,9 +127,9 @@ def check_rabbitmq_cluster(_no_item, params, parsed):
 
 check_info["rabbitmq_cluster"] = LegacyCheckDefinition(
     parse_function=parse_rabbitmq_cluster,
-    check_function=check_rabbitmq_cluster,
-    discovery_function=inventory_rabbitmq_cluster,
     service_name="RabbitMQ Cluster",
+    discovery_function=inventory_rabbitmq_cluster,
+    check_function=check_rabbitmq_cluster,
 )
 
 
@@ -162,9 +162,9 @@ def check_rabbitmq_cluster_messages(_no_item, params, parsed):
 
 
 check_info["rabbitmq_cluster.messages"] = LegacyCheckDefinition(
-    check_function=check_rabbitmq_cluster_messages,
-    discovery_function=inventory_rabbitmq_cluster_messages,
     service_name="RabbitMQ Cluster Messages",
+    discovery_function=inventory_rabbitmq_cluster_messages,
+    check_function=check_rabbitmq_cluster_messages,
     check_ruleset_name="rabbitmq_cluster_messages",
 )
 
@@ -212,8 +212,8 @@ def _handle_output(params, value, key, infotext, hr_func):
 
 
 check_info["rabbitmq_cluster.stats"] = LegacyCheckDefinition(
-    check_function=check_rabbitmq_cluster_stats,
-    discovery_function=inventory_rabbitmq_cluster_stats,
     service_name="RabbitMQ Cluster Stats",
+    discovery_function=inventory_rabbitmq_cluster_stats,
+    check_function=check_rabbitmq_cluster_stats,
     check_ruleset_name="rabbitmq_cluster_stats",
 )

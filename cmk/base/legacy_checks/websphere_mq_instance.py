@@ -130,9 +130,9 @@ def check_websphere_mq_instance(item, params, parsed):
 
 check_info["websphere_mq_instance"] = LegacyCheckDefinition(
     parse_function=parse_websphere_mq_instance,
+    service_name="MQ Instance %s",
     discovery_function=inventory_websphere_mq_instance,
     check_function=check_websphere_mq_instance,
-    service_name="MQ Instance %s",
     check_ruleset_name="websphere_mq_instance",
 )
 
@@ -202,8 +202,8 @@ def check_websphere_mq_manager(item, params, parsed):  # pylint: disable=too-man
 
 
 check_info["websphere_mq_instance.manager"] = LegacyCheckDefinition(
+    service_name="MQ Manager %s",
     discovery_function=inventory_websphere_mq_manager,
     check_function=check_websphere_mq_manager,
-    service_name="MQ Manager %s",
     check_ruleset_name="websphere_mq_manager",
 )

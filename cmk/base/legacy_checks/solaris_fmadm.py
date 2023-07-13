@@ -196,7 +196,7 @@ def check_solaris_fmadm(_no_item, params, parsed):
 
 check_info["solaris_fmadm"] = LegacyCheckDefinition(
     parse_function=parse_solaris_fmadm,
+    service_name="FMD Status",
     discovery_function=inventory_solaris_fmadm,
     check_function=check_solaris_fmadm,
-    service_name="FMD Status",
 )

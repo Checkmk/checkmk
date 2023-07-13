@@ -53,7 +53,7 @@ def check_ucs_c_rack_server_faultinst(
 
 
 check_info["ucs_c_rack_server_faultinst"] = LegacyCheckDefinition(
+    service_name="Fault Instances Rack",
     discovery_function=lambda p: [(None, {})],
     check_function=check_ucs_c_rack_server_faultinst,
-    service_name="Fault Instances Rack",
 )

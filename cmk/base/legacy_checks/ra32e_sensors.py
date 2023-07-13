@@ -112,10 +112,6 @@ def check_ra32e_sensors(item, params, parsed):
 
 check_info["ra32e_sensors"] = LegacyCheckDefinition(
     detect=DETECT_RA32E,
-    parse_function=parse_ra32e_sensors,
-    discovery_function=lambda x: inventory_ra32e_sensors(x, "temperature"),
-    check_function=check_ra32e_sensors,
-    service_name="Temperature %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.20916.1.8.1.1",
@@ -146,6 +142,10 @@ check_info["ra32e_sensors"] = LegacyCheckDefinition(
             for table in _SENSOR_TABLES
         ),
     ],
+    parse_function=parse_ra32e_sensors,
+    service_name="Temperature %s",
+    discovery_function=lambda x: inventory_ra32e_sensors(x, "temperature"),
+    check_function=check_ra32e_sensors,
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (30.0, 35.0),
@@ -172,9 +172,9 @@ def check_ra32e_humidity_sensors(item, params, parsed):
 
 
 check_info["ra32e_sensors.humidity"] = LegacyCheckDefinition(
+    service_name="Humidity %s",
     discovery_function=lambda x: inventory_ra32e_sensors(x, "humidity"),
     check_function=check_ra32e_humidity_sensors,
-    service_name="Humidity %s",
     check_ruleset_name="humidity",
     check_default_parameters={
         "levels": (70.0, 80.0),
@@ -197,9 +197,9 @@ def check_ra32e_sensors_voltage(item, params, parsed):
 
 
 check_info["ra32e_sensors.voltage"] = LegacyCheckDefinition(
+    service_name="Voltage %s",
     discovery_function=lambda x: inventory_ra32e_sensors(x, "voltage"),
     check_function=check_ra32e_sensors_voltage,
-    service_name="Voltage %s",
     check_ruleset_name="ups_outphase",
     check_default_parameters={
         "voltage": (210, 180),
@@ -222,8 +222,8 @@ def check_ra32e_power_sensors(item, params, parsed):
 
 
 check_info["ra32e_sensors.power"] = LegacyCheckDefinition(
+    service_name="Power State %s",
     discovery_function=lambda x: inventory_ra32e_sensors(x, "power"),
     check_function=check_ra32e_power_sensors,
-    service_name="Power State %s",
     check_ruleset_name="ups_outphase",
 )

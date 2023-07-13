@@ -30,13 +30,13 @@ def check_stormshield_updates(item, params, info):
 
 check_info["stormshield_updates"] = LegacyCheckDefinition(
     detect=DETECT_STORMSHIELD,
-    discovery_function=inventory_stormshield_updates,
-    check_function=check_stormshield_updates,
-    service_name="Autoupdate %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11256.1.9.1.1",
         oids=["2", "3", "4"],
     ),
+    service_name="Autoupdate %s",
+    discovery_function=inventory_stormshield_updates,
+    check_function=check_stormshield_updates,
     check_ruleset_name="stormshield_updates",
     check_default_parameters={
         "Not Available": 1,

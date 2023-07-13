@@ -153,8 +153,8 @@ def check_websphere_mq_queues(item, params, parsed):
 
 check_info["websphere_mq_queues"] = LegacyCheckDefinition(
     parse_function=parse_websphere_mq_queues,
+    service_name="MQ Queue %s",
     discovery_function=inventory_websphere_mq_queues,
     check_function=check_websphere_mq_queues,
-    service_name="MQ Queue %s",
     check_ruleset_name="websphere_mq",
 )

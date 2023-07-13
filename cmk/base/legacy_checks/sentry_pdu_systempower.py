@@ -26,13 +26,13 @@ def discover_sentry_pdu_systempower(section):
 
 check_info["sentry_pdu_systempower"] = LegacyCheckDefinition(
     detect=equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.1718.3"),
-    parse_function=parse_sentry_pdu_systempower,
-    discovery_function=discover_sentry_pdu_systempower,
-    check_function=check_elphase,
-    service_name="%s",
-    check_ruleset_name="el_inphase",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.1718.3.1",
         oids=["6"],
     ),
+    parse_function=parse_sentry_pdu_systempower,
+    service_name="%s",
+    discovery_function=discover_sentry_pdu_systempower,
+    check_function=check_elphase,
+    check_ruleset_name="el_inphase",
 )

@@ -39,12 +39,12 @@ def check_tplink_cpu(_no_item, params, info):
 # Migration via cmk/update_config.py!
 check_info["tplink_cpu"] = LegacyCheckDefinition(
     detect=DETECT_TPLINK,
-    check_function=check_tplink_cpu,
-    discovery_function=inventory_tplink_cpu,
-    service_name="CPU utilization",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11863.6.4.1.1.1.1",
         oids=["2"],
     ),
+    service_name="CPU utilization",
+    discovery_function=inventory_tplink_cpu,
+    check_function=check_tplink_cpu,
     check_ruleset_name="cpu_utilization_os",
 )

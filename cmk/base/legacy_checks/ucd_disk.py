@@ -32,13 +32,13 @@ def check_ucd_disk(item, params, info):
 
 check_info["ucd_disk"] = LegacyCheckDefinition(
     detect=ucd_hr_detection.PREFER_HR_ELSE_UCD,
-    discovery_function=inventory_ucd_disk,
-    check_function=check_ucd_disk,
-    service_name="Filesystem %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2021.9.1",
         oids=["2", "6", "7"],
     ),
+    service_name="Filesystem %s",
+    discovery_function=inventory_ucd_disk,
+    check_function=check_ucd_disk,
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

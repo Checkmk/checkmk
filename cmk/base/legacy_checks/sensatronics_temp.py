@@ -41,11 +41,6 @@ def check_sensatronics_temp(
 
 check_info["sensatronics_temp"] = LegacyCheckDefinition(
     detect=any_of(equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.16174.1.1.1")),
-    parse_function=parse_sensatronics_temp,
-    check_function=check_sensatronics_temp,
-    discovery_function=inventory_sensatronics_temp,
-    service_name="Temperature %s",
-    check_ruleset_name="temperature",
     fetch=[
         SNMPTree(
             base=f".1.3.6.1.4.1.16174.1.1.1.3.{table}",
@@ -56,5 +51,10 @@ check_info["sensatronics_temp"] = LegacyCheckDefinition(
         )
         for table in _TABLES
     ],
+    parse_function=parse_sensatronics_temp,
+    service_name="Temperature %s",
+    discovery_function=inventory_sensatronics_temp,
+    check_function=check_sensatronics_temp,
+    check_ruleset_name="temperature",
     check_default_parameters={"levels": (23.0, 25.0)},
 )

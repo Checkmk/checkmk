@@ -40,12 +40,12 @@ def check_tplink_mem(_no_item, params, info):
 
 check_info["tplink_mem"] = LegacyCheckDefinition(
     detect=DETECT_TPLINK,
-    check_function=check_tplink_mem,
-    discovery_function=inventory_tplink_mem,
-    service_name="Memory",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11863.6.4.1.2.1.1",
         oids=["2"],
     ),
+    service_name="Memory",
+    discovery_function=inventory_tplink_mem,
+    check_function=check_tplink_mem,
     check_ruleset_name="memory_percentage_used",
 )

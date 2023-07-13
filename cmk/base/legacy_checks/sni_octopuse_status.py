@@ -42,13 +42,13 @@ def check_octopus_status(_no_item, _no_params_info, info):
 
 check_info["sni_octopuse_status"] = LegacyCheckDefinition(
     detect=DETECT_SNI_OCTOPUSE,
-    check_function=check_octopus_status,
-    discovery_function=inventory_octopus_status,
-    service_name="Global status",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.231.7.2.9.1.1",
             oids=["0"],
         )
     ],
+    service_name="Global status",
+    discovery_function=inventory_octopus_status,
+    check_function=check_octopus_status,
 )

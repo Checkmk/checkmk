@@ -57,7 +57,7 @@ def check_storeonce4x_alerts(_item, _param, parsed):
 
 check_info["storeonce4x_alerts"] = LegacyCheckDefinition(
     parse_function=parse_storeonce4x_alerts,
+    service_name="Alerts",
     discovery_function=discover_storeonce4x_alerts,
     check_function=check_storeonce4x_alerts,
-    service_name="Alerts",
 )

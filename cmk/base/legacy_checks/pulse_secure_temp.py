@@ -32,14 +32,14 @@ def discover_pulse_secure_temp(section):
 
 check_info["pulse_secure_temp"] = LegacyCheckDefinition(
     detect=pulse_secure.DETECT_PULSE_SECURE,
-    parse_function=parse_pulse_secure_temp,
-    discovery_function=discover_pulse_secure_temp,
-    check_function=check_pulse_secure_temp,
-    service_name="Pulse Secure %s Temperature",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12532",
         oids=["42"],
     ),
+    parse_function=parse_pulse_secure_temp,
+    service_name="Pulse Secure %s Temperature",
+    discovery_function=discover_pulse_secure_temp,
+    check_function=check_pulse_secure_temp,
     check_ruleset_name="temperature",
     check_default_parameters={"levels": (70.0, 75.0)},
 )

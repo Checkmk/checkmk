@@ -25,11 +25,11 @@ check_info["quantum_libsmall_door"] = LegacyCheckDefinition(
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "linux"), contains(".1.3.6.1.2.1.1.6.0", "library")
     ),
-    check_function=check_quantum_libsmall_door,
-    discovery_function=inventory_quantum_libsmall_door,
-    service_name="Tape library door",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3697.1.10.10.1.15.2",
         oids=["0"],
     ),
+    service_name="Tape library door",
+    discovery_function=inventory_quantum_libsmall_door,
+    check_function=check_quantum_libsmall_door,
 )

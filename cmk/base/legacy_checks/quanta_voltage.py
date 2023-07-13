@@ -57,16 +57,15 @@ def discover_quanta_voltage(section):
 
 check_info["quanta_voltage"] = LegacyCheckDefinition(
     detect=DETECT_QUANTA,
-    discovery_function=discover_quanta_voltage,
-    parse_function=parse_quanta,
-    check_function=check_quanta_voltage,
-    service_name="Voltage %s",
-    check_ruleset_name="voltage",
-    # these is no good oid identifier for quanta devices, thats why the first oid is used here
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.7244.1.2.1.3.5.1",
             oids=["1", "2", "3", "4", "6", "7", "8", "9"],
         )
     ],
+    parse_function=parse_quanta,
+    service_name="Voltage %s",
+    discovery_function=discover_quanta_voltage,
+    check_function=check_quanta_voltage,
+    check_ruleset_name="voltage",
 )

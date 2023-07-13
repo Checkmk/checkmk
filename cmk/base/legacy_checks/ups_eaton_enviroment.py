@@ -57,14 +57,14 @@ check_info["ups_eaton_enviroment"] = LegacyCheckDefinition(
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.534.1"),
         equals(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.705.1"),
     ),
-    discovery_function=inventory_ups_eaton_enviroment,
-    check_function=check_ups_eaton_enviroment,
-    service_name="Enviroment",
-    check_ruleset_name="eaton_enviroment",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.534.1.6",
         oids=["1", "5", "6"],
     ),
+    service_name="Enviroment",
+    discovery_function=inventory_ups_eaton_enviroment,
+    check_function=check_ups_eaton_enviroment,
+    check_ruleset_name="eaton_enviroment",
     check_default_parameters={
         "temp": (40, 50),
         "remote_temp": (40, 50),

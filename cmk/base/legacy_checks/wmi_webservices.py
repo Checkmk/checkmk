@@ -20,10 +20,10 @@ def check_wmi_webservices(item, params, parsed):
 
 
 check_info["wmi_webservices"] = LegacyCheckDefinition(
+    parse_function=parse_wmi_table,
+    service_name="Web Service %s",
     discovery_function=lambda p: inventory_wmi_table_instances(  # pylint: disable=unnecessary-lambda
         p
     ),
     check_function=check_wmi_webservices,
-    parse_function=parse_wmi_table,
-    service_name="Web Service %s",
 )

@@ -66,10 +66,6 @@ check_info["quantum_libsmall_status"] = LegacyCheckDefinition(
     detect=all_of(
         contains(".1.3.6.1.2.1.1.1.0", "linux"), contains(".1.3.6.1.2.1.1.6.0", "library")
     ),
-    parse_function=parse_quantum_libsmall_status,
-    check_function=check_quantum_libsmall_status,
-    discovery_function=inventory_quantum_libsmall_status,
-    service_name="Tape library status",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.3697.1.10.10.1.15",
@@ -80,4 +76,8 @@ check_info["quantum_libsmall_status"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "12"],
         ),
     ],
+    parse_function=parse_quantum_libsmall_status,
+    service_name="Tape library status",
+    discovery_function=inventory_quantum_libsmall_status,
+    check_function=check_quantum_libsmall_status,
 )

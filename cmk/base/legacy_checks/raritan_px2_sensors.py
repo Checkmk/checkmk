@@ -29,10 +29,6 @@ from cmk.base.plugins.agent_based.utils.raritan import DETECT_RARITAN
 
 check_info["raritan_px2_sensors"] = LegacyCheckDefinition(
     detect=DETECT_RARITAN,
-    parse_function=parse_raritan_sensors,
-    discovery_function=lambda parsed: inventory_raritan_sensors_temp(parsed, "temp"),
-    check_function=check_raritan_sensors_temp,
-    service_name="Temperature %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.13742.6",
         oids=[
@@ -50,6 +46,10 @@ check_info["raritan_px2_sensors"] = LegacyCheckDefinition(
             "3.6.3.1.34.1",
         ],
     ),
+    parse_function=parse_raritan_sensors,
+    service_name="Temperature %s",
+    discovery_function=lambda parsed: inventory_raritan_sensors_temp(parsed, "temp"),
+    check_function=check_raritan_sensors_temp,
     check_ruleset_name="temperature",
 )
 
@@ -64,9 +64,9 @@ check_info["raritan_px2_sensors"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 check_info["raritan_px2_sensors.airflow"] = LegacyCheckDefinition(
+    service_name="Air flow %s",
     discovery_function=lambda parsed: inventory_raritan_sensors(parsed, "airflow"),
     check_function=check_raritan_sensors,
-    service_name="Air flow %s",
 )
 
 # .
@@ -80,9 +80,9 @@ check_info["raritan_px2_sensors.airflow"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 check_info["raritan_px2_sensors.humidity"] = LegacyCheckDefinition(
+    service_name="Humidity %s",
     discovery_function=lambda parsed: inventory_raritan_sensors(parsed, "humidity"),
     check_function=check_raritan_sensors,
-    service_name="Humidity %s",
 )
 
 # .
@@ -96,7 +96,7 @@ check_info["raritan_px2_sensors.humidity"] = LegacyCheckDefinition(
 #   +----------------------------------------------------------------------+
 
 check_info["raritan_px2_sensors.pressure"] = LegacyCheckDefinition(
+    service_name="Pressure %s",
     discovery_function=lambda parsed: inventory_raritan_sensors(parsed, "pressure"),
     check_function=check_raritan_sensors,
-    service_name="Pressure %s",
 )

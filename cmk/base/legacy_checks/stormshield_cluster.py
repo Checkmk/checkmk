@@ -65,11 +65,11 @@ check_info["stormshield_cluster"] = LegacyCheckDefinition(
         ),
         exists(".1.3.6.1.4.1.11256.1.11.*"),
     ),
-    discovery_function=inventory_stormshield_cluster,
-    check_function=check_stormshield_cluster,
-    service_name="HA Status",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11256.1.11",
         oids=["1", "2", "3", "5", "6", "8"],
     ),
+    service_name="HA Status",
+    discovery_function=inventory_stormshield_cluster,
+    check_function=check_stormshield_cluster,
 )

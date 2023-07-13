@@ -56,7 +56,7 @@ def discover_ucs_c_rack_server_fans(section):
 
 check_info["ucs_c_rack_server_fans"] = LegacyCheckDefinition(
     parse_function=parse_ucs_c_rack_server_fans,
+    service_name="Fan %s",
     discovery_function=discover_ucs_c_rack_server_fans,
     check_function=check_ucs_c_rack_server_fans,
-    service_name="Fan %s",
 )

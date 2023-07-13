@@ -88,9 +88,9 @@ def check_safenet_hsm_events(_no_item, params, parsed):
 
 
 check_info["safenet_hsm.events"] = LegacyCheckDefinition(
+    service_name="HSM Safenet Event Stats",
     discovery_function=inventory_safenet_hsm_events,
     check_function=check_safenet_hsm_events,
-    service_name="HSM Safenet Event Stats",
     check_ruleset_name="safenet_hsm_eventstats",
     check_default_parameters={
         "critical_event_rate": (0.0001, 0.0005),
@@ -179,14 +179,14 @@ check_info["safenet_hsm"] = LegacyCheckDefinition(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.12383"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.8072"),
     ),
-    parse_function=parse_safenet_hsm,
-    discovery_function=inventory_safenet_hsm,
-    check_function=check_safenet_hsm,
-    service_name="HSM Operation Stats",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12383.3.1.1",
         oids=["1", "2", "3", "4"],
     ),
+    parse_function=parse_safenet_hsm,
+    service_name="HSM Operation Stats",
+    discovery_function=inventory_safenet_hsm,
+    check_function=check_safenet_hsm,
     check_ruleset_name="safenet_hsm_operstats",
     check_default_parameters={"error_rate": (0.01, 0.05), "request_rate": None},
 )

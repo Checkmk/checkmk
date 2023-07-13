@@ -42,11 +42,11 @@ def check_stormshield_packets(item, _no_params, info):
 
 check_info["stormshield_packets"] = LegacyCheckDefinition(
     detect=DETECT_STORMSHIELD,
-    discovery_function=inventory_stormshield_packets,
-    check_function=check_stormshield_packets,
-    service_name="Packet Stats %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.11256.1.4.1.1",
         oids=["2", "3", "6", "11", "12", "16", "23", "24"],
     ),
+    service_name="Packet Stats %s",
+    discovery_function=inventory_stormshield_packets,
+    check_function=check_stormshield_packets,
 )

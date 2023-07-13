@@ -108,9 +108,9 @@ def check_websphere_mq_channels(item, params, parsed):
 
 check_info["websphere_mq_channels"] = LegacyCheckDefinition(
     parse_function=parse_websphere_mq_channels,
-    check_function=check_websphere_mq_channels,
-    discovery_function=inventory_websphere_mq_channels,
     service_name="MQ Channel %s",
+    discovery_function=inventory_websphere_mq_channels,
+    check_function=check_websphere_mq_channels,
     check_ruleset_name="websphere_mq_channels",
     check_default_parameters={
         "message_count": (900, 1000),

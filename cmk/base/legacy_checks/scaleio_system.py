@@ -47,9 +47,9 @@ def check_scaleio_system(item, params, parsed):
 
 check_info["scaleio_system"] = LegacyCheckDefinition(
     parse_function=parse_scaleio_system,
+    service_name="ScaleIO System %s",
     discovery_function=inventory_scaleio_system,
     check_function=check_scaleio_system,
-    service_name="ScaleIO System %s",
     check_ruleset_name="filesystem",
     check_default_parameters=FILESYSTEM_DEFAULT_PARAMS,
 )

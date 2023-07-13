@@ -26,11 +26,11 @@ def check_superstack3_sensors(item, params, info):
 
 check_info["superstack3_sensors"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "3com superstack 3"),
-    check_function=check_superstack3_sensors,
-    discovery_function=inventory_superstack3_sensors,
-    service_name="%s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.43.43.1.1",
         oids=["7", "10"],
     ),
+    service_name="%s",
+    discovery_function=inventory_superstack3_sensors,
+    check_function=check_superstack3_sensors,
 )

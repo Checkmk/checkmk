@@ -58,16 +58,15 @@ def discover_quanta_fan(section):
 
 check_info["quanta_fan"] = LegacyCheckDefinition(
     detect=DETECT_QUANTA,
-    discovery_function=discover_quanta_fan,
-    parse_function=parse_quanta,
-    check_function=check_quanta_fan,
-    service_name="Fan %s",
-    check_ruleset_name="hw_fans",
-    # these is no good oid identifier for quanta devices, thats why the first oid is used here
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.7244.1.2.1.3.3.1",
             oids=["1", "2", "3", "4", "6", "7", "8", "9"],
         )
     ],
+    parse_function=parse_quanta,
+    service_name="Fan %s",
+    discovery_function=discover_quanta_fan,
+    check_function=check_quanta_fan,
+    check_ruleset_name="hw_fans",
 )

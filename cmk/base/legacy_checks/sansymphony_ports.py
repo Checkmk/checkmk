@@ -32,7 +32,7 @@ def check_sansymphony_ports(item, _no_params, info):
 
 
 check_info["sansymphony_ports"] = LegacyCheckDefinition(
-    check_function=check_sansymphony_ports,
-    discovery_function=inventory_sansymphony_ports,
     service_name="sansymphony Port %s",
+    discovery_function=inventory_sansymphony_ports,
+    check_function=check_sansymphony_ports,
 )

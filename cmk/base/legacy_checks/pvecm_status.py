@@ -98,7 +98,7 @@ def check_pvecm_status(_no_item, _no_params, parsed):
 
 check_info["pvecm_status"] = LegacyCheckDefinition(
     parse_function=parse_pvecm_status,
+    service_name="PVE Cluster State",
     discovery_function=inventory_pvecm_status,
     check_function=check_pvecm_status,
-    service_name="PVE Cluster State",
 )

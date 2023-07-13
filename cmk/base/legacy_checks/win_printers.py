@@ -95,10 +95,10 @@ def check_win_printers(
 
 check_info["win_printers"] = LegacyCheckDefinition(
     parse_function=parse_win_printers,
+    service_name="Printer %s",
+    discovery_function=discover_win_printers,
     check_function=check_win_printers,
     check_ruleset_name="windows_printer_queues",
-    discovery_function=discover_win_printers,
-    service_name="Printer %s",
     check_default_parameters={
         "warn_states": [8, 11],
         "crit_states": [9, 10],

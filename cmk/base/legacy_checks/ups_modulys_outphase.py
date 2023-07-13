@@ -47,14 +47,14 @@ def discover_ups_modulys_outphase(section):
 
 check_info["ups_modulys_outphase"] = LegacyCheckDefinition(
     detect=DETECT_UPS_MODULYS,
-    parse_function=parse_ups_modulys_outphase,
-    discovery_function=discover_ups_modulys_outphase,
-    check_function=check_elphase,
-    service_name="Output %s",
-    check_ruleset_name="ups_outphase",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2254.2.4.5",
         oids=["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"],
     ),
+    parse_function=parse_ups_modulys_outphase,
+    service_name="Output %s",
+    discovery_function=discover_ups_modulys_outphase,
+    check_function=check_elphase,
+    check_ruleset_name="ups_outphase",
     check_default_parameters={},
 )

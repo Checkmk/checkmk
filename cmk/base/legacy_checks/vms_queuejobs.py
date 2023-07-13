@@ -47,7 +47,7 @@ def check_vms_queuejobs(_no_item, params, info):
 
 
 check_info["vms_queuejobs"] = LegacyCheckDefinition(
-    check_function=check_vms_queuejobs,
-    discovery_function=inventory_vms_queuejobs,
     service_name="Queue Jobs",
+    discovery_function=inventory_vms_queuejobs,
+    check_function=check_vms_queuejobs,
 )

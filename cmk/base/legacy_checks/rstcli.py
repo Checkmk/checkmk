@@ -144,10 +144,10 @@ def check_rstcli(item, _no_params, parsed):
 
 
 check_info["rstcli"] = LegacyCheckDefinition(
-    check_function=check_rstcli,
-    discovery_function=inventory_rstcli,
     parse_function=parse_rstcli,
     service_name="RAID Volume %s",
+    discovery_function=inventory_rstcli,
+    check_function=check_rstcli,
 )
 
 
@@ -176,7 +176,7 @@ def check_rstcli_pdisks(item, _no_params, parsed):
 
 
 check_info["rstcli.pdisks"] = LegacyCheckDefinition(
-    check_function=check_rstcli_pdisks,
-    discovery_function=inventory_rstcli_pdisks,
     service_name="RAID Disk %s",
+    discovery_function=inventory_rstcli_pdisks,
+    check_function=check_rstcli_pdisks,
 )

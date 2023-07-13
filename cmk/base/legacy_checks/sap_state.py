@@ -27,7 +27,7 @@ def check_sap_state(item, _no_parameters, info):
 
 
 check_info["sap_state"] = LegacyCheckDefinition(
-    check_function=check_sap_state,
-    discovery_function=inventory_sap_state,
     service_name="SAP State %s",
+    discovery_function=inventory_sap_state,
+    check_function=check_sap_state,
 )

@@ -18,7 +18,7 @@ def check_vnx_version(item, params, info):
 
 
 check_info["vnx_version"] = LegacyCheckDefinition(
+    service_name="VNX Version",
     discovery_function=inventory_vnx_version,
     check_function=check_vnx_version,
-    service_name="VNX Version",
 )

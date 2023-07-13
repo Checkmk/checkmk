@@ -104,9 +104,9 @@ def check_saprouter_cert(_no_item, params, parsed):
 
 check_info["saprouter_cert"] = LegacyCheckDefinition(
     parse_function=parse_saprouter_cert,
+    service_name="SAP router certificate",
     discovery_function=inventory_saprouter_cert,
     check_function=check_saprouter_cert,
-    service_name="SAP router certificate",
     check_ruleset_name="saprouter_cert_age",
     check_default_parameters={
         "validity_age": (86400 * 30, 86400 * 7),

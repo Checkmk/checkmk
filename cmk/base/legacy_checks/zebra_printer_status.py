@@ -31,11 +31,11 @@ def check_zebra_printer_status(item, params, info):
 
 check_info["zebra_printer_status"] = LegacyCheckDefinition(
     detect=contains(".1.3.6.1.2.1.1.1.0", "zebra"),
-    check_function=check_zebra_printer_status,
-    discovery_function=inventory_zebra_printer_status,
-    service_name="Zebra Printer Status",
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.25.3.5.1.1",
         oids=["1"],
     ),
+    service_name="Zebra Printer Status",
+    discovery_function=inventory_zebra_printer_status,
+    check_function=check_zebra_printer_status,
 )

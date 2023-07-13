@@ -78,7 +78,7 @@ def check_tsm_drives(item, params, info):
 
 
 check_info["tsm_drives"] = LegacyCheckDefinition(
-    check_function=check_tsm_drives,
-    discovery_function=inventory_tsm_drives,
     service_name="TSM Drive %s",
+    discovery_function=inventory_tsm_drives,
+    check_function=check_tsm_drives,
 )

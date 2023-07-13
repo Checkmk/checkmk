@@ -229,9 +229,6 @@ check_info["qlogic_fcport"] = LegacyCheckDefinition(
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3873.1.12"),
         startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.3873.1.14"),
     ),
-    check_function=check_qlogic_fcport,
-    discovery_function=inventory_qlogic_fcport,
-    service_name="FC Port %s",
     fetch=SNMPTree(
         base=".1.3.6.1.2.1.75.1",
         oids=[
@@ -263,5 +260,8 @@ check_info["qlogic_fcport"] = LegacyCheckDefinition(
             "4.3.1.5",
         ],
     ),
+    service_name="FC Port %s",
+    discovery_function=inventory_qlogic_fcport,
+    check_function=check_qlogic_fcport,
     check_ruleset_name="qlogic_fcport",
 )

@@ -38,11 +38,11 @@ def check_qnap_disks(item, _no_params, info):
 
 check_info["qnap_disks"] = LegacyCheckDefinition(
     detect=DETECT_QNAP,
-    check_function=check_qnap_disks,
-    discovery_function=inventory_qnap_disks,
-    service_name="Disk %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.24681.1.2.11.1",
         oids=["2", "3", "4", "5", "6", "7"],
     ),
+    service_name="Disk %s",
+    discovery_function=inventory_qnap_disks,
+    check_function=check_qnap_disks,
 )

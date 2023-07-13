@@ -109,10 +109,6 @@ def check_silverpeak(_item, _params, parsed):
 
 check_info["silverpeak_VX6000"] = LegacyCheckDefinition(
     detect=startswith(".1.3.6.1.2.1.1.2.0", ".1.3.6.1.4.1.23867"),
-    parse_function=parse_silverpeak,
-    discovery_function=discover_silverpeak_VX6000,
-    check_function=check_silverpeak,
-    service_name="Alarms",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.23867.3.1.1.1",
@@ -123,4 +119,8 @@ check_info["silverpeak_VX6000"] = LegacyCheckDefinition(
             oids=["3", "5", "6"],
         ),
     ],
+    parse_function=parse_silverpeak,
+    service_name="Alarms",
+    discovery_function=discover_silverpeak_VX6000,
+    check_function=check_silverpeak,
 )

@@ -44,11 +44,6 @@ def discover_raritan_pdu_inlet(section):
 
 check_info["raritan_pdu_inlet"] = LegacyCheckDefinition(
     detect=DETECT_RARITAN,
-    parse_function=parse_raritan_pdu_inlet,
-    discovery_function=discover_raritan_pdu_inlet,
-    check_function=check_raritan_pdu_inlet,
-    service_name="Input %s",
-    check_ruleset_name="el_inphase",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.13742.6.3.3.6.1",
@@ -59,4 +54,9 @@ check_info["raritan_pdu_inlet"] = LegacyCheckDefinition(
             oids=[OIDEnd(), "2", "3", "4"],
         ),
     ],
+    parse_function=parse_raritan_pdu_inlet,
+    service_name="Input %s",
+    discovery_function=discover_raritan_pdu_inlet,
+    check_function=check_raritan_pdu_inlet,
+    check_ruleset_name="el_inphase",
 )

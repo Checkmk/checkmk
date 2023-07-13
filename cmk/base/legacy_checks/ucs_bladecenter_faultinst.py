@@ -49,8 +49,8 @@ def check_ucs_bladecenter_faultinst(_item, params, parsed):
 
 check_info["ucs_bladecenter_faultinst"] = LegacyCheckDefinition(
     parse_function=ucs_bladecenter.generic_parse,
+    service_name="Fault Instances Blade",
     discovery_function=inventory_ucs_bladecenter_faultinst,
     check_function=check_ucs_bladecenter_faultinst,
-    service_name="Fault Instances Blade",
     check_ruleset_name="ucs_bladecenter_faultinst",
 )

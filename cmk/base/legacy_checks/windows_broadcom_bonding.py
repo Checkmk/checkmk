@@ -36,7 +36,7 @@ def check_windows_broadcom_bonding(item, params, info):
 
 
 check_info["windows_broadcom_bonding"] = LegacyCheckDefinition(
-    check_function=check_windows_broadcom_bonding,
-    discovery_function=inventory_windows_broadcom_bonding,
     service_name="Bonding Interface %s",
+    discovery_function=inventory_windows_broadcom_bonding,
+    check_function=check_windows_broadcom_bonding,
 )

@@ -48,8 +48,8 @@ def check_symantec_av_updates(_no_item, params, info):
 
 
 check_info["symantec_av_updates"] = LegacyCheckDefinition(
+    service_name="AV Update Status",
+    discovery_function=inventory_symantec_av_updates,
     check_function=check_symantec_av_updates,
     check_ruleset_name="antivir_update_age",
-    discovery_function=inventory_symantec_av_updates,
-    service_name="AV Update Status",
 )

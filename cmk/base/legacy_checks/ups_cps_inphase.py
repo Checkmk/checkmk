@@ -30,13 +30,13 @@ def inventory_ups_cps_inphase(parsed):
 
 check_info["ups_cps_inphase"] = LegacyCheckDefinition(
     detect=DETECT_UPS_CPS,
-    parse_function=parse_ups_cps_inphase,
-    discovery_function=inventory_ups_cps_inphase,
-    check_function=check_elphase,
-    service_name="UPS Input Phase %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.3808.1.1.1.3.2",
         oids=["1", "4"],
     ),
+    parse_function=parse_ups_cps_inphase,
+    service_name="UPS Input Phase %s",
+    discovery_function=inventory_ups_cps_inphase,
+    check_function=check_elphase,
     check_ruleset_name="el_inphase",
 )

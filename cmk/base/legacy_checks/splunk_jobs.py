@@ -73,8 +73,8 @@ def check_splunk_jobs(_no_item, params, parsed):
 
 check_info["splunk_jobs"] = LegacyCheckDefinition(
     parse_function=parse_splunk_jobs,
-    check_function=check_splunk_jobs,
-    discovery_function=inventory_splunk_jobs,
     service_name="Splunk Jobs",
+    discovery_function=inventory_splunk_jobs,
+    check_function=check_splunk_jobs,
     check_ruleset_name="splunk_jobs",
 )

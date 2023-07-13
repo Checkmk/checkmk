@@ -89,10 +89,6 @@ def check_tplink_poe(item, params, parsed):
 
 check_info["tplink_poe"] = LegacyCheckDefinition(
     detect=DETECT_TPLINK,
-    parse_function=parse_tplink_poe,
-    check_function=check_tplink_poe,
-    discovery_function=inventory_tplink_poe,
-    service_name="POE%s consumption",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.2.1.2.2.1",
@@ -103,4 +99,8 @@ check_info["tplink_poe"] = LegacyCheckDefinition(
             oids=["1", "2", "4", "7", "11"],
         ),
     ],
+    parse_function=parse_tplink_poe,
+    service_name="POE%s consumption",
+    discovery_function=inventory_tplink_poe,
+    check_function=check_tplink_poe,
 )

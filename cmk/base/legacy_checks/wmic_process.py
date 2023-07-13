@@ -79,7 +79,7 @@ def check_wmic_process(item, params, info):
 
 
 check_info["wmic_process"] = LegacyCheckDefinition(
-    check_function=check_wmic_process,
     service_name="Process %s",
+    check_function=check_wmic_process,
     check_ruleset_name="wmic_process",
 )

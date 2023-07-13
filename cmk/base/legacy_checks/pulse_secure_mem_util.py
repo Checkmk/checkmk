@@ -45,14 +45,14 @@ def check_pulse_secure_mem(item, params, parsed):
 
 check_info["pulse_secure_mem_util"] = LegacyCheckDefinition(
     detect=pulse_secure.DETECT_PULSE_SECURE,
-    parse_function=parse_pulse_secure_mem,
-    discovery_function=discover_pulse_secure_mem_util,
-    check_function=check_pulse_secure_mem,
-    service_name="Pulse Secure IVE memory utilization",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12532",
         oids=["11", "24"],
     ),
+    parse_function=parse_pulse_secure_mem,
+    service_name="Pulse Secure IVE memory utilization",
+    discovery_function=discover_pulse_secure_mem_util,
+    check_function=check_pulse_secure_mem,
     check_ruleset_name="pulse_secure_mem_util",
     check_default_parameters={
         "mem_used_percent": (90, 95),

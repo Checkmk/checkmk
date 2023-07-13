@@ -33,14 +33,14 @@ def discover_qnap_fans(section):
 
 check_info["qnap_fans"] = LegacyCheckDefinition(
     detect=DETECT_QNAP,
-    discovery_function=discover_qnap_fans,
-    parse_function=parse_qnap_fans,
-    check_function=check_qnap_fans,
-    service_name="QNAP FAN %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.24681.1.2.15.1",
         oids=[OIDEnd(), "3"],
     ),
+    parse_function=parse_qnap_fans,
+    service_name="QNAP FAN %s",
+    discovery_function=discover_qnap_fans,
+    check_function=check_qnap_fans,
     check_ruleset_name="hw_fans",
     check_default_parameters={
         "upper": (None, None),

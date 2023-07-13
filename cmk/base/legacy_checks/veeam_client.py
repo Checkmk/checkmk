@@ -154,9 +154,9 @@ def check_veeam_client(item, params, parsed):  # pylint: disable=too-many-branch
 
 check_info["veeam_client"] = LegacyCheckDefinition(
     parse_function=parse_veeam_client,
-    check_function=check_veeam_client,
-    discovery_function=inventory_veeam_client,
     service_name="VEEAM Client %s",
+    discovery_function=inventory_veeam_client,
+    check_function=check_veeam_client,
     check_ruleset_name="veeam_backup",
     check_default_parameters={
         "age": (108000, 172800),  # 30h/2d

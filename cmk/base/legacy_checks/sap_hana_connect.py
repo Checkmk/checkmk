@@ -71,7 +71,7 @@ def discover_sap_hana_connect(section):
 
 check_info["sap_hana_connect"] = LegacyCheckDefinition(
     parse_function=parse_sap_hana_connect,
+    service_name="SAP HANA CONNECT %s",
     discovery_function=discover_sap_hana_connect,
     check_function=check_sap_hana_connect,
-    service_name="SAP HANA CONNECT %s",
 )

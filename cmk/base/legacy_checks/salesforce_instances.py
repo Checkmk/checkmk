@@ -60,7 +60,7 @@ def check_salesforce_instances(item, params, parsed):
 
 check_info["salesforce_instances"] = LegacyCheckDefinition(
     parse_function=parse_salesforce,
+    service_name="Salesforce Instance %s",
     discovery_function=inventory_salesforce_instances,
     check_function=check_salesforce_instances,
-    service_name="Salesforce Instance %s",
 )

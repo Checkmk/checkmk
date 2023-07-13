@@ -48,13 +48,13 @@ def check_octopus_trunks(item, _no_params, info):
 
 check_info["sni_octopuse_trunks"] = LegacyCheckDefinition(
     detect=DETECT_SNI_OCTOPUSE,
-    check_function=check_octopus_trunks,
-    discovery_function=inventory_octopus_trunks,
-    service_name="Trunk Port %s",
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.231.7.2.9.3.8.1",
             oids=["1", "2", "3", "4"],
         )
     ],
+    service_name="Trunk Port %s",
+    discovery_function=inventory_octopus_trunks,
+    check_function=check_octopus_trunks,
 )

@@ -59,9 +59,9 @@ def check_siemens_plc_temp(item, params, info):
 
 
 check_info["siemens_plc.temp"] = LegacyCheckDefinition(
+    service_name="Temperature %s",
     discovery_function=inventory_siemens_plc_temp,
     check_function=check_siemens_plc_temp,
-    service_name="Temperature %s",
     check_ruleset_name="temperature",
     check_default_parameters={
         "levels": (70.0, 80.0),
@@ -101,9 +101,9 @@ def check_siemens_plc_flag(item, params, info):
 
 
 check_info["siemens_plc.flag"] = LegacyCheckDefinition(
+    service_name="Flag %s",
     discovery_function=inventory_siemens_plc_flag,
     check_function=check_siemens_plc_flag,
-    service_name="Flag %s",
     check_ruleset_name="siemens_plc_flag",
 )
 
@@ -164,9 +164,9 @@ def check_siemens_plc_duration(item, params, info):
 
 
 check_info["siemens_plc.duration"] = LegacyCheckDefinition(
+    service_name="Duration %s",
     discovery_function=inventory_siemens_plc_duration,
     check_function=check_siemens_plc_duration,
-    service_name="Duration %s",
     check_ruleset_name="siemens_plc_duration",
 )
 
@@ -211,9 +211,9 @@ def check_siemens_plc_counter(item, params, info):
 
 
 check_info["siemens_plc.counter"] = LegacyCheckDefinition(
+    service_name="Counter %s",
     discovery_function=inventory_siemens_plc_counter,
     check_function=check_siemens_plc_counter,
-    service_name="Counter %s",
     check_ruleset_name="siemens_plc_counter",
 )
 
@@ -242,9 +242,9 @@ def check_siemens_plc_info(item, _no_params, info):
 
 
 check_info["siemens_plc.info"] = LegacyCheckDefinition(
+    service_name="Info %s",
     discovery_function=inventory_siemens_plc_info,
     check_function=check_siemens_plc_info,
-    service_name="Info %s",
 )
 
 # .
@@ -278,7 +278,7 @@ def check_siemens_plc_cpu_state(_no_item, _no_params, info):
 
 
 check_info["siemens_plc_cpu_state"] = LegacyCheckDefinition(
+    service_name="CPU state",
     discovery_function=inventory_siemens_plc_cpu_state,
     check_function=check_siemens_plc_cpu_state,
-    service_name="CPU state",
 )

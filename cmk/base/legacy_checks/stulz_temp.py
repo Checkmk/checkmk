@@ -79,14 +79,14 @@ def check_stulz_temp(item, params, parsed):
 
 check_info["stulz_temp"] = LegacyCheckDefinition(
     detect=DETECT_STULZ,
-    parse_function=parse_stulz_temp,
-    discovery_function=inventory_stulz_temp,
-    check_function=check_stulz_temp,
-    service_name="Temperature %s",
-    check_ruleset_name="temperature",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.29462.10.2.1.1.1.1.1.1",
         oids=[OIDEnd(), "1"],
     ),
+    parse_function=parse_stulz_temp,
+    service_name="Temperature %s",
+    discovery_function=inventory_stulz_temp,
+    check_function=check_stulz_temp,
+    check_ruleset_name="temperature",
     check_default_parameters={"levels": (25.0, 28.0)},
 )

@@ -60,16 +60,15 @@ def discover_quanta_temperature(section):
 
 check_info["quanta_temperature"] = LegacyCheckDefinition(
     detect=DETECT_QUANTA,
-    discovery_function=discover_quanta_temperature,
-    parse_function=parse_quanta,
-    check_function=check_quanta_temperature,
-    service_name="Temperature %s",
-    check_ruleset_name="temperature",
-    # these is no good oid identifier for quanta devices, thats why the first oid is used here
     fetch=[
         SNMPTree(
             base=".1.3.6.1.4.1.7244.1.2.1.3.4.1",
             oids=["1", "2", "3", "4", "6", "7", "8", "9"],
         )
     ],
+    parse_function=parse_quanta,
+    service_name="Temperature %s",
+    discovery_function=discover_quanta_temperature,
+    check_function=check_quanta_temperature,
+    check_ruleset_name="temperature",
 )

@@ -41,14 +41,14 @@ def check_pulse_secure_disk_util(item, params, parsed):
 
 check_info["pulse_secure_disk_util"] = LegacyCheckDefinition(
     detect=pulse_secure.DETECT_PULSE_SECURE,
-    parse_function=parse_pulse_secure_disk_util,
-    discovery_function=discover_pulse_secure_disk_util,
-    check_function=check_pulse_secure_disk_util,
-    service_name="Pulse Secure disk utilization",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12532",
         oids=["25"],
     ),
+    parse_function=parse_pulse_secure_disk_util,
+    service_name="Pulse Secure disk utilization",
+    discovery_function=discover_pulse_secure_disk_util,
+    check_function=check_pulse_secure_disk_util,
     check_ruleset_name="pulse_secure_disk_util",
     check_default_parameters={"upper_levels": (80.0, 90.0)},
 )

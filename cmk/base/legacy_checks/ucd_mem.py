@@ -66,14 +66,14 @@ def check_ucd_mem(item, params, parsed):
 # This check plugin uses the migrated section in cmk/base/plugins/agent_based/ucd_mem.py!
 check_info["ucd_mem"] = LegacyCheckDefinition(
     detect=ucd_hr_detection.USE_UCD_MEM,
-    parse_function=parse_ucd_mem,
-    discovery_function=inventory_ucd_mem,
-    check_function=check_ucd_mem,
-    service_name="Memory",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.2021.4",
         oids=["5", "6", "3", "4", "11", "12", "13", "14", "15", "100", "2", "101"],
     ),
+    parse_function=parse_ucd_mem,
+    service_name="Memory",
+    discovery_function=inventory_ucd_mem,
+    check_function=check_ucd_mem,
     check_ruleset_name="memory_simple",
     check_default_parameters={
         "levels": ("perc_used", (80.0, 90.0)),

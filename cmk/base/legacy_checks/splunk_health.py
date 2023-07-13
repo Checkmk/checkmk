@@ -71,9 +71,9 @@ def check_splunk_health(_no_item, params, parsed):
 
 check_info["splunk_health"] = LegacyCheckDefinition(
     parse_function=parse_splunk_health,
-    check_function=check_splunk_health,
-    discovery_function=inventory_splunk_health,
     service_name="Splunk Health",
+    discovery_function=inventory_splunk_health,
+    check_function=check_splunk_health,
     check_ruleset_name="splunk_health",
     check_default_parameters={
         "green": 0,

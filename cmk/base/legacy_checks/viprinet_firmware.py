@@ -26,11 +26,11 @@ def check_viprinet_firmware(_no_item, _no_params, info):
 
 check_info["viprinet_firmware"] = LegacyCheckDefinition(
     detect=DETECT_VIPRINET,
-    check_function=check_viprinet_firmware,
-    discovery_function=lambda info: len(info) > 0 and [(None, None)] or [],
-    service_name="Firmware Version",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.35424.1.1",
         oids=["4", "7"],
     ),
+    service_name="Firmware Version",
+    discovery_function=lambda info: len(info) > 0 and [(None, None)] or [],
+    check_function=check_viprinet_firmware,
 )

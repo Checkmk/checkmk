@@ -28,11 +28,11 @@ def check_steelhead_peers(item, _no_params, info):
 
 check_info["steelhead_peers"] = LegacyCheckDefinition(
     detect=DETECT_STEELHEAD,
-    check_function=check_steelhead_peers,
-    discovery_function=inventory_steelhead_peers,
-    service_name="Peer %s",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.17163.1.1.2.6.1.1",
         oids=["2", "3", "4", "5"],
     ),
+    service_name="Peer %s",
+    discovery_function=inventory_steelhead_peers,
+    check_function=check_steelhead_peers,
 )

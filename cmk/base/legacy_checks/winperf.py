@@ -108,13 +108,13 @@ def check_win_diskstat(item, params, info):
 
 
 check_info["winperf.cpuusage"] = LegacyCheckDefinition(
-    check_function=check_win_cpuusage,
-    discovery_function=inventory_win_cpuusage,
     service_name="CPU Usage",
+    discovery_function=inventory_win_cpuusage,
+    check_function=check_win_cpuusage,
 )
 
 check_info["winperf.diskstat"] = LegacyCheckDefinition(
-    check_function=check_win_diskstat,
-    discovery_function=inventory_win_diskstat,
     service_name="Disk IO",
+    discovery_function=inventory_win_diskstat,
+    check_function=check_win_diskstat,
 )

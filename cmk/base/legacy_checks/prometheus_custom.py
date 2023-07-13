@@ -140,8 +140,8 @@ def discover_prometheus_custom(section):
 
 check_info["prometheus_custom"] = LegacyCheckDefinition(
     parse_function=parse_prometheus_custom,
-    check_function=check_prometheus_custom,
-    discovery_function=discover_prometheus_custom,
     service_name="%s",
+    discovery_function=discover_prometheus_custom,
+    check_function=check_prometheus_custom,
     check_ruleset_name="prometheus_custom",
 )

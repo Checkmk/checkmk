@@ -40,12 +40,12 @@ def check_pulse_secure_log_util(item, params, parsed):
 
 check_info["pulse_secure_log_util"] = LegacyCheckDefinition(
     detect=pulse_secure.DETECT_PULSE_SECURE,
-    parse_function=parse_pulse_secure_log_utils,
-    discovery_function=discover_pulse_secure_log_util,
-    check_function=check_pulse_secure_log_util,
-    service_name="Pulse Secure log file utilization",
     fetch=SNMPTree(
         base=".1.3.6.1.4.1.12532",
         oids=["1"],
     ),
+    parse_function=parse_pulse_secure_log_utils,
+    service_name="Pulse Secure log file utilization",
+    discovery_function=discover_pulse_secure_log_util,
+    check_function=check_pulse_secure_log_util,
 )

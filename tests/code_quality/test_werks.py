@@ -46,7 +46,10 @@ def test_write_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     cee_werks = {w.id: w for w in all_werks if w.edition == "cee"}
     cme_werks = {w.id: w for w in all_werks if w.edition == "cme"}
     cce_werks = {w.id: w for w in all_werks if w.edition == "cce"}
-    assert len(all_werks) == len(cre_werks) + len(cee_werks) + len(cme_werks) + len(cce_werks)
+    cse_werks = {w.id: w for w in all_werks if w.edition == "cse"}
+    assert len(all_werks) == sum(
+        [len(cre_werks), len(cee_werks), len(cme_werks), len(cce_werks), len(cse_werks)]
+    )
 
     assert len(cre_werks) > 9847
     assert [w for w in cre_werks.keys() if 9000 <= w < 10000] == []
@@ -61,6 +64,9 @@ def test_write_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     assert len(cce_werks) > 10
     cmk.utils.werks.write_precompiled_werks(Path(tmp_dir) / "werks-cloud", cce_werks)
 
+    assert len(cse_werks) >= 1
+    cmk.utils.werks.write_precompiled_werks(Path(tmp_dir) / "werks-saas", cse_werks)
+
     monkeypatch.setattr(cmk.utils.werks, "_compiled_werks_dir", lambda: Path(tmp_dir))
     werks_loaded = cmk.utils.werks.load()
 
@@ -68,6 +74,7 @@ def test_write_precompiled_werks(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     merged_werks.update(cee_werks)
     merged_werks.update(cme_werks)
     merged_werks.update(cce_werks)
+    merged_werks.update(cse_werks)
     assert len(all_werks) == len(merged_werks)
 
     assert set(merged_werks.keys()) == (werks_loaded.keys())

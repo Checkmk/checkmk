@@ -71,7 +71,7 @@ def main(args: argparse.Namespace) -> None:
     version_werks = [werk for werk in werks_list if werk.version == args.version]
 
     werks = {}
-    for edition in [Edition.CRE, Edition.CEE, Edition.CCE, Edition.CME]:
+    for edition in [Edition.CRE, Edition.CEE, Edition.CCE, Edition.CME, Edition.CSE]:
         werks[edition.value] = get_werks_by_edition(version_werks, edition)
 
     env = Environment(

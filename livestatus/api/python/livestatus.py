@@ -28,8 +28,8 @@ SiteId = NewType("SiteId", str)
 
 
 class TLSParams(TypedDict, total=False):
-    verify: bool
-    ca_file_path: str | None
+    verify: bool  # missing key means: True
+    ca_file_path: str | None  # missing key means: None, but where on earth is this set???
 
 
 TLSInfo = tuple[Literal["encrypted", "plain_text"], TLSParams]
@@ -1056,7 +1056,7 @@ class MultiSiteConnection(Helpers):
         url = site["socket"]
         assert isinstance(url, str)
         persist = not temporary and site.get("persist", False)
-        tls_type, tls_params = site.get("tls", ("plain_text", {}))
+        tls_type, tls_params = site.get("tls", ("plain_text", TLSParams()))
 
         connection = SingleSiteConnection(
             socketurl=url,

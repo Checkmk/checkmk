@@ -14,7 +14,7 @@ from pytest_mock import MockerFixture
 
 from tests.testlib.utils import is_enterprise_repo, is_managed_repo
 
-from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId
+from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId, TLSParams
 
 import cmk.utils.packaging
 import cmk.utils.paths
@@ -153,7 +153,7 @@ def _get_site_configuration(remote_site: SiteId) -> SiteConfiguration:
                 "tcp",
                 NetworkSocketDetails(
                     address=("127.0.0.1", 6790),
-                    tls=("encrypted", {"verify": True}),
+                    tls=("encrypted", TLSParams(verify=True)),
                 ),
             ),
             "replication": "slave",
@@ -180,7 +180,7 @@ def _get_site_configuration(remote_site: SiteId) -> SiteConfiguration:
                 "tcp",
                 NetworkSocketDetails(
                     address=("127.0.0.1", 6790),
-                    tls=("encrypted", {"verify": True}),
+                    tls=("encrypted", TLSParams(verify=True)),
                 ),
             ),
             "replication": "slave",

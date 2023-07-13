@@ -106,7 +106,7 @@ class Socket:
     def to_internal(self) -> NetworkSocketInfo | UnixSocketInfo | LocalSocketInfo:
         if self.socket_type in ("tcp", "tcp6"):
             if self.host and self.port:
-                tls_params: TLSParams = {}
+                tls_params = TLSParams()
 
                 if self.verify is not None:
                     tls_params["verify"] = self.verify

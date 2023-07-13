@@ -14,7 +14,7 @@ from collections.abc import Collection, Iterable, Iterator, Mapping
 from multiprocessing import JoinableQueue, Process
 from typing import Any, cast, NamedTuple, overload
 
-from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId
+from livestatus import NetworkSocketDetails, SiteConfiguration, SiteId, TLSParams
 
 import cmk.utils.paths
 from cmk.utils.encryption import CertificateDetails, fetch_certificate_details
@@ -170,9 +170,7 @@ class ModeEditSite(WatoMode):
                             address=("", 6557),
                             tls=(
                                 "encrypted",
-                                {
-                                    "verify": True,
-                                },
+                                TLSParams(verify=True),
                             ),
                         ),
                     ),

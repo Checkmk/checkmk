@@ -20,14 +20,14 @@ class HostSections(Generic[_TSec], abc.ABC):
 
     def __init__(
         self,
-        sections: HostSection[_TSec] | None = None,
+        sections: HostSection[_TSec],
         *,
         cache_info: Mapping[SectionName, tuple[int, int]] | None = None,
         # For `piggybacked_raw_data`, Sequence[bytes] is equivalent to AgentRawData.
         piggybacked_raw_data: Mapping[HostName, Sequence[bytes]] | None = None,
     ) -> None:
         super().__init__()
-        self.sections: HostSection[_TSec] = sections if sections else {}
+        self.sections = sections
         self.cache_info: Final = cache_info if cache_info else {}
         self.piggybacked_raw_data: Final = piggybacked_raw_data if piggybacked_raw_data else {}
 

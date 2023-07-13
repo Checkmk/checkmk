@@ -49,7 +49,7 @@ def filter_out_errors(
     for source, host_section in host_sections:
         host_key = HostKey(source.hostname, source.source_type)
         console.vverbose(f"  {host_key!s}")
-        output.setdefault(host_key, HostSections())
+        output.setdefault(host_key, HostSections({}))
         if host_section.is_ok():
             console.vverbose(
                 "  -> Add sections: %s\n"

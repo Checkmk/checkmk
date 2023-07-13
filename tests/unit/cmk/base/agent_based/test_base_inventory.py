@@ -276,9 +276,9 @@ def test__inventorize_real_host_only_items() -> None:
 )
 def test__inventorize_real_host_only_intervals(
     attrs_choices: Literal["all"] | tuple[str, list[str]],
-    attrs_expected_retentions: dict[str, tuple[int, int, int]],
+    attrs_expected_retentions: Mapping[SDKey, _RetentionInterval],
     table_choices: Literal["all"] | tuple[str, list[str]],
-    table_expected_retentions: dict[str, tuple[int, int, int]],
+    table_expected_retentions: Mapping[SDRowIdent, Mapping[SDKey, _RetentionInterval]],
 ) -> None:
     trees, update_result = _inventorize_real_host(
         now=10,
@@ -348,7 +348,7 @@ def test__inventorize_real_host_only_intervals(
                 "foo1": "2. bar1",
                 "foo2": "bar2",
             },
-            "Retentions": attrs_expected_retentions,
+            "Retentions": {k: v.serialize() for k, v in attrs_expected_retentions.items()},
         }
     else:
         raw_attributes = {
@@ -360,7 +360,12 @@ def test__inventorize_real_host_only_intervals(
         }
 
     if table_expected_retentions:
-        table_retentions = {"Retentions": table_expected_retentions}
+        table_retentions = {
+            "Retentions": {
+                i: {k: v.serialize() for k, v in ri.items()}
+                for i, ri in table_expected_retentions.items()
+            }
+        }
     else:
         table_retentions = {}
 
@@ -552,7 +557,7 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
                 "foo1": "2. bar1",
                 "foo2": "bar2",
             },
-            "Retentions": attrs_expected_retentions,
+            "Retentions": {k: v.serialize() for k, v in attrs_expected_retentions.items()},
         }
     else:
         raw_attributes = {
@@ -564,7 +569,12 @@ def test__inventorize_real_host_raw_cache_info_and_only_intervals(
         }
 
     if table_expected_retentions:
-        table_retentions = {"Retentions": table_expected_retentions}
+        table_retentions = {
+            "Retentions": {
+                i: {k: v.serialize() for k, v in ri.items()}
+                for i, ri in table_expected_retentions.items()
+            }
+        }
     else:
         table_retentions = {}
 
@@ -655,7 +665,10 @@ def _make_tree_or_items(
                         "node-with-attrs": {
                             "Attributes": {
                                 "Pairs": {"old": "Key", "keys": "Previous Keys"},
-                                "Retentions": previous_attributes_retentions,
+                                "Retentions": {
+                                    k: v.serialize()
+                                    for k, v in previous_attributes_retentions.items()
+                                },
                             },
                             "Nodes": {},
                             "Table": {},
@@ -677,7 +690,10 @@ def _make_tree_or_items(
                                         "keys": "Previous Keys 2",
                                     },
                                 ],
-                                "Retentions": previous_table_retentions,
+                                "Retentions": {
+                                    i: {k: v.serialize() for k, v in ri.items()}
+                                    for i, ri in previous_table_retentions.items()
+                                },
                             },
                         },
                     },

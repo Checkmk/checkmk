@@ -129,7 +129,8 @@ class RawIntervalFromConfig(_RawIntervalFromConfigMandatory, total=False):
     columns: Literal["all"] | tuple[str, list[str]]
 
 
-class _RetentionInterval(NamedTuple):
+@dataclass(frozen=True)
+class _RetentionInterval:
     cached_at: int
     cache_interval: int
     retention_interval: int
@@ -137,7 +138,7 @@ class _RetentionInterval(NamedTuple):
 
     @classmethod
     def from_previous(cls, other: _RetentionInterval) -> _RetentionInterval:
-        return cls(*other[:3], "previous")
+        return cls(other.cached_at, other.cache_interval, other.retention_interval, "previous")
 
     @classmethod
     def from_config(

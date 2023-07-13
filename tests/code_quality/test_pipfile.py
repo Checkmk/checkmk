@@ -310,9 +310,6 @@ def get_undeclared_dependencies() -> Iterable[Import]:
 
 CEE_UNUSED_PACKAGES = [
     "bcrypt",  # optional for passlib, we need it
-    "cachetools",
-    "chardet",
-    "click",
     "cython",
     "defusedxml",
     "docutils",

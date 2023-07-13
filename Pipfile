@@ -59,7 +59,6 @@ schemathesis = "==3.19.0"  # used for openapi tests
 httpx = "*"  # used by agent receiver tests
 ruff = "*"
 types-beautifulsoup4 = "*"  # used for type checking
-types-cachetools = "*"  # used for type checking
 types-cryptography = "*"  # used for type checking
 types-docutils = "*"  # used for type checking
 types-jmespath = "*"  # used for type checking
@@ -116,7 +115,6 @@ ply = "==3.11"  # needed by pysmi, python-active-directory
 pysmi = "==0.3.4"  # needed by pysnmp
 pysnmp = "==4.4.12"  # needed by Event Console
 snmpsim = "==0.4.7"  # needed by SNMP integration tests
-chardet = "==5.1.0"  # needed by requests
 urllib3 = "==1.26.15"  # needed by requests
 pyopenssl = "~=20.0"  # needed by requests with extras = ["security"]
 pbr = "==5.11.1"  # needed by jira
@@ -130,7 +128,6 @@ jinja2 = "==3.1.2"  # needed by flask
 more-itertools = "==9.1.0"  # needed by connexion through zipp, pytest
 zipp = "==3.15.0"  # needed by importlib-metadata
 pyrsistent = "==0.19.3"  # needed by jsonschema
-click = "==8.1.3"  # needed by flask
 werkzeug = "==2.2.3"  # direct dependency and needed by flask
 flask = "==2.2.3"  # direct dependency
 pytz = "==2023.3"  # direct dependency
@@ -152,7 +149,6 @@ numpy = "==1.24.2"  # needed by GUI (metrics)
 reportlab = "==3.6.12"  # needed by GUI (reporting)
 pypdf3 = "==1.0.6"  # needed by GUI (reporting)
 roman = "==4.0"  # needed by GUI (reporting)
-cachetools = "==4.2.4"  # needed by kubernetes
 google-auth = "==2.17.1"  # needed by kubernetes
 websocket-client = "==1.5.1"  # needed by kubernetes
 kubernetes = "==21.7.0"  # needed by kubernetes

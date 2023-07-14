@@ -12,7 +12,7 @@ from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, ServiceLabel
 from cmk.utils.log import console
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import SectionMap
 from cmk.utils.servicename import ServiceName
 from cmk.utils.timeperiod import timeperiod_active
 
@@ -74,8 +74,8 @@ def get_check_preview(
     parser: ParserFunction,
     fetcher: FetcherFunction,
     summarizer: SummarizerFunction,
-    section_plugins: Mapping[SectionName, SectionPlugin],
-    host_label_plugins: Mapping[SectionName, HostLabelPlugin],
+    section_plugins: SectionMap[SectionPlugin],
+    host_label_plugins: SectionMap[HostLabelPlugin],
     discovery_plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],

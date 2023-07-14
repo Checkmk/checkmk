@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
-
 import pytest
 
 from tests.unit.conftest import FixRegister
 
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import SectionMap, SectionName
 
 from cmk.base.api.agent_based.type_defs import AgentParseFunction, AgentSectionPlugin
 from cmk.base.plugins.agent_based.utils import kube as check
@@ -39,7 +37,7 @@ def get_kube_agent_section_models() -> frozenset[type[agent.Section]]:
 
 
 @pytest.fixture(scope="module", name="kube_agent_sections")
-def get_kube_agent_sections(fix_register: FixRegister) -> Mapping[SectionName, AgentSectionPlugin]:
+def get_kube_agent_sections(fix_register: FixRegister) -> SectionMap[AgentSectionPlugin]:
     return {
         name: section
         for name, section in fix_register.agent_sections.items()
@@ -49,15 +47,15 @@ def get_kube_agent_sections(fix_register: FixRegister) -> Mapping[SectionName, A
 
 @pytest.fixture(scope="module", name="kube_parse_functions")
 def get_kube_parse_functions(
-    kube_agent_sections: Mapping[SectionName, AgentSectionPlugin],
-) -> Mapping[SectionName, AgentParseFunction]:
+    kube_agent_sections: SectionMap[AgentSectionPlugin],
+) -> SectionMap[AgentParseFunction]:
     return {name: section.parse_function for name, section in kube_agent_sections.items()}
 
 
 @pytest.fixture(scope="module", name="kube_parsed_section_types")
 def get_kube_parsed_section_types(
-    kube_parse_functions: Mapping[SectionName, AgentParseFunction],
-) -> Mapping[SectionName, object]:
+    kube_parse_functions: SectionMap[AgentParseFunction],
+) -> SectionMap[object]:
     return {name: f.__annotations__["return"] for name, f in kube_parse_functions.items()}
 
 
@@ -70,8 +68,8 @@ _KNOWN_EXCEPTIONS: dict[SectionName, type[check.Section]] = {
 
 @pytest.fixture(scope="module", name="kube_check_section_models")
 def get_kube_check_section_models(
-    kube_parsed_section_types: Mapping[SectionName, type],
-) -> Mapping[SectionName, type[check.Section]]:
+    kube_parsed_section_types: SectionMap[type],
+) -> SectionMap[type[check.Section]]:
     """Section models used by parse_functions.
 
     This fixture returns the pydantic models, which are used by the
@@ -85,9 +83,7 @@ def get_kube_check_section_models(
     return result
 
 
-def test_keep_known_exceptions_up_to_date(
-    kube_parsed_section_types: Mapping[SectionName, type]
-) -> None:
+def test_keep_known_exceptions_up_to_date(kube_parsed_section_types: SectionMap[type]) -> None:
     assert all(
         kube_parsed_section_types[name] != section for name, section in _KNOWN_EXCEPTIONS.items()
     )
@@ -95,7 +91,7 @@ def test_keep_known_exceptions_up_to_date(
 
 def test_schema_did_not_diverge(
     kube_agent_section_models: frozenset[type[agent.Section]],
-    kube_check_section_models: Mapping[SectionName, type[check.Section]],
+    kube_check_section_models: SectionMap[type[check.Section]],
 ) -> None:
     """Sync serialization and deserialization.
 

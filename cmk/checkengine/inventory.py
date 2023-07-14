@@ -19,7 +19,7 @@ import cmk.utils.tty as tty
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console, section
 from cmk.utils.rulesets import RuleSetName
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import SectionMap
 from cmk.utils.structured_data import (
     ImmutableTree,
     MutableTree,
@@ -119,7 +119,7 @@ def inventorize_host(
     parser: ParserFunction,
     summarizer: SummarizerFunction,
     inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
-    section_plugins: Mapping[SectionName, SectionPlugin],
+    section_plugins: SectionMap[SectionPlugin],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[InventoryPluginName],
     parameters: HWSWInventoryParameters,

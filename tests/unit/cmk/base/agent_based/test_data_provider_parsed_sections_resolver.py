@@ -3,10 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import SectionMap, SectionName
 
 from cmk.checkengine import HostKey, SectionPlugin, SourceType
 from cmk.checkengine.discovery._host_labels import _all_parsing_results as all_parsing_results
@@ -38,7 +38,7 @@ class _FakeParser(dict):
 class TestParsedSectionsResolver:
     @staticmethod
     def make_provider(
-        section_plugins: Mapping[SectionName, SectionPlugin],
+        section_plugins: SectionMap[SectionPlugin],
     ) -> ParsedSectionsResolver:
         return ParsedSectionsResolver(
             _FakeParser(  # type: ignore[arg-type]

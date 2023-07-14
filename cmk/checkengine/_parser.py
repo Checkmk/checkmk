@@ -10,7 +10,7 @@ from collections.abc import Mapping, Sequence
 from typing import Final, Generic, TypeVar
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.sectionname import SectionMap, SectionName
+from cmk.utils.sectionname import SectionMap
 
 from .type_defs import SectionNameCollection
 
@@ -27,7 +27,7 @@ class HostSections(Generic[_Tout]):
         self,
         sections: _Tout,
         *,
-        cache_info: Mapping[SectionName, tuple[int, int]] | None = None,
+        cache_info: SectionMap[tuple[int, int]] | None = None,
         # For `piggybacked_raw_data`, Sequence[bytes] is equivalent to AgentRawData.
         piggybacked_raw_data: Mapping[HostName, Sequence[bytes]] | None = None,
     ) -> None:

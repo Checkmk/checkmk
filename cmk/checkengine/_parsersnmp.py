@@ -5,11 +5,10 @@
 
 import logging
 import time
-from collections.abc import Mapping, MutableMapping
 from typing import Final
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import MutableSectionMap, SectionMap, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataElem
 
@@ -34,7 +33,7 @@ class SNMPParser(Parser[SNMPRawData, SNMPRawData]):
         hostname: HostName,
         section_store: SectionStore[SNMPRawDataElem],
         *,
-        check_intervals: Mapping[SectionName, int | None],
+        check_intervals: SectionMap[int | None],
         keep_outdated: bool,
         logger: logging.Logger,
     ) -> None:
@@ -61,7 +60,7 @@ class SNMPParser(Parser[SNMPRawData, SNMPRawData]):
                 return now, now + interval
             return None
 
-        cache_info: MutableMapping[SectionName, tuple[int, int]] = {}
+        cache_info: MutableSectionMap[tuple[int, int]] = {}
         new_sections = self.section_store.update(
             sections,
             cache_info,

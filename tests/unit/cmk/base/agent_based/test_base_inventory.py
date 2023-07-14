@@ -13,7 +13,7 @@ from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.everythingtype import EVERYTHING
 from cmk.utils.hostaddress import HostAddress, HostName
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.structured_data import (
     _RetentionInterval,
     ImmutableAttributes,
@@ -1238,7 +1238,7 @@ def test_inventorize_host(failed_state: int | None, expected: int) -> None:
     ) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]:
         def parse(
             header: AgentRawData | SNMPRawData,
-        ) -> Mapping[SectionName, str]:
+        ) -> SectionMap[str]:
             assert isinstance(header, bytes)
             txt = header.decode()
             return {SectionName(txt[3:-3]): txt}

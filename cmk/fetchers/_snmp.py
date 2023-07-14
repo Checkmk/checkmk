@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any, Final
 
 from cmk.utils.exceptions import MKFetcherError, OnError
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import SectionMap, SectionName
 
 import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib.snmp_scan import gather_available_raw_section_names
@@ -67,7 +67,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
     def __init__(
         self,
         *,
-        sections: Mapping[SectionName, SNMPSectionMeta],
+        sections: SectionMap[SNMPSectionMeta],
         on_error: OnError,
         missing_sys_description: bool,
         do_status_data_inventory: bool,

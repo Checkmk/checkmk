@@ -21,7 +21,7 @@ from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
 from cmk.utils.piggyback import PiggybackTimeSettings
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import SectionMap, SectionName
 
 from cmk.snmplib.type_defs import SNMPRawData
 
@@ -263,7 +263,7 @@ class CMKFetcher:
         )
 
 
-class SectionPluginMapper(Mapping[SectionName, SectionPlugin]):
+class SectionPluginMapper(SectionMap[SectionPlugin]):
     # We should probably not tap into the private `register._config` module but
     # the data we need doesn't seem to be available elsewhere.  Anyway, this is
     # an *immutable* Mapping so we are actually on the safe side.
@@ -287,7 +287,7 @@ class SectionPluginMapper(Mapping[SectionName, SectionPlugin]):
         )
 
 
-class HostLabelPluginMapper(Mapping[SectionName, HostLabelPlugin]):
+class HostLabelPluginMapper(SectionMap[HostLabelPlugin]):
     def __init__(self, *, config_cache: ConfigCache) -> None:
         super().__init__()
         self.config_cache: Final = config_cache

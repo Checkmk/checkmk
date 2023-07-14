@@ -162,7 +162,7 @@ class ParsedSectionsResolver:
         self,
         parser: SectionsParser,
         *,
-        section_plugins: Mapping[SectionName, SectionPlugin],
+        section_plugins: SectionMap[SectionPlugin],
     ) -> None:
         self._parser: Final = parser
         self.section_plugins: Final = section_plugins
@@ -179,8 +179,8 @@ class ParsedSectionsResolver:
 
     @staticmethod
     def _init_superseders(
-        section_plugins: Mapping[SectionName, SectionPlugin],
-    ) -> Mapping[SectionName, Sequence[tuple[SectionName, SectionPlugin]]]:
+        section_plugins: SectionMap[SectionPlugin],
+    ) -> SectionMap[Sequence[tuple[SectionName, SectionPlugin]]]:
         superseders: dict[SectionName, list[tuple[SectionName, SectionPlugin]]] = {}
         for section_name, section in section_plugins.items():
             for superseded in section.supersedes:
@@ -189,7 +189,7 @@ class ParsedSectionsResolver:
 
     @staticmethod
     def _init_producers(
-        section_plugins: Mapping[SectionName, SectionPlugin],
+        section_plugins: SectionMap[SectionPlugin],
     ) -> Mapping[ParsedSectionName, Sequence[tuple[SectionName, SectionPlugin]]]:
         producers: dict[ParsedSectionName, list[tuple[SectionName, SectionPlugin]]] = {}
         for section_name, section in section_plugins.items():
@@ -244,7 +244,7 @@ def store_piggybacked_sections(collected_host_sections: Mapping[HostKey, HostSec
 
 def make_providers(
     host_sections: Mapping[HostKey, HostSections],
-    section_plugins: Mapping[SectionName, SectionPlugin],
+    section_plugins: SectionMap[SectionPlugin],
 ) -> Mapping[HostKey, Provider]:
     return {
         host_key: ParsedSectionsResolver(

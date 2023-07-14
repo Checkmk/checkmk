@@ -21,7 +21,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
 from cmk.utils.regex import regex
 from cmk.utils.resulttype import Result
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import SectionMap
 from cmk.utils.servicename import ServiceName
 from cmk.utils.structured_data import TreeStore
 from cmk.utils.timeperiod import check_timeperiod, timeperiod_active, TimeperiodName
@@ -110,7 +110,7 @@ def execute_checkmk_checks(
     ],
     parser: ParserFunction,
     summarizer: SummarizerFunction,
-    section_plugins: Mapping[SectionName, SectionPlugin],
+    section_plugins: SectionMap[SectionPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
     run_plugin_names: Container[CheckPluginName],

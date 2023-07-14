@@ -16,7 +16,7 @@ import cmk.utils.debug
 import cmk.utils.misc
 from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostName
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import MutableSectionMap, SectionName
 from cmk.utils.translations import TranslationOptions
 
 from cmk.fetchers.cache import SectionStore
@@ -518,8 +518,8 @@ class AgentParser(Parser[AgentRawData, AgentRawDataSection]):
 
         def decode_sections(
             sections: ImmutableSection,
-        ) -> MutableMapping[SectionName, list[AgentRawDataSectionElem]]:
-            out: MutableMapping[SectionName, list[AgentRawDataSectionElem]] = {}
+        ) -> MutableSectionMap[list[AgentRawDataSectionElem]]:
+            out: MutableSectionMap[list[AgentRawDataSectionElem]] = {}
             for header, content in sections:
                 out.setdefault(header.name, []).extend(header.parse_line(line) for line in content)
             return out

@@ -16,7 +16,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import HostLabel as _HostLabel
 from cmk.utils.log import console
 from cmk.utils.rulesets.ruleset_matcher import merge_cluster_labels
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import SectionMap
 
 from cmk.checkengine._typedefs import HostKey, Parameters, SourceType
 from cmk.checkengine.discovery._utils import QualifiedDiscovery
@@ -94,7 +94,7 @@ def analyse_cluster_labels(
 
 def discover_host_labels(
     host_name: HostName,
-    host_label_plugins: Mapping[SectionName, HostLabelPlugin],
+    host_label_plugins: SectionMap[HostLabelPlugin],
     *,
     providers: Mapping[HostKey, Provider],
     on_error: OnError,
@@ -139,7 +139,7 @@ def _all_parsing_results(
 
 
 def _discover_host_labels_for_source_type(
-    host_label_plugins: Mapping[SectionName, HostLabelPlugin],
+    host_label_plugins: SectionMap[HostLabelPlugin],
     *,
     host_key: HostKey,
     providers: Mapping[HostKey, Provider],

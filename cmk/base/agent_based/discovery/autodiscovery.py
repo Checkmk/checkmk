@@ -17,7 +17,7 @@ from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import SectionMap
 from cmk.utils.servicename import ServiceName
 
 from cmk.checkengine import (
@@ -82,8 +82,8 @@ def automation_discovery(
     parser: ParserFunction,
     fetcher: FetcherFunction,
     summarizer: SummarizerFunction,
-    section_plugins: Mapping[SectionName, SectionPlugin],
-    host_label_plugins: Mapping[SectionName, HostLabelPlugin],
+    section_plugins: SectionMap[SectionPlugin],
+    host_label_plugins: SectionMap[HostLabelPlugin],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     mode: DiscoveryMode,
@@ -303,8 +303,8 @@ def autodiscovery(
     fetcher: FetcherFunction,
     parser: ParserFunction,
     summarizer: SummarizerFunction,
-    section_plugins: Mapping[SectionName, SectionPlugin],
-    host_label_plugins: Mapping[SectionName, HostLabelPlugin],
+    section_plugins: SectionMap[SectionPlugin],
+    host_label_plugins: SectionMap[HostLabelPlugin],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     schedule_discovery_check: Callable[[HostName], object],

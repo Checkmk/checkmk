@@ -16,7 +16,7 @@ from cmk.utils.exceptions import MKGeneralException, OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
-from cmk.utils.sectionname import SectionName
+from cmk.utils.sectionname import SectionMap
 
 from cmk.checkengine import FetcherFunction, HostKey, ParserFunction, SectionPlugin
 from cmk.checkengine.checking import CheckPluginName
@@ -49,8 +49,8 @@ def commandline_discovery(
     parser: ParserFunction,
     fetcher: FetcherFunction,
     config_cache: ConfigCache,
-    section_plugins: Mapping[SectionName, SectionPlugin],
-    host_label_plugins: Mapping[SectionName, HostLabelPlugin],
+    section_plugins: SectionMap[SectionPlugin],
+    host_label_plugins: SectionMap[HostLabelPlugin],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     run_plugin_names: Container[CheckPluginName],
     arg_only_new: bool,
@@ -134,7 +134,7 @@ def _preprocess_hostnames(
 def _commandline_discovery_on_host(
     *,
     real_host_name: HostName,
-    host_label_plugins: Mapping[SectionName, HostLabelPlugin],
+    host_label_plugins: SectionMap[HostLabelPlugin],
     config_cache: ConfigCache,
     providers: Mapping[HostKey, Provider],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],

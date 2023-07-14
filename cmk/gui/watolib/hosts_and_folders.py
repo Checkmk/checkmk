@@ -105,6 +105,9 @@ from cmk.gui.watolib.utils import (
 if cmk_version.is_managed_edition():
     import cmk.gui.cme.helpers as managed_helpers  # pylint: disable=no-name-in-module
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
+    from cmk.gui.cme.host_and_folder_validators import (  # pylint: disable=no-name-in-module
+        validate_edit_host,
+    )
 
 SearchCriteria = Mapping[str, Any]
 
@@ -3629,33 +3632,9 @@ class CMEFolder(CREFolder):
         customer_id = self._get_customer_id()
         if customer_id != managed_helpers.default_customer_id():
             for hostname, attributes, _cluster_nodes in entries:
-                self.check_modify_host(hostname, attributes)
+                validate_edit_host(self.site_id(), hostname, attributes)
 
         super().create_hosts(entries)
-
-    def check_modify_host(self, hostname, attributes):
-        if "site" not in attributes:
-            return
-
-        customer_id = self._get_customer_id()
-        if customer_id != managed_helpers.default_customer_id():
-            host_customer_id = managed.get_customer_of_site(attributes["site"])
-            if host_customer_id != customer_id:
-                folder_sites = ", ".join(managed_helpers.get_sites_of_customer(customer_id))
-                raise MKUserError(
-                    None,
-                    _(
-                        "Unable to modify host <i>%s</i>. Its site id <i>%s</i> conflicts with the customer <i>%s</i>, "
-                        "which owns this folder. This violates the CME folder hierarchy. You may "
-                        "choose the sites: %s"
-                    )
-                    % (
-                        hostname,
-                        enabled_sites()[attributes["site"]]["alias"],
-                        customer_id,
-                        folder_sites,
-                    ),
-                )
 
     def move_hosts(self, host_names, target_folder):
         # Check if the target folder may have this host
@@ -3725,7 +3704,7 @@ class CMEHost(CREHost):
     def edit(self, attributes: HostAttributes, cluster_nodes: Sequence[HostName] | None) -> None:
         f = self.folder()
         if isinstance(f, CMEFolder):
-            f.check_modify_host(self.name(), attributes)
+            validate_edit_host(f.site_id(), self.name(), attributes)
         super().edit(attributes, cluster_nodes)
 
 

@@ -1081,9 +1081,9 @@ class _CustomerField(base.String):
 
         included = value in managed.customer_collection()
         if self._should_exist and not included:
-            raise self.make_error("should_exist", host_name=value)
+            raise self.make_error("should_exist", customer=value)
         if not self._should_exist and included:
-            raise self.make_error("should_not_exist", host_name=value)
+            raise self.make_error("should_not_exist", customer=value)
 
     def _deserialize(self, value, attr, data, **kwargs):
         value = super()._deserialize(value, attr, data, **kwargs)

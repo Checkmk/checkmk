@@ -93,7 +93,7 @@ def run_make_targets(Map args) {
                                         sh("""RESULT_PATH='${WORKSPACE}/test-results/${DISTRO}' \
                                         EDITION='${args.EDITION}' \
                                         DOCKER_TAG='${args.DOCKER_TAG}' \
-                                        VERSION='${args.VERSION == "git" ? args.VERSION : args.cmk_version}' \
+                                        VERSION='${args.VERSION in ["git", "daily"] ? args.VERSION : args.cmk_version}' \
                                         DISTRO='$DISTRO' \
                                         BRANCH='${args.BRANCH}' \
                                         make ${args.MAKE_TARGET}""");

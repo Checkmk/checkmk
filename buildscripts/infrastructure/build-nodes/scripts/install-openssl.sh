@@ -14,6 +14,9 @@ DIR_NAME=openssl-${OPENSSL_VERSION}
 ARCHIVE_NAME=${DIR_NAME}.tar.gz
 TARGET_DIR=/opt
 
+# OpenSSL "config" seems to have problems with detecting 32bit architecture in some cases
+CONFIG_COMMAND=config
+[ $ARCHITECTURE = i386 ] && CONFIG_COMMAND="Configure linux-x86"
 # Increase this to enforce a recreation of the build cache
 BUILD_ID=4
 
@@ -27,7 +30,7 @@ build_package() {
     # Now build the package
     tar xf "${ARCHIVE_NAME}"
     cd "${DIR_NAME}"
-    ./config --prefix="${TARGET_DIR}/${DIR_NAME}" enable-md2 -Wl,-rpath,/opt/"${DIR_NAME}"/lib
+    ./${CONFIG_COMMAND} --prefix="${TARGET_DIR}/${DIR_NAME}" enable-md2 -Wl,-rpath,/opt/"${DIR_NAME}"/lib
     make -j6
     make install
 

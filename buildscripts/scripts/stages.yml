@@ -82,10 +82,6 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^tests/agent-plugin-unit/' || true"
       REPLACE_NEWLINES: true
 
-    - NAME: CHANGED_CORE_FILES
-      SH: "echo '${CHANGED_FILES_REL}' | grep -e '^livestatus' -e '^packages/cmc' || true"
-      REPLACE_NEWLINES: true
-
     - NAME: CHANGED_UNIXCAT_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/unixcat/' || true"
       REPLACE_NEWLINES: true
@@ -98,8 +94,13 @@ VARIABLES:
       SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/neb/' || true"
       REPLACE_NEWLINES: true
 
-    - NAME: CHANGED_CLANG_FORMAT_FILE
-      SH: "echo '${CHANGED_FILES_REL}' | grep '^\\.clang-format$' || true"
+    - NAME: CHANGED_CMC_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^packages/cmc' || true"
+      REPLACE_NEWLINES: true
+
+    - NAME: CHANGED_CMC_PROTO_FILES
+      SH: "echo '${CHANGED_FILES_REL}' | grep '^enterprise/protocols/checkmk/cmc' || true"
+      REPLACE_NEWLINES: true
 
     - NAME: CHANGED_JS_FILES
       SH: "echo '${CHANGED_FILES_REL}' | grep '^web/htdocs/js/\\|\\.js$\\|\\.ts$' || true"
@@ -165,7 +166,7 @@ STAGES:
       TEXT_ON_SKIP: 'No Python files changed'
       RESULT_CHECK_FILE_PATTERN: "results/py-import-cycles.txt"
 
-    - NAME: 'Python Unit Test'
+    - NAME: 'Python Unit Tests'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT,CHANGED_CHECKMAN_FILES
       DIR: 'tests'
       ENV_VARS:
@@ -217,7 +218,7 @@ STAGES:
       RESULT_CHECK_TYPE: "JUNIT"
       RESULT_CHECK_FILE_PATTERN: "results/python3-werks-junit.xml"
 
-    - NAME: 'Python Linting'
+    - NAME: 'Python Pylint'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_PYLINT_RC_FILE,CHANGED_PYTHON_FILES,CHANGED_PIPFILE_LOCK,CHANGED_PYPROJECT_TOML_FILE,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_PIPENV_SCRIPT
       DIR: 'tests'
       ENV_VARS:
@@ -243,7 +244,7 @@ STAGES:
       COMMAND: "make --quiet test-format-shell &> ${RESULTS}/shell-format.txt"
       RESULT_CHECK_FILE_PATTERN: "results/shell-format.txt"
 
-    - NAME: 'Shell check'
+    - NAME: 'Shellcheck'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_SHELL_FILES
       DIR: 'tests'
       COMMAND: "make test-shellcheck &> ${RESULTS}/shellcheck.txt"
@@ -251,7 +252,7 @@ STAGES:
       RESULT_CHECK_TYPE: "SHELLCHECK"
       RESULT_CHECK_FILE_PATTERN: "results/shellcheck.txt"
 
-    - NAME: 'Shell Unit'
+    - NAME: 'Shell Unit Tests'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_SHELL_FILES
       DIR: 'tests'
       COMMAND: "make test-unit-shell-docker &> ${RESULTS}/shell-unit.txt"
@@ -267,7 +268,7 @@ STAGES:
       RESULT_CHECK_TYPE: "TSJSFORMAT"
       RESULT_CHECK_FILE_PATTERN: "results/js-prettier.txt"
 
-    - NAME: 'JS Build'
+    - NAME: 'JavaScript Build'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_JS_FILES,CHANGED_TESTS_MAKEFILE,CHANGED_WEBPACK_CONFIG,CHANGED_PACKAGE_JSON
       DIR: 'tests'
       COMMAND: 'make test-build-js-docker &> ${RESULTS}/js-build.txt'
@@ -275,7 +276,7 @@ STAGES:
       RESULT_CHECK_TYPE: "TSJSBUILD"
       RESULT_CHECK_FILE_PATTERN: "results/js-build.txt"
 
-    - NAME: 'JS Lint'
+    - NAME: 'JavaScript Lint'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_JS_FILES,CHANGED_TESTS_MAKEFILE,CHANGED_RUN_JS_LINT_SCRIPT,CHANGED_PACKAGE_JSON
       DIR: 'tests'
       COMMAND: 'make test-lint-js-docker &> ${RESULTS}/js-lint.txt'
@@ -321,7 +322,15 @@ STAGES:
       TEXT_ON_SKIP: 'No agent files changed'
       RESULT_CHECK_FILE_PATTERN: "results/agent-plugin-unit-junit.txt"
 
-    - NAME: 'Test - Livestatus'
+    - NAME: 'unixcat'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_UNIXCAT_FILES
+      DIR: 'packages/unixcat'
+      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/unixcat.txt"
+      TEXT_ON_SKIP: 'No unixcat files changed'
+      RESULT_CHECK_TYPE: "GCC"
+      RESULT_CHECK_FILE_PATTERN: "results/unixcat.txt"
+
+    - NAME: 'Livestatus'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
       DIR: 'packages/livestatus'
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/livestatus.txt"
@@ -329,30 +338,16 @@ STAGES:
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/livestatus.txt"
 
-    - NAME: 'Test - unixcat'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_LIVESTATUS_FILES,CHANGED_UNIXCAT_FILES
-      DIR: 'packages/unixcat'
-      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/unixcat.txt"
-      TEXT_ON_SKIP: 'No unixcat files changed'
-      RESULT_CHECK_TYPE: "GCC"
-      RESULT_CHECK_FILE_PATTERN: "results/unixcat.txt"
-
-    - NAME: 'NEB/CMC Compile'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_NEB_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
-      COMMAND: "make compile-neb-cmc-docker &> ${RESULTS}/neb-cmc-compile.txt"
-      RESULT_CHECK_TYPE: "GCC"
-      RESULT_CHECK_FILE_PATTERN: "results/neb-cmc-compile.txt"
-
-    - NAME: 'Test - NEB'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_LIVESTATUS_FILES,CHANGED_NEB_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
+    - NAME: 'NEB'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_NEB_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
       DIR: 'packages/neb'
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/neb.txt"
       TEXT_ON_SKIP: 'No NEB files changed'
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/neb.txt"
 
-    - NAME: 'Test - CMC'
-      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CORE_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
+    - NAME: 'CMC'
+      ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CMC_FILES,CHANGED_CMC_PROTO_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
       DIR: 'packages/cmc'
       COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmc.txt"
       TEXT_ON_SKIP: 'No CMC files changed'
@@ -365,7 +360,7 @@ STAGES:
       TEXT_ON_SKIP: 'No SW Documentation files changed'
       RESULT_CHECK_FILE_PATTERN: "results/sw-documentation.txt"
 
-    - NAME: 'Test - Agent Controller'
+    - NAME: 'Agent Controller'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_AGENT_CONTROLLER_FILES
       DIR: 'packages/cmk-agent-ctl'
       COMMAND: "../../scripts/run-in-docker.sh ./run --setup-environment --all &> ${RESULTS}/agent-controller.txt"

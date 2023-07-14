@@ -782,127 +782,6 @@ class FolderProtocol(Protocol):
         ...
 
 
-class BaseFolder(FolderProtocol):
-    """Base class of SearchFolder and Folder. Implements common methods"""
-
-    def hosts(self) -> Mapping[HostName, CREHost]:
-        raise NotImplementedError()
-
-    def delete_hosts(
-        self,
-        host_names: Sequence[HostName],
-        *,
-        automation: Callable[[SiteId, Sequence[HostName]], ABCAutomationResult],
-    ) -> None:
-        raise NotImplementedError()
-
-    def host_names(self) -> Sequence[HostName]:
-        return list(self.hosts().keys())
-
-    def load_host(self, host_name: HostName) -> CREHost:
-        try:
-            return self.hosts()[host_name]
-        except KeyError:
-            raise MKUserError(None, f"The host {host_name} could not be found.")
-
-    def host(self, host_name: HostName) -> CREHost | None:
-        return self.hosts().get(host_name)
-
-    def has_host(self, host_name: HostName) -> bool:
-        return host_name in self.hosts()
-
-    def has_hosts(self) -> bool:
-        return len(self.hosts()) != 0
-
-    def host_validation_errors(self) -> dict[HostName, list[str]]:
-        return validate_all_hosts(self.host_names())
-
-    def has_parent(self) -> bool:
-        return self.parent() is not None
-
-    def parent(self) -> CREFolder | None:
-        raise NotImplementedError()
-
-    def is_same_as(self, folder: CREFolder | None) -> bool:
-        if folder is None:
-            return False
-        return self == folder or self.path() == folder.path()
-
-    def path(self) -> str:
-        raise NotImplementedError()
-
-    def __eq__(self, other: object) -> bool:
-        return id(self) == id(other) or (
-            isinstance(other, CREFolder) and self.path() == other.path()
-        )
-
-    def __hash__(self) -> int:
-        return id(self)
-
-    def is_current_folder(self) -> bool:
-        return self.is_same_as(folder_from_request())
-
-    def is_transitive_parent_of(self, maybe_child: CREFolder) -> bool:
-        if self.is_same_as(maybe_child):
-            return True
-
-        if not maybe_child.has_parent():
-            return False
-
-        if parent := maybe_child.parent():
-            return self.is_transitive_parent_of(parent)
-
-        return False
-
-    def is_root(self) -> bool:
-        return not self.has_parent()
-
-    def name(self) -> str:
-        raise NotImplementedError()
-
-    def title(self) -> str:
-        raise NotImplementedError()
-
-    def subfolders(self, only_visible: bool = False) -> list[CREFolder]:
-        raise NotImplementedError()
-
-    def subfolder_by_title(self, title: str) -> CREFolder | None:
-        raise NotImplementedError()
-
-    def subfolder(self, name: str) -> CREFolder | None:
-        raise NotImplementedError()
-
-    def has_subfolders(self) -> bool:
-        raise NotImplementedError()
-
-    def subfolder_choices(self) -> list[tuple[str, str]]:
-        raise NotImplementedError()
-
-    def move_subfolder_to(self, subfolder: CREFolder, target_folder: CREFolder) -> None:
-        raise NotImplementedError()
-
-    def create_subfolder(self, name: str, title: str, attributes: HostAttributes) -> CREFolder:
-        raise NotImplementedError()
-
-    def edit_url(self, backfolder: CREFolder | None = None) -> str:
-        raise NotImplementedError()
-
-    def edit(self, new_title: str, new_attributes: HostAttributes) -> None:
-        raise NotImplementedError()
-
-    def locked(self) -> bool | str:
-        raise NotImplementedError()
-
-    def create_hosts(
-        self,
-        entries: Iterable[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
-    ) -> None:
-        raise NotImplementedError()
-
-    def site_id(self) -> SiteId:
-        raise NotImplementedError()
-
-
 def find_available_folder_name(candidate: str, parent: CREFolder) -> str:
     basename = _normalize_folder_name(candidate)
     c = 1
@@ -1243,7 +1122,7 @@ def disk_or_search_base_folder_from_request() -> CREFolder:
     return folder
 
 
-class CREFolder(BaseFolder):
+class CREFolder(FolderProtocol):
     """This class represents a Setup folder that contains other folders and hosts."""
 
     @classmethod
@@ -1350,6 +1229,24 @@ class CREFolder(BaseFolder):
 
     def parent(self) -> CREFolder | None:
         return self._parent
+
+    def is_current_folder(self) -> bool:
+        return self.is_same_as(folder_from_request())
+
+    def is_transitive_parent_of(self, maybe_child: CREFolder) -> bool:
+        if self.is_same_as(maybe_child):
+            return True
+
+        if not maybe_child.has_parent():
+            return False
+
+        if parent := maybe_child.parent():
+            return self.is_transitive_parent_of(parent)
+
+        return False
+
+    def is_root(self) -> bool:
+        return not self.has_parent()
 
     def is_disk_folder(self) -> bool:
         return True
@@ -1691,6 +1588,43 @@ class CREFolder(BaseFolder):
 
     def object_ref(self) -> ObjectRef:
         return ObjectRef(ObjectRefType.Folder, self.path())
+
+    def host_names(self) -> Sequence[HostName]:
+        return list(self.hosts().keys())
+
+    def load_host(self, host_name: HostName) -> CREHost:
+        try:
+            return self.hosts()[host_name]
+        except KeyError:
+            raise MKUserError(None, f"The host {host_name} could not be found.")
+
+    def host(self, host_name: HostName) -> CREHost | None:
+        return self.hosts().get(host_name)
+
+    def has_host(self, host_name: HostName) -> bool:
+        return host_name in self.hosts()
+
+    def has_hosts(self) -> bool:
+        return len(self.hosts()) != 0
+
+    def host_validation_errors(self) -> dict[HostName, list[str]]:
+        return validate_all_hosts(self.host_names())
+
+    def has_parent(self) -> bool:
+        return self.parent() is not None
+
+    def is_same_as(self, folder: CREFolder | None) -> bool:
+        if folder is None:
+            return False
+        return self == folder or self.path() == folder.path()
+
+    def __eq__(self, other: object) -> bool:
+        return id(self) == id(other) or (
+            isinstance(other, CREFolder) and self.path() == other.path()
+        )
+
+    def __hash__(self) -> int:
+        return id(self)
 
     def hosts(self) -> Mapping[HostName, CREHost]:
         self._load_hosts_on_demand()
@@ -2878,11 +2812,7 @@ def _get_cgconf_from_attributes(attributes: HostAttributes) -> HostContactGroupS
     )
 
 
-# TODO: We do not implement 13 abstract methods from the super classes, but we nevertheless
-# instantiate SearchFolder below in current_search_folder() and pretend that it is a CREFolder! This
-# is totally broken, the class hierarchy and/or the code below needs some serious overhaul.
-# Nevertheless, we suppress the warnings for this chaos to activate pylint's warning.
-class SearchFolder(FolderProtocol):  # pylint: disable=abstract-method
+class SearchFolder(FolderProtocol):
     """A virtual folder representing the result of a search."""
 
     def __init__(self, tree: FolderTree, base_folder: CREFolder, criteria: SearchCriteria) -> None:

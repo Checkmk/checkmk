@@ -4,8 +4,8 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from typing import Any
+from unittest import mock
 
-import mock
 import pytest
 from pytest import MonkeyPatch
 

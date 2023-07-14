@@ -10,11 +10,14 @@ import copy
 import sys
 
 import pytest
-from mock import Mock, patch
 
 if sys.version_info[0] == 2:
+    from mock import Mock, patch
+
     import agents.plugins.mk_postgres_2 as mk_postgres  # pylint: disable=syntax-error
 else:
+    from unittest.mock import Mock, patch
+
     import agents.plugins.mk_postgres as mk_postgres
 
 try:

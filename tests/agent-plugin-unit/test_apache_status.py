@@ -10,11 +10,14 @@ import sys
 
 import pytest
 from _pytest.capture import CaptureFixture
-from mock import Mock
 
 if sys.version_info[0] == 2:
+    from mock import Mock
+
     import agents.plugins.apache_status_2 as apache_status  # pylint: disable=syntax-error
 else:
+    from unittest.mock import Mock
+
     import agents.plugins.apache_status as apache_status
 
 RESPONSE = "\n".join(("1st line", "2nd line", "3rd line"))

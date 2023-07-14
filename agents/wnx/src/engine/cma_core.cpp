@@ -595,7 +595,6 @@ bool HackDataWithCacheInfo(std::vector<char> &out,
     auto table = tools::SplitString(stringized, "\n");
 
     size_t data_count = 0;
-    bool hack_allowed = true;
     for (auto &t : table) {
         if constexpr (g_config_remove_slash_r) {
             while (t.back() == '\r') {
@@ -617,17 +616,14 @@ bool HackDataWithCacheInfo(std::vector<char> &out,
         }
 
         // check for piggyback
-        if (auto piggyback_name = GetPiggyBackName(t); piggyback_name) {
-            hack_allowed = piggyback_name->empty();
-            XLOG::t.i("piggyback input {}",
-                      hack_allowed
-                          ? "ended"
-                          : fmt::format("'{}' started", *piggyback_name));
+        if (auto piggyback_name = GetPiggyBackName(t);
+            piggyback_name.has_value()) {
+            XLOG::t.i("skip piggyback input {}", *piggyback_name);
             continue;
         }
 
         // hack code if not piggyback and we have something to patch
-        if (hack_allowed && TryToHackStringWithCachedInfo(t, patch)) {
+        if (TryToHackStringWithCachedInfo(t, patch)) {
             data_count += patch.size();
         }
     }

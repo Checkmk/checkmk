@@ -567,7 +567,7 @@ TEST(PluginTest, HackPluginWithPiggyBack) {
         "<<<<a>>>>\n"
         "aaaaa\r\n"
         "<<<<a>>>>\n"
-        "<<<a>>>\r\n***\r\r\n<<<b>>>\n"
+        "<<<a:cached(123,456)>>>\r\n***\r\r\n<<<b:cached(123,456)>>>\n"
         "<<<<>>>>\n"
         "<<<<>>>>\n"
         "<<<a:cached(123,456)>>>\r\n***\r\r\n<<<b:cached(123,456)>>>\n");

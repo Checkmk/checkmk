@@ -6,11 +6,11 @@
 from __future__ import annotations
 
 from collections.abc import Container, Mapping
-from typing import TypeVar
+from typing import TypeAlias, TypeVar
 
 from cmk.utils.validatedstr import ValidatedString
 
-__all__ = ["SectionName", "HostSection"]
+__all__ = ["SectionName", "SectionMap"]
 
 
 class SectionName(ValidatedString):
@@ -21,4 +21,4 @@ class SectionName(ValidatedString):
 
 _T_co = TypeVar("_T_co", covariant=True)
 
-HostSection = Mapping[SectionName, _T_co]
+SectionMap: TypeAlias = Mapping[SectionName, _T_co]

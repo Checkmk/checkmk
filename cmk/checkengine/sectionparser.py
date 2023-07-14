@@ -13,7 +13,7 @@ import cmk.utils.piggyback
 import cmk.utils.resulttype as result
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
-from cmk.utils.sectionname import HostSection, SectionName
+from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.validatedstr import ValidatedString
 
 from ._parser import HostSections
@@ -91,11 +91,11 @@ class SectionsParser(Generic[_TSeq]):
 
     def __init__(
         self,
-        host_sections: HostSections[HostSection[_TSeq]],
+        host_sections: HostSections[SectionMap[_TSeq]],
         host_name: HostName,
     ) -> None:
         super().__init__()
-        self._host_sections: HostSections[HostSection[_TSeq]] = host_sections
+        self._host_sections: HostSections[SectionMap[_TSeq]] = host_sections
         self.parsing_errors: list[str] = []
         self._memoized_results: dict[SectionName, _ParsingResult | None] = {}
         self._host_name = host_name

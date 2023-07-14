@@ -10,14 +10,14 @@ from collections.abc import Mapping, Sequence
 from typing import Final, Generic, TypeVar
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.sectionname import HostSection, SectionName
+from cmk.utils.sectionname import SectionMap, SectionName
 
 from .type_defs import SectionNameCollection
 
 __all__ = ["Parser", "HostSections"]
 
 _Tin = TypeVar("_Tin")
-_Tout = TypeVar("_Tout", bound=HostSection[Sequence])
+_Tout = TypeVar("_Tout", bound=SectionMap[Sequence])
 
 
 class HostSections(Generic[_Tout]):

@@ -12,7 +12,7 @@ from typing import Any, cast, Literal, NamedTuple, Union
 
 from cmk.utils.hostaddress import HostAddress as _HostAddress
 from cmk.utils.hostaddress import HostName as _HostName
-from cmk.utils.sectionname import HostSection as _HostSection
+from cmk.utils.sectionname import SectionMap as _HostSection
 from cmk.utils.sectionname import SectionName as _SectionName
 
 SNMPContextName = str

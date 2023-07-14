@@ -47,13 +47,13 @@ include(ExternalProject)
 ExternalProject_Add(
   livestatus
   SOURCE_DIR ${root_repo_dir}/packages/livestatus
-  BINARY_DIR ${root_repo_dir}/packages/livestatus/build
+  BUILD_IN_SOURCE 1 # run is know what to do
   CONFIGURE_COMMAND ""
   BUILD_ALWAYS 1
   BUILD_COMMAND ${root_repo_dir}/packages/livestatus/run --build
   INSTALL_COMMAND "")
-ExternalProject_Get_Property(livestatus BINARY_DIR)
-set(livestatus_lib "${BINARY_DIR}/src/liblivestatus.so")
+set(livestatus_so
+    "${root_repo_dir}/packages/livestatus/build/src/liblivestatus.so")
 
 add_library(neb SHARED ${neb_headers} ${neb_sources})
 add_dependencies(neb livestatus)
@@ -67,7 +67,7 @@ target_compile_definitions(neb PRIVATE VERSION="${CMAKE_PROJECT_VERSION}")
 target_link_libraries(
   neb
   PRIVATE -static-libstdc++ -lpthread
-  PUBLIC ${livestatus_lib})
+  PUBLIC ${livestatus_so})
 
 target_compile_features(neb PUBLIC cxx_std_17)
 set_target_properties(neb PROPERTIES NO_SONAME 1)

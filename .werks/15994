@@ -1,0 +1,26 @@
+Title: cisco_ucs: Add support for Cisco UCS C240
+Class: fix
+Compatible: compat
+Component: checks
+Date: 1689317805
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+The related check plugins are
+<ul>
+<li>cisco_ucs_lun.py</li>
+<li>cisco_ucs_psu.py</li>
+<li>cisco_ucs_cpu.py</li>
+<li>cisco_ucs_mem_total.py</li>
+<li>cisco_ucs_temp_cpu.py</li>
+<li>cisco_ucs_mem.py</li>
+<li>cisco_ucs_temp_env.py</li>
+<li>cisco_ucs_raid.py</li>
+<li>cisco_ucs_hdd.py</li>
+<li>cisco_ucs_fan.py</li>
+<li>cisco_ucs_temp_mem.py</li>
+<li>cisco_ucs_system.py</li>
+</ul>
+which may be discovered.

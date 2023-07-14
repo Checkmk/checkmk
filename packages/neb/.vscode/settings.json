@@ -169,9 +169,6 @@
     "c-cpp-flylint.flexelint.enable": false,
     "window.title": "${dirty}${activeEditorShort}${separator}LIVESTATUS${separator}",
     "workbench.colorCustomizations": {
-        "[Atom One Light]": {},
-        "activityBar.background": "#3D2A0F",
-        "titleBar.activeBackground": "#563B15",
-        "titleBar.activeForeground": "#FDFAF6"
+        "[Atom One Light]": {}
     }
 }

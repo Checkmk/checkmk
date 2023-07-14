@@ -5,7 +5,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Container, Mapping
+from collections.abc import Container, Mapping, MutableMapping
 from typing import TypeAlias, TypeVar
 
 from cmk.utils.validatedstr import ValidatedString
@@ -20,5 +20,7 @@ class SectionName(ValidatedString):
 
 
 _T_co = TypeVar("_T_co", covariant=True)
-
 SectionMap: TypeAlias = Mapping[SectionName, _T_co]
+
+_T = TypeVar("_T")
+MutableSectionMap: TypeAlias = MutableMapping[SectionName, _T]

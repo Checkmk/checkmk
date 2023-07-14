@@ -138,6 +138,7 @@ class ModeFolder(WatoMode):
     def page_menu(self, breadcrumb: Breadcrumb) -> PageMenu:
         if not self._folder.is_disk_folder():
             return self._search_folder_page_menu(breadcrumb)
+        assert not isinstance(self._folder, SearchFolder)
 
         menu = PageMenu(
             dropdowns=[
@@ -703,6 +704,7 @@ class ModeFolder(WatoMode):
 
     def _show_subfolders_of(self) -> None:
         if self._folder.has_subfolders():
+            assert isinstance(self._folder, CREFolder)
             html.open_div(
                 class_="folders"
             )  # This won't hurt even if there are no visible subfolders

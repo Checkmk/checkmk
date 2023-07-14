@@ -459,6 +459,7 @@ class ModeParentScan(WatoMode):
                 entries.append(host)
 
         if recurse:
+            assert isinstance(folder, CREFolder)
             for subfolder in folder.subfolders():
                 entries += self._recurse_hosts(subfolder, recurse, select)
         return entries

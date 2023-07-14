@@ -17,7 +17,7 @@ from collections.abc import Callable, Collection, Iterable, Iterator, Mapping, S
 from contextlib import contextmanager, suppress
 from enum import Enum
 from pathlib import Path
-from typing import Any, Final, Literal, NamedTuple, NotRequired, TypedDict
+from typing import Any, Final, Literal, NamedTuple, NotRequired, Protocol, TypedDict
 
 from redis.client import Pipeline
 
@@ -759,7 +759,30 @@ class EffectiveAttributes:
         self._effective_attributes = None
 
 
-class BaseFolder:
+class FolderProtocol(Protocol):
+    def is_disk_folder(self) -> bool:
+        ...
+
+    def is_search_folder(self) -> bool:
+        ...
+
+    def breadcrumb(self) -> Breadcrumb:
+        ...
+
+    def has_host(self, host_name: HostName) -> bool:
+        ...
+
+    def has_hosts(self) -> bool:
+        ...
+
+    def load_host(self, host_name: HostName) -> CREHost:
+        ...
+
+    def host_validation_errors(self) -> dict[HostName, list[str]]:
+        ...
+
+
+class BaseFolder(FolderProtocol):
     """Base class of SearchFolder and Folder. Implements common methods"""
 
     @staticmethod
@@ -815,19 +838,6 @@ class BaseFolder:
     ) -> None:
         raise NotImplementedError()
 
-    def breadcrumb(self) -> Breadcrumb:
-        breadcrumb = Breadcrumb()
-
-        for folder in self.parent_folder_chain() + [self]:
-            breadcrumb.append(
-                BreadcrumbItem(
-                    title=folder.title(),
-                    url=folder.url(),
-                )
-            )
-
-        return breadcrumb
-
     def host_names(self) -> Sequence[HostName]:
         return list(self.hosts().keys())
 
@@ -848,12 +858,6 @@ class BaseFolder:
 
     def host_validation_errors(self) -> dict[HostName, list[str]]:
         return validate_all_hosts(self.host_names())
-
-    def is_disk_folder(self) -> bool:
-        return False
-
-    def is_search_folder(self) -> bool:
-        return False
 
     def has_parent(self) -> bool:
         return self.parent() is not None
@@ -894,14 +898,6 @@ class BaseFolder:
 
     def is_root(self) -> bool:
         return not self.has_parent()
-
-    def parent_folder_chain(self) -> list:
-        folders = []
-        folder = self.parent()
-        while folder:
-            folders.append(folder)
-            folder = folder.parent()
-        return folders[::-1]
 
     def name(self) -> str:
         raise NotImplementedError()
@@ -947,6 +943,20 @@ class BaseFolder:
 
     def site_id(self) -> SiteId:
         raise NotImplementedError()
+
+
+def _folder_breadcrumb(folder: CREFolder | SearchFolder) -> Breadcrumb:
+    breadcrumb = Breadcrumb()
+
+    for this_folder in parent_folder_chain(folder) + [folder]:
+        breadcrumb.append(
+            BreadcrumbItem(
+                title=this_folder.title(),
+                url=this_folder.url(),
+            )
+        )
+
+    return breadcrumb
 
 
 def update_metadata(
@@ -1239,10 +1249,6 @@ def disk_or_search_base_folder_from_request() -> CREFolder:
 class CREFolder(BaseFolder):
     """This class represents a Setup folder that contains other folders and hosts."""
 
-    # Need this for specifying the correct type
-    def parent_folder_chain(self) -> list[CREFolder]:  # pylint: disable=useless-super-delegation
-        return super().parent_folder_chain()
-
     @classmethod
     def new(
         cls,
@@ -1341,6 +1347,9 @@ class CREFolder(BaseFolder):
 
     def __repr__(self) -> str:
         return f"Folder({self.path()!r}, {self._title!r})"
+
+    def breadcrumb(self) -> Breadcrumb:
+        return _folder_breadcrumb(self)
 
     def parent(self) -> CREFolder | None:
         return self._parent
@@ -1902,11 +1911,11 @@ class CREFolder(BaseFolder):
                     filename="wato.py",
                 ),
             )
-            for folder in self.parent_folder_chain() + [self]
+            for folder in parent_folder_chain(self) + [self]
         ]
 
     def title_path(self) -> list[str]:
-        return [folder.title() for folder in self.parent_folder_chain() + [self]]
+        return [folder.title() for folder in parent_folder_chain(self) + [self]]
 
     def title_path_without_root(self) -> list[str]:
         if self.is_root():
@@ -1919,7 +1928,7 @@ class CREFolder(BaseFolder):
 
     def _compute_effective_attributes(self) -> HostAttributes:
         effective = HostAttributes()
-        for folder in self.parent_folder_chain():
+        for folder in parent_folder_chain(self):
             effective.update(folder.attributes)
         effective.update(self.attributes)
 
@@ -2284,7 +2293,7 @@ class CREFolder(BaseFolder):
                 _("Cannot move folder: A folder can not be moved to it's own parent folder."),
             )
 
-        if subfolder in target_folder.parent_folder_chain():
+        if subfolder in parent_folder_chain(target_folder):
             raise MKUserError(
                 None,
                 _("Cannot move folder: A folder can not be moved to a folder within itself."),
@@ -2876,7 +2885,7 @@ def _get_cgconf_from_attributes(attributes: HostAttributes) -> HostContactGroupS
 # instantiate SearchFolder below in current_search_folder() and pretend that it is a CREFolder! This
 # is totally broken, the class hierarchy and/or the code below needs some serious overhaul.
 # Nevertheless, we suppress the warnings for this chaos to activate pylint's warning.
-class SearchFolder(BaseFolder):  # pylint: disable=abstract-method
+class SearchFolder(FolderProtocol):  # pylint: disable=abstract-method
     """A virtual folder representing the result of a search."""
 
     def __init__(self, tree: FolderTree, base_folder: CREFolder, criteria: SearchCriteria) -> None:
@@ -2896,16 +2905,37 @@ class SearchFolder(BaseFolder):  # pylint: disable=abstract-method
     def parent(self) -> CREFolder:
         return self._base_folder
 
+    def is_disk_folder(self) -> bool:
+        return False
+
     def is_search_folder(self) -> bool:
         return True
 
     def title(self) -> str:
         return _("Search results for folder %s") % self._base_folder.title()
 
+    def breadcrumb(self) -> Breadcrumb:
+        return _folder_breadcrumb(self)
+
     def hosts(self) -> Mapping[HostName, CREHost]:
         if self._found_hosts is None:
             self._found_hosts = self._search_hosts_recursively(self._base_folder)
         return self._found_hosts
+
+    def host_validation_errors(self) -> dict[HostName, list[str]]:
+        return validate_all_hosts(list(self.hosts().keys()))
+
+    def load_host(self, host_name: HostName) -> CREHost:
+        try:
+            return self.hosts()[host_name]
+        except KeyError:
+            raise MKUserError(None, f"The host {host_name} could not be found.")
+
+    def has_host(self, host_name: HostName) -> bool:
+        return host_name in self.hosts()
+
+    def has_hosts(self) -> bool:
+        return bool(self.hosts())
 
     def locked_hosts(self) -> bool:
         return False
@@ -3026,6 +3056,15 @@ class SearchFolder(BaseFolder):  # pylint: disable=abstract-method
 
     def _invalidate_search(self) -> None:
         self._found_hosts = None
+
+
+def parent_folder_chain(origin: SearchFolder | CREFolder) -> list[CREFolder]:
+    folders = []
+    folder = origin.parent()
+    while folder:
+        folders.append(folder)
+        folder = folder.parent()
+    return folders[::-1]
 
 
 class CREHost:
@@ -3219,7 +3258,7 @@ class CREHost:
         The labels of all parent folders and the host are added together. When multiple
         objects define the same tag group, the nearest to the host wins."""
         labels: dict[str, str] = {}
-        for obj in self.folder().parent_folder_chain() + [self.folder()]:
+        for obj in parent_folder_chain(self.folder()) + [self.folder()]:
             labels.update(obj.attributes.get("labels", {}).items())
         labels.update(self.attributes.get("labels", {}).items())
         return labels

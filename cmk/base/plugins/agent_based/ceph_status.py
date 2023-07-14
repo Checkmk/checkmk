@@ -6,25 +6,24 @@
 
 import json
 import time
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Mapping, Sequence
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    LegacyCheckDefinition,
-    state_markers,
-)
-from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    check_levels,
     get_average,
     get_rate,
     get_value_store,
+    register,
     render,
+    Result,
+    Service,
+    State,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
-
-DiscoveryResult = Iterable[tuple[str | None, dict]]
-CheckResult = Iterable[tuple[int, str]]
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
+    CheckResult,
+    DiscoveryResult,
+    StringTable,
+)
 
 Section = Mapping
 
@@ -40,7 +39,7 @@ def parse_ceph_status(string_table: StringTable) -> Section:
     return section
 
 
-def ceph_check_epoch(id_: str, epoch: float, params: Mapping[str, Any]) -> tuple[int, str]:
+def ceph_check_epoch(id_: str, epoch: float, params: Mapping[str, Any]) -> CheckResult:
     warn, crit, avg_interval_min = params.get("epoch", (None, None, 1))
     now = time.time()
     value_store = get_value_store()
@@ -52,13 +51,11 @@ def ceph_check_epoch(id_: str, epoch: float, params: Mapping[str, Any]) -> tuple
     )
     epoch_avg = get_average(value_store, f"{id_}.epoch.avg", now, epoch_rate, avg_interval_min)
 
-    infoname = "Epoch rate (%s average)" % get_age_human_readable(avg_interval_min * 60)
-    return check_levels(
+    yield from check_levels(
         epoch_avg,
-        None,
-        (warn, crit),
-        infoname=infoname,
-    )[:2]
+        levels_upper=(warn, crit),
+        label=f"Epoch rate ({render.timespan(avg_interval_min * 60)} average)",
+    )
 
 
 #   .--status--------------------------------------------------------------.
@@ -74,7 +71,7 @@ def ceph_check_epoch(id_: str, epoch: float, params: Mapping[str, Any]) -> tuple
 
 
 def discovery_ceph_status(section: Section) -> DiscoveryResult:
-    yield None, {}
+    yield Service()
 
 
 def _extract_error_messages(section: Section) -> Sequence[str]:
@@ -87,12 +84,12 @@ def _extract_error_messages(section: Section) -> Sequence[str]:
 
 
 # TODO genereller Status -> ceph health (Ausnahmen für "too many PGs per OSD" als Option ermöglichen)
-def check_ceph_status(_no_item: None, params: Mapping[str, Any], section: Section) -> CheckResult:
-    map_health_states = {
-        "HEALTH_OK": (0, "OK"),
-        "HEALTH_WARN": (1, "warning"),
-        "HEALTH_CRIT": (2, "critical"),
-        "HEALTH_ERR": (2, "error"),
+def check_ceph_status(params: Mapping[str, Any], section: Section) -> CheckResult:
+    map_health_states: dict[str, tuple[State, str]] = {
+        "HEALTH_OK": (State.OK, "OK"),
+        "HEALTH_WARN": (State.WARN, "warning"),
+        "HEALTH_CRIT": (State.CRIT, "critical"),
+        "HEALTH_ERR": (State.CRIT, "error"),
     }
 
     overall_status = section.get("health", {}).get("status")
@@ -101,19 +98,24 @@ def check_ceph_status(_no_item: None, params: Mapping[str, Any], section: Sectio
 
     state, state_readable = map_health_states.get(
         overall_status,
-        (3, "unknown[%s]" % overall_status),
+        (State.UNKNOWN, "unknown[%s]" % overall_status),
     )
     if state:
         error_messages = _extract_error_messages(section)
         if error_messages:
             state_readable += " (%s)" % (", ".join(error_messages))
 
-    yield state, "Health: %s" % state_readable
-    yield ceph_check_epoch("ceph_status", section["election_epoch"], params)
+    yield Result(state=state, summary="Health: %s" % state_readable)
+    yield from ceph_check_epoch("ceph_status", section["election_epoch"], params)
 
 
-check_info["ceph_status"] = LegacyCheckDefinition(
+register.agent_section(
+    name="ceph_status",
     parse_function=parse_ceph_status,
+)
+
+register.check_plugin(
+    name="ceph_status",
     service_name="Ceph Status",
     discovery_function=discovery_ceph_status,
     check_function=check_ceph_status,
@@ -137,51 +139,43 @@ check_info["ceph_status"] = LegacyCheckDefinition(
 
 def discovery_ceph_status_osds(section: Section) -> DiscoveryResult:
     if "osdmap" in section:
-        yield None, {}
+        yield Service()
 
 
-def check_ceph_status_osds(
-    _no_item: None, params: Mapping[str, Any], section: Section
-) -> CheckResult:
+def check_ceph_status_osds(params: Mapping[str, Any], section: Section) -> CheckResult:
     # some instances of ceph give out osdmap data in a flat structure
     data = section["osdmap"].get("osdmap") or section["osdmap"]
     num_osds = int(data["num_osds"])
-    yield ceph_check_epoch("ceph_osds", data["epoch"], params)
+    yield from ceph_check_epoch("ceph_osds", data["epoch"], params)
 
     for ds, title, state in [
-        ("full", "Full", 2),
-        ("nearfull", "Near full", 1),
+        ("full", "Full", State.CRIT),
+        ("nearfull", "Near full", State.WARN),
     ]:
         if data.get(ds, False):
             # Return false if 'full' or 'nearfull' indicators are not in the datasets (relevant for newer ceph versions after 13.2.7)
-            yield state, title
+            yield Result(state=state, summary=title)
 
-    yield 0, "OSDs: {}, Remapped PGs: {}".format(num_osds, data["num_remapped_pgs"])
+    yield Result(
+        state=State.OK,
+        summary="OSDs: {}, Remapped PGs: {}".format(num_osds, data["num_remapped_pgs"]),
+    )
 
     for ds, title, param_key in [
         ("num_in_osds", "OSDs out", "num_out_osds"),
         ("num_up_osds", "OSDs down", "num_down_osds"),
     ]:
-        state = 0
         value = num_osds - data[ds]
-        value_perc = 100 * float(value) / num_osds
-        infotext = f"{title}: {value}, {render.percent(value_perc)}"
-        if params.get(param_key):
-            warn, crit = params[param_key]
-            if value_perc >= crit:
-                state = 2
-            elif value_perc >= warn:
-                state = 1
-            if state > 0:
-                infotext += " (warn/crit at {}/{})".format(
-                    render.percent(warn),
-                    render.percent(crit),
-                )
-
-        yield state, infotext
+        yield from check_levels(
+            100 * float(value) / num_osds,
+            levels_upper=params.get(param_key),
+            render_func=render.percent,
+            label=title,
+        )
 
 
-check_info["ceph_status.osds"] = LegacyCheckDefinition(
+register.check_plugin(
+    name="ceph_status_osds",
     sections=["ceph_status"],
     service_name="Ceph OSDs",
     discovery_function=discovery_ceph_status_osds,
@@ -207,59 +201,60 @@ check_info["ceph_status.osds"] = LegacyCheckDefinition(
 
 def discovery_ceph_status_pgs(section: Section) -> DiscoveryResult:
     if "pgmap" in section:
-        yield None, {}
+        yield Service()
 
 
-def check_ceph_status_pgs(
-    _no_item: None, params: Mapping[str, Any], section: Section
-) -> CheckResult:
+def check_ceph_status_pgs(section: Section) -> CheckResult:
     # Suggested by customer
-    map_pg_states = {
-        "active": (0, "active"),
-        "backfill": (0, "backfill"),
-        "backfill_wait": (1, "backfill wait"),
-        "backfilling": (1, "backfilling"),
-        "backfill_toofull": (0, "backfill too full"),
-        "clean": (0, "clean"),
-        "creating": (0, "creating"),
-        "degraded": (1, "degraded"),
-        "down": (2, "down"),
-        "deep": (0, "deep"),
-        "incomplete": (2, "incomplete"),
-        "inconsistent": (2, "inconsistent"),
-        "peered": (2, "peered"),
-        "peering": (0, "peering"),
-        "recovering": (0, "recovering"),
-        "recovery_wait": (0, "recovery wait"),
-        "remapped": (0, "remapped"),
-        "repair": (0, "repair"),
-        "replay": (1, "replay"),
-        "scrubbing": (0, "scrubbing"),
-        "snaptrim": (0, "snaptrim"),
-        "snaptrim_wait": (0, "snaptrim wait"),
-        "stale": (2, "stale"),
-        "undersized": (0, "undersized"),
-        "wait_backfill": (0, "wait backfill"),
+    map_pg_states: dict[str, tuple[State, str]] = {
+        "active": (State.OK, "active"),
+        "backfill": (State.OK, "backfill"),
+        "backfill_wait": (State.WARN, "backfill wait"),
+        "backfilling": (State.WARN, "backfilling"),
+        "backfill_toofull": (State.OK, "backfill too full"),
+        "clean": (State.OK, "clean"),
+        "creating": (State.OK, "creating"),
+        "degraded": (State.WARN, "degraded"),
+        "down": (State.CRIT, "down"),
+        "deep": (State.OK, "deep"),
+        "incomplete": (State.CRIT, "incomplete"),
+        "inconsistent": (State.CRIT, "inconsistent"),
+        "peered": (State.CRIT, "peered"),
+        "peering": (State.OK, "peering"),
+        "recovering": (State.OK, "recovering"),
+        "recovery_wait": (State.OK, "recovery wait"),
+        "remapped": (State.OK, "remapped"),
+        "repair": (State.OK, "repair"),
+        "replay": (State.WARN, "replay"),
+        "scrubbing": (State.OK, "scrubbing"),
+        "snaptrim": (State.OK, "snaptrim"),
+        "snaptrim_wait": (State.OK, "snaptrim wait"),
+        "stale": (State.CRIT, "stale"),
+        "undersized": (State.OK, "undersized"),
+        "wait_backfill": (State.OK, "wait backfill"),
     }
 
     data = section["pgmap"]
     num_pgs = data["num_pgs"]
-    pgs_info = "PGs: %s" % num_pgs
-    states = [0]
-    infotexts = []
+    yield Result(state=State.OK, summary="PGs: %s" % num_pgs)
 
     for pgs_by_state in data["pgs_by_state"]:
         statetexts = []
+        states = []
         for status in pgs_by_state["state_name"].split("+"):
-            state, state_readable = map_pg_states.get(status, (3, "UNKNOWN[%s]" % status))
+            state, state_readable = map_pg_states.get(
+                status, (State.UNKNOWN, "UNKNOWN[%s]" % status)
+            )
             states.append(state)
-            statetexts.append(f"{state_readable}{state_markers[state]}")
-        infotexts.append("Status '{}': {}".format("+".join(statetexts), pgs_by_state["count"]))
+            statetexts.append(state_readable)
+        yield Result(
+            state=State.worst(*states),
+            summary="Status '{}': {}".format("+".join(statetexts), pgs_by_state["count"]),
+        )
 
-    yield max(states), "{}, {}".format(pgs_info, ", ".join(infotexts))
 
-
-check_info["ceph_status.pgs"] = LegacyCheckDefinition(
+register.check_plugin(
+    name="ceph_status_pgs",
     sections=["ceph_status"],
     service_name="Ceph PGs",
     discovery_function=discovery_ceph_status_pgs,
@@ -281,19 +276,18 @@ check_info["ceph_status.pgs"] = LegacyCheckDefinition(
 
 def discovery_ceph_status_mgrs(section: Section) -> DiscoveryResult:
     if "epoch" in section.get("mgrmap", {}):
-        yield None, {}
+        yield Service()
 
 
-def check_ceph_status_mgrs(
-    _no_item: None, params: Mapping[str, Any], section: Section
-) -> CheckResult:
+def check_ceph_status_mgrs(params: Mapping[str, Any], section: Section) -> CheckResult:
     epoch = section.get("mgrmap", {}).get("epoch")
     if epoch is None:
         return
-    yield ceph_check_epoch("ceph_mgrs", epoch, params)
+    yield from ceph_check_epoch("ceph_mgrs", epoch, params)
 
 
-check_info["ceph_status.mgrs"] = LegacyCheckDefinition(
+register.check_plugin(
+    name="ceph_status_mgrs",
     sections=["ceph_status"],
     service_name="Ceph MGRs",
     discovery_function=discovery_ceph_status_mgrs,

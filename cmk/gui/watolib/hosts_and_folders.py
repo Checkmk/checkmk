@@ -785,48 +785,6 @@ class FolderProtocol(Protocol):
 class BaseFolder(FolderProtocol):
     """Base class of SearchFolder and Folder. Implements common methods"""
 
-    @staticmethod
-    def _normalize_folder_name(name: str) -> str:
-        """Transform the `name` to a filesystem friendly one.
-
-        >>> BaseFolder._normalize_folder_name("abc")
-        'abc'
-        >>> BaseFolder._normalize_folder_name("Äbc")
-        'aebc'
-        >>> BaseFolder._normalize_folder_name("../Äbc")
-        '___aebc'
-        """
-        converted = ""
-        for c in name.lower():
-            if c == "ä":
-                converted += "ae"
-            elif c == "ö":
-                converted += "oe"
-            elif c == "ü":
-                converted += "ue"
-            elif c == "ß":
-                converted += "ss"
-            elif c in "abcdefghijklmnopqrstuvwxyz0123456789-_":
-                converted += c
-            else:
-                converted += "_"
-        return converted
-
-    @staticmethod
-    def find_available_folder_name(candidate: str, parent: BaseFolder | None = None) -> str:
-        if parent is None:
-            parent = folder_from_request()
-
-        basename = BaseFolder._normalize_folder_name(candidate)
-        c = 1
-        name = basename
-        while True:
-            if parent.subfolder(name) is None:
-                break
-            c += 1
-            name = "%s-%d" % (basename, c)
-        return name
-
     def hosts(self) -> Mapping[HostName, CREHost]:
         raise NotImplementedError()
 
@@ -943,6 +901,45 @@ class BaseFolder(FolderProtocol):
 
     def site_id(self) -> SiteId:
         raise NotImplementedError()
+
+
+def find_available_folder_name(candidate: str, parent: CREFolder) -> str:
+    basename = _normalize_folder_name(candidate)
+    c = 1
+    name = basename
+    while True:
+        if parent.subfolder(name) is None:
+            break
+        c += 1
+        name = "%s-%d" % (basename, c)
+    return name
+
+
+def _normalize_folder_name(name: str) -> str:
+    """Transform the `name` to a filesystem friendly one.
+
+    >>> _normalize_folder_name("abc")
+    'abc'
+    >>> _normalize_folder_name("Äbc")
+    'aebc'
+    >>> _normalize_folder_name("../Äbc")
+    '___aebc'
+    """
+    converted = ""
+    for c in name.lower():
+        if c == "ä":
+            converted += "ae"
+        elif c == "ö":
+            converted += "oe"
+        elif c == "ü":
+            converted += "ue"
+        elif c == "ß":
+            converted += "ss"
+        elif c in "abcdefghijklmnopqrstuvwxyz0123456789-_":
+            converted += c
+        else:
+            converted += "_"
+    return converted
 
 
 def _folder_breadcrumb(folder: CREFolder | SearchFolder) -> Breadcrumb:

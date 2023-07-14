@@ -56,7 +56,7 @@ from cmk.gui.plugins.openapi.endpoints.host_config.response_schemas import (
 from cmk.gui.plugins.openapi.endpoints.utils import folder_slug
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
-from cmk.gui.watolib.hosts_and_folders import BaseFolder, CREFolder, folder_tree
+from cmk.gui.watolib.hosts_and_folders import CREFolder, find_available_folder_name, folder_tree
 
 from cmk import fields
 
@@ -115,7 +115,7 @@ def create(params: Mapping[str, Any]) -> Response:
         )
 
     if name is None:
-        name = BaseFolder.find_available_folder_name(title)
+        name = find_available_folder_name(title, parent_folder)
 
     folder = parent_folder.create_subfolder(name, title, attributes)
 

@@ -78,11 +78,11 @@ from cmk.gui.watolib.host_attributes import (
     HostAttributes,
 )
 from cmk.gui.watolib.hosts_and_folders import (
-    BaseFolder,
     check_wato_foldername,
     CREFolder,
     CREHost,
     disk_or_search_folder_from_request,
+    find_available_folder_name,
     folder_from_request,
     folder_preserving_link,
     folder_tree,
@@ -1328,13 +1328,14 @@ class ModeCreateFolder(ABCFolderMode):
         return _("Add folder")
 
     def _save(self, title: str, attributes: HostAttributes) -> None:
+        parent_folder = folder_from_request()
         if not active_config.wato_hide_filenames:
             name = request.get_ascii_input_mandatory("name", "").strip()
             check_wato_foldername("name", name)
         else:
-            name = BaseFolder.find_available_folder_name(title)
+            name = find_available_folder_name(title, parent_folder)
 
-        folder_from_request().create_subfolder(name, title, attributes)
+        parent_folder.create_subfolder(name, title, attributes)
 
 
 @page_registry.register_page("ajax_set_foldertree")

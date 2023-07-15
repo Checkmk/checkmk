@@ -6635,10 +6635,6 @@ msgstr "Attribuut"
 msgid "Attribute Sync Plugins"
 msgstr "Attribuut Sync Plugins"
 
-#, fuzzy
-msgid "Attribute match value"
-msgstr "In te stellen attribuut"
-
 msgid "Attribute sync plugins"
 msgstr "Attribuut sync plugins"
 
@@ -10922,6 +10918,14 @@ msgstr ""
 "Kies of u alleen het versienummer wilt opvragen, of dat u het antwoord op "
 "een adresopvraag wilt controleren."
 
+#, fuzzy
+msgid ""
+"Choose, whether you want to use the parent host information for the NetBIOS "
+"server name, or if you want to specify one."
+msgstr ""
+"Kies of u alleen het versienummer wilt opvragen, of dat u het antwoord op "
+"een adresopvraag wilt controleren."
+
 msgid "Chrony timesynchronisation"
 msgstr "Chrony timesynchronisatie"
 
@@ -12629,10 +12633,6 @@ msgstr "Naam contactpersoon"
 msgid "Contact group (effective)"
 msgstr "Contactgroep (effectief)"
 
-#, fuzzy
-msgid "Contact group claim name"
-msgstr "Kenmerk contactgroepen"
-
 msgid "Contact groups"
 msgstr "Contactgroepen"
 
@@ -12657,6 +12657,10 @@ msgid "Contact groups are used to assign users to hosts and services"
 msgstr ""
 "Contactgroepen worden gebruikt om gebruikers aan hosts en diensten toe te "
 "wijzen"
+
+#, fuzzy
+msgid "Contact groups attribute"
+msgstr "Contactgroepen"
 
 msgid "Contact groups defined in rule"
 msgstr "Contactgroepen gedefinieerd in regel"
@@ -15153,6 +15157,10 @@ msgstr "Definieer lagere niveaus voor het aantal totale containers"
 msgid "Define lower levels for number of waiting containers"
 msgstr "Definieer lagere niveaus voor het aantal wachtende containers"
 
+#, fuzzy
+msgid "Define name of NetBIOS server"
+msgstr "NetBIOS naam van de server"
+
 msgid ""
 "Define patterns for excluding kernel configuration parameters from the "
 "inventory."
@@ -17512,10 +17520,6 @@ msgstr "Titel niet tonen"
 msgid "Do not status data inventory"
 msgstr "Geen status gegevensinventaris"
 
-#, fuzzy
-msgid "Do not synchronize contact group memberships"
-msgstr "Contactgroep Lidmaatschap"
-
 msgid "Do not transfer context"
 msgstr "Context niet overdragen"
 
@@ -19265,29 +19269,6 @@ msgstr ""
 "mycheckmkserver.com/site/<br>De server hoeft niet toegankelijk te zijn voor "
 "uw identity provider. We ondersteunen alleen HTTPS voor dit eindpunt, dat "
 "een vertrouwd certificaat specificeert."
-
-msgid ""
-"Enter the claim name whose attribute value you expect to be a distinguished "
-"name (DN) and whose common name (CN) you want to use as contact group. A "
-"contact group with the identical name must exist in Checkmk. Otherwise they "
-"can't be mapped."
-msgstr ""
-
-#, fuzzy
-msgid ""
-"Enter the claim name whose attribute value you want to use to map your "
-"identity provider to a contact group. A contact group with the identical "
-"name must exist in Checkmk. Otherwise they cannot be mapped."
-msgstr ""
-"Het attribuut dat gebruikt wordt om contactgroepen te mappen tussen uw "
-"identity provider en Checkmk. Merk op dat contactgroepen moeten bestaan in "
-"Checkmk om te kunnen worden gemapt."
-
-msgid ""
-"Enter the claim name whose attribute value you want to use. The user will "
-"only be assigned to contact groups in case of a match between the specified "
-"attribute match value and the returned claim attribute value."
-msgstr ""
 
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr ""
@@ -25552,6 +25533,11 @@ msgstr "IP-adres"
 msgid "IP address family"
 msgstr "IP-adresfamilie"
 
+msgid ""
+"IP address of SMB share host (only necessary if SMB share host is in another "
+"network)"
+msgstr ""
+
 msgid "IP address or FQDN of JVM webserver"
 msgstr "IP-adres of FQDN van JVM webserver"
 
@@ -26091,9 +26077,6 @@ msgstr ""
 "details in de long-output tot de eerste N karakters van alle argumenten voor "
 "elk proces bevatten. Merk op dat dit gevoelige gegevens kan bevatten, zoals "
 "credentials, en wordt sterk afgeraden."
-
-msgid "If omitted then the IP address is being used."
-msgstr "Indien weggelaten dan wordt het IP adres gebruikt."
 
 msgid ""
 "If one of the selected states occurs the check will repsond with a critical "
@@ -32991,14 +32974,6 @@ msgid ""
 msgstr ""
 "Zet de operationele toestand (<tt>ifOperStatus</tt>) om in een "
 "bewakingstoestand."
-
-#, fuzzy
-msgid "Map to contact groups"
-msgstr "Overeenkomen met contactgroepen"
-
-#, fuzzy
-msgid "Map value to specific groups"
-msgstr "uitdrukkelijk gespecificeerde groepen"
 
 msgid "Mapped data"
 msgstr "In kaart gebrachte gegevens"
@@ -48740,10 +48715,6 @@ msgstr "Reserve schijf"
 msgid "Special Agent"
 msgstr "Speciaal Agent"
 
-#, fuzzy
-msgid "Specific Mappings"
-msgstr "Specifieke sites"
-
 msgid "Specific date"
 msgstr "Specifieke datum"
 
@@ -51735,6 +51706,10 @@ msgstr "Terse"
 msgid "Test"
 msgstr "Test"
 
+#, fuzzy
+msgid "Test authentication"
+msgstr "Token authenticatie"
+
 msgid "Test connection to host"
 msgstr "Test verbinding met host"
 
@@ -51743,6 +51718,10 @@ msgstr "Testgebeurtenis gegenereerd en naar Event Console gestuurd."
 
 msgid "Test hostname before activation"
 msgstr "Test hostnaam vóór activering"
+
+#, fuzzy
+msgid "Test verification"
+msgstr "Verificatie van het rijbewijs"
 
 msgid "Testing"
 msgstr "Test"
@@ -52851,6 +52830,16 @@ msgid "The attribute used to identify users group memberships."
 msgstr ""
 "Het kenmerk dat wordt gebruikt om het lidmaatschap van een gebruikersgroep "
 "te identificeren."
+
+#, fuzzy
+msgid ""
+"The attribute used to map contact groups between your identity provider and "
+"Checkmk. Note that contact groups need to exist in Checkmk to be able to be "
+"mapped."
+msgstr ""
+"Het attribuut dat gebruikt wordt om contactgroepen te mappen tussen uw "
+"identity provider en Checkmk. Merk op dat contactgroepen moeten bestaan in "
+"Checkmk om te kunnen worden gemapt."
 
 #, python-format
 msgid ""
@@ -63951,9 +63940,6 @@ msgstr ""
 "Gebruik <tt>1</tt>, <tt>2</tt> enz. om overeenkomende subgroepen te "
 "vervangen, <tt>0</tt> om de oorspronkelijke hostnaam in te voegen"
 
-msgid "Use CN from LDAP distinguished name (DN) string"
-msgstr ""
-
 msgid "Use CSV export"
 msgstr "CSV-export gebruiken"
 
@@ -64111,10 +64097,6 @@ msgstr "Gebruik alternatieve weergavenaam voor diensten"
 msgid "Use any network address"
 msgstr "Netwerkadres"
 
-#, fuzzy
-msgid "Use attribute value"
-msgstr "Kenmerk gebruikers-ID"
-
 msgid "Use backup code"
 msgstr "Gebruik back-up code"
 
@@ -64271,6 +64253,9 @@ msgstr "Gebruik hier alleen kleine letters, cijfers en underscores."
 
 msgid "Use other hostname"
 msgstr "Gebruik een andere hostnaam"
+
+msgid "Use parent host information for the NetBIOS server name"
+msgstr ""
 
 msgid "Use persistent connections"
 msgstr "Gebruik persistente verbindingen"
@@ -69030,6 +69015,10 @@ msgstr ""
 "href='wato.py?mode=edit_ruleset&varname=inventory_df_rules'>Verspeuren van "
 "bestandssystemen</a>."
 
+#, fuzzy
+msgid "You can specify the NetBIOS server name."
+msgstr "U kunt maximaal %d items opgeven"
+
 msgid ""
 "You can specify which Scrape Targets including Exporters are connected to "
 "your Prometheus instance. The Prometheus Special Agent will automatically "
@@ -72158,6 +72147,44 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#, fuzzy
+#~| msgid "Attribute to set"
+#~ msgid "Attribute match value"
+#~ msgstr "In te stellen attribuut"
+
+#, fuzzy
+#~| msgid "Contact groups attribute"
+#~ msgid "Contact group claim name"
+#~ msgstr "Kenmerk contactgroepen"
+
+#, fuzzy
+#~| msgid "Contactgroup Membership"
+#~ msgid "Do not synchronize contact group memberships"
+#~ msgstr "Contactgroep Lidmaatschap"
+
+#, fuzzy
+#~| msgid "Match contact groups"
+#~ msgid "Map to contact groups"
+#~ msgstr "Overeenkomen met contactgroepen"
+
+#, fuzzy
+#~| msgid "explicitly specified groups"
+#~ msgid "Map value to specific groups"
+#~ msgstr "uitdrukkelijk gespecificeerde groepen"
+
+#, fuzzy
+#~| msgid "Specific sites"
+#~ msgid "Specific Mappings"
+#~ msgstr "Specifieke sites"
+
+#, fuzzy
+#~| msgid "User ID attribute"
+#~ msgid "Use attribute value"
+#~ msgstr "Kenmerk gebruikers-ID"
+
+#~ msgid "If omitted then the IP address is being used."
+#~ msgstr "Indien weggelaten dan wordt het IP adres gebruikt."
 
 #~ msgid "Collect diagnostics data from the local site."
 #~ msgstr "Verzamel diagnostische gegevens van de lokale locatie."

@@ -6693,10 +6693,6 @@ msgstr "Atributo"
 msgid "Attribute Sync Plugins"
 msgstr "Plugins de sincronización de atributos"
 
-#, fuzzy
-msgid "Attribute match value"
-msgstr "Atributo a fijar"
-
 msgid "Attribute sync plugins"
 msgstr "Sincronización de atributos"
 
@@ -11010,6 +11006,14 @@ msgstr ""
 "Elija, si sólo quiere consultar el número de versión, o si quiere comprobar "
 "la respuesta a una consulta de dirección."
 
+#, fuzzy
+msgid ""
+"Choose, whether you want to use the parent host information for the NetBIOS "
+"server name, or if you want to specify one."
+msgstr ""
+"Elija, si sólo quiere consultar el número de versión, o si quiere comprobar "
+"la respuesta a una consulta de dirección."
+
 msgid "Chrony timesynchronisation"
 msgstr "Sincronización horaria de las crónicas"
 
@@ -12734,10 +12738,6 @@ msgstr "Nombre de contacto"
 msgid "Contact group (effective)"
 msgstr "Grupo de contacto (efectivo)"
 
-#, fuzzy
-msgid "Contact group claim name"
-msgstr "Atributo de grupos de contacto"
-
 msgid "Contact groups"
 msgstr "Grupos de contacto"
 
@@ -12761,6 +12761,10 @@ msgstr ""
 msgid "Contact groups are used to assign users to hosts and services"
 msgstr ""
 "Los grupos de contacto se utilizan para asignar usuarios a hosts y servicios"
+
+#, fuzzy
+msgid "Contact groups attribute"
+msgstr "Grupos de contacto"
 
 msgid "Contact groups defined in rule"
 msgstr "Grupos de contactos definidos en la norma"
@@ -15270,6 +15274,10 @@ msgstr "Definir niveles inferiores para el número de contenedores totales"
 msgid "Define lower levels for number of waiting containers"
 msgstr "Definir niveles inferiores para el número de contenedores en espera"
 
+#, fuzzy
+msgid "Define name of NetBIOS server"
+msgstr "Nombre NetBIOS del servidor"
+
 msgid ""
 "Define patterns for excluding kernel configuration parameters from the "
 "inventory."
@@ -17663,10 +17671,6 @@ msgstr "No mostrar el título"
 msgid "Do not status data inventory"
 msgstr "No se trata de un inventario de datos"
 
-#, fuzzy
-msgid "Do not synchronize contact group memberships"
-msgstr "Afiliación al grupo de contacto"
-
 msgid "Do not transfer context"
 msgstr "No transferir el contexto"
 
@@ -19424,29 +19428,6 @@ msgstr ""
 "https://mycheckmkserver.com No es necesario que su proveedor de identidad "
 "pueda acceder a él. Sólo admitimos HTTPS para este punto final, que "
 "especifica un certificado de confianza."
-
-msgid ""
-"Enter the claim name whose attribute value you expect to be a distinguished "
-"name (DN) and whose common name (CN) you want to use as contact group. A "
-"contact group with the identical name must exist in Checkmk. Otherwise they "
-"can't be mapped."
-msgstr ""
-
-#, fuzzy
-msgid ""
-"Enter the claim name whose attribute value you want to use to map your "
-"identity provider to a contact group. A contact group with the identical "
-"name must exist in Checkmk. Otherwise they cannot be mapped."
-msgstr ""
-"Atributo utilizado para asignar grupos de contactos entre su proveedor de "
-"identidad y Checkmk. Tenga en cuenta que los grupos de contactos deben "
-"existir en Checkmk para poder asignarse."
-
-msgid ""
-"Enter the claim name whose attribute value you want to use. The user will "
-"only be assigned to contact groups in case of a match between the specified "
-"attribute match value and the returned claim attribute value."
-msgstr ""
 
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr ""
@@ -25755,6 +25736,11 @@ msgstr "Dirección IP"
 msgid "IP address family"
 msgstr "Familia de direcciones IP"
 
+msgid ""
+"IP address of SMB share host (only necessary if SMB share host is in another "
+"network)"
+msgstr ""
+
 msgid "IP address or FQDN of JVM webserver"
 msgstr "Dirección IP o FQDN del servidor web JVM"
 
@@ -26297,9 +26283,6 @@ msgstr ""
 "detalles en la salida larga incluirá hasta los primeros N caracteres de "
 "todos los argumentos de cada proceso. Tenga en cuenta que esto puede incluir "
 "datos sensibles como las credenciales, y se desaconseja encarecidamente."
-
-msgid "If omitted then the IP address is being used."
-msgstr "Si se omite, se utiliza la dirección IP."
 
 msgid ""
 "If one of the selected states occurs the check will repsond with a critical "
@@ -33253,14 +33236,6 @@ msgid ""
 msgstr ""
 "Asigna el estado operativo (<tt>ifOperStatus</tt>) a un estado de "
 "supervisión."
-
-#, fuzzy
-msgid "Map to contact groups"
-msgstr "Coincidir con los grupos de contacto"
-
-#, fuzzy
-msgid "Map value to specific groups"
-msgstr "grupos especificados explícitamente"
 
 msgid "Mapped data"
 msgstr "Datos mapeados"
@@ -49183,10 +49158,6 @@ msgstr "Disco de repuesto"
 msgid "Special Agent"
 msgstr "Agente especial"
 
-#, fuzzy
-msgid "Specific Mappings"
-msgstr "Sitios específicos"
-
 msgid "Specific date"
 msgstr "Fecha específica"
 
@@ -52206,6 +52177,10 @@ msgstr "Terse"
 msgid "Test"
 msgstr "Prueba"
 
+#, fuzzy
+msgid "Test authentication"
+msgstr "Autenticación por token"
+
 msgid "Test connection to host"
 msgstr "Prueba de conexión con el host"
 
@@ -52214,6 +52189,10 @@ msgstr "Evento de prueba generado y enviado a la consola de eventos."
 
 msgid "Test hostname before activation"
 msgstr "Prueba de nombre de host antes de la activación"
+
+#, fuzzy
+msgid "Test verification"
+msgstr "Verificación de licencias"
 
 msgid "Testing"
 msgstr "Prueba"
@@ -53322,6 +53301,16 @@ msgstr ""
 msgid "The attribute used to identify users group memberships."
 msgstr ""
 "Atributo utilizado para identificar la pertenencia a grupos de usuarios."
+
+#, fuzzy
+msgid ""
+"The attribute used to map contact groups between your identity provider and "
+"Checkmk. Note that contact groups need to exist in Checkmk to be able to be "
+"mapped."
+msgstr ""
+"Atributo utilizado para asignar grupos de contactos entre su proveedor de "
+"identidad y Checkmk. Tenga en cuenta que los grupos de contactos deben "
+"existir en Checkmk para poder asignarse."
 
 #, python-format
 msgid ""
@@ -64505,9 +64494,6 @@ msgstr ""
 "Utilice <tt>1</tt>, <tt>2</tt> etc. para reemplazar los subgrupos "
 "coincidentes, <tt>0</tt> para insertar al nombre original del host"
 
-msgid "Use CN from LDAP distinguished name (DN) string"
-msgstr ""
-
 msgid "Use CSV export"
 msgstr "Utilizar la exportación CSV"
 
@@ -64664,10 +64650,6 @@ msgstr "Utilizar un nombre de visualización alternativo para los servicios"
 #, fuzzy
 msgid "Use any network address"
 msgstr "Dirección de la red"
-
-#, fuzzy
-msgid "Use attribute value"
-msgstr "Atributo User-ID"
 
 msgid "Use backup code"
 msgstr "Utilizar el código de reserva"
@@ -64826,6 +64808,9 @@ msgstr "Utilice aquí sólo letras minúsculas, dígitos y guiones bajos."
 
 msgid "Use other hostname"
 msgstr "Utilizar otro nombre de host"
+
+msgid "Use parent host information for the NetBIOS server name"
+msgstr ""
 
 msgid "Use persistent connections"
 msgstr "Utilizar conexiones persistentes"
@@ -69603,6 +69588,10 @@ msgstr ""
 "mode=edit_ruleset&varname=inventory_df_rules'>Descubrimiento de sistemas de "
 "archivos</a>."
 
+#, fuzzy
+msgid "You can specify the NetBIOS server name."
+msgstr "Puede especificar un máximo de %d entradas"
+
 msgid ""
 "You can specify which Scrape Targets including Exporters are connected to "
 "your Prometheus instance. The Prometheus Special Agent will automatically "
@@ -72751,6 +72740,44 @@ msgstr "{actual} es demasiado bajo. El valor mínimo permitido es {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos los derechos reservados."
+
+#, fuzzy
+#~| msgid "Attribute to set"
+#~ msgid "Attribute match value"
+#~ msgstr "Atributo a fijar"
+
+#, fuzzy
+#~| msgid "Contact groups attribute"
+#~ msgid "Contact group claim name"
+#~ msgstr "Atributo de grupos de contacto"
+
+#, fuzzy
+#~| msgid "Contactgroup Membership"
+#~ msgid "Do not synchronize contact group memberships"
+#~ msgstr "Afiliación al grupo de contacto"
+
+#, fuzzy
+#~| msgid "Match contact groups"
+#~ msgid "Map to contact groups"
+#~ msgstr "Coincidir con los grupos de contacto"
+
+#, fuzzy
+#~| msgid "explicitly specified groups"
+#~ msgid "Map value to specific groups"
+#~ msgstr "grupos especificados explícitamente"
+
+#, fuzzy
+#~| msgid "Specific sites"
+#~ msgid "Specific Mappings"
+#~ msgstr "Sitios específicos"
+
+#, fuzzy
+#~| msgid "User ID attribute"
+#~ msgid "Use attribute value"
+#~ msgstr "Atributo User-ID"
+
+#~ msgid "If omitted then the IP address is being used."
+#~ msgstr "Si se omite, se utiliza la dirección IP."
 
 #~ msgid "Collect diagnostics data from the local site."
 #~ msgstr "Recopilar datos de diagnóstico del sitio local."

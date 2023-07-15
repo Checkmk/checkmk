@@ -6507,10 +6507,6 @@ msgstr "属性"
 msgid "Attribute Sync Plugins"
 msgstr "属性同期プラグイン"
 
-#, fuzzy
-msgid "Attribute match value"
-msgstr "設定する属性"
-
 msgid "Attribute sync plugins"
 msgstr "属性同期プラグイン"
 
@@ -10732,6 +10728,14 @@ msgstr ""
 "バージョン番号の問い合わせだけなのか、アドレスの問い合わせに対する応答を確認"
 "したいのか、選択してください。"
 
+#, fuzzy
+msgid ""
+"Choose, whether you want to use the parent host information for the NetBIOS "
+"server name, or if you want to specify one."
+msgstr ""
+"バージョン番号の問い合わせだけなのか、アドレスの問い合わせに対する応答を確認"
+"したいのか、選択してください。"
+
 msgid "Chrony timesynchronisation"
 msgstr "慢性的な時間同期"
 
@@ -12412,10 +12416,6 @@ msgstr "連絡先"
 msgid "Contact group (effective)"
 msgstr "連絡先グループ(有効)"
 
-#, fuzzy
-msgid "Contact group claim name"
-msgstr "連絡先グループ属性"
-
 msgid "Contact groups"
 msgstr "連絡先グループ"
 
@@ -12438,6 +12438,10 @@ msgstr ""
 msgid "Contact groups are used to assign users to hosts and services"
 msgstr ""
 "連絡先グループは、ユーザーをホストとサービスに割り当てるために使用されます"
+
+#, fuzzy
+msgid "Contact groups attribute"
+msgstr "連絡先グループ"
 
 msgid "Contact groups defined in rule"
 msgstr "ルールで定義された連絡先グループ"
@@ -14916,6 +14920,10 @@ msgstr "コンテナ総数の下位レベル定義"
 msgid "Define lower levels for number of waiting containers"
 msgstr "待機コンテナ数の下位レベルの定義"
 
+#, fuzzy
+msgid "Define name of NetBIOS server"
+msgstr "サーバーのNetBIOS名"
+
 msgid ""
 "Define patterns for excluding kernel configuration parameters from the "
 "inventory."
@@ -17265,10 +17273,6 @@ msgstr "タイトルを表示しない"
 msgid "Do not status data inventory"
 msgstr "データインベントリのステータスを設定しない"
 
-#, fuzzy
-msgid "Do not synchronize contact group memberships"
-msgstr "コンタクトグループメンバーシップ"
-
 msgid "Do not transfer context"
 msgstr "コンテキストを転送しない"
 
@@ -19009,29 +19013,6 @@ msgstr ""
 "これは、Checkmk が稼働しているサーバーの URL を指します。例: https://"
 "mycheckmkserver.com IDプロバイダからアクセスできる必要はありません。このエン"
 "ドポイントでは、信頼できる証明書を指定する HTTPS のみをサポートしています。"
-
-msgid ""
-"Enter the claim name whose attribute value you expect to be a distinguished "
-"name (DN) and whose common name (CN) you want to use as contact group. A "
-"contact group with the identical name must exist in Checkmk. Otherwise they "
-"can't be mapped."
-msgstr ""
-
-#, fuzzy
-msgid ""
-"Enter the claim name whose attribute value you want to use to map your "
-"identity provider to a contact group. A contact group with the identical "
-"name must exist in Checkmk. Otherwise they cannot be mapped."
-msgstr ""
-"IDプロバイダとCheckmkの間でコンタクトグループをマッピングするために使用される"
-"属性です。連絡先グループは、マッピングするためにCheckmkに存在する必要があるこ"
-"とに注意してください。"
-
-msgid ""
-"Enter the claim name whose attribute value you want to use. The user will "
-"only be assigned to contact groups in case of a match between the specified "
-"attribute match value and the returned claim attribute value."
-msgstr ""
 
 msgid "Enter the exit code as 10-digit, lower case hex value, e.g. 0x00000000."
 msgstr "終了コードを10桁の小文字の16進値(0x00000000など)で入力します。"
@@ -25225,6 +25206,11 @@ msgstr "IPアドレス"
 msgid "IP address family"
 msgstr "IPアドレスファミリ"
 
+msgid ""
+"IP address of SMB share host (only necessary if SMB share host is in another "
+"network)"
+msgstr ""
+
 msgid "IP address or FQDN of JVM webserver"
 msgstr "JVM WebサーバーのIPアドレスまたはFQDN"
 
@@ -25739,9 +25725,6 @@ msgstr ""
 "ゼロ以外の場合、long-outputに一致するすべてのプロセスのリストとその詳細には、"
 "各プロセスの全ての引数の最初のN文字までが含まれます。これには資格情報などの機"
 "密データが含まれる可能性があるため、強くお勧めできません。"
-
-msgid "If omitted then the IP address is being used."
-msgstr "省略した場合、IPアドレスが使用されます。"
 
 msgid ""
 "If one of the selected states occurs the check will repsond with a critical "
@@ -32524,14 +32507,6 @@ msgstr "管理状態(<tt> ifAdminStatus </tt>)を監視状態にマップしま�
 msgid ""
 "Map the operational state (<tt>ifOperStatus</tt>) to a monitoring state."
 msgstr "運用状態(<tt>ifOperStatus</tt>)を監視状態にマッピングします。"
-
-#, fuzzy
-msgid "Map to contact groups"
-msgstr "連絡先グループと一致する"
-
-#, fuzzy
-msgid "Map value to specific groups"
-msgstr "明示的に指定されたグループ"
 
 msgid "Mapped data"
 msgstr "マップされたデータ"
@@ -48232,10 +48207,6 @@ msgstr "スペアディスク"
 msgid "Special Agent"
 msgstr "特別なエージェント"
 
-#, fuzzy
-msgid "Specific Mappings"
-msgstr "特定のサイト"
-
 msgid "Specific date"
 msgstr "特定の日付"
 
@@ -51163,6 +51134,10 @@ msgstr "簡潔"
 msgid "Test"
 msgstr "テスト"
 
+#, fuzzy
+msgid "Test authentication"
+msgstr "トークン認証"
+
 msgid "Test connection to host"
 msgstr "ホストへの接続をテストします"
 
@@ -51171,6 +51146,10 @@ msgstr "テストイベントが生成され、Event Consoleに送信されま�
 
 msgid "Test hostname before activation"
 msgstr "アクティベーション前にホスト名をテストする"
+
+#, fuzzy
+msgid "Test verification"
+msgstr "ライセンス検証"
 
 msgid "Testing"
 msgstr "テスト"
@@ -52213,6 +52192,16 @@ msgstr ""
 
 msgid "The attribute used to identify users group memberships."
 msgstr "ユーザーグループのメンバーシップを識別するために使用される属性。"
+
+#, fuzzy
+msgid ""
+"The attribute used to map contact groups between your identity provider and "
+"Checkmk. Note that contact groups need to exist in Checkmk to be able to be "
+"mapped."
+msgstr ""
+"IDプロバイダとCheckmkの間でコンタクトグループをマッピングするために使用される"
+"属性です。連絡先グループは、マッピングするためにCheckmkに存在する必要があるこ"
+"とに注意してください。"
 
 #, python-format
 msgid ""
@@ -62818,9 +62807,6 @@ msgstr ""
 "<tt>\\1</tt>, <tt>\\2</tt>などを使用して一致するサブグループを置き換え、<tt>"
 "\\0</tt>を使用して元のホスト名に挿入します"
 
-msgid "Use CN from LDAP distinguished name (DN) string"
-msgstr ""
-
 #, fuzzy
 msgid "Use CSV export"
 msgstr "使用されるSNATポート"
@@ -62981,10 +62967,6 @@ msgstr "サービスに代替表示名を使用する"
 msgid "Use any network address"
 msgstr "ネットワークアドレス"
 
-#, fuzzy
-msgid "Use attribute value"
-msgstr "ユーザーID属性"
-
 msgid "Use backup code"
 msgstr "バックアップコードを使用"
 
@@ -63139,6 +63121,9 @@ msgstr "ここでは、小文字、数字、およびアンダースコアのみ
 
 msgid "Use other hostname"
 msgstr "他のホスト名を使用する"
+
+msgid "Use parent host information for the NetBIOS server name"
+msgstr ""
 
 msgid "Use persistent connections"
 msgstr "持続的接続を使用する"
@@ -67681,6 +67666,10 @@ msgstr ""
 "成に応じて、マウントポイントまたはボリュームとマウントポイントの組み合わせの"
 "いずれかに一致することに注意してください。"
 
+#, fuzzy
+msgid "You can specify the NetBIOS server name."
+msgstr "最大 %d のエントリを指定できます"
+
 msgid ""
 "You can specify which Scrape Targets including Exporters are connected to "
 "your Prometheus instance. The Prometheus Special Agent will automatically "
@@ -70758,6 +70747,44 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "Attribute to set"
+#~ msgid "Attribute match value"
+#~ msgstr "設定する属性"
+
+#, fuzzy
+#~| msgid "Contact groups attribute"
+#~ msgid "Contact group claim name"
+#~ msgstr "連絡先グループ属性"
+
+#, fuzzy
+#~| msgid "Contactgroup Membership"
+#~ msgid "Do not synchronize contact group memberships"
+#~ msgstr "コンタクトグループメンバーシップ"
+
+#, fuzzy
+#~| msgid "Match contact groups"
+#~ msgid "Map to contact groups"
+#~ msgstr "連絡先グループと一致する"
+
+#, fuzzy
+#~| msgid "explicitly specified groups"
+#~ msgid "Map value to specific groups"
+#~ msgstr "明示的に指定されたグループ"
+
+#, fuzzy
+#~| msgid "Specific sites"
+#~ msgid "Specific Mappings"
+#~ msgstr "特定のサイト"
+
+#, fuzzy
+#~| msgid "User ID attribute"
+#~ msgid "Use attribute value"
+#~ msgstr "ユーザーID属性"
+
+#~ msgid "If omitted then the IP address is being used."
+#~ msgstr "省略した場合、IPアドレスが使用されます。"
 
 #, fuzzy
 #~| msgid "Connect to the local site"

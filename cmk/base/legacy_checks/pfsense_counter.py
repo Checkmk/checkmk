@@ -5,13 +5,21 @@
 
 
 import time
+from typing import Any, Iterable, Mapping
 
 from cmk.base.check_api import get_average, get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, OIDEnd, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
+
+Section = Mapping[str, int]
+
+CheckResult = Iterable[tuple[int, str, list]]
+
+DiscoveryResult = Iterable[tuple[None, dict]]
 
 
-def parse_pfsense_counter(info):
+def parse_pfsense_counter(info: StringTable) -> Section:
     names = {
         "1.0": "matched",
         "2.0": "badoffset",
@@ -27,11 +35,13 @@ def parse_pfsense_counter(info):
     return parsed
 
 
-def inventory_pfsense_counter(parsed):
+def inventory_pfsense_counter(parsed: Section) -> DiscoveryResult:
     return [(None, {})]
 
 
-def check_pfsense_counter(_no_item, params, parsed):
+def check_pfsense_counter(
+    _no_item: None, params: Mapping[str, Any], parsed: Section
+) -> CheckResult:
     namestoinfo = {
         "matched": "Packets that matched a rule",
         "badoffset": "Packets with bad offset",
@@ -45,7 +55,7 @@ def check_pfsense_counter(_no_item, params, parsed):
 
     if params.get("average"):
         backlog_minutes = params["average"]
-        yield 0, "Values averaged over %d min" % params["average"]
+        yield 0, "Values averaged over %d min" % params["average"], []
     else:
         backlog_minutes = None
 

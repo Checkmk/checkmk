@@ -19,7 +19,7 @@ CheckResult = Iterable[tuple[int, str, list]]
 DiscoveryResult = Iterable[tuple[None, dict]]
 
 
-def parse_pfsense_counter(info: StringTable) -> Section:
+def parse_pfsense_counter(string_table: StringTable) -> Section:
     names = {
         "1.0": "matched",
         "2.0": "badoffset",
@@ -30,17 +30,17 @@ def parse_pfsense_counter(info: StringTable) -> Section:
     }
 
     parsed = {}
-    for end_oid, counter_text in info:
+    for end_oid, counter_text in string_table:
         parsed[names[end_oid]] = int(counter_text)
     return parsed
 
 
-def inventory_pfsense_counter(parsed: Section) -> DiscoveryResult:
+def discovery_pfsense_counter(section: Section) -> DiscoveryResult:
     return [(None, {})]
 
 
 def check_pfsense_counter(
-    _no_item: None, params: Mapping[str, Any], parsed: Section
+    _no_item: None, params: Mapping[str, Any], section: Section
 ) -> CheckResult:
     namestoinfo = {
         "matched": "Packets that matched a rule",
@@ -59,8 +59,8 @@ def check_pfsense_counter(
     else:
         backlog_minutes = None
 
-    for what in parsed:
-        rate = get_rate("pfsense_counter-%s" % what, this_time, parsed[what])
+    for what in section:
+        rate = get_rate("pfsense_counter-%s" % what, this_time, section[what])
         perfrate = ("fw_packets_" + what, rate)
 
         if backlog_minutes:
@@ -101,7 +101,7 @@ check_info["pfsense_counter"] = LegacyCheckDefinition(
     ),
     parse_function=parse_pfsense_counter,
     service_name="pfSense Firewall Packet Rates",
-    discovery_function=inventory_pfsense_counter,
+    discovery_function=discovery_pfsense_counter,
     check_function=check_pfsense_counter,
     check_ruleset_name="pfsense_counter",
     check_default_parameters={

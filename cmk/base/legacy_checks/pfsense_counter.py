@@ -7,7 +7,7 @@
 import time
 from typing import Any, Iterable, Mapping
 
-from cmk.base.check_api import get_average, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, get_average, get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
@@ -53,44 +53,25 @@ def check_pfsense_counter(
 
     this_time = time.time()
 
-    if params.get("average"):
+    if backlog_minutes := params.get("average"):
         backlog_minutes = params["average"]
         yield 0, "Values averaged over %d min" % params["average"], []
-    else:
-        backlog_minutes = None
 
     for what in section:
+        levels = params.get(what)
         rate = get_rate("pfsense_counter-%s" % what, this_time, section[what])
-        perfrate = ("fw_packets_" + what, rate)
 
         if backlog_minutes:
-            avgrate = get_average("pfsense_counter-%srate" % what, this_time, rate, backlog_minutes)
-            check_against = avgrate
-            perfavg = ("fw_avg_packets_" + what, avgrate)
-        else:
-            perfavg = None
-            check_against = rate
-        infotext = "%s: %.2f pkts/s" % (namestoinfo[what], check_against)
+            yield 0, "", [("fw_packets_" + what, rate) + (levels or ())]
+            rate = get_average("pfsense_counter-%srate" % what, this_time, rate, backlog_minutes)
 
-        status = 0
-        if params.get(what):
-            warn, crit = params[what]
-            perfrate += params[what]
-            if perfavg:
-                perfavg += params[what]
-            levelstext = " (warn/crit at %.2f/%.2f pkts/s)" % (warn, crit)
-            if crit and check_against >= crit:
-                status = 2
-                infotext += levelstext
-            elif warn and check_against >= warn:
-                status = 1
-                infotext += levelstext
-
-        perfdata = [perfrate]
-        if perfavg:
-            perfdata.append(perfavg)
-
-        yield status, infotext, perfdata
+        yield check_levels(
+            rate,
+            f"fw{'_avg' if backlog_minutes else ''}_packets_{what}",
+            levels,
+            human_readable_func=lambda x: "%.2f pkts",
+            infoname=namestoinfo[what],
+        )
 
 
 check_info["pfsense_counter"] = LegacyCheckDefinition(

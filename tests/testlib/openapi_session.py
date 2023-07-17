@@ -7,7 +7,7 @@ import logging
 import time
 from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
-from typing import Any, AnyStr, NamedTuple, NoReturn, Optional
+from typing import Any, AnyStr, NamedTuple, Optional
 
 import requests
 
@@ -280,7 +280,7 @@ class CMKOpenApiSession(requests.Session):
 
     def bulk_create_hosts(
         self,
-        entries: list[Mapping[str, Any]],
+        entries: list[dict[str, Any]],
         bake_agent: bool = False,
         ignore_existing: bool = False,
     ) -> list[dict[str, Any]]:
@@ -325,6 +325,14 @@ class CMKOpenApiSession(requests.Session):
         if response.status_code != 204:
             raise UnexpectedResponse.from_response(response)
 
+    def bulk_delete_hosts(self, hostnames: list[str]) -> None:
+        response = self.post(
+            "/domain-types/host_config/actions/bulk-delete/invoke",
+            json={"entries": hostnames},
+        )
+        if response.status_code != 204:
+            raise UnexpectedResponse.from_response(response)
+
     def rename_host(self, *, hostname_old: str, hostname_new: str, etag: str) -> None:
         response = self.put(
             f"/objects/host_config/{hostname_old}/actions/rename/invoke",
@@ -351,17 +359,25 @@ class CMKOpenApiSession(requests.Session):
         with self._wait_for_completion(timeout, "post"):
             self.rename_host(hostname_old=hostname_old, hostname_new=hostname_new, etag=etag)
 
-    def discover_services(self, hostname: str, mode: str = "tabula_rasa") -> NoReturn:
+    def discover_services(
+        self,
+        hostname: str,
+        mode: str = "tabula_rasa",
+    ) -> None:
         response = self.post(
             "/domain-types/service_discovery_run/actions/start/invoke",
-            json={"host_name": hostname, "mode": mode},
+            json={
+                "host_name": hostname,
+                "mode": mode,
+            },
             # We want to get the redirect response and handle that below. So don't let requests
             # handle that for us.
             allow_redirects=False,
         )
         if response.status_code == 302:
             raise Redirect(redirect_url=response.headers["Location"])  # activation pending
-        raise UnexpectedResponse.from_response(response)
+        if response.status_code != 200:
+            raise UnexpectedResponse.from_response(response)
 
     def bulk_discover_services(
         self,
@@ -399,10 +415,11 @@ class CMKOpenApiSession(requests.Session):
         status: str = response.json()["extensions"]["state"]
         return status
 
-    def discover_services_and_wait_for_completion(self, hostname: str) -> None:
-        timeout = 60
+    def discover_services_and_wait_for_completion(
+        self, hostname: str, mode: str = "new", timeout: int = 60
+    ) -> None:
         with self._wait_for_completion(timeout, "get"):
-            self.discover_services(hostname)
+            self.discover_services(hostname, mode)
 
     @contextmanager
     def _wait_for_completion(
@@ -436,10 +453,10 @@ class CMKOpenApiSession(requests.Session):
         self, hostname: str, pending: Optional[bool] = None, columns: Optional[list[str]] = None
     ) -> list[dict[str, Any]]:
         if pending is not None:
-            if columns:
-                columns.append("has_been_checked")
-            else:
+            if columns is None:
                 columns = ["has_been_checked"]
+            elif "has_been_checked" not in columns:
+                columns.append("has_been_checked")
         query_string = "?columns=" + "&columns=".join(columns) if columns else ""
         response = self.get(f"/objects/host/{hostname}/collections/services{query_string}")
         if response.status_code != 200:

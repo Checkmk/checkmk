@@ -24,7 +24,6 @@ from redis.client import Pipeline
 from livestatus import SiteId
 
 import cmk.utils.paths
-import cmk.utils.version as cmk_version
 from cmk.utils import store
 from cmk.utils.datastructures import deep_update
 from cmk.utils.exceptions import MKGeneralException
@@ -101,16 +100,6 @@ from cmk.gui.watolib.utils import (
     rename_host_in_list,
     wato_root_dir,
 )
-
-if cmk_version.is_managed_edition():
-    from cmk.gui.cme.host_and_folder_validators import (  # pylint: disable=no-name-in-module
-        validate_create_hosts,
-        validate_create_subfolder,
-        validate_edit_folder,
-        validate_edit_host,
-        validate_move_hosts,
-        validate_move_subfolder_to,
-    )
 
 SearchCriteria = Mapping[str, Any]
 
@@ -1130,6 +1119,15 @@ def disk_or_search_base_folder_from_request() -> CREFolder:
 
 class CREFolder(FolderProtocol):
     """This class represents a Setup folder that contains other folders and hosts."""
+
+    validate_edit_host: Callable[[SiteId, HostName, HostAttributes], None]
+    validate_create_hosts: Callable[
+        [Iterable[tuple[HostName, HostAttributes, Sequence[HostName] | None]], SiteId], None
+    ]
+    validate_create_subfolder: Callable[[CREFolder, HostAttributes], None]
+    validate_edit_folder: Callable[[CREFolder, HostAttributes], None]
+    validate_move_hosts: Callable[[CREFolder, Iterable[HostName], CREFolder], None]
+    validate_move_subfolder_to: Callable[[CREFolder, CREFolder], None]
 
     @classmethod
     def new(
@@ -3286,6 +3284,7 @@ class CREHost:
         self.permissions.need_permission("write")
         self.need_unlocked()
 
+        CREFolder.validate_edit_host(self.folder().site_id(), self.name(), attributes)
         _validate_contact_group_modification(
             _get_cgconf_from_attributes(self.attributes)["groups"],
             _get_cgconf_from_attributes(attributes)["groups"],
@@ -3482,65 +3481,9 @@ def _must_be_in_contactgroups(cgs: Iterable[ContactgroupName]) -> None:
             )
 
 
-# .
-#   .--CME-----------------------------------------------------------------.
-#   |                          ____ __  __ _____                           |
-#   |                         / ___|  \/  | ____|                          |
-#   |                        | |   | |\/| |  _|                            |
-#   |                        | |___| |  | | |___                           |
-#   |                         \____|_|  |_|_____|                          |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Managed Services Edition specific things                             |
-#   '----------------------------------------------------------------------'
-# TODO: This has been moved directly into watolib because it was not easily possible
-# to extract Folder/Host dependencies to a separate module. As soon as we have untied
-# this we should re-establish a watolib plugin hierarchy and move this to a CME
-# specific watolib plugin
-
-
-class CMEFolder(CREFolder):
-    def edit(self, new_title, new_attributes):
-        validate_edit_folder(self, new_attributes)
-        super().edit(new_title, new_attributes)
-
-    def create_subfolder(self, name, title, attributes):
-        validate_create_subfolder(self, attributes)
-        return super().create_subfolder(name, title, attributes)
-
-    def move_subfolder_to(self, subfolder, target_folder):
-        validate_move_subfolder_to(subfolder, target_folder)
-        super().move_subfolder_to(subfolder, target_folder)
-
-    def create_hosts(
-        self,
-        entries: Iterable[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
-    ) -> None:
-        validate_create_hosts(entries, self.site_id())
-        super().create_hosts(entries)
-
-    def move_hosts(self, host_names, target_folder):
-        validate_move_hosts(self, host_names, target_folder)
-        super().move_hosts(host_names, target_folder)
-
-
-class CMEHost(CREHost):
-    def edit(self, attributes: HostAttributes, cluster_nodes: Sequence[HostName] | None) -> None:
-        f = self.folder()
-        if isinstance(f, CMEFolder):
-            validate_edit_host(f.site_id(), self.name(), attributes)
-        super().edit(attributes, cluster_nodes)
-
-
-def _get_host_and_folder_class() -> tuple[type[CREFolder], type[CREHost]]:
-    if not cmk_version.is_managed_edition():
-        return CREFolder, CREHost
-    return CMEFolder, CMEHost
-
-
-host_and_folder_classes = _get_host_and_folder_class()
-Folder: type[CREFolder] = host_and_folder_classes[0]
-Host: type[CREHost] = host_and_folder_classes[1]
+# TODO: Clean this up
+Folder = CREFolder
+Host = CREHost
 
 
 def call_hook_hosts_changed(folder: CREFolder) -> None:

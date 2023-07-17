@@ -36,6 +36,7 @@ from cmk.gui.watolib.host_attributes import host_attribute_registry as _host_att
 from cmk.gui.watolib.host_rename import (
     AutomationRenameHostsUUIDLink as _AutomationRenameHostsUUIDLink,
 )
+from cmk.gui.watolib.hosts_and_folders import CREFolder
 from cmk.gui.watolib.hosts_and_folders import (
     rebuild_folder_lookup_cache as _rebuild_folder_lookup_cache,
 )
@@ -146,8 +147,17 @@ def _register_cronjobs() -> None:
     _register_job(_autodiscovery.execute_autodiscovery)
 
 
-def load_watolib_plugins():
+def load_watolib_plugins() -> None:
     _load_web_plugins("watolib", globals())
+
+
+def _register_folder_stub_validators() -> None:
+    CREFolder.validate_edit_host = lambda s, n, a: None
+    CREFolder.validate_create_hosts = lambda e, s: None
+    CREFolder.validate_create_subfolder = lambda f, a: None
+    CREFolder.validate_edit_folder = lambda f, a: None
+    CREFolder.validate_move_hosts = lambda f, n, t: None
+    CREFolder.validate_move_subfolder_to = lambda f, t: None
 
 
 # TODO(ml):  The code is still poorly organized as we register classes here that are
@@ -162,3 +172,4 @@ _register_host_attribute()
 _register_pages()
 _register_post_config_load()
 _register_cronjobs()
+_register_folder_stub_validators()

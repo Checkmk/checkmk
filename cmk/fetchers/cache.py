@@ -37,15 +37,14 @@ class SectionStore(Generic[_T]):
             return
 
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        _store.save_object_to_file(
+        _store.save_object_to_pickle_file(
             self.path,
             {str(k): v for k, v in sections.items()},
-            pretty=False,
         )
         self._logger.debug("Stored persisted sections: %s", ", ".join(str(s) for s in sections))
 
     def load(self) -> MutableSectionMap[tuple[int, int, _T]]:
-        raw_sections_data = _store.load_object_from_file(self.path, default={})
+        raw_sections_data = _store.load_object_from_pickle_file(self.path, default={})
         return {SectionName(k): v for k, v in raw_sections_data.items()}
 
     def update(
@@ -80,20 +79,24 @@ class SectionStore(Generic[_T]):
         # the possible write here and simply ignore the outdated sections or lock when
         # reading and unlock after writing
         persisted_sections = self.load()
-        persisted_sections.update(
-            {
-                section_name: persist_info + (section_content,)
-                for section_name, section_content in sections.items()
-                if (persist_info := lookup_persist(section_name)) is not None
-            }
-        )
+
+        new_sections = {
+            section_name: persist_info + (section_content,)
+            for section_name, section_content in sections.items()
+            if (persist_info := lookup_persist(section_name)) is not None
+        }
+        store_sections = bool(new_sections)
+        persisted_sections.update(new_sections)
+
         if not keep_outdated:
             for section_name in tuple(persisted_sections):
                 (_created_at, valid_until, _section_content) = persisted_sections[section_name]
                 if valid_until < now:
+                    store_sections = True
                     del persisted_sections[section_name]
 
-        self.store(persisted_sections)
+        if store_sections:
+            self.store(persisted_sections)
         return persisted_sections
 
     def _add_persisted_sections(

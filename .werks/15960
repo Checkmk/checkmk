@@ -1,0 +1,18 @@
+Title: permissions: allow guest users Host read access on monitoring endpoints
+Class: fix
+Compatible: incomp
+Component: rest-api
+Date: 1689601987
+Edition: cre
+Knowledge: doc
+Level: 1
+Version: 2.3.0b1
+
+After some security updates to the REST-API, guest users were
+no longer able to view host data on monitoring endpoints due
+to insufficient permissions. There is a differentiation between
+'monitoring' and 'setup' endpoints with regards to permissions
+which was previously not taken into account.
+
+This werk addresses this issue by allowing monitoring read
+access for guest users.

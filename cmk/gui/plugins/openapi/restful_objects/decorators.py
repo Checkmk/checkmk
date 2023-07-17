@@ -78,6 +78,7 @@ from cmk.gui.plugins.openapi.utils import (
     FIELDS,
     problem,
     ProblemException,
+    RestAPIForbiddenException,
     RestAPIHeaderSchemaValidationException,
     RestAPIHeaderValidationException,
     RestAPIPathValidationException,
@@ -86,7 +87,6 @@ from cmk.gui.plugins.openapi.utils import (
     RestAPIRequestContentTypeException,
     RestAPIRequestDataValidationException,
     RestAPIResponseException,
-    RestAPIUnauthorizedException,
     RestAPIWatoDisabledException,
 )
 from cmk.gui.watolib.activate_changes import (
@@ -691,6 +691,11 @@ class Endpoint:
                     exc.messages if isinstance(exc.messages, dict) else {"exc": exc.messages},
                 ),
             )
+        except MKAuthException as exc:
+            raise RestAPIForbiddenException(
+                title=http.client.responses[403],
+                detail=exc.args[0],
+            )
 
     def _query_param_validation(
         self, query_schema: type[Schema] | None, _params: dict[str, Any]
@@ -712,6 +717,11 @@ class Endpoint:
                 fields=FIELDS(
                     exc.messages if isinstance(exc.messages, dict) else {"exc": exc.messages},
                 ),
+            )
+        except MKAuthException as exc:
+            raise RestAPIForbiddenException(
+                title=http.client.responses[403],
+                detail=exc.args[0],
             )
 
     def _header_validation(
@@ -766,8 +776,8 @@ class Endpoint:
             )
 
         except MKAuthException as exc:
-            raise RestAPIUnauthorizedException(
-                title=http.client.responses[401],
+            raise RestAPIForbiddenException(
+                title=http.client.responses[403],
                 detail=exc.args[0],
             )
 

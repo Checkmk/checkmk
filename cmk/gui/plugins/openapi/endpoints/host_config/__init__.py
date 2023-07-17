@@ -503,7 +503,15 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
     constructors.object_action_href("host_config", "{host_name}", action_name="rename"),
     "cmk/rename",
     method="put",
-    path_params=[HOST_NAME],
+    path_params=[
+        {
+            "host_name": gui_fields.HostField(
+                description="A hostname.",
+                should_exist=True,
+                permission_type="setup_write",
+            ),
+        }
+    ],
     etag="both",
     additional_status_codes=[302, 409, 422],
     status_descriptions={
@@ -513,6 +521,7 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
     },
     permissions_required=permissions.AllPerm(
         [
+            permissions.Perm("wato.all_folders"),
             permissions.Perm("wato.edit_hosts"),
             permissions.Perm("wato.rename_hosts"),
             permissions.Perm("wato.see_all_folders"),
@@ -717,7 +726,15 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
     constructors.object_href("host_config", "{host_name}"),
     "cmk/show",
     method="get",
-    path_params=[HOST_NAME],
+    path_params=[
+        {
+            "host_name": gui_fields.HostField(
+                description="A hostname.",
+                should_exist=True,
+                permission_type="setup_read",
+            )
+        }
+    ],
     query_params=[EFFECTIVE_ATTRIBUTES],
     etag="output",
     response_schema=HostConfigSchema,

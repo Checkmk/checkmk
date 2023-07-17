@@ -276,9 +276,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 #   |              \___\___/|_| |_| |_|_| |_| |_|\___/|_| |_|              |
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-def parse_varnish(info):
+def parse_varnish(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         parsed_path = _parse_path(line[0])
         instance = _create_hierarchy(parsed_path, parsed)
         try:

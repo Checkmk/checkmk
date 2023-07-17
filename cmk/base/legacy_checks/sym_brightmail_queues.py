@@ -38,7 +38,7 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, contains, SNMPTree
 
 
-def parse_sym_brightmail_queues(info):
+def parse_sym_brightmail_queues(string_table):
     parsed = {}
     for (
         descr,
@@ -48,7 +48,7 @@ def parse_sym_brightmail_queues(info):
         messageRate,
         queueSize,
         queuedMessages,
-    ) in info:
+    ) in string_table:
         for k, v in [
             ("connections", connections),
             ("dataRate", dataRate),

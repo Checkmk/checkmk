@@ -12,10 +12,10 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_ucs_c_rack_server_fans(info):
+def parse_ucs_c_rack_server_fans(string_table):
     parsed = {}
 
-    for fan in info:
+    for fan in string_table:
         try:
             key_value_pairs = [kv.split(" ", 1) for kv in fan[1:]]
             fan = (

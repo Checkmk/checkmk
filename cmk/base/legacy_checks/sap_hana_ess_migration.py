@@ -21,9 +21,9 @@ sap_hana_ess_migration_state_map = {
 }
 
 
-def parse_sap_hana_ess_migration(info):
+def parse_sap_hana_ess_migration(string_table):
     parsed = {}
-    for sid_instance, lines in sap_hana.parse_sap_hana(info).items():
+    for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
         if not lines:
             parsed[sid_instance] = {"log": "", "timestamp": "not available"}
             continue

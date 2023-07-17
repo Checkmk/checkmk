@@ -14,9 +14,9 @@ from cmk.base.config import check_info
 tsm_scratch_default_levels = (5, 7)
 
 
-def parse_tsm_scratch(info):
+def parse_tsm_scratch(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if len(line) != 3:
             continue
 

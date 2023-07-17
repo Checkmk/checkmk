@@ -18,9 +18,9 @@ _SAP_HANA_CONNECT_STATE_MAP: Mapping[str, tuple[int, Callable[[str], bool]]] = {
 }
 
 
-def parse_sap_hana_connect(info):
+def parse_sap_hana_connect(string_table):
     parsed: dict[str, dict] = {}
-    for sid_instance, lines in sap_hana.parse_sap_hana(info).items():
+    for sid_instance, lines in sap_hana.parse_sap_hana(string_table).items():
         inst = parsed.setdefault(
             sid_instance,
             {

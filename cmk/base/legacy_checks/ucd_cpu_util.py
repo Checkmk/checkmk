@@ -23,8 +23,8 @@ from cmk.base.plugins.agent_based.utils import ucd_hr_detection
 #    UCD-SNMP-MIB::ssCpuRawSoftIRQ.0 = Counter32: 277402
 
 
-def parse_ucd_cpu_util(info):
-    if not info:
+def parse_ucd_cpu_util(string_table):
+    if not string_table:
         return {}
 
     (
@@ -38,7 +38,7 @@ def parse_ucd_cpu_util(info):
         raw_io_send,
         raw_io_received,
         raw_cpu_softirq,
-    ) = info[0]
+    ) = string_table[0]
 
     raw_cpu_ticks = [
         raw_cpu_user or None,

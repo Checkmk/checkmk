@@ -17,7 +17,7 @@ Section = Mapping[Literal["alerts"], Sequence[Mapping[str, Any]]]
 STATUS_MAP = {"CRITICAL": 2, "WARNING": 1, "OK": 0, "UNKNOWN": 3, "DISABLED": 3}
 
 
-def parse_storeonce4x_alerts(info):
+def parse_storeonce4x_alerts(string_table):
     return {
         "alerts": [
             {
@@ -26,7 +26,7 @@ def parse_storeonce4x_alerts(info):
                 "alertState": alert["alertState"],
                 "description": alert["description"],
             }
-            for alert in json.loads(info[0][0])["members"]
+            for alert in json.loads(string_table[0][0])["members"]
         ]
     }
 

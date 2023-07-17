@@ -22,9 +22,9 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 
-def parse_websphere_mq_channels(info):
+def parse_websphere_mq_channels(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if len(line) == 2:
             messages, max_messages = 0, 0
             channel_name = line[0]

@@ -18,10 +18,10 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_scaleio_devices(info):
+def parse_scaleio_devices(string_table):
     devices = {}
     device = {}
-    for line in info:
+    for line in string_table:
         if len(line) != 2:
             continue
         key, value = line

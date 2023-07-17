@@ -41,10 +41,10 @@ raritan_pdu_ocprot_current_default_levels = (14.0, 15.0)
 # of the OID should really be swapped!
 
 
-def parse_raritan_pdu_ocprot(info):
+def parse_raritan_pdu_ocprot(string_table):
     flattened_info = [
         [end_oid, state, value, scale]
-        for (end_oid, state, value), (scale,) in zip(info[0], info[1])
+        for (end_oid, state, value), (scale,) in zip(string_table[0], string_table[1])
     ]
     parsed = {}
     for end_oid, state, value, scale in flattened_info:

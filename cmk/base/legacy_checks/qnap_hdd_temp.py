@@ -11,9 +11,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.qnap import DETECT_QNAP
 
 
-def parse_qnap_hdd_temp(info):
+def parse_qnap_hdd_temp(string_table):
     parsed = {}
-    for hdd, temp in info:
+    for hdd, temp in string_table:
         try:
             temp = float(temp.split()[0])
             parsed[hdd] = temp

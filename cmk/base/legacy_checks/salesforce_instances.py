@@ -10,11 +10,11 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_salesforce(info):
+def parse_salesforce(string_table):
     import json
 
     pre_parsed = []
-    for line in info:
+    for line in string_table:
         pre_parsed.append(json.loads(" ".join(line)))
 
     parsed = {}

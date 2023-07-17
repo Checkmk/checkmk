@@ -55,9 +55,9 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_pvecm_status(info):
+def parse_pvecm_status(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if len(line) < 2:
             continue
         k = line[0].strip().lower()

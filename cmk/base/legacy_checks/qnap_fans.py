@@ -11,9 +11,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.qnap import DETECT_QNAP
 
 
-def parse_qnap_fans(info):
+def parse_qnap_fans(string_table):
     parsed = {}
-    for fan, value in info:
+    for fan, value in string_table:
         try:
             parsed[fan] = int(value.replace("RPM", ""))
         except ValueError:

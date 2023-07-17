@@ -37,12 +37,12 @@ rds_licenses_product_versionid_map = {
 }
 
 
-def parse_rds_licenses(info):
+def parse_rds_licenses(string_table):
     parsed = {}
-    if not info:
+    if not string_table:
         return parsed
-    headers = info[0]
-    for line in info[1:]:
+    headers = string_table[0]
+    for line in string_table[1:]:
         data = dict(zip(headers, line))
         version_id = data.get("ProductVersionID")
         if version_id not in rds_licenses_product_versionid_map:

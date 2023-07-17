@@ -15,8 +15,8 @@ from cmk.base.config import check_info
 # equipmentPsuStats       Dn sys/chassis-1/psu-1/stats    AmbientTemp 17.000000   Output12vAvg 12.008000  Output3v3Avg 3.336000
 
 
-def ucs_bladecenter_psu_parse(info):
-    data = ucs_bladecenter.generic_parse(info)
+def ucs_bladecenter_psu_parse(string_table):
+    data = ucs_bladecenter.generic_parse(string_table)
     psu: dict[str, dict] = {}
 
     def get_item_name(key):

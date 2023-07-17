@@ -10,9 +10,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
 from cmk.base.plugins.agent_based.utils.sophos import DETECT_SOPHOS
 
 
-def parse_sophos_memory(info):
+def parse_sophos_memory(string_table):
     try:
-        return int(info[0][0])
+        return int(string_table[0][0])
     except (ValueError, IndexError):
         return None
 

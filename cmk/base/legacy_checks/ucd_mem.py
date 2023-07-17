@@ -31,7 +31,7 @@ from cmk.base.plugins.agent_based.utils import ucd_hr_detection
 # suggested by customer
 
 
-def parse_ucd_mem(info):
+def parse_ucd_mem(string_table):
     # this should never happen
     raise RuntimeError("section is already migrated")
 

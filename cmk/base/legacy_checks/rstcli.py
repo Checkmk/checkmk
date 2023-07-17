@@ -101,11 +101,11 @@ def parse_rstcli_disks(rows):
     return disks
 
 
-def parse_rstcli(info):
-    if info == [["rstcli not found"]]:
+def parse_rstcli(string_table):
+    if string_table == [["rstcli not found"]]:
         return {}
 
-    rstcli_sections = parse_rstcli_sections(info)
+    rstcli_sections = parse_rstcli_sections(string_table)
     if rstcli_sections is None:
         return {}
 

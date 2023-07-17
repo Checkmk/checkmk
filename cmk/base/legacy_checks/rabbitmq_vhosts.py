@@ -48,10 +48,10 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_rabbitmq_vhosts(info):
+def parse_rabbitmq_vhosts(string_table):
     parsed = {}
 
-    for vhosts in info:
+    for vhosts in string_table:
         for vhost_json in vhosts:
             vhost = json.loads(vhost_json)
 

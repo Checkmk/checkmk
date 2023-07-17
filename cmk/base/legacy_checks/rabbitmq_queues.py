@@ -41,10 +41,10 @@ from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyChe
 from cmk.base.config import check_info
 
 
-def parse_rabbitmq_queues(info):
+def parse_rabbitmq_queues(string_table):
     parsed = {}
 
-    for queues in info:
+    for queues in string_table:
         for queue_json in queues:
             queue = json.loads(queue_json)
 

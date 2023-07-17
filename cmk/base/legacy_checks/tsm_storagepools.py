@@ -25,9 +25,9 @@ from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_tsm_storagepools(info):
+def parse_tsm_storagepools(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if len(line) < 4:
             continue
 

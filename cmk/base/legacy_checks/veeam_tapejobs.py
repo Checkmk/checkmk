@@ -21,11 +21,11 @@ veeam_tapejobs_default_levels = (1 * 3600 * 24, 2 * 3600 * 24)
 BACKUP_STATE = {"Success": 0, "Warning": 1, "Failed": 2}
 
 
-def parse_veeam_tapejobs(info):
+def parse_veeam_tapejobs(string_table):
     parsed = {}
-    columns = [s.lower() for s in info[0]]
+    columns = [s.lower() for s in string_table[0]]
 
-    for line in info[1:]:
+    for line in string_table[1:]:
         if len(line) < len(columns):
             continue
 

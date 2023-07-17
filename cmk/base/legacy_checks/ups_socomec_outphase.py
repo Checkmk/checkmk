@@ -11,9 +11,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.ups_socomec import DETECT_SOCOMEC
 
 
-def parse_ups_socomec_outphase(info):
+def parse_ups_socomec_outphase(string_table):
     parsed = {}
-    for index, rawvolt, rawcurr, rawload in info:
+    for index, rawvolt, rawcurr, rawload in string_table:
         parsed["Phase " + index] = {
             "voltage": (int(rawvolt) // 10, None),  # The actual precision does not appear to
             "current": (int(rawcurr) // 10, None),  # go beyond degrees, thus we drop the trailing 0

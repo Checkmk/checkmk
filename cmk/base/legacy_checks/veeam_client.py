@@ -17,9 +17,9 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 
-def parse_veeam_client(info):
+def parse_veeam_client(string_table):
     data = {}
-    for line in info:
+    for line in string_table:
         if line[0] == "Status":
             if len(line) == 2:
                 last_status = line[1]

@@ -53,10 +53,10 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_pvecm_nodes(info):
+def parse_pvecm_nodes(string_table):
     parsed = {}
     header = None
-    for line in info:
+    for line in string_table:
         if line == ["Node", "Sts", "Inc", "Joined", "Name"]:
             header = ["node_id", "status", "joined", "name"]
             parse_func = _parse_version_eq_2

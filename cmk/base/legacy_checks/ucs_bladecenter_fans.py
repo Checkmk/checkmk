@@ -16,8 +16,8 @@ from cmk.base.config import check_info
 # equipmentFanStats       Dn sys/chassis-2/fan-module-1-1/fan-1/stats     SpeedAvg 3652
 
 
-def parse_ucs_bladecenter_fans(info):
-    data = ucs_bladecenter.generic_parse(info)
+def parse_ucs_bladecenter_fans(string_table):
+    data = ucs_bladecenter.generic_parse(string_table)
     fans: dict[str, dict] = {}
 
     def get_item_name(key):

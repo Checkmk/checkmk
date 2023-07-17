@@ -15,9 +15,9 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_ucs_c_rack_server_topsystem(info):
+def parse_ucs_c_rack_server_topsystem(string_table):
     """
-    Input: Single line info with a rack server topsystem information.
+    Input: Single line string_table with a rack server topsystem information.
     Output: Returns dict with dn, address, current time, mode and name as keys (with corresponding values).
     """
 
@@ -32,11 +32,11 @@ def parse_ucs_c_rack_server_topsystem(info):
         return formatted
 
     parsed = []
-    # The element count of info lines is under our control (agent output) and
+    # The element count of string_table lines is under our control (agent output) and
     # ensured to have expected length. It is ensured that elements contain a
     # string. No bad case handling required here.
-    for _, dn, ip, date_and_time, mode, name in info:
-        # If more than one info line given or in case of unexpected info list element format the
+    for _, dn, ip, date_and_time, mode, name in string_table:
+        # If more than one string_table line given or in case of unexpected string_table list element format the
         # parsed dict will be empty.
         parsed.extend(
             [

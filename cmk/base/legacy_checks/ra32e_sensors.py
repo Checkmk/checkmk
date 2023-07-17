@@ -23,7 +23,7 @@ _SENSOR_TABLES = [
 ]
 
 
-def parse_ra32e_sensors(info):
+def parse_ra32e_sensors(string_table):
     def type_of(sensor):
         def values_until(x):
             return all(sensor[:x]) and not any(sensor[x:])
@@ -45,7 +45,7 @@ def parse_ra32e_sensors(info):
         "power": {},
     }
 
-    internal, *sensors = info
+    internal, *sensors = string_table
 
     for type_, item, value in zip(
         ["temperature", "humidity", "temperature"],

@@ -10,10 +10,10 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import all_of, any_of, SNMPTree, startswith
 
 
-def parse_raritan_pdu_plugs(info):
+def parse_raritan_pdu_plugs(string_table):
     parsed = {}
 
-    for outlet_label, outlet_name, outlet_state in info:
+    for outlet_label, outlet_name, outlet_state in string_table:
         parsed[outlet_label] = {
             "state": raritan_map_state.get(outlet_state, (3, "unknown")),
             "outlet_name": outlet_name,

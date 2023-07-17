@@ -16,9 +16,9 @@ from cmk.base.plugins.agent_based.utils.vutlan import DETECT_VUTLAN_EMS
 # NOTE: the unit is not given in the SNMP walk, it is %
 
 
-def parse_vutlan_ems_humidity(info):
+def parse_vutlan_ems_humidity(string_table):
     parsed = {}
-    for line in info[0]:
+    for line in string_table[0]:
         if line[0].startswith("202"):
             # all OIDs 202xxx are humidity-related
             parsed[line[1]] = float(line[2])

@@ -12,11 +12,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.ups import DETECT_UPS_CPS
 
 
-def parse_ups_cps_inphase(info: list[str]) -> dict[Literal["1"], dict[str, float]]:
+def parse_ups_cps_inphase(string_table: list[str]) -> dict[Literal["1"], dict[str, float]]:
     parsed = {}
     for index, stat_name in enumerate(("voltage", "frequency")):
         try:
-            parsed[stat_name] = float(info[0][index]) / 10
+            parsed[stat_name] = float(string_table[0][index]) / 10
         except ValueError:
             continue
 

@@ -11,10 +11,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.raritan import DETECT_RARITAN
 
 
-def parse_raritan_pdu_inlet(info):
-    precisions = {oid_end: int(decimals) for oid_end, decimals in info[0]}
+def parse_raritan_pdu_inlet(string_table):
+    precisions = {oid_end: int(decimals) for oid_end, decimals in string_table[0]}
     parsed: dict[str, dict[str, tuple[str, tuple | None]]] = {}
-    for oid_end, availability, sensor_state, value in info[1]:
+    for oid_end, availability, sensor_state, value in string_table[1]:
         if availability == "1":
             phase_id, sensor_type = oid_end.split(".")[2:4]
             phase = "Phase " + phase_id

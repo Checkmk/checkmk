@@ -24,9 +24,9 @@ VMStatAIX = collections.namedtuple(  # pylint: disable=collections-namedtuple-ca
 )
 
 
-def parse_vmstat_aix(info):
+def parse_vmstat_aix(string_table):
     try:
-        data = info[0]
+        data = string_table[0]
         return VMStatAIX(int(data[13]), int(data[14]), int(data[15]), int(data[16]))
     except (IndexError, ValueError):
         return None

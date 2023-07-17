@@ -14,8 +14,8 @@ from cmk.base.config import check_info
 Section = Mapping[str, Any]
 
 
-def parse_storeonce4x_d2d_services(info):
-    return json.loads(info[0][0])["services"]
+def parse_storeonce4x_d2d_services(string_table):
+    return json.loads(string_table[0][0])["services"]
 
 
 def discover_storeonce4x_d2d_services(section: Section) -> Iterable[tuple[None, dict]]:

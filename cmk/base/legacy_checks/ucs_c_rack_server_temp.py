@@ -19,13 +19,13 @@ from cmk.base.config import check_info
 # computeRackUnitMbTempStats<TAB>dn sys/rack-unit-2/board/temp-stats<TAB>ambientTemp 50.0<TAB>frontTemp 50.0<TAB>ioh1Temp 50.0<TAB>ioh2Temp 50.0<TAB>rearTemp 50.0
 
 
-def parse_ucs_c_rack_server_temp(info):
+def parse_ucs_c_rack_server_temp(string_table):
     """
     Returns dict with indexed processors, memory units and motherboards mapped to keys and
     temperature as value.
     """
     parsed = {}
-    for line in info:
+    for line in string_table:
         key_value_pairs = [kv.split(" ", 1) for kv in line[1:]]
         if "cpu-" in key_value_pairs[0][1]:
             cpu = (

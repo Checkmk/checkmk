@@ -45,10 +45,10 @@ def add_key_values(data_dict, line):
             data_dict[name].append(token[0].replace(" ", ""))
 
 
-def parse_scaleio_mdm(info):
+def parse_scaleio_mdm(string_table):
     # parsing this section is horrible. But I will guide you...
     parsed, id_, node = {}, "", ""
-    for line in info:
+    for line in string_table:
         # A subsection starts with one of the following:
         if line[0].lower() in (
             "cluster:",

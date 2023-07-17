@@ -15,7 +15,7 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMPTree
 
 
-def parse_raritan_emx(info):
+def parse_raritan_emx(string_table):
     raritan_type_map = {
         "0": ("temp", "Air"),
         "1": ("temp", "Water"),
@@ -24,7 +24,7 @@ def parse_raritan_emx(info):
         "4": ("valve", ""),
     }
     parsed = {}
-    for rack_id, rack_name, sensor_number, value_text, unit, sensor_state in info:
+    for rack_id, rack_name, sensor_number, value_text, unit, sensor_state in string_table:
         rack_type, rack_type_readable = raritan_type_map[sensor_number]
 
         extra_name = ""

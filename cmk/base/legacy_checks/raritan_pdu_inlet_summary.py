@@ -11,9 +11,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.raritan import DETECT_RARITAN
 
 
-def parse_raritan_pdu_inlet_summary(info):
+def parse_raritan_pdu_inlet_summary(string_table):
     summary: dict[str, tuple] = {}
-    for sensor_type, decimal_digits, availability, sensor_state, value in info:
+    for sensor_type, decimal_digits, availability, sensor_state, value in string_table:
         if availability == "1":
             if sensor_type in raritan_map_type:  # handled sensor types
                 key, _key_info = raritan_map_type[sensor_type]  # get key for elphase.include

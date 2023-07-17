@@ -73,7 +73,7 @@ def get_websphere_mq_status(what, status, params):
     return state
 
 
-def parse_websphere_mq_instance(info):
+def parse_websphere_mq_instance(string_table):
     def get_data_of_line(line):
         data = {}
         for elem in line:
@@ -83,7 +83,7 @@ def parse_websphere_mq_instance(info):
         return data
 
     parsed = {"manager": {}, "instances": {}}
-    for line in info:
+    for line in string_table:
         data = get_data_of_line(line)
         if data:
             if "QMNAME" in data:

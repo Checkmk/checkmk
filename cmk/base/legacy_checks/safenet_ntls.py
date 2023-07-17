@@ -11,14 +11,14 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, SNMPTree, startswith
 
 
-def parse_safenet_ntls(info):
+def parse_safenet_ntls(string_table):
     return {
-        "operation_status": info[0][0],
-        "connected_clients": int(info[0][1]),
-        "links": int(info[0][2]),
-        "successful_connections": int(info[0][3]),
-        "failed_connections": int(info[0][4]),
-        "expiration_date": info[0][5],
+        "operation_status": string_table[0][0],
+        "connected_clients": int(string_table[0][1]),
+        "links": int(string_table[0][2]),
+        "successful_connections": int(string_table[0][3]),
+        "failed_connections": int(string_table[0][4]),
+        "expiration_date": string_table[0][5],
     }
 
 

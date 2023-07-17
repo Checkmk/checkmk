@@ -11,9 +11,9 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, OIDEnd, SNMPTree
 
 
-def parse_seh_ports(info):
+def parse_seh_ports(string_table):
     parsed = {}
-    for oid_end, tag, status, port_number in info[0]:
+    for oid_end, tag, status, port_number in string_table[0]:
         oid_index = oid_end.split(".")[0]
         if tag != "":
             parsed.setdefault(oid_index, {}).update(tag=tag)

@@ -37,10 +37,10 @@ SplunkLicenseState = collections.namedtuple(  # pylint: disable=collections-name
 )
 
 
-def parse_splunk_license_state(info):
+def parse_splunk_license_state(string_table):
     parsed = {}
 
-    for lcs_detail in info:
+    for lcs_detail in string_table:
         try:
             label, max_violations, window_period, quota, expiration_time, status = lcs_detail
 

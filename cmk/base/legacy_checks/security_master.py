@@ -64,7 +64,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree, st
 # also only one sensor group is supported with this plugin!
 
 
-def parse_security_master(info):  # pylint: disable=too-many-branches
+def parse_security_master(string_table):  # pylint: disable=too-many-branches
     supported_sensors = {
         50: "temp",
         60: "humidity",
@@ -73,7 +73,7 @@ def parse_security_master(info):  # pylint: disable=too-many-branches
 
     parsed = {"temp": {}, "humidity": {}, "smoke": {}}
 
-    for oid, sensor in info[0]:
+    for oid, sensor in string_table[0]:
         if ".5.0" not in str(oid):
             continue
 
@@ -82,7 +82,7 @@ def parse_security_master(info):  # pylint: disable=too-many-branches
         num = oid.split(".")[0]
         value, sensor_id, warn_low, warn_high, crit_low, crit_high, alarm = (None,) * 7
 
-        for oid_second, sensor_second in info[0]:
+        for oid_second, sensor_second in string_table[0]:
             if num + ".1.0" == oid_second:
                 sensor_id = saveint(sensor_second[0].encode("utf-8").hex())
             elif num + ".2.0" == oid_second:

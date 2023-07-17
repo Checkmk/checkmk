@@ -15,12 +15,12 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 # 1 99.17 0.54 0.18 0.00
 
 
-def parse_vms_cpu(info):
+def parse_vms_cpu(string_table):
     parsed: dict[str, int | float] = {}
     try:
-        parsed["num_cpus"] = int(info[0][0])
+        parsed["num_cpus"] = int(string_table[0][0])
         for i, key in enumerate(("idle", "user", "wait_interrupt", "wait_npsync"), 1):
-            parsed[key] = float(info[0][i]) / parsed["num_cpus"]
+            parsed[key] = float(string_table[0][i]) / parsed["num_cpus"]
     except (IndexError, ValueError):
         return {}
 

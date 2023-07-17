@@ -28,18 +28,18 @@ def _deci_watt_to_watt(deci_watt):
     return float(deci_watt) / 10
 
 
-def parse_tplink_poe(info):
+def parse_tplink_poe(string_table):
     """
-    parse info data and create dictionary with namedtuples for each item.
+    parse string_table data and create dictionary with namedtuples for each item.
 
     {
        item : PoeData(poe_max, poe_used, pse_op_status)
     }
 
-    :param info: parsed snmp data
+    :param string_table: parsed snmp data
     :return: dictionary
     """
-    interface_list, poe_info = info
+    interface_list, poe_info = string_table
 
     poe_dict = {}
     for port_index, poe_port_status, poe_max, poe_used, poe_power_status in poe_info:

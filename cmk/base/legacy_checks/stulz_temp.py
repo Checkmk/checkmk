@@ -33,7 +33,7 @@ from cmk.base.plugins.agent_based.utils.stulz import DETECT_STULZ
 # .1.3.6.1.4.1.29462.10.2.1.1.1.1.3.1.1.1208.1.2.1 16 --> Stulz-WIB8000-MIB::currentRaisedFloorPressure.1.2.1
 
 
-def parse_stulz_temp(info):
+def parse_stulz_temp(string_table):
     map_types = {
         "1170": "unit air",
         "1192": "unit return air",
@@ -55,7 +55,7 @@ def parse_stulz_temp(info):
     }
 
     parsed = {}
-    for oidend, reading_str in info:
+    for oidend, reading_str in string_table:
         oids = oidend.split(".")
         temp_ty = oids[0]
         index = oids[2]

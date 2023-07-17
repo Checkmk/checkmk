@@ -54,7 +54,7 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
 
 
-def parse_raritan_px_sensors(info):
+def parse_raritan_px_sensors(string_table):
     pre_parsed = []
     for (
         sensor_id,
@@ -68,7 +68,7 @@ def parse_raritan_px_sensors(info):
         sensor_lower_warn_str,
         sensor_upper_crit_str,
         sensor_upper_warn_str,
-    ) in info:
+    ) in string_table:
         sensor_name = (
             sensor_name.replace("Temperature", "")
             .replace("Humidity", "")

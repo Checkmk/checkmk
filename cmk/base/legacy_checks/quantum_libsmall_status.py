@@ -36,9 +36,9 @@ OPNEED_STATUS_MAP = {
 }
 
 
-def parse_quantum_libsmall_status(info):
+def parse_quantum_libsmall_status(string_table):
     parsed = []
-    for line in info:
+    for line in string_table:
         for oidend, dev_state in line:
             dev_type = DEVICE_TYPE_MAP.get(oidend.split(".")[0])
             if not (dev_type or dev_state):

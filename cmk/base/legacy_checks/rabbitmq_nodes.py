@@ -61,10 +61,10 @@ def discover_key(key: str) -> Callable[[Section], Iterable[tuple[str, dict]]]:
     return _discover_bound_key
 
 
-def parse_rabbitmq_nodes(info):
+def parse_rabbitmq_nodes(string_table):
     parsed: dict[str, _ItemData] = {}
 
-    for nodes in info:
+    for nodes in string_table:
         for node_json in nodes:
             node = json.loads(node_json)
 

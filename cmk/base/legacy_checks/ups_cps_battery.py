@@ -10,19 +10,19 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.ups import DETECT_UPS_CPS
 
 
-def parse_ups_cps_battery(info):
+def parse_ups_cps_battery(string_table):
     parsed: dict[str, float] = {}
 
-    if info[0][0]:
-        parsed["capacity"] = int(info[0][0])
+    if string_table[0][0]:
+        parsed["capacity"] = int(string_table[0][0])
 
     # The MIB explicitly declares this to be Celsius
-    if info[0][1] and info[0][1] != "NULL":
-        parsed["temperature"] = int(info[0][1])
+    if string_table[0][1] and string_table[0][1] != "NULL":
+        parsed["temperature"] = int(string_table[0][1])
 
     # A TimeTick is 1/100 s
-    if info[0][2]:
-        parsed["battime"] = float(info[0][2]) / 100.0
+    if string_table[0][2]:
+        parsed["battime"] = float(string_table[0][2]) / 100.0
     return parsed
 
 

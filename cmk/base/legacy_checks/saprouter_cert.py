@@ -33,14 +33,14 @@ from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_saprouter_cert(info):
+def parse_saprouter_cert(string_table):
     def parse_date(list_):
         time_struct = time.strptime(" ".join(list_), "%b %d %H:%M:%S %Y")
         return time.mktime(time_struct), "%s-%s-%s" % time_struct[:3]
 
     parsed = {}
     validity = None
-    for line in info:
+    for line in string_table:
         if line[0] == "Validity":
             validity = "valid"
             parsed.setdefault(validity, {})

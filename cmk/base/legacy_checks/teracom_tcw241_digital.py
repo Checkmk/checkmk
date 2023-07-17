@@ -9,11 +9,11 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
 
-def parse_tcw241_digital(info):
+def parse_tcw241_digital(string_table):
     """
-    parse info data and create list of namedtuples for 4 digital sensors.
+    parse string_table data and create list of namedtuples for 4 digital sensors.
 
-    expected info structure:
+    expected string_table structure:
         list of digital sensor descriptions and states:
             [description1, description2, description3, description4]
             [input state1, input state2, input state3, input state4]
@@ -25,11 +25,11 @@ def parse_tcw241_digital(info):
             4: { description4: state4 }
         }
 
-    :param info: parsed snmp data
+    :param string_table: parsed snmp data
     :return: list of namedtuples for digital sensors
     """
     try:
-        descriptions, states = info[0][0], info[1][0]
+        descriptions, states = string_table[0][0], string_table[1][0]
     except IndexError:
         return {}
 

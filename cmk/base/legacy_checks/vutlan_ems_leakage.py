@@ -14,9 +14,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.vutlan import DETECT_VUTLAN_EMS
 
 
-def parse_vutlan_ems_leakage(info):
+def parse_vutlan_ems_leakage(string_table):
     parsed = {}
-    for line in info[0]:
+    for line in string_table[0]:
         if line[0].startswith("107"):
             # all OIDs 107xxx are leakage-related
             parsed[line[1]] = bool(int(line[2]))

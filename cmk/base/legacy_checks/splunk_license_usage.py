@@ -19,10 +19,10 @@ SplunkLicenseUsage = collections.namedtuple(  # pylint: disable=collections-name
 )
 
 
-def parse_splunk_license_usage(info):
+def parse_splunk_license_usage(string_table):
     parsed = {}
 
-    for lcs_detail in info:
+    for lcs_detail in string_table:
         try:
             quota, slaves_usage_bytes = lcs_detail
 

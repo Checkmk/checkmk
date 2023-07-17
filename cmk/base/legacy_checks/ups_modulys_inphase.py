@@ -11,25 +11,25 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.ups_modulys import DETECT_UPS_MODULYS
 
 
-def parse_ups_modulys_inphase(info):
+def parse_ups_modulys_inphase(string_table):
     parsed = {}
     parsed["Phase 1"] = {
-        "frequency": int(info[0][1]) / 10.0,
-        "voltage": int(info[0][2]) / 10.0,
-        "current": int(info[0][3]) / 10.0,
+        "frequency": int(string_table[0][1]) / 10.0,
+        "voltage": int(string_table[0][2]) / 10.0,
+        "current": int(string_table[0][3]) / 10.0,
     }
 
-    if info[0][0] == "3":
+    if string_table[0][0] == "3":
         parsed["Phase 2"] = {
-            "frequency": int(info[0][4]) / 10.0,
-            "voltage": int(info[0][5]) / 10.0,
-            "current": int(info[0][6]) / 10.0,
+            "frequency": int(string_table[0][4]) / 10.0,
+            "voltage": int(string_table[0][5]) / 10.0,
+            "current": int(string_table[0][6]) / 10.0,
         }
 
         parsed["Phase 3"] = {
-            "frequency": int(info[0][7]) / 10.0,
-            "voltage": int(info[0][8]) / 10.0,
-            "current": int(info[0][9]) / 10.0,
+            "frequency": int(string_table[0][7]) / 10.0,
+            "voltage": int(string_table[0][8]) / 10.0,
+            "current": int(string_table[0][9]) / 10.0,
         }
 
     return parsed

@@ -14,14 +14,14 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_ucs_c_rack_server_health(info):
+def parse_ucs_c_rack_server_health(string_table):
     """
     Input: list of lists containing storage controller health data on a per rack basis.
     Output: Returns dict with indexed Rack Units mapped to keys and lowercase health string mapped to value
     'health' if rack server has racks attached or empty dict if not.
     """
     parsed = {}
-    for _, dn, _id, health in info:
+    for _, dn, _id, health in string_table:
         rack_storage_board = (
             dn.replace("dn sys/", "")
             .replace("rack-unit-", "Rack unit ")

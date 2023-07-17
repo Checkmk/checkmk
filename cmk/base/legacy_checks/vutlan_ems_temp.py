@@ -16,9 +16,9 @@ from cmk.base.plugins.agent_based.utils.vutlan import DETECT_VUTLAN_EMS
 # NOTE: the unit is not given in the SNMP walk, it is °C
 
 
-def parse_vutlan_ems_temp(info):
+def parse_vutlan_ems_temp(string_table):
     parsed = {}
-    for line in info[0]:
+    for line in string_table[0]:
         if line[0].startswith("201"):
             # all OIDs 201xxx are temperature-related
             parsed[line[1]] = float(line[2])

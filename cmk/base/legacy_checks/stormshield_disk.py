@@ -10,8 +10,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.stormshield import DETECT_STORMSHIELD
 
 
-def parse_stormshield_disk(info):
-    standalone, cluster = info
+def parse_stormshield_disk(string_table):
+    standalone, cluster = string_table
     parsed = []
     if not cluster and not standalone:
         return []

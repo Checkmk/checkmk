@@ -9,12 +9,12 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils import megaraid
 
 
-def parse_storcli_pdisks(info):
+def parse_storcli_pdisks(string_table):
     parsed = {}
 
     controller_num = 0
     separator_count = 0
-    for line in info:
+    for line in string_table:
         if line[0].startswith("-----"):
             separator_count += 1
         elif separator_count == 2:

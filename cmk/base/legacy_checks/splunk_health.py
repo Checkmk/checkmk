@@ -20,10 +20,10 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_splunk_health(info):
+def parse_splunk_health(string_table):
     parsed = {}
 
-    for state_detail in info:
+    for state_detail in string_table:
         try:
             if len(state_detail) == 2:
                 name, health = state_detail

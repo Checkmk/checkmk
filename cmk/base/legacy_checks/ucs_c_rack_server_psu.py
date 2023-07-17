@@ -14,12 +14,12 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_ucs_c_rack_server_psu(info):
+def parse_ucs_c_rack_server_psu(string_table):
     """
     Returns dict with indexed PSUs mapped to keys and operability, voltage values mapped to dicts.
     """
     parsed = {}
-    for psu in info:
+    for psu in string_table:
         try:
             key_value_pairs = [kv.split(" ", 1) for kv in psu[1:]]
             psu = (
@@ -34,7 +34,7 @@ def parse_ucs_c_rack_server_psu(info):
                 "model": key_value_pairs[2][1],
             }
         except IndexError:
-            continue  # skip info line in case agent output is incomplete or invalid
+            continue  # skip string_table line in case agent output is incomplete or invalid
     return parsed
 
 

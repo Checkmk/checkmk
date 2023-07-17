@@ -13,12 +13,12 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, SNMPTree, startswith
 
 
-def parse_safenet_hsm(info):
+def parse_safenet_hsm(string_table):
     return {
-        "operation_requests": int(info[0][0]),
-        "operation_errors": int(info[0][1]),
-        "critical_events": int(info[0][2]),
-        "noncritical_events": int(info[0][3]),
+        "operation_requests": int(string_table[0][0]),
+        "operation_errors": int(string_table[0][1]),
+        "critical_events": int(string_table[0][2]),
+        "noncritical_events": int(string_table[0][3]),
     }
 
 

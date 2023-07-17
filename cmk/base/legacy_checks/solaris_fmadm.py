@@ -142,12 +142,12 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_solaris_fmadm(info):
-    if len(info) < 4:
+def parse_solaris_fmadm(string_table):
+    if len(string_table) < 4:
         return {}
 
     event = []
-    for entry in ":".join(info[3]).split():
+    for entry in ":".join(string_table[3]).split():
         if entry:
             event.append(entry)
 
@@ -162,7 +162,7 @@ def parse_solaris_fmadm(info):
     }
 
     # Skip header
-    for line in info[4:]:
+    for line in string_table[4:]:
         stripped = [x.strip() for x in line]
         if stripped[0] in ["Problem class", "Fault class"]:
             parsed["problems"].append(":".join(stripped[1:]))

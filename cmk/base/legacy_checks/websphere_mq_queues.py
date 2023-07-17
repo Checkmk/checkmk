@@ -48,9 +48,9 @@ websphere_mq_queues_default_levels = {
 }
 
 
-def parse_websphere_mq_queues(info):
+def parse_websphere_mq_queues(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if len(line) < 2:
             continue
 

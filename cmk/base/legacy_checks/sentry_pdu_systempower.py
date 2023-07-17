@@ -16,8 +16,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
 # }
 
 
-def parse_sentry_pdu_systempower(info):
-    return {"Power Supply System": {"power": (int(info[0][0]), {})}}
+def parse_sentry_pdu_systempower(string_table):
+    return {"Power Supply System": {"power": (int(string_table[0][0]), {})}}
 
 
 def discover_sentry_pdu_systempower(section):

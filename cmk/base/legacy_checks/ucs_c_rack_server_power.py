@@ -20,17 +20,17 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_ucs_c_rack_server_power(info):
+def parse_ucs_c_rack_server_power(string_table):
     """
     Returns dict with indexed rack motherboards mapped to keys and consumed power,
     input current status and input voltage status as value.
     """
     parsed = {}
-    # The element count of info lines is under our control (agent output) and
+    # The element count of string_table lines is under our control (agent output) and
     # ensured to have expected length. It is ensured that elements contain a
     # string. Handles invalid values provided by the XML API which cannot be
     # casted by setting corresponding values to None.
-    for _, dn, power, current, voltage in info:
+    for _, dn, power, current, voltage in string_table:
         motherboard = (
             dn.replace("dn ", "")
             .replace("sys/", "")

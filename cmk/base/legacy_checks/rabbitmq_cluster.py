@@ -48,10 +48,10 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_rabbitmq_cluster(info):
+def parse_rabbitmq_cluster(string_table):
     parsed = {}
 
-    for clusters in info:
+    for clusters in string_table:
         try:
             cluster = json.loads(clusters[0])
         except IndexError:

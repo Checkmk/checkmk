@@ -18,11 +18,11 @@ AnalogSensor = collections.namedtuple(  # pylint: disable=collections-namedtuple
 _TABLES = ["1", "2", "3", "4"]
 
 
-def parse_tcw241_analog(info):
+def parse_tcw241_analog(string_table):
     """
-    parse info data and create list of namedtuples for 4 analog sensors.
+    parse string_table data and create list of namedtuples for 4 analog sensors.
 
-    expected info structure:
+    expected string_table structure:
         list of 4 analog sensors:
             [description, maximum , minimum]
             ..
@@ -33,11 +33,11 @@ def parse_tcw241_analog(info):
     converted to list structure:
         [AnalogSensor(description maximum minimum voltage)]
 
-    :param info: parsed snmp data
+    :param string_table: parsed snmp data
     :return: list of namedtuples for analog sensors
     """
     try:
-        sensor_parameter, voltages = info[:4], info[4][0]
+        sensor_parameter, voltages = string_table[:4], string_table[4][0]
     except IndexError:
         return {}
 

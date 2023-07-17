@@ -20,12 +20,12 @@ JobCount = collections.namedtuple(  # pylint: disable=collections-namedtuple-cal
 )
 
 
-def parse_splunk_jobs(info):
+def parse_splunk_jobs(string_table):
     parsed = {}
     long_output = ""
     job_count, failed_count, zombie_count = 0, 0, 0
 
-    for job_detail in info:
+    for job_detail in string_table:
         try:
             published, author, app, dispatchstate, iszombie = job_detail
             job_count += 1

@@ -22,7 +22,7 @@ from cmk.base.config import check_info
 tinkerforge_humidity_default_levels = (35, 40, 50, 55)
 
 
-def parse_tinkerforge(info):
+def parse_tinkerforge(string_table):
     # biggest trouble here is generating sensible item names as tho ones
     # provided to us are simply random-generated
 
@@ -38,7 +38,7 @@ def parse_tinkerforge(info):
     # to query the stack topology
     master_index = {}
     temp = {}
-    for line in info:
+    for line in string_table:
         brick_type, path = line[:2]
         try:
             brick_type, subtype = brick_type.split(".")

@@ -12,9 +12,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.ups import DETECT_UPS_GENERIC
 
 
-def parse_ups_in_freq(info):
+def parse_ups_in_freq(string_table):
     parsed = {}
-    for name, freq_str in info:
+    for name, freq_str in string_table:
         try:
             freq = int(freq_str) / 10.0
         except ValueError:

@@ -14,9 +14,9 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_sansymphony_virtualdiskstatus(info):
+def parse_sansymphony_virtualdiskstatus(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         parsed.setdefault(line[0], " ".join(line[1:]))
     return parsed
 

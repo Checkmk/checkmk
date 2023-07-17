@@ -73,10 +73,10 @@ def _parse_line(line, temp_unit):
     yield "dew", {"Dew point %s" % sensor_id: (line[5], temp_unit)}
 
 
-def parse_watchdog_sensors(info):
+def parse_watchdog_sensors(string_table):
     parsed = {}
 
-    general, data = info
+    general, data = string_table
     if not general:
         return parsed
 

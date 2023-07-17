@@ -327,11 +327,12 @@ class Site:
         wait_timeout: int = 20,
     ) -> None:
         logger.debug("processing check result took %0.2f seconds", time.time() - command_timestamp)
-        assert last_check > last_check_before, (
-            f"Check result not processed within {wait_timeout} seconds "
-            f"(last check before reschedule: {last_check_before:.0f}, "
-            f"scheduled at: {command_timestamp:.0f}, last check: {last_check:.0f})"
-        )
+        if not last_check > last_check_before:
+            raise TimeoutError(
+                f"Check result not processed within {wait_timeout} seconds "
+                f"(last check before reschedule: {last_check_before:.0f}, "
+                f"scheduled at: {command_timestamp:.0f}, last check: {last_check:.0f})"
+            )
         if expected_state is None:
             return
         assert (

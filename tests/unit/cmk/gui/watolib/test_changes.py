@@ -189,38 +189,6 @@ class TestSiteChanges:
         store.clear()
         assert not list(store.read())
 
-    @pytest.mark.parametrize(
-        "old_type,ref_type",
-        [
-            ("CREHost", ObjectRefType.Host),
-            ("CMEHost", ObjectRefType.Host),
-            ("CREFolder", ObjectRefType.Folder),
-            ("CMEFolder", ObjectRefType.Folder),
-        ],
-    )
-    def test_read_pre_20_host_change(
-        self, store: SiteChanges, old_type: str, ref_type: ObjectRefType
-    ) -> None:
-        with store._path.open("wb") as f:
-            f.write(
-                repr(
-                    {
-                        "id": "d60ca3d4-7201-4a89-b66f-2f156192cad2",
-                        "action_name": "create-host",
-                        "text": "Created new host node1.",
-                        "object": (old_type, "node1"),
-                        "user_id": "cmkadmin",
-                        "domains": ["check_mk"],
-                        "time": 1605461248.786142,
-                        "need_sync": True,
-                        "need_restart": True,
-                    }
-                ).encode("utf-8")
-                + b"\0"
-            )
-
-        assert store.read()[0]["object"] == ObjectRef(ref_type, "node1")
-
 
 @pytest.mark.usefixtures("request_context")
 def test_log_audit_with_object_diff() -> None:

@@ -510,7 +510,7 @@ class UserClient(RestApiClient):
         self,
         username: str,
         fullname: str,
-        customer: str = "provider",
+        customer: str | None = None,
         authorized_sites: Sequence[str] | None = None,
         contactgroups: Sequence[str] | None = None,
         auth_option: dict[str, Any] | None = None,

@@ -1207,6 +1207,7 @@ def test_openapi_host_config_effective_attributes_schema_regression(
     )
 
 
+@managedtest
 @pytest.mark.usefixtures("with_host")
 def test_openapi_host_config_show_host_disregards_contact_groups(clients: ClientRegistry) -> None:
     """This test makes sure a user cannot see the config of a host that is not assigned to their contact groups."""
@@ -1216,6 +1217,7 @@ def test_openapi_host_config_show_host_disregards_contact_groups(clients: Client
     clients.User.create(
         username="unable_to_see_host",
         fullname="unable_to_see_host",
+        customer="provider",
         contactgroups=["no_hosts_in_here"],
         auth_option={"auth_type": "password", "password": "supersecretish"},
     )
@@ -1234,11 +1236,13 @@ def test_openapi_host_config_show_host_disregards_contact_groups(clients: Client
     assert "heute" in resp.json["detail"]
 
 
+@managedtest
 def test_openapi_list_hosts_does_not_show_inaccessible_hosts(clients: ClientRegistry) -> None:
     clients.ContactGroup.create(name="does_not_see_everything", alias="does_not_see_everything")
     clients.User.create(
         username="unable_to_see_all_host",
         fullname="unable_to_see_all_host",
+        customer="provider",
         contactgroups=["does_not_see_everything"],
         auth_option={"auth_type": "password", "password": "supersecretish"},
     )
@@ -1306,6 +1310,7 @@ def test_openapi_effective_attributes_are_transformed_on_their_way_out_regressio
     )
 
 
+@managedtest
 def test_move_to_folder_with_different_contact_group(clients: ClientRegistry) -> None:
     clients.ContactGroup.create(
         name="test_contact_group",
@@ -1315,6 +1320,7 @@ def test_move_to_folder_with_different_contact_group(clients: ClientRegistry) ->
     clients.User.create(
         username="user1",
         fullname="user1_fullname",
+        customer="provider",
         contactgroups=["test_contact_group"],
         auth_option={"auth_type": "password", "password": "asflkjas^asf@adf%5Ah!@%^sfadf"},
         roles=["admin"],
@@ -1357,6 +1363,7 @@ def test_move_to_folder_with_different_contact_group(clients: ClientRegistry) ->
     )
 
 
+@managedtest
 def test_move_from_folder_with_different_contact_group(clients: ClientRegistry) -> None:
     clients.ContactGroup.create(
         name="test_contact_group",
@@ -1366,6 +1373,7 @@ def test_move_from_folder_with_different_contact_group(clients: ClientRegistry) 
     clients.User.create(
         username="user1",
         fullname="user1_fullname",
+        customer="provider",
         contactgroups=["test_contact_group"],
         auth_option={"auth_type": "password", "password": "asflkjas^asf@adf%5Ah!@%^sfadf"},
         roles=["admin"],
@@ -1408,6 +1416,7 @@ def test_move_from_folder_with_different_contact_group(clients: ClientRegistry) 
     )
 
 
+@managedtest
 def test_move_host_different_contact_group(clients: ClientRegistry) -> None:
     clients.ContactGroup.create(
         name="test_contact_group_1",
@@ -1434,6 +1443,7 @@ def test_move_host_different_contact_group(clients: ClientRegistry) -> None:
     clients.User.create(
         username="user1",
         fullname="user1_fullname",
+        customer="provider",
         contactgroups=["test_contact_group_1"],
         auth_option={"auth_type": "password", "password": "asflkjas^asf@adf%5Ah!@%^sfadf"},
         roles=["admin"],

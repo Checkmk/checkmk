@@ -969,6 +969,7 @@ def add_default_customer_in_managed_edition(params: dict[str, Any]) -> None:
         params["customer"] = "global"
 
 
+@managedtest
 def test_openapi_custom_attributes_of_user(
     clients: ClientRegistry,
     monkeypatch: MonkeyPatch,
@@ -989,6 +990,7 @@ def test_openapi_custom_attributes_of_user(
         clients.User.create(
             username=username,
             fullname="Mathias Kettner",
+            customer="provider",
             interface_options={
                 "interface_theme": "dark",
                 "sidebar_position": "left",
@@ -1006,6 +1008,7 @@ def test_openapi_custom_attributes_of_user(
         assert result.json["extensions"]["judas"] == "priest"
 
 
+@managedtest
 def test_create_user_with_non_existing_custom_attribute(
     clients: ClientRegistry, monkeypatch: MonkeyPatch
 ) -> None:
@@ -1052,12 +1055,21 @@ def test_openapi_edit_non_existing_user_regression(clients: ClientRegistry) -> N
     ).assert_status_code(404)
 
 
+@managedtest
 def test_openapi_all_authorized_sites(clients: ClientRegistry) -> None:
     clients.User.create(
-        username="user1", fullname="User 1", authorized_sites=["all"], expect_ok=True
+        username="user1",
+        fullname="User 1",
+        authorized_sites=["all"],
+        expect_ok=True,
+        customer="provider",
     )
     clients.User.create(
-        username="user2", fullname="User 2", authorized_sites=["NO_SITE"], expect_ok=True
+        username="user2",
+        fullname="User 2",
+        authorized_sites=["NO_SITE"],
+        expect_ok=True,
+        customer="provider",
     )
     clients.User.edit(username="user2", fullname="User 2", authorized_sites=["all"], expect_ok=True)
 
@@ -1107,11 +1119,13 @@ def test_openapi_auth_type_of_saml_user(clients: ClientRegistry) -> None:
     assert resp.json["extensions"]["auth_option"] == {"auth_type": ConnectorType.SAML2}
 
 
+@managedtest
 def test_user_without_permission_cant_interrogate_if_user_exists(clients: ClientRegistry) -> None:
     # Create a guest user using default client credentials
     clients.User.create(
         username="user1",
         fullname="user1",
+        customer="provider",
         authorized_sites=["NO_SITE"],
         roles=["guest"],
         auth_option={"auth_type": "password", "password": "supersecretish1"},
@@ -1124,6 +1138,7 @@ def test_user_without_permission_cant_interrogate_if_user_exists(clients: Client
     resp1 = clients.User.create(
         username="user2",
         fullname="user2",
+        customer="provider",
         authorized_sites=["NO_SITE"],
         roles=["guest"],
         auth_option={"auth_type": "password", "password": "supersecretish2"},
@@ -1160,12 +1175,14 @@ def test_user_without_permission_cant_interrogate_if_user_exists(clients: Client
     )
 
 
+@managedtest
 def test_delete_and_edit_user_when_client_user_has_permission_to_do_so(
     clients: ClientRegistry,
 ) -> None:
     clients.User.create(
         username="user1",
         fullname="user1",
+        customer="provider",
         authorized_sites=["NO_SITE"],
         roles=["guest"],
         auth_option={"auth_type": "password", "password": "supersecretish1"},

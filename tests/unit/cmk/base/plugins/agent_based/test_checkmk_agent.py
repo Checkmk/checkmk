@@ -1139,6 +1139,8 @@ def test_certificate_validity(
                     CachedPlugin(
                         plugin_type=CachedPluginType.PLUGIN,
                         plugin_name="some_plugin",
+                        timeout=123,
+                        pid=4711,
                     ),
                 ],
                 killfailed=None,
@@ -1147,7 +1149,7 @@ def test_certificate_validity(
                 Result(
                     state=State.WARN,
                     summary="Timed out plugin(s): some_plugin",
-                    details="Cached plugins(s) that reached timeout: some_plugin (Agent plugin) - "
+                    details="Cached plugins(s) that reached timeout: some_plugin (Agent plugin, Timeout: 123s, PID: 4711) - "
                     "Corresponding output is outdated and/or dropped.",
                 ),
             ],
@@ -1160,6 +1162,8 @@ def test_certificate_validity(
                     CachedPlugin(
                         plugin_type=CachedPluginType.LOCAL,
                         plugin_name="my_local_check",
+                        timeout=7200,
+                        pid=1234,
                     ),
                 ],
             ),
@@ -1168,7 +1172,7 @@ def test_certificate_validity(
                     state=State.WARN,
                     summary="Termination failed: my_local_check",
                     details="Cached plugins(s) that failed to be terminated after timeout: "
-                    "my_local_check (Local check) - Dysfunctional until successful termination.",
+                    "my_local_check (Local check, Timeout: 7200s, PID: 1234) - Dysfunctional until successful termination.",
                 ),
             ],
             id="killfailed_local_check",
@@ -1179,20 +1183,28 @@ def test_certificate_validity(
                     CachedPlugin(
                         plugin_type=CachedPluginType.PLUGIN,
                         plugin_name="some_plugin",
+                        timeout=7200,
+                        pid=1234,
                     ),
                     CachedPlugin(
                         plugin_type=None,
                         plugin_name="other_process",
+                        timeout=7200,
+                        pid=1234,
                     ),
                 ],
                 killfailed=[
                     CachedPlugin(
                         plugin_type=CachedPluginType.LOCAL,
                         plugin_name="my_local_check",
+                        timeout=7200,
+                        pid=1234,
                     ),
                     CachedPlugin(
                         plugin_type=CachedPluginType.ORACLE,
                         plugin_name="destroy_db",
+                        timeout=123,
+                        pid=4711,
                     ),
                 ],
             ),
@@ -1200,14 +1212,14 @@ def test_certificate_validity(
                 Result(
                     state=State.WARN,
                     summary="Timed out plugin(s): some_plugin, other_process",
-                    details="Cached plugins(s) that reached timeout: some_plugin (Agent plugin), "
-                    "other_process - Corresponding output is outdated and/or dropped.",
+                    details="Cached plugins(s) that reached timeout: some_plugin (Agent plugin, Timeout: 7200s, PID: 1234), "
+                    "other_process (Timeout: 7200s, PID: 1234) - Corresponding output is outdated and/or dropped.",
                 ),
                 Result(
                     state=State.WARN,
                     summary="Termination failed: my_local_check, destroy_db",
                     details="Cached plugins(s) that failed to be terminated after timeout: "
-                    "my_local_check (Local check), destroy_db (mk_oracle plugin) - "
+                    "my_local_check (Local check, Timeout: 7200s, PID: 1234), destroy_db (mk_oracle plugin, Timeout: 123s, PID: 4711) - "
                     "Dysfunctional until successful termination.",
                 ),
             ],

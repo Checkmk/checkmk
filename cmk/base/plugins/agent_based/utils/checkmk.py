@@ -38,6 +38,8 @@ class CachedPluginType(StrEnum):
 class CachedPlugin(NamedTuple):
     plugin_type: CachedPluginType | None
     plugin_name: str
+    timeout: int
+    pid: int
 
 
 class CachedPluginsSection(NamedTuple):

@@ -704,12 +704,12 @@ run_cached() {
             [ -e "${cfile}" ] || break # no match
             if [ $((NOW - $(get_file_atime "${cfile}"))) -ge "${TIMEOUT}" ]; then
                 {
-                    echo "<<<checkmk_cached_plugins>>>"
-                    printf "Timeout: %s\n" "${NAME}"
+                    echo "<<<checkmk_cached_plugins:sep(124)>>>"
                     pid="${cfile##*.new.}"
+                    printf "timeout|%s|%s|%s\n" "${NAME}" "${TIMEOUT}" "${pid}"
                     kill -9 "${pid}" >/dev/null 2>&1 && sleep 2 # TODO: what about child processes?
                     if [ -n "$(ps -o args= -p "${pid}")" ]; then
-                        printf "KillFailed: %s" "${NAME}"
+                        printf "killfailed|%s|%s|%s\n" "${NAME}" "${TIMEOUT}" "${pid}"
                     else
                         rm -f "${cfile}"
                     fi

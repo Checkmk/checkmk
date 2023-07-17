@@ -522,8 +522,10 @@ def _check_controller_cert_validity(section: ControllerSection, now: float) -> C
 
 
 def _format_cached_plugin(plugin: CachedPlugin) -> str:
+    plugin_info = f"Timeout: {plugin.timeout}s, PID: {plugin.pid}"
+
     if plugin.plugin_type is None:
-        return plugin.plugin_name
+        return f"{plugin.plugin_name} ({plugin_info})"
 
     name_mapping = {
         CachedPluginType.PLUGIN: "Agent plugin",
@@ -531,7 +533,7 @@ def _format_cached_plugin(plugin: CachedPlugin) -> str:
         CachedPluginType.ORACLE: "mk_oracle plugin",
     }
 
-    return f"{plugin.plugin_name} ({name_mapping[plugin.plugin_type]})"
+    return f"{plugin.plugin_name} ({name_mapping[plugin.plugin_type]}, {plugin_info})"
 
 
 def _plugin_strings(plugins: Sequence[CachedPlugin]) -> tuple[str, str]:

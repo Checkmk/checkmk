@@ -21,6 +21,7 @@ from cmk.automations.results import CheckPreviewEntry
 from cmk.checkengine import (
     CheckPlugin,
     FetcherFunction,
+    filter_out_errors,
     HostKey,
     ParserFunction,
     SectionPlugin,
@@ -38,12 +39,7 @@ from cmk.checkengine.discovery import (
     QualifiedDiscovery,
 )
 from cmk.checkengine.parameters import TimespecificParameters
-from cmk.checkengine.sectionparser import (
-    filter_out_errors,
-    make_providers,
-    Provider,
-    store_piggybacked_sections,
-)
+from cmk.checkengine.sectionparser import make_providers, Provider, store_piggybacked_sections
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 
 import cmk.base.agent_based.checking as checking

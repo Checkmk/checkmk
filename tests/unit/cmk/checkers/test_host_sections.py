@@ -11,8 +11,7 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.fetchers import FetcherType
 
-from cmk.checkengine import HostKey, HostSections, SourceInfo, SourceType
-from cmk.checkengine.sectionparser import filter_out_errors
+from cmk.checkengine import filter_out_errors, HostKey, HostSections, SourceInfo, SourceType
 from cmk.checkengine.type_defs import AgentRawDataSection
 
 HS: TypeAlias = HostSections[AgentRawDataSection]
@@ -44,7 +43,7 @@ def parse(raw: TRAW) -> dict[SectionName, list[list[str]]]:
     return {SectionName(name): [line.split() for line in lines.splitlines()] for name, lines in raw}
 
 
-class TestFilterOutErrors:
+class TestMergeHostSections:
     def test_nothing_noop(self):
         RAW: TRAW = []
 

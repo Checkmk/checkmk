@@ -18,7 +18,13 @@ from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
 from cmk.utils.sectionname import SectionMap
 
-from cmk.checkengine import FetcherFunction, HostKey, ParserFunction, SectionPlugin
+from cmk.checkengine import (
+    FetcherFunction,
+    filter_out_errors,
+    HostKey,
+    ParserFunction,
+    SectionPlugin,
+)
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import (
     analyse_services,
@@ -30,12 +36,7 @@ from cmk.checkengine.discovery import (
     HostLabelPlugin,
     QualifiedDiscovery,
 )
-from cmk.checkengine.sectionparser import (
-    filter_out_errors,
-    make_providers,
-    Provider,
-    store_piggybacked_sections,
-)
+from cmk.checkengine.sectionparser import make_providers, Provider, store_piggybacked_sections
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 
 from cmk.base.config import ConfigCache
@@ -70,9 +71,9 @@ def commandline_discovery(
         section.section_begin(host_name)
         try:
             fetched = fetcher(host_name, ip_address=None)
-            host_sections = filter_out_errors(parser((f[0], f[1]) for f in fetched))
-            store_piggybacked_sections(host_sections)
-            providers = make_providers(host_sections, section_plugins)
+            merged_host_sections = filter_out_errors(parser((f[0], f[1]) for f in fetched))
+            store_piggybacked_sections(merged_host_sections)
+            providers = make_providers(merged_host_sections, section_plugins)
             _commandline_discovery_on_host(
                 real_host_name=host_name,
                 host_label_plugins=host_label_plugins,

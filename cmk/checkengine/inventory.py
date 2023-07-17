@@ -35,10 +35,10 @@ from cmk.utils.validatedstr import ValidatedString
 
 from ._api import FetcherFunction, ParserFunction, SectionPlugin, SummarizerFunction
 from ._parser import HostSections
+from ._parserutils import filter_out_errors
 from ._typedefs import HostKey, SourceType
 from .checkresults import ActiveCheckResult
 from .sectionparser import (
-    filter_out_errors,
     make_providers,
     ParsedSectionName,
     Provider,

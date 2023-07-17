@@ -22,6 +22,7 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.checkengine import (
     FetcherFunction,
+    filter_out_errors,
     HostKey,
     ParserFunction,
     SectionPlugin,
@@ -45,12 +46,7 @@ from cmk.checkengine.discovery import (
 )
 from cmk.checkengine.discovery.filters import RediscoveryParameters
 from cmk.checkengine.discovery.filters import ServiceFilters as _ServiceFilters
-from cmk.checkengine.sectionparser import (
-    filter_out_errors,
-    make_providers,
-    Provider,
-    store_piggybacked_sections,
-)
+from cmk.checkengine.sectionparser import make_providers, Provider, store_piggybacked_sections
 
 from cmk.base.config import ConfigCache
 
@@ -111,9 +107,9 @@ def automation_discovery(
         if failed_sources_results := [r for r in summarizer(parsed) if r.state != 0]:
             return DiscoveryResult(error_text=", ".join(r.summary for r in failed_sources_results))
 
-        host_sections = filter_out_errors(parsed)
-        store_piggybacked_sections(host_sections)
-        providers = make_providers(host_sections, section_plugins)
+        host_sections_no_error = filter_out_errors(parsed)
+        store_piggybacked_sections(host_sections_no_error)
+        providers = make_providers(host_sections_no_error, section_plugins)
 
         if mode is not DiscoveryMode.REMOVE:
             host_labels = QualifiedDiscovery[HostLabel](

@@ -33,6 +33,7 @@ from cmk.fetchers import FetcherType
 from cmk.checkengine import (
     CheckPlugin,
     crash_reporting,
+    filter_out_errors,
     HostKey,
     Parameters,
     ParserFunction,
@@ -60,7 +61,6 @@ from cmk.checkengine.inventory import (
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.sectionparser import (
-    filter_out_errors,
     make_providers,
     ParsedSectionName,
     Provider,

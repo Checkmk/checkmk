@@ -25,10 +25,10 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 
-def parse_msoffice_licenses(info):
+def parse_msoffice_licenses(string_table):
     parsed = {}
 
-    for line in info:
+    for line in string_table:
         if len(line) != 4:
             continue
 

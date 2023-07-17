@@ -34,7 +34,7 @@ from cmk.base.plugins.agent_based.utils.intel import DETECT_INTEL_TRUE_SCALE
 # .1.3.6.1.4.1.10222.2.1.4.7.1.6.5.4 0 --> ICS-CHASSIS-MIB::icsChassisPowerSupplyOutputPower.5.4
 
 
-def parse_intel_true_scale_psus(info):
+def parse_intel_true_scale_psus(string_table):
     map_states = {
         "1": (3, "unknown"),
         "2": (3, "disabled"),
@@ -54,7 +54,7 @@ def parse_intel_true_scale_psus(info):
     }
 
     parsed = {}
-    for descr, operstate, source, voltage_str, power_str in info:
+    for descr, operstate, source, voltage_str, power_str in string_table:
         name = descr.replace("Power Supply", "").strip()
 
         parsed.setdefault(

@@ -28,13 +28,13 @@ from cmk.base.config import check_info
 Section = Mapping
 
 
-def parse_mongodb_replication_info(info):
+def parse_mongodb_replication_info(string_table):
     """
-    :param info: dictionary with replication info from local.oplog.rs
+    :param string_table: dictionary with replication string_table from local.oplog.rs
     :return: dict
     """
-    if info:
-        return json.loads(str(info[0][0]))
+    if string_table:
+        return json.loads(str(string_table[0][0]))
     return {}
 
 

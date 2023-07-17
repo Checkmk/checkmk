@@ -10,10 +10,10 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_informix_status(info):
+def parse_informix_status(string_table):
     parsed = {}
     instance = None
-    for line in info:
+    for line in string_table:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             instance = line[0][3:-3]
 

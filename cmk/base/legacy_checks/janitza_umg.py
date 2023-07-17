@@ -18,11 +18,11 @@ janitza_umg_device_map = {
 }
 
 
-def parse_janitza_umg_inphase(info):
+def parse_janitza_umg_inphase(string_table):
     def flatten(line):
         return [x[0] for x in line]
 
-    dev_type = janitza_umg_device_map[info[0][0][0]]
+    dev_type = janitza_umg_device_map[string_table[0][0][0]]
 
     info_offsets = {
         "508": {
@@ -42,10 +42,10 @@ def parse_janitza_umg_inphase(info):
         },
     }[dev_type]
 
-    rmsphase = flatten(info[1])
-    sumphase = flatten(info[2])
-    energy = flatten(info[info_offsets["energy"]])
-    sumenergy = flatten(info[info_offsets["sumenergy"]])
+    rmsphase = flatten(string_table[1])
+    sumphase = flatten(string_table[2])
+    energy = flatten(string_table[info_offsets["energy"]])
+    sumenergy = flatten(string_table[info_offsets["sumenergy"]])
 
     if dev_type in ["508", "604"]:
         num_phases = 4
@@ -83,7 +83,7 @@ def parse_janitza_umg_inphase(info):
 
     result["Total"] = {"power": int(sumphase[0]), "energy": int(sumenergy[0])}
 
-    misc = flatten(info[info_offsets["misc"]])
+    misc = flatten(string_table[info_offsets["misc"]])
     result["Frequency"] = int(misc[0])
     # temperature not present in UMG508 and UMG604
     if len(misc) > 1:

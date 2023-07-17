@@ -46,21 +46,21 @@ def _delocalize_de_DE(instance, counter, value):
     return instance, counter, value
 
 
-def parse_msexch_database(info):
-    if not (info and info[0]):
+def parse_msexch_database(string_table):
+    if not (string_table and string_table[0]):
         return {}
 
     delocalize_func = None
     offset = 0
-    if len(info[0]) > 1 and info[0][0] == "locale":
-        locale = info[0][1].strip()
+    if len(string_table[0]) > 1 and string_table[0][0] == "locale":
+        locale = string_table[0][1].strip()
         offset = 1
         delocalize_func = {
             "de-DE": _delocalize_de_DE,
         }.get(locale)
 
     parsed = {}
-    for row in info[offset:]:
+    for row in string_table[offset:]:
         row = [r.strip('"') for r in row]
         if len(row) != 2 or not row[0].startswith("\\\\"):
             continue

@@ -23,12 +23,12 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 
-def parse_postgres_stat_database(info):
-    if len(info) == 0:
+def parse_postgres_stat_database(string_table):
+    if len(string_table) == 0:
         return {}
     parsed = {}
     instance_name = ""
-    for line in info:
+    for line in string_table:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             instance_name = line[0][3:-3].upper()
             continue

@@ -26,9 +26,9 @@ from cmk.base.plugins.agent_based.utils.netextreme import DETECT_NETEXTREME
 # Just assumed
 
 
-def parse_netextreme_psu_out(info):
+def parse_netextreme_psu_out(string_table):
     parsed = {}
-    for psu_index, psu_voltage_str, psu_current_str, psu_factor_str in info:
+    for psu_index, psu_voltage_str, psu_current_str, psu_factor_str in string_table:
         psu_name = "Output %s" % psu_index
         psu_voltage = float(psu_voltage_str) * pow(10, int(psu_factor_str))
         psu_current = float(psu_current_str) * pow(10, int(psu_factor_str))

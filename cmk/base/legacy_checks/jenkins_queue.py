@@ -30,10 +30,10 @@ MAP_QUEUE_STATES = {
 }
 
 
-def parse_jenkins_queue(info):
+def parse_jenkins_queue(string_table):
     parsed = []
 
-    for line in info:
+    for line in string_table:
         parsed.extend(json.loads(line[0]))
 
     return parsed

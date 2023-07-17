@@ -10,11 +10,11 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
 
-def parse_poseidon_temp(info):
+def parse_poseidon_temp(string_table):
     parsed = {}
-    if not info:
+    if not string_table:
         return None
-    for name, state, value_string in info:
+    for name, state, value_string in string_table:
         try:
             temp = float(value_string.replace("C", ""))
         except ValueError:

@@ -29,13 +29,13 @@ from cmk.base.plugins.agent_based.utils.mongodb import parse_date
 Section = Mapping
 
 
-def parse_mongodb_replica_set(info):
+def parse_mongodb_replica_set(string_table):
     """
-    :param info: dictionary with all data for all checks and subchecks
+    :param string_table: dictionary with all data for all checks and subchecks
     :return:
     """
-    if info:
-        return json.loads(str(info[0][0]))
+    if string_table:
+        return json.loads(str(string_table[0][0]))
     return {}
 
 

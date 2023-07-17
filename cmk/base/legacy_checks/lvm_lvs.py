@@ -17,11 +17,11 @@ LvmLvsEntry = collections.namedtuple(  # pylint: disable=collections-namedtuple-
 )
 
 
-def parse_lvm_lvs(info):
-    possible_items = {"%s/%s" % (line[1], line[4]) for line in info if line[4] != ""}
+def parse_lvm_lvs(string_table):
+    possible_items = {"%s/%s" % (line[1], line[4]) for line in string_table if line[4] != ""}
 
     parsed = {}
-    for line in info:
+    for line in string_table:
         item = "%s/%s" % (line[1], line[0])
         if item not in possible_items:
             continue

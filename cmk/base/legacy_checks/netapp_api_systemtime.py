@@ -32,9 +32,9 @@ NetappApiTimeEntry = collections.namedtuple(  # pylint: disable=collections-name
 )
 
 
-def parse_netapp_api_systemtime(info):
+def parse_netapp_api_systemtime(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         try:
             item, agent_time, system_time = line
             parsed[item] = NetappApiTimeEntry(int(agent_time), int(system_time))

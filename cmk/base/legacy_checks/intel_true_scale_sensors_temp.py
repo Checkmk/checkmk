@@ -33,7 +33,7 @@ from cmk.base.plugins.agent_based.utils.intel import DETECT_INTEL_TRUE_SCALE
 # .1.3.6.1.4.1.10222.2.1.9.8.1.8.1.2.2 31 --> ICS-CHASSIS-MIB::icsChassisSensorSlotValue.1.2.2
 
 
-def parse_intel_true_scale_sensors(info):
+def parse_intel_true_scale_sensors(string_table):
     map_slot_types = {
         "0": "unspecified",
         "1": "switch master",
@@ -78,7 +78,7 @@ def parse_intel_true_scale_sensors(info):
         "5": (3, "disabled"),
     }
 
-    slots, sensors = info
+    slots, sensors = string_table
     parsed = {}
     for slot_id, slot_ty in slots:
         parsed.setdefault("slot %s" % slot_id, {"slot_type": map_slot_types[slot_ty]})

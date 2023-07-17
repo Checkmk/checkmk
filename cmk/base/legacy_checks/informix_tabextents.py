@@ -12,11 +12,11 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_informix_tabextents(info):
+def parse_informix_tabextents(string_table):
     parsed = {}
     instance = None
     entry = None
-    for line in info:
+    for line in string_table:
         if instance is not None and line == ["(constant)", "TABEXTENTS"]:
             entry = {}
             parsed.setdefault(instance, [])

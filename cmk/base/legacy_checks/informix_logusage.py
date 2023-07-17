@@ -10,11 +10,11 @@ from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_informix_logusage(info):
+def parse_informix_logusage(string_table):
     parsed = {}
     instance = None
     entry = None
-    for line in info:
+    for line in string_table:
         if instance is not None and line == ["(constant)", "LOGUSAGE"]:
             entry = {}
             parsed.setdefault(instance, [])

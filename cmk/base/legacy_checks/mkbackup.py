@@ -47,13 +47,13 @@ from cmk.base.check_api import (
 from cmk.base.config import check_info
 
 
-def parse_mkbackup(info):
+def parse_mkbackup(string_table):
     import json
 
     parsed = {}
 
     job, json_data = None, ""
-    for l in info:
+    for l in string_table:
         line = " ".join(l)
         if line.startswith("[[["):
             head = line[3:-3].split(":")

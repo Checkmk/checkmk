@@ -16,9 +16,9 @@ from cmk.base.config import check_info
 
 
 @mysql_parse_per_item
-def parse_mysql_slave(info):
+def parse_mysql_slave(string_table):
     data: dict[str, int | bool | None] = {}
-    for line in info:
+    for line in string_table:
         if not line[0].endswith(":"):
             continue
 

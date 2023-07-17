@@ -16,10 +16,10 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 
-def parse_oracle_sessions(info):
+def parse_oracle_sessions(string_table):
     header = ["cursess", "maxsess", "curmax"]
     parsed = {}
-    for line in info:
+    for line in string_table:
         for key, entry in zip(header, line[1:]):
             try:
                 parsed.setdefault(line[0], {})[key] = int(entry)

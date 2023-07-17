@@ -21,9 +21,9 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.mongodb import parse_date
 
 
-def parse_mongodb_collections(info):
-    if info:
-        return json.loads(str(info[0][0]))
+def parse_mongodb_collections(string_table):
+    if string_table:
+        return json.loads(str(string_table[0][0]))
     return {}
 
 

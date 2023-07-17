@@ -29,7 +29,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 # .1.3.6.1.4.1.18248.20.1.2.1.1.3.3 0
 
 
-def parse_papouch_th2e_sensors(info):
+def parse_papouch_th2e_sensors(string_table):
     map_sensor_type = {
         "1": "temp",
         "2": "humidity",
@@ -52,7 +52,7 @@ def parse_papouch_th2e_sensors(info):
     }
 
     parsed = {}
-    for oidend, state, reading_str, unit in info:
+    for oidend, state, reading_str, unit in string_table:
         if state != "3":
             sensor_ty = map_sensor_type[oidend]
             sensor_unit = map_units[unit]

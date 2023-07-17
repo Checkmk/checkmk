@@ -39,14 +39,14 @@ from cmk.base.config import check_info
 # tcp4  0   0   127.0.0.1.1234  127.0.0.1.5678  ESTABLISHED
 
 
-def parse_netstat(info):
+def parse_netstat(string_table):
     def split_ip_address(ip_address):
         if ":" in ip_address:
             return ip_address.rsplit(":", 1)
         return ip_address.rsplit(".", 1)
 
     connections = []
-    for line in info:
+    for line in string_table:
         if len(line) == 6:
             proto, _recv_q, _send_q, local, remote, connstate = line
             if proto.startswith("tcp"):  # also tcp4 and tcp6

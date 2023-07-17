@@ -34,10 +34,10 @@ megaraid_bbu_refvalues = {
 }
 
 
-def megaraid_bbu_parse(info):
+def megaraid_bbu_parse(string_table):
     controllers = {}
     current_hba = None
-    for line in info:
+    for line in string_table:
         joined = " ".join(line)
         if ":" not in joined:
             continue  # skip garbage lines

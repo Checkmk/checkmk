@@ -15,9 +15,9 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_mssql_connections(info):
+def parse_mssql_connections(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         try:
             instance, db_name, connection_count = line
             connection_count = int(connection_count)

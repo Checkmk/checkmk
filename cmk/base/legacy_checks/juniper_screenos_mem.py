@@ -14,9 +14,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.juniper import DETECT_JUNIPER_SCREENOS
 
 
-def parse_juniper_screenos_mem(info):
+def parse_juniper_screenos_mem(string_table):
     new_info = []
-    for used, free in info:
+    for used, free in string_table:
         new_info.append([int(used) // 1024, (int(used) + int(free)) // 1024])
     return new_info
 

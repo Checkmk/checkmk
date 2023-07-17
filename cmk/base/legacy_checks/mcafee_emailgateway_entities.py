@@ -10,7 +10,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.mcafee_gateway import DETECT_EMAIL_GATEWAY
 
 
-def parse_mcafee_emailgateway_entities(info):
+def parse_mcafee_emailgateway_entities(string_table):
     parsed = {}
     for idx, services in enumerate(
         [
@@ -50,7 +50,7 @@ def parse_mcafee_emailgateway_entities(info):
             ["WEBMC", "Eventhandler", "SMTP Retryer", "Spam Updater", "Postgres", "RMD Merge"],
         ]
     ):
-        parsed.update(dict(zip(services, info[idx][0])))
+        parsed.update(dict(zip(services, string_table[idx][0])))
     return parsed
 
 

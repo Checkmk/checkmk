@@ -14,8 +14,8 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 
-def parse_oracle_undostat(info):
-    return {line[0]: [int(v) for v in line[1:]] for line in info if len(line) == 6}
+def parse_oracle_undostat(string_table):
+    return {line[0]: [int(v) for v in line[1:]] for line in string_table if len(line) == 6}
 
 
 def discover_oracle_undostat(parsed):

@@ -27,10 +27,10 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 
-def parse_postgres_version(info):
+def parse_postgres_version(string_table):
     parsed = {}
     instance_name = ""
-    for line in info:
+    for line in string_table:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             instance_name = line[0][3:-3]
             continue

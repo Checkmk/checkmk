@@ -13,9 +13,9 @@ from cmk.base.check_legacy_includes.jolokia import parse_jolokia_json_output
 from cmk.base.config import check_info
 
 
-def parse_jolokia_jvm_garbagecollectors(info):
+def parse_jolokia_jvm_garbagecollectors(string_table):
     parsed = {}
-    for instance, _mbean, bulk_data in parse_jolokia_json_output(info):
+    for instance, _mbean, bulk_data in parse_jolokia_json_output(string_table):
         for data in bulk_data.values():
             name = data.get("Name")
             if not name:

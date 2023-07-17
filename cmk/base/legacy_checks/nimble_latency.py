@@ -18,7 +18,7 @@ NimbleReadsType = "read"
 NimbleWritesType = "write"
 
 
-def parse_nimble_read_latency(info):
+def parse_nimble_read_latency(string_table):
     range_keys = [
         ("total", "Total"),
         ("0.1", "0-0.1 ms"),
@@ -37,7 +37,7 @@ def parse_nimble_read_latency(info):
     ]
     parsed = {}
 
-    for line in info:
+    for line in string_table:
         vol_name = line[0]
         for ty, start_idx in [
             (NimbleReadsType, 1),

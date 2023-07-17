@@ -13,7 +13,7 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
 
-def parse_orion_system(info):
+def parse_orion_system(string_table):
     map_charge_states = {
         "1": (0, "float charging"),
         "2": (0, "discharge"),
@@ -34,7 +34,7 @@ def parse_orion_system(info):
         _battery_current_limit,
         rectifier_current,
         system_power,
-    ) = info[0]
+    ) = string_table[0]
 
     parsed = {
         "charging": {

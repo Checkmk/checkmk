@@ -22,9 +22,9 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
 
 
-def parse_printer_supply_ricoh(info):
+def parse_printer_supply_ricoh(string_table):
     parsed = {}
-    for what, pages_text in info:
+    for what, pages_text in string_table:
         name_reversed = what.split(" ")
 
         if len(name_reversed) == 2:

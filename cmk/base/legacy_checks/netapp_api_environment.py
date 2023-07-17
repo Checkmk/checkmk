@@ -15,14 +15,14 @@ from cmk.base.config import check_info
 # sensor-name PSU1 FAULT  sensor-type discrete    node-name BIN-CL1-N1    discrete-sensor-value OK    discrete-sensor-state normal    threshold-sensor-state normal
 
 
-def _parse_netapp_api_environment(info):
+def _parse_netapp_api_environment(string_table):
     def item_func(name, values):
         try:
             return "%(node-name)s / %(sensor-name)s" % values
         except KeyError:
             return name
 
-    return netapp_api_parse_lines(info, item_func=item_func)
+    return netapp_api_parse_lines(string_table, item_func=item_func)
 
 
 def discover_api_environment(predicate=None):

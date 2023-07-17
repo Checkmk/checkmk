@@ -17,19 +17,19 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import exists, OIDEnd, SNMP
 # 4 pethMainPseConsumptionPower (Measured usage power expressed in Watts)
 
 
-def parse_pse_poe(info):
+def parse_pse_poe(string_table):
     """
-    parse info data and create dictionary with namedtuples for each OID.
+    parse string_table data and create dictionary with namedtuples for each OID.
 
     {
        oid_end : PoeValues(poe_max, poe_used, poe_status, poe_status_detail)
     }
 
-    :param info: parsed snmp data
+    :param string_table: parsed snmp data
     :return: dictionary
     """
     poe_dict = {}
-    for oid_end, poe_max, pse_op_status, poe_used in info:
+    for oid_end, poe_max, pse_op_status, poe_used in string_table:
         poe_dict[str(oid_end)] = PoeValues(
             poe_max=int(poe_max),
             poe_used=int(poe_used),

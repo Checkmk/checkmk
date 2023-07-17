@@ -52,9 +52,9 @@ class DiscoveryFunction(Protocol):
 
 
 @mysql_parse_per_item
-def parse_mysql(info):
+def parse_mysql(string_table):
     data = {}
-    for line in info:
+    for line in string_table:
         try:
             data[line[0]] = int(line[1])
         except IndexError:

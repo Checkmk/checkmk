@@ -17,11 +17,11 @@ from cmk.base.check_api import get_bytes_human_readable, get_rate, LegacyCheckDe
 from cmk.base.config import check_info
 
 
-def parse_mkeventd_status(info):
+def parse_mkeventd_status(string_table):
     import json
 
     parsed, site = {}, None
-    for line in info:
+    for line in string_table:
         try:
             data = json.loads(line[0])
         except ValueError:

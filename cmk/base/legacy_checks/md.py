@@ -117,10 +117,10 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_md(info):  # pylint: disable=too-many-branches
+def parse_md(string_table):  # pylint: disable=too-many-branches
     parsed = {}
     instance = {}
-    for line in (l for l in info if l):
+    for line in (l for l in string_table if l):
         if len(line) >= 5 and line[0].startswith("md") and line[1] == ":":
             if line[3].startswith("(") and line[3].endswith(")"):
                 raid_state = line[2] + line[3]

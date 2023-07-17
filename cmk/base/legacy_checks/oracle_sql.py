@@ -29,7 +29,7 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_oracle_sql(info):
+def parse_oracle_sql(string_table):
     def parse_perfdata(line):
         perfdata = []
         for entry in line.split():
@@ -47,7 +47,7 @@ def parse_oracle_sql(info):
 
     parsed = {}
     instance = None
-    for line in info:
+    for line in string_table:
         if line[0].startswith("[[[") and line[0].endswith("]]]"):
             item_name = tuple(line[0][3:-3].split("|"))
             instance = parsed.setdefault(

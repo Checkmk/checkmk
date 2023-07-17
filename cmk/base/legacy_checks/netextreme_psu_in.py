@@ -18,9 +18,9 @@ from cmk.base.plugins.agent_based.utils.netextreme import DETECT_NETEXTREME
 # Just an assumption
 
 
-def parse_netextreme_psu_in(info):
+def parse_netextreme_psu_in(string_table):
     parsed = {}
-    for psu_index, psu_usage_str, psu_factor_str in info:
+    for psu_index, psu_usage_str, psu_factor_str in string_table:
         power = float(psu_usage_str) * pow(10, int(psu_factor_str))
         if power > 0:
             parsed["Input %s" % psu_index] = {

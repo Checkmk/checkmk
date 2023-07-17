@@ -9,10 +9,10 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
 
-def parse_poseidon_inputs(info):
+def parse_poseidon_inputs(string_table):
     parsed = {}
-    if info:
-        for line_number, line in enumerate(info, 1):
+    if string_table:
+        for line_number, line in enumerate(string_table, 1):
             input_value, input_name, input_alarm_setup, input_alarm_state = line
             if input_name == "":
                 input_name = "Eingang %d" % line_number

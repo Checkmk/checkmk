@@ -23,7 +23,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.pandacom import DETECT_PANDACOM
 
 
-def parse_pandacom_psu(info):
+def parse_pandacom_psu(string_table):
     map_psu_type = {
         "0": "type not configured",
         "1": "230 V AC 75 W",
@@ -51,10 +51,10 @@ def parse_pandacom_psu(info):
         ("2", 6, 3),
         ("3", 10, 11),
     ]:
-        if info[state_index][0] not in ["0", "255"]:
+        if string_table[state_index][0] not in ["0", "255"]:
             parsed[psu_nr] = {
-                "type": map_psu_type[info[type_index][0]],
-                "state": map_psu_state[info[state_index][0]],
+                "type": map_psu_type[string_table[type_index][0]],
+                "state": map_psu_state[string_table[state_index][0]],
             }
 
     return parsed

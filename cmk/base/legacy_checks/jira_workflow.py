@@ -15,10 +15,10 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_jira_workflow(info):
+def parse_jira_workflow(string_table):
     parsed = {}
 
-    for line in info:
+    for line in string_table:
         projects = json.loads(" ".join(line))
 
         for project in projects:

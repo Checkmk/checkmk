@@ -36,11 +36,11 @@ from cmk.base.plugins.agent_based.utils.kentix import DETECT_KENTIX
 # }
 
 
-def parse_kentix_amp_sensors(info):
+def parse_kentix_amp_sensors(string_table):
     info_flattened = []
 
-    for i in range(0, len(info[0]), 10):
-        info_flattened.append([a[0] for a in info[0][i : i + 10]])
+    for i in range(0, len(string_table[0]), 10):
+        info_flattened.append([a[0] for a in string_table[0][i : i + 10]])
 
     parsed = {}
     for line in info_flattened:

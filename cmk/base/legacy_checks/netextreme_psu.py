@@ -17,9 +17,9 @@ from cmk.base.plugins.agent_based.utils.netextreme import DETECT_NETEXTREME
 # as in the documentation 'Summit-X460-G2-DS.pdf'
 
 
-def parse_netextreme_psu(info):
+def parse_netextreme_psu(string_table):
     try:
-        return {"1": {"power": float(info[0][0]) * pow(10, int(info[0][1]))}}
+        return {"1": {"power": float(string_table[0][0]) * pow(10, int(string_table[0][1]))}}
     except (IndexError, ValueError):
         return {}
 

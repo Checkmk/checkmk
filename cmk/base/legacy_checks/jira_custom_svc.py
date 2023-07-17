@@ -24,10 +24,10 @@ from cmk.base.check_api import (
 from cmk.base.config import check_info
 
 
-def parse_jira_custom_svc(info):
+def parse_jira_custom_svc(string_table):
     parsed = {}
 
-    for line in info:
+    for line in string_table:
         custom_svc = json.loads(" ".join(line))
 
         for service in custom_svc:

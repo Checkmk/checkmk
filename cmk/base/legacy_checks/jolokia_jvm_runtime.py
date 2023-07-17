@@ -10,8 +10,11 @@ from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 from cmk.base.config import check_info
 
 
-def parse_jolokia_jvm_runtime(info):
-    return {instance: json_data for instance, _mbean, json_data in parse_jolokia_json_output(info)}
+def parse_jolokia_jvm_runtime(string_table):
+    return {
+        instance: json_data
+        for instance, _mbean, json_data in parse_jolokia_json_output(string_table)
+    }
 
 
 def check_jolokia_jvm_runtime_uptime(item, params, parsed):

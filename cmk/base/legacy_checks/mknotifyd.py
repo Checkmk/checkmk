@@ -58,12 +58,12 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 
-def parse_mknotifyd(info):  # pylint: disable=too-many-branches
+def parse_mknotifyd(string_table):  # pylint: disable=too-many-branches
     try:
-        timestamp, data = float(info[0][0]), info[1:]
+        timestamp, data = float(string_table[0][0]), string_table[1:]
     except (IndexError, ValueError):
         # versions before 1.5.0p23/1.6.0p4 did not include a timestamp
-        timestamp, data = time.time(), info
+        timestamp, data = time.time(), string_table
 
     parsed: dict[str, Any] = {
         "sites": {},

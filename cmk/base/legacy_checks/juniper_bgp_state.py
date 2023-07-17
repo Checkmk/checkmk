@@ -22,7 +22,7 @@ def juniper_bgp_state_create_item(peering_entry):
     return " ".join("%02X" % int(i) for i in peering_entry)  # that's what has been in the data
 
 
-def parse_juniper_bgp_state(info):
+def parse_juniper_bgp_state(string_table):
     bgp_state_map = {
         "0": "undefined",  # 0 does not exist
         "1": "idle",  # 1
@@ -38,7 +38,7 @@ def parse_juniper_bgp_state(info):
         "2": "running",  # 2
     }
     parsed = {}
-    for state, operational_state, peering_entry in info:
+    for state, operational_state, peering_entry in string_table:
         item = juniper_bgp_state_create_item(peering_entry)
         state_txt = bgp_state_map.get(state.strip(), "undefined")
         operational_txt = bgp_operational_state_map.get(operational_state.strip(), "undefined")

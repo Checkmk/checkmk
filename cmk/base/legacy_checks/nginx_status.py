@@ -17,14 +17,14 @@ from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_nginx_status(info):
-    if len(info) % 4 != 0:
+def parse_nginx_status(string_table):
+    if len(string_table) % 4 != 0:
         # Every instance block consists of four lines
         # Multiple block may occur.
         return {}
 
     data = {}
-    for i, line in enumerate(info):
+    for i, line in enumerate(string_table):
         address, port = line[:2]
         if len(line) < 3:
             continue  # Skip unexpected lines
@@ -33,13 +33,13 @@ def parse_nginx_status(info):
         if item not in data:
             # new server block start
             data[item] = {
-                "active": int(info[i + 0][4]),
-                "accepted": int(info[i + 2][2]),
-                "handled": int(info[i + 2][3]),
-                "requests": int(info[i + 2][4]),
-                "reading": int(info[i + 3][3]),
-                "writing": int(info[i + 3][5]),
-                "waiting": int(info[i + 3][7]),
+                "active": int(string_table[i + 0][4]),
+                "accepted": int(string_table[i + 2][2]),
+                "handled": int(string_table[i + 2][3]),
+                "requests": int(string_table[i + 2][4]),
+                "reading": int(string_table[i + 3][3]),
+                "writing": int(string_table[i + 3][5]),
+                "waiting": int(string_table[i + 3][7]),
             }
 
     return data

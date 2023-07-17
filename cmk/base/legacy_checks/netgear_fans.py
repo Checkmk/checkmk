@@ -80,8 +80,8 @@ def netgear_map_state_txt_to_int(state_nr, version):
     return map_state_txt_to_int.get(state_txt, 3), state_txt
 
 
-def parse_netgear_fans(info):
-    versioninfo, sensorinfo = info
+def parse_netgear_fans(string_table):
+    versioninfo, sensorinfo = string_table
     if versioninfo == []:
         parsed = {"__fans__": {}}
     else:

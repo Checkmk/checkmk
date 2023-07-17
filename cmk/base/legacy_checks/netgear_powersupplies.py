@@ -17,9 +17,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.netgear import DETECT_NETGEAR
 
 
-def parse_netgear_powersupplies(info):
+def parse_netgear_powersupplies(string_table):
     parsed = {}
-    for oid_end, sstate in info:
+    for oid_end, sstate in string_table:
         parsed.setdefault("%s" % oid_end.replace(".", "/"), sstate)
     return parsed
 

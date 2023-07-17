@@ -23,10 +23,10 @@ MAP_INSTANCE_STATE = {
 }
 
 
-def parse_jenkins_instance(info):
+def parse_jenkins_instance(string_table):
     parsed = {}
 
-    for line in info:
+    for line in string_table:
         parsed.update(json.loads(line[0]))
 
     return parsed

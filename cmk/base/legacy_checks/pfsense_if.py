@@ -10,9 +10,9 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
 
-def parse_pfsense_if(info):
+def parse_pfsense_if(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         parsed[line[0]] = {"ip4_in_blocked": int(line[1])}
     return parsed
 

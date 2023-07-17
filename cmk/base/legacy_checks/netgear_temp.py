@@ -48,13 +48,13 @@ from cmk.base.plugins.agent_based.utils.netgear import DETECT_NETGEAR
 # .1.3.6.1.4.1.4526.10.43.1.8.1.5.2.0 37 --> FASTPATH-BOXSERVICES-PRIVATE-MIB::boxServicesTempSensorsEntry.5.2.0
 
 
-def parse_netgear_temp(info):
+def parse_netgear_temp(string_table):
     map_types = {
         "1": "fixed",
         "2": "removable",
     }
 
-    versioninfo, sensorinfo = info
+    versioninfo, sensorinfo = string_table
     parsed = {}
     for oid_end, sensor_ty, sstate, reading_str, reading_str_10 in sensorinfo:
         if versioninfo[0][0].startswith("10."):

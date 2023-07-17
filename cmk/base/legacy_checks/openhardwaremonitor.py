@@ -67,9 +67,9 @@ OpenhardwaremonitorSensor = collections.namedtuple(  # pylint: disable=collectio
 )
 
 
-def parse_openhardwaremonitor(info):
+def parse_openhardwaremonitor(string_table):
     parsed: dict[str, dict[str, OpenhardwaremonitorSensor]] = {}
-    for line in info:
+    for line in string_table:
         if line[0] == "Index":
             # header line
             continue

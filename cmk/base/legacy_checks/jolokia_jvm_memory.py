@@ -15,9 +15,9 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 
-def parse_jolokia_jvm_memory(info):
+def parse_jolokia_jvm_memory(string_table):
     parsed = {}
-    for instance, mbean, data in parse_jolokia_json_output(info):
+    for instance, mbean, data in parse_jolokia_json_output(string_table):
         type_ = jolokia_mbean_attribute("type", mbean)
         parsed_data = parsed.setdefault(instance, {}).setdefault(type_, {})
         parsed_data.update(data)

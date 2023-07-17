@@ -12,7 +12,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.mbg_lantime import DETECT_MBG_LANTIME_NG
 
 
-def parse_mbg_lantime_ng_fan(info):
+def parse_mbg_lantime_ng_fan(string_table):
     parsed = {}
     fan_states = {
         "0": (3, "not available"),
@@ -25,7 +25,7 @@ def parse_mbg_lantime_ng_fan(info):
         "2": (2, "yes"),
     }
 
-    for line in info:
+    for line in string_table:
         index, fan_status, fan_error = line
         if not index:
             continue

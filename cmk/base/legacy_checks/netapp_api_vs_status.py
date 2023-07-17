@@ -15,9 +15,9 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_netapp_api_vs_status(info):
+def parse_netapp_api_vs_status(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if len(line) == 2:
             # pre v1.6.0 agent output
             name, state = line

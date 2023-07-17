@@ -10,9 +10,9 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_jolokia_info(info):
+def parse_jolokia_info(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         parsed.setdefault(line[0], []).append(line[1:])
     return parsed
 

@@ -46,8 +46,8 @@ def iptables_hash(config):
     return hashlib.sha256(config.encode("utf-8")).hexdigest()
 
 
-def parse_iptables(info):
-    config_lines = [" ".join(sublist) for sublist in info]
+def parse_iptables(string_table):
+    config_lines = [" ".join(sublist) for sublist in string_table]
     config = "\n".join(config_lines)
     return config
 

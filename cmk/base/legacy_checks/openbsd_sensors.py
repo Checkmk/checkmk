@@ -93,7 +93,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import exists, SNMPTree
 #   '----------------------------------------------------------------------'
 
 
-def parse_openbsd_sensors(info):
+def parse_openbsd_sensors(string_table):
     parsed = {}
     used_descriptions = set()
 
@@ -125,7 +125,7 @@ def parse_openbsd_sensors(info):
         "21": "powersupply",
     }
 
-    for descr, sensortype, value, unit, state in info:
+    for descr, sensortype, value, unit, state in string_table:
         if sensortype not in openbsd_map_type:
             continue
         if (sensortype == "0" and value == "-273.15") or (

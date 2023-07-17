@@ -11,9 +11,9 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
 
 
-def parse_innovaphone_priports_l1(info):
+def parse_innovaphone_priports_l1(string_table):
     parsed = {}
-    for item, state_s, sigloss_s, slip_s in info:
+    for item, state_s, sigloss_s, slip_s in string_table:
         parsed[item] = {
             "state": saveint(state_s),
             "sigloss": saveint(sigloss_s),

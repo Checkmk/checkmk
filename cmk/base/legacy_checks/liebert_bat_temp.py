@@ -13,9 +13,9 @@ from cmk.base.plugins.agent_based.utils.lgp import DETECT_LGP
 liebert_bat_temp_default = (40, 50)  # warning / critical
 
 
-def parse_liebert_bat_temp(info):
+def parse_liebert_bat_temp(string_table):
     try:
-        return {"Battery": int(info[0][0])}
+        return {"Battery": int(string_table[0][0])}
     except (ValueError, IndexError):
         return {}
 

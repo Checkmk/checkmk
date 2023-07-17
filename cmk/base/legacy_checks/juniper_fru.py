@@ -69,9 +69,9 @@ from cmk.base.plugins.agent_based.utils.juniper import DETECT_JUNIPER
 #   '----------------------------------------------------------------------'
 
 
-def parse_juniper_fru(info):
+def parse_juniper_fru(string_table):
     parsed = {}
-    for fru_name, fru_type, fru_state in info:
+    for fru_name, fru_type, fru_state in string_table:
         # jnxFruName is read-only, thus we can replace here
         # some auto-generated declarations
         name = (

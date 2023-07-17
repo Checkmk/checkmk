@@ -31,7 +31,7 @@ isc_dhcpd_default_levels = (15.0, 5.0)
 # 10.0.1.57
 
 
-def parse_isc_dhcpd(info):
+def parse_isc_dhcpd(string_table):
     def ip_to_number(ip):
         number = 0
         factor = 1
@@ -47,7 +47,7 @@ def parse_isc_dhcpd(info):
     }
 
     mode = None
-    for line in info:
+    for line in string_table:
         if line[0] == "[general]":
             mode = "general"
         elif line[0] == "[pools]":

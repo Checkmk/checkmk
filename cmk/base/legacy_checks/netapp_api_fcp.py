@@ -191,9 +191,9 @@ def _notice_only_fy(state, text, metrics):
     return state, f"{newline}{text}", metrics
 
 
-def parse_netapp_api_fcp(info):
+def parse_netapp_api_fcp(string_table):
     now = time.time()
-    parsed = netapp_api_parse_lines(info, custom_keys=["node_name", "instance_name"])
+    parsed = netapp_api_parse_lines(string_table, custom_keys=["node_name", "instance_name"])
     fcp_interfaces = {}
     for key, values in parsed.items():
         fcp_data = {

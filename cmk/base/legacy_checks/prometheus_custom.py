@@ -16,9 +16,9 @@ ERROR_DETAILS = {
 }
 
 
-def parse_prometheus_custom(info):
+def parse_prometheus_custom(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         try:
             prometheus_data = json.loads(line[0])
         except ValueError:

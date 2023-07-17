@@ -24,6 +24,7 @@ import pysnmp.smi.rfc1902  # type: ignore[import]
 import pysnmp.smi.view  # type: ignore[import]
 from pyasn1.type.base import SimpleAsn1Type
 
+import cmk.utils.paths
 from cmk.utils.log import VERBOSE
 from cmk.utils.render import Age
 
@@ -263,7 +264,12 @@ class SNMPTrapTranslator:
             builder = pysnmp.smi.builder.MibBuilder()  # manages python MIB modules
 
             # we need compiled Mib Dir and explicit system Mib Dir
-            for source in [str(mibs_dir), "/usr/share/snmp/mibs"]:
+            for source in [
+                cmk.utils.paths.local_mib_dir,
+                cmk.utils.paths.mib_dir,
+                "/usr/share/snmp/mibs",
+                str(mibs_dir),
+            ]:
                 builder.addMibSources(*[pysnmp.smi.builder.DirMibSource(source)])
 
             # Indicate if we wish to load DESCRIPTION and other texts from MIBs

@@ -325,7 +325,7 @@ STAGES:
     - NAME: 'unixcat'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_UNIXCAT_FILES
       DIR: 'packages/unixcat'
-      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/unixcat.txt"
+      COMMAND: "GCC_TOOLCHAIN=/opt/gcc-12.2.0 ../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/unixcat.txt"
       TEXT_ON_SKIP: 'No unixcat files changed'
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/unixcat.txt"
@@ -333,7 +333,7 @@ STAGES:
     - NAME: 'Livestatus'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
       DIR: 'packages/livestatus'
-      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/livestatus.txt"
+      COMMAND: "GCC_TOOLCHAIN=/opt/gcc-12.2.0 ../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/livestatus.txt"
       TEXT_ON_SKIP: 'No Livestatus files changed'
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/livestatus.txt"
@@ -341,7 +341,7 @@ STAGES:
     - NAME: 'NEB'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_NEB_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
       DIR: 'packages/neb'
-      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/neb.txt"
+      COMMAND: "GCC_TOOLCHAIN=/opt/gcc-12.2.0 ../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/neb.txt"
       TEXT_ON_SKIP: 'No NEB files changed'
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/neb.txt"
@@ -349,7 +349,7 @@ STAGES:
     - NAME: 'CMC'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_CMC_FILES,CHANGED_CMC_PROTO_FILES,CHANGED_LIVESTATUS_FILES,CHANGED_ASIO_FILES,CHANGED_GOOGLETEST_FILES,CHANGED_RE2_FILES
       DIR: 'packages/cmc'
-      COMMAND: "../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmc.txt"
+      COMMAND: "GCC_TOOLCHAIN=/opt/gcc-12.2.0 ../../scripts/run-in-docker.sh ./run --all &> ${RESULTS}/cmc.txt"
       TEXT_ON_SKIP: 'No CMC files changed'
       RESULT_CHECK_TYPE: "GCC"
       RESULT_CHECK_FILE_PATTERN: "results/cmc.txt"

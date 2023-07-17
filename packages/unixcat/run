@@ -21,7 +21,7 @@ usage() {
     echo
     echo "  -c, --clean             remove artifacts first"
     echo "  -F, --check-format      check for correct formatting"
-    echo "  -b, --build             build unixcat executable"
+    echo "  -b, --build             build unixcat"
     echo "  -U, --build-unit-tests  build unit tests"
     echo "  -u, --unit-tests        run unit tests"
     echo "  -i, --iwyu              check C/C++ includes via include-what-you-use"
@@ -236,7 +236,11 @@ run_unit_tests() {
 run_iwyu() {
     test ${#FILES_TO_USE[@]} -eq 0 && return
     update_cmake_artifacts
-    # shellcheck disable=SC2086 # Yes, we want splitting for IWYU_EXTRA_ARGS.
+    if [ -z "${GCC_TOOLCHAIN}" ]; then
+        IWYU_EXTRA_ARGS=""
+    else
+        IWYU_EXTRA_ARGS="--gcc-toolchain=${GCC_TOOLCHAIN}"
+    fi
     python3 "$(command -v iwyu_tool.py)" \
         --jobs="${JOBS}" \
         -p=build \
@@ -244,18 +248,22 @@ run_iwyu() {
         "${FILES_TO_USE[@]}" -- \
         -Xiwyu --error \
         -Xiwyu "--mapping_file=$(realpath .iwyu/check_mk.imp)" \
-        ${IWYU_EXTRA_ARGS}
+        "${IWYU_EXTRA_ARGS}"
 }
 
 run_clang_tidy() {
     test ${#FILES_TO_USE[@]} -eq 0 && return
     update_cmake_artifacts
-    # shellcheck disable=SC2046,SC2086 # Yes, we want splitting for CLANG_TIDY_EXTRA_ARGS
+    if [ -z "${GCC_TOOLCHAIN}" ]; then
+        CLANG_TIDY_EXTRA_ARGS=""
+    else
+        CLANG_TIDY_EXTRA_ARGS="-extra-arg-before=--gcc-toolchain=${GCC_TOOLCHAIN}"
+    fi
     python3 "$(command -v run-clang-tidy-${CLANG_VERSION}.py)" \
         -j "${JOBS}" \
         -p=build \
         -quiet \
-        ${CLANG_TIDY_EXTRA_ARGS} \
+        "${CLANG_TIDY_EXTRA_ARGS}" \
         "${FILES_TO_USE[@]}" # NOTE: args are regexes, we pass (full) filenames
 }
 

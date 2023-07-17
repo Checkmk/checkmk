@@ -18,12 +18,12 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 # .1.3.6.1.4.1.9.9.719.1.9.44.1.21 cucsComputeRackUnitMbTempStatsRearTemp
 
 
-def parse_cisco_ucs_temp_env(info):
+def parse_cisco_ucs_temp_env(string_table):
     new_info = {
-        "Ambient": info[0][0],
-        "Front": info[0][1],
-        "IO-Hub": info[0][2],
-        "Rear": info[0][3],
+        "Ambient": string_table[0][0],
+        "Front": string_table[0][1],
+        "IO-Hub": string_table[0][2],
+        "Rear": string_table[0][3],
     }
     return new_info
 

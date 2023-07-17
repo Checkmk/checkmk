@@ -47,12 +47,12 @@ db2_counters_map = {
 }
 
 
-def parse_db2_counters(info):
+def parse_db2_counters(string_table):
     dbs = {}
     timestamp = 0
     node_infos = []
     element_offset = {}
-    for line in info:
+    for line in string_table:
         if line[0].startswith("TIMESTAMP"):
             element_offset = {}
             node_infos = []

@@ -18,7 +18,7 @@ from cmk.base.plugins.agent_based.utils.checkpoint import DETECT
 # .1.3.6.1.4.1.2620.1.1.7.0 16297
 
 
-def parse_checkpoint_packets(info):
+def parse_checkpoint_packets(string_table):
     parsed = {}
     for key, main_index, sub_index in [
         ("Accepted", 0, 0),
@@ -29,7 +29,7 @@ def parse_checkpoint_packets(info):
         ("EspDecrypted", 1, 1),
     ]:
         try:
-            parsed[key] = int(info[main_index][0][sub_index])
+            parsed[key] = int(string_table[main_index][0][sub_index])
         except (IndexError, ValueError):
             pass
     return parsed

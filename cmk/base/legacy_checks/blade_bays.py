@@ -12,7 +12,7 @@ from cmk.base.plugins.agent_based.utils.blade import DETECT_BLADE
 # mypy: disable-error-code="var-annotated"
 
 
-def parse_blade_bays(info):
+def parse_blade_bays(string_table):
     map_states = {
         "0": (0, "standby"),
         "1": (0, "on"),
@@ -22,7 +22,7 @@ def parse_blade_bays(info):
     }
 
     parsed = {}
-    for power_domain, block in zip((1, 2), info):
+    for power_domain, block in zip((1, 2), string_table):
         for oid, name, state, ty, identifier, power_str, power_max_str in block:
             itemname = "PD%d %s" % (power_domain, name)
             if itemname in parsed:

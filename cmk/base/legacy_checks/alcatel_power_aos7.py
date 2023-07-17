@@ -36,7 +36,7 @@ PowerSupplyEntry = collections.namedtuple(  # pylint: disable=collections-namedt
 )
 
 
-def parse_alcatel_power_aos7(info):
+def parse_alcatel_power_aos7(string_table):
     return {
         item: PowerSupplyEntry(
             alcatel_power_aos7_operability_to_status_mapping[operability_status],
@@ -45,7 +45,7 @@ def parse_alcatel_power_aos7(info):
                 alcatel_power_aos7_no_power_supply,
             ),
         )
-        for (item, operability_status, power_supply_type) in info
+        for (item, operability_status, power_supply_type) in string_table
     }
 
 

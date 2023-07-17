@@ -29,9 +29,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 # .1.3.6.1.2.1.99.1.1.1.4.100006006 570 --> ENTITY-SENSOR-MIB::entPhySensorValue.100006006
 
 
-def parse_arista_temp(info):
+def parse_arista_temp(string_table):
     parsed = {}
-    for sensor, precision, value in info:
+    for sensor, precision, value in string_table:
         if value and "temp" in sensor.lower():
             try:
                 parsed[sensor] = int(value) * float("1e-%s" % precision)

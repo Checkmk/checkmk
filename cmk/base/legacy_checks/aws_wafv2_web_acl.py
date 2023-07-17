@@ -16,8 +16,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, 
 from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
 
 
-def parse_aws_wafv2_web_acl(info):
-    metrics = extract_aws_metrics_by_labels(["AllowedRequests", "BlockedRequests"], parse_aws(info))
+def parse_aws_wafv2_web_acl(string_table):
+    metrics = extract_aws_metrics_by_labels(
+        ["AllowedRequests", "BlockedRequests"], parse_aws(string_table)
+    )
     try:
         return list(metrics.values())[-1]
     except IndexError:

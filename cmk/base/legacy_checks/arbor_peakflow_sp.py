@@ -30,8 +30,8 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 # .1.3.6.1.4.1.9694.1.4.2.1.12.0 0 --> PEAKFLOW-SP-MIB::deviceTotalFlowsHC.0
 
 
-def parse_peakflow_sp(info):
-    valid = info[0]
+def parse_peakflow_sp(string_table):
+    valid = string_table[0]
     res = {"disk": valid[0], "memory": valid[1:3]}
     if valid[3]:
         # this value appears to be optional

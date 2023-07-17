@@ -15,9 +15,9 @@ from cmk.base.check_legacy_includes.azure import AZURE_AGENT_SEPARATOR
 from cmk.base.config import check_info
 
 
-def parse_azure_ad(info):
+def parse_azure_ad(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         key = line[0]
         value = AZURE_AGENT_SEPARATOR.join(line[1:])
         if key == "users_count":

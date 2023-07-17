@@ -10,12 +10,12 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
 
-def parse_atto_fibrebridge_chassis(info):
+def parse_atto_fibrebridge_chassis(string_table):
     parsed = {}
 
-    min_operating_temp = int(info[0][0])
-    max_operating_temp = int(info[0][1])
-    chassis_temp = int(info[0][2])
+    min_operating_temp = int(string_table[0][0])
+    max_operating_temp = int(string_table[0][1])
+    chassis_temp = int(string_table[0][2])
 
     parsed["temperature"] = {
         "dev_levels": (max_operating_temp, max_operating_temp),
@@ -23,7 +23,7 @@ def parse_atto_fibrebridge_chassis(info):
         "reading": chassis_temp,
     }
 
-    parsed["throughput_status"] = info[0][3]
+    parsed["throughput_status"] = string_table[0][3]
 
     return parsed
 

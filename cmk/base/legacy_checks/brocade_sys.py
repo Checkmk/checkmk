@@ -12,11 +12,11 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, SNMPTree, startswith
 
 
-def parse_brocade_sys(info):
+def parse_brocade_sys(string_table):
     try:
         return {
-            "cpu_util": int(info[0][0]),
-            "mem_used_percent": int(info[0][1]),
+            "cpu_util": int(string_table[0][0]),
+            "mem_used_percent": int(string_table[0][1]),
         }
     except (IndexError, ValueError):
         return {}

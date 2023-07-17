@@ -41,10 +41,10 @@ from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_aix_sap_processlist(info):
+def parse_aix_sap_processlist(string_table):
     instance, description = None, None
     parsed = {}
-    for line in info:
+    for line in string_table:
         if line[0].startswith("["):
             instance = line[0][1:-1]
 

@@ -13,8 +13,8 @@ from cmk.base.config import check_info
 Section = Mapping[str, Mapping]
 
 
-def parse_aws_glacier(info):
-    parsed = parse_aws(info)
+def parse_aws_glacier(string_table):
+    parsed = parse_aws(string_table)
     parsed_by_vault = {}
     for vault in parsed:
         parsed_by_vault[vault["VaultName"]] = vault

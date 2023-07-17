@@ -36,14 +36,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 # .1.3.6.1.4.1.705.2.4.16.0 499 --> MG-SNMP-STS-MIB::stsmgSource2Frequency.0
 
 
-def parse_apc_sts_inputs(info):
+def parse_apc_sts_inputs(string_table):
     return {
         f"Source {src} Phase {phs}": {
             "voltage": int(voltage) / 10.0,
             "current": int(current) / 10.0,
             "power": int(power),
         }
-        for src, block in enumerate(info, 1)
+        for src, block in enumerate(string_table, 1)
         for (voltage, current, power), phs in zip(block, cycle((1, 2, 3)))
     }
 

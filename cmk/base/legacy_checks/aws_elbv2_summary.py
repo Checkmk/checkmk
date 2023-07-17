@@ -9,9 +9,9 @@ from cmk.base.check_legacy_includes.aws import check_aws_elb_summary_generic, pa
 from cmk.base.config import check_info
 
 
-def parse_aws_elbv2_summary(info):
+def parse_aws_elbv2_summary(string_table):
     application_lbs, network_lbs = [], []
-    for row in parse_aws(info):
+    for row in parse_aws(string_table):
         lb_type = row.get("Type")
         if lb_type == "application":
             application_lbs.append(row)

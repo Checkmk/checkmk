@@ -45,7 +45,7 @@ _TABLES = [
 ]
 
 
-def parse_cmctc_output(info):
+def parse_cmctc_output(string_table):
     def parse_output_sensor(table_idx, sensor):
         type_map = {
             # ID    Type                                    Unit      Perfkey
@@ -152,7 +152,7 @@ def parse_cmctc_output(info):
         return name, parsed
 
     parsed = {}
-    for table_idx, sensor_block in zip(_TABLES, info):
+    for table_idx, sensor_block in zip(_TABLES, string_table):
         for sensor in sensor_block:
             parsed_sensor = parse_output_sensor(table_idx, sensor)
             if parsed_sensor:

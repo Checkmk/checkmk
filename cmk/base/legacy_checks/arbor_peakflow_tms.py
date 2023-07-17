@@ -28,9 +28,9 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 # .1.3.6.1.4.1.9694.1.5.2.8.0 0 --> PEAKFLOW-TMS-MIB::deviceSwapSpaceUsage.0
 
 
-def parse_peakflow_tms(info):
-    health = info[0][0]
-    updates = info[1][0]
+def parse_peakflow_tms(string_table):
+    health = string_table[0][0]
+    updates = string_table[1][0]
     return {
         "disk": health[0],
         "memory": health[1:3],

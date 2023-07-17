@@ -20,8 +20,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 # BP8                             100.00                 100.00                       -                     -
 
 
-def parse_db2_bp_hitratios(info):
-    pre_parsed = parse_db2_dbs(info)
+def parse_db2_bp_hitratios(string_table):
+    pre_parsed = parse_db2_dbs(string_table)
 
     # Some databases run in DPF mode. This means they are split over several instances
     # Each instance has its own bufferpool hitratio information. We create on service for each instance

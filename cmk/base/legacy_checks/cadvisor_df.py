@@ -15,8 +15,8 @@ from cmk.base.config import check_info
 Section = Mapping[str, Any]
 
 
-def parse_cadvisor_df(info):
-    diskstat_info = json.loads(info[0][0])
+def parse_cadvisor_df(string_table):
+    diskstat_info = json.loads(string_table[0][0])
     parsed = {}
     for diskstat_name, diskstat_entries in diskstat_info.items():
         if len(diskstat_entries) != 1:

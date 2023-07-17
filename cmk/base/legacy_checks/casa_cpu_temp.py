@@ -11,13 +11,13 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.casa import DETECT_CASA
 
 
-def parse_casa_info_temp(info):
-    entity_names = {int(k): v for k, v in (x for x in info[0])}
-    temp_value = {int(k): v for k, v in (x for x in info[1])}
-    temp_status = {int(k): v for k, v in (x for x in info[2])}
-    temp_unit = {int(k): v for k, v in (x for x in info[3])}
+def parse_casa_info_temp(string_table):
+    entity_names = {int(k): v for k, v in (x for x in string_table[0])}
+    temp_value = {int(k): v for k, v in (x for x in string_table[1])}
+    temp_status = {int(k): v for k, v in (x for x in string_table[2])}
+    temp_unit = {int(k): v for k, v in (x for x in string_table[3])}
     data = {}
-    for entry in info[1]:
+    for entry in string_table[1]:
         entry_nr = int(entry[0])
 
         def beautify_module_text(text):

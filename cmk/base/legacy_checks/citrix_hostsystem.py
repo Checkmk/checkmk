@@ -20,9 +20,9 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_citrix_hostsystem(info):
+def parse_citrix_hostsystem(string_table):
     parsed = {"vms": [], "pool": ""}
-    for line in info:
+    for line in string_table:
         if line[0] == "VMName":
             vm = " ".join(line[1:])
             if vm not in parsed["vms"]:

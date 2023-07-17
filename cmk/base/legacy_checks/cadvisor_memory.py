@@ -14,8 +14,8 @@ from cmk.base.config import check_info
 Section = Mapping[str, float]
 
 
-def parse_cadvisor_memory(info):
-    memory_info = json.loads(info[0][0])
+def parse_cadvisor_memory(string_table):
+    memory_info = json.loads(string_table[0][0])
     parsed = {}
     for memory_name, memory_entries in memory_info.items():
         if len(memory_entries) != 1:

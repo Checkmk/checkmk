@@ -15,11 +15,11 @@ from cmk.base.plugins.agent_based.utils.aws import aws_rds_service_item
 Section = Mapping[str, Any]
 
 
-def parse_aws_rds_summary(info):
+def parse_aws_rds_summary(string_table):
     try:
         return {
             aws_rds_service_item(instance["DBInstanceIdentifier"], instance["Region"]): instance
-            for instance in parse_aws(info)
+            for instance in parse_aws(string_table)
         }
     except IndexError:
         return {}

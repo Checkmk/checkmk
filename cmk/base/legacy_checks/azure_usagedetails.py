@@ -13,9 +13,9 @@ from cmk.base.check_legacy_includes.azure import get_data_or_go_stale, parse_res
 from cmk.base.config import check_info
 
 
-def parse_azure_usagedetails(info):
+def parse_azure_usagedetails(string_table):
     parsed = {}
-    for detail in list(parse_resources(info).values()):
+    for detail in list(parse_resources(string_table).values()):
         props = detail.properties
         service_name = props["ResourceType"].split("/")[0]
         data = parsed.setdefault(

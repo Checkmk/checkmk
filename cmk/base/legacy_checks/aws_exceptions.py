@@ -14,9 +14,9 @@ Section = Mapping[str, set[str]]
 AWSNoExceptionsText = "No exceptions"
 
 
-def parse_aws_exceptions(info: list[list[str]]) -> Section:
+def parse_aws_exceptions(string_table: list[list[str]]) -> Section:
     parsed: dict[str, set[str]] = {}
-    for line in info:
+    for line in string_table:
         parsed.setdefault(line[0], set()).add(" ".join(line[1:]))
     return parsed
 

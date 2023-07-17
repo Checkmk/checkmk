@@ -39,9 +39,9 @@ from cmk.base.plugins.agent_based.utils.detection import DETECT_NEVER
 # .1.3.6.1.4.1.2620.1.16.23.1.1.13.1.0 1
 
 
-def parse_checkpoint_vsx(info):
+def parse_checkpoint_vsx(string_table):
     parsed = {}
-    status_table, counter_table = info
+    status_table, counter_table = string_table
 
     vsid_info = [s + c for (s, c) in zip(status_table, counter_table)]
 

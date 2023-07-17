@@ -11,10 +11,10 @@ from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
 from cmk.base.config import check_info
 
 
-def parse_ddn_s2a_stats(info):
+def parse_ddn_s2a_stats(string_table):
     return {
         key: value[0] if key.startswith("All_ports") else value
-        for key, value in parse_ddn_s2a_api_response(info).items()
+        for key, value in parse_ddn_s2a_api_response(string_table).items()
     }
 
 

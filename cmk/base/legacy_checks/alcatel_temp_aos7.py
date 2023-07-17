@@ -11,10 +11,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.alcatel import DETECT_ALCATEL_AOS7
 
 
-def parse_alcatel_aos7_temp(info):
-    if not info:
+def parse_alcatel_aos7_temp(string_table):
+    if not string_table:
         return {}
-    most_recent_values = info[-1]
+    most_recent_values = string_table[-1]
     parsed = {}
     board_not_connected_value = 0
     boards = (

@@ -22,9 +22,9 @@ from cmk.base.config import check_info
 # PVSD_STD_CCS 42 0
 
 
-def parse_citrix_licenses(info):
+def parse_citrix_licenses(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         try:
             have = int(line[1])
             used = int(line[2])

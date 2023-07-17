@@ -25,13 +25,13 @@ class WaterflowReading(NamedTuple):
 Section = Optional[WaterflowReading]
 
 
-def parse_cmciii_lcp_waterflow(info) -> Section:
-    if not info:
+def parse_cmciii_lcp_waterflow(string_table) -> Section:
+    if not string_table:
         return None
 
     # We have a list of values where no item has a fixed index. We
     # try to detect the starting index for the needed values now.
-    iter_info = iter(info[0])
+    iter_info = iter(string_table[0])
     name = None
     for line in iter_info:
         if "Waterflow" in line:

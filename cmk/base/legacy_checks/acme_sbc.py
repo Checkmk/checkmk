@@ -41,10 +41,10 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def acme_sbc_parse_function(info):
+def acme_sbc_parse_function(string_table):
     states = {}
     settings = {}
-    for line in info:
+    for line in string_table:
         if len(line) == 2:
             for what in ["Health", "State"]:
                 if line[0] == what:

@@ -20,9 +20,9 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_aix_hacmp_resources(info):
+def parse_aix_hacmp_resources(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         joined_line = " ".join(line)
         if (
             "There is no cluster definition" in joined_line

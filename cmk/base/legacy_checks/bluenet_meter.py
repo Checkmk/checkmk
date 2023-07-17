@@ -12,9 +12,9 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
 
 
-def parse_bluenet_meter(info):
+def parse_bluenet_meter(string_table):
     parsed = {}
-    for meter_id, power_p, power_s, u_rms, i_rms in info:
+    for meter_id, power_p, power_s, u_rms, i_rms in string_table:
         # do not take into account powermeters with no voltage
         if u_rms != "0":
             parsed.setdefault(meter_id, {})

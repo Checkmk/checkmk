@@ -15,9 +15,9 @@ AWSELBHealthMap = {
 }
 
 
-def parse_aws_elb_health(info):
+def parse_aws_elb_health(string_table):
     try:
-        return parse_aws(info)[-1]
+        return parse_aws(string_table)[-1]
     except IndexError:
         return {}
 

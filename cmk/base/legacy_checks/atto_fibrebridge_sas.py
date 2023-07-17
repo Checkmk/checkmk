@@ -9,7 +9,7 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
 
-def parse_atto_fibrebridge_sas(info):
+def parse_atto_fibrebridge_sas(string_table):
     phy_operstates = {
         -1: "unknown",
         1: "online",
@@ -31,7 +31,7 @@ def parse_atto_fibrebridge_sas(info):
     }
 
     parsed = {}
-    for line in info:
+    for line in string_table:
         port_info = {}
         port_info["oper_state"] = sas_operstates[int(line[1])]
         port_info["admin_state"] = sas_adminstates[int(line[6])]

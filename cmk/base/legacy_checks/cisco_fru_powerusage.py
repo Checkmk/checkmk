@@ -32,9 +32,9 @@ from cmk.base.plugins.agent_based.utils.cisco import DETECT_CISCO
 # .1.3.6.1.4.1.9.9.117.1.1.4.1.4.13 0       <= exclude
 
 
-def parse_cisco_fru_powerusage(info):
+def parse_cisco_fru_powerusage(string_table):
     parsed = {}
-    powerunit, powervals = info
+    powerunit, powervals = string_table
     if powerunit and powervals:
         oidend, powerunit_str = powerunit[0]
         factor_str, voltage_str = powerunit_str.lower().split("amps")

@@ -17,7 +17,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
 
 
-def parse_aws_elbv2_network(info):
+def parse_aws_elbv2_network(string_table):
     metrics = extract_aws_metrics_by_labels(
         [
             "ConsumedLCUs",
@@ -35,7 +35,7 @@ def parse_aws_elbv2_network(info):
             "TCP_ELB_Reset_Count",
             "TCP_Target_Reset_Count",
         ],
-        parse_aws(info),
+        parse_aws(string_table),
     )
     # We get exactly one entry: {INST-ID: METRICS}
     # INST-ID is the piggyback host name

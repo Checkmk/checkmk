@@ -19,11 +19,12 @@ from cmk.base.plugins.agent_based.utils.apc import DETECT
 # .1.3.6.1.4.1.318.1.1.13.3.2.2.2.26.0 154 --> PowerNet-MIB::airIRRCUnitStatusLeavingFluidTemperatureMetric.0
 
 
-def parse_apc_inrow_temp(info):
+def parse_apc_inrow_temp(string_table):
     parsed = {}
-    if info:
+    if string_table:
         for what, what_item in zip(
-            info[0], ["Rack Inlet", "Supply Air", "Return Air", "Entering Fluid", "Leaving Fluid"]
+            string_table[0],
+            ["Rack Inlet", "Supply Air", "Return Air", "Entering Fluid", "Leaving Fluid"],
         ):
             if what not in ["", "-1"]:
                 parsed.setdefault(what_item, float(what) / 10)

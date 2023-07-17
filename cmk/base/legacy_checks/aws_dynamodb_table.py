@@ -14,8 +14,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, 
 from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
 
 
-def parse_aws_dynamodb_table(info):
-    parsed = parse_aws(info)
+def parse_aws_dynamodb_table(string_table):
+    parsed = parse_aws(string_table)
 
     # the last entry contains the provisioned limits
     metrics = extract_aws_metrics_by_labels(

@@ -13,8 +13,8 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines
 
 
-def parse_couchbase_buckets_operations(info):
-    parsed = parse_couchbase_lines(info)
+def parse_couchbase_buckets_operations(string_table):
+    parsed = parse_couchbase_lines(string_table)
     counters = (collections.Counter(data) for data in parsed.values())
     try:
         parsed[None] = sum(counters, collections.Counter())

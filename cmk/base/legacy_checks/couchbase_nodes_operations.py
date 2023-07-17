@@ -10,9 +10,9 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_couchbase_nodes_operations(info):
+def parse_couchbase_nodes_operations(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if len(line) < 2:
             continue
         raw_value, node = line[0], " ".join(line[1:])

@@ -13,9 +13,9 @@ from cmk.base.config import check_info
 Section = Mapping[str, Mapping]
 
 
-def parse_aws_s3(info):
+def parse_aws_s3(string_table):
     parsed: dict[str, dict] = {}
-    for row in parse_aws(info):
+    for row in parse_aws(string_table):
         bucket = parsed.setdefault(row["Label"], {})
         try:
             bucket["LocationConstraint"] = row["LocationConstraint"]

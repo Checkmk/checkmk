@@ -29,9 +29,9 @@ from cmk.base.plugins.agent_based.utils.df import FILESYSTEM_DEFAULT_PARAMS
 # .1.3.6.1.4.1.9694.1.6.2.39.0 43 --> PRAVAIL-MIB::pravailOverrunDropRatePps.0
 
 
-def parse_pravail(info):
-    # peakflow SP and TMS have the same info in different oid ranges
-    valid = info[0]
+def parse_pravail(string_table):
+    # peakflow SP and TMS have the same string_table in different oid ranges
+    valid = string_table[0]
     return {
         "disk": valid[0],
         "memory": valid[1:3],

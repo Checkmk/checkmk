@@ -24,9 +24,9 @@ AWSEBSStorageTypes = {
 }
 
 
-def parse_aws_summary(info):
+def parse_aws_summary(string_table):
     parsed = {}
-    for row in parse_aws(info):
+    for row in parse_aws(string_table):
         if (vid := row["VolumeId"]) not in parsed:
             parsed[vid] = row
         inst = parsed[vid]

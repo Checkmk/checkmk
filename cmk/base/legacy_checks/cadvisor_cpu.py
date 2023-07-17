@@ -14,8 +14,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 Section = Mapping[str, float]
 
 
-def parse_cadvisor_cpu(info):
-    cpu_info = json.loads(info[0][0])
+def parse_cadvisor_cpu(string_table):
+    cpu_info = json.loads(string_table[0][0])
     parsed = {}
     for cpu_name, cpu_entries in cpu_info.items():
         if len(cpu_entries) != 1:

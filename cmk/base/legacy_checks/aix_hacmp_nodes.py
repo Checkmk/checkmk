@@ -41,9 +41,9 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_aix_hacmp_nodes(info):
+def parse_aix_hacmp_nodes(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if len(line) == 1:
             parsed[line[0]] = {}
 

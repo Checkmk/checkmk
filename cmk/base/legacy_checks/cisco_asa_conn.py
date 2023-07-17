@@ -17,14 +17,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 
 
-def parse_cisco_asa_conn(info):
+def parse_cisco_asa_conn(string_table):
     parsed = {}
-    for line in info[0]:
+    for line in string_table[0]:
         parsed[line[0]] = [line[1]]
-    for line in info[2]:
+    for line in string_table[2]:
         parsed[line[0]].append(line[1])
         parsed[line[0]].append(line[2])
-    for line in info[1]:
+    for line in string_table[1]:
         parsed[line[0]].append(line[1])
 
     return parsed

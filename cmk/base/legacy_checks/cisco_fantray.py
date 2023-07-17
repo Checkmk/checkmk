@@ -62,7 +62,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 
 
-def parse_cisco_fantray(info):
+def parse_cisco_fantray(string_table):
     map_states = {
         "1": (3, "unknown"),
         "2": (0, "powered on"),
@@ -71,13 +71,13 @@ def parse_cisco_fantray(info):
     }
 
     ppre_parsed = {}
-    for end_oid, oper_state in info[0]:
+    for end_oid, oper_state in string_table[0]:
         ppre_parsed.setdefault(
             end_oid, map_states.get(oper_state, (3, "unexpected(%s)" % oper_state))
         )
 
     pre_parsed = {}
-    for end_oid, name in info[1]:
+    for end_oid, name in string_table[1]:
         if end_oid in ppre_parsed:
             pre_parsed.setdefault(name, [])
             pre_parsed[name].append(ppre_parsed[end_oid])

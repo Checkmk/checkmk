@@ -12,9 +12,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.avaya import DETECT_AVAYA
 
 
-def parse_avaya_88xx(info):
+def parse_avaya_88xx(string_table):
     parsed = {"fanstate": [], "temp": []}
-    for line in info:
+    for line in string_table:
         parsed["fanstate"].append(line[0])
         parsed["temp"].append(line[1])
 

@@ -44,9 +44,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 #        },
 
 
-def parse_aws_elbv2_target_groups(info):
+def parse_aws_elbv2_target_groups(string_table):
     application_target_groups, network_target_groups = [], []
-    for load_balancer_type, target_groups in parse_aws(info):
+    for load_balancer_type, target_groups in parse_aws(string_table):
         if load_balancer_type == "application":
             application_target_groups.extend(target_groups)
         elif load_balancer_type == "network":

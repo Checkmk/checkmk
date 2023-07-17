@@ -18,8 +18,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 
 
-def parse_cisco_ip_sla(info):
-    precisions = {line[0]: "ms" if line[-1] == "1" else "us" for line in info[0]}
+def parse_cisco_ip_sla(string_table):
+    precisions = {line[0]: "ms" if line[-1] == "1" else "us" for line in string_table[0]}
 
     rtt_types = {
         "1": "echo",
@@ -108,7 +108,7 @@ def parse_cisco_ip_sla(info):
     ]
 
     parsed: dict[str, list] = {}
-    for content, entries in zip(contents, info):
+    for content, entries in zip(contents, string_table):
         if not entries:
             continue
 

@@ -13,12 +13,12 @@ from cmk.base.plugins.agent_based.utils.apc import DETECT
 # .1.3.6.1.4.1.318.1.1.1.3.2.1.0 231
 
 
-def parse_apc_symmetra_input(info):
-    if not info:
+def parse_apc_symmetra_input(string_table):
+    if not string_table:
         return {}
     return {
         "Input": {
-            "voltage": float(info[0][0]),
+            "voltage": float(string_table[0][0]),
         }
     }
 

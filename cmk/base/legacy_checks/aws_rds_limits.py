@@ -11,9 +11,9 @@ from cmk.base.check_legacy_includes.aws import AWSLimitsByRegion, check_aws_limi
 from cmk.base.config import check_info
 
 
-def parse_aws_rds_limits(info):
+def parse_aws_rds_limits(string_table):
     limits_by_region: AWSLimitsByRegion = {}
-    for line in parse_aws(info):
+    for line in parse_aws(string_table):
         resource_key, resource_title, limit, amount, region = line
 
         if resource_key == "allocated_storage":

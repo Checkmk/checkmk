@@ -10,7 +10,7 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
 
 
-def parse_aws_elbv2_target_groups_http(info):
+def parse_aws_elbv2_target_groups_http(string_table):
     metrics = extract_aws_metrics_by_labels(
         [
             "RequestCount",
@@ -19,7 +19,7 @@ def parse_aws_elbv2_target_groups_http(info):
             "HTTPCode_Target_4XX_Count",
             "HTTPCode_Target_5XX_Count",
         ],
-        parse_aws(info),
+        parse_aws(string_table),
     )
     return metrics
 

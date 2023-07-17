@@ -18,7 +18,7 @@ from cmk.base.config import check_info
 #   '----------------------------------------------------------------------'
 
 
-def parse_ddn_s2a_faultsbasic(info):
+def parse_ddn_s2a_faultsbasic(string_table):
     non_unique_keys = [
         "failed_avr_fan_ctrl_item",
         "failed_avr_pwr_sup_item",
@@ -28,7 +28,7 @@ def parse_ddn_s2a_faultsbasic(info):
     ]
     return {
         key: value if key in non_unique_keys else value[0]
-        for key, value in parse_ddn_s2a_api_response(info).items()
+        for key, value in parse_ddn_s2a_api_response(string_table).items()
     }
 
 

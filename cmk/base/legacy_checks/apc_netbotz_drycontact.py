@@ -47,7 +47,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, SNMPTree
 from cmk.base.plugins.agent_based.utils.apc import DETECT
 
 
-def parse_apc_netbotz_drycontact(info):
+def parse_apc_netbotz_drycontact(string_table):
     parsed = {}
 
     state_map = {
@@ -57,7 +57,7 @@ def parse_apc_netbotz_drycontact(info):
         "4": ("Not applicable", 3),
     }
 
-    for idx, inst, loc, state in info:
+    for idx, inst, loc, state in string_table:
         parsed[inst + " " + idx] = {
             "location": loc,
             "state": state_map.get(state, ("unknown[%s]" % state, 3)),

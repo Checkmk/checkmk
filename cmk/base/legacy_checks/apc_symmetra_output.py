@@ -17,12 +17,12 @@ from cmk.base.plugins.agent_based.utils.apc import DETECT
 # .1.3.6.1.4.1.318.1.1.1.4.2.3.0 37
 
 
-def parse_apc_symmetra_output(info):
-    if not info:
+def parse_apc_symmetra_output(string_table):
+    if not string_table:
         return {}
 
     data = {}
-    for key, value_str in zip(["voltage", "current", "output_load"], info[0]):
+    for key, value_str in zip(["voltage", "current", "output_load"], string_table[0]):
         try:
             value = float(value_str)
         except ValueError:

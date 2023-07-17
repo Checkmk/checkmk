@@ -11,9 +11,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.brocade import DETECT_MLX
 
 
-def parse_brocade_mlx_temp(info):
+def parse_brocade_mlx_temp(string_table):
     parsed = {}
-    for temp_descr, temp_value in info:
+    for temp_descr, temp_value in string_table:
         if temp_value and temp_value != "0":
             item = (
                 temp_descr.replace("temperature", "")

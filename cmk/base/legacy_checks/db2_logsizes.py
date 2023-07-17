@@ -21,8 +21,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 # logsecond 100
 
 
-def parse_db2_logsizes(info):
-    pre_parsed = parse_db2_dbs(info)
+def parse_db2_logsizes(string_table):
+    pre_parsed = parse_db2_dbs(string_table)
     global_timestamp = pre_parsed[0]
     parsed = {}
     for key, values in pre_parsed[1].items():

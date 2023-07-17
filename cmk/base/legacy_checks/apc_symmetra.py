@@ -51,14 +51,14 @@ from cmk.base.plugins.agent_based.utils.apc import DETECT
 # 56: UPS Internal Communication Failure, 57-64: <Not Used>
 
 
-def parse_apc_symmetra(info):
-    sensor_info, info = info
+def parse_apc_symmetra(string_table):
+    sensor_info, string_table = string_table
     parsed = {}
 
     for name, temp in sensor_info:
         parsed.setdefault("temp", {})[name] = int(temp)
 
-    if not info:
+    if not string_table:
         return parsed
 
     # some numeric fields may be empty
@@ -74,7 +74,7 @@ def parse_apc_symmetra(info):
         battery_temp,
         battery_current,
         state_output_state,
-    ) = info[0]
+    ) = string_table[0]
 
     if state_output_state != "":
         # string contains a bitmask, convert to int

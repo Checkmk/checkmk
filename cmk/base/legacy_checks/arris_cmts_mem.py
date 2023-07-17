@@ -12,9 +12,9 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, OIDEnd, SNMPTree
 
 
-def parse_arris_cmts_mem(info):
+def parse_arris_cmts_mem(string_table):
     parsed = {}
-    for cid, heap, heap_free in info:
+    for cid, heap, heap_free in string_table:
         # The Module numbers are starting with 0, not with 1 like the OIDs
         heap, heap_free = float(heap), float(heap_free)
         parsed.setdefault(

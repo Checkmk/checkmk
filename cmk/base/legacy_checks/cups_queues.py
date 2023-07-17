@@ -43,23 +43,23 @@ class _Data(TypedDict):
 Section = Mapping[str, _Data]
 
 
-def parse_cups_queues(info: list[list[str]]) -> Section:
+def parse_cups_queues(string_table: list[list[str]]) -> Section:
     parsed: dict[str, _Data] = {}
 
-    for num, line in enumerate(info):
+    for num, line in enumerate(string_table):
         if line[0] == "printer":
             parsed[line[1]] = {
                 "status_readable": " ".join(line[2:4]).replace(" ", "_").strip("."),
                 "output": " ".join(line[2:]),
                 "jobs": [],
             }
-            if len(info) > num + 1 and not info[num + 1][0] in ["printer", "---"]:
-                parsed[line[1]]["output"] += " (%s)" % " ".join(info[num + 1])
+            if len(string_table) > num + 1 and not string_table[num + 1][0] in ["printer", "---"]:
+                parsed[line[1]]["output"] += " (%s)" % " ".join(string_table[num + 1])
         elif line[0] == "---":
             break
 
     queue_section = False
-    for line in info:
+    for line in string_table:
         if line[0] == "---":
             queue_section = True
             continue

@@ -19,8 +19,8 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 
-def parse_ceph_status(info):
-    joined_lines = [" ".join(line) for line in info]
+def parse_ceph_status(string_table):
+    joined_lines = [" ".join(line) for line in string_table]
     parsed = json.loads("".join(joined_lines))
 
     # ceph health' JSON format has changed in luminous

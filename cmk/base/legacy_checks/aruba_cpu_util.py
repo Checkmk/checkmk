@@ -12,9 +12,9 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 
 
-def parse_aruba_cpu_util(info):
+def parse_aruba_cpu_util(string_table):
     parsed = {}
-    for description, raw_cpu_util in info:
+    for description, raw_cpu_util in string_table:
         try:
             parsed.setdefault(description, float(raw_cpu_util))
         except ValueError:

@@ -18,7 +18,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, 
 from cmk.base.plugins.agent_based.utils.aws import extract_aws_metrics_by_labels, parse_aws
 
 
-def parse_aws_s3(info):
+def parse_aws_s3(string_table):
     parsed = extract_aws_metrics_by_labels(
         [
             "AllRequests",
@@ -38,7 +38,7 @@ def parse_aws_s3(info):
             "SelectBytesScanned",
             "SelectBytesReturned",
         ],
-        parse_aws(info),
+        parse_aws(string_table),
     )
     return parsed
 

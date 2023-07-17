@@ -17,9 +17,9 @@ AWSCostAndUageMetrics = [
 ]
 
 
-def parse_aws_costs_and_usage(info):
+def parse_aws_costs_and_usage(string_table):
     parsed = {}
-    for row in parse_aws(info):
+    for row in parse_aws(string_table):
         timeperiod = row["TimePeriod"]["Start"]
         for group in row.get("Groups", []):
             service_name = " ".join(group["Keys"])

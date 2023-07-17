@@ -101,9 +101,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 # Suggested by customer
 
 
-def parse_apc_netbotz_sensors(info):
+def parse_apc_netbotz_sensors(string_table):
     parsed = {}
-    for item_type, block in zip(("temp", "humidity", "dewpoint"), info):
+    for item_type, block in zip(("temp", "humidity", "dewpoint"), string_table):
         for item_name, reading_str, label, plugged_in_state in block:
             if not plugged_in_state:
                 continue

@@ -20,11 +20,11 @@ def _sanitize_mac(string):
     return ":".join(hx_gen).replace(" ", "0")
 
 
-def parse_cisco_secure(info):
+def parse_cisco_secure(string_table):
     parsed = []
     # l[1] = Name, l[2] = Portstate
-    names = {l[0]: (l[1], l[2]) for l in info[0]}
-    for num, is_enabled, status, violation_count, lastmac in info[1]:
+    names = {l[0]: (l[1], l[2]) for l in string_table[0]}
+    for num, is_enabled, status, violation_count, lastmac in string_table[1]:
         mac = _sanitize_mac(lastmac)
         enabled_txt = {"1": "yes", "2": "no"}.get(is_enabled)
         try:

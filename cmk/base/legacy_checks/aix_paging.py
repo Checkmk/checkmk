@@ -23,18 +23,18 @@ AIXPaging = collections.namedtuple(  # pylint: disable=collections-namedtuple-ca
 )
 
 
-def parse_aix_paging(info):
+def parse_aix_paging(string_table):
     map_type = {
         "lv": "logical volume",
         "nfs": "NFS",
     }
 
     parsed = {}
-    if len(info) <= 1:
+    if len(string_table) <= 1:
         return parsed
 
     # First line is the header
-    for line in info[1:]:
+    for line in string_table[1:]:
         try:
             # Always given in MB, eg. 1234MB
             size = int(line[3][:-2])

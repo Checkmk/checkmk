@@ -33,9 +33,9 @@ def _update_remaining_reads(parsed, value):
         pass
 
 
-def parse_azure_agent_info(info):
+def parse_azure_agent_info(string_table):
     parsed = {}
-    for row in info:
+    for row in string_table:
         key = row[0]
         value = AZURE_AGENT_SEPARATOR.join(row[1:])  # pylint: disable=undefined-variable
 

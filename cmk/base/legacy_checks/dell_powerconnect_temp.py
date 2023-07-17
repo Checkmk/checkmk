@@ -17,9 +17,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 # Tested with Dell PowerConnect 5448 and 5424 models.
 
 
-def parse_dell_powerconnect_temp(info):
+def parse_dell_powerconnect_temp(string_table):
     try:
-        temp_str, dev_status = info[0]
+        temp_str, dev_status = string_table[0]
     except (IndexError, ValueError):
         return None
     try:

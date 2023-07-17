@@ -56,10 +56,10 @@ default_cluster_state = {
 }
 
 
-def parse_elasticsearch_cluster_health(info):
+def parse_elasticsearch_cluster_health(string_table):
     parsed = {}
 
-    for line in info:
+    for line in string_table:
         try:
             if any(s in line for s in cluster_info):
                 inst = parsed.setdefault("Info", {})

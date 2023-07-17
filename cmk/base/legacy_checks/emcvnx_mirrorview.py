@@ -77,10 +77,10 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_emcvnx_mirrorview(info):
+def parse_emcvnx_mirrorview(string_table):
     parsed = {}
     instance = None
-    for line in info:
+    for line in string_table:
         if " ".join(line).startswith("Unable to validate the identity of the server."):
             break
 

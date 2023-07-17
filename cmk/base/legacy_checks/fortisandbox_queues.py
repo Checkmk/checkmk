@@ -25,7 +25,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.fortinet import DETECT_FORTISANDBOX
 
 
-def parse_fortisandbox_queues(info):
+def parse_fortisandbox_queues(string_table):
     queues = [
         "Executable",
         "PDF",
@@ -40,7 +40,7 @@ def parse_fortisandbox_queues(info):
         "Job Queue Assignment",
     ]
 
-    return {k: int(v) for k, v in zip(queues, info[0])}
+    return {k: int(v) for k, v in zip(queues, string_table[0])}
 
 
 def inventory_fortisandbox_queues(parsed):

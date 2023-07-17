@@ -20,10 +20,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 
 
-def parse_hp_hh3c_ext(info):
-    entity_info = dict(info[1])
+def parse_hp_hh3c_ext(string_table):
+    entity_info = dict(string_table[1])
     parsed = {}
-    for index, admin_state, oper_state, cpu, mem_usage, temperature, mem_size in info[0]:
+    for index, admin_state, oper_state, cpu, mem_usage, temperature, mem_size in string_table[0]:
         name = entity_info.get(index, (None, None))
 
         # mem_size measured in 'bytes' (hh3cEntityExtMemSize)

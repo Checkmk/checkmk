@@ -22,13 +22,13 @@ SecurityContent = collections.namedtuple(  # pylint: disable=collections-namedtu
 )
 
 
-def parse_fireeye_content(info):
+def parse_fireeye_content(string_table):
     security_content_status_map = {
         "1": "OK",
         "0": "failed",
     }
 
-    version, update_status_raw, update_time_str = info[0]
+    version, update_status_raw, update_time_str = string_table[0]
     update_status = security_content_status_map.get(update_status_raw)
 
     # If content update has never completed, last_update_time contains no valid timestamp

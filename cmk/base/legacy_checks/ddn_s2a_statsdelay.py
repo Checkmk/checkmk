@@ -12,8 +12,8 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
 
 
-def parse_ddn_s2a_statsdelay(info):
-    parsed = parse_ddn_s2a_api_response(info)
+def parse_ddn_s2a_statsdelay(string_table):
+    parsed = parse_ddn_s2a_api_response(string_table)
 
     for key in ["host_reads", "host_writes", "disk_reads", "disk_writes"]:
         parsed[key] = list(map(int, parsed[key]))

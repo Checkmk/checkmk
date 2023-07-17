@@ -20,7 +20,7 @@ from cmk.base.config import check_info
 Section = Mapping
 
 
-def parse_ibm_svc_host(info):
+def parse_ibm_svc_host(string_table):
     dflt_header = [
         "id",
         "name",
@@ -32,7 +32,7 @@ def parse_ibm_svc_host(info):
         "host_cluster_id",
         "host_cluster_name",
     ]
-    return parse_ibm_svc_with_header(info, dflt_header)
+    return parse_ibm_svc_with_header(string_table, dflt_header)
 
 
 def discover_ibm_svc_host(section: Section) -> Iterable[tuple[None, dict]]:

@@ -51,20 +51,20 @@ from cmk.base.config import check_info
 # [... more software packages follow ...]
 
 
-def parse_emcvnx_info(info):
+def parse_emcvnx_info(string_table):
     parsed = {
-        "info": [],
+        "string_table": [],
         "storage": [],
         "link": [],
         "config": [],
         "io": [],
     }
     key_to_subcheck = {
-        "System Fault LED": "info",
-        "Server IP Address": "info",
-        "System Date": "info",
-        "System Time": "info",
-        "Serial Number For The SP": "info",
+        "System Fault LED": "string_table",
+        "Server IP Address": "string_table",
+        "System Date": "string_table",
+        "System Time": "string_table",
+        "Serial Number For The SP": "string_table",
         "Storage Processor": "storage",
         "Storage Processor Network Name": "storage",
         "Storage Processor IP Address": "storage",
@@ -97,7 +97,7 @@ def parse_emcvnx_info(info):
         "Write_cache_blocks_flushed": "io",
     }
 
-    preparsed, errors = preparse_emcvnx_info(info)
+    preparsed, errors = preparse_emcvnx_info(string_table)
 
     for key, value in preparsed:
         subcheck = key_to_subcheck.get(key)

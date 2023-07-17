@@ -21,7 +21,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 _TABLES = ["1", "2", "3", "4"]
 
 
-def parse_emka_modules(info):  # pylint: disable=too-many-branches
+def parse_emka_modules(string_table):  # pylint: disable=too-many-branches
     # basModuleCoIx == 0
     map_module_types = {
         "0": "vacant",
@@ -49,7 +49,7 @@ def parse_emka_modules(info):  # pylint: disable=too-many-branches
     }
 
     parsed: dict = {"basic_components": {}}
-    for oidend, status, ty, mod_info, remark in info[0]:
+    for oidend, status, ty, mod_info, remark in string_table[0]:
         mo_index, co_index = oidend.split(".")
         if mo_index == "0":
             itemname = "Master %s" % mod_info.split(",")[0]
@@ -76,7 +76,7 @@ def parse_emka_modules(info):  # pylint: disable=too-many-branches
         parsed.setdefault(table, {})
         parsed[table].setdefault(itemname, {"_location_": oidend})
 
-    for table_idx, block in zip(_TABLES, info[1:5]):
+    for table_idx, block in zip(_TABLES, string_table[1:5]):
         for module_link, value, mode in block:
             table = map_component_types[table_idx]
             location = ".".join(module_link.split(".")[-2:])
@@ -89,7 +89,7 @@ def parse_emka_modules(info):  # pylint: disable=too-many-branches
                 if mode:
                     attrs["mode"] = mode
 
-    for oidend, threshold in info[6]:
+    for oidend, threshold in string_table[6]:
         location, threshold_ty = oidend.split(".")
         if threshold_ty == "1":
             ty = "levels_lower"
@@ -112,7 +112,7 @@ def parse_emka_modules(info):  # pylint: disable=too-many-branches
     # 0.02  => 2/100 [multiplicator]/[divisor]
     # -30.0          [offset]
     # Notice, may also "=#\xb0C0.0230.0"
-    for oidend, equation_bin in info[7]:
+    for oidend, equation_bin in string_table[7]:
         equation = []
         part = []
         for entry in equation_bin:

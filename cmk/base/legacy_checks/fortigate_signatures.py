@@ -16,7 +16,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.fortinet import DETECT_FORTIGATE
 
 
-def parse_fortigate_signatures(info):
+def parse_fortigate_signatures(string_table):
     def parse_version(ver):
         # sample: 27.00768(2015-09-01 15:10)
         ver_regex = regex(r"([0-9.]*)\(([0-9-: ]*)\)")
@@ -36,7 +36,7 @@ def parse_fortigate_signatures(info):
             ("av_ext_age", "AV extended"),
             ("ips_ext_age", "IPS extended"),
         ],
-        info[0],
+        string_table[0],
     ):
         version, age = parse_version(value)
         parsed.append((key, title, version, age))

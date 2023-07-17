@@ -25,15 +25,15 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 # .1.3.6.1.4.1.3375.2.1.1.2.1.144 0 sysStatMemoryUsedKb
 
 
-def parse_f5_bigip_mem(info):
+def parse_f5_bigip_mem(string_table):
     parsed = {}
     try:
-        parsed["total"] = (float(info[0][0]), float(info[0][1]))
+        parsed["total"] = (float(string_table[0][0]), float(string_table[0][1]))
     except ValueError:
         pass
 
     try:
-        parsed["TMM"] = (float(info[0][2]) * 1024, float(info[0][3]) * 1024)
+        parsed["TMM"] = (float(string_table[0][2]) * 1024, float(string_table[0][3]) * 1024)
     except ValueError:
         pass
 

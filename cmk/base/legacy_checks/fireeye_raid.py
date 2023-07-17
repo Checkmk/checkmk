@@ -33,12 +33,12 @@ from cmk.base.plugins.agent_based.utils.fireeye import DETECT
 #   '----------------------------------------------------------------------'
 
 
-def parse_fireeye_raid(info):
+def parse_fireeye_raid(string_table):
     # We only discover in case of a raid system
     parsed = {}
-    if len(info[1]) > 1:
-        for diskname, diskstatus, diskhealth in info[1]:
-            parsed.setdefault("raid", info[0][0])
+    if len(string_table[1]) > 1:
+        for diskname, diskstatus, diskhealth in string_table[1]:
+            parsed.setdefault("raid", string_table[0][0])
             parsed.setdefault("disks", [])
             parsed["disks"].append([diskname, diskstatus, diskhealth])
 

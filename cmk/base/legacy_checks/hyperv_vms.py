@@ -52,9 +52,9 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_hyperv_vms(info):
+def parse_hyperv_vms(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if len(line) != 4:
             # skip lines containing invalid data like e.g.
             # ../tests/unit/checks/generictests/datasets/hyperv_vms.py, line 16 or 17

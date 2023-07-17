@@ -21,9 +21,9 @@ class HpProRaid(typing.NamedTuple):
     rebuild_percent: int
 
 
-def parse_hp_proliant_raid(info):
+def parse_hp_proliant_raid(string_table):
     parsed = {}
-    for number, name, status, size_str, rebuild in info:
+    for number, name, status, size_str, rebuild in string_table:
         itemname = f"{name} {number}".strip()
         parsed.setdefault(
             itemname,

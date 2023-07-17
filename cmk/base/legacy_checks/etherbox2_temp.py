@@ -32,7 +32,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 # suggested by customer
 
 
-def parse_etherbox2_temp(info):
+def parse_etherbox2_temp(string_table):
     # We have to use xxx.7.1.2.a to know if a temperature sensor
     # is connected:
     # - if oid(xxx.7.1.2.{a}) == 5.fff and oid(xxx.7.1.2.{a+1}) == 2.fff
@@ -42,7 +42,7 @@ def parse_etherbox2_temp(info):
     # Furthermore we cannot only use xxx.9.1.2.{a} < 0 (or something like that)
     # because the temperature can drop below 0.
     parsed = {}
-    sensor_indicators, sensors = info
+    sensor_indicators, sensors = string_table
     for sensor_index, sensor in enumerate(sensors):
         indicator_index = 2 * sensor_index
         if (

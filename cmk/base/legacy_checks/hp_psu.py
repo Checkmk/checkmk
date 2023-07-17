@@ -16,8 +16,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 
 
-def parse_hp_psu(info):
-    parsed = {index: {"temp": int(temp), "status": dev_status} for index, dev_status, temp in info}
+def parse_hp_psu(string_table):
+    parsed = {
+        index: {"temp": int(temp), "status": dev_status} for index, dev_status, temp in string_table
+    }
     return parsed
 
 

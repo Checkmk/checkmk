@@ -12,14 +12,14 @@ from cmk.base.plugins.agent_based.utils.huawei import DETECT_HUAWEI_SWITCH
 huawei_switch_stack_unknown_role = "unknown"
 
 
-def parse_huawei_switch_stack(info):
+def parse_huawei_switch_stack(string_table):
     stack_role_names = {
         "1": "master",
         "2": "standby",
         "3": "slave",
     }
 
-    stack_enabled_info, stack_role_info = info
+    stack_enabled_info, stack_role_info = string_table
     if not stack_enabled_info or stack_enabled_info[0][0] != "1":
         return {}
 

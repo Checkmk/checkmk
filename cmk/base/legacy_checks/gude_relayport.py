@@ -20,9 +20,17 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 # .1.3.6.1.4.1.28507.38.1.5.1.2.1.10.1 0 --> GUDEADS-EPC822X-MIB::epc822XPowerApparent.1
 
 
-def parse_gude_relayport(info):
+def parse_gude_relayport(string_table):
     parsed = {}
-    for portname, portstate, active_power_str, current_str, volt_str, freq_str, appower_str in info:
+    for (
+        portname,
+        portstate,
+        active_power_str,
+        current_str,
+        volt_str,
+        freq_str,
+        appower_str,
+    ) in string_table:
         parsed.setdefault(
             portname,
             {

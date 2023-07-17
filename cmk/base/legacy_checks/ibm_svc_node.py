@@ -21,7 +21,7 @@ from cmk.base.config import check_info
 # 6:N4_164312:100025E315:500507680100D880:online:1:io_grp1:yes:2040000085543045:CG8:iqn.1986-03.com.ibm:2145.svc-cl.n4164312::164312:::::
 
 
-def parse_ibm_svc_node(info):
+def parse_ibm_svc_node(string_table):
     dflt_header = [
         "id",
         "name",
@@ -43,7 +43,7 @@ def parse_ibm_svc_node(info):
         "site_name",
     ]
     parsed = {}
-    for rows in parse_ibm_svc_with_header(info, dflt_header).values():
+    for rows in parse_ibm_svc_with_header(string_table, dflt_header).values():
         for data in rows:
             parsed.setdefault(data["IO_group_name"], []).append(data)
     return parsed

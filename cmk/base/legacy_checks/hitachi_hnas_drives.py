@@ -18,9 +18,9 @@ def inventory_hitachi_hnas_drives(info):
     return []
 
 
-def parse_hitachi_hnas_drives(info):
+def parse_hitachi_hnas_drives(string_table):
     parsed = {}
-    for (status,) in info:
+    for (status,) in string_table:
         parsed.setdefault(status, 0)
         parsed[status] += 1
     return parsed

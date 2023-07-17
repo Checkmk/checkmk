@@ -13,11 +13,11 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, render, SNMPTree
 
 
-def parse_huawei_wlc_devs(info):
+def parse_huawei_wlc_devs(string_table):
     parsed = {}
 
     # Devices
-    for name, cpu_perc, mem_perc in info:
+    for name, cpu_perc, mem_perc in string_table:
         if name:
             parsed[name] = {}
             for metric, value in (("cpu_percent", cpu_perc), ("mem_used_percent", mem_perc)):

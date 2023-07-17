@@ -15,9 +15,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 
 
-def parse_hp_fan(info):
+def parse_hp_fan(string_table):
     return {
-        "%s/%s" % (tray_index, fan_index): fan_state for fan_index, tray_index, fan_state in info
+        "%s/%s" % (tray_index, fan_index): fan_state
+        for fan_index, tray_index, fan_state in string_table
     }
 
 

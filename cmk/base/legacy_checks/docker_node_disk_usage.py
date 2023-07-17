@@ -11,8 +11,8 @@ from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyChe
 from cmk.base.config import check_info
 
 
-def parse_docker_node_disk_usage(info):
-    disk_usage = docker.parse_multiline(info).data
+def parse_docker_node_disk_usage(string_table):
+    disk_usage = docker.parse_multiline(string_table).data
     return {r.get("type"): r for r in disk_usage if r is not None}
 
 

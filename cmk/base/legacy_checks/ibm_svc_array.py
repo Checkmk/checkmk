@@ -18,7 +18,7 @@ from cmk.base.config import check_info
 # 30:SSD_mdisk1:online:2:POOL_1_V7000_BRZ:372.1GB:online:raid1:1:256:generic_ssd
 
 
-def parse_ibm_svc_array(info):
+def parse_ibm_svc_array(string_table):
     dflt_header = [
         "mdisk_id",
         "mdisk_name",
@@ -34,7 +34,7 @@ def parse_ibm_svc_array(info):
         "encrypt",
     ]
     parsed = {}
-    for id_, rows in parse_ibm_svc_with_header(info, dflt_header).items():
+    for id_, rows in parse_ibm_svc_with_header(string_table, dflt_header).items():
         try:
             data = rows[0]
         except IndexError:

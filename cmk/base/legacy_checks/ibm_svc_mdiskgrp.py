@@ -45,7 +45,7 @@ def ibm_svc_mdiskgrp_to_mb(size):
     return size
 
 
-def parse_ibm_svc_mdiskgrp(info):
+def parse_ibm_svc_mdiskgrp(string_table):
     dflt_header = [
         "id",
         "name",
@@ -77,7 +77,7 @@ def parse_ibm_svc_mdiskgrp(info):
         "site_name",
     ]
     parsed = {}
-    for rows in parse_ibm_svc_with_header(info, dflt_header).values():
+    for rows in parse_ibm_svc_with_header(string_table, dflt_header).values():
         try:
             data = rows[0]
         except IndexError:

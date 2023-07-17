@@ -49,11 +49,11 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, OIDE
 # []]
 
 
-def parse_docsis_channels_upstream(info):
-    freq_info = info[0]
+def parse_docsis_channels_upstream(string_table):
+    freq_info = string_table[0]
     freq_info_dict = {x[0]: x[1:] for x in freq_info}
-    sig_info_dict = {x[0]: x[1:] for x in info[1]}
-    cm_info_dict = {x[0]: x[1:] for x in info[2]}
+    sig_info_dict = {x[0]: x[1:] for x in string_table[1]}
+    cm_info_dict = {x[0]: x[1:] for x in string_table[2]}
 
     parsed = {}
     for endoid, (cid, freq_str) in freq_info_dict.items():

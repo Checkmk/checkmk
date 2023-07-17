@@ -68,9 +68,9 @@ from cmk.base.check_api import get_rate, LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
 
 
-def parse_emcvnx_hba(info):
+def parse_emcvnx_hba(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if len(line) > 2 and line[0] == "SP" and line[1] == "Name:":
             hba_id = " ".join(line[2:])
         elif len(line) > 2 and line[0] == "SP" and line[1] == "Port" and line[2] == "ID:":

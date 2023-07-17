@@ -32,10 +32,10 @@ nodes_info = {
 }
 
 
-def parse_elasticsearch_nodes(info):
+def parse_elasticsearch_nodes(string_table):
     parsed = {}
 
-    for name, desc, value_str in info:
+    for name, desc, value_str in string_table:
         try:
             if desc == "cpu_percent":
                 value = float(value_str)

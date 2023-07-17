@@ -28,8 +28,8 @@ from cmk.base.plugins.agent_based.utils.eltek import DETECT_ELTEK
 #   '----------------------------------------------------------------------'
 
 
-def parse_eltek_battery(info):
-    voltage, current, temp, breaker_status = info[0]
+def parse_eltek_battery(string_table):
+    voltage, current, temp, breaker_status = string_table[0]
     return {
         "supply": {
             "Supply": {

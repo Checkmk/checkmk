@@ -63,9 +63,9 @@ def get_ip_address_human_readable(ip_addr):
     return "-"
 
 
-def parse_f5_bigip_vserver(info):
+def parse_f5_bigip_vserver(string_table):
     vservers: dict[str, dict] = {}
-    for line in info:
+    for line in string_table:
         instance = vservers.setdefault(
             line[0],
             {

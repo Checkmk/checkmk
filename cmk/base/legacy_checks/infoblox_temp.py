@@ -29,7 +29,7 @@ from cmk.base.plugins.agent_based.utils.infoblox import DETECT_INFOBLOX
 # Suggested by customer
 
 
-def parse_infoblox_temp(info):
+def parse_infoblox_temp(string_table):
     map_states = {
         "1": (0, "working"),
         "2": (1, "warning"),
@@ -40,7 +40,9 @@ def parse_infoblox_temp(info):
 
     parsed = {}
     # Just for a better handling
-    for index, state, descr in list(zip(["", "1", "2", ""], info[0][0], info[1][0]))[1:]:
+    for index, state, descr in list(
+        zip(["", "1", "2", ""], string_table[0][0], string_table[1][0])
+    )[1:]:
         if ":" not in descr:
             continue
 

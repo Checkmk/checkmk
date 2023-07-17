@@ -23,10 +23,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 f5_bigip_pool_default_levels = (2, 1)
 
 
-def parse_f5_bigip_pool(info):
+def parse_f5_bigip_pool(string_table):
     parsed = {}
     processed_member_info = False
-    for block in info:
+    for block in string_table:
         if not block:
             continue
 

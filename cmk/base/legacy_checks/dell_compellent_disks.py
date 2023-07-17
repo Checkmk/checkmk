@@ -28,9 +28,9 @@ dell_compellent_disks_health_map = {
 }
 
 
-def parse_dell_compellent_disks(info):
-    disk_info = info[0]
-    disk_serials = dict(info[1])
+def parse_dell_compellent_disks(string_table):
+    disk_info = string_table[0]
+    disk_serials = dict(string_table[1])
 
     return {
         disk_name_position: [status, health, health_message, enclosure, disk_serials.get(number)]

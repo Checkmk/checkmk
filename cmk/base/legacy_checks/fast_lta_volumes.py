@@ -18,9 +18,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 
 
-def parse_fast_lta_volumes(info):
+def parse_fast_lta_volumes(string_table):
     parsed = {}
-    for volname, volquota, volused in info:
+    for volname, volquota, volused in string_table:
         try:
             size_mb = int(volquota) / 1048576.0
             avail_mb = (int(volquota) - int(volused)) / 1048576.0

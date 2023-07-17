@@ -9,8 +9,8 @@ from cmk.base.check_legacy_includes.emcvnx import preparse_emcvnx_info
 from cmk.base.config import check_info
 
 
-def parse_emcvnx_agent(info):
-    return preparse_emcvnx_info(info)
+def parse_emcvnx_agent(string_table):
+    return preparse_emcvnx_info(string_table)
 
 
 def inventory_emcvnx_agent(parsed):

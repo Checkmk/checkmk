@@ -17,9 +17,9 @@ from cmk.base.plugins.agent_based.utils.fireeye import DETECT
 # .1.3.6.1.4.1.25597.13.1.49.0 0
 
 
-def parse_fireeye_mailq(info):
-    if info:
-        return dict(zip(["Deferred", "Hold", "Incoming", "Active", "Drop"], info[0]))
+def parse_fireeye_mailq(string_table):
+    if string_table:
+        return dict(zip(["Deferred", "Hold", "Incoming", "Active", "Drop"], string_table[0]))
     return None
 
 

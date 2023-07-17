@@ -18,9 +18,9 @@ from cmk.base.config import check_info
 # vCenter Server 5 Standard   1 1
 
 
-def parse_esx_vsphere_licenses(info):
+def parse_esx_vsphere_licenses(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         name, values = line
         parsed.setdefault(name, {"used": 0, "total": 0, "keys": 0})
         used, total = values.split()

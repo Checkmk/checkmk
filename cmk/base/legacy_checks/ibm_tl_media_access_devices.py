@@ -29,9 +29,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 # .1.3.6.1.4.1.14851.3.1.12.2.1.6.2 3 --> SNIA-SML-MIB::scsiProtocolController-Availability.2
 
 
-def parse_ibm_tl_media_access_devices(info):
+def parse_ibm_tl_media_access_devices(string_table):
     parsed = {}
-    media_access_info, controller_info = info
+    media_access_info, controller_info = string_table
     for ty, name, clean in media_access_info:
         parsed.setdefault(
             ibm_tape_library_parse_device_name(name),

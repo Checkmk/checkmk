@@ -20,9 +20,9 @@ from cmk.base.config import check_info
 emcvnx_sp_util_default_levels = (50.0, 60.0)
 
 
-def parse_emcvnx_sp_util(info):
+def parse_emcvnx_sp_util(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if len(line) == 2 and "busy" in line[0]:
             parsed.setdefault("busy", float(line[1]))
         elif len(line) == 2 and "idle" in line[0]:

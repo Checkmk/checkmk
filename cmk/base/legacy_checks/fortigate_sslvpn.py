@@ -10,9 +10,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.fortinet import DETECT_FORTIGATE
 
 
-def parse_fortigate_sslvpn(info):
+def parse_fortigate_sslvpn(string_table):
     parsed = {}
-    for domain_name, domain_info in zip(info[0], info[1]):
+    for domain_name, domain_info in zip(string_table[0], string_table[1]):
         parsed[domain_name[0]] = {
             "state": domain_info[0],
             "users": int(domain_info[1]),

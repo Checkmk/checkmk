@@ -11,8 +11,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import OIDEnd, render, SNMP
 from cmk.base.plugins.agent_based.utils.huawei import DETECT_HUAWEI_SWITCH
 
 
-def parse_huawei_switch_mem(info):
-    return parse_huawei_physical_entity_values(info)
+def parse_huawei_switch_mem(string_table):
+    return parse_huawei_physical_entity_values(string_table)
 
 
 def check_huawei_switch_mem(item, params, parsed):

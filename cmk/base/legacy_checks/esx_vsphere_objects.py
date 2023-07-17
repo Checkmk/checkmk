@@ -30,12 +30,12 @@ vsphere_object_names = {
 }
 
 
-def parse_esx_vsphere_objects(info):
+def parse_esx_vsphere_objects(string_table):
     parsed = {}
     Obj = collections.namedtuple(  # pylint: disable=collections-namedtuple-call
         "Obj", ["name", "hostsystem", "state"]
     )
-    for line in info:
+    for line in string_table:
         if len(line) < 2:
             continue
         if len(line) < 4:

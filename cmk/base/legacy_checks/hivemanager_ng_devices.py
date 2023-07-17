@@ -19,9 +19,9 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_hivemanager_ng_devices(info):
+def parse_hivemanager_ng_devices(string_table):
     parsed = {}
-    for device in info:
+    for device in string_table:
         data = dict(element.split("::") for element in device)
 
         data["connected"] = data["connected"] == "True"

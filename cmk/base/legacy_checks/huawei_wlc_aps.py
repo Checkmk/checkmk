@@ -42,10 +42,10 @@ ap_state_map = {
 # Defined by customer, see SUP-1020
 
 
-def parse_huawei_wlc_aps(info):
+def parse_huawei_wlc_aps(string_table):
     parsed = {}
 
-    aps_info1, aps_info2 = info
+    aps_info1, aps_info2 = string_table
 
     # Access-Points
     for idx, ap_info1 in enumerate(aps_info1):

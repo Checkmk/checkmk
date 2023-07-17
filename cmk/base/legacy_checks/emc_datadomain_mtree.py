@@ -10,10 +10,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 from cmk.base.plugins.agent_based.utils.emc import DETECT_DATADOMAIN
 
 
-def parse_emc_datadomain_mtree(info):
+def parse_emc_datadomain_mtree(string_table):
     return {
         line[0]: {"precompiled": int(float(line[1]) * 1024**3), "status_code": line[2]}
-        for line in info
+        for line in string_table
     }
 
 

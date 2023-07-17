@@ -36,7 +36,7 @@ def get_time(timefromdevice):
     return timedevice
 
 
-def parse_hepta(info):
+def parse_hepta(string_table):
     (
         (
             device_type,
@@ -49,7 +49,7 @@ def parse_hepta(info):
             sync_state,
         ),
     ) = (
-        info[0] or info[1]
+        string_table[0] or string_table[1]
     )
     return {
         "devicetype": device_type,

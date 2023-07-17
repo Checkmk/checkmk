@@ -33,7 +33,7 @@ from cmk.base.config import check_info
 # id:port_id:port_speed:node_id:node_name:WWPN:status:switch_WWPN:attachment:type:adapter_location:adapter_port_id
 
 
-def parse_ibm_svc_portsas(info):
+def parse_ibm_svc_portsas(string_table):
     dflt_header = [
         "id",
         "port_id",
@@ -49,7 +49,7 @@ def parse_ibm_svc_portsas(info):
         "adapter_port_id",
     ]
     parsed = {}
-    for id_, rows in parse_ibm_svc_with_header(info, dflt_header).items():
+    for id_, rows in parse_ibm_svc_with_header(string_table, dflt_header).items():
         try:
             data = rows[0]
         except IndexError:

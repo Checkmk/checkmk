@@ -22,7 +22,7 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 
 
-def parse_fortinet_controller_aps(info):
+def parse_fortinet_controller_aps(string_table):
     map_oper_state = {
         "0": "unknown",
         "1": "enabled",
@@ -42,7 +42,7 @@ def parse_fortinet_controller_aps(info):
     }
 
     parsed = {}
-    ap_table, client_table = info
+    ap_table, client_table = string_table
     for descr, id_, location, uptime_str, oper_state, availability in ap_table:
         try:
             uptime = int(uptime_str)

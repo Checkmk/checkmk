@@ -46,10 +46,10 @@ from cmk.base.config import check_info
 #   '----------------------------------------------------------------------'
 
 
-def parse_filestats(info):
+def parse_filestats(string_table):
     sections_info = {}
     current = []  # should never be used, but better safe than sorry
-    for line in info:
+    for line in string_table:
         if not line:
             continue
         if line[0].startswith("[[["):

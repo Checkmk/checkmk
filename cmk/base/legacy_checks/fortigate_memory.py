@@ -17,9 +17,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 fortigate_memory_default_levels = (70, 80)
 
 
-def parse_fortigate_memory(info):
+def parse_fortigate_memory(string_table):
     try:
-        return int(info[0][0])
+        return int(string_table[0][0])
     except ValueError:
         return None
 

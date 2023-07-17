@@ -14,9 +14,9 @@ from cmk.base.config import check_info
 # runmqsc|Not executable
 
 
-def parse_ibm_mq_plugin(info):
+def parse_ibm_mq_plugin(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         key = line[0].strip()
         value = line[1].strip()
         parsed[key] = value

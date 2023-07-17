@@ -19,9 +19,9 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 
 
-def parse_f5_bigip_snat(info):
+def parse_f5_bigip_snat(string_table):
     snats = {}
-    for line in info:
+    for line in string_table:
         name = line[0]
         snat_info = snats.setdefault(name, {})
         for index, stat in enumerate(

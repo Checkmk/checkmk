@@ -38,13 +38,13 @@ from cmk.base.config import check_info
 # 1:online:control:9843-AE2:6860407:2:2:2:12
 
 
-def parse_ibm_svc_enclosure(info):
-    dflt_header = _get_ibm_svc_enclosure_dflt_header(info)
+def parse_ibm_svc_enclosure(string_table):
+    dflt_header = _get_ibm_svc_enclosure_dflt_header(string_table)
     if dflt_header is None:
         return {}
 
     parsed = {}
-    for id_, rows in parse_ibm_svc_with_header(info, dflt_header).items():
+    for id_, rows in parse_ibm_svc_with_header(string_table, dflt_header).items():
         try:
             data = rows[0]
         except IndexError:

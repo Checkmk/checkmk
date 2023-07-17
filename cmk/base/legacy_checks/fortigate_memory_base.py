@@ -16,10 +16,10 @@ fortigate_memory_base_default_levels = {
 }
 
 
-def parse_fortigate_memory_base(info):
+def parse_fortigate_memory_base(string_table):
     try:
-        total = int(info[0][1]) * 1024  # value from device is in kb, we need bytes
-        used = float(info[0][0]) / 100.0 * total
+        total = int(string_table[0][1]) * 1024  # value from device is in kb, we need bytes
+        used = float(string_table[0][0]) / 100.0 * total
     except (IndexError, ValueError):
         return ()
     return used, total

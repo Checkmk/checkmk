@@ -24,9 +24,9 @@ from cmk.base.config import check_info
 # license_compression_enclosures:0
 
 
-def parse_ibm_svc_license(info):
+def parse_ibm_svc_license(string_table):
     licenses = {}
-    for line in info:
+    for line in string_table:
         if line[0].startswith("license_"):
             license_ = line[0].replace("license_", "")
             if not license_ in licenses:

@@ -50,14 +50,14 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 #   '----------------------------------------------------------------------'
 
 
-def parse_fortigate_node(info):
+def parse_fortigate_node(string_table):
     parsed = {}
-    if info[0]:
-        parsed["cluster_info"] = info[0][0]
+    if string_table[0]:
+        parsed["cluster_info"] = string_table[0][0]
 
-    for hostname, cpu_str, memory_str, sessions_str, oid_end in info[1]:
+    for hostname, cpu_str, memory_str, sessions_str, oid_end in string_table[1]:
         # This means we have a standalone cluster
-        if len(info[1]) == 1:
+        if len(string_table[1]) == 1:
             item_name = "Cluster"
         elif hostname:
             item_name = hostname

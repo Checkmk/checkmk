@@ -44,7 +44,7 @@ from cmk.base.config import check_info
 Section = Sequence
 
 
-def parse_ibm_svc_disks(info):
+def parse_ibm_svc_disks(string_table):
     dflt_header = [
         "id",
         "status",
@@ -61,7 +61,7 @@ def parse_ibm_svc_disks(info):
         "drive_class_id",
     ]
     parsed = []
-    for rows in parse_ibm_svc_with_header(info, dflt_header).values():
+    for rows in parse_ibm_svc_with_header(string_table, dflt_header).values():
         parsed.extend(rows)
     return parsed
 

@@ -16,12 +16,12 @@ from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 
 
-def parse_emcvnx_storage_pools(info):
+def parse_emcvnx_storage_pools(string_table):
     parsed = {}
     section = None
     pool_name = None
     tier_name = None
-    for line in info:
+    for line in string_table:
         line = [x.strip() for x in line]
 
         if line[0].startswith("[[[") and line[0].endswith("]]]"):

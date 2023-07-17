@@ -21,9 +21,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 # url /vmfs/volumes/513df1e9-12fd7366-ac5a-e41f13e69eaa
 
 
-def parse_esx_vsphere_datastores(info):
+def parse_esx_vsphere_datastores(string_table):
     stores = {}
-    for line in info:
+    for line in string_table:
         if line[0].startswith("["):
             name = line[0][1:-1]
             store = {}

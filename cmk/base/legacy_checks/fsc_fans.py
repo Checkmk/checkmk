@@ -19,9 +19,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import (
 )
 
 
-def parse_fsc_fans(info):
+def parse_fsc_fans(string_table):
     parsed = {}
-    for fan_name, rpm_str in info:
+    for fan_name, rpm_str in string_table:
         try:
             rpm = int(rpm_str)
         except ValueError:

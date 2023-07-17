@@ -23,9 +23,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import contains, SNMPTree
 #   '----------------------------------------------------------------------'
 
 
-def parse_icom_repeater(info):  # pylint: disable=too-many-branches
+def parse_icom_repeater(string_table):  # pylint: disable=too-many-branches
     parsed: dict[str, int | dict | float] = {}
-    for line in info:
+    for line in string_table:
         if line[1] == "Temperature":
             parsed["temp"] = float(line[2][:-1])
             parsed["temp_devunit"] = line[2][-1].lower()

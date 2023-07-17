@@ -21,7 +21,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, OIDEnd, SNMP
 # discovering function.
 
 
-def parse_gude_powerbanks(info):
+def parse_gude_powerbanks(string_table):
     map_port_states = {
         "0": (2, "off"),
         "1": (0, "on"),
@@ -31,10 +31,10 @@ def parse_gude_powerbanks(info):
         "1": (0, "data valid"),
     }
 
-    ports = dict(info[0])
+    ports = dict(string_table[0])
 
     parsed = {}
-    for oid, block in zip(_TABLES, info[2:]):
+    for oid, block in zip(_TABLES, string_table[2:]):
         for (
             idx,
             dev_state,

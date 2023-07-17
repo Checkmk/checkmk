@@ -39,10 +39,10 @@ from cmk.base.config import check_info
 # false, "query  ": "", "total": 1, "order": "asc"}
 
 
-def parse_graylog_sidecars(info):
+def parse_graylog_sidecars(string_table):
     parsed = {}
 
-    for line in info:
+    for line in string_table:
         sidecar_data = json.loads(line[0])
 
         sidecar_nodename = sidecar_data.get("node_name")

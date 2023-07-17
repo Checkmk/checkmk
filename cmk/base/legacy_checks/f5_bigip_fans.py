@@ -29,12 +29,12 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
 f5_bigip_fans_default_levels = (2000, 500)
 
 
-def parse_f5_bigip_fans(info):
+def parse_f5_bigip_fans(string_table):
     fantyp = ["Chassis", "Processor"]
     fanchoice = 0
     parsed: dict[str, tuple[int, int | None]] = {}
 
-    for line in info:
+    for line in string_table:
         for fanentry in line:
             if fanchoice >= len(fantyp):
                 continue

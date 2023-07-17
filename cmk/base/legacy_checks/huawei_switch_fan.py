@@ -19,9 +19,9 @@ HuaweiFanData = collections.namedtuple(  # pylint: disable=collections-namedtupl
 )
 
 
-def parse_huawei_switch_fan(info):
+def parse_huawei_switch_fan(string_table):
     entities_per_member = {}
-    for line in info:
+    for line in string_table:
         member_number = line[0].partition(".")[0]
         fan_present = line[2] == "1"
 

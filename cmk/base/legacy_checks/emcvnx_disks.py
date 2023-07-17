@@ -99,9 +99,9 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import render
 # }
 
 
-def parse_emcvnx_disks(info):
+def parse_emcvnx_disks(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if len(line) > 4 and line[0] == "Bus" and line[4] == "Disk":
             encid = line[1] + "/" + line[3] + " " + line[4] + " " + line[5]
             enc = {}

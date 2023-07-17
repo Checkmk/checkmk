@@ -17,8 +17,8 @@ from cmk.base.config import check_info
 Section = Mapping[str, str]
 
 
-def parse_hyperv_vmstatus(info):
-    return {line[0]: " ".join(line[1:]) for line in info}
+def parse_hyperv_vmstatus(string_table):
+    return {line[0]: " ".join(line[1:]) for line in string_table}
 
 
 def discover_hyperv_vmstatus(section: Section) -> Iterable[tuple[None, dict]]:

@@ -136,7 +136,7 @@ def check_hp_msa_volume_health(item, params, parsed):
     return check_hp_msa_health(item, params, parsed)
 
 
-def parse_hp_msa_volume(info):
+def parse_hp_msa_volume(string_table):
     # use numerical id (2nd row from left) as uid for items,
     # in case of several values the values are whitespace separated as usual
     item_type_idx = 0
@@ -146,7 +146,7 @@ def parse_hp_msa_volume(info):
     min_list_elements_cnt_with_values = 4
     pre_parsed = {}
 
-    for line in info:
+    for line in string_table:
         if len(line) < min_list_elements_cnt_with_values:
             # make parsing robust against too short lists
             continue

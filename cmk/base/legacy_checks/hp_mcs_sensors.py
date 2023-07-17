@@ -31,10 +31,10 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree, startswith
 # .1.3.6.1.4.1.232.167.2.4.5.2.1.7.3 0
 
 
-def parse_hp_mcs_sensors(info):
+def parse_hp_mcs_sensors(string_table):
     parsed = {}
 
-    for line in info:
+    for line in string_table:
         parsed[line[0]] = {
             "type": int(line[1]),
             "name": line[2],

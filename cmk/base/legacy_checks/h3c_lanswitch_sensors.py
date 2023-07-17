@@ -15,8 +15,8 @@ Section = Mapping[str, str]
 def parse_h3c_lanswitch_sensors(string_table: list[list[list[str]]]) -> Section:
     return {
         h3c_lanswitch_genitem(device_class, item): state
-        for device_class, info in zip(("Fan", "Powersupply"), string_table)
-        for item, state in info
+        for device_class, string_table in zip(("Fan", "Powersupply"), string_table)
+        for item, state in string_table
     }
 
 

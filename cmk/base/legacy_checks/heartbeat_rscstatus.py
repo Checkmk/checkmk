@@ -13,9 +13,9 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_heartbeat_rscstatus(info):
+def parse_heartbeat_rscstatus(string_table):
     try:
-        return info[0][0]
+        return string_table[0][0]
     except IndexError:
         return None
 

@@ -18,12 +18,13 @@ MAILQUEUES_LABEL = (
 )
 
 
-def parse_domino_mailqueues(info):
-    if not info:
+def parse_domino_mailqueues(string_table):
+    if not string_table:
         return {}
 
     return {
-        item: (label, int(raw_value)) for (item, label), raw_value in zip(MAILQUEUES_LABEL, info[0])
+        item: (label, int(raw_value))
+        for (item, label), raw_value in zip(MAILQUEUES_LABEL, string_table[0])
     }
 
 

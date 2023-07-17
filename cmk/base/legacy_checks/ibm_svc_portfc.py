@@ -37,7 +37,7 @@ from cmk.base.config import check_info
 # 11:4:4:fc:N/A:2:node2:5005076803102127:000000:inactive_unconfigured:none:local_partner
 
 
-def parse_ibm_svc_portfc(info):
+def parse_ibm_svc_portfc(string_table):
     dflt_header = [
         "id",
         "fc_io_port_id",
@@ -55,7 +55,7 @@ def parse_ibm_svc_portfc(info):
         "adapter_port_id",
     ]
     parsed = {}
-    for id_, rows in parse_ibm_svc_with_header(info, dflt_header).items():
+    for id_, rows in parse_ibm_svc_with_header(string_table, dflt_header).items():
         try:
             data = rows[0]
         except IndexError:

@@ -35,10 +35,10 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_graylog_nodes(info):
+def parse_graylog_nodes(string_table):
     parsed = {}
 
-    for line in info:
+    for line in string_table:
         node_details = json.loads(line[0])
 
         for node, detail in node_details.items():

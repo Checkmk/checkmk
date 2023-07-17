@@ -9,8 +9,8 @@ from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
 from cmk.base.config import check_info
 
 
-def parse_ddn_s2a_version(info):
-    return {key: value[0] for key, value in parse_ddn_s2a_api_response(info).items()}
+def parse_ddn_s2a_version(string_table):
+    return {key: value[0] for key, value in parse_ddn_s2a_api_response(string_table).items()}
 
 
 def inventory_ddn_s2a_version(parsed):

@@ -24,7 +24,7 @@ from cmk.base.config import check_info
 # 9:stp5_300G_01-04:online:managed:16:stp5_300G_01:1.1TB:0000000000000004:BLUBB5:600a0b80006e1dbc0000f7d051341cc000000000000000000000000000000000:generic_hdd
 
 
-def parse_ibm_svc_mdisk(info):
+def parse_ibm_svc_mdisk(string_table):
     dflt_header = [
         "id",
         "name",
@@ -44,7 +44,7 @@ def parse_ibm_svc_mdisk(info):
         "dedupe",
     ]
     parsed = {}
-    for rows in parse_ibm_svc_with_header(info, dflt_header).values():
+    for rows in parse_ibm_svc_with_header(string_table, dflt_header).values():
         try:
             data = rows[0]
             parsed.setdefault(data["name"], data)

@@ -24,9 +24,9 @@ MAP_RPO_STATES = {
 }
 
 
-def parse_zerto_vpg(info):
+def parse_zerto_vpg(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if len(line) < 3:
             continue
         vpgname = line[0]

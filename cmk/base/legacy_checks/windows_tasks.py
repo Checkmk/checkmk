@@ -27,10 +27,10 @@ from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_windows_tasks(info):
+def parse_windows_tasks(string_table):
     data = {}
     last_task: bool | str = False
-    for line in info:
+    for line in string_table:
         name = line[0].strip()
         value = ":".join(line[1:]).strip()
         if value and last_task and name != "TaskName":

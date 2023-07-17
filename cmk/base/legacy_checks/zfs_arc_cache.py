@@ -235,9 +235,9 @@ from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_zfs_arc_cache(info):
+def parse_zfs_arc_cache(string_table):
     parsed = {}
-    for line in info:
+    for line in string_table:
         if not (len(line) >= 3 and line[1] == "=" and line[2].isdigit()):
             continue
 

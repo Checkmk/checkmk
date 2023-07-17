@@ -46,9 +46,9 @@ win_netstat_states = {
 }
 
 
-def parse_win_netstat(info):
+def parse_win_netstat(string_table):
     connections = []
-    for line in info:
+    for line in string_table:
         if line[0] == "TCP":
             proto, local, remote, connstate = line
         elif line[0] == "UDP":

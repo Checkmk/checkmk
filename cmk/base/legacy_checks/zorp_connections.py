@@ -14,16 +14,16 @@ from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
 
 
-def parse_zorp_connections(info):
+def parse_zorp_connections(string_table):
     """Creates dict name -> connections
-    from info =
+    from string_table =
     [["Instance <name>:", "walking"], ["zorp.stats.active_connections:", "<Number|'None'>"],
      ["Instance <name>:", "walking"], ["zorp.stats.active_connections:", "<Number|'None'>"],
      ...]
     """
     return {
         instance[1].rstrip(":"): int(state[1]) if state[1] != "None" else 0
-        for instance, state in zip(info[::2], info[1::2])
+        for instance, state in zip(string_table[::2], string_table[1::2])
     }
 
 

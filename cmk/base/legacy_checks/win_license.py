@@ -16,9 +16,9 @@ from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition, re
 from cmk.base.config import check_info
 
 
-def parse_win_license(info):
+def parse_win_license(string_table):
     parsed: dict[str, str | int] = {}
-    for line in info:
+    for line in string_table:
         if len(line) == 0:
             continue
 

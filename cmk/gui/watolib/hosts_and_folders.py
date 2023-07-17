@@ -69,7 +69,7 @@ from cmk.gui.i18n import _, _l
 from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.page_menu import confirmed_form_submit_options
-from cmk.gui.site_config import enabled_sites, is_wato_slave_site
+from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import Choices, HTTPVariables, SetOnceDict
 from cmk.gui.utils import urls
 from cmk.gui.utils.agent_registration import remove_tls_registration_help
@@ -103,10 +103,13 @@ from cmk.gui.watolib.utils import (
 )
 
 if cmk_version.is_managed_edition():
-    import cmk.gui.cme.helpers as managed_helpers  # pylint: disable=no-name-in-module
-    import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
     from cmk.gui.cme.host_and_folder_validators import (  # pylint: disable=no-name-in-module
+        validate_create_hosts,
+        validate_create_subfolder,
+        validate_edit_folder,
         validate_edit_host,
+        validate_move_hosts,
+        validate_move_subfolder_to,
     )
 
 SearchCriteria = Mapping[str, Any]
@@ -3498,206 +3501,27 @@ def _must_be_in_contactgroups(cgs: Iterable[ContactgroupName]) -> None:
 
 class CMEFolder(CREFolder):
     def edit(self, new_title, new_attributes):
-        if "site" in new_attributes:
-            site_id = new_attributes["site"]
-            parent = self.parent()
-            if isinstance(parent, CMEFolder):
-                parent._check_parent_customer_conflicts(site_id)
-            self._check_childs_customer_conflicts(site_id)
-
+        validate_edit_folder(self, new_attributes)
         super().edit(new_title, new_attributes)
 
-    def _check_parent_customer_conflicts(self, site_id):
-        new_customer_id = managed.get_customer_of_site(site_id)
-        customer_id = self._get_customer_id()
-
-        if (
-            new_customer_id == managed_helpers.default_customer_id()
-            and customer_id != managed_helpers.default_customer_id()
-        ):
-            raise MKUserError(
-                None,
-                _(
-                    "The configured target site refers to the default customer <i>%s</i>. The parent folder however, "
-                    "already have the specific customer <i>%s</i> set. This violates the CME folder hierarchy."
-                )
-                % (
-                    managed.get_customer_name_by_id(managed_helpers.default_customer_id()),
-                    managed.get_customer_name_by_id(customer_id),
-                ),
-            )
-
-        # The parents customer id may be the default customer or the same customer
-        customer_id = self._get_customer_id()
-        if customer_id not in [managed_helpers.default_customer_id(), new_customer_id]:
-            folder_sites = ", ".join(
-                list(managed_helpers.get_sites_of_customer(customer_id).keys())
-            )
-            raise MKUserError(
-                None,
-                _(
-                    "The configured target site <i>%s</i> for this folder is invalid. The folder <i>%s</i> already belongs "
-                    "to the customer <i>%s</i>. This violates the CME folder hierarchy. You may choose the "
-                    "following sites <i>%s</i>."
-                )
-                % (
-                    enabled_sites()[site_id]["alias"],
-                    self.title(),
-                    managed.get_customer_name_by_id(customer_id),
-                    folder_sites,
-                ),
-            )
-
-    def _check_childs_customer_conflicts(self, site_id):
-        customer_id = managed.get_customer_of_site(site_id)
-        # Check hosts
-        self._check_hosts_customer_conflicts(site_id)
-
-        # Check subfolders
-        for subfolder in (f for f in self.subfolders() if isinstance(f, CMEFolder)):
-            subfolder_explicit_site = subfolder.attributes.get("site")
-            if subfolder_explicit_site:
-                subfolder_customer = subfolder._get_customer_id()
-                if subfolder_customer != customer_id:
-                    raise MKUserError(
-                        None,
-                        _(
-                            "The subfolder <i>%s</i> has the explicit site <i>%s</i> set, which belongs to "
-                            "customer <i>%s</i>. This violates the CME folder hierarchy."
-                        )
-                        % (
-                            subfolder.title(),
-                            enabled_sites()[subfolder_explicit_site]["alias"],
-                            managed.get_customer_name_by_id(subfolder_customer),
-                        ),
-                    )
-
-            subfolder._check_childs_customer_conflicts(site_id)
-
-    def _check_hosts_customer_conflicts(self, site_id):
-        customer_id = managed.get_customer_of_site(site_id)
-        for host in self.hosts().values():
-            host_explicit_site = host.attributes.get("site")
-            if host_explicit_site:
-                host_customer = managed.get_customer_of_site(host_explicit_site)
-                if host_customer != customer_id:
-                    raise MKUserError(
-                        None,
-                        _(
-                            "The host <i>%s</i> has the explicit site <i>%s</i> set, which belongs to "
-                            "customer <i>%s</i>. This violates the CME folder hierarchy."
-                        )
-                        % (
-                            host.name(),
-                            enabled_sites()[host_explicit_site]["alias"],
-                            managed.get_customer_name_by_id(host_customer),
-                        ),
-                    )
-
     def create_subfolder(self, name, title, attributes):
-        if "site" in attributes:
-            self._check_parent_customer_conflicts(attributes["site"])
+        validate_create_subfolder(self, attributes)
         return super().create_subfolder(name, title, attributes)
 
     def move_subfolder_to(self, subfolder, target_folder):
-        target_folder_customer = target_folder._get_customer_id()
-        if target_folder_customer != managed_helpers.default_customer_id():
-            result_dict: dict[str, Any] = {
-                "explicit_host_sites": {},  # May be used later on to
-                "explicit_folder_sites": {},  # improve error message
-                "involved_customers": set(),
-            }
-            subfolder._determine_involved_customers(result_dict)
-            other_customers = result_dict["involved_customers"] - {target_folder_customer}
-            if other_customers:
-                other_customers_text = ", ".join(
-                    map(managed.get_customer_name_by_id, other_customers)
-                )
-                raise MKUserError(
-                    None,
-                    _(
-                        "Cannot move folder. Some of its elements have specifically other customers set (<i>%s</i>). "
-                        "This violates the CME folder hierarchy."
-                    )
-                    % other_customers_text,
-                )
-
-        # The site attribute is not explicitely set. The new inheritance might brake something..
+        validate_move_subfolder_to(subfolder, target_folder)
         super().move_subfolder_to(subfolder, target_folder)
 
     def create_hosts(
         self,
         entries: Iterable[tuple[HostName, HostAttributes, Sequence[HostName] | None]],
     ) -> None:
-        customer_id = self._get_customer_id()
-        if customer_id != managed_helpers.default_customer_id():
-            for hostname, attributes, _cluster_nodes in entries:
-                validate_edit_host(self.site_id(), hostname, attributes)
-
+        validate_create_hosts(entries, self.site_id())
         super().create_hosts(entries)
 
     def move_hosts(self, host_names, target_folder):
-        # Check if the target folder may have this host
-        # A host from customerA is not allowed in a customerB folder
-        target_site_id = target_folder.site_id()
-
-        # Check if the hosts are moved to a provider folder
-        target_customer_id = managed.get_customer_of_site(target_site_id)
-        if target_customer_id != managed_helpers.default_customer_id():
-            allowed_sites = managed_helpers.get_sites_of_customer(target_customer_id)
-            for hostname in host_names:
-                host = self.load_host(hostname)
-                host_site = host.attributes.get("site")
-                if not host_site:
-                    continue
-                if host_site not in allowed_sites:
-                    raise MKUserError(
-                        None,
-                        _(
-                            "Unable to move host <i>%s</i>. Its explicit set site attribute <i>%s</i> "
-                            "belongs to customer <i>%s</i>. The target folder however, belongs to customer <i>%s</i>. "
-                            "This violates the folder CME folder hierarchy."
-                        )
-                        % (
-                            hostname,
-                            enabled_sites()[host_site]["alias"],
-                            managed.get_customer_of_site(host_site),
-                            managed.get_customer_of_site(target_site_id),
-                        ),
-                    )
-
+        validate_move_hosts(self, host_names, target_folder)
         super().move_hosts(host_names, target_folder)
-
-    def _get_customer_id(self):
-        customer_id = managed.get_customer_of_site(self.site_id())
-        return customer_id
-
-    def _determine_involved_customers(self, result_dict):
-        self._determine_explicit_set_site_ids(result_dict)
-        result_dict["involved_customers"].update(
-            set(map(managed.get_customer_of_site, result_dict["explicit_host_sites"].keys()))
-        )
-        result_dict["involved_customers"].update(
-            set(map(managed.get_customer_of_site, result_dict["explicit_folder_sites"].keys()))
-        )
-
-    def _determine_explicit_set_site_ids(self, result_dict):
-        for host in self.hosts().values():
-            host_explicit_site = host.attributes.get("site")
-            if host_explicit_site:
-                result_dict["explicit_host_sites"].setdefault(host_explicit_site, []).append(
-                    host.name()
-                )
-
-        for subfolder in (f for f in self.subfolders() if isinstance(f, CMEFolder)):
-            subfolder_explicit_site = subfolder.attributes.get("site")
-            if subfolder_explicit_site:
-                result_dict["explicit_folder_sites"].setdefault(subfolder_explicit_site, []).append(
-                    subfolder.title()
-                )
-            subfolder._determine_explicit_set_site_ids(result_dict)
-
-        return result_dict
 
 
 class CMEHost(CREHost):

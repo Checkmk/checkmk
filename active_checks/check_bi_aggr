@@ -188,7 +188,7 @@ try:
         auth=auth,
         headers={"Authorization": f"Bearer {username} {password}"} if not auth else None,
         proxies=proxies,
-        json={},
+        json={"filter_names": [aggr_name]},
     )
     r.raise_for_status()
     raw_response = r.text

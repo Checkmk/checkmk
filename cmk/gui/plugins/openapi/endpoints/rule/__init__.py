@@ -33,7 +33,7 @@ from cmk.gui.plugins.openapi.utils import (
 from cmk.gui.utils import gen_id
 from cmk.gui.utils.escaping import strip_tags
 from cmk.gui.watolib.changes import add_change
-from cmk.gui.watolib.hosts_and_folders import CREFolder
+from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import (
     AllRulesets,
     FolderRulesets,
@@ -66,7 +66,7 @@ class RuleEntry:
     all_rulesets: AllRulesets
     # NOTE: Can't be called "index", because mypy doesn't like that. Duh.
     index_nr: int
-    folder: CREFolder
+    folder: Folder
 
 
 def _validate_rule_move(lhs: RuleEntry, rhs: RuleEntry) -> None:
@@ -104,7 +104,7 @@ def move_rule_to(param: typing.Mapping[str, typing.Any]) -> http.Response:
     all_rulesets = source_entry.all_rulesets
 
     index: int
-    dest_folder: CREFolder
+    dest_folder: Folder
     match position:
         case "top_of_folder":
             dest_folder = body["folder"]
@@ -163,7 +163,7 @@ def create_rule(param):
     user.need_permission("wato.edit")
     user.need_permission("wato.rulesets")
     body = param["body"]
-    folder: CREFolder = body["folder"]
+    folder: Folder = body["folder"]
     value = body["value_raw"]
     ruleset_name = body["ruleset"]
 
@@ -292,7 +292,7 @@ def _get_rule_by_id(rule_uuid: str, all_rulesets=None) -> RuleEntry:  # type: ig
         all_rulesets = AllRulesets.load_all_rulesets()
 
     for ruleset in all_rulesets.get_rulesets().values():
-        folder: CREFolder
+        folder: Folder
         index: int
         rule: Rule
         for folder, index, rule in ruleset.get_rules():

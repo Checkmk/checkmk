@@ -33,9 +33,9 @@ from cmk.gui.watolib.host_attributes import (
     host_attribute_registry,
 )
 from cmk.gui.watolib.hosts_and_folders import (
-    CREFolder,
-    CREHost,
     disk_or_search_folder_from_request,
+    Folder,
+    Host,
     SearchFolder,
 )
 
@@ -206,7 +206,7 @@ class ModeBulkCleanup(WatoMode):
         html.hidden_fields()
         html.end_form()
 
-    def _select_attributes_for_bulk_cleanup(self, hosts: Sequence[CREHost]) -> None:
+    def _select_attributes_for_bulk_cleanup(self, hosts: Sequence[Host]) -> None:
         attributes = self._get_attributes_for_bulk_cleanup(hosts)
 
         for attr, is_inherited, num_haveit in attributes:
@@ -233,7 +233,7 @@ class ModeBulkCleanup(WatoMode):
             html.write_text(_("The selected hosts have no explicit attributes"))
 
     def _get_attributes_for_bulk_cleanup(
-        self, hosts: Sequence[CREHost]
+        self, hosts: Sequence[Host]
     ) -> list[tuple[ABCHostAttribute, bool, int]]:
         attributes = []
         for attr in host_attribute_registry.get_sorted_host_attributes():
@@ -253,7 +253,7 @@ class ModeBulkCleanup(WatoMode):
 
             # If the attribute is mandatory and no value is inherited
             # by file or folder, the attribute cannot be cleaned.
-            container: CREFolder | SearchFolder | None = self._folder
+            container: Folder | SearchFolder | None = self._folder
             is_inherited = False
             while container:
                 if attrname in container.attributes:

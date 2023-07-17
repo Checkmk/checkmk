@@ -36,7 +36,7 @@ from cmk.gui.plugins.openapi.endpoints.host_internal.response_schemas import (
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME
 from cmk.gui.plugins.openapi.utils import ProblemException, serve_json
-from cmk.gui.watolib.hosts_and_folders import CREHost, Host
+from cmk.gui.watolib.hosts_and_folders import Host
 
 permission_registry.register(
     Permission(
@@ -112,14 +112,14 @@ def register(params: Mapping[str, Any]) -> Response:
     return serve_json({"connection_mode": connection_mode.value})
 
 
-def _verified_host(host_name: HostName) -> CREHost:
+def _verified_host(host_name: HostName) -> Host:
     host = Host.load_host(host_name)
     _verify_permissions(host)
     _verify_host_properties(host)
     return host
 
 
-def _verify_permissions(host: CREHost) -> None:
+def _verify_permissions(host: Host) -> None:
     if user.may("agent_registration.register_any_existing_host"):
         return
     if user.may("agent_registration.register_managed_existing_host") and host.is_contact(user):
@@ -143,7 +143,7 @@ def _verify_permissions(host: CREHost) -> None:
         raise unathorized_excpt
 
 
-def _verify_host_properties(host: CREHost) -> None:
+def _verify_host_properties(host: Host) -> None:
     if host.site_id() != omd_site():
         raise ProblemException(
             status=405,
@@ -162,7 +162,7 @@ def _check_host_access_permissions(
     host_name: HostName,
     *,
     access_type: Literal["read", "write"],
-) -> CREHost:
+) -> Host:
     host = Host.load_host(host_name)
     try:
         host.permissions.need_permission(access_type)

@@ -23,7 +23,7 @@ from cmk.automations.results import (
 
 from cmk.gui.utils import transaction_manager
 from cmk.gui.watolib.audit_log import AuditLogStore
-from cmk.gui.watolib.hosts_and_folders import CREHost, folder_tree
+from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.gui.watolib.services import (
     DiscoveryAction,
     DiscoveryResult,
@@ -117,7 +117,7 @@ def fixture_sample_host(
     request_context: None,
     with_admin_login: UserId,
     sample_host_name: HostName,
-) -> Generator[CREHost, None, None]:
+) -> Generator[Host, None, None]:
     hostname = sample_host_name
     root_folder = folder_tree().root_folder()
     root_folder.create_hosts([(hostname, {}, None)])
@@ -129,7 +129,7 @@ def fixture_sample_host(
 
 @pytest.mark.usefixtures("inline_background_jobs")
 def test_perform_discovery_none_action(
-    sample_host: CREHost, mock_discovery_preview: MagicMock
+    sample_host: Host, mock_discovery_preview: MagicMock
 ) -> None:
     discovery_result = initial_discovery_result(
         action=DiscoveryAction.NONE,
@@ -144,7 +144,7 @@ def test_perform_discovery_none_action(
 @pytest.mark.usefixtures("inline_background_jobs")
 def test_perform_discovery_tabula_rasa_action_with_no_previous_discovery_result(
     sample_host_name: HostName,
-    sample_host: CREHost,
+    sample_host: Host,
     mock_discovery_preview: MagicMock,
 ) -> None:
     discovery_result = get_check_table(
@@ -165,7 +165,7 @@ def test_perform_discovery_tabula_rasa_action_with_no_previous_discovery_result(
 def test_perform_discovery_fix_all_with_previous_discovery_result(
     mocker: MockerFixture,
     sample_host_name: HostName,
-    sample_host: CREHost,
+    sample_host: Host,
     mock_set_autochecks: MagicMock,
 ) -> None:
     mocker.patch("cmk.gui.watolib.services.update_host_labels", return_value={})
@@ -317,7 +317,7 @@ def test_perform_discovery_fix_all_with_previous_discovery_result(
 def test_perform_discovery_single_update(
     mocker: MockerFixture,
     sample_host_name: HostName,
-    sample_host: CREHost,
+    sample_host: Host,
     mock_set_autochecks: MagicMock,
 ) -> None:
     mock_discovery_preview = mocker.patch(
@@ -555,7 +555,7 @@ def test_perform_discovery_single_update(
 def test_perform_discovery_action_update_services(
     mocker: MockerFixture,
     sample_host_name: HostName,
-    sample_host: CREHost,
+    sample_host: Host,
     mock_set_autochecks: MagicMock,
 ) -> None:
     mock_discovery_preview = mocker.patch(
@@ -738,7 +738,7 @@ def test_perform_discovery_action_update_services(
 def test_perform_discovery_action_update_host_labels(
     mocker: MockerFixture,
     sample_host_name: HostName,
-    sample_host: CREHost,
+    sample_host: Host,
     mock_set_autochecks: MagicMock,
 ) -> None:
     mock_update_host_labels = mocker.patch(

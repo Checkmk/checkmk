@@ -26,7 +26,7 @@ import cmk.gui.watolib.rulesets as rulesets
 from cmk.gui.config import active_config
 from cmk.gui.plugins.wato.check_parameters.local import _parameter_valuespec_local
 from cmk.gui.plugins.wato.check_parameters.ps import _valuespec_inventory_processes_rules
-from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, folder_tree
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree
 from cmk.gui.watolib.rulesets import Rule, RuleOptions, Ruleset, RuleValue
 from cmk.gui.watolib.utils import NEGATE
 
@@ -771,11 +771,9 @@ def test_rules_grouped_by_folder() -> None:
         "",
     ]
 
-    root: CREFolder = tree.root_folder()
+    root: Folder = tree.root_folder()
     ruleset: Ruleset = Ruleset("only_hosts", {TagID("TAG1"): TagGroupID("TG1")})
-    rules: list[tuple[CREFolder, int, Rule]] = [
-        (root, 0, Rule.from_ruleset_defaults(root, ruleset))
-    ]
+    rules: list[tuple[Folder, int, Rule]] = [(root, 0, Rule.from_ruleset_defaults(root, ruleset))]
 
     for nr in range(1, 3):
         folder = Folder.new(tree=tree, name="folder%d" % nr, parent_folder=root)

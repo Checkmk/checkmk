@@ -27,7 +27,7 @@ from cmk.gui.watolib.activate_changes import ActivateChangesManager
 from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import delete_hosts
-from cmk.gui.watolib.hosts_and_folders import CREHost, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 from cmk.gui.watolib.rulesets import SingleRulesetRecursively, UseHostFolder
 
 
@@ -93,7 +93,7 @@ def _remove_hosts(job_interface: BackgroundProcessInterface) -> None:
 
 def _hosts_to_be_removed(
     job_interface: BackgroundProcessInterface,
-) -> Iterator[tuple[SiteId, Iterator[CREHost]]]:
+) -> Iterator[tuple[SiteId, Iterator[Host]]]:
     yield from (
         (site_id, _hosts_to_be_removed_for_site(job_interface, site_id))
         for site_id in wato_site_ids()
@@ -103,7 +103,7 @@ def _hosts_to_be_removed(
 def _hosts_to_be_removed_for_site(
     job_interface: BackgroundProcessInterface,
     site_id: SiteId,
-) -> Iterator[CREHost]:
+) -> Iterator[Host]:
     if site_is_local(site_id):
         hostnames = _hosts_to_be_removed_local()
     else:

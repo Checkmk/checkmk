@@ -3259,7 +3259,7 @@ class ConfigCache:
         # This assumes all needed aux tags of grouped are already in the tag_list
 
         # Ensure the internal mandatory tag groups are set for all hosts
-        # TODO: This immitates the logic of cmk.gui.watolib.CREHost.tag_groups which
+        # TODO: This immitates the logic of cmk.gui.watolib.Host.tag_groups which
         # is currently responsible for calculating the host tags of a host.
         # Would be better to untie the GUI code there and move it over to cmk.utils.tags.
         return {
@@ -3292,7 +3292,7 @@ class ConfigCache:
             return host_tags[hostname]
 
         # Handle not existing hosts (No need to performance optimize this)
-        # TODO: This immitates the logic of cmk.gui.watolib.CREHost.tag_groups which
+        # TODO: This immitates the logic of cmk.gui.watolib.Host.tag_groups which
         # is currently responsible for calculating the host tags of a host.
         # Would be better to untie the GUI code there and move it over to cmk.utils.tags.
         return {

@@ -444,7 +444,7 @@ def test_mgmt_inherit_protocol_explicit_host_ipmi() -> None:
 
 @pytest.fixture(name="patch_may")
 def fixture_patch_may(mocker: MagicMock) -> None:
-    def prefixed_title(self_: hosts_and_folders.CREFolder, current_depth: int, pretty: bool) -> str:
+    def prefixed_title(self_: hosts_and_folders.Folder, current_depth: int, pretty: bool) -> str:
         return "_" * current_depth + self_.title()
 
     mocker.patch.object(hosts_and_folders.Folder, "_prefixed_title", prefixed_title)
@@ -455,13 +455,13 @@ def fixture_patch_may(mocker: MagicMock) -> None:
     mocker.patch.object(hosts_and_folders.PermissionChecker, "may", may)
 
 
-def only_root() -> hosts_and_folders.CREFolder:
+def only_root() -> hosts_and_folders.Folder:
     root_folder = folder_tree().root_folder()
     root_folder._loaded_subfolders = {}
     return root_folder
 
 
-def three_levels() -> hosts_and_folders.CREFolder:
+def three_levels() -> hosts_and_folders.Folder:
     main = folder_tree().root_folder()
 
     a = main.create_subfolder("a", title="A", attributes={})
@@ -475,7 +475,7 @@ def three_levels() -> hosts_and_folders.CREFolder:
     return main
 
 
-def three_levels_leaf_permissions() -> hosts_and_folders.CREFolder:
+def three_levels_leaf_permissions() -> hosts_and_folders.Folder:
     main = folder_tree().root_folder()
 
     # Attribute only used for testing
@@ -528,7 +528,7 @@ def three_levels_leaf_permissions() -> hosts_and_folders.CREFolder:
 @pytest.mark.usefixtures("patch_may")
 def test_recursive_subfolder_choices(
     monkeypatch: MonkeyPatch,
-    actual_builder: Callable[[], hosts_and_folders.CREFolder],
+    actual_builder: Callable[[], hosts_and_folders.Folder],
     expected: list[tuple[str, str]],
 ) -> None:
     with monkeypatch.context() as m:
@@ -593,14 +593,14 @@ class _TreeStructure:
 
 
 def make_monkeyfree_folder(
-    tree_structure: _TreeStructure, parent: hosts_and_folders.CREFolder | None = None
-) -> hosts_and_folders.CREFolder:
+    tree_structure: _TreeStructure, parent: hosts_and_folders.Folder | None = None
+) -> hosts_and_folders.Folder:
     tree = hosts_and_folders.folder_tree()
     if parent is None:
         new_folder = tree.root_folder()
         new_folder.attributes = tree_structure.attributes
     else:
-        new_folder = hosts_and_folders.CREFolder.new(
+        new_folder = hosts_and_folders.Folder.new(
             tree=tree,
             name=tree_structure.path,
             parent_folder=parent,
@@ -621,11 +621,11 @@ def make_monkeyfree_folder(
     return new_folder
 
 
-def dump_wato_folder_structure(wato_folder: hosts_and_folders.CREFolder) -> None:
+def dump_wato_folder_structure(wato_folder: hosts_and_folders.Folder) -> None:
     # Debug function to have a look at the internal folder tree structure
     sys.stdout.write("\n")
 
-    def dump_structure(wato_folder: hosts_and_folders.CREFolder, indent: int = 0) -> None:
+    def dump_structure(wato_folder: hosts_and_folders.Folder, indent: int = 0) -> None:
         indent_space = " " * indent * 6
         sys.stdout.write(f"{indent_space + '->' + str(wato_folder):80} {wato_folder.path()}\n")
         sys.stdout.write(
@@ -773,8 +773,8 @@ def test_folder_permissions(
 
 
 def _convert_folder_tree_to_all_folders(
-    root_folder: hosts_and_folders.CREFolder,
-) -> dict[hosts_and_folders.PathWithoutSlash, hosts_and_folders.CREFolder]:
+    root_folder: hosts_and_folders.Folder,
+) -> dict[hosts_and_folders.PathWithoutSlash, hosts_and_folders.Folder]:
     all_folders = {}
 
     def parse_folder(folder):
@@ -904,7 +904,7 @@ def _run_num_host_test(
 ) -> None:
     wato_folder = make_monkeyfree_folder(structure)
     with hide_folders_without_permission(user_test.hide_folders_without_permission):
-        # The algorithm implemented in CREFolder actually computes the num_hosts_recursively wrong.
+        # The algorithm implemented in Folder actually computes the num_hosts_recursively wrong.
         # It does not exclude hosts in the questioned base folder, even when it should adhere
         # the visibility permissions. This error is not visible in the GUI since another(..)
         # function filters those folders in advance
@@ -931,7 +931,7 @@ def _run_num_host_test(
             assert wato_folder.num_hosts_recursively() == expected_host_count
 
 
-def _fake_redis_num_hosts_answer(wato_folder: hosts_and_folders.CREFolder) -> list[list[str]]:
+def _fake_redis_num_hosts_answer(wato_folder: hosts_and_folders.Folder) -> list[list[str]]:
     redis_answer = []
     for folder in _convert_folder_tree_to_all_folders(wato_folder).values():
         redis_answer.extend([",".join(folder.groups()[0]), str(folder._num_hosts)])
@@ -963,7 +963,7 @@ class MockRedisClient:
 @contextmanager
 def get_fake_setup_redis_client(
     monkeypatch: MonkeyPatch,
-    all_folders: dict[hosts_and_folders.PathWithoutSlash, hosts_and_folders.CREFolder],
+    all_folders: dict[hosts_and_folders.PathWithoutSlash, hosts_and_folders.Folder],
     redis_answers: list[list[list[str]]],
 ) -> Iterator[MockRedisClient]:
     monkeypatch.setattr(hosts_and_folders, "may_use_redis", lambda: True)
@@ -1002,14 +1002,14 @@ def test_load_redis_folders_on_demand(monkeypatch: MonkeyPatch) -> None:
         # Check if item is None
         assert g.wato_folders._raw_dict["sub1.1"] is None
         # Check if item is generated on access
-        assert isinstance(g.wato_folders["sub1.1"], hosts_and_folders.CREFolder)
+        assert isinstance(g.wato_folders["sub1.1"], hosts_and_folders.Folder)
         # Check if item is now set in dict
-        assert isinstance(g.wato_folders._raw_dict["sub1.1"], hosts_and_folders.CREFolder)
+        assert isinstance(g.wato_folders._raw_dict["sub1.1"], hosts_and_folders.Folder)
 
         # Check if other folder is still None
         assert g.wato_folders._raw_dict["sub1.2"] is None
         # Check if parent(main) folder got instantiated as well
-        assert isinstance(g.wato_folders._raw_dict[""], hosts_and_folders.CREFolder)
+        assert isinstance(g.wato_folders._raw_dict[""], hosts_and_folders.Folder)
 
 
 def test_folder_exists() -> None:
@@ -1026,8 +1026,8 @@ def test_folder_exists() -> None:
 def test_folder_access() -> None:
     tree = folder_tree()
     tree.root_folder().create_subfolder("foo", "foo", {}).create_subfolder("bar", "bar", {})
-    assert isinstance(tree.folder("foo/bar"), hosts_and_folders.CREFolder)
-    assert isinstance(tree.folder(""), hosts_and_folders.CREFolder)
+    assert isinstance(tree.folder("foo/bar"), hosts_and_folders.Folder)
+    assert isinstance(tree.folder(""), hosts_and_folders.Folder)
     with pytest.raises(MKGeneralException):
         tree.folder("unknown_folder")
 

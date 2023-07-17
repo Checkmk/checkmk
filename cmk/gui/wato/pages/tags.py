@@ -58,10 +58,10 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.watolib.host_attributes import host_attribute, undeclare_host_tag_attribute
 from cmk.gui.watolib.hosts_and_folders import (
-    CREFolder,
-    CREHost,
+    Folder,
     folder_preserving_link,
     folder_tree,
+    Host,
     make_action_link,
 )
 from cmk.gui.watolib.main_menu import MenuItem
@@ -1064,7 +1064,7 @@ def _show_aux_tag_used_by_tags(tags: set[cmk.utils.tags.GroupedTag]) -> None:
     html.close_ul()
 
 
-def _show_affected_folders(affected_folders: list[CREFolder]) -> None:
+def _show_affected_folders(affected_folders: list[Folder]) -> None:
     html.open_ul()
     for folder in affected_folders:
         html.open_li()
@@ -1073,7 +1073,7 @@ def _show_affected_folders(affected_folders: list[CREFolder]) -> None:
     html.close_ul()
 
 
-def _show_affected_hosts(affected_hosts: list[CREHost]) -> None:
+def _show_affected_hosts(affected_hosts: list[Host]) -> None:
     html.open_ul()
     html.open_li()
     for nr, host in enumerate(affected_hosts):

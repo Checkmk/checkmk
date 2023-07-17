@@ -48,7 +48,7 @@ from cmk.gui.watolib.check_mk_automations import (
     set_autochecks,
     update_host_labels,
 )
-from cmk.gui.watolib.hosts_and_folders import CREHost
+from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.rulesets import EnabledDisabledServicesEditor
 from cmk.gui.watolib.utils import may_edit_ruleset
 
@@ -220,7 +220,7 @@ class DiscoveryOptions(NamedTuple):
 class Discovery:
     def __init__(
         self,
-        host: CREHost,
+        host: Host,
         action: DiscoveryAction,
         *,
         update_target: str | None,
@@ -360,7 +360,7 @@ class Discovery:
 
 
 @contextmanager
-def _service_discovery_context(host: CREHost) -> Iterator[None]:
+def _service_discovery_context(host: Host) -> Iterator[None]:
     user.need_permission("wato.services")
 
     # no try/finally here.
@@ -373,7 +373,7 @@ def _service_discovery_context(host: CREHost) -> Iterator[None]:
 def perform_fix_all(
     discovery_result: DiscoveryResult,
     *,
-    host: CREHost,
+    host: Host,
     raise_errors: bool,
 ) -> DiscoveryResult:
     """
@@ -396,7 +396,7 @@ def perform_host_label_discovery(
     action: DiscoveryAction,
     discovery_result: DiscoveryResult,
     *,
-    host: CREHost,
+    host: Host,
     raise_errors: bool,
 ) -> DiscoveryResult:
     """Handle update host labels discovery action"""
@@ -412,7 +412,7 @@ def perform_service_discovery(
     update_source: str | None,
     update_target: str | None,
     *,
-    host: CREHost,
+    host: Host,
     selected_services: Container[tuple[CheckPluginNameStr, Item]],
     raise_errors: bool,
 ) -> DiscoveryResult:
@@ -493,7 +493,7 @@ def has_modification_specific_permissions(update_target: UpdateType) -> bool:
 
 def initial_discovery_result(
     action: DiscoveryAction,
-    host: CREHost,
+    host: Host,
     previous_discovery_result: DiscoveryResult | None,
     raise_errors: bool,
 ) -> DiscoveryResult:
@@ -506,7 +506,7 @@ def initial_discovery_result(
 
 def _perform_update_host_labels(labels_by_nodes: Mapping[HostName, Sequence[HostLabel]]) -> None:
     for host_name, host_labels in labels_by_nodes.items():
-        if (host := CREHost.host(host_name)) is None:
+        if (host := Host.host(host_name)) is None:
             raise ValueError(f"no such host: {host_name!r}")
 
         message = _("Updated discovered host labels of '%s' with %d labels") % (
@@ -634,9 +634,7 @@ def checkbox_service(checkbox_id_value: str) -> tuple[CheckPluginNameStr, Item]:
     return check_name, item_str or None
 
 
-def get_check_table(
-    host: CREHost, action: DiscoveryAction, *, raise_errors: bool
-) -> DiscoveryResult:
+def get_check_table(host: Host, action: DiscoveryAction, *, raise_errors: bool) -> DiscoveryResult:
     """Gathers the check table using a background job
 
     Cares about handling local / remote sites using an automation call. In both cases

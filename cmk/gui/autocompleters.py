@@ -35,7 +35,7 @@ from cmk.gui.type_defs import Choices
 from cmk.gui.utils.labels import encode_label_for_livestatus, Label, LABEL_REGEX
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import autocompleter_registry, Labels
-from cmk.gui.watolib.hosts_and_folders import CREHost, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 
 
 def __live_query_to_choices(
@@ -94,7 +94,7 @@ def config_hostname_autocompleter(value: str, params: dict) -> Choices:
     """Return the matching list of dropdown choices
     Called by the webservice with the current input field value and the completions_params to get the list of choices
     """
-    all_hosts: dict[HostName, CREHost] = Host.all()
+    all_hosts: dict[HostName, Host] = Host.all()
     match_pattern = re.compile(value, re.IGNORECASE)
     match_list: Choices = []
     for host_name, host_object in all_hosts.items():

@@ -56,7 +56,7 @@ from cmk.gui.plugins.openapi.endpoints.host_config.response_schemas import (
 from cmk.gui.plugins.openapi.endpoints.utils import folder_slug
 from cmk.gui.plugins.openapi.restful_objects import constructors, Endpoint, permissions
 from cmk.gui.plugins.openapi.utils import problem, ProblemException, serve_json
-from cmk.gui.watolib.hosts_and_folders import CREFolder, find_available_folder_name, folder_tree
+from cmk.gui.watolib.hosts_and_folders import find_available_folder_name, Folder, folder_tree
 
 from cmk import fields
 
@@ -132,7 +132,7 @@ def create(params: Mapping[str, Any]) -> Response:
 )
 def hosts_of_folder(params: Mapping[str, Any]) -> Response:
     """Show all hosts in a folder"""
-    folder: CREFolder = params["folder"]
+    folder: Folder = params["folder"]
     folder.permissions.need_permission("read")
     return serve_host_collection(folder.hosts().values())
 
@@ -151,7 +151,7 @@ def update(params: Mapping[str, Any]) -> Response:
     """Update a folder"""
     user.need_permission("wato.edit")
     user.need_permission("wato.edit_folders")
-    folder: CREFolder = params["folder"]
+    folder: Folder = params["folder"]
     constructors.require_etag(hash_of_folder(folder))
 
     post_body = params["body"]
@@ -209,7 +209,7 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
 
     faulty_folders = []
     for update_details in entries:
-        folder: CREFolder = update_details["folder"]
+        folder: Folder = update_details["folder"]
         title = folder.title() if not "title" in update_details else update_details["title"]
         attributes = folder.attributes.copy()
 
@@ -258,7 +258,7 @@ def bulk_update(params: Mapping[str, Any]) -> Response:
 def delete(params: Mapping[str, Any]) -> Response:
     """Delete a folder"""
     user.need_permission("wato.edit")
-    folder: CREFolder = params["folder"]
+    folder: Folder = params["folder"]
     if (parent := folder.parent()) is None:
         raise ProblemException(
             title="Problem deleting folder.",
@@ -282,12 +282,12 @@ def delete(params: Mapping[str, Any]) -> Response:
 def move(params: Mapping[str, Any]) -> Response:
     """Move a folder"""
     user.need_permission("wato.edit")
-    folder: CREFolder = params["folder"]
+    folder: Folder = params["folder"]
     folder_id = folder.id()
 
     constructors.require_etag(hash_of_folder(folder))
 
-    dest_folder: CREFolder = params["body"]["destination"]
+    dest_folder: Folder = params["body"]["destination"]
 
     try:
         parent = folder.parent()
@@ -335,7 +335,7 @@ def move(params: Mapping[str, Any]) -> Response:
 )
 def list_folders(params: Mapping[str, Any]) -> Response:
     """Show all folders"""
-    parent: CREFolder = params["parent"]
+    parent: Folder = params["parent"]
     if params["recursive"]:
         parent.need_recursive_permission("read")
         folders = parent.subfolders_recursively()
@@ -346,7 +346,7 @@ def list_folders(params: Mapping[str, Any]) -> Response:
 
 
 def _folders_collection(  # type: ignore[no-untyped-def]
-    folders: list[CREFolder],
+    folders: list[Folder],
     show_hosts: bool,
 ):
     folders_ = []
@@ -408,7 +408,7 @@ def _folders_collection(  # type: ignore[no-untyped-def]
 )
 def show_folder(params: Mapping[str, Any]) -> Response:
     """Show a folder"""
-    folder: CREFolder = params["folder"]
+    folder: Folder = params["folder"]
     folder.permissions.need_permission("read")
     return _serve_folder(folder, show_hosts=params["show_hosts"])
 
@@ -424,7 +424,7 @@ def _serve_folder(
     return response
 
 
-def _serialize_folder(folder: CREFolder, show_hosts):  # type: ignore[no-untyped-def]
+def _serialize_folder(folder: Folder, show_hosts):  # type: ignore[no-untyped-def]
     links = []
 
     if not folder.is_root():
@@ -467,7 +467,7 @@ def _serialize_folder(folder: CREFolder, show_hosts):  # type: ignore[no-untyped
     return rv
 
 
-def hash_of_folder(folder: CREFolder) -> constructors.ETagHash:
+def hash_of_folder(folder: Folder) -> constructors.ETagHash:
     return constructors.hash_of_dict(
         {
             "path": folder.path(),

@@ -37,8 +37,8 @@ from cmk.gui.watolib.bulk_discovery import (
     vs_bulk_discovery,
 )
 from cmk.gui.watolib.hosts_and_folders import (
-    CREFolder,
     disk_or_search_folder_from_request,
+    Folder,
     SearchFolder,
 )
 
@@ -230,14 +230,14 @@ class ModeBulkDiscovery(WatoMode):
         return hosts_to_discover
 
     def _recurse_hosts(
-        self, folder: CREFolder | SearchFolder
-    ) -> list[tuple[HostName, CREFolder | SearchFolder]]:
+        self, folder: Folder | SearchFolder
+    ) -> list[tuple[HostName, Folder | SearchFolder]]:
         entries = []
         for host_name, host in folder.hosts().items():
             if not self._only_failed or host.discovery_failed():
                 entries.append((host_name, folder))
         if self._recurse:
-            assert isinstance(folder, CREFolder)
+            assert isinstance(folder, Folder)
             for subfolder in folder.subfolders():
                 entries += self._recurse_hosts(subfolder)
         return entries

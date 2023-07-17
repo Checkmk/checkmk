@@ -119,7 +119,7 @@ class Scenario:
         self.config["host_paths"][hostname] = host_path
         self.config["host_tags"][hostname] = self._get_effective_tag_config(tags)
 
-    # TODO: This immitates the logic of cmk.gui.watolib.CREHost.tag_groups which
+    # TODO: This immitates the logic of cmk.gui.watolib.Host.tag_groups which
     # is currently responsible for calulcating the host tags of a host.
     # Would be better to untie the GUI code there and move it over to cmk.utils.tags.
     def _get_effective_tag_config(

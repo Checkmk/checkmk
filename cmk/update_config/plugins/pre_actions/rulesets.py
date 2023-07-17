@@ -10,7 +10,7 @@ from cmk.utils.redis import disable_redis
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.script_helpers import gui_context
-from cmk.gui.watolib.hosts_and_folders import CREFolder
+from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.rulesets import AllRulesets, Ruleset, RulesetCollection
 from cmk.gui.wsgi.blueprints.global_vars import set_global_vars
 
@@ -88,7 +88,7 @@ def _validate_rule_values(
 
 
 def _request_user_input_on_invalid_rule(
-    ruleset: Ruleset, folder: CREFolder, index: int, exception: MKUserError
+    ruleset: Ruleset, folder: Folder, index: int, exception: MKUserError
 ) -> str:
     return input(
         "WARNING: Invalid rule configuration detected\n"

@@ -46,11 +46,11 @@ from cmk.gui.wato.pages.folders import ModeFolder
 from cmk.gui.watolib.check_mk_automations import scan_parents
 from cmk.gui.watolib.host_attributes import HostAttributes
 from cmk.gui.watolib.hosts_and_folders import (
-    CREFolder,
-    CREHost,
     disk_or_search_base_folder_from_request,
     disk_or_search_folder_from_request,
+    Folder,
     folder_tree,
+    Host,
     SearchFolder,
 )
 
@@ -253,7 +253,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         task: ParentScanTask,
         settings: ParentScanSettings,
         gateway: ParentScanResult | None,
-        folder: CREFolder,
+        folder: Folder,
     ) -> list[HostName]:
         """Ensure there is a gateway host in the Checkmk configuration (or raise an exception)
 
@@ -280,7 +280,7 @@ class ParentScanBackgroundJob(BackgroundJob):
 
         return [gw_host_name]
 
-    def _determine_gateway_folder(self, where: str, folder: CREFolder) -> CREFolder:
+    def _determine_gateway_folder(self, where: str, folder: Folder) -> Folder:
         if where == "here":  # directly in current folder
             return disk_or_search_base_folder_from_request()
 
@@ -317,7 +317,7 @@ class ParentScanBackgroundJob(BackgroundJob):
         task: ParentScanTask,
         settings: ParentScanSettings,
         gateway: ParentScanResult,
-        gw_folder: CREFolder,
+        gw_folder: Folder,
     ) -> HostAttributes:
         new_host_attributes = HostAttributes(
             {
@@ -442,7 +442,7 @@ class ModeParentScan(WatoMode):
             tasks.append(ParentScanTask(host.site_id(), host.folder().path(), host.name()))
         return tasks
 
-    def _include_host(self, host: CREHost, select: SelectChoices) -> bool:
+    def _include_host(self, host: Host, select: SelectChoices) -> bool:
         if select == "noexplicit" and "parents" in host.attributes:
             return False
         if select == "no":
@@ -451,15 +451,15 @@ class ModeParentScan(WatoMode):
         return True
 
     def _recurse_hosts(
-        self, folder: CREFolder | SearchFolder, recurse: bool, select: SelectChoices
-    ) -> list[CREHost]:
+        self, folder: Folder | SearchFolder, recurse: bool, select: SelectChoices
+    ) -> list[Host]:
         entries = []
         for host in folder.hosts().values():
             if self._include_host(host, select):
                 entries.append(host)
 
         if recurse:
-            assert isinstance(folder, CREFolder)
+            assert isinstance(folder, Folder)
             for subfolder in folder.subfolders():
                 entries += self._recurse_hosts(subfolder, recurse, select)
         return entries

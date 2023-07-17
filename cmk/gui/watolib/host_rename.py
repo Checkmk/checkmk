@@ -35,13 +35,7 @@ from cmk.gui.watolib.automation_commands import AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.check_mk_automations import rename_hosts
-from cmk.gui.watolib.hosts_and_folders import (
-    call_hook_hosts_changed,
-    CREFolder,
-    CREHost,
-    folder_tree,
-    Host,
-)
+from cmk.gui.watolib.hosts_and_folders import call_hook_hosts_changed, Folder, folder_tree, Host
 from cmk.gui.watolib.notifications import load_notification_rules, save_notification_rules
 from cmk.gui.watolib.rulesets import FolderRulesets
 from cmk.gui.watolib.utils import rename_host_in_list
@@ -55,7 +49,7 @@ except ImportError:
 
 
 def perform_rename_hosts(
-    renamings: Iterable[tuple[CREFolder, HostName, HostName]],
+    renamings: Iterable[tuple[Folder, HostName, HostName]],
     job_interface: BackgroundProcessInterface | None = None,
 ) -> tuple[dict[str, int], list[tuple[HostName, MKAuthException]]]:
     """Rename hosts mechanism
@@ -126,14 +120,14 @@ def perform_rename_hosts(
     return action_counts, auth_problems
 
 
-def _rename_host_in_folder(folder: CREFolder, oldname: HostName, newname: HostName) -> list[str]:
+def _rename_host_in_folder(folder: Folder, oldname: HostName, newname: HostName) -> list[str]:
     folder.rename_host(oldname, newname)
     folder_tree().invalidate_caches()
     return ["folder"]
 
 
 def _rename_host_as_cluster_node(
-    all_hosts: Iterable[CREHost], oldname: HostName, newname: HostName
+    all_hosts: Iterable[Host], oldname: HostName, newname: HostName
 ) -> list[str]:
     clusters = []
     for somehost in all_hosts:
@@ -150,7 +144,7 @@ def _rename_parents(
     newname: HostName,
 ) -> list[str]:
     parent_renamed: list[str]
-    folder_parent_renamed: list[CREFolder]
+    folder_parent_renamed: list[Folder]
     parent_renamed, folder_parent_renamed = _rename_host_in_parents(oldname, newname)
     # Needed because hosts.mk in folders with parent as effective attribute
     # would not be updated
@@ -163,8 +157,8 @@ def _rename_parents(
 def _rename_host_in_parents(
     oldname: HostName,
     newname: HostName,
-) -> tuple[list[str], list[CREFolder]]:
-    folder_parent_renamed: list[CREFolder] = []
+) -> tuple[list[str], list[Folder]]:
+    folder_parent_renamed: list[Folder] = []
     parents, folder_parent_renamed = _rename_host_as_parent(
         oldname,
         newname,
@@ -178,7 +172,7 @@ def _rename_host_in_rulesets(oldname: HostName, newname: HostName) -> list[str]:
     # Rules that explicitely name that host (no regexes)
     changed_rulesets = []
 
-    def rename_host_in_folder_rules(folder: CREFolder) -> None:
+    def rename_host_in_folder_rules(folder: Folder) -> None:
         rulesets = FolderRulesets.load_folder_rulesets(folder)
 
         changed_folder_rulesets = []
@@ -320,9 +314,9 @@ def _rename_host_in_multisite(oldname: HostName, newname: HostName) -> list[str]
 def _rename_host_as_parent(
     oldname: HostName,
     newname: HostName,
-    folder_parent_renamed: list[CREFolder],
-    in_folder: CREFolder,
-) -> tuple[list[HostName | str], list[CREFolder]]:
+    folder_parent_renamed: list[Folder],
+    in_folder: Folder,
+) -> tuple[list[HostName | str], list[Folder]]:
     parents: list[HostName | str] = []
     for somehost in in_folder.hosts().values():
         if "parents" in somehost.attributes:
@@ -351,7 +345,7 @@ def _merge_action_counts(action_counts: dict[str, int], new_counts: Mapping[str,
 
 
 def _group_renamings_by_site(
-    renamings: Iterable[tuple[CREFolder, HostName, HostName]]
+    renamings: Iterable[tuple[Folder, HostName, HostName]]
 ) -> dict[SiteId, list[tuple[HostName, HostName]]]:
     renamings_per_site: dict[SiteId, list[tuple[HostName, HostName]]] = {}
     for folder, oldname, newname in renamings:

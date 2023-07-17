@@ -54,7 +54,7 @@ from cmk.gui.watolib.host_rename import (
     RenameHostsBackgroundJob,
 )
 from cmk.gui.watolib.hosts_and_folders import (
-    CREFolder,
+    Folder,
     folder_from_request,
     Host,
     validate_host_uniqueness,
@@ -359,7 +359,7 @@ def _confirm(html_title, message):
 
 
 def rename_hosts_background_job(
-    renamings: Sequence[tuple[CREFolder, HostName, HostName]],
+    renamings: Sequence[tuple[Folder, HostName, HostName]],
     job_interface: background_job.BackgroundProcessInterface,
 ) -> None:
     actions, auth_problems = rename_hosts(
@@ -485,7 +485,7 @@ class ModeRenameHost(WatoMode):
 
         return redirect(host_renaming_job.detail_url())
 
-    def _check_new_host_name(self, folder: CREFolder, varname: str, host_name: HostName) -> None:
+    def _check_new_host_name(self, folder: Folder, varname: str, host_name: HostName) -> None:
         if not host_name:
             raise MKUserError(varname, _("Please specify a host name."))
         if folder.has_host(host_name):

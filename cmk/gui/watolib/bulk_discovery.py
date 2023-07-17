@@ -27,12 +27,7 @@ from cmk.gui.i18n import _
 from cmk.gui.valuespec import Checkbox, Dictionary, DropdownChoice, Integer, Tuple, ValueSpec
 from cmk.gui.watolib.changes import add_service_change
 from cmk.gui.watolib.check_mk_automations import discovery
-from cmk.gui.watolib.hosts_and_folders import (
-    CREHost,
-    disk_or_search_folder_from_request,
-    folder_tree,
-    Host,
-)
+from cmk.gui.watolib.hosts_and_folders import disk_or_search_folder_from_request, folder_tree, Host
 
 DiscoveryMode = NewType("DiscoveryMode", str)
 DoFullScan = NewType("DoFullScan", bool)
@@ -253,7 +248,7 @@ class BulkDiscoveryBackgroundJob(BackgroundJob):
         self._num_host_labels_added += result.self_new_host_labels
         self._num_host_labels_total += result.self_total_host_labels
 
-    def _process_discovery_result_for_host(self, host: CREHost, result: DiscoveryResult) -> str:
+    def _process_discovery_result_for_host(self, host: Host, result: DiscoveryResult) -> str:
         if result.error_text == "":
             self._num_hosts_skipped += 1
             return _("discovery skipped: host not monitored")

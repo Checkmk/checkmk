@@ -47,7 +47,7 @@ from cmk.gui.watolib.bulk_discovery import (
     prepare_hosts_for_discovery,
     start_bulk_discovery,
 )
-from cmk.gui.watolib.hosts_and_folders import CREHost, Host
+from cmk.gui.watolib.hosts_and_folders import Host
 from cmk.gui.watolib.services import (
     Discovery,
     DiscoveryAction,
@@ -270,7 +270,7 @@ def update_service_phase(params: Mapping[str, Any]) -> Response:
 
 def _update_single_service_phase(
     target_phase: str,
-    host: CREHost,
+    host: Host,
     check_type: str,
     service_item: str | None,
 ) -> None:
@@ -416,7 +416,7 @@ def execute(params: Mapping[str, Any]) -> Response:
     return _execute_service_discovery(discovery_action, host)
 
 
-def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: CREHost) -> Response:
+def _execute_service_discovery(api_discovery_action: APIDiscoveryAction, host: Host) -> Response:
     service_discovery_job = ServiceDiscoveryBackgroundJob(host.name())
     if service_discovery_job.is_active():
         return Response(status=409)
@@ -496,7 +496,7 @@ def _lookup_phase_name(internal_phase_name: str) -> str:
 
 
 def serialize_discovery_result(  # type: ignore[no-untyped-def]
-    host: CREHost,
+    host: Host,
     discovery_result: DiscoveryResult,
 ):
     services = {}
@@ -694,7 +694,7 @@ def _serve_background_job(job: BulkDiscoveryBackgroundJob) -> Response:
 
 
 def _serve_services(
-    host: CREHost,
+    host: Host,
     discovered_services: Sequence[CheckPreviewEntry],
     discovery_phases: list[str],
 ) -> Response:

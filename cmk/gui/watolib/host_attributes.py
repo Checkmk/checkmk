@@ -336,7 +336,7 @@ class ABCHostAttribute(abc.ABC):
         Instead, an exclicit_host_config entry will be generated, e.g.
         explicit_host_config["alias"][hostname] = value
 
-        Used in: hosts_and_folders:CREFolder:_save_hosts_file
+        Used in: hosts_and_folders:Folder:_save_hosts_file
         """
         return False
 

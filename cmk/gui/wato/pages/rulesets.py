@@ -90,8 +90,7 @@ from cmk.gui.watolib.check_mk_automations import analyse_service, get_check_info
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.host_label_sync import execute_host_label_sync
 from cmk.gui.watolib.hosts_and_folders import (
-    CREFolder,
-    CREHost,
+    Folder,
     folder_from_request,
     folder_lookup_cache,
     folder_preserving_link,
@@ -836,7 +835,7 @@ class ModeEditRuleset(WatoMode):
                     pass
 
         hostname = request.get_ascii_input("host")
-        self._host: CREHost | None = None
+        self._host: Host | None = None
         self._hostname: HostName | None = None
         if hostname:
             self._hostname = HostName(hostname)
@@ -1095,7 +1094,7 @@ class ModeEditRuleset(WatoMode):
         html.close_div()
 
     def _rule_listing(self, ruleset: Ruleset) -> None:
-        rules: list[tuple[CREFolder, int, Rule]] = ruleset.get_rules()
+        rules: list[tuple[Folder, int, Rule]] = ruleset.get_rules()
         if not rules:
             html.div(_("There are no rules defined in this set."), class_="info")
             return

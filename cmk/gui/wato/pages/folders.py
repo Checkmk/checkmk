@@ -79,10 +79,9 @@ from cmk.gui.watolib.host_attributes import (
 )
 from cmk.gui.watolib.hosts_and_folders import (
     check_wato_foldername,
-    CREFolder,
-    CREHost,
     disk_or_search_folder_from_request,
     find_available_folder_name,
+    Folder,
     folder_from_request,
     folder_preserving_link,
     folder_tree,
@@ -95,7 +94,7 @@ from cmk.gui.watolib.main_menu import MenuItem
 TagsOrLabels = TypeVar("TagsOrLabels", Mapping[TagGroupID, TagID], Labels)
 
 
-def make_folder_breadcrumb(folder: CREFolder | SearchFolder) -> Breadcrumb:
+def make_folder_breadcrumb(folder: Folder | SearchFolder) -> Breadcrumb:
     return (
         Breadcrumb(
             [
@@ -704,7 +703,7 @@ class ModeFolder(WatoMode):
 
     def _show_subfolders_of(self) -> None:
         if self._folder.has_subfolders():
-            assert isinstance(self._folder, CREFolder)
+            assert isinstance(self._folder, Folder)
             html.open_div(
                 class_="folders"
             )  # This won't hurt even if there are no visible subfolders
@@ -721,7 +720,7 @@ class ModeFolder(WatoMode):
             html.close_div()
             html.div("", class_="folder_foot")
 
-    def _show_subfolder(self, subfolder: CREFolder) -> None:
+    def _show_subfolder(self, subfolder: Folder) -> None:
         html.open_div(
             class_=["floatfolder", "unlocked" if subfolder.permissions.may("read") else "locked"],
             id_="folder_%s" % subfolder.name(),
@@ -732,7 +731,7 @@ class ModeFolder(WatoMode):
         self._show_subfolder_title(subfolder)
         html.close_div()  # floatfolder
 
-    def _show_subfolder_hoverarea(self, subfolder: CREFolder) -> None:
+    def _show_subfolder_hoverarea(self, subfolder: Folder) -> None:
         # Only make folder openable when permitted to edit
         if subfolder.permissions.may("read"):
             html.open_div(
@@ -748,7 +747,7 @@ class ModeFolder(WatoMode):
             )
             html.div("", class_="hoverarea")
 
-    def _show_subfolder_title(self, subfolder: CREFolder) -> None:
+    def _show_subfolder_title(self, subfolder: Folder) -> None:
         title = subfolder.title()
         if not active_config.wato_hide_filenames:
             title += " (%s)" % subfolder.name()
@@ -760,7 +759,7 @@ class ModeFolder(WatoMode):
             html.write_text(subfolder.title())
         html.close_div()
 
-    def _show_subfolder_buttons(self, subfolder: CREFolder) -> None:
+    def _show_subfolder_buttons(self, subfolder: Folder) -> None:
         self._show_subfolder_edit_button(subfolder)
 
         if not subfolder.locked_subfolders() and not subfolder.locked():
@@ -768,7 +767,7 @@ class ModeFolder(WatoMode):
                 self._show_move_to_folder_action(subfolder)
                 self._show_subfolder_delete_button(subfolder)
 
-    def _show_subfolder_edit_button(self, subfolder: CREFolder) -> None:
+    def _show_subfolder_edit_button(self, subfolder: Folder) -> None:
         html.icon_button(
             subfolder.edit_url(subfolder.parent()),
             _("Edit the properties of this folder"),
@@ -778,7 +777,7 @@ class ModeFolder(WatoMode):
             style="display:none",
         )
 
-    def _show_subfolder_delete_button(self, subfolder: CREFolder) -> None:
+    def _show_subfolder_delete_button(self, subfolder: Folder) -> None:
         confirm_message: str = ""
         num_hosts = subfolder.num_hosts_recursively()
         if num_hosts:
@@ -806,7 +805,7 @@ class ModeFolder(WatoMode):
             style="display:none",
         )
 
-    def _show_subfolder_infos(self, subfolder: CREFolder) -> None:
+    def _show_subfolder_infos(self, subfolder: Folder) -> None:
         html.open_div(class_="infos")
         html.open_div(class_="infos_content")
         groups = load_contact_group_information()
@@ -832,13 +831,13 @@ class ModeFolder(WatoMode):
         html.close_div()
         html.close_div()
 
-    def _show_move_to_folder_action(self, obj: CREFolder | CREHost) -> None:
+    def _show_move_to_folder_action(self, obj: Folder | Host) -> None:
         if isinstance(obj, Host):
             what = "host"
             what_title = _("host")
             ident = str(obj.name())
             style = None
-        elif isinstance(obj, CREFolder):
+        elif isinstance(obj, Folder):
             what = "folder"
             what_title = _("folder")
             ident = obj.path()
@@ -1052,7 +1051,7 @@ class ModeFolder(WatoMode):
         display_name = contact_group_names.get(c, {"alias": c})["alias"]
         return HTMLWriter.render_a(display_name, "wato.py?mode=edit_contact_group&edit=%s" % c)
 
-    def _show_host_actions(self, host: CREHost) -> None:
+    def _show_host_actions(self, host: Host) -> None:
         html.icon_button(host.edit_url(), _("Edit the properties of this host"), "edit")
         if user.may("wato.rulesets"):
             html.icon_button(
@@ -1191,7 +1190,7 @@ class ABCFolderMode(WatoMode, abc.ABC):
         self._folder = self._init_folder()
 
     @abc.abstractmethod
-    def _init_folder(self) -> CREFolder:
+    def _init_folder(self) -> Folder:
         # TODO: Needed to make pylint know the correct type of the return value.
         # Will be cleaned up in future when typing is established
         return folder_tree().root_folder()
@@ -1298,7 +1297,7 @@ class ModeEditFolder(ABCFolderMode):
     def __init__(self) -> None:
         super().__init__(is_new=False)
 
-    def _init_folder(self) -> CREFolder:
+    def _init_folder(self) -> Folder:
         return folder_from_request()
 
     def title(self) -> str:
@@ -1321,7 +1320,7 @@ class ModeCreateFolder(ABCFolderMode):
     def __init__(self) -> None:
         super().__init__(is_new=True)
 
-    def _init_folder(self) -> CREFolder:
+    def _init_folder(self) -> Folder:
         return folder_tree().root_folder()
 
     def title(self) -> str:

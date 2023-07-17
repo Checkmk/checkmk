@@ -44,7 +44,7 @@ from cmk.gui.site_config import configured_sites
 from cmk.gui.userdb import load_users
 from cmk.gui.watolib import userroles
 from cmk.gui.watolib.host_attributes import host_attribute
-from cmk.gui.watolib.hosts_and_folders import CREFolder, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 from cmk.gui.watolib.tags import load_tag_group
 
@@ -187,7 +187,7 @@ class FolderField(base.String):
         return folder_id
 
     @classmethod
-    def load_folder(cls, folder_id: str) -> CREFolder:
+    def load_folder(cls, folder_id: str) -> Folder:
         def _ishexdigit(hex_string: str) -> bool:
             try:
                 int(hex_string, 16)
@@ -221,7 +221,7 @@ class FolderField(base.String):
                 value = f"/{value}"
             return value
 
-        if isinstance(value, CREFolder):
+        if isinstance(value, Folder):
             return "/" + value.path()
 
         raise ValueError(f"Unknown type: {value!r}")

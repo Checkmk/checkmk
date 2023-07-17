@@ -22,7 +22,7 @@ from cmk.gui.plugins.openapi.restful_objects import constructors
 from cmk.gui.plugins.openapi.restful_objects.type_defs import CollectionObject
 from cmk.gui.plugins.openapi.utils import ProblemException
 from cmk.gui.watolib.groups import edit_group
-from cmk.gui.watolib.hosts_and_folders import CREFolder
+from cmk.gui.watolib.hosts_and_folders import Folder
 
 if edition() is Edition.CME:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
@@ -280,7 +280,7 @@ def updated_group_details(  # type: ignore[no-untyped-def]
     return group
 
 
-def folder_slug(folder: CREFolder) -> str:
+def folder_slug(folder: Folder) -> str:
     """Create a tilde separated path identifier to be used in URLs
 
     Args:

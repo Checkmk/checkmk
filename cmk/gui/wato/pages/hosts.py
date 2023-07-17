@@ -47,7 +47,6 @@ from cmk.gui.watolib.check_mk_automations import delete_hosts, update_dns_cache
 from cmk.gui.watolib.config_hostname import ConfigHostname
 from cmk.gui.watolib.host_attributes import collect_attributes
 from cmk.gui.watolib.hosts_and_folders import (
-    CREHost,
     folder_from_request,
     folder_preserving_link,
     Host,
@@ -61,7 +60,7 @@ class ABCHostMode(WatoMode, abc.ABC):
         return ModeFolder
 
     @abc.abstractmethod
-    def _init_host(self) -> CREHost:
+    def _init_host(self) -> Host:
         ...
 
     def __init__(self) -> None:
@@ -327,7 +326,7 @@ class ModeEditHost(ABCHostMode):
     def _breadcrumb_url(self) -> str:
         return self.mode_url(host=self._host.name())
 
-    def _init_host(self) -> CREHost:
+    def _init_host(self) -> Host:
         hostname = HostName(request.get_ascii_input_mandatory("host"))
         folder = folder_from_request()
         if not folder.has_host(hostname):
@@ -435,7 +434,7 @@ def page_menu_all_hosts_entries(should_use_dns_cache: bool) -> Iterator[PageMenu
         )
 
 
-def page_menu_host_entries(mode_name: str, host: CREHost) -> Iterator[PageMenuEntry]:
+def page_menu_host_entries(mode_name: str, host: Host) -> Iterator[PageMenuEntry]:
     if mode_name != "edit_host":
         yield PageMenuEntry(
             title=_("Properties"),
@@ -579,7 +578,7 @@ class CreateHostMode(ABCHostMode):
 
     @classmethod
     @abc.abstractmethod
-    def _init_new_host_object(cls) -> CREHost:
+    def _init_new_host_object(cls) -> Host:
         raise NotImplementedError()
 
     @classmethod
@@ -598,7 +597,7 @@ class CreateHostMode(ABCHostMode):
         else:
             self._mode = "new"
 
-    def _init_host(self) -> CREHost:
+    def _init_host(self) -> Host:
         clonename = request.get_ascii_input("clone")
         if not clonename:
             return self._init_new_host_object()
@@ -678,7 +677,7 @@ class ModeCreateHost(CreateHostMode):
         return _("Add host")
 
     @classmethod
-    def _init_new_host_object(cls) -> CREHost:
+    def _init_new_host_object(cls) -> Host:
         return Host(
             folder=folder_from_request(),
             host_name=HostName(request.get_ascii_input_mandatory("host", "")),
@@ -711,7 +710,7 @@ class ModeCreateCluster(CreateHostMode):
         return _("Create cluster")
 
     @classmethod
-    def _init_new_host_object(cls) -> CREHost:
+    def _init_new_host_object(cls) -> Host:
         return Host(
             folder=folder_from_request(),
             host_name=HostName(request.get_ascii_input_mandatory("host", "")),

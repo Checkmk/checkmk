@@ -37,7 +37,7 @@ from cmk.gui.view_breadcrumbs import make_host_breadcrumb
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import get_agent_output
-from cmk.gui.watolib.hosts_and_folders import CREHost, folder_from_request, Host
+from cmk.gui.watolib.hosts_and_folders import folder_from_request, Host
 
 # .
 #   .--Agent-Output--------------------------------------------------------.
@@ -56,7 +56,7 @@ from cmk.gui.watolib.hosts_and_folders import CREHost, folder_from_request, Host
 
 
 class FetchAgentOutputRequest:
-    def __init__(self, host: CREHost, agent_type: str) -> None:
+    def __init__(self, host: Host, agent_type: str) -> None:
         self.host = host
         self.agent_type = agent_type
 

@@ -8,7 +8,7 @@ from typing import Callable, Iterator
 from cmk.utils.store.host_storage import ContactgroupName
 
 from cmk.gui.watolib.host_attributes import HostContactGroupSpec
-from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, folder_tree
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 
 from cmk.update_config.registry import update_action_registry, UpdateAction
 from cmk.update_config.update_state import UpdateActionState
@@ -24,8 +24,8 @@ class UpdateHostsAndFolders(UpdateAction):
             handler()
 
 
-def replace_legacy_contact_groups(root_folder: CREFolder) -> Iterator[Callable[[], None]]:
-    def replace_contact_groups(obj: CREFolder | CREHost) -> bool:
+def replace_legacy_contact_groups(root_folder: Folder) -> Iterator[Callable[[], None]]:
+    def replace_contact_groups(obj: Folder | Host) -> bool:
         if "contactgroups" in obj.attributes:
             old_value = obj.attributes["contactgroups"]
             new_value = convert_cgroups_from_tuple(old_value)

@@ -32,10 +32,10 @@ from cmk.gui.valuespec import Tuple, ValueSpecText
 from cmk.gui.wato.pages.hosts import ModeEditHost, page_menu_host_entries
 from cmk.gui.watolib.check_mk_automations import analyse_host, analyse_service
 from cmk.gui.watolib.hosts_and_folders import (
-    CREFolder,
-    CREHost,
+    Folder,
     folder_from_request,
     folder_preserving_link,
+    Host,
 )
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, Ruleset
 from cmk.gui.watolib.rulespecs import (
@@ -69,7 +69,7 @@ class ModeObjectParameters(WatoMode):
         host = folder_from_request().host(self._hostname)
         if host is None:
             raise MKUserError("host", _("The given host does not exist."))
-        self._host: CREHost = host
+        self._host: Host = host
         self._host.permissions.need_permission("read")
 
         # TODO: Validate?
@@ -362,7 +362,7 @@ class ModeObjectParameters(WatoMode):
 
     def _get_custom_check_origin_rule(
         self, ruleset: Ruleset, hostname: str, svc_desc: str, service_result: AnalyseServiceResult
-    ) -> tuple[CREFolder, int, Rule] | None:
+    ) -> tuple[Folder, int, Rule] | None:
         # We could use the outcome of _setting instead of the outcome of
         # the automation call in the future
         _setting, rules = ruleset.analyse_ruleset(

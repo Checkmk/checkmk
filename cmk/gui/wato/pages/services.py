@@ -68,7 +68,6 @@ from cmk.gui.watolib.automation_commands import automation_command_registry, Aut
 from cmk.gui.watolib.automations import cmk_version_of_remote_automation_source
 from cmk.gui.watolib.check_mk_automations import active_check
 from cmk.gui.watolib.hosts_and_folders import (
-    CREHost,
     folder_from_request,
     folder_preserving_link,
     folder_tree,
@@ -349,7 +348,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
     def _perform_discovery_action(
         self,
         action: DiscoveryAction,
-        host: CREHost,
+        host: Host,
         previous_discovery_result: DiscoveryResult | None,
         update_source: str | None,
         update_target: str | None,
@@ -424,7 +423,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
         # empty list can mean everything or nothing.
         return () if checkboxes_where_avaliable else EVERYTHING
 
-    def _get_page_menu(self, discovery_options: DiscoveryOptions, host: CREHost) -> str:
+    def _get_page_menu(self, discovery_options: DiscoveryOptions, host: Host) -> str:
         """Render the page menu contents to reflect contect changes
 
         The page menu needs to be updated, just like the body of the page. We previously tried an
@@ -439,7 +438,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
             )
             return output_funnel.drain()
 
-    def _get_discovery_breadcrumb(self, host: CREHost) -> Breadcrumb:
+    def _get_discovery_breadcrumb(self, host: Host) -> Breadcrumb:
         with request.stashed_vars():
             request.set_var("host", host.name())
             mode = ModeDiscovery()
@@ -531,7 +530,7 @@ class ModeAjaxServiceDiscovery(AjaxPage):
 
 
 class DiscoveryPageRenderer:
-    def __init__(self, host: CREHost, options: DiscoveryOptions) -> None:
+    def __init__(self, host: Host, options: DiscoveryOptions) -> None:
         super().__init__()
         self._host = host
         self._options = options
@@ -1533,7 +1532,7 @@ class ModeAjaxExecuteCheck(AjaxPage):
         }
 
 
-def service_page_menu(breadcrumb: Breadcrumb, host: CREHost, options: DiscoveryOptions) -> PageMenu:
+def service_page_menu(breadcrumb: Breadcrumb, host: Host, options: DiscoveryOptions) -> PageMenu:
     menu = PageMenu(
         dropdowns=[
             PageMenuDropdown(
@@ -1583,7 +1582,7 @@ def service_page_menu(breadcrumb: Breadcrumb, host: CREHost, options: DiscoveryO
     return menu
 
 
-def _page_menu_host_entries(host: CREHost) -> Iterator[PageMenuEntry]:
+def _page_menu_host_entries(host: Host) -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("Properties"),
         icon_name="edit",
@@ -1620,7 +1619,7 @@ def _page_menu_host_entries(host: CREHost) -> Iterator[PageMenuEntry]:
         )
 
 
-def _page_menu_settings_entries(host: CREHost) -> Iterator[PageMenuEntry]:
+def _page_menu_settings_entries(host: Host) -> Iterator[PageMenuEntry]:
     if not user.may("wato.rulesets"):
         return
 
@@ -1658,7 +1657,7 @@ def _page_menu_settings_entries(host: CREHost) -> Iterator[PageMenuEntry]:
     )
 
 
-def _extend_display_dropdown(menu: PageMenu, host: CREHost, options: DiscoveryOptions) -> None:
+def _extend_display_dropdown(menu: PageMenu, host: Host, options: DiscoveryOptions) -> None:
     display_dropdown = menu.get_dropdown_by_name("display", make_display_options_dropdown())
     display_dropdown.topics.insert(
         0,
@@ -1679,7 +1678,7 @@ def _extend_help_dropdown(menu: PageMenu) -> None:
     menu.add_doc_reference(_("Understanding and configuring services"), DocReference.WATO_SERVICES)
 
 
-def _page_menu_entry_show_parameters(host: CREHost, options: DiscoveryOptions) -> PageMenuEntry:
+def _page_menu_entry_show_parameters(host: Host, options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
         title=_("Show check parameters"),
         icon_name="toggle_on" if options.show_parameters else "toggle_off",
@@ -1694,7 +1693,7 @@ def _page_menu_entry_show_parameters(host: CREHost, options: DiscoveryOptions) -
     )
 
 
-def _page_menu_entry_show_checkboxes(host: CREHost, options: DiscoveryOptions) -> PageMenuEntry:
+def _page_menu_entry_show_checkboxes(host: Host, options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
         title=_("Show checkboxes"),
         icon_name="toggle_on" if options.show_checkboxes else "toggle_off",
@@ -1709,13 +1708,11 @@ def _page_menu_entry_show_checkboxes(host: CREHost, options: DiscoveryOptions) -
     )
 
 
-def _checkbox_js_url(host: CREHost, options: DiscoveryOptions) -> str:
+def _checkbox_js_url(host: Host, options: DiscoveryOptions) -> str:
     return "javascript:%s" % make_javascript_action(_start_js_call(host, options))
 
 
-def _page_menu_entry_show_discovered_labels(
-    host: CREHost, options: DiscoveryOptions
-) -> PageMenuEntry:
+def _page_menu_entry_show_discovered_labels(host: Host, options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
         title=_("Show discovered service labels"),
         icon_name="toggle_on" if options.show_discovered_labels else "toggle_off",
@@ -1730,7 +1727,7 @@ def _page_menu_entry_show_discovered_labels(
     )
 
 
-def _page_menu_entry_show_plugin_names(host: CREHost, options: DiscoveryOptions) -> PageMenuEntry:
+def _page_menu_entry_show_plugin_names(host: Host, options: DiscoveryOptions) -> PageMenuEntry:
     return PageMenuEntry(
         title=_("Show plugin names"),
         icon_name="toggle_on" if options.show_plugin_names else "toggle_off",
@@ -1746,7 +1743,7 @@ def _page_menu_entry_show_plugin_names(host: CREHost, options: DiscoveryOptions)
 
 
 def _page_menu_service_configuration_entries(
-    host: CREHost, options: DiscoveryOptions
+    host: Host, options: DiscoveryOptions
 ) -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("Accept all"),
@@ -1808,7 +1805,7 @@ class BulkEntry(NamedTuple):
 
 
 def _page_menu_selected_services_entries(
-    host: CREHost, options: DiscoveryOptions
+    host: Host, options: DiscoveryOptions
 ) -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("Add missing, remove vanished"),
@@ -1910,7 +1907,7 @@ def _page_menu_selected_services_entries(
 
 
 def _page_menu_host_labels_entries(
-    host: CREHost, options: DiscoveryOptions
+    host: Host, options: DiscoveryOptions
 ) -> Iterator[PageMenuEntry]:
     yield PageMenuEntry(
         title=_("Update host labels"),
@@ -1926,9 +1923,7 @@ def _page_menu_host_labels_entries(
     )
 
 
-def _start_js_call(
-    host: CREHost, options: DiscoveryOptions, request_vars: dict | None = None
-) -> str:
+def _start_js_call(host: Host, options: DiscoveryOptions, request_vars: dict | None = None) -> str:
     return "cmk.service_discovery.start({}, {}, {}, {}, {})".format(
         json.dumps(host.name()),
         json.dumps(host.folder().path()),

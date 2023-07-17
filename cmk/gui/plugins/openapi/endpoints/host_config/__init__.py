@@ -83,7 +83,7 @@ from cmk.gui.wato.pages.host_rename import rename_hosts_background_job
 from cmk.gui.watolib.activate_changes import has_pending_changes
 from cmk.gui.watolib.check_mk_automations import delete_hosts
 from cmk.gui.watolib.host_rename import RenameHostBackgroundJob, RenameHostsBackgroundJob
-from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 
 from cmk import fields
 
@@ -184,7 +184,7 @@ def create_host(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.edit")
     body = params["body"]
     host_name: HostName = body["host_name"]
-    folder: CREFolder = body["folder"]
+    folder: Folder = body["folder"]
 
     # is_cluster is defined as "cluster_hosts is not None"
     folder.create_hosts(
@@ -215,7 +215,7 @@ def create_cluster_host(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.edit")
     body = params["body"]
     host_name: HostName = body["host_name"]
-    folder: CREFolder = body["folder"]
+    folder: Folder = body["folder"]
 
     folder.create_hosts(
         [(host_name, body["attributes"], body["nodes"])],
@@ -266,7 +266,7 @@ def bulk_create_hosts(params: Mapping[str, Any]) -> Response:
 
     failed_hosts: dict[HostName, str] = {}
     succeeded_hosts: list[HostName] = []
-    folder: CREFolder
+    folder: Folder
     for folder, grouped_hosts in itertools.groupby(entries, operator.itemgetter("folder")):
         validated_entries = []
         folder.prepare_create_hosts()
@@ -295,7 +295,7 @@ def bulk_create_hosts(params: Mapping[str, Any]) -> Response:
 
 
 def _bulk_host_action_response(
-    failed_hosts: dict[HostName, str], succeeded_hosts: Sequence[CREHost]
+    failed_hosts: dict[HostName, str], succeeded_hosts: Sequence[Host]
 ) -> Response:
     if failed_hosts:
         return problem(
@@ -338,7 +338,7 @@ def list_hosts(param) -> Response:  # type: ignore[no-untyped-def]
     )
 
 
-def serve_host_collection(hosts: Iterable[CREHost], effective_attributes: bool = False) -> Response:
+def serve_host_collection(hosts: Iterable[Host], effective_attributes: bool = False) -> Response:
     return serve_json(
         _host_collection(
             hosts,
@@ -347,9 +347,7 @@ def serve_host_collection(hosts: Iterable[CREHost], effective_attributes: bool =
     )
 
 
-def _host_collection(
-    hosts: Iterable[CREHost], effective_attributes: bool = False
-) -> dict[str, Any]:
+def _host_collection(hosts: Iterable[Host], effective_attributes: bool = False) -> dict[str, Any]:
     return {
         "id": "host",
         "domainType": "host_config",
@@ -384,7 +382,7 @@ def update_nodes(params: Mapping[str, Any]) -> Response:
     host_name = params["host_name"]
     body = params["body"]
     nodes = body["nodes"]
-    host: CREHost = Host.load_host(host_name)
+    host: Host = Host.load_host(host_name)
     _require_host_etag(host)
     host.edit(host.attributes, nodes)
 
@@ -418,7 +416,7 @@ def update_host(params: Mapping[str, Any]) -> Response:
     update_attributes = body["update_attributes"]
     remove_attributes = body["remove_attributes"]
     _verify_hostname(host_name, should_exist=True)
-    host: CREHost = Host.load_host(host_name)
+    host: Host = Host.load_host(host_name)
     _require_host_etag(host)
 
     if new_attributes:
@@ -469,7 +467,7 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
     body = params["body"]
     entries = body["entries"]
 
-    succeeded_hosts: list[CREHost] = []
+    succeeded_hosts: list[Host] = []
     failed_hosts: dict[HostName, str] = {}
     for update_detail in entries:
         host_name = update_detail["host_name"]
@@ -477,7 +475,7 @@ def bulk_update_hosts(params: Mapping[str, Any]) -> Response:
         update_attributes = update_detail["update_attributes"]
         remove_attributes = update_detail["remove_attributes"]
         _verify_hostname(host_name)
-        host: CREHost = Host.load_host(host_name)
+        host: Host = Host.load_host(host_name)
         if new_attributes:
             host.edit(new_attributes, None)
 
@@ -538,7 +536,7 @@ def rename_host(params: Mapping[str, Any]) -> Response:
             detail="Please activate all pending changes before executing a host rename process",
         )
     host_name = params["host_name"]
-    host: CREHost = Host.load_host(host_name)
+    host: Host = Host.load_host(host_name)
     new_name = params["body"]["new_name"]
 
     try:
@@ -619,10 +617,10 @@ def move(params: Mapping[str, Any]) -> Response:
     user.need_permission("wato.edit")
     user.need_permission("wato.move_hosts")
     host_name = params["host_name"]
-    host: CREHost = Host.load_host(host_name)
+    host: Host = Host.load_host(host_name)
     _require_host_etag(host)
     current_folder = host.folder()
-    target_folder: CREFolder = params["body"]["target_folder"]
+    target_folder: Folder = params["body"]["target_folder"]
 
     # Here we make sure the user has write access to the destination folder,
     # the source folder and the host itself. This should be handled in the schema.
@@ -677,7 +675,7 @@ def delete(params: Mapping[str, Any]) -> Response:
     host_name = params["host_name"]
     # Parameters can't be validated through marshmallow yet.
     _verify_hostname(host_name, should_exist=True)
-    host: CREHost = Host.load_host(host_name)
+    host: Host = Host.load_host(host_name)
     host.folder().delete_hosts([host.name()], automation=delete_hosts)
     return Response(status=204)
 
@@ -728,16 +726,16 @@ def bulk_delete(params: Mapping[str, Any]) -> Response:
 def show_host(params: Mapping[str, Any]) -> Response:
     """Show a host"""
     host_name = params["host_name"]
-    host: CREHost = Host.load_host(host_name)
+    host: Host = Host.load_host(host_name)
     return _serve_host(host, effective_attributes=params["effective_attributes"])
 
 
-def _serve_host(host: CREHost, effective_attributes: bool = False) -> Response:
+def _serve_host(host: Host, effective_attributes: bool = False) -> Response:
     response = serve_json(serialize_host(host, effective_attributes))
     return constructors.response_with_etag_created_from_dict(response, _host_etag_values(host))
 
 
-def serialize_host(host: CREHost, effective_attributes: bool) -> dict[str, Any]:
+def serialize_host(host: Host, effective_attributes: bool) -> dict[str, Any]:
     extensions = {
         "folder": "/" + host.folder().path(),
         "attributes": host.attributes,
@@ -783,7 +781,7 @@ def serialize_host(host: CREHost, effective_attributes: bool) -> dict[str, Any]:
     )
 
 
-def _require_host_etag(host: CREHost) -> None:
+def _require_host_etag(host: Host) -> None:
     etag_values = _host_etag_values(host)
     constructors.require_etag(
         constructors.hash_of_dict(etag_values),
@@ -791,7 +789,7 @@ def _require_host_etag(host: CREHost) -> None:
     )
 
 
-def _host_etag_values(host: CREHost) -> dict[str, Any]:
+def _host_etag_values(host: Host) -> dict[str, Any]:
     # FIXME: Through some not yet fully explored effect, we do not get the actual persisted
     #        timestamp in the meta_data section but rather some other timestamp. This makes the
     #        reported ETag a different one than the one which is accepted by the endpoint.

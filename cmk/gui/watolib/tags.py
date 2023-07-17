@@ -21,7 +21,7 @@ from cmk.gui.config import load_config
 from cmk.gui.exceptions import MKAuthException
 from cmk.gui.hooks import request_memoize
 from cmk.gui.logged_in import user
-from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, folder_tree
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 from cmk.gui.watolib.rulesets import AllRulesets, Rule, RuleConditions, Ruleset
 from cmk.gui.watolib.utils import format_php, multisite_dir, wato_root_dir
 
@@ -290,7 +290,7 @@ class OperationReplaceGroupedTags(ABCOperation):
 
 def change_host_tags(
     operation: ABCTagGroupOperation | OperationReplaceGroupedTags, mode: TagCleanupMode
-) -> tuple[list[CREFolder], list[CREHost], list[Ruleset]]:
+) -> tuple[list[Folder], list[Host], list[Ruleset]]:
     affected_folder, affected_hosts = _change_host_tags_in_folders(
         operation,
         mode,
@@ -323,7 +323,7 @@ def change_host_tags_in_rulesets(
 
 def _change_host_tags_in_folders(
     operation: ABCTagGroupOperation | OperationReplaceGroupedTags, mode: TagCleanupMode, folder: Any
-) -> tuple[list[CREFolder], list[CREHost]]:
+) -> tuple[list[Folder], list[Host]]:
     """Update host tag assignments in hosts/folders
 
     See _rename_tags_after_confirmation() doc string for additional information.
@@ -355,8 +355,8 @@ def _change_host_tags_in_folders(
 def _change_host_tags_in_hosts(
     operation: ABCTagGroupOperation | OperationReplaceGroupedTags,
     mode: TagCleanupMode,
-    folder: CREFolder,
-) -> list[CREHost]:
+    folder: Folder,
+) -> list[Host]:
     affected_hosts = []
     for host in folder.hosts().values():
         aff_hosts = _change_host_tags_in_host_or_folder(operation, mode, host)
@@ -371,7 +371,7 @@ def _change_host_tags_in_hosts(
     return affected_hosts
 
 
-T = TypeVar("T", CREFolder, CREHost)
+T = TypeVar("T", Folder, Host)
 
 
 def _change_host_tags_in_host_or_folder(

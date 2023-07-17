@@ -28,7 +28,7 @@ from cmk.gui.site_config import get_site_config, is_wato_slave_site, site_is_loc
 from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.host_attributes import ExcludeIPRange, IPRange, NetworkScanResult
-from cmk.gui.watolib.hosts_and_folders import CREFolder, folder_tree, Host, update_metadata
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host, update_metadata
 
 NetworkScanFoundHosts = list[tuple[HostName, HostAddress]]
 
@@ -103,7 +103,7 @@ def execute_network_scan_job() -> None:
         _save_network_scan_result(folder, result)
 
 
-def _find_folder_to_scan() -> CREFolder | None:
+def _find_folder_to_scan() -> Folder | None:
     """Find the folder which network scan is longest waiting and return the folder object."""
     folder_to_scan = None
     for folder in folder_tree().all_folders().values():
@@ -116,7 +116,7 @@ def _find_folder_to_scan() -> CREFolder | None:
     return folder_to_scan
 
 
-def _add_scanned_hosts_to_folder(folder: CREFolder, found: NetworkScanFoundHosts) -> None:
+def _add_scanned_hosts_to_folder(folder: Folder, found: NetworkScanFoundHosts) -> None:
     if (network_scan_properties := folder.attributes.get("network_scan")) is None:
         return
 
@@ -155,7 +155,7 @@ def _add_scanned_hosts_to_folder(folder: CREFolder, found: NetworkScanFoundHosts
     bakery.try_bake_agents_for_hosts(tuple(e[0] for e in entries))
 
 
-def _save_network_scan_result(folder: CREFolder, result: NetworkScanResult) -> None:
+def _save_network_scan_result(folder: Folder, result: NetworkScanResult) -> None:
     # Reload the folder, lock Setup before to protect against concurrency problems.
     with store.lock_checkmk_configuration():
         # A user might have changed the folder somehow since starting the scan. Load the
@@ -182,12 +182,12 @@ class AutomationNetworkScan(AutomationCommand):
 
 
 # This is executed in the site the host is assigned to.
-def _do_network_scan(folder: CREFolder) -> list[tuple[HostName, HostAddress]]:
+def _do_network_scan(folder: Folder) -> list[tuple[HostName, HostAddress]]:
     ip_addresses = _ip_addresses_to_scan(folder)
     return _scan_ip_addresses(folder, ip_addresses)
 
 
-def _ip_addresses_to_scan(folder: CREFolder) -> set[HostAddress]:
+def _ip_addresses_to_scan(folder: Folder) -> set[HostAddress]:
     ip_range_specs = folder.attributes["network_scan"]["ip_ranges"]
     exclude_specs = folder.attributes["network_scan"]["exclude_ranges"]
 
@@ -336,7 +336,7 @@ def _excludes_by_regexes(
 # Start ping threads till max parallel pings let threads do their work till all are done.
 # let threds also do name resolution. Return list of tuples (hostname, address).
 def _scan_ip_addresses(
-    folder: CREFolder, ip_addresses: set[HostAddress]
+    folder: Folder, ip_addresses: set[HostAddress]
 ) -> list[tuple[HostName, HostAddress]]:
     num_addresses = len(ip_addresses)
 

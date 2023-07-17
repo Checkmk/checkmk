@@ -47,8 +47,7 @@ from cmk.gui.valuespec import DropdownChoiceEntries, ValueSpec
 from cmk.gui.watolib.changes import add_change
 from cmk.gui.watolib.check_mk_automations import get_services_labels
 from cmk.gui.watolib.hosts_and_folders import (
-    CREFolder,
-    CREHost,
+    Folder,
     folder_from_request,
     folder_tree,
     get_wato_redis_client,
@@ -113,7 +112,7 @@ class UseHostFolder(Enum):
     MACRO = auto()
     # cmk.gui uses folders like this:
     # subfolder/subsubfolder/...
-    # cf. CREFolder.folder, CREFolder.folder_choices etc.
+    # cf. Folder.folder, Folder.folder_choices etc.
     HOST_FOLDER_FOR_UI = auto()
     # cmk.base sets folders this way when loading the configuration:
     # /wato/subfolder/subsubfolder/...
@@ -303,7 +302,7 @@ class RulesetCollection:
         return {varname: Ruleset(varname, tag_to_group_map) for varname in varnames}
 
     def _load_folder_rulesets(
-        self, folder: CREFolder, only_varname: RulesetName | None = None
+        self, folder: Folder, only_varname: RulesetName | None = None
     ) -> None:
         path = folder.rules_file_path()
 
@@ -323,7 +322,7 @@ class RulesetCollection:
         )
 
     @staticmethod
-    def _context_helpers(folder: CREFolder) -> Mapping[str, object]:
+    def _context_helpers(folder: Folder) -> Mapping[str, object]:
         return {
             "ALL_HOSTS": ALL_HOSTS,
             "ALL_SERVICES": ALL_SERVICES,
@@ -346,7 +345,7 @@ class RulesetCollection:
     def replace_folder_config(
         # The Any below should most likely be RuleSpec[object] but I am not sure.
         self,
-        folder: CREFolder,
+        folder: Folder,
         loaded_file_config: Mapping[str, Any],
         only_varname: RulesetName | None = None,
     ) -> None:
@@ -391,7 +390,7 @@ class RulesetCollection:
 
     @staticmethod
     def _save_folder(
-        folder: CREFolder,
+        folder: Folder,
         rulesets: Mapping[RulesetName, Ruleset],
         unknown_rulesets: Mapping[str, Mapping[str, Sequence[RuleSpec[object]]]],
     ) -> None:
@@ -448,7 +447,7 @@ class RulesetCollection:
 
 
 class AllRulesets(RulesetCollection):
-    def _load_rulesets_recursively(self, folder: CREFolder) -> None:
+    def _load_rulesets_recursively(self, folder: Folder) -> None:
         if may_use_redis():
             self._load_rulesets_via_redis(folder)
             return
@@ -458,7 +457,7 @@ class AllRulesets(RulesetCollection):
 
         self._load_folder_rulesets(folder)
 
-    def _load_rulesets_via_redis(self, folder: CREFolder) -> None:
+    def _load_rulesets_via_redis(self, folder: Folder) -> None:
         tree = folder_tree()
         # Search relevant folders with rules.mk files
         # Note: The sort order of the folders does not matter here
@@ -490,10 +489,10 @@ class AllRulesets(RulesetCollection):
         """Save all rulesets of all folders recursively"""
         self._save_rulesets_recursively(folder_tree().root_folder())
 
-    def save_folder(self, folder: CREFolder) -> None:
+    def save_folder(self, folder: Folder) -> None:
         self._save_folder(folder, self._rulesets, self._unknown_rulesets)
 
-    def _save_rulesets_recursively(self, folder: CREFolder) -> None:
+    def _save_rulesets_recursively(self, folder: Folder) -> None:
         for subfolder in folder.subfolders():
             self._save_rulesets_recursively(subfolder)
 
@@ -502,7 +501,7 @@ class AllRulesets(RulesetCollection):
 
 class SingleRulesetRecursively(RulesetCollection):
     # Load single ruleset from all folders
-    def _load_rulesets_recursively(self, folder: CREFolder, only_varname: RulesetName) -> None:
+    def _load_rulesets_recursively(self, folder: Folder, only_varname: RulesetName) -> None:
         # Copy/paste from AllRulesets
 
         if may_use_redis():
@@ -514,7 +513,7 @@ class SingleRulesetRecursively(RulesetCollection):
 
         self._load_folder_rulesets(folder, only_varname)
 
-    def _load_rulesets_via_redis(self, folder: CREFolder, only_varname: RulesetName) -> None:
+    def _load_rulesets_via_redis(self, folder: Folder, only_varname: RulesetName) -> None:
         # Copy/paste from AllRulesets
 
         tree = folder_tree()
@@ -549,13 +548,13 @@ class FolderRulesets(RulesetCollection):
         self,
         rulesets: Mapping[RulesetName, Ruleset],
         *,
-        folder: CREFolder,
+        folder: Folder,
     ) -> None:
         super().__init__(rulesets)
         self._folder: Final = folder
 
     @staticmethod
-    def load_folder_rulesets(folder: CREFolder) -> FolderRulesets:
+    def load_folder_rulesets(folder: Folder) -> FolderRulesets:
         rulesets = RulesetCollection._initialize_rulesets()
         self = FolderRulesets(rulesets, folder=folder)
         self._load_folder_rulesets(folder)
@@ -606,16 +605,16 @@ class Ruleset:
     def is_empty(self) -> bool:
         return self.num_rules() == 0
 
-    def is_empty_in_folder(self, folder: CREFolder) -> bool:
+    def is_empty_in_folder(self, folder: Folder) -> bool:
         return not self.get_folder_rules(folder)
 
     def num_rules(self) -> int:
         return len(self._rules_by_id)
 
-    def num_rules_in_folder(self, folder: CREFolder) -> int:
+    def num_rules_in_folder(self, folder: Folder) -> int:
         return len(self.get_folder_rules(folder))
 
-    def get_rules(self) -> list[tuple[CREFolder, int, Rule]]:
+    def get_rules(self) -> list[tuple[Folder, int, Rule]]:
         rules = []
         for _folder_path, folder_rules in self._rules.items():
             for rule_index, rule in enumerate(folder_rules):
@@ -624,13 +623,13 @@ class Ruleset:
             rules, key=lambda x: (x[0].path().split("/"), len(rules) - x[1]), reverse=True
         )
 
-    def get_folder_rules(self, folder: CREFolder) -> list[Rule]:
+    def get_folder_rules(self, folder: Folder) -> list[Rule]:
         try:
             return self._rules[folder.path()]
         except KeyError:
             return []
 
-    def prepend_rule(self, folder: CREFolder, rule: Rule) -> None:
+    def prepend_rule(self, folder: Folder, rule: Rule) -> None:
         rules = self._rules.setdefault(folder.path(), [])
         rules.insert(0, rule)
         self._rules_by_id[rule.id] = rule
@@ -654,7 +653,7 @@ class Ruleset:
     def move_to_folder(
         self,
         rule: Rule,
-        folder: CREFolder,
+        folder: Folder,
         index: int = BOTTOM,
     ) -> None:
         source_rules = self._rules[rule.folder.path()]
@@ -670,7 +669,7 @@ class Ruleset:
 
         self._on_change()
 
-    def append_rule(self, folder: CREFolder, rule: Rule) -> int:
+    def append_rule(self, folder: Folder, rule: Rule) -> int:
         rules = self._rules.setdefault(folder.path(), [])
         index = len(rules)
         rules.append(rule)
@@ -687,7 +686,7 @@ class Ruleset:
 
     def replace_folder_config(  # type: ignore[no-untyped-def]
         self,
-        folder: CREFolder,
+        folder: Folder,
         rules_config,
     ) -> None:
         if not rules_config:
@@ -711,7 +710,7 @@ class Ruleset:
             self._rules[folder.path()].append(rule)
             self._rules_by_id[rule.id] = rule
 
-    def to_config(self, folder: CREFolder) -> str:
+    def to_config(self, folder: Folder) -> str:
         return self.format_raw_value(
             self.name,
             (r.to_config() for r in self._rules[folder.path()]),
@@ -826,7 +825,7 @@ class Ruleset:
             search_options["ruleset_group"]
         )
 
-    def get_rule(self, folder: CREFolder, rule_index: int) -> Rule:
+    def get_rule(self, folder: Folder, rule_index: int) -> Rule:
         return self._rules[folder.path()][rule_index]
 
     def get_rule_by_id(self, rule_id: str) -> Rule:
@@ -1005,7 +1004,7 @@ class Ruleset:
 
 class Rule:
     @classmethod
-    def from_ruleset_defaults(cls, folder: CREFolder, ruleset: Ruleset) -> Rule:
+    def from_ruleset_defaults(cls, folder: Folder, ruleset: Ruleset) -> Rule:
         return Rule(
             utils.gen_id(),
             folder,
@@ -1024,14 +1023,14 @@ class Rule:
     def __init__(
         self,
         id_: str,
-        folder: CREFolder,
+        folder: Folder,
         ruleset: Ruleset,
         conditions: RuleConditions,
         options: RuleOptions,
         value: RuleValue,
     ) -> None:
         self.ruleset: Ruleset = ruleset
-        self.folder: CREFolder = folder
+        self.folder: Folder = folder
         self.conditions: RuleConditions = conditions
         self.id: str = id_
         self.rule_options: RuleOptions = options
@@ -1050,7 +1049,7 @@ class Rule:
     @classmethod
     def from_config(
         cls,
-        folder: CREFolder,
+        folder: Folder,
         ruleset: Ruleset,
         rule_config: Any,
     ) -> Rule:
@@ -1069,7 +1068,7 @@ class Rule:
     @classmethod
     def _parse_dict_rule(
         cls,
-        folder: CREFolder,
+        folder: Folder,
         ruleset: Ruleset,
         rule_config: dict[Any, Any],
     ) -> Rule:
@@ -1410,7 +1409,7 @@ class Rule:
     def get_rule_conditions(self) -> RuleConditions:
         return self.conditions
 
-    def is_discovery_rule_of(self, host: CREHost) -> bool:
+    def is_discovery_rule_of(self, host: Host) -> bool:
         return (
             self.conditions.host_name == [host.name()]
             and self.conditions.host_tags == {}
@@ -1486,12 +1485,12 @@ def service_description_to_condition(service_description: str) -> HostOrServiceC
 
 
 def rules_grouped_by_folder(
-    rules: list[tuple[CREFolder, int, Rule]],
-    current_folder: CREFolder,
-) -> Generator[tuple[CREFolder, Iterator[tuple[CREFolder, int, Rule]]], None, None]:
+    rules: list[tuple[Folder, int, Rule]],
+    current_folder: Folder,
+) -> Generator[tuple[Folder, Iterator[tuple[Folder, int, Rule]]], None, None]:
     """Get ruleset groups in correct sort order. Sort by title_path() to honor
     renamed folders"""
-    sorted_rules: list[tuple[CREFolder, int, Rule]] = sorted(
+    sorted_rules: list[tuple[Folder, int, Rule]] = sorted(
         rules,
         key=lambda x: (x[0].title_path(), len(rules) - x[1]),
         reverse=True,
@@ -1505,7 +1504,7 @@ def rules_grouped_by_folder(
 
 
 class EnabledDisabledServicesEditor:
-    def __init__(self, host: CREHost) -> None:
+    def __init__(self, host: Host) -> None:
         self._host = host
 
     def save_host_service_enable_disable_rules(self, to_enable, to_disable):
@@ -1583,7 +1582,7 @@ class EnabledDisabledServicesEditor:
 
     def _update_rule_of_host(
         self, ruleset: Ruleset, service_patterns: HostOrServiceConditions, value: Any
-    ) -> list[CREFolder]:
+    ) -> list[Folder]:
         folder = self._host.folder()
         rule = self._get_rule_of_host(ruleset, value)
 

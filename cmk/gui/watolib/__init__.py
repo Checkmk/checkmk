@@ -36,7 +36,7 @@ from cmk.gui.watolib.host_attributes import host_attribute_registry as _host_att
 from cmk.gui.watolib.host_rename import (
     AutomationRenameHostsUUIDLink as _AutomationRenameHostsUUIDLink,
 )
-from cmk.gui.watolib.hosts_and_folders import CREFolder
+from cmk.gui.watolib.hosts_and_folders import Folder
 from cmk.gui.watolib.hosts_and_folders import (
     rebuild_folder_lookup_cache as _rebuild_folder_lookup_cache,
 )
@@ -152,12 +152,12 @@ def load_watolib_plugins() -> None:
 
 
 def _register_folder_stub_validators() -> None:
-    CREFolder.validate_edit_host = lambda s, n, a: None
-    CREFolder.validate_create_hosts = lambda e, s: None
-    CREFolder.validate_create_subfolder = lambda f, a: None
-    CREFolder.validate_edit_folder = lambda f, a: None
-    CREFolder.validate_move_hosts = lambda f, n, t: None
-    CREFolder.validate_move_subfolder_to = lambda f, t: None
+    Folder.validate_edit_host = lambda s, n, a: None
+    Folder.validate_create_hosts = lambda e, s: None
+    Folder.validate_create_subfolder = lambda f, a: None
+    Folder.validate_edit_folder = lambda f, a: None
+    Folder.validate_move_hosts = lambda f, n, t: None
+    Folder.validate_move_subfolder_to = lambda f, t: None
 
 
 # TODO(ml):  The code is still poorly organized as we register classes here that are

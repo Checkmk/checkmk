@@ -28,7 +28,7 @@ from cmk.gui.exceptions import MKUserError
 from cmk.gui.type_defs import CustomAttr
 from cmk.gui.watolib.custom_attributes import save_custom_attrs_to_mk_file
 from cmk.gui.watolib.host_attributes import HostAttributes
-from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, folder_tree, Host
+from cmk.gui.watolib.hosts_and_folders import Folder, folder_tree, Host
 
 managedtest = pytest.mark.skipif(not version.is_managed_edition(), reason="see #7213")
 
@@ -510,7 +510,7 @@ def test_openapi_bulk_with_failed(
         return _attributes
 
     monkeypatch.setattr(
-        "cmk.gui.watolib.hosts_and_folders.CREFolder.verify_and_update_host_details", _raise
+        "cmk.gui.watolib.hosts_and_folders.Folder.verify_and_update_host_details", _raise
     )
 
     resp = aut_user_auth_wsgi_app.call_method(
@@ -1128,7 +1128,7 @@ def test_openapi_all_hosts_with_non_existing_site(
 ) -> None:
     def mock_all_hosts_recursively(_cls):
         return {
-            "foo": CREHost(
+            "foo": Host(
                 folder=folder_tree().root_folder(),
                 host_name=HostName("foo"),
                 attributes=HostAttributes({"site": SiteId("a_non_existing_site")}),
@@ -1136,7 +1136,7 @@ def test_openapi_all_hosts_with_non_existing_site(
             )
         }
 
-    monkeypatch.setattr(CREFolder, "all_hosts_recursively", mock_all_hosts_recursively)
+    monkeypatch.setattr(Folder, "all_hosts_recursively", mock_all_hosts_recursively)
 
     aut_user_auth_wsgi_app.get(
         f"{base}/domain-types/host_config/collections/all",
@@ -1151,7 +1151,7 @@ def test_openapi_host_with_non_existing_site(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     def mock_host(_hostname):
-        return CREHost(
+        return Host(
             folder=folder_tree().root_folder(),
             host_name=HostName("foo"),
             attributes=HostAttributes({"site": SiteId("a_non_existing_site")}),

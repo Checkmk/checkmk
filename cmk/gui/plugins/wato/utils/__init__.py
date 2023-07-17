@@ -159,10 +159,10 @@ from cmk.gui.watolib.host_attributes import HostAttributeTopicMetaData as HostAt
 from cmk.gui.watolib.host_attributes import (
     HostAttributeTopicNetworkScan as HostAttributeTopicNetworkScan,
 )
-from cmk.gui.watolib.hosts_and_folders import CREFolder as CREFolder
-from cmk.gui.watolib.hosts_and_folders import CREHost as CREHost
+from cmk.gui.watolib.hosts_and_folders import Folder as Folder
 from cmk.gui.watolib.hosts_and_folders import folder_from_request as folder_from_request
 from cmk.gui.watolib.hosts_and_folders import folder_tree as folder_tree
+from cmk.gui.watolib.hosts_and_folders import Host as Host
 from cmk.gui.watolib.hosts_and_folders import SearchFolder as SearchFolder
 from cmk.gui.watolib.main_menu import ABCMainModule as ABCMainModule
 from cmk.gui.watolib.main_menu import main_module_registry as main_module_registry
@@ -1475,10 +1475,10 @@ DialogIdent = Literal["host", "cluster", "folder", "host_search", "bulk"]
 # TODO: Wow, this function REALLY has to be cleaned up
 def configure_attributes(  # pylint: disable=too-many-branches
     new: bool,
-    hosts: Mapping[str, CREHost | CREFolder | None],
+    hosts: Mapping[str, Host | Folder | None],
     for_what: DialogIdent,
-    parent: CREFolder | SearchFolder | None,
-    myself: CREFolder | None = None,
+    parent: Folder | SearchFolder | None,
+    myself: Folder | None = None,
     without_attributes: Sequence[str] | None = None,
     varprefix: str = "",
     basic_attributes: Sequence[tuple[str, ValueSpec, object]] | None = None,
@@ -1566,7 +1566,7 @@ def configure_attributes(  # pylint: disable=too-many-branches
 
             if for_what in ["host", "cluster", "folder"]:
                 if hosts:
-                    host: CREHost | CREFolder | None = list(hosts.values())[0]
+                    host: Host | Folder | None = list(hosts.values())[0]
                 else:
                     host = None
 
@@ -1791,7 +1791,7 @@ def configure_attributes(  # pylint: disable=too-many-branches
 
 
 def _determine_attribute_settings(
-    attrname: str, hosts: Mapping[str, CREHost | CREFolder | None]
+    attrname: str, hosts: Mapping[str, Host | Folder | None]
 ) -> tuple[list[object], int, int]:
     values = []
     num_have_locked_it = 0
@@ -1815,7 +1815,7 @@ def _determine_attribute_settings(
 # Check if at least one host in a folder (or its subfolders)
 # has not set a certain attribute. This is needed for the validation
 # of mandatory attributes.
-def some_host_hasnt_set(folder: CREFolder, attrname: str) -> bool:
+def some_host_hasnt_set(folder: Folder, attrname: str) -> bool:
     # Check subfolders
     for subfolder in folder.subfolders():
         # If the attribute is not set in the subfolder, we need
@@ -2442,8 +2442,8 @@ def get_search_expression() -> None | str:
 
 
 def get_hostnames_from_checkboxes(
-    folder: CREFolder | SearchFolder,
-    filterfunc: Callable[[CREHost], bool] | None = None,
+    folder: Folder | SearchFolder,
+    filterfunc: Callable[[Host], bool] | None = None,
     deflt: bool = False,
 ) -> Sequence[HostName]:
     """Create list of all host names that are select with checkboxes in the current file.
@@ -2462,7 +2462,7 @@ def get_hostnames_from_checkboxes(
 
 
 def _search_text_matches(
-    host: CREHost,
+    host: Host,
     search_text: str,
 ) -> bool:
     match_regex = re.compile(search_text, re.IGNORECASE)
@@ -2481,8 +2481,8 @@ def _search_text_matches(
 
 
 def get_hosts_from_checkboxes(
-    folder: CREFolder | SearchFolder, filterfunc: Callable[[CREHost], bool] | None = None
-) -> list[CREHost]:
+    folder: Folder | SearchFolder, filterfunc: Callable[[Host], bool] | None = None
+) -> list[Host]:
     """Create list of all host objects that are select with checkboxes in the current file.
     This is needed for bulk operations."""
     return [

@@ -3087,6 +3087,10 @@ def _get_edition(
     return "unknown"
 
 
+def _get_raw_version(omd_version: str) -> str:
+    return omd_version[:-4]
+
+
 def _omd_to_check_mk_version(omd_version: str) -> Version:
     """
     >>> f = _omd_to_check_mk_version
@@ -3767,6 +3771,8 @@ def main_cleanup(
     if package_manager is None:
         bail_out("Command is not supported on this platform")
 
+    all_installed_packages = package_manager.get_all_installed_packages()
+
     for version in omd_versions():
         if version == default_version():
             sys.stdout.write(
@@ -3787,10 +3793,16 @@ def main_cleanup(
             )
             continue
 
-        version_path = os.path.join("/omd/versions", version)
+        target_package_name = "%s-%s" % (
+            _get_edition(version),
+            _get_raw_version(version),
+        )
 
-        packages = package_manager.find_packages_of_path(version_path)
-        if len(packages) != 1:
+        matching_installed_packages = [
+            package for package in all_installed_packages if target_package_name in package
+        ]
+
+        if len(matching_installed_packages) != 1:
             sys.stdout.write(
                 "%s%-20s%s Could not determine package. Keeping this version.\n"
                 % (tty.bold, version, tty.normal)
@@ -3798,10 +3810,11 @@ def main_cleanup(
             continue
 
         sys.stdout.write("%s%-20s%s Uninstalling\n" % (tty.bold, version, tty.normal))
-        package_manager.uninstall(packages[0])
+        package_manager.uninstall(matching_installed_packages[0])
 
         # In case there were modifications made to the version the uninstall may leave
         # some files behind. Remove the whole version directory
+        version_path: str = os.path.join("/omd/versions", version)
         if os.path.exists(version_path):
             shutil.rmtree(version_path)
 
@@ -3846,7 +3859,7 @@ class PackageManager(abc.ABC):
         raise NotImplementedError()
 
     @abc.abstractmethod
-    def find_packages_of_path(self, path: str) -> list[str]:
+    def get_all_installed_packages(self) -> list[str]:
         raise NotImplementedError()
 
     def _execute_uninstall(self, cmd: list[str]) -> None:
@@ -3873,38 +3886,38 @@ class PackageManagerDEB(PackageManager):
     def uninstall(self, package_name: str) -> None:
         self._execute_uninstall(["apt-get", "-y", "purge", package_name])
 
-    def find_packages_of_path(self, path: str) -> list[str]:
-        real_path = os.path.realpath(path)
-
-        p = self._execute(["dpkg", "-S", real_path])
+    def get_all_installed_packages(self) -> list[str]:
+        p = self._execute(["dpkg", "-l"])
         output = p.communicate()[0]
         if p.wait() != 0:
-            bail_out("Failed to find packages:\n%s" % output)
+            bail_out("Failed to get all installed packages:\n%s" % output)
 
-        for line in output.split("\n"):
-            if line.endswith(": %s" % real_path):
-                return line.split(": ", 1)[0].split(", ")
+        packages: list[str] = []
+        for package in output.split("\n"):
+            if not package.startswith("ii"):
+                continue
 
-        return []
+            packages.append(package.split()[1])
+
+        return packages
 
 
 class PackageManagerRPM(PackageManager):
     def uninstall(self, package_name: str) -> None:
         self._execute_uninstall(["rpm", "-e", package_name])
 
-    def find_packages_of_path(self, path: str) -> list[str]:
-        real_path = os.path.realpath(path)
-
-        p = self._execute(["rpm", "-qf", real_path])
+    def get_all_installed_packages(self) -> list[str]:
+        p = self._execute(["rpm", "-qa"])
         output = p.communicate()[0]
-
-        if p.wait() == 1 and "not owned" in output:
-            return []
 
         if p.wait() != 0:
             bail_out("Failed to find packages:\n%s" % output)
 
-        return output.strip().split("\n")
+        packages: list[str] = []
+        for package in output.split("\n"):
+            packages.append(package)
+
+        return packages
 
 
 class Option(NamedTuple):

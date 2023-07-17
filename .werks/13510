@@ -1,0 +1,16 @@
+Title: omd cleanup: Use package manager search without path
+Class: fix
+Compatible: compat
+Component: rpm
+Date: 1640185228
+Edition: cre
+Knowledge: doc
+Level: 1
+State: unknown
+Version: 2.3.0b1
+
+The real path (canonical path, eliminating any symbolic links ) was used
+before, leading to unfound packages in special situations.
+
+We now use "dpkg -l" and "rpm -qa" to find installed packages. A path is not
+needed any more.

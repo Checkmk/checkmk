@@ -36,6 +36,23 @@ class HostSections(Generic[_Tout]):
         self.cache_info: Final = cache_info if cache_info else {}
         self.piggybacked_raw_data: Final = piggybacked_raw_data if piggybacked_raw_data else {}
 
+    def __repr__(self) -> str:
+        return (
+            f"{type(self).__name__}("
+            f"{self.sections!r}, "
+            f"cache_info={self.cache_info!r}, "
+            f"piggybacked_raw_data={self.piggybacked_raw_data!r})"
+        )
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, HostSections):
+            return False
+        return (
+            self.sections == other.sections
+            and self.cache_info == other.cache_info
+            and self.piggybacked_raw_data == other.piggybacked_raw_data
+        )
+
 
 class Parser(Generic[_Tin, _Tout], abc.ABC):
     """Parse raw data into host sections."""

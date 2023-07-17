@@ -437,7 +437,15 @@ def bulk_update_hosts(params):
     constructors.object_action_href("host_config", "{host_name}", action_name="rename"),
     "cmk/rename",
     method="put",
-    path_params=[HOST_NAME],
+    path_params=[
+        {
+            "host_name": gui_fields.HostField(
+                description="A hostname.",
+                should_exist=True,
+                permission_type="setup_write",
+            ),
+        }
+    ],
     etag="both",
     additional_status_codes=[409, 422],
     status_descriptions={
@@ -560,7 +568,15 @@ def bulk_delete(params):
     constructors.object_href("host_config", "{host_name}"),
     "cmk/show",
     method="get",
-    path_params=[HOST_NAME],
+    path_params=[
+        {
+            "host_name": gui_fields.HostField(
+                description="A hostname.",
+                should_exist=True,
+                permission_type="setup_read",
+            )
+        }
+    ],
     query_params=[EFFECTIVE_ATTRIBUTES],
     etag="output",
     response_schema=response_schemas.HostConfigSchema,

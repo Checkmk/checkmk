@@ -11,7 +11,7 @@ import typing
 import uuid
 import warnings
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 import pytz
 from cryptography.x509 import CertificateSigningRequest, load_pem_x509_csr
@@ -38,6 +38,7 @@ from cmk.gui.fields.utils import attr_openapi_schema, ObjectContext, ObjectType
 from cmk.gui.globals import user
 from cmk.gui.groups import GroupName, GroupType, load_group_information
 from cmk.gui.sites import configured_sites
+from cmk.gui.watolib.hosts_and_folders import CREHost, Host
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 
 from cmk.fields import base, DateTime
@@ -549,6 +550,7 @@ class HostField(base.String):
         should_exist: Optional[bool] = True,
         should_be_monitored: Optional[bool] = None,
         should_be_cluster: Optional[bool] = None,
+        permission_type: Literal["setup_write", "setup_read", "monitor"] = "monitor",
         **kwargs,
     ):
         if not should_exist and should_be_cluster is not None:
@@ -557,6 +559,7 @@ class HostField(base.String):
         self._should_exist = should_exist
         self._should_be_monitored = should_be_monitored
         self._should_be_cluster = should_be_cluster
+        self._permission_type = permission_type
         super().__init__(
             example=example,
             pattern=pattern,
@@ -565,8 +568,21 @@ class HostField(base.String):
             **kwargs,
         )
 
+    def _confirm_user_has_permission(self, host: Optional[CREHost]) -> None:
+        if self._permission_type == "monitor":
+            return
+
+        if host:
+            host._user_needs_permission(("read"))
+            if self._permission_type == "setup_write":
+                host._user_needs_permission("write")
+
+        return
+
     def _validate(self, value):
         super()._validate(value)
+        host = Host.host(value)
+        self._confirm_user_has_permission(host)
 
         # Regex gets checked through the `pattern` of the String instance
 
@@ -574,17 +590,6 @@ class HostField(base.String):
             host = watolib.Host.host(value)
             if self._should_exist and not host:
                 raise self.make_error("should_exist", host_name=value)
-
-            if (
-                self._should_exist and host is not None and not host.may("read")
-            ):  # host is there but user isn't allowed see it
-                # TODO: This is probably the wrong Exception Type to use here.
-                # TODO: We're adressing this in CMK-13171
-                raise MKUserError(
-                    varname=None,
-                    message=f"You don't have access to this host: {value!r}",
-                    status=403,
-                )
 
             if not self._should_exist and host is not None:
                 raise self.make_error("should_not_exist", host_name=value)

@@ -51,6 +51,7 @@ from cmk.utils.type_defs import HTTPMethod
 
 from cmk.gui import fields
 from cmk.gui import http as cmk_http
+from cmk.gui.exceptions import MKAuthException
 from cmk.gui.globals import config, request
 from cmk.gui.permissions import permission_registry
 from cmk.gui.plugins.openapi.restful_objects import permissions
@@ -85,6 +86,7 @@ from cmk.gui.plugins.openapi.utils import (
     FIELDS,
     problem,
     ProblemException,
+    RestAPIForbiddenException,
     RestAPIHeaderSchemaValidationException,
     RestAPIHeaderValidationException,
     RestAPIPathValidationException,
@@ -657,6 +659,11 @@ class Endpoint:
                     exc.messages if isinstance(exc.messages, dict) else {"exc": exc.messages},
                 ),
             )
+        except MKAuthException as exc:
+            raise RestAPIForbiddenException(
+                title=http.client.responses[403],
+                detail=exc.args[0],
+            )
 
     def _query_param_validation(
         self, query_schema: type[Schema] | None, _params: dict[str, Any]
@@ -678,6 +685,11 @@ class Endpoint:
                 fields=FIELDS(
                     exc.messages if isinstance(exc.messages, dict) else {"exc": exc.messages},
                 ),
+            )
+        except MKAuthException as exc:
+            raise RestAPIForbiddenException(
+                title=http.client.responses[403],
+                detail=exc.args[0],
             )
 
     def _header_validation(
@@ -729,6 +741,12 @@ class Endpoint:
                 fields=FIELDS(
                     exc.messages if isinstance(exc.messages, dict) else {"exc": exc.messages},
                 ),
+            )
+
+        except MKAuthException as exc:
+            raise RestAPIForbiddenException(
+                title=http.client.responses[403],
+                detail=exc.args[0],
             )
 
     def _validate_response(  # pylint: disable=too-many-branches

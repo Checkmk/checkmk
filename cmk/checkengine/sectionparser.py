@@ -43,19 +43,6 @@ class SectionPlugin:
 
 
 @no_type_check
-def _update_sections(lhs: HostSections, rhs: HostSections) -> None:
-    for section_name, section_content in rhs.sections.items():
-        lhs.sections.setdefault(section_name, []).extend(section_content)
-    for hostname, raw_lines in rhs.piggybacked_raw_data.items():
-        lhs.piggybacked_raw_data.setdefault(hostname, []).extend(raw_lines)
-    # TODO: It should be supported that different sources produce equal sections.
-    # this is handled for the lhs.sections data by simply concatenating the lines
-    # of the sections, but for the lhs.cache_info this is not done. Why?
-    # TODO: checking._execute_check() is using the oldest cached_at and the largest interval.
-    #       Would this be correct here?
-    lhs.cache_info.update(rhs.cache_info)
-
-
 def filter_out_errors(
     host_sections: Iterable[tuple[SourceInfo, result.Result[HostSections, Exception]]]
 ) -> Mapping[HostKey, HostSections]:
@@ -69,7 +56,16 @@ def filter_out_errors(
                 "  -> Add sections: %s\n"
                 % sorted([str(s) for s in host_section.ok.sections.keys()])
             )
-            _update_sections(output[host_key], host_section.ok)
+            for section_name, section_content in host_section.ok.sections.items():
+                output[host_key].sections.setdefault(section_name, []).extend(section_content)
+            for hostname, raw_lines in host_section.ok.piggybacked_raw_data.items():
+                output[host_key].piggybacked_raw_data.setdefault(hostname, []).extend(raw_lines)
+            # TODO: It should be supported that different sources produce equal sections.
+            # this is handled for the output[host_key].sections data by simply concatenating the lines
+            # of the sections, but for the output[host_key].cache_info this is not done. Why?
+            # TODO: checking._execute_check() is using the oldest cached_at and the largest interval.
+            #       Would this be correct here?
+            output[host_key].cache_info.update(host_section.ok.cache_info)
         else:
             console.vverbose("  -> Not adding sections: %s\n" % host_section.error)
     return output

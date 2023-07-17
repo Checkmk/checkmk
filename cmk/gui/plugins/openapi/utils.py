@@ -197,8 +197,8 @@ class RestAPIWatoDisabledException(RestAPIRequestGeneralException):
 
 
 # ==================================================== PERMISSION Exceptions
-class RestAPIUnauthorizedException(RestAPIRequestGeneralException):
-    status: Literal[401] = 401
+class RestAPIForbiddenException(RestAPIRequestGeneralException):
+    status: Literal[403] = 403
 
     def __init__(
         self,
@@ -208,7 +208,7 @@ class RestAPIUnauthorizedException(RestAPIRequestGeneralException):
         fields: FIELDS | None = None,
         ext: EXT | None = None,
     ) -> None:
-        super().__init__(RestAPIUnauthorizedException.status, title, detail, fields, ext)
+        super().__init__(RestAPIForbiddenException.status, title, detail, fields, ext)
 
 
 class RestAPIPermissionException(GeneralRestAPIException):

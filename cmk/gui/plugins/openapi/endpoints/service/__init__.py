@@ -29,6 +29,7 @@ from cmk.utils.livestatus_helpers.tables import Services
 
 from cmk.gui import fields as gui_fields
 from cmk.gui import sites
+from cmk.gui.fields import HostField
 from cmk.gui.http import Response
 from cmk.gui.plugins.openapi.restful_objects import (
     constructors,
@@ -37,7 +38,6 @@ from cmk.gui.plugins.openapi.restful_objects import (
     response_schemas,
 )
 from cmk.gui.plugins.openapi.restful_objects.constructors import object_action_href
-from cmk.gui.plugins.openapi.restful_objects.parameters import HOST_NAME, OPTIONAL_HOST_NAME
 from cmk.gui.plugins.openapi.utils import problem, serve_json
 
 from cmk import fields
@@ -75,6 +75,23 @@ PARAMETERS = [
         ),
     }
 ]
+
+HOST_NAME = {
+    "host_name": HostField(
+        description="A hostname.",
+        should_exist=True,
+        permission_type="monitor",
+    )
+}
+
+OPTIONAL_HOST_NAME = {
+    "host_name": HostField(
+        description="A hostname.",
+        should_exist=True,
+        required=False,
+        permission_type="monitor",
+    )
+}
 
 
 @Endpoint(

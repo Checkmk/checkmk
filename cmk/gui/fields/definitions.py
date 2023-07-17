@@ -41,7 +41,7 @@ from cmk.gui.permissions import permission_registry
 from cmk.gui.site_config import configured_sites
 from cmk.gui.userdb import load_users
 from cmk.gui.watolib.host_attributes import host_attribute
-from cmk.gui.watolib.hosts_and_folders import CREFolder, Folder, Host
+from cmk.gui.watolib.hosts_and_folders import CREFolder, CREHost, Folder, Host
 from cmk.gui.watolib.passwords import contact_group_choices, password_exists
 from cmk.gui.watolib.tags import load_tag_group
 from cmk.gui.watolib.userroles import role_exists
@@ -561,6 +561,7 @@ class HostField(base.String):
         should_exist: bool | None = True,
         should_be_monitored: bool | None = None,
         should_be_cluster: bool | None = None,
+        permission_type: Literal["setup_write", "setup_read", "monitor"] = "monitor",
         **kwargs,
     ):
         if not should_exist and should_be_cluster is not None:
@@ -569,6 +570,7 @@ class HostField(base.String):
         self._should_exist = should_exist
         self._should_be_monitored = should_be_monitored
         self._should_be_cluster = should_be_cluster
+        self._permission_type = permission_type
         super().__init__(
             example=example,
             pattern=pattern,
@@ -577,27 +579,27 @@ class HostField(base.String):
             **kwargs,
         )
 
+    def _confirm_user_has_permission(self, host: CREHost | None) -> None:
+        if self._permission_type == "monitor":
+            return
+
+        if host:
+            host._user_needs_permission(("read"))
+            if self._permission_type == "setup_write":
+                host._user_needs_permission("write")
+
+        return
+
     def _validate(self, value):
         super()._validate(value)
+        host = Host.host(value)
+        self._confirm_user_has_permission(host)
 
         # Regex gets checked through the `pattern` of the String instance
-
-        host = Host.host(value)
 
         if self._should_exist is not None:
             if self._should_exist and host is None:
                 raise self.make_error("should_exist", host_name=value)
-
-            if (
-                self._should_exist and host is not None and not host.may("read")
-            ):  # host is there but user isn't allowed see it
-                # TODO: This is probably the wrong Exception Type to use here.
-                # TODO: We're adressing this in CMK-13171
-                raise MKUserError(
-                    varname=None,
-                    message=f"You don't have access to this host: {value!r}",
-                    status=403,
-                )
 
             if not self._should_exist and host is not None:
                 raise self.make_error("should_not_exist", host_name=value)

@@ -1460,7 +1460,7 @@ def test_user_without_permission_cant_interrogate_if_user_exists(clients: Client
         auth_option={"auth_type": "password", "password": "supersecretish2"},
         expect_ok=False,
     )
-    resp1.assert_status_code(401)
+    resp1.assert_status_code(403)
     assert (
         resp1.json["detail"]
         == "We are sorry, but you lack the permission for this operation. If you do not like this then please ask your administrator to provide you with the following permission: '<b>User management</b>'."
@@ -1473,7 +1473,7 @@ def test_user_without_permission_cant_interrogate_if_user_exists(clients: Client
         authorized_sites=["all"],
         expect_ok=False,
     )
-    resp2.assert_status_code(401)
+    resp2.assert_status_code(403)
     assert (
         resp2.json["detail"]
         == "We are sorry, but you lack the permission for this operation. If you do not like this then please ask your administrator to provide you with the following permission: '<b>User management</b>'."
@@ -1484,7 +1484,7 @@ def test_user_without_permission_cant_interrogate_if_user_exists(clients: Client
         username="user1",
         expect_ok=False,
     )
-    resp3.assert_status_code(401)
+    resp3.assert_status_code(403)
     assert (
         resp3.json["detail"]
         == "We are sorry, but you lack the permission for this operation. If you do not like this then please ask your administrator to provide you with the following permission: '<b>User management</b>'."

@@ -23,7 +23,15 @@ from typing import Final, Literal, Optional
 import pytest
 
 from tests.testlib.openapi_session import CMKOpenApiSession
-from tests.testlib.utils import cmc_path, cme_path, cmk_path, is_containerized, restart_httpd
+from tests.testlib.utils import (
+    cmc_path,
+    cme_path,
+    cmk_path,
+    is_containerized,
+    PExpectDialog,
+    restart_httpd,
+    spawn_expect_process,
+)
 from tests.testlib.version import CMKVersion, version_from_env
 from tests.testlib.web_session import CMKWebSession
 
@@ -1318,6 +1326,76 @@ class SiteFactory:
         assert completed_process.returncode == 0
         site = self.get_existing_site(name)
         site.start()
+        return site
+
+    def update_site(
+        self,
+        test_site: Site,
+        target_version: CMKVersion,
+        conflict_mode: str = "keepold",
+        logfile_path: str = "/tmp/sep.out",
+    ) -> Site:
+        self.version = target_version
+        site = self.get_existing_site(test_site.id)
+        site.install_cmk()
+        site.stop()
+
+        logger.info(
+            "Updating %s site from %s version to %s version...",
+            test_site.id,
+            test_site.version.version,
+            target_version.version_directory(),
+        )
+
+        pexpect_dialogs = [
+            PExpectDialog(
+                expect=(
+                    f"You are going to update the site {test_site.id} "
+                    f"from version {test_site.version.version_directory()} "
+                    f"to version {target_version.version_directory()}."
+                ),
+                send="u\r",
+            ),
+            PExpectDialog(expect="Wrong permission", send="d", count=0, optional=True),
+        ]
+
+        rc = spawn_expect_process(
+            [
+                "/usr/bin/sudo",
+                "/usr/bin/omd",
+                "-V",
+                target_version.version_directory(),
+                "update",
+                f"--conflict={conflict_mode}",
+                test_site.id,
+            ],
+            dialogs=pexpect_dialogs,
+            logfile_path=logfile_path,
+        )
+        assert rc == 0, f"Executed command returned {rc} exit status. Expected: 0"
+
+        with open(logfile_path, "r") as logfile:
+            logger.debug("OMD automation logfile: %s", logfile.read())
+
+        # refresh the site object after creating the site
+        site = self.get_existing_site(test_site.id)
+
+        # open the livestatus port
+        site.open_livestatus_tcp(encrypted=False)
+
+        # start the site after manually installing it
+        site.start()
+
+        assert site.is_running(), "Site is not running!"
+        logger.info("Site %s is up", site.id)
+
+        restart_httpd()
+
+        assert site.version.version == target_version.version, "Version mismatch during update!"
+        assert (
+            site.version.edition.short == target_version.edition.short
+        ), "Edition mismatch during update!"
+
         return site
 
     def get_test_site(

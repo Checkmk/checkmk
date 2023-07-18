@@ -21,7 +21,7 @@ from cmk.automations.results import CheckPreviewEntry
 from cmk.checkengine import (
     CheckPlugin,
     FetcherFunction,
-    filter_out_errors,
+    group_by_host,
     HostKey,
     ParserFunction,
     SectionPlugin,
@@ -85,11 +85,11 @@ def get_check_preview(
     parsed = parser((f[0], f[1]) for f in fetched)
 
     host_sections = parser((f[0], f[1]) for f in fetched)
-    host_sections_no_error = filter_out_errors(
+    host_sections_by_host = group_by_host(
         (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
     )
-    store_piggybacked_sections(host_sections_no_error)
-    providers = make_providers(host_sections_no_error, section_plugins)
+    store_piggybacked_sections(host_sections_by_host)
+    providers = make_providers(host_sections_by_host, section_plugins)
 
     if config_cache.is_cluster(host_name):
         host_labels, kept_labels = analyse_cluster_labels(

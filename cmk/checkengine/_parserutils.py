@@ -15,10 +15,10 @@ from cmk.utils.sectionname import MutableSectionMap
 from ._parser import HostSections
 from ._typedefs import HostKey
 
-__all__ = ["filter_out_errors"]
+__all__ = ["group_by_host"]
 
 
-def filter_out_errors(
+def group_by_host(
     host_sections: Iterable[tuple[HostKey, HostSections]]
 ) -> Mapping[HostKey, HostSections]:
     out_sections: dict[HostKey, MutableSectionMap[list]] = defaultdict(dict)

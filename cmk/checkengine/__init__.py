@@ -40,7 +40,7 @@ from ._markers import PiggybackMarker, SectionMarker
 from ._parser import HostSections, Parser
 from ._parseragent import AgentParser
 from ._parsersnmp import SNMPParser
-from ._parserutils import filter_out_errors
+from ._parserutils import group_by_host
 from ._typedefs import HostKey, Parameters, SourceInfo, SourceType
 from .summarize import summarize
 
@@ -51,7 +51,7 @@ __all__ = [
     "HostKey",
     "HostSections",
     "inventory",
-    "filter_out_errors",
+    "group_by_host",
     "Parameters",
     "parse_raw_data",
     "Parser",

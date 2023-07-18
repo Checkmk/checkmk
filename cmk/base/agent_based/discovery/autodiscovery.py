@@ -22,7 +22,7 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.checkengine import (
     FetcherFunction,
-    filter_out_errors,
+    group_by_host,
     HostKey,
     ParserFunction,
     SectionPlugin,
@@ -107,11 +107,11 @@ def automation_discovery(
         if failed_sources_results := [r for r in summarizer(host_sections) if r.state != 0]:
             return DiscoveryResult(error_text=", ".join(r.summary for r in failed_sources_results))
 
-        host_sections_no_error = filter_out_errors(
+        host_sections_by_host = group_by_host(
             (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
         )
-        store_piggybacked_sections(host_sections_no_error)
-        providers = make_providers(host_sections_no_error, section_plugins)
+        store_piggybacked_sections(host_sections_by_host)
+        providers = make_providers(host_sections_by_host, section_plugins)
 
         if mode is not DiscoveryMode.REMOVE:
             host_labels = QualifiedDiscovery[HostLabel](

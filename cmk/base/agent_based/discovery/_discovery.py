@@ -21,7 +21,7 @@ from cmk.utils.servicename import ServiceName
 from cmk.snmplib import SNMPRawData
 
 from cmk.checkengine import (
-    filter_out_errors,
+    group_by_host,
     HostKey,
     ParserFunction,
     SectionPlugin,
@@ -96,11 +96,11 @@ def execute_check_discovery(
     discovery_mode = DiscoveryMode(params.rediscovery.get("mode"))
 
     host_sections = parser(fetched)
-    host_sections_no_error = filter_out_errors(
+    host_sections_by_host = group_by_host(
         (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
     )
-    store_piggybacked_sections(host_sections_no_error)
-    providers = make_providers(host_sections_no_error, section_plugins)
+    store_piggybacked_sections(host_sections_by_host)
+    providers = make_providers(host_sections_by_host, section_plugins)
 
     if config_cache.is_cluster(host_name):
         host_labels, _kept_labels = analyse_cluster_labels(

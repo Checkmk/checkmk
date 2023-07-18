@@ -35,7 +35,7 @@ from cmk.utils.validatedstr import ValidatedString
 
 from ._api import FetcherFunction, ParserFunction, SectionPlugin, SummarizerFunction
 from ._parser import HostSections
-from ._parserutils import filter_out_errors
+from ._parserutils import group_by_host
 from ._typedefs import HostKey, SourceType
 from .checkresults import ActiveCheckResult
 from .sectionparser import (
@@ -128,12 +128,12 @@ def inventorize_host(
 ) -> CheckInventoryTreeResult:
     fetched = fetcher(host_name, ip_address=None)
     host_sections = parser((f[0], f[1]) for f in fetched)
-    host_sections_no_error = filter_out_errors(
+    host_sections_by_host = group_by_host(
         (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
     )
-    store_piggybacked_sections(host_sections_no_error)
+    store_piggybacked_sections(host_sections_by_host)
 
-    providers = make_providers(host_sections_no_error, section_plugins)
+    providers = make_providers(host_sections_by_host, section_plugins)
 
     trees, update_result = _inventorize_real_host(
         now=int(time.time()),
@@ -160,7 +160,7 @@ def inventorize_host(
     processing_failed = any(
         host_section.is_error() for _source, host_section in host_sections
     ) or bool(parsing_errors)
-    no_data_or_files = _no_data_or_files(host_name, host_sections_no_error.values())
+    no_data_or_files = _no_data_or_files(host_name, host_sections_by_host.values())
 
     return CheckInventoryTreeResult(
         processing_failed=processing_failed,

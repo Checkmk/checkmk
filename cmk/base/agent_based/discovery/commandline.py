@@ -18,13 +18,7 @@ from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
 from cmk.utils.sectionname import SectionMap
 
-from cmk.checkengine import (
-    FetcherFunction,
-    filter_out_errors,
-    HostKey,
-    ParserFunction,
-    SectionPlugin,
-)
+from cmk.checkengine import FetcherFunction, group_by_host, HostKey, ParserFunction, SectionPlugin
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import (
     analyse_services,
@@ -72,11 +66,11 @@ def commandline_discovery(
         try:
             fetched = fetcher(host_name, ip_address=None)
             host_sections = parser((f[0], f[1]) for f in fetched)
-            merged_host_sections = filter_out_errors(
+            host_sections_by_host = group_by_host(
                 (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
             )
-            store_piggybacked_sections(merged_host_sections)
-            providers = make_providers(merged_host_sections, section_plugins)
+            store_piggybacked_sections(host_sections_by_host)
+            providers = make_providers(host_sections_by_host, section_plugins)
             _commandline_discovery_on_host(
                 real_host_name=host_name,
                 host_label_plugins=host_label_plugins,

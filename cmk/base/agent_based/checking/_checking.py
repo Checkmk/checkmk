@@ -33,7 +33,7 @@ from cmk.fetchers import FetcherType
 from cmk.checkengine import (
     CheckPlugin,
     crash_reporting,
-    filter_out_errors,
+    group_by_host,
     HostKey,
     Parameters,
     ParserFunction,
@@ -120,11 +120,11 @@ def execute_checkmk_checks(
     exit_spec = config_cache.exit_code_spec(hostname)
     services = config_cache.configured_services(hostname)
     host_sections = parser((f[0], f[1]) for f in fetched)
-    host_sections_no_error = filter_out_errors(
+    host_sections_by_host = group_by_host(
         (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
     )
-    store_piggybacked_sections(host_sections_no_error)
-    providers = make_providers(host_sections_no_error, section_plugins)
+    store_piggybacked_sections(host_sections_by_host)
+    providers = make_providers(host_sections_by_host, section_plugins)
     with CPUTracker() as tracker:
         service_results = check_host_services(
             hostname,

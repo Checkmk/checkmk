@@ -19,7 +19,7 @@ from cmk.utils.log import console
 from cmk.utils.sectionname import SectionMap, SectionName
 
 import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib.type_defs import (
+from cmk.snmplib import (
     BackendSNMPTree,
     SNMPBackend,
     SNMPHostConfig,

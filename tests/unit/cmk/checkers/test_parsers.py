@@ -22,7 +22,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
 from cmk.utils.translations import TranslationOptions
 
-from cmk.snmplib.type_defs import SNMPRawData
+from cmk.snmplib import SNMPRawData
 
 from cmk.fetchers.cache import SectionStore
 

@@ -18,7 +18,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionName
 
-from .type_defs import OID, SNMPBackend, SNMPDecodedString, SNMPRawValue, SNMPRowInfo
+from ._typedefs import OID, SNMPBackend, SNMPDecodedString, SNMPRawValue, SNMPRowInfo
 
 SNMPRowInfoForStoredWalk = list[tuple[OID, str]]
 SNMPWalkOptions = dict[str, list[OID]]

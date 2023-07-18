@@ -14,7 +14,7 @@ from cmk.utils.sectionname import SectionName
 from cmk.utils.version import edition, Edition
 
 import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib.type_defs import BackendSNMPTree, SNMPBackend, SNMPBackendEnum, SNMPHostConfig
+from cmk.snmplib import BackendSNMPTree, SNMPBackend, SNMPBackendEnum, SNMPHostConfig
 
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 

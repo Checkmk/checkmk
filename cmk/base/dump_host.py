@@ -12,7 +12,7 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.paths import tmp_dir
 from cmk.utils.timeperiod import timeperiod_active
 
-from cmk.snmplib.type_defs import SNMPBackendEnum
+from cmk.snmplib import SNMPBackendEnum
 
 from cmk.fetchers import IPMIFetcher, PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge

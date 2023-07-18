@@ -13,7 +13,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionName
 
-from .type_defs import (
+from ._typedefs import (
     BackendSNMPTree,
     OID,
     SNMPBackend,

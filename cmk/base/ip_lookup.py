@@ -20,7 +20,7 @@ from cmk.utils.exceptions import MKIPAddressLookupError, MKTerminate, MKTimeout
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import console
 
-from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
+from cmk.snmplib import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
 
 IPLookupCacheId = tuple[HostName | HostAddress, socket.AddressFamily]
 

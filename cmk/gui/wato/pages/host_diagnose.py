@@ -11,7 +11,7 @@ from typing import NotRequired, TypedDict
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 
-from cmk.snmplib.type_defs import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
+from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.forms as forms
 from cmk.gui.breadcrumb import Breadcrumb

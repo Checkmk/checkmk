@@ -14,7 +14,7 @@ from cmk.utils.cpu_tracking import Snapshot
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.rulesets import RuleSetName
 
-from cmk.snmplib.type_defs import SNMPRawData
+from cmk.snmplib import SNMPRawData
 
 from ._parser import HostSections, Parser
 from ._typedefs import SourceInfo

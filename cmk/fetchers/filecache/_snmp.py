@@ -9,7 +9,7 @@ import ast
 
 from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib.type_defs import SNMPRawData
+from cmk.snmplib import SNMPRawData
 
 from ._cache import FileCache
 

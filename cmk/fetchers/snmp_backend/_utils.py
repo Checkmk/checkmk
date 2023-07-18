@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Helpers for the backends."""
 
-from cmk.snmplib.type_defs import SNMPRawValue
+from cmk.snmplib import SNMPRawValue
 
 __all__ = ["strip_snmp_value"]
 

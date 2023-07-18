@@ -23,7 +23,7 @@ from cmk.utils.log import console
 from cmk.utils.piggyback import PiggybackTimeSettings
 from cmk.utils.sectionname import SectionMap, SectionName
 
-from cmk.snmplib.type_defs import SNMPRawData
+from cmk.snmplib import SNMPRawData
 
 from cmk.fetchers import Fetcher, get_raw_data, Mode
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge

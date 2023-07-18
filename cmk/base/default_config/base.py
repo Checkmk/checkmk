@@ -16,7 +16,7 @@ from cmk.utils.tags import TagConfigSpec
 from cmk.utils.timeperiod import TimeperiodSpecs
 from cmk.utils.translations import TranslationOptionsSpec
 
-from cmk.snmplib.type_defs import SNMPCredentials
+from cmk.snmplib import SNMPCredentials
 
 from cmk.fetchers import IPMICredentials
 

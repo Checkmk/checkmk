@@ -22,8 +22,7 @@ from tests.testlib.site import Site
 
 from cmk.utils.hostaddress import HostAddress
 
-from cmk.snmplib import snmp_modes
-from cmk.snmplib.type_defs import OID, SNMPBackendEnum, SNMPHostConfig
+from cmk.snmplib import OID, snmp_modes, SNMPBackendEnum, SNMPHostConfig
 
 from .snmp_helpers import default_config, get_single_oid
 

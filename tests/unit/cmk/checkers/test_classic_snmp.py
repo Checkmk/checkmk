@@ -12,7 +12,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import logger
 
-from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPHostConfig
+from cmk.snmplib import SNMPBackendEnum, SNMPHostConfig
 
 import cmk.fetchers.snmp_backend.classic as classic_snmp
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend

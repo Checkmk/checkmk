@@ -17,7 +17,7 @@ from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPRawDataElem
+from cmk.snmplib import SNMPBackendEnum, SNMPRawDataElem
 
 from cmk.fetchers import FetcherType, SNMPFetcher
 from cmk.fetchers.cache import SectionStore

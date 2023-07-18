@@ -11,7 +11,7 @@ from tests.testlib.utils import is_enterprise_repo
 
 from cmk.utils.hostaddress import HostAddress, HostName
 
-from cmk.snmplib.type_defs import SNMPBackendEnum, SNMPHostConfig
+from cmk.snmplib import SNMPBackendEnum, SNMPHostConfig
 
 from cmk.fetchers.snmp import make_backend
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend

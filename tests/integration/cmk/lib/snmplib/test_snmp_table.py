@@ -12,7 +12,7 @@ from tests.testlib.site import Site
 
 from cmk.utils.hostaddress import HostAddress
 
-from cmk.snmplib.type_defs import BackendOIDSpec, BackendSNMPTree, SNMPBackendEnum, SpecialColumn
+from cmk.snmplib import BackendOIDSpec, BackendSNMPTree, SNMPBackendEnum, SpecialColumn
 
 INFO_TREE = BackendSNMPTree(
     base=".1.3.6.1.2.1.1",

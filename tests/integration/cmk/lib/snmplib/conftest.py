@@ -32,7 +32,7 @@ from tests.testlib.site import Site
 import cmk.utils.debug as debug
 import cmk.utils.log as log
 
-from cmk.snmplib.type_defs import SNMPBackendEnum
+from cmk.snmplib import SNMPBackendEnum
 
 logger = logging.getLogger(__name__)
 

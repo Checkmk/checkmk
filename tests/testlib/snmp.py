@@ -10,8 +10,8 @@ from typing import Any, Final
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
 
+from cmk.snmplib import BackendSNMPTree, SNMPBackendEnum, SNMPHostConfig
 from cmk.snmplib.snmp_table import get_snmp_table
-from cmk.snmplib.type_defs import BackendSNMPTree, SNMPBackendEnum, SNMPHostConfig
 from cmk.snmplib.utils import evaluate_snmp_detection
 
 from cmk.fetchers.snmp_backend import StoredWalkSNMPBackend

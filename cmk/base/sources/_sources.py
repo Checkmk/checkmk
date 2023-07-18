@@ -12,7 +12,7 @@ from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 
-from cmk.snmplib.type_defs import SNMPRawData
+from cmk.snmplib import SNMPRawData
 
 from cmk.fetchers import Fetcher, FetcherType, NoFetcher, NoFetcherError, ProgramFetcher
 from cmk.fetchers.config import make_file_cache_path_template

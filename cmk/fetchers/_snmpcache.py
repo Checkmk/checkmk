@@ -11,7 +11,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 from cmk.utils.hostaddress import HostAddress, HostName
 
-from cmk.snmplib.type_defs import OID, SNMPDecodedString
+from cmk.snmplib import OID, SNMPDecodedString
 
 # TODO: Replace this by generic caching
 _g_single_oid_hostname: HostName | None = None

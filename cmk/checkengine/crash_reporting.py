@@ -18,7 +18,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
 from cmk.utils.servicename import ServiceName
 
-from cmk.snmplib.type_defs import SNMPBackendEnum
+from cmk.snmplib import SNMPBackendEnum
 
 from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
 

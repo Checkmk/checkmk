@@ -15,7 +15,7 @@ from cmk.utils.log import logger
 from cmk.utils.sectionname import SectionName
 
 import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib.type_defs import (
+from cmk.snmplib import (
     BackendOIDSpec,
     BackendSNMPTree,
     SNMPBackend,

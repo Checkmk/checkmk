@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.snmplib.type_defs import SpecialColumn
+from cmk.snmplib import SpecialColumn
 
 from cmk.base.api.agent_based.section_classes import OIDEnd, SNMPTree
 from cmk.base.api.agent_based.type_defs import OIDSpecTuple

@@ -9,7 +9,7 @@ from typing import Any, Final, NamedTuple
 
 from cmk.utils.sectionname import SectionMap, SectionName
 
-from cmk.snmplib.type_defs import (
+from cmk.snmplib import (
     BackendSNMPTree,
     SNMPBackend,
     SNMPBackendEnum,

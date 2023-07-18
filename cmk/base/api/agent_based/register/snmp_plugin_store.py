@@ -5,7 +5,7 @@
 
 from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib.type_defs import (  # pylint: disable=cmk-module-layer-violation
+from cmk.snmplib import (  # pylint: disable=cmk-module-layer-violation
     BackendSNMPTree,
     SNMPDetectSpec,
 )

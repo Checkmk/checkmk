@@ -13,7 +13,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.tags import TagGroup, TagGroupID, TagID
 from cmk.utils.version import edition, Edition
 
-from cmk.snmplib.type_defs import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
+from cmk.snmplib import SNMPBackendEnum  # pylint: disable=cmk-module-layer-violation
 
 import cmk.gui.plugins.userdb.utils as userdb_utils
 from cmk.gui.config import active_config

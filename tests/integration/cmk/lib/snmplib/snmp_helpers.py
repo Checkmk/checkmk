@@ -11,7 +11,7 @@ from tests.testlib.site import Site
 
 from cmk.utils.hostaddress import HostAddress, HostName
 
-from cmk.snmplib.type_defs import (
+from cmk.snmplib import (
     BackendSNMPTree,
     OID,
     SNMPBackendEnum,

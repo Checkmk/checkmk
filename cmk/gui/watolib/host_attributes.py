@@ -26,7 +26,7 @@ from cmk.utils.tags import TagGroup, TagGroupID, TagID
 from cmk.utils.translations import TranslationOptionsSpec
 from cmk.utils.user import UserId
 
-from cmk.snmplib.type_defs import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
+from cmk.snmplib import SNMPCredentials  # pylint: disable=cmk-module-layer-violation
 
 from cmk.fetchers import IPMICredentials
 

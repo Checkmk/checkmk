@@ -10,7 +10,7 @@ from typing import Final
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import MutableSectionMap, SectionMap, SectionName
 
-from cmk.snmplib.type_defs import SNMPRawData, SNMPRawDataElem
+from cmk.snmplib import SNMPRawData, SNMPRawDataElem
 
 from cmk.fetchers.cache import SectionStore
 

@@ -98,7 +98,7 @@ from cmk.automations.results import (
 
 import cmk.snmplib.snmp_modes as snmp_modes
 import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib.type_defs import BackendOIDSpec, BackendSNMPTree, SNMPCredentials, SNMPHostConfig
+from cmk.snmplib import BackendOIDSpec, BackendSNMPTree, SNMPCredentials, SNMPHostConfig
 
 from cmk.fetchers import FetcherType, get_raw_data, Mode, ProgramFetcher, TCPFetcher
 from cmk.fetchers.filecache import FileCacheOptions

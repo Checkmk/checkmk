@@ -13,8 +13,7 @@ import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.version import edition, Edition
 
-from cmk.snmplib import snmp_modes
-from cmk.snmplib.type_defs import OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig
+from cmk.snmplib import OID, snmp_modes, SNMPBackend, SNMPBackendEnum, SNMPHostConfig
 
 import cmk.fetchers._snmpcache as snmp_cache
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend

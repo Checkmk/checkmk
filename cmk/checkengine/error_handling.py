@@ -19,7 +19,7 @@ from cmk.utils.exceptions import (
 from cmk.utils.hostaddress import HostName
 from cmk.utils.servicename import ServiceName
 
-from cmk.snmplib.type_defs import SNMPBackendEnum
+from cmk.snmplib import SNMPBackendEnum
 
 from cmk.checkengine import crash_reporting
 from cmk.checkengine.checking import CheckPluginNameStr

@@ -22,7 +22,7 @@ from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import RuleSpec
 from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib.type_defs import SNMPRawData
+from cmk.snmplib import SNMPRawData
 
 from cmk.fetchers import Mode
 from cmk.fetchers.filecache import FileCacheOptions

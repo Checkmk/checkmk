@@ -18,7 +18,7 @@ from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.sectionname import SectionMap
 from cmk.utils.servicename import ServiceName
 
-from cmk.snmplib.type_defs import SNMPRawData
+from cmk.snmplib import SNMPRawData
 
 from cmk.checkengine import ParserFunction, SectionPlugin, SourceInfo, SummarizerFunction
 from cmk.checkengine.checking import CheckPluginName, Item

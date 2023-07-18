@@ -25,7 +25,7 @@ from cmk.utils.structured_data import (
     UpdateResult,
 )
 
-from cmk.snmplib.type_defs import SNMPRawData
+from cmk.snmplib import SNMPRawData
 
 from cmk.fetchers import FetcherType
 

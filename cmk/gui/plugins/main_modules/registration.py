@@ -22,6 +22,7 @@ from cmk.gui import (
     wato,
     watolib,
 )
+from cmk.gui.background_job import job_registry
 from cmk.gui.bi import registration as bi_registration
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.dashboard import dashlet_registry
@@ -44,6 +45,7 @@ from cmk.gui.views.join_service_rows import join_service_row_post_processor
 from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.row_post_processing import register_row_post_processor
 from cmk.gui.views.sorter import sorter_registry
+from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.config_domain_name import (
     config_domain_registry,
     config_variable_group_registry,
@@ -104,7 +106,13 @@ def register() -> None:
     mobile.register(layout_registry)
     userdb_registration.register(user_attribute_registry)
     watolib.register()
-    wato.register(painter_registry, sorter_registry, icon_and_action_registry)
+    wato.register(
+        painter_registry,
+        sorter_registry,
+        icon_and_action_registry,
+        automation_command_registry,
+        job_registry,
+    )
     bi_registration.register(
         data_source_registry,
         painter_registry,

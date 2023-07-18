@@ -17,9 +17,9 @@ from cmk.utils.site import omd_site
 
 from cmk.gui.background_job import (
     BackgroundJob,
+    BackgroundJobRegistry,
     BackgroundProcessInterface,
     InitialStatusArgs,
-    job_registry,
 )
 from cmk.gui.cron import register_job
 from cmk.gui.http import request
@@ -27,7 +27,7 @@ from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.site_config import get_site_config, is_wato_slave_site, wato_slave_sites
 from cmk.gui.watolib.audit_log import AuditLogStore
-from cmk.gui.watolib.automation_commands import automation_command_registry, AutomationCommand
+from cmk.gui.watolib.automation_commands import AutomationCommand, AutomationCommandRegistry
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.paths import wato_var_dir
 from cmk.gui.watolib.site_changes import ChangeSpec, SiteChanges
@@ -36,6 +36,16 @@ AuditLogs = Sequence[AuditLogStore.Entry]
 SiteChangeSequence = Sequence[ChangeSpec]
 LastAuditLogs = Mapping[SiteId, AuditLogs]
 LastSiteChanges = Mapping[SiteId, SiteChangeSequence]
+
+
+def register(
+    automation_command_registry: AutomationCommandRegistry, job_registry: BackgroundJobRegistry
+) -> None:
+    register_job(execute_sync_remote_sites)
+    job_registry.register(SyncRemoteSitesBackgroundJob)
+
+    automation_command_registry.register(AutomationSyncRemoteSites)
+    automation_command_registry.register(AutomationClearSiteChanges)
 
 
 @dataclass
@@ -59,7 +69,6 @@ class SyncRemoteSitesResult:
         return cls(audit_logs, site_changes)
 
 
-@automation_command_registry.register
 class AutomationSyncRemoteSites(AutomationCommand):
     def command_name(self) -> str:
         return "sync-remote-site"
@@ -76,7 +85,6 @@ class AutomationSyncRemoteSites(AutomationCommand):
         return int(request.get_str_input_mandatory("last_audit_log_timestamp"))
 
 
-@automation_command_registry.register
 class AutomationClearSiteChanges(AutomationCommand):
     def command_name(self) -> str:
         return "clear-site-changes"
@@ -112,7 +120,6 @@ def _get_last_audit_log_timestamps_path() -> Path:
     return wato_var_dir() / "log" / "last_audit_log_timestamps"
 
 
-@job_registry.register
 class SyncRemoteSitesBackgroundJob(BackgroundJob):
     job_prefix = "sync_remote_sites"
 
@@ -307,6 +314,3 @@ def execute_sync_remote_sites() -> None:
         return
 
     job.start(job.do_execute)
-
-
-register_job(execute_sync_remote_sites)

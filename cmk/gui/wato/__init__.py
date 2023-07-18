@@ -90,11 +90,13 @@ import cmk.gui.watolib.translation
 import cmk.gui.watolib.user_scripts
 import cmk.gui.watolib.utils
 import cmk.gui.weblib as weblib
+from cmk.gui.cron import register_job
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.pages import Page, page_registry
 from cmk.gui.permissions import Permission, permission_registry
+from cmk.gui.plugins.wato import sync_remote_sites
 from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import PermissionName
@@ -257,6 +259,7 @@ from cmk.gui.plugins.wato.utils.main_menu import (  # Kept for compatibility wit
 )
 from cmk.gui.views.icon import IconRegistry
 from cmk.gui.views.sorter import SorterRegistry
+from cmk.gui.watolib.automation_commands import AutomationCommandRegistry
 from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
 from cmk.gui.watolib.main_menu import MenuItem
 
@@ -273,7 +276,11 @@ from .views import (
 
 
 def register(
-    painter_registry: PainterRegistry, sorter_registry: SorterRegistry, icon_registry: IconRegistry
+    painter_registry: PainterRegistry,
+    sorter_registry: SorterRegistry,
+    icon_registry: IconRegistry,
+    automation_command_registry: AutomationCommandRegistry,
+    job_registry: background_job.BackgroundJobRegistry,
 ) -> None:
     painter_registry.register(PainterHostFilename)
     painter_registry.register(PainterWatoFolderAbs)
@@ -288,6 +295,8 @@ def register(
     icon_registry.register(WatoIcon)
 
     page_registry.register_page_handler("ajax_popup_host_action_menu", ajax_popup_host_action_menu)
+
+    sync_remote_sites.register(automation_command_registry, job_registry)
 
 
 # .

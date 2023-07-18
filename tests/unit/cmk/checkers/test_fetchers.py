@@ -31,11 +31,11 @@ from cmk.snmplib import (
     BackendSNMPTree,
     snmp_table,
     SNMPBackendEnum,
-    SNMPDetectSpec,
     SNMPHostConfig,
     SNMPRawData,
     SNMPTable,
 )
+from cmk.snmplib.utils import SNMPDetectSpec
 
 import cmk.fetchers._snmp as snmp
 import cmk.fetchers._tcp as tcp

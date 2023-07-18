@@ -9,13 +9,8 @@ from typing import Any, Final, NamedTuple
 
 from cmk.utils.sectionname import SectionMap, SectionName
 
-from cmk.snmplib import (
-    BackendSNMPTree,
-    SNMPBackend,
-    SNMPBackendEnum,
-    SNMPDetectSpec,
-    SNMPHostConfig,
-)
+from cmk.snmplib import BackendSNMPTree, SNMPBackend, SNMPBackendEnum, SNMPHostConfig
+from cmk.snmplib.utils import SNMPDetectSpec
 
 from .snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 

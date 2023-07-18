@@ -14,8 +14,6 @@ from ._typedefs import SNMPBackendEnum as SNMPBackendEnum
 from ._typedefs import SNMPContextName as SNMPContextName
 from ._typedefs import SNMPCredentials as SNMPCredentials
 from ._typedefs import SNMPDecodedString as SNMPDecodedString
-from ._typedefs import SNMPDetectBaseType as SNMPDetectBaseType
-from ._typedefs import SNMPDetectSpec as SNMPDetectSpec
 from ._typedefs import SNMPHostConfig as SNMPHostConfig
 from ._typedefs import SNMPRawData as SNMPRawData
 from ._typedefs import SNMPRawDataElem as SNMPRawDataElem

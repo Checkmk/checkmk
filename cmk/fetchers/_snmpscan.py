@@ -12,8 +12,8 @@ from cmk.utils.log import console
 from cmk.utils.sectionname import SectionName
 
 import cmk.snmplib.snmp_modes as snmp_modes
-from cmk.snmplib import SNMPBackend, SNMPDetectBaseType
-from cmk.snmplib.utils import evaluate_snmp_detection
+from cmk.snmplib import SNMPBackend
+from cmk.snmplib.utils import evaluate_snmp_detection, SNMPDetectBaseType
 
 import cmk.fetchers._snmpcache as snmp_cache
 

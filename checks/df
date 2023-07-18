@@ -233,8 +233,9 @@ def check_df(item, params, parsed):
     ]
 
     if params.get("show_volume_name"):
-        volume_name = [d.device for d in df_blocks if d.mountpoint == item][0]
-        yield 0, f"[{volume_name}]"
+        volume_names = [d.device for d in df_blocks if d.mountpoint == item]
+        if volume_names:  # might be empty list for some nodes in the cluster case.
+            yield 0, f"[{volume_names[0]}]"
 
     yield from df_check_filesystem_list_coroutine(item, params, raw_df_blocks, raw_df_inodes)
 

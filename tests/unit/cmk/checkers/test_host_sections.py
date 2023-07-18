@@ -5,37 +5,14 @@
 
 from typing import TypeAlias
 
-from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
 
-from cmk.fetchers import FetcherType
-
-from cmk.checkengine import group_by_host, HostKey, HostSections, SourceInfo, SourceType
+from cmk.checkengine import group_by_host, HostKey, HostSections, SourceType
 from cmk.checkengine.type_defs import AgentRawDataSection
 
 HS: TypeAlias = HostSections[AgentRawDataSection]
 TRAW: TypeAlias = list[tuple[str, str]]
-
-
-def make_source_info(
-    host_name: HostName | None = None,
-    host_addr: HostAddress | None = None,
-    ident: str | None = None,
-    fetcher_type: FetcherType | None = None,
-    source_type: SourceType | None = None,
-) -> SourceInfo:
-    """Provide usable defaults."""
-    return SourceInfo(
-        host_name or HostName("testhost"),
-        host_addr or HostAddress("192.0.2.4"),
-        ident or "ident",
-        fetcher_type or FetcherType.TCP,
-        source_type or SourceType.HOST,
-    )
-
-
-def make_host_key(source_info: SourceInfo) -> HostKey:
-    return HostKey(source_info.hostname, source_info.source_type)
 
 
 def parse(raw: TRAW) -> dict[SectionName, list[list[str]]]:

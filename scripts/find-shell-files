@@ -122,6 +122,7 @@ get_files_from_filesystem() {
         --exclude-dir="cpp-httplib-0.11.3" \
         --exclude-dir="googletest-*-patched" \
         $(: various artifact directories ------------------------------------) \
+        --exclude-dir="bazel-*" \
         --exclude-dir="build" \
         --exclude-dir="node_modules" \
         --exclude-dir="shared_cargo_folder" \

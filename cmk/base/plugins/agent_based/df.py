@@ -241,8 +241,11 @@ def check_df(item: str, params: Mapping[str, Any], section: DfSection) -> CheckR
         for df_inode in df_inodes
     ]
 
-    if params.get("show_volume_name"):
-        volume_name = [d.device for d in df_blocks if d.mountpoint == item][0]
+    if (
+        params.get("show_volume_name")
+        # we might have no matching device in the cluster case
+        and (volume_name := next((d.device for d in df_blocks if d.mountpoint == item), None))
+    ):
         yield Result(state=State.OK, summary=f"[{volume_name}]")
 
     yield from df_check_filesystem_list(

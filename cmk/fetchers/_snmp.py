@@ -19,7 +19,6 @@ from cmk.utils.log import console
 from cmk.utils.sectionname import SectionMap, SectionName
 
 import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib.snmp_scan import gather_available_raw_section_names
 from cmk.snmplib.type_defs import (
     BackendSNMPTree,
     SNMPBackend,
@@ -31,6 +30,7 @@ from cmk.snmplib.type_defs import (
 
 from cmk.fetchers import Fetcher, Mode
 
+from ._snmpscan import gather_available_raw_section_names
 from .cache import SectionStore
 from .snmp import make_backend, SNMPPluginStore
 

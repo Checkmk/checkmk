@@ -97,14 +97,10 @@ RUN /opt/install-protobuf-cpp.sh
 RUN /opt/install-openssl.sh
 RUN /opt/install-python.sh
 RUN /opt/install-freetds.sh
-RUN /opt/install-rust-cargo.sh
 
 # Now shrink all the binaries and libraries we produced to build a small image
 # in the next step
 RUN /opt/strip_binaries /opt
-
-# Run this AFTER strip_binaries!!
-RUN /opt/install-bazel.sh
 
 ### Actual Image ###
 FROM base
@@ -122,8 +118,6 @@ RUN /opt/install-cmake.sh link-only
 RUN /opt/install-protobuf-cpp.sh --link-only
 RUN /opt/install-python.sh link-only
 RUN /opt/install-freetds.sh link-only
-RUN /opt/install-bazel.sh link-only
-RUN /opt/install-rust-cargo.sh link-only
 
 # Install non cached dependencies
 RUN /opt/install-pipenv.sh
@@ -135,12 +129,8 @@ RUN /opt/install-patchelf.sh
 RUN groupadd -g 1000 jenkins \
     && useradd -m -u 1001 -g 1000 -s /bin/bash jenkins
 
-RUN mkdir -p /home/jenkins/.cache/ \
-    && chown jenkins:jenkins /home/jenkins/.cache/
-
 ARG VERS_TAG
 RUN echo $VERS_TAG > /version.txt
 
-ENV RUSTUP_HOME=/opt/rust/rustup
 LABEL \
     com.tribe29.image_type="build-image"

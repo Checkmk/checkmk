@@ -52,11 +52,9 @@ from cmk.gui.valuespec import (
     FileUpload,
     FileUploadModel,
     FixedValue,
-    Integer,
     ListChoice,
     ListOf,
     ListOfTimeRanges,
-    Optional,
     TextInput,
     Tuple,
     ValueSpec,
@@ -328,35 +326,21 @@ class ModeTimeperiodImportICal(WatoMode):
                         validate=self._validate_ical_file,
                     ),
                 ),
-                (
-                    "horizon",
-                    Integer(
-                        title=_("Time horizon for repeated events"),
-                        help=_(
-                            "When the iCalendar file contains definitions of repeating events, these repeating "
-                            "events will be resolved to single events for the number of years you specify here."
-                        ),
-                        minvalue=0,
-                        maxvalue=50,
-                        default_value=10,
-                        unit=_("years"),
-                    ),
-                ),
-                (
-                    "times",
-                    Optional(
-                        valuespec=ListOfTimeRanges(
-                            default_value=[None],
-                        ),
-                        title=_("Use specific times"),
-                        label=_("Use specific times instead of whole day"),
-                        help=_(
-                            "When you specify explicit time definitions here, these will be added to each "
-                            "date which is added to the resulting time period. By default the whole day is "
-                            "used."
-                        ),
-                    ),
-                ),
+                # TODO: Should be added back once CMK-14051 is completed.
+                # (
+                #     "horizon",
+                #     Integer(
+                #         title=_("Time horizon for repeated events"),
+                #         help=_(
+                #             "When the iCalendar file contains definitions of repeating events, these repeating "
+                #             "events will be resolved to single events for the number of years you specify here."
+                #         ),
+                #         minvalue=0,
+                #         maxvalue=50,
+                #         default_value=10,
+                #         unit=_("years"),
+                #     ),
+                # ),
             ],
         )
 
@@ -392,9 +376,10 @@ class ModeTimeperiodImportICal(WatoMode):
         html.p(
             _(
                 "This page can be used to generate a new time period definition based "
-                "on the appointments of an iCalendar (<tt>*.ics</tt>) file. This import is normally used "
-                "to import events like holidays, therefore only single whole day appointments are "
-                "handled by this import."
+                "on the appointments of an iCalendar (<tt>*.ics</tt>) file. This import "
+                "is normally used to import events as exceptions. Time ranges and "
+                "recurring events are supported, however, currently the total number of "
+                "75 exceptions can not be exceeded."
             )
         )
 
@@ -414,10 +399,13 @@ class ModeTimeperiodImportICal(WatoMode):
         filename, _ty, content = ical["file"]
         cal_obj: Calendar = Calendar.from_ical(content)
 
+        # TODO: The time horizon should be taken into account for recurring events,
+        # but currently more than 75 events is too many and causes an ISE. See CMK-14051.
+        # For now, we are limiting events to only the current calendar year.
+
         event_map: dict[datetime, ICalEvent] = {}
-        now = datetime.now()
         for e in recurring_ical_events.of(cal_obj).between(
-            now, now + timedelta(days=365 * ical["horizon"])
+            date.today(), date(date.today().year + 1, 1, 1)
         ):
             ice = ICalEvent(e)
             if ice.dtstart_dt is None:

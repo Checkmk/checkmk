@@ -95,10 +95,7 @@ tests/.hypothesis/
 /results
 /buildscripts/infrastructure/build-nodes/scripts/defines.make
 /buildscripts/docker_image_aliases/docker-image-alias-resolve-error.txt
-/bazel-bin
-/bazel-check_mk
-/bazel-out
-/bazel-testlogs
+/bazel-*
 
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode

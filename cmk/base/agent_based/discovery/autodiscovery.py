@@ -103,11 +103,13 @@ def automation_discovery(
             )  # this is cluster-aware!
 
         fetched = fetcher(host_name, ip_address=None)
-        parsed = parser((f[0], f[1]) for f in fetched)
-        if failed_sources_results := [r for r in summarizer(parsed) if r.state != 0]:
+        host_sections = parser((f[0], f[1]) for f in fetched)
+        if failed_sources_results := [r for r in summarizer(host_sections) if r.state != 0]:
             return DiscoveryResult(error_text=", ".join(r.summary for r in failed_sources_results))
 
-        host_sections_no_error = filter_out_errors(parsed)
+        host_sections_no_error = filter_out_errors(
+            (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
+        )
         store_piggybacked_sections(host_sections_no_error)
         providers = make_providers(host_sections_no_error, section_plugins)
 

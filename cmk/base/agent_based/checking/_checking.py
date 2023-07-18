@@ -120,7 +120,9 @@ def execute_checkmk_checks(
     exit_spec = config_cache.exit_code_spec(hostname)
     services = config_cache.configured_services(hostname)
     host_sections = parser((f[0], f[1]) for f in fetched)
-    host_sections_no_error = filter_out_errors(host_sections)
+    host_sections_no_error = filter_out_errors(
+        (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
+    )
     store_piggybacked_sections(host_sections_no_error)
     providers = make_providers(host_sections_no_error, section_plugins)
     with CPUTracker() as tracker:

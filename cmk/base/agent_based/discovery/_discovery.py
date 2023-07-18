@@ -22,6 +22,7 @@ from cmk.snmplib import SNMPRawData
 
 from cmk.checkengine import (
     filter_out_errors,
+    HostKey,
     ParserFunction,
     SectionPlugin,
     SourceInfo,
@@ -95,7 +96,9 @@ def execute_check_discovery(
     discovery_mode = DiscoveryMode(params.rediscovery.get("mode"))
 
     host_sections = parser(fetched)
-    host_sections_no_error = filter_out_errors(host_sections)
+    host_sections_no_error = filter_out_errors(
+        (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
+    )
     store_piggybacked_sections(host_sections_no_error)
     providers = make_providers(host_sections_no_error, section_plugins)
 

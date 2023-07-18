@@ -71,7 +71,10 @@ def commandline_discovery(
         section.section_begin(host_name)
         try:
             fetched = fetcher(host_name, ip_address=None)
-            merged_host_sections = filter_out_errors(parser((f[0], f[1]) for f in fetched))
+            host_sections = parser((f[0], f[1]) for f in fetched)
+            merged_host_sections = filter_out_errors(
+                (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
+            )
             store_piggybacked_sections(merged_host_sections)
             providers = make_providers(merged_host_sections, section_plugins)
             _commandline_discovery_on_host(

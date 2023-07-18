@@ -8,46 +8,40 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
 
-import cmk.utils.resulttype as result
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
 from cmk.utils.sectionname import MutableSectionMap
 
 from ._parser import HostSections
-from ._typedefs import HostKey, SourceInfo
+from ._typedefs import HostKey
 
 __all__ = ["filter_out_errors"]
 
 
 def filter_out_errors(
-    host_sections: Iterable[tuple[SourceInfo, result.Result[HostSections, Exception]]]
+    host_sections: Iterable[tuple[HostKey, HostSections]]
 ) -> Mapping[HostKey, HostSections]:
     out_sections: dict[HostKey, MutableSectionMap[list]] = defaultdict(dict)
     out_cache_info: dict[HostKey, MutableSectionMap[tuple[int, int]]] = defaultdict(dict)
     out_piggybacked_raw_data: dict[HostKey, dict[HostName, list[bytes]]] = defaultdict(dict)
     host_keys: list[HostKey] = []
 
-    for source, host_section in host_sections:
-        host_key = HostKey(source.hostname, source.source_type)
+    for host_key, host_section in host_sections:
         host_keys.append(host_key)
         console.vverbose(f"  {host_key!s}")
-        if host_section.is_ok():
-            console.vverbose(
-                "  -> Add sections: %s\n"
-                % sorted([str(s) for s in host_section.ok.sections.keys()])
-            )
-            for section_name, section_content in host_section.ok.sections.items():
-                out_sections[host_key].setdefault(section_name, []).extend(section_content)
-            for hostname, raw_lines in host_section.ok.piggybacked_raw_data.items():
-                out_piggybacked_raw_data[host_key].setdefault(hostname, []).extend(raw_lines)
-            # TODO: It should be supported that different sources produce equal sections.
-            # this is handled for the output[host_key].sections data by simply concatenating the lines
-            # of the sections, but for the output[host_key].cache_info this is not done. Why?
-            # TODO: checking._execute_check() is using the oldest cached_at and the largest interval.
-            #       Would this be correct here?
-            out_cache_info[host_key].update(host_section.ok.cache_info)
-        else:
-            console.vverbose("  -> Not adding sections: %s\n" % host_section.error)
+        console.vverbose(
+            "  -> Add sections: %s\n" % sorted([str(s) for s in host_section.sections.keys()])
+        )
+        for section_name, section_content in host_section.sections.items():
+            out_sections[host_key].setdefault(section_name, []).extend(section_content)
+        for hostname, raw_lines in host_section.piggybacked_raw_data.items():
+            out_piggybacked_raw_data[host_key].setdefault(hostname, []).extend(raw_lines)
+        # TODO: It should be supported that different sources produce equal sections.
+        # this is handled for the output[host_key].sections data by simply concatenating the lines
+        # of the sections, but for the output[host_key].cache_info this is not done. Why?
+        # TODO: checking._execute_check() is using the oldest cached_at and the largest interval.
+        #       Would this be correct here?
+        out_cache_info[host_key].update(host_section.cache_info)
 
     return {
         hk: HostSections(

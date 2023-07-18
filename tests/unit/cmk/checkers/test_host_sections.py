@@ -5,7 +5,6 @@
 
 from typing import TypeAlias
 
-import cmk.utils.resulttype as result
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.sectionname import SectionName
 
@@ -48,11 +47,9 @@ class TestMergeHostSections:
         RAW: TRAW = []
 
         host_sections = HS(parse(RAW))
-        source_info = make_source_info()
+        host_key = HostKey(HostName("testhost"), SourceType.HOST)
 
-        assert filter_out_errors([(source_info, result.OK(host_sections))]) == {
-            make_host_key(source_info): HS({})
-        }
+        assert filter_out_errors([(host_key, host_sections)]) == {host_key: HS({})}
 
     def test_sections_noop(self):
         RAW = [
@@ -61,11 +58,9 @@ class TestMergeHostSections:
         ]
 
         host_sections = HS(parse(RAW))
-        source_info = make_source_info()
+        host_key = HostKey(HostName("testhost"), SourceType.HOST)
 
-        assert filter_out_errors([(source_info, result.OK(host_sections))]) == {
-            make_host_key(source_info): HS(parse(RAW))
-        }
+        assert filter_out_errors([(host_key, host_sections)]) == {host_key: HS(parse(RAW))}
 
     def test_sections_merge_sources(self):
         RAW_1 = [
@@ -79,14 +74,11 @@ class TestMergeHostSections:
 
         host_sections_1 = HS(parse(RAW_1))
         host_sections_2 = HS(parse(RAW_2))
-        source_info = make_source_info()
+        host_key = HostKey(HostName("testhost"), SourceType.HOST)
 
-        assert filter_out_errors(
-            [
-                (source_info, result.OK(host_sections_1)),
-                (source_info, result.OK(host_sections_2)),
-            ]
-        ) == {make_host_key(source_info): HS(parse(RAW_1 + RAW_2))}
+        assert filter_out_errors([(host_key, host_sections_1), (host_key, host_sections_2)]) == {
+            host_key: HS(parse(RAW_1 + RAW_2))
+        }
         # check for input mutation
         assert host_sections_1 == HS(parse(RAW_1))
         assert host_sections_2 == HS(parse(RAW_2))
@@ -96,10 +88,10 @@ class TestMergeHostSections:
         PB = {HostName("piggybacked"): [b"aaa", b"bbb", b"ccc"]}
 
         host_sections = HS(parse(RAW), piggybacked_raw_data=PB)
-        source_info = make_source_info()
+        host_key = HostKey(HostName("testhost"), SourceType.HOST)
 
-        assert filter_out_errors([(source_info, result.OK(host_sections))]) == {
-            make_host_key(source_info): HS(parse(RAW), piggybacked_raw_data=PB)
+        assert filter_out_errors([(host_key, host_sections)]) == {
+            host_key: HS(parse(RAW), piggybacked_raw_data=PB)
         }
 
     def test_piggybacked_raw_merge_sources(self):
@@ -112,17 +104,10 @@ class TestMergeHostSections:
 
         host_sections_1 = HS(parse(RAW_1), piggybacked_raw_data={host_name: PB_1})
         host_sections_2 = HS(parse(RAW_2), piggybacked_raw_data={host_name: PB_2})
-        source_info = make_source_info()
+        host_key = HostKey(HostName("testhost"), SourceType.HOST)
 
-        assert filter_out_errors(
-            [
-                (source_info, result.OK(host_sections_1)),
-                (source_info, result.OK(host_sections_2)),
-            ]
-        ) == {
-            make_host_key(source_info): HS(
-                parse(RAW_1 + RAW_2), piggybacked_raw_data={host_name: PB_1 + PB_2}
-            )
+        assert filter_out_errors([(host_key, host_sections_1), (host_key, host_sections_2)]) == {
+            host_key: HS(parse(RAW_1 + RAW_2), piggybacked_raw_data={host_name: PB_1 + PB_2})
         }
 
     def test_cache_info_noop(self):
@@ -130,10 +115,10 @@ class TestMergeHostSections:
         CACHE_INFO = {SectionName("aaa"): (1, 2)}
 
         host_section = HS(parse(RAW), cache_info=CACHE_INFO)
-        source_info = make_source_info()
+        host_key = HostKey(HostName("testhost"), SourceType.HOST)
 
-        assert filter_out_errors([(source_info, result.OK(host_section))]) == {
-            make_host_key(source_info): HS(parse(RAW), cache_info=CACHE_INFO)
+        assert filter_out_errors([(host_key, host_section)]) == {
+            host_key: HS(parse(RAW), cache_info=CACHE_INFO)
         }
 
     def test_cache_info_last_overwrites_previous_values(self):
@@ -146,11 +131,8 @@ class TestMergeHostSections:
 
         host_sections_1 = HS(parse(RAW_1), cache_info=CACHE_INFO_1)
         host_sections_2 = HS(parse(RAW_2), cache_info=CACHE_INFO_2)
-        source_info = make_source_info()
+        host_key = HostKey(HostName("testhost"), SourceType.HOST)
 
-        assert filter_out_errors(
-            [
-                (source_info, result.OK(host_sections_1)),
-                (source_info, result.OK(host_sections_2)),
-            ]
-        ) == {make_host_key(source_info): HS(parse(RAW_1 + RAW_2), cache_info=CACHE_INFO_2)}
+        assert filter_out_errors([(host_key, host_sections_1), (host_key, host_sections_2)]) == {
+            host_key: HS(parse(RAW_1 + RAW_2), cache_info=CACHE_INFO_2)
+        }

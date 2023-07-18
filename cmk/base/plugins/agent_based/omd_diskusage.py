@@ -32,12 +32,13 @@ class Directory:
 
 @dataclass(frozen=True)
 class Site:
-    site: int
     entries: Sequence[Directory]
 
 
 Section = NewType("Section", Mapping[str, Site])
 
+
+TOTAL_SPEC: Final = Spec(metric_name="omd_size", _path="", label="Total")
 
 SPECS: Final = [
     Spec(metric_name="omd_log_size", _path="/var/log", label="Logs"),
@@ -78,14 +79,10 @@ def parse(string_table: StringTable) -> Section:
     for site_name, lines in sub_section_parser(string_table):
         site_dir = f"/omd/sites/{site_name}"
         entries = []
-        site: None | int = None
         for line in lines:
-            if spec := next((spec for spec in SPECS if line.endswith(spec.path(site_dir))), None):
-                entries.append(Directory(spec=spec, value=int(line.split()[0])))
-            else:
-                site = int(line.split()[0])
-        if site is not None:
-            sites[site_name] = Site(site, entries)
+            spec = next((spec for spec in SPECS if line.endswith(spec.path(site_dir))), TOTAL_SPEC)
+            entries.append(Directory(spec=spec, value=int(line.split()[0])))
+        sites[site_name] = Site(entries)
     return Section(sites)
 
 
@@ -101,11 +98,10 @@ def discovery(section: Section) -> DiscoveryResult:
 
 
 def check(item: str, section: Section) -> CheckResult:
-    site = section[item]
-    yield from check_levels(
-        site.site, metric_name="omd_size", label="Total", render_func=render.bytes
-    )
-    for entry in sorted(site.entries, key=lambda x: x.spec.label):
+    if (site := section.get(item)) is None:
+        return
+
+    for entry in sorted(site.entries, key=lambda x: (x.spec.label != "Total", x.spec.label)):
         yield from check_levels(
             entry.value,
             metric_name=entry.spec.metric_name,

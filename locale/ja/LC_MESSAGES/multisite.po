@@ -35718,6 +35718,10 @@ msgstr "一致するホスト/サービスがありません。"
 msgid "No matching metrics found"
 msgstr "一致するメトリックが見つかりません"
 
+#, fuzzy
+msgid "No matching request ID found"
+msgstr "一致するワークが見つかりませんでした。"
+
 msgid "No metrics in this graph yet."
 msgstr "このグラフにはまだ指標がありません。"
 
@@ -43137,10 +43141,6 @@ msgstr "必須 バージョン"
 
 msgid "Request"
 msgstr "リクエスト"
-
-#, fuzzy
-msgid "Request IDs are not equal"
-msgstr "ラベル \"%s\" は必須ではありません。"
 
 msgid "Request Method"
 msgstr "リクエスト方法"
@@ -70747,6 +70747,11 @@ msgstr "{actual}が低すぎます。最小許容値は {bound} です。"
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s tribe29 GmbH. All Rights Reserved."
+
+#, fuzzy
+#~| msgid "The labels %s are not required."
+#~ msgid "Request IDs are not equal"
+#~ msgstr "ラベル \"%s\" は必須ではありません。"
 
 #, fuzzy
 #~| msgid "Attribute to set"

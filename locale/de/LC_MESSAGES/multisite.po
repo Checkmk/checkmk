@@ -36249,6 +36249,10 @@ msgstr "Keine passenden Hosts/Services gefunden."
 msgid "No matching metrics found"
 msgstr "Keine passenden Metriken gefunden"
 
+#, fuzzy
+msgid "No matching request ID found"
+msgstr "Keine passenden Werks gefunden."
+
 msgid "No metrics in this graph yet."
 msgstr "Der Graph enthält noch keine Metriken."
 
@@ -43742,9 +43746,6 @@ msgstr "Erf. Version"
 
 msgid "Request"
 msgstr "Bedarf"
-
-msgid "Request IDs are not equal"
-msgstr "Anfrage-IDs sind nicht gleich"
 
 msgid "Request Method"
 msgstr "Requestmethode"
@@ -72284,6 +72285,9 @@ msgstr "{actual} ist zu niedrig. Erlaubtes Minimum ist {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle Rechte vorbehalten."
+
+#~ msgid "Request IDs are not equal"
+#~ msgstr "Anfrage-IDs sind nicht gleich"
 
 #~ msgid "Attribute match value"
 #~ msgstr "Attribut-Match-Wert"

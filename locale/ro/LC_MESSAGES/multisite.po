@@ -36498,6 +36498,10 @@ msgstr "Nu există gazde/servicii corespunzătoare."
 msgid "No matching metrics found"
 msgstr "Nu s-au găsit metrici corespunzătoare"
 
+#, fuzzy
+msgid "No matching request ID found"
+msgstr "Nu s-au găsit Werks corespunzătoare."
+
 msgid "No metrics in this graph yet."
 msgstr "Nu există încă metrici în acest grafic."
 
@@ -44026,9 +44030,6 @@ msgstr "Cerință. Versiune"
 
 msgid "Request"
 msgstr "Cerere"
-
-msgid "Request IDs are not equal"
-msgstr "ID-urile cererilor nu sunt egale"
 
 msgid "Request Method"
 msgstr "Metoda de solicitare"
@@ -72835,6 +72836,9 @@ msgstr "{actual} este prea mică. Valoarea minimă permisă este {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Toate drepturile rezervate."
+
+#~ msgid "Request IDs are not equal"
+#~ msgstr "ID-urile cererilor nu sunt egale"
 
 #, fuzzy
 #~| msgid "Attribute to set"

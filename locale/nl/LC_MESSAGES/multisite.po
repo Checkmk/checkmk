@@ -36184,6 +36184,10 @@ msgstr "Geen overeenkomende hosts/diensten."
 msgid "No matching metrics found"
 msgstr "Geen overeenkomstige metriek gevonden"
 
+#, fuzzy
+msgid "No matching request ID found"
+msgstr "Geen overeenkomende Werks gevonden."
+
 msgid "No metrics in this graph yet."
 msgstr "Nog geen metriek in deze grafiek."
 
@@ -43634,9 +43638,6 @@ msgstr "Req. Versie"
 
 msgid "Request"
 msgstr "Verzoek"
-
-msgid "Request IDs are not equal"
-msgstr "Verzoek ID's zijn niet gelijk"
 
 msgid "Request Method"
 msgstr "Aanvraag methode"
@@ -72147,6 +72148,9 @@ msgstr "{actual} is te laag. De minimaal toegestane waarde is {bound}."
 #, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Alle rechten voorbehouden."
+
+#~ msgid "Request IDs are not equal"
+#~ msgstr "Verzoek ID's zijn niet gelijk"
 
 #, fuzzy
 #~| msgid "Attribute to set"

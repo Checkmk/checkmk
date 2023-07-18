@@ -36254,6 +36254,10 @@ msgstr "Sem anfitriões/serviços correspondentes."
 msgid "No matching metrics found"
 msgstr "Não foram encontradas métricas correspondentes"
 
+#, fuzzy
+msgid "No matching request ID found"
+msgstr "Não se encontraram Werks correspondentes."
+
 msgid "No metrics in this graph yet."
 msgstr "Ainda não há métricas neste gráfico."
 
@@ -43733,9 +43737,6 @@ msgstr "Req. Versão"
 
 msgid "Request"
 msgstr "Solicitação"
-
-msgid "Request IDs are not equal"
-msgstr "Os IDs dos pedidos não são iguais"
 
 msgid "Request Method"
 msgstr "Método de solicitação"
@@ -72221,6 +72222,9 @@ msgstr "{actual} é demasiado baixo. O valor mínimo permitido é {bound}."
 #, fuzzy, python-format
 msgid "© %s Checkmk GmbH. All Rights Reserved."
 msgstr "© %s Checkmk GmbH. Todos os direitos reservados."
+
+#~ msgid "Request IDs are not equal"
+#~ msgstr "Os IDs dos pedidos não são iguais"
 
 #, fuzzy
 #~| msgid "Attribute to set"

@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 #
 from dataclasses import dataclass
-from typing import Final, Iterator, LiteralString, Mapping, NewType, Sequence
+from typing import Final, Iterator, LiteralString, Mapping, Sequence
 
 from cmk.base.plugins.agent_based.agent_based_api.v1 import check_levels, register, render, Service
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
@@ -17,11 +17,7 @@ from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import (
 @dataclass(frozen=True)
 class Spec:
     metric_name: LiteralString
-    _path: LiteralString
     label: LiteralString
-
-    def path(self, site_dir: str) -> str:
-        return site_dir + self._path
 
 
 @dataclass(frozen=True)
@@ -30,35 +26,30 @@ class Directory:
     spec: Spec
 
 
-@dataclass(frozen=True)
-class Site:
-    entries: Sequence[Directory]
+Section = Mapping[str, Sequence[Directory]]
 
 
-Section = NewType("Section", Mapping[str, Site])
-
-
-TOTAL_SPEC: Final = Spec(metric_name="omd_size", _path="", label="Total")
-
-SPECS: Final = [
-    Spec(metric_name="omd_log_size", _path="/var/log", label="Logs"),
-    Spec(metric_name="omd_rrd_size", _path="/var/check_mk/rrd", label="RRDs"),
-    Spec(metric_name="omd_tmp_size", _path="/tmp/", label="Tmp"),
-    Spec(metric_name="omd_local_size", _path="/local/", label="Local"),
-    Spec(metric_name="omd_agents_size", _path="/var/check_mk/agents/", label="Agents"),
-    Spec(metric_name="omd_history_size", _path="/var/mkeventd/history/", label="History"),
-    Spec(metric_name="omd_core_size", _path="/var/check_mk/core/", label="Core"),
-    Spec(metric_name="omd_pnp4nagios_size", _path="/var/pnp4nagios/", label="PNP4Nagios"),
-    Spec(
+SPECS: Final = {
+    "": Spec(metric_name="omd_size", label="Total"),
+    "/var/log": Spec(metric_name="omd_log_size", label="Logs"),
+    "/var/check_mk/rrd": Spec(metric_name="omd_rrd_size", label="RRDs"),
+    "/tmp": Spec(metric_name="omd_tmp_size", label="Tmp"),
+    "/local": Spec(metric_name="omd_local_size", label="Local"),
+    "/var/check_mk/agents": Spec(metric_name="omd_agents_size", label="Agents"),
+    "/var/mkeventd/history": Spec(metric_name="omd_history_size", label="History"),
+    "/var/check_mk/core": Spec(metric_name="omd_core_size", label="Core"),
+    "/var/pnp4nagios": Spec(metric_name="omd_pnp4nagios_size", label="PNP4Nagios"),
+    "/var/check_mk/inventory_archive": Spec(
         metric_name="omd_inventory_size",
-        _path="/var/check_mk/inventory_archive/",
         label="Inventory",
     ),
-]
+}
 
 
-def sub_section_parser(string_table: StringTable) -> Iterator[tuple[str, Sequence[str]]]:
-    sub_section: list[str] = []
+def sub_section_parser(
+    string_table: StringTable,
+) -> Iterator[tuple[str, Sequence[tuple[int, str]]]]:
+    sub_section: list[tuple[int, str]] = []
     name = ""
     for line in string_table:
         if line[0].startswith("[") and line[0].endswith("]"):
@@ -69,21 +60,21 @@ def sub_section_parser(string_table: StringTable) -> Iterator[tuple[str, Sequenc
             name = line[0].removeprefix("[site ")[:-1]
             sub_section = []
         elif line[0] != "":
-            sub_section.append(line[0])
+            raw_value, dir_name = line[0].split()
+            sub_section.append((int(raw_value), dir_name.rstrip("/")))
     if len(sub_section) != 0:
         yield name, sub_section
 
 
 def parse(string_table: StringTable) -> Section:
-    sites: dict[str, Site] = {}
-    for site_name, lines in sub_section_parser(string_table):
-        site_dir = f"/omd/sites/{site_name}"
-        entries = []
-        for line in lines:
-            spec = next((spec for spec in SPECS if line.endswith(spec.path(site_dir))), TOTAL_SPEC)
-            entries.append(Directory(spec=spec, value=int(line.split()[0])))
-        sites[site_name] = Site(entries)
-    return Section(sites)
+    return {
+        site_name: [
+            Directory(spec=spec, value=size)
+            for size, dir_name in lines
+            if (spec := SPECS.get(dir_name.removeprefix(f"/omd/sites/{site_name}")))
+        ]
+        for site_name, lines in sub_section_parser(string_table)
+    }
 
 
 register.agent_section(
@@ -98,10 +89,10 @@ def discovery(section: Section) -> DiscoveryResult:
 
 
 def check(item: str, section: Section) -> CheckResult:
-    if (site := section.get(item)) is None:
+    if (directories := section.get(item)) is None:
         return
 
-    for entry in sorted(site.entries, key=lambda x: (x.spec.label != "Total", x.spec.label)):
+    for entry in sorted(directories, key=lambda d: (d.spec.label != "Total", d.spec.label)):
         yield from check_levels(
             entry.value,
             metric_name=entry.spec.metric_name,

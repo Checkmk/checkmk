@@ -35,7 +35,7 @@ from cmk.snmplib import (
     SNMPRawData,
     SNMPTable,
 )
-from cmk.snmplib.utils import SNMPDetectSpec
+from cmk.snmplib.detect import SNMPDetectSpec
 
 import cmk.fetchers._snmp as snmp
 import cmk.fetchers._tcp as tcp

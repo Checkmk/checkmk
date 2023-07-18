@@ -22,7 +22,7 @@ from cmk.utils.paths import snmp_scan_cache_dir
 from cmk.utils.sectionname import SectionName
 
 from cmk.snmplib import OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig
-from cmk.snmplib.utils import evaluate_snmp_detection
+from cmk.snmplib.detect import evaluate_snmp_detection
 
 import cmk.fetchers._snmpcache as snmp_cache
 import cmk.fetchers._snmpscan as snmp_scan

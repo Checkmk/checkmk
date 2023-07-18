@@ -17,7 +17,7 @@ from cmk.utils.regex import regex
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib.utils import SNMPDetectBaseType
+from cmk.snmplib.detect import SNMPDetectBaseType
 
 from cmk.checkengine.discovery import HostLabel
 from cmk.checkengine.sectionparser import ParsedSectionName

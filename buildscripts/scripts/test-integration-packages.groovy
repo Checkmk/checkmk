@@ -21,10 +21,10 @@ def main() {
     def testing_helper = load("${checkout_dir}/buildscripts/scripts/utils/integration.groovy");
 
     def distros = versioning.configured_or_overridden_distros(EDITION, OVERRIDE_DISTROS);
-    def branch_name = versioning.safe_branch_name(scm);
-    def cmk_version = versioning.get_cmk_version(branch_name, VERSION);
+    def safe_branch_name = versioning.safe_branch_name(scm);
+    def cmk_version = versioning.get_cmk_version(safe_branch_name, VERSION);
     def docker_tag = versioning.select_docker_tag(
-        branch_name,
+        safe_branch_name,
         env.DOCKER_TAG,  // FIXME
         env.DOCKER_TAG_DEFAULT);
 
@@ -33,14 +33,18 @@ def main() {
         |Run integration tests for packages<br>
         |VERSION: ${VERSION}<br>
         |EDITION: ${EDITION}<br>
+        |safe_branch_name: ${safe_branch_name}<br>
+        |cmk_version: ${cmk_version}<br>
         |distros: ${distros}<br>
         """.stripMargin());
 
     print(
         """
         |===== CONFIGURATION ===============================
-        |distros:...............  │${distros}│
+        |safe_branch_name:......  │${safe_branch_name}│
         |docker_tag:............  │${docker_tag}│
+        |distros:...............  │${distros}│
+        |cmk_version:...........  │${cmk_version}
         |===================================================
         """.stripMargin());
 
@@ -60,5 +64,4 @@ def main() {
         )
     }
 }
-
 return this;

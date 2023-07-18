@@ -2016,6 +2016,121 @@ class CommentClient(RestApiClient):
         )
 
 
+APIDCD = dict[str, Any]
+
+
+class DcdClient(RestApiClient):
+    domain: Literal["dcd"] = "dcd"
+
+    def get(self, dcd_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/objects/{self.domain}/{dcd_id}",
+            expect_ok=expect_ok,
+        )
+
+    def get_all(self, expect_ok: bool = True) -> Response:
+        return self.request(
+            "get",
+            url=f"/domain-types/{self.domain}/collections/all",
+            expect_ok=expect_ok,
+        )
+
+    def create(
+        self,
+        dcd_id: str,
+        site: str,
+        title: str
+        | None = None,  # Set as optional in order to run tests on missing fields behavior
+        comment: str | None = None,
+        documentation_url: str | None = None,
+        disabled: bool | None = None,
+        interval: int | None = None,
+        connector_type: str | None = None,
+        discover_on_creation: bool | None = None,
+        no_deletion_time_after_init: int | None = None,
+        validity_period: int | None = None,
+        exclude_time_ranges: list[dict[str, str]] | None = None,
+        creation_rules: list[dict[str, Any]] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, Any] = {
+            k: v
+            for k, v in {
+                "dcd_id": dcd_id,
+                "title": title,
+                "site": site,
+                "comment": comment,
+                "documentation_url": documentation_url,
+                "disabled": disabled,
+                "interval": interval,
+                "discover_on_creation": discover_on_creation,
+                "no_deletion_time_after_init": no_deletion_time_after_init,
+                "validity_period": validity_period,
+                "creation_rules": creation_rules,
+                "exclude_time_ranges": exclude_time_ranges,
+                "connector_type": connector_type,
+            }.items()
+            if v is not None
+        }
+
+        return self.request(
+            "post",
+            url=f"/domain-types/{self.domain}/collections/all",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def edit(
+        self,
+        dcd_id: str,
+        title: str,
+        site: str,
+        comment: str | None = None,
+        documentation_url: str | None = None,
+        disabled: bool | None = None,
+        interval: int | None = None,
+        discover_on_creation: bool | None = None,
+        no_deletion_time_after_init: int | None = None,
+        validity_period: int | None = None,
+        creation_rules: list[dict[str, Any]] | None = None,
+        exclude_time_ranges: list[dict[str, str]] | None = None,
+        expect_ok: bool = True,
+    ) -> Response:
+        body: dict[str, Any] = {
+            k: v
+            for k, v in {
+                "dcd_id": dcd_id,
+                "title": title,
+                "site": site,
+                "comment": comment,
+                "documentation_url": documentation_url,
+                "disabled": disabled,
+                "interval": interval,
+                "discover_on_creation": discover_on_creation,
+                "no_deletion_time_after_init": no_deletion_time_after_init,
+                "validity_period": validity_period,
+                "creation_rules": creation_rules,
+                "exclude_time_ranges": exclude_time_ranges,
+            }.items()
+            if v is not None
+        }
+
+        return self.request(
+            "put",
+            url=f"/objects/{self.domain}/{dcd_id}",
+            body=body,
+            expect_ok=expect_ok,
+        )
+
+    def delete(self, dcd_id: str, expect_ok: bool = True) -> Response:
+        return self.request(
+            "delete",
+            url=f"/objects/{self.domain}/{dcd_id}",
+            expect_ok=expect_ok,
+        )
+
+
 @dataclasses.dataclass
 class ClientRegistry:
     Licensing: LicensingClient
@@ -2039,6 +2154,7 @@ class ClientRegistry:
     RuleNotification: RuleNotificationClient
     Comment: CommentClient
     EventConsole: EventConsoleClient
+    Dcd: DcdClient
 
 
 def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> ClientRegistry:
@@ -2064,4 +2180,5 @@ def get_client_registry(request_handler: RequestHandler, url_prefix: str) -> Cli
         RuleNotification=RuleNotificationClient(request_handler, url_prefix),
         Comment=CommentClient(request_handler, url_prefix),
         EventConsole=EventConsoleClient(request_handler, url_prefix),
+        Dcd=DcdClient(request_handler, url_prefix),
     )

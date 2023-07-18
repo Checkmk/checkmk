@@ -345,5 +345,5 @@ $(CMA_PACKAGE): $(APPLIANCE_INSTALL_CMA) install
 
 clean: install-clean
 	$(RM) -r $(BUILD_HELPER_DIR)
-	$(RM) -r $(BUILD_BASE_DIR)
+	$(RM) -r $(BUILD_BASE_DIR)/* $(BUILD_BASE_DIR)/.*
 	$(RM) -r $(PACKAGE_BUILD_DIR)

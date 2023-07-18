@@ -1,6 +1,6 @@
 Title: UNIX agents/mk_oracle: Validate termination of cached plugins
 Class: fix
-Compatible: incomp
+Compatible: compat
 Component: checks
 Date: 1688562129
 Edition: cre

@@ -8,8 +8,9 @@ from pathlib import Path
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.snmplib.snmp_table import WalkCache
 from cmk.snmplib.type_defs import BackendOIDSpec, BackendSNMPTree, SNMPRowInfo
+
+from cmk.fetchers._snmp import WalkCache
 
 
 class MockWalkCache(WalkCache):

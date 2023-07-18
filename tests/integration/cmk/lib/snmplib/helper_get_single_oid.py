@@ -13,9 +13,10 @@ import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.version import edition, Edition
 
-from cmk.snmplib import snmp_cache, snmp_modes
+from cmk.snmplib import snmp_modes
 from cmk.snmplib.type_defs import OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig
 
+import cmk.fetchers._snmpcache as snmp_cache
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 
 if edition() is not Edition.CRE:

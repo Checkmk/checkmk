@@ -21,10 +21,10 @@ from cmk.utils.log import logger
 from cmk.utils.paths import snmp_scan_cache_dir
 from cmk.utils.sectionname import SectionName
 
-import cmk.snmplib.snmp_cache as snmp_cache
 from cmk.snmplib.type_defs import OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig
 from cmk.snmplib.utils import evaluate_snmp_detection
 
+import cmk.fetchers._snmpcache as snmp_cache
 import cmk.fetchers._snmpscan as snmp_scan
 
 import cmk.base.api.agent_based.register as agent_based_register

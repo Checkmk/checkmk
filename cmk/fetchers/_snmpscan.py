@@ -11,10 +11,11 @@ from cmk.utils.exceptions import MKGeneralException, MKSNMPError, OnError
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionName
 
-import cmk.snmplib.snmp_cache as snmp_cache
 import cmk.snmplib.snmp_modes as snmp_modes
 from cmk.snmplib.type_defs import SNMPBackend, SNMPDetectBaseType
 from cmk.snmplib.utils import evaluate_snmp_detection
+
+import cmk.fetchers._snmpcache as snmp_cache
 
 SNMPScanSection = tuple[SectionName, SNMPDetectBaseType]
 

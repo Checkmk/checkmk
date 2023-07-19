@@ -37,7 +37,7 @@ LOGGER = logging.getLogger()  # root logger for now
 
 AZURE_CACHE_FILE_PATH = tmp_dir / "agents" / "agent_azure"
 
-NOW = datetime.datetime.utcnow()
+NOW = datetime.datetime.now(tz=datetime.UTC)
 
 ALL_METRICS: dict[str, list[tuple]] = {
     # to add a new metric, just add a made up name, run the

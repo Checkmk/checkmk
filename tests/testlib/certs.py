@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric.padding import PKCS1v15
@@ -103,5 +103,5 @@ def fixture_self_signed() -> CertificateWithPrivateKey:
             common_name="TestGenerateSelfSigned",
             expiry=relativedelta(hours=2),
             key_size=1024,
-            start_date=datetime.utcnow(),
+            start_date=datetime.now(tz=timezone.utc),
         )

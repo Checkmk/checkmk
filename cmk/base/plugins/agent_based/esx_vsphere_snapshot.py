@@ -50,7 +50,7 @@ def check_snapshots_summary(params: Mapping[str, Any], section: Section) -> Chec
     snapshots = section  # just to be clear
 
     # use UTC-timestamp - don't use time.time() here since it's local
-    now = int(datetime.datetime.utcnow().timestamp())
+    now = int(datetime.datetime.now(tz=datetime.UTC).timestamp())
 
     if any(s for s in snapshots if s.time > now):
         yield Result(

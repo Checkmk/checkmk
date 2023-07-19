@@ -321,11 +321,13 @@ def check_docker_container_status_uptime(
         return
 
     # assumed format: 2019-06-05T08:58:06.893459004Z
-    utc_start = datetime.datetime.strptime(started_str[:-4] + "UTC", "%Y-%m-%dT%H:%M:%S.%f%Z")
+    utc_start = datetime.datetime.strptime(
+        started_str[:-4] + "UTC", "%Y-%m-%dT%H:%M:%S.%f%Z"
+    ).astimezone(tz=datetime.UTC)
 
     op_status = section_docker_container_status["Status"]
     if op_status == "running":
-        uptime_sec = (datetime.datetime.utcnow() - utc_start).total_seconds()
+        uptime_sec = (datetime.datetime.now(tz=datetime.UTC) - utc_start).total_seconds()
         yield from uptime.check(params, uptime.Section(int(uptime_sec), None))
     else:
         yield from uptime.check(params, uptime.Section(0, None))

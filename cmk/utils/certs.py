@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Final, NamedTuple
 
@@ -174,8 +174,8 @@ def _make_cert_builder(
         .subject_name(subject_name)
         .public_key(public_key)
         .serial_number(random_serial_number())
-        .not_valid_before(datetime.utcnow())
-        .not_valid_after(datetime.utcnow() + validity)
+        .not_valid_before(datetime.now(tz=timezone.utc))
+        .not_valid_after(datetime.now(tz=timezone.utc) + validity)
     )
 
 

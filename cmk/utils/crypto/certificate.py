@@ -33,7 +33,7 @@ from __future__ import annotations
 
 import contextlib
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import NamedTuple, NewType, overload
 
@@ -133,7 +133,7 @@ class CertificateWithPrivateKey(NamedTuple):
             common_name,
             organization or f"Checkmk Site {omd_site()}",
             expiry,
-            start_date=start_date or datetime.utcnow(),
+            start_date=start_date or datetime.now(tz=timezone.utc),
             organizational_unit_name=organizational_unit_name,
             subject_alt_dns_names=subject_alt_dns_names,
         )
@@ -490,11 +490,11 @@ class Certificate:
         if allowed_drift is None:
             allowed_drift = relativedelta(hours=+2)
 
-        if datetime.utcnow() + allowed_drift < self._cert.not_valid_before:
+        if datetime.now() + allowed_drift < self._cert.not_valid_before:
             raise InvalidExpiryError(
                 f"Certificate is not yet valid (not_valid_before: {self._cert.not_valid_before})"
             )
-        if datetime.utcnow() - allowed_drift > self._cert.not_valid_after:
+        if datetime.now() - allowed_drift > self._cert.not_valid_after:
             raise InvalidExpiryError(
                 f"Certificate is expired (not_valid_after: {self._cert.not_valid_after})"
             )
@@ -509,7 +509,7 @@ class Certificate:
         If the certificate's "not_valid_after" time lies in the past, a negative value will be
         returned.
         """
-        return (self._cert.not_valid_after - datetime.utcnow()).days
+        return (self._cert.not_valid_after - datetime.now()).days
 
     def _get_name_attribute(self, attribute: x509.ObjectIdentifier) -> str:
         attr = self._cert.subject.get_attributes_for_oid(attribute)

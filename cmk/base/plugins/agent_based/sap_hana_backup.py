@@ -20,7 +20,7 @@ from .utils import sap_hana
 
 # Black magic alert: could return None in some cases, but the offset seems to be
 # magically calculated based on local systemtime...
-LOCAL_TIMEZONE = datetime.utcnow().astimezone().tzinfo
+LOCAL_TIMEZONE = datetime.now(tz=timezone.utc).astimezone().tzinfo
 
 
 class Backup(NamedTuple):
@@ -132,7 +132,7 @@ def check_sap_hana_backup(item: str, params: Mapping[str, Any], section: Section
             state=State.OK, summary="Last: %s" % render.datetime(data.end_time.timestamp())
         )
         yield from check_levels(
-            (datetime.utcnow().replace(tzinfo=timezone.utc) - data.end_time).total_seconds(),
+            (datetime.now(tz=timezone.utc) - data.end_time).total_seconds(),
             metric_name="backup_age",
             levels_upper=params["backup_age"],
             render_func=render.timespan,

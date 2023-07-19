@@ -3,7 +3,7 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import cache
 
 from cryptography.hazmat.primitives.asymmetric.rsa import RSAPrivateKey
@@ -41,8 +41,10 @@ def sign_agent_csr(
             .subject_name(csr.subject)
             .public_key(csr.public_key())
             .serial_number(random_serial_number())
-            .not_valid_before(datetime.utcnow())
-            .not_valid_after(datetime.utcnow() + relativedelta(months=lifetime_in_months))
+            .not_valid_before(datetime.now(tz=timezone.utc))
+            .not_valid_after(
+                datetime.now(tz=timezone.utc) + relativedelta(months=lifetime_in_months)
+            )
         )
         .issuer_name(root_cert.issuer)
         .add_extension(

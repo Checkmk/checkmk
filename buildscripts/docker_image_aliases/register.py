@@ -4,11 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 """This script stores a given Docker image in our internal registry and creates a textual
-docker image alias (in form of a Dockerfile file containing the provided data and a new sha
+docker image alias (in form of a Dockerfile file containing the provided data and a new SHA
 based image name) referencing the remotly stored image via unique ID
 
 run
 
+  >> docker login artifacts.lan.tribe29.com:4000 --username USER.NAME
   >> ./register.py IMAGE_DEBIAN_DEFAULT debian:buster-slim
 
 to create an (internally used) Dockerfile inside `IMAGE_DEBIAN_DEFAULT/`:
@@ -25,15 +26,16 @@ import shlex
 import subprocess
 import sys
 from pathlib import Path
+from typing import List, Optional, Sequence, Tuple
 
-import docker
+import docker  # type: ignore
 import yaml
 
 LOG = logging.getLogger("register-dia")
 REGISTRY = "artifacts.lan.tribe29.com:4000"
 
 
-def split_source_name(raw_source):
+def split_source_name(raw_source: str) -> Tuple[str, str, List[str]]:
     """
     >>> split_source_name("artifacts.lan.tribe29.com:4000/debian:latest")
     ('artifacts.lan.tribe29.com:4000', 'debian', ['latest'])
@@ -50,7 +52,7 @@ def split_source_name(raw_source):
     return "/".join(registry_name), base_name, tags if tags else ["latest"]
 
 
-def cmd_result(cmd, cwd=None):
+def cmd_result(cmd: str, cwd: Optional[str] = None) -> Sequence[str]:
     """Run @cmd and return non-empty lines"""
     return [
         line
@@ -61,11 +63,11 @@ def cmd_result(cmd, cwd=None):
     ]
 
 
-def commit_id(directory) -> str:
+def commit_id(directory: str) -> str:
     return cmd_result("git rev-parse --short HEAD", cwd=directory)[0]
 
 
-def cmk_branch(directory) -> str:
+def cmk_branch(directory: str) -> str:
     return min(
         ("master", "2.2.0", "2.1.0", "2.0.0", "1.6.0", "1.5.0"),
         key=lambda b: int(
@@ -76,20 +78,19 @@ def cmk_branch(directory) -> str:
     )
 
 
-def git_info():
+def git_info() -> List[str]:
     cwd = os.path.dirname(__file__)
     a, b = cmk_branch(directory=cwd), commit_id(directory=cwd)
     return [a, b]
 
 
-def main():
+def main() -> None:
     logging.basicConfig(
         level=logging.DEBUG if "-v" in sys.argv else logging.WARNING,
         format="%(name)s %(levelname)s: %(message)s",
     )
 
     alias_name, source_name = sys.argv[1], sys.argv[2]
-    alias_file_name = os.path.join(os.path.dirname(__file__), "docker_image_aliases.txt")
 
     client = docker.from_env(timeout=1200)
     LOG.info("Docker version: %r", client.info()["ServerVersion"])
@@ -130,7 +131,7 @@ def main():
     assert remote_image_name in new_digests
 
     alias_dir = Path(os.path.dirname(__file__)) / alias_name
-    alias_dir.mkdir(parents=True)
+    alias_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"create new alias at {alias_dir.absolute()}")
     with open(alias_dir / "Dockerfile", "w") as dockerfile:

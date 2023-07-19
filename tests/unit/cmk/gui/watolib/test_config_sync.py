@@ -581,7 +581,6 @@ def _synchronize_site(
 
     fetch_state_result = activate_changes.fetch_sync_state(
         snapshot_settings.snapshot_components,
-        Path(snapshot_settings.work_dir),
         site_activation_state,
         {},
     )

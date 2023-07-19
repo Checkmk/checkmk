@@ -30,9 +30,9 @@ import traceback
 from collections.abc import Callable, Iterable, Iterator, Mapping, MutableMapping, Sequence
 from dataclasses import asdict, dataclass
 from itertools import filterfalse
-from multiprocessing.pool import ThreadPool
+from multiprocessing.pool import AsyncResult, ThreadPool
 from pathlib import Path
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, TypedDict
 
 from setproctitle import setthreadtitle
 
@@ -664,9 +664,8 @@ class SyncState:
 
 def fetch_sync_state(
     replication_paths: list[ReplicationPath],
-    site_config_dir: Path,
     site_activation_state: SiteActivationState,
-    config_sync_file_infos_per_inode: Mapping[int, ConfigSyncFileInfo],
+    central_file_infos: ConfigSyncFileInfos,
 ) -> tuple[SyncState, SiteActivationState, float] | None:
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
@@ -682,14 +681,6 @@ def fetch_sync_state(
             site_id, replication_paths
         )
         site_logger.debug("Received %d file infos from remote", len(remote_file_infos))
-
-        # In case we experience performance issues here, we could postpone the hashing of the
-        # central files to only be done ad-hoc in get_file_names_to_sync when the other attributes
-        # are not enough to detect a differing file.
-        central_file_infos = _get_config_sync_file_infos(
-            replication_paths, site_config_dir, config_sync_file_infos_per_inode
-        )
-        site_logger.debug("Got %d file infos from %s", len(remote_file_infos), site_config_dir)
 
         return (
             SyncState(
@@ -718,12 +709,7 @@ def calc_sync_delta(
     try:
         _set_sync_state(site_activation_state, _("Computing differences"))
 
-        sync_delta = get_file_names_to_sync(
-            site_id,
-            site_logger,
-            sync_state,
-            file_filter_func,
-        )
+        sync_delta = get_file_names_to_sync(site_id, site_logger, sync_state, file_filter_func)
 
         site_logger.debug("New files to be synchronized: %r", sync_delta.to_sync_new)
         site_logger.debug("Changed files to be synchronized: %r", sync_delta.to_sync_changed)
@@ -758,7 +744,7 @@ def synchronize_files(
 
         _set_sync_state(
             site_activation_state,
-            _("Transfering: %d new, %d changed and %d vanished files")
+            _("Transferring: %d new, %d changed and %d vanished files")
             % (
                 len(sync_delta.to_sync_new),
                 len(sync_delta.to_sync_changed),
@@ -881,10 +867,7 @@ def _call_activate_changes_automation(
         response = cmk.gui.watolib.automations.do_remote_automation(
             get_site_config(site_id),
             "activate-changes",
-            [
-                ("domains", repr(serialized_requests)),
-                ("site_id", site_id),
-            ],
+            [("domains", repr(serialized_requests)), ("site_id", site_id)],
         )
     except cmk.gui.watolib.automations.MKAutomationException as e:
         if "Invalid automation command: activate-changes" in "%s" % e:
@@ -921,7 +904,7 @@ def activate_remote_changes(
     activate_changes: ActivateChanges,
     prevent_activate: bool,
     site_activation_state: SiteActivationState,
-) -> tuple[SiteId, SiteActivationState] | None:
+) -> SiteActivationState | None:
     site_id = site_activation_state["_site_id"]
     site_logger = logger.getChild(f"site[{site_id}]")
 
@@ -940,7 +923,7 @@ def activate_remote_changes(
             _confirm_activated_changes(site_id, site_changes_activate_until)
 
         _set_done_result(configuration_warnings, site_activation_state)
-        return site_id, site_activation_state
+        return site_activation_state
     except Exception as e:
         _handle_activation_changes_exception(site_logger, str(e), site_activation_state)
         return None
@@ -1997,20 +1980,17 @@ def _get_config_sync_file_infos_per_inode(root_dir: str) -> Mapping[int, ConfigS
     return inode_sync_states
 
 
-def _initialize_tasks(
-    activation_id: ActivationId,
+def _prepare_for_activation_tasks(
     activate_changes: ActivateChanges,
-    prevent_activate: bool,
+    activation_id: ActivationId,
     site_snapshot_settings: Mapping[SiteId, SnapshotSettings],
     time_started: float,
-) -> tuple[Sequence[SiteId], list, list]:
+) -> tuple[Mapping[SiteId, ConfigSyncFileInfos], Mapping[SiteId, SiteActivationState]]:
     config_sync_file_infos_per_inode = _get_config_sync_file_infos_per_inode(
         site_snapshot_settings[list(site_snapshot_settings.keys())[0]].work_dir
     )
-
-    activation_remote_changes_pool_args = []
-    fetch_sync_state_pool_args = []
-    locked_sites = []
+    central_file_infos_per_site = {}
+    site_activation_states_per_site = {}
     for site_id, snapshot_settings in sorted(site_snapshot_settings.items(), key=lambda e: e[0]):
         site_activation_state = _initialize_site_activation_state(
             site_id, activation_id, activate_changes, time_started
@@ -2018,100 +1998,47 @@ def _initialize_tasks(
 
         if not _lock_activation(site_activation_state):
             continue
-        locked_sites.append(site_id)
         _mark_running(site_activation_state)
 
         log_audit("activate-changes", "Started activation of site %s" % site_id)
+        site_activation_states_per_site[site_id] = site_activation_state
 
-        if activate_changes.is_sync_needed_until(site_id):
-            fetch_sync_state_pool_args.append(
-                (
-                    snapshot_settings.snapshot_components,
-                    Path(snapshot_settings.work_dir),
-                    site_activation_state,
-                    config_sync_file_infos_per_inode,
-                )
+        if activate_changes.is_sync_needed(site_id):
+            central_file_infos_per_site[site_id] = _get_site_central_file_infos(
+                site_id, snapshot_settings, config_sync_file_infos_per_inode
             )
-        else:
-            activation_remote_changes_pool_args.append(
-                (activate_changes, prevent_activate, site_activation_state)
-            )
-    return locked_sites, fetch_sync_state_pool_args, activation_remote_changes_pool_args
+    return central_file_infos_per_site, site_activation_states_per_site
 
 
-def _fetch_sync_state_tasks(
-    pool: multiprocessing.pool.ThreadPool,
-    pool_args: Sequence[tuple[Sequence[ReplicationPath], Path, SiteActivationState]],
-    file_filter_func: FileFilterFunc,
-    remote_config_generation_per_site: MutableMapping[SiteId, int],
-) -> Sequence[tuple[SyncState, FileFilterFunc, SiteActivationState, float]]:
-    pool_result = pool.starmap_async(copy_request_context(fetch_sync_state), pool_args)
+def _get_site_central_file_infos(site_id, snapshot_settings, config_sync_file_infos_per_inode):
+    # In case we experience performance issues here, we could postpone the hashing of the
+    # central files to only be done ad-hoc in get_file_names_to_sync when the other attributes
+    # are not enough to detect a differing file.
 
-    calc_delta_args = []
-    for fetch_sync_state_result in pool_result.get():
-        if fetch_sync_state_result is None:
-            continue  # exception handling happens in thread
+    site_config_dir = Path(snapshot_settings.work_dir)
+    central_file_infos = _get_config_sync_file_infos(
+        snapshot_settings.snapshot_components,
+        site_config_dir,
+        config_sync_file_infos_per_inode,
+    )
 
-        sync_state, activation_state, sync_start_time = fetch_sync_state_result
-        remote_config_generation_per_site[
-            activation_state["_site_id"]
-        ] = sync_state.remote_config_generation
-
-        calc_delta_args.append((sync_state, file_filter_func, activation_state, sync_start_time))
-    return calc_delta_args
+    logger.getChild(f"site[{site_id}]").debug(
+        "Got %d file infos from %s", len(central_file_infos), site_config_dir
+    )
+    return central_file_infos
 
 
-def _calc_sync_delta_tasks(
-    pool: multiprocessing.pool.ThreadPool,
-    pool_args: Sequence[tuple[SyncState, FileFilterFunc, SiteActivationState, float]],
-    remote_config_generation_per_site: MutableMapping[SiteId, int],
-    site_snapshot_settings: Mapping[SiteId, SnapshotSettings],
-) -> Sequence[tuple[SyncDelta, int, Path, SiteActivationState, float]]:
-    pool_result = pool.starmap_async(copy_request_context(calc_sync_delta), pool_args)
-
-    synchronize_files_pool_args = []
-    for calc_delta_result in pool_result.get():
-        if calc_delta_result is None:
-            continue  # exception handling happens in thread
-
-        sync_delta, site_activation_state, sync_start_time = calc_delta_result
-        synchronize_files_pool_args.append(
-            (
-                sync_delta,
-                remote_config_generation_per_site[site_activation_state["_site_id"]],
-                Path(site_snapshot_settings[site_activation_state["_site_id"]].work_dir),
-                site_activation_state,
-                sync_start_time,
-            )
-        )
-    return synchronize_files_pool_args
+class ActiveTasks(TypedDict):
+    fetch_sync_state: MutableMapping[SiteId, AsyncResult]
+    calc_sync_delta: MutableMapping[SiteId, AsyncResult]
+    synchronize_files: MutableMapping[SiteId, AsyncResult]
+    activate_remote_changes: MutableMapping[SiteId, AsyncResult]
 
 
-def _synchronize_files_tasks(
-    pool: multiprocessing.pool.ThreadPool,
-    pool_args: Sequence[tuple[SyncDelta, int, Path, SiteActivationState, float]],
-    activate_changes: ActivateChanges,
-    prevent_activate: bool,
-) -> Sequence[tuple[ActivateChanges, bool, SiteActivationState]]:
-    pool_result = pool.starmap_async(copy_request_context(synchronize_files), pool_args)
-
-    activation_remote_changes_pool_args = []
-    for synchronize_files_result in pool_result.get():
-        if synchronize_files_result is None:
-            continue  # exception handling happens in thread
-
-        activation_remote_changes_pool_args.append(
-            (activate_changes, prevent_activate, synchronize_files_result)
-        )
-    return activation_remote_changes_pool_args
-
-
-def _activate_remote_changes_tasks(
-    pool: multiprocessing.pool.ThreadPool,
-    pool_args: Sequence[tuple[ActivateChanges, bool, SiteActivationState]],
-) -> None:
-    pool_result = pool.starmap_async(copy_request_context(activate_remote_changes), pool_args)
-    pool_result.get()
+def _error_callback(error: BaseException) -> None:
+    # for exceptions that could not be handled within the function, e.g. calling with incorrect
+    # number of arguments
+    logger.error(str(error))
 
 
 def sync_and_activate(
@@ -2135,7 +2062,7 @@ def sync_and_activate(
     4. Collect needed files and send them over to the remote site (+ remote config hash)
     5. Raise when something failed on the remote site while applying the sent files
     """
-    locked_sites: Sequence[SiteId] = []
+    site_activation_states: Mapping[SiteId, SiteActivationState] = {}
     try:
         time_started = time.time()
 
@@ -2154,47 +2081,140 @@ def sync_and_activate(
             if _handle_distributed_sites_in_free(site_snapshot_settings, time_started):
                 return
 
-        (
-            locked_sites,
-            fetch_sync_state_pool_args,
-            activation_remote_changes_pool_args,
-        ) = _initialize_tasks(
-            activation_id, activate_changes, prevent_activate, site_snapshot_settings, time_started
+        (site_central_file_infos, site_activation_states) = _prepare_for_activation_tasks(
+            activate_changes, activation_id, site_snapshot_settings, time_started
         )
 
-        remote_config_generation_per_site: MutableMapping[SiteId, int] = {}
-        with ThreadPool(processes=len(locked_sites)) as pool:
-            calc_delta_pool_args = _fetch_sync_state_tasks(
-                pool,
-                fetch_sync_state_pool_args,
-                file_filter_func,
-                remote_config_generation_per_site,
-            )
+        task_pool = ThreadPool(processes=len(site_snapshot_settings))
 
-            synchronize_files_pool_args = _calc_sync_delta_tasks(
-                pool,
-                calc_delta_pool_args,
+        active_tasks = ActiveTasks(
+            fetch_sync_state={},
+            calc_sync_delta={},
+            synchronize_files={},
+            activate_remote_changes={},
+        )
+
+        for site_id, site_activation_state in site_activation_states.items():
+            if activate_changes.is_sync_needed(site_id):
+                async_result = task_pool.apply_async(
+                    func=copy_request_context(fetch_sync_state),
+                    args=(
+                        site_snapshot_settings[site_id].snapshot_components,
+                        site_activation_state,
+                        site_central_file_infos[site_id],
+                    ),
+                    error_callback=_error_callback,
+                )
+                active_tasks["fetch_sync_state"][site_id] = async_result
+            else:
+                async_result = task_pool.apply_async(
+                    func=copy_request_context(activate_remote_changes),
+                    args=(activate_changes, prevent_activate, site_activation_state),
+                    error_callback=_error_callback,
+                )
+                active_tasks["activate_remote_changes"][site_id] = async_result
+
+        remote_config_generation_per_site: MutableMapping[SiteId, int] = {}
+        # we want to mostly parallelize the activation steps, but if one site takes longer,
+        # it should not hold up the other sites
+        # -> monitor active tasks to handle results as soon as one finishes and start a task for
+        # the next step
+        while (
+            len(active_tasks["fetch_sync_state"]) > 0
+            or len(active_tasks["calc_sync_delta"]) > 0
+            or len(active_tasks["synchronize_files"]) > 0
+            or len(active_tasks["activate_remote_changes"]) > 0
+        ):
+            time.sleep(0.1)
+            _handle_active_tasks(
+                active_tasks,
+                activate_changes,
+                file_filter_func,
+                prevent_activate,
                 remote_config_generation_per_site,
                 site_snapshot_settings,
+                task_pool,
             )
 
-            remote_changes_pool_args = _synchronize_files_tasks(
-                pool, synchronize_files_pool_args, activate_changes, prevent_activate
-            )
-            activation_remote_changes_pool_args.extend(remote_changes_pool_args)
-
-            _activate_remote_changes_tasks(pool, activation_remote_changes_pool_args)
     except Exception:
         logger.exception("error activating changes")
     finally:
-        for locked_site_id in locked_sites:
-            _unlock_activation(locked_site_id, activation_id)
+        for activation_site_id in site_activation_states:
+            _unlock_activation(activation_site_id, activation_id)
 
             # Create a copy of last result in the persisted dir
             shutil.copy(
-                ActivateChangesManager.site_state_path(activation_id, locked_site_id),
-                ActivateChangesManager.persisted_site_state_path(locked_site_id),
+                ActivateChangesManager.site_state_path(activation_id, activation_site_id),
+                ActivateChangesManager.persisted_site_state_path(activation_site_id),
             )
+
+
+def _handle_active_tasks(
+    active_tasks: ActiveTasks,
+    activate_changes: ActivateChanges,
+    file_filter_func: FileFilterFunc,
+    prevent_activate: bool,
+    remote_config_generation_per_site: MutableMapping[SiteId, int],
+    site_snapshot_settings: Mapping[SiteId, SnapshotSettings],
+    task_pool: ThreadPool,
+) -> None:
+    for site_id, async_result in list(active_tasks["fetch_sync_state"].items()):
+        if not async_result.ready():
+            return
+
+        active_tasks["fetch_sync_state"].pop(site_id)
+        if (fetch_sync_state_results := async_result.get()) is None:
+            return  # exception handling happens in thread
+
+        sync_state, activation_state, sync_start_time = fetch_sync_state_results
+        remote_config_generation_per_site[site_id] = sync_state.remote_config_generation
+
+        active_tasks["calc_sync_delta"][site_id] = task_pool.apply_async(
+            func=copy_request_context(calc_sync_delta),
+            args=(sync_state, file_filter_func, activation_state, sync_start_time),
+            error_callback=_error_callback,
+        )
+
+    for site_id, async_result in list(active_tasks["calc_sync_delta"].items()):
+        if not async_result.ready():
+            return
+
+        active_tasks["calc_sync_delta"].pop(site_id)
+        if (calc_sync_delta_result := async_result.get()) is None:
+            return  # exception handling happens in thread
+
+        sync_delta, activation_state, sync_start_time = calc_sync_delta_result
+        active_tasks["synchronize_files"][site_id] = task_pool.apply_async(
+            func=copy_request_context(synchronize_files),
+            args=(
+                sync_delta,
+                remote_config_generation_per_site[site_id],
+                Path(site_snapshot_settings[site_id].work_dir),
+                activation_state,
+                sync_start_time,
+            ),
+            error_callback=_error_callback,
+        )
+
+    for site_id, async_result in list(active_tasks["synchronize_files"].items()):
+        if not async_result.ready():
+            return
+
+        active_tasks["synchronize_files"].pop(site_id)
+        if (activation_state := async_result.get()) is None:
+            return  # exception handling happens in thread
+
+        active_tasks["activate_remote_changes"][site_id] = task_pool.apply_async(
+            func=copy_request_context(activate_remote_changes),
+            args=(activate_changes, prevent_activate, activation_state),
+            error_callback=_error_callback,
+        )
+
+    for site_id, async_result in list(active_tasks["activate_remote_changes"].items()):
+        if not async_result.ready():
+            return
+
+        active_tasks["activate_remote_changes"].pop(site_id)
 
 
 @job_registry.register

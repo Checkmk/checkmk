@@ -10,6 +10,7 @@ from typing import Any, Literal
 from livestatus import SiteConfigurations
 
 from cmk.utils.tags import TagConfigSpec
+from cmk.utils.version import edition, Edition
 
 from cmk.gui.type_defs import GroupSpec, UserSpec
 from cmk.gui.utils.temperate_unit import TemperatureUnit
@@ -469,7 +470,7 @@ class CREConfig:
     #   |                                                                      |
     #   '----------------------------------------------------------------------'
 
-    mkeventd_enabled: bool = True
+    mkeventd_enabled: bool = edition() is not Edition.CSE  # disabled in CSE
     mkeventd_pprint_rules: bool = False
     mkeventd_notify_contactgroup: str = ""
     mkeventd_notify_facility: int = 16

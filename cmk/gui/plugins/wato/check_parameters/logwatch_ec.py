@@ -3,8 +3,8 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import cmk.gui.mkeventd as mkeventd
 from cmk.gui.i18n import _
+from cmk.gui.mkeventd import syslog_facilities
 from cmk.gui.plugins.wato.utils import (
     CheckParameterRulespecWithoutItem,
     HostRulespec,
@@ -403,7 +403,7 @@ def _parameter_valuespec_logwatch_ec() -> Alternative:
                                 "When forwarding messages and no facility can be extracted from the "
                                 "message this facility is used."
                             ),
-                            choices=mkeventd.syslog_facilities,
+                            choices=syslog_facilities,
                             default_value=17,  # local1
                         ),
                     ),
@@ -501,11 +501,10 @@ def _parameter_valuespec_logwatch_ec() -> Alternative:
     )
 
 
-rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
-        check_group_name="logwatch_ec",
-        group=RulespecGroupCheckParametersApplications,
-        parameter_valuespec=_parameter_valuespec_logwatch_ec,
-        title=lambda: _("Logwatch Event Console Forwarding"),
-    )
+# Registered in cmk.gui.mkeventd.wato
+RulespecLogwatchEC = CheckParameterRulespecWithoutItem(
+    check_group_name="logwatch_ec",
+    group=RulespecGroupCheckParametersApplications,
+    parameter_valuespec=_parameter_valuespec_logwatch_ec,
+    title=lambda: _("Logwatch Event Console Forwarding"),
 )

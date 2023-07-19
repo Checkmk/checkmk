@@ -6,9 +6,11 @@
 
 from collections.abc import Iterable, Mapping
 
-import cmk.gui.mkeventd as mkeventd
+from cmk.utils.version import edition, Edition
+
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
+from cmk.gui.mkeventd import syslog_facilities
 from cmk.gui.plugins.wato.active_checks.common import RulespecGroupActiveChecks
 from cmk.gui.plugins.wato.utils import (
     HostRulespec,
@@ -432,187 +434,186 @@ def _valuespec_active_checks_mail() -> Migrate:
                         unit=_("sec"),
                     ),
                 ),
-                (
-                    "forward",
-                    Dictionary(
-                        title=_("Forward mails as events to Event Console"),
-                        elements=[
-                            (
-                                "method",
-                                Alternative(
-                                    title=_("Forwarding Method"),
-                                    elements=[
-                                        Alternative(
-                                            title=_("Send events to local event console"),
-                                            elements=[
-                                                FixedValue(
-                                                    value="",
-                                                    totext=_("Directly forward to event console"),
-                                                    title=_(
-                                                        "Send events to local event console in same OMD site"
-                                                    ),
-                                                ),
-                                                TextInput(
-                                                    title=_(
-                                                        "Send events to local event console into unix socket"
-                                                    ),
-                                                    allow_empty=False,
-                                                ),
-                                                FixedValue(
-                                                    value="spool:",
-                                                    totext=_("Spool to event console"),
-                                                    title=_(
-                                                        "Spooling: Send events to local event console in same OMD site"
-                                                    ),
-                                                ),
-                                                Transform(
-                                                    valuespec=TextInput(
-                                                        allow_empty=False,
-                                                    ),
-                                                    title=_(
-                                                        "Spooling: Send events to local event console into given spool directory"
-                                                    ),
-                                                    # remove prefix
-                                                    to_valuespec=lambda x: x[6:],
-                                                    from_valuespec=lambda x: "spool:"
-                                                    + x,  # add prefix
-                                                ),
-                                            ],
-                                            match=lambda x: x
-                                            and (
-                                                x == "spool:"
-                                                and 2
-                                                or x.startswith("spool:")
-                                                and 3
-                                                or 1
-                                            )
-                                            or 0,
-                                        ),
-                                        Tuple(
-                                            title=_("Send events to remote syslog host"),
-                                            elements=[
-                                                DropdownChoice(
-                                                    choices=[
-                                                        ("udp", _("UDP")),
-                                                        ("tcp", _("TCP")),
-                                                    ],
-                                                    title=_("Protocol"),
-                                                ),
-                                                TextInput(
-                                                    title=_("Address"),
-                                                    allow_empty=False,
-                                                ),
-                                                NetworkPort(
-                                                    title=_("Port"),
-                                                    default_value=514,
-                                                    minvalue=1,
-                                                    maxvalue=65535,
-                                                    size=6,
-                                                ),
-                                            ],
-                                        ),
-                                    ],
-                                ),
-                            ),
-                            (
-                                "match_subject",
-                                RegExp(
-                                    title=_("Only process mails with matching subject"),
-                                    help=_(
-                                        "Use this option to not process all messages found in the inbox, "
-                                        "but only the those whose subject matches the given regular expression."
-                                    ),
-                                    mode=RegExp.prefix,
-                                ),
-                            ),
-                            (
-                                "facility",
-                                DropdownChoice(
-                                    title=_("Events: Syslog facility"),
-                                    help=_("Use this syslog facility for all created events"),
-                                    choices=mkeventd.syslog_facilities,
-                                    default_value=2,  # mail
-                                ),
-                            ),
-                            (
-                                "application",
-                                Alternative(
-                                    title=_("Events: Syslog application"),
-                                    help=_("Use this syslog application for all created events"),
-                                    elements=[
-                                        FixedValue(
-                                            value=None,
-                                            title=_("Use the mail subject"),
-                                            totext=_(
-                                                "The mail subject is used as syslog appliaction"
-                                            ),
-                                        ),
-                                        TextInput(
-                                            title=_("Specify the application"),
-                                            help=_(
-                                                "Use this text as application. You can use macros like <tt>\\1</tt>, <tt>\\2</tt>, ... "
-                                                "here when you configured <i>subject matching</i> in this rule with a regular expression "
-                                                "that declares match groups (using braces)."
-                                            ),
-                                            allow_empty=False,
-                                        ),
-                                    ],
-                                ),
-                            ),
-                            (
-                                "host",
-                                TextInput(
-                                    title=_("Events: Hostname"),
-                                    help=_(
-                                        "Use this hostname for all created events instead of the name of the mailserver"
-                                    ),
-                                ),
-                            ),
-                            (
-                                "body_limit",
-                                Integer(
-                                    title=_("Limit length of mail body"),
-                                    help=_(
-                                        "When forwarding mails from the mailbox to the event console, the "
-                                        "body of the mail is limited to the given number of characters."
-                                    ),
-                                    default_value=1000,
-                                ),
-                            ),
-                            (
-                                "cleanup",
-                                Alternative(
-                                    title=_("Cleanup messages"),
-                                    help=_(
-                                        "The handled messages (see <i>subject matching</i>) can be cleaned up by either "
-                                        "deleting them or moving them to a subfolder. By default nothing is cleaned up."
-                                    ),
-                                    elements=[
-                                        FixedValue(
-                                            value=True,
-                                            title=_("Delete messages"),
-                                            totext=_(
-                                                "Delete all processed message belonging to this check"
-                                            ),
-                                        ),
-                                        TextInput(
-                                            title=_("Move to subfolder"),
-                                            help=_(
-                                                "Specify the destination path in the format <tt>Path/To/Folder</tt>, for example"
-                                                "<tt>INBOX/Processed_Mails</tt>."
-                                            ),
-                                            allow_empty=False,
-                                        ),
-                                    ],
-                                ),
-                            ),
-                        ],
-                    ),
-                ),
-            ],
+            ]
+            + _forward_to_ec_elements(),
         ),
         migrate=migrate_check_mail_params,
     )
+
+
+def _forward_to_ec_elements() -> list[DictionaryEntry]:
+    if edition() is Edition.CSE:  # disabled in CSE
+        return []
+    return [
+        (
+            "forward",
+            Dictionary(
+                title=_("Forward mails as events to Event Console"),
+                elements=[
+                    (
+                        "method",
+                        Alternative(
+                            title=_("Forwarding Method"),
+                            elements=[
+                                Alternative(
+                                    title=_("Send events to local event console"),
+                                    elements=[
+                                        FixedValue(
+                                            value="",
+                                            totext=_("Directly forward to event console"),
+                                            title=_(
+                                                "Send events to local event console in same OMD site"
+                                            ),
+                                        ),
+                                        TextInput(
+                                            title=_(
+                                                "Send events to local event console into unix socket"
+                                            ),
+                                            allow_empty=False,
+                                        ),
+                                        FixedValue(
+                                            value="spool:",
+                                            totext=_("Spool to event console"),
+                                            title=_(
+                                                "Spooling: Send events to local event console in same OMD site"
+                                            ),
+                                        ),
+                                        Transform(
+                                            valuespec=TextInput(
+                                                allow_empty=False,
+                                            ),
+                                            title=_(
+                                                "Spooling: Send events to local event console into given spool directory"
+                                            ),
+                                            # remove prefix
+                                            to_valuespec=lambda x: x[6:],
+                                            from_valuespec=lambda x: "spool:" + x,  # add prefix
+                                        ),
+                                    ],
+                                    match=lambda x: x
+                                    and (x == "spool:" and 2 or x.startswith("spool:") and 3 or 1)
+                                    or 0,
+                                ),
+                                Tuple(
+                                    title=_("Send events to remote syslog host"),
+                                    elements=[
+                                        DropdownChoice(
+                                            choices=[
+                                                ("udp", _("UDP")),
+                                                ("tcp", _("TCP")),
+                                            ],
+                                            title=_("Protocol"),
+                                        ),
+                                        TextInput(
+                                            title=_("Address"),
+                                            allow_empty=False,
+                                        ),
+                                        NetworkPort(
+                                            title=_("Port"),
+                                            default_value=514,
+                                            minvalue=1,
+                                            maxvalue=65535,
+                                            size=6,
+                                        ),
+                                    ],
+                                ),
+                            ],
+                        ),
+                    ),
+                    (
+                        "match_subject",
+                        RegExp(
+                            title=_("Only process mails with matching subject"),
+                            help=_(
+                                "Use this option to not process all messages found in the inbox, "
+                                "but only the those whose subject matches the given regular expression."
+                            ),
+                            mode=RegExp.prefix,
+                        ),
+                    ),
+                    (
+                        "facility",
+                        DropdownChoice(
+                            title=_("Events: Syslog facility"),
+                            help=_("Use this syslog facility for all created events"),
+                            choices=syslog_facilities,
+                            default_value=2,  # mail
+                        ),
+                    ),
+                    (
+                        "application",
+                        Alternative(
+                            title=_("Events: Syslog application"),
+                            help=_("Use this syslog application for all created events"),
+                            elements=[
+                                FixedValue(
+                                    value=None,
+                                    title=_("Use the mail subject"),
+                                    totext=_("The mail subject is used as syslog appliaction"),
+                                ),
+                                TextInput(
+                                    title=_("Specify the application"),
+                                    help=_(
+                                        "Use this text as application. You can use macros like <tt>\\1</tt>, <tt>\\2</tt>, ... "
+                                        "here when you configured <i>subject matching</i> in this rule with a regular expression "
+                                        "that declares match groups (using braces)."
+                                    ),
+                                    allow_empty=False,
+                                ),
+                            ],
+                        ),
+                    ),
+                    (
+                        "host",
+                        TextInput(
+                            title=_("Events: Hostname"),
+                            help=_(
+                                "Use this hostname for all created events instead of the name of the mailserver"
+                            ),
+                        ),
+                    ),
+                    (
+                        "body_limit",
+                        Integer(
+                            title=_("Limit length of mail body"),
+                            help=_(
+                                "When forwarding mails from the mailbox to the event console, the "
+                                "body of the mail is limited to the given number of characters."
+                            ),
+                            default_value=1000,
+                        ),
+                    ),
+                    (
+                        "cleanup",
+                        Alternative(
+                            title=_("Cleanup messages"),
+                            help=_(
+                                "The handled messages (see <i>subject matching</i>) can be cleaned up by either "
+                                "deleting them or moving them to a subfolder. By default nothing is cleaned up."
+                            ),
+                            elements=[
+                                FixedValue(
+                                    value=True,
+                                    title=_("Delete messages"),
+                                    totext=_(
+                                        "Delete all processed message belonging to this check"
+                                    ),
+                                ),
+                                TextInput(
+                                    title=_("Move to subfolder"),
+                                    help=_(
+                                        "Specify the destination path in the format <tt>Path/To/Folder</tt>, for example"
+                                        "<tt>INBOX/Processed_Mails</tt>."
+                                    ),
+                                    allow_empty=False,
+                                ),
+                            ],
+                        ),
+                    ),
+                ],
+            ),
+        ),
+    ]
 
 
 rulespec_registry.register(

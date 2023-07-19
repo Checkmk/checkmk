@@ -20,6 +20,7 @@ import cmk.utils.plugin_registry
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.tags import TagGroupID, TagID
+from cmk.utils.version import edition, Edition
 
 from cmk.checkengine.checking import CheckPluginName
 
@@ -1336,6 +1337,24 @@ class ABCEventsMode(WatoMode, abc.ABC):
                     allow_empty=False,
                 ),
             ),
+            *cls._match_service_level_elements(),
+            (
+                "match_timeperiod",
+                _timeperiods.TimeperiodSelection(
+                    title=_("Match only during time period"),
+                    help=_(
+                        "Match this rule only during times where the selected time period from the monitoring "
+                        "system is active."
+                    ),
+                ),
+            ),
+        ]
+
+    @classmethod
+    def _match_service_level_elements(cls) -> list[DictionaryEntry]:
+        if edition() is Edition.CSE:  # disabled in CSE
+            return []
+        return [
             (
                 "match_sl",
                 Tuple(
@@ -1358,17 +1377,7 @@ class ABCEventsMode(WatoMode, abc.ABC):
                         ),
                     ],
                 ),
-            ),
-            (
-                "match_timeperiod",
-                _timeperiods.TimeperiodSelection(
-                    title=_("Match only during time period"),
-                    help=_(
-                        "Match this rule only during times where the selected time period from the monitoring "
-                        "system is active."
-                    ),
-                ),
-            ),
+            )
         ]
 
     @abc.abstractmethod
@@ -1854,6 +1863,8 @@ class NotificationParameterRegistry(
     def plugin_name(self, instance):
         return instance().ident
 
+    # TODO: Make this registration_hook actually take an instance. Atm it takes a class and
+    #       instantiates it
     def registration_hook(self, instance):
         plugin = instance()
 

@@ -11,8 +11,8 @@ from typing import Any
 
 import cmk.utils.paths
 import cmk.utils.store as store
-import cmk.utils.version as cmk_version
 from cmk.utils.config_warnings import ConfigurationWarnings
+from cmk.utils.version import edition, Edition
 
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
@@ -24,7 +24,6 @@ from cmk.gui.valuespec import (
     DropdownChoice,
     Filesize,
     Integer,
-    ListChoice,
     Optional,
     Tuple,
     ValueSpec,
@@ -102,7 +101,7 @@ class ConfigVariableSiteCore(ConfigVariable):
 
     def _monitoring_core_choices(self):
         cores = []
-        if cmk_version.edition() is not cmk_version.Edition.CRE:
+        if edition() is not Edition.CRE:
             cores.append(("cmc", _("Checkmk Micro Core")))
 
         cores += [
@@ -135,42 +134,6 @@ class ConfigVariableSiteLivestatusTCP(ConfigVariable):
             ),
             label=_("Enable Livestatus access via network (TCP)"),
             none_label=_("Livestatus is available locally"),
-        )
-
-
-@config_variable_registry.register
-class ConfigVariableSiteEventConsole(ConfigVariable):
-    def group(self) -> type[ConfigVariableGroup]:
-        return ConfigVariableGroupSiteManagement
-
-    def domain(self) -> type[ABCConfigDomain]:
-        return ConfigDomainOMD
-
-    def ident(self) -> str:
-        return "site_mkeventd"
-
-    def valuespec(self) -> ValueSpec:
-        return Optional(
-            valuespec=ListChoice(
-                choices=[
-                    ("SNMPTRAP", _("Receive SNMP traps (UDP/162)")),
-                    ("SYSLOG", _("Receive Syslog messages (UDP/514)")),
-                    ("SYSLOG_TCP", _("Receive Syslog messages (TCP/514)")),
-                ],
-                title=_("Listen for incoming messages via"),
-                empty_text=_("Locally enabled"),
-            ),
-            title=_("Event Console"),
-            help=_(
-                "This option enables the Event Console - The event processing and "
-                "classification daemon of Checkmk. You can also configure whether "
-                "or not the Event Console shal listen for incoming SNMP traps or "
-                "syslog messages. Please note that only a single Checkmk site per "
-                "Check_MK server can listen for such messages."
-            ),
-            label=_("Event Console enabled"),
-            none_label=_("Event Console disabled"),
-            indent=False,
         )
 
 

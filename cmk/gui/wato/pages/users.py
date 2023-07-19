@@ -11,9 +11,9 @@ from collections.abc import Collection, Iterator
 from typing import cast, overload
 
 import cmk.utils.render as render
-import cmk.utils.version as cmk_version
 from cmk.utils.crypto.password import Password
 from cmk.utils.user import UserId
+from cmk.utils.version import edition, Edition
 
 import cmk.gui.background_job as background_job
 import cmk.gui.forms as forms
@@ -79,7 +79,7 @@ from cmk.gui.watolib.users import (
     verify_password_policy,
 )
 
-if cmk_version.edition() is cmk_version.Edition.CME:
+if edition() is Edition.CME:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
     from cmk.gui.cme.helpers import default_customer_id  # pylint: disable=no-name-in-module
 else:
@@ -230,7 +230,7 @@ class ModeUsers(WatoMode):
             item=make_simple_link(folder_preserving_link([("mode", "ldap_config")])),
         )
 
-        if cmk_version.edition() is not cmk_version.Edition.CRE:
+        if edition() is not Edition.CRE:
             yield PageMenuEntry(
                 title=_("SAML authentication"),
                 icon_name="saml",
@@ -445,7 +445,7 @@ class ModeUsers(WatoMode):
                     else:
                         html.write_text(_("Never logged in"))
 
-                if cmk_version.edition() is cmk_version.Edition.CME:
+                if edition() is Edition.CME:
                     table.cell(_("Customer"), managed.get_customer_name(user_spec))
 
                 # Connection
@@ -614,7 +614,7 @@ class ModeEditUser(WatoMode):
         self._roles = userdb_utils.load_roles()
         self._user_id: UserId | None
 
-        if cmk_version.edition() is cmk_version.Edition.CME:
+        if edition() is Edition.CME:
             self._vs_customer = managed.vs_customer()
 
     def _from_vars(self):
@@ -807,7 +807,7 @@ class ModeEditUser(WatoMode):
         # Pager
         user_attrs["pager"] = request.get_str_input_mandatory("pager", "").strip()
 
-        if cmk_version.edition() is cmk_version.Edition.CME:
+        if edition() is Edition.CME:
             customer = self._vs_customer.from_html_vars("customer")
             self._vs_customer.validate_value(customer, "customer")
 
@@ -927,7 +927,7 @@ class ModeEditUser(WatoMode):
         lockable_input("pager", "")
         html.help(_("The pager address is optional "))
 
-        if cmk_version.edition() is cmk_version.Edition.CME:
+        if edition() is Edition.CME:
             forms.section(self._vs_customer.title())
             self._vs_customer.render_input("customer", managed.get_customer_id(self._user))
 
@@ -1183,8 +1183,15 @@ class ModeEditUser(WatoMode):
                 "In case none of your notification rules handles a certain event a notification "
                 "will be sent to this contact. This makes sure that in that case at least <i>someone</i> "
                 "gets notified. Furthermore this contact will be used for notifications to any host or service "
-                "that is not known to the monitoring. This can happen when you forward notifications "
-                "from the Event Console.<br><br>Notification fallback can also configured in the global "
+                "that is not known to the monitoring. "
+            )
+            + (
+                _("This can happen when you forward notifications from the Event Console. ")
+                if edition() is not Edition.CSE
+                else ""
+            )
+            + _(
+                "<br><br>Notification fallback can also configured in the global "
                 'setting <a href="wato.py?mode=edit_configvar&varname=notification_fallback_email">'
                 "Fallback email address for notifications</a>."
             )

@@ -31,9 +31,9 @@ from contextlib import suppress
 from typing import cast, Generic, Literal, Self, TypedDict, TypeVar
 
 import cmk.utils.store as store
-import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.user import UserId
+from cmk.utils.version import edition, Edition
 
 import cmk.gui.pages
 import cmk.gui.sites as sites
@@ -1338,7 +1338,7 @@ def _page_menu_entries_related(current_type_name: str) -> Iterator[PageMenuEntry
 
 
 def _has_reporting() -> bool:
-    return cmk_version.edition() is not cmk_version.Edition.CRE
+    return edition() is not Edition.CRE
 
 
 def vs_no_permission_to_publish(type_title: str, title: str) -> FixedValue:
@@ -1995,7 +1995,7 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec]):
 
     @classmethod
     def builtin_pages(cls) -> Mapping[str, PagetypeTopicSpec]:
-        return {
+        topics: dict[str, PagetypeTopicSpec] = {
             "overview": {
                 "name": "overview",
                 "title": _("Overview"),
@@ -2039,15 +2039,6 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec]):
                 "description": "",
                 "public": True,
                 "sort_index": 60,
-                "owner": UserId.builtin(),
-            },
-            "events": {
-                "name": "events",
-                "title": _("Event Console"),
-                "icon_name": "topic_events",
-                "description": "",
-                "public": True,
-                "sort_index": 70,
                 "owner": UserId.builtin(),
             },
             "cloud": {
@@ -2126,6 +2117,22 @@ class PagetypeTopics(Overridable[PagetypeTopicSpec]):
                 "owner": UserId.builtin(),
             },
         }
+        if edition() is not Edition.CSE:  # disabled in CSE
+            topics.update(
+                {
+                    "events": {
+                        "name": "events",
+                        "title": _("Event Console"),
+                        "icon_name": "topic_events",
+                        "description": "",
+                        "public": True,
+                        "sort_index": 70,
+                        "owner": UserId.builtin(),
+                    }
+                }
+            )
+
+        return topics
 
     def max_entries(self) -> int:
         return self._.get("max_entries", 10)

@@ -9,6 +9,7 @@
 from functools import partial
 
 from cmk.utils.licensing.registry import register_cre_licensing_handler
+from cmk.utils.version import edition, Edition
 
 import cmk.gui.help
 import cmk.gui.pages
@@ -104,23 +105,24 @@ def register() -> None:
         sorter_registry,
         command_registry,
     )
-    mkeventd_registration.register(
-        permission_section_registry,
-        permission_registry,
-        data_source_registry,
-        painter_registry,
-        icon_and_action_registry,
-        config_domain_registry,
-        sample_config_generator_registry,
-        mode_registry,
-        main_module_registry,
-        config_variable_group_registry,
-        config_variable_registry,
-        rulespec_group_registry,
-        rulespec_registry,
-        autocompleter_registry,
-        filter_registry,
-    )
+    if edition() is not Edition.CSE:  # disabled in CSE
+        mkeventd_registration.register(
+            permission_section_registry,
+            permission_registry,
+            data_source_registry,
+            painter_registry,
+            icon_and_action_registry,
+            config_domain_registry,
+            sample_config_generator_registry,
+            mode_registry,
+            main_module_registry,
+            config_variable_group_registry,
+            config_variable_registry,
+            rulespec_group_registry,
+            rulespec_registry,
+            autocompleter_registry,
+            filter_registry,
+        )
     mobile.register(layout_registry)
     userdb_registration.register(user_attribute_registry)
     watolib.register()

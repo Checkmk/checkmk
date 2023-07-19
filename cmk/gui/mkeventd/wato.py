@@ -37,19 +37,25 @@ import cmk.utils.paths
 import cmk.utils.render
 import cmk.utils.store as store
 import cmk.utils.translations
-import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.site import omd_site
+from cmk.utils.version import edition, Edition
 
 # It's OK to import centralized config load logic
 import cmk.ec.export as ec  # pylint: disable=cmk-module-layer-violation
 
 from cmk.gui.config import active_config
+from cmk.gui.plugins.wato.utils import (
+    ConfigVariableGroupSiteManagement,
+    NotificationParameter,
+    NotificationParameterRegistry,
+)
 from cmk.gui.type_defs import Icon, PermissionName
 from cmk.gui.utils.urls import DocReference
 from cmk.gui.watolib.audit_log import log_audit
 from cmk.gui.watolib.config_domain_name import ABCConfigDomain
+from cmk.gui.watolib.config_domains import ConfigDomainOMD
 from cmk.gui.watolib.main_menu import MainModuleTopic
 from cmk.gui.watolib.mkeventd import (
     export_mkp_rule_pack,
@@ -57,7 +63,7 @@ from cmk.gui.watolib.mkeventd import (
     save_mkeventd_rules,
 )
 
-if cmk_version.edition() is cmk_version.Edition.CME:
+if edition() is Edition.CME:
     import cmk.gui.cme.managed as managed  # pylint: disable=no-name-in-module
 else:
     managed = None  # type: ignore[assignment]
@@ -85,6 +91,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.permissions import Permission, PermissionRegistry
+from cmk.gui.plugins.wato.check_parameters.logwatch_ec import RulespecLogwatchEC
 from cmk.gui.plugins.wato.utils import (
     ABCMainModule,
     ConfigVariableGroupNotifications,
@@ -132,6 +139,7 @@ from cmk.gui.valuespec import (
     Integer,
     IPAddress,
     IPNetwork,
+    IPv4Address,
     ListChoice,
     ListOf,
     ListOfStrings,
@@ -194,6 +202,7 @@ def register(
     rulespec_group_registry: RulespecGroupRegistry,
     rulespec_registry: RulespecRegistry,
     match_item_generator_registry: MatchItemGeneratorRegistry,
+    notification_parameter_registry: NotificationParameterRegistry,
 ) -> None:
     sample_config_generator_registry.register(SampleConfigGeneratorECSampleRulepack)
 
@@ -213,6 +222,7 @@ def register(
     config_var_group_registry.register(ConfigVariableGroupEventConsoleGeneric)
     config_var_group_registry.register(ConfigVariableGroupEventConsoleLogging)
     config_var_group_registry.register(ConfigVariableGroupEventConsoleSNMP)
+    config_var_registry.register(ConfigVariableEventConsole)
     config_var_registry.register(ConfigVariableEventConsoleRemoteStatus)
     config_var_registry.register(ConfigVariableEventConsoleReplication)
     config_var_registry.register(ConfigVariableEventConsoleRetentionInterval)
@@ -238,6 +248,7 @@ def register(
     config_var_registry.register(ConfigVariableEventConsoleNotifyContactgroup)
     config_var_registry.register(ConfigVariableEventConsoleNotifyRemoteHost)
     config_var_registry.register(ConfigVariableEventConsoleNotifyFacility)
+    config_var_registry.register(ConfigVariableEventConsoleServiceLevels)
 
     rulespec_group_registry.register(RulespecGroupEventConsole)
     rulespec_registry.register(ECEventLimitRulespec)
@@ -246,6 +257,7 @@ def register(
     rulespec_registry.register(ExtraServiceConfECSLRulespec)
     rulespec_registry.register(ExtraHostConfECContact)
     rulespec_registry.register(ExtraServiceConfECContact)
+    rulespec_registry.register(RulespecLogwatchEC)
 
     permission_registry.register(ConfigureECPermission)
     permission_registry.register(ConfigureECRulesPermission)
@@ -254,6 +266,11 @@ def register(
 
     match_item_generator_registry.register(MatchItemEventConsole)
     match_item_generator_registry.register(MatchItemEventConsoleSettings)
+
+    # TODO: Make the decorator notification_parameter_registry.register take an instance instead of
+    #       a class. Then register an instance of the class NotificationParameterMKEventDaemon here
+    #       (as is done for the other registrations above).
+    notification_parameter_registry.register(NotificationParameterMKEventDaemon)
 
 
 def _compiled_mibs_dir() -> Path:
@@ -523,7 +540,7 @@ def vs_mkeventd_rule_pack(
         ),
     )
 
-    if cmk_version.edition() is cmk_version.Edition.CME:
+    if edition() is Edition.CME:
         elements += managed.customer_choice_element(deflt=managed.SCOPE_GLOBAL)
 
     return Dictionary(
@@ -550,7 +567,7 @@ def vs_mkeventd_rule(customer: str | None = None) -> Dictionary:
         ),
     ] + rule_option_elements()
 
-    if cmk_version.edition() is cmk_version.Edition.CME:
+    if edition() is Edition.CME:
         if customer:
             # Enforced by rule pack
             elements += [
@@ -1554,7 +1571,7 @@ class ABCEventConsoleMode(WatoMode, abc.ABC):
     def _get_rule_pack_to_mkp_map(self) -> dict[str, Any]:
         return (
             {}
-            if cmk_version.edition() is cmk_version.Edition.CRE
+            if edition() is Edition.CRE
             else cmk.utils.packaging.id_to_mkp(
                 cmk.utils.packaging.Installer(cmk.utils.paths.installed_packages_dir),
                 cmk.utils.packaging.all_rule_pack_files(ec.mkp_rule_pack_dir()),
@@ -1958,7 +1975,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 rules_url = makeuri_contextless(request, rules_url_vars)
                 html.icon_button(rules_url, _("Edit the rules in this pack"), "rules")
 
-                if cmk_version.edition() is not cmk_version.Edition.CRE:
+                if edition() is not Edition.CRE:
                     # Icons for mkp export (CEE/CME only)
                     if type_ == ec.RulePackType.internal:
                         export_url = make_action_link(
@@ -2087,7 +2104,7 @@ class ModeEventConsoleRulePacks(ABCEventConsoleMode):
                 table.cell(_("ID"), id_)
                 table.cell(_("Title"), rule_pack["title"])
 
-                if cmk_version.edition() is cmk_version.Edition.CME:
+                if edition() is Edition.CME:
                     table.cell(_("Customer"))
                     if "customer" in rule_pack:
                         html.write_text(managed.get_customer_name(rule_pack))
@@ -2413,7 +2430,7 @@ class ModeEventConsoleRules(ABCEventConsoleMode):
 
                 table.cell(_("ID"), HTMLWriter.render_a(rule["id"], edit_url))
 
-                if cmk_version.edition() is cmk_version.Edition.CME:
+                if edition() is Edition.CME:
                     table.cell(_("Customer"))
                     if "customer" in self._rule_pack:
                         html.write_text(
@@ -2785,7 +2802,7 @@ class ModeEventConsoleEditRule(ABCEventConsoleMode):
                         )
             num_repl -= 1
 
-        if cmk_version.edition() is cmk_version.Edition.CME and "customer" in self._rule_pack:
+        if edition() is Edition.CME and "customer" in self._rule_pack:
             try:
                 del self._rule["customer"]
             except KeyError:
@@ -3687,6 +3704,41 @@ class MainModuleEventConsole(ABCMainModule):
 #   | Declarations for global settings of EC parameters and of a rule for  |
 #   | active checks that query the EC status of a host.                    |
 #   '----------------------------------------------------------------------'
+
+
+class ConfigVariableEventConsole(ConfigVariable):
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupSiteManagement
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainOMD
+
+    def ident(self) -> str:
+        return "site_mkeventd"
+
+    def valuespec(self) -> ValueSpec:
+        return Optional(
+            valuespec=ListChoice(
+                choices=[
+                    ("SNMPTRAP", _("Receive SNMP traps (UDP/162)")),
+                    ("SYSLOG", _("Receive Syslog messages (UDP/514)")),
+                    ("SYSLOG_TCP", _("Receive Syslog messages (TCP/514)")),
+                ],
+                title=_("Listen for incoming messages via"),
+                empty_text=_("Locally enabled"),
+            ),
+            title=_("Event Console"),
+            help=_(
+                "This option enables the Event Console - The event processing and "
+                "classification daemon of Checkmk. You can also configure whether "
+                "or not the Event Console shal listen for incoming SNMP traps or "
+                "syslog messages. Please note that only a single Checkmk site per "
+                "Check_MK server can listen for such messages."
+            ),
+            label=_("Event Console enabled"),
+            none_label=_("Event Console disabled"),
+            indent=False,
+        )
 
 
 class ConfigVariableEventConsoleRemoteStatus(ConfigVariable):
@@ -4749,6 +4801,51 @@ class ConfigVariableEventConsoleNotifyFacility(ConfigVariable):
         return True
 
 
+class ConfigVariableEventConsoleServiceLevels(ConfigVariable):
+    def group(self) -> type[ConfigVariableGroup]:
+        return ConfigVariableGroupNotifications
+
+    def domain(self) -> type[ABCConfigDomain]:
+        return ConfigDomainGUI
+
+    def ident(self) -> str:
+        return "mkeventd_service_levels"
+
+    def valuespec(self) -> ValueSpec:
+        return ListOf(
+            valuespec=Tuple(
+                elements=[
+                    Integer(
+                        title=_("internal ID"),
+                        minvalue=0,
+                        maxvalue=100,
+                    ),
+                    TextInput(
+                        title=_("Name / Description"),
+                        allow_empty=False,
+                    ),
+                ],
+                orientation="horizontal",
+            ),
+            title=_("Service Levels"),
+            help=_(
+                "Here you can configure the list of possible service levels for hosts, services and "
+                "events. A service level can be assigned to a host or service by configuration. "
+                "The event console can configure each created event to have a specific service level. "
+                "Internally the level is represented as an integer number. Note: a higher number represents "
+                "a higher service level. This is important when filtering views "
+                "by the service level.<p>You can also attach service levels to hosts "
+                "and services in the monitoring. These levels will then be sent to the "
+                "Event Console when you forward notifications to it and will override the "
+                "setting of the matching rule."
+            ),
+            allow_empty=False,
+        )
+
+    def allow_reset(self) -> bool:
+        return False
+
+
 class MainModuleEventConsoleRules(ABCMainModule):
     @property
     def enabled(self) -> bool:
@@ -5306,4 +5403,40 @@ def query_ec_directly(query: bytes) -> dict[str, Any]:
     except Exception as e:
         raise MKGeneralException(
             _("Cannot connect to event daemon via %s: %s") % (_socket_path(), e)
+        )
+
+
+class NotificationParameterMKEventDaemon(NotificationParameter):
+    @property
+    def ident(self) -> str:
+        return "mkeventd"
+
+    @property
+    def spec(self):
+        return Dictionary(
+            title=_("Create notification with the following parameters"),
+            elements=[
+                (
+                    "facility",
+                    DropdownChoice(
+                        title=_("Syslog Facility to use"),
+                        help=_(
+                            "The notifications will be converted into syslog messages with "
+                            "the facility that you choose here. In the Event Console you can "
+                            "later create a rule matching this facility."
+                        ),
+                        choices=syslog_facilities,
+                    ),
+                ),
+                (
+                    "remote",
+                    IPv4Address(
+                        title=_("IP Address of remote Event Console"),
+                        help=_(
+                            "If you set this parameter then the notifications will be sent via "
+                            "syslog/UDP (port 514) to a remote Event Console or syslog server."
+                        ),
+                    ),
+                ),
+            ],
         )

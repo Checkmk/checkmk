@@ -6,6 +6,8 @@
 from cmk.gui.data_source import DataSourceRegistry
 from cmk.gui.painter.v0.base import PainterRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
+from cmk.gui.plugins.sidebar.utils import snapin_registry
+from cmk.gui.plugins.wato.utils import notification_parameter_registry
 from cmk.gui.plugins.wato.utils.base_modes import ModeRegistry
 from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.views.icon import IconRegistry
@@ -21,6 +23,7 @@ from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 from cmk.gui.watolib.search import match_item_generator_registry
 
 from . import _filters, views, wato
+from ._sidebar_snapin import SidebarSnapinEventConsole
 from .autocompleters import service_levels_autocompleter, syslog_facilities_autocompleter
 from .config_domain import ConfigDomainEventConsole
 from .icon import MkeventdIcon
@@ -58,9 +61,11 @@ def register(
         rulespec_group_registry,
         rulespec_registry,
         match_item_generator_registry,
+        notification_parameter_registry,
     )
     permission_section_registry.register(PermissionSectionEventConsole)
     config_domain_registry.register(ConfigDomainEventConsole)
     autocompleter_registry.register_expression("syslog_facilities")(syslog_facilities_autocompleter)
     autocompleter_registry.register_expression("service_levels")(service_levels_autocompleter)
     _filters.register(filter_registry)
+    snapin_registry.register(SidebarSnapinEventConsole)

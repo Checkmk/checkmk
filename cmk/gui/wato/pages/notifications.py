@@ -13,6 +13,7 @@ from typing import Any, NamedTuple, overload
 
 import cmk.utils.store as store
 from cmk.utils.notify_types import EventRule
+from cmk.utils.version import edition, Edition
 
 import cmk.gui.forms as forms
 import cmk.gui.permissions as permissions
@@ -111,11 +112,6 @@ class ABCNotificationsMode(ABCEventsMode):
 
     @classmethod
     def _notification_rule_match_conditions(cls):
-        def migrate_ec_rule_id_match(val):
-            if isinstance(val, list):
-                return val
-            return [val]
-
         return [
             (
                 "match_escalation",
@@ -184,6 +180,19 @@ class ABCNotificationsMode(ABCEventsMode):
                     mode=RegExp.prefix,
                 ),
             ),
+        ] + cls._match_event_console_elements()
+
+    @classmethod
+    def _match_event_console_elements(cls) -> list[DictionaryEntry]:
+        if edition() is Edition.CSE:  # disabled in CSE
+            return []
+
+        def migrate_ec_rule_id_match(val):
+            if isinstance(val, list):
+                return val
+            return [val]
+
+        return [
             (
                 "match_ec",
                 Alternative(
@@ -265,7 +274,7 @@ class ABCNotificationsMode(ABCEventsMode):
                         ),
                     ],
                 ),
-            ),
+            )
         ]
 
     def _render_notification_rules(  # pylint: disable=too-many-branches
@@ -392,9 +401,15 @@ class ABCNotificationsMode(ABCEventsMode):
                 ("sl", _("Service level")),
                 ("check_type", _("Check type")),
                 ("state", _("Host/Service state")),
-                ("ec_contact", _("Event Console contact")),
-                ("ec_comment", _("Event Console comment")),
-            ],
+            ]
+            + (
+                [
+                    ("ec_contact", _("Event Console contact")),
+                    ("ec_comment", _("Event Console comment")),
+                ]
+                if edition() is not Edition.CSE  # disabled in CSE
+                else []
+            ),
             default_value=["host"],
         )
 

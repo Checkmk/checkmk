@@ -5,7 +5,12 @@
 
 from cmk.gui.http import request
 from cmk.gui.i18n import _
-from cmk.gui.plugins.userdb.utils import show_mode_choices, UserAttribute, validate_start_url
+from cmk.gui.plugins.userdb.utils import (
+    show_mode_choices,
+    UserAttribute,
+    UserAttributeRegistry,
+    validate_start_url,
+)
 from cmk.gui.utils.temperate_unit import temperature_unit_choices
 from cmk.gui.utils.theme import theme_choices
 from cmk.gui.utils.urls import makeuri_contextless
@@ -21,6 +26,18 @@ from cmk.gui.valuespec import (
     Tuple,
     ValueSpec,
 )
+
+
+def register(user_attribute_registry: UserAttributeRegistry) -> None:
+    user_attribute_registry.register(TemperatureUnitUserAttribute)
+    user_attribute_registry.register(ForceAuthUserUserAttribute)
+    user_attribute_registry.register(DisableNotificationsUserAttribute)
+    user_attribute_registry.register(StartURLUserAttribute)
+    user_attribute_registry.register(UIThemeUserAttribute)
+    user_attribute_registry.register(UISidebarPosition)
+    user_attribute_registry.register(UIIconTitle)
+    user_attribute_registry.register(UIIconPlacement)
+    user_attribute_registry.register(UIBasicAdvancedToggle)
 
 
 class TemperatureUnitUserAttribute(UserAttribute):

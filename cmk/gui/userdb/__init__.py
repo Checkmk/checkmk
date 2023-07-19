@@ -49,11 +49,11 @@ from cmk.gui.plugins.userdb.utils import (
     user_attribute_registry,
     user_sync_config,
     UserAttribute,
+    UserAttributeRegistry,
     UserConnector,
 )
 from cmk.gui.site_config import is_wato_slave_site
 from cmk.gui.type_defs import TwoFactorCredentials, Users, UserSpec
-from cmk.gui.userdb import user_attributes
 from cmk.gui.userdb.ldap_connector import MKLDAPException
 from cmk.gui.userdb.session import is_valid_user_session, load_session_infos
 from cmk.gui.userdb.store import (
@@ -870,18 +870,3 @@ def cleanup_abandoned_profiles(logger: Logger, now: datetime, max_age: timedelta
                 shutil.rmtree(profile_dir)
             except OSError:
                 logger.debug("Could not delete %s", profile_dir, exc_info=True)
-
-
-def _register_user_attributes() -> None:
-    user_attribute_registry.register(user_attributes.TemperatureUnitUserAttribute)
-    user_attribute_registry.register(user_attributes.ForceAuthUserUserAttribute)
-    user_attribute_registry.register(user_attributes.DisableNotificationsUserAttribute)
-    user_attribute_registry.register(user_attributes.StartURLUserAttribute)
-    user_attribute_registry.register(user_attributes.UIThemeUserAttribute)
-    user_attribute_registry.register(user_attributes.UISidebarPosition)
-    user_attribute_registry.register(user_attributes.UIIconTitle)
-    user_attribute_registry.register(user_attributes.UIIconPlacement)
-    user_attribute_registry.register(user_attributes.UIBasicAdvancedToggle)
-
-
-_register_user_attributes()

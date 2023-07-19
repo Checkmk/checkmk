@@ -10,18 +10,13 @@ import urllib3 as _urllib3
 import cmk.gui.background_job as _background_job
 import cmk.gui.hooks as _hooks
 import cmk.gui.pages as _pages
-import cmk.gui.userdb as _userdb
 import cmk.gui.watolib.auth_php as _auth_php
 import cmk.gui.watolib.automation_commands as _automation_commands
 import cmk.gui.watolib.builtin_attributes as builtin_attributes
 import cmk.gui.watolib.config_domains as _config_domains
 import cmk.gui.watolib.groups as groups
 import cmk.gui.weblib as _webling
-from cmk.gui.config import register_post_config_load_hook as _register_post_config_load_hook
 from cmk.gui.cron import register_job as _register_job
-from cmk.gui.inventory import (
-    execute_inventory_housekeeping_job as _execute_inventory_housekeeping_job,
-)
 from cmk.gui.utils import load_web_plugins as _load_web_plugins
 from cmk.gui.watolib import autodiscovery as _autodiscovery
 from cmk.gui.watolib import automatic_host_removal as _automatic_host_removal
@@ -127,21 +122,10 @@ def _register_pages():
         _pages.register(name)(func)
 
 
-def _register_post_config_load():
-    for cls in (
-        _userdb._fix_user_connections,
-        _userdb.update_config_based_user_attributes,
-    ):
-        _register_post_config_load_hook(cls)
-
-
 def _register_cronjobs() -> None:
     _register_job(_execute_activation_cleanup_background_job)
     _register_job(_background_job.execute_housekeeping_job)
-    _register_job(_execute_inventory_housekeeping_job)
     _register_job(_execute_network_scan_job)
-    _register_job(_userdb.execute_userdb_job)
-    _register_job(_userdb.execute_user_profile_cleanup_job)
     _register_job(_rebuild_folder_lookup_cache)
     _register_job(_automatic_host_removal.execute_host_removal_background_job)
     _register_job(_autodiscovery.execute_autodiscovery)
@@ -160,9 +144,6 @@ def _register_folder_stub_validators() -> None:
     Folder.validate_move_subfolder_to = lambda f, t: None
 
 
-# TODO(ml):  The code is still poorly organized as we register classes here that are
-# not defined under watolib.
-
 _register_automation_commands()
 _register_gui_background_jobs()
 _register_hooks()
@@ -170,6 +151,5 @@ _register_config_domains()
 _register_host_attributes()
 _register_host_attribute()
 _register_pages()
-_register_post_config_load()
 _register_cronjobs()
 _register_folder_stub_validators()

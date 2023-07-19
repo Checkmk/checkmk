@@ -41,6 +41,7 @@ import cmk.gui.pages
 import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
 from cmk.gui.config import active_config
+from cmk.gui.cron import register_job
 from cmk.gui.exceptions import MKAuthException, MKUserError
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.html import html
@@ -819,3 +820,7 @@ class InventoryHousekeeping:
 
 def execute_inventory_housekeeping_job() -> None:
     cmk.gui.inventory.InventoryHousekeeping().run()
+
+
+def register() -> None:
+    register_job(execute_inventory_housekeeping_job)

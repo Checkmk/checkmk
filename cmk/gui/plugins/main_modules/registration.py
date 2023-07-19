@@ -11,7 +11,16 @@ from functools import partial
 from cmk.utils.licensing.registry import register_cre_licensing_handler
 
 import cmk.gui.pages
-from cmk.gui import autocompleters, crash_reporting, dashboard, mobile, views, visuals, wato
+from cmk.gui import (
+    autocompleters,
+    crash_reporting,
+    dashboard,
+    inventory,
+    mobile,
+    views,
+    visuals,
+    wato,
+)
 from cmk.gui.bi import registration as bi_registration
 from cmk.gui.config import register_post_config_load_hook
 from cmk.gui.dashboard import dashlet_registry
@@ -20,10 +29,12 @@ from cmk.gui.mkeventd import registration as mkeventd_registration
 from cmk.gui.painter.v0.base import painter_registry
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.permissions import permission_registry, permission_section_registry
+from cmk.gui.plugins.userdb.utils import user_attribute_registry
 from cmk.gui.plugins.visuals import filters
 from cmk.gui.plugins.visuals.utils import visual_type_registry
 from cmk.gui.plugins.wato.utils import mode_registry
 from cmk.gui.query_filters import cre_sites_options
+from cmk.gui.userdb import registration as userdb_registration
 from cmk.gui.valuespec import autocompleter_registry
 from cmk.gui.views.command import command_registry
 from cmk.gui.views.icon import icon_and_action_registry
@@ -59,6 +70,7 @@ def register() -> None:
         visual_type_registry,
         register_post_config_load_hook,
     )
+    inventory.register()
     dashboard.register(
         permission_section_registry,
         cmk.gui.pages.page_registry,
@@ -89,6 +101,7 @@ def register() -> None:
         autocompleter_registry,
     )
     mobile.register(layout_registry)
+    userdb_registration.register(user_attribute_registry)
     wato.register(painter_registry, sorter_registry, icon_and_action_registry)
     bi_registration.register(
         data_source_registry,

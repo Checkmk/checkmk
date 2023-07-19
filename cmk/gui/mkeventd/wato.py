@@ -169,8 +169,8 @@ from cmk.gui.watolib.main_menu import MainModuleRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 from cmk.gui.watolib.search import (
     ABCMatchItemGenerator,
-    match_item_generator_registry,
     MatchItem,
+    MatchItemGeneratorRegistry,
     MatchItems,
 )
 from cmk.gui.watolib.translation import HostnameTranslation
@@ -192,6 +192,7 @@ def register(
     config_var_registry: ConfigVariableRegistry,
     rulespec_group_registry: RulespecGroupRegistry,
     rulespec_registry: RulespecRegistry,
+    match_item_generator_registry: MatchItemGeneratorRegistry,
 ) -> None:
     sample_config_generator_registry.register(SampleConfigGeneratorECSampleRulepack)
 
@@ -249,6 +250,9 @@ def register(
     permission_registry.register(ConfigureECRulesPermission)
     permission_registry.register(ActivateECPermission)
     permission_registry.register(SwitchSlaveReplicationPermission)
+
+    match_item_generator_registry.register(MatchItemEventConsole)
+    match_item_generator_registry.register(MatchItemEventConsoleSettings)
 
 
 def _compiled_mibs_dir() -> Path:
@@ -5199,19 +5203,14 @@ class MatchItemGeneratorECRulePacksAndRules(ABCMatchItemGenerator):
         return False
 
 
-match_item_generator_registry.register(
-    MatchItemGeneratorECRulePacksAndRules(
-        "event_console",
-        ec.load_rule_packs,
-    )
+MatchItemEventConsole = MatchItemGeneratorECRulePacksAndRules(
+    "event_console",
+    ec.load_rule_packs,
 )
-
-match_item_generator_registry.register(
-    MatchItemGeneratorSettings(
-        "event_console_settings",
-        _("Event Console settings"),
-        ModeEventConsoleSettings,
-    )
+MatchItemEventConsoleSettings = MatchItemGeneratorSettings(
+    "event_console_settings",
+    _("Event Console settings"),
+    ModeEventConsoleSettings,
 )
 
 

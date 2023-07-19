@@ -17,6 +17,7 @@ from cmk.gui.watolib.config_domain_name import (
 )
 from cmk.gui.watolib.main_menu import MainModuleRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
+from cmk.gui.watolib.search import match_item_generator_registry
 
 from . import views, wato
 from .autocompleters import service_levels_autocompleter, syslog_facilities_autocompleter
@@ -43,7 +44,7 @@ def register(
     rulespec_registry: RulespecRegistry,
     autocompleter_registry: AutocompleterRegistry,
 ) -> None:
-    views.register(data_source_registry, painter_registry)
+    views.register(data_source_registry, painter_registry, permission_registry)
     icon_registry.register(MkeventdIcon)
     wato.register(
         permission_registry,
@@ -54,6 +55,7 @@ def register(
         config_variable_registry,
         rulespec_group_registry,
         rulespec_registry,
+        match_item_generator_registry,
     )
     permission_section_registry.register(PermissionSectionEventConsole)
     config_domain_registry.register(ConfigDomainEventConsole)

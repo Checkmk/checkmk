@@ -42,6 +42,18 @@ from cmk.gui.watolib.network_scan import execute_network_scan_job as _execute_ne
 _urllib3.disable_warnings(_urllib3.exceptions.InsecureRequestWarning)
 
 
+def register() -> None:
+    _register_automation_commands()
+    _register_gui_background_jobs()
+    _register_hooks()
+    _register_config_domains()
+    _register_host_attributes()
+    _register_host_attribute()
+    _register_pages()
+    _register_cronjobs()
+    _register_folder_stub_validators()
+
+
 def _register_automation_commands() -> None:
     clss: Sequence[type[_automation_commands.AutomationCommand]] = (
         _automation_commands.AutomationPing,
@@ -142,14 +154,3 @@ def _register_folder_stub_validators() -> None:
     Folder.validate_edit_folder = lambda f, a: None
     Folder.validate_move_hosts = lambda f, n, t: None
     Folder.validate_move_subfolder_to = lambda f, t: None
-
-
-_register_automation_commands()
-_register_gui_background_jobs()
-_register_hooks()
-_register_config_domains()
-_register_host_attributes()
-_register_host_attribute()
-_register_pages()
-_register_cronjobs()
-_register_folder_stub_validators()

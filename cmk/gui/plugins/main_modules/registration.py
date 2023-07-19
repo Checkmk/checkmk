@@ -20,6 +20,7 @@ from cmk.gui import (
     views,
     visuals,
     wato,
+    watolib,
 )
 from cmk.gui.bi import registration as bi_registration
 from cmk.gui.config import register_post_config_load_hook
@@ -102,6 +103,7 @@ def register() -> None:
     )
     mobile.register(layout_registry)
     userdb_registration.register(user_attribute_registry)
+    watolib.register()
     wato.register(painter_registry, sorter_registry, icon_and_action_registry)
     bi_registration.register(
         data_source_registry,

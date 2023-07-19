@@ -9,13 +9,41 @@ from cmk.base.plugins.agent_based.agent_based_api import v1
 from cmk.base.plugins.agent_based.utils.citrix_state import Section
 
 Params = Mapping[str, Mapping[str, int]]
-
 DEFAULT_PARAMS = {
     "registrationstate": {
         "Unregistered": 2,
         "Initializing": 1,
         "Registered": 0,
         "AgentError": 2,
+    },
+}
+_CONSTANTS_MAP = {
+    "maintenancemode": {
+        "False": 0,
+        "True": 1,
+    },
+    "powerstate": {
+        "Unmanaged": 1,
+        "Unknown": 1,
+        "Unavailable": 2,
+        "Off": 2,
+        "On": 0,
+        "Suspended": 2,
+        "TurningOn": 1,
+        "TurningOff": 1,
+    },
+    "vmtoolsstate": {
+        "NotPresent": 2,
+        "Unknown": 3,
+        "NotStarted": 1,
+        "Running": 0,
+    },
+    "faultstate": {
+        "None": 0,
+        "FailedToStart": 2,
+        "StuckOnBoot": 2,
+        "Unregistered": 2,
+        "MaxCapacity": 1,
     },
 }
 
@@ -62,37 +90,12 @@ def discovery_citrix_state(section: Section) -> v1.type_defs.DiscoveryResult:
 
 
 def check_citrix_state(params: Params, section: Section) -> v1.type_defs.CheckResult:
-    params = {
-        "maintenancemode": {
-            "False": 0,
-            "True": 1,
-        },
-        "powerstate": {
-            "Unmanaged": 1,
-            "Unknown": 1,
-            "Unavailable": 2,
-            "Off": 2,
-            "On": 0,
-            "Suspended": 2,
-            "TurningOn": 1,
-            "TurningOff": 1,
-        },
-        "vmtoolsstate": {
-            "NotPresent": 2,
-            "Unknown": 3,
-            "NotStarted": 1,
-            "Running": 0,
-        },
-        "faultstate": {
-            "None": 0,
-            "FailedToStart": 2,
-            "StuckOnBoot": 2,
-            "Unregistered": 2,
-            "MaxCapacity": 1,
-        },
-    } | params
     for state_type, state in section["instance"].items():
-        if (monitoring_map := params.get(state_type.lower())) is not None:
+        if (
+            monitoring_map := (
+                params.get(state_type.lower()) or _CONSTANTS_MAP.get(state_type.lower())
+            )
+        ) is not None:
             yield v1.Result(state=v1.State(monitoring_map[state]), summary=f"{state_type} {state}")
 
 

@@ -79,7 +79,7 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 		--ignore-installed \
 		--no-warn-script-location \
 		--prefix="$(PYTHON3_MODULES_INSTALL_DIR)" \
-		git+https://github.com/matusvalo/pymssql.git@cython3_fix ; \
+		git+https://github.com/JonasScharpf/pymssql.git@cython3_fix_v227 ; \
 	    $(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
 		`: dont use precompiled things, build with our build env ` \
 		--no-binary=":all:" \

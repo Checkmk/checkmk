@@ -14,7 +14,7 @@ from collections.abc import Callable, Container, Iterable, Iterator, Mapping, Se
 from dataclasses import dataclass
 from functools import lru_cache
 from itertools import chain
-from typing import Any, Final, Literal, NotRequired, overload, TypedDict, TypeVar, Union
+from typing import Any, Final, Literal, overload, TypedDict, TypeVar, Union
 
 from livestatus import SiteId
 
@@ -139,10 +139,6 @@ class GraphTemplate:
     range: GraphRangeSpec | None
     omit_zero_metrics: bool
     metrics: Sequence[MetricDefinition]
-
-
-class CombinedMetric(GraphMetric):
-    original_metrics: NotRequired[Sequence["GraphMetric"]]
 
 
 @dataclass(frozen=True)

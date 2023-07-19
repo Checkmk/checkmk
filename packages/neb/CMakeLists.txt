@@ -17,7 +17,7 @@ add_compile_options(
 project(
   neb
   VERSION 1.0
-  DESCRIPTION "neb"
+  DESCRIPTION "Livestatus NEB"
   LANGUAGES CXX)
 
 # SUB-DIRS:

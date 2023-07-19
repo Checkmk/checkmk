@@ -21,7 +21,7 @@ usage() {
     echo
     echo "  -c, --clean             remove artifacts first"
     echo "  -F, --check-format      check for correct formatting"
-    echo "  -b, --build             build Livestatus NEB"
+    echo "  -b, --build             build $(grep ' DESCRIPTION ' CMakeLists.txt | sed 's/.* DESCRIPTION "\([^"]*\)".*/\1/')"
     echo "  -U, --build-unit-tests  build unit tests"
     echo "  -u, --unit-tests        run unit tests"
     echo "  -i, --iwyu              check C/C++ includes via include-what-you-use"

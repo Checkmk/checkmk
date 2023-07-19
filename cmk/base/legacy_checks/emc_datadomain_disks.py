@@ -26,6 +26,7 @@ def check_emc_datadomain_disks(item, _no_params, info):
         "4": ("Failed", 2),
         "5": ("Spare", 0),
         "6": ("Available", 0),
+        "8": ("System", 0),
     }
     for line in info[0]:
         if item == line[0] + "-" + line[1]:

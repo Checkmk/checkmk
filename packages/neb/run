@@ -237,11 +237,6 @@ run_unit_tests() {
 run_iwyu() {
     test ${#FILES_TO_USE[@]} -eq 0 && return
     update_cmake_artifacts
-    if [ -z "${GCC_TOOLCHAIN}" ]; then
-        IWYU_EXTRA_ARGS=""
-    else
-        IWYU_EXTRA_ARGS="--gcc-toolchain=${GCC_TOOLCHAIN}"
-    fi
     python3 "$(command -v iwyu_tool.py)" \
         --jobs="${JOBS}" \
         -p=build \
@@ -249,22 +244,17 @@ run_iwyu() {
         "${FILES_TO_USE[@]}" -- \
         -Xiwyu --error \
         -Xiwyu "--mapping_file=$(realpath .iwyu/check_mk.imp)" \
-        "${IWYU_EXTRA_ARGS}"
+        ${GCC_TOOLCHAIN:+"--gcc-toolchain=${GCC_TOOLCHAIN}"}
 }
 
 run_clang_tidy() {
     test ${#FILES_TO_USE[@]} -eq 0 && return
     update_cmake_artifacts
-    if [ -z "${GCC_TOOLCHAIN}" ]; then
-        CLANG_TIDY_EXTRA_ARGS=""
-    else
-        CLANG_TIDY_EXTRA_ARGS="-extra-arg-before=--gcc-toolchain=${GCC_TOOLCHAIN}"
-    fi
     python3 "$(command -v run-clang-tidy-${CLANG_VERSION}.py)" \
         -j "${JOBS}" \
         -p=build \
         -quiet \
-        "${CLANG_TIDY_EXTRA_ARGS}" \
+        ${GCC_TOOLCHAIN:+"-extra-arg-before=--gcc-toolchain=${GCC_TOOLCHAIN}"} \
         "${FILES_TO_USE[@]}" # NOTE: args are regexes, we pass (full) filenames
 }
 

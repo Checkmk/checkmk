@@ -75,6 +75,7 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 		--no-warn-script-location \
 		--prefix="$(PYTHON3_MODULES_INSTALL_DIR)" \
 		-r requirements-dist.txt ; \
+	    GIT_SSL_NO_VERIFY=$$([[ $(DISTRO_CODE) == sles* ]]) \
 	    $(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
 		`: dont use precompiled things, build with our build env ` \
 		--no-binary=":all:" \

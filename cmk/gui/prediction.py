@@ -10,20 +10,23 @@ from typing import Any
 
 import livestatus
 
-import cmk.utils.paths
 import cmk.utils.prediction as prediction
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 
-import cmk.gui.pages
 import cmk.gui.sites as sites
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
+from cmk.gui.pages import PageRegistry
 from cmk.gui.view_breadcrumbs import make_service_breadcrumb
 
 graph_size = 2000, 700
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page_handler("prediction_graph", page_graph)
 
 
 def _load_prediction_information(
@@ -53,8 +56,7 @@ def _load_prediction_information(
     return selected_timegroup, [(tg.name, tg.name.title()) for tg in timegroups]
 
 
-@cmk.gui.pages.register("prediction_graph")
-def page_graph():
+def page_graph() -> None:
     host_name = HostName(request.get_str_input_mandatory("host"))
     service = request.get_str_input_mandatory("service")
     dsname = request.get_str_input_mandatory("dsname")

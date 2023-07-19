@@ -96,7 +96,7 @@ def register(
         permission_section_registry,
         register_post_config_load_hook,
     )
-    inventory.register()
+    inventory.register(page_registry)
 
 
 class PermissionSectionViews(PermissionSection):

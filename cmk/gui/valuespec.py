@@ -142,6 +142,7 @@ Promise = Union[T, Callable[[], T]]
 
 def register(page_registry: PageRegistry) -> None:
     page_registry.register_page("ajax_fetch_ca")(AjaxFetchCA)
+    page_registry.register_page_handler("ajax_popup_icon_selector", ajax_popup_icon_selector)
 
 
 # NOTE: This helper function should be used everywhere instead of dispatching on
@@ -7546,7 +7547,6 @@ class IconSelector(ValueSpec[IconSelectorModel]):
             raise MKUserError(varprefix, _("The selected emblem does not exist."))
 
 
-@cmk.gui.pages.register("ajax_popup_icon_selector")
 def ajax_popup_icon_selector() -> None:
     """AJAX API call for rendering the icon selector"""
     varprefix = request.get_ascii_input_mandatory("varprefix")

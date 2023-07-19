@@ -37,7 +37,6 @@ from cmk.utils.structured_data import (
     SDRawTree,
 )
 
-import cmk.gui.pages
 import cmk.gui.sites as sites
 import cmk.gui.userdb as userdb
 from cmk.gui.config import active_config
@@ -48,8 +47,15 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.pages import PageRegistry
 from cmk.gui.type_defs import Row
 from cmk.gui.valuespec import TextInput, ValueSpec
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page_handler("host_inv_api", page_host_inv_api)
+    register_job(execute_inventory_housekeeping_job)
+
 
 # TODO Cleanup variation:
 #   - InventoryPath.parse parses NOT visible, internal tree paths used in displayhints/views
@@ -637,7 +643,6 @@ class _HostInvAPIResponse(TypedDict):
     result: str | Mapping[str, SDRawTree]
 
 
-@cmk.gui.pages.register("host_inv_api")
 def page_host_inv_api() -> None:
     resp: _HostInvAPIResponse
     try:
@@ -820,7 +825,3 @@ class InventoryHousekeeping:
 
 def execute_inventory_housekeeping_job() -> None:
     cmk.gui.inventory.InventoryHousekeeping().run()
-
-
-def register() -> None:
-    register_job(execute_inventory_housekeeping_job)

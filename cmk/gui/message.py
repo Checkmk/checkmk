@@ -16,7 +16,6 @@ import cmk.utils.store as store
 from cmk.utils.notify import ensure_utf8
 from cmk.utils.user import UserId
 
-import cmk.gui.pages
 import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
@@ -37,6 +36,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.pages import PageRegistry
 from cmk.gui.permissions import Permission, permission_registry
 from cmk.gui.utils.escaping import escape_to_html
 from cmk.gui.utils.html import HTML
@@ -54,6 +54,10 @@ from cmk.gui.valuespec import (
 )
 
 Message = DictionaryModel
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page_handler("message", page_message)
 
 
 def get_gui_messages(user_id: UserId | None = None) -> MutableSequence[Message]:
@@ -132,7 +136,6 @@ permission_registry.register(
 )
 
 
-@cmk.gui.pages.register("message")
 def page_message() -> None:
     if not user.may("general.message"):
         raise MKAuthException(_("You are not allowed to use the message module."))

@@ -89,6 +89,7 @@ def register(page_registry: PageRegistry) -> None:
     page_registry.register_page("ajax_load_bi_template_layout")(AjaxLoadBITemplateLayout)
     page_registry.register_page("ajax_get_all_bi_template_layouts")(AjaxGetAllBITemplateLayouts)
     page_registry.register_page("ajax_fetch_topology")(AjaxFetchTopology)
+    page_registry.register_page_handler("bi_map", _bi_map)
 
 
 def _get_topology_configuration(
@@ -363,7 +364,6 @@ class AjaxInitialTopologyFilters(ABCAjaxInitialFilters):
         return {f.ident: {} for f in show_filters if f.available()}
 
 
-@cmk.gui.pages.register("bi_map")
 def _bi_map() -> None:
     aggr_name = request.var("aggr_name")
     layout_id = request.var("layout_id")

@@ -10,6 +10,7 @@ from functools import partial
 
 from cmk.utils.licensing.registry import register_cre_licensing_handler
 
+import cmk.gui.help
 import cmk.gui.pages
 from cmk.gui import (
     autocompleters,
@@ -18,12 +19,17 @@ from cmk.gui import (
     dashboard,
     inventory,
     login,
+    logwatch,
+    main,
+    message,
     mobile,
     node_visualization,
     notifications,
+    prediction,
     robotmk,
     sidebar,
     user_message,
+    userdb,
     valuespec,
     views,
     visuals,
@@ -82,7 +88,7 @@ def register() -> None:
         visual_type_registry,
         register_post_config_load_hook,
     )
-    inventory.register()
+    inventory.register(cmk.gui.pages.page_registry)
     dashboard.register(
         permission_section_registry,
         cmk.gui.pages.page_registry,
@@ -140,6 +146,12 @@ def register() -> None:
     werks.register(cmk.gui.pages.page_registry)
     login.register(cmk.gui.pages.page_registry)
     sidebar.register(cmk.gui.pages.page_registry)
+    message.register(cmk.gui.pages.page_registry)
+    userdb.register(cmk.gui.pages.page_registry)
+    cmk.gui.help.register(cmk.gui.pages.page_registry)
+    main.register(cmk.gui.pages.page_registry)
+    logwatch.register(cmk.gui.pages.page_registry)
+    prediction.register(cmk.gui.pages.page_registry)
     register_sites_options()
     register_row_post_processor(inventory_row_post_processor)
     register_row_post_processor(join_service_row_post_processor)

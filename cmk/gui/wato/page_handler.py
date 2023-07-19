@@ -7,7 +7,6 @@ import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.gui.pages
 import cmk.gui.watolib.read_only as read_only
 from cmk.gui.breadcrumb import make_main_menu_breadcrumb
 from cmk.gui.config import active_config
@@ -61,7 +60,6 @@ else:
 #   `----------------------------------------------------------------------'
 
 
-@cmk.gui.pages.register("wato")
 def page_handler() -> None:
     initialize_wato_html_head()
 

@@ -24,7 +24,6 @@ from cmk.utils.crypto.password import Password, PasswordHash
 from cmk.utils.store.htpasswd import Htpasswd
 from cmk.utils.user import UserId
 
-import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.background_job import (
     BackgroundJob,
@@ -40,6 +39,7 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger as gui_logger
 from cmk.gui.logged_in import LoggedInUser
+from cmk.gui.pages import PageRegistry
 from cmk.gui.plugins.userdb.utils import (
     active_connections,
     ConnectorType,
@@ -109,6 +109,10 @@ __all__ = [
 ]
 
 auth_logger = gui_logger.getChild("auth")
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page_handler("ajax_userdb_sync", ajax_sync)
 
 
 def load_plugins() -> None:
@@ -676,7 +680,6 @@ def userdb_sync_job_enabled() -> bool:
     return True
 
 
-@cmk.gui.pages.register("ajax_userdb_sync")
 def ajax_sync() -> None:
     try:
         job = UserSyncBackgroundJob()

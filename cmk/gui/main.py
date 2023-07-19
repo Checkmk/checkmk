@@ -6,20 +6,23 @@
 from cmk.utils.site import omd_site
 from cmk.utils.urls import is_allowed_url
 
-import cmk.gui.pages
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import HTTPRedirect
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
+from cmk.gui.pages import PageRegistry
 from cmk.gui.sidebar import SidebarRenderer
 from cmk.gui.site_config import get_site_config
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri
 
 
-@cmk.gui.pages.register("index")
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page_handler("index", page_index)
+
+
 def page_index() -> None:
     # Redirect to mobile GUI if we are a mobile device and the index is requested
     if is_mobile(request, response):

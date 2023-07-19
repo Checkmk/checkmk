@@ -6,9 +6,6 @@
 import time
 from collections.abc import Iterator
 
-import cmk.utils.paths
-import cmk.utils.werks
-
 import cmk.gui.message as message
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.htmllib.header import make_header
@@ -30,6 +27,7 @@ from cmk.gui.table import table_element
 
 def register(page_registry: PageRegistry) -> None:
     page_registry.register_page("user_message")(PageUserMessage)
+    page_registry.register_page_handler("ajax_delete_user_message", ajax_delete_user_message)
 
 
 class PageUserMessage(Page):
@@ -114,7 +112,6 @@ def render_user_message_table(what: str) -> None:
     html.close_div()
 
 
-@cmk.gui.pages.register("ajax_delete_user_message")
 def ajax_delete_user_message() -> None:
     msg_id = request.get_str_input_mandatory("id")
     message.delete_gui_message(msg_id)

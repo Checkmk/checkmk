@@ -35,7 +35,6 @@ from cmk.utils.structured_data import (
 from cmk.utils.user import UserId
 
 import cmk.gui.inventory as inventory
-import cmk.gui.pages
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
 from cmk.gui.data_source import ABCDataSource, data_source_registry, RowTable
@@ -48,6 +47,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.ifaceoper import interface_oper_state_name, interface_port_types
+from cmk.gui.pages import PageRegistry
 from cmk.gui.painter.v0.base import Cell, Painter, painter_registry, register_painter
 from cmk.gui.painter_options import (
     paint_age,
@@ -108,8 +108,9 @@ _PAINT_FUNCTION_NAME_PREFIX = "inv_paint_"
 _PAINT_FUNCTIONS: dict[str, PaintFunction] = {}
 
 
-def register() -> None:
+def register(page_registry: PageRegistry) -> None:
     builtin_display_hints.register(inventory_displayhints)
+    page_registry.register_page_handler("ajax_inv_render_tree", ajax_inv_render_tree)
 
 
 def update_paint_functions(mapping: Mapping[str, Any]) -> None:
@@ -2264,7 +2265,6 @@ def _load_inventory_tree(site_id: SiteId, host_name: HostName) -> ImmutableTree:
 
 
 # Ajax call for fetching parts of the tree
-@cmk.gui.pages.register("ajax_inv_render_tree")
 def ajax_inv_render_tree() -> None:
     site_id = SiteId(request.get_ascii_input_mandatory("site"))
     host_name = HostName(request.get_ascii_input_mandatory("host"))

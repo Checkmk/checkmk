@@ -91,8 +91,6 @@ class ExplicitGraphSpecification(BaseModel, frozen=True):
     explicit_vertical_range: tuple[float | None, float | None]
     omit_zero_metrics: bool
     horizontal_rules: Sequence[HorizontalRule]
-    context: VisualContext
-    add_context_to_title: bool
     metrics: Sequence[GraphMetric]
 
     def to_legacy_format(self) -> ExplicitGraphSpec:
@@ -103,8 +101,6 @@ class ExplicitGraphSpecification(BaseModel, frozen=True):
             explicit_vertical_range=self.explicit_vertical_range,
             omit_zero_metrics=self.omit_zero_metrics,
             horizontal_rules=self.horizontal_rules,
-            context=self.context,
-            add_context_to_title=self.add_context_to_title,
             metrics=self.metrics,
         )
 

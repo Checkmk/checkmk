@@ -182,8 +182,6 @@ class TemplateGraphRecipe(GraphRecipeBase):
 
 class ExplicitGraphRecipe(GraphRecipeBase):
     specification: ExplicitGraphIdentifier
-    context: VisualContext
-    add_context_to_title: bool
 
 
 class SingleTimeseriesGraphRecipe(GraphRecipeBase):

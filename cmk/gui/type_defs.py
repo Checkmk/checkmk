@@ -680,8 +680,6 @@ class ExplicitGraphSpec(GraphSpec):
     explicit_vertical_range: tuple[float | None, float | None]
     omit_zero_metrics: bool
     horizontal_rules: Sequence[HorizontalRule]
-    context: VisualContext
-    add_context_to_title: bool
     metrics: Sequence[GraphMetric]
 
 

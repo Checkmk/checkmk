@@ -24,8 +24,6 @@ class ExplicitGraphRecipeBuilder:
                 "explicit_vertical_range": spec.explicit_vertical_range,
                 "omit_zero_metrics": spec.omit_zero_metrics,
                 "horizontal_rules": spec.horizontal_rules,
-                "context": spec.context,
-                "add_context_to_title": spec.add_context_to_title,
                 "metrics": spec.metrics,
                 "specification": (
                     "explicit",

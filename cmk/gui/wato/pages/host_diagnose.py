@@ -27,7 +27,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, page_registry, PageResult
+from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.plugins.wato.utils import flash, mode_registry, mode_url, redirect, WatoMode
 from cmk.gui.type_defs import ActionResult, PermissionName
 from cmk.gui.utils.csrf_token import check_csrf_token
@@ -52,6 +52,10 @@ class HostSpec(TypedDict):
     ipaddress: NotRequired[HostAddress]
     snmp_community: NotRequired[SNMPCredentials]
     snmp_v3_credentials: NotRequired[SNMPv3NoAuthNoPriv | SNMPv3AuthNoPriv | SNMPv3AuthPriv]
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("wato_ajax_diag_host")(PageAjaxDiagHost)
 
 
 @mode_registry.register
@@ -407,8 +411,7 @@ class ModeDiagHost(WatoMode):
         )
 
 
-@page_registry.register_page("wato_ajax_diag_host")
-class ModeAjaxDiagHost(AjaxPage):
+class PageAjaxDiagHost(AjaxPage):
     def page(self) -> PageResult:
         check_csrf_token()
         if not user.may("wato.diag_host"):

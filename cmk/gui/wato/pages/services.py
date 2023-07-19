@@ -49,7 +49,7 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.page_menu_entry import disable_page_menu_entry, enable_page_menu_entry
-from cmk.gui.pages import AjaxPage, page_registry, PageResult
+from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.plugins.wato.utils.context_buttons import make_host_status_link
 from cmk.gui.site_config import sitenames
@@ -101,6 +101,11 @@ class TableGroupEntry(NamedTuple):
     show_bulk_actions: bool
     title: str
     help_text: str
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("ajax_service_discovery")(ModeAjaxServiceDiscovery)
+    page_registry.register_page("wato_ajax_execute_check")(ModeAjaxExecuteCheck)
 
 
 @mode_registry.register
@@ -241,7 +246,6 @@ class AutomationServiceDiscoveryJob(AutomationCommand):
         ).serialize(central_version)
 
 
-@page_registry.register_page("ajax_service_discovery")
 class ModeAjaxServiceDiscovery(AjaxPage):
     def page(self) -> PageResult:
         check_csrf_token()
@@ -1492,7 +1496,6 @@ class DiscoveryPageRenderer:
         ]
 
 
-@page_registry.register_page("wato_ajax_execute_check")
 class ModeAjaxExecuteCheck(AjaxPage):
     def _from_vars(self) -> None:
         self._site = SiteId(request.get_ascii_input_mandatory("site"))

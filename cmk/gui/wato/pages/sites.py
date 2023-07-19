@@ -47,7 +47,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, page_registry, PageResult
+from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.plugins.wato.utils import mode_registry, sort_sites
 from cmk.gui.plugins.wato.utils.base_modes import mode_url, redirect, WatoMode
 from cmk.gui.plugins.wato.utils.html_elements import wato_html_head
@@ -107,6 +107,10 @@ from cmk.gui.watolib.sites import (
     site_globals_editable,
     SiteManagementFactory,
 )
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("wato_ajax_fetch_site_status")(PageAjaxFetchSiteStatus)
 
 
 @mode_registry.register
@@ -883,8 +887,7 @@ class ModeDistributedMonitoring(WatoMode):
         html.close_div()
 
 
-@page_registry.register_page("wato_ajax_fetch_site_status")
-class ModeAjaxFetchSiteStatus(AjaxPage):
+class PageAjaxFetchSiteStatus(AjaxPage):
     """AJAX handler for asynchronous fetching of the site status"""
 
     def page(self) -> PageResult:

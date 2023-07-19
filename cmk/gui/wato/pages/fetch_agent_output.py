@@ -28,7 +28,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import ContentDispositionType, request, response
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.pages import Page, page_registry
+from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.transaction_manager import transactions
@@ -38,6 +38,12 @@ from cmk.gui.watolib.automation_commands import automation_command_registry, Aut
 from cmk.gui.watolib.automations import do_remote_automation
 from cmk.gui.watolib.check_mk_automations import get_agent_output
 from cmk.gui.watolib.hosts_and_folders import folder_from_request, Host
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("fetch_agent_output")(PageFetchAgentOutput)
+    page_registry.register_page("download_agent_output")(PageDownloadAgentOutput)
+
 
 # .
 #   .--Agent-Output--------------------------------------------------------.
@@ -124,7 +130,6 @@ class AgentOutputPage(Page, abc.ABC):
         )
 
 
-@page_registry.register_page("fetch_agent_output")
 class PageFetchAgentOutput(AgentOutputPage):
     def page(self) -> None:
         title = self._title()
@@ -316,7 +321,6 @@ class FetchAgentOutputBackgroundJob(BackgroundJob):
         )
 
 
-@page_registry.register_page("download_agent_output")
 class PageDownloadAgentOutput(AgentOutputPage):
     def page(self) -> None:
         file_name = self.file_name(self._request)

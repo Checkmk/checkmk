@@ -13,10 +13,14 @@ import cmk.gui.backup as backup
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.pages import AjaxPage, page_registry, PageResult
+from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.plugins.wato.utils import mode_registry, WatoMode
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.watolib.audit_log import log_audit
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("ajax_backup_job_state")(PageAjaxBackupJobState)
 
 
 @mode_registry.register
@@ -99,8 +103,7 @@ class ModeBackupJobState(backup.PageBackupJobState, WatoMode):
         return ["backups"]
 
 
-@page_registry.register_page("ajax_backup_job_state")
-class ModeAjaxBackupJobState(AjaxPage):
+class PageAjaxBackupJobState(AjaxPage):
     # TODO: Better use AjaxPage.handle_page() for standard AJAX call error handling. This
     # would need larger refactoring of the generic html.popup_trigger() mechanism.
     def handle_page(self) -> None:

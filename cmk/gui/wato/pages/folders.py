@@ -41,7 +41,7 @@ from cmk.gui.page_menu import (
     PageMenuSearch,
     PageMenuTopic,
 )
-from cmk.gui.pages import AjaxPage, page_registry, PageResult
+from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.plugins.wato.utils import (
     configure_attributes,
     get_hostnames_from_checkboxes,
@@ -92,6 +92,11 @@ from cmk.gui.watolib.hosts_and_folders import (
 from cmk.gui.watolib.main_menu import MenuItem
 
 TagsOrLabels = TypeVar("TagsOrLabels", Mapping[TagGroupID, TagID], Labels)
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("ajax_popup_move_to_folder")(PageAjaxPopupMoveToFolder)
+    page_registry.register_page("ajax_set_foldertree")(PageAjaxSetFoldertree)
 
 
 def make_folder_breadcrumb(folder: Folder | SearchFolder) -> Breadcrumb:
@@ -1116,8 +1121,7 @@ class ModeFolder(WatoMode):
 
 
 # TODO: Split this into one base class and one subclass for folder and hosts
-@page_registry.register_page("ajax_popup_move_to_folder")
-class ModeAjaxPopupMoveToFolder(AjaxPage):
+class PageAjaxPopupMoveToFolder(AjaxPage):
     """Renders the popup menu contents for either moving a host or a folder to another folder"""
 
     def _from_vars(self) -> None:
@@ -1337,8 +1341,7 @@ class ModeCreateFolder(ABCFolderMode):
         parent_folder.create_subfolder(name, title, attributes)
 
 
-@page_registry.register_page("ajax_set_foldertree")
-class ModeAjaxSetFoldertree(AjaxPage):
+class PageAjaxSetFoldertree(AjaxPage):
     def page(self) -> PageResult:  # pylint: disable=useless-return
         check_csrf_token()
         api_request = self.webapi_request()

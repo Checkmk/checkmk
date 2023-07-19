@@ -35,7 +35,7 @@ class ResultTest(ABCAutomationResult):
         return "test"
 
 
-class TestModeAutomation:
+class TestPageAutomation:
     @pytest.fixture(name="result_type_registry")
     def result_type_registry_fixture(self, monkeypatch: pytest.MonkeyPatch) -> None:
         registry = ResultTypeRegistry()
@@ -91,7 +91,7 @@ class TestModeAutomation:
                 "headers",
                 {"x-checkmk-version": cmk_version.__version__, "x-checkmk-edition": "cee"},
             )
-            automation.ModeAutomation()._execute_cmk_automation()
+            automation.PageAutomation()._execute_cmk_automation()
             assert response.get_data() == b"((1, 2), 'this field was not sent by version N-1')"
 
     @pytest.mark.usefixtures(
@@ -107,7 +107,7 @@ class TestModeAutomation:
                 "headers",
                 {"x-checkmk-version": "2.2.0p20", "x-checkmk-edition": "cee"},
             )
-            automation.ModeAutomation()._execute_cmk_automation()
+            automation.PageAutomation()._execute_cmk_automation()
             assert response.get_data() == b"((1, 2),)"
 
     @pytest.mark.parametrize(
@@ -133,4 +133,4 @@ class TestModeAutomation:
                 {"x-checkmk-version": incomp_version, "x-checkmk-edition": "cee"},
             )
             with pytest.raises(MKGeneralException, match="not compatible"):
-                automation.ModeAutomation()._execute_cmk_automation()
+                automation.PageAutomation()._execute_cmk_automation()

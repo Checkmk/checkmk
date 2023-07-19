@@ -30,7 +30,7 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.pages import AjaxPage, page_registry, PageResult
+from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.session import SuperUserContext
 from cmk.gui.utils.compatibility import make_incompatible_info
 from cmk.gui.watolib.automation_commands import automation_command_registry
@@ -42,8 +42,12 @@ from cmk.gui.watolib.automations import (
 )
 
 
-@page_registry.register_page("automation_login")
-class ModeAutomationLogin(AjaxPage):
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("automation_login")(PageAutomationLogin)
+    page_registry.register_page("noauth:automation")(PageAutomation)
+
+
+class PageAutomationLogin(AjaxPage):
     """Is executed by the central Checkmk site to get the site secret of the remote site
 
     When the page method is execute a remote (central) site has successfully
@@ -119,8 +123,7 @@ class ModeAutomationLogin(AjaxPage):
         return None
 
 
-@page_registry.register_page("noauth:automation")
-class ModeAutomation(AjaxPage):
+class PageAutomation(AjaxPage):
     """Executes the requested automation call
 
     This page is accessible without regular login. The request is authenticated using the given

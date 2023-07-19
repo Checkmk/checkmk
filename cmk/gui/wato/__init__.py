@@ -73,8 +73,15 @@ import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
 import cmk.gui.valuespec
 import cmk.gui.view_utils
+import cmk.gui.wato.pages.activate_changes
+import cmk.gui.wato.pages.automation
+import cmk.gui.wato.pages.backup
 import cmk.gui.wato.pages.diagnostics
 import cmk.gui.wato.pages.fetch_agent_output
+import cmk.gui.wato.pages.folders
+import cmk.gui.wato.pages.host_diagnose
+import cmk.gui.wato.pages.services
+import cmk.gui.wato.pages.sites
 import cmk.gui.wato.pages.user_profile
 import cmk.gui.wato.permissions
 import cmk.gui.watolib as watolib
@@ -102,14 +109,8 @@ from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.html import HTML
-from cmk.gui.wato.pages.activate_changes import (
-    ModeActivateChanges,
-    ModeAjaxActivationState,
-    ModeAjaxStartActivation,
-)
 from cmk.gui.wato.pages.analyze_configuration import ModeAnalyzeConfig
 from cmk.gui.wato.pages.audit_log import ModeAuditLog
-from cmk.gui.wato.pages.automation import ModeAutomation, ModeAutomationLogin
 from cmk.gui.wato.pages.backup import (
     ModeBackup,
     ModeBackupDownloadKey,
@@ -135,13 +136,7 @@ from cmk.gui.wato.pages.custom_attributes import (
     ModeEditCustomUserAttr,
 )
 from cmk.gui.wato.pages.download_agents import ModeDownloadAgentsOther
-from cmk.gui.wato.pages.folders import (
-    ModeAjaxPopupMoveToFolder,
-    ModeAjaxSetFoldertree,
-    ModeCreateFolder,
-    ModeEditFolder,
-    ModeFolder,
-)
+from cmk.gui.wato.pages.folders import ModeCreateFolder, ModeEditFolder, ModeFolder
 from cmk.gui.wato.pages.global_settings import ModeEditGlobals, ModeEditGlobalSetting
 from cmk.gui.wato.pages.groups import (
     ModeContactgroups,
@@ -152,7 +147,6 @@ from cmk.gui.wato.pages.groups import (
     ModeHostgroups,
     ModeServicegroups,
 )
-from cmk.gui.wato.pages.host_diagnose import ModeDiagHost
 from cmk.gui.wato.pages.host_rename import ModeBulkRenameHost, ModeRenameHost
 from cmk.gui.wato.pages.hosts import ModeCreateCluster, ModeCreateHost, ModeEditHost
 from cmk.gui.wato.pages.icons import ModeIcons
@@ -178,7 +172,6 @@ from cmk.gui.wato.pages.read_only import ModeManageReadOnly
 from cmk.gui.wato.pages.roles import ModeEditRole, ModeRoleMatrix, ModeRoles
 from cmk.gui.wato.pages.rulesets import ModeCloneRule, ModeEditRule, ModeEditRuleset, ModeNewRule
 from cmk.gui.wato.pages.search import ModeSearch
-from cmk.gui.wato.pages.services import ModeAjaxExecuteCheck, ModeDiscovery
 from cmk.gui.wato.pages.sites import ModeDistributedMonitoring, ModeEditSite, ModeEditSiteGlobals
 from cmk.gui.wato.pages.tags import ModeEditAuxtag, ModeEditTagGroup, ModeTags
 from cmk.gui.wato.pages.timeperiods import (
@@ -303,6 +296,14 @@ def register(
     cmk.gui.wato.pages.user_profile.change_password.register(page_registry)
     cmk.gui.wato.pages.user_profile.async_replication.register(page_registry)
     cmk.gui.wato.pages.user_profile.replicate.register(page_registry)
+    cmk.gui.wato.pages.services.register(page_registry)
+    cmk.gui.wato.pages.host_diagnose.register(page_registry)
+    cmk.gui.wato.pages.activate_changes.register(page_registry)
+    cmk.gui.wato.pages.backup.register(page_registry)
+    cmk.gui.wato.pages.folders.register(page_registry)
+    cmk.gui.wato.pages.automation.register(page_registry)
+    cmk.gui.wato.pages.sites.register(page_registry)
+    cmk.gui.wato.pages.fetch_agent_output.register(page_registry)
 
     sync_remote_sites.register(automation_command_registry, job_registry)
 

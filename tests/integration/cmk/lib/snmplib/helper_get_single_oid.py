@@ -13,7 +13,7 @@ import cmk.utils.paths
 from cmk.utils.hostaddress import HostName
 from cmk.utils.version import edition, Edition
 
-from cmk.snmplib import OID, snmp_modes, SNMPBackend, SNMPBackendEnum, SNMPHostConfig
+from cmk.snmplib import get_single_oid, OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig
 
 import cmk.fetchers._snmpcache as snmp_cache
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
@@ -51,7 +51,7 @@ match backend_type:
 print(
     repr(
         (
-            snmp_modes.get_single_oid(
+            get_single_oid(
                 oid, single_oid_cache=snmp_cache.single_oid_cache(), backend=backend(config, logger)
             ),
             snmp_cache.single_oid_cache(),

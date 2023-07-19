@@ -12,7 +12,7 @@ import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.version import edition, Edition
 
-from cmk.snmplib import OID, snmp_modes, SNMPBackend, SNMPBackendEnum, SNMPHostConfig
+from cmk.snmplib import OID, SNMPBackend, SNMPBackendEnum, SNMPHostConfig, walk_for_export
 
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 
@@ -44,4 +44,4 @@ match backend_type:
     case _:
         raise ValueError(backend_type)
 
-print(repr(snmp_modes.walk_for_export(backend(config, logger).walk(oid))))
+print(repr(walk_for_export(backend(config, logger).walk(oid))))

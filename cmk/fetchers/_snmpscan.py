@@ -11,8 +11,7 @@ from cmk.utils.exceptions import MKGeneralException, MKSNMPError, OnError
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionName
 
-import cmk.snmplib.snmp_modes as snmp_modes
-from cmk.snmplib import SNMPBackend
+from cmk.snmplib import get_single_oid, SNMPBackend
 from cmk.snmplib.detect import evaluate_snmp_detection, SNMPDetectBaseType
 
 import cmk.fetchers._snmpcache as snmp_cache
@@ -82,7 +81,7 @@ def _prefetch_description_object(*, backend: SNMPBackend) -> None:
         (OID_SYS_OBJ, "system object"),
     ):
         if (
-            snmp_modes.get_single_oid(
+            get_single_oid(
                 oid,
                 single_oid_cache=snmp_cache.single_oid_cache(),
                 backend=backend,
@@ -116,7 +115,7 @@ def _find_sections(
     found_sections: set[SectionName] = set()
     for name, specs in sections:
         oid_value_getter = functools.partial(
-            snmp_modes.get_single_oid,
+            get_single_oid,
             section_name=name,
             single_oid_cache=snmp_cache.single_oid_cache(),
             backend=backend,

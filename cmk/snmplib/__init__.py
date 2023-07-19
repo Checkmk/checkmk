@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Package with our SNMP stuff."""
 
+from ._getoid import get_single_oid as get_single_oid
 from ._typedefs import BackendOIDSpec as BackendOIDSpec
 from ._typedefs import BackendSNMPTree as BackendSNMPTree
 from ._typedefs import OID as OID
@@ -22,3 +23,6 @@ from ._typedefs import SNMPRowInfo as SNMPRowInfo
 from ._typedefs import SNMPTable as SNMPTable
 from ._typedefs import SNMPTiming as SNMPTiming
 from ._typedefs import SpecialColumn as SpecialColumn
+from ._walk import oids_to_walk as oids_to_walk
+from ._walk import SNMPRowInfoForStoredWalk as SNMPRowInfoForStoredWalk
+from ._walk import walk_for_export as walk_for_export

@@ -51,8 +51,7 @@ from cmk.utils.structured_data import (
 from cmk.utils.tags import TagID
 from cmk.utils.timeout import Timeout
 
-import cmk.snmplib.snmp_modes as snmp_modes
-from cmk.snmplib import OID, SNMPBackend
+from cmk.snmplib import get_single_oid, OID, oids_to_walk, SNMPBackend, walk_for_export
 
 import cmk.fetchers.snmp as snmp_factory
 from cmk.fetchers import FetcherType, get_raw_data
@@ -1038,7 +1037,7 @@ def _do_snmpwalk(options: _SNMPWalkOptions, *, backend: SNMPBackend) -> None:
 def _do_snmpwalk_on(options: _SNMPWalkOptions, filename: str, *, backend: SNMPBackend) -> None:
     console.verbose("%s:\n" % backend.hostname)
 
-    oids = snmp_modes.oids_to_walk(options)
+    oids = oids_to_walk(options)
 
     with Path(filename).open("w", encoding="utf-8") as file:
         for rows in _execute_walks_for_dump(oids, backend=backend):
@@ -1055,7 +1054,7 @@ def _execute_walks_for_dump(
     for oid in oids:
         try:
             console.verbose('Walk on "%s"...\n' % oid)
-            yield snmp_modes.walk_for_export(backend.walk(oid=oid))
+            yield walk_for_export(backend.walk(oid=oid))
         except Exception as e:
             console.error("Error: %s\n" % e)
             if cmk.utils.debug.enabled():
@@ -1154,7 +1153,7 @@ def mode_snmpget(args: list[str]) -> None:
 
         snmp_config = config_cache.make_snmp_config(hostname, ipaddress, SourceType.HOST)
         backend = snmp_factory.make_backend(snmp_config, log.logger)
-        value = snmp_modes.get_single_oid(oid, single_oid_cache={}, backend=backend)
+        value = get_single_oid(oid, single_oid_cache={}, backend=backend)
         sys.stdout.write(f"{backend.hostname} ({backend.address}): {value!r}\n")
 
 

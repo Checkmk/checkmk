@@ -22,7 +22,7 @@ from tests.testlib.site import Site
 
 from cmk.utils.hostaddress import HostAddress
 
-from cmk.snmplib import OID, snmp_modes, SNMPBackendEnum, SNMPHostConfig
+from cmk.snmplib import OID, SNMPBackendEnum, SNMPHostConfig, SNMPRowInfoForStoredWalk
 
 from .snmp_helpers import default_config, get_single_oid
 
@@ -137,7 +137,7 @@ def test_get_single_oid_next(site: Site, backend_type: SNMPBackendEnum) -> None:
 # The get_single_oid function currently does not support OID_BIN handling
 # @pytest.mark.usefixtures("snmpsim")
 # def test_get_single_oid_hex(snmp_config) -> None:
-#    assert snmp_modes.get_single_oid(snmp_config, ".1.3.6.1.2.1.2.2.1.6.2")[0] == b"\x00\x12yb\xf9@"
+#    assert get_single_oid(snmp_config, ".1.3.6.1.2.1.2.2.1.6.2")[0] == b"\x00\x12yb\xf9@"
 
 
 @pytest.mark.usefixtures("snmpsim")
@@ -237,7 +237,7 @@ def test_walk_for_export(
 
 def walk_for_export(
     site: Site, oid: OID, backend_type: SNMPBackendEnum, config: SNMPHostConfig
-) -> snmp_modes.SNMPRowInfoForStoredWalk:
+) -> SNMPRowInfoForStoredWalk:
     return ast.literal_eval(
         site.python_helper("helper_walk_for_export.py").check_output(
             input=repr(

@@ -96,9 +96,15 @@ from cmk.automations.results import (
     UpdateHostLabelsResult,
 )
 
-import cmk.snmplib.snmp_modes as snmp_modes
 import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib import BackendOIDSpec, BackendSNMPTree, SNMPCredentials, SNMPHostConfig
+from cmk.snmplib import (
+    BackendOIDSpec,
+    BackendSNMPTree,
+    oids_to_walk,
+    SNMPCredentials,
+    SNMPHostConfig,
+    walk_for_export,
+)
 
 from cmk.fetchers import FetcherType, get_raw_data, Mode, ProgramFetcher, TCPFetcher
 from cmk.fetchers.filecache import FileCacheOptions
@@ -2144,9 +2150,9 @@ class AutomationGetAgentOutput(Automation):
                 backend = make_snmp_backend(snmp_config, log.logger, use_cache=False)
 
                 lines = []
-                for walk_oid in snmp_modes.oids_to_walk():
+                for walk_oid in oids_to_walk():
                     try:
-                        for oid, value in snmp_modes.walk_for_export(backend.walk(oid=walk_oid)):
+                        for oid, value in walk_for_export(backend.walk(oid=walk_oid)):
                             raw_oid_value = f"{oid} {value}\n"
                             lines.append(raw_oid_value.encode())
                     except Exception as e:

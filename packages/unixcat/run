@@ -149,6 +149,7 @@ parse_options() {
 }
 
 update_cmake_artifacts() {
+    test "${UPDATE_CMAKE_ARTIFACTS_RAN}" = "yes" && return
     # We depend on all CMakeLists.txt, all the external dependencies pulled in
     # via FetchContent, and all the patches applied to those dependencies. We
     # could guard the configuration call below with a timestamp comparison
@@ -157,6 +158,7 @@ update_cmake_artifacts() {
     # scenario, which is fast enough. We can reconsider a guard when this gets
     # worse.
     cmake -S . -B build
+    UPDATE_CMAKE_ARTIFACTS_RAN=yes
 }
 
 run_clean() {
@@ -204,6 +206,7 @@ run_build() {
 }
 
 run_build_unit_tests() {
+    test "${RUN_BUILD_UNIT_TESTS_RAN}" = "yes" && return
     update_cmake_artifacts
     touch build/.run-build-unit-tests-stamp
     cmake --build build --parallel "${JOBS}" --target test
@@ -213,6 +216,7 @@ run_build_unit_tests() {
     done < <(find build/test/CMakeFiles -name "*.o" -newer build/.run-build-unit-tests-stamp |
         sed 's,^build/test/CMakeFiles/[^/]*\.dir/\(.*\)\.o$,test/\1,' |
         sort)
+    RUN_BUILD_UNIT_TESTS_RAN=yes
 }
 
 calculate_files_to_use() {

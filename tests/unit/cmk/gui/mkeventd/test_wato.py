@@ -4,7 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Iterable
-from datetime import datetime
+from datetime import datetime, timezone
 
 from freezegun import freeze_time
 from pytest import MonkeyPatch
@@ -70,7 +70,7 @@ def test_match_item_generator_ec_rule_packs_and_rules() -> None:
     ]
 
 
-@freeze_time(datetime.utcfromtimestamp(1622638021))
+@freeze_time(datetime.fromtimestamp(1622638021, tz=timezone.utc))
 def test_send_event(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(
         mkeventd_wato,

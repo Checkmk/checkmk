@@ -11,10 +11,9 @@ import typing
 import uuid
 import warnings
 from collections.abc import Mapping
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Literal
 
-import pytz
 from cryptography.x509 import CertificateSigningRequest, load_pem_x509_csr
 from cryptography.x509.oid import NameOID
 from marshmallow import fields as _fields
@@ -1255,8 +1254,7 @@ class PasswordShare(base.String):
 
 
 def from_timestamp(value: float) -> datetime:
-    stamp = datetime.utcfromtimestamp(value)
-    return stamp.replace(tzinfo=pytz.utc)
+    return datetime.fromtimestamp(value, tz=timezone.utc)
 
 
 def to_timestamp(value: datetime) -> float:

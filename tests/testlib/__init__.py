@@ -436,7 +436,7 @@ def set_timezone(timezone: str) -> Iterator[None]:
 def on_time(utctime: datetime.datetime | str | int | float, timezone: str) -> Iterator[None]:
     """Set the time and timezone for the test"""
     if isinstance(utctime, (int, float)):
-        utctime = datetime.datetime.utcfromtimestamp(utctime)
+        utctime = datetime.datetime.fromtimestamp(utctime, tz=datetime.UTC)
 
     with set_timezone(timezone), freezegun.freeze_time(utctime):
         yield

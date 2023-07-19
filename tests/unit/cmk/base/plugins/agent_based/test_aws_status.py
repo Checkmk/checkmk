@@ -13,7 +13,7 @@ import pytest
 from cmk.base.plugins.agent_based import aws_status
 from cmk.base.plugins.agent_based.agent_based_api import v1
 
-CURRENT_TIME = datetime.datetime.utcfromtimestamp(1670000000.0)
+CURRENT_TIME = datetime.datetime.fromtimestamp(1670000000.0, tz=datetime.UTC)
 
 
 def _random_time(oldest: float, newest: float) -> time.struct_time:

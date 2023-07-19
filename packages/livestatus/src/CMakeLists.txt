@@ -287,6 +287,8 @@ target_compile_features(livestatus PUBLIC cxx_std_17)
 set_target_properties(livestatus PROPERTIES VERSION ${PROJECT_VERSION}
                                             SOVERSION ${PROJECT_VERSION_MAJOR})
 
+add_custom_target(build DEPENDS livestatus)
+
 # Black Magic for IDE:
 source_group(
   TREE "${PROJECT_SOURCE_DIR}/include"

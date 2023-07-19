@@ -194,7 +194,7 @@ run_format() {
 run_build() {
     update_cmake_artifacts
     touch build/.run-build-stamp
-    cmake --build build --parallel "${JOBS}" --target livestatus
+    cmake --build build --parallel "${JOBS}" --target build
     # collect all (re-)compiled sources for later, could use readarray/mapfile with bash >=4.0
     while IFS= read -r line; do
         COMPILED_SOURCES+=("$line")

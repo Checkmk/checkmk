@@ -72,6 +72,8 @@ target_link_libraries(
 target_compile_features(neb PUBLIC cxx_std_17)
 set_target_properties(neb PROPERTIES NO_SONAME 1)
 
+add_custom_target(build DEPENDS neb)
+
 # Black Magic for IDE:
 source_group(
   TREE "${PROJECT_SOURCE_DIR}/include"

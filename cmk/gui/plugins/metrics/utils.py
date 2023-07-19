@@ -193,12 +193,9 @@ class CombinedGraphRecipe(GraphRecipeIncomplete):
     specification: CombinedGraphIdentifier
 
 
-class ForecastGraphRecipeBase(GraphRecipeBase):
+class _ForecastGraphRecipeMandatory(GraphRecipeBase):
     is_forecast: Literal[True]
-    model_params: dict[str, Any]
-
-
-class _ForecastGraphRecipeMandatory(ForecastGraphRecipeBase):
+    model_params: Mapping[str, Any]
     specification: ForecastGraphIdentifier
     model_params_html: str
 

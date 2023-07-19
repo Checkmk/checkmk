@@ -29,14 +29,20 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.pages import PageRegistry
 from cmk.gui.sites import live, only_sites
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.view_breadcrumbs import make_service_breadcrumb
 
 
-@cmk.gui.pages.page_registry.register_page("robotmk")
-class ModeRobotmkPage(cmk.gui.pages.Page):
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("robotmk")(RobotmkPage)
+    page_registry.register_page_handler("robotmk_report", robotmk_report_page)
+    page_registry.register_page_handler("download_robotmk_report", robotmk_download_page)
+
+
+class RobotmkPage(cmk.gui.pages.Page):
     @classmethod
     def ident(cls) -> str:
         return "robotmk"
@@ -185,7 +191,6 @@ class ModeRobotmkPage(cmk.gui.pages.Page):
         )
 
 
-@cmk.gui.pages.register("robotmk_report")
 def robotmk_report_page() -> None:
     """Renders the content of the RobotMK html log file"""
     site_id, host_name, service_description = _get_mandatory_request_vars()
@@ -197,7 +202,6 @@ def robotmk_report_page() -> None:
     html.write_html(html_content)
 
 
-@cmk.gui.pages.register("download_robotmk_report")
 def robotmk_download_page() -> None:
     user.need_permission("general.see_crash_reports")
 

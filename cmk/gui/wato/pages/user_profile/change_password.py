@@ -14,7 +14,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.pages import page_registry
+from cmk.gui.pages import PageRegistry
 from cmk.gui.plugins.wato.utils.base_modes import redirect
 from cmk.gui.session import session
 from cmk.gui.userdb.htpasswd import hash_password
@@ -25,7 +25,10 @@ from cmk.gui.watolib.users import verify_password_policy
 from .abstract_page import ABCUserProfilePage
 
 
-@page_registry.register_page("user_change_pw")
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("user_change_pw")(UserChangePasswordPage)
+
+
 class UserChangePasswordPage(ABCUserProfilePage):
     def _page_title(self) -> str:
         return _("Change password")

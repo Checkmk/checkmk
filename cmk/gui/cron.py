@@ -16,9 +16,14 @@ import cmk.gui.pages
 import cmk.gui.utils as utils
 from cmk.gui.http import response
 from cmk.gui.log import logger
+from cmk.gui.pages import PageRegistry
 from cmk.gui.session import SuperUserContext
 
 multisite_cronjobs = []
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page_handler("noauth:run_cron", page_run_cron)
 
 
 def register_job(cron_job: Callable[[], Any]) -> None:
@@ -60,14 +65,15 @@ def _register_pre_21_plugin_api() -> None:
     )
 
 
-# Page called by some external trigger (usually cron job in OMD site)
-# Note: this URL is being called *without* any login. We have no
-# user. Everyone can call this! We must not read any URL variables.
-#
-# There is no output written to the user in regular cases. Exceptions
-# are written to the web log.
-@cmk.gui.pages.register("noauth:run_cron")
 def page_run_cron() -> None:
+    """Page called by some external trigger (usually cron job in OMD site)
+
+    Note: this URL is being called *without* any login. We have no
+    user. Everyone can call this! We must not read any URL variables.
+
+    There is no output written to the user in regular cases. Exceptions
+    are written to the web log.
+    """
     lock_file = _lock_file()
 
     # Prevent cron jobs from being run too often, also we need

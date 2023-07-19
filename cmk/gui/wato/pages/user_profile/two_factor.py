@@ -45,7 +45,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import Page, page_registry
+from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.plugins.wato.utils.base_modes import redirect
 from cmk.gui.session import session
 from cmk.gui.table import table_element
@@ -82,7 +82,16 @@ def make_fido2_server() -> Fido2Server:
 overview_page_name: str = "user_two_factor_overview"
 
 
-@page_registry.register_page(overview_page_name)
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page(overview_page_name)(UserTwoFactorOverview)
+    page_registry.register_page("user_two_factor_edit_credential")(UserChangePasswordPage)
+    page_registry.register_page("user_webauthn_register_begin")(UserWebAuthnRegisterBegin)
+    page_registry.register_page("user_webauthn_register_complete")(UserWebAuthnRegisterComplete)
+    page_registry.register_page("user_login_two_factor")(UserLoginTwoFactor)
+    page_registry.register_page("user_webauthn_login_begin")(UserWebAuthnLoginBegin)
+    page_registry.register_page("user_webauthn_login_complete")(UserWebAuthnLoginComplete)
+
+
 class UserTwoFactorOverview(ABCUserProfilePage):
     def _page_title(self) -> str:
         return _("Two-factor authentication")
@@ -243,7 +252,6 @@ class UserTwoFactorOverview(ABCUserProfilePage):
         forms.end()
 
 
-@page_registry.register_page("user_two_factor_edit_credential")
 class UserChangePasswordPage(ABCUserProfilePage):
     def _page_title(self) -> str:
         return _("Edit credential")
@@ -375,7 +383,6 @@ class CBORPage(Page, abc.ABC):
         raise NotImplementedError()
 
 
-@page_registry.register_page("user_webauthn_register_begin")
 class UserWebAuthnRegisterBegin(CBORPage):
     def page(self) -> CBORPageResult:
         assert user.id is not None
@@ -401,7 +408,6 @@ class UserWebAuthnRegisterBegin(CBORPage):
         return registration_data
 
 
-@page_registry.register_page("user_webauthn_register_complete")
 class UserWebAuthnRegisterComplete(CBORPage):
     def page(self) -> CBORPageResult:
         assert user.id is not None
@@ -448,7 +454,6 @@ class UserWebAuthnRegisterComplete(CBORPage):
         return {"status": "OK"}
 
 
-@page_registry.register_page("user_login_two_factor")
 class UserLoginTwoFactor(Page):
     def page(self) -> None:
         assert user.id is not None
@@ -531,7 +536,6 @@ class UserLoginTwoFactor(Page):
         html.footer()
 
 
-@page_registry.register_page("user_webauthn_login_begin")
 class UserWebAuthnLoginBegin(CBORPage):
     def page(self) -> CBORPageResult:
         assert user.id is not None
@@ -552,7 +556,6 @@ class UserWebAuthnLoginBegin(CBORPage):
         return auth_data
 
 
-@page_registry.register_page("user_webauthn_login_complete")
 class UserWebAuthnLoginComplete(CBORPage):
     def page(self) -> CBORPageResult:
         assert user.id is not None

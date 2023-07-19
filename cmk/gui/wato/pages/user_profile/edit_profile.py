@@ -14,7 +14,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request, response
 from cmk.gui.i18n import _, _u, localize
 from cmk.gui.logged_in import user
-from cmk.gui.pages import page_registry
+from cmk.gui.pages import PageRegistry
 from cmk.gui.plugins.userdb.utils import (
     get_user_attributes,
     get_user_attributes_by_topic,
@@ -35,7 +35,10 @@ def _get_input(valuespec: ValueSpec, varprefix: str) -> Any:
     return value
 
 
-@page_registry.register_page("user_profile")
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("user_profile")(UserProfile)
+
+
 class UserProfile(ABCUserProfilePage):
     def _page_title(self) -> str:
         return _("Edit profile")

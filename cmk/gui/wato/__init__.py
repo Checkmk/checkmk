@@ -73,6 +73,7 @@ import cmk.gui.userdb as userdb
 import cmk.gui.utils as utils
 import cmk.gui.valuespec
 import cmk.gui.view_utils
+import cmk.gui.wato.pages.diagnostics
 import cmk.gui.wato.pages.fetch_agent_output
 import cmk.gui.wato.pages.user_profile
 import cmk.gui.wato.permissions
@@ -133,7 +134,6 @@ from cmk.gui.wato.pages.custom_attributes import (
     ModeEditCustomHostAttr,
     ModeEditCustomUserAttr,
 )
-from cmk.gui.wato.pages.diagnostics import ModeDiagnostics
 from cmk.gui.wato.pages.download_agents import ModeDownloadAgentsOther
 from cmk.gui.wato.pages.folders import (
     ModeAjaxPopupMoveToFolder,
@@ -295,6 +295,14 @@ def register(
     icon_registry.register(WatoIcon)
 
     page_registry.register_page_handler("ajax_popup_host_action_menu", ajax_popup_host_action_menu)
+    cmk.gui.wato.pages.diagnostics.register(page_registry)
+    cmk.gui.wato.pages.user_profile.mega_menu.register(page_registry)
+    cmk.gui.wato.pages.user_profile.two_factor.register(page_registry)
+    cmk.gui.wato.pages.user_profile.two_factor.register(page_registry)
+    cmk.gui.wato.pages.user_profile.edit_profile.register(page_registry)
+    cmk.gui.wato.pages.user_profile.change_password.register(page_registry)
+    cmk.gui.wato.pages.user_profile.async_replication.register(page_registry)
+    cmk.gui.wato.pages.user_profile.replicate.register(page_registry)
 
     sync_remote_sites.register(automation_command_registry, job_registry)
 

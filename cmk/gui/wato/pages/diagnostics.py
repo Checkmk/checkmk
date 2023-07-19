@@ -60,7 +60,7 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
-from cmk.gui.pages import Page, page_registry
+from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.plugins.wato.utils import mode_registry, redirect, WatoMode
 from cmk.gui.site_config import get_site_config, site_is_local
 from cmk.gui.type_defs import ActionResult, PermissionName
@@ -85,6 +85,10 @@ _CHECKMK_FILES_NOTE = _(
     " Other files may include IP adresses, hostnames, usernames,"
     " mail adresses or phone numbers and are marked with 'M'."
 )
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("download_diagnostics_dump")(PageDownloadDiagnosticsDump)
 
 
 @mode_registry.register
@@ -709,7 +713,6 @@ def _create_file_path() -> str:
     )
 
 
-@page_registry.register_page("download_diagnostics_dump")
 class PageDownloadDiagnosticsDump(Page):
     def page(self) -> None:
         if not user.may("wato.diagnostics"):

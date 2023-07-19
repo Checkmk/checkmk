@@ -14,9 +14,11 @@ import cmk.gui.pages
 from cmk.gui import (
     autocompleters,
     crash_reporting,
+    cron,
     dashboard,
     inventory,
     mobile,
+    robotmk,
     views,
     visuals,
     wato,
@@ -121,6 +123,8 @@ def register() -> None:
         permission_registry,
         cmk.gui.pages.page_registry,
     )
+    robotmk.register(cmk.gui.pages.page_registry)
+    cron.register(cmk.gui.pages.page_registry)
     register_sites_options()
     register_row_post_processor(inventory_row_post_processor)
     register_row_post_processor(join_service_row_post_processor)

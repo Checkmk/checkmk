@@ -16,6 +16,8 @@ from functools import lru_cache
 from itertools import chain
 from typing import Any, Final, Literal, overload, TypedDict, TypeVar, Union
 
+from pydantic import BaseModel, parse_obj_as
+
 from livestatus import SiteId
 
 import cmk.utils.regex
@@ -38,10 +40,6 @@ from cmk.gui.log import logger
 from cmk.gui.type_defs import (
     Choice,
     Choices,
-    CombinedGraphIdentifier,
-    CustomGraphIdentifier,
-    ExplicitGraphIdentifier,
-    ForecastGraphIdentifier,
     GraphConsoldiationFunction,
     GraphMetric,
     GraphPresentation,
@@ -55,15 +53,17 @@ from cmk.gui.type_defs import (
     RenderableRecipe,
     RGBColor,
     Row,
-    RPNExpression,
-    SingleTimeseriesGraphIdentifier,
-    TemplateGraphIdentifier,
     TranslatedMetric,
     TranslatedMetrics,
     UnitInfo,
     VisualContext,
 )
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
+from cmk.gui.utils.graph_specification import (
+    CombinedGraphSpecification,
+    ForecastGraphSpecification,
+    GraphSpecification,
+)
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import DropdownChoiceWithHostAndServiceHints
@@ -150,68 +150,44 @@ class CombinedSingleMetricSpec:
     presentation: GraphPresentation
 
 
-class CombinedGraphMetricRecipe(TypedDict):
-    unit: str
-    color: str
-    title: str
-    line_type: LineType
-    expression: RPNExpression
+class CombinedGraphMetric(GraphMetric, frozen=True):
     metric_definition: MetricDefinition
 
 
-class GraphRecipeIncomplete(TypedDict):
+class GraphRecipeBase(BaseModel, frozen=True):
     title: str
     unit: str
     explicit_vertical_range: GraphRange
     horizontal_rules: Sequence[HorizontalRule]
     omit_zero_metrics: bool
     consolidation_function: GraphConsoldiationFunction | None
-
-
-class GraphRecipeBase(GraphRecipeIncomplete):
     metrics: Sequence[GraphMetric]
 
 
-class TemplateGraphRecipe(GraphRecipeBase):
-    specification: TemplateGraphIdentifier
+class GraphRecipe(GraphRecipeBase, frozen=True):
+    specification: GraphSpecification
 
 
-class ExplicitGraphRecipe(GraphRecipeBase):
-    specification: ExplicitGraphIdentifier
+class CombinedGraphRecipe(GraphRecipe, frozen=True):
+    metrics: Sequence[CombinedGraphMetric]
+    specification: CombinedGraphSpecification
 
 
-class SingleTimeseriesGraphRecipe(GraphRecipeBase):
-    specification: SingleTimeseriesGraphIdentifier
-
-
-class CombinedGraphRecipe(GraphRecipeIncomplete):
-    metrics: Sequence[CombinedGraphMetricRecipe]
-    specification: CombinedGraphIdentifier
-
-
-class _ForecastGraphRecipeMandatory(GraphRecipeBase):
+class ForecastGraphRecipe(GraphRecipe, frozen=True):
     is_forecast: Literal[True]
     model_params: Mapping[str, Any]
-    specification: ForecastGraphIdentifier
     model_params_html: str
+    metric_id: tuple[HostName, ServiceName, MetricName_, str] | None
+    specification: ForecastGraphSpecification
 
 
-class ForecastGraphRecipe(_ForecastGraphRecipeMandatory, total=False):
-    metric_id: tuple[HostName, ServiceName, MetricName_, str]
-
-
-class CustomGraphRecipe(GraphRecipeBase):
-    specification: CustomGraphIdentifier
-
-
-GraphRecipe = (
-    TemplateGraphRecipe
-    | ExplicitGraphRecipe
-    | SingleTimeseriesGraphRecipe
-    | CombinedGraphRecipe
-    | ForecastGraphRecipe
-    | CustomGraphRecipe
-)
+def parse_raw_graph_recipe(raw: Mapping[str, object]) -> GraphRecipe:
+    # See https://github.com/pydantic/pydantic/issues/1847 and the linked mypy issue for the
+    # suppressions below
+    return parse_obj_as(
+        CombinedGraphRecipe | ForecastGraphRecipe | GraphRecipe,  # type: ignore[arg-type]
+        raw,
+    )
 
 
 RRDDataKey = tuple[SiteId, HostName, ServiceName, str, GraphConsoldiationFunction | None, float]

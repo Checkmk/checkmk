@@ -21,6 +21,7 @@ from cmk.gui.plugins.metrics.utils import (
     get_graph_range,
     get_graph_template,
     get_graph_templates,
+    GraphRecipe,
     GraphRecipeBase,
     GraphTemplate,
     horizontal_rules_from_thresholds,
@@ -29,7 +30,6 @@ from cmk.gui.plugins.metrics.utils import (
     replace_expressions,
     split_expression,
     stack_resolver,
-    TemplateGraphRecipe,
     translated_metrics_from_row,
 )
 from cmk.gui.type_defs import (
@@ -51,7 +51,7 @@ class TemplateGraphRecipeBuilder:
     def __init__(self) -> None:
         self.graph_type: Final = "template"
 
-    def __call__(self, spec: TemplateGraphSpecification) -> list[TemplateGraphRecipe]:
+    def __call__(self, spec: TemplateGraphSpecification) -> list[GraphRecipe]:
         row = get_graph_data_from_livestatus(spec.site, spec.host_name, spec.service_description)
         translated_metrics = translated_metrics_from_row(row)
         return [
@@ -79,7 +79,7 @@ class TemplateGraphRecipeBuilder:
         row: Row,
         translated_metrics: TranslatedMetrics,
         index: int,
-    ) -> TemplateGraphRecipe | None:
+    ) -> GraphRecipe | None:
         if not (
             graph_template_tuned := self._template_tuning(
                 graph_template,
@@ -97,22 +97,25 @@ class TemplateGraphRecipeBuilder:
             row,
         )
 
-        spec_info = spec.to_legacy_format()
-        # Performance graph dashlets already use graph_id, but for example in reports, we still
-        # use graph_index. We should switch to graph_id everywhere (CMK-7308). Once this is
-        # done, we can remove the line below.
-        spec_info["graph_index"] = index
-        spec_info["graph_id"] = graph_template_tuned.id
-
-        return TemplateGraphRecipe(
-            title=graph_recipe["title"],
-            metrics=graph_recipe["metrics"],
-            unit=graph_recipe["unit"],
-            explicit_vertical_range=graph_recipe["explicit_vertical_range"],
-            horizontal_rules=graph_recipe["horizontal_rules"],
-            omit_zero_metrics=graph_recipe["omit_zero_metrics"],
-            consolidation_function=graph_recipe["consolidation_function"],
-            specification=("template", spec_info),
+        return GraphRecipe(
+            title=graph_recipe.title,
+            metrics=graph_recipe.metrics,
+            unit=graph_recipe.unit,
+            explicit_vertical_range=graph_recipe.explicit_vertical_range,
+            horizontal_rules=graph_recipe.horizontal_rules,
+            omit_zero_metrics=graph_recipe.omit_zero_metrics,
+            consolidation_function=graph_recipe.consolidation_function,
+            specification=TemplateGraphSpecification(
+                site=spec.site,
+                host_name=spec.host_name,
+                service_description=spec.service_description,
+                destination=spec.destination,
+                # Performance graph dashlets already use graph_id, but for example in reports, we still
+                # use graph_index. We should switch to graph_id everywhere (CMK-7308). Once this is
+                # done, we can remove the line below.
+                graph_index=index,
+                graph_id=graph_template_tuned.id,
+            ),
         )
 
     @staticmethod
@@ -164,31 +167,23 @@ def create_graph_recipe_from_template(
     graph_template: GraphTemplate, translated_metrics: TranslatedMetrics, row: Row
 ) -> GraphRecipeBase:
     def _metric(metric_definition: MetricDefinition) -> GraphMetric:
-        metric = GraphMetric(
-            {
-                "title": metric_line_title(metric_definition, translated_metrics),
-                "line_type": metric_definition[1],
-                "expression": metric_expression_to_graph_recipe_expression(
-                    metric_definition[0],
-                    translated_metrics,
-                    row,
-                    graph_template.consolidation_function or "max",
-                ),
-            }
+        unit_color = metric_unit_color(metric_definition[0], translated_metrics)
+        return GraphMetric(
+            title=metric_line_title(metric_definition, translated_metrics),
+            line_type=metric_definition[1],
+            expression=metric_expression_to_graph_recipe_expression(
+                metric_definition[0],
+                translated_metrics,
+                row,
+                graph_template.consolidation_function or "max",
+            ),
+            unit=unit_color["unit"] if unit_color else "",
+            color=unit_color["color"] if unit_color else "#000000",
+            visible=True,
         )
 
-        unit_color = metric_unit_color(metric_definition[0], translated_metrics)
-        if unit_color:
-            metric.update(
-                {
-                    "color": unit_color["color"],
-                    "unit": unit_color["unit"],
-                }
-            )
-        return metric
-
     metrics = list(map(_metric, graph_template.metrics))
-    units = {m["unit"] for m in metrics}
+    units = {m.unit for m in metrics}
     if len(units) > 1:
         raise MKGeneralException(
             _("Cannot create graph with metrics of different units '%s'") % ", ".join(units)
@@ -196,23 +191,23 @@ def create_graph_recipe_from_template(
 
     title = replace_expressions(graph_template.title or "", translated_metrics)
     if not title:
-        title = next((m["title"] for m in metrics if m["title"]), "")
+        title = next((m.title for m in metrics), "")
 
     painter_options = PainterOptions.get_instance()
     if painter_options.get("show_internal_graph_and_metric_ids"):
         title = title + f" (Graph ID: {graph_template.id})"
 
-    return {
-        "title": title,
-        "metrics": metrics,
-        "unit": units.pop(),
-        "explicit_vertical_range": get_graph_range(graph_template, translated_metrics),
-        "horizontal_rules": horizontal_rules_from_thresholds(
+    return GraphRecipeBase(
+        title=title,
+        metrics=metrics,
+        unit=units.pop(),
+        explicit_vertical_range=get_graph_range(graph_template, translated_metrics),
+        horizontal_rules=horizontal_rules_from_thresholds(
             graph_template.scalars, translated_metrics
         ),  # e.g. lines for WARN and CRIT
-        "omit_zero_metrics": graph_template.omit_zero_metrics,
-        "consolidation_function": graph_template.consolidation_function or "max",
-    }
+        omit_zero_metrics=graph_template.omit_zero_metrics,
+        consolidation_function=graph_template.consolidation_function or "max",
+    )
 
 
 def iter_rpn_expression(

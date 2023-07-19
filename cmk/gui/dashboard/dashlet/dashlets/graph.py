@@ -271,7 +271,7 @@ function handle_dashboard_render_graph_response(handler_data, response_body)
         except Exception:
             raise MKGeneralException(_("Failed to calculate a graph recipe."))
 
-        graph_title = graph_recipes[0]["title"] if graph_recipes else None
+        graph_title = graph_recipes[0].title if graph_recipes else None
 
         return graph_specification, graph_title
 

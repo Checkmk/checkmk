@@ -31,17 +31,19 @@ from cmk.gui.plugins.metrics.artwork import (
     order_graph_curves_for_legend_and_mouse_hover,
 )
 from cmk.gui.plugins.metrics.utils import (
-    CombinedGraphMetricRecipe,
+    CombinedGraphMetric,
     CombinedSingleMetricSpec,
+    ForecastGraphRecipe,
     GraphDataRange,
     GraphRecipe,
+    parse_raw_graph_recipe,
     render_color_icon,
     Scalar,
     SizeEx,
 )
 from cmk.gui.plugins.metrics.valuespecs import migrate_graph_render_options_title_format
 from cmk.gui.sites import get_alias_of_host
-from cmk.gui.type_defs import GraphRenderOptions, TemplateGraphSpec
+from cmk.gui.type_defs import GraphRenderOptions
 from cmk.gui.utils.graph_specification import GraphSpecification, TemplateGraphSpecification
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -89,7 +91,7 @@ def host_service_graph_popup_cmk(  # type: ignore[no-untyped-def]
     host_name,
     service_description,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
     ],
 ):
     graph_render_options = {
@@ -186,7 +188,7 @@ def graph_ajax_context(
     graph_render_options: GraphRenderOptions,
 ) -> dict[str, Any]:
     return {
-        "definition": graph_artwork.definition,
+        "definition": graph_artwork.definition.dict(),
         "data_range": graph_data_range,
         "render_options": graph_render_options,
         "display_id": graph_artwork.display_id,
@@ -223,43 +225,43 @@ def _render_graph_title_elements(
         title_elements.append((graph_artwork.title, None))
 
     # Only add host/service information for template based graphs
-    specification = graph_artwork.definition["specification"]
-    if specification[0] != "template":
+    specification = graph_artwork.definition.specification
+    if not isinstance(specification, TemplateGraphSpecification):
         return title_elements
 
-    title_elements.extend(title_info_elements(specification[1], title_format))
+    title_elements.extend(title_info_elements(specification, title_format))
 
     return title_elements
 
 
 def title_info_elements(
-    spec_info: TemplateGraphSpec, title_format: Sequence[str]
+    spec_info: TemplateGraphSpecification, title_format: Sequence[str]
 ) -> Iterable[tuple[str, str]]:
     if "add_host_name" in title_format:
         host_url = makeuri_contextless(
             request,
-            [("view_name", "hoststatus"), ("host", spec_info["host_name"])],
+            [("view_name", "hoststatus"), ("host", spec_info.host_name)],
             filename="view.py",
         )
-        yield spec_info["host_name"], host_url
+        yield spec_info.host_name, host_url
 
     if "add_host_alias" in title_format:
-        host_alias = get_alias_of_host(spec_info["site"], spec_info["host_name"])
+        host_alias = get_alias_of_host(spec_info.site, spec_info.host_name)
         host_url = makeuri_contextless(
             request,
-            [("view_name", "hoststatus"), ("host", spec_info["host_name"])],
+            [("view_name", "hoststatus"), ("host", spec_info.host_name)],
             filename="view.py",
         )
         yield host_alias, host_url
 
     if "add_service_description" in title_format:
-        service_description = spec_info["service_description"]
+        service_description = spec_info.service_description
         if service_description != "_HOST_":
             service_url = makeuri_contextless(
                 request,
                 [
                     ("view_name", "service"),
-                    ("host", spec_info["host_name"]),
+                    ("host", spec_info.host_name),
                     ("service", service_description),
                 ],
                 filename="view.py",
@@ -331,13 +333,12 @@ def _show_graph_html_content(
     if _graph_legend_enabled(graph_render_options, graph_artwork):
         _show_graph_legend(graph_artwork, graph_render_options)
 
-    graph_definition = graph_artwork.definition
-    if graph_definition["specification"][0] == "forecast" and graph_definition["model_params"].get(
-        "display_model_parametrization"
-    ):
+    if isinstance(
+        graph_definition := graph_artwork.definition, ForecastGraphRecipe
+    ) and graph_definition.model_params.get("display_model_parametrization"):
         html.open_div(align="center")
         html.h2(_("Forecast Parametrization"))
-        html.write_html(HTML(graph_definition["model_params_html"]))
+        html.write_html(HTML(graph_definition.model_params_html))
         html.close_div()
 
     html.close_div()
@@ -403,7 +404,7 @@ def get_scalars(
         ("max", _("Maximum")),
         ("average", _("Average")),
     ]:
-        consolidation_function = graph_artwork.definition["consolidation_function"]
+        consolidation_function = graph_artwork.definition.consolidation_function
         inactive = consolidation_function is not None and consolidation_function != scalar
 
         scalars.append((scalar, title, inactive))
@@ -458,12 +459,12 @@ def _show_graph_legend(  # pylint: disable=too-many-branches
                 "aggregated in %s steps. Assuming a check interval of 1 minute, the %s "
                 "values here are based on the %s value out of %d raw values."
             ) % (
-                graph_artwork.definition["consolidation_function"],
+                graph_artwork.definition.consolidation_function,
                 scalar,
-                graph_artwork.definition["consolidation_function"],
+                graph_artwork.definition.consolidation_function,
                 artwork.get_step_label(graph_artwork.step),
                 scalar,
-                graph_artwork.definition["consolidation_function"],
+                graph_artwork.definition.consolidation_function,
                 (graph_artwork.step / 60),
             )
 
@@ -545,7 +546,7 @@ def _graph_margin_ex(  # type: ignore[no-untyped-def]
 
 def ajax_graph(
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
     ],
 ) -> None:
     """Registered as `ajax_graph`."""
@@ -565,12 +566,12 @@ def ajax_graph(
 def render_ajax_graph(
     context: Mapping[str, Any],
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
     ],
 ) -> dict[str, Any]:
     graph_data_range = context["data_range"]
     graph_render_options = context["render_options"]
-    graph_recipe = context["definition"]
+    graph_recipe = parse_raw_graph_recipe(context["definition"])
 
     start_time_var = request.var("start_time")
     end_time_var = request.var("end_time")
@@ -606,7 +607,9 @@ def render_ajax_graph(
         artwork.save_graph_pin()
 
     if request.has_var("consolidation_function"):
-        graph_recipe["consolidation_function"] = request.var("consolidation_function")
+        graph_recipe = graph_recipe.copy(
+            update={"consolidation_function": request.var("consolidation_function")}
+        )
 
     graph_render_options["size"] = size
     graph_data_range["time_range"] = (start_time, end_time)
@@ -633,7 +636,7 @@ def render_ajax_graph(
         "graph": graph_artwork.dict(),
         "context": {
             "graph_id": context["graph_id"],
-            "definition": graph_recipe,
+            "definition": graph_recipe.dict(),
             "data_range": graph_data_range,
             "render_options": graph_render_options,
         },
@@ -684,7 +687,7 @@ def render_graphs_from_specification_html(
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
     ],
     *,
     render_async: bool = True,
@@ -709,7 +712,7 @@ def render_graphs_from_definitions(
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
     ],
     *,
     render_async: bool = True,
@@ -771,7 +774,7 @@ def render_graph_container_html(
     output += HTMLWriter.render_javascript(
         "cmk.graphs.load_graph_content(%s, %s, %s, %s)"
         % (
-            json.dumps(graph_recipe),
+            graph_recipe.json(),
             json.dumps(graph_data_range),
             json.dumps(graph_render_options),
             json.dumps(graph_display_id),
@@ -787,7 +790,7 @@ def render_graph_container_html(
 # Called from javascript code via JSON to initially render a graph
 def ajax_render_graph_content(
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
     ],
 ) -> None:
     """Registered as `ajax_render_graph_content`."""
@@ -797,7 +800,7 @@ def ajax_render_graph_content(
         resp = {
             "result_code": 0,
             "result": render_graph_content_html(
-                api_request["graph_recipe"],
+                parse_raw_graph_recipe(api_request["graph_recipe"]),
                 api_request["graph_data_range"],
                 api_request["graph_render_options"],
                 resolve_combined_single_metric_spec,
@@ -819,7 +822,7 @@ def render_graph_content_html(
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
     ],
     *,
     graph_display_id: str = "",
@@ -837,11 +840,9 @@ def render_graph_content_html(
             graph_artwork, graph_data_range, graph_render_options
         )
 
-        previews = graph_render_options["show_time_range_previews"]
-        if graph_recipe["specification"][0] == "forecast":
-            previews = False
-
-        if previews:
+        if graph_render_options["show_time_range_previews"] and not isinstance(
+            graph_recipe, ForecastGraphRecipe
+        ):
             output += HTMLWriter.render_div(
                 main_graph_html
                 + render_time_range_selection(
@@ -871,7 +872,7 @@ def render_time_range_selection(
     graph_recipe: GraphRecipe,
     graph_render_options: GraphRenderOptions,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
     ],
     *,
     graph_display_id: str,
@@ -960,7 +961,7 @@ def estimate_graph_step_for_html(
 
 def ajax_graph_hover(
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
     ],
 ) -> None:
     """Registered as `ajax_graph_hover`."""
@@ -984,11 +985,11 @@ def render_ajax_graph_hover(
     context: Mapping[str, Any],
     hover_time: int,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
     ],
 ) -> dict[str, object]:
     graph_data_range = context["data_range"]
-    graph_recipe = context["definition"]
+    graph_recipe = parse_raw_graph_recipe(context["definition"])
 
     curves = artwork.compute_graph_artwork_curves(
         graph_recipe,
@@ -1004,7 +1005,7 @@ def render_ajax_graph_hover(
                     graph_recipe,
                     graph_curves_to_be_painted(curves),
                 ),
-                graph_recipe["unit"],
+                graph_recipe.unit,
                 hover_time,
             )
         ),
@@ -1082,7 +1083,7 @@ def host_service_graph_dashlet_cmk(
     graph_specification: GraphSpecification,
     custom_graph_render_options: GraphRenderOptions,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
     ],
     *,
     graph_display_id: str = "",

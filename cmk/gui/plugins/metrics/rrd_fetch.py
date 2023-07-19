@@ -26,7 +26,7 @@ import cmk.gui.sites as sites
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import (
     CheckMetricEntry,
-    CombinedGraphMetricRecipe,
+    CombinedGraphMetric,
     CombinedSingleMetricSpec,
     find_matching_translation,
     GraphDataRange,
@@ -44,13 +44,11 @@ def fetch_rrd_data_for_graph(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
     ],
 ) -> RRDData:
-    needed_rrd_data = get_needed_sources(
-        graph_recipe["metrics"], resolve_combined_single_metric_spec
-    )
-    unit_conversion = unit_info[graph_recipe["unit"]].get(
+    needed_rrd_data = get_needed_sources(graph_recipe.metrics, resolve_combined_single_metric_spec)
+    unit_conversion = unit_info[graph_recipe.unit].get(
         "conversion",
         lambda v: v,
     )
@@ -78,7 +76,7 @@ def fetch_rrd_data_for_graph(
                     data,
                     conversion=unit_conversion,
                 )
-    align_and_resample_rrds(rrd_data, graph_recipe["consolidation_function"])
+    align_and_resample_rrds(rrd_data, graph_recipe.consolidation_function)
     chop_last_empty_step(graph_data_range, rrd_data)
 
     return rrd_data
@@ -144,7 +142,7 @@ def _chop_end_of_the_curve(rrd_data: RRDData, step: int) -> None:
 def needed_elements_of_expression(
     expression: RPNExpression,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
     ],
 ) -> Iterator[tuple[Any, ...]]:
     if expression[0] in ["rrd", "scalar"]:
@@ -165,19 +163,19 @@ def needed_elements_of_expression(
         )
 
         for out in (
-            needed_elements_of_expression(m["expression"], resolve_combined_single_metric_spec)
+            needed_elements_of_expression(m.expression, resolve_combined_single_metric_spec)
             for m in metrics
         ):
             yield from out
 
 
 def get_needed_sources(
-    metrics: Sequence[GraphMetric] | Sequence[CombinedGraphMetricRecipe],
+    metrics: Sequence[GraphMetric],
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
     ],
     *,
-    condition: Callable[[Any], bool] = lambda x: True,
+    condition: Callable[[GraphMetric], bool] = lambda x: True,
 ) -> set[tuple[Any, ...]]:
     """Extract all metric data sources definitions
 
@@ -189,7 +187,7 @@ def get_needed_sources(
         source  #
         for metric in metrics
         for source in needed_elements_of_expression(
-            metric["expression"],
+            metric.expression,
             resolve_combined_single_metric_spec,
         )
         if condition(metric)
@@ -227,7 +225,7 @@ def fetch_rrd_data(
         step = max(1, step)
 
     point_range = ":".join(map(str, (start_time, end_time, step)))
-    lql_columns = list(rrd_columns(metrics, graph_recipe["consolidation_function"], point_range))
+    lql_columns = list(rrd_columns(metrics, graph_recipe.consolidation_function, point_range))
     query = livestatus_lql([host_name], lql_columns, service_description)
 
     with sites.only_sites(site):

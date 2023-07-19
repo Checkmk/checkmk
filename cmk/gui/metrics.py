@@ -36,7 +36,7 @@ from cmk.gui.plugins.metrics.html_render import (
     host_service_graph_popup_cmk,
 )
 from cmk.gui.plugins.metrics.utils import (
-    CombinedGraphMetricRecipe,
+    CombinedGraphMetric,
     CombinedSingleMetricSpec,
     evaluate,
     LegacyPerfometer,
@@ -747,7 +747,7 @@ class MetricometerRendererDual(MetricometerRenderer):
 # This page is called for the popup of the graph icon of hosts/services.
 def page_host_service_graph_popup(
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
     ],
 ) -> None:
     """Registered as `host_service_graph_popup`."""
@@ -777,7 +777,7 @@ def page_host_service_graph_popup(
 
 def page_graph_dashlet(
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
     ],
 ) -> None:
     """Registered as `graph_dashlet`."""

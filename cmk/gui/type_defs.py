@@ -642,16 +642,10 @@ RPNExpression = tuple  # TODO: Improve this type
 HorizontalRule = tuple[float, str, str, str]
 
 
-class _GraphMetricMandatory(TypedDict):
+class GraphMetric(BaseModel, frozen=True):
     title: str
     line_type: LineType
     expression: RPNExpression
-
-
-# pydantic 1.x cannot handle NotRequired, so we have to use inheritance here until we also pydantify
-# the graph recipes:
-# https://github.com/pydantic/pydantic/discussions/3563
-class GraphMetric(_GraphMetricMandatory, total=False):
     unit: str
     color: str
     visible: bool

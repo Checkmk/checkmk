@@ -22,7 +22,7 @@ from cmk.gui.painter_options import (
     PainterOptions,
 )
 from cmk.gui.plugins.metrics import html_render
-from cmk.gui.plugins.metrics.utils import CombinedGraphMetricRecipe, CombinedSingleMetricSpec
+from cmk.gui.plugins.metrics.utils import CombinedGraphMetric, CombinedSingleMetricSpec
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
 from cmk.gui.type_defs import (
     ColumnName,
@@ -142,7 +142,7 @@ def paint_time_graph_cmk(
     row: Row,
     cell: Cell,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
     ],
     *,
     override_graph_render_options: GraphRenderOptions | None = None,
@@ -229,7 +229,7 @@ def paint_cmk_graphs_with_timeranges(
     row: Row,
     cell: Cell,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
     ],
 ) -> tuple[Literal[""], HTML | str]:
     return paint_time_graph_cmk(

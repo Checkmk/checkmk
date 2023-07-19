@@ -17,7 +17,6 @@ import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import (
     AugmentedTimeSeries,
-    CombinedGraphMetricRecipe,
     Curve,
     ExpressionParams,
     fade_color,
@@ -42,24 +41,24 @@ from cmk.gui.type_defs import GraphMetric, RPNExpression
 
 
 def compute_graph_curves(
-    metrics: Sequence[GraphMetric] | Sequence[CombinedGraphMetricRecipe],
+    metrics: Sequence[GraphMetric],
     rrd_data: RRDData,
 ) -> list[Curve]:
     curves = []
     for metric_definition in metrics:
-        expression = metric_definition["expression"]
+        expression = metric_definition.expression
         time_series = evaluate_time_series_expression(expression, rrd_data)
         if not time_series:
             continue
 
         multi = len(time_series) > 1
-        mirror_prefix = "-" if metric_definition["line_type"].startswith("-") else ""
+        mirror_prefix = "-" if metric_definition.line_type.startswith("-") else ""
         for i, ts in enumerate(time_series):
-            title = metric_definition["title"]
+            title = metric_definition.title
             if ts.metadata.title and multi:
                 title += " - " + ts.metadata.title
 
-            color = ts.metadata.color or metric_definition.get("color", "#000000")
+            color = ts.metadata.color or metric_definition.color
             if i % 2 == 1 and not (
                 expression[0] == "transformation" and expression[1][0] == "forecast"
             ):
@@ -70,7 +69,7 @@ def compute_graph_curves(
                     {
                         "line_type": mirror_prefix + ts.metadata.line_type
                         if multi
-                        else metric_definition["line_type"],
+                        else metric_definition.line_type,
                         "color": color,
                         "title": title,
                         "rrddata": ts.data,

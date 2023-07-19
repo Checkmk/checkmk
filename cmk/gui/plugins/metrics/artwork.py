@@ -22,7 +22,7 @@ from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
 from cmk.gui.plugins.metrics import rrd_fetch, timeseries
 from cmk.gui.plugins.metrics.utils import (
-    CombinedGraphMetricRecipe,
+    CombinedGraphMetric,
     CombinedSingleMetricSpec,
     Curve,
     GraphDataRange,
@@ -80,7 +80,7 @@ class CurveValue(TypedDict):
 
 class GraphArtwork(BaseModel):
     # Labelling, size, layout
-    title: str | None
+    title: str
     width: int
     height: int
     mirrored: bool
@@ -216,7 +216,7 @@ def compute_graph_artwork(
     graph_data_range: GraphDataRange,
     graph_render_options: GraphRenderOptions,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
     ],
     *,
     graph_display_id: str = "",
@@ -244,13 +244,13 @@ def compute_graph_artwork(
 
     return GraphArtwork(
         # Labelling, size, layout
-        title=graph_recipe.get("title"),
+        title=graph_recipe.title,
         width=width,  # in widths of lower case 'x'
         height=height,
         mirrored=mirrored,
         # Actual data and axes
         curves=layouted_curves,
-        horizontal_rules=graph_recipe["horizontal_rules"],
+        horizontal_rules=graph_recipe.horizontal_rules,
         vertical_axis=compute_graph_v_axis(
             graph_recipe, graph_data_range, height, layouted_curves, mirrored
         ),
@@ -259,7 +259,7 @@ def compute_graph_artwork(
         start_time=start_time,
         end_time=end_time,
         step=step,
-        explicit_vertical_range=graph_recipe["explicit_vertical_range"],
+        explicit_vertical_range=graph_recipe.explicit_vertical_range,
         requested_vrange=graph_data_range.get("vertical_range"),
         requested_start_time=graph_data_range["time_range"][0],
         requested_end_time=graph_data_range["time_range"][1],
@@ -388,7 +388,7 @@ def compute_graph_artwork_curves(
     graph_recipe: GraphRecipe,
     graph_data_range: GraphDataRange,
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
     ],
 ) -> list[Curve]:
     # Fetch all raw RRD data
@@ -398,9 +398,9 @@ def compute_graph_artwork_curves(
         resolve_combined_single_metric_spec,
     )
 
-    curves = timeseries.compute_graph_curves(graph_recipe["metrics"], rrd_data)
+    curves = timeseries.compute_graph_curves(graph_recipe.metrics, rrd_data)
 
-    if graph_recipe.get("omit_zero_metrics"):
+    if graph_recipe.omit_zero_metrics:
         curves = [curve for curve in curves if any(curve["rrddata"])]
 
     return curves
@@ -439,7 +439,7 @@ def order_graph_curves_for_legend_and_mouse_hover(
     graph_recipe: GraphRecipe, curves: Iterable[_TCurveType]
 ) -> Iterator[_TCurveType]:
     yield from reversed(list(curves)) if any(
-        metric["line_type"] == "stack" for metric in graph_recipe.get("metrics", [])
+        metric.line_type == "stack" for metric in graph_recipe.metrics
     ) else curves
 
 
@@ -460,7 +460,7 @@ def order_graph_curves_for_legend_and_mouse_hover(
 def _compute_scalars(
     graph_recipe: GraphRecipe, curves: Iterable[Curve], pin_time: int | None
 ) -> None:
-    unit = unit_info[graph_recipe["unit"]]
+    unit = unit_info[graph_recipe.unit]
 
     for curve in curves:
         rrddata = curve["rrddata"]
@@ -546,7 +546,7 @@ def compute_graph_v_axis(
     layouted_curves: Sequence[LayoutedCurve],
     mirrored: bool,
 ) -> VerticalAxis:
-    unit = unit_info[graph_recipe["unit"]]
+    unit = unit_info[graph_recipe.unit]
 
     # Calculate the the value range
     # real_range -> physical range, without extra margin or zooming
@@ -661,7 +661,7 @@ def compute_v_axis_min_max(
     min_value, max_value = _purge_min_max(opt_min_value, opt_max_value, mirrored)
 
     # Apply explicit range if defined in graph
-    explicit_min_value, explicit_max_value = graph_recipe["explicit_vertical_range"]
+    explicit_min_value, explicit_max_value = graph_recipe.explicit_vertical_range
     if explicit_min_value is not None:
         min_value = explicit_min_value
     if explicit_max_value is not None:

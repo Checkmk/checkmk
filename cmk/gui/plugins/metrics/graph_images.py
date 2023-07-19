@@ -10,7 +10,7 @@ import json
 import time
 import traceback
 from collections.abc import Callable, Sequence
-from typing import Any, cast
+from typing import Any
 
 import livestatus
 
@@ -33,14 +33,14 @@ from cmk.gui.plugins.metrics.graph_pdf import (
     render_graph_pdf,
 )
 from cmk.gui.plugins.metrics.utils import (
-    CombinedGraphMetricRecipe,
+    CombinedGraphMetric,
     CombinedSingleMetricSpec,
     get_graph_data_from_livestatus,
     GraphDataRange,
     GraphRecipe,
 )
 from cmk.gui.session import SuperUserContext
-from cmk.gui.type_defs import GraphConsoldiationFunction, GraphRenderOptions
+from cmk.gui.type_defs import GraphRenderOptions
 from cmk.gui.utils.graph_specification import (
     parse_raw_graph_specification,
     TemplateGraphSpecification,
@@ -54,7 +54,7 @@ from .graph_recipe_builder import build_graph_recipes
 #    # Needed by mail notification plugin (-> no authentication from localhost)
 def ajax_graph_images_for_notifications(
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
     ],
 ) -> None:
     """Registered as `noauth:ajax_graph_images`."""
@@ -69,7 +69,7 @@ def ajax_graph_images_for_notifications(
 
 def _answer_graph_image_request(
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
     ],
 ) -> None:
     try:
@@ -252,12 +252,11 @@ def graph_recipes_for_api_request(
     except livestatus.MKLivestatusNotFoundError as e:
         raise MKUserError(None, _("Cannot calculate graph recipes: %s") % e)
 
-    if api_request.get("consolidation_function"):
-        for graph_recipe in graph_recipes:
-            graph_recipe["consolidation_function"] = cast(
-                GraphConsoldiationFunction,
-                api_request.get("consolidation_function"),
-            )
+    if consolidation_function := api_request.get("consolidation_function"):
+        graph_recipes = [
+            graph_recipe.copy(update={"consolidation_function": consolidation_function})
+            for graph_recipe in graph_recipes
+        ]
 
     return graph_data_range, graph_recipes
 
@@ -265,7 +264,7 @@ def graph_recipes_for_api_request(
 def graph_spec_from_request(
     api_request: dict[str, Any],
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
     ],
 ) -> dict[str, Any]:
     graph_data_range, graph_recipes = graph_recipes_for_api_request(api_request)

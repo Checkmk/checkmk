@@ -17,7 +17,7 @@ from cmk.gui.i18n import _
 from cmk.gui.metrics import page_graph_dashlet, page_host_service_graph_popup
 from cmk.gui.painter.v0 import painters
 from cmk.gui.painter.v0.base import Cell, painter_registry
-from cmk.gui.plugins.metrics.utils import CombinedGraphMetricRecipe, CombinedSingleMetricSpec
+from cmk.gui.plugins.metrics.utils import CombinedGraphMetric, CombinedSingleMetricSpec
 from cmk.gui.type_defs import Row
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views import graph
@@ -25,7 +25,7 @@ from cmk.gui.views import graph
 
 def resolve_combined_single_metric_spec(
     specification: CombinedSingleMetricSpec,
-) -> Sequence[CombinedGraphMetricRecipe]:
+) -> Sequence[CombinedGraphMetric]:
     # Not available in CRE.
     return ()
 

@@ -26,7 +26,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.metrics.utils import CombinedGraphMetricRecipe, CombinedSingleMetricSpec
+from cmk.gui.plugins.metrics.utils import CombinedGraphMetric, CombinedSingleMetricSpec
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
@@ -251,7 +251,7 @@ class Painter(abc.ABC):
 class Painter2(Painter):
     # Poor man's composition:  Renderer differs between CRE and non-CRE.
     resolve_combined_single_metric_spec: Callable[
-        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetricRecipe]
+        [CombinedSingleMetricSpec], Sequence[CombinedGraphMetric]
     ] | None = None
 
 

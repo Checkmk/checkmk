@@ -17,7 +17,9 @@ from cmk.utils.prediction import TimeSeries, TimeSeriesValues
 
 import cmk.gui.plugins.metrics.rrd_fetch as rf
 from cmk.gui.config import active_config
-from cmk.gui.plugins.metrics.utils import GraphDataRange, TemplateGraphRecipe
+from cmk.gui.plugins.metrics.utils import GraphDataRange, GraphRecipe
+from cmk.gui.type_defs import GraphMetric
+from cmk.gui.utils.graph_specification import TemplateGraphSpecification
 from cmk.gui.utils.temperate_unit import TemperatureUnit
 
 
@@ -60,42 +62,38 @@ ColumnHeaders: off
         yield
 
 
-_GRAPH_RECIPE = TemplateGraphRecipe(
-    {
-        "title": "Temperature",
-        "metrics": [
-            {
-                "title": "Temperature",
-                "line_type": "area",
-                "expression": (
-                    "rrd",
-                    "NO_SITE",
-                    "my-host",
-                    "Temperature Zone 6",
-                    "temp",
-                    "max",
-                    1,
-                ),
-                "color": "#ffa000",
-                "unit": "c",
-            }
-        ],
-        "unit": "c",
-        "explicit_vertical_range": (None, None),
-        "horizontal_rules": [],
-        "omit_zero_metrics": False,
-        "consolidation_function": "max",
-        "specification": (
-            "template",
-            {
-                "site": SiteId("NO_SITE"),
-                "host_name": HostName("my-host"),
-                "service_description": "Temperature Zone 6",
-                "graph_index": 0,
-                "graph_id": "temperature",
-            },
-        ),
-    }
+_GRAPH_RECIPE = GraphRecipe(
+    title="Temperature",
+    metrics=[
+        GraphMetric(
+            title="Temperature",
+            line_type="area",
+            expression=(
+                "rrd",
+                "NO_SITE",
+                "my-host",
+                "Temperature Zone 6",
+                "temp",
+                "max",
+                1,
+            ),
+            color="#ffa000",
+            unit="c",
+            visible=True,
+        )
+    ],
+    unit="c",
+    explicit_vertical_range=(None, None),
+    horizontal_rules=[],
+    omit_zero_metrics=False,
+    consolidation_function="max",
+    specification=TemplateGraphSpecification(
+        site=SiteId("NO_SITE"),
+        host_name=HostName("my-host"),
+        service_description="Temperature Zone 6",
+        graph_index=0,
+        graph_id="temperature",
+    ),
 )
 
 _GRAPH_DATA_RANGE: GraphDataRange = {"time_range": (1681985455, 1681999855), "step": 20}

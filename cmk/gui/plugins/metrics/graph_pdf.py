@@ -17,7 +17,13 @@ from cmk.gui.plugins.metrics.artwork import (
     LayoutedCurve,
     LayoutedCurveArea,
 )
-from cmk.gui.plugins.metrics.utils import darken_color, GraphDataRange, lighten_color, parse_color
+from cmk.gui.plugins.metrics.utils import (
+    darken_color,
+    ForecastGraphRecipe,
+    GraphDataRange,
+    lighten_color,
+    parse_color,
+)
 from cmk.gui.type_defs import GraphRenderOptions, RGBColor, SizeMM
 
 
@@ -33,7 +39,7 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
 ) -> None:
     pdf_document = instance["document"]
 
-    logger.debug("  Render graph %r", graph_artwork.definition["specification"])
+    logger.debug("  Render graph %r", graph_artwork.definition.specification)
 
     if pos_left is None:  # floating element
         pdf_document.margin(2.5)
@@ -400,7 +406,7 @@ def render_graph_pdf(  # type: ignore[no-untyped-def] # pylint: disable=too-many
                     parse_color(color_from_artwork), [str(title), None, None, None, readable]
                 )
 
-    if graph_artwork.definition.get("is_forecast"):
+    if isinstance(graph_artwork.definition, ForecastGraphRecipe):
         pin = trans_t(graph_artwork.requested_end_time)
         pdf_document.render_line(pin, v_orig, pin, trans_v(v_range_to), color=(0.0, 1.0, 0.0))
 

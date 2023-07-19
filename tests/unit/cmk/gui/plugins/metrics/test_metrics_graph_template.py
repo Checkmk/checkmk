@@ -11,8 +11,13 @@ from cmk.utils.exceptions import MKGeneralException
 
 import cmk.gui.metrics as metrics
 import cmk.gui.plugins.metrics.graph_templates as gt
-from cmk.gui.plugins.metrics.utils import GraphTemplate
-from cmk.gui.type_defs import GraphConsoldiationFunction, MetricExpression, RPNExpression
+from cmk.gui.plugins.metrics.utils import GraphRecipeBase, GraphTemplate
+from cmk.gui.type_defs import (
+    GraphConsoldiationFunction,
+    GraphMetric,
+    MetricExpression,
+    RPNExpression,
+)
 
 
 @pytest.mark.parametrize(
@@ -114,22 +119,25 @@ def test_create_graph_recipe_from_template() -> None:
     )
     lq_row = {"site": "", "host_name": "", "service_description": ""}
 
-    assert gt.create_graph_recipe_from_template(graph_template, translated_metrics, lq_row) == {
-        "title": "Used space",
-        "metrics": [
-            {
-                "unit": "bytes",
-                "color": "#00ffc6",
-                "title": "Used space",
-                "line_type": "area",
-                "expression": ("rrd", "", "", "", "_", "max", 1048576),
-            },
-            {
-                "unit": "bytes",
-                "color": "#e3fff9",
-                "title": "Free space",
-                "line_type": "stack",
-                "expression": (
+    assert gt.create_graph_recipe_from_template(
+        graph_template, translated_metrics, lq_row
+    ) == GraphRecipeBase(
+        title="Used space",
+        metrics=[
+            GraphMetric(
+                unit="bytes",
+                color="#00ffc6",
+                title="Used space",
+                line_type="area",
+                expression=("rrd", "", "", "", "_", "max", 1048576),
+                visible=True,
+            ),
+            GraphMetric(
+                unit="bytes",
+                color="#e3fff9",
+                title="Free space",
+                line_type="stack",
+                expression=(
                     "operator",
                     "-",
                     [
@@ -137,21 +145,23 @@ def test_create_graph_recipe_from_template() -> None:
                         ("rrd", "", "", "", "_", "max", 1048576),
                     ],
                 ),
-            },
-            {
-                "unit": "bytes",
-                "color": "#006040",
-                "title": "Total size",
-                "line_type": "line",
-                "expression": ("rrd", "", "", "", "fs_size", "max", 1048576),
-            },
+                visible=True,
+            ),
+            GraphMetric(
+                unit="bytes",
+                color="#006040",
+                title="Total size",
+                line_type="line",
+                expression=("rrd", "", "", "", "fs_size", "max", 1048576),
+                visible=True,
+            ),
         ],
-        "unit": "bytes",
-        "explicit_vertical_range": (0.0, None),
-        "horizontal_rules": [],
-        "omit_zero_metrics": False,
-        "consolidation_function": "max",
-    }
+        unit="bytes",
+        explicit_vertical_range=(0.0, None),
+        horizontal_rules=[],
+        omit_zero_metrics=False,
+        consolidation_function="max",
+    )
 
 
 @pytest.mark.parametrize(

@@ -20,7 +20,6 @@ import cmk.utils.werks as utils_werks
 from cmk.utils.version import __version__, Edition, Version
 from cmk.utils.werks.werk import Compatibility, NoWiki, Werk, WerkTranslator
 
-import cmk.gui.pages
 from cmk.gui.breadcrumb import (
     Breadcrumb,
     BreadcrumbItem,
@@ -48,6 +47,7 @@ from cmk.gui.page_menu import (
     PageMenuSidePopup,
     PageMenuTopic,
 )
+from cmk.gui.pages import Page, PageRegistry, PageResult
 from cmk.gui.table import Table, table_element
 from cmk.gui.utils.escaping import escape_to_html, escape_to_html_permissive, strip_tags
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
@@ -70,6 +70,12 @@ acknowledgement_path = cmk.utils.paths.var_dir + "/acknowledged_werks.mk"
 
 
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("info")(AboutCheckmkPage)
+    page_registry.register_page("change_log")(ChangeLogPage)
+    page_registry.register_page_handler("werk", page_werk)
 
 
 class GuiWerk(NamedTuple):
@@ -145,12 +151,11 @@ _WerkTableOptionColumns = Literal[
 ]
 
 
-@cmk.gui.pages.page_registry.register_page("info")
-class ModeAboutCheckmkPage(cmk.gui.pages.Page):
+class AboutCheckmkPage(Page):
     def _title(self) -> str:
         return _("About Checkmk")
 
-    def page(self) -> cmk.gui.pages.PageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:  # pylint: disable=useless-return
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry["help_links"], _("Info"))
         make_header(
             html,
@@ -203,12 +208,11 @@ class ModeAboutCheckmkPage(cmk.gui.pages.Page):
         return None
 
 
-@cmk.gui.pages.page_registry.register_page("change_log")
-class ModeChangeLogPage(cmk.gui.pages.Page):
+class ChangeLogPage(Page):
     def _title(self) -> str:
         return _("Change log (Werks)")
 
-    def page(self) -> cmk.gui.pages.PageResult:  # pylint: disable=useless-return
+    def page(self) -> PageResult:  # pylint: disable=useless-return
         breadcrumb = make_simple_page_breadcrumb(mega_menu_registry["help_links"], self._title())
 
         werk_table_options = _werk_table_options_from_request()
@@ -353,7 +357,6 @@ def _show_werk_options_controls() -> None:
     html.close_div()
 
 
-@cmk.gui.pages.register("werk")
 def page_werk() -> None:
     gui_werk = get_werk_by_id(request.get_integer_input_mandatory("werk"))
     werk = gui_werk.werk

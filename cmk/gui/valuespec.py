@@ -92,7 +92,7 @@ from cmk.gui.htmllib.tag_rendering import HTMLTagAttributes
 from cmk.gui.http import request, UploadedFile
 from cmk.gui.i18n import _
 from cmk.gui.logged_in import user
-from cmk.gui.pages import AjaxPage, page_registry, PageResult
+from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.type_defs import (
     _Icon,
     ChoiceGroup,
@@ -138,6 +138,10 @@ T = TypeVar("T")
 # NOTE: Due to the use of Union below, we can't have Callables as values.
 # NOTE: No caching, so it's different from e.g. Scheme's delay/force.
 Promise = Union[T, Callable[[], T]]
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("ajax_fetch_ca")(AjaxFetchCA)
 
 
 # NOTE: This helper function should be used everywhere instead of dispatching on
@@ -7907,7 +7911,6 @@ class _CAInput(ValueSpec[_CAInputModel]):
         return (address, port, content)
 
 
-@page_registry.register_page("ajax_fetch_ca")
 class AjaxFetchCA(AjaxPage):
     def page(self) -> PageResult:
         check_csrf_token()

@@ -17,12 +17,19 @@ from cmk.gui import (
     cron,
     dashboard,
     inventory,
+    login,
     mobile,
+    node_visualization,
+    notifications,
     robotmk,
+    sidebar,
+    user_message,
+    valuespec,
     views,
     visuals,
     wato,
     watolib,
+    werks,
 )
 from cmk.gui.background_job import job_registry
 from cmk.gui.bi import registration as bi_registration
@@ -125,6 +132,14 @@ def register() -> None:
     )
     robotmk.register(cmk.gui.pages.page_registry)
     cron.register(cmk.gui.pages.page_registry)
+    node_visualization.register(cmk.gui.pages.page_registry)
+    notifications.register(cmk.gui.pages.page_registry)
+    user_message.register(cmk.gui.pages.page_registry)
+    valuespec.register(cmk.gui.pages.page_registry)
+    autocompleters.register(cmk.gui.pages.page_registry)
+    werks.register(cmk.gui.pages.page_registry)
+    login.register(cmk.gui.pages.page_registry)
+    sidebar.register(cmk.gui.pages.page_registry)
     register_sites_options()
     register_row_post_processor(inventory_row_post_processor)
     register_row_post_processor(join_service_row_post_processor)

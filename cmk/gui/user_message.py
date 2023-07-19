@@ -10,7 +10,6 @@ import cmk.utils.paths
 import cmk.utils.werks
 
 import cmk.gui.message as message
-import cmk.gui.pages
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
 from cmk.gui.htmllib.header import make_header
 from cmk.gui.htmllib.html import html
@@ -25,11 +24,15 @@ from cmk.gui.page_menu import (
     PageMenuEntry,
     PageMenuTopic,
 )
+from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.table import table_element
 
 
-@cmk.gui.pages.page_registry.register_page("user_message")
-class ModeUserMessagePage(cmk.gui.pages.Page):
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("user_message")(PageUserMessage)
+
+
+class PageUserMessage(Page):
     def title(self) -> str:
         return _("User messages")
 

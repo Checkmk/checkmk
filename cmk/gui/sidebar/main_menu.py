@@ -17,7 +17,7 @@ from cmk.gui.http import request, response
 from cmk.gui.i18n import _, ungettext
 from cmk.gui.logged_in import user
 from cmk.gui.main_menu import any_show_more_items, mega_menu_registry
-from cmk.gui.pages import AjaxPage, page_registry, PageResult, register
+from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.type_defs import Icon, MegaMenu, TopicMenuItem, TopicMenuTopic
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -112,7 +112,6 @@ class MainMenuRenderer:
             return output_funnel.drain()
 
 
-@register("sidebar_message_read")
 def ajax_message_read():
     response.set_content_type("application/json")
     try:
@@ -124,8 +123,7 @@ def ajax_message_read():
         html.write_text("ERROR")
 
 
-@page_registry.register_page("ajax_sidebar_get_messages")
-class ModeAjaxSidebarGetMessages(AjaxPage):
+class PageAjaxSidebarGetMessages(AjaxPage):
     def page(self) -> PageResult:
         popup_msg: list = []
         hint_msg: int = 0
@@ -145,8 +143,7 @@ class ModeAjaxSidebarGetMessages(AjaxPage):
         }
 
 
-@page_registry.register_page("ajax_sidebar_get_unack_incomp_werks")
-class ModeAjaxSidebarGetUnackIncompWerks(AjaxPage):
+class PageAjaxSidebarGetUnackIncompWerks(AjaxPage):
     def page(self) -> PageResult:
         if not may_acknowledge():
             raise MKAuthException(_("You are not allowed to acknowlegde werks"))

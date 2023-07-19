@@ -20,7 +20,6 @@ import cmk.utils.paths
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
 
-import cmk.gui.pages
 import cmk.gui.pagetypes as pagetypes
 import cmk.gui.sites as sites
 from cmk.gui.breadcrumb import Breadcrumb, make_simple_page_breadcrumb
@@ -34,7 +33,7 @@ from cmk.gui.log import logger
 from cmk.gui.logged_in import LoggedInUser, user
 from cmk.gui.main_menu import mega_menu_registry
 from cmk.gui.page_menu import PageMenu, PageMenuDropdown, PageMenuTopic
-from cmk.gui.pages import AjaxPage, PageResult
+from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 
 # Kept for compatibility with legacy plugins
 # TODO: Drop once we don't support legacy snapins anymore
@@ -62,10 +61,31 @@ from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.valuespec import CascadingDropdown, CascadingDropdownChoice, Dictionary, ValueSpec
 from cmk.gui.werks import may_acknowledge
 
-from .main_menu import MainMenuRenderer
+from .main_menu import (
+    ajax_message_read,
+    MainMenuRenderer,
+    PageAjaxSidebarGetMessages,
+    PageAjaxSidebarGetUnackIncompWerks,
+)
 
 # TODO: Kept for pre 1.6 plugin compatibility
 sidebar_snapins: dict[str, dict] = {}
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("sidebar_fold")(AjaxFoldSnapin)
+    page_registry.register_page("sidebar_openclose")(AjaxOpenCloseSnapin)
+    page_registry.register_page("sidebar_ajax_add_snapin")(AjaxAddSnapin)
+    page_registry.register_page_handler("side", page_side)
+    page_registry.register_page_handler("sidebar_snapin", ajax_snapin)
+    page_registry.register_page_handler("sidebar_move_snapin", move_snapin)
+    page_registry.register_page_handler("sidebar_add_snapin", page_add_snapin)
+    page_registry.register_page_handler("sidebar_ajax_set_snapin_site", ajax_set_snapin_site)
+    page_registry.register_page_handler("sidebar_message_read", ajax_message_read)
+    page_registry.register_page("ajax_sidebar_get_messages")(PageAjaxSidebarGetMessages)
+    page_registry.register_page("ajax_sidebar_get_unack_incomp_werks")(
+        PageAjaxSidebarGetUnackIncompWerks
+    )
 
 
 def load_plugins() -> None:
@@ -613,12 +633,10 @@ def _render_header_icon() -> None:
         html.icon("checkmk_logo" + ("_min" if user.get_attribute("nav_hide_icons_title") else ""))
 
 
-@cmk.gui.pages.register("side")
 def page_side():
     SidebarRenderer().show()
 
 
-@cmk.gui.pages.register("sidebar_snapin")
 def ajax_snapin():
     """Renders and returns the contents of the requested sidebar snapin(s) in JSON format"""
     response.set_content_type("application/json")
@@ -670,7 +688,6 @@ def ajax_snapin():
     response.set_data(json.dumps(snapin_code))
 
 
-@cmk.gui.pages.page_registry.register_page("sidebar_fold")
 class AjaxFoldSnapin(AjaxPage):
     def page(self) -> PageResult:  # pylint: disable=useless-return
         check_csrf_token()
@@ -681,7 +698,6 @@ class AjaxFoldSnapin(AjaxPage):
         return None
 
 
-@cmk.gui.pages.page_registry.register_page("sidebar_openclose")
 class AjaxOpenCloseSnapin(AjaxPage):
     def page(self) -> PageResult:
         check_csrf_token()
@@ -713,7 +729,6 @@ class AjaxOpenCloseSnapin(AjaxPage):
         return None
 
 
-@cmk.gui.pages.register("sidebar_move_snapin")
 def move_snapin() -> None:
     response.set_content_type("application/json")
     if not user.may("general.configure_sidebar"):
@@ -853,7 +868,6 @@ register_post_config_load_hook(_register_custom_snapins)
 #   '----------------------------------------------------------------------'
 
 
-@cmk.gui.pages.register("sidebar_add_snapin")
 def page_add_snapin() -> None:
     if not user.may("general.configure_sidebar"):
         raise MKGeneralException(_("You are not allowed to change the sidebar."))
@@ -911,7 +925,6 @@ def _used_snapins() -> list[Any]:
     return [snapin.snapin_type.type_name() for snapin in user_config.snapins]
 
 
-@cmk.gui.pages.page_registry.register_page("sidebar_ajax_add_snapin")
 class AjaxAddSnapin(AjaxPage):
     def page(self) -> PageResult:
         check_csrf_token()
@@ -947,7 +960,6 @@ class AjaxAddSnapin(AjaxPage):
 
 
 # TODO: This is snapin specific. Move this handler to the snapin file
-@cmk.gui.pages.register("sidebar_ajax_set_snapin_site")
 def ajax_set_snapin_site():
     response.set_content_type("application/json")
     ident = request.var("ident")

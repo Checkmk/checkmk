@@ -32,7 +32,7 @@ from cmk.gui.i18n import _, ungettext
 from cmk.gui.log import AuthenticationFailureEvent, AuthenticationSuccessEvent
 from cmk.gui.logged_in import LoggedInNobody, LoggedInUser, user
 from cmk.gui.main import get_page_heading
-from cmk.gui.pages import Page, page_registry
+from cmk.gui.pages import Page, PageRegistry
 from cmk.gui.plugins.userdb.utils import active_connections_by_type
 from cmk.gui.session import session, UserContext
 from cmk.gui.userdb.session import auth_cookie_name
@@ -44,6 +44,11 @@ from cmk.gui.utils.theme import theme
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.utils.urls import makeuri, requested_file_name, urlencode
 from cmk.gui.utils.user_errors import user_errors
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("login")(LoginPage)
+    page_registry.register_page("logout")(LogoutPage)
 
 
 @contextlib.contextmanager
@@ -106,7 +111,6 @@ def del_auth_cookie() -> None:
 # - It calls connection.is_locked() but we don't
 
 
-@page_registry.register_page("login")
 class LoginPage(Page):
     def __init__(self) -> None:
         super().__init__()
@@ -392,7 +396,6 @@ def _show_remaining_trial_time(remaining_trial_time: RemainingTrialTime) -> None
     html.close_div()
 
 
-@page_registry.register_page("logout")
 class LogoutPage(Page):
     def page(self) -> None:
         assert user.id is not None

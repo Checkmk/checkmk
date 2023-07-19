@@ -17,7 +17,7 @@ import cmk.gui.sites as sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.i18n import _
-from cmk.gui.pages import AjaxPage, page_registry, PageResult
+from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.plugins.metrics.utils import (
     get_graph_templates,
     graph_templates_internal,
@@ -36,6 +36,10 @@ from cmk.gui.utils.labels import encode_label_for_livestatus, Label, LABEL_REGEX
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import autocompleter_registry, Labels
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
+
+
+def register(page_registry: PageRegistry) -> None:
+    page_registry.register_page("ajax_vs_autocomplete")(PageVsAutocomplete)
 
 
 def __live_query_to_choices(
@@ -344,7 +348,6 @@ def validate_autocompleter_data(api_request):
         raise MKUserError("ident", _('You need to set the "%s" parameter.') % "ident")
 
 
-@page_registry.register_page("ajax_vs_autocomplete")
 class PageVsAutocomplete(AjaxPage):
     def page(self) -> PageResult:
         api_request = self.webapi_request()

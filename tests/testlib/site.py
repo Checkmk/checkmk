@@ -589,14 +589,16 @@ class Site:
 
     def install_cmk(self) -> None:
         if not self.version.is_installed():
-            logger.info("Install Checkmk version %s", self.version.version)
+            logger.info("Installing Checkmk version %s", self.version.version_directory())
             completed_process = subprocess.run(
                 [
                     f"{cmk_path()}/scripts/run-pipenv",
                     "run",
                     f"{cmk_path()}/tests/scripts/install-cmk.py",
                 ],
-                env=dict(os.environ, VERSION=self.version.version),
+                env=dict(
+                    os.environ, VERSION=self.version.version, EDITION=self.version.edition.short
+                ),
                 check=False,
             )
             if completed_process.returncode != 0:
@@ -1288,6 +1290,34 @@ class SiteFactory:
             site.gather_livestatus_port(from_config=True)
         site.start()
         logger.debug("Reused site %s", site.id)
+        return site
+
+    def restore_site_from_backup(self, backup_path: Path, name: str) -> Site:
+        site = self._site_obj(name)
+
+        assert (
+            not site.exists()
+        ), f"Site {name} already existing. Please remove it before restoring it from a backup."
+        site.install_cmk()
+
+        logger.info("Creating %s site from backup...", name)
+
+        completed_process = subprocess.run(
+            [
+                "sudo",
+                "/usr/bin/omd",
+                "restore",
+                backup_path,
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            encoding="utf-8",
+            check=False,
+        )
+
+        assert completed_process.returncode == 0
+        site = self.get_existing_site(name)
+        site.start()
         return site
 
     def get_test_site(

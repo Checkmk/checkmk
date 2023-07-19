@@ -5,6 +5,7 @@
 
 import logging
 import os
+import subprocess
 import sys
 import time
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
@@ -51,6 +52,7 @@ from cmk.utils.tags import TagID
 from cmk.utils.timeout import Timeout
 
 import cmk.snmplib.snmp_modes as snmp_modes
+from cmk.snmplib import OID, SNMPBackend
 
 import cmk.fetchers.snmp as snmp_factory
 from cmk.fetchers import FetcherType, get_raw_data
@@ -936,7 +938,53 @@ modes.register(
 
 
 def mode_snmptranslate(walk_filename: str) -> None:
-    snmp_modes.do_snmptranslate(walk_filename)
+    if not walk_filename:
+        raise MKGeneralException("Please provide the name of a SNMP walk file")
+
+    walk_path = Path(cmk.utils.paths.snmpwalks_dir) / walk_filename
+    if not walk_path.exists():
+        raise MKGeneralException("The walk '%s' does not exist" % walk_path)
+
+    command: list[str] = [
+        "snmptranslate",
+        "-m",
+        "ALL",
+        "-M+%s" % cmk.utils.paths.local_mib_dir,
+        "-",
+    ]
+    with walk_path.open("rb") as walk_file:
+        walk = walk_file.read().split(b"\n")
+    while walk[-1] == b"":
+        del walk[-1]
+
+    # to be compatible to previous version of this script, we do not feed
+    # to original walk to snmptranslate (which would be possible) but a
+    # version without values. The output should look like:
+    # "[full oid] [value] --> [translated oid]"
+    walk_without_values = b"\n".join(line.split(b" ", 1)[0] for line in walk)
+
+    completed_process = subprocess.run(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+        close_fds=True,
+        check=False,
+        input=walk_without_values,
+    )
+
+    data_translated = completed_process.stdout.split(b"\n")
+    # remove last empty line (some tools add a '\n' at the end of the file, others not)
+    if data_translated[-1] == b"":
+        del data_translated[-1]
+
+    if len(walk) != len(data_translated):
+        raise MKGeneralException("call to snmptranslate returned a ambiguous result")
+
+    for element_input, element_translated in zip(walk, data_translated):
+        sys.stdout.buffer.write(element_input.strip())
+        sys.stdout.buffer.write(b" --> ")
+        sys.stdout.buffer.write(element_translated.strip())
+        sys.stdout.buffer.write(b"\n")
 
 
 modes.register(
@@ -968,6 +1016,50 @@ modes.register(
 
 _oids: list[str] = []
 _extra_oids: list[str] = []
+_SNMPWalkOptions = dict[str, list[OID]]
+
+
+def _do_snmpwalk(options: _SNMPWalkOptions, *, backend: SNMPBackend) -> None:
+    if not os.path.exists(cmk.utils.paths.snmpwalks_dir):
+        os.makedirs(cmk.utils.paths.snmpwalks_dir)
+
+    # TODO: What about SNMP management boards?
+    try:
+        _do_snmpwalk_on(
+            options, cmk.utils.paths.snmpwalks_dir + "/" + backend.hostname, backend=backend
+        )
+    except Exception as e:
+        console.error(f"Error walking {backend.hostname}: {e}\n")
+        if cmk.utils.debug.enabled():
+            raise
+    cmk.utils.cleanup.cleanup_globals()
+
+
+def _do_snmpwalk_on(options: _SNMPWalkOptions, filename: str, *, backend: SNMPBackend) -> None:
+    console.verbose("%s:\n" % backend.hostname)
+
+    oids = snmp_modes.oids_to_walk(options)
+
+    with Path(filename).open("w", encoding="utf-8") as file:
+        for rows in _execute_walks_for_dump(oids, backend=backend):
+            for oid, value in rows:
+                file.write(f"{oid} {value}\n")
+            console.verbose("%d variables.\n" % len(rows))
+
+    console.verbose(f"Wrote fetched data to {tty.bold}{filename}{tty.normal}.\n")
+
+
+def _execute_walks_for_dump(
+    oids: list[OID], *, backend: SNMPBackend
+) -> Iterable[list[tuple[OID, str]]]:
+    for oid in oids:
+        try:
+            console.verbose('Walk on "%s"...\n' % oid)
+            yield snmp_modes.walk_for_export(backend.walk(oid=oid))
+        except Exception as e:
+            console.error("Error: %s\n" % e)
+            if cmk.utils.debug.enabled():
+                raise
 
 
 def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
@@ -989,7 +1081,7 @@ def mode_snmpwalk(options: dict, hostnames: list[str]) -> None:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
         snmp_config = config_cache.make_snmp_config(hostname, ipaddress, SourceType.HOST)
-        snmp_modes.do_snmpwalk(options, backend=snmp_factory.make_backend(snmp_config, log.logger))
+        _do_snmpwalk(options, backend=snmp_factory.make_backend(snmp_config, log.logger))
 
 
 modes.register(
@@ -1061,7 +1153,9 @@ def mode_snmpget(args: list[str]) -> None:
             raise MKGeneralException("Failed to gather IP address of %s" % hostname)
 
         snmp_config = config_cache.make_snmp_config(hostname, ipaddress, SourceType.HOST)
-        snmp_modes.do_snmpget(oid, backend=snmp_factory.make_backend(snmp_config, log.logger))
+        backend = snmp_factory.make_backend(snmp_config, log.logger)
+        value = snmp_modes.get_single_oid(oid, single_oid_cache={}, backend=backend)
+        sys.stdout.write(f"{backend.hostname} ({backend.address}): {value!r}\n")
 
 
 modes.register(

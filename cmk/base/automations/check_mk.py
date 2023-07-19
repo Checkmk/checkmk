@@ -2146,7 +2146,7 @@ class AutomationGetAgentOutput(Automation):
                 lines = []
                 for walk_oid in snmp_modes.oids_to_walk():
                     try:
-                        for oid, value in snmp_modes.walk_for_export(walk_oid, backend=backend):
+                        for oid, value in snmp_modes.walk_for_export(backend.walk(oid=walk_oid)):
                             raw_oid_value = f"{oid} {value}\n"
                             lines.append(raw_oid_value.encode())
                     except Exception as e:

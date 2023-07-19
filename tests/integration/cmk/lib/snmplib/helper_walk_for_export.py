@@ -44,4 +44,4 @@ match backend_type:
     case _:
         raise ValueError(backend_type)
 
-print(repr(snmp_modes.walk_for_export(oid, backend=backend(config, logger))))
+print(repr(snmp_modes.walk_for_export(backend(config, logger).walk(oid))))

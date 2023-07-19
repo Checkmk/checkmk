@@ -65,6 +65,21 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 	    `: Keep in sync with scripts/run-pipenv` \
 	    export GRPC_PYTHON_BUILD_EXT_COMPILER_JOBS=4 ; \
 	    export NPY_NUM_BUILD_JOBS=4 ; \
+	    `: Make git command work with system ssl while we keep using our own for building` \
+            export PATH="$(PYTHON3_MODULES_WORK_DIR):$$PATH" ; \
+            mkdir -p "$(PYTHON3_MODULES_WORK_DIR)" ; \
+            install -m 755 "$(PACKAGE_DIR)/omd/use_system_openssl" "$(PYTHON3_MODULES_WORK_DIR)/git" ; \
+		GIT_SSL_CAINFO=$(REPO_PATH)/omd/packages/python3-modules/github-com.pem \
+		$(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
+		`: dont use precompiled things, build with our build env ` \
+		--no-binary=":all:" \
+		--no-deps \
+		--compile \
+		--isolated \
+		--ignore-installed \
+		--no-warn-script-location \
+		--prefix="$(PYTHON3_MODULES_INSTALL_DIR)" \
+		git+https://github.com/matusvalo/pymssql.git@537307c8afb730f741d906688f7b60d479d2272a ; \
 	    $(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
 		`: dont use precompiled things, build with our build env ` \
 		--no-binary=":all:" \
@@ -75,17 +90,6 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 		--no-warn-script-location \
 		--prefix="$(PYTHON3_MODULES_INSTALL_DIR)" \
 		-r requirements-dist.txt ; \
-	    GIT_SSL_NO_VERIFY=$$([[ $(DISTRO_CODE) == sles* ]]) \
-	    $(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
-		`: dont use precompiled things, build with our build env ` \
-		--no-binary=":all:" \
-		--no-deps \
-		--compile \
-		--isolated \
-		--ignore-installed \
-		--no-warn-script-location \
-		--prefix="$(PYTHON3_MODULES_INSTALL_DIR)" \
-		git+https://github.com/matusvalo/pymssql.git@cython3_fix ; \
 	    $(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
 		`: dont use precompiled things, build with our build env ` \
 		--no-binary=":all:" \

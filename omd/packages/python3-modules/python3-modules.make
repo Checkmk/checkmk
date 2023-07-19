@@ -62,6 +62,21 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 	    export LD_LIBRARY_PATH="$(PACKAGE_PYTHON_LD_LIBRARY_PATH):$(PACKAGE_OPENSSL_LD_LIBRARY_PATH)" ; \
 	    export PATH="$(PACKAGE_PYTHON_BIN):$$PATH" ; \
 	    export CFLAGS="-I$(PACKAGE_PYTHON_INCLUDE_PATH) $$CFLAGS" ; \
+	    `: Make git command work with system ssl while we keep using our own for building` \
+            export PATH="$(PYTHON3_MODULES_WORK_DIR):$$PATH" ; \
+            mkdir -p "$(PYTHON3_MODULES_WORK_DIR)" ; \
+            install -m 755 "$(PACKAGE_DIR)/omd/use_system_openssl" "$(PYTHON3_MODULES_WORK_DIR)/git" ; \
+		GIT_SSL_CAINFO=$(REPO_PATH)/omd/packages/python3-modules/github-com.pem \
+		$(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
+		`: dont use precompiled things, build with our build env ` \
+		--no-binary=":all:" \
+		--no-deps \
+		--compile \
+		--isolated \
+		--ignore-installed \
+		--no-warn-script-location \
+		--prefix="$(PYTHON3_MODULES_INSTALL_DIR)" \
+		git+https://github.com/matusvalo/pymssql.git@537307c8afb730f741d906688f7b60d479d2272a ; \
 	    $(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
 		`: dont use precompiled things, build with our build env ` \
 		--no-binary=":all:" \
@@ -72,16 +87,6 @@ $(PYTHON3_MODULES_BUILD): $(PYTHON_CACHE_PKG_PROCESS) $(OPENSSL_CACHE_PKG_PROCES
 		--no-warn-script-location \
 		--prefix="$(PYTHON3_MODULES_INSTALL_DIR)" \
 		-r requirements-dist.txt ; \
-	    $(PACKAGE_PYTHON_EXECUTABLE) -m pip install \
-		`: dont use precompiled things, build with our build env ` \
-		--no-binary=":all:" \
-		--no-deps \
-		--compile \
-		--isolated \
-		--ignore-installed \
-		--no-warn-script-location \
-		--prefix="$(PYTHON3_MODULES_INSTALL_DIR)" \
-		git+https://github.com/matusvalo/pymssql.git@cython3_fix
 # For some highly obscure unknown reason some files end up world-writable. Fix that!
 	chmod -R o-w $(PYTHON3_MODULES_INSTALL_DIR)/lib/python$(PYTHON_MAJOR_DOT_MINOR)/site-packages
 # Cleanup some unwanted files (example scripts)

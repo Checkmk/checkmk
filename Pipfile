@@ -79,7 +79,7 @@ httpx = "*"  # for testing the agent-receiver
 setuptools_scm = "==4.1.2"  # needed by various setup.py
 six = "==1.16.0"  # direct dependency + needed by bcrypt, cryptography, PyNaCl, python-dateutil, vcrpy, python-active-directory
 python-dateutil = "==2.8.2"  # direct dependency
-PyYAML = "==6.0"  # needed by vcrpy
+PyYAML = "==6.0.1"  # needed by vcrpy
 wrapt = "==1.14.1"  # needed by vcrpy
 yarl = "==1.8.2"  # needed by vcrpy
 multidict = "==6.0.4"  # needed by yarl

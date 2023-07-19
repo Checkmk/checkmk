@@ -23,18 +23,6 @@ from ._typedefs import OID, SNMPBackend, SNMPDecodedString, SNMPRawValue, SNMPRo
 SNMPRowInfoForStoredWalk = list[tuple[OID, str]]
 SNMPWalkOptions = dict[str, list[OID]]
 
-# .
-#   .--Generic SNMP--------------------------------------------------------.
-#   |     ____                      _        ____  _   _ __  __ ____       |
-#   |    / ___| ___ _ __   ___ _ __(_) ___  / ___|| \ | |  \/  |  _ \      |
-#   |   | |  _ / _ \ '_ \ / _ \ '__| |/ __| \___ \|  \| | |\/| | |_) |     |
-#   |   | |_| |  __/ | | |  __/ |  | | (__   ___) | |\  | |  | |  __/      |
-#   |    \____|\___|_| |_|\___|_|  |_|\___| |____/|_| \_|_|  |_|_|         |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Top level functions to realize SNMP functionality for Checkmk.      |
-#   '----------------------------------------------------------------------'
-
 
 # Contextes can only be used when check_plugin_name is given.
 def get_single_oid(
@@ -96,19 +84,6 @@ def walk_for_export(oid: OID, *, backend: SNMPBackend) -> SNMPRowInfoForStoredWa
     return _convert_rows_for_stored_walk(backend.walk(oid=oid))
 
 
-# .
-#   .--SNMP helpers--------------------------------------------------------.
-#   |     ____  _   _ __  __ ____    _          _                          |
-#   |    / ___|| \ | |  \/  |  _ \  | |__   ___| |_ __   ___ _ __ ___      |
-#   |    \___ \|  \| | |\/| | |_) | | '_ \ / _ \ | '_ \ / _ \ '__/ __|     |
-#   |     ___) | |\  | |  | |  __/  | | | |  __/ | |_) |  __/ |  \__ \     |
-#   |    |____/|_| \_|_|  |_|_|     |_| |_|\___|_| .__/ \___|_|  |___/     |
-#   |                                            |_|                       |
-#   +----------------------------------------------------------------------+
-#   | Internal helpers for processing SNMP things                          |
-#   '----------------------------------------------------------------------'
-
-
 def _convert_rows_for_stored_walk(rows: SNMPRowInfo) -> SNMPRowInfoForStoredWalk:
     def should_be_encoded(v: SNMPRawValue) -> bool:
         for c in bytearray(v):
@@ -132,19 +107,6 @@ def _convert_rows_for_stored_walk(rows: SNMPRowInfo) -> SNMPRowInfoForStoredWalk
         else:
             new_rows.append((oid, value.decode()))
     return new_rows
-
-
-# .
-#   .--Main modes----------------------------------------------------------.
-#   |       __  __       _                             _                   |
-#   |      |  \/  | __ _(_)_ __    _ __ ___   ___   __| | ___  ___         |
-#   |      | |\/| |/ _` | | '_ \  | '_ ` _ \ / _ \ / _` |/ _ \/ __|        |
-#   |      | |  | | (_| | | | | | | | | | | | (_) | (_| |  __/\__ \        |
-#   |      |_|  |_|\__,_|_|_| |_| |_| |_| |_|\___/ \__,_|\___||___/        |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Some main modes to help the user                                     |
-#   '----------------------------------------------------------------------'
 
 
 def do_snmptranslate(walk_filename: str) -> None:

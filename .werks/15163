@@ -1,0 +1,11 @@
+Title: Add REMOVE_ACKNOWLEDGEMENT_BY_ID livestatus command
+Class: feature
+Compatible: compat
+Component: livestatus
+Date: 1689776576
+Edition: cee
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+Use <tt>REMOVE_ACKNOWLEDGEMENT_BY_ID;[ID]\n</tt> to remove a single acknowledgement.

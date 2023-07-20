@@ -457,6 +457,7 @@ def get_host_services(
         services = {
             **_get_cluster_services(
                 host_name,
+                nodes=config_cache.nodes_of(host_name) or (),
                 config_cache=config_cache,
                 providers=providers,
                 plugins=plugins,
@@ -621,16 +622,13 @@ def _group_by_transition(
 def _get_cluster_services(
     host_name: HostName,
     *,
+    nodes: Iterable[HostName],
     config_cache: ConfigCache,
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     providers: Mapping[HostKey, Provider],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     on_error: OnError,
 ) -> ServicesTable[_Transition]:
-    nodes = config_cache.nodes_of(host_name)
-    if not nodes:
-        return {}
-
     cluster_items: ServicesTable[_BasicTransition] = {}
 
     # Get services of the nodes. We are only interested in "old", "new" and "vanished"

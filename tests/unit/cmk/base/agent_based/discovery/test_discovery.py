@@ -1502,6 +1502,7 @@ def test__discover_services_on_cluster(
 
     discovered_services = _get_cluster_services(
         scenario.parent,
+        nodes=nodes,
         config_cache=scenario.config_cache,
         providers=scenario.providers,
         plugins=DiscoveryPluginMapper(config_cache=scenario.config_cache),

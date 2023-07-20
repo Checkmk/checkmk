@@ -107,8 +107,8 @@ idna = "==3.4"  # needed by yarl
 vcrpy = "==4.2.1"  # used by various unit tests to mock HTTP transactions
 pycparser = "==2.21"  # needed by cffi
 pynacl = "==1.5.0"  # needed by paramiko
-cryptography = "~=3.4"  # needed by paramiko. NOTE: rust is needed for version >=3.4, see https://cryptography.io/en/latest/changelog/#v3-4
-bcrypt = "~=4.0"  # needed by paramiko. NOTE: rust is needed for version >=4.0.0, see https://github.com/pyca/bcrypt#400
+cryptography = "~=36.0"  # needed by paramiko.
+bcrypt = "==3.2.2"  # needed by paramiko.
 paramiko = "==2.10.3"
 pyasn1 = "==0.4.8"  # needed by pysnmp
 pyasn1-modules = "==0.2.8"  # needed by kubernetes
@@ -118,7 +118,7 @@ pysnmp = "==4.4.12"  # needed by Event Console
 snmpsim = "==0.4.7"  # needed by SNMP integration tests
 chardet = "==5.1.0"  # needed by requests
 urllib3 = "==1.26.15"  # needed by requests
-pyopenssl = "==19.1.0"  # needed by requests with extras = ["security"]
+pyopenssl = "~=20.0"  # needed by requests with extras = ["security"]
 pbr = "==5.11.1"  # needed by jira
 pyghmi = "==1.5.60"  # needed by base for IPMI
 requests = {version = "==2.28.2",extras = ["security"]}  # needed by DCD, connexion

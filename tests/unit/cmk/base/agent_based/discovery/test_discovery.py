@@ -986,6 +986,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     discovery.commandline_discovery(
         arg_hostnames={testhost},
         config_cache=config_cache,
+        ruleset_matcher=config_cache.ruleset_matcher,
         parser=parser,
         fetcher=fetcher,
         section_plugins=SectionPluginMapper(),

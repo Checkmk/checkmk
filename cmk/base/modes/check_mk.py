@@ -1891,6 +1891,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     discovery.commandline_discovery(
         set(hostnames),
         config_cache=config_cache,
+        ruleset_matcher=config_cache.ruleset_matcher,
         parser=parser,
         fetcher=fetcher,
         section_plugins=SectionPluginMapper(),

@@ -16,6 +16,7 @@ from cmk.utils.exceptions import MKGeneralException, OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionMap
 
 from cmk.checkengine import FetcherFunction, group_by_host, HostKey, ParserFunction, SectionPlugin
@@ -44,6 +45,7 @@ def commandline_discovery(
     parser: ParserFunction,
     fetcher: FetcherFunction,
     config_cache: ConfigCache,
+    ruleset_matcher: RulesetMatcher,
     section_plugins: SectionMap[SectionPlugin],
     host_label_plugins: SectionMap[HostLabelPlugin],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
@@ -75,6 +77,7 @@ def commandline_discovery(
                 real_host_name=host_name,
                 host_label_plugins=host_label_plugins,
                 config_cache=config_cache,
+                ruleset_matcher=ruleset_matcher,
                 providers=providers,
                 plugins=plugins,
                 run_plugin_names=run_plugin_names,
@@ -134,6 +137,7 @@ def _commandline_discovery_on_host(
     real_host_name: HostName,
     host_label_plugins: SectionMap[HostLabelPlugin],
     config_cache: ConfigCache,
+    ruleset_matcher: RulesetMatcher,
     providers: Mapping[HostKey, Provider],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     run_plugin_names: Container[CheckPluginName],
@@ -154,7 +158,7 @@ def _commandline_discovery_on_host(
     DiscoveredHostLabelsStore(real_host_name).save(host_labels.kept())
     if host_labels.new or host_labels.vanished:  # add 'changed' once it exists.
         # Rulesets for service discovery can match based on the hosts labels.
-        config_cache.ruleset_matcher.clear_caches()
+        ruleset_matcher.clear_caches()
 
     count = len(host_labels.new) if host_labels.new else ("no new" if only_new else "no")
     section.section_success(f"Found {count} host labels")

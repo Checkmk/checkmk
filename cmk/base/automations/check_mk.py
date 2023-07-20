@@ -252,6 +252,7 @@ class AutomationDiscovery(DiscoveryAutomation):
             results[hostname] = discovery.automation_discovery(
                 hostname,
                 config_cache=config_cache,
+                ruleset_matcher=config_cache.ruleset_matcher,
                 parser=parser,
                 fetcher=fetcher,
                 summarizer=CMKSummarizer(
@@ -541,6 +542,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                     discovery_result, activate_host = discovery.autodiscovery(
                         host_name,
                         config_cache=config_cache,
+                        ruleset_matcher=config_cache.ruleset_matcher,
                         parser=parser,
                         fetcher=fetcher,
                         summarizer=CMKSummarizer(

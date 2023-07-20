@@ -17,6 +17,7 @@ from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel
 from cmk.utils.log import console, section
+from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionMap
 from cmk.utils.servicename import ServiceName
 
@@ -75,6 +76,7 @@ def automation_discovery(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
+    ruleset_matcher: RulesetMatcher,
     parser: ParserFunction,
     fetcher: FetcherFunction,
     summarizer: SummarizerFunction,
@@ -129,7 +131,7 @@ def automation_discovery(
             DiscoveredHostLabelsStore(host_name).save(host_labels.kept())
             if host_labels.new or host_labels.vanished:  # add 'changed' once it exists.
                 # Rulesets for service discovery can match based on the hosts labels.
-                config_cache.ruleset_matcher.clear_caches()
+                ruleset_matcher.clear_caches()
 
             if mode is DiscoveryMode.ONLY_HOST_LABELS:
                 result.diff_text = _make_diff(host_labels.vanished, host_labels.new, (), ())
@@ -298,6 +300,7 @@ def autodiscovery(
     host_name: HostName,
     *,
     config_cache: ConfigCache,
+    ruleset_matcher: RulesetMatcher,
     fetcher: FetcherFunction,
     parser: ParserFunction,
     summarizer: SummarizerFunction,
@@ -325,6 +328,7 @@ def autodiscovery(
     result = automation_discovery(
         host_name,
         config_cache=config_cache,
+        ruleset_matcher=ruleset_matcher,
         parser=parser,
         fetcher=fetcher,
         summarizer=summarizer,

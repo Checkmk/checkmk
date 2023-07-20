@@ -12,9 +12,9 @@
 import re
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, SNMPTree
 from cmk.base.plugins.agent_based.utils.brocade import DETECT_MLX
 
 
@@ -43,8 +43,11 @@ def check_brocade_tm(item, params, info):
             perfdata = []
             overall_state = 0
 
+            value_store = get_value_store()
             for name, counter in tm.items():
-                rate = get_rate("%s.%s" % (name, item), now, int(counter))
+                rate = get_rate(
+                    value_store, f"{name}.{item}", now, int(counter), raise_overflow=True
+                )
 
                 warn, crit = params["brcdTMStats" + name]
                 if re.search("Discard", name):

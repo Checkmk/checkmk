@@ -6,8 +6,9 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 
 def check_wmic_process(item, params, info):
@@ -16,6 +17,10 @@ def check_wmic_process(item, params, info):
     cpucores = 1
     if len(info) == 0:
         return (3, "No output from agent in section wmic_process")
+
+    value_store = get_value_store()
+    now = time.time()
+
     legend = info[0]
     for line in info[1:]:
         psinfo = dict(zip(legend, line))
@@ -32,8 +37,12 @@ def check_wmic_process(item, params, info):
 
     mem_mb = mem / 1048576.0
     page_mb = page / 1048576.0
-    user_per_sec = get_rate("wmic_process.user.%s.%d" % (name, count), time.time(), userc)
-    kernel_per_sec = get_rate("wmic_process.kernel.%s.%d" % (name, count), time.time(), kernelc)
+    user_per_sec = get_rate(
+        value_store, "wmic_process.user.%s.%d" % (name, count), now, userc, raise_overflow=True
+    )
+    kernel_per_sec = get_rate(
+        value_store, "wmic_process.kernel.%s.%d" % (name, count), now, kernelc, raise_overflow=True
+    )
     user_perc = (user_per_sec / 100000.0) / cpucores
     kernel_perc = (kernel_per_sec / 100000.0) / cpucores
     cpu_perc = user_perc + kernel_perc

@@ -6,10 +6,10 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mcafee_gateway import inventory_mcafee_gateway_generic
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, SNMPTree
 from cmk.base.plugins.agent_based.utils.mcafee_gateway import DETECT_EMAIL_GATEWAY
 
 # TODO states, traffic, params?
@@ -34,13 +34,16 @@ def check_mcafee_emailgateway_bridge(item, params, info):
     yield state, "Status: %s" % state_readable
 
     now = time.time()
+    value_store = get_value_store()
     for title, packets in [
         ("TCP", tcp_packets),
         ("UDP", udp_packets),
         ("ICMP", icmp_packets),
     ]:
         key = title.lower()
-        packets_rate = get_rate("mcafee_emailgateway_bridge.%s" % key, now, int(packets))
+        packets_rate = get_rate(
+            value_store, f"mcafee_emailgateway_bridge.{key}", now, int(packets), raise_overflow=True
+        )
         perfdata = ["%s_packets_received" % key, packets_rate]
         infotext = "%s: %.2f packets received/s" % (title, packets_rate)
         state = 0

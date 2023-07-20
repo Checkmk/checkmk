@@ -11,9 +11,9 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, SNMPTree
 from cmk.base.plugins.agent_based.utils.netscaler import SNMP_DETECT
 
 
@@ -27,8 +27,9 @@ def check_netscaler_dnsrates(_no_item, params, info):
     queries, answers = map(int, info[0])
 
     now = time.time()
+    value_store = get_value_store()
     for name, counter in [("query", queries), ("answer", answers)]:
-        rate = get_rate(name, now, counter)
+        rate = get_rate(value_store, name, now, counter, raise_overflow=True)
         warn, crit = params[name]
         infotext = "%s rate %.1f/sec" % (name, rate)
         perfdata = [(name + "_rate", rate, warn, crit, 0)]

@@ -6,9 +6,10 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.netapp_api import netapp_api_parse_lines
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 # <<<netapp_api_protocol:sep(9)>>>
 # protocol nfs nfsv3_write_ops 0   instance_name nfs   nfsv3_read_ops 0
@@ -29,11 +30,12 @@ def check_netapp_api_protocol(item, _no_params, parsed):
     if not counter_data:
         return
 
+    value_store = get_value_store()
     now = time.time()
     for key, value in counter_data.items():
         for what in ["read", "write"]:
             if key.endswith("%s_ops" % what):
-                per_sec = get_rate(key, now, int(value))
+                per_sec = get_rate(value_store, key, now, int(value), raise_overflow=True)
                 yield 0, "%s OPs: %s" % (what.title(), per_sec), [
                     ("%s_%s_ios" % (item, what), per_sec)
                 ]

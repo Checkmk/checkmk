@@ -6,9 +6,10 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition, RAISE
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 # 7mode
 # <<<netapp_api_cpu:sep(9)>>>
@@ -46,7 +47,9 @@ def check_netapp_api_cpu_utilization(item, params, parsed, mode):
 
     cpu_busy = int(data["cpu_busy"])
     num_cpus_str = data.get("num_processors")
-    ticks_per_sec = get_rate("netapp_api_cpu.utilization", now, cpu_busy, onwrap=RAISE)
+    ticks_per_sec = get_rate(
+        get_value_store(), "netapp_api_cpu.utilization", now, cpu_busy, raise_overflow=True
+    )
     cpusecs_per_sec = ticks_per_sec / 1000000.0
     used_perc = 100.0 * cpusecs_per_sec
 

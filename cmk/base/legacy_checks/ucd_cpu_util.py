@@ -6,10 +6,10 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.cpu_util import check_cpu_util_unix, CPUInfo
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, SNMPTree
 from cmk.base.plugins.agent_based.utils import ucd_hr_detection
 
 #    UCD-SNMP-MIB::ssCpuRawUser.0 = Counter32: 219998591
@@ -68,6 +68,7 @@ def inventory_ucd_cpu_util(info):
 
 def check_ucd_cpu_util(item, params, parsed):
     now = time.time()
+    value_store = get_value_store()
     error = parsed["error"]
     if error is not None and error != "systemStats":
         yield 1, "Error: %s" % error
@@ -83,8 +84,8 @@ def check_ucd_cpu_util(item, params, parsed):
         return
 
     perfdata = [
-        ("read_blocks", get_rate("io_received", now, raw_io_received), None, None),
-        ("write_blocks", get_rate("io_send", now, raw_io_send), None, None),
+        ("read_blocks", get_rate(value_store, "io_received", now, raw_io_received), None, None),
+        ("write_blocks", get_rate(value_store, "io_send", now, raw_io_send), None, None),
     ]
     yield 0, "", perfdata
 

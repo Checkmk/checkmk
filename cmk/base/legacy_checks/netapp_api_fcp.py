@@ -6,13 +6,18 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition, RAISE
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.netapp_api import (
     get_and_try_cast_to_int,
     netapp_api_parse_lines,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_rate,
+    get_value_store,
+    IgnoreResultsError,
+    render,
+)
 from cmk.base.plugins.agent_based.utils.interfaces import (
     bandwidth_levels,
     BandwidthUnit,
@@ -103,12 +108,13 @@ def _io_bytes_results(item, params, fcp_if):
         unit=BandwidthUnit.BYTE,
     )
 
+    value_store = get_value_store()
     now = fcp_if["now"]
     for what, levels, descr in [
         ("read_bytes", bw_levels.input, "Read"),
         ("write_bytes", bw_levels.output, "Write"),
     ]:
-        value = get_rate("%s.%s" % (item, what), now, fcp_if.get(what))
+        value = get_rate(value_store, f"{item}.{what}", now, fcp_if.get(what), raise_overflow=True)
         if value is None:  # cannot happen. left in until migration, to illustrate intention.
             continue
 
@@ -141,11 +147,12 @@ def _io_bytes_results(item, params, fcp_if):
 
 def _io_ops_results(item, params, fcp_if):
     now = fcp_if["now"]
+    value_store = get_value_store()
     for what, descr in [
         ("read_ops", "Read OPS"),
         ("write_ops", "Write OPS"),
     ]:
-        value = get_rate("%s.%s" % (item, what), now, fcp_if.get(what))
+        value = get_rate(value_store, f"{item}.{what}", now, fcp_if.get(what), raise_overflow=True)
         if value is None:  # cannot happen. left in until migration, to illustrate intention.
             continue
 
@@ -162,6 +169,7 @@ def _io_ops_results(item, params, fcp_if):
 
 def _latency_results(item, params, fcp_if):
     total_ops = fcp_if["total_ops"]
+    value_store = get_value_store()
     for what, text in [
         ("avg_latency", "Latency"),
         ("avg_read_latency", "Read Latency"),
@@ -170,7 +178,9 @@ def _latency_results(item, params, fcp_if):
         try:
             # According to NetApp's "Performance Management Design Guide",
             # the latency is a function of `total_ops`.
-            value = get_rate("%s.%s" % (item, what), total_ops, fcp_if.get(what), onwrap=RAISE)
+            value = get_rate(
+                value_store, f"{item}.{what}", total_ops, fcp_if.get(what), raise_overflow=True
+            )
         except IgnoreResultsError:
             continue
 

@@ -7,8 +7,9 @@
 # mypy: disable-error-code="arg-type"
 
 import cmk.base.plugins.agent_based.kernel
-from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 #   .--kernel--Counters----------------------------------------------------.
 #   |                ____                  _                               |
@@ -48,7 +49,7 @@ def check_kernel(item, params, parsed):
         return 3, "item '%s' not unique (found %d times)" % (item, len(item_values))
 
     counter, value = item_values[0]
-    per_sec = get_rate(None, timestamp, value)
+    per_sec = get_rate(get_value_store(), "counter", timestamp, value)
     return check_levels(per_sec, counter, params, unit="/s", boundaries=(0, None))
 
 
@@ -95,7 +96,7 @@ def check_kernel_performance(_no_item, params, parsed):
             yield 3, "item '%s' not unique (found %d times)" % (item_name, len(item_values))
 
         counter, value = item_values[0]
-        rate = get_rate(counter, timestamp, value)
+        rate = get_rate(get_value_store(), counter, timestamp, value)
 
         if counter in ["pswpin", "pswpout"]:
             levels = params.get(

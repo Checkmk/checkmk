@@ -40,8 +40,9 @@
 
 # mypy: disable-error-code="arg-type"
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 
 def inventory_winperf_mem(info):
@@ -64,7 +65,9 @@ def check_winperf_mem(_unused, params, info):
     except StopIteration:
         pass
 
-    pages_per_sec = get_rate(None, this_time, page_counter)
+    pages_per_sec = get_rate(
+        get_value_store(), "pages_count", this_time, page_counter, raise_overflow=True
+    )
     state = 0
     if "pages_per_second" in params:
         warn, crit = params["pages_per_second"]

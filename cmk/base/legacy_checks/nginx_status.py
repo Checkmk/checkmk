@@ -13,8 +13,9 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 
 def parse_nginx_status(string_table):
@@ -56,8 +57,12 @@ def check_nginx_status(item, params, parsed):
     computed_values["requests_per_conn"] = 1.0 * data["requests"] / data["handled"]
 
     this_time = int(time.time())
+    value_store = get_value_store()
+
     for key in ["accepted", "handled", "requests"]:
-        per_sec = get_rate("nginx_status.%s" % key, this_time, data[key])
+        per_sec = get_rate(
+            value_store, f"nginx_status.{key}", this_time, data[key], raise_overflow=True
+        )
         computed_values["%s_per_sec" % key] = per_sec
 
     state, txt, perf = check_levels(

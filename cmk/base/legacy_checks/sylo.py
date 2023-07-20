@@ -28,8 +28,9 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 sylo_default_levels = (70, 5, 25)
 
@@ -75,8 +76,9 @@ def check_sylo(item, params, info):
         used_mb = bytesUsed / (1024 * 1024.0)
 
         # Rates for input and output
-        in_rate = get_rate("sylo.in", mtime, inOffset)
-        out_rate = get_rate("sylo.out", mtime, outOffset)
+        value_store = get_value_store()
+        in_rate = get_rate(value_store, "sylo.in", mtime, inOffset, raise_overflow=True)
+        out_rate = get_rate(value_store, "sylo.out", mtime, outOffset, raise_overflow=True)
         msg += "Silo is filled %.1fMB (%.1f%%), in %.1f B/s, out %.1f B/s" % (
             bytesUsed / (1024 * 1024.0),
             percUsed,

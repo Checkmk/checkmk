@@ -4,8 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 linux_nic_check = "lnx_if"
 
@@ -67,6 +68,7 @@ def check_netctr_combined(nic, params, info):
         warn, crit = (0.01, 0.1)
 
     this_time = int(info[0][0])
+    value_store = get_value_store()
 
     # Look for line describing this nic
     for nicline in info[1:]:
@@ -79,7 +81,9 @@ def check_netctr_combined(nic, params, info):
         for countername in netctr_counters:
             index = netctr_counter_indices[countername]
             value = int(nicline[index + 1])
-            items_per_sec = get_rate("netctr." + nic + "." + countername, this_time, value)
+            items_per_sec = get_rate(
+                value_store, f"netctr.{nic}.{countername}", this_time, value, raise_overflow=True
+            )
             perfdata.append((countername, "%dc" % value))
 
             if countername in ["rx_errors", "tx_errors", "tx_collisions"]:

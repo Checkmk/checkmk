@@ -9,9 +9,14 @@
 import time
 from collections.abc import Callable
 
-from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_rate,
+    get_value_store,
+    render,
+    SNMPTree,
+)
 from cmk.base.plugins.agent_based.utils.detection import DETECT_NEVER
 
 # .1.3.6.1.4.1.2620.1.16.22.1.1.1.1.0 0
@@ -221,6 +226,8 @@ def check_checkpoint_vsx_packets(item, params, parsed):
     if not (data := parsed.get(item)):
         return
 
+    value_store = get_value_store()
+
     for key, infotext in [
         ("packets", "Total number of packets processed"),
         ("packets_accepted", "Total number of accepted packets"),
@@ -233,7 +240,9 @@ def check_checkpoint_vsx_packets(item, params, parsed):
             continue
 
         this_time = int(time.time())
-        value_per_sec = get_rate("%s_rate" % key, this_time, value)
+        value_per_sec = get_rate(
+            value_store, "%s_rate" % key, this_time, value, raise_overflow=True
+        )
 
         yield check_levels(
             value_per_sec,
@@ -269,6 +278,8 @@ def check_checkpoint_vsx_traffic(item, params, parsed):
     if not (data := parsed.get(item)):
         return
 
+    value_store = get_value_store()
+
     for key in [
         ("bytes_accepted"),
         ("bytes_dropped"),
@@ -279,7 +290,7 @@ def check_checkpoint_vsx_traffic(item, params, parsed):
             continue
 
         this_time = int(time.time())
-        value_per_sec = get_rate("%s_rate" % key, this_time, value)
+        value_per_sec = get_rate(value_store, f"{key}_rate", this_time, value, raise_overflow=True)
 
         yield check_levels(
             value_per_sec,

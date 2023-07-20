@@ -14,7 +14,7 @@ import sys
 import traceback
 from collections.abc import Callable, Iterable, Iterator, Mapping, Sequence
 from contextlib import suppress
-from itertools import chain, starmap
+from itertools import chain
 from pathlib import Path
 from typing import Any, cast, Final, Generic, get_args, TypeVar
 
@@ -348,84 +348,6 @@ def load(
     )
 
     return visuals
-
-
-def transform_pre_2_1_discovery_state(
-    fident: FilterName, vals: FilterHTTPVariables
-) -> tuple[FilterName, FilterHTTPVariables]:
-    # Fix context into type VisualContext
-    if fident == "discovery_state":
-        return "discovery_state", {key: "on" if val else "" for key, val in vals.items()}
-    return fident, vals
-
-
-def transform_pre_2_1_single_infos(
-    single_infos: SingleInfos,
-) -> Callable[
-    [FilterName, str | int | FilterHTTPVariables], tuple[FilterName, FilterHTTPVariables]
-]:
-    # Remove the old single infos
-    single_info_keys = get_single_info_keys(single_infos)
-
-    def unsingle(
-        fident: FilterName, vals: str | int | FilterHTTPVariables
-    ) -> tuple[FilterName, FilterHTTPVariables]:
-        if isinstance(vals, dict):  # Alredy FilterHTTPVariables
-            return fident, vals
-        # Single infos come from VisualInfo children. They have a str or int valuespec
-        if fident in single_info_keys:
-            filt = get_filter(fident)
-            return filt.ident, {filt.htmlvars[0]: str(vals)}
-        if fident in ["site", "sites", "siteopt"]:  # Because the site hint is not a VisualInfo
-            htmlvar = "site" if fident == "siteopt" else fident
-            return fident, {htmlvar: str(vals)}
-
-        # should never happen
-        raise MKGeneralException(
-            "Unexpected configuration of context variable: Filter '%s' with value %r"
-            % (fident, vals)
-        )
-
-    return unsingle
-
-
-@request_memoize()
-def _get_range_filters():
-    return [
-        filter_ident
-        for filter_ident, filter_object in filter_registry.items()
-        if hasattr(filter_object, "query_filter")
-        and isinstance(filter_object.query_filter, query_filters.NumberRangeQuery)
-    ]
-
-
-def transform_pre_2_1_range_filters() -> (
-    Callable[[FilterName, FilterHTTPVariables], tuple[FilterName, FilterHTTPVariables]]
-):
-    # Update Visual Range Filters
-    range_filters = _get_range_filters()
-
-    def transform_range_vars(
-        fident: FilterName, vals: FilterHTTPVariables
-    ) -> tuple[FilterName, FilterHTTPVariables]:
-        if fident in range_filters:
-            return fident, {
-                re.sub("_to(_|$)", "_until\\1", request_var): value
-                for request_var, value in vals.items()
-            }
-        return fident, vals
-
-    return transform_range_vars
-
-
-def cleanup_context_filters(  # type: ignore[no-untyped-def]
-    context, single_infos: SingleInfos
-) -> VisualContext:
-    new_context_vars = starmap(transform_pre_2_1_single_infos(single_infos), context.items())
-    new_context_vars = starmap(transform_pre_2_1_discovery_state, new_context_vars)
-    new_context_vars = starmap(transform_pre_2_1_range_filters(), new_context_vars)
-
-    return dict(new_context_vars)
 
 
 class _CombinedVisualsCache(Generic[T]):

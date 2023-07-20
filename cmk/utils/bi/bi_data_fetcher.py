@@ -308,6 +308,12 @@ class BIStatusFetcher(ABCBIStatusFetcher):
 
     # Get all status information for the required_hosts
     def _get_status_info(self, required_elements) -> BIStatusInfo:
+        if not required_elements:
+            # There is no reason to start a query if no elements are required
+            # Even worse, without any required_elements the query would have no filter restrictions
+            # and return all hosts
+            return {}
+
         # Query each site only for hosts that that site provides
         req_hosts: Set[HostName] = set()
         req_sites: Set[SiteId] = set()

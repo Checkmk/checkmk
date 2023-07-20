@@ -6,7 +6,7 @@
 
 import crossfilter, {Crossfilter} from "crossfilter2";
 import * as d3 from "d3";
-import {FigureBaseDashletSpec} from "figures_types";
+import {FigureBaseDashletSpec} from "figure_types";
 import {CMKAjaxReponse} from "types";
 
 import * as utils from "../utils";

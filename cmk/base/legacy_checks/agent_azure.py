@@ -24,7 +24,7 @@ def agent_azure_arguments(
         passwordstore_get_cmdline("%s", params["secret"]),
     ]
 
-    keys = ("subscription", "piggyback_vms", "sequential")
+    keys = ("authority", "subscription", "piggyback_vms", "sequential")
 
     for key in (k for k in keys if k in params):
         option = "--%s" % key

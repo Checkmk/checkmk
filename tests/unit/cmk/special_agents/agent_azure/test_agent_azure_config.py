@@ -19,6 +19,8 @@ from cmk.special_agents.agent_azure import (
 )
 
 ARGV = [
+    "--authority",
+    "global",
     "--tenant",
     "tenant-id",
     "--client",
@@ -50,6 +52,7 @@ ARGS = Args(
     dump_config=False,
     timeout=10,
     piggyback_vms="grouphost",
+    authority="global",
     subscriptions=["subscription-id"],
     client="client-id",
     tenant="tenant-id",
@@ -83,6 +86,7 @@ ARGS = Args(
                 "argparse: require_tag_value = [['tag2', 'value2']]",
                 "argparse: explicit_config = ['group=test-group', 'resources=Resource1,Resource2']",
                 "argparse: services = ['Microsoft.Compute/virtualMachines', 'Microsoft.Storage/storageAccounts']",
+                "argparse: authority = 'global'",
             ],
         ),
     ],

@@ -20,7 +20,7 @@ from collections import defaultdict
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from multiprocessing import Lock, Process, Queue
 from queue import Empty as QueueEmpty
-from typing import Any, NamedTuple
+from typing import Any, Literal, NamedTuple
 
 import adal  # type: ignore[import] # pylint: disable=import-error
 import requests
@@ -253,6 +253,13 @@ def parse_arguments(argv: Sequence[str]) -> Args:
         nargs="*",
         help="List of services to monitor",
     )
+    parser.add_argument(
+        "--authority",
+        default="global",
+        choices=["global", "china"],
+        required=True,
+        help="Authority to be used",
+    )
     args = parser.parse_args(argv)
 
     if args.vcrtrace:
@@ -326,20 +333,38 @@ class _AuthorityURLs(NamedTuple):
     base: str
 
 
-def _get_graph_authority_urls() -> _AuthorityURLs:
-    return _AuthorityURLs(
-        "https://login.microsoftonline.com",
-        "https://graph.microsoft.com",
-        "https://graph.microsoft.com/v1.0/",
-    )
+def _get_graph_authority_urls(authority: Literal["global", "china"]) -> _AuthorityURLs:
+    if authority == "global":
+        return _AuthorityURLs(
+            "https://login.microsoftonline.com",
+            "https://graph.microsoft.com",
+            "https://graph.microsoft.com/v1.0/",
+        )
+    if authority == "china":
+        return _AuthorityURLs(
+            "https://login.partner.microsoftonline.cn",
+            "https://microsoftgraph.chinacloudapi.cn",
+            "https://microsoftgraph.chinacloudapi.cn/v1.0/",
+        )
+    raise ValueError("Unknown authority %r" % authority)
 
 
-def _get_mgmt_authority_urls(subscription: str) -> _AuthorityURLs:
-    return _AuthorityURLs(
-        "https://login.microsoftonline.com",
-        "https://management.azure.com",
-        f"https://management.azure.com/subscriptions/{subscription}",
-    )
+def _get_mgmt_authority_urls(
+    authority: Literal["global", "china"], subscription: str
+) -> _AuthorityURLs:
+    if authority == "global":
+        return _AuthorityURLs(
+            "https://login.microsoftonline.com",
+            "https://management.azure.com",
+            f"https://management.azure.com/subscriptions/{subscription}",
+        )
+    if authority == "china":
+        return _AuthorityURLs(
+            "https://login.partner.microsoftonline.cn",
+            "https://management.chinacloudapi.cn",
+            f"https://management.chinacloudapi.cn/subscriptions/{subscription}",
+        )
+    raise ValueError("Unknown authority %r" % authority)
 
 
 class BaseApiClient(abc.ABC):
@@ -1417,8 +1442,8 @@ def get_mapper(debug, sequential, timeout):
     return async_mapper
 
 
-def main_graph_client(args):
-    graph_client = GraphApiClient(_get_graph_authority_urls())
+def main_graph_client(args: Args) -> None:
+    graph_client = GraphApiClient(_get_graph_authority_urls(args.authority))
     try:
         graph_client.login(args.tenant, args.client, args.secret)
         write_section_ad(graph_client, AzureSection("ad"), args)
@@ -1556,8 +1581,8 @@ def process_resource_health(
         yield section
 
 
-def main_subscription(args, selector, subscription):
-    mgmt_client = MgmtApiClient(_get_mgmt_authority_urls(subscription))
+def main_subscription(args: Args, selector: Selector, subscription: str) -> None:
+    mgmt_client = MgmtApiClient(_get_mgmt_authority_urls(args.authority, subscription))
 
     try:
         mgmt_client.login(args.tenant, args.client, args.secret)
@@ -1600,10 +1625,9 @@ def main(argv=None):
     if args.dump_config:
         sys.stdout.write("Configuration:\n%s\n" % selector)
         return
+
     LOGGER.debug("%s", selector)
-
     main_graph_client(args)
-
     for subscription in args.subscriptions:
         main_subscription(args, selector, subscription)
 

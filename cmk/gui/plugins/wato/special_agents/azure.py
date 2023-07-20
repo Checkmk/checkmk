@@ -112,6 +112,8 @@ def _special_agents_azure_azure_tag_based_config():
 
 
 def _migrate_services(data):
+    if "authority" not in data:
+        data["authority"] = "global"
     if "services" not in data:
         # Services selection was introduced after Azure monitoring so we want that the users with an
         # older version will have all services enabled as it was before this change
@@ -132,6 +134,26 @@ def _valuespec_special_agents_azure():
             ),
             # element names starting with "--" will be passed do cmd line w/o parsing!
             elements=[
+                (
+                    "authority",
+                    DropdownChoice(
+                        title=_("Authority"),
+                        choices=[
+                            ("global", _("Global")),
+                            ("china", _("China")),
+                        ],
+                        default="global",
+                        help=_(
+                            "Specify the authority you want to connect to:"
+                            "<ul>"
+                            "<li>Global: Login into 'https://login.microsoftonline.com',"
+                            " get data from 'https://graph.microsoft.com'</li>"
+                            "<li>China: Login into 'https://login.partner.microsoftonline.cn',"
+                            " get data from 'https://microsoftgraph.chinacloudapi.cn'</li>"
+                            "</ul>"
+                        ),
+                    ),
+                ),
                 (
                     "subscription",
                     TextInput(

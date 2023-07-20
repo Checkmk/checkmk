@@ -1,0 +1,15 @@
+Title: agent_azure: Add support for China
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1689838927
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+We use the following URLs for the given authorities:
+<ul>
+<li>Global: Login into 'https://login.microsoftonline.com', get data from 'https://graph.microsoft.com'</li>
+<li>China: Login into 'https://login.partner.microsoftonline.cn', get data from 'https://microsoftgraph.chinacloudapi.cn'</li>
+</ul>

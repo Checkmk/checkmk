@@ -57,6 +57,8 @@ REQUIRED_ARGUMENTS: dict[str, list[str]] = {
         "ip_region_instance",
     ],
     "agent_azure": [
+        "--authority",
+        "global",
         "--subscription",
         "SUBSCRIPTION",
         "--client",

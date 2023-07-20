@@ -18,7 +18,6 @@ import livestatus
 import cmk.utils.debug
 import cmk.utils.paths
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
 from cmk.utils.metrics import MetricName
 from cmk.utils.servicename import ServiceName
@@ -270,14 +269,14 @@ def lq_logic(filter_condition: str, values: list[str], join: str) -> str:
 
 
 def livestatus_lql(
-    host_names: list[HostName],
+    host_names: list[str],
     columns: list[str],
     service_description: ServiceName | None = None,
 ) -> str:
     query_filter = "Columns: %s\n" % " ".join(columns)
     query_filter += lq_logic(
         "Filter: host_name =",
-        [str(hostname) for hostname in host_names],
+        host_names,
         "Or",
     )
     if service_description == "_HOST_" or service_description is None:
@@ -290,7 +289,7 @@ def livestatus_lql(
 
 def get_rrd_data(
     connection: livestatus.SingleSiteConnection,
-    hostname: HostName,
+    hostname: str,
     service_description: ServiceName,
     varname: MetricName,
     cf: ConsolidationFunctionName,
@@ -344,9 +343,9 @@ def get_rrd_data(
 
 def rrd_datacolum(
     connection: livestatus.SingleSiteConnection,
-    hostname: HostName,
-    service_description: ServiceName,
-    varname: MetricName,
+    hostname: str,
+    service_description: str,
+    varname: str,
     cf: ConsolidationFunctionName,
 ) -> RRDColumnFunction:
     "Partial helper function to get rrd data"
@@ -362,9 +361,9 @@ def rrd_datacolum(
 class PredictionStore:
     def __init__(
         self,
-        host_name: HostName,
-        service_description: ServiceName,
-        dsname: MetricName,
+        host_name: str,
+        service_description: str,
+        dsname: str,
     ) -> None:
         self._dir = Path(
             cmk.utils.paths.var_dir,

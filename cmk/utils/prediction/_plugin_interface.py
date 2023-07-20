@@ -14,10 +14,7 @@ from typing import Final, NamedTuple
 import livestatus
 
 import cmk.utils.dateutils as dateutils
-from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
-from cmk.utils.metrics import MetricName
-from cmk.utils.servicename import ServiceName
 
 from ._prediction import (
     ConsolidationFunctionName,
@@ -250,9 +247,9 @@ def _is_prediction_up_to_date(
 # in the cpu.loads check the multiplies the levels by the number of CPU
 # cores.
 def get_predictive_levels(
-    hostname: HostName,
-    service_description: ServiceName,
-    dsname: MetricName,
+    hostname: str,
+    service_description: str,
+    dsname: str,
     params: PredictionParameters,
     cf: ConsolidationFunctionName,
     levels_factor: float = 1.0,

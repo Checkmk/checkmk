@@ -7,7 +7,6 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.utils.hostaddress import HostName
 from cmk.utils.prediction import _prediction
 
 
@@ -61,7 +60,7 @@ Filter: service_description = invent\n""",
         ),
     ],
 )
-def test_livestatus_lql(args: tuple[list[HostName], list[str], str], result: str) -> None:
+def test_livestatus_lql(args: tuple[list[str], list[str], str], result: str) -> None:
     assert _prediction.livestatus_lql(*args) == result
 
 

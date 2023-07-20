@@ -1,2 +1,2 @@
-source: debian:bookworm
-tag: artifacts.lan.tribe29.com:4000/debian:bookworm-image-alias-master-ffa6b0b646d
+source: debian:12
+tag: artifacts.lan.tribe29.com:4000/debian:12-image-alias-2.1.0-b3d96bcc770

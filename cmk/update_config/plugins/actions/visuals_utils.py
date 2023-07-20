@@ -18,7 +18,7 @@ from cmk.gui.valuespec import LabelGroups
 
 def update_visuals(
     visual_type: VisualTypeName,
-    all_visuals: dict[tuple[UserId, str], visuals.T],
+    all_visuals: dict[tuple[UserId, str], visuals.TVisual],
 ) -> None:
     with _save_user_visuals(visual_type, all_visuals) as affected_user:
         # skip builtins, only users
@@ -30,7 +30,7 @@ def update_visuals(
 @contextmanager
 def _save_user_visuals(
     visual_type: VisualTypeName,
-    all_visuals: dict[tuple[UserId, str], visuals.T],
+    all_visuals: dict[tuple[UserId, str], visuals.TVisual],
 ) -> Iterator[set[UserId]]:
     modified_user_instances: set[UserId] = set()
     try:
@@ -41,7 +41,7 @@ def _save_user_visuals(
             visuals.save(visual_type, all_visuals, user_id)
 
 
-def _set_packaged_key(all_visuals: dict[tuple[UserId, str], visuals.T]) -> None:
+def _set_packaged_key(all_visuals: dict[tuple[UserId, str], visuals.TVisual]) -> None:
     """2.2 introduced the mandatory key 'packaged', update old visuals with
     this key"""
     for (owner, _name), config in all_visuals.items():
@@ -52,7 +52,7 @@ def _set_packaged_key(all_visuals: dict[tuple[UserId, str], visuals.T]) -> None:
         config["packaged"] = False
 
 
-def _migrate_label_filter_configs(all_visuals: dict[tuple[UserId, str], visuals.T]) -> None:
+def _migrate_label_filter_configs(all_visuals: dict[tuple[UserId, str], visuals.TVisual]) -> None:
     """
     Migrate host and service label filter configs in custom visual contexts
     Exemplary old visual context for a host label filter:

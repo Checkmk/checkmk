@@ -26,8 +26,7 @@ import cmk.utils.paths
 import cmk.utils.store as store
 import cmk.utils.version as cmk_version
 from cmk.utils.exceptions import MKGeneralException
-from cmk.utils.packaging import id_to_mkp, Installer, PackageName, PackagePart
-from cmk.utils.store import save_object_to_file
+from cmk.utils.packaging import PackageName
 from cmk.utils.user import UserId
 
 import cmk.gui.forms as forms
@@ -133,8 +132,17 @@ from cmk.gui.valuespec import (
     ValueSpecValidateFunc,
 )
 
-T = TypeVar("T", bound=Visual)
-CustomUserVisuals = dict[tuple[UserId, VisualName], T]
+from ._permissions import declare_visual_permissions as declare_visual_permissions
+from ._store import available as available
+from ._store import declare_custom_permissions as declare_custom_permissions
+from ._store import declare_packaged_visuals_permissions as declare_packaged_visuals_permissions
+from ._store import delete_local_file, get_installed_packages
+from ._store import get_permissioned_visual as get_permissioned_visual
+from ._store import load as load
+from ._store import load_visuals_of_a_user as load_visuals_of_a_user
+from ._store import local_file_exists, move_visual_to_local
+from ._store import save as save
+from ._store import TVisual as TVisual
 
 
 def register(page_registry: PageRegistry) -> None:
@@ -194,509 +202,6 @@ def _register_pre_21_plugin_api() -> None:
         api_module.__dict__[name] = plugin_utils.__dict__[name]
 
 
-# TODO: This has been obsoleted by pagetypes.py
-def declare_visual_permissions(what: VisualTypeName, what_plural: str) -> None:
-    declare_permission(
-        "general.edit_" + what,
-        _("Customize %s and use them") % what_plural,
-        _("Allows to create own %s, customize builtin %s and use them.")
-        % (what_plural, what_plural),
-        ["admin", "user"],
-    )
-
-    declare_permission(
-        "general.publish_" + what,
-        _("Publish %s") % what_plural,
-        _("Make %s visible and usable for all users.") % what_plural,
-        ["admin", "user"],
-    )
-
-    declare_permission(
-        "general.publish_" + what + "_to_groups",
-        _("Publish %s to allowed contact groups") % what_plural,
-        _(
-            "Make %s visible and usable for users of contact groups the publishing user is a member of."
-        )
-        % what_plural,
-        ["admin", "user"],
-    )
-
-    declare_permission(
-        "general.publish_" + what + "_to_foreign_groups",
-        _("Publish %s to foreign contact groups") % what_plural,
-        _(
-            "Make %s visible and usable for users of contact groups the publishing user is not a member of."
-        )
-        % what_plural,
-        ["admin"],
-    )
-
-    declare_permission(
-        "general.publish_" + what + "_to_sites",
-        ("Publish %s to users of selected sites") % what_plural,
-        _("Make %s visible and usable for users of sites the publishing user has selected.")
-        % what_plural,
-        ["admin"],
-    )
-
-    declare_permission(
-        "general.see_user_" + what,
-        _("See user %s") % what_plural,
-        _("Is needed for seeing %s that other users have created.") % what_plural,
-        default_authorized_builtin_role_ids,
-    )
-
-    declare_permission(
-        "general.see_packaged_" + what,
-        _("See packaged %s") % what_plural,
-        _("Is needed for seeing %s that are provided via extension packages.") % what_plural,
-        default_authorized_builtin_role_ids,
-    )
-
-    declare_permission(
-        "general.force_" + what,
-        _("Modify builtin %s") % what_plural,
-        _("Make own published %s override builtin %s for all users.") % (what_plural, what_plural),
-        ["admin"],
-    )
-
-    declare_permission(
-        "general.edit_foreign_" + what,
-        _("Edit foreign %s") % what_plural,
-        _("Allows to edit %s created by other users.") % what_plural,
-        ["admin"],
-    )
-
-    declare_permission(
-        "general.delete_foreign_" + what,
-        _("Delete foreign %s") % what_plural,
-        _("Allows to delete %s created by other users.") % what_plural,
-        ["admin"],
-    )
-
-
-# .
-#   .--Save/Load-----------------------------------------------------------.
-#   |          ____                     ___                    _           |
-#   |         / ___|  __ ___   _____   / / |    ___   __ _  __| |          |
-#   |         \___ \ / _` \ \ / / _ \ / /| |   / _ \ / _` |/ _` |          |
-#   |          ___) | (_| |\ V /  __// / | |__| (_) | (_| | (_| |          |
-#   |         |____/ \__,_| \_/ \___/_/  |_____\___/ \__,_|\__,_|          |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-
-def _fix_lazy_strings(obj: T) -> T:
-    """
-    Recursively evaluate all LazyStrings in the object to fixed strings by running them through
-    str()
-    """
-
-    match obj:
-        case dict():
-            # cast is needed for the TypedDicts
-            return cast(T, {attr: _fix_lazy_strings(value) for (attr, value) in obj.items()})
-        case list():
-            return list(map(_fix_lazy_strings, obj))
-        case tuple():
-            return tuple(map(_fix_lazy_strings, obj))
-        case utils.speaklater.LazyString():
-            return str(obj)
-
-    return obj
-
-
-def save(
-    what: VisualTypeName, visuals: dict[tuple[UserId, VisualName], T], user_id: UserId | None = None
-) -> None:
-    if user_id is None:
-        user_id = user.ident
-
-    user_visuals = {
-        # Since we're de/serializing the Visuals via literal_eval/repr, we will not be able to
-        # deserialize LasyStrings again. Decide on their fixed str representation now.
-        name: _fix_lazy_strings(visual)
-        for (owner_id, name), visual in visuals.items()
-        if user_id == owner_id and not visual["packaged"]
-    }
-    save_user_file("user_" + what, user_visuals, user_id=user_id)
-    _CombinedVisualsCache(what).invalidate_cache()
-
-
-def load(
-    what: VisualTypeName,
-    builtin_visuals: dict[VisualName, T],
-    internal_to_runtime_transformer: Callable[[dict[str, Any]], T],
-) -> dict[tuple[UserId, VisualName], T]:
-    visuals = {
-        # Ensure converting _l to str. During "import time" the may not be localized since the
-        # user language is not known. Here we are in a request context and may resolve the
-        # localization. It might be better to keep the LazyString objects unresolved during run
-        # time, but we had some call sites which were not correctly handling the LazyStrings. So
-        # we took the approach to resolve them in a central early stage instead.
-        (UserId.builtin(), name): _fix_lazy_strings(visual)
-        for name, visual in builtin_visuals.items()
-    }
-
-    # Add custom "user_*.mk" visuals
-    visuals.update(
-        _CombinedVisualsCache[T](what).load(
-            internal_to_runtime_transformer,
-        )
-    )
-
-    return visuals
-
-
-class _CombinedVisualsCache(Generic[T]):
-    _visuals_cache_dir: Final = cmk.utils.paths.visuals_cache_dir
-
-    def __init__(self, visual_type: VisualTypeName) -> None:
-        self._visual_type: Final = visual_type
-
-    @classmethod
-    def invalidate_all_caches(cls) -> None:
-        for visual_type in get_args(VisualTypeName):
-            _CombinedVisualsCache(visual_type).invalidate_cache()
-
-    def invalidate_cache(self) -> None:
-        self._info_filename.unlink(missing_ok=True)
-
-    def _update_cache_info_timestamp(self) -> None:
-        cache_info_filename = self._info_filename
-        cache_info_filename.parent.mkdir(parents=True, exist_ok=True)
-        cache_info_filename.touch()
-
-    @property
-    def _info_filename(self) -> Path:
-        return self._visuals_cache_dir / f"last_update_{self._visual_type}"
-
-    @property
-    def _content_filename(self) -> Path:
-        return self._visuals_cache_dir / f"cached_{self._visual_type}"
-
-    def load(
-        self,
-        internal_to_runtime_transformer: Callable[[dict[str, Any]], T],
-    ) -> CustomUserVisuals:
-        if self._may_use_cache():
-            if (content := self._read_from_cache()) is not None:
-                self._set_permissions(content)
-                return content
-        return self._compute_and_write_cache(internal_to_runtime_transformer)
-
-    def _set_permissions(self, content: CustomUserVisuals) -> None:
-        """Make sure that all permissions are known to the current apache process"""
-        for name, visual in content.items():
-            declare_visual_permission(self._visual_type, name[1], visual)
-            if visual["packaged"]:
-                declare_packaged_visual_permission(self._visual_type, name[1], visual)
-
-    def _may_use_cache(self) -> bool:
-        if not self._content_filename.exists():
-            return False
-
-        if not self._info_filename.exists():
-            # Create a new file for future reference (this obviously has the newest timestamp)
-            self._update_cache_info_timestamp()
-            return False
-
-        if self._content_filename.stat().st_mtime < self._info_filename.stat().st_mtime:
-            return False
-
-        return True
-
-    def _compute_and_write_cache(
-        self,
-        internal_to_runtime_transformer: Callable[[dict[str, Any]], T],
-    ) -> CustomUserVisuals:
-        visuals = _load_custom_user_visuals(self._visual_type, internal_to_runtime_transformer)
-        self._write_to_cache(visuals)
-        return visuals
-
-    def _read_from_cache(self) -> CustomUserVisuals | None:
-        try:
-            return store.load_object_from_pickle_file(self._content_filename, default={})
-        except (TypeError, pickle.UnpicklingError):
-            return None
-
-    def _write_to_cache(self, visuals: CustomUserVisuals) -> None:
-        store.save_bytes_to_file(self._content_filename, pickle.dumps(visuals))
-        self._update_cache_info_timestamp()
-
-
-hooks.register_builtin("snapshot-pushed", _CombinedVisualsCache.invalidate_all_caches)
-hooks.register_builtin("snapshot-pushed", store.clear_pickled_files_cache)
-hooks.register_builtin("users-saved", lambda x: _CombinedVisualsCache.invalidate_all_caches())
-
-
-def _load_custom_user_visuals(
-    what: VisualTypeName,
-    internal_to_runtime_transformer: Callable[[dict[str, Any]], T],
-) -> CustomUserVisuals:
-    """Note: Try NOT to use pathlib.Path functionality in this function, as pathlib is
-    measurably slower (7 times), due to path object creation and concatenation. This function
-    can iterate over several thousand files, which may take 250ms (Path) or 50ms(os.path)"""
-
-    visuals: CustomUserVisuals = {}
-    visual_filename = "user_%s.mk" % what
-    old_views_filename = "views.mk"
-
-    for dirname in cmk.utils.paths.profile_dir.iterdir():
-        try:
-            user_dirname = os.path.join(cmk.utils.paths.profile_dir, dirname)
-            visual_path = os.path.join(user_dirname, visual_filename)
-            # Be compatible to old views.mk. The views.mk contains customized views
-            # in an old format which will be loaded, transformed and when saved stored
-            # in users_views.mk. When this file exists only this file is used.
-            if what == "views" and not os.path.exists(visual_path):
-                visual_path = os.path.join(user_dirname, old_views_filename)
-
-            if not os.path.exists(visual_path):
-                continue
-
-            user_id = os.path.basename(dirname)
-            if not userdb.user_exists(UserId(user_id)):
-                continue
-
-            visuals.update(
-                load_visuals_of_a_user(
-                    what,
-                    internal_to_runtime_transformer,
-                    Path(visual_path),
-                    UserId(user_id),
-                )
-            )
-
-        except SyntaxError as e:
-            raise MKGeneralException(_("Cannot load %s from %s: %s") % (what, visual_path, e))
-
-    visuals.update(
-        _get_packaged_visuals(
-            what,
-            internal_to_runtime_transformer,
-        )
-    )
-
-    return visuals
-
-
-def load_visuals_of_a_user(
-    what: VisualTypeName,
-    internal_to_runtime_transformer: Callable[[dict[str, Any]], T],
-    path: Path,
-    user_id: UserId,
-) -> CustomUserVisuals[T]:
-    user_visuals: CustomUserVisuals[T] = {}
-    for name, raw_visual in store.try_load_file_from_pickle_cache(path, default={}).items():
-        visual = internal_to_runtime_transformer(raw_visual)
-        visual["owner"] = user_id
-        visual["name"] = name
-
-        # Declare custom permissions
-        declare_visual_permission(what, name, visual)
-
-        user_visuals[(user_id, name)] = visual
-
-    return user_visuals
-
-
-def _get_packaged_visuals(
-    visual_type: VisualTypeName,
-    internal_to_runtime_transformer: Callable[[dict[str, Any]], T],
-) -> CustomUserVisuals[T]:
-    local_visuals: CustomUserVisuals[T] = {}
-    local_path = _get_local_path(visual_type)
-    for dirpath in local_path.iterdir():
-        if dirpath.is_dir():
-            continue
-
-        try:
-            for name, raw_visual in store.try_load_file_from_pickle_cache(
-                dirpath, default={}
-            ).items():
-                visual = internal_to_runtime_transformer(raw_visual)
-                visual["owner"] = UserId.builtin()
-                visual["name"] = name
-                visual["packaged"] = True
-
-                # Declare custom permissions
-                declare_packaged_visual_permission(visual_type, name, visual)
-
-                local_visuals[(UserId.builtin(), name)] = visual
-        except Exception:
-            logger.exception(
-                "Error on loading packaged visuals from file %s. Skipping it...", dirpath
-            )
-    return local_visuals
-
-
-def declare_visual_permission(what: VisualTypeName, name: str, visual: T) -> None:
-    permname = PermissionName(f"{what[:-1]}.{name}")
-    if visual["public"] and permname not in permission_registry:
-        declare_permission(
-            permname, visual["title"], visual["description"], default_authorized_builtin_role_ids
-        )
-
-
-def declare_packaged_visual_permission(what: VisualTypeName, name: str, visual: T) -> None:
-    permname = PermissionName(f"{what[:-1]}.{name}_packaged")
-    if visual["packaged"] and permname not in permission_registry:
-        declare_permission(
-            permname,
-            visual["title"] + _(" (packaged)"),
-            visual["description"],
-            default_authorized_builtin_role_ids,
-        )
-
-
-# Load all users visuals just in order to declare permissions of custom visuals
-# TODO: Use regular load logic here, e.g. _load_custom_user_visuals()
-def declare_custom_permissions(what: VisualTypeName) -> None:
-    for dirpath in cmk.utils.paths.profile_dir.iterdir():
-        try:
-            if dirpath.is_dir():
-                path = dirpath.joinpath("user_%s.mk" % what)
-                if not path.exists():
-                    continue
-                visuals = store.load_object_from_file(path, default={})
-                for name, visual in visuals.items():
-                    declare_visual_permission(what, name, visual)
-        except Exception:
-            logger.exception(
-                "Error on declaring permissions for customized visuals in file %s", dirpath
-            )
-            if active_config.debug:
-                raise
-
-
-def declare_packaged_visuals_permissions(what: VisualTypeName) -> None:
-    for dirpath in _get_local_path(what).iterdir():
-        try:
-            if dirpath.is_dir():
-                continue
-
-            for name, visual in store.try_load_file_from_pickle_cache(dirpath, default={}).items():
-                visual["packaged"] = True
-                declare_packaged_visual_permission(what, name, visual)
-        except Exception:
-            logger.exception(
-                "Error on declaring permissions for packaged visuals in file %s", dirpath
-            )
-            if active_config.debug:
-                raise
-
-
-# Get the list of visuals which are available to the user
-# (which could be retrieved with get_visual)
-def available(  # pylint: disable=too-many-branches
-    what: VisualTypeName,
-    all_visuals: dict[tuple[UserId, VisualName], T],
-) -> dict[VisualName, T]:
-    visuals = {}
-    permprefix = what[:-1]
-
-    def published_to_user(visual: T) -> bool:
-        if visual["public"] is True:
-            return True
-
-        if isinstance(visual["public"], tuple):
-            if visual["public"][0] == "contact_groups":
-                user_groups = set([] if user.id is None else userdb.contactgroups_of_user(user.id))
-                return bool(user_groups.intersection(visual["public"][1]))
-            if visual["public"][0] == "sites":
-                user_sites = set(user.authorized_sites().keys())
-                return bool(user_sites.intersection(visual["public"][1]))
-
-        return False
-
-    def restricted_visual(visualname: VisualName) -> bool:
-        permname = f"{permprefix}.{visualname}"
-        return permname in permission_registry and not user.may(permname)
-
-    def restricted_packaged_visual(visualname: VisualName) -> bool:
-        permname = f"{permprefix}.{visualname}_packaged"
-        return permname in permission_registry and not user.may(permname)
-
-    # 1. user's own visuals, if allowed to edit visuals
-    if user.may("general.edit_" + what):
-        for (u, n), visual in all_visuals.items():
-            if u == user.id:
-                visuals[n] = visual
-
-    # 2. visuals of special users allowed to globally override builtin visuals
-    for (u, n), visual in all_visuals.items():
-        # Honor original permissions for the current user
-        if (
-            n not in visuals
-            and published_to_user(visual)
-            and user_may(u, "general.force_" + what)
-            and user.may("general.see_user_" + what)
-            and not restricted_visual(n)
-        ):
-            visuals[n] = visual
-
-    # 3. Builtin visuals, if allowed.
-    for (u, n), visual in all_visuals.items():
-        if u == UserId.builtin() and n not in visuals and user.may(f"{permprefix}.{n}"):
-            visuals[n] = visual
-
-    # 4. other users visuals, if public. Still make sure we honor permission
-    #    for builtin visuals. Also the permission "general.see_user_visuals" is
-    #    necessary.
-    if user.may("general.see_user_" + what):
-        for (u, n), visual in all_visuals.items():
-            # Is there a builtin visual with the same name? If yes, honor permissions.
-            if (
-                n not in visuals
-                and published_to_user(visual)
-                and user_may(u, "general.publish_" + what)
-                and not restricted_visual(n)
-            ):
-                visuals[n] = visual
-
-    # 5. packaged visuals
-    if user.may("general.see_packaged_" + what):
-        for (u, n), visual in all_visuals.items():
-            if not visual["packaged"]:
-                continue
-            if not restricted_packaged_visual(n):
-                visuals[n] = visual
-
-    return visuals
-
-
-def get_permissioned_visual(
-    item: str,
-    owner: UserId | None,
-    what: str,
-    permitted_visuals: dict[str, T],
-    all_visuals: dict[tuple[UserId, str], T],
-) -> T:
-    if (
-        owner is not None
-        and owner != user.id  # Var is set from edit page and can be empty string for builtin
-        and user.may(  # user has top priority, thus only change if other user
-            "general.edit_foreign_%ss" % what
-        )
-    ):
-        if visual := all_visuals.get((owner, item)):
-            return visual
-        # We don't raise on not found immediately and let it trickle down to default permitted
-        # as a failsafe for report inheritance. In general it is OK for other cases, because the
-        # priority should be inverse, first pick from permitted, then if edit_foreign permissions
-        # are available get from other user. In reports it still happens that the inheritance view
-        # is of the active user not of the "owner". Resolution of those piorities would need to be
-        # fixed in visuals.available to support foreign users.
-
-    if visual := permitted_visuals.get(item):
-        return visual
-
-    raise MKUserError("%s_name" % what, _("The requested %s %s does not exist") % (what, item))
-
-
 # .
 #   .--Listing-------------------------------------------------------------.
 #   |                    _     _     _   _                                 |
@@ -716,12 +221,12 @@ def get_permissioned_visual(
 def page_list(  # pylint: disable=too-many-branches
     what: VisualTypeName,
     title: str,
-    visuals: dict[tuple[UserId, VisualName], T],
-    custom_columns: Iterable[tuple[HTMLContent, Callable[[T], HTMLContent]]] | None = None,
-    render_custom_buttons: Callable[[VisualName, T], None] | None = None,
-    render_custom_columns: Callable[[Table, VisualName, T], None] | None = None,
+    visuals: dict[tuple[UserId, VisualName], TVisual],
+    custom_columns: Iterable[tuple[HTMLContent, Callable[[TVisual], HTMLContent]]] | None = None,
+    render_custom_buttons: Callable[[VisualName, TVisual], None] | None = None,
+    render_custom_columns: Callable[[Table, VisualName, TVisual], None] | None = None,
     custom_page_menu_entries: Callable[[], Iterable[PageMenuEntry]] | None = None,
-    check_deletable_handler: Callable[[dict[tuple[UserId, VisualName], T], UserId, str], bool]
+    check_deletable_handler: Callable[[dict[tuple[UserId, VisualName], TVisual], UserId, str], bool]
     | None = None,
 ) -> None:
     if custom_columns is None:
@@ -790,7 +295,7 @@ def page_list(  # pylint: disable=too-many-branches
             html.user_error(e)
 
     available_visuals = available(what, visuals)
-    installed_packages: dict[str, PackageName | None] = _get_installed_packages(what)
+    installed_packages: dict[str, PackageName | None] = get_installed_packages(what)
     for source, title1, visual_group in _partition_visuals(visuals, what):
         if not visual_group:
             continue
@@ -952,7 +457,7 @@ def _render_extension_package_icons(
             "icon": "mkps",
             "emblem": "add",
         }
-        if Path(_get_local_path(what) / visual_name).exists():
+        if local_file_exists(what, visual_name):
             html.icon(
                 title=_("This %s is already available for packaging as extension package") % what_s,
                 icon=clone_icon,
@@ -1011,31 +516,6 @@ def _render_extension_package_icons(
         )
 
 
-def _get_installed_packages(what: VisualTypeName) -> dict[str, PackageName | None]:
-    return (
-        {}
-        if cmk_version.is_raw_edition() or not user.may("wato.manage_mkps")
-        else id_to_mkp(
-            Installer(cmk.utils.paths.installed_packages_dir),
-            _all_local_visuals_files(what),
-            PackagePart.GUI,
-        )
-    )
-
-
-def _all_local_visuals_files(what: VisualTypeName) -> set[Path]:
-    local_path = _get_local_path(what)
-    # dashboard dir is singular in local web and gui folder
-    dir_name = "dashboard" if what == "dashboards" else what
-    with suppress(FileNotFoundError):
-        return {
-            Path(dir_name) / f.relative_to(local_path)
-            for f in local_path.iterdir()
-            if not f.is_dir()
-        }
-    return set()
-
-
 def _add_doc_references(
     page_menu: PageMenu,
     what: VisualTypeName,
@@ -1051,8 +531,8 @@ def _add_doc_references(
 def _visual_can_be_linked(
     what: VisualTypeName,
     visual_name: VisualName,
-    user_visuals: dict[VisualName, T],
-    visual: T,
+    user_visuals: dict[VisualName, TVisual],
+    visual: TVisual,
     owner: UserId,
 ) -> bool:
     if owner == user.id or user.may("general.edit_foreign_%s" % what):
@@ -1066,8 +546,8 @@ def _visual_can_be_linked(
 
 
 def _partition_visuals(
-    visuals: dict[tuple[UserId, VisualName], T], what: str
-) -> list[tuple[str, str, list[tuple[UserId, VisualName, T]]]]:
+    visuals: dict[tuple[UserId, VisualName], TVisual], what: str
+) -> list[tuple[str, str, list[tuple[UserId, VisualName, TVisual]]]]:
     keys_sorted = sorted(visuals.keys(), key=lambda x: (x[1], x[0]))
 
     my_visuals, foreign_visuals, builtin_visuals, packaged_visuals = [], [], [], []
@@ -1321,7 +801,7 @@ def _vs_general(
     default_id: str,
     visual_type: VisualType,
     visibility_elements: list[tuple[str, ValueSpec]],
-    all_visuals: dict[tuple[UserId, VisualName], T],
+    all_visuals: dict[tuple[UserId, VisualName], TVisual],
     mode: str,
     what: VisualTypeName,
 ) -> Dictionary:
@@ -1446,7 +926,7 @@ def _vs_general(
 
 def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branches
     what: VisualTypeName,
-    all_visuals: dict[tuple[UserId, VisualName], T],
+    all_visuals: dict[tuple[UserId, VisualName], TVisual],
     custom_field_handler=None,
     create_handler=None,
     info_handler=None,
@@ -1491,12 +971,15 @@ def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many
             owner_user_id = owner_id
             title = _("Edit %s") % visual_type.title
         elif mode == "export":
-            _move_visual_to_local(all_visuals, what)
-            _CombinedVisualsCache(what).invalidate_cache()
+            move_visual_to_local(
+                request.get_str_input_mandatory("load_name"),
+                request.get_validated_type_input_mandatory(UserId, "owner", user.id),
+                all_visuals,
+                what,
+            )
             raise HTTPRedirect(back_url)
         elif mode == "delete":
-            _delete_local_file(what, visualname)
-            _CombinedVisualsCache(what).invalidate_cache()
+            delete_local_file(what, visualname)
             raise HTTPRedirect(back_url)
         else:  # clone explicit or edit from builtin that needs copy
             title = _("Clone %s") % visual_type.title
@@ -1683,11 +1166,11 @@ def page_edit_visual(  # type: ignore[no-untyped-def] # pylint: disable=too-many
                 if transactions.check_transaction():
                     assert owner_user_id is not None
                     # Since we have no way to parse the raw dictionary and Dictionary is also not
-                    # typable, we need to hope here that page_dict fits with T. On the mission to at
+                    # typable, we need to hope here that page_dict fits with TVisual. On the mission to at
                     # least add some typing here, we take this shortcut for now. There are way
                     # bigger problems in this class hierarchy than the edit dialog we should solve
                     # first.
-                    all_visuals[(owner_user_id, visual["name"])] = cast(T, visual)
+                    all_visuals[(owner_user_id, visual["name"])] = cast(TVisual, visual)
                     # Handle renaming of visuals
                     if oldname and oldname != visual["name"]:
                         # -> delete old entry
@@ -2517,44 +2000,6 @@ def may_add_site_hint(
         return False
 
     return True
-
-
-def _get_local_path(visual_type: VisualTypeName) -> Path:
-    if visual_type == "dashboards":
-        return cmk.utils.paths.local_dashboards_dir
-    if visual_type == "views":
-        return cmk.utils.paths.local_views_dir
-    if visual_type == "reports":
-        return cmk.utils.paths.local_reports_dir
-
-    raise MKUserError(None, _("This package type is not supported."))
-
-
-def _move_visual_to_local(
-    all_visuals: dict[tuple[UserId, VisualName], T],
-    visual_type: VisualTypeName,
-) -> None:
-    """Create a file within ~/local with content of the visual"""
-    visual_id = request.get_str_input_mandatory("load_name")
-    owner: UserId = request.get_validated_type_input_mandatory(UserId, "owner", user.id)
-    local_path = _get_local_path(visual_type)
-
-    if source_visual := all_visuals.get((owner, visual_id)):
-        visual = {}
-        visual[visual_id] = source_visual
-        if "owner" in visual[visual_id]:
-            del visual[visual_id]["owner"]
-
-        save_object_to_file(
-            path=local_path / visual_id,
-            data=visual,
-            pretty=True,
-        )
-
-
-def _delete_local_file(visual_type: VisualTypeName, visual_name: str) -> None:
-    visuals_path = _get_local_path(visual_type) / visual_name
-    visuals_path.unlink(missing_ok=True)
 
 
 # .

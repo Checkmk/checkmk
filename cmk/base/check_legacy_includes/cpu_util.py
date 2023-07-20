@@ -6,13 +6,7 @@
 import time
 
 import cmk.base.plugins.agent_based.utils.cpu_util as cpu_util
-from cmk.base.check_api import (
-    check_levels,
-    clear_item_state,
-    get_age_human_readable,
-    get_item_state,
-    set_item_state,
-)
+from cmk.base.check_api import check_levels, get_age_human_readable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_average,
     get_value_store,
@@ -53,13 +47,14 @@ CPUInfo = cpu_util.CPUInfo
 
 # ALREADY MIGRATED
 def util_counter(stats: CPUInfo, this_time: float) -> CPUInfo:
+    value_store = get_value_store()
     # Compute jiffi-differences of all relevant counters
     diff_values = []
     for n, v in enumerate(stats[1:], start=1):
         countername = "cpu.util.%d" % n
-        last_val = get_item_state(countername, (0, 0))[1]
+        last_val = value_store.get(countername, (0, 0))[1]
         diff_values.append(v - last_val)
-        set_item_state(countername, (this_time, v))
+        value_store[countername] = this_time, v
 
     return CPUInfo(stats.name, *diff_values)
 
@@ -136,6 +131,8 @@ def check_cpu_util_unix(  # type: ignore[no-untyped-def]
     values: CPUInfo, params, cores=None, values_counter=True
 ):
     this_time = time.time()
+    value_store = get_value_store()
+
     if values_counter:
         diff_values = util_counter(values, this_time)
         sum_jiffies = diff_values.total_sum
@@ -198,10 +195,10 @@ def check_cpu_util_unix(  # type: ignore[no-untyped-def]
     summary_cores = []
     if cores:
         for core in cores:
-            prev_total = get_item_state("cpu.util.%s.total" % core.name, 0)
+            prev_total = value_store.get("cpu.util.%s.total" % core.name, 0)
             util_total = core.util_total
             total_diff = util_total - prev_total
-            set_item_state("cpu.util.%s.total" % core.name, util_total)
+            value_store[f"cpu.util.{core.name}.total"] = util_total
             total_perc = (100.0 * total_diff / sum_jiffies) * len(cores)
             summary_cores.append((core.name, total_perc))
 
@@ -282,8 +279,9 @@ def _util_perfdata(core, total_perc, core_index, this_time, params):
 # ALREADY MIGRATED
 def cpu_util_time(this_time, core, perc, threshold, warn_core, crit_core):
     core_state_name = "cpu.util.core.high.%s" % core
+    value_store = get_value_store()
     if perc > threshold:
-        timestamp = get_item_state(core_state_name, 0)
+        timestamp = value_store.get(core_state_name, 0)
         high_load_duration = this_time - timestamp
         state, infotext, _ = check_levels(
             high_load_duration,
@@ -293,10 +291,10 @@ def cpu_util_time(this_time, core, perc, threshold, warn_core, crit_core):
             infoname="%s is under high load for" % core,
         )
         if timestamp == 0:
-            set_item_state(core_state_name, this_time)
+            value_store[core_state_name] = this_time
         elif state:
             return state, infotext, []
         return 0, "", []
 
-    clear_item_state(core_state_name)
+    value_store.pop(core_state_name, None)
     return 0, "", []

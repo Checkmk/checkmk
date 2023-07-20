@@ -6,8 +6,9 @@
 
 import json
 
-from cmk.base.check_api import check_levels, get_item_state, LegacyCheckDefinition, set_item_state
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store
 
 ERROR_DETAILS = {
     "query error": "does not produce a valid result",
@@ -43,12 +44,13 @@ def _check_for_invalid_result(metric_details, promql_expression):
              infotext for the service to display
 
     """
-    expression_has_been_valid_before = get_item_state(promql_expression, False)
+    value_store = get_value_store()
+    expression_has_been_valid_before = value_store.get(promql_expression, False)
     expression_is_valid_now = "value" in metric_details
 
     if expression_is_valid_now:
         # Keep a record of the PromQL expressions which gave a valid result at least once
-        set_item_state(promql_expression, True)
+        value_store[promql_expression] = True
         return ()
 
     if expression_has_been_valid_before:

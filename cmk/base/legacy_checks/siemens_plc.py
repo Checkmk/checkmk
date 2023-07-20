@@ -4,14 +4,10 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import (
-    get_age_human_readable,
-    get_item_state,
-    LegacyCheckDefinition,
-    set_item_state,
-)
+from cmk.base.check_api import get_age_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.temperature import check_temperature
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store
 
 # <<<siemens_plc>>>
 # PFT01 temp Gesamt 279183569715
@@ -135,6 +131,7 @@ def check_siemens_plc_duration(item, params, info):
         if (line[1].startswith("hours") or line[1].startswith("seconds")) and line[0] + " " + line[
             2
         ] == item:
+            value_store = get_value_store()
             if line[1].startswith("hours"):
                 seconds = float(line[-1]) * 3600
             else:
@@ -143,7 +140,7 @@ def check_siemens_plc_duration(item, params, info):
             perfdata = [(line[1], seconds)]
 
             key = "siemens_plc.duration.%s" % item
-            old_seconds = get_item_state(key, None)
+            old_seconds = value_store.get(key)
             if old_seconds is not None and old_seconds > seconds:
                 return (
                     2,
@@ -152,7 +149,7 @@ def check_siemens_plc_duration(item, params, info):
                     perfdata,
                 )
 
-            set_item_state(key, seconds)
+            value_store[key] = seconds
 
             state = 0
             warn, crit = params.get("duration", (None, None))
@@ -193,14 +190,15 @@ def inventory_siemens_plc_counter(info):
 def check_siemens_plc_counter(item, params, info):
     for line in info:
         if line[1].startswith("counter") and line[0] + " " + line[2] == item:
+            value_store = get_value_store()
             value = int(line[-1])
             perfdata = [(line[1], value)]
 
             key = "siemens_plc.counter.%s" % item
-            old_value = get_item_state(key, None)
+            old_value = value_store.get(key)
             if old_value is not None and old_value > value:
                 return 2, "Reduced from %s to %s" % (old_value, value), perfdata
-            set_item_state(key, value)
+            value_store[key] = value
 
             state = 0
             warn, crit = params.get("levels", (None, None))

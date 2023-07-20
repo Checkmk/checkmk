@@ -9,9 +9,10 @@
 import json
 import time
 
-from cmk.base.check_api import check_levels, get_item_state, LegacyCheckDefinition, set_item_state
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.azure import AZURE_AGENT_SEPARATOR
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store
 
 
 def _update_remaining_reads(parsed, value):
@@ -68,12 +69,13 @@ def discovery_azure_agent_info(parsed):
 
 def agent_bailouts(bailouts):
     now = time.time()
+    value_store = get_value_store()
     for status, text in bailouts:
         if text.startswith("Usage client"):
             # Usage API is unreliable.
             # Only use state if this goes on for more than an hour.
-            first_seen = get_item_state(text, default=now)
-            set_item_state(text, first_seen)
+            first_seen = value_store.get(text, now)
+            value_store[text] = first_seen
             status = 0 if (now - first_seen < 3600) else status
         yield status, text
 

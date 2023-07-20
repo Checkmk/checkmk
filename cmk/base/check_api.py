@@ -169,9 +169,6 @@ def get_timestamp_human_readable(timestamp: float) -> str:
 # Counter handling
 #
 
-set_item_state = _item_state.set_item_state
-get_item_state = _item_state.get_item_state
-clear_item_state = _item_state.clear_item_state
 
 get_rate = _item_state.get_rate
 

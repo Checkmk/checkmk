@@ -8,13 +8,7 @@ import calendar
 import json as json_module
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    get_item_state,
-    get_rate,
-    set_item_state,
-)
+from cmk.base.check_api import check_levels, get_age_human_readable, get_rate
 from cmk.base.plugins.agent_based.agent_based_api.v1 import get_average, get_value_store
 from cmk.base.plugins.agent_based.utils import graylog
 
@@ -82,12 +76,12 @@ def handle_graylog_messages(messages, params):
 
 def _get_value_diff(diff_name, svc_value, timespan):
     this_time = time.time()
-    old_state = get_item_state(diff_name, None)
+    value_store = get_value_store()
 
     # first call: take current value as diff or assume 0.0
-    if old_state is None:
+    if (old_state := value_store.get(diff_name)) is None:
         diff_val = 0
-        set_item_state(diff_name, (this_time, svc_value))
+        value_store[diff_name] = this_time, svc_value
         return diff_val
 
     # Get previous value and time difference
@@ -97,6 +91,6 @@ def _get_value_diff(diff_name, svc_value, timespan):
         diff_val = svc_value - last_val
     else:
         diff_val = 0
-        set_item_state(diff_name, (this_time, svc_value))
+        value_store[diff_name] = this_time, svc_value
 
     return diff_val

@@ -14,14 +14,9 @@
 import json
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    get_age_human_readable,
-    get_item_state,
-    LegacyCheckDefinition,
-    set_item_state,
-)
+from cmk.base.check_api import check_levels, get_age_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store
 
 
 def parse_jira_custom_svc(string_table):
@@ -101,12 +96,14 @@ def check_jira_custom_svc(item, params, parsed):
 
 def _get_value_diff(diff_name, svc_value, timespan):
     this_time = time.time()
-    old_state = get_item_state(diff_name, None)
+    value_store = get_value_store()
+
+    old_state = value_store.get(diff_name)
 
     # first call: take current value as diff or assume 0.0
     if old_state is None:
         diff_val = 0
-        set_item_state(diff_name, (this_time, svc_value))
+        value_store[diff_name] = (this_time, svc_value)
         return diff_val
 
     # Get previous value and time difference
@@ -116,7 +113,7 @@ def _get_value_diff(diff_name, svc_value, timespan):
         diff_val = svc_value - last_val
     else:
         diff_val = 0
-        set_item_state(diff_name, (this_time, svc_value))
+        value_store[diff_name] = (this_time, svc_value)
 
     return diff_val
 

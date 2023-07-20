@@ -16,12 +16,11 @@ from collections.abc import Iterable, Mapping
 from cmk.base.check_api import (
     check_levels,
     get_age_human_readable,
-    get_item_state,
     get_timestamp_human_readable,
     LegacyCheckDefinition,
-    set_item_state,
 )
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store
 from cmk.base.plugins.agent_based.utils.mongodb import parse_date
 
 # levels_mongdb_replication_lag: (lag threshold, time interval for warning, time interval for critical)
@@ -117,9 +116,10 @@ def check_mongodb_replica_set_lag(_item, params, status_dict):
 
 def _check_lag_over_time(new_timestamp, member_name, name, lag_in_sec, levels):
     member_state_name = "mongodb.replica.set.lag.%s" % member_name
+    value_store = get_value_store()
     if lag_in_sec > levels[0]:
         # I don't think getting zero by default is the right thing to do here.
-        last_timestamp = get_item_state(member_state_name, 0.0)
+        last_timestamp = value_store.get(member_state_name, 0.0)
         lag_duration = new_timestamp - last_timestamp
         state, infotext, _ = check_levels(
             lag_duration,
@@ -130,14 +130,14 @@ def _check_lag_over_time(new_timestamp, member_name, name, lag_in_sec, levels):
         )
 
         if last_timestamp == 0:
-            set_item_state(member_state_name, new_timestamp)
+            value_store[member_state_name] = new_timestamp
         elif state:
             return state, infotext
 
         return 0, "", []
 
     # zero? see above!
-    set_item_state(member_state_name, 0.0)
+    value_store[member_state_name] = 0.0
 
     return 0, "", []
 
@@ -253,8 +253,9 @@ def check_mongodb_primary_election(_item, _params, status_dict):
         yield 1, "Can not retrieve primary name and election date"
         return
 
+    value_store = get_value_store()
     # get primary information from last check
-    last_primary_dict = get_item_state("mongodb_primary_election", {})
+    last_primary_dict = value_store.get("mongodb_primary_election", {})
 
     # check if primary or election date has changed between checks
     primary_name_changed = bool(
@@ -279,9 +280,10 @@ def check_mongodb_primary_election(_item, _params, status_dict):
         )
 
     # update primary information
-    set_item_state(
-        "mongodb_primary_election", {"name": primary_name, "election_time": primary_election_time}
-    )
+    value_store["mongodb_primary_election"] = {
+        "name": primary_name,
+        "election_time": primary_election_time,
+    }
 
 
 def _get_primary_election_time(primary):

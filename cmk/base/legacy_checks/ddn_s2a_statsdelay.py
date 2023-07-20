@@ -6,10 +6,10 @@
 
 # mypy: disable-error-code="no-untyped-def,list-item"
 
-from cmk.base.check_api import get_item_state, LegacyCheckDefinition, set_item_state
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.ddn_s2a import parse_ddn_s2a_api_response
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, IgnoreResultsError
 
 
 def parse_ddn_s2a_statsdelay(string_table):
@@ -86,6 +86,8 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
             status = 0
         return status, infotext, perfdata
 
+    value_store = get_value_store()
+
     time_intervals = parsed["time_interval_in_seconds"]
     if item == "Disk":
         reads = parsed["disk_reads"]
@@ -94,13 +96,13 @@ def check_ddn_s2a_statsdelay(item, params, parsed):
         reads = parsed["host_reads"]
         writes = parsed["host_writes"]
 
-    old_intervals = get_item_state("time_intervals")
-    old_reads = get_item_state("reads")
-    old_writes = get_item_state("writes")
+    old_intervals = value_store.get("time_intervals")
+    old_reads = value_store.get("reads")
+    old_writes = value_store.get("writes")
 
-    set_item_state("time_intervals", time_intervals)
-    set_item_state("reads", reads)
-    set_item_state("writes", writes)
+    value_store["time_intervals"] = time_intervals
+    value_store["reads"] = reads
+    value_store["writes"] = writes
 
     if old_intervals is None:
         raise IgnoreResultsError("Initializing")

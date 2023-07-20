@@ -56,10 +56,10 @@ ifneq ("$(wildcard $(PY_PATH))","")
 endif
 
 .PHONY: announcement all build check check-binaries check-permissions check-version \
-        clean compile-neb compile-neb-cmc compile-neb-cmc-docker css dist documentation \
+        clean css dist documentation \
         format format-c test-format-c format-python format-shell \
         format-js GTAGS help install iwyu mrproper mrclean optimize-images \
-        packages setup setversion tidy version am--refresh skel openapi openapi-doc \
+        packages setup setversion tidy version skel openapi openapi-doc \
         protobuf-files
 
 help:
@@ -132,7 +132,7 @@ dist: $(LIVESTATUS_INTERMEDIATE_ARCHIVE) $(SOURCE_BUILT_AGENTS) $(SOURCE_BUILT_A
 	if [ -d .git ]; then \
 	    git rev-parse --short HEAD > COMMIT ; \
 	    for X in $$(git ls-files --directory --others -i --exclude-standard) ; do \
-	    if [[ $$X != aclocal.m4 && $$X != config.h.in  && ! "$(DIST_DEPS)" =~ (^|[[:space:]])$$X($$|[[:space:]]) && $$X != omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz && $$X != livestatus/* && $$X != enterprise/* ]]; then \
+	    if [[ ! "$(DIST_DEPS)" =~ (^|[[:space:]])$$X($$|[[:space:]]) && $$X != omd/packages/mk-livestatus/mk-livestatus-$(VERSION).tar.gz && $$X != livestatus/* && $$X != enterprise/* ]]; then \
 		    EXCLUDES+=" --exclude $${X%*/}" ; \
 		fi ; \
 	    done ; \
@@ -197,7 +197,6 @@ version:
 
 setversion:
 	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" defines.make
-	sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$(NEW_VERSION)"'], [mk@mathias-kettner.de])/' configure.ac
 	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' cmk/utils/version.py bin/livedump
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
 	$(MAKE) -C docker_image NEW_VERSION=$(NEW_VERSION) setversion
@@ -423,22 +422,6 @@ ifeq ($(ENTERPRISE),yes)
 	$(MAKE) -C enterprise protobuf-files
 endif
 
-compile-neb-cmc: test-format-c compile-neb
-	packages/neb/run --build
-ifeq ($(ENTERPRISE),yes)
-	packages/cmc/run --build
-endif
-
-
-compile-neb-cmc-docker:
-	scripts/run-in-docker.sh make compile-neb-cmc
-
-tidy:
-	echo Nothing todo, delete this target
-
-iwyu:
-	echo Nothing todo, delete this target
-
 format: format-python format-c format-shell format-js format-css format-bazel
 
 format-c:
@@ -527,10 +510,3 @@ Pipfile.lock: Pipfile
 	    fi; \
 	    ( SKIP_MAKEFILE_CALL=1 VIRTUAL_ENV="" $(PIPENV) sync --python $(PYTHON_MAJOR_DOT_MINOR) --dev && touch .venv ) || ( $(RM) -r .venv ; exit 1 ) \
 	) $(LOCK_FD)>$(LOCK_PATH)
-
-# This dummy rule is called from subdirectories whenever one of the
-# top-level Makefile's dependencies must be updated.  It does not
-# need to depend on %MAKEFILE% because GNU make will always make sure
-# %MAKEFILE% is updated before considering the am--refresh target.
-am--refresh: config.status
-	./config.status

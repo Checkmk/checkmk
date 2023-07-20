@@ -40,10 +40,7 @@
 /*.wpr
 /*.wpu
 /announce*
-aclocal.m4
-ar-lib
 artefacts/
-autom4te.cache/
 build/
 ChangeLog
 check_mk-*.tar.gz
@@ -54,15 +51,6 @@ check-mk-*_amd64.deb
 clang-analyzer/
 cmc-*.tar.gz
 cme-*.tar.gz
-compile
-config.guess
-config.h
-config.h.in
-config.log
-config.status
-config.sub
-configure
-depcomp
 agent-receiver/dist/*
 agents/linux/*
 doc/plugin-api/build/
@@ -73,10 +61,8 @@ GPATH
 GRTAGS
 GTAGS
 htmlcov/
-install-sh
 agent-receiver/agent_receiver.egg-info
 agent-receiver/pyproject.toml
-missing
 mk-livestatus-*.tar.gz
 node_modules/
 omd/bazel-*
@@ -86,7 +72,6 @@ pip-mirror-tmp
 RemoteSystemsTempFiles
 requirements.txt
 requirements-no-dev.txt
-stamp-h1
 tags
 tests/web/data/*
 tests/var/*

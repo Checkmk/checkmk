@@ -36,8 +36,6 @@ PACKAGE_PROTOBUF_LD_LIBRARY_PATH := $(PACKAGE_PROTOBUF_DESTDIR)/lib
 PACKAGE_PROTOBUF_INCLUDE_PATH    := $(PACKAGE_PROTOBUF_DESTDIR)/include/google/protobuf
 PACKAGE_PROTOBUF_PROTOC_BIN      := $(PACKAGE_PROTOBUF_DESTDIR)/bin/protoc
 
-# Executed from packages/cmc/Makefile.am, packages/cmc/.f12
-# and ./enterprise/Makefile
 $(PROTOBUF)-build-library: $(BUILD_HELPER_DIR) $(PROTOBUF_CACHE_PKG_PROCESS_LIBRARY)
 
 # We have a globally defined $(PROTOBUF_UNPACK) target, but we need some special

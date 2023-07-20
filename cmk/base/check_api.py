@@ -142,21 +142,6 @@ def get_bytes_human_readable(
     return renderer(bytes_)[:-1] + unit
 
 
-def get_filesize_human_readable(size: float) -> str:
-    """Format size of a file for humans.
-
-    Similar to get_bytes_human_readable, but optimized for file
-    sizes. Really only use this for files. We assume that for smaller
-    files one wants to compare the exact bytes of a file, so the
-    threshold to show the value as MB/GB is higher as the one of
-    get_bytes_human_readable()."""
-    if size < 4 * 1024 * 1024:
-        return "%d B" % int(size)
-    if size < 4 * 1024 * 1024 * 1024:
-        return "%.2f MB" % (float(size) / (1024 * 1024))
-    return "%.2f GB" % (float(size) / (1024 * 1024 * 1024))
-
-
 def get_timestamp_human_readable(timestamp: float) -> str:
     """Format a time stamp for humans in "%Y-%m-%d %H:%M:%S" format.
     In case None is given or timestamp is 0, it returns "never"."""

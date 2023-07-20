@@ -10,8 +10,7 @@ import pytest
 from freezegun import freeze_time
 
 from cmk.base.api.agent_based.type_defs import StringTable
-from cmk.base.check_api import get_age_human_readable, get_filesize_human_readable
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, render, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult
 from cmk.base.plugins.agent_based.utils.fileinfo import (
     _cast_value,
@@ -513,8 +512,8 @@ def test_check_fileinfo_groups_data(
     [
         pytest.param(
             [
-                MetricInfo("Size", "size", 7, get_filesize_human_readable),
-                MetricInfo("Age", "age", 3, get_age_human_readable),
+                MetricInfo("Size", "size", 7, render.filesize),
+                MetricInfo("Age", "age", 3, render.timespan),
             ],
             {},
             [
@@ -527,7 +526,7 @@ def test_check_fileinfo_groups_data(
         ),
         pytest.param(
             [
-                MetricInfo("Age", "age", -30, get_age_human_readable),
+                MetricInfo("Age", "age", -30, render.timespan),
             ],
             {},
             [
@@ -541,7 +540,7 @@ def test_check_fileinfo_groups_data(
         ),
         pytest.param(
             [
-                MetricInfo("Age", "age", -3, get_age_human_readable),
+                MetricInfo("Age", "age", -3, render.timespan),
             ],
             {"negative_age_tolerance": 5},
             [
@@ -567,8 +566,8 @@ def test__fileinfo_check_function(
     [
         (
             [
-                ("Size", "size", 17, get_filesize_human_readable),
-                ("Newest age", "newest_age", 3, get_age_human_readable),
+                ("Size", "size", 17, render.filesize),
+                ("Newest age", "newest_age", 3, render.timespan),
             ],
             {"conjunctions": [(2, [("size", 12), ("newest_age_lower", 86400)])]},
             [

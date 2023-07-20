@@ -18,9 +18,9 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionMap, SectionName
 
-import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib import (
     BackendSNMPTree,
+    get_snmp_table,
     SNMPBackend,
     SNMPHostConfig,
     SNMPRawData,
@@ -373,7 +373,7 @@ class SNMPFetcher(Fetcher[SNMPRawData]):
                 self._logger.debug("%s: Fetching data (%s)", section_name, walk_cache_msg)
 
                 fetched_data[section_name] = [
-                    snmp_table.get_snmp_table(
+                    get_snmp_table(
                         section_name=section_name,
                         tree=tree,
                         walk_cache=walk_cache,

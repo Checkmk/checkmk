@@ -11,23 +11,33 @@ from typing import assert_never
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
+from cmk.utils.sectionname import SectionMap as _HostSection
 from cmk.utils.sectionname import SectionName
 
 from ._typedefs import (
     BackendSNMPTree,
     OID,
     SNMPBackend,
-    SNMPDecodedValues,
     SNMPRawValue,
     SNMPRowInfo,
-    SNMPTable,
     SNMPValueEncoding,
     SpecialColumn,
 )
 
-ResultColumnsUnsanitized = list[tuple[OID, SNMPRowInfo, SNMPValueEncoding]]
-ResultColumnsSanitized = list[tuple[list[SNMPRawValue], SNMPValueEncoding]]
-ResultColumnsDecoded = list[list[SNMPDecodedValues]]
+SNMPDecodedString = str
+SNMPDecodedBinary = Sequence[int]
+SNMPDecodedValues = SNMPDecodedString | SNMPDecodedBinary
+SNMPTable = Sequence[SNMPDecodedValues]
+SNMPRawDataElem = Sequence[SNMPTable | Sequence[SNMPTable]]
+SNMPRawData = _HostSection[SNMPRawDataElem]
+OIDFunction = Callable[
+    [OID, SNMPDecodedString | None, SectionName | None], SNMPDecodedString | None
+]
+SNMPScanFunction = Callable[[OIDFunction], bool]
+
+_ResultColumnsUnsanitized = list[tuple[OID, SNMPRowInfo, SNMPValueEncoding]]
+_ResultColumnsSanitized = list[tuple[list[SNMPRawValue], SNMPValueEncoding]]
+_ResultColumnsDecoded = list[list[SNMPDecodedValues]]
 
 
 def get_snmp_table(
@@ -39,7 +49,7 @@ def get_snmp_table(
 ) -> Sequence[SNMPTable]:
     index_column = -1
     index_format: SpecialColumn | None = None
-    columns: ResultColumnsUnsanitized = []
+    columns: _ResultColumnsUnsanitized = []
     # Detect missing (empty columns)
     max_len = 0
     max_len_col = -1
@@ -114,7 +124,7 @@ def _make_index_rows(
 
 
 def _make_table(
-    columns: ResultColumnsUnsanitized, ensure_str: Callable[[str | bytes], str]
+    columns: _ResultColumnsUnsanitized, ensure_str: Callable[[str | bytes], str]
 ) -> Sequence[SNMPTable]:
     # Here we have to deal with a nasty problem: Some brain-dead devices
     # omit entries in some sub OIDs. This happens e.g. for CISCO 3650
@@ -211,8 +221,8 @@ def _perform_snmpwalk(
 
 
 def _sanitize_snmp_encoding(
-    columns: ResultColumnsSanitized, ensure_str: Callable[[str | bytes], str]
-) -> ResultColumnsDecoded:
+    columns: _ResultColumnsSanitized, ensure_str: Callable[[str | bytes], str]
+) -> _ResultColumnsDecoded:
     return [
         _decode_column(column, value_encoding, ensure_str) for column, value_encoding in columns  #
     ]
@@ -234,7 +244,7 @@ def _decode_column(
     return [decode(v) for v in column]
 
 
-def _sanitize_snmp_table_columns(columns: ResultColumnsUnsanitized) -> ResultColumnsSanitized:
+def _sanitize_snmp_table_columns(columns: _ResultColumnsUnsanitized) -> _ResultColumnsSanitized:
     # First compute the complete list of end-oids appearing in the output
     # by looping all results and putting the endoids to a flat list
     endoids: list[OID] = []
@@ -253,7 +263,7 @@ def _sanitize_snmp_table_columns(columns: ResultColumnsUnsanitized) -> ResultCol
         need_sort = False
 
     # Now fill gaps in columns where some endois are missing
-    new_columns: ResultColumnsSanitized = []
+    new_columns: _ResultColumnsSanitized = []
     for fetchoid, row_info, value_encoding in columns:
         # It might happen that end OIDs are not ordered. Fix the OID sorting to make
         # it comparable to the already sorted endoids list. Otherwise we would get
@@ -291,7 +301,7 @@ def _are_ascending_oids(oid_list: list[OID]) -> bool:
     return True
 
 
-def _construct_snmp_table_of_rows(columns: ResultColumnsDecoded) -> Sequence[SNMPTable]:
+def _construct_snmp_table_of_rows(columns: _ResultColumnsDecoded) -> Sequence[SNMPTable]:
     if not columns:
         return []
 

@@ -7,35 +7,22 @@ import abc
 import copy
 import enum
 import logging
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from typing import Any, Literal, NamedTuple, Union
 
-from cmk.utils.hostaddress import HostAddress as _HostAddress
-from cmk.utils.hostaddress import HostName as _HostName
-from cmk.utils.sectionname import SectionMap as _HostSection
-from cmk.utils.sectionname import SectionName as _SectionName
+from cmk.utils.hostaddress import HostAddress, HostName
+from cmk.utils.sectionname import SectionName
 
 SNMPContextName = str
-SNMPDecodedString = str
-SNMPDecodedBinary = Sequence[int]
-SNMPDecodedValues = SNMPDecodedString | SNMPDecodedBinary
-SNMPValueEncoding = Literal["string", "binary"]
-SNMPTable = Sequence[SNMPDecodedValues]
 SNMPContext = str | None
-SNMPRawDataElem = Sequence[SNMPTable | Sequence[SNMPTable]]
-SNMPRawData = _HostSection[SNMPRawDataElem]
+SNMPValueEncoding = Literal["string", "binary"]
 OID = str
-OIDFunction = Callable[
-    [OID, SNMPDecodedString | None, _SectionName | None], SNMPDecodedString | None
-]
 OIDRange = tuple[int, int]
 # We still need "Union" because of https://github.com/python/mypy/issues/11098
 RangeLimit = Union[
     tuple[Literal["first", "last"], int],
     tuple[Literal["mid"], OIDRange],
 ]
-
-SNMPScanFunction = Callable[[OIDFunction], bool]
 SNMPRawValue = bytes
 SNMPRowInfo = list[tuple[OID, SNMPRawValue]]
 
@@ -76,15 +63,15 @@ class SNMPBackendEnum(enum.Enum):
 # Wraps the configuration of a host into a single object for the SNMP code
 class SNMPHostConfig(NamedTuple):
     is_ipv6_primary: bool
-    hostname: _HostName
-    ipaddress: _HostAddress
+    hostname: HostName
+    ipaddress: HostAddress
     credentials: SNMPCredentials
     port: int
     is_bulkwalk_host: bool
     is_snmpv2or3_without_bulkwalk_host: bool
     bulk_walk_size_of: int
     timing: SNMPTiming
-    oid_range_limits: Mapping[_SectionName, Sequence[RangeLimit]]
+    oid_range_limits: Mapping[SectionName, Sequence[RangeLimit]]
     snmpv3_contexts: list
     character_encoding: str | None
     snmp_backend: SNMPBackendEnum
@@ -95,7 +82,7 @@ class SNMPHostConfig(NamedTuple):
 
     def snmpv3_contexts_of(
         self,
-        section_name: _SectionName | None,
+        section_name: SectionName | None,
     ) -> Sequence[SNMPContext]:
         if not section_name or not self.is_snmpv3_host:
             return [None]
@@ -128,7 +115,7 @@ class SNMPHostConfig(NamedTuple):
         serialized_ = copy.deepcopy(dict(serialized))
         serialized_["snmp_backend"] = SNMPBackendEnum.deserialize(serialized_["snmp_backend"])
         serialized_["oid_range_limits"] = {
-            _SectionName(sn): rl for sn, rl in serialized_["oid_range_limits"].items()
+            SectionName(sn): rl for sn, rl in serialized_["oid_range_limits"].items()
         }
         return cls(**serialized_)
 
@@ -140,11 +127,11 @@ class SNMPBackend(abc.ABC):
         self.config = snmp_config
 
     @property
-    def hostname(self) -> _HostName:
+    def hostname(self) -> HostName:
         return self.config.hostname
 
     @property
-    def address(self) -> _HostAddress | None:
+    def address(self) -> HostAddress | None:
         return self.config.ipaddress
 
     @property
@@ -167,7 +154,7 @@ class SNMPBackend(abc.ABC):
     def walk(
         self,
         oid: OID,
-        section_name: _SectionName | None = None,
+        section_name: SectionName | None = None,
         table_base_oid: OID | None = None,
         context_name: SNMPContextName | None = None,
     ) -> SNMPRowInfo:

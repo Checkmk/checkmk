@@ -29,7 +29,6 @@ from cmk.utils.sectionname import SectionName
 from cmk.snmplib import (
     BackendOIDSpec,
     BackendSNMPTree,
-    snmp_table,
     SNMPBackendEnum,
     SNMPHostConfig,
     SNMPRawData,
@@ -562,11 +561,7 @@ class TestSNMPFetcherFetch:
 
     def test_fetch_from_io_non_empty(self, fetcher: SNMPFetcher, monkeypatch: MonkeyPatch) -> None:
         table = [["1"]]
-        monkeypatch.setattr(
-            snmp_table,
-            "get_snmp_table",
-            lambda *_, **__: table,
-        )
+        monkeypatch.setattr(snmp, "get_snmp_table", lambda *_, **__: table)
         section_name = SectionName("pim")
         monkeypatch.setattr(
             fetcher,
@@ -623,7 +618,7 @@ class TestSNMPFetcherFetch:
         )
         table = [["1"]]
         monkeypatch.setattr(
-            snmp_table,
+            snmp,
             "get_snmp_table",
             lambda tree, **__: table
             if tree.base == fetcher.plugin_store[section_name].trees[0].base
@@ -642,11 +637,7 @@ class TestSNMPFetcherFetch:
         )
 
     def test_fetch_from_io_empty(self, monkeypatch: MonkeyPatch, fetcher: SNMPFetcher) -> None:
-        monkeypatch.setattr(
-            snmp_table,
-            "get_snmp_table",
-            lambda *_, **__: [],
-        )
+        monkeypatch.setattr(snmp, "get_snmp_table", lambda *_, **__: [])
         monkeypatch.setattr(
             snmp,
             "gather_available_raw_section_names",
@@ -667,7 +658,7 @@ class TestSNMPFetcherFetch:
     @pytest.fixture(name="set_sections")
     def _set_sections(self, monkeypatch: MonkeyPatch) -> list[list[str]]:
         table = [["1"]]
-        monkeypatch.setattr(snmp_table, "get_snmp_table", lambda tree, **__: table)
+        monkeypatch.setattr(snmp, "get_snmp_table", lambda tree, **__: table)
         monkeypatch.setattr(
             SNMPFetcher, "disabled_sections", property(lambda self: {SectionName("pam")})
         )

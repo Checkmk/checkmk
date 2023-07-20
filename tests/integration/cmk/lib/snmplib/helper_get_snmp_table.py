@@ -13,8 +13,13 @@ import cmk.utils.paths
 from cmk.utils.sectionname import SectionName
 from cmk.utils.version import edition, Edition
 
-import cmk.snmplib.snmp_table as snmp_table
-from cmk.snmplib import BackendSNMPTree, SNMPBackend, SNMPBackendEnum, SNMPHostConfig
+from cmk.snmplib import (
+    BackendSNMPTree,
+    get_snmp_table,
+    SNMPBackend,
+    SNMPBackendEnum,
+    SNMPHostConfig,
+)
 
 from cmk.fetchers.snmp_backend import ClassicSNMPBackend, StoredWalkSNMPBackend
 
@@ -49,7 +54,7 @@ walk_cache: MutableMapping[str, tuple[bool, list[tuple[str, bytes]]]] = {}
 print(
     repr(
         (
-            snmp_table.get_snmp_table(
+            get_snmp_table(
                 section_name=SectionName("my_Section"),
                 tree=tree,
                 backend=backend(config, logger),

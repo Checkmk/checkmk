@@ -14,10 +14,11 @@ from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.log import logger
 from cmk.utils.sectionname import SectionName
 
-import cmk.snmplib.snmp_table as snmp_table
+import cmk.snmplib._table as _snmp_table
 from cmk.snmplib import (
     BackendOIDSpec,
     BackendSNMPTree,
+    get_snmp_table,
     SNMPBackend,
     SNMPBackendEnum,
     SNMPHostConfig,
@@ -79,14 +80,14 @@ def test_get_snmp_table(
     def get_all_snmp_tables(info):
         backend = SNMPTestBackend(SNMPConfig, logger)
         if not isinstance(info, list):
-            return snmp_table.get_snmp_table(
+            return get_snmp_table(
                 section_name=SectionName("unit_test"),
                 tree=info,
                 walk_cache={},
                 backend=backend,
             )
         return [
-            snmp_table.get_snmp_table(
+            get_snmp_table(
                 section_name=SectionName("unit_test"),
                 tree=i,
                 walk_cache={},
@@ -113,8 +114,8 @@ def test_get_snmp_table(
 def test_sanitize_snmp_encoding(
     monkeypatch: MonkeyPatch,
     encoding: str | None,
-    columns: snmp_table.ResultColumnsSanitized,
-    expected: snmp_table.ResultColumnsDecoded,
+    columns: _snmp_table._ResultColumnsSanitized,
+    expected: _snmp_table._ResultColumnsDecoded,
 ) -> None:
     ts = Scenario()
     ts.add_host(HostName("localhost"))
@@ -132,7 +133,7 @@ def test_sanitize_snmp_encoding(
     snmp_config = config_cache.make_snmp_config(
         HostName("localhost"), HostAddress("1.2.3.4"), SourceType.HOST
     )
-    assert snmp_table._sanitize_snmp_encoding(columns, snmp_config.ensure_str) == expected
+    assert _snmp_table._sanitize_snmp_encoding(columns, snmp_config.ensure_str) == expected
 
 
 def test_is_bulkwalk_host(monkeypatch: MonkeyPatch) -> None:

@@ -13,7 +13,8 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionName
 
-from ._typedefs import OID, SNMPBackend, SNMPDecodedString
+from ._table import SNMPDecodedString
+from ._typedefs import OID, SNMPBackend
 
 
 # Contextes can only be used when check_plugin_name is given.

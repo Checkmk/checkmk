@@ -96,10 +96,10 @@ from cmk.automations.results import (
     UpdateHostLabelsResult,
 )
 
-import cmk.snmplib.snmp_table as snmp_table
 from cmk.snmplib import (
     BackendOIDSpec,
     BackendSNMPTree,
+    get_snmp_table,
     oids_to_walk,
     SNMPCredentials,
     SNMPHostConfig,
@@ -1887,7 +1887,7 @@ class AutomationDiagHost(Automation):
             return 1, "SNMP command not implemented"
 
         # TODO: What about SNMP management boards?
-        # TODO: `snmp_table.get_snmp_table()` with some cache handling
+        # TODO: `get_snmp_table()` with some cache handling
         #       is what the SNMPFetcher already does.  Work on reducing
         #       code duplication.
         snmp_config = SNMPHostConfig(
@@ -1909,7 +1909,7 @@ class AutomationDiagHost(Automation):
             snmp_backend=snmp_config.snmp_backend,
         )
 
-        data = snmp_table.get_snmp_table(
+        data = get_snmp_table(
             section_name=None,
             tree=BackendSNMPTree(
                 base=".1.3.6.1.2.1.1",

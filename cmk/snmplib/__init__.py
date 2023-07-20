@@ -5,6 +5,11 @@
 """Package with our SNMP stuff."""
 
 from ._getoid import get_single_oid as get_single_oid
+from ._table import get_snmp_table as get_snmp_table
+from ._table import SNMPDecodedString as SNMPDecodedString
+from ._table import SNMPRawData as SNMPRawData
+from ._table import SNMPRawDataElem as SNMPRawDataElem
+from ._table import SNMPTable as SNMPTable
 from ._typedefs import BackendOIDSpec as BackendOIDSpec
 from ._typedefs import BackendSNMPTree as BackendSNMPTree
 from ._typedefs import OID as OID
@@ -14,13 +19,9 @@ from ._typedefs import SNMPBackend as SNMPBackend
 from ._typedefs import SNMPBackendEnum as SNMPBackendEnum
 from ._typedefs import SNMPContextName as SNMPContextName
 from ._typedefs import SNMPCredentials as SNMPCredentials
-from ._typedefs import SNMPDecodedString as SNMPDecodedString
 from ._typedefs import SNMPHostConfig as SNMPHostConfig
-from ._typedefs import SNMPRawData as SNMPRawData
-from ._typedefs import SNMPRawDataElem as SNMPRawDataElem
 from ._typedefs import SNMPRawValue as SNMPRawValue
 from ._typedefs import SNMPRowInfo as SNMPRowInfo
-from ._typedefs import SNMPTable as SNMPTable
 from ._typedefs import SNMPTiming as SNMPTiming
 from ._typedefs import SpecialColumn as SpecialColumn
 from ._walk import oids_to_walk as oids_to_walk

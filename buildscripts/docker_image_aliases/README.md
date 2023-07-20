@@ -26,6 +26,8 @@ see:
 Just switch to `buildscripts/docker_image_aliases` and run `register.py` providing the name of
 the image alias (preferably uppper case and prefixed with "`IMAGE_`" for consistancy).
 
+This step has to be performed for every branch, e.g. `master`, `2.2.0`, `2.1.0`
+
 Remember to login to the registry once by
 `docker login artifacts.lan.tribe29.com:4000 --username USER.NAME` to create the required
 `~/.docker/config.json` file

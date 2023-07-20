@@ -99,7 +99,6 @@ def check_jira_custom_svc(item, params, parsed):
             )
 
 
-# get_rate() and get_average() do not help here
 def _get_value_diff(diff_name, svc_value, timespan):
     this_time = time.time()
     old_state = get_item_state(diff_name, None)

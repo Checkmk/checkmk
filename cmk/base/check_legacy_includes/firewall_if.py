@@ -6,7 +6,8 @@
 import time
 from typing import Any
 
-from cmk.base.check_api import check_levels, get_average, get_rate, RAISE
+from cmk.base.check_api import check_levels, get_rate, RAISE
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_average, get_value_store
 
 
 def check_firewall_if(item, params, data):
@@ -15,13 +16,16 @@ def check_firewall_if(item, params, data):
     }
 
     this_time = time.time()
+    value_store = get_value_store()
 
     for what, counter in data.items():
         rate = get_rate(f"firewall_if-{what}.{item}", this_time, counter, onwrap=RAISE)
 
         if params.get("averaging"):
             backlog_minutes = params["averaging"]
-            avgrate = get_average(f"firewall_if-{what}.{item}", this_time, rate, backlog_minutes)
+            avgrate = get_average(
+                value_store, f"firewall_if-{what}.{item}", this_time, rate, backlog_minutes
+            )
             check_against = avgrate
         else:
             check_against = rate

@@ -67,18 +67,18 @@ result_parsed_over_time = [
             },
             (
                 0,
-                "Total CPU (2min average): 0%, 2 CPUs",
+                "Total CPU (2min average): 13.33%, 2 CPUs",
                 [
                     ("util", 13.333333333333334, 80.0, 90.0, 0, 2),
-                    ("util_average", 0, 80.0, 90.0, 0, 100),
+                    ("util_average", 13.333333333333334, 80.0, 90.0, 0, 100),
                 ],
             ),
             (
                 0,
-                "Total CPU (2min average): 0.42%, 2 CPUs",
+                "Total CPU (2min average): 4.49%, 2 CPUs",
                 [
                     ("util", 0.8333333333333334, 80.0, 90.0, 0, 2),
-                    ("util_average", 0.4166666666666667, 80.0, 90.0, 0, 100),
+                    ("util_average", 4.494498568501489, 80.0, 90.0, 0, 100),
                 ],
             ),
         ),

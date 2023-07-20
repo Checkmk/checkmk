@@ -18,7 +18,7 @@ def patch_rate_and_average(monkeypatch: MonkeyPatch, negative: bool = False) -> 
     monkeypatch.setattr(size_trend, "get_average", lambda *_args: growth)
 
 
-def test_size_trend_growing(monkeypatch: MonkeyPatch) -> None:
+def test_size_trend_growing(monkeypatch: MonkeyPatch, initialised_item_state: None) -> None:
     patch_rate_and_average(monkeypatch, False)
     state, infotext, perfdata = size_trend.size_trend(
         "somecheck",
@@ -52,7 +52,7 @@ def test_size_trend_growing(monkeypatch: MonkeyPatch) -> None:
     ]
 
 
-def test_size_trend_shrinking(monkeypatch: MonkeyPatch) -> None:
+def test_size_trend_shrinking(monkeypatch: MonkeyPatch, initialised_item_state: None) -> None:
     patch_rate_and_average(monkeypatch, True)
     state, infotext, perfdata = size_trend.size_trend(
         "somecheck",
@@ -85,7 +85,9 @@ def test_size_trend_shrinking(monkeypatch: MonkeyPatch) -> None:
     ]
 
 
-def test_size_trend_negative_free_space(monkeypatch: MonkeyPatch) -> None:
+def test_size_trend_negative_free_space(
+    monkeypatch: MonkeyPatch, initialised_item_state: None
+) -> None:
     patch_rate_and_average(monkeypatch, False)
     state, infotext, perfdata = size_trend.size_trend(
         "somecheck",

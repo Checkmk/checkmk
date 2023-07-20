@@ -10,8 +10,8 @@
 from collections.abc import Mapping, MutableSequence, Sequence
 from typing import Any
 
-from cmk.base.check_api import check_levels, get_average, get_rate
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.check_api import check_levels, get_rate
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_average, get_value_store, render
 
 
 def check_diskstat_line(  # pylint: disable=too-many-branches
@@ -24,6 +24,8 @@ def check_diskstat_line(  # pylint: disable=too-many-branches
     average_range = params.get("average")
     if average_range == 0:
         average_range = None  # disable averaging when 0 is set
+
+    value_store = get_value_store()
 
     perfdata: MutableSequence[Any] = []
     infos: MutableSequence[str] = []
@@ -58,7 +60,7 @@ def check_diskstat_line(  # pylint: disable=too-many-branches
         if average_range is not None:
             perfdata.append((dsname, bytes_per_sec, warn, crit))
             bytes_per_sec = get_average(
-                countername + ".avg", this_time, bytes_per_sec, average_range
+                value_store, f"{countername}.avg", this_time, bytes_per_sec, average_range
             )
             dsname += ".avg"
 

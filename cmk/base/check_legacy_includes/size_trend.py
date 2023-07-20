@@ -8,8 +8,13 @@
 import time
 from collections.abc import Callable
 
-from cmk.base.check_api import get_average, get_bytes_human_readable, get_rate, RAISE
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
+from cmk.base.check_api import get_bytes_human_readable, get_rate, RAISE
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_average,
+    get_value_store,
+    IgnoreResultsError,
+    render,
+)
 
 # ==================================================================================================
 # THESE FUNCTIONS DEFINED HERE ARE IN THE PROCESS OF OR HAVE ALREADY BEEN MIGRATED TO
@@ -95,6 +100,7 @@ def size_trend(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branc
       present for the trend computation) the tuple (0, '', []) is
       returned.
     """
+    value_store = get_value_store()
 
     perfdata: list[
         (  #
@@ -125,7 +131,7 @@ def size_trend(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branc
         perfdata.append(("growth", rate * H24))
 
     # average trend in MB/s, initialized with zero (by default)
-    rate_avg = get_average(f"{check}.{item}.trend", timestamp, rate, range_sec / 60.0)
+    rate_avg = get_average(value_store, f"{check}.{item}.trend", timestamp, rate, range_sec / 60.0)
 
     trend = rate_avg * range_sec
     sign = "+" if trend > 0 else ""

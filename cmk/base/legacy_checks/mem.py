@@ -9,15 +9,10 @@
 import time
 
 import cmk.base.plugins.agent_based.utils.memory as memory
-from cmk.base.check_api import (
-    check_levels,
-    get_average,
-    get_bytes_human_readable,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.mem import check_memory_dict, check_memory_element
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_average, get_value_store, render
 
 #   .--mem.linux-----------------------------------------------------------.
 #   |                                      _ _                             |
@@ -234,11 +229,11 @@ def _do_averaging(
 ):
     used_avg = (
         get_average(
+            get_value_store(),
             "mem.win.%s" % paramname,
             timestamp,
             used / 1024.0,  # use kB for compatibility
             average_horizon_min,
-            initialize_zero=False,
         )
         * 1024
     )

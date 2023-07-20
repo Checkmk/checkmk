@@ -174,7 +174,6 @@ get_item_state = _item_state.get_item_state
 clear_item_state = _item_state.clear_item_state
 
 get_rate = _item_state.get_rate
-get_average = _item_state.get_average
 
 SKIP = _item_state.SKIP
 RAISE = _item_state.RAISE

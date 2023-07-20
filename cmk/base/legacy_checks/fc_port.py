@@ -8,11 +8,13 @@
 
 import time
 
-from cmk.base.check_api import get_average, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import get_rate, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fc_port import fc_parse_counter
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     all_of,
+    get_average,
+    get_value_store,
     not_exists,
     OIDBytes,
     render,
@@ -122,6 +124,8 @@ def inventory_fc_port(info):
 
 
 def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
+    value_store = get_value_store()
+
     # Accept item, even if port name has changed
     item_index = int(item.split()[0])
     portinfo = [line for line in info if int(line[0]) == item_index + 1]
@@ -188,7 +192,9 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
 
         # average turned on: use averaged traffic values instead of current ones
         if average:
-            value = get_average("fc_port.%s.%s.avg" % (what, item), this_time, value, average)
+            value = get_average(
+                value_store, "fc_port.%s.%s.avg" % (what, item), this_time, value, average
+            )
             output.append("Avg(%dmin): %s" % (average, render.iobandwidth(value)))
             perfaverages.append(
                 ("%s_avg" % what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed)
@@ -212,7 +218,9 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
     for what, value in [("rxobjects", rxobjects_rate), ("txobjects", txobjects_rate)]:
         perfdata.append((what, value))
         if average:
-            value = get_average("fc_port.%s.%s.avg" % (what, item), this_time, value, average)
+            value = get_average(
+                value_store, "fc_port.%s.%s.avg" % (what, item), this_time, value, average
+            )
             perfdata.append(("%s_avg" % what, value))
 
     # E R R O R C O U N T E R S
@@ -251,7 +259,7 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
         # if averaging is on, compute average and apply levels to average
         if average:
             per_sec_avg = get_average(
-                "fc_port.%s.%s.avg" % (counter, item), this_time, per_sec, average
+                value_store, "fc_port.%s.%s.avg" % (counter, item), this_time, per_sec, average
             )
             perfdata.append(("%s_avg" % counter, per_sec_avg))
 
@@ -264,7 +272,9 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
 
         # Honor averaging of error rate
         if average:
-            rate = get_average("fc_port.%s.%s.avgrate" % (counter, item), this_time, rate, average)
+            rate = get_average(
+                value_store, "fc_port.%s.%s.avgrate" % (counter, item), this_time, rate, average
+            )
             text += ", Avg: %.2f%%" % (rate * 100.0)
 
         error_percentage = rate * 100.0

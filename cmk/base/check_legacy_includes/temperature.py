@@ -8,8 +8,12 @@
 import time
 from typing import AnyStr, Union
 
-from cmk.base.check_api import check_levels, get_average, get_rate, state_markers
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+from cmk.base.check_api import check_levels, get_rate, state_markers
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_average,
+    get_value_store,
+    IgnoreResultsError,
+)
 from cmk.base.plugins.agent_based.utils.temperature import _migrate_params
 from cmk.base.plugins.agent_based.utils.temperature import (
     fahrenheit_to_celsius as fahrenheit_to_celsius,
@@ -154,6 +158,8 @@ def check_temperature_trend(  # pylint: disable=too-many-branches
     crit_lower,
     unique_name,
 ):
+    value_store = get_value_store()
+
     def combiner(status, infotext):
         if "status" in dir(combiner):
             combiner.status = max(combiner.status, status)  # type: ignore[attr-defined]
@@ -173,7 +179,9 @@ def check_temperature_trend(  # pylint: disable=too-many-branches
         rate = get_rate("temp.%s.delta" % unique_name, this_time, temp, allow_negative=True)
 
         # average trend, initialize with zero (by default), rate_avg is in C/s
-        rate_avg = get_average("temp.%s.trend" % unique_name, this_time, rate, trend_range_min)
+        rate_avg = get_average(
+            value_store, f"temp.{unique_name}.trend", this_time, rate, trend_range_min
+        )
 
         # rate_avg is growth in C/s, trend is in C per trend range minutes
         trend = float(rate_avg * trend_range_min * 60.0)

@@ -6,10 +6,10 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_average, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fireeye import inventory_fireeye_generic
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_average, get_value_store, SNMPTree
 from cmk.base.plugins.agent_based.utils.fireeye import DETECT
 
 
@@ -28,7 +28,7 @@ def fireeye_counter_generic(value, what, average):
     # (e.g. 'infected_rate')
     perfdata = [("%s_rate" % what.split(" ")[0].lower(), rate)]
     if average:
-        avg = get_average(" %s avg" % counter, this_time, rate, average)
+        avg = get_average(get_value_store(), " %s avg" % counter, this_time, rate, average)
         return (state, "%s: %.2f mails/%d seconds" % (what, avg * average, average), perfdata)
     return (state, "%s: %.2f mails/s" % (what, rate), perfdata)
 
@@ -193,6 +193,7 @@ check_info["fireeye_mail.url"] = LegacyCheckDefinition(
 def check_fireeye_mail_statistics(_no_item, params, info):
     statistics_info = info[0][9:13]
     average = params.get("interval", 0)
+    value_store = get_value_store()
     for index, mail_containing in enumerate(
         [
             "Emails containing Attachment",
@@ -206,7 +207,7 @@ def check_fireeye_mail_statistics(_no_item, params, info):
         rate = get_rate(counter, this_time, int(statistics_info[index]))
         perfdata = [(counter.replace(".", "_"), rate * 60)]
         if average:
-            avg = get_average("%s.avg" % counter, this_time, rate, average)
+            avg = get_average(value_store, f"{counter}.avg", this_time, rate, average)
             yield 0, "%s: %.2f per %d minutes" % (
                 mail_containing,
                 avg * 60 * average,

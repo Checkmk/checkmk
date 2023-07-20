@@ -10,11 +10,15 @@ from cmk.base.check_api import (
     check_levels,
     clear_item_state,
     get_age_human_readable,
-    get_average,
     get_item_state,
     set_item_state,
 )
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_average,
+    get_value_store,
+    IgnoreResultsError,
+    render,
+)
 
 # Common file for all (modern) checks that check CPU utilization (not load!)
 
@@ -87,7 +91,9 @@ def check_cpu_util(util, params, this_time=None, cores=None, perf_max=100):
 
     # Averaging
     if "average" in params:
-        util_avg = get_average("cpu_utilization.avg", this_time, util, params["average"])
+        util_avg = get_average(
+            get_value_store(), "cpu_utilization.avg", this_time, util, params["average"]
+        )
         perfdata.append(("util_average", util_avg, warn, crit, 0, perf_max))
         state, infotext, extraperf = check_levels(
             util_avg,
@@ -251,6 +257,7 @@ def _util_perfdata(core, total_perc, core_index, this_time, params):
     if time_avg:
         yield from _check_single_core_util(
             get_average(
+                get_value_store(),
                 "cpu_utilization_%d.avg" % core_index,
                 this_time,
                 total_perc,

@@ -7,7 +7,7 @@
 import string
 from collections.abc import Sequence
 
-from cmk.snmplib.detect import SNMPDetectBaseType
+from cmk.snmplib import SNMPDetectBaseType
 
 from cmk.base.api.agent_based.type_defs import OIDSpecTuple, SNMPTreeTuple
 

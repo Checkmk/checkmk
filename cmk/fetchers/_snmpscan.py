@@ -11,8 +11,7 @@ from cmk.utils.exceptions import MKGeneralException, MKSNMPError, OnError
 from cmk.utils.log import console
 from cmk.utils.sectionname import SectionName
 
-from cmk.snmplib import get_single_oid, SNMPBackend
-from cmk.snmplib.detect import evaluate_snmp_detection, SNMPDetectBaseType
+from cmk.snmplib import evaluate_snmp_detection, get_single_oid, SNMPBackend, SNMPDetectBaseType
 
 import cmk.fetchers._snmpcache as snmp_cache
 

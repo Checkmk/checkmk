@@ -15,7 +15,6 @@ import livestatus
 
 import cmk.utils.dateutils as dateutils
 import cmk.utils.debug
-from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
 from cmk.utils.metrics import MetricName
@@ -159,7 +158,7 @@ def _retrieve_grouped_data_from_rrd(
     # finest resolution.
     twindow = slices[0][0].twindow
     if twindow[2] == 0:
-        raise MKGeneralException("Got no historic metrics")
+        raise RuntimeError("Got no historic metrics")
 
     return twindow, [ts.bfill_upsample(twindow, shift) for ts, shift in slices]
 

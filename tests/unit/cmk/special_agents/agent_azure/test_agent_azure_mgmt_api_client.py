@@ -5,7 +5,7 @@
 
 import pytest
 
-from cmk.special_agents.agent_azure import ApiError, MgmtApiClient
+from cmk.special_agents.agent_azure import _AuthorityURLs, ApiError, MgmtApiClient
 
 RESOURCE_ID = "/subscriptions/1234/resourceGroups/test/providers/Microsoft.Network/virtualNetworkGateways/vnet_gateway"
 
@@ -42,7 +42,7 @@ RESOURCE_ID = "/subscriptions/1234/resourceGroups/test/providers/Microsoft.Netwo
 def test_get_available_metrics_from_exception(
     desired_names: str, api_error: ApiError, expected_result: str
 ) -> None:
-    client = MgmtApiClient("1234")
+    client = MgmtApiClient(_AuthorityURLs("login-url", "resource-url", "base-url"))
 
     result = client._get_available_metrics_from_exception(desired_names, api_error, RESOURCE_ID)
     assert result == expected_result
@@ -70,7 +70,7 @@ def test_get_available_metrics_from_exception(
 def test_get_available_metrics_from_exception_error(
     desired_names: str, api_error: ApiError, expected_error: str
 ) -> None:
-    client = MgmtApiClient("1234")
+    client = MgmtApiClient(_AuthorityURLs("login-url", "resource-url", "base-url"))
 
     with pytest.raises(ApiError, match=expected_error):
         client._get_available_metrics_from_exception(desired_names, api_error, RESOURCE_ID)

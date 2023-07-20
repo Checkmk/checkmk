@@ -20,7 +20,7 @@ from collections import defaultdict
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from multiprocessing import Lock, Process, Queue
 from queue import Empty as QueueEmpty
-from typing import Any
+from typing import Any, NamedTuple
 
 import adal  # type: ignore[import] # pylint: disable=import-error
 import requests
@@ -320,22 +320,39 @@ class ApiErrorFactory:
             return ApiError(error_data)
 
 
-class BaseApiClient(abc.ABC):
-    AUTHORITY = "https://login.microsoftonline.com"
+class _AuthorityURLs(NamedTuple):
+    login: str
+    resource: str
+    base: str
 
-    def __init__(self, base_url) -> None:  # type: ignore[no-untyped-def]
+
+def _get_graph_authority_urls() -> _AuthorityURLs:
+    return _AuthorityURLs(
+        "https://login.microsoftonline.com",
+        "https://graph.microsoft.com",
+        "https://graph.microsoft.com/v1.0/",
+    )
+
+
+def _get_mgmt_authority_urls(subscription: str) -> _AuthorityURLs:
+    return _AuthorityURLs(
+        "https://login.microsoftonline.com",
+        "https://management.azure.com",
+        f"https://management.azure.com/subscriptions/{subscription}",
+    )
+
+
+class BaseApiClient(abc.ABC):
+    def __init__(self, authority_urls: _AuthorityURLs) -> None:
         self._ratelimit = float("Inf")
         self._headers: dict = {}
-        self._base_url = base_url
-
-    @property
-    @abc.abstractmethod
-    def resource(self):
-        pass
+        self._login_url = authority_urls.login
+        self._resource_url = authority_urls.resource
+        self._base_url = authority_urls.base
 
     def login(self, tenant, client, secret):
-        context = adal.AuthenticationContext(f"{self.AUTHORITY}/{tenant}")
-        token = context.acquire_token_with_client_credentials(self.resource, client, secret)
+        context = adal.AuthenticationContext(f"{self._login_url}/{tenant}")
+        token = context.acquire_token_with_client_credentials(self._resource_url, client, secret)
         self._headers.update(
             {
                 "Authorization": "Bearer %s" % token["accessToken"],
@@ -430,14 +447,6 @@ class BaseApiClient(abc.ABC):
 
 
 class GraphApiClient(BaseApiClient):
-    def __init__(self) -> None:
-        base_url = "%s/v1.0/" % self.resource
-        super().__init__(base_url)
-
-    @property
-    def resource(self):
-        return "https://graph.microsoft.com"
-
     def users(self, data=None, uri=None):
         if data is None:
             data = []
@@ -473,10 +482,6 @@ class GraphApiClient(BaseApiClient):
 
 
 class MgmtApiClient(BaseApiClient):
-    def __init__(self, subscription) -> None:  # type: ignore[no-untyped-def]
-        base_url = f"{self.resource}/subscriptions/{subscription}/"
-        super().__init__(base_url)
-
     @staticmethod
     def _get_available_metrics_from_exception(
         desired_names: str, api_error: ApiError, resource_id: str
@@ -496,10 +501,6 @@ class MgmtApiClient(BaseApiClient):
             return None
 
         return ",".join(sorted(retry_names))
-
-    @property
-    def resource(self):
-        return "https://management.azure.com"
 
     def resourcegroups(self):
         return self._get("resourcegroups", key="value", params={"api-version": "2019-05-01"})
@@ -1417,7 +1418,7 @@ def get_mapper(debug, sequential, timeout):
 
 
 def main_graph_client(args):
-    graph_client = GraphApiClient()
+    graph_client = GraphApiClient(_get_graph_authority_urls())
     try:
         graph_client.login(args.tenant, args.client, args.secret)
         write_section_ad(graph_client, AzureSection("ad"), args)
@@ -1556,7 +1557,7 @@ def process_resource_health(
 
 
 def main_subscription(args, selector, subscription):
-    mgmt_client = MgmtApiClient(subscription)
+    mgmt_client = MgmtApiClient(_get_mgmt_authority_urls(subscription))
 
     try:
         mgmt_client.login(args.tenant, args.client, args.secret)

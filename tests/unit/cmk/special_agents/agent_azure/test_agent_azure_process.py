@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from cmk.special_agents.agent_azure import (
+    _AuthorityURLs,
     ApiError,
     Args,
     AzureResource,
@@ -51,7 +52,7 @@ class MockMgmtApiClient(MgmtApiClient):
         self.resource_health = resource_health
         self.resource_health_exception = resource_health_exception
 
-        super().__init__("1234")
+        super().__init__(_AuthorityURLs("login-url", "resource-url", "base-url"))
 
     def resourcegroups(self) -> Sequence[Mapping[str, Any]]:
         return self.resource_groups

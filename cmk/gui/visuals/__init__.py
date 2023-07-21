@@ -18,8 +18,6 @@ from itertools import chain
 from pathlib import Path
 from typing import Any, cast, Final, Generic, get_args, TypeVar
 
-from pydantic import BaseModel
-
 from livestatus import LivestatusTestingError
 
 import cmk.utils.paths
@@ -90,7 +88,6 @@ from cmk.gui.type_defs import (
     VisualName,
     VisualTypeName,
 )
-from cmk.gui.utils.csrf_token import check_csrf_token
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -131,7 +128,12 @@ from cmk.gui.valuespec import (
     ValueSpecValidateFunc,
 )
 
+from ._add_to_visual import ajax_add_visual, ajax_popup_add
+from ._add_to_visual import page_menu_dropdown_add_to_visual as page_menu_dropdown_add_to_visual
+from ._add_to_visual import set_page_context as set_page_context
 from ._breadcrumb import visual_page_breadcrumb as visual_page_breadcrumb
+from ._filter_form import render_filter_form as render_filter_form
+from ._filter_form import show_filter_form as show_filter_form
 from ._filter_valuespecs import FilterChoices as FilterChoices
 from ._filter_valuespecs import PageAjaxVisualFilterListGetChoice
 from ._filter_valuespecs import VisualFilterList as VisualFilterList
@@ -382,90 +384,6 @@ def active_context_from_request(infos: SingleInfos, context: VisualContext) -> V
     return context
 
 
-def render_filter_form(
-    info_list: SingleInfos, context: VisualContext, page_name: str, reset_ajax_page: str
-) -> HTML:
-    with output_funnel.plugged():
-        show_filter_form(info_list, context, page_name, reset_ajax_page)
-        return HTML(output_funnel.drain())
-
-
-def show_filter_form(
-    info_list: SingleInfos, context: VisualContext, page_name: str, reset_ajax_page: str
-) -> None:
-    html.show_user_errors()
-    form_name: str = "filter"
-    html.begin_form(
-        form_name,
-        method="GET",
-        add_transid=False,
-        onsubmit=f"cmk.forms.on_filter_form_submit_remove_vars({json.dumps('form_' + form_name)});",
-    )
-    varprefix = ""
-    vs_filters = VisualFilterListWithAddPopup(info_list=info_list)
-
-    filter_list_id = VisualFilterListWithAddPopup.filter_list_id(varprefix)
-    filter_list_selected_id = filter_list_id + "_selected"
-    _show_filter_form_buttons(
-        varprefix, filter_list_id, vs_filters._page_request_vars, page_name, reset_ajax_page
-    )
-
-    html.open_div(id_=filter_list_selected_id, class_=["side_popup_content"])
-    vs_filters.render_input(varprefix, context)
-    html.close_div()
-
-    forms.end()
-
-    html.hidden_fields()
-    html.end_form()
-    html.javascript("cmk.utils.add_simplebar_scrollbar(%s);" % json.dumps(filter_list_selected_id))
-
-    # The filter popup is shown automatically when it has been submitted before on page reload. To
-    # know that the user closed the popup after filtering, we have to hook into the close_popup
-    # function.
-    html.final_javascript(
-        "cmk.page_menu.register_on_open_handler('popup_filters', cmk.page_menu.on_filter_popup_open);"
-        "cmk.page_menu.register_on_close_handler('popup_filters', cmk.page_menu.on_filter_popup_close);"
-        f"cmk.forms.add_filter_form_error_listener('{filter_list_selected_id}');"
-    )
-
-
-def _show_filter_form_buttons(
-    varprefix: str,
-    filter_list_id: str,
-    page_request_vars: Mapping[str, Any] | None,
-    view_name: str,
-    reset_ajax_page: str,
-) -> None:
-    html.open_div(class_="side_popup_controls")
-
-    html.open_a(
-        href="javascript:void(0);",
-        onclick="cmk.page_menu.toggle_popup_filter_list(this, %s)" % json.dumps(filter_list_id),
-        class_="add",
-    )
-    html.icon("add")
-    html.div(_("Add filter"), class_="description")
-    html.close_a()
-
-    html.open_div(class_="update_buttons")
-    html.button("%s_apply" % varprefix, _("Apply filters"), cssclass="apply hot")
-    html.jsbutton(
-        "%s_reset" % varprefix,
-        _("Reset"),
-        cssclass="reset",
-        onclick="cmk.valuespecs.visual_filter_list_reset(%s, %s, %s, %s)"
-        % (
-            json.dumps(varprefix),
-            json.dumps(page_request_vars),
-            json.dumps(view_name),
-            json.dumps(reset_ajax_page),
-        ),
-    )
-    html.close_div()
-    html.close_div()
-
-
 # Converts a context from the form { filtername : { ... } } into
 # the for { infoname : { filtername : { } } for editing.
 def pack_context_for_editing(context: VisualContext, info_keys: Sequence[InfoName]) -> dict:
@@ -631,146 +549,3 @@ def may_add_site_hint(
         return False
 
     return True
-
-
-# .
-#   .--Popup Add-----------------------------------------------------------.
-#   |          ____                              _       _     _           |
-#   |         |  _ \ ___  _ __  _   _ _ __      / \   __| | __| |          |
-#   |         | |_) / _ \| '_ \| | | | '_ \    / _ \ / _` |/ _` |          |
-#   |         |  __/ (_) | |_) | |_| | |_) |  / ___ \ (_| | (_| |          |
-#   |         |_|   \___/| .__/ \__,_| .__/  /_/   \_\__,_|\__,_|          |
-#   |                    |_|         |_|                                   |
-#   +----------------------------------------------------------------------+
-#   |  Handling of adding a visual element to a dashboard, etc.            |
-#   '----------------------------------------------------------------------'
-
-
-def ajax_popup_add() -> None:
-    # name is unused at the moment in this, hand over as empty name
-    page_menu_dropdown = page_menu_dropdown_add_to_visual(
-        add_type=request.get_ascii_input_mandatory("add_type"), name=""
-    )[0]
-
-    html.open_ul()
-
-    for topic in page_menu_dropdown.topics:
-        html.open_li()
-        html.span(topic.title)
-        html.close_li()
-
-        for entry in topic.entries:
-            html.open_li()
-
-            if not isinstance(entry.item, PageMenuLink):
-                html.write_text(f"Unhandled entry type '{type(entry.item)}': {entry.name}")
-                continue
-
-            html.open_a(
-                href=entry.item.link.url,
-                onclick=entry.item.link.onclick,
-                target=entry.item.link.target,
-            )
-            html.icon(entry.icon_name or "trans")
-            html.write_text(entry.title)
-            html.close_a()
-            html.close_li()
-
-    html.close_ul()
-
-
-def page_menu_dropdown_add_to_visual(add_type: str, name: str) -> list[PageMenuDropdown]:
-    """Create the dropdown menu for adding a visual to other visuals / pagetypes
-
-    Please not that this data structure is not only used for rendering the dropdown
-    in the page menu. There is also the case of graphs which open a popup menu to
-    show these entries.
-    """
-
-    visual_topics = []
-
-    for visual_type_class in visual_type_registry.values():
-        visual_type = visual_type_class()
-
-        entries = list(visual_type.page_menu_add_to_entries(add_type))
-        if not entries:
-            continue
-
-        visual_topics.append(
-            PageMenuTopic(
-                title=_("Add to %s") % visual_type.title,
-                entries=entries,
-            )
-        )
-
-    if add_type == "pnpgraph" and not cmk_version.is_raw_edition():
-        visual_topics.append(
-            PageMenuTopic(
-                title=_("Export"),
-                entries=[
-                    PageMenuEntry(
-                        title=_("Export as JSON"),
-                        icon_name="download",
-                        item=make_javascript_link("cmk.popup_menu.graph_export('graph_export')"),
-                    ),
-                    PageMenuEntry(
-                        title=_("Export as PNG"),
-                        icon_name="download",
-                        item=make_javascript_link("cmk.popup_menu.graph_export('graph_image')"),
-                    ),
-                ],
-            )
-        )
-
-    return [
-        PageMenuDropdown(
-            name="add_to",
-            title=_("Add to"),
-            topics=pagetypes.page_menu_add_to_topics(add_type) + visual_topics,
-            popup_data=[
-                add_type,
-                _encode_page_context(g.get("page_context", {})),
-                {
-                    "name": name,
-                },
-            ],
-        )
-    ]
-
-
-# TODO: VisualContext can't be part of the types, VisualContext has neither
-# None nor str on the values. Thus unhelpfully set to Dict
-def _encode_page_context(page_context: dict) -> dict:
-    return {k: "" if v is None else v for k, v in page_context.items()}
-
-
-def set_page_context(page_context: VisualContext) -> None:
-    g.page_context = page_context
-
-
-class CreateInfoModel(BaseModel):
-    params: dict
-    context: VisualContext | None
-
-
-def ajax_add_visual() -> None:
-    check_csrf_token()
-    visual_type_name = request.get_str_input_mandatory("visual_type")  # dashboards / views / ...
-    try:
-        visual_type = visual_type_registry[visual_type_name]()
-    except KeyError:
-        raise MKUserError("visual_type", _("Invalid visual type"))
-
-    visual_name = request.get_str_input_mandatory("visual_name")  # add to this visual
-
-    # type of the visual to add (e.g. view)
-    element_type = request.get_str_input_mandatory("type")
-
-    create_info = request.get_model_mandatory(CreateInfoModel, "create_info")
-
-    visual_type.add_visual_handler(
-        visual_name,
-        element_type,
-        create_info.context,
-        create_info.params,
-    )

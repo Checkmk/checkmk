@@ -267,7 +267,7 @@ test-extension-compatibility:
 	$(PYTEST) -T extension_compatibility $(PYTEST_SYSTEM_TEST_ARGS) $(realpath extension_compatibility)
 
 test-update:
-	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/test_update.py)
+	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update)
 
 test-plugins:
 	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration)

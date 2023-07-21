@@ -384,20 +384,6 @@ def active_context_from_request(infos: SingleInfos, context: VisualContext) -> V
     return context
 
 
-# Converts a context from the form { filtername : { ... } } into
-# the for { infoname : { filtername : { } } for editing.
-def pack_context_for_editing(context: VisualContext, info_keys: Sequence[InfoName]) -> dict:
-    # We need to pack all variables into dicts with the name of the
-    # info. Since we have no mapping from info the the filter variable,
-    # we pack into every info every filter. The dict valuespec will
-    # pick out what it needs. Yurks.
-    return {info_name: context for info_name in info_keys}
-
-
-def unpack_context_after_editing(packed_context: dict) -> VisualContext:
-    return get_merged_context(*(its_context for _info_type, its_context in packed_context.items()))
-
-
 # .
 #   .--Misc----------------------------------------------------------------.
 #   |                          __  __ _                                    |
@@ -409,10 +395,6 @@ def unpack_context_after_editing(packed_context: dict) -> VisualContext:
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
-
-
-def is_single_site_info(info_key: InfoName) -> bool:
-    return visual_info_registry[info_key]().single_site
 
 
 def get_missing_single_infos(single_infos: SingleInfos, context: VisualContext) -> set[FilterName]:
@@ -522,30 +504,3 @@ def get_singlecontext_vars(context: VisualContext, single_infos: SingleInfos) ->
         key: var_value(key) or var_value(link_filters.get(key, ""))
         for key in get_single_info_keys(single_infos)
     }
-
-
-@request_memoize()
-def may_add_site_hint(
-    visual_name: str,
-    info_keys: SingleInfos,
-    single_info_keys: SingleInfos,
-    filter_names: tuple[FilterName, ...],
-) -> bool:
-    """Whether or not the site hint may be set when linking to a visual with the given details"""
-    # When there is one non single site info used don't add the site hint
-    if [info_key for info_key in single_info_keys if not is_single_site_info(info_key)]:
-        return False
-
-    # Alternatively when the infos allow a site hint it is also needed to skip the site hint based
-    # on the filters used by the target visual
-    for info_key in info_keys:
-        for filter_key in visual_info_registry[info_key]().multiple_site_filters:
-            if filter_key in filter_names:
-                return False
-
-    # Hack for servicedesc view which is meant to show all services with the given
-    # description: Don't add the site filter for this view.
-    if visual_name == "servicedesc":
-        return False
-
-    return True

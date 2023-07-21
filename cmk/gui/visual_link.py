@@ -10,11 +10,14 @@ from typing import cast
 import cmk.gui.visuals as visuals
 from cmk.gui.data_source import data_source_registry
 from cmk.gui.display_options import display_options
+from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request, response
 from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
 from cmk.gui.type_defs import (
+    FilterName,
     HTTPVariables,
+    InfoName,
     Row,
     SingleInfos,
     ViewSpec,
@@ -119,7 +122,7 @@ def _get_singlecontext_html_vars_from_row(
         except KeyError:
             pass
 
-    add_site_hint = visuals.may_add_site_hint(
+    add_site_hint = _may_add_site_hint(
         visual_name,
         info_keys=tuple(visual_info_registry.keys()),
         single_info_keys=tuple(single_infos),
@@ -220,7 +223,7 @@ def get_linked_visual_request_vars(
         vars_values.append(("site", singlecontext_request_vars["site"]))
     else:
         # site may already be added earlier from the livestatus row
-        add_site_hint = visuals.may_add_site_hint(
+        add_site_hint = _may_add_site_hint(
             visual["name"],
             info_keys=tuple(visual_info_registry.keys()),
             single_info_keys=tuple(visual["single_infos"]),
@@ -231,3 +234,34 @@ def get_linked_visual_request_vars(
             vars_values.append(("site", request.get_ascii_input_mandatory("site")))
 
     return vars_values
+
+
+@request_memoize()
+def _may_add_site_hint(
+    visual_name: str,
+    info_keys: SingleInfos,
+    single_info_keys: SingleInfos,
+    filter_names: tuple[FilterName, ...],
+) -> bool:
+    """Whether or not the site hint may be set when linking to a visual with the given details"""
+    # When there is one non single site info used don't add the site hint
+    if [info_key for info_key in single_info_keys if not _is_single_site_info(info_key)]:
+        return False
+
+    # Alternatively when the infos allow a site hint it is also needed to skip the site hint based
+    # on the filters used by the target visual
+    for info_key in info_keys:
+        for filter_key in visual_info_registry[info_key]().multiple_site_filters:
+            if filter_key in filter_names:
+                return False
+
+    # Hack for servicedesc view which is meant to show all services with the given
+    # description: Don't add the site filter for this view.
+    if visual_name == "servicedesc":
+        return False
+
+    return True
+
+
+def _is_single_site_info(info_key: InfoName) -> bool:
+    return visual_info_registry[info_key]().single_site

@@ -109,12 +109,12 @@ strict_equality = true
 warn_redundant_casts = true
 warn_return_any = false  # 821 errors in 304 files
 warn_unused_configs = true
-warn_unused_ignores = false  # 55 errors in 31 files
+warn_unused_ignores = false  # 25 errors in 8 files
 # Miscellaneous stuff not in --strict
 disallow_any_decorated = false  # 3433 errors in 997 files
 disallow_any_explicit = false  # 2854 errors in 836 files
 disallow_any_expr = false  # 112427 errors in 3304 files
-disallow_any_unimported = false  # 317 errors in 47 files
+disallow_any_unimported = false  # 291 errors in 46 files
 warn_unreachable = false  # 240 errors in 133 files
 # hidden flags for PEP 688 compat, see https://github.com/python/mypy/issues/15313
 disable_bytearray_promotion = true

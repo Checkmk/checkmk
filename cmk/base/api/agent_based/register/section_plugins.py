@@ -134,7 +134,7 @@ def _create_snmp_parse_function(
 
     @functools.wraps(parse_function)
     def unpacking_parse_function(string_table):
-        return parse_function(string_table[0])  # type: ignore[misc] # no, it's not None.
+        return parse_function(string_table[0])
 
     return unpacking_parse_function
 
@@ -209,10 +209,7 @@ def _create_host_label_function(
 
         This allows for better typing in base code.
         """
-        for label in host_label_function(  # type: ignore[misc] # Bug: None not callable
-            *args,
-            **kwargs,
-        ):
+        for label in host_label_function(*args, **kwargs):
             if not isinstance(label, HostLabel):
                 raise TypeError("unexpected type in host label function: %r" % type(label))
             yield label

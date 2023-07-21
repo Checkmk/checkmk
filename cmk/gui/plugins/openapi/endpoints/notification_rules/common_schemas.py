@@ -7,7 +7,7 @@ from typing import Any, get_args, Type
 
 from marshmallow import post_dump, post_load, ValidationError
 from marshmallow.schema import Schema
-from marshmallow_oneofschema import OneOfSchema  # type: ignore[import]
+from marshmallow_oneofschema import OneOfSchema
 
 from cmk.utils.notify_types import (
     BuiltInPluginNames,

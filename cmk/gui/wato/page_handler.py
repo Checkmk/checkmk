@@ -79,7 +79,7 @@ def page_handler() -> None:
         cmk_version.is_managed_edition()
         and not managed.is_provider(active_config.current_customer)
         and not current_mode.startswith(("backup", "edit_backup"))
-    ):  # type: ignore[attr-defined]
+    ):
         raise MKGeneralException(_("Checkmk can only be configured on the managers central site."))
 
     mode_instance = mode_registry.get(current_mode, ModeNotImplemented)()

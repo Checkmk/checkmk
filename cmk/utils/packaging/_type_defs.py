@@ -10,7 +10,7 @@ from functools import cached_property
 from typing import Literal, Union
 
 from pydantic import BaseModel, validator
-from semver import VersionInfo  # type: ignore[import]
+from semver import VersionInfo
 
 
 class PackageError(Exception):

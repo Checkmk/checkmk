@@ -255,10 +255,10 @@ def conditions_options(status_code: int) -> Iterator:
     for k, gen in conditions.items():
         if status_code == 200:
             for value in gen():
-                yield {k: {"state": "enabled", "value": value}}  # type: ignore
-            yield {k: {"state": "disabled"}}  # type: ignore
+                yield {k: {"state": "enabled", "value": value}}
+            yield {k: {"state": "disabled"}}
         else:
-            yield {k: {"state": "enabled"}}  # type: ignore
+            yield {k: {"state": "enabled"}}
 
 
 def test_get_notification_rule(clients: ClientRegistry) -> None:

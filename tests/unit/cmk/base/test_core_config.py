@@ -56,7 +56,7 @@ def test_do_create_config_nagios(core_scenario: ConfigCache) -> None:
     assert config.PackedConfigStore.from_serial(LATEST_CONFIG).path.exists()
 
 
-def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:  # type:ignore[no-untyped-def]
+def test_get_host_attributes(monkeypatch: MonkeyPatch) -> None:
     ts = Scenario()
     ts.add_host(HostName("test-host"), tags={TagGroupID("agent"): TagID("no-agent")})
     ts.set_option(

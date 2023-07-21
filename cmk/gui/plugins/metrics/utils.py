@@ -1020,7 +1020,7 @@ def graph_templates_internal() -> dict[str, GraphTemplate]:
             # https://github.com/python/mypy/issues/1178
             metrics=[
                 (
-                    metric  # type: ignore[return-value]
+                    metric
                     if len(metric) == 2
                     else (
                         metric[0],

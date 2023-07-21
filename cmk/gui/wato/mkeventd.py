@@ -4841,6 +4841,24 @@ def _valuespec_active_checks_mkevents():
                     default_value=None,
                 ),
             ),
+            (
+                "show_last_log",
+                DropdownChoice(
+                    title=_("Show last log message"),
+                    help=_(
+                        "Display the last log message that lead to the worst state (i.e., the "
+                        "current state of the service) and choose the display location. "
+                        "Please note that log messages may contain sensitive information, "
+                        "so displaying them on a service can lead to a security risk."
+                    ),
+                    choices=[
+                        ("summary", _("In service summary")),
+                        ("details", _("In service details")),
+                        ("no", _("Don't show")),
+                    ],
+                    default_value="details",
+                ),
+            ),
         ],
         optional_keys=["application", "remote", "ignore_acknowledged", "item"],
         ignored_keys=["less_verbose"],  # is deprecated
@@ -4852,7 +4870,10 @@ rulespec_registry.register(
         group=RulespecGroupEventConsole,
         match_type="all",
         name="active_checks:mkevents",
-        valuespec=_valuespec_active_checks_mkevents,
+        valuespec=lambda: Transform(
+            valuespec=_valuespec_active_checks_mkevents(),
+            forth=lambda value: {"show_last_log": "summary"} | value,
+        ),
     )
 )
 

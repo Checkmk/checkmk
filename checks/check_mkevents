@@ -18,6 +18,12 @@ def check_mkevents_arguments(params):
     if params.get("ignore_acknowledged"):
         args.append("-a")
 
+    if (last_log := params.get("show_last_log")) is not None:
+        if last_log == "summary":
+            args.append("-l")
+        elif last_log == "details":
+            args.append("-L")
+
     hostspec = params.get("hostspec", "$HOSTADDRESS$")
     if isinstance(hostspec, list):
         hostspec = "/".join(hostspec)
@@ -25,6 +31,7 @@ def check_mkevents_arguments(params):
 
     if "application" in params:
         args.append(params["application"])
+
     return args
 
 

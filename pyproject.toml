@@ -107,7 +107,7 @@ no_implicit_reexport = true
 strict_concatenate = true
 strict_equality = true
 warn_redundant_casts = true
-warn_return_any = false  # 821 errors in 304 files
+warn_return_any = false  # 622 errors in 267 files
 warn_unused_configs = true
 warn_unused_ignores = false  # 25 errors in 8 files
 # Miscellaneous stuff not in --strict

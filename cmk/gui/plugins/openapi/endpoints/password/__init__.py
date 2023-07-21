@@ -180,7 +180,7 @@ def list_passwords(params: Mapping[str, Any]) -> Response:
     )
 
 
-def _serve_password(ident, password_details):
+def _serve_password(ident, password_details) -> Response:  # type: ignore[no-untyped-def]
     response = serve_json(serialize_password(ident, complement_customer(password_details)))
     return constructors.response_with_etag_created_from_dict(response, password_details)
 

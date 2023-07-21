@@ -44,7 +44,7 @@ def complement_customer(details):
     return details
 
 
-def serve_group(group, serializer):
+def serve_group(group, serializer) -> Response:  # type: ignore[no-untyped-def]
     response = Response()
     response.set_data(json.dumps(serializer(group)))
     if response.status_code != 204:

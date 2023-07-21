@@ -38,7 +38,7 @@ Key = Union[LabelKey, AggregationKey]
 
 @dataclass(frozen=True)
 class GCPLabels:
-    _data: Mapping[str, Any]
+    _data: Mapping[str, Mapping[str, Mapping[str, str]]]
 
     def __getitem__(self, key: LabelKey) -> str:
         return self._data[key.prefix]["labels"][key.key]
@@ -46,7 +46,7 @@ class GCPLabels:
 
 @dataclass(frozen=True)
 class GCPAggregation:
-    _data: Mapping[str, Any]
+    _data: Mapping[str, str]
 
     def __getitem__(self, key: AggregationKey) -> str:
         return self._data[key.key]

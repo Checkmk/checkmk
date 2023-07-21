@@ -413,11 +413,11 @@ def show_folder(params: Mapping[str, Any]) -> Response:
     return _serve_folder(folder, show_hosts=params["show_hosts"])
 
 
-def _serve_folder(
+def _serve_folder(  # type: ignore[no-untyped-def]
     folder,
     profile=None,
     show_hosts=False,
-):
+) -> Response:
     folder_json = _serialize_folder(folder, show_hosts)
     response = serve_json(folder_json, profile=profile)
     response.headers.add("ETag", ETags(strong_etags=[hash_of_folder(folder)]).to_header())

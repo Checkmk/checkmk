@@ -202,7 +202,7 @@ run_build() {
         COMPILED_SOURCES+=("$line")
     done < <(find build/src/CMakeFiles -name "*.o" -newer build/.run-build-stamp |
         sed 's,^build/src/CMakeFiles/[^/]*\.dir/\(.*\)\.o$,src/\1,' |
-        grep -v '\.pb\.cc$' | # We don't want to run IWYU or clang-tidy on generated protobuf code
+        grep -v '\.pb\.cc$' |
         sort)
 }
 
@@ -216,7 +216,7 @@ run_build_unit_tests() {
         COMPILED_SOURCES+=("$line")
     done < <(find build/test/CMakeFiles -name "*.o" -newer build/.run-build-unit-tests-stamp |
         sed 's,^build/test/CMakeFiles/[^/]*\.dir/\(.*\)\.o$,test/\1,' |
-        grep -v '\.pb\.cc$' | # We don't want to run IWYU or clang-tidy on generated protobuf code
+        grep -v '\.pb\.cc$' |
         sort)
     RUN_BUILD_UNIT_TESTS_RAN=yes
 }

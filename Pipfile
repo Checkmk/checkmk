@@ -108,7 +108,7 @@ vcrpy = "==4.2.1"  # used by various unit tests to mock HTTP transactions
 pycparser = "==2.21"  # needed by cffi
 pynacl = "==1.5.0"  # needed by paramiko
 cryptography = "~=3.4"  # needed by paramiko. NOTE: rust is needed for version >=3.4, see https://cryptography.io/en/latest/changelog/#v3-4
-bcrypt = "==3.2.2"  # needed by paramiko. NOTE: rust is needed for version >=4.0.0, see https://github.com/pyca/bcrypt#400
+bcrypt = "~=4.0"  # needed by paramiko. NOTE: rust is needed for version >=4.0.0, see https://github.com/pyca/bcrypt#400
 paramiko = "==2.10.3"
 pyasn1 = "==0.4.8"  # needed by pysnmp
 pyasn1-modules = "==0.2.8"  # needed by kubernetes

@@ -41,6 +41,19 @@ def _parameter_valuespec_epower():
                         ],
                     ),
                 ),
+                (
+                    "levels_upper",
+                    Tuple(
+                        help=_(
+                            "Levels for the electrical power consumption of a device "
+                            "like a UPS or a PDU. Several phases may be addressed independently."
+                        ),
+                        elements=[
+                            Integer(title=_("warning at"), unit="Watt", default_value=2000),
+                            Integer(title=_("critical at"), unit="Watt", default_value=4000),
+                        ],
+                    ),
+                ),
             ],
             optional_keys=False,
         ),

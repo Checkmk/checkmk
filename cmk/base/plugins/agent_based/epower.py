@@ -19,6 +19,7 @@ def check_epower(item: str, params: dict, section: dict[str, int]) -> CheckResul
         yield from check_levels(
             power,
             levels_lower=params.get("levels_lower"),
+            levels_upper=params.get("levels_upper"),
             metric_name="power",
             label="Power",
             render_func=lambda p: f"{int(p)} W",

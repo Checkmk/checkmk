@@ -5,7 +5,7 @@
 
 
 import time
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Container, Iterable, Mapping
 from typing import assert_never, Literal, TypeVar, Union
 
 import cmk.utils.cleanup
@@ -92,6 +92,7 @@ def automation_discovery(
     mode: DiscoveryMode,
     keep_clustered_vanished_services: bool,
     service_filters: _ServiceFilters | None,
+    enforced_services: Container[ServiceID],
     on_error: OnError,
 ) -> DiscoveryResult:
     console.verbose("  Doing discovery with mode '%s'...\n" % mode)
@@ -149,13 +150,13 @@ def automation_discovery(
             host_name,
             is_cluster=is_cluster,
             cluster_nodes=cluster_nodes,
-            config_cache=config_cache,
             providers=providers,
             plugins=plugins,
             ignore_service=ignore_service,
             ignore_plugin=ignore_plugin,
             get_effective_host=get_effective_host,
             get_service_description=get_service_description,
+            enforced_services=enforced_services,
             on_error=on_error,
         )
 
@@ -329,6 +330,7 @@ def autodiscovery(
     autodiscovery_queue: AutoQueue,
     reference_time: float,
     oldest_queued: float,
+    enforced_services: Container[ServiceID],
     on_error: OnError,
 ) -> tuple[DiscoveryResult | None, bool]:
     reason = _may_rediscover(
@@ -361,6 +363,7 @@ def autodiscovery(
             "keep_clustered_vanished_services", True
         ),
         service_filters=_ServiceFilters.from_settings(rediscovery_parameters),
+        enforced_services=enforced_services,
         on_error=on_error,
     )
     if result.error_text is not None:
@@ -472,13 +475,13 @@ def get_host_services(
     *,
     is_cluster: bool,
     cluster_nodes: Iterable[HostName],
-    config_cache: ConfigCache,
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     providers: Mapping[HostKey, Provider],
     ignore_service: Callable[[HostName, ServiceName], bool],
     ignore_plugin: Callable[[HostName, CheckPluginName], bool],
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    enforced_services: Container[ServiceID],
     on_error: OnError,
 ) -> ServicesByTransition:
     services: ServicesTable[_Transition]
@@ -520,7 +523,6 @@ def get_host_services(
     )
 
     # remove the ones shadowed by enforced services
-    enforced_services = config_cache.enforced_services_table(host_name)
     return _group_by_transition({k: v for k, v in services.items() if k not in enforced_services})
 
 

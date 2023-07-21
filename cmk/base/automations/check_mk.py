@@ -272,6 +272,7 @@ class AutomationDiscovery(DiscoveryAutomation):
                 mode=mode,
                 keep_clustered_vanished_services=True,
                 service_filters=None,
+                enforced_services=config_cache.enforced_services_table(hostname),
                 on_error=on_error,
             )
 
@@ -443,6 +444,7 @@ def _execute_discovery(
         ignore_plugin=config_cache.check_plugin_ignored,
         get_effective_host=config_cache.effective_host,
         find_service_description=config.service_description,
+        enforced_services=config_cache.enforced_services_table(host_name),
         on_error=on_error,
     )
     return discovery.CheckPreview(
@@ -573,6 +575,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                         autodiscovery_queue=autodiscovery_queue,
                         reference_time=rediscovery_reference_time,
                         oldest_queued=oldest_queued,
+                        enforced_services=config_cache.enforced_services_table(host_name),
                         on_error=on_error,
                     )
                 if discovery_result:

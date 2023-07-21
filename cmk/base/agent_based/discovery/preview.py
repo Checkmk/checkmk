@@ -12,6 +12,7 @@ from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.labels import DiscoveredHostLabelsStore, HostLabel, ServiceLabel
 from cmk.utils.log import console
+from cmk.utils.rulesets.ruleset_matcher import RulesetName
 from cmk.utils.sectionname import SectionMap
 from cmk.utils.servicename import ServiceName
 from cmk.utils.timeperiod import timeperiod_active
@@ -27,7 +28,7 @@ from cmk.checkengine import (
     SectionPlugin,
     SummarizerFunction,
 )
-from cmk.checkengine.check_table import ConfiguredService
+from cmk.checkengine.check_table import ConfiguredService, ServiceID
 from cmk.checkengine.checking import CheckPluginName, Item
 from cmk.checkengine.checkresults import ActiveCheckResult, ServiceCheckResult
 from cmk.checkengine.discovery import (
@@ -81,6 +82,7 @@ def get_check_preview(
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     compute_check_parameters: Callable[[HostName, AutocheckEntry], TimespecificParameters],
+    enforced_services: Mapping[ServiceID, tuple[RulesetName, ConfiguredService]],
     on_error: OnError,
 ) -> CheckPreview:
     """Get the list of service of a host or cluster and guess the current state of
@@ -136,13 +138,13 @@ def get_check_preview(
         host_name,
         is_cluster=is_cluster,
         cluster_nodes=cluster_nodes,
-        config_cache=config_cache,
         providers=providers,
         plugins=discovery_plugins,
         ignore_service=ignore_service,
         ignore_plugin=ignore_plugin,
         get_effective_host=get_effective_host,
         get_service_description=find_service_description,
+        enforced_services=enforced_services,
         on_error=on_error,
     )
 
@@ -185,7 +187,7 @@ def get_check_preview(
                 get_effective_host=get_effective_host,
                 value_store_manager=value_store_manager,
             )
-            for _ruleset_name, service in config_cache.enforced_services_table(host_name).values()
+            for _ruleset_name, service in enforced_services.values()
         ]
 
     return CheckPreview(

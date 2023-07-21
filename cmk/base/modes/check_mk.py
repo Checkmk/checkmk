@@ -1658,6 +1658,7 @@ def mode_check_discovery(
             ignore_plugin=config_cache.check_plugin_ignored,
             get_effective_host=config_cache.effective_host,
             find_service_description=config.service_description,
+            enforced_services=config_cache.enforced_services_table(hostname),
         )
         state, text = check_result.state, check_result.as_text()
 

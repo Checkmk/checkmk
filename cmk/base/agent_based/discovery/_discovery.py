@@ -5,7 +5,7 @@
 import enum
 import itertools
 from collections import Counter
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from typing import Literal
 
 import cmk.utils.paths
@@ -28,6 +28,7 @@ from cmk.checkengine import (
     SourceInfo,
     SummarizerFunction,
 )
+from cmk.checkengine.check_table import ServiceID
 from cmk.checkengine.checking import CheckPluginName, Item
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import (
@@ -90,6 +91,7 @@ def execute_check_discovery(
     ignore_plugin: Callable[[HostName, CheckPluginName], bool],
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
+    enforced_services: Container[ServiceID],
 ) -> ActiveCheckResult:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
     # 1. use caches as default:
@@ -141,13 +143,13 @@ def execute_check_discovery(
         host_name,
         is_cluster=is_cluster,
         cluster_nodes=cluster_nodes,
-        config_cache=config_cache,
         providers=providers,
         plugins=plugins,
         ignore_service=ignore_service,
         ignore_plugin=ignore_plugin,
         get_effective_host=get_effective_host,
         get_service_description=find_service_description,
+        enforced_services=enforced_services,
         on_error=OnError.RAISE,
     )
 

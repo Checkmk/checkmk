@@ -1,0 +1,11 @@
+Title: check_mkevents: Display of last log line configurable
+Class: feature
+Compatible: compat
+Component: ec
+Date: 1689966800
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+* Adapted ruleset and argument thingy

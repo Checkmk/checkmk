@@ -30,7 +30,7 @@ register.check_plugin(
     name="epower",
     service_name="Power phase %s",
     discovery_function=discover_epower,
-    check_default_parameters={"levels_lower": (20, 1), "levels_upper": (2000,4000)},
+    check_default_parameters={"levels_lower": (20, 1), "levels_upper": (2000, 4000)},
     check_ruleset_name="epower",
     check_function=check_epower,
 )

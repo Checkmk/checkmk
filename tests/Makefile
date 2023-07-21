@@ -46,6 +46,7 @@ SYSTEM_TESTS := \
     test-plugins-integration \
     test-composition \
     test-update \
+    test-plugins \
     test-gui-crawl \
     test-xss-crawl \
     test-gui-e2e \
@@ -267,6 +268,9 @@ test-extension-compatibility:
 
 test-update:
 	$(PYTEST) -T update $(PYTEST_SYSTEM_TEST_ARGS) $(realpath update/test_update.py)
+
+test-plugins:
+	$(PYTEST) -T plugins_integration $(PYTEST_SYSTEM_TEST_ARGS) $(realpath plugins_integration)
 
 $(foreach TEST,$(SYSTEM_TESTS),$(TEST)-docker):
 	$(PIPENV) run scripts/run-dockerized.py "$(subst -docker,,$@)"

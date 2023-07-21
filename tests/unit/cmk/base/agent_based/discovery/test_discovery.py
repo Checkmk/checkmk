@@ -1509,6 +1509,7 @@ def test__discover_services_on_cluster(
         providers=scenario.providers,
         plugins=DiscoveryPluginMapper(config_cache=scenario.config_cache),
         ignore_plugin=lambda *args, **kw: False,
+        get_effective_host=lambda *args, **kw: scenario.parent,
         get_service_description=config.service_description,
         on_error=OnError.RAISE,
     )

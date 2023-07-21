@@ -76,6 +76,7 @@ def get_check_preview(
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     ignore_service: Callable[[HostName, ServiceName], bool],
     ignore_plugin: Callable[[HostName, CheckPluginName], bool],
+    get_effective_host: Callable[[HostName, ServiceName], HostName],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     compute_check_parameters: Callable[[HostName, AutocheckEntry], TimespecificParameters],
     on_error: OnError,
@@ -136,6 +137,7 @@ def get_check_preview(
         plugins=discovery_plugins,
         ignore_service=ignore_service,
         ignore_plugin=ignore_plugin,
+        get_effective_host=get_effective_host,
         get_service_description=find_service_description,
         on_error=on_error,
     )
@@ -157,6 +159,7 @@ def get_check_preview(
                 ),
                 check_source=check_source,
                 providers=providers,
+                get_effective_host=get_effective_host,
                 found_on_nodes=found_on_nodes,
                 value_store_manager=value_store_manager,
             )
@@ -171,6 +174,7 @@ def get_check_preview(
                 check_source="manual",  # "enforced" would be nicer
                 providers=providers,
                 found_on_nodes=[host_name],
+                get_effective_host=get_effective_host,
                 value_store_manager=value_store_manager,
             )
             for _ruleset_name, service in config_cache.enforced_services_table(host_name).values()
@@ -195,6 +199,7 @@ def _check_preview_table_row(
     check_source: _Transition | Literal["manual"],
     providers: Mapping[HostKey, Provider],
     found_on_nodes: Sequence[HostName],
+    get_effective_host: Callable[[HostName, ServiceName], HostName],
     value_store_manager: ValueStoreManager,
 ) -> CheckPreviewEntry:
     check_plugin = check_plugins.get(service.check_plugin_name)
@@ -209,6 +214,7 @@ def _check_preview_table_row(
             providers,
             service,
             check_plugin,
+            get_effective_host=get_effective_host,
             value_store_manager=value_store_manager,
             rtc_package=None,
         ).result

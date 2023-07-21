@@ -86,6 +86,7 @@ def execute_check_discovery(
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     ignore_service: Callable[[HostName, ServiceName], bool],
     ignore_plugin: Callable[[HostName, CheckPluginName], bool],
+    get_effective_host: Callable[[HostName, ServiceName], HostName],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> ActiveCheckResult:
     # Note: '--cache' is set in core_cmc, nagios template or even on CL and means:
@@ -141,6 +142,7 @@ def execute_check_discovery(
         plugins=plugins,
         ignore_service=ignore_service,
         ignore_plugin=ignore_plugin,
+        get_effective_host=get_effective_host,
         get_service_description=find_service_description,
         on_error=OnError.RAISE,
     )

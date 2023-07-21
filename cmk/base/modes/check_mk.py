@@ -1654,6 +1654,7 @@ def mode_check_discovery(
             plugins=DiscoveryPluginMapper(config_cache=config_cache),
             ignore_service=config_cache.service_ignored,
             ignore_plugin=config_cache.check_plugin_ignored,
+            get_effective_host=config_cache.effective_host,
             find_service_description=config.service_description,
         )
         state, text = check_result.state, check_result.as_text()
@@ -2060,6 +2061,7 @@ def mode_check(
             check_plugins=CheckPluginMapper(),
             inventory_plugins=InventoryPluginMapper(),
             run_plugin_names=run_plugin_names,
+            get_effective_host=config_cache.effective_host,
             submitter=get_submitter_(
                 check_submission=config.check_submission,
                 monitoring_core=config.monitoring_core,

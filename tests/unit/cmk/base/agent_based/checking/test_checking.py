@@ -240,7 +240,11 @@ def test_config_cache_get_clustered_service_node_keys_no_cluster(monkeypatch: Mo
     )
     # empty, we have no cluster:
     assert [] == checking._get_clustered_service_node_keys(
-        config_cache, HostName("cluster.test"), SourceType.HOST, "Test Service"
+        config_cache,
+        HostName("cluster.test"),
+        SourceType.HOST,
+        "Test Service",
+        get_effective_host=lambda hn, *args, **kw: hn,
     )
 
 
@@ -259,7 +263,11 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
     )
     # empty for a node:
     assert [] == checking._get_clustered_service_node_keys(
-        config_cache, HostName("node1.test"), SourceType.HOST, "Test Service"
+        config_cache,
+        HostName("node1.test"),
+        SourceType.HOST,
+        "Test Service",
+        get_effective_host=lambda hn, *args, **kw: hn,
     )
 
     # empty for cluster (we have not clustered the service)
@@ -267,7 +275,11 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
         HostKey(hostname=HostName("node1.test"), source_type=SourceType.HOST),
         HostKey(hostname=HostName("node2.test"), source_type=SourceType.HOST),
     ] == checking._get_clustered_service_node_keys(
-        config_cache, cluster_test, SourceType.HOST, "Test Service"
+        config_cache,
+        cluster_test,
+        SourceType.HOST,
+        "Test Service",
+        get_effective_host=lambda hn, *args, **kw: hn,
     )
 
 
@@ -298,7 +310,11 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
         lambda hostname, *args, **kw: "dummy.test.ip.%s" % hostname[4],
     )
     assert checking._get_clustered_service_node_keys(
-        config_cache, cluster, SourceType.HOST, "Test Service"
+        config_cache,
+        cluster,
+        SourceType.HOST,
+        "Test Service",
+        get_effective_host=lambda hn, *args, **kw: hn,
     ) == [
         HostKey(node1, SourceType.HOST),
         HostKey(node2, SourceType.HOST),
@@ -312,5 +328,9 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
         HostKey(hostname=HostName("node1.test"), source_type=SourceType.HOST),
         HostKey(hostname=HostName("node2.test"), source_type=SourceType.HOST),
     ] == checking._get_clustered_service_node_keys(
-        config_cache, cluster, SourceType.HOST, "Test Unclustered"
+        config_cache,
+        cluster,
+        SourceType.HOST,
+        "Test Unclustered",
+        get_effective_host=lambda hn, *args, **kw: hn,
     )

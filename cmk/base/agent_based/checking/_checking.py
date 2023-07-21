@@ -113,6 +113,7 @@ def execute_checkmk_checks(
     section_plugins: SectionMap[SectionPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
+    get_effective_host: Callable[[HostName, ServiceName], HostName],
     run_plugin_names: Container[CheckPluginName],
     perfdata_with_times: bool,
     submitter: Submitter,
@@ -133,6 +134,7 @@ def execute_checkmk_checks(
             services=services,
             check_plugins=check_plugins,
             run_plugin_names=run_plugin_names,
+            get_effective_host=get_effective_host,
             submitter=submitter,
             rtc_package=None,
         )
@@ -289,6 +291,7 @@ def check_host_services(
     services: Sequence[ConfiguredService],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     run_plugin_names: Container[CheckPluginName],
+    get_effective_host: Callable[[HostName, ServiceName], HostName],
     submitter: Submitter,
     rtc_package: AgentRawData | None,
 ) -> Sequence[_AggregatedResult]:
@@ -326,6 +329,7 @@ def check_host_services(
                         check_plugins[service.check_plugin_name],
                         value_store_manager=value_store_manager,
                         rtc_package=rtc_package,
+                        get_effective_host=get_effective_host,
                     )
                 submittables.append(submittable)
 
@@ -400,6 +404,7 @@ def get_aggregated_result(
     *,
     rtc_package: AgentRawData | None,
     value_store_manager: value_store.ValueStoreManager,
+    get_effective_host: Callable[[HostName, ServiceName], HostName],
 ) -> _AggregatedResult:
     """Run the check function and aggregate the subresults
 
@@ -414,7 +419,12 @@ def get_aggregated_result(
     )
 
     section_kws, error_result = get_monitoring_data_kwargs(
-        host_name, providers, config_cache, service, plugin.sections
+        host_name,
+        providers,
+        config_cache,
+        service,
+        plugin.sections,
+        get_effective_host=get_effective_host,
     )
     if not section_kws:  # no data found
         return _AggregatedResult(
@@ -504,15 +514,13 @@ def _get_clustered_service_node_keys(
     cluster_name: HostName,
     source_type: SourceType,
     service_descr: ServiceName,
+    *,
+    get_effective_host: Callable[[HostName, ServiceName], HostName],
 ) -> Sequence[HostKey]:
     """Returns the node keys if a service is clustered, otherwise an empty sequence"""
     nodes = config_cache.nodes_of(cluster_name)
     used_nodes = (
-        [
-            nn
-            for nn in (nodes or ())
-            if cluster_name == config_cache.effective_host(nn, service_descr)
-        ]
+        [nn for nn in (nodes or ()) if cluster_name == get_effective_host(nn, service_descr)]
         or nodes  # IMHO: this can never happen, but if it does, using nodes is wrong.
         or ()
     )
@@ -527,6 +535,8 @@ def get_monitoring_data_kwargs(
     service: ConfiguredService,
     sections: Sequence[ParsedSectionName],
     source_type: SourceType | None = None,
+    *,
+    get_effective_host: Callable[[HostName, ServiceName], HostName],
 ) -> tuple[Mapping[str, object], ServiceCheckResult]:
     # Mapping[str, object] stands for either
     #  * Mapping[HostName, Mapping[str, ParsedSectionContent | None]] for clusters, or
@@ -544,6 +554,7 @@ def get_monitoring_data_kwargs(
             host_name,
             source_type,
             service.description,
+            get_effective_host=get_effective_host,
         )
         return (
             get_section_cluster_kwargs(

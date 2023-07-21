@@ -85,6 +85,7 @@ def automation_discovery(
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     ignore_service: Callable[[HostName, ServiceName], bool],
     ignore_plugin: Callable[[HostName, CheckPluginName], bool],
+    get_effective_host: Callable[[HostName, ServiceName], HostName],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     mode: DiscoveryMode,
     keep_clustered_vanished_services: bool,
@@ -149,6 +150,7 @@ def automation_discovery(
             plugins=plugins,
             ignore_service=ignore_service,
             ignore_plugin=ignore_plugin,
+            get_effective_host=get_effective_host,
             get_service_description=get_service_description,
             on_error=on_error,
         )
@@ -313,6 +315,7 @@ def autodiscovery(
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     ignore_service: Callable[[HostName, ServiceName], bool],
     ignore_plugin: Callable[[HostName, CheckPluginName], bool],
+    get_effective_host: Callable[[HostName, ServiceName], HostName],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     schedule_discovery_check: Callable[[HostName], object],
     rediscovery_parameters: RediscoveryParameters,
@@ -343,6 +346,7 @@ def autodiscovery(
         plugins=plugins,
         ignore_service=ignore_service,
         ignore_plugin=ignore_plugin,
+        get_effective_host=get_effective_host,
         get_service_description=get_service_description,
         mode=DiscoveryMode(rediscovery_parameters.get("mode")),
         keep_clustered_vanished_services=rediscovery_parameters.get(
@@ -463,6 +467,7 @@ def get_host_services(
     providers: Mapping[HostKey, Provider],
     ignore_service: Callable[[HostName, ServiceName], bool],
     ignore_plugin: Callable[[HostName, CheckPluginName], bool],
+    get_effective_host: Callable[[HostName, ServiceName], HostName],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     on_error: OnError,
 ) -> ServicesByTransition:
@@ -476,6 +481,7 @@ def get_host_services(
                 providers=providers,
                 plugins=plugins,
                 ignore_plugin=ignore_plugin,
+                get_effective_host=get_effective_host,
                 get_service_description=get_service_description,
                 on_error=on_error,
             )
@@ -489,7 +495,7 @@ def get_host_services(
                 on_error=on_error,
                 ignore_service=ignore_service,
                 ignore_plugin=ignore_plugin,
-                get_effective_host=config_cache.effective_host,
+                get_effective_host=get_effective_host,
                 get_service_description=get_service_description,
             )
         }
@@ -647,6 +653,7 @@ def _get_cluster_services(
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     providers: Mapping[HostKey, Provider],
     ignore_plugin: Callable[[HostName, CheckPluginName], bool],
+    get_effective_host: Callable[[HostName, ServiceName], HostName],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     on_error: OnError,
 ) -> ServicesTable[_Transition]:
@@ -690,7 +697,7 @@ def _get_cluster_services(
                     check_source=check_source,
                     host_name=host_name,
                     node_name=node,
-                    services_cluster=config_cache.effective_host(
+                    services_cluster=get_effective_host(
                         node, get_service_description(node, *entry.id())
                     ),
                     entry=entry,

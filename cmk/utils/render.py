@@ -15,7 +15,6 @@ from datetime import timedelta
 from typing import final
 
 from cmk.utils.i18n import _
-from cmk.utils.prediction import Seconds
 
 # .
 #   .--Date/Time-----------------------------------------------------------.
@@ -34,7 +33,7 @@ class Renderer(abc.ABC):
 
 class SecondsRenderer(Renderer):
     @staticmethod
-    def get_tuple(value: Seconds) -> tuple[int, int, int, int]:
+    def get_tuple(value: int) -> tuple[int, int, int, int]:
         """return a (days, hours, minutes, seconds) tuple
         >>> SecondsRenderer.get_tuple(1)
         (0, 0, 0, 1)
@@ -47,7 +46,7 @@ class SecondsRenderer(Renderer):
         return days, hours, mins, secs
 
     @classmethod
-    def detailed_str(cls, value: Seconds) -> str:
+    def detailed_str(cls, value: int) -> str:
         """Convert seconds into a more readable string
         >>> SecondsRenderer.detailed_str(1)
         '1 seconds'
@@ -85,7 +84,6 @@ def date_and_time(timestamp: float | None) -> str:
     return f"{date(timestamp)} {time_of_day(timestamp)}"
 
 
-# NOTE: strftime's format *must* be of type str, both in Python 2 and 3.
 def time_of_day(timestamp: float | None) -> str:
     return time.strftime(str(_("%H:%M:%S")), time.localtime(timestamp))
 

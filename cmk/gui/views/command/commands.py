@@ -10,7 +10,6 @@ from typing import Any, Literal
 import livestatus
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.prediction import Seconds
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.servicename import ServiceName
 
@@ -1166,9 +1165,9 @@ class CommandScheduleDowntimes(Command):
             recurring_type = 0
         return recurring_type
 
-    def _flexible_option(self) -> Seconds:
+    def _flexible_option(self) -> int:
         if request.var("_down_flexible"):
-            delayed_duration: Seconds = self._vs_duration().from_html_vars("_down_duration")
+            delayed_duration: int = self._vs_duration().from_html_vars("_down_duration")
             self._vs_duration().validate_value(delayed_duration, "_down_duration")
         else:
             delayed_duration = 0

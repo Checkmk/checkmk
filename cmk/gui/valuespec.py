@@ -72,7 +72,6 @@ import cmk.utils.regex
 from cmk.utils.encryption import Encrypter, fetch_certificate_details
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.plugin_registry import Registry
-from cmk.utils.prediction import Seconds, TimeRange
 from cmk.utils.render import SecondsRenderer
 from cmk.utils.urls import is_allowed_url
 from cmk.utils.user import UserId
@@ -414,31 +413,31 @@ class FixedValue(ValueSpec[T]):
             )
 
 
-class Age(ValueSpec[Seconds]):
+class Age(ValueSpec[int]):
     """Time in seconds"""
 
     def __init__(  # pylint: disable=redefined-builtin
         self,
         label: str | None = None,
-        minvalue: Seconds | None = None,
-        maxvalue: Seconds | None = None,
+        minvalue: int | None = None,
+        maxvalue: int | None = None,
         display: Container[Literal["days", "hours", "minutes", "seconds"]] | None = None,
         title: str | None = None,
         help: ValueSpecHelp | None = None,
-        default_value: ValueSpecDefault[Seconds] = DEF_VALUE,
-        validate: ValueSpecValidateFunc[Seconds] | None = None,
+        default_value: ValueSpecDefault[int] = DEF_VALUE,
+        validate: ValueSpecValidateFunc[int] | None = None,
         cssclass: str | None = None,
     ):
         super().__init__(title=title, help=help, default_value=default_value, validate=validate)
         self._label = label
-        self._bounds = Bounds[Seconds](minvalue, maxvalue)
+        self._bounds = Bounds[int](minvalue, maxvalue)
         self._display = display if display is not None else ["days", "hours", "minutes", "seconds"]
         self._cssclass = [] if cssclass is None else [cssclass]
 
-    def canonical_value(self) -> Seconds:
+    def canonical_value(self) -> int:
         return self._bounds.lower(0)
 
-    def render_input(self, varprefix: str, value: Seconds) -> None:
+    def render_input(self, varprefix: str, value: int) -> None:
         days, rest = divmod(value, 60 * 60 * 24)
         hours, rest = divmod(rest, 60 * 60)
         minutes, seconds = divmod(rest, 60)
@@ -465,7 +464,7 @@ class Age(ValueSpec[Seconds]):
                 takeover = (takeover + val) * tkovr_fac
         html.close_div()
 
-    def from_html_vars(self, varprefix: str) -> Seconds:
+    def from_html_vars(self, varprefix: str) -> int:
         # TODO: Validate for correct numbers!
         return (
             request.get_integer_input_mandatory(varprefix + "_days", 0) * 3600 * 24
@@ -474,28 +473,28 @@ class Age(ValueSpec[Seconds]):
             + request.get_integer_input_mandatory(varprefix + "_seconds", 0)
         )
 
-    def mask(self, value: Seconds) -> Seconds:
+    def mask(self, value: int) -> int:
         return value
 
-    def value_to_html(self, value: Seconds) -> ValueSpecText:
+    def value_to_html(self, value: int) -> ValueSpecText:
         if value == 0:
             return _("no time")
         return SecondsRenderer.detailed_str(value)
 
-    def value_to_json(self, value: Seconds) -> JSONValue:
+    def value_to_json(self, value: int) -> JSONValue:
         return value
 
-    def value_from_json(self, json_value: JSONValue) -> Seconds:
+    def value_from_json(self, json_value: JSONValue) -> int:
         return json_value
 
-    def validate_datatype(self, value: Seconds, varprefix: str) -> None:
+    def validate_datatype(self, value: int, varprefix: str) -> None:
         if not isinstance(value, int):
             raise MKUserError(
                 varprefix,
                 _("The value %r has type %s, but must be of type int") % (value, _type_name(value)),
             )
 
-    def _validate_value(self, value: Seconds, varprefix: str) -> None:
+    def _validate_value(self, value: int, varprefix: str) -> None:
         self._bounds.validate_value(value, varprefix)
 
 
@@ -4811,7 +4810,7 @@ TimerangeValue = Union[None, int, str, tuple[str, Any]]  # TODO: Be more specifi
 
 
 class ComputedTimerange(NamedTuple):
-    range: TimeRange
+    range: tuple[int, int]
     title: str
 
 

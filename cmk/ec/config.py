@@ -16,7 +16,6 @@ from re import Pattern
 from typing import Any, Literal, TypedDict, Union
 
 from cmk.utils.exceptions import MKException
-from cmk.utils.prediction import Seconds
 from cmk.utils.translations import TranslationOptions
 
 TextPattern = str | Pattern[str]
@@ -170,7 +169,7 @@ class Rule(TypedDict, total=False):
     hits: int
     id: str
     invert_matching: bool
-    livetime: tuple[Seconds, Iterable[Literal["open", "ack"]]]
+    livetime: tuple[int, Iterable[Literal["open", "ack"]]]
     match: TextPattern
     match_application: TextPattern
     match_facility: int

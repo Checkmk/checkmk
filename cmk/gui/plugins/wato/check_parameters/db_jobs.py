@@ -3,12 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.utils.prediction import Seconds
-
 from cmk.gui.i18n import _
 from cmk.gui.valuespec import Age, DropdownChoice, MonitoringState, Tuple
 
-run_duration: Tuple[tuple[Seconds, Seconds]] = Tuple(
+run_duration: Tuple[tuple[int, int]] = Tuple(
     title=_("Maximum run duration for last execution"),
     help=_("Here you can define an upper limit for the run duration of last execution of the job."),
     elements=[

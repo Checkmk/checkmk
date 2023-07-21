@@ -133,6 +133,8 @@ from cmk.gui.valuespec import (
 )
 
 from ._breadcrumb import visual_page_breadcrumb as visual_page_breadcrumb
+from ._page_create_visual import page_create_visual as page_create_visual
+from ._page_create_visual import SingleInfoSelection as SingleInfoSelection
 from ._page_list import page_list as page_list
 from ._permissions import declare_visual_permissions as declare_visual_permissions
 from ._store import available as available
@@ -202,82 +204,6 @@ def _register_pre_21_plugin_api() -> None:
         "VisualType",
     ):
         api_module.__dict__[name] = plugin_utils.__dict__[name]
-
-
-# .
-#   .--Create Visual-------------------------------------------------------.
-#   |      ____                _        __     ___                 _       |
-#   |     / ___|_ __ ___  __ _| |_ ___  \ \   / (_)___ _   _  __ _| |      |
-#   |    | |   | '__/ _ \/ _` | __/ _ \  \ \ / /| / __| | | |/ _` | |      |
-#   |    | |___| | |  __/ (_| | ||  __/   \ V / | \__ \ |_| | (_| | |      |
-#   |     \____|_|  \___|\__,_|\__\___|    \_/  |_|___/\__,_|\__,_|_|      |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Realizes the steps before getting to the editor (context type)       |
-#   '----------------------------------------------------------------------'
-
-
-def page_create_visual(
-    what: VisualTypeName, info_keys: SingleInfos, next_url: str | None = None
-) -> None:
-    visual_name = visual_type_registry[what]().title
-    title = _("Create %s") % visual_name
-    what_s = what[:-1]
-
-    vs_infos = SingleInfoSelection(info_keys)
-
-    breadcrumb = visual_page_breadcrumb(what, title, "create")
-    make_header(
-        html,
-        title,
-        breadcrumb,
-        make_simple_form_page_menu(
-            visual_name.capitalize(),
-            breadcrumb,
-            form_name="create_visual",
-            button_name="_save",
-            save_title=_("Continue"),
-        ),
-    )
-
-    html.open_p()
-    html.write_text(
-        _(
-            "Depending on the chosen datasource, a %s can list <i>multiple</i> or <i>single</i> objects. "
-            "For example, the <i>services</i> datasource can be used to simply create a list "
-            "of <i>multiple</i> services, a list of <i>multiple</i> services of a <i>single</i> host or even "
-            "a list of services with the same name on <i>multiple</i> hosts. When you just want to "
-            "create a list of objects, simply continue with the default choice (no restrictions). "
-            "Alternatively, you have the option to restrict to a single host or to choose the type "
-            "of objects you want to restrict to manually."
-        )
-        % what_s
-    )
-    html.close_p()
-
-    if request.var("_save") and transactions.check_transaction():
-        try:
-            single_infos = vs_infos.from_html_vars("single_infos")
-            vs_infos.validate_value(single_infos, "single_infos")
-            next_url = (
-                next_url or "edit_" + what_s + ".py?mode=create"
-            ) + "&single_infos=%s" % ",".join(single_infos)
-            raise HTTPRedirect(next_url)
-        except MKUserError as e:
-            html.user_error(e)
-
-    html.begin_form("create_visual")
-    html.hidden_field("mode", "create")
-
-    forms.header(_("Select specific object type"))
-    forms.section(vs_infos.title())
-    vs_infos.render_input("single_infos", "")
-    html.help(vs_infos.help())
-    forms.end()
-
-    html.hidden_fields()
-    html.end_form()
-    html.footer()
 
 
 # .
@@ -1356,79 +1282,6 @@ class VisualFilter(ValueSpec[FilterHTTPVariables]):
 
     def value_from_json(self, json_value: JSONValue) -> FilterHTTPVariables:
         raise NotImplementedError()  # FIXME! Violates LSP!
-
-
-def _single_info_selection_to_valuespec(restrictions: Sequence[str]) -> tuple[str, Sequence[str]]:
-    if not restrictions:
-        choice_name = "no_restriction"
-    elif restrictions == ["host"]:
-        choice_name = "single_host"
-    else:
-        choice_name = "manual_selection"
-    return choice_name, restrictions
-
-
-def _single_info_selection_from_valuespec(
-    name_and_restrictions: tuple[str, Sequence[str]]
-) -> Sequence[str]:
-    return name_and_restrictions[1]
-
-
-def SingleInfoSelection(info_keys: SingleInfos) -> Transform:
-    infos = [visual_info_registry[key]() for key in info_keys]
-    manual_choices = [
-        (i.ident, _("Show information of a single %s") % i.title)
-        for i in sorted(infos, key=lambda inf: (inf.sort_index, inf.title))
-    ]
-
-    cascading_dropdown_choices: list[tuple[str, str, ValueSpec]] = [
-        (
-            "no_restriction",
-            _("No restrictions to specific objects"),
-            FixedValue(
-                value=[],
-                totext="",
-            ),
-        ),
-    ]
-
-    if any(manual_choice[0] == "host" for manual_choice in manual_choices):
-        cascading_dropdown_choices.append(
-            (
-                "single_host",
-                _("Restrict to a single host"),
-                FixedValue(
-                    value=["host"],
-                    totext="",
-                ),
-            ),
-        )
-
-    cascading_dropdown_choices.append(
-        (
-            "manual_selection",
-            _("Configure restrictions manually"),
-            DualListChoice(
-                title=_("Specific objects"),
-                choices=manual_choices,
-                rows=10,
-                allow_empty=False,
-            ),
-        ),
-    )
-
-    # We need these transformations because the code which further processes the user input to this
-    # valuespec expects a list of strings (since this was once the DualListChoice now located under
-    # "manual_selection").
-    return Transform(
-        valuespec=CascadingDropdown(
-            choices=cascading_dropdown_choices,
-            title=_("Specific objects"),
-            sorted=False,
-        ),
-        from_valuespec=_single_info_selection_from_valuespec,
-        to_valuespec=_single_info_selection_to_valuespec,
-    )
 
 
 # Converts a context from the form { filtername : { ... } } into

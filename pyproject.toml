@@ -127,7 +127,6 @@ module = [
     "cmk.gui.backup",
     "cmk.gui.mobile.views",
     "cmk.gui.views.layout",
-    "cmk.gui.views.painter",
     "cmk.gui.wato.pages.parentscan",
     "cmk.gui.wato.pages.bulk_edit",
     "cmk.gui.wato.pages.bulk_discovery",

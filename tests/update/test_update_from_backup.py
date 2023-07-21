@@ -54,3 +54,6 @@ def test_update_from_backup() -> None:
 
     for hostname in hostnames:
         assert base_services[hostname].sort() == target_services[hostname].sort()
+
+    logger.info("Removing test-site...")
+    target_site.rm()

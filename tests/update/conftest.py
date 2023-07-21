@@ -10,7 +10,7 @@ import subprocess
 from collections.abc import Iterator
 from pathlib import Path
 from pprint import pformat
-from typing import Optional
+from typing import Generator, Optional
 
 import pytest
 
@@ -329,11 +329,14 @@ def version_supported(version: str) -> bool:
 @pytest.fixture(
     name="test_site", params=BaseVersions.BASE_VERSIONS, ids=BaseVersions.IDS, scope="module"
 )
-def get_site(request: pytest.FixtureRequest) -> Site:
+def get_site(request: pytest.FixtureRequest) -> Generator[Site, None, None]:
     """Install the test site with the base version."""
     base_version = request.param
     logger.info("Setting up test-site ...")
-    return _get_site(base_version, interactive=True)
+    test_site = _get_site(base_version, interactive=True)
+    yield _get_site(base_version, interactive=True)
+    logger.info("Removing test-site...")
+    test_site.rm()
 
 
 def update_site(site: Site, target_version: CMKVersion, interactive: bool = True) -> Site:

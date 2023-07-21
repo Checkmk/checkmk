@@ -273,7 +273,7 @@ def test_mem_win(
     expected_result: CheckResult,
 ) -> None:
     mocker.patch(
-        "cmk.base.check_api._prediction.get_levels",
+        "cmk.base.check_api._get_predictive_levels",
         return_value=(100000, (90000, 110000, None, None)),
     )
     with current_host(HostName("unittest-hn")), current_service(

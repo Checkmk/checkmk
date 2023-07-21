@@ -79,7 +79,6 @@ from cmk.utils.http_proxy_config import http_proxy_config_from_user_setting, HTT
 from cmk.utils.labels import Labels
 from cmk.utils.log import console
 from cmk.utils.macros import replace_macros_in_str
-from cmk.utils.prediction import Seconds
 from cmk.utils.regex import regex
 from cmk.utils.rulesets import RuleSetName
 from cmk.utils.rulesets.ruleset_matcher import (
@@ -426,7 +425,7 @@ class RRDConfig(TypedDict):
 
     cfs: Iterable[Literal["MIN", "MAX", "AVERAGE"]]  # conceptually a Set[Literal[...]]
     rras: list[tuple[float, int, int]]
-    step: Seconds
+    step: int
     format: Literal["pnp_multiple", "cmc_single"]
 
 

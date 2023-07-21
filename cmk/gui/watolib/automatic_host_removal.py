@@ -12,7 +12,6 @@ from typing import Literal, TypedDict
 from livestatus import LocalConnection, SiteId
 
 from cmk.utils.hostaddress import HostName
-from cmk.utils.prediction import Seconds
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatchObject, RuleSpec
 
 from cmk.base.export import get_ruleset_matcher  # pylint: disable=cmk-module-layer-violation
@@ -171,7 +170,7 @@ Filter: state = 2"""
 
 
 class _RemovalConditions(TypedDict):
-    checkmk_service_crit: Seconds
+    checkmk_service_crit: int  # seconds
 
 
 def _should_delete_host(

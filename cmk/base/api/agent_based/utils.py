@@ -14,10 +14,10 @@ from typing import Any, overload
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
+from cmk.utils.prediction import get_predictive_levels
 
 from cmk.checkengine import plugin_contexts
 
-import cmk.base.prediction  # pylint: disable=cmk-module-layer-violation
 from cmk.base.api.agent_based.checking_classes import IgnoreResultsError, Metric, Result, State
 from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification
 
@@ -384,7 +384,7 @@ def check_levels_predictive(
     _ = Metric(metric_name, value)
 
     try:
-        ref_value, levels_tuple = cmk.base.prediction.get_levels(
+        ref_value, levels_tuple = get_predictive_levels(
             HostName(plugin_contexts.host_name()),
             plugin_contexts.service_description(),
             metric_name,

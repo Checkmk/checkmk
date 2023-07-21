@@ -16,7 +16,8 @@ from cmk.base.plugins.agent_based.agent_based_api.v1 import Result
 
 def test_check_levels_predictive_default_render_func(mocker: MockerFixture) -> None:
     mocker.patch(
-        "cmk.base.check_api._prediction.get_levels", return_value=(None, (2.2, 4.2, None, None))
+        "cmk.base.api.agent_based.utils.get_predictive_levels",
+        return_value=(None, (2.2, 4.2, None, None)),
     )
 
     with current_host(HostName("unittest")), current_service(

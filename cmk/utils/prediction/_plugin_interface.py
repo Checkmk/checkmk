@@ -14,28 +14,29 @@ from typing import Final, NamedTuple
 import livestatus
 
 import cmk.utils.dateutils as dateutils
-import cmk.utils.debug
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import VERBOSE
 from cmk.utils.metrics import MetricName
-from cmk.utils.prediction import (
+from cmk.utils.servicename import ServiceName
+
+from ._prediction import (
     ConsolidationFunctionName,
     DataStats,
+    estimate_levels,
     EstimatedLevels,
     PredictionData,
     PredictionInfo,
-)
-from cmk.utils.prediction import PredictionParameters as _PredictionParameters
-from cmk.utils.prediction import (
+    PredictionParameters,
     PredictionStore,
+    rrd_datacolum,
     RRDColumnFunction,
     Seconds,
     Timegroup,
     TimeSeriesValues,
     Timestamp,
     TimeWindow,
+    timezone_at,
 )
-from cmk.utils.servicename import ServiceName
 
 logger = logging.getLogger("cmk.prediction")
 
@@ -53,7 +54,7 @@ def _window_start(timestamp: int, span: int) -> int:
     """If time is partitioned in SPAN intervals, how many seconds is TIMESTAMP away from the start
 
     It works well across time zones, but has an unfair behavior with daylight savings time."""
-    return (timestamp - cmk.utils.prediction.timezone_at(timestamp)) % span
+    return (timestamp - timezone_at(timestamp)) % span
 
 
 def _group_by_wday(t: Timestamp) -> tuple[Timegroup, Timestamp]:
@@ -218,7 +219,7 @@ def _std_dev(point_line: list[float], average: float) -> float:
 def _is_prediction_up_to_date(
     last_info: PredictionInfo | None,
     timegroup: Timegroup,
-    params: _PredictionParameters,
+    params: PredictionParameters,
 ) -> bool:
     """Check, if we need to (re-)compute the prediction file.
 
@@ -248,11 +249,11 @@ def _is_prediction_up_to_date(
 # levels_factor: this multiplies all absolute levels. Usage for example
 # in the cpu.loads check the multiplies the levels by the number of CPU
 # cores.
-def get_levels(
+def get_predictive_levels(
     hostname: HostName,
     service_description: ServiceName,
     dsname: MetricName,
-    params: _PredictionParameters,
+    params: PredictionParameters,
     cf: ConsolidationFunctionName,
     levels_factor: float = 1.0,
 ) -> tuple[float | None, EstimatedLevels]:
@@ -278,7 +279,7 @@ def get_levels(
 
         time_windows = _time_slices(now, int(params["horizon"] * 86400), period_info, timegroup)
 
-        rrd_datacolumn = cmk.utils.prediction.rrd_datacolum(
+        rrd_datacolumn = rrd_datacolum(
             livestatus.LocalConnection(), hostname, service_description, dsname, cf
         )
 
@@ -299,7 +300,7 @@ def get_levels(
     index = int(rel_time / data_for_pred.step)
     reference = dict(zip(data_for_pred.columns, data_for_pred.points[index]))
 
-    return reference["average"], cmk.utils.prediction.estimate_levels(
+    return reference["average"], estimate_levels(
         reference_value=reference["average"],
         stdev=reference["stdev"],
         levels_lower=params.get("levels_lower"),

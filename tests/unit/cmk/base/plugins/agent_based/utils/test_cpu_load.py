@@ -38,7 +38,7 @@ def test_cpu_loads_fixed_levels() -> None:
 def test_cpu_loads_predictive(mocker: Mock) -> None:
     # make sure cpu_load check can handle predictive values
     mocker.patch(
-        "cmk.base.check_api._prediction.get_levels",
+        "cmk.base.api.agent_based.utils.get_predictive_levels",
         return_value=(None, (2.2, 4.2, None, None)),
     )
     with current_host(HostName("unittest")), current_service(CheckPluginName("cpu_loads"), "item"):

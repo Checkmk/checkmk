@@ -7,8 +7,8 @@ from collections.abc import Mapping
 
 import pytest
 
-import cmk.utils.prediction as prediction
 from cmk.utils.hostaddress import HostName
+from cmk.utils.prediction import _prediction
 
 
 @pytest.mark.parametrize(
@@ -25,7 +25,7 @@ from cmk.utils.hostaddress import HostName
     ],
 )
 def test_lq_logic(filter_condition: str, values: list[str], join: str, result: str) -> None:
-    assert prediction.lq_logic(filter_condition, values, join) == result
+    assert _prediction.lq_logic(filter_condition, values, join) == result
 
 
 @pytest.mark.parametrize(
@@ -62,14 +62,14 @@ Filter: service_description = invent\n""",
     ],
 )
 def test_livestatus_lql(args: tuple[list[HostName], list[str], str], result: str) -> None:
-    assert prediction.livestatus_lql(*args) == result
+    assert _prediction.livestatus_lql(*args) == result
 
 
 @pytest.mark.parametrize(
     "twindow, result", [((0, 0, 0), []), ((100, 200, 25), [125, 150, 175, 200])]
 )
-def test_rrdtimestamps(twindow: prediction.TimeWindow, result: list[int]) -> None:
-    assert prediction.rrd_timestamps(twindow) == result
+def test_rrdtimestamps(twindow: _prediction.TimeWindow, result: list[int]) -> None:
+    assert _prediction.rrd_timestamps(twindow) == result
 
 
 @pytest.mark.parametrize(
@@ -94,12 +94,12 @@ def test_rrdtimestamps(twindow: prediction.TimeWindow, result: list[int]) -> Non
     ],
 )
 def test_time_series_upsampling(
-    rrddata: prediction.TimeSeriesValues,
-    twindow: prediction.TimeWindow,
+    rrddata: _prediction.TimeSeriesValues,
+    twindow: _prediction.TimeWindow,
     shift: int,
-    upsampled: prediction.TimeSeriesValues,
+    upsampled: _prediction.TimeSeriesValues,
 ) -> None:
-    ts = prediction.TimeSeries(rrddata)
+    ts = _prediction.TimeSeries(rrddata)
     assert ts.bfill_upsample(twindow, shift) == upsampled
 
 
@@ -122,19 +122,19 @@ def test_time_series_upsampling(
     ],
 )
 def test_time_series_downsampling(
-    rrddata: prediction.TimeSeriesValues,
-    twindow: prediction.TimeWindow,
-    cf: prediction.ConsolidationFunctionName,
-    downsampled: prediction.TimeSeriesValues,
+    rrddata: _prediction.TimeSeriesValues,
+    twindow: _prediction.TimeWindow,
+    cf: _prediction.ConsolidationFunctionName,
+    downsampled: _prediction.TimeSeriesValues,
 ) -> None:
-    ts = prediction.TimeSeries(rrddata)
+    ts = _prediction.TimeSeries(rrddata)
     assert ts.downsample(twindow, cf) == downsampled
 
 
 def test__get_reference_deviation_absolute() -> None:
     factor = 3.1415
     assert (
-        prediction._get_reference_deviation(
+        _prediction._get_reference_deviation(
             levels_type="absolute",
             reference_value=42.0,
             stdev=None,
@@ -147,7 +147,7 @@ def test__get_reference_deviation_absolute() -> None:
 def test__get_reference_deviation_relative() -> None:
     reference_value = 42.0
     assert (
-        prediction._get_reference_deviation(
+        _prediction._get_reference_deviation(
             levels_type="relative",
             reference_value=reference_value,
             stdev=None,
@@ -160,7 +160,7 @@ def test__get_reference_deviation_relative() -> None:
 def test__get_reference_deviation_stdev_good() -> None:
     stdev = 23.0
     assert (
-        prediction._get_reference_deviation(
+        _prediction._get_reference_deviation(
             levels_type="stdev",
             reference_value=42.0,
             stdev=stdev,
@@ -172,7 +172,7 @@ def test__get_reference_deviation_stdev_good() -> None:
 
 def test__get_reference_deviation_stdev_bad() -> None:
     with pytest.raises(TypeError):
-        _ = prediction._get_reference_deviation(
+        _ = _prediction._get_reference_deviation(
             levels_type="stdev",
             reference_value=42.0,
             stdev=None,
@@ -224,10 +224,10 @@ def test_estimate_levels(
     reference_deviation: float | None,
     params: Mapping,
     levels_factor: float,
-    result: prediction.EstimatedLevels,
+    result: _prediction.EstimatedLevels,
 ) -> None:
     assert (
-        prediction.estimate_levels(
+        _prediction.estimate_levels(
             reference_value=reference_value,
             stdev=reference_deviation,
             levels_lower=params.get("levels_lower"),
@@ -241,7 +241,7 @@ def test_estimate_levels(
 
 class TestTimeseries:
     def test_conversion(self) -> None:
-        assert prediction.TimeSeries(
+        assert _prediction.TimeSeries(
             [1, 2, 3, 4, None, 5],
             conversion=lambda v: 2 * v - 3,
         ).values == [
@@ -251,11 +251,11 @@ class TestTimeseries:
         ]
 
     def test_conversion_noop_default(self) -> None:
-        assert prediction.TimeSeries([1, 2, 3, 4, None, 5]).values == [4, None, 5]
+        assert _prediction.TimeSeries([1, 2, 3, 4, None, 5]).values == [4, None, 5]
 
     def test_count(self) -> None:
         assert (
-            prediction.TimeSeries(
+            _prediction.TimeSeries(
                 [1, 2, None, 4, None, 5],
                 time_window=(7, 8, 9),
             ).count(None)

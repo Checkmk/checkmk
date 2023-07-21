@@ -10,7 +10,7 @@ from typing import Any
 
 import livestatus
 
-import cmk.utils.prediction as prediction
+import cmk.utils.prediction as _prediction
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 
@@ -32,10 +32,10 @@ def register(page_registry: PageRegistry) -> None:
 def _load_prediction_information(
     *,
     tg_name: str | None,
-    prediction_store: prediction.PredictionStore,
-) -> tuple[prediction.PredictionInfo, Sequence[tuple[str, str]]]:
-    selected_timegroup: prediction.PredictionInfo | None = None
-    timegroups: list[prediction.PredictionInfo] = []
+    prediction_store: _prediction.PredictionStore,
+) -> tuple[_prediction.PredictionInfo, Sequence[tuple[str, str]]]:
+    selected_timegroup: _prediction.PredictionInfo | None = None
+    timegroups: list[_prediction.PredictionInfo] = []
     now = time.time()
     for tg_info in prediction_store.available_predictions():
         timegroups.append(tg_info)
@@ -71,7 +71,7 @@ def page_graph() -> None:
     # Get current value from perf_data via Livestatus
     current_value = get_current_perfdata(host_name, service, dsname)
 
-    prediction_store = prediction.PredictionStore(host_name, service, dsname)
+    prediction_store = _prediction.PredictionStore(host_name, service, dsname)
 
     timegroup, choices = _load_prediction_information(
         tg_name=request.var("timegroup"),
@@ -134,14 +134,14 @@ def page_graph() -> None:
     from_time, until_time = timegroup.range
     now = time.time()
     if from_time <= now <= until_time:
-        timeseries = prediction.get_rrd_data(
+        timeseries = _prediction.get_rrd_data(
             livestatus.LocalConnection(), host_name, service, dsname, "MAX", from_time, until_time
         )
         rrd_data = timeseries.values
 
         render_curve(rrd_data, "#0000ff", 2)
         if current_value is not None:
-            rel_time = (now - prediction.timezone_at(now)) % timegroup.slice
+            rel_time = (now - _prediction.timezone_at(now)) % timegroup.slice
             render_point(timegroup.range[0] + rel_time, current_value, "#0000ff")
 
     html.footer()
@@ -223,7 +223,7 @@ def swap_and_compute_levels(tg_data, tg_info):
         for k, v in row.items():
             swapped[k].append(v)
         if row["average"] is not None and row["stdev"] is not None:
-            upper_0, upper_1, lower_0, lower_1 = prediction.estimate_levels(
+            upper_0, upper_1, lower_0, lower_1 = _prediction.estimate_levels(
                 reference_value=row["average"],
                 stdev=row["stdev"],
                 levels_lower=tg_info.get("levels_lower"),

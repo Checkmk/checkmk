@@ -29,6 +29,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.http_proxy_config import HTTPProxyConfig
 from cmk.utils.metrics import MetricName
+from cmk.utils.prediction import get_predictive_levels as _get_predictive_levels
 from cmk.utils.regex import regex as regex  # pylint: disable=unused-import
 
 from cmk.checkengine.checkresults import state_markers as state_markers
@@ -38,7 +39,6 @@ from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
 import cmk.base.config as _config
 import cmk.base.item_state as _item_state
-import cmk.base.prediction as _prediction
 from cmk.base.api.agent_based import render as _render
 
 # pylint: disable=unused-import
@@ -315,7 +315,7 @@ def check_levels(  # pylint: disable=too-many-branches
             raise TypeError("Metric name is empty/None")
 
         try:
-            ref_value, levels = _prediction.get_levels(
+            ref_value, levels = _get_predictive_levels(
                 _internal_host_name(),
                 service_description(),
                 dsname,

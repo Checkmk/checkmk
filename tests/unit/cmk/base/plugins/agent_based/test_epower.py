@@ -109,7 +109,10 @@ def test_power_discover(
             APC_SYMMETRA_0,
             SectionName("apc_symmetra_power"),
             "1",
-            {"levels_lower": (20, 1)},
+            {
+                "levels_lower": (20, 1),
+                "levels_upper": None,
+            },
             [
                 Result(state=State.OK, summary="Power: 1309 W"),
                 Metric("power", 1309.0),
@@ -120,7 +123,7 @@ def test_power_discover(
             APC_SYMMETRA_1,
             SectionName("apc_symmetra_power"),
             "2",
-            {"levels_lower": (20, 1)},
+            {"levels_lower": (20, 1), "levels_upper": None},
             [
                 Result(state=State.OK, summary="Power: 2000 W"),
                 Metric("power", 2000.0),
@@ -131,7 +134,7 @@ def test_power_discover(
             APC_SYMMETRA_1,
             SectionName("apc_symmetra_power"),
             "2",
-            {"levels_lower": (3000, 2000)},
+            {"levels_lower": (3000, 2000), "levels_upper": None},
             [
                 Result(state=State.WARN, summary="Power: 2000 W (warn/crit below 3000 W/2000 W)"),
                 Metric("power", 2000.0),
@@ -142,7 +145,7 @@ def test_power_discover(
             APC_SYMMETRA_1,
             SectionName("apc_symmetra_power"),
             "2",
-            {"levels_lower": (6000, 3000)},
+            {"levels_lower": (6000, 3000), "levels_upper": None},
             [
                 Result(state=State.CRIT, summary="Power: 2000 W (warn/crit below 6000 W/3000 W)"),
                 Metric("power", 2000.0),
@@ -153,7 +156,7 @@ def test_power_discover(
             UPS_POWER_0,
             SectionName("ups_power"),
             "2",
-            {"levels_lower": (20, 1)},
+            {"levels_lower": (20, 1), "levels_upper": None},
             [
                 Result(state=State.OK, summary="Power: 3500 W"),
                 Metric("power", 3500.0),
@@ -164,7 +167,7 @@ def test_power_discover(
             UPS_POWER_0,
             SectionName("ups_power"),
             "2",
-            {"levels_lower": (4000, 3000)},
+            {"levels_lower": (4000, 3000), "levels_upper": None},
             [
                 Result(state=State.WARN, summary="Power: 3500 W (warn/crit below 4000 W/3000 W)"),
                 Metric("power", 3500.0),
@@ -175,10 +178,21 @@ def test_power_discover(
             UPS_POWER_0,
             SectionName("ups_power"),
             "2",
-            {"levels_lower": (6000, 4000)},
+            {"levels_lower": (6000, 4000), "levels_upper": None},
             [
                 Result(state=State.CRIT, summary="Power: 3500 W (warn/crit below 6000 W/4000 W)"),
                 Metric("power", 3500.0),
+            ],
+            id="ups-power-2-crit",
+        ),
+        pytest.param(
+            UPS_POWER_0,
+            SectionName("ups_power"),
+            "2",
+            {"levels_lower": (3000, 2000), "levels_upper": (3000, 4000)},
+            [
+                Result(state=State.WARN, summary="Power: 3500 W (warn/crit at 3000 W/4000 W)"),
+                Metric("power", 3500.0, levels=(3000.0, 4000.0)),
             ],
             id="ups-power-2-crit",
         ),

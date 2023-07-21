@@ -31,18 +31,27 @@ def _parameter_valuespec_epower():
                 (
                     "levels_lower",
                     Tuple(
-                        help=_(
-                            "Levels for the electrical power consumption of a device "
-                            "like a UPS or a PDU. Several phases may be addressed independently."
-                        ),
                         elements=[
                             Integer(title=_("warning if below"), unit="Watt", default_value=20),
                             Integer(title=_("critical if below"), unit="Watt", default_value=1),
                         ],
                     ),
                 ),
+                (
+                    "levels_upper",
+                    Tuple(
+                        elements=[
+                            Integer(title=_("warning at"), unit="Watt", default_value=2000),
+                            Integer(title=_("critical at"), unit="Watt", default_value=4000),
+                        ],
+                    ),
+                ),
             ],
-            optional_keys=False,
+            help=_(
+                "Levels for the electrical power consumption of a device "
+                "like a UPS or a PDU. Several phases may be addressed independently."
+            ),
+            optional_keys=["levels_upper"],
         ),
         migrate=_migrate,
     )

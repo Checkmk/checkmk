@@ -1647,7 +1647,7 @@ def mode_check_discovery(
             hostname,
             is_cluster=config_cache.is_cluster(hostname),
             cluster_nodes=config_cache.nodes_of(hostname) or (),
-            config_cache=config_cache,
+            params=config_cache.discovery_check_parameters(hostname),
             fetched=((f[0], f[1]) for f in fetched),
             parser=parser,
             summarizer=summarizer,

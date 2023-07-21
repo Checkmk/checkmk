@@ -45,7 +45,7 @@ from cmk.checkengine.discovery.filters import ServiceFilters as _ServiceFilters
 from cmk.checkengine.sectionparser import make_providers, store_piggybacked_sections
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 
-from cmk.base.config import ConfigCache, DiscoveryCheckParameters
+from cmk.base.config import DiscoveryCheckParameters
 
 from .autodiscovery import get_host_services, ServicesByTransition
 
@@ -80,7 +80,7 @@ def execute_check_discovery(
     *,
     is_cluster: bool,
     cluster_nodes: Sequence[HostName],
-    config_cache: ConfigCache,
+    params: DiscoveryCheckParameters,
     fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
     parser: ParserFunction,
     summarizer: SummarizerFunction,
@@ -98,7 +98,6 @@ def execute_check_discovery(
     #    - Set FileCacheGlobals.maybe = True (set max_cachefile_age, else 0)
     #    - Set FileCacheGlobals.use_outdated = True
     # 2. Then these settings are used to read cache file or not
-    params = config_cache.discovery_check_parameters(host_name)
 
     discovery_mode = DiscoveryMode(params.rediscovery.get("mode"))
 

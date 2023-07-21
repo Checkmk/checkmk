@@ -993,6 +993,7 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
         host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
         plugins=DiscoveryPluginMapper(config_cache=config_cache),
         run_plugin_names=EVERYTHING,
+        ignore_plugin=lambda *args, **kw: False,
         arg_only_new=False,
         on_error=OnError.RAISE,
     )
@@ -1507,6 +1508,7 @@ def test__discover_services_on_cluster(
         config_cache=scenario.config_cache,
         providers=scenario.providers,
         plugins=DiscoveryPluginMapper(config_cache=scenario.config_cache),
+        ignore_plugin=lambda *args, **kw: False,
         get_service_description=config.service_description,
         on_error=OnError.RAISE,
     )
@@ -1552,7 +1554,7 @@ def test__perform_host_label_discovery_on_cluster(
     assert kept_labels == discovery_test_case.on_cluster.expected_kept_labels
 
 
-def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
+def test_get_node_services() -> None:
     host_name = HostName("horst")
     entries = QualifiedDiscovery[AutocheckEntry](
         preexisting=[
@@ -1574,13 +1576,13 @@ def test_get_node_services(monkeypatch: MonkeyPatch) -> None:
             for discovery_status in ("old", "new")
         ],
     )
-    config_cache = Scenario().apply(monkeypatch)
     assert make_table(
-        config_cache,
         host_name,
         entries,
-        get_effective_host=lambda hn, _svcdescr: hn,
-        get_service_description=lambda *_args: "desc",
+        ignore_service=lambda *args, **kw: False,
+        ignore_plugin=lambda *args, **kw: False,
+        get_effective_host=lambda hn, *args, **kw: hn,
+        get_service_description=lambda *args, **kw: "desc",
     ) == {
         ServiceID(CheckPluginName("plugin_vanished"), item=None): (
             "vanished",

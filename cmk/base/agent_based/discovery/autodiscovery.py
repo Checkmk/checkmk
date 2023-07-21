@@ -83,6 +83,8 @@ def automation_discovery(
     section_plugins: SectionMap[SectionPlugin],
     host_label_plugins: SectionMap[HostLabelPlugin],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
+    ignore_service: Callable[[HostName, ServiceName], bool],
+    ignore_plugin: Callable[[HostName, CheckPluginName], bool],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     mode: DiscoveryMode,
     keep_clustered_vanished_services: bool,
@@ -145,6 +147,8 @@ def automation_discovery(
             config_cache=config_cache,
             providers=providers,
             plugins=plugins,
+            ignore_service=ignore_service,
+            ignore_plugin=ignore_plugin,
             get_service_description=get_service_description,
             on_error=on_error,
         )
@@ -307,6 +311,8 @@ def autodiscovery(
     section_plugins: SectionMap[SectionPlugin],
     host_label_plugins: SectionMap[HostLabelPlugin],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
+    ignore_service: Callable[[HostName, ServiceName], bool],
+    ignore_plugin: Callable[[HostName, CheckPluginName], bool],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     schedule_discovery_check: Callable[[HostName], object],
     rediscovery_parameters: RediscoveryParameters,
@@ -335,6 +341,8 @@ def autodiscovery(
         section_plugins=section_plugins,
         host_label_plugins=host_label_plugins,
         plugins=plugins,
+        ignore_service=ignore_service,
+        ignore_plugin=ignore_plugin,
         get_service_description=get_service_description,
         mode=DiscoveryMode(rediscovery_parameters.get("mode")),
         keep_clustered_vanished_services=rediscovery_parameters.get(
@@ -453,6 +461,8 @@ def get_host_services(
     config_cache: ConfigCache,
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     providers: Mapping[HostKey, Provider],
+    ignore_service: Callable[[HostName, ServiceName], bool],
+    ignore_plugin: Callable[[HostName, CheckPluginName], bool],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     on_error: OnError,
 ) -> ServicesByTransition:
@@ -465,6 +475,7 @@ def get_host_services(
                 config_cache=config_cache,
                 providers=providers,
                 plugins=plugins,
+                ignore_plugin=ignore_plugin,
                 get_service_description=get_service_description,
                 on_error=on_error,
             )
@@ -472,18 +483,25 @@ def get_host_services(
     else:
         services = {
             **_get_node_services(
-                config_cache,
                 host_name,
                 providers=providers,
                 plugins=plugins,
                 on_error=on_error,
+                ignore_service=ignore_service,
+                ignore_plugin=ignore_plugin,
                 get_effective_host=config_cache.effective_host,
                 get_service_description=get_service_description,
             )
         }
 
     services.update(
-        _reclassify_disabled_items(config_cache, host_name, services, get_service_description)
+        _reclassify_disabled_items(
+            host_name,
+            services,
+            ignore_service,
+            ignore_plugin,
+            get_service_description,
+        )
     )
 
     # remove the ones shadowed by enforced services
@@ -493,12 +511,13 @@ def get_host_services(
 
 # Do the actual work for a non-cluster host or node
 def _get_node_services(
-    config_cache: ConfigCache,
     host_name: HostName,
     *,
     providers: Mapping[HostKey, Provider],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     on_error: OnError,
+    ignore_service: Callable[[HostName, ServiceName], bool],
+    ignore_plugin: Callable[[HostName, CheckPluginName], bool],
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> ServicesTable[_Transition]:
@@ -506,11 +525,7 @@ def _get_node_services(
         providers,
         [(plugin_name, plugin.sections) for plugin_name, plugin in plugins.items()],
     )
-    skip = {
-        plugin_name
-        for plugin_name in candidates
-        if config_cache.check_plugin_ignored(host_name, plugin_name)
-    }
+    skip = {plugin_name for plugin_name in candidates if ignore_plugin(host_name, plugin_name)}
 
     section.section_step("Executing discovery plugins (%d)" % len(candidates))
     console.vverbose("  Trying discovery with: %s\n" % ", ".join(str(n) for n in candidates))
@@ -536,27 +551,30 @@ def _get_node_services(
         keep_vanished=False,
     )
     return make_table(
-        config_cache,
         host_name,
         service_result,
+        ignore_service=ignore_service,
+        ignore_plugin=ignore_plugin,
         get_effective_host=get_effective_host,
         get_service_description=get_service_description,
     )
 
 
 def make_table(
-    config_cache: ConfigCache,
     host_name: HostName,
     entries: QualifiedDiscovery[AutocheckEntry],
     *,
+    ignore_service: Callable[[HostName, ServiceName], bool],
+    ignore_plugin: Callable[[HostName, CheckPluginName], bool],
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> ServicesTable[_Transition]:
     return {
         entry.id(): (
             _node_service_source(
-                config_cache,
                 host_name,
+                ignore_service=ignore_service,
+                ignore_plugin=ignore_plugin,
                 check_source=check_source,
                 cluster_name=get_effective_host(host_name, service_name),
                 check_plugin_name=entry.check_plugin_name,
@@ -571,9 +589,10 @@ def make_table(
 
 
 def _node_service_source(
-    config_cache: ConfigCache,
     host_name: HostName,
     *,
+    ignore_service: Callable[[HostName, ServiceName], bool],
+    ignore_plugin: Callable[[HostName, CheckPluginName], bool],
     check_source: _BasicTransition,
     cluster_name: HostName,
     check_plugin_name: CheckPluginName,
@@ -582,9 +601,7 @@ def _node_service_source(
     if host_name == cluster_name:
         return check_source
 
-    if config_cache.service_ignored(
-        cluster_name, service_name
-    ) or config_cache.check_plugin_ignored(cluster_name, check_plugin_name):
+    if ignore_service(cluster_name, service_name) or ignore_plugin(cluster_name, check_plugin_name):
         return "ignored"
 
     if check_source == "vanished":
@@ -595,19 +612,18 @@ def _node_service_source(
 
 
 def _reclassify_disabled_items(
-    config_cache: ConfigCache,
     host_name: HostName,
     services: ServicesTable[_Transition],
+    ignore_service: Callable[[HostName, ServiceName], bool],
+    ignore_plugin: Callable[[HostName, CheckPluginName], bool],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
 ) -> Iterable[tuple[ServiceID, ServicesTableEntry]]:
     """Handle disabled services -> 'ignored'"""
     yield from (
         (service.id(), ("ignored", service, [host_name]))
         for check_source, service, _found_on_nodes in services.values()
-        if config_cache.service_ignored(
-            host_name, get_service_description(host_name, *service.id())
-        )
-        or config_cache.check_plugin_ignored(host_name, service.check_plugin_name)
+        if ignore_service(host_name, get_service_description(host_name, *service.id()))
+        or ignore_plugin(host_name, service.check_plugin_name)
     )
 
 
@@ -630,6 +646,7 @@ def _get_cluster_services(
     config_cache: ConfigCache,
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     providers: Mapping[HostKey, Provider],
+    ignore_plugin: Callable[[HostName, CheckPluginName], bool],
     get_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     on_error: OnError,
 ) -> ServicesTable[_Transition]:
@@ -645,11 +662,7 @@ def _get_cluster_services(
             providers,
             [(plugin_name, plugin.sections) for plugin_name, plugin in plugins.items()],
         )
-        skip = {
-            plugin_name
-            for plugin_name in candidates
-            if config_cache.check_plugin_ignored(host_name, plugin_name)
-        }
+        skip = {plugin_name for plugin_name in candidates if ignore_plugin(host_name, plugin_name)}
         section.section_step("Executing discovery plugins (%d)" % len(candidates))
         console.vverbose("  Trying discovery with: %s\n" % ", ".join(str(n) for n in candidates))
 

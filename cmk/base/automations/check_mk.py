@@ -263,6 +263,8 @@ class AutomationDiscovery(DiscoveryAutomation):
                 section_plugins=SectionPluginMapper(),
                 host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
                 plugins=DiscoveryPluginMapper(config_cache=config_cache),
+                ignore_service=config_cache.service_ignored,
+                ignore_plugin=config_cache.check_plugin_ignored,
                 get_service_description=config.service_description,
                 mode=mode,
                 keep_clustered_vanished_services=True,
@@ -432,6 +434,8 @@ def _execute_discovery(
             )
         ),
         discovery_plugins=DiscoveryPluginMapper(config_cache=config_cache),
+        ignore_service=config_cache.service_ignored,
+        ignore_plugin=config_cache.check_plugin_ignored,
         find_service_description=config.service_description,
         on_error=on_error,
     )
@@ -551,6 +555,8 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                         section_plugins=section_plugins,
                         host_label_plugins=host_label_plugins,
                         plugins=plugins,
+                        ignore_service=config_cache.service_ignored,
+                        ignore_plugin=config_cache.check_plugin_ignored,
                         get_service_description=get_service_description,
                         schedule_discovery_check=_schedule_discovery_check,
                         rediscovery_parameters=params.rediscovery,

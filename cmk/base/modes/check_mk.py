@@ -1652,6 +1652,8 @@ def mode_check_discovery(
             section_plugins=SectionPluginMapper(),
             host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
             plugins=DiscoveryPluginMapper(config_cache=config_cache),
+            ignore_service=config_cache.service_ignored,
+            ignore_plugin=config_cache.check_plugin_ignored,
             find_service_description=config.service_description,
         )
         state, text = check_result.state, check_result.as_text()
@@ -1898,6 +1900,7 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
         host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
         plugins=DiscoveryPluginMapper(config_cache=config_cache),
         run_plugin_names=run_plugin_names,
+        ignore_plugin=config_cache.check_plugin_ignored,
         arg_only_new=options["discover"] == 1,
         only_host_labels="only-host-labels" in options,
         on_error=on_error,

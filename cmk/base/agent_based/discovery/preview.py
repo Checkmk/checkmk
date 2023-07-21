@@ -74,6 +74,8 @@ def get_check_preview(
     host_label_plugins: SectionMap[HostLabelPlugin],
     discovery_plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
+    ignore_service: Callable[[HostName, ServiceName], bool],
+    ignore_plugin: Callable[[HostName, CheckPluginName], bool],
     find_service_description: Callable[[HostName, CheckPluginName, Item], ServiceName],
     compute_check_parameters: Callable[[HostName, AutocheckEntry], TimespecificParameters],
     on_error: OnError,
@@ -132,6 +134,8 @@ def get_check_preview(
         config_cache=config_cache,
         providers=providers,
         plugins=discovery_plugins,
+        ignore_service=ignore_service,
+        ignore_plugin=ignore_plugin,
         get_service_description=find_service_description,
         on_error=on_error,
     )

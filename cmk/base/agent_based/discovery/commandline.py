@@ -6,7 +6,7 @@
 
 import itertools
 from collections import Counter
-from collections.abc import Container, Iterable, Mapping
+from collections.abc import Callable, Container, Iterable, Mapping
 
 import cmk.utils.cleanup
 import cmk.utils.debug
@@ -50,6 +50,7 @@ def commandline_discovery(
     host_label_plugins: SectionMap[HostLabelPlugin],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     run_plugin_names: Container[CheckPluginName],
+    ignore_plugin: Callable[[HostName, CheckPluginName], bool],
     arg_only_new: bool,
     only_host_labels: bool = False,
     on_error: OnError,
@@ -76,11 +77,11 @@ def commandline_discovery(
             _commandline_discovery_on_host(
                 real_host_name=host_name,
                 host_label_plugins=host_label_plugins,
-                config_cache=config_cache,
                 ruleset_matcher=ruleset_matcher,
                 providers=providers,
                 plugins=plugins,
                 run_plugin_names=run_plugin_names,
+                ignore_plugin=ignore_plugin,
                 only_new=arg_only_new,
                 load_labels=arg_only_new,
                 only_host_labels=only_host_labels,
@@ -136,11 +137,11 @@ def _commandline_discovery_on_host(
     *,
     real_host_name: HostName,
     host_label_plugins: SectionMap[HostLabelPlugin],
-    config_cache: ConfigCache,
     ruleset_matcher: RulesetMatcher,
     providers: Mapping[HostKey, Provider],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     run_plugin_names: Container[CheckPluginName],
+    ignore_plugin: Callable[[HostName, CheckPluginName], bool],
     only_new: bool,
     load_labels: bool,
     only_host_labels: bool,
@@ -177,11 +178,7 @@ def _commandline_discovery_on_host(
             if plugin_name in run_plugin_names
         ],
     )
-    skip = {
-        plugin_name
-        for plugin_name in candidates
-        if config_cache.check_plugin_ignored(real_host_name, plugin_name)
-    }
+    skip = {plugin_name for plugin_name in candidates if ignore_plugin(real_host_name, plugin_name)}
 
     section.section_step("Executing discovery plugins (%d)" % len(candidates))
     console.vverbose("  Trying discovery with: %s\n" % ", ".join(str(n) for n in candidates))

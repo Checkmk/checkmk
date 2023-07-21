@@ -75,6 +75,8 @@ ServicesByTransition = dict[_Transition, list[AutocheckServiceWithNodes]]
 def automation_discovery(
     host_name: HostName,
     *,
+    is_cluster: bool,
+    cluster_nodes: Iterable[HostName],
     config_cache: ConfigCache,
     ruleset_matcher: RulesetMatcher,
     parser: ParserFunction,
@@ -145,6 +147,8 @@ def automation_discovery(
         # Compute current state of new and existing checks
         services = get_host_services(
             host_name,
+            is_cluster=is_cluster,
+            cluster_nodes=cluster_nodes,
             config_cache=config_cache,
             providers=providers,
             plugins=plugins,
@@ -305,6 +309,8 @@ def _make_diff(
 def autodiscovery(
     host_name: HostName,
     *,
+    is_cluster: bool,
+    cluster_nodes: Iterable[HostName],
     config_cache: ConfigCache,
     ruleset_matcher: RulesetMatcher,
     fetcher: FetcherFunction,
@@ -336,6 +342,8 @@ def autodiscovery(
 
     result = automation_discovery(
         host_name,
+        is_cluster=is_cluster,
+        cluster_nodes=cluster_nodes,
         config_cache=config_cache,
         ruleset_matcher=ruleset_matcher,
         parser=parser,
@@ -462,6 +470,8 @@ def _may_rediscover(
 def get_host_services(
     host_name: HostName,
     *,
+    is_cluster: bool,
+    cluster_nodes: Iterable[HostName],
     config_cache: ConfigCache,
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     providers: Mapping[HostKey, Provider],
@@ -472,12 +482,11 @@ def get_host_services(
     on_error: OnError,
 ) -> ServicesByTransition:
     services: ServicesTable[_Transition]
-    if config_cache.is_cluster(host_name):
+    if is_cluster:
         services = {
             **_get_cluster_services(
                 host_name,
-                nodes=config_cache.nodes_of(host_name) or (),
-                config_cache=config_cache,
+                cluster_nodes=cluster_nodes,
                 providers=providers,
                 plugins=plugins,
                 ignore_plugin=ignore_plugin,
@@ -648,8 +657,7 @@ def _group_by_transition(
 def _get_cluster_services(
     host_name: HostName,
     *,
-    nodes: Iterable[HostName],
-    config_cache: ConfigCache,
+    cluster_nodes: Iterable[HostName],
     plugins: Mapping[CheckPluginName, DiscoveryPlugin],
     providers: Mapping[HostKey, Provider],
     ignore_plugin: Callable[[HostName, CheckPluginName], bool],
@@ -661,7 +669,7 @@ def _get_cluster_services(
 
     # Get services of the nodes. We are only interested in "old", "new" and "vanished"
     # From the states and parameters of these we construct the final state per service.
-    for node in nodes:
+    for node in cluster_nodes:
         candidates = find_plugins(
             # This call doesn't seem to depend on `node` so we could
             # probably take it out of the loop to improve readability

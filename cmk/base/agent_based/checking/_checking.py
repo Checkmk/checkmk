@@ -100,6 +100,8 @@ class _AggregatedResult(NamedTuple):
 def execute_checkmk_checks(
     *,
     hostname: HostName,
+    is_cluster: bool,
+    cluster_nodes: Sequence[HostName],
     config_cache: ConfigCache,
     fetched: Sequence[
         tuple[
@@ -129,6 +131,8 @@ def execute_checkmk_checks(
     with CPUTracker() as tracker:
         service_results = check_host_services(
             hostname,
+            is_cluster=is_cluster,
+            cluster_nodes=cluster_nodes,
             config_cache=config_cache,
             providers=providers,
             services=services,
@@ -286,6 +290,8 @@ def _check_plugins_missing_data(
 def check_host_services(
     host_name: HostName,
     *,
+    is_cluster: bool,
+    cluster_nodes: Sequence[HostName],
     config_cache: ConfigCache,
     providers: Mapping[HostKey, Provider],
     services: Sequence[ConfiguredService],
@@ -323,6 +329,8 @@ def check_host_services(
                 else:
                     submittable = get_aggregated_result(
                         host_name,
+                        is_cluster,
+                        cluster_nodes,
                         config_cache,
                         providers,
                         service,
@@ -379,6 +387,7 @@ def service_outside_check_period(description: ServiceName, period: TimeperiodNam
 def get_check_function(
     config_cache: ConfigCache,
     host_name: HostName,
+    is_cluster: bool,
     plugin: CheckPlugin,
     service: ConfiguredService,
     value_store_manager: value_store.ValueStoreManager,
@@ -390,13 +399,15 @@ def get_check_function(
             service_id=service.id(),
             value_store_manager=value_store_manager,
         )
-        if config_cache.is_cluster(host_name)
+        if is_cluster
         else plugin.function
     )
 
 
 def get_aggregated_result(
     host_name: HostName,
+    is_cluster: bool,
+    cluster_nodes: Sequence[HostName],
     config_cache: ConfigCache,
     providers: Mapping[HostKey, Provider],
     service: ConfiguredService,
@@ -413,6 +424,7 @@ def get_aggregated_result(
     check_function = get_check_function(
         config_cache,
         host_name,
+        is_cluster=is_cluster,
         plugin=plugin,
         service=service,
         value_store_manager=value_store_manager,
@@ -420,10 +432,11 @@ def get_aggregated_result(
 
     section_kws, error_result = get_monitoring_data_kwargs(
         host_name,
+        is_cluster,
         providers,
-        config_cache,
         service,
         plugin.sections,
+        cluster_nodes=cluster_nodes,
         get_effective_host=get_effective_host,
     )
     if not section_kws:  # no data found
@@ -477,7 +490,7 @@ def get_aggregated_result(
                 service.description,
                 plugin_name=service.check_plugin_name,
                 plugin_kwargs={**item_kw, **params_kw, **section_kws},
-                is_cluster=config_cache.is_cluster(host_name),
+                is_cluster=is_cluster,
                 is_enforced=service.is_enforced,
                 snmp_backend=config_cache.get_snmp_backend(host_name),
                 rtc_package=rtc_package,
@@ -510,18 +523,17 @@ def get_aggregated_result(
 
 
 def _get_clustered_service_node_keys(
-    config_cache: ConfigCache,
     cluster_name: HostName,
     source_type: SourceType,
     service_descr: ServiceName,
     *,
+    cluster_nodes: Sequence[HostName],
     get_effective_host: Callable[[HostName, ServiceName], HostName],
 ) -> Sequence[HostKey]:
     """Returns the node keys if a service is clustered, otherwise an empty sequence"""
-    nodes = config_cache.nodes_of(cluster_name)
     used_nodes = (
-        [nn for nn in (nodes or ()) if cluster_name == get_effective_host(nn, service_descr)]
-        or nodes  # IMHO: this can never happen, but if it does, using nodes is wrong.
+        [nn for nn in cluster_nodes if cluster_name == get_effective_host(nn, service_descr)]
+        or cluster_nodes  # IMHO: this can never happen, but if it does, using nodes is wrong.
         or ()
     )
 
@@ -530,12 +542,13 @@ def _get_clustered_service_node_keys(
 
 def get_monitoring_data_kwargs(
     host_name: HostName,
+    is_cluster: bool,
     providers: Mapping[HostKey, Provider],
-    config_cache: ConfigCache,
     service: ConfiguredService,
     sections: Sequence[ParsedSectionName],
     source_type: SourceType | None = None,
     *,
+    cluster_nodes: Sequence[HostName],
     get_effective_host: Callable[[HostName, ServiceName], HostName],
 ) -> tuple[Mapping[str, object], ServiceCheckResult]:
     # Mapping[str, object] stands for either
@@ -548,12 +561,12 @@ def get_monitoring_data_kwargs(
             else SourceType.HOST
         )
 
-    if config_cache.is_cluster(host_name):
+    if is_cluster:
         nodes = _get_clustered_service_node_keys(
-            config_cache,
             host_name,
             source_type,
             service.description,
+            cluster_nodes=cluster_nodes,
             get_effective_host=get_effective_host,
         )
         return (

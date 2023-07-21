@@ -1645,6 +1645,8 @@ def mode_check_discovery(
         fetched = fetcher(hostname, ip_address=None)
         check_result = discovery.execute_check_discovery(
             hostname,
+            is_cluster=config_cache.is_cluster(hostname),
+            cluster_nodes=config_cache.nodes_of(hostname) or (),
             config_cache=config_cache,
             fetched=((f[0], f[1]) for f in fetched),
             parser=parser,
@@ -1893,6 +1895,8 @@ def mode_discover(options: _DiscoveryOptions, args: list[str]) -> None:
     )
     discovery.commandline_discovery(
         set(hostnames),
+        is_cluster=config_cache.is_cluster,
+        resolve_cluster=lambda hn: config_cache.nodes_of(hn) or (),
         config_cache=config_cache,
         ruleset_matcher=config_cache.ruleset_matcher,
         parser=parser,
@@ -2053,6 +2057,8 @@ def mode_check(
         fetched = fetcher(hostname, ip_address=ipaddress)
         check_result = checking.execute_checkmk_checks(
             hostname=hostname,
+            is_cluster=config_cache.is_cluster(hostname),
+            cluster_nodes=config_cache.nodes_of(hostname) or (),
             config_cache=config_cache,
             fetched=fetched,
             parser=parser,

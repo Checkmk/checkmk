@@ -251,6 +251,8 @@ class AutomationDiscovery(DiscoveryAutomation):
         for hostname in hostnames:
             results[hostname] = discovery.automation_discovery(
                 hostname,
+                is_cluster=config_cache.is_cluster(hostname),
+                cluster_nodes=config_cache.nodes_of(hostname) or (),
                 config_cache=config_cache,
                 ruleset_matcher=config_cache.ruleset_matcher,
                 parser=parser,
@@ -415,6 +417,8 @@ def _execute_discovery(
     passive_check_preview = discovery.get_check_preview(
         host_name,
         ip_address,
+        is_cluster=config_cache.is_cluster(host_name),
+        cluster_nodes=config_cache.nodes_of(host_name) or (),
         config_cache=config_cache,
         parser=parser,
         fetcher=fetcher,
@@ -547,6 +551,8 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                 else:
                     discovery_result, activate_host = discovery.autodiscovery(
                         host_name,
+                        is_cluster=config_cache.is_cluster(host_name),
+                        cluster_nodes=config_cache.nodes_of(host_name) or (),
                         config_cache=config_cache,
                         ruleset_matcher=config_cache.ruleset_matcher,
                         parser=parser,

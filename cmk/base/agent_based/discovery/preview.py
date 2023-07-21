@@ -66,6 +66,8 @@ def get_check_preview(
     host_name: HostName,
     ip_address: HostAddress | None,
     *,
+    is_cluster: bool,
+    cluster_nodes: Sequence[HostName],
     config_cache: ConfigCache,
     parser: ParserFunction,
     fetcher: FetcherFunction,
@@ -94,10 +96,10 @@ def get_check_preview(
     store_piggybacked_sections(host_sections_by_host)
     providers = make_providers(host_sections_by_host, section_plugins)
 
-    if config_cache.is_cluster(host_name):
+    if is_cluster:
         host_labels, kept_labels = analyse_cluster_labels(
             host_name,
-            config_cache.nodes_of(host_name) or (),
+            cluster_nodes,
             discovered_host_labels={
                 node_name: discover_host_labels(
                     node_name,
@@ -105,11 +107,11 @@ def get_check_preview(
                     providers=providers,
                     on_error=on_error,
                 )
-                for node_name in config_cache.nodes_of(host_name) or ()
+                for node_name in cluster_nodes
             },
             existing_host_labels={
                 node_name: DiscoveredHostLabelsStore(node_name).load()
-                for node_name in config_cache.nodes_of(host_name) or ()
+                for node_name in cluster_nodes
             },
         )
     else:
@@ -132,6 +134,8 @@ def get_check_preview(
 
     grouped_services = get_host_services(
         host_name,
+        is_cluster=is_cluster,
+        cluster_nodes=cluster_nodes,
         config_cache=config_cache,
         providers=providers,
         plugins=discovery_plugins,
@@ -146,6 +150,8 @@ def get_check_preview(
         passive_rows = [
             _check_preview_table_row(
                 host_name,
+                is_cluster=is_cluster,
+                cluster_nodes=cluster_nodes,
                 config_cache=config_cache,
                 check_plugins=check_plugins,
                 service=ConfiguredService(
@@ -168,6 +174,8 @@ def get_check_preview(
         ] + [
             _check_preview_table_row(
                 host_name,
+                is_cluster=is_cluster,
+                cluster_nodes=cluster_nodes,
                 config_cache=config_cache,
                 service=service,
                 check_plugins=check_plugins,
@@ -193,6 +201,8 @@ def get_check_preview(
 def _check_preview_table_row(
     host_name: HostName,
     *,
+    is_cluster: bool,
+    cluster_nodes: Sequence[HostName],
     config_cache: ConfigCache,
     service: ConfiguredService,
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
@@ -210,6 +220,8 @@ def _check_preview_table_row(
     result = (
         checking.get_aggregated_result(
             host_name,
+            is_cluster,
+            cluster_nodes,
             config_cache,
             providers,
             service,

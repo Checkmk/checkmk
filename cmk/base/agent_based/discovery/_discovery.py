@@ -77,6 +77,8 @@ class _Transition(enum.Enum):
 def execute_check_discovery(
     host_name: HostName,
     *,
+    is_cluster: bool,
+    cluster_nodes: Sequence[HostName],
     config_cache: ConfigCache,
     fetched: Iterable[tuple[SourceInfo, result.Result[AgentRawData | SNMPRawData, Exception]]],
     parser: ParserFunction,
@@ -105,10 +107,10 @@ def execute_check_discovery(
     store_piggybacked_sections(host_sections_by_host)
     providers = make_providers(host_sections_by_host, section_plugins)
 
-    if config_cache.is_cluster(host_name):
+    if is_cluster:
         host_labels, _kept_labels = analyse_cluster_labels(
             host_name,
-            config_cache.nodes_of(host_name) or (),
+            cluster_nodes,
             discovered_host_labels={
                 node_name: discover_host_labels(
                     node_name,
@@ -116,11 +118,11 @@ def execute_check_discovery(
                     providers=providers,
                     on_error=OnError.RAISE,
                 )
-                for node_name in config_cache.nodes_of(host_name) or ()
+                for node_name in cluster_nodes
             },
             existing_host_labels={
                 node_name: DiscoveredHostLabelsStore(node_name).load()
-                for node_name in config_cache.nodes_of(host_name) or ()
+                for node_name in cluster_nodes
             },
         )
 
@@ -137,6 +139,8 @@ def execute_check_discovery(
 
     services = get_host_services(
         host_name,
+        is_cluster=is_cluster,
+        cluster_nodes=cluster_nodes,
         config_cache=config_cache,
         providers=providers,
         plugins=plugins,
@@ -175,7 +179,8 @@ def execute_check_discovery(
             [
                 _schedule_rediscovery(
                     host_name,
-                    config_cache=config_cache,
+                    is_cluster=is_cluster,
+                    cluster_nodes=cluster_nodes,
                     need_rediscovery=(services_need_rediscovery or host_labels_need_rediscovery)
                     and all(r.state == 0 for r in parsing_errors_results),
                 )
@@ -315,16 +320,16 @@ def _make_labels_result(
 def _schedule_rediscovery(
     host_name: HostName,
     *,
-    config_cache: ConfigCache,
+    is_cluster: bool,
+    cluster_nodes: Iterable[HostName],
     need_rediscovery: bool,
 ) -> ActiveCheckResult:
     if not need_rediscovery:
         return ActiveCheckResult()
 
     autodiscovery_queue = AutoQueue(cmk.utils.paths.autodiscovery_dir)
-    nodes = config_cache.nodes_of(host_name)
-    if config_cache.is_cluster(host_name) and nodes:
-        for nodename in nodes:
+    if is_cluster:
+        for nodename in cluster_nodes:
             autodiscovery_queue.add(nodename)
     else:
         autodiscovery_queue.add(host_name)

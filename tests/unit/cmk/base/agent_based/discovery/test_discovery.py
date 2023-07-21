@@ -985,6 +985,8 @@ def test_commandline_discovery(monkeypatch: MonkeyPatch) -> None:
     )
     discovery.commandline_discovery(
         arg_hostnames={testhost},
+        is_cluster=config_cache.is_cluster,
+        resolve_cluster=lambda hn: config_cache.nodes_of(hn) or (),
         config_cache=config_cache,
         ruleset_matcher=config_cache.ruleset_matcher,
         parser=parser,
@@ -1504,8 +1506,7 @@ def test__discover_services_on_cluster(
 
     discovered_services = _get_cluster_services(
         scenario.parent,
-        nodes=nodes,
-        config_cache=scenario.config_cache,
+        cluster_nodes=nodes,
         providers=scenario.providers,
         plugins=DiscoveryPluginMapper(config_cache=scenario.config_cache),
         ignore_plugin=lambda *args, **kw: False,

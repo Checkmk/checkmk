@@ -42,6 +42,8 @@ __all__ = ["commandline_discovery"]
 def commandline_discovery(
     arg_hostnames: set[HostName],
     *,
+    is_cluster: Callable[[HostName], bool],
+    resolve_cluster: Callable[[HostName], Iterable[HostName]],
     parser: ParserFunction,
     fetcher: FetcherFunction,
     config_cache: ConfigCache,
@@ -61,7 +63,13 @@ def commandline_discovery(
     The list of hostnames is already prepared by the main code.
     If it is empty then we use all hosts and switch to using cache files.
     """
-    non_cluster_host_names = _preprocess_hostnames(arg_hostnames, config_cache, only_host_labels)
+    non_cluster_host_names = _preprocess_hostnames(
+        arg_hostnames,
+        is_cluster,
+        resolve_cluster,
+        config_cache,
+        only_host_labels,
+    )
 
     # Now loop through all hosts
     for host_name in sorted(non_cluster_host_names):
@@ -98,6 +106,8 @@ def commandline_discovery(
 
 def _preprocess_hostnames(
     arg_host_names: set[HostName],
+    is_cluster: Callable[[HostName], bool],
+    resolve_nodes: Callable[[HostName], Iterable[HostName]],
     config_cache: ConfigCache,
     only_host_labels: bool,
 ) -> set[HostName]:
@@ -109,20 +119,10 @@ def _preprocess_hostnames(
         )
         return set(config_cache.all_active_realhosts())
 
-    # For clusters add their nodes to the list.
-    # Clusters themselves cannot be discovered.
-    # The user is allowed to specify them and we do discovery on the nodes instead.
-    def _resolve_nodes(cluster_name: HostName) -> Iterable[HostName]:
-        if (nodes := config_cache.nodes_of(cluster_name)) is None:
-            raise MKGeneralException(f"Invalid cluster configuration: {cluster_name}")
-        return nodes
-
     node_names = {
         node_name
         for host_name in arg_host_names
-        for node_name in (
-            _resolve_nodes(host_name) if config_cache.is_cluster(host_name) else (host_name,)
-        )
+        for node_name in (resolve_nodes(host_name) if is_cluster(host_name) else (host_name,))
     }
 
     console.verbose(

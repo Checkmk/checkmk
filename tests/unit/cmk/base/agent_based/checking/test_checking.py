@@ -229,10 +229,6 @@ def test_aggregate_result(subresults: CheckResult, aggregated_results: ServiceCh
 
 
 def test_config_cache_get_clustered_service_node_keys_no_cluster(monkeypatch: MonkeyPatch) -> None:
-    ts = Scenario()
-
-    config_cache = ts.apply(monkeypatch)
-
     monkeypatch.setattr(
         config,
         "lookup_ip_address",
@@ -240,10 +236,10 @@ def test_config_cache_get_clustered_service_node_keys_no_cluster(monkeypatch: Mo
     )
     # empty, we have no cluster:
     assert [] == checking._get_clustered_service_node_keys(
-        config_cache,
         HostName("cluster.test"),
         SourceType.HOST,
         "Test Service",
+        cluster_nodes=(),
         get_effective_host=lambda hn, *args, **kw: hn,
     )
 
@@ -254,7 +250,6 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
     cluster_test = HostName("cluster.test")
     ts = Scenario()
     ts.add_cluster(cluster_test, nodes=[HostName("node1.test"), HostName("node2.test")])
-    config_cache = ts.apply(monkeypatch)
 
     monkeypatch.setattr(
         config,
@@ -263,10 +258,10 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
     )
     # empty for a node:
     assert [] == checking._get_clustered_service_node_keys(
-        config_cache,
         HostName("node1.test"),
         SourceType.HOST,
         "Test Service",
+        cluster_nodes=(),
         get_effective_host=lambda hn, *args, **kw: hn,
     )
 
@@ -275,10 +270,10 @@ def test_config_cache_get_clustered_service_node_keys_cluster_no_service(
         HostKey(hostname=HostName("node1.test"), source_type=SourceType.HOST),
         HostKey(hostname=HostName("node2.test"), source_type=SourceType.HOST),
     ] == checking._get_clustered_service_node_keys(
-        config_cache,
         cluster_test,
         SourceType.HOST,
         "Test Service",
+        cluster_nodes=[HostName("node1.test"), HostName("node2.test")],
         get_effective_host=lambda hn, *args, **kw: hn,
     )
 
@@ -291,7 +286,7 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
     ts = Scenario()
     ts.add_host(node1)
     ts.add_host(node2)
-    ts.add_cluster(cluster, nodes=[HostName("node1.test"), HostName("node2.test")])
+    ts.add_cluster(cluster, nodes=[node1, node2])
     # add a fake rule, that defines a cluster
     ts.set_option(
         "clustered_services_mapping",
@@ -302,7 +297,6 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
             }
         ],
     )
-    config_cache = ts.apply(monkeypatch)
 
     monkeypatch.setattr(
         config,
@@ -310,10 +304,10 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
         lambda hostname, *args, **kw: "dummy.test.ip.%s" % hostname[4],
     )
     assert checking._get_clustered_service_node_keys(
-        config_cache,
         cluster,
         SourceType.HOST,
         "Test Service",
+        cluster_nodes=[node1, node2],
         get_effective_host=lambda hn, *args, **kw: hn,
     ) == [
         HostKey(node1, SourceType.HOST),
@@ -328,9 +322,9 @@ def test_config_cache_get_clustered_service_node_keys_clustered(monkeypatch: Mon
         HostKey(hostname=HostName("node1.test"), source_type=SourceType.HOST),
         HostKey(hostname=HostName("node2.test"), source_type=SourceType.HOST),
     ] == checking._get_clustered_service_node_keys(
-        config_cache,
         cluster,
         SourceType.HOST,
         "Test Unclustered",
+        cluster_nodes=[node1, node2],
         get_effective_host=lambda hn, *args, **kw: hn,
     )

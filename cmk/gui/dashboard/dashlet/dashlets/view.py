@@ -20,7 +20,6 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
 from cmk.gui.type_defs import (
     ColumnSpec,
     HTTPVariables,
@@ -37,6 +36,7 @@ from cmk.gui.views.page_edit_view import create_view_from_valuespec, render_view
 from cmk.gui.views.page_show_view import get_limit, get_user_sorters, process_view
 from cmk.gui.views.store import get_all_views, get_permitted_views
 from cmk.gui.views.view_choices import view_choices
+from cmk.gui.visuals import get_only_sites_from_context
 
 
 class ABCViewDashletConfig(DashletConfig):

@@ -50,11 +50,13 @@ from cmk.gui.logged_in import user
 from cmk.gui.pages import PageRegistry
 from cmk.gui.type_defs import Row
 from cmk.gui.valuespec import TextInput, ValueSpec
+from cmk.gui.visuals.info import VisualInfo, VisualInfoRegistry
 
 
-def register(page_registry: PageRegistry) -> None:
+def register(page_registry: PageRegistry, visual_info_registry: VisualInfoRegistry) -> None:
     page_registry.register_page_handler("host_inv_api", page_host_inv_api)
     register_job(execute_inventory_housekeeping_job)
+    visual_info_registry.register(VisualInfoInventoryHistory)
 
 
 # TODO Cleanup variation:
@@ -825,3 +827,21 @@ class InventoryHousekeeping:
 
 def execute_inventory_housekeeping_job() -> None:
     cmk.gui.inventory.InventoryHousekeeping().run()
+
+
+class VisualInfoInventoryHistory(VisualInfo):
+    @property
+    def ident(self) -> str:
+        return "invhist"
+
+    @property
+    def title(self) -> str:
+        return _("Inventory History")
+
+    @property
+    def title_plural(self) -> str:
+        return _("Inventory Historys")
+
+    @property
+    def single_spec(self) -> list[tuple[str, ValueSpec]]:
+        return []

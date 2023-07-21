@@ -26,7 +26,6 @@ from cmk.gui.painter.v0.base import Cell, Painter, PainterRegistry
 from cmk.gui.painter.v0.helpers import paint_nagiosflag
 from cmk.gui.painter_options import paint_age
 from cmk.gui.permissions import Permission, PermissionRegistry
-from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
@@ -52,6 +51,7 @@ from cmk.gui.views.sorter import (
     declare_1to1_sorter,
 )
 from cmk.gui.views.store import get_permitted_views, multisite_builtin_views
+from cmk.gui.visuals.filter import Filter
 
 from .defines import action_whats, phase_names, syslog_facilities, syslog_priorities
 from .helpers import action_choices

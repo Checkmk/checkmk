@@ -22,9 +22,9 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pagetypes import page_menu_add_to_topics
-from cmk.gui.plugins.visuals.utils import visual_type_registry
 from cmk.gui.type_defs import VisualContext
 from cmk.gui.utils.csrf_token import check_csrf_token
+from cmk.gui.visuals.type import visual_type_registry
 
 
 def ajax_popup_add() -> None:

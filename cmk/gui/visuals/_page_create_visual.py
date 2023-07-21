@@ -14,10 +14,11 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.page_menu import make_simple_form_page_menu
-from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry
 from cmk.gui.type_defs import SingleInfos, VisualTypeName
 from cmk.gui.utils.transaction_manager import transactions
 from cmk.gui.valuespec import CascadingDropdown, DualListChoice, FixedValue, Transform, ValueSpec
+from cmk.gui.visuals.info import visual_info_registry
+from cmk.gui.visuals.type import visual_type_registry
 
 from ._breadcrumb import visual_page_breadcrumb
 

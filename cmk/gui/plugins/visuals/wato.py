@@ -13,9 +13,9 @@ import cmk.gui.sites as sites
 from cmk.gui.config import active_config
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _l
-from cmk.gui.plugins.visuals.utils import Filter, filter_registry
 from cmk.gui.type_defs import Choices, FilterHeader, FilterHTTPVariables
 from cmk.gui.valuespec import DualListChoice, ValueSpec
+from cmk.gui.visuals.filter import Filter, filter_registry
 from cmk.gui.watolib.hosts_and_folders import folder_tree
 
 

@@ -3,23 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Iterator
+from collections.abc import Container, Iterable, Iterator
 from itertools import chain
 
 from cmk.gui.hooks import request_memoize
 from cmk.gui.http import request
-from cmk.gui.plugins.visuals.utils import (
-    active_filter_flag,
-    collect_filters,
-    Filter,
-    filter_registry,
-    get_livestatus_filter_headers,
-    get_only_sites_from_context,
-    visual_info_registry,
-)
 from cmk.gui.type_defs import FilterName, InfoName, SingleInfos, Visual, VisualContext
 
 from ._filter_valuespecs import VisualFilterListWithAddPopup
+from .filter import Filter, filter_registry
+from .info import visual_info_registry
 
 
 def get_filter(name: str) -> Filter:
@@ -152,15 +145,6 @@ def get_merged_context(*contexts: VisualContext) -> VisualContext:
     return {key: value for context in contexts for key, value in context.items()}
 
 
-# Compute Livestatus-Filters based on a given context. Returns
-# the only_sites list and a string with the filter headers
-# TODO: Untangle only_sites and filter headers
-# TODO: Reduce redundancies with filters_of_visual()
-def get_filter_headers(table, infos, context: VisualContext):  # type: ignore[no-untyped-def]
-    filter_headers = "".join(get_livestatus_filter_headers(context, collect_filters(infos)))
-    return filter_headers, get_only_sites_from_context(context)
-
-
 def active_context_from_request(infos: SingleInfos, context: VisualContext) -> VisualContext:
     vs_filterlist = VisualFilterListWithAddPopup(info_list=infos)
     if request.has_var("_active"):
@@ -170,11 +154,20 @@ def active_context_from_request(infos: SingleInfos, context: VisualContext) -> V
     # contruct crosslinks manually without the filter menu.
     # We must merge with the view context as many views have defaults, which
     # are not included in the crosslink.
-    if flag := active_filter_flag(set(vs_filterlist._filters.keys()), request.itervars()):
+    if flag := _active_filter_flag(set(vs_filterlist._filters.keys()), request.itervars()):
         with request.stashed_vars():
             request.set_var("_active", flag)
             return get_merged_context(context, vs_filterlist.from_html_vars(""))
     return context
+
+
+def _active_filter_flag(allowed_filters: set[str], url_vars: Iterator[tuple[str, str]]) -> str:
+    active_filters = {
+        filt
+        for var, value in url_vars  #
+        if (filt := filter_registry.htmlvars_to_filter.get(var)) and filt in allowed_filters
+    }
+    return ";".join(sorted(active_filters))
 
 
 def get_missing_single_infos(single_infos: SingleInfos, context: VisualContext) -> set[FilterName]:
@@ -227,3 +220,9 @@ def get_singlecontext_vars(context: VisualContext, single_infos: SingleInfos) ->
         key: var_value(key) or var_value(link_filters.get(key, ""))
         for key in get_single_info_keys(single_infos)
     }
+
+
+def collect_filters(info_keys: Container[str]) -> Iterable[Filter]:
+    for filter_obj in filter_registry.values():
+        if filter_obj.info in info_keys and filter_obj.available():
+            yield filter_obj

@@ -33,12 +33,6 @@ from cmk.gui.logged_in import user
 from cmk.gui.page_menu import make_external_link, PageMenuEntry, PageMenuTopic
 from cmk.gui.painter.v0.base import Cell, columns_of_cells
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.plugins.visuals.utils import (
-    Filter,
-    filters_allowed_for_infos,
-    get_livestatus_filter_headers,
-    get_only_sites_from_context,
-)
 from cmk.gui.type_defs import (
     ColumnName,
     PainterParameters,
@@ -51,6 +45,12 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view import View
 from cmk.gui.view_renderer import ABCViewRenderer, GUIViewRenderer
+from cmk.gui.visuals import (
+    filters_allowed_for_infos,
+    get_livestatus_filter_headers,
+    get_only_sites_from_context,
+)
+from cmk.gui.visuals.filter import Filter
 
 from . import availability
 from .row_post_processing import post_process_rows

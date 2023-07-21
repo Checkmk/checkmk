@@ -31,7 +31,6 @@ from cmk.gui.plugins.metrics.utils import (
     MKCombinedGraphLimitExceededError,
 )
 from cmk.gui.plugins.metrics.valuespecs import vs_graph_render_options
-from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
 from cmk.gui.type_defs import Choices, SingleInfos, VisualContext
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.graph_specification import GraphSpecification, TemplateGraphSpecification
@@ -43,7 +42,7 @@ from cmk.gui.valuespec import (
     Timerange,
     ValueSpec,
 )
-from cmk.gui.visuals import get_singlecontext_vars
+from cmk.gui.visuals import get_only_sites_from_context, get_singlecontext_vars
 
 from ...title_macros import macro_mapping_from_context
 from ...type_defs import ABCGraphDashletConfig, DashboardConfig, DashboardName

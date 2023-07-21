@@ -66,14 +66,7 @@ from cmk.gui.plugins.visuals.inventory import (
     FilterInvtableText,
     FilterInvtableVersion,
     FilterInvText,
-)
-from cmk.gui.plugins.visuals.utils import (
-    Filter,
-    filter_registry,
-    get_livestatus_filter_headers,
     get_ranged_table_filter_name,
-    visual_info_registry,
-    VisualInfo,
 )
 from cmk.gui.type_defs import (
     ColumnName,
@@ -97,6 +90,9 @@ from cmk.gui.valuespec import Checkbox, Dictionary, FixedValue, ValueSpec
 from cmk.gui.view_utils import CellSpec, CSVExportError, render_labels
 from cmk.gui.views.sorter import cmp_simple_number, declare_1to1_sorter, register_sorter
 from cmk.gui.views.store import multisite_builtin_views
+from cmk.gui.visuals import get_livestatus_filter_headers
+from cmk.gui.visuals.filter import Filter, filter_registry
+from cmk.gui.visuals.info import visual_info_registry, VisualInfo
 
 from . import builtin_display_hints
 from .registry import inventory_displayhints, InventoryHintSpec

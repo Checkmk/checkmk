@@ -5,7 +5,6 @@
 
 
 from cmk.gui.i18n import _
-from cmk.gui.plugins.visuals.utils import visual_info_registry, VisualInfo
 from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.valuespec import (
     Integer,
@@ -15,8 +14,33 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 
+from ._base import VisualInfo
+from ._registry import VisualInfoRegistry
 
-@visual_info_registry.register
+
+def register(visual_info_registry: VisualInfoRegistry) -> None:
+    visual_info_registry.register(VisualInfoHost)
+    visual_info_registry.register(VisualInfoService)
+    visual_info_registry.register(VisualInfoHostgroup)
+    visual_info_registry.register(VisualInfoServicegroup)
+    visual_info_registry.register(VisualInfoLog)
+    visual_info_registry.register(VisualInfoComment)
+    visual_info_registry.register(VisualInfoDowntime)
+    visual_info_registry.register(VisualInfoContact)
+    visual_info_registry.register(VisualInfoCommand)
+    visual_info_registry.register(VisualInfoBIAggregation)
+    visual_info_registry.register(VisualInfoBIAggregationGroup)
+    visual_info_registry.register(VisualInfoDiscovery)
+    visual_info_registry.register(VisualInfoEvent)
+    visual_info_registry.register(VisualInfoEventHistory)
+    visual_info_registry.register(VisualInfoCrash)
+    visual_info_registry.register(VisualInfoKubernetesCluser)
+    visual_info_registry.register(VisualInfoKubernetesNamespace)
+    visual_info_registry.register(VisualInfoKubernetesDaemonset)
+    visual_info_registry.register(VisualInfoKubernetesDeployment)
+    visual_info_registry.register(VisualInfoKubernetesStatefulset)
+
+
 class VisualInfoHost(VisualInfo):
     @property
     def ident(self) -> str:
@@ -43,7 +67,6 @@ class VisualInfoHost(VisualInfo):
         return 10
 
 
-@visual_info_registry.register
 class VisualInfoService(VisualInfo):
     @property
     def ident(self) -> str:
@@ -83,7 +106,6 @@ class VisualInfoService(VisualInfo):
         return 10
 
 
-@visual_info_registry.register
 class VisualInfoHostgroup(VisualInfo):
     @property
     def ident(self) -> str:
@@ -117,7 +139,6 @@ class VisualInfoHostgroup(VisualInfo):
         return 10
 
 
-@visual_info_registry.register
 class VisualInfoServicegroup(VisualInfo):
     @property
     def ident(self) -> str:
@@ -151,7 +172,6 @@ class VisualInfoServicegroup(VisualInfo):
         return 10
 
 
-@visual_info_registry.register
 class VisualInfoLog(VisualInfo):
     @property
     def ident(self) -> str:
@@ -170,7 +190,6 @@ class VisualInfoLog(VisualInfo):
         return []
 
 
-@visual_info_registry.register
 class VisualInfoComment(VisualInfo):
     @property
     def ident(self) -> str:
@@ -196,7 +215,6 @@ class VisualInfoComment(VisualInfo):
         ]
 
 
-@visual_info_registry.register
 class VisualInfoDowntime(VisualInfo):
     @property
     def ident(self) -> str:
@@ -222,7 +240,6 @@ class VisualInfoDowntime(VisualInfo):
         ]
 
 
-@visual_info_registry.register
 class VisualInfoContact(VisualInfo):
     @property
     def ident(self) -> str:
@@ -248,7 +265,6 @@ class VisualInfoContact(VisualInfo):
         ]
 
 
-@visual_info_registry.register
 class VisualInfoCommand(VisualInfo):
     @property
     def ident(self) -> str:
@@ -274,7 +290,6 @@ class VisualInfoCommand(VisualInfo):
         ]
 
 
-@visual_info_registry.register
 class VisualInfoBIAggregation(VisualInfo):
     @property
     def ident(self) -> str:
@@ -304,7 +319,6 @@ class VisualInfoBIAggregation(VisualInfo):
         return 20
 
 
-@visual_info_registry.register
 class VisualInfoBIAggregationGroup(VisualInfo):
     @property
     def ident(self) -> str:
@@ -334,7 +348,6 @@ class VisualInfoBIAggregationGroup(VisualInfo):
         return 20
 
 
-@visual_info_registry.register
 class VisualInfoDiscovery(VisualInfo):
     @property
     def ident(self) -> str:
@@ -353,7 +366,6 @@ class VisualInfoDiscovery(VisualInfo):
         return []
 
 
-@visual_info_registry.register
 class VisualInfoEvent(VisualInfo):
     @property
     def ident(self) -> str:
@@ -379,7 +391,6 @@ class VisualInfoEvent(VisualInfo):
         ]
 
 
-@visual_info_registry.register
 class VisualInfoEventHistory(VisualInfo):
     @property
     def ident(self) -> str:
@@ -411,7 +422,6 @@ class VisualInfoEventHistory(VisualInfo):
         ]
 
 
-@visual_info_registry.register
 class VisualInfoCrash(VisualInfo):
     @property
     def ident(self) -> str:
@@ -437,7 +447,6 @@ class VisualInfoCrash(VisualInfo):
         ]
 
 
-@visual_info_registry.register
 class VisualInfoKubernetesCluser(VisualInfo):
     @property
     def ident(self) -> str:
@@ -456,7 +465,6 @@ class VisualInfoKubernetesCluser(VisualInfo):
         return [("kubernetes_cluster", TextInput(title=self.title))]
 
 
-@visual_info_registry.register
 class VisualInfoKubernetesNamespace(VisualInfo):
     @property
     def ident(self) -> str:
@@ -475,7 +483,6 @@ class VisualInfoKubernetesNamespace(VisualInfo):
         return [("kubernetes_namespace", TextInput(title=self.title))]
 
 
-@visual_info_registry.register
 class VisualInfoKubernetesDaemonset(VisualInfo):
     @property
     def ident(self) -> str:
@@ -494,7 +501,6 @@ class VisualInfoKubernetesDaemonset(VisualInfo):
         return [("kubernetes_daemonset", TextInput(title=self.title))]
 
 
-@visual_info_registry.register
 class VisualInfoKubernetesDeployment(VisualInfo):
     @property
     def ident(self) -> str:
@@ -513,7 +519,6 @@ class VisualInfoKubernetesDeployment(VisualInfo):
         return [("kubernetes_deployment", TextInput(title=self.title))]
 
 
-@visual_info_registry.register
 class VisualInfoKubernetesStatefulset(VisualInfo):
     @property
     def ident(self) -> str:

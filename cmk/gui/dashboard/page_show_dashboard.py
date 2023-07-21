@@ -42,7 +42,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.plugins.metrics.utils import MKCombinedGraphLimitExceededError
-from cmk.gui.plugins.visuals.utils import Filter, visual_info_registry
 from cmk.gui.type_defs import InfoName, VisualContext
 from cmk.gui.utils.html import HTML, HTMLInput
 from cmk.gui.utils.ntop import is_ntop_configured
@@ -51,6 +50,8 @@ from cmk.gui.utils.urls import makeuri, makeuri_contextless, urlencode
 from cmk.gui.view import View
 from cmk.gui.views.page_ajax_filters import ABCAjaxInitialFilters
 from cmk.gui.views.store import get_permitted_views
+from cmk.gui.visuals.filter import Filter
+from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
 
 from .breadcrumb import dashboard_breadcrumb

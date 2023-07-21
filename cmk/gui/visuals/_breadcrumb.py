@@ -6,8 +6,8 @@
 from cmk.gui.breadcrumb import Breadcrumb, BreadcrumbItem, make_main_menu_breadcrumb
 from cmk.gui.http import request
 from cmk.gui.main_menu import mega_menu_registry
-from cmk.gui.plugins.visuals.utils import visual_type_registry
 from cmk.gui.utils.urls import makeuri
+from cmk.gui.visuals.type import visual_type_registry
 
 
 def visual_page_breadcrumb(what: str, title: str, page_name: str) -> Breadcrumb:

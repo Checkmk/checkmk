@@ -32,7 +32,6 @@ from cmk.gui.logged_in import user
 from cmk.gui.painter.v0.base import Cell, Painter
 from cmk.gui.painter_options import PainterOption, PainterOptions
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.plugins.visuals.utils import Filter, get_livestatus_filter_headers
 from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.escaping import escape_attribute
 from cmk.gui.utils.html import HTML
@@ -50,6 +49,8 @@ from cmk.gui.views.command import (
     PermissionSectionAction,
 )
 from cmk.gui.views.command.base import CommandSpecWithoutSite
+from cmk.gui.visuals import get_livestatus_filter_headers
+from cmk.gui.visuals.filter import Filter
 
 from cmk.bi.aggregation import BIAggregation
 from cmk.bi.computer import BIAggregationFilter

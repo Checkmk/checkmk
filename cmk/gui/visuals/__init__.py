@@ -6,16 +6,17 @@
 from cmk.gui import utils
 from cmk.gui.pages import PageRegistry
 
+from . import info
 from ._add_to_visual import ajax_add_visual, ajax_popup_add
 from ._add_to_visual import page_menu_dropdown_add_to_visual as page_menu_dropdown_add_to_visual
 from ._add_to_visual import set_page_context as set_page_context
 from ._breadcrumb import visual_page_breadcrumb as visual_page_breadcrumb
 from ._filter_context import active_context_from_request as active_context_from_request
+from ._filter_context import collect_filters as collect_filters
 from ._filter_context import context_to_uri_vars as context_to_uri_vars
 from ._filter_context import filters_of_visual as filters_of_visual
 from ._filter_context import get_context_from_uri_vars as get_context_from_uri_vars
 from ._filter_context import get_filter as get_filter
-from ._filter_context import get_filter_headers as get_filter_headers
 from ._filter_context import get_link_filter_names as get_link_filter_names
 from ._filter_context import get_merged_context as get_merged_context
 from ._filter_context import get_missing_single_infos as get_missing_single_infos
@@ -27,9 +28,16 @@ from ._filter_context import visible_filters_of_visual as visible_filters_of_vis
 from ._filter_form import render_filter_form as render_filter_form
 from ._filter_form import show_filter_form as show_filter_form
 from ._filter_valuespecs import FilterChoices as FilterChoices
+from ._filter_valuespecs import filters_allowed_for_info as filters_allowed_for_info
+from ._filter_valuespecs import filters_allowed_for_infos as filters_allowed_for_infos
 from ._filter_valuespecs import PageAjaxVisualFilterListGetChoice
 from ._filter_valuespecs import VisualFilterList as VisualFilterList
 from ._filter_valuespecs import VisualFilterListWithAddPopup as VisualFilterListWithAddPopup
+from ._livestatus import get_filter_headers as get_filter_headers
+from ._livestatus import get_livestatus_filter_headers as get_livestatus_filter_headers
+from ._livestatus import get_only_sites_from_context as get_only_sites_from_context
+from ._livestatus import livestatus_query_bare as livestatus_query_bare
+from ._livestatus import livestatus_query_bare_string as livestatus_query_bare_string
 from ._page_create_visual import page_create_visual as page_create_visual
 from ._page_create_visual import SingleInfoSelection as SingleInfoSelection
 from ._page_edit_visual import get_context_specs as get_context_specs
@@ -51,14 +59,18 @@ from ._store import save as save
 from ._store import TVisual as TVisual
 from ._title import view_title as view_title
 from ._title import visual_title as visual_title
+from .filter import Filter, filter_registry, FilterOption, FilterTime, InputTextFilter
+from .info import visual_info_registry, VisualInfo, VisualInfoRegistry
+from .type import visual_type_registry, VisualType
 
 
-def register(page_registry: PageRegistry) -> None:
+def register(page_registry: PageRegistry, _visual_info_registry: VisualInfoRegistry) -> None:
     page_registry.register_page("ajax_visual_filter_list_get_choice")(
         PageAjaxVisualFilterListGetChoice
     )
     page_registry.register_page_handler("ajax_popup_add_visual", ajax_popup_add)
     page_registry.register_page_handler("ajax_add_visual", ajax_add_visual)
+    info.register(_visual_info_registry)
 
 
 def load_plugins() -> None:
@@ -84,15 +96,16 @@ def _register_pre_21_plugin_api() -> None:
     import cmk.gui.plugins.visuals as api_module
     import cmk.gui.plugins.visuals.utils as plugin_utils
 
-    for name in (
-        "Filter",
-        "filter_registry",
-        "FilterOption",
-        "FilterTime",
-        "get_only_sites_from_context",
-        "visual_info_registry",
-        "visual_type_registry",
-        "VisualInfo",
-        "VisualType",
+    for name, val in (
+        ("Filter", Filter),
+        ("filter_registry", filter_registry),
+        ("FilterOption", FilterOption),
+        ("FilterTime", FilterTime),
+        ("InputTextFilter", InputTextFilter),
+        ("get_only_sites_from_context", get_only_sites_from_context),
+        ("visual_info_registry", visual_info_registry),
+        ("visual_type_registry", visual_type_registry),
+        ("VisualInfo", VisualInfo),
+        ("VisualType", VisualType),
     ):
-        api_module.__dict__[name] = plugin_utils.__dict__[name]
+        api_module.__dict__[name] = plugin_utils.__dict__[name] = val

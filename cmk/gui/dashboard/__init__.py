@@ -17,7 +17,7 @@ from cmk.gui.permissions import (
     PermissionSection,
     PermissionSectionRegistry,
 )
-from cmk.gui.plugins.visuals.utils import VisualTypeRegistry
+from cmk.gui.visuals.type import VisualTypeRegistry
 
 from .builtin_dashboards import builtin_dashboards, GROW, MAX
 from .cre_dashboards import register_builtin_dashboards

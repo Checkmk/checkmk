@@ -23,7 +23,6 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.pages import AjaxPage, PageResult
 from cmk.gui.painter.v0.base import Cell, Painter, painter_registry, PainterRegistry
-from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry
 from cmk.gui.type_defs import (
     ColumnName,
     ColumnSpec,
@@ -56,6 +55,8 @@ from cmk.gui.valuespec import (
     ValueSpec,
 )
 from cmk.gui.views.inventory import DISPLAY_HINTS, DisplayHints
+from cmk.gui.visuals.info import visual_info_registry
+from cmk.gui.visuals.type import visual_type_registry
 
 from .layout import layout_registry
 from .sorter import ParameterizedSorter, Sorter, sorter_registry, SorterRegistry

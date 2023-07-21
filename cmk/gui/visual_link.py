@@ -13,7 +13,6 @@ from cmk.gui.display_options import display_options
 from cmk.gui.hooks import request_memoize
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.http import request, response
-from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
 from cmk.gui.type_defs import (
     FilterName,
     HTTPVariables,
@@ -28,6 +27,8 @@ from cmk.gui.type_defs import (
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.mobile import is_mobile
 from cmk.gui.utils.urls import makeuri, makeuri_contextless
+from cmk.gui.visuals.info import visual_info_registry
+from cmk.gui.visuals.type import visual_type_registry, VisualType
 
 
 def render_link_to_view(content: str | HTML, row: Row, link_spec: VisualLinkSpec) -> str | HTML:

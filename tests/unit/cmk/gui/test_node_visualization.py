@@ -90,7 +90,7 @@ def test_ParentChildTopologyPage_get_hostnames_from_filters(
         return_value=(MockView, []),
     )
     mocker.patch(
-        "cmk.gui.plugins.visuals.utils.get_livestatus_filter_headers",
+        "cmk.gui.visuals._livestatus.get_livestatus_filter_headers",
         return_value=[],
     )
 

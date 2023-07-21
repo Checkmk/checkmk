@@ -48,7 +48,6 @@ from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.plugins.userdb.utils import user_attribute_registry
 from cmk.gui.plugins.visuals import filters
-from cmk.gui.plugins.visuals.utils import visual_type_registry
 from cmk.gui.plugins.wato.utils import mode_registry
 from cmk.gui.query_filters import cre_sites_options
 from cmk.gui.userdb import registration as userdb_registration
@@ -60,6 +59,8 @@ from cmk.gui.views.join_service_rows import join_service_row_post_processor
 from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.row_post_processing import register_row_post_processor
 from cmk.gui.views.sorter import sorter_registry
+from cmk.gui.visuals.info import visual_info_registry
+from cmk.gui.visuals.type import visual_type_registry
 from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.config_domain_name import (
     config_domain_registry,
@@ -81,14 +82,14 @@ def register_sites_options() -> None:
 
 def register() -> None:
     register_cre_licensing_handler()
-    visuals.register(cmk.gui.pages.page_registry)
+    visuals.register(cmk.gui.pages.page_registry, visual_info_registry)
     views.register(
         permission_section_registry,
         cmk.gui.pages.page_registry,
         visual_type_registry,
         register_post_config_load_hook,
     )
-    inventory.register(cmk.gui.pages.page_registry)
+    inventory.register(cmk.gui.pages.page_registry, visual_info_registry)
     dashboard.register(
         permission_section_registry,
         cmk.gui.pages.page_registry,

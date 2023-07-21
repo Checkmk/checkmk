@@ -19,12 +19,12 @@ from cmk.gui.i18n import _, _l, ungettext
 from cmk.gui.painter.v0.base import Cell, Painter
 from cmk.gui.painter_options import paint_age
 from cmk.gui.permissions import Permission, permission_registry
-from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import ColumnName, Row, Rows, SingleInfos, VisualContext
 from cmk.gui.utils.urls import makeuri_contextless
 from cmk.gui.view_utils import CellSpec
 from cmk.gui.views.command import Command, CommandActionResult, PermissionSectionAction
 from cmk.gui.views.sorter import cmp_simple_number, Sorter
+from cmk.gui.visuals.filter import Filter
 
 from .helpers import local_files_involved_in_crash
 

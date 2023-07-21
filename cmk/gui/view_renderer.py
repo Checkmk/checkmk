@@ -46,7 +46,6 @@ from cmk.gui.page_menu_utils import (
     get_ntop_page_menu_dropdown,
 )
 from cmk.gui.painter_options import PainterOptions
-from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import HTTPVariables, InfoName, Rows, ViewSpec
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.ntop import get_ntop_connection, is_ntop_configured
@@ -56,6 +55,7 @@ from cmk.gui.utils.urls import DocReference, makeuri, makeuri_contextless
 from cmk.gui.view import View
 from cmk.gui.views.command import Command, do_actions, get_command_groups, should_show_command_form
 from cmk.gui.visuals import view_title
+from cmk.gui.visuals.filter import Filter
 from cmk.gui.watolib.activate_changes import get_pending_changes_tooltip, has_pending_changes
 
 if cmk_version.edition() is not cmk_version.Edition.CRE:

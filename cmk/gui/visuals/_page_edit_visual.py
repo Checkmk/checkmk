@@ -25,7 +25,6 @@ from cmk.gui.pagetypes import (
     SubPagesSpec,
     vs_no_permission_to_publish,
 )
-from cmk.gui.plugins.visuals.utils import visual_info_registry, visual_type_registry, VisualType
 from cmk.gui.type_defs import (
     FilterName,
     HTTPVariables,
@@ -53,6 +52,8 @@ from cmk.gui.valuespec import (
     Transform,
     ValueSpec,
 )
+from cmk.gui.visuals.info import visual_info_registry
+from cmk.gui.visuals.type import visual_type_registry, VisualType
 
 from ._breadcrumb import visual_page_breadcrumb
 from ._filter_valuespecs import VisualFilterList

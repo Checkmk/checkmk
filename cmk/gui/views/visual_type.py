@@ -20,10 +20,10 @@ from cmk.gui.inventory import (
     LoadStructuredDataError,
 )
 from cmk.gui.page_menu import PageMenuEntry
-from cmk.gui.plugins.visuals.utils import VisualType
 from cmk.gui.type_defs import HTTPVariables, PermittedViewSpecs, VisualContext
 from cmk.gui.valuespec import Hostname
 from cmk.gui.views.store import get_permitted_views
+from cmk.gui.visuals.type import VisualType
 
 
 class VisualTypeViews(VisualType):

@@ -5,6 +5,7 @@
 
 import re
 from functools import partial
+from typing import get_args, Literal
 
 import cmk.gui.inventory as inventory
 import cmk.gui.query_filters as query_filters
@@ -13,7 +14,8 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.ifaceoper import interface_oper_states, interface_port_types
 from cmk.gui.num_split import cmp_version
-from cmk.gui.plugins.visuals.utils import (
+from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Rows, VisualContext
+from cmk.gui.visuals.filter import (
     CheckboxRowFilter,
     display_filter_radiobuttons,
     DualListFilter,
@@ -22,12 +24,129 @@ from cmk.gui.plugins.visuals.utils import (
     FilterNumberRange,
     FilterOption,
     InputTextFilter,
-    RangedTableFilterName,
-    visual_info_registry,
-    VisualInfo,
 )
-from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Rows, VisualContext
-from cmk.gui.valuespec import ValueSpec
+
+RangedTableFilterName = Literal[
+    "invswpac_install_date",
+    "invswpac_size",
+    "invinterface_speed",
+    "invdockerimages_size",
+    "invdockerimages_labels",
+    "invdockerimages_repotags",
+    "invdockerimages_repodigests",
+    "invdockercontainers_labels",
+    "invcmksites_autostart",
+    "invcmksites_apache",
+    "invcmksites_cmc",
+    "invcmksites_crontab",
+    "invcmksites_dcd",
+    "invcmksites_liveproxyd",
+    "invcmksites_mkeventd",
+    "invcmksites_mknotifyd",
+    "invcmksites_nagios",
+    "invcmksites_npcd",
+    "invcmksites_rrdcached",
+    "invcmksites_stunnel",
+    "invcmksites_xinetd",
+    "invcmkversions_demo",
+    "invinterface_index",
+    "invorainstance_db_creation_time",
+    "invorainstance_db_uptime",
+    "invoratablespace_current_size",
+    "invoratablespace_max_size",
+    "invoratablespace_used_size",
+    "invoratablespace_increment_size",
+    "invoratablespace_free_space",
+    "invorasga_fixed_size",
+    "invorasga_redo_buffer",
+    "invorasga_buf_cache_size",
+    "invorasga_in_mem_area_size",
+    "invorasga_shared_pool_size",
+    "invorasga_large_pool_size",
+    "invorasga_java_pool_size",
+    "invorasga_streams_pool_size",
+    "invorasga_shared_io_pool_size",
+    "invorasga_data_trans_cache_size",
+    "invorasga_granule_size",
+    "invorasga_max_size",
+    "invorasga_start_oh_shared_pool",
+    "invorasga_free_mem_avail",
+    "invorapga_aggregate_pga_auto_target",
+    "invorapga_aggregate_pga_target_parameter",
+    "invorapga_bytes_processed",
+    "invorapga_extra_bytes_read_written",
+    "invorapga_global_memory_bound",
+    "invorapga_maximum_pga_allocated",
+    "invorapga_maximum_pga_used_for_auto_workareas",
+    "invorapga_maximum_pga_used_for_manual_workareas",
+    "invorapga_total_pga_allocated",
+    "invorapga_total_pga_inuse",
+    "invorapga_total_pga_used_for_auto_workareas",
+    "invorapga_total_pga_used_for_manual_workareas",
+    "invorapga_total_freeable_pga_memory",
+    "invswpac_install_date",
+    "invswpac_size",
+    "invinterface_speed",
+    "invdockerimages_size",
+    "invdockerimages_labels",
+    "invdockerimages_repotags",
+    "invdockerimages_repodigests",
+    "invdockercontainers_labels",
+    "invcmksites_autostart",
+    "invcmksites_apache",
+    "invcmksites_cmc",
+    "invcmksites_crontab",
+    "invcmksites_dcd",
+    "invcmksites_liveproxyd",
+    "invcmksites_mkeventd",
+    "invcmksites_mknotifyd",
+    "invcmksites_nagios",
+    "invcmksites_npcd",
+    "invcmksites_rrdcached",
+    "invcmksites_stunnel",
+    "invcmksites_xinetd",
+    "invcmkversions_demo",
+    "invorainstance_db_uptime",
+    "invoratablespace_current_size",
+    "invoratablespace_max_size",
+    "invoratablespace_used_size",
+    "invoratablespace_increment_size",
+    "invoratablespace_free_space",
+    "invorasga_fixed_size",
+    "invorasga_redo_buffer",
+    "invorasga_buf_cache_size",
+    "invorasga_in_mem_area_size",
+    "invorasga_shared_pool_size",
+    "invorasga_large_pool_size",
+    "invorasga_java_pool_size",
+    "invorasga_streams_pool_size",
+    "invorasga_shared_io_pool_size",
+    "invorasga_data_trans_cache_size",
+    "invorasga_granule_size",
+    "invorasga_max_size",
+    "invorasga_start_oh_shared_pool",
+    "invorasga_free_mem_avail",
+    "invorapga_aggregate_pga_auto_target",
+    "invorapga_aggregate_pga_target_parameter",
+    "invorapga_bytes_processed",
+    "invorapga_extra_bytes_read_written",
+    "invorapga_global_memory_bound",
+    "invorapga_maximum_pga_allocated",
+    "invorapga_maximum_pga_used_for_auto_workareas",
+    "invorapga_maximum_pga_used_for_manual_workareas",
+    "invorapga_total_pga_allocated",
+    "invorapga_total_pga_inuse",
+    "invorapga_total_pga_used_for_auto_workareas",
+    "invorapga_total_pga_used_for_manual_workareas",
+    "invorapga_total_freeable_pga_memory",
+]
+
+
+def get_ranged_table_filter_name(s: str) -> RangedTableFilterName | None:
+    for lit in get_args(RangedTableFilterName):
+        if s == lit:
+            return lit
+    return None
 
 
 class FilterInvtableText(InputTextFilter):
@@ -405,22 +524,3 @@ class _FilterInvHasSoftwarePackage(Filter):
 
 
 filter_registry.register(_FilterInvHasSoftwarePackage())
-
-
-@visual_info_registry.register
-class VisualInfoHost(VisualInfo):
-    @property
-    def ident(self) -> str:
-        return "invhist"
-
-    @property
-    def title(self) -> str:
-        return _("Inventory History")
-
-    @property
-    def title_plural(self) -> str:
-        return _("Inventory Historys")
-
-    @property
-    def single_spec(self) -> list[tuple[str, ValueSpec]]:
-        return []

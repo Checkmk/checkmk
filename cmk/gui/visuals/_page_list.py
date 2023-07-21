@@ -27,7 +27,6 @@ from cmk.gui.page_menu import (
     PageMenuTopic,
 )
 from cmk.gui.pagetypes import customize_page_menu
-from cmk.gui.plugins.visuals.utils import visual_type_registry
 from cmk.gui.table import Table, table_element
 from cmk.gui.type_defs import HTTPVariables, Icon, VisualName, VisualTypeName
 from cmk.gui.utils.flashed_messages import flash, get_flashed_messages
@@ -42,6 +41,7 @@ from cmk.gui.utils.urls import (
     makeuri_contextless,
     urlencode,
 )
+from cmk.gui.visuals.type import visual_type_registry
 
 from ._breadcrumb import visual_page_breadcrumb
 from ._store import available, get_installed_packages, local_file_exists, save, TVisual

@@ -26,15 +26,15 @@ from cmk.gui.plugins.metrics.utils import (
     registered_metrics,
     translated_metrics_from_row,
 )
-from cmk.gui.plugins.visuals.utils import (
-    get_only_sites_from_context,
-    livestatus_query_bare,
-    livestatus_query_bare_string,
-)
 from cmk.gui.type_defs import Choices
 from cmk.gui.utils.labels import encode_label_for_livestatus, Label, LABEL_REGEX
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import autocompleter_registry, Labels
+from cmk.gui.visuals import (
+    get_only_sites_from_context,
+    livestatus_query_bare,
+    livestatus_query_bare_string,
+)
 from cmk.gui.watolib.hosts_and_folders import folder_tree, Host
 
 

@@ -22,6 +22,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.pages import AjaxPage, page_registry, PageResult
+from cmk.gui.site_config import get_site_config
 from cmk.gui.type_defs import (
     Choices,
     ColumnName,
@@ -43,19 +44,18 @@ if cmk_version.edition() is cmk_version.Edition.CME:
     )
 
 import cmk.gui.query_filters as query_filters
-from cmk.gui.plugins.visuals.utils import (
+from cmk.gui.visuals import get_only_sites_from_context
+from cmk.gui.visuals.filter import (
     checkbox_component,
     checkbox_row,
     CheckboxRowFilter,
     display_filter_radiobuttons,
     DualListFilter,
     Filter,
-    filter_cre_heading_info,
     filter_registry,
     FilterNumberRange,
     FilterOption,
     FilterTime,
-    get_only_sites_from_context,
     InputTextFilter,
 )
 
@@ -1078,6 +1078,11 @@ class SiteFilter(Filter):
 
     def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {"site": row["site"]}
+
+
+def filter_cre_heading_info(value: FilterHTTPVariables) -> str | None:
+    current_value = value.get("site")
+    return get_site_config(livestatus.SiteId(current_value))["alias"] if current_value else None
 
 
 filter_registry.register(

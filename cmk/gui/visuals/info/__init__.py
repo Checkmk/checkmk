@@ -3,11 +3,13 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui import main_modules
+from ._base import VisualInfo
+from ._infos import register
+from ._registry import visual_info_registry, VisualInfoRegistry
 
-main_modules.load_plugins()
-from cmk.gui.plugins.visuals.utils import (  # type: ignore[attr-defined]  # pylint: disable=no-name-in-module
-    filter_registry,
-)
-
-print("test" in filter_registry)
+__all__ = [
+    "VisualInfo",
+    "VisualInfoRegistry",
+    "visual_info_registry",
+    "register",
+]

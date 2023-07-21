@@ -35,7 +35,6 @@ from cmk.gui.exceptions import MKHTTPException, MKUserError
 from cmk.gui.htmllib.generator import HTMLWriter
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
-from cmk.gui.plugins.visuals.utils import livestatus_query_bare
 from cmk.gui.type_defs import (
     Choice,
     Choices,
@@ -68,6 +67,7 @@ from cmk.gui.utils.autocompleter_config import ContextAutocompleterConfig
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import DropdownChoiceWithHostAndServiceHints
+from cmk.gui.visuals import livestatus_query_bare
 
 LegacyPerfometer = tuple[str, Any]
 

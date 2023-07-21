@@ -4,24 +4,27 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 from collections.abc import Sequence
-from typing import Any
+from typing import Any, get_args
 
 import pytest
 
 import cmk.utils.version as cmk_version
 
 import cmk.gui.plugins.visuals.filters
-import cmk.gui.plugins.visuals.utils as utils
 import cmk.gui.views
 import cmk.gui.visuals as visuals
 from cmk.gui.http import request
-from cmk.gui.plugins.visuals.utils import filters_allowed_for_info, filters_allowed_for_infos
+from cmk.gui.plugins.visuals.inventory import RangedTableFilterName
 from cmk.gui.type_defs import SingleInfos, VisualContext
+from cmk.gui.visuals import filters_allowed_for_info, filters_allowed_for_infos
+from cmk.gui.visuals.filter import Filter, filter_registry
+from cmk.gui.visuals.info import visual_info_registry
+from cmk.gui.visuals.type import visual_type_registry
 
 
 def test_get_filter() -> None:
     f = visuals.get_filter("hostregex")
-    assert isinstance(f, utils.Filter)
+    assert isinstance(f, Filter)
 
 
 def test_get_not_existing_filter() -> None:
@@ -80,11 +83,11 @@ def _expected_visual_types():
 
 
 def test_registered_visual_types() -> None:
-    assert sorted(utils.visual_type_registry.keys()) == sorted(_expected_visual_types().keys())
+    assert sorted(visual_type_registry.keys()) == sorted(_expected_visual_types().keys())
 
 
 def test_registered_visual_type_attributes() -> None:
-    for ident, plugin_class in utils.visual_type_registry.items():
+    for ident, plugin_class in visual_type_registry.items():
         plugin = plugin_class()
         spec = _expected_visual_types()[ident]
 
@@ -4871,10 +4874,10 @@ expected_filters: dict[str, dict[str, Any]] = {
 # Skip pending discussion with development team.
 @pytest.mark.skip
 def test_registered_filters() -> None:
-    names = cmk.gui.plugins.visuals.utils.filter_registry.keys()
+    names = filter_registry.keys()
     assert sorted(expected_filters.keys()) == sorted(names)
 
-    for filt in cmk.gui.plugins.visuals.utils.filter_registry.values():
+    for filt in filter_registry.values():
         spec = expected_filters[filt.ident]
 
         assert filt.title == spec["title"]
@@ -4892,7 +4895,7 @@ def test_registered_filters() -> None:
         bases = [c.__name__ for c in filt.__class__.__bases__] + [filt.__class__.__name__]
         assert spec["filter_class"] in bases
         if spec["filter_class"] == "FilterInvtableIDRange":
-            assert filt.ident in utils.RangedTableFilterName.__args__  # type: ignore[attr-defined]
+            assert filt.ident in get_args(RangedTableFilterName)
 
 
 expected_infos: dict[str, dict[str, Any]] = {
@@ -5037,14 +5040,14 @@ expected_infos: dict[str, dict[str, Any]] = {
 # Skip pending discussion with development team.
 @pytest.mark.skip
 def test_registered_infos() -> None:
-    assert sorted(utils.visual_info_registry.keys()) == sorted(expected_infos.keys())
+    assert sorted(visual_info_registry.keys()) == sorted(expected_infos.keys())
 
 
 # These tests make adding new elements needlessly painful.
 # Skip pending discussion with development team.
 @pytest.mark.skip
 def test_registered_info_attributes() -> None:
-    for ident, cls in utils.visual_info_registry.items():
+    for ident, cls in visual_info_registry.items():
         info = cls()
         spec = expected_infos[ident]
 
@@ -5210,7 +5213,7 @@ def test_get_missing_single_infos_missing_context() -> None:
 
 
 def test_get_context_specs_no_info_limit() -> None:
-    result = visuals.get_context_specs(["host"], list(utils.visual_info_registry.keys()))
+    result = visuals.get_context_specs(["host"], list(visual_info_registry.keys()))
     expected = [
         "host",
         "service",

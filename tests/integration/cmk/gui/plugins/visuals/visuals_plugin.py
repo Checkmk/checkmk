@@ -4,7 +4,12 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 import cmk.gui.query_filters as query_filters
-from cmk.gui.plugins.visuals.utils import filter_registry, InputTextFilter
+
+# Names are made available dynamically
+from cmk.gui.plugins.visuals.utils import (  # type: ignore[attr-defined]  # pylint: disable=no-name-in-module
+    filter_registry,
+    InputTextFilter,
+)
 
 filter_registry.register(
     InputTextFilter(

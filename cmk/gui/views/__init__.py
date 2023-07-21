@@ -21,9 +21,9 @@ from cmk.gui.permissions import (
     PermissionSection,
     PermissionSectionRegistry,
 )
-from cmk.gui.plugins.visuals.utils import VisualTypeRegistry
 from cmk.gui.type_defs import Perfdata, PerfometerSpec, TranslatedMetrics, VisualLinkSpec
 from cmk.gui.view_utils import get_labels, render_labels, render_tag_groups
+from cmk.gui.visuals.type import VisualTypeRegistry
 
 from . import icon, inventory, perfometer
 from .builtin_views import builtin_views

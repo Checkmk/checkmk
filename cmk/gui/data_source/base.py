@@ -11,8 +11,8 @@ from collections.abc import Sequence
 from livestatus import OnlySites
 
 from cmk.gui.painter.v0.base import Cell
-from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import ColumnName, Rows, SingleInfos, VisualContext
+from cmk.gui.visuals.filter import Filter
 
 
 class RowTable(abc.ABC):

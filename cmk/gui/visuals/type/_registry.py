@@ -3,11 +3,14 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from cmk.gui import main_modules
+from cmk.utils.plugin_registry import Registry
 
-main_modules.load_plugins()
-from cmk.gui.plugins.visuals.utils import (  # type: ignore[attr-defined]  # pylint: disable=no-name-in-module
-    filter_registry,
-)
+from ._base import VisualType
 
-print("test" in filter_registry)
+
+class VisualTypeRegistry(Registry[type[VisualType]]):
+    def plugin_name(self, instance):
+        return instance().ident
+
+
+visual_type_registry = VisualTypeRegistry()

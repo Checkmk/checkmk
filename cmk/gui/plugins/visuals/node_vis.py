@@ -6,10 +6,10 @@ from dataclasses import dataclass
 
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _l
-from cmk.gui.plugins.visuals.utils import Filter, filter_registry
 from cmk.gui.type_defs import FilterHTTPVariables, Row
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.speaklater import LazyString
+from cmk.gui.visuals.filter import Filter, filter_registry
 
 
 @dataclass

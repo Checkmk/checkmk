@@ -5,9 +5,9 @@
 
 from collections.abc import Callable, Sequence
 
-from cmk.gui.plugins.visuals.utils import Filter
 from cmk.gui.type_defs import Rows
 from cmk.gui.view import View
+from cmk.gui.visuals.filter import Filter
 
 _ROW_POST_PROCESSORS: list[Callable[[View, Sequence[Filter], Rows], None]] = []
 

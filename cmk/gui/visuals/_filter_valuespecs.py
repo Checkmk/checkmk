@@ -6,6 +6,7 @@
 import json
 import sys
 import traceback
+from itertools import chain
 from typing import Iterator, Sequence
 
 from livestatus import LivestatusTestingError
@@ -16,13 +17,6 @@ from cmk.gui.http import request
 from cmk.gui.i18n import _
 from cmk.gui.log import logger
 from cmk.gui.logged_in import user
-from cmk.gui.plugins.visuals.utils import (
-    Filter,
-    filter_registry,
-    filters_allowed_for_info,
-    filters_allowed_for_infos,
-    visual_info_registry,
-)
 from cmk.gui.type_defs import FilterHTTPVariables, SingleInfos, VisualContext
 from cmk.gui.utils.html import HTML
 from cmk.gui.utils.output_funnel import output_funnel
@@ -40,6 +34,8 @@ from cmk.gui.valuespec import (
     ValueSpecText,
     ValueSpecValidateFunc,
 )
+from cmk.gui.visuals.filter import Filter, filter_registry
+from cmk.gui.visuals.info import visual_info_registry
 
 
 def FilterChoices(  # pylint: disable=redefined-builtin
@@ -200,6 +196,18 @@ class VisualFilterList(ListOfMultiple):
 
     def has_show_more(self) -> bool:
         return all(vs.is_show_more for _key, vs in self.filter_items())
+
+
+def filters_allowed_for_info(info: str) -> Iterator[tuple[str, Filter]]:
+    """Returns a map of filter names and filter objects that are registered for the given info"""
+    for fname, filt in filter_registry.items():
+        if filt.info is None or info == filt.info:
+            yield fname, filt
+
+
+def filters_allowed_for_infos(info_list: SingleInfos) -> dict[str, Filter]:
+    """Same as filters_allowed_for_info() but for multiple infos"""
+    return dict(chain.from_iterable(map(filters_allowed_for_info, info_list)))
 
 
 class VisualFilterListWithAddPopup(VisualFilterList):

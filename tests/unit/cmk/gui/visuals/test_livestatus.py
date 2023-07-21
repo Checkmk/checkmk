@@ -9,8 +9,8 @@ import pytest
 
 from livestatus import SiteId
 
-from cmk.gui.plugins.visuals.utils import get_only_sites_from_context
 from cmk.gui.type_defs import VisualContext
+from cmk.gui.visuals import get_only_sites_from_context
 
 
 @pytest.mark.parametrize(

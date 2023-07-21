@@ -6,6 +6,7 @@ common: &common
     - "ubuntu-20.04"
     - "ubuntu-22.04"
     - "ubuntu-22.10"
+    - "ubuntu-23.04"
     - "centos-7"
     - "centos-8"
     - "almalinux-9"

@@ -12,3 +12,4 @@ Version: 2.3.0b1
 * Parse argument in active check
 * Prepare functions in check_mkevents.cc for printing long output
 * Don't print the worst state
+* Print last log line according to the configuration

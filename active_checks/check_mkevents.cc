@@ -381,11 +381,20 @@ int main(int argc, char **argv) {
         reply_and_exit(State::ok, "no events for " + app + host);
     }
 
+    std::cout << worst_state << " - ";
+
     std::stringstream output;
     output << count << " events (" << unhandled << " unacknowledged)";
-    if (!worst_row_event_text.empty()) {
-        output << " (Last line: " << worst_row_event_text << ")";
+    if (!worst_row_event_text.empty() &&  last_log_in_summary) {
+        output << ", Last line: " << worst_row_event_text;
     }
-    reply_and_exit(worst_state, output.str());
+    print_line(output.str());
+
+    if (!worst_row_event_text.empty() && last_log_in_details) {
+        print_line("Last line: " + worst_row_event_text);
+    }
+
+    exit(worst_state);
+
     return 0;  // never reached
 }

@@ -15,10 +15,9 @@ import cmk.utils.tags
 from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.tags import TagGroupID, TagID
 
-from cmk.checkengine.discovery import AutocheckEntry
+from cmk.checkengine.discovery import AutocheckEntry, AutochecksManager
 
 import cmk.base.config as config
-from cmk.base._autochecks import AutochecksManager
 from cmk.base.config import ConfigCache
 
 

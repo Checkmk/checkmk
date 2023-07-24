@@ -124,11 +124,13 @@ from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
+import cmk.checkengine.discovery._autochecks as autochecks
 from cmk.checkengine import AgentParser, CheckPlugin, Parameters, SourceType
 from cmk.checkengine.check_table import ConfiguredService, FilterMode, HostCheckTable, ServiceID
 from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr, Item
 from cmk.checkengine.discovery import (
     AutocheckServiceWithNodes,
+    AutochecksManager,
     DiscoveryCheckParameters,
     DiscoveryPlugin,
 )
@@ -138,11 +140,9 @@ from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.type_defs import AgentRawDataSectionElem, NO_SELECTION, SectionNameCollection
 
-import cmk.base._autochecks as autochecks
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.default_config as default_config
 import cmk.base.ip_lookup as ip_lookup
-from cmk.base._autochecks import AutochecksManager
 from cmk.base.api.agent_based.cluster_mode import ClusterMode
 from cmk.base.api.agent_based.register.check_plugins_legacy import create_check_plugin_from_legacy
 from cmk.base.api.agent_based.register.section_plugins_legacy import (

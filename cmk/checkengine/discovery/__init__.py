@@ -3,7 +3,12 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from ._autochecks import AutocheckEntry, AutocheckServiceWithNodes, AutochecksStore
+from ._autochecks import (
+    AutocheckEntry,
+    AutocheckServiceWithNodes,
+    AutochecksManager,
+    AutochecksStore,
+)
 from ._autodiscovery import DiscoveryResult
 from ._discovery import DiscoveryPlugin
 from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabel, HostLabelPlugin
@@ -16,6 +21,7 @@ __all__ = [
     "analyse_services",
     "AutocheckServiceWithNodes",
     "AutocheckEntry",
+    "AutochecksManager",
     "AutochecksStore",
     "discover_host_labels",
     "discover_services",

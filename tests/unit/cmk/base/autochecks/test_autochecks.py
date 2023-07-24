@@ -18,9 +18,9 @@ from cmk.utils.hostaddress import HostName
 from cmk.checkengine.check_table import ConfiguredService
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import AutocheckEntry, AutocheckServiceWithNodes
+from cmk.checkengine.discovery._autochecks import _consolidate_autochecks_of_real_hosts
 from cmk.checkengine.parameters import TimespecificParameters
 
-from cmk.base._autochecks import _consolidate_autochecks_of_real_hosts
 from cmk.base.config import ConfigCache
 
 _COMPUTED_PARAMETERS_SENTINEL = TimespecificParameters(())

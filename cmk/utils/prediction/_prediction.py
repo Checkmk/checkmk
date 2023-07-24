@@ -5,18 +5,20 @@
 
 import json
 import logging
+import math
 import time
 from collections.abc import Callable, Iterable, Iterator
 from contextlib import suppress
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from statistics import fmean
-from typing import Any, Literal, NewType
+from typing import Any, Final, NamedTuple, NewType
 
 import livestatus
 
 import cmk.utils.debug
 import cmk.utils.paths
+from cmk.utils import dateutils
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.log import VERBOSE
 from cmk.utils.metrics import MetricName
@@ -40,10 +42,16 @@ PredictionParameters = dict[str, Any]  # TODO: improve this type
 
 _DataStatValue = float | None
 _DataStat = list[_DataStatValue]
+_TimeSlices = list[tuple[Timestamp, Timestamp]]
 DataStats = list[_DataStat]
 
-_LevelsType = Literal["absolute", "relative", "stdev"]
-_LevelsSpec = tuple[_LevelsType, tuple[float, float]]
+_GroupByFunction = Callable[[Timestamp], tuple[Timegroup, Timestamp]]
+
+
+class _PeriodInfo(NamedTuple):
+    slice: int
+    groupby: _GroupByFunction
+    valid: int
 
 
 @dataclass(frozen=True)
@@ -427,95 +435,203 @@ class PredictionStore:
         return None
 
 
-def estimate_levels(
-    *,
-    reference_value: float | None,
-    stdev: float | None,
-    levels_lower: _LevelsSpec | None,
-    levels_upper: _LevelsSpec | None,
-    levels_upper_lower_bound: tuple[float, float] | None,
-    levels_factor: float,
-) -> EstimatedLevels:
-    if not reference_value:  # No reference data available
-        return (None, None, None, None)
+def compute_prediction(
+    timegroup: Timegroup,
+    prediction_store: PredictionStore,
+    params: PredictionParameters,
+    now: int,
+    period_info: _PeriodInfo,
+    hostname: str,
+    service_description: str,
+    dsname: str,
+    cf: ConsolidationFunctionName,
+) -> PredictionData:
+    logger.log(VERBOSE, "Calculating prediction data for time group %s", timegroup)
+    prediction_store.clean_prediction_files(timegroup, force=True)
 
-    estimated_upper_warn, estimated_upper_crit = (
-        _get_levels_from_params(
-            levels=levels_upper,
-            sig=1,
-            reference_value=reference_value,
-            stdev=stdev,
-            levels_factor=levels_factor,
-        )
-        if levels_upper
-        else (None, None)
+    time_windows = _time_slices(now, int(params["horizon"] * 86400), period_info, timegroup)
+
+    rrd_datacolumn = rrd_datacolum(
+        livestatus.LocalConnection(), hostname, service_description, dsname, cf
     )
 
-    estimated_lower_warn, estimated_lower_crit = (
-        _get_levels_from_params(
-            levels=levels_lower,
-            sig=-1,
-            reference_value=reference_value,
-            stdev=stdev,
-            levels_factor=levels_factor,
-        )
-        if levels_lower
-        else (None, None)
+    data_for_pred = _calculate_data_for_prediction(time_windows, rrd_datacolumn)
+
+    info = PredictionInfo(
+        name=timegroup,
+        time=now,
+        range=time_windows[0],
+        cf=cf,
+        dsname=dsname,
+        slice=period_info.slice,
+        params=params,
+    )
+    prediction_store.save_predictions(info, data_for_pred)
+
+    return data_for_pred
+
+
+def _window_start(timestamp: int, span: int) -> int:
+    """If time is partitioned in SPAN intervals, how many seconds is TIMESTAMP away from the start
+
+    It works well across time zones, but has an unfair behavior with daylight savings time."""
+    return (timestamp - timezone_at(timestamp)) % span
+
+
+def _group_by_wday(t: Timestamp) -> tuple[Timegroup, Timestamp]:
+    wday = time.localtime(t).tm_wday
+    return Timegroup(dateutils.weekday_ids()[wday]), _window_start(t, 86400)
+
+
+def _group_by_day(t: Timestamp) -> tuple[Timegroup, Timestamp]:
+    return Timegroup("everyday"), _window_start(t, 86400)
+
+
+def _group_by_day_of_month(t: Timestamp) -> tuple[Timegroup, Timestamp]:
+    mday = time.localtime(t).tm_mday
+    return Timegroup(str(mday)), _window_start(t, 86400)
+
+
+def _group_by_everyhour(t: Timestamp) -> tuple[Timegroup, Timestamp]:
+    return Timegroup("everyhour"), _window_start(t, 3600)
+
+
+PREDICTION_PERIODS: Final = {
+    "wday": _PeriodInfo(
+        slice=86400,  # 7 slices
+        groupby=_group_by_wday,
+        valid=7,
+    ),
+    "day": _PeriodInfo(
+        slice=86400,  # 31 slices
+        groupby=_group_by_day_of_month,
+        valid=28,
+    ),
+    "hour": _PeriodInfo(
+        slice=86400,  # 1 slice
+        groupby=_group_by_day,
+        valid=1,
+    ),
+    "minute": _PeriodInfo(
+        slice=3600,  # 1 slice
+        groupby=_group_by_everyhour,
+        valid=24,
+    ),
+}
+
+
+def _time_slices(
+    timestamp: Timestamp,
+    horizon: Seconds,
+    period_info: _PeriodInfo,
+    timegroup: Timegroup,
+) -> _TimeSlices:
+    "Collect all slices back into the past until time horizon is reached"
+    timestamp = int(timestamp)
+    abs_begin = timestamp - horizon
+    slices = []
+
+    # Note: due to the f**king DST, we can have several shifts between DST
+    # and non-DST during a computation. Treatment is unfair on those longer
+    # or shorter days. All days have 24hrs. DST swaps within slices are
+    # being ignored, we work with slice shifts. The DST flag is checked
+    # against the query timestamp. In general that means test is done at
+    # the beginning of the day(because predictive levels refresh at
+    # midnight) and most likely before DST swap is applied.
+
+    # Have fun understanding the tests for this function.
+    for begin in range(timestamp, abs_begin, -period_info.slice):
+        tg, start, end = _get_prediction_timegroup(begin, period_info)[:3]
+        if tg == timegroup:
+            slices.append((start, end))
+    return slices
+
+
+def _get_prediction_timegroup(
+    t: Timestamp,
+    period_info: _PeriodInfo,
+) -> tuple[Timegroup, Timestamp, Timestamp, Seconds]:
+    """
+    Return:
+    timegroup: name of the group, like 'monday' or '12'
+    from_time: absolute epoch time of the first second of the
+    current slice.
+    until_time: absolute epoch time of the first second *not* in the slice
+    rel_time: seconds offset of now in the current slice
+    """
+    # Convert to local timezone
+    timegroup, rel_time = period_info.groupby(t)
+    from_time = t - rel_time
+    until_time = from_time + period_info.slice
+    return timegroup, from_time, until_time, rel_time
+
+
+def _calculate_data_for_prediction(
+    time_windows: _TimeSlices,
+    rrd_datacolumn: RRDColumnFunction,
+) -> PredictionData:
+    twindow, slices = _retrieve_grouped_data_from_rrd(rrd_datacolumn, time_windows)
+
+    descriptors = _data_stats(slices)
+
+    return PredictionData(
+        columns=["average", "min", "max", "stdev"],
+        points=descriptors,
+        num_points=len(descriptors),
+        data_twindow=list(twindow[:2]),
+        step=twindow[2],
     )
 
-    if levels_upper_lower_bound:
-        estimated_upper_warn = (
-            None
-            if estimated_upper_warn is None
-            else max(levels_upper_lower_bound[0], estimated_upper_warn)
-        )
-        estimated_upper_crit = (
-            None
-            if estimated_upper_crit is None
-            else max(levels_upper_lower_bound[1], estimated_upper_crit)
-        )
 
-    return (estimated_upper_warn, estimated_upper_crit, estimated_lower_warn, estimated_lower_crit)
+def _data_stats(slices: list[TimeSeriesValues]) -> DataStats:
+    "Statistically summarize all the upsampled RRD data"
+
+    descriptors: DataStats = []
+
+    for time_column in zip(*slices):
+        point_line = [x for x in time_column if x is not None]
+        if point_line:
+            average = sum(point_line) / float(len(point_line))
+            descriptors.append(
+                [
+                    average,
+                    min(point_line),
+                    max(point_line),
+                    _std_dev(point_line, average),
+                ]
+            )
+        else:
+            descriptors.append([None, None, None, None])
+
+    return descriptors
 
 
-def _get_levels_from_params(
-    *,
-    levels: _LevelsSpec,
-    sig: Literal[1, -1],
-    reference_value: float,
-    stdev: float | None,
-    levels_factor: float,
-) -> tuple[float, float]:
-    levels_type, (warn, crit) = levels
-
-    reference_deviation = _get_reference_deviation(
-        levels_type=levels_type,
-        reference_value=reference_value,
-        stdev=stdev,
-        levels_factor=levels_factor,
+def _std_dev(point_line: list[float], average: float) -> float:
+    samples = len(point_line)
+    # In the case of a single data-point an unbiased standard deviation is
+    # undefined. In this case we take the magnitude of the measured value
+    # itself as a measure of the dispersion.
+    if samples == 1:
+        return abs(average)
+    return math.sqrt(
+        abs(sum(p**2 for p in point_line) - average**2 * samples) / float(samples - 1)
     )
 
-    estimated_warn = reference_value + sig * warn * reference_deviation
-    estimated_crit = reference_value + sig * crit * reference_deviation
 
-    return estimated_warn, estimated_crit
+def _retrieve_grouped_data_from_rrd(
+    rrd_column: RRDColumnFunction,
+    time_windows: _TimeSlices,
+) -> tuple[TimeWindow, list[TimeSeriesValues]]:
+    "Collect all time slices and up-sample them to same resolution"
+    from_time = time_windows[0][0]
 
+    slices = [(rrd_column(start, end), from_time - start) for start, end in time_windows]
 
-def _get_reference_deviation(
-    *,
-    levels_type: _LevelsType,
-    reference_value: float,
-    stdev: float | None,
-    levels_factor: float,
-) -> float:
-    if levels_type == "absolute":
-        return levels_factor
+    # The resolutions of the different time ranges differ. We upsample
+    # to the best resolution. We assume that the youngest slice has the
+    # finest resolution.
+    twindow = slices[0][0].twindow
+    if twindow[2] == 0:
+        raise RuntimeError("Got no historic metrics")
 
-    if levels_type == "relative":
-        return reference_value / 100.0
-
-    # levels_type == "stdev":
-    if stdev is None:  # just make explicit what would have happend anyway:
-        raise TypeError("stdev is None")
-
-    return stdev
+    return twindow, [ts.bfill_upsample(twindow, shift) for ts, shift in slices]

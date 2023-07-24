@@ -7,7 +7,7 @@ from collections.abc import Mapping
 
 import pytest
 
-from cmk.utils.prediction import _prediction
+from cmk.utils.prediction import _plugin_interface, _prediction
 
 
 @pytest.mark.parametrize(
@@ -133,7 +133,7 @@ def test_time_series_downsampling(
 def test__get_reference_deviation_absolute() -> None:
     factor = 3.1415
     assert (
-        _prediction._get_reference_deviation(
+        _plugin_interface._get_reference_deviation(
             levels_type="absolute",
             reference_value=42.0,
             stdev=None,
@@ -146,7 +146,7 @@ def test__get_reference_deviation_absolute() -> None:
 def test__get_reference_deviation_relative() -> None:
     reference_value = 42.0
     assert (
-        _prediction._get_reference_deviation(
+        _plugin_interface._get_reference_deviation(
             levels_type="relative",
             reference_value=reference_value,
             stdev=None,
@@ -159,7 +159,7 @@ def test__get_reference_deviation_relative() -> None:
 def test__get_reference_deviation_stdev_good() -> None:
     stdev = 23.0
     assert (
-        _prediction._get_reference_deviation(
+        _plugin_interface._get_reference_deviation(
             levels_type="stdev",
             reference_value=42.0,
             stdev=stdev,
@@ -171,7 +171,7 @@ def test__get_reference_deviation_stdev_good() -> None:
 
 def test__get_reference_deviation_stdev_bad() -> None:
     with pytest.raises(TypeError):
-        _ = _prediction._get_reference_deviation(
+        _ = _plugin_interface._get_reference_deviation(
             levels_type="stdev",
             reference_value=42.0,
             stdev=None,
@@ -226,7 +226,7 @@ def test_estimate_levels(
     result: _prediction.EstimatedLevels,
 ) -> None:
     assert (
-        _prediction.estimate_levels(
+        _plugin_interface.estimate_levels(
             reference_value=reference_value,
             stdev=reference_deviation,
             levels_lower=params.get("levels_lower"),

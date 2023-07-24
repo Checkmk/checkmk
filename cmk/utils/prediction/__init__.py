@@ -4,10 +4,9 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from ._plugin_interface import get_predictive_levels
+from ._plugin_interface import estimate_levels, EstimatedLevels, get_predictive_levels
 from ._prediction import (
     DataStats,
-    estimate_levels,
     get_rrd_data,
     livestatus_lql,
     lq_logic,

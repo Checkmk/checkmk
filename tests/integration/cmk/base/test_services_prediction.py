@@ -17,7 +17,7 @@ from tests.testlib.site import Site
 
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
-from cmk.utils.prediction import _plugin_interface, _prediction
+from cmk.utils.prediction import _prediction
 
 
 @pytest.fixture(name="cfg_setup", scope="module")
@@ -118,8 +118,8 @@ def test_get_rrd_data(
 ) -> None:
     with on_time(utcdate, timezone):
         timestamp = time.time()
-        _, from_time, until_time, _ = _plugin_interface._get_prediction_timegroup(
-            int(timestamp), _plugin_interface._PREDICTION_PERIODS[period]
+        _, from_time, until_time, _ = _prediction._get_prediction_timegroup(
+            int(timestamp), _prediction.PREDICTION_PERIODS[period]
         )
 
     timeseries = _prediction.get_rrd_data(
@@ -426,12 +426,12 @@ def test_retieve_grouped_data_from_rrd(
 
     index = params["period"]
     assert isinstance(index, str)
-    period_info = _plugin_interface._PREDICTION_PERIODS[index]
+    period_info = _prediction.PREDICTION_PERIODS[index]
     with on_time(utcdate, timezone):
         now = int(time.time())
         assert callable(period_info.groupby)
         timegroup = period_info.groupby(now)[0]
-        time_windows = _plugin_interface._time_slices(
+        time_windows = _prediction._time_slices(
             now, int(params["horizon"] * 86400), period_info, timegroup
         )
 
@@ -439,7 +439,7 @@ def test_retieve_grouped_data_from_rrd(
     rrd_datacolumn = _prediction.rrd_datacolum(
         site.live, hostname, service_description, dsname, "MAX"
     )
-    result = _plugin_interface._retrieve_grouped_data_from_rrd(rrd_datacolumn, time_windows)
+    result = _prediction._retrieve_grouped_data_from_rrd(rrd_datacolumn, time_windows)
 
     assert result == reference
 
@@ -481,13 +481,13 @@ def test_calculate_data_for_prediction(
 ) -> None:
     index = params["period"]
     assert isinstance(index, str)
-    period_info = _plugin_interface._PREDICTION_PERIODS[index]
+    period_info = _prediction.PREDICTION_PERIODS[index]
     with on_time(utcdate, timezone):
         now = int(time.time())
         assert callable(period_info.groupby)
         timegroup = period_info.groupby(now)[0]
 
-        time_windows = _plugin_interface._time_slices(
+        time_windows = _prediction._time_slices(
             now, int(params["horizon"] * 86400), period_info, timegroup
         )
 
@@ -495,7 +495,7 @@ def test_calculate_data_for_prediction(
     rrd_datacolumn = _prediction.rrd_datacolum(
         site.live, hostname, service_description, dsname, "MAX"
     )
-    data_for_pred = _plugin_interface._calculate_data_for_prediction(time_windows, rrd_datacolumn)
+    data_for_pred = _prediction._calculate_data_for_prediction(time_windows, rrd_datacolumn)
 
     expected_reference = _load_expected_result(
         repo_path() / "tests/integration/cmk/base/test-files" / str(timezone) / str(timegroup)
@@ -543,8 +543,8 @@ def test_get_rrd_data_incomplete(
 @pytest.mark.usefixtures("cfg_setup")
 def test_get_rrd_data_fails(site: Site) -> None:
     timestamp = time.mktime(datetime.strptime("2018-11-28 12", "%Y-%m-%d %H").timetuple())
-    _, from_time, until_time, _ = _plugin_interface._get_prediction_timegroup(
-        int(timestamp), _plugin_interface._PREDICTION_PERIODS["hour"]
+    _, from_time, until_time, _ = _prediction._get_prediction_timegroup(
+        int(timestamp), _prediction.PREDICTION_PERIODS["hour"]
     )
 
     # Fail to get data, because non-existent check

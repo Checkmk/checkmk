@@ -59,7 +59,7 @@ def compute_graph_curves(
             if ts.metadata.title and multi:
                 title += " - " + ts.metadata.title
 
-            color = metric_definition.get("color", ts.metadata.color or "#000000")
+            color = ts.metadata.color or metric_definition.get("color", "#000000")
             if i % 2 == 1 and not (
                 expression[0] == "transformation" and expression[1][0] == "forecast"
             ):

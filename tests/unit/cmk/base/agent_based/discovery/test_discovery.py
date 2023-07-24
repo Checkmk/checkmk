@@ -27,7 +27,7 @@ from cmk.snmplib import SNMPRawData
 from cmk.fetchers import Mode
 from cmk.fetchers.filecache import FileCacheOptions
 
-from cmk.checkengine import HostKey, HostSections, SectionPlugin, SourceType
+from cmk.checkengine import HostKey, HostSections, SourceType
 from cmk.checkengine.check_table import ServiceID
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.checkresults import ActiveCheckResult
@@ -60,6 +60,7 @@ from cmk.checkengine.sectionparser import (
     ParsedSectionName,
     ParsedSectionsResolver,
     Provider,
+    SectionPlugin,
     SectionsParser,
 )
 from cmk.checkengine.type_defs import AgentRawDataSection, NO_SELECTION

@@ -28,14 +28,7 @@ See Also:
 """
 
 from . import checking, inventory
-from ._api import (
-    CheckPlugin,
-    FetcherFunction,
-    parse_raw_data,
-    ParserFunction,
-    SectionPlugin,
-    SummarizerFunction,
-)
+from ._api import CheckPlugin, FetcherFunction, parse_raw_data, ParserFunction, SummarizerFunction
 from ._markers import PiggybackMarker, SectionMarker
 from ._parser import HostSections, Parser
 from ._parseragent import AgentParser
@@ -58,7 +51,6 @@ __all__ = [
     "ParserFunction",
     "CheckPlugin",
     "PiggybackMarker",
-    "SectionPlugin",
     "SectionMarker",
     "SNMPParser",
     "SourceInfo",

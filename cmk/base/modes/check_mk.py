@@ -63,7 +63,6 @@ from cmk.checkengine import (
     FetcherFunction,
     parse_raw_data,
     ParserFunction,
-    SectionPlugin,
     SourceType,
     SummarizerFunction,
 )
@@ -72,6 +71,7 @@ from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import execute_check_discovery, remove_autochecks_of_host
 from cmk.checkengine.error_handling import CheckResultErrorHandler
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin, InventoryPluginName
+from cmk.checkengine.sectionparser import SectionPlugin
 from cmk.checkengine.submitters import get_submitter, ServiceState, Submitter
 from cmk.checkengine.summarize import summarize
 from cmk.checkengine.type_defs import NO_SELECTION, SectionNameCollection

@@ -11,9 +11,14 @@ import pytest
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
 
-from cmk.checkengine import HostKey, HostSections, SectionPlugin, SourceType
+from cmk.checkengine import HostKey, HostSections, SourceType
 from cmk.checkengine.checkresults import ActiveCheckResult
-from cmk.checkengine.sectionparser import ParsedSectionName, ParsedSectionsResolver, SectionsParser
+from cmk.checkengine.sectionparser import (
+    ParsedSectionName,
+    ParsedSectionsResolver,
+    SectionPlugin,
+    SectionsParser,
+)
 from cmk.checkengine.sectionparserutils import (
     check_parsing_errors,
     get_section_cluster_kwargs,

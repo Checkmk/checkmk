@@ -38,7 +38,6 @@ from cmk.checkengine import (
     Parameters,
     ParserFunction,
     plugin_contexts,
-    SectionPlugin,
     SourceInfo,
     SourceType,
     SummarizerFunction,
@@ -65,6 +64,7 @@ from cmk.checkengine.sectionparser import (
     ParsedSectionName,
     Provider,
     ResolvedResult,
+    SectionPlugin,
     store_piggybacked_sections,
 )
 from cmk.checkengine.sectionparserutils import (

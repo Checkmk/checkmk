@@ -25,7 +25,6 @@ from cmk.checkengine import (
     group_by_host,
     HostKey,
     ParserFunction,
-    SectionPlugin,
     SummarizerFunction,
 )
 from cmk.checkengine.check_table import ConfiguredService, ServiceID
@@ -41,7 +40,12 @@ from cmk.checkengine.discovery import (
 )
 from cmk.checkengine.discovery._autodiscovery import _Transition, get_host_services
 from cmk.checkengine.parameters import TimespecificParameters
-from cmk.checkengine.sectionparser import make_providers, Provider, store_piggybacked_sections
+from cmk.checkengine.sectionparser import (
+    make_providers,
+    Provider,
+    SectionPlugin,
+    store_piggybacked_sections,
+)
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 
 import cmk.base.agent_based.checking as checking

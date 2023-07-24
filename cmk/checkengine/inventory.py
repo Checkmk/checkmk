@@ -33,7 +33,7 @@ from cmk.utils.structured_data import (
 )
 from cmk.utils.validatedstr import ValidatedString
 
-from ._api import FetcherFunction, ParserFunction, SectionPlugin, SummarizerFunction
+from ._api import FetcherFunction, ParserFunction, SummarizerFunction
 from ._parser import HostSections
 from ._parserutils import group_by_host
 from ._typedefs import HostKey, SourceType
@@ -43,6 +43,7 @@ from .sectionparser import (
     ParsedSectionName,
     Provider,
     ResolvedResult,
+    SectionPlugin,
     store_piggybacked_sections,
 )
 from .sectionparserutils import check_parsing_errors, get_cache_info, get_section_kwargs

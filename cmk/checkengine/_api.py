@@ -19,16 +19,10 @@ from cmk.snmplib import SNMPRawData
 from ._parser import HostSections, Parser
 from ._typedefs import SourceInfo
 from .checkresults import ActiveCheckResult
-from .sectionparser import ParsedSectionName, SectionPlugin
+from .sectionparser import ParsedSectionName
 from .type_defs import AgentRawDataSection, SectionNameCollection
 
-__all__ = [
-    "parse_raw_data",
-    "ParserFunction",
-    "CheckPlugin",
-    "SectionPlugin",
-    "SummarizerFunction",
-]
+__all__ = ["parse_raw_data", "ParserFunction", "CheckPlugin", "SummarizerFunction"]
 
 
 class FetcherFunction(Protocol):

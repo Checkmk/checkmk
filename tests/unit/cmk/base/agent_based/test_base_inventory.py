@@ -29,7 +29,7 @@ from cmk.snmplib import SNMPRawData
 
 from cmk.fetchers import FetcherType
 
-from cmk.checkengine import HostSections, SectionPlugin, SourceInfo, SourceType
+from cmk.checkengine import HostSections, SourceInfo, SourceType
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.inventory import (
     _check_fetched_data_or_trees,
@@ -40,7 +40,7 @@ from cmk.checkengine.inventory import (
     inventorize_host,
     ItemsOfInventoryPlugin,
 )
-from cmk.checkengine.sectionparser import ParsedSectionName
+from cmk.checkengine.sectionparser import ParsedSectionName, SectionPlugin
 
 from cmk.base.api.agent_based.inventory_classes import Attributes, TableRow
 from cmk.base.modes.check_mk import _get_save_tree_actions, _SaveTreeActions

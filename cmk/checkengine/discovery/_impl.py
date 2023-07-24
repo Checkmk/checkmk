@@ -20,13 +20,13 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.snmplib import SNMPRawData
 
-from cmk.checkengine._api import ParserFunction, SectionPlugin, SummarizerFunction
+from cmk.checkengine._api import ParserFunction, SummarizerFunction
 from cmk.checkengine._parserutils import group_by_host
 from cmk.checkengine._typedefs import HostKey, SourceInfo
 from cmk.checkengine.check_table import ServiceID
 from cmk.checkengine.checking import CheckPluginName, Item
 from cmk.checkengine.checkresults import ActiveCheckResult
-from cmk.checkengine.sectionparser import make_providers, store_piggybacked_sections
+from cmk.checkengine.sectionparser import make_providers, SectionPlugin, store_piggybacked_sections
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 
 from ._autochecks import AutocheckServiceWithNodes

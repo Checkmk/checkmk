@@ -23,12 +23,17 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionMap
 from cmk.utils.servicename import ServiceName
 
-from cmk.checkengine._api import FetcherFunction, ParserFunction, SectionPlugin, SummarizerFunction
+from cmk.checkengine._api import FetcherFunction, ParserFunction, SummarizerFunction
 from cmk.checkengine._parserutils import group_by_host
 from cmk.checkengine._typedefs import HostKey
 from cmk.checkengine.check_table import ServiceID
 from cmk.checkengine.checking import CheckPluginName, Item
-from cmk.checkengine.sectionparser import make_providers, Provider, store_piggybacked_sections
+from cmk.checkengine.sectionparser import (
+    make_providers,
+    Provider,
+    SectionPlugin,
+    store_piggybacked_sections,
+)
 
 from ._autochecks import (
     AutocheckEntry,

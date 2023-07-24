@@ -8,13 +8,17 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition, saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.check_legacy_includes.jolokia import (
     get_inventory_jolokia_metrics_apps,
     jolokia_metrics_parse,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_rate,
+    get_value_store,
+    IgnoreResultsError,
+)
 
 # Example output from agent:
 # <<<jolokia_metrics>>>
@@ -129,7 +133,13 @@ def check_jolokia_metrics_serv_req(item, params, info):
     wrapped = False
     this_time = time.time()
     try:
-        rate = get_rate("jolokia_metrics.serv_req.%s" % item, this_time, req)
+        rate = get_rate(
+            get_value_store(),
+            "jolokia_metrics.serv_req.%s" % item,
+            this_time,
+            req,
+            raise_overflow=True,
+        )
         output.append("RequestRate: %0.2f" % rate)
         perfdata.append(("RequestRate", rate))
     except IgnoreResultsError:
@@ -270,7 +280,13 @@ def check_jolokia_metrics_bea_requests(item, _no_params, info):
     for nk in ["CompletedRequestCount", "requestCount"]:
         if nk in app:
             requests = int(app[nk])
-            rate = get_rate("j4p.bea.requests.%s" % item, time.time(), requests)
+            rate = get_rate(
+                get_value_store(),
+                "j4p.bea.requests.%s" % item,
+                time.time(),
+                requests,
+                raise_overflow=True,
+            )
             return (0, "%.2f requests/sec" % rate, [("rate", rate)])
 
     return (3, "data not found in agent output")

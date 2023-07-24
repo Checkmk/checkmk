@@ -13,8 +13,9 @@
 
 import time
 
-from cmk.base.check_api import get_bytes_human_readable, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 
 def parse_mkeventd_status(string_table):
@@ -91,7 +92,7 @@ def check_mkeventd_status(item, params, parsed):  # pylint: disable=too-many-bra
     this_time = time.time()
     for title, col, fmt in columns:
         counter_value = status[col + "s"]
-        rate = get_rate(col, this_time, counter_value)
+        rate = get_rate(get_value_store(), col, this_time, counter_value, raise_overflow=True)
         rates[col] = rate
         yield 0, ("%s: " + fmt) % (title, rate), [("average_%s_rate" % col, rate)]
 

@@ -37,9 +37,13 @@
 
 # mypy: disable-error-code="var-annotated"
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition, RAISE
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_rate,
+    get_value_store,
+    IgnoreResultsError,
+)
 
 db2_counters_map = {
     "deadlocks": "Deadlocks",
@@ -99,7 +103,7 @@ def check_db2_counters(item, params, parsed):
             continue
 
         try:
-            rate = get_rate("db2_counters.%s.%s" % (item, counter), timestamp, value, onwrap=RAISE)
+            rate = get_rate(get_value_store(), counter, timestamp, value, raise_overflow=True)
         except IgnoreResultsError:
             wrapped = True
             continue

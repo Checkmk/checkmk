@@ -9,6 +9,29 @@
 
 checkname = "fireeye_mail"
 
+mock_item_state = {
+    "": {
+        "fireeye_mail.total" : (0, 0),
+        "fireeye_mail.infected" : (0, 0),
+        "fireeye_mail.analyzed" : (0, 0),
+    },
+    "attachment": {
+        "fireeye_mail.total.attachment" : (0, 0),
+        "fireeye_mail.infected.attachment" : (0, 0),
+        "fireeye_mail.analyzed.attachment" : (0, 0),
+    },
+    "url": {
+        "fireeye_mail.total.url" : (0, 0),
+        "fireeye_mail.infected.url" : (0, 0),
+        "fireeye_mail.analyzed.url" : (0, 0),
+    },
+    "statistics": {
+        "fireeye.stat.attachment": (0, 0),
+        "fireeye.stat.url": (0, 0),
+        "fireeye.stat.maliciousattachment": (0, 0),
+        "fireeye.stat.maliciousurl": (0, 0),
+    },
+}
 
 info = [
     [

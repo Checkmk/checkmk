@@ -16,7 +16,7 @@ from .checktestlib import assertCheckResultsEqual, CheckResult
 pytestmark = pytest.mark.checks
 
 
-def get_rate(_counter, _time, value):
+def get_rate(_vs, _counter, _time, value, raise_overflow):
     return value
 
 

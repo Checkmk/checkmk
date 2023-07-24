@@ -8,6 +8,14 @@
 
 checkname = "skype"
 
+mock_item_state = {
+    "edge": {
+        "A/V Edge - Authentication Failures/sec_LS:A/V Edge - UDP Counters": (1442491.2178844, 74),
+        "A/V Edge - Allocate Requests Exceeding Port Limit/sec_LS:A/V Edge - UDP Counters": (1442491.2178844, 0),
+        "A/V Edge - Packets Dropped/sec_LS:A/V Edge - UDP Counters": (1442491.2178844, 0),
+    }
+}
+
 info = [
     ["sampletime", "14425512178844", "10000000"],
     ["[LS:A/V Edge - UDP Counters]"],

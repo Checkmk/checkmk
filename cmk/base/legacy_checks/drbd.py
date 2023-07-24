@@ -127,8 +127,9 @@ import re
 # Default thresholds for drbd checks
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition, state_markers
+from cmk.base.check_api import LegacyCheckDefinition, state_markers
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 drbd_net_default_levels = (None, None)
 drbd_disk_default_levels = (None, None)
@@ -364,7 +365,9 @@ def drbd_get_rates(list_):
     output = ""
     perfdata = []
     for type_, name, item, value, uom in list_:
-        rate = get_rate("%s.%s.%s" % (type_, name, item), now, value)
+        rate = get_rate(
+            get_value_store(), "%s.%s.%s" % (type_, name, item), now, value, raise_overflow=True
+        )
         perfdata.append((name, rate))
         output += " %s/sec: %s%s" % (name, rate, uom)
     return (output, perfdata)

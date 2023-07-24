@@ -6,10 +6,15 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fireeye import inventory_fireeye_generic
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_average, get_value_store, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_average,
+    get_rate,
+    get_value_store,
+    SNMPTree,
+)
 from cmk.base.plugins.agent_based.utils.fireeye import DETECT
 
 
@@ -20,7 +25,7 @@ def fireeye_counter_generic(value, what, average):
     # For the counter variable name, we remove all spaces
     # (e.g. 'fireeye.infected.url')
     counter = "fireeye_mail.%s" % what.replace(" ", ".").lower()
-    rate = get_rate(counter, this_time, value)
+    rate = get_rate(get_value_store(), counter, this_time, value, raise_overflow=True)
     state = 0
     if what == "Bypass" and rate > 0:
         state = 2
@@ -204,7 +209,9 @@ def check_fireeye_mail_statistics(_no_item, params, info):
     ):
         this_time = time.time()
         counter = "fireeye.stat.%s" % "".join(mail_containing.split(" ")[2:]).lower()
-        rate = get_rate(counter, this_time, int(statistics_info[index]))
+        rate = get_rate(
+            get_value_store(), counter, this_time, int(statistics_info[index]), raise_overflow=True
+        )
         perfdata = [(counter.replace(".", "_"), rate * 60)]
         if average:
             avg = get_average(value_store, f"{counter}.avg", this_time, rate, average)

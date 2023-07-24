@@ -8,10 +8,15 @@
 
 import time
 
-from cmk.base.check_api import get_bytes_human_readable, get_rate, LegacyCheckDefinition, RAISE
+from cmk.base.check_api import get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.netapp_api import netapp_api_parse_lines
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_rate,
+    get_value_store,
+    IgnoreResultsError,
+    render,
+)
 
 # <<<netapp_api_vs_traffic:sep(9)>>>
 # lif:vserver        instance_uuid 4294967295        instance_name sb1        sent_errors 0        recv_errors 0 ...
@@ -193,6 +198,7 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
             return None
 
     now = time.time()
+    value_store = get_value_store()
     for protocol, (protoname, values) in protocol_map.items():
         data = parsed.get("%s.%s" % (protocol, item))
         if not data:
@@ -208,10 +214,11 @@ def check_netapp_api_vs_traffic(item, _no_params, parsed):
 
             try:
                 rate = get_rate(
+                    value_store,
                     f"{protocol}.{what}",
                     ref,
                     int(data[what]) * scale,
-                    onwrap=RAISE,
+                    raise_overflow=True,
                 )
                 yield (
                     0,

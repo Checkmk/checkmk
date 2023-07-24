@@ -6,9 +6,9 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, SNMPTree
 from cmk.base.plugins.agent_based.utils.stormshield import DETECT_STORMSHIELD
 
 # Unfortunalty we can not use the normal interface names here, because
@@ -26,9 +26,15 @@ def check_stormshield_packets(item, _no_params, info):
     for descrip, name, _iftype, pktaccepted, pktblocked, pkticmp, tcp, udp in info:
         if item == descrip:
             now = time.time()
-            rate_pktaccepted = get_rate("acc_%s" % item, now, int(pktaccepted))
-            rate_pktblocked = get_rate("block_%s" % item, now, int(pktblocked))
-            rate_pkticmp = get_rate("icmp_%s" % item, now, int(pkticmp))
+            rate_pktaccepted = get_rate(
+                get_value_store(), "acc_%s" % item, now, int(pktaccepted), raise_overflow=True
+            )
+            rate_pktblocked = get_rate(
+                get_value_store(), "block_%s" % item, now, int(pktblocked), raise_overflow=True
+            )
+            rate_pkticmp = get_rate(
+                get_value_store(), "icmp_%s" % item, now, int(pkticmp), raise_overflow=True
+            )
             infotext = "[%s], tcp: %s, udp: %s" % (name, tcp, udp)
             perfdata = [
                 ("tcp_active_sessions", tcp),

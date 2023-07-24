@@ -9,6 +9,14 @@
 
 checkname = "ceph_status"
 
+mock_item_state = {
+    "": {
+        "ceph_status.epoch.rate" : (0, 108),
+    },
+    "osds": {
+        "ceph_osds.epoch.rate" : (0, 95921),
+    }
+}
 
 info = [
     ["{"],

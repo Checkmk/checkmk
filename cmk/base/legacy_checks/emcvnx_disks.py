@@ -8,9 +8,9 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition, saveint, state_markers
+from cmk.base.check_api import LegacyCheckDefinition, saveint, state_markers
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, render
 
 # Example output from agent:
 # <<<emcvnx_disks>>>
@@ -166,11 +166,15 @@ def check_emcvnx_disks(item, params, parsed):
     countername_r = "emcvnx_disks.read_bytes.%s" % item.replace(" ", "_")
     countername_w = "emcvnx_disks.write_bytes.%s" % item.replace(" ", "_")
 
-    read_bytes_per_sec = get_rate(countername_r, now, read_bytes)
+    read_bytes_per_sec = get_rate(
+        get_value_store(), countername_r, now, read_bytes, raise_overflow=True
+    )
     message += ", Read: %s" % render.iobandwidth(read_bytes_per_sec)
     perfdata.append(("read", read_bytes_per_sec))
 
-    write_bytes_per_sec = get_rate(countername_w, now, write_bytes)
+    write_bytes_per_sec = get_rate(
+        get_value_store(), countername_w, now, write_bytes, raise_overflow=True
+    )
     message += ", Write: %s" % render.iobandwidth(write_bytes_per_sec)
     perfdata.append(("write", write_bytes_per_sec))
 

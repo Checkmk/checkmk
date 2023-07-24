@@ -6,9 +6,9 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, SNMPTree
 from cmk.base.plugins.agent_based.utils.checkpoint import DETECT
 
 # .1.3.6.1.2.1.1.1.0 Linux gateway1 2.6.18-92cp #1 SMP Tue Dec 4 21:44:22 IST 2012 i686
@@ -50,7 +50,7 @@ def check_checkpoint_packets(_no_item, params, parsed):
         else:
             warn, crit = params[key]
 
-        rate = get_rate(key, this_time, value)
+        rate = get_rate(get_value_store(), key, this_time, value, raise_overflow=True)
         infotext = "%s: %.1f pkts/s" % (name, rate)
         state = 0
         if crit is not None and rate >= crit:

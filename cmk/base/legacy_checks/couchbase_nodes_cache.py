@@ -7,9 +7,9 @@
 import time
 from collections.abc import Iterable
 
-from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, render
 from cmk.base.plugins.agent_based.utils.couchbase import parse_couchbase_lines, Section
 
 DiscoveryResult = Iterable[tuple[str, dict]]
@@ -32,7 +32,9 @@ def check_couchbase_nodes_cache(item, params, parsed):
         return
     total = misses + hits
     hit_perc = (hits / float(total)) * 100.0 if total != 0 else 100.0
-    miss_rate = get_rate("%s.cache_misses" % item, time.time(), misses)
+    miss_rate = get_rate(
+        get_value_store(), "cache_misses", time.time(), misses, raise_overflow=True
+    )
 
     yield check_levels(
         miss_rate,

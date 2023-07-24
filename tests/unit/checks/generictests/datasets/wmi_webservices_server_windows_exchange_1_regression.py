@@ -8,6 +8,9 @@
 
 checkname = "wmi_webservices"
 
+
+mock_item_state = {"": {"CurrentConnections_": (3452500.0, 0)}}
+
 info = [
     [
         "AnonymousUsersPersec",
@@ -406,12 +409,12 @@ checks = {
         (
             "Default Web Site",
             {},
-            [(0, "Connections: 0.00", [("connections", 0.0, None, None, None, None)])],
+            [(0, "Connections: 0.00", [("connections", 0.00, None, None, None, None)])],
         ),
         (
             "Exchange Back End",
             {},
-            [(0, "Connections: 0.00", [("connections", 0.0, None, None, None, None)])],
+            [(0, "Connections: 1.74", [("connections", 1.7370736254249444, None, None, None, None)])],
         ),
     ]
 }

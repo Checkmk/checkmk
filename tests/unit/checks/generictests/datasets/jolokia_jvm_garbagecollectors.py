@@ -8,6 +8,15 @@
 
 checkname = "jolokia_jvm_garbagecollectors"
 
+mock_item_state = {
+    "": {
+        "MyJIRA GC PS MarkSweep.time": (0, 4753),
+        "MyJIRA GC PS MarkSweep.count": (0.0, 7),
+        "MyJIRA GC PS Scavenge.time": (0.0, 209798),
+        "MyJIRA GC PS Scavenge.count": (0.0, 2026),
+    },
+}
+
 info = [
     [
         "MyJIRA",

@@ -7,10 +7,15 @@
 import socket
 import time
 
-from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.f5_bigip import DETECT
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_rate,
+    get_value_store,
+    render,
+    SNMPTree,
+)
 
 # Current server status
 # vserver["status"]
@@ -120,7 +125,9 @@ def get_aggregated_values(vserver):
     # Calculate counters
     for what in aggregation:
         for idx, entry in enumerate(vserver[what]):
-            rate = get_rate("%s.%s" % (what, idx), now, entry)
+            rate = get_rate(
+                get_value_store(), "%s.%s" % (what, idx), now, entry, raise_overflow=True
+            )
             aggregation[what] += rate
 
     # Calucate min/max/sum/mean values

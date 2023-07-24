@@ -8,10 +8,10 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.uptime import check_uptime_seconds
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, render
 
 
 # Special thanks to Rene Stolle (r.stolle@funkemedien.de)
@@ -348,7 +348,9 @@ def check_varnish_stats(_no_item, params, parsed, expected_keys):
             continue
         descr_per_sec = "%s/s" % data["descr"]
         yield check_levels(
-            get_rate("varnish.%s" % key, this_time, data["value"]),
+            get_rate(
+                get_value_store(), "varnish.%s" % key, this_time, data["value"], raise_overflow=True
+            ),
             data["perf_var_name"],
             params.get(data["params_var_name"], (None, None)),
             human_readable_func=lambda r, d=descr_per_sec: ("%.1f " + d) % r,

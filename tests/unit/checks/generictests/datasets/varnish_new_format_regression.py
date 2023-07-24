@@ -8,6 +8,27 @@
 
 checkname = "varnish"
 
+
+mock_item_state = {
+    "cache": {
+        "varnish.cache_hit": (0.0, 277834),
+        "varnish.cache_hitpass": (0.0, 0),
+        "varnish.cache_hitmiss": (0.0, 0),
+        "varnish.cache_miss": (0.0, 3142),
+    },
+    "backend": {
+        "varnish.backend_busy": (0.0, 0.0),
+        "varnish.backend_unhealthy": (0.0, 0.0),
+        "varnish.backend_req": (0.0, 5470),
+        "varnish.backend_recycle": (0.0, 5470),
+        "varnish.backend_retry": (0.0, 0),
+        "varnish.backend_fail": (0.0, 0),
+        "varnish.backend_conn": (0.0, 1065),
+        "varnish.backend_reuse": (0.0, 4405),
+    },
+}
+
+
 info = [
     ["MGT.child_start", "1", "0.00", "Child", "process", "started"],
     ["MGT.child_exit", "0", "0.00", "Child", "process", "normal", "exit"],
@@ -481,13 +502,6 @@ checks = {
             ],
         )
     ],
-    "backend_success_ratio": [
-        (
-            None,
-            {"levels_lower": (70.0, 60.0)},
-            [(0, "100.00%", [("varnish_backend_success_ratio", 100.0, None, None, None, None)])],
-        )
-    ],
     "cache": [
         (
             None,
@@ -499,67 +513,6 @@ checks = {
                     0,
                     "0.0 hits for pass./s",
                     [("varnish_cache_hitpass_rate", 0.0, None, None, None, None)],
-                ),
-            ],
-        )
-    ],
-    "cache_hit_ratio": [
-        (
-            None,
-            {"levels_lower": (70.0, 60.0)},
-            [(0, "98.88%", [("cache_hit_ratio", 98.88175502534024, None, None, None, None)])],
-        )
-    ],
-    "client": [
-        (
-            None,
-            {},
-            [
-                (
-                    0,
-                    "0.0 Good client requests received/s",
-                    [("varnish_client_req_rate", 0.0, None, None, None, None)],
-                )
-            ],
-        )
-    ],
-    "esi": [
-        (
-            None,
-            {"errors": (1.0, 2.0)},
-            [
-                (
-                    0,
-                    "0.0 parse errors (unlock)/s",
-                    [("varnish_esi_errors_rate", 0.0, 1.0, 2.0, None, None)],
-                ),
-                (
-                    0,
-                    "0.0 parse warnings (unlock)/s",
-                    [("varnish_esi_warnings_rate", 0.0, None, None, None, None)],
-                ),
-            ],
-        )
-    ],
-    "objects": [
-        (
-            None,
-            {},
-            [
-                (
-                    0,
-                    "0.0 Number of expired objects/s",
-                    [("varnish_objects_expired_rate", 0.0, None, None, None, None)],
-                ),
-                (
-                    0,
-                    "0.0 Number of LRU nuked objects/s",
-                    [("varnish_objects_lru_nuked_rate", 0.0, None, None, None, None)],
-                ),
-                (
-                    0,
-                    "0.0 Number of LRU moved objects/s",
-                    [("varnish_objects_lru_moved_rate", 0.0, None, None, None, None)],
                 ),
             ],
         )

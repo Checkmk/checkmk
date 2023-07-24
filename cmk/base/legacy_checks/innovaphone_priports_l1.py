@@ -6,9 +6,14 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition, saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    equals,
+    get_rate,
+    get_value_store,
+    SNMPTree,
+)
 
 
 def parse_innovaphone_priports_l1(string_table):
@@ -42,7 +47,13 @@ def check_innovaphone_priports_l1(item, params, parsed):
     yield 0 if l1state == 2 else 2, "Current state is %s" % states[l1state]
 
     l1sigloss = data["sigloss"]
-    siglos_per_sec = get_rate("innovaphone_priports_l1." + item, time.time(), l1sigloss)
+    siglos_per_sec = get_rate(
+        get_value_store(),
+        "innovaphone_priports_l1." + item,
+        time.time(),
+        l1sigloss,
+        raise_overflow=True,
+    )
     if siglos_per_sec > 0:
         yield 2, "Signal loss is %.2f/sec" % siglos_per_sec
 

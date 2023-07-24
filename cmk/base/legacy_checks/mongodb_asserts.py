@@ -13,8 +13,9 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 
 def inventory_mongodb_asserts(info):
@@ -27,7 +28,7 @@ def check_mongodb_asserts(_no_item, params, info):
         what = line[0]
         value = int(line[1])
         warn, crit = None, None
-        what_rate = get_rate(what, now, value)
+        what_rate = get_rate(get_value_store(), what, now, value, raise_overflow=True)
 
         state = 0
         if "%s_assert_rate" % what in params:

@@ -8,6 +8,10 @@
 
 checkname = "msexch_rpcclientaccess"
 
+mock_item_state = {
+    "": {"RPCRequests_": (0, 0)}
+}
+
 info = [
     [
         "ActiveUserCount",

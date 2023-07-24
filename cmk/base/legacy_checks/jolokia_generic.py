@@ -8,9 +8,10 @@ import time
 from collections.abc import Callable, Iterable, Mapping
 from typing import Literal
 
-from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.jolokia import jolokia_basic_split
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 Section = Mapping[str, Mapping[str, float | str]]
@@ -90,7 +91,7 @@ check_info["jolokia_generic.string"] = LegacyCheckDefinition(
 def check_jolokia_generic_rate(item, params, parsed):
     if not (data := parsed.get(item)):
         return
-    rate = get_rate(item, time.time(), data["value"])
+    rate = get_rate(get_value_store(), item, time.time(), data["value"], raise_overflow=True)
     levels = params.get("levels", (None, None)) + params.get("levels_lower", (None, None))
     yield check_levels(rate, "generic_rate", levels)
 

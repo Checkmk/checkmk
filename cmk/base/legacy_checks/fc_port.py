@@ -8,12 +8,13 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.check_legacy_includes.fc_port import fc_parse_counter
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     all_of,
     get_average,
+    get_rate,
     get_value_store,
     not_exists,
     OIDBytes,
@@ -165,8 +166,20 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
     # Now check rates of various counters
     this_time = time.time()
 
-    in_bytes = get_rate("fc_port.rxelements.%s" % index, this_time, rxelements)
-    out_bytes = get_rate("fc_port.txelements.%s" % index, this_time, txelements)
+    in_bytes = get_rate(
+        get_value_store(),
+        "fc_port.rxelements.%s" % index,
+        this_time,
+        rxelements,
+        raise_overflow=True,
+    )
+    out_bytes = get_rate(
+        get_value_store(),
+        "fc_port.txelements.%s" % index,
+        this_time,
+        txelements,
+        raise_overflow=True,
+    )
 
     average = params.get("average")  # range in minutes
 
@@ -213,8 +226,12 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
 
     # R X O B J E C T S & T X O B J E C T S
     # Put number of objects into performance data (honor averaging)
-    rxobjects_rate = get_rate("fc_port.rxobjects.%s" % index, this_time, rxobjects)
-    txobjects_rate = get_rate("fc_port.txobjects.%s" % index, this_time, txobjects)
+    rxobjects_rate = get_rate(
+        get_value_store(), "fc_port.rxobjects.%s" % index, this_time, rxobjects, raise_overflow=True
+    )
+    txobjects_rate = get_rate(
+        get_value_store(), "fc_port.txobjects.%s" % index, this_time, txobjects, raise_overflow=True
+    )
     for what, value in [("rxobjects", rxobjects_rate), ("txobjects", txobjects_rate)]:
         perfdata.append((what, value))
         if average:
@@ -252,7 +269,13 @@ def check_fc_port(item, params, info):  # pylint: disable=too-many-branches
             txobjects_rate,
         ),
     ]:
-        per_sec = get_rate("fc_port.%s.%s" % (counter, index), this_time, value)
+        per_sec = get_rate(
+            get_value_store(),
+            "fc_port.%s.%s" % (counter, index),
+            this_time,
+            value,
+            raise_overflow=True,
+        )
 
         perfdata.append((counter, per_sec))
 

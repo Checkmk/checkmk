@@ -20,9 +20,14 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import equals, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    equals,
+    get_rate,
+    get_value_store,
+    SNMPTree,
+)
 
 
 def inventory_sophos_messages(info):
@@ -33,8 +38,12 @@ def check_sophos_messages(item, params, info):
     for counter_type, inbound_str, outbound_str in info:
         if counter_type.replace("InvalidRecipient", "Invalid Recipient") == item:
             now = time.time()
-            inbound = get_rate("inbound", now, int(inbound_str))
-            outbound = get_rate("outbound", now, int(outbound_str))
+            inbound = get_rate(
+                get_value_store(), "inbound", now, int(inbound_str), raise_overflow=True
+            )
+            outbound = get_rate(
+                get_value_store(), "outbound", now, int(outbound_str), raise_overflow=True
+            )
             infotext = "%.1f Inbounds and Outbounds/s, %.1f Inbounds/s, %.1f Outbounds/s" % (
                 inbound + outbound,
                 inbound,

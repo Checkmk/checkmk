@@ -9,6 +9,11 @@
 
 checkname = "jolokia_jvm_threading"
 
+mock_item_state = {
+    "": {
+        "jolokia_jvm_threading.count.JIRA" : (0, 131),
+    }
+}
 
 info = [
     [

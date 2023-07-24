@@ -8,9 +8,10 @@
 import time
 from collections.abc import Callable
 
-from cmk.base.check_api import get_bytes_human_readable, get_rate, RAISE
+from cmk.base.check_api import get_bytes_human_readable
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_average,
+    get_rate,
     get_value_store,
     IgnoreResultsError,
     render,
@@ -121,7 +122,10 @@ def size_trend(  # type: ignore[no-untyped-def] # pylint: disable=too-many-branc
     # compute current rate in MB/s by computing delta since last check
     try:
         rate = get_rate(
-            f"{check}.{item}.delta", timestamp, used_mb, allow_negative=True, onwrap=RAISE
+            get_value_store(),
+            f"{check}.{item}.delta",
+            timestamp,
+            used_mb,
         )
     except IgnoreResultsError:
         # need more data for computing a trend

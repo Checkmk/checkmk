@@ -64,8 +64,9 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition, saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 
 def parse_emcvnx_hba(string_table):
@@ -100,8 +101,12 @@ def check_emcvnx_hba(item, _no_params, parsed):
     countername_r = "emcvnx_hba.read_blocks.%s" % item.replace(" ", "_")
     countername_w = "emcvnx_hba.write_blocks.%s" % item.replace(" ", "_")
 
-    read_blocks_per_sec = get_rate(countername_r, now, read_blocks)
-    write_blocks_per_sec = get_rate(countername_w, now, write_blocks)
+    read_blocks_per_sec = get_rate(
+        get_value_store(), countername_r, now, read_blocks, raise_overflow=True
+    )
+    write_blocks_per_sec = get_rate(
+        get_value_store(), countername_w, now, write_blocks, raise_overflow=True
+    )
     read_blocks_per_sec = saveint(read_blocks_per_sec)
     write_blocks_per_sec = saveint(write_blocks_per_sec)
     perfdata.append(("read_blocks", read_blocks_per_sec))

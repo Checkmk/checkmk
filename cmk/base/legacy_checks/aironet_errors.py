@@ -6,9 +6,16 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, OIDEnd, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    any_of,
+    equals,
+    get_rate,
+    get_value_store,
+    OIDEnd,
+    SNMPTree,
+)
 
 aironet_default_error_levels = (1.0, 10.0)  # per second
 
@@ -23,7 +30,13 @@ def check_aironet_errors(item, params, info):
             value = int(line[1])
             this_time = time.time()
             yield check_levels(
-                get_rate("aironet_errors.%s" % item, this_time, value),
+                get_rate(
+                    get_value_store(),
+                    "aironet_errors.%s" % item,
+                    this_time,
+                    value,
+                    raise_overflow=True,
+                ),
                 "errors",
                 params,
                 infoname="Errors/s",

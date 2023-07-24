@@ -3,13 +3,11 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Sequence
-
 import pytest
 
 from tests.testlib import Check
 
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, IgnoreResultsError
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import StringTable
 
 from .checktestlib import CheckResult
@@ -132,35 +130,13 @@ def test_wmi_timeout_exceptions(check_name: str, info: StringTable) -> None:
 
 
 @pytest.mark.usefixtures("initialised_item_state")
-@pytest.mark.parametrize(
-    "check_name, expected",
-    [
-        (
-            "msexch_isclienttype",
-            [
-                (
-                    0,
-                    "Average latency: 0.49 ms",
-                    [("average_latency", 0.48712422193702626, 40.0, 50.0)],
-                ),
-                (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60.0, 70.0)]),
-            ],
-        ),
-        (
-            "msexch_isstore",
-            [
-                (
-                    0,
-                    "Average latency: 0.49 ms",
-                    [("average_latency", 0.48712422193702626, 41.0, 51.0)],
-                ),
-            ],
-        ),
-    ],
-)
-def test_wmi_msexch_isclienttype_wato_params(check_name: str, expected: Sequence[object]) -> None:
-    check = Check(check_name)
-    result = list(
+def test_wmi_msexch_isclienttype_wato_params() -> None:
+    check = Check("msexch_isclienttype")
+
+    # prepare the state (scoped to this function by the fixture)
+    get_value_store().update({"RPCRequests_": (0.0, 1145789)})
+
+    assert list(
         check.run_check(
             item="_total",
             params={
@@ -170,5 +146,33 @@ def test_wmi_msexch_isclienttype_wato_params(check_name: str, expected: Sequence
             },
             info=check.run_parse(info_msx_info_store_1),
         )
-    )
-    assert result == expected
+    ) == [
+        (
+            0,
+            "Average latency: 0.49 ms",
+            [("average_latency", 0.48712422193702626, 40.0, 50.0)],
+        ),
+        (0, "RPC Requests/sec: 0.00", [("requests_per_sec", 0.0, 60.0, 70.0)]),
+    ]
+
+
+@pytest.mark.usefixtures("initialised_item_state")
+def test_wmi_msexch_isstore_wato_params() -> None:
+    check = Check("msexch_isstore")
+    assert list(
+        check.run_check(
+            item="_total",
+            params={
+                "store_latency": (41.0, 51.0),
+                "clienttype_latency": (40.0, 50.0),
+                "clienttype_requests": (60, 70),
+            },
+            info=check.run_parse(info_msx_info_store_1),
+        )
+    ) == [
+        (
+            0,
+            "Average latency: 0.49 ms",
+            [("average_latency", 0.48712422193702626, 41.0, 51.0)],
+        ),
+    ]

@@ -8,9 +8,10 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.jolokia import parse_jolokia_json_output
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 
 def parse_jolokia_jvm_garbagecollectors(string_table):
@@ -64,9 +65,9 @@ def check_jolokia_jvm_garbagecollectors(item, params, parsed):
         return
 
     try:
-        count_rate = get_rate("%s.count" % item, now, count)
+        count_rate = get_rate(get_value_store(), "%s.count" % item, now, count, raise_overflow=True)
     finally:  # initalize 2nd counter!
-        ctime_rate = get_rate("%s.time" % item, now, ctime)
+        ctime_rate = get_rate(get_value_store(), "%s.time" % item, now, ctime, raise_overflow=True)
 
     params = transform_units(params)
 

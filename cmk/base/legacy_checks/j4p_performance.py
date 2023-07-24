@@ -13,8 +13,9 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition, saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 j4p_performance_mem_default_levels = (1000, 2000)
 # Number of threads warn, crit
@@ -160,7 +161,13 @@ def check_j4p_performance_threads(item, params, info):
                 status = 1
 
             # Calculate the thread increase rate
-            rate = get_rate("j4p_performance.threads.%s" % item, this_time, val)
+            rate = get_rate(
+                get_value_store(),
+                "j4p_performance.threads.%s" % item,
+                this_time,
+                val,
+                raise_overflow=True,
+            )
             output.append("ThreadRate: %0.2f" % rate)
             perfdata.append(("ThreadRate", rate))
 
@@ -290,7 +297,9 @@ def check_j4p_performance_serv_req(item, params, info):
     output = ["Requests: %d%s" % (req, status_txt)]
     perfdata = [("Requests", req, hi_warn, hi_crit)]
     this_time = time.time()
-    rate = get_rate("j4p_performance.serv_req.%s" % item, this_time, req)
+    rate = get_rate(
+        get_value_store(), "j4p_performance.serv_req.%s" % item, this_time, req, raise_overflow=True
+    )
     output.append("RequestRate: %0.2f" % rate)
     perfdata.append(("RequestRate", rate))
     return (status, ", ".join(output), perfdata)

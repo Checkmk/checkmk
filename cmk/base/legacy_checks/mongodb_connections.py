@@ -13,9 +13,9 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, render
 
 
 def inventory_mongodb_connections(info):
@@ -49,7 +49,13 @@ def check_mongodb_connections(item, params, info):
         infoname="Used percentage",
     )
 
-    rate = get_rate("total_created", time.time(), int(info_dict["totalCreated"]))
+    rate = get_rate(
+        get_value_store(),
+        "total_created",
+        time.time(),
+        int(info_dict["totalCreated"]),
+        raise_overflow=True,
+    )
     yield 0, "Rate: %s/sec" % rate, [("connections_rate", rate)]
 
 

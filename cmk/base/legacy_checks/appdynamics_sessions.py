@@ -11,8 +11,9 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 
 def inventory_appdynamics_sessions(info):
@@ -35,7 +36,7 @@ def check_appdynamics_sessions(item, params, info):
 
             now = time.time()
             rate_id = "appdynamics_sessions.%s.counter" % (item.lower().replace(" ", "_"))
-            counter_rate = get_rate(rate_id, now, counter)
+            counter_rate = get_rate(get_value_store(), rate_id, now, counter, raise_overflow=True)
 
             state = 0
             perfdata = []

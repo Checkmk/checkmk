@@ -8,9 +8,15 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, SNMPTree, startswith
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    any_of,
+    get_rate,
+    get_value_store,
+    SNMPTree,
+    startswith,
+)
 
 
 def parse_safenet_hsm(string_table):
@@ -62,7 +68,9 @@ def check_safenet_hsm_events(_no_item, params, parsed):
 
     def check_event_rate(event_type):
         events = parsed[event_type + "_events"]
-        event_rate = get_rate(event_type + "_events", now, events)
+        event_rate = get_rate(
+            get_value_store(), event_type + "_events", now, events, raise_overflow=True
+        )
         infotext = "%.2f %s events/s" % (event_rate, event_type)
         if params.get(event_type + "_event_rate"):
             warn, crit = params[event_type + "_event_rate"]
@@ -125,7 +133,9 @@ def check_safenet_hsm(_no_item, params, parsed):
     now = time.time()
 
     def check_operation_request_rate(operation_requests):
-        request_rate = get_rate("operation_requests", now, operation_requests)
+        request_rate = get_rate(
+            get_value_store(), "operation_requests", now, operation_requests, raise_overflow=True
+        )
 
         status, infotext, extra_perf = check_levels(
             request_rate, "request_rate", params["request_rate"], unit="1/s", infoname="Requests"
@@ -134,7 +144,9 @@ def check_safenet_hsm(_no_item, params, parsed):
         return status, infotext, perfdata
 
     def check_operation_error_rate(operation_errors):
-        error_rate = get_rate("operation_errors", now, operation_errors)
+        error_rate = get_rate(
+            get_value_store(), "operation_errors", now, operation_errors, raise_overflow=True
+        )
         infotext = "%.2f operation errors/s" % error_rate
         if params.get("error_rate"):
             warn, crit = params["error_rate"]

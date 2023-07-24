@@ -6,11 +6,15 @@
 # pylint: disable=unused-import
 
 import functools
-import json
 import time
 
-from cmk.base.check_api import check_levels, get_bytes_human_readable, get_rate
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
+from cmk.base.check_api import check_levels, get_bytes_human_readable
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_rate,
+    get_value_store,
+    IgnoreResultsError,
+    render,
+)
 from cmk.base.plugins.agent_based.utils.azure import AZURE_AGENT_SEPARATOR as AZURE_AGENT_SEPARATOR
 from cmk.base.plugins.agent_based.utils.azure import (
     iter_resource_attributes as iter_resource_attributes,
@@ -53,7 +57,9 @@ def check_azure_metric(  # pylint: disable=too-many-locals
 
     if use_rate:
         countername = f"{resource.id}.{metric_key}"
-        value = get_rate(countername, time.time(), metric.value)
+        value = get_rate(
+            get_value_store(), countername, time.time(), metric.value, raise_overflow=True
+        )
         unit = "%s_rate" % metric.unit
     else:
         value = metric.value

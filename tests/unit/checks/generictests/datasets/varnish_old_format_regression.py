@@ -8,6 +8,68 @@
 
 checkname = "varnish"
 
+
+mock_item_state = {
+    "cache": {
+        "varnish.cache_miss": (0.0, 5688),
+        "varnish.cache_hit": (0.0, 3679),
+        "varnish.cache_hitpass": (0.0, 0.0),
+    },
+    "client": {
+        "varnish.client_drop": (0.0, 0.0),
+        "varnish.client_req": (0.0, 22399444),
+        "varnish.client_conn": (0.0, 13688122),
+        "varnish.client_drop_late": (0.0, 0.0),
+    },
+    "backend": {
+        "varnish.backend_busy": (0.0, 0.0),
+        "varnish.backend_unhealthy": (0.0, 0.0),
+        "varnish.backend_req": (0.0,15543010),
+        "varnish.backend_recycle": (0.0, 15535904),
+        "varnish.backend_retry": (0.0, 46),
+        "varnish.backend_fail": (0.0, 0),
+        "varnish.backend_toolate": (0.0, 6235),
+        "varnish.backend_conn": (0.0, 6870905),
+        "varnish.backend_reuse": (0.0, 15529663),
+    },
+    "fetch": {
+        "varnish.fetch_head": (0.0, 2027),
+        "varnish.fetch_length": (0.0, 262229),
+        "varnish.fetch_chunked": (0.0, 15036092),
+        "varnish.fetch_eof": (0.0, 0),
+        "varnish.fetch_bad": (0.0, 0),
+        "varnish.fetch_close": (0.0, 0),
+        "varnish.fetch_oldhttp": (0.0, 0),
+        "varnish.fetch_zero": (0.0, 0),
+        "varnish.fetch_failed": (0.0, 0),
+        "varnish.fetch_1xx": (0.0, 0),
+        "varnish.fetch_204": (0.0, 0),
+        "varnish.fetch_304": (0.0, 242538),
+    },
+    "esi": {
+        "varnish.esi_warnings": (0.0, 0),
+        "varnish.esi_errors": (0.0, 0),
+    },
+    "objects": {
+        "varnish.n_object": (0.0, 6),
+        "varnish.n_vampireobject": (0.0, 0),
+        "varnish.n_expired": (0.0, 5680),
+        "varnish.n_lru_nuked": (0.0, 0),
+        "varnish.n_lru_moved": (0.0, 1031),
+    },
+    "worker": {
+        "varnish.n_wrk": (0.0, 1000),
+        "varnish.n_wrk_create": (0.0, 1000),
+        "varnish.n_wrk_failed": (0.0, 0),
+        "varnish.n_wrk_max": (0.0, 893),
+        "varnish.n_wrk_lqueue": (0.0, 0),
+        "varnish.n_wrk_queued": (0.0, 21),
+        "varnish.n_wrk_drop": (0.0, 0),
+    },
+}
+
+
+
 info = [
     ["client_conn", "13688122", "4.41", "Client", "connections", "accepted"],
     ["client_drop", "0", "0.00", "Connection", "dropped,", "no", "sess/wrk"],

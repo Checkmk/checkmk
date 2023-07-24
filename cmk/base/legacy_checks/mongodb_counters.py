@@ -6,8 +6,9 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 
 def inventory_mongodb_counters(parsed):
@@ -25,7 +26,7 @@ def check_mongodb_counters(item, _no_params, parsed):
 
     now = time.time()
     for what, value in data.items():
-        what_rate = get_rate(what, now, value)
+        what_rate = get_rate(get_value_store(), what, now, value, raise_overflow=True)
         yield 0, "%s: %.2f/s" % (what.title(), what_rate), [("%s_ops" % what, what_rate)]
 
 

@@ -8,12 +8,13 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.jolokia import (
     jolokia_mbean_attribute,
     parse_jolokia_json_output,
 )
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 
 def parse_jolokia_jvm_threading(string_table):
@@ -48,7 +49,7 @@ def check_jolokia_jvm_threading(item, params, parsed):
         )
 
         counter = "jolokia_jvm_threading.count.%s" % item
-        thread_rate = get_rate(counter, time.time(), count, allow_negative=True)
+        thread_rate = get_rate(get_value_store(), counter, time.time(), count)
         levels = params.get("threadrate_levels")
         yield check_levels(thread_rate, "ThreadRate", levels, infoname="Rate")
 

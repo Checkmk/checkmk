@@ -34,9 +34,11 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_rate,
+    get_value_store,
     IgnoreResultsError,
     OIDEnd,
     SNMPTree,
@@ -57,7 +59,9 @@ def check_hpux_snmp_cpu(item, _no_params, info):
     rates = []
     for what, oid in [("user", "13.0"), ("system", "14.0"), ("idle", "15.0"), ("nice", "16.0")]:
         value = int(parts[oid])
-        rate = get_rate("snmp_cpu_util.%s" % what, this_time, value)
+        rate = get_rate(
+            get_value_store(), "snmp_cpu_util.%s" % what, this_time, value, raise_overflow=True
+        )
         total_rate += rate
         rates.append(rate)
 

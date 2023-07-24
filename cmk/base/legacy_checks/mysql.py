@@ -10,11 +10,11 @@ import time
 from collections.abc import Iterable, Mapping
 from typing import Any, Protocol
 
-from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.check_legacy_includes.diskstat import check_diskstat_line
 from cmk.base.check_legacy_includes.mysql import mysql_parse_per_item
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store, render
 
 # <<<mysql>>>
 # [[mysql]]
@@ -113,7 +113,9 @@ def check_mysql_sessions(item, params, parsed):
         return
     total_sessions = data["Threads_connected"]
     running_sessions = data["Threads_running"]
-    connects = get_rate("mysql.sessions", time.time(), data["Connections"])
+    connects = get_rate(
+        get_value_store(), "mysql.sessions", time.time(), data["Connections"], raise_overflow=True
+    )
 
     for value, perfvar, what, format_str, unit in [
         (total_sessions, "total_sessions", "total", "%d %s%s", ""),

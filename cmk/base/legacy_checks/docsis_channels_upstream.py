@@ -6,9 +6,17 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, OIDEnd, render, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    any_of,
+    equals,
+    get_rate,
+    get_value_store,
+    OIDEnd,
+    render,
+    SNMPTree,
+)
 
 # Old comments:
 # Strange: Channel IDs seem to be not unique. But the second
@@ -128,7 +136,7 @@ def check_docsis_channels_upstream(item, params, parsed):
             ),
             ("uncorrectable", int(uncorrectables)),
         ]:
-            rate = get_rate("docsis_channels_upstream.%s.%s" % (item, what), now, counter)
+            rate = get_rate(get_value_store(), what, now, counter, raise_overflow=True)
             rates[what] = rate
             total_rate += rate
 

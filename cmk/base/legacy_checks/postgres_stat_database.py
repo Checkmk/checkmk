@@ -13,14 +13,13 @@
 
 import time
 
-from cmk.base.check_api import (
-    check_levels,
-    get_bytes_human_readable,
-    get_rate,
-    LegacyCheckDefinition,
-)
+from cmk.base.check_api import check_levels, get_bytes_human_readable, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_rate,
+    get_value_store,
+    IgnoreResultsError,
+)
 
 
 def parse_postgres_stat_database(string_table):
@@ -78,7 +77,13 @@ def check_postgres_stat_database(item, params, parsed):
         ("tup_updated", "Updates"),
         ("tup_inserted", "Inserts"),
     ]:
-        rate = get_rate("postgres_stat_database.%s.%s" % (item, what), this_time, stats[what])
+        rate = get_rate(
+            get_value_store(),
+            "postgres_stat_database.%s.%s" % (item, what),
+            this_time,
+            stats[what],
+            raise_overflow=True,
+        )
         infos.append("%s: %.2f/s" % (title, rate))
         if what in params:
             warn, crit = params[what]

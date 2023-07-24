@@ -7,6 +7,15 @@
 # mypy: disable-error-code=var-annotated
 checkname = "ceph_status"
 
+mock_item_state = {
+    "": {
+        "ceph_status.epoch.rate" : (0, 175986),
+    },
+    "osds": {
+        "ceph_osds.epoch.rate" : (0, 54070),
+    }
+}
+
 info = [
     ["{"],
     ['"health":', "{"],

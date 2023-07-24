@@ -10,8 +10,13 @@
 from collections.abc import Mapping, MutableSequence, Sequence
 from typing import Any
 
-from cmk.base.check_api import check_levels, get_rate
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_average, get_value_store, render
+from cmk.base.check_api import check_levels
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_average,
+    get_rate,
+    get_value_store,
+    render,
+)
 
 
 def check_diskstat_line(  # pylint: disable=too-many-branches
@@ -47,7 +52,7 @@ def check_diskstat_line(  # pylint: disable=too-many-branches
         else:
             warn, crit = None, None
 
-        per_sec = get_rate(countername, this_time, int(ctr))
+        per_sec = get_rate(get_value_store(), countername, this_time, int(ctr), raise_overflow=True)
         if mode == "sectors":
             # compute IO rate in bytes/sec
             bytes_per_sec = per_sec * 512
@@ -108,7 +113,9 @@ def check_diskstat_line(  # pylint: disable=too-many-branches
         else:
             warn, crit = None, None
         ios = reads + writes
-        ios_per_sec = get_rate(countername + ".ios", this_time, ios)
+        ios_per_sec = get_rate(
+            get_value_store(), countername + ".ios", this_time, ios, raise_overflow=True
+        )
         infos.append("IOs: %.2f/sec" % ios_per_sec)
 
         if params.get("latency_perfdata"):
@@ -117,7 +124,9 @@ def check_diskstat_line(  # pylint: disable=too-many-branches
     # Do Latency computation if this information is available:
     if len(line) >= 7 and line[6] >= 0:
         timems = int(line[6])
-        timems_per_sec = get_rate(countername + ".time", this_time, timems)
+        timems_per_sec = get_rate(
+            get_value_store(), countername + ".time", this_time, timems, raise_overflow=True
+        )
         if not ios_per_sec:
             latency = 0.0
         else:
@@ -148,7 +157,7 @@ def check_diskstat_line(  # pylint: disable=too-many-branches
             else:
                 warn, crit = None, None
 
-            qlx = get_rate(countername, this_time, int(ctr))
+            qlx = get_rate(get_value_store(), countername, this_time, int(ctr), raise_overflow=True)
             ql = qlx / 10000000.0
             infos.append(what.title() + " Queue: %.2f" % ql)
 

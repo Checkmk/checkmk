@@ -4,9 +4,14 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import IgnoreResultsError, render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_rate,
+    get_value_store,
+    IgnoreResultsError,
+    render,
+)
 
 
 def inventory_win_cpuusage(info):
@@ -36,7 +41,9 @@ def check_win_cpuusage(item, params, info):
             overall_perc = 0.0
             for cpu in range(0, num_cpus):
                 ticks = int(line[2 + cpu])
-                ticks_per_sec = get_rate("cpuusage.%d" % cpu, this_time, ticks)
+                ticks_per_sec = get_rate(
+                    get_value_store(), "cpuusage.%d" % cpu, this_time, ticks, raise_overflow=True
+                )
                 secs_per_sec = ticks_per_sec / 10000000.0
                 used_perc = 100 * (1 - secs_per_sec)
                 overall_perc += used_perc
@@ -90,12 +97,18 @@ def check_win_diskstat(item, params, info):
         return None
 
     try:
-        read_per_sec = get_rate("diskstat.read", this_time, read_bytes_ctr)
-        write_per_sec = get_rate("diskstat.write", this_time, write_bytes_ctr)
+        read_per_sec = get_rate(
+            get_value_store(), "diskstat.read", this_time, read_bytes_ctr, raise_overflow=True
+        )
+        write_per_sec = get_rate(
+            get_value_store(), "diskstat.write", this_time, write_bytes_ctr, raise_overflow=True
+        )
     except IgnoreResultsError as e:
         # make sure that inital check does not need three cycles for all counters
         # to be initialized
-        get_rate("diskstat.write", this_time, write_bytes_ctr)
+        get_rate(
+            get_value_store(), "diskstat.write", this_time, write_bytes_ctr, raise_overflow=True
+        )
         raise e
 
     perfdata = [("read", "%dc" % read_bytes_ctr), ("write", "%dc" % write_bytes_ctr)]

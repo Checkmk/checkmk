@@ -8,6 +8,14 @@
 
 checkname = "azure_databases"
 
+
+mock_item_state = {
+    "connections": {
+        "/subscriptions/2fac104f-cb9c-461d-be57-037039662426/resourceGroups/Woodstock/providers/Microsoft.Sql/servers/hugo-server/databases/Testdatabase.average_connection_failed": (1572247078.0, 0.0),
+    }
+}
+
+
 info = [
     ["Resource"],
     [

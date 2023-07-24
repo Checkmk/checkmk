@@ -8,8 +8,8 @@ import calendar
 import json as json_module
 import time
 
-from cmk.base.check_api import check_levels, get_age_human_readable, get_rate
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_average, get_value_store
+from cmk.base.check_api import check_levels, get_age_human_readable
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_average, get_rate, get_value_store
 from cmk.base.plugins.agent_based.utils import graylog
 
 json = json_module
@@ -47,7 +47,9 @@ def handle_graylog_messages(messages, params):
 
     value_store = get_value_store()
 
-    rate = get_rate("graylog_%s.rate" % avg_key, this_time, messages)
+    rate = get_rate(
+        get_value_store(), "graylog_%s.rate" % avg_key, this_time, messages, raise_overflow=True
+    )
     avg_rate = get_average(value_store, f"graylog_{avg_key}.avg", this_time, rate, avg)
 
     yield check_levels(

@@ -8,9 +8,10 @@
 import time
 from typing import AnyStr, Union
 
-from cmk.base.check_api import check_levels, get_rate, state_markers
+from cmk.base.check_api import check_levels, state_markers
 from cmk.base.plugins.agent_based.agent_based_api.v1 import (
     get_average,
+    get_rate,
     get_value_store,
     IgnoreResultsError,
 )
@@ -176,7 +177,12 @@ def check_temperature_trend(  # pylint: disable=too-many-branches
         this_time = time.time()
 
         # first compute current rate in C/s by computing delta since last check
-        rate = get_rate("temp.%s.delta" % unique_name, this_time, temp, allow_negative=True)
+        rate = get_rate(
+            get_value_store(),
+            "temp.%s.delta" % unique_name,
+            this_time,
+            temp,
+        )
 
         # average trend, initialize with zero (by default), rate_avg is in C/s
         rate_avg = get_average(

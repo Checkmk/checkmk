@@ -6,9 +6,16 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition, saveint
+from cmk.base.check_api import LegacyCheckDefinition, saveint
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, equals, render, SNMPTree
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    any_of,
+    equals,
+    get_rate,
+    get_value_store,
+    render,
+    SNMPTree,
+)
 
 # .1.3.6.1.4.1.3375.2.1.2.4.4.3.1.1.  index for ifname
 # .1.3.6.1.4.1.3375.2.1.2.4.1.2.1.17. index for ifstate
@@ -37,8 +44,20 @@ def check_f5_bigip_interfaces(item, params, info):
             )
 
         this_time = int(time.time())
-        in_per_sec = get_rate("f5_interface.in.%s" % item, this_time, saveint(inbytes))
-        out_per_sec = get_rate("f5_interface.out.%s" % item, this_time, saveint(outbytes))
+        in_per_sec = get_rate(
+            get_value_store(),
+            "in",
+            this_time,
+            saveint(inbytes),
+            raise_overflow=True,
+        )
+        out_per_sec = get_rate(
+            get_value_store(),
+            "out",
+            this_time,
+            saveint(outbytes),
+            raise_overflow=True,
+        )
 
         inbytes_h = render.iobandwidth(in_per_sec)
         outbytes_h = render.iobandwidth(out_per_sec)

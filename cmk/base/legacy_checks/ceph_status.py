@@ -10,12 +10,16 @@ import time
 from cmk.base.check_api import (
     check_levels,
     get_age_human_readable,
-    get_rate,
     LegacyCheckDefinition,
     state_markers,
 )
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import get_average, get_value_store, render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    get_average,
+    get_rate,
+    get_value_store,
+    render,
+)
 
 
 def parse_ceph_status(string_table):
@@ -33,7 +37,12 @@ def ceph_check_epoch(id_, epoch, params):
     warn, crit, avg_interval_min = params.get("epoch", (None, None, 1))
     now = time.time()
     value_store = get_value_store()
-    epoch_rate = get_rate("%s.epoch.rate" % id_, now, epoch, allow_negative=True)
+    epoch_rate = get_rate(
+        get_value_store(),
+        f"{id_}.epoch.rate",
+        now,
+        epoch,
+    )
     epoch_avg = get_average(value_store, f"{id_}.epoch.avg", now, epoch_rate, avg_interval_min)
 
     infoname = "Epoch rate (%s average)" % get_age_human_readable(avg_interval_min * 60)

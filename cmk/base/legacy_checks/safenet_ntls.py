@@ -6,9 +6,15 @@
 
 import time
 
-from cmk.base.check_api import check_levels, get_rate, LegacyCheckDefinition
+from cmk.base.check_api import check_levels, LegacyCheckDefinition
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import any_of, SNMPTree, startswith
+from cmk.base.plugins.agent_based.agent_based_api.v1 import (
+    any_of,
+    get_rate,
+    get_value_store,
+    SNMPTree,
+    startswith,
+)
 
 
 def parse_safenet_ntls(string_table):
@@ -47,7 +53,9 @@ def inventory_safenet_ntls_connrate(parsed):
 
 def check_safenet_ntls_connrate(item, _no_params, parsed):
     now = time.time()
-    connections_rate = get_rate(item, now, parsed[item + "_connections"])
+    connections_rate = get_rate(
+        get_value_store(), item, now, parsed[item + "_connections"], raise_overflow=True
+    )
     perfdata = [("connections_rate", connections_rate)]
     return 0, "%.2f connections/s" % connections_rate, perfdata
 

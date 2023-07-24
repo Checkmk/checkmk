@@ -12,8 +12,9 @@
 
 import time
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition
+from cmk.base.check_api import LegacyCheckDefinition
 from cmk.base.config import check_info
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_rate, get_value_store
 
 
 def inventory_appdynamics_web_container(info):
@@ -73,13 +74,17 @@ def check_appdynamics_web_container(item, params, info):  # pylint: disable=too-
 
             if error_count is not None:
                 rate_id = "appdynamics_web_container.%s.error" % (item.lower().replace(" ", "_"))
-                error_rate = get_rate(rate_id, now, error_count)
+                error_rate = get_rate(
+                    get_value_store(), rate_id, now, error_count, raise_overflow=True
+                )
                 perfdata = [("error_rate", error_rate)]
                 yield 0, "Errors: %.2f/sec" % error_rate, perfdata
 
             if request_count is not None:
                 rate_id = "appdynamics_web_container.%s.request" % (item.lower().replace(" ", "_"))
-                request_rate = get_rate(rate_id, now, request_count)
+                request_rate = get_rate(
+                    get_value_store(), rate_id, now, request_count, raise_overflow=True
+                )
                 perfdata = [("request_rate", request_rate)]
                 yield 0, "Requests: %.2f/sec" % request_rate, perfdata
 

@@ -439,7 +439,9 @@ def test_retieve_grouped_data_from_rrd(
     rrd_datacolumn = _prediction.rrd_datacolum(
         site.live, hostname, service_description, dsname, "MAX"
     )
-    result = _prediction._retrieve_grouped_data_from_rrd(rrd_datacolumn, time_windows)
+    from_time = time_windows[0][0]
+    slices = [(rrd_datacolumn(start, end), from_time - start) for start, end in time_windows]
+    result = _prediction._upsample(slices)
 
     assert result == reference
 

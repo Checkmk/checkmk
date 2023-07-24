@@ -12,7 +12,7 @@ from contextlib import suppress
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from statistics import fmean
-from typing import Any, Final, NamedTuple, NewType
+from typing import Any, Final, NamedTuple, NewType, Sequence
 
 import livestatus
 
@@ -564,9 +564,13 @@ def _get_prediction_timegroup(
 
 def _calculate_data_for_prediction(
     time_windows: _TimeSlices,
-    rrd_datacolumn: RRDColumnFunction,
+    rrd_column: RRDColumnFunction,
 ) -> PredictionData:
-    twindow, slices = _retrieve_grouped_data_from_rrd(rrd_datacolumn, time_windows)
+    from_time = time_windows[0][0]
+
+    raw_slices = [(rrd_column(start, end), from_time - start) for start, end in time_windows]
+
+    twindow, slices = _upsample(raw_slices)
 
     descriptors = _data_stats(slices)
 
@@ -614,18 +618,15 @@ def _std_dev(point_line: list[float], average: float) -> float:
     )
 
 
-def _retrieve_grouped_data_from_rrd(
-    rrd_column: RRDColumnFunction,
-    time_windows: _TimeSlices,
+def _upsample(
+    slices: Sequence[tuple[TimeSeries, int]]
 ) -> tuple[TimeWindow, list[TimeSeriesValues]]:
-    "Collect all time slices and up-sample them to same resolution"
-    from_time = time_windows[0][0]
+    """Upsample all time slices to same resolution
 
-    slices = [(rrd_column(start, end), from_time - start) for start, end in time_windows]
-
-    # The resolutions of the different time ranges differ. We upsample
-    # to the best resolution. We assume that the youngest slice has the
-    # finest resolution.
+    The resolutions of the different time ranges differ. We upsample
+    to the best resolution. We assume that the youngest slice has the
+    finest resolution.
+    """
     twindow = slices[0][0].twindow
     if twindow[2] == 0:
         raise RuntimeError("Got no historic metrics")

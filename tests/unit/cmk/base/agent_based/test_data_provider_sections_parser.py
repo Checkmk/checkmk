@@ -12,7 +12,8 @@ import cmk.utils.debug
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionMap, SectionName
 
-from cmk.checkengine import crash_reporting, HostSections
+from cmk.checkengine import crash_reporting
+from cmk.checkengine.parser import HostSections
 from cmk.checkengine.sectionparser import SectionsParser
 from cmk.checkengine.type_defs import AgentRawDataSectionElem
 

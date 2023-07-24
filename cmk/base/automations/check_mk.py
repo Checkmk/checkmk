@@ -122,9 +122,9 @@ from cmk.checkengine.discovery import (
     set_autochecks_of_cluster,
     set_autochecks_of_real_hosts,
 )
+from cmk.checkengine.parser import NO_SELECTION
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.checkengine.summarize import summarize
-from cmk.checkengine.type_defs import NO_SELECTION
 
 import cmk.base.agent_based.discovery as discovery
 import cmk.base.api.agent_based.register as agent_based_register

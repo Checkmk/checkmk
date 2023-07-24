@@ -8,7 +8,8 @@ from typing import TypeAlias
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
 
-from cmk.checkengine import group_by_host, HostKey, HostSections, SourceType
+from cmk.checkengine import HostKey, SourceType
+from cmk.checkengine.parser import group_by_host, HostSections
 from cmk.checkengine.type_defs import AgentRawDataSection
 
 HS: TypeAlias = HostSections[AgentRawDataSection]

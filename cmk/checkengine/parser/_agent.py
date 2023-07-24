@@ -21,14 +21,10 @@ from cmk.utils.translations import TranslationOptions
 
 from cmk.fetchers.cache import SectionStore
 
+from cmk.checkengine.type_defs import AgentRawDataSection, AgentRawDataSectionElem
+
 from ._markers import PiggybackMarker, SectionMarker
-from ._parser import HostSections, Parser
-from .type_defs import (
-    AgentRawDataSection,
-    AgentRawDataSectionElem,
-    NO_SELECTION,
-    SectionNameCollection,
-)
+from ._parser import HostSections, NO_SELECTION, Parser, SectionNameCollection
 
 
 class SectionWithHeader(NamedTuple):

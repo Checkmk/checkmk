@@ -6,15 +6,20 @@
 from __future__ import annotations
 
 import abc
-from collections.abc import Mapping, Sequence
-from typing import Final, Generic, TypeVar
+import enum
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Final, Generic, Protocol, TypeVar
 
+import cmk.utils.resulttype as result
+from cmk.utils.agentdatatype import AgentRawData
 from cmk.utils.hostaddress import HostName
-from cmk.utils.sectionname import SectionMap
+from cmk.utils.sectionname import SectionMap, SectionName
 
-from .type_defs import SectionNameCollection
+from cmk.snmplib import SNMPRawData
 
-__all__ = ["Parser", "HostSections"]
+from cmk.checkengine._typedefs import SourceInfo
+
+__all__ = ["NO_SELECTION", "Parser", "ParserFunction", "SectionNameCollection", "HostSections"]
 
 _Tin = TypeVar("_Tin")
 _Tout = TypeVar("_Tout", bound=SectionMap[Sequence])
@@ -54,9 +59,34 @@ class HostSections(Generic[_Tout]):
         )
 
 
+class SelectionType(enum.Enum):
+    NONE = enum.auto()
+
+
+SectionNameCollection = SelectionType | frozenset[SectionName]
+# If preselected sections are given, we assume that we are interested in these
+# and only these sections, so we may omit others and in the SNMP case
+# must try to fetch them (regardles of detection).
+
+NO_SELECTION: Final = SelectionType.NONE
+
+
 class Parser(Generic[_Tin, _Tout], abc.ABC):
     """Parse raw data into host sections."""
 
     @abc.abstractmethod
     def parse(self, raw_data: _Tin, *, selection: SectionNameCollection) -> HostSections[_Tout]:
         raise NotImplementedError
+
+
+class ParserFunction(Protocol):
+    def __call__(
+        self,
+        fetched: Iterable[
+            tuple[
+                SourceInfo,
+                result.Result[AgentRawData | SNMPRawData, Exception],
+            ]
+        ],
+    ) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]:
+        ...

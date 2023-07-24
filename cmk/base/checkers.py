@@ -28,16 +28,16 @@ from cmk.snmplib import SNMPRawData
 from cmk.fetchers import Fetcher, get_raw_data, Mode
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
-from cmk.checkengine import CheckPlugin, HostSections, parse_raw_data, SourceInfo
+from cmk.checkengine import CheckPlugin, parse_raw_data, SourceInfo
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import DiscoveryPlugin, HostLabelPlugin
 from cmk.checkengine.error_handling import ExitSpec
 from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
+from cmk.checkengine.parser import HostSections, NO_SELECTION, SectionNameCollection
 from cmk.checkengine.sectionparser import SectionPlugin
 from cmk.checkengine.submitters import ServiceState
 from cmk.checkengine.summarize import summarize
-from cmk.checkengine.type_defs import NO_SELECTION, SectionNameCollection
 
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.api.agent_based.register._config as _api

@@ -14,8 +14,7 @@ from cmk.snmplib import SNMPRawData, SNMPRawDataElem
 
 from cmk.fetchers.cache import SectionStore
 
-from ._parser import HostSections, Parser
-from .type_defs import SectionNameCollection
+from ._parser import HostSections, Parser, SectionNameCollection
 
 __all__ = ["SNMPParser"]
 

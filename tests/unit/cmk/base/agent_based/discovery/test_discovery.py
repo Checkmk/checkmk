@@ -27,7 +27,7 @@ from cmk.snmplib import SNMPRawData
 from cmk.fetchers import Mode
 from cmk.fetchers.filecache import FileCacheOptions
 
-from cmk.checkengine import HostKey, HostSections, SourceType
+from cmk.checkengine import HostKey, SourceType
 from cmk.checkengine.check_table import ServiceID
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.checkresults import ActiveCheckResult
@@ -56,6 +56,7 @@ from cmk.checkengine.discovery._autodiscovery import (
 from cmk.checkengine.discovery._filters import RediscoveryParameters, ServiceFilters
 from cmk.checkengine.discovery._impl import _check_host_labels, _check_service_lists
 from cmk.checkengine.discovery._services import _find_host_plugins, _find_mgmt_plugins
+from cmk.checkengine.parser import HostSections, NO_SELECTION
 from cmk.checkengine.sectionparser import (
     ParsedSectionName,
     ParsedSectionsResolver,
@@ -63,7 +64,7 @@ from cmk.checkengine.sectionparser import (
     SectionPlugin,
     SectionsParser,
 )
-from cmk.checkengine.type_defs import AgentRawDataSection, NO_SELECTION
+from cmk.checkengine.type_defs import AgentRawDataSection
 
 import cmk.base.agent_based.discovery as discovery
 import cmk.base.api.agent_based.register as agent_based_register

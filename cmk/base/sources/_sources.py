@@ -27,7 +27,7 @@ from cmk.fetchers.filecache import (
 )
 
 from cmk.checkengine import SourceInfo, SourceType
-from cmk.checkengine.type_defs import SectionNameCollection
+from cmk.checkengine.parser import SectionNameCollection
 
 import cmk.base.config as config
 import cmk.base.core_config as core_config

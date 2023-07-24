@@ -33,11 +33,10 @@ from cmk.utils.structured_data import (
 )
 from cmk.utils.validatedstr import ValidatedString
 
-from ._api import FetcherFunction, ParserFunction, SummarizerFunction
-from ._parser import HostSections
-from ._parserutils import group_by_host
+from ._api import FetcherFunction, SummarizerFunction
 from ._typedefs import HostKey, SourceType
 from .checkresults import ActiveCheckResult
+from .parser import group_by_host, HostSections, ParserFunction
 from .sectionparser import (
     make_providers,
     ParsedSectionName,

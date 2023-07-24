@@ -14,9 +14,9 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.utils.validatedstr import ValidatedString
 
-from ._parser import HostSections
 from ._typedefs import HostKey, SourceType
 from .crash_reporting import create_section_crash_dump
+from .parser import HostSections
 
 _CacheInfo = tuple[int, int]
 

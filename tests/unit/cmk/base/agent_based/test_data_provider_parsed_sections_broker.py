@@ -10,7 +10,7 @@ from pytest import MonkeyPatch
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
 
-from cmk.checkengine import HostSections
+from cmk.checkengine.parser import HostSections
 from cmk.checkengine.sectionparser import (
     ParsedSectionName,
     ParsedSectionsResolver,

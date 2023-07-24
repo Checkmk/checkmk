@@ -11,8 +11,9 @@ import pytest
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionName
 
-from cmk.checkengine import HostKey, HostSections, SourceType
+from cmk.checkengine import HostKey, SourceType
 from cmk.checkengine.checkresults import ActiveCheckResult
+from cmk.checkengine.parser import HostSections
 from cmk.checkengine.sectionparser import (
     ParsedSectionName,
     ParsedSectionsResolver,

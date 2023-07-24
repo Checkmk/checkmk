@@ -10,7 +10,19 @@ import time
 from contextlib import suppress
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, Iterator, List, Literal, NewType, Optional, Tuple
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Literal,
+    NewType,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import livestatus
 
@@ -434,7 +446,7 @@ def estimate_levels(
         _get_levels_from_params(
             levels=levels_upper,
             sig=1,
-            reference_value=reference_value,
+            reference=reference_value,
             stdev=stdev,
             levels_factor=levels_factor,
         )
@@ -446,7 +458,7 @@ def estimate_levels(
         _get_levels_from_params(
             levels=levels_lower,
             sig=-1,
-            reference_value=reference_value,
+            reference=reference_value,
             stdev=stdev,
             levels_factor=levels_factor,
         )
@@ -473,41 +485,23 @@ def _get_levels_from_params(
     *,
     levels: _LevelsSpec,
     sig: Literal[1, -1],
-    reference_value: float,
+    reference: float,
     stdev: Optional[float],
     levels_factor: float,
-) -> Tuple[float, float]:
+) -> Union[Tuple[float, float], Tuple[None, None]]:
 
     levels_type, (warn, crit) = levels
 
-    reference_deviation = _get_reference_deviation(
-        levels_type=levels_type,
-        reference_value=reference_value,
-        stdev=stdev,
-        levels_factor=levels_factor,
-    )
-
-    estimated_warn = reference_value + sig * warn * reference_deviation
-    estimated_crit = reference_value + sig * crit * reference_deviation
-
-    return estimated_warn, estimated_crit
-
-
-def _get_reference_deviation(
-    *,
-    levels_type: _LevelsType,
-    reference_value: float,
-    stdev: Optional[float],
-    levels_factor: float,
-) -> float:
     if levels_type == "absolute":
-        return levels_factor
+        reference_deviation = levels_factor
+    elif levels_type == "relative":
+        reference_deviation = reference / 100.0
+    else:  # levels_type == "stdev":
+        if stdev is None:  # just make explicit what would have happend anyway:
+            raise TypeError("stdev is None")
+        reference_deviation = stdev
 
-    if levels_type == "relative":
-        return reference_value / 100.0
-
-    # levels_type == "stdev":
-    if stdev is None:  # just make explicit what would have happend anyway:
-        raise TypeError("stdev is None")
-
-    return stdev
+    return (
+        reference + sig * warn * reference_deviation,
+        reference + sig * crit * reference_deviation,
+    )

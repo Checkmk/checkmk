@@ -290,6 +290,7 @@ def match_event_rule(rule_pack: ec.ECRulePack, rule: ec.Rule, event: ec.Event) -
         is_active_time_period=time_period.active,
     )
     rule = rule.copy()
+    rule["pack"] = rule_pack["id"]
     ec.compile_rule(rule)
     return rule_matcher.event_rule_matches(rule, event)
 

@@ -345,23 +345,6 @@ def get_rrd_data(
     return TimeSeries(response)
 
 
-def rrd_datacolum(
-    connection: livestatus.SingleSiteConnection,
-    hostname: str,
-    service_description: str,
-    metric_name: str,
-    cf: ConsolidationFunctionName,
-) -> RRDColumnFunction:
-    "Partial helper function to get rrd data"
-
-    def time_boundaries(fromtime: Timestamp, untiltime: Timestamp) -> TimeSeries:
-        return get_rrd_data(
-            connection, hostname, service_description, metric_name, cf, fromtime, untiltime
-        )
-
-    return time_boundaries
-
-
 class PredictionStore:
     def __init__(
         self,
@@ -447,11 +430,16 @@ def compute_prediction(
 
     time_windows = _time_slices(now, int(params["horizon"] * 86400), period_info, timegroup)
 
-    rrd_datacolumn = rrd_datacolum(
-        livestatus.LocalConnection(), hostname, service_description, dsname, cf
-    )
     from_time = time_windows[0][0]
-    raw_slices = [(rrd_datacolumn(start, end), from_time - start) for start, end in time_windows]
+    raw_slices = [
+        (
+            get_rrd_data(
+                livestatus.LocalConnection(), hostname, service_description, dsname, cf, start, end
+            ),
+            from_time - start,
+        )
+        for start, end in time_windows
+    ]
 
     data_for_pred = _calculate_data_for_prediction(raw_slices)
 

@@ -436,11 +436,16 @@ def test_retieve_grouped_data_from_rrd(
         )
 
     hostname, service_description, dsname = HostName("test-prediction"), "CPU load", "load15"
-    rrd_datacolumn = _prediction.rrd_datacolum(
-        site.live, hostname, service_description, dsname, "MAX"
-    )
     from_time = time_windows[0][0]
-    slices = [(rrd_datacolumn(start, end), from_time - start) for start, end in time_windows]
+    slices = [
+        (
+            _prediction.get_rrd_data(
+                site.live, hostname, service_description, dsname, "MAX", start, end
+            ),
+            from_time - start,
+        )
+        for start, end in time_windows
+    ]
     result = _prediction._upsample(slices)
 
     assert result == reference
@@ -494,12 +499,17 @@ def test_calculate_data_for_prediction(
         )
 
     hostname, service_description, dsname = HostName("test-prediction"), "CPU load", "load15"
-    rrd_datacolumn = _prediction.rrd_datacolum(
-        site.live, hostname, service_description, dsname, "MAX"
-    )
 
     from_time = time_windows[0][0]
-    raw_slices = [(rrd_datacolumn(start, end), from_time - start) for start, end in time_windows]
+    raw_slices = [
+        (
+            _prediction.get_rrd_data(
+                site.live, hostname, service_description, dsname, "MAX", start, end
+            ),
+            from_time - start,
+        )
+        for start, end in time_windows
+    ]
     data_for_pred = _prediction._calculate_data_for_prediction(raw_slices)
 
     expected_reference = _load_expected_result(

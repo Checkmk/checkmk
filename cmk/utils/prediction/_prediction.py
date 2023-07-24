@@ -450,8 +450,10 @@ def compute_prediction(
     rrd_datacolumn = rrd_datacolum(
         livestatus.LocalConnection(), hostname, service_description, dsname, cf
     )
+    from_time = time_windows[0][0]
+    raw_slices = [(rrd_datacolumn(start, end), from_time - start) for start, end in time_windows]
 
-    data_for_pred = _calculate_data_for_prediction(time_windows, rrd_datacolumn)
+    data_for_pred = _calculate_data_for_prediction(raw_slices)
 
     info = PredictionInfo(
         name=timegroup,
@@ -563,13 +565,8 @@ def _get_prediction_timegroup(
 
 
 def _calculate_data_for_prediction(
-    time_windows: _TimeSlices,
-    rrd_column: RRDColumnFunction,
+    raw_slices: Sequence[tuple[TimeSeries, int]],
 ) -> PredictionData:
-    from_time = time_windows[0][0]
-
-    raw_slices = [(rrd_column(start, end), from_time - start) for start, end in time_windows]
-
     twindow, slices = _upsample(raw_slices)
 
     descriptors = _data_stats(slices)

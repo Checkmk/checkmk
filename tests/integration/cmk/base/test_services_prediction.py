@@ -497,7 +497,10 @@ def test_calculate_data_for_prediction(
     rrd_datacolumn = _prediction.rrd_datacolum(
         site.live, hostname, service_description, dsname, "MAX"
     )
-    data_for_pred = _prediction._calculate_data_for_prediction(time_windows, rrd_datacolumn)
+
+    from_time = time_windows[0][0]
+    raw_slices = [(rrd_datacolumn(start, end), from_time - start) for start, end in time_windows]
+    data_for_pred = _prediction._calculate_data_for_prediction(raw_slices)
 
     expected_reference = _load_expected_result(
         repo_path() / "tests/integration/cmk/base/test-files" / str(timezone) / str(timegroup)

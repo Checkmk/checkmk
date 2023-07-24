@@ -8,6 +8,9 @@ from ._autochecks import (
     AutocheckServiceWithNodes,
     AutochecksManager,
     AutochecksStore,
+    remove_autochecks_of_host,
+    set_autochecks_of_cluster,
+    set_autochecks_of_real_hosts,
 )
 from ._autodiscovery import DiscoveryResult
 from ._discovery import DiscoveryPlugin
@@ -33,4 +36,7 @@ __all__ = [
     "HostLabel",
     "HostLabelPlugin",
     "QualifiedDiscovery",
+    "remove_autochecks_of_host",
+    "set_autochecks_of_cluster",
+    "set_autochecks_of_real_hosts",
 ]

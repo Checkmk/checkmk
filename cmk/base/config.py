@@ -3390,23 +3390,6 @@ class ConfigCache:
         else:
             autochecks.set_autochecks_of_real_hosts(hostname, new_services)
 
-    def remove_autochecks(self, hostname: HostName) -> int:
-        """Remove all autochecks of a host while being cluster-aware
-
-        Cluster aware means that the autocheck files of the nodes are handled. Instead
-        of removing the whole file the file is loaded and only the services associated
-        with the given cluster are removed."""
-        nodes = self.nodes_of(hostname) or [hostname]
-        return sum(
-            autochecks.remove_autochecks_of_host(
-                node,
-                hostname,
-                self.effective_host,
-                functools.partial(service_description),
-            )
-            for node in nodes
-        )
-
     def inv_retention_intervals(self, hostname: HostName) -> Sequence[RawIntervalFromConfig]:
         entries = self.host_extra_conf(hostname, inv_retention_intervals)
         return entries[0] if entries else []

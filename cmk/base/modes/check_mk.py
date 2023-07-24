@@ -69,6 +69,7 @@ from cmk.checkengine import (
 )
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.checkresults import ActiveCheckResult
+from cmk.checkengine.discovery import remove_autochecks_of_host
 from cmk.checkengine.error_handling import CheckResultErrorHandler
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin, InventoryPluginName
 from cmk.checkengine.submitters import get_submitter, ServiceState, Submitter
@@ -1239,7 +1240,13 @@ def mode_flush(hosts: list[HostName]) -> None:  # pylint: disable=too-many-branc
                 out.output(tty.bold + tty.magenta + " logfiles(%d)" % d)
 
         # autochecks
-        count = config_cache.remove_autochecks(host)
+        count = sum(
+            remove_autochecks_of_host(
+                node, host, config_cache.effective_host, config.service_description
+            )
+            for node in config_cache.nodes_of(host) or [host]
+        )
+        # config_cache.remove_autochecks(host)
         if count:
             flushed = True
             out.output(tty.bold + tty.cyan + " autochecks(%d)" % count)

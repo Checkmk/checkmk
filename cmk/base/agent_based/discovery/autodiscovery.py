@@ -44,6 +44,7 @@ from cmk.checkengine.discovery import (
     find_plugins,
     HostLabelPlugin,
     QualifiedDiscovery,
+    remove_autochecks_of_host,
 )
 from cmk.checkengine.discovery.filters import RediscoveryParameters
 from cmk.checkengine.discovery.filters import ServiceFilters as _ServiceFilters
@@ -106,9 +107,13 @@ def automation_discovery(
         # checks of the host, so that _get_host_services() does show us the
         # new discovered check parameters.
         if mode is DiscoveryMode.REFRESH:
-            result.self_removed += config_cache.remove_autochecks(
-                host_name
-            )  # this is cluster-aware!
+            result.self_removed += sum(
+                # this is cluster-aware!
+                remove_autochecks_of_host(
+                    node, host_name, get_effective_host, get_service_description
+                )
+                for node in (cluster_nodes if is_cluster else [host_name])
+            )
 
         fetched = fetcher(host_name, ip_address=None)
         host_sections = parser((f[0], f[1]) for f in fetched)

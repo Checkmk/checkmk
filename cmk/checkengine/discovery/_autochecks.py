@@ -21,7 +21,15 @@ from cmk.checkengine.checking import CheckPluginName, Item
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
 
-__all__ = ["AutocheckServiceWithNodes", "AutocheckEntry", "AutochecksStore", "AutochecksManager"]
+__all__ = [
+    "AutocheckServiceWithNodes",
+    "AutocheckEntry",
+    "AutochecksStore",
+    "AutochecksManager",
+    "remove_autochecks_of_host",
+    "set_autochecks_of_cluster",
+    "set_autochecks_of_real_hosts",
+]
 
 
 ComputeCheckParameters = Callable[
@@ -297,6 +305,11 @@ def remove_autochecks_of_host(
     get_effective_host: GetEffectviveHost,
     get_service_description: GetServiceDescription,
 ) -> int:
+    """Remove all autochecks of a host while being cluster-aware
+
+    Cluster aware means that the autocheck files of the nodes are handled. Instead
+    of removing the whole file the file is loaded and only the services associated
+    with the given cluster are removed."""
     store = AutochecksStore(hostname)
     existing_entries = store.read()
     new_entries = [

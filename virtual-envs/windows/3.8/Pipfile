@@ -7,14 +7,15 @@ name = "pypi"
 
 [packages]
 colorama = "==0.4.1"    # Windows has to have some color output
-pyyaml = "==5.1.2"      # to support the agent config
-certifi= "==2020.4.5.1" # jolokia
-chardet = "==3.0.4"     # jolokia
-idna = "==2.9"          # jolokia
-requests = {extras = ["socks"], version = "2.23.0"}   # jolokia, cmk_update_agent
-urllib3 = "==1.25.9"    # jolokia
-pyopenssl = "19.1.0"    # cmk_update_agent
-pywin32 = "==300"       # logwatch
+pyyaml = "==5.4.1"      # to support the agent config
+certifi= "==2022.12.7"
+chardet = "==3.0.4"
+idna = "==2.9"
+requests = {extras = ["socks"], version = "2.26.0"}
+urllib3 = "==1.26.7"
+pyopenssl = "==19.1.0"
+pywin32 = "==300"
+cryptography = "==3.3.2"
 
 [requires]
 python_version = "3.8"

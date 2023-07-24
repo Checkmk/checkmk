@@ -12,7 +12,7 @@
 
 # commandline
 PY_VER             ?= 3.8
-PY_SUBVER          ?= 15
+PY_SUBVER          ?= 16
 MSBUILD            ?= C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\MSBuild\15.0\Bin\MSBuild.exe
 
 # internal dirs:

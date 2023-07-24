@@ -162,7 +162,7 @@ STAGES:
     - NAME: 'Python Cyclic Dependencies'
       ONLY_WHEN_NOT_EMPTY: CHANGED_IMAGE_TESTING,CHANGED_TESTS_MAKEFILE,CHANGED_PIPFILE_LOCK,CHANGED_PYTHON_FILES
       DIR: 'tests'
-      COMMAND: 'make test-cycles-docker > ${RESULTS}/py-import-cycles.txt'
+      COMMAND: 'make test-cycles-docker &> ${RESULTS}/py-import-cycles.txt'
       TEXT_ON_SKIP: 'No Python files changed'
       RESULT_CHECK_FILE_PATTERN: "results/py-import-cycles.txt"
 

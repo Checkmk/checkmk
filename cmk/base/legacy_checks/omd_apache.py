@@ -7,10 +7,11 @@
 # mypy: disable-error-code="var-annotated"
 
 import time
+from typing import Any, MutableMapping
 
-from cmk.base.check_api import get_rate, LegacyCheckDefinition, regex, SKIP
+from cmk.base.check_api import LegacyCheckDefinition, regex
 from cmk.base.config import check_info
-from cmk.base.plugins.agent_based.agent_based_api.v1 import render
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, IgnoreResults, render
 
 # <<<omd_apache:sep(124)>>>
 # [heute]
@@ -42,6 +43,16 @@ omd_apache_patterns = [
 
 def inventory_omd_apache(parsed):
     return [(k, None) for k in parsed]
+
+
+def _compute_rate(
+    value_store: MutableMapping[str, Any], key: str, now: float, value: float
+) -> float | None:
+    last_time = value_store.get(key)
+    value_store[key] = now
+    if last_time is None or (time_delta := now - last_time) == 0:
+        return None
+    return value / time_delta
 
 
 def check_omd_apache(item, _no_params, parsed):
@@ -84,6 +95,7 @@ def check_omd_apache(item, _no_params, parsed):
     # Now process the result. Break down the gathered values to values per second.
     # the output is showing total values, for the graphing we provide detailed data
     this_time = time.time()
+    value_store = get_value_store()
     for ty, title in [
         ("requests", "Requests"),
         ("secs", "Seconds serving"),
@@ -91,11 +103,12 @@ def check_omd_apache(item, _no_params, parsed):
     ]:
         total = 0.0
         for key, value in sorted(stats[ty].items(), key=lambda k_v: k_v[1], reverse=True):
-            rate = get_rate(
-                "omd_apache.%s.%s.%s" % (item, ty, key), this_time, value, onwrap=SKIP, is_rate=True
-            )
+            metric_name = f"{ty}_{key}"
+            if (rate := _compute_rate(value_store, metric_name, this_time, value)) is None:
+                yield IgnoreResults(f"Initialized counter '{metric_name}'")
+                continue
             total += rate
-            yield 0, "", [(ty + "_" + key, rate)]
+            yield 0, "", [(metric_name, rate)]
 
         total_str = render.iobandwidth(total) if ty == "bytes" else ("%.2f/s" % total)
         yield 0, f"{title}: {total_str}"

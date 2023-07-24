@@ -35,6 +35,7 @@ from cmk.checkengine.discovery import (
     analyse_cluster_labels,
     AutocheckServiceWithNodes,
     discover_host_labels,
+    DiscoveryCheckParameters,
     DiscoveryMode,
     DiscoveryPlugin,
     HostLabelPlugin,
@@ -44,8 +45,6 @@ from cmk.checkengine.discovery.filters import ServiceFilter as _ServiceFilter
 from cmk.checkengine.discovery.filters import ServiceFilters as _ServiceFilters
 from cmk.checkengine.sectionparser import make_providers, store_piggybacked_sections
 from cmk.checkengine.sectionparserutils import check_parsing_errors
-
-from cmk.base.config import DiscoveryCheckParameters
 
 from .autodiscovery import get_host_services, ServicesByTransition
 

@@ -38,6 +38,7 @@ from cmk.checkengine.discovery import (
     AutochecksStore,
     discover_host_labels,
     discover_services,
+    DiscoveryCheckParameters,
     DiscoveryMode,
     DiscoveryResult,
     find_plugins,
@@ -411,8 +412,8 @@ def test__get_post_discovery_services(
     assert result.self_removed == count_removed
 
 
-def _get_params(rediscovery: RediscoveryParameters) -> config.DiscoveryCheckParameters:
-    return config.DiscoveryCheckParameters(
+def _get_params(rediscovery: RediscoveryParameters) -> DiscoveryCheckParameters:
+    return DiscoveryCheckParameters(
         commandline_only=False,
         check_interval=60,
         severity_new_services=1,
@@ -662,7 +663,7 @@ def _get_params(rediscovery: RediscoveryParameters) -> config.DiscoveryCheckPara
 )
 def test__check_service_table(
     grouped_services: ServicesByTransition,
-    parameters: config.DiscoveryCheckParameters,
+    parameters: DiscoveryCheckParameters,
     result_need_rediscovery: bool,
 ) -> None:
     rediscovery_parameters = parameters.rediscovery.copy()

@@ -33,7 +33,7 @@ from cmk.fetchers import Mode, TCPEncryptionHandling
 
 from cmk.checkengine.check_table import ConfiguredService, ServiceID
 from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.discovery import AutocheckEntry, HostLabel
+from cmk.checkengine.discovery import AutocheckEntry, DiscoveryCheckParameters, HostLabel
 from cmk.checkengine.inventory import InventoryPlugin
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.sectionparser import ParsedSectionName
@@ -1079,11 +1079,18 @@ def test_host_config_inventory_parameters(
     [
         (
             HostName("testhost1"),
-            config.DiscoveryCheckParameters.commandline_only_defaults(),
+            DiscoveryCheckParameters(
+                commandline_only=True,
+                check_interval=0,
+                severity_new_services=1,
+                severity_vanished_services=0,
+                severity_new_host_labels=1,
+                rediscovery={},
+            ),
         ),
         (
             HostName("testhost2"),
-            config.DiscoveryCheckParameters(
+            DiscoveryCheckParameters(
                 commandline_only=False,
                 check_interval=1,
                 severity_new_services=1,
@@ -1095,7 +1102,7 @@ def test_host_config_inventory_parameters(
     ],
 )
 def test_discovery_check_parameters(
-    monkeypatch: MonkeyPatch, hostname: HostName, result: config.DiscoveryCheckParameters
+    monkeypatch: MonkeyPatch, hostname: HostName, result: DiscoveryCheckParameters
 ) -> None:
     ts = Scenario()
     ts.add_host(hostname)

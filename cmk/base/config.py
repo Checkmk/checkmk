@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import contextlib
 import copy
+import dataclasses
 import functools
 import ipaddress
 import itertools
@@ -126,8 +127,11 @@ from cmk.fetchers.filecache import MaxAge
 from cmk.checkengine import AgentParser, CheckPlugin, Parameters, SourceType
 from cmk.checkengine.check_table import ConfiguredService, FilterMode, HostCheckTable, ServiceID
 from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr, Item
-from cmk.checkengine.discovery import AutocheckServiceWithNodes, DiscoveryPlugin
-from cmk.checkengine.discovery.filters import RediscoveryParameters
+from cmk.checkengine.discovery import (
+    AutocheckServiceWithNodes,
+    DiscoveryCheckParameters,
+    DiscoveryPlugin,
+)
 from cmk.checkengine.error_handling import ExitSpec
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin
 from cmk.checkengine.legacy import LegacyCheckParameters
@@ -439,32 +443,6 @@ CheckIncludes = list[str]
 
 class CheckmkCheckParameters(NamedTuple):
     enabled: bool
-
-
-class DiscoveryCheckParameters(NamedTuple):
-    commandline_only: bool
-    check_interval: int
-    severity_new_services: int
-    severity_vanished_services: int
-    severity_new_host_labels: int
-    rediscovery: RediscoveryParameters
-
-    @classmethod
-    def commandline_only_defaults(cls) -> DiscoveryCheckParameters:
-        return cls.default()._replace(commandline_only=True)
-
-    @classmethod
-    def default(cls) -> DiscoveryCheckParameters:
-        """Support legacy single value global configurations. Otherwise return the defaults"""
-        return cls(
-            commandline_only=inventory_check_interval is None,
-            check_interval=int(inventory_check_interval or 0),
-            severity_new_services=int(inventory_check_severity),
-            severity_vanished_services=0,
-            severity_new_host_labels=1,
-            # TODO: defaults are currently all over the place :-(
-            rediscovery={},
-        )
 
 
 class SpecialAgentConfiguration(Protocol):
@@ -2887,19 +2865,29 @@ class ConfigCache:
     def discovery_check_parameters(self, host_name: HostName) -> DiscoveryCheckParameters:
         """Compute the parameters for the discovery check for a host"""
 
+        defaults = DiscoveryCheckParameters(
+            commandline_only=inventory_check_interval is None,
+            check_interval=int(inventory_check_interval or 0),
+            severity_new_services=int(inventory_check_severity),
+            severity_vanished_services=0,
+            severity_new_host_labels=1,
+            # TODO: defaults are currently all over the place :-(
+            rediscovery={},
+        )
+
         def make_discovery_check_parameters() -> DiscoveryCheckParameters:
             service_discovery_name = ConfigCache.service_discovery_name()
             if self.is_ping_host(host_name) or self.service_ignored(
                 host_name, service_discovery_name
             ):
-                return DiscoveryCheckParameters.commandline_only_defaults()
+                return dataclasses.replace(defaults, commandline_only=True)
 
             entries = self.host_extra_conf(host_name, periodic_discovery)
             if not entries:
-                return DiscoveryCheckParameters.default()
+                return defaults
 
             if (entry := entries[0]) is None or not (check_interval := entry["check_interval"]):
-                return DiscoveryCheckParameters.commandline_only_defaults()
+                return dataclasses.replace(defaults, commandline_only=True)
 
             return DiscoveryCheckParameters(
                 commandline_only=False,

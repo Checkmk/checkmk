@@ -384,8 +384,7 @@ int main(int argc, char **argv) {
     std::stringstream output;
     output << count << " events (" << unhandled << " unacknowledged)";
     if (!worst_row_event_text.empty()) {
-        output << ", worst state is " << worst_state
-               << " (Last line: " << worst_row_event_text << ")";
+        output << " (Last line: " << worst_row_event_text << ")";
     }
     reply_and_exit(worst_state, output.str());
     return 0;  // never reached

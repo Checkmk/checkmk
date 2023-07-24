@@ -7,7 +7,7 @@
 import json
 import logging
 import time
-from typing import Literal
+from typing import assert_never, Literal
 
 from cmk.utils.log import VERBOSE
 
@@ -130,7 +130,7 @@ def estimate_levels(
         _get_levels_from_params(
             levels=levels_upper,
             sig=1,
-            reference_value=reference_value,
+            reference=reference_value,
             stdev=stdev,
             levels_factor=levels_factor,
         )
@@ -142,7 +142,7 @@ def estimate_levels(
         _get_levels_from_params(
             levels=levels_lower,
             sig=-1,
-            reference_value=reference_value,
+            reference=reference_value,
             stdev=stdev,
             levels_factor=levels_factor,
         )
@@ -169,40 +169,25 @@ def _get_levels_from_params(
     *,
     levels: _LevelsSpec,
     sig: Literal[1, -1],
-    reference_value: float,
+    reference: float,
     stdev: float | None,
     levels_factor: float,
 ) -> tuple[float, float]:
     levels_type, (warn, crit) = levels
 
-    reference_deviation = _get_reference_deviation(
-        levels_type=levels_type,
-        reference_value=reference_value,
-        stdev=stdev,
-        levels_factor=levels_factor,
+    match levels_type:
+        case "absolute":
+            reference_deviation = levels_factor
+        case "relative":
+            reference_deviation = reference / 100.0
+        case "stdev":
+            if stdev is None:  # just make explicit what would have happend anyway:
+                raise TypeError("stdev is None")
+            reference_deviation = stdev
+        case _:
+            assert_never(levels_type)
+
+    return (
+        reference + sig * warn * reference_deviation,
+        reference + sig * crit * reference_deviation,
     )
-
-    estimated_warn = reference_value + sig * warn * reference_deviation
-    estimated_crit = reference_value + sig * crit * reference_deviation
-
-    return estimated_warn, estimated_crit
-
-
-def _get_reference_deviation(
-    *,
-    levels_type: _LevelsType,
-    reference_value: float,
-    stdev: float | None,
-    levels_factor: float,
-) -> float:
-    if levels_type == "absolute":
-        return levels_factor
-
-    if levels_type == "relative":
-        return reference_value / 100.0
-
-    # levels_type == "stdev":
-    if stdev is None:  # just make explicit what would have happend anyway:
-        raise TypeError("stdev is None")
-
-    return stdev

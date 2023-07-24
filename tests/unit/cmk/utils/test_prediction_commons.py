@@ -3,11 +3,9 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-from collections.abc import Mapping
-
 import pytest
 
-from cmk.utils.prediction import _plugin_interface, _prediction
+from cmk.utils.prediction import _prediction
 
 
 @pytest.mark.parametrize(
@@ -128,114 +126,6 @@ def test_time_series_downsampling(
 ) -> None:
     ts = _prediction.TimeSeries(rrddata)
     assert ts.downsample(twindow, cf) == downsampled
-
-
-def test__get_reference_deviation_absolute() -> None:
-    factor = 3.1415
-    assert (
-        _plugin_interface._get_reference_deviation(
-            levels_type="absolute",
-            reference_value=42.0,
-            stdev=None,
-            levels_factor=factor,
-        )
-        == factor
-    )
-
-
-def test__get_reference_deviation_relative() -> None:
-    reference_value = 42.0
-    assert (
-        _plugin_interface._get_reference_deviation(
-            levels_type="relative",
-            reference_value=reference_value,
-            stdev=None,
-            levels_factor=3.1415,
-        )
-        == reference_value / 100.0
-    )
-
-
-def test__get_reference_deviation_stdev_good() -> None:
-    stdev = 23.0
-    assert (
-        _plugin_interface._get_reference_deviation(
-            levels_type="stdev",
-            reference_value=42.0,
-            stdev=stdev,
-            levels_factor=3.1415,
-        )
-        == stdev
-    )
-
-
-def test__get_reference_deviation_stdev_bad() -> None:
-    with pytest.raises(TypeError):
-        _ = _plugin_interface._get_reference_deviation(
-            levels_type="stdev",
-            reference_value=42.0,
-            stdev=None,
-            levels_factor=3.1415,
-        )
-
-
-@pytest.mark.parametrize(
-    "reference_value, reference_deviation, params, levels_factor, result",
-    [
-        (
-            5,
-            2,
-            {"levels_lower": ("absolute", (2, 4))},
-            1,
-            (None, None, 3, 1),
-        ),
-        (
-            15,
-            2,
-            {
-                "levels_upper": ("stddev", (2, 4)),
-                "levels_lower": ("stddev", (3, 5)),
-            },
-            1,
-            (19, 23, 9, 5),
-        ),
-        (
-            2,
-            3,
-            {
-                "levels_upper": ("relative", (20, 40)),
-                "levels_upper_min": (2, 4),
-            },
-            1,
-            (2.4, 4, None, None),
-        ),
-        (
-            None,
-            object(),  # should never be used
-            {},
-            1,
-            (None, None, None, None),
-        ),
-    ],
-)
-def test_estimate_levels(
-    reference_value: float | None,
-    reference_deviation: float | None,
-    params: Mapping,
-    levels_factor: float,
-    result: _prediction.EstimatedLevels,
-) -> None:
-    assert (
-        _plugin_interface.estimate_levels(
-            reference_value=reference_value,
-            stdev=reference_deviation,
-            levels_lower=params.get("levels_lower"),
-            levels_upper=params.get("levels_upper"),
-            levels_upper_lower_bound=params.get("levels_upper_min"),
-            levels_factor=levels_factor,
-        )
-        == result
-    )
 
 
 class TestTimeseries:

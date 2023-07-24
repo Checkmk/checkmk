@@ -52,8 +52,6 @@ from cmk.checkengine.discovery.filters import RediscoveryParameters
 from cmk.checkengine.discovery.filters import ServiceFilters as _ServiceFilters
 from cmk.checkengine.sectionparser import make_providers, Provider, store_piggybacked_sections
 
-from cmk.base.config import ConfigCache
-
 __all__ = ["get_host_services"]
 
 _BasicTransition = Literal["old", "new", "vanished"]
@@ -80,7 +78,7 @@ def automation_discovery(
     *,
     is_cluster: bool,
     cluster_nodes: Sequence[HostName],
-    config_cache: ConfigCache,
+    active_hosts: Container[HostName],
     ruleset_matcher: RulesetMatcher,
     parser: ParserFunction,
     fetcher: FetcherFunction,
@@ -100,7 +98,7 @@ def automation_discovery(
 ) -> DiscoveryResult:
     console.verbose("  Doing discovery with mode '%s'...\n" % mode)
     result = DiscoveryResult()
-    if host_name not in config_cache.all_active_hosts():
+    if host_name not in active_hosts:
         result.error_text = ""
         return result
 
@@ -329,7 +327,7 @@ def autodiscovery(
     *,
     is_cluster: bool,
     cluster_nodes: Sequence[HostName],
-    config_cache: ConfigCache,
+    active_hosts: Container[HostName],
     ruleset_matcher: RulesetMatcher,
     fetcher: FetcherFunction,
     parser: ParserFunction,
@@ -363,7 +361,7 @@ def autodiscovery(
         host_name,
         is_cluster=is_cluster,
         cluster_nodes=cluster_nodes,
-        config_cache=config_cache,
+        active_hosts=active_hosts,
         ruleset_matcher=ruleset_matcher,
         parser=parser,
         fetcher=fetcher,

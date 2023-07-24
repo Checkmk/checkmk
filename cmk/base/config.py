@@ -124,16 +124,10 @@ from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
-import cmk.checkengine.discovery._autochecks as autochecks
 from cmk.checkengine import AgentParser, CheckPlugin, Parameters, SourceType
 from cmk.checkengine.check_table import ConfiguredService, FilterMode, HostCheckTable, ServiceID
 from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr, Item
-from cmk.checkengine.discovery import (
-    AutocheckServiceWithNodes,
-    AutochecksManager,
-    DiscoveryCheckParameters,
-    DiscoveryPlugin,
-)
+from cmk.checkengine.discovery import AutochecksManager, DiscoveryCheckParameters, DiscoveryPlugin
 from cmk.checkengine.error_handling import ExitSpec
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin
 from cmk.checkengine.legacy import LegacyCheckParameters
@@ -3370,25 +3364,6 @@ class ConfigCache:
         if (value := spec.get("legacy_pull_mode")) is not None:
             merged_spec["legacy_pull_mode"] = value
         return merged_spec
-
-    def set_autochecks(
-        self,
-        hostname: HostName,
-        new_services: Sequence[AutocheckServiceWithNodes],
-    ) -> None:
-        """Merge existing autochecks with the given autochecks for a host and save it"""
-        nodes = self.nodes_of(hostname)
-        if self.is_cluster(hostname):
-            if nodes:
-                autochecks.set_autochecks_of_cluster(
-                    nodes,
-                    hostname,
-                    new_services,
-                    self.effective_host,
-                    functools.partial(service_description),
-                )
-        else:
-            autochecks.set_autochecks_of_real_hosts(hostname, new_services)
 
     def inv_retention_intervals(self, hostname: HostName) -> Sequence[RawIntervalFromConfig]:
         entries = self.host_extra_conf(hostname, inv_retention_intervals)

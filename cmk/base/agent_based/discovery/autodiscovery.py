@@ -5,7 +5,7 @@
 
 
 import time
-from collections.abc import Callable, Container, Iterable, Mapping
+from collections.abc import Callable, Container, Iterable, Mapping, Sequence
 from typing import assert_never, Literal, TypeVar, Union
 
 import cmk.utils.cleanup
@@ -45,6 +45,8 @@ from cmk.checkengine.discovery import (
     HostLabelPlugin,
     QualifiedDiscovery,
     remove_autochecks_of_host,
+    set_autochecks_of_cluster,
+    set_autochecks_of_real_hosts,
 )
 from cmk.checkengine.discovery.filters import RediscoveryParameters
 from cmk.checkengine.discovery.filters import ServiceFilters as _ServiceFilters
@@ -77,7 +79,7 @@ def automation_discovery(
     host_name: HostName,
     *,
     is_cluster: bool,
-    cluster_nodes: Iterable[HostName],
+    cluster_nodes: Sequence[HostName],
     config_cache: ConfigCache,
     ruleset_matcher: RulesetMatcher,
     parser: ParserFunction,
@@ -177,7 +179,17 @@ def automation_discovery(
             mode,
             keep_clustered_vanished_services,
         )
-        config_cache.set_autochecks(host_name, list(final_services.values()))
+        new_services = list(final_services.values())
+        if is_cluster:
+            set_autochecks_of_cluster(
+                cluster_nodes,
+                host_name,
+                new_services,
+                get_effective_host,
+                get_service_description,
+            )
+        else:
+            set_autochecks_of_real_hosts(host_name, new_services)
 
         result.diff_text = _make_diff(
             host_labels.vanished,
@@ -316,7 +328,7 @@ def autodiscovery(
     host_name: HostName,
     *,
     is_cluster: bool,
-    cluster_nodes: Iterable[HostName],
+    cluster_nodes: Sequence[HostName],
     config_cache: ConfigCache,
     ruleset_matcher: RulesetMatcher,
     fetcher: FetcherFunction,

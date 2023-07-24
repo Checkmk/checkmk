@@ -117,6 +117,8 @@ from cmk.checkengine.discovery import (
     AutocheckServiceWithNodes,
     DiscoveryMode,
     DiscoveryResult,
+    set_autochecks_of_cluster,
+    set_autochecks_of_real_hosts,
 )
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.checkengine.summarize import summarize
@@ -662,7 +664,17 @@ class AutomationSetAutochecks(DiscoveryAutomation):
                 )
             )
 
-        config_cache.set_autochecks(hostname, new_services)
+        if config_cache.is_cluster(hostname):
+            set_autochecks_of_cluster(
+                config_cache.nodes_of(hostname) or (),
+                hostname,
+                new_services,
+                config_cache.effective_host,
+                config.service_description,
+            )
+        else:
+            set_autochecks_of_real_hosts(hostname, new_services)
+
         self._trigger_discovery_check(config_cache, hostname)
         return SetAutochecksResult()
 

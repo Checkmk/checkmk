@@ -158,8 +158,6 @@ class TimeSeries:
             describes (start, end, step), in this case data has only values
         conversion:
             optional conversion to account for user-specific unit settings
-        **metadata:
-            additional information arguments
 
     """
 
@@ -168,7 +166,6 @@ class TimeSeries:
         data: TimeSeriesValues,
         time_window: TimeWindow | None = None,
         conversion: Callable[[float], float] = lambda v: v,
-        **metadata: str,
     ) -> None:
         if time_window is None:
             if not data or data[0] is None or data[1] is None or data[2] is None:
@@ -182,7 +179,6 @@ class TimeSeries:
         self.end = int(time_window[1])
         self.step = int(time_window[2])
         self.values = [v if v is None else conversion(v) for v in data]
-        self.metadata = metadata
 
     @property
     def twindow(self) -> TimeWindow:

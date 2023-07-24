@@ -16,6 +16,7 @@ from cmk.utils.prediction import TimeSeries, TimeSeriesValues
 import cmk.gui.utils.escaping as escaping
 from cmk.gui.i18n import _
 from cmk.gui.plugins.metrics.utils import (
+    AugmentedTimeSeries,
     CombinedGraphMetricRecipe,
     Curve,
     ExpressionParams,
@@ -25,7 +26,7 @@ from cmk.gui.plugins.metrics.utils import (
     RRDData,
     time_series_expression_registry,
 )
-from cmk.gui.type_defs import GraphMetric
+from cmk.gui.type_defs import GraphMetric, RPNExpression
 
 # .
 #   .--Curves--------------------------------------------------------------.
@@ -55,10 +56,10 @@ def compute_graph_curves(
         mirror_prefix = "-" if metric_definition["line_type"].startswith("-") else ""
         for i, ts in enumerate(time_series):
             title = metric_definition["title"]
-            if ts.metadata.get("title") and multi:
-                title += " - " + ts.metadata["title"]
+            if ts.metadata.title and multi:
+                title += " - " + ts.metadata.title
 
-            color = metric_definition.get("color", ts.metadata.get("color", "#000000"))
+            color = metric_definition.get("color", ts.metadata.color or "#000000")
             if i % 2 == 1 and not (
                 expression[0] == "transformation" and expression[1][0] == "forecast"
             ):
@@ -67,12 +68,12 @@ def compute_graph_curves(
             curves.append(
                 Curve(
                     {
-                        "line_type": mirror_prefix + ts.metadata.get("line_type", "")
+                        "line_type": mirror_prefix + ts.metadata.line_type
                         if multi
                         else metric_definition["line_type"],
                         "color": color,
                         "title": title,
-                        "rrddata": ts,
+                        "rrddata": ts.data,
                     }
                 )
             )
@@ -80,9 +81,10 @@ def compute_graph_curves(
     return curves
 
 
-def evaluate_time_series_expression(  # type: ignore[no-untyped-def]
-    expression, rrd_data: RRDData
-) -> Sequence[TimeSeries]:
+def evaluate_time_series_expression(
+    expression: RPNExpression,
+    rrd_data: RRDData,
+) -> Sequence[AugmentedTimeSeries]:
     ident, parameters = expression[0], expression[1:]
 
     try:
@@ -106,29 +108,43 @@ def evaluate_time_series_expression(  # type: ignore[no-untyped-def]
 
 
 @time_series_expression_registry.register_expression("operator")
-def expression_operator(parameters: ExpressionParams, rrd_data: RRDData) -> Sequence[TimeSeries]:
+def expression_operator(
+    parameters: ExpressionParams,
+    rrd_data: RRDData,
+) -> Sequence[AugmentedTimeSeries]:
     operator_id, operands = parameters
-    operands_evaluated = list(
-        chain.from_iterable(evaluate_time_series_expression(a, rrd_data) for a in operands)
-    )
-    if result := time_series_math(operator_id, operands_evaluated):
-        return [result]
+    if result := time_series_math(
+        operator_id,
+        [
+            operand_evaluated.data
+            for operand_evaluated in chain.from_iterable(
+                evaluate_time_series_expression(a, rrd_data) for a in operands
+            )
+        ],
+    ):
+        return [AugmentedTimeSeries(data=result)]
     return []
 
 
 @time_series_expression_registry.register_expression("rrd")
-def expression_rrd(parameters: ExpressionParams, rrd_data: RRDData) -> Sequence[TimeSeries]:
+def expression_rrd(
+    parameters: ExpressionParams,
+    rrd_data: RRDData,
+) -> Sequence[AugmentedTimeSeries]:
     key = (parameters[0], parameters[1], parameters[2], parameters[3], parameters[4], parameters[5])
     if key in rrd_data:
-        return [rrd_data[key]]
+        return [AugmentedTimeSeries(data=rrd_data[key])]
     num_points, twindow = _derive_num_points_twindow(rrd_data)
-    return [TimeSeries([None] * num_points, twindow)]
+    return [AugmentedTimeSeries(data=TimeSeries([None] * num_points, twindow))]
 
 
 @time_series_expression_registry.register_expression("constant")
-def expression_constant(parameters: ExpressionParams, rrd_data: RRDData) -> Sequence[TimeSeries]:
+def expression_constant(
+    parameters: ExpressionParams,
+    rrd_data: RRDData,
+) -> Sequence[AugmentedTimeSeries]:
     num_points, twindow = _derive_num_points_twindow(rrd_data)
-    return [TimeSeries([parameters[0]] * num_points, twindow)]
+    return [AugmentedTimeSeries(data=TimeSeries([parameters[0]] * num_points, twindow))]
 
 
 def _derive_num_points_twindow(rrd_data: RRDData) -> tuple[int, tuple[int, int, int]]:

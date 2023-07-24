@@ -955,8 +955,21 @@ def _evaluate_literal(
     return value, unit, color
 
 
+@dataclass(frozen=True)
+class TimeSeriesMetaData:
+    title: str | None = None
+    color: str | None = None
+    line_type: str = ""
+
+
+@dataclass(frozen=True)
+class AugmentedTimeSeries:
+    data: TimeSeries
+    metadata: TimeSeriesMetaData = TimeSeriesMetaData()
+
+
 ExpressionParams = Sequence[Any]
-ExpressionFunc = Callable[[ExpressionParams, RRDData], Sequence[TimeSeries]]
+ExpressionFunc = Callable[[ExpressionParams, RRDData], Sequence[AugmentedTimeSeries]]
 
 
 class TimeSeriesExpressionRegistry(Registry[ExpressionFunc]):

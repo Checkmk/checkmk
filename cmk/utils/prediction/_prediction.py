@@ -290,8 +290,8 @@ def livestatus_lql(
 def get_rrd_data(
     connection: livestatus.SingleSiteConnection,
     hostname: str,
-    service_description: ServiceName,
-    varname: MetricName,
+    service_description: str,
+    metric_name: str,
     cf: ConsolidationFunctionName,
     fromtime: Timestamp,
     untiltime: Timestamp,
@@ -320,7 +320,7 @@ def get_rrd_data(
     """
 
     step = 1
-    rpn = f"{varname}.{cf.lower()}"  # "MAX" -> "max"
+    rpn = f"{metric_name}.{cf.lower()}"  # "MAX" -> "max"
     point_range = ":".join(
         livestatus.lqencode(str(x)) for x in (fromtime, untiltime, step, max_entries)
     )
@@ -345,14 +345,14 @@ def rrd_datacolum(
     connection: livestatus.SingleSiteConnection,
     hostname: str,
     service_description: str,
-    varname: str,
+    metric_name: str,
     cf: ConsolidationFunctionName,
 ) -> RRDColumnFunction:
     "Partial helper function to get rrd data"
 
     def time_boundaries(fromtime: Timestamp, untiltime: Timestamp) -> TimeSeries:
         return get_rrd_data(
-            connection, hostname, service_description, varname, cf, fromtime, untiltime
+            connection, hostname, service_description, metric_name, cf, fromtime, untiltime
         )
 
     return time_boundaries

@@ -271,27 +271,17 @@ def get_predictive_levels(
         data_for_pred = prediction_store.get_data(timegroup)
 
     if data_for_pred is None:
-        logger.log(VERBOSE, "Calculating prediction data for time group %s", timegroup)
-        prediction_store.clean_prediction_files(timegroup, force=True)
-
-        time_windows = _time_slices(now, int(params["horizon"] * 86400), period_info, timegroup)
-
-        rrd_datacolumn = rrd_datacolum(
-            livestatus.LocalConnection(), hostname, service_description, dsname, cf
+        data_for_pred = _compute_prediction(
+            timegroup,
+            prediction_store,
+            params,
+            now,
+            period_info,
+            hostname,
+            service_description,
+            dsname,
+            cf,
         )
-
-        data_for_pred = _calculate_data_for_prediction(time_windows, rrd_datacolumn)
-
-        info = PredictionInfo(
-            name=timegroup,
-            time=now,
-            range=time_windows[0],
-            cf=cf,
-            dsname=dsname,
-            slice=period_info.slice,
-            params=params,
-        )
-        prediction_store.save_predictions(info, data_for_pred)
 
     # Find reference value in data_for_pred
     index = int(rel_time / data_for_pred.step)
@@ -305,3 +295,39 @@ def get_predictive_levels(
         levels_upper_lower_bound=params.get("levels_upper_min"),
         levels_factor=levels_factor,
     )
+
+
+def _compute_prediction(
+    timegroup: Timegroup,
+    prediction_store: PredictionStore,
+    params: PredictionParameters,
+    now: int,
+    period_info: _PeriodInfo,
+    hostname: str,
+    service_description: str,
+    dsname: str,
+    cf: ConsolidationFunctionName,
+) -> PredictionData:
+    logger.log(VERBOSE, "Calculating prediction data for time group %s", timegroup)
+    prediction_store.clean_prediction_files(timegroup, force=True)
+
+    time_windows = _time_slices(now, int(params["horizon"] * 86400), period_info, timegroup)
+
+    rrd_datacolumn = rrd_datacolum(
+        livestatus.LocalConnection(), hostname, service_description, dsname, cf
+    )
+
+    data_for_pred = _calculate_data_for_prediction(time_windows, rrd_datacolumn)
+
+    info = PredictionInfo(
+        name=timegroup,
+        time=now,
+        range=time_windows[0],
+        cf=cf,
+        dsname=dsname,
+        slice=period_info.slice,
+        params=params,
+    )
+    prediction_store.save_predictions(info, data_for_pred)
+
+    return data_for_pred

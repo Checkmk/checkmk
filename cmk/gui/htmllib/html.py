@@ -273,7 +273,8 @@ class HTMLGenerator(HTMLWriter):
     def javascript_filename_for_browser(self, jsname: str) -> str | None:
         filename_for_browser = f"js/{jsname}_min-{cmk_version.__version__}.js"
         try:
-            HTMLGenerator._exists_in_web_dirs(filename_for_browser)
+            if current_app.debug:
+                HTMLGenerator._verify_file_exists_in_web_dirs(filename_for_browser)
         except FileNotFoundError:
             if current_app.debug:
                 raise RuntimeError(f"{jsname} could not be found.")
@@ -282,12 +283,7 @@ class HTMLGenerator(HTMLWriter):
         return filename_for_browser
 
     @staticmethod
-    def _exists_in_web_dirs(file_name: str) -> None:
-        """
-        show error message about missing files, if in debug mode
-        """
-        if not current_app.debug:
-            return
+    def _verify_file_exists_in_web_dirs(file_name: str) -> None:
         path = _path(cmk.utils.paths.web_dir) / file_name
         local_path = _path(cmk.utils.paths.local_web_dir) / file_name
         file_missing = not (path.exists() or local_path.exists())
@@ -296,7 +292,8 @@ class HTMLGenerator(HTMLWriter):
 
     @staticmethod
     def _css_filename_for_browser(css: str) -> str | None:
-        HTMLGenerator._exists_in_web_dirs(f"htdocs/{css}.css")
+        if current_app.debug:
+            HTMLGenerator._verify_file_exists_in_web_dirs(f"htdocs/{css}.css")
         return f"{css}-{cmk_version.__version__}.css"
 
     def html_head(

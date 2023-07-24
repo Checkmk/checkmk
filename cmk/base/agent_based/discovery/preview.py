@@ -39,6 +39,7 @@ from cmk.checkengine.discovery import (
     HostLabelPlugin,
     QualifiedDiscovery,
 )
+from cmk.checkengine.discovery._autodiscovery import _Transition, get_host_services
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.sectionparser import make_providers, Provider, store_piggybacked_sections
 from cmk.checkengine.sectionparserutils import check_parsing_errors
@@ -46,8 +47,6 @@ from cmk.checkengine.sectionparserutils import check_parsing_errors
 import cmk.base.agent_based.checking as checking
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.config import ConfigCache
-
-from .autodiscovery import _Transition, get_host_services
 
 __all__ = [
     "CheckPreview",

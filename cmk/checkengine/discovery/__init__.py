@@ -12,9 +12,10 @@ from ._autochecks import (
     set_autochecks_of_cluster,
     set_autochecks_of_real_hosts,
 )
-from ._autodiscovery import DiscoveryResult
+from ._autodiscovery import autodiscovery, automation_discovery, DiscoveryResult, get_host_services
 from ._discovery import DiscoveryPlugin
 from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabel, HostLabelPlugin
+from ._impl import execute_check_discovery
 from ._params import DiscoveryCheckParameters
 from ._services import analyse_services, discover_services, find_plugins
 from ._utils import DiscoveryMode, QualifiedDiscovery
@@ -26,13 +27,17 @@ __all__ = [
     "AutocheckEntry",
     "AutochecksManager",
     "AutochecksStore",
+    "autodiscovery",
+    "automation_discovery",
     "discover_host_labels",
     "discover_services",
     "DiscoveryCheckParameters",
     "DiscoveryMode",
     "DiscoveryResult",
     "DiscoveryPlugin",
+    "execute_check_discovery",
     "find_plugins",
+    "get_host_services",
     "HostLabel",
     "HostLabelPlugin",
     "QualifiedDiscovery",

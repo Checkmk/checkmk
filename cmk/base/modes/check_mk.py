@@ -69,7 +69,7 @@ from cmk.checkengine import (
 )
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.checkresults import ActiveCheckResult
-from cmk.checkengine.discovery import remove_autochecks_of_host
+from cmk.checkengine.discovery import execute_check_discovery, remove_autochecks_of_host
 from cmk.checkengine.error_handling import CheckResultErrorHandler
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin, InventoryPluginName
 from cmk.checkengine.submitters import get_submitter, ServiceState, Submitter
@@ -1650,7 +1650,7 @@ def mode_check_discovery(
     state, text = 3, "unknown error"
     with error_handler:
         fetched = fetcher(hostname, ip_address=None)
-        check_result = discovery.execute_check_discovery(
+        check_result = execute_check_discovery(
             hostname,
             is_cluster=config_cache.is_cluster(hostname),
             cluster_nodes=config_cache.nodes_of(hostname) or (),

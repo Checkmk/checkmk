@@ -20,33 +20,23 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.snmplib import SNMPRawData
 
-from cmk.checkengine import (
-    group_by_host,
-    HostKey,
-    ParserFunction,
-    SectionPlugin,
-    SourceInfo,
-    SummarizerFunction,
-)
+from cmk.checkengine._api import ParserFunction, SectionPlugin, SummarizerFunction
+from cmk.checkengine._parserutils import group_by_host
+from cmk.checkengine._typedefs import HostKey, SourceInfo
 from cmk.checkengine.check_table import ServiceID
 from cmk.checkengine.checking import CheckPluginName, Item
 from cmk.checkengine.checkresults import ActiveCheckResult
-from cmk.checkengine.discovery import (
-    analyse_cluster_labels,
-    AutocheckServiceWithNodes,
-    discover_host_labels,
-    DiscoveryCheckParameters,
-    DiscoveryMode,
-    DiscoveryPlugin,
-    HostLabelPlugin,
-    QualifiedDiscovery,
-)
-from cmk.checkengine.discovery.filters import ServiceFilter as _ServiceFilter
-from cmk.checkengine.discovery.filters import ServiceFilters as _ServiceFilters
 from cmk.checkengine.sectionparser import make_providers, store_piggybacked_sections
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 
-from .autodiscovery import get_host_services, ServicesByTransition
+from ._autochecks import AutocheckServiceWithNodes
+from ._autodiscovery import get_host_services, ServicesByTransition
+from ._discovery import DiscoveryPlugin
+from ._filters import ServiceFilter as _ServiceFilter
+from ._filters import ServiceFilters as _ServiceFilters
+from ._host_labels import analyse_cluster_labels, discover_host_labels, HostLabelPlugin
+from ._params import DiscoveryCheckParameters
+from ._utils import DiscoveryMode, QualifiedDiscovery
 
 __all__ = ["execute_check_discovery"]
 

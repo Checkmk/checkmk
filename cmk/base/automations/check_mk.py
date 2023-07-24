@@ -115,6 +115,8 @@ from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
 from cmk.checkengine.discovery import (
     AutocheckEntry,
     AutocheckServiceWithNodes,
+    autodiscovery,
+    automation_discovery,
     DiscoveryMode,
     DiscoveryResult,
     set_autochecks_of_cluster,
@@ -251,7 +253,7 @@ class AutomationDiscovery(DiscoveryAutomation):
             max_cachefile_age=config.max_cachefile_age(),
         )
         for hostname in hostnames:
-            results[hostname] = discovery.automation_discovery(
+            results[hostname] = automation_discovery(
                 hostname,
                 is_cluster=config_cache.is_cluster(hostname),
                 cluster_nodes=config_cache.nodes_of(hostname) or (),
@@ -553,7 +555,7 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                     console.verbose("  failed: discovery check disabled\n")
                     discovery_result, activate_host = None, False
                 else:
-                    discovery_result, activate_host = discovery.autodiscovery(
+                    discovery_result, activate_host = autodiscovery(
                         host_name,
                         is_cluster=config_cache.is_cluster(host_name),
                         cluster_nodes=config_cache.nodes_of(host_name) or (),

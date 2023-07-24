@@ -44,8 +44,18 @@ from cmk.checkengine.discovery import (
     find_plugins,
     QualifiedDiscovery,
 )
+from cmk.checkengine.discovery._autodiscovery import (
+    _get_cluster_services,
+    _get_post_discovery_autocheck_services,
+    _group_by_transition,
+    _make_diff,
+    make_table,
+    ServicesByTransition,
+    ServicesTable,
+)
+from cmk.checkengine.discovery._filters import RediscoveryParameters, ServiceFilters
+from cmk.checkengine.discovery._impl import _check_host_labels, _check_service_lists
 from cmk.checkengine.discovery._services import _find_host_plugins, _find_mgmt_plugins
-from cmk.checkengine.discovery.filters import RediscoveryParameters, ServiceFilters
 from cmk.checkengine.sectionparser import (
     ParsedSectionName,
     ParsedSectionsResolver,
@@ -57,16 +67,6 @@ from cmk.checkengine.type_defs import AgentRawDataSection, NO_SELECTION
 import cmk.base.agent_based.discovery as discovery
 import cmk.base.api.agent_based.register as agent_based_register
 import cmk.base.config as config
-from cmk.base.agent_based.discovery._discovery import _check_host_labels, _check_service_lists
-from cmk.base.agent_based.discovery.autodiscovery import (
-    _get_cluster_services,
-    _get_post_discovery_autocheck_services,
-    _group_by_transition,
-    _make_diff,
-    make_table,
-    ServicesByTransition,
-    ServicesTable,
-)
 from cmk.base.api.agent_based.type_defs import SectionPlugin as SectionPluginAPI
 from cmk.base.checkers import (
     CMKFetcher,

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import dataclasses
 
-from .filters import RediscoveryParameters
+from ._filters import RediscoveryParameters
 
 
 @dataclasses.dataclass(frozen=True)

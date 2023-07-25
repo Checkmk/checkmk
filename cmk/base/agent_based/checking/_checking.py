@@ -359,7 +359,7 @@ def service_outside_check_period(description: ServiceName, period: TimeperiodNam
     return True
 
 
-def get_check_function(
+def _get_check_function(
     config_cache: ConfigCache,
     host_name: HostName,
     is_cluster: bool,
@@ -396,7 +396,7 @@ def get_aggregated_result(
 
     This function is also called during discovery.
     """
-    check_function = get_check_function(
+    check_function = _get_check_function(
         config_cache,
         host_name,
         is_cluster=is_cluster,

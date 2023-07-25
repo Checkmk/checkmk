@@ -5,7 +5,7 @@ license: GPLv2
 distribution: check_mk
 description:
  This check retrieves the values {sysDescr}, {sysContact}, {sysName} and
- {sysLocation} and displays them. It is alwas OK.
+ {sysLocation} and displays them. It is always OK.
 
 discovery:
  One service is created for each SNMP host.

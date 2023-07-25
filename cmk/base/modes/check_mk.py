@@ -59,11 +59,12 @@ from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers.filecache import FileCacheOptions
 
 import cmk.checkengine.inventory as inventory
-from cmk.checkengine import FetcherFunction, parse_raw_data, SourceType, SummarizerFunction
+from cmk.checkengine import parse_raw_data, SummarizerFunction
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import execute_check_discovery, remove_autochecks_of_host
 from cmk.checkengine.error_handling import CheckResultErrorHandler
+from cmk.checkengine.fetcher import FetcherFunction, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin, InventoryPluginName
 from cmk.checkengine.parser import NO_SELECTION, ParserFunction, SectionNameCollection
 from cmk.checkengine.sectionparser import SectionPlugin

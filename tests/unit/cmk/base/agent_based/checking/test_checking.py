@@ -12,8 +12,8 @@ from tests.testlib.base import Scenario
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.checkengine import HostKey, SourceType
 from cmk.checkengine.checkresults import ServiceCheckResult
+from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 

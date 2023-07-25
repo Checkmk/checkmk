@@ -17,7 +17,7 @@ from cmk.snmplib import SNMPBackendEnum
 from cmk.fetchers import IPMIFetcher, PiggybackFetcher, ProgramFetcher, SNMPFetcher, TCPFetcher
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
-from cmk.checkengine import SourceType
+from cmk.checkengine.fetcher import SourceType
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters
 

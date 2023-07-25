@@ -33,11 +33,8 @@ from cmk.fetchers import FetcherType
 from cmk.checkengine import (
     CheckPlugin,
     crash_reporting,
-    HostKey,
     Parameters,
     plugin_contexts,
-    SourceInfo,
-    SourceType,
     SummarizerFunction,
 )
 from cmk.checkengine.check_table import ConfiguredService
@@ -49,6 +46,7 @@ from cmk.checkengine.checkresults import (
     state_markers,
 )
 from cmk.checkengine.error_handling import ExitSpec
+from cmk.checkengine.fetcher import HostKey, SourceInfo, SourceType
 from cmk.checkengine.inventory import (
     HWSWInventoryParameters,
     inventorize_status_data_of_real_host,

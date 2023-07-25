@@ -13,9 +13,10 @@ from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
 
-from cmk.checkengine import HostKey, plugin_contexts, SourceType
+from cmk.checkengine import plugin_contexts
 from cmk.checkengine.check_table import ServiceID
 from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.sectionparser import ParsedSectionName, Provider
 from cmk.checkengine.sectionparserutils import get_section_kwargs
 

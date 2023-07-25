@@ -24,7 +24,7 @@ from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import FileCacheOptions, MaxAge
 
-from cmk.checkengine import SourceInfo
+from cmk.checkengine.fetcher import SourceInfo
 from cmk.checkengine.parser import NO_SELECTION, Parser, SectionNameCollection, SNMPParser
 from cmk.checkengine.type_defs import AgentRawDataSectionElem
 

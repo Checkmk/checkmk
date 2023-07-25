@@ -26,7 +26,7 @@ from cmk.fetchers.filecache import (
     SNMPFileCache,
 )
 
-from cmk.checkengine import SourceInfo, SourceType
+from cmk.checkengine.fetcher import SourceInfo, SourceType
 from cmk.checkengine.parser import SectionNameCollection
 
 import cmk.base.config as config

@@ -11,7 +11,7 @@ from typing import Generic, Sized, TypeVar
 from cmk.fetchers import Fetcher
 from cmk.fetchers.filecache import FileCache, FileCacheOptions
 
-from cmk.checkengine import SourceInfo
+from cmk.checkengine.fetcher import SourceInfo
 
 _TRawData = TypeVar("_TRawData", bound=Sized)
 

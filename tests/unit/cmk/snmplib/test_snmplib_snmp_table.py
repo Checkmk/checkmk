@@ -26,7 +26,7 @@ from cmk.snmplib import (
     SpecialColumn,
 )
 
-from cmk.checkengine import SourceType
+from cmk.checkengine.fetcher import SourceType
 
 from cmk.base.config import ConfigCache
 

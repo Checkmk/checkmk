@@ -10,32 +10,17 @@ from typing import Protocol
 
 import cmk.utils.resulttype as result
 from cmk.utils.agentdatatype import AgentRawData
-from cmk.utils.cpu_tracking import Snapshot
-from cmk.utils.hostaddress import HostAddress, HostName
 from cmk.utils.rulesets import RuleSetName
 
 from cmk.snmplib import SNMPRawData
 
-from ._typedefs import SourceInfo
 from .checkresults import ActiveCheckResult
+from .fetcher import SourceInfo
 from .parser import HostSections, Parser, SectionNameCollection
 from .sectionparser import ParsedSectionName
 from .type_defs import AgentRawDataSection
 
 __all__ = ["parse_raw_data", "CheckPlugin", "SummarizerFunction"]
-
-
-class FetcherFunction(Protocol):
-    def __call__(
-        self, host_name: HostName, *, ip_address: HostAddress | None
-    ) -> Sequence[
-        tuple[
-            SourceInfo,
-            result.Result[AgentRawData | SNMPRawData, Exception],
-            Snapshot,
-        ]
-    ]:
-        ...
 
 
 class SummarizerFunction(Protocol):

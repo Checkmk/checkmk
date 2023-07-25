@@ -12,7 +12,7 @@ from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
 from cmk.utils.sectionname import MutableSectionMap
 
-from cmk.checkengine._typedefs import HostKey
+from cmk.checkengine.fetcher import HostKey
 
 from ._parser import HostSections
 

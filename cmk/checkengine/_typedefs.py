@@ -5,27 +5,12 @@
 
 from __future__ import annotations
 
-import enum
 import pprint
 from collections.abc import Iterator
-from typing import NamedTuple
 
 from cmk.utils.check_utils import ParametersTypeAlias
-from cmk.utils.hostaddress import HostAddress, HostName
 
-from cmk.fetchers import FetcherType
-
-__all__ = [
-    "HostKey",
-    "Parameters",
-    "SourceType",
-    "SourceInfo",
-]
-
-
-class HostKey(NamedTuple):
-    hostname: HostName
-    source_type: SourceType
+__all__ = ["Parameters"]
 
 
 class Parameters(ParametersTypeAlias):
@@ -46,18 +31,3 @@ class Parameters(ParametersTypeAlias):
     def __repr__(self) -> str:
         # use pformat to be testable.
         return f"{self.__class__.__name__}({pprint.pformat(self._data)})"
-
-
-class SourceType(enum.Enum):
-    """Classification of management sources vs regular hosts"""
-
-    HOST = enum.auto()
-    MANAGEMENT = enum.auto()
-
-
-class SourceInfo(NamedTuple):
-    hostname: HostName
-    ipaddress: HostAddress | None
-    ident: str
-    fetcher_type: FetcherType
-    source_type: SourceType

@@ -8,8 +8,8 @@ from collections.abc import Iterable
 from cmk.utils.hostaddress import HostName
 from cmk.utils.sectionname import SectionMap, SectionName
 
-from cmk.checkengine import HostKey, SourceType
 from cmk.checkengine.discovery._host_labels import _all_parsing_results as all_parsing_results
+from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.sectionparser import _ParsingResult as ParsingResult
 from cmk.checkengine.sectionparser import (
     ParsedSectionName,

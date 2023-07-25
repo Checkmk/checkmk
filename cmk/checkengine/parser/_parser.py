@@ -17,7 +17,7 @@ from cmk.utils.sectionname import SectionMap, SectionName
 
 from cmk.snmplib import SNMPRawData
 
-from cmk.checkengine._typedefs import SourceInfo
+from cmk.checkengine.fetcher import SourceInfo
 
 __all__ = ["NO_SELECTION", "Parser", "ParserFunction", "SectionNameCollection", "HostSections"]
 

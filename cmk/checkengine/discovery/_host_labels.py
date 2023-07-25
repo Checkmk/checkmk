@@ -18,8 +18,9 @@ from cmk.utils.log import console
 from cmk.utils.rulesets.ruleset_matcher import merge_cluster_labels
 from cmk.utils.sectionname import SectionMap
 
-from cmk.checkengine._typedefs import HostKey, Parameters, SourceType
+from cmk.checkengine._typedefs import Parameters
 from cmk.checkengine.discovery._utils import QualifiedDiscovery
+from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.sectionparser import Provider, ResolvedResult
 
 __all__ = [

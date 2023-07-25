@@ -6,8 +6,8 @@
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Final, NamedTuple
 
-from ._typedefs import HostKey
 from .checkresults import ActiveCheckResult
+from .fetcher import HostKey
 from .sectionparser import ParsedSectionContent, ParsedSectionName, Provider
 from .submitters import ServiceState
 

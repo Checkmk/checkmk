@@ -23,10 +23,10 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionMap
 from cmk.utils.servicename import ServiceName
 
-from cmk.checkengine._api import FetcherFunction, SummarizerFunction
-from cmk.checkengine._typedefs import HostKey
+from cmk.checkengine._api import SummarizerFunction
 from cmk.checkengine.check_table import ServiceID
 from cmk.checkengine.checking import CheckPluginName, Item
+from cmk.checkengine.fetcher import FetcherFunction, HostKey
 from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.sectionparser import (
     make_providers,

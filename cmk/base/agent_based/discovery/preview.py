@@ -19,7 +19,7 @@ from cmk.utils.timeperiod import timeperiod_active
 
 from cmk.automations.results import CheckPreviewEntry
 
-from cmk.checkengine import CheckPlugin, FetcherFunction, HostKey, SummarizerFunction
+from cmk.checkengine import CheckPlugin, SummarizerFunction
 from cmk.checkengine.check_table import ConfiguredService, ServiceID
 from cmk.checkengine.checking import CheckPluginName, Item
 from cmk.checkengine.checkresults import ActiveCheckResult, ServiceCheckResult
@@ -32,6 +32,7 @@ from cmk.checkengine.discovery import (
     QualifiedDiscovery,
 )
 from cmk.checkengine.discovery._autodiscovery import _Transition, get_host_services
+from cmk.checkengine.fetcher import FetcherFunction, HostKey
 from cmk.checkengine.parameters import TimespecificParameters
 from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.sectionparser import (

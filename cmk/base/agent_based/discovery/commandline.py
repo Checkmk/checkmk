@@ -19,7 +19,6 @@ from cmk.utils.log import console, section
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionMap
 
-from cmk.checkengine import FetcherFunction, HostKey
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import (
     analyse_services,
@@ -31,6 +30,7 @@ from cmk.checkengine.discovery import (
     HostLabelPlugin,
     QualifiedDiscovery,
 )
+from cmk.checkengine.fetcher import FetcherFunction, HostKey
 from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.sectionparser import (
     make_providers,

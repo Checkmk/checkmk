@@ -799,7 +799,7 @@ class ModeBIRules(ABCBIMode):
         target_pack_id = None
         if request.has_var("bulk_moveto"):
             target_pack_id = request.get_str_input_mandatory("bulk_moveto", "")
-            html.javascript('cmk.selection.update_bulk_moveto("%s")' % target_pack_id)
+            html.javascript("cmk.selection.update_bulk_moveto(%s)" % json.dumps(target_pack_id))
 
         if target_pack_id is None:
             raise MKUserError(None, _("This BI pack does not exist."))
@@ -862,7 +862,8 @@ class ModeBIRules(ABCBIMode):
 
             if request.has_var("bulk_moveto"):
                 html.javascript(
-                    'cmk.selection.update_bulk_moveto("%s")' % request.var("bulk_moveto", "")
+                    "cmk.selection.update_bulk_moveto(%s)"
+                    % json.dumps(request.var("bulk_moveto", ""))
                 )
 
             html.add_confirm_on_submit(
@@ -1437,13 +1438,15 @@ class ModeBIEditRule(ABCBIMode):
 class BIRuleForm(Dictionary):
     def render_input(self, varprefix: str, value: Any) -> None:
         super().render_input(varprefix, value)
-        html.javascript("new cmk.bi.BIRulePreview('#form_birule', '%s')" % varprefix)
+        html.javascript("new cmk.bi.BIRulePreview('#form_birule', %s)" % json.dumps(varprefix))
 
 
 class BIAggregationForm(Dictionary):
     def render_input(self, varprefix: str, value: Any) -> None:
         super().render_input(varprefix, value)
-        html.javascript("new cmk.bi.BIAggregationPreview('#form_biaggr', '%s')" % varprefix)
+        html.javascript(
+            "new cmk.bi.BIAggregationPreview('#form_biaggr', %s)" % json.dumps(varprefix)
+        )
 
 
 @page_registry.register_page("ajax_bi_rule_preview")
@@ -1997,7 +2000,7 @@ class BIModeAggregations(ABCBIMode):
         target = None
         if request.has_var("bulk_moveto"):
             target = request.var("bulk_moveto", "")
-            html.javascript('cmk.selection.update_bulk_moveto("%s")' % target)
+            html.javascript("cmk.selection.update_bulk_moveto(%s)" % json.dumps(target))
 
         target_pack = None
         if target in self._bi_packs.get_packs():
@@ -2119,7 +2122,8 @@ class BIModeAggregations(ABCBIMode):
 
             if request.has_var("bulk_moveto"):
                 html.javascript(
-                    'cmk.selection.update_bulk_moveto("%s")' % request.var("bulk_moveto", "")
+                    "cmk.selection.update_bulk_moveto(%s)"
+                    % json.dumps(request.var("bulk_moveto", ""))
                 )
 
             html.add_confirm_on_submit(

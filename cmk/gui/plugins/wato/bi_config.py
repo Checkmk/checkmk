@@ -726,7 +726,7 @@ class ModeBIRules(ABCBIMode):
         target_pack_id = None
         if html.request.has_var('bulk_moveto'):
             target_pack_id = html.request.get_str_input_mandatory('bulk_moveto', '')
-            html.javascript('cmk.selection.update_bulk_moveto("%s")' % target_pack_id)
+            html.javascript('cmk.selection.update_bulk_moveto(%s)' % json.dumps(target_pack_id))
 
         if target_pack_id is None:
             raise MKUserError(None, _("This BI pack does not exist."))
@@ -784,8 +784,8 @@ class ModeBIRules(ABCBIMode):
                 return ""
 
             if html.request.has_var('bulk_moveto'):
-                html.javascript('cmk.selection.update_bulk_moveto("%s")' %
-                                html.request.var('bulk_moveto', ''))
+                html.javascript('cmk.selection.update_bulk_moveto(%s)' %
+                                json.dumps(html.request.var('bulk_moveto', '')))
 
             html.add_confirm_on_submit("bulk_action_form",
                                        _("Do you really want to move the selected rules?"))
@@ -1278,13 +1278,14 @@ class ModeBIEditRule(ABCBIMode):
 class BIRuleForm(Dictionary):
     def render_input(self, varprefix, value):
         super().render_input(varprefix, value)
-        html.javascript("new cmk.bi.BIRulePreview('#form_birule', '%s')" % (varprefix))
+        html.javascript("new cmk.bi.BIRulePreview('#form_birule', %s)" % (json.dumps(varprefix)))
 
 
 class BIAggregationForm(Dictionary):
     def render_input(self, varprefix, value):
         super().render_input(varprefix, value)
-        html.javascript("new cmk.bi.BIAggregationPreview('#form_biaggr', '%s')" % (varprefix))
+        html.javascript("new cmk.bi.BIAggregationPreview('#form_biaggr', %s)" %
+                        (json.dumps(varprefix)))
 
 
 @page_registry.register_page("ajax_bi_rule_preview")
@@ -1767,7 +1768,7 @@ class BIModeAggregations(ABCBIMode):
         target = None
         if html.request.has_var('bulk_moveto'):
             target = html.request.var('bulk_moveto', '')
-            html.javascript('cmk.selection.update_bulk_moveto("%s")' % target)
+            html.javascript('cmk.selection.update_bulk_moveto(%s)' % json.dumps(target))
 
         target_pack = None
         if target in self._bi_packs.get_packs():
@@ -1879,8 +1880,8 @@ class BIModeAggregations(ABCBIMode):
                 return ""
 
             if html.request.has_var('bulk_moveto'):
-                html.javascript('cmk.selection.update_bulk_moveto("%s")' %
-                                html.request.var('bulk_moveto', ''))
+                html.javascript('cmk.selection.update_bulk_moveto(%s)' %
+                                json.dumps(html.request.var('bulk_moveto', '')))
 
             html.add_confirm_on_submit("bulk_action_form",
                                        _("Do you really want to move the selected aggregations?"))

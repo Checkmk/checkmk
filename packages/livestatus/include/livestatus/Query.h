@@ -94,23 +94,28 @@ private:
     std::chrono::seconds _timezone_offset;
     Logger *const _logger;
     std::vector<std::shared_ptr<Column>> _columns;
-    std::vector<std::unique_ptr<StatsColumn>> _stats_columns;
+    using StatsColumns = std::vector<std::unique_ptr<StatsColumn>>;
+    StatsColumns _stats_columns;
     std::map<RowFragment, std::vector<std::unique_ptr<Aggregator>>>
         _stats_groups;
-    std::unordered_set<std::shared_ptr<Column>> _all_columns;
+    using ColumnSet = std::unordered_set<std::shared_ptr<Column>>;
+    ColumnSet _all_columns;
 
     bool doStats() const;
     void doWait();
-    void parseFilterLine(char *line, FilterStack &filters);
-    void parseStatsLine(char *line);
-    void parseStatsGroupLine(char *line);
+    void parseFilterLine(char *line, FilterStack &filters,
+                         ColumnSet &all_columnsa);
+    void parseStatsLine(char *line, StatsColumns &stats_columns,
+                        ColumnSet &all_columns);
     static void parseAndOrLine(char *line, Filter::Kind kind,
                                const LogicalConnective &connective,
                                FilterStack &filters);
     static void parseNegateLine(char *line, FilterStack &filters);
-    void parseStatsAndOrLine(char *line, const LogicalConnective &connective);
-    void parseStatsNegateLine(char *line);
-    void parseColumnsLine(const char *line);
+    static void parseStatsAndOrLine(char *line,
+                                    const LogicalConnective &connective,
+                                    StatsColumns &stats_columns);
+    static void parseStatsNegateLine(char *line, StatsColumns &stats_columns);
+    void parseColumnsLine(const char *line, ColumnSet &all_columns);
     void parseColumnHeadersLine(char *line);
     void parseLimitLine(char *line);
     void parseTimelimitLine(char *line);

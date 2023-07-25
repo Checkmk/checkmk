@@ -96,7 +96,7 @@ Query::Query(const std::list<std::string> &lines, Table &table,
         char *arguments = rest_copy.data();
         try {
             if (header == "Filter") {
-                parseFilterLine(arguments, filters);
+                parseFilterLine(arguments, filters, _all_columns);
             } else if (header == "Or") {
                 parseAndOrLine(arguments, Filter::Kind::row, OringFilter::make,
                                filters);
@@ -106,17 +106,21 @@ Query::Query(const std::list<std::string> &lines, Table &table,
             } else if (header == "Negate") {
                 parseNegateLine(arguments, filters);
             } else if (header == "StatsOr") {
-                parseStatsAndOrLine(arguments, OringFilter::make);
+                parseStatsAndOrLine(arguments, OringFilter::make,
+                                    _stats_columns);
             } else if (header == "StatsAnd") {
-                parseStatsAndOrLine(arguments, AndingFilter::make);
+                parseStatsAndOrLine(arguments, AndingFilter::make,
+                                    _stats_columns);
             } else if (header == "StatsNegate") {
-                parseStatsNegateLine(arguments);
+                parseStatsNegateLine(arguments, _stats_columns);
             } else if (header == "Stats") {
-                parseStatsLine(arguments);
+                parseStatsLine(arguments, _stats_columns, _all_columns);
             } else if (header == "StatsGroupBy") {
-                parseStatsGroupLine(arguments);
+                Warning(_logger)
+                    << "Warning: StatsGroupBy is deprecated. Please use Columns instead.";
+                parseColumnsLine(arguments, _all_columns);
             } else if (header == "Columns") {
-                parseColumnsLine(arguments);
+                parseColumnsLine(arguments, _all_columns);
             } else if (header == "ColumnHeaders") {
                 parseColumnHeadersLine(arguments);
             } else if (header == "Limit") {
@@ -134,7 +138,7 @@ Query::Query(const std::list<std::string> &lines, Table &table,
             } else if (header == "KeepAlive") {
                 parseKeepAliveLine(arguments);
             } else if (header == "WaitCondition") {
-                parseFilterLine(arguments, wait_conditions);
+                parseFilterLine(arguments, wait_conditions, _all_columns);
             } else if (header == "WaitConditionAnd") {
                 parseAndOrLine(arguments, Filter::Kind::wait_condition,
                                AndingFilter::make, wait_conditions);
@@ -222,30 +226,32 @@ void Query::parseNegateLine(char *line, FilterStack &filters) {
     filters.push_back(top->negate());
 }
 
-void Query::parseStatsAndOrLine(char *line,
-                                const LogicalConnective &connective) {
+// static
+void Query::parseStatsAndOrLine(char *line, const LogicalConnective &connective,
+                                StatsColumns &stats_columns) {
     auto number = nextNonNegativeIntegerArgument(&line);
     Filters subfilters;
     for (auto i = 0; i < number; ++i) {
-        if (_stats_columns.empty()) {
+        if (stats_columns.empty()) {
             stack_underflow(number, i);
         }
-        subfilters.push_back(_stats_columns.back()->stealFilter());
-        _stats_columns.pop_back();
+        subfilters.push_back(stats_columns.back()->stealFilter());
+        stats_columns.pop_back();
     }
     std::reverse(subfilters.begin(), subfilters.end());
-    _stats_columns.push_back(std::make_unique<StatsColumnCount>(
+    stats_columns.push_back(std::make_unique<StatsColumnCount>(
         connective(Filter::Kind::stats, subfilters)));
 }
 
-void Query::parseStatsNegateLine(char *line) {
+// static
+void Query::parseStatsNegateLine(char *line, StatsColumns &stats_columns) {
     checkNoArguments(line);
-    if (_stats_columns.empty()) {
+    if (stats_columns.empty()) {
         stack_underflow(1, 0);
     }
-    auto to_negate = _stats_columns.back()->stealFilter();
-    _stats_columns.pop_back();
-    _stats_columns.push_back(
+    auto to_negate = stats_columns.back()->stealFilter();
+    stats_columns.pop_back();
+    stats_columns.push_back(
         std::make_unique<StatsColumnCount>(to_negate->negate()));
 }
 
@@ -361,7 +367,8 @@ const std::map<std::string, AggregationFactory> stats_ops{
     {"avginv", []() { return std::make_unique<AvgInvAggregation>(); }}};
 }  // namespace
 
-void Query::parseStatsLine(char *line) {
+void Query::parseStatsLine(char *line, StatsColumns &stats_columns,
+                           ColumnSet &all_columns) {
     // first token is either aggregation operator or column name
     std::shared_ptr<Column> column;
     std::unique_ptr<StatsColumn> sc;
@@ -377,33 +384,28 @@ void Query::parseStatsLine(char *line) {
         column = _table.column(nextStringArgument(&line));
         sc = std::make_unique<StatsColumnOp>(it->second, column.get());
     }
-    _stats_columns.push_back(std::move(sc));
-    _all_columns.insert(column);
+    stats_columns.push_back(std::move(sc));
+    all_columns.insert(column);
     // Default to old behaviour: do not output column headers if we do Stats
     // queries
     _show_column_headers = false;
 }
 
-void Query::parseFilterLine(char *line, FilterStack &filters) {
+void Query::parseFilterLine(char *line, FilterStack &filters,
+                            ColumnSet &all_columns) {
     auto column = _table.column(nextStringArgument(&line));
     auto rel_op = relationalOperatorForName(nextStringArgument(&line));
     auto operand = mk::lstrip(line);
     auto sub_filter = column->createFilter(Filter::Kind::row, rel_op, operand);
     filters.push_back(std::move(sub_filter));
-    _all_columns.insert(column);
+    all_columns.insert(column);
 }
 
 void Query::parseAuthUserHeader(const char *line) {
     user_ = _table.core()->find_user(line);
 }
 
-void Query::parseStatsGroupLine(char *line) {
-    Warning(_logger)
-        << "Warning: StatsGroupBy is deprecated. Please use Columns instead.";
-    parseColumnsLine(line);
-}
-
-void Query::parseColumnsLine(const char *line) {
+void Query::parseColumnsLine(const char *line, ColumnSet &all_columns) {
     const std::string str = line;
     const std::string sep = " \t\n\v\f\r";
     for (auto pos = str.find_first_not_of(sep); pos != std::string::npos;) {
@@ -426,7 +428,7 @@ void Query::parseColumnsLine(const char *line) {
                 column_name, "non-existing column", ColumnOffsets{});
         }
         _columns.push_back(column);
-        _all_columns.insert(column);
+        all_columns.insert(column);
     }
     _show_column_headers = false;
 }

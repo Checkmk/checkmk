@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import assert_never, Final
 
-from ._i18n import _
 from ._mkp import PackagePart
 
 
@@ -90,7 +89,7 @@ class PathConfig:
         )
 
 
-def ui_title(part: PackagePart) -> str:
+def ui_title(part: PackagePart, _: Callable[[str], str]) -> str:
     match part:
         case PackagePart.EC_RULE_PACKS:
             return _("Event Console rule packs")

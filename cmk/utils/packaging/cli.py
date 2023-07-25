@@ -61,7 +61,7 @@ def _render_table(headers: list[str], rows: Iterable[list[str]]) -> str:
 def _to_text(manifest: Manifest) -> str:
     valid_until_text = manifest.version_usable_until or "No version limitation"
     files = "".join(
-        "\n  {}{}".format(ui_title(part), "".join(f"\n    {f}" for f in fs))
+        "\n  {}{}".format(ui_title(part, lambda s: s), "".join(f"\n    {f}" for f in fs))
         for part, fs in manifest.files.items()
     )
     return (

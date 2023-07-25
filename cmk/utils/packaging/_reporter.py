@@ -94,7 +94,7 @@ def files_inventory(installer: Installer, path_config: PathConfig) -> Sequence[F
             package=package_id.name if package_id else "",
             version=package_id.version if package_id else "",
             part_id=part.ident if part else "",
-            part_title=ui_title(part) if part else "",
+            part_title=ui_title(part, lambda s: s) if part else "",
             mode=_get_mode((path_config.get_path(part) / file) if part else file),
         )
         for part, file, package_id in files_and_packages

@@ -399,9 +399,9 @@ def _get_range_filters():
     ]
 
 
-def transform_pre_2_1_range_filters() -> Callable[
-    [FilterName, FilterHTTPVariables], tuple[FilterName, FilterHTTPVariables]
-]:
+def transform_pre_2_1_range_filters() -> (
+    Callable[[FilterName, FilterHTTPVariables], tuple[FilterName, FilterHTTPVariables]]
+):
     # Update Visual Range Filters
     range_filters = _get_range_filters()
 
@@ -459,7 +459,6 @@ class _CombinedVisualsCache(Generic[T]):
         self,
         internal_to_runtime_transformer: Callable[[dict[str, Any]], T],
     ) -> CustomUserVisuals:
-
         if self._may_use_cache():
             if (content := self._read_from_cache()) is not None:
                 self._set_permissions(content)
@@ -737,7 +736,7 @@ def available(  # pylint: disable=too-many-branches
                 visuals[n] = visual
 
     # 5. packaged visuals
-    if user.may("general.see_packaged_" + what):
+    if user.may("general.see_packaged_" + what) and n not in visuals:
         for (u, n), visual in all_visuals.items():
             if not visual["packaged"]:
                 continue
@@ -803,7 +802,6 @@ def page_list(  # pylint: disable=too-many-branches
     check_deletable_handler: Callable[[dict[tuple[UserId, VisualName], T], UserId, str], bool]
     | None = None,
 ) -> None:
-
     if custom_columns is None:
         custom_columns = []
 
@@ -877,7 +875,6 @@ def page_list(  # pylint: disable=too-many-branches
 
         html.h3(title1, class_="table")
         with table_element(css="data", limit=None) as table:
-
             for owner, visual_name, visual in visual_group:
                 table.row(css=["data"])
 
@@ -1152,7 +1149,7 @@ def _partition_visuals(
     keys_sorted = sorted(visuals.keys(), key=lambda x: (x[1], x[0]))
 
     my_visuals, foreign_visuals, builtin_visuals, packaged_visuals = [], [], [], []
-    for (owner, visual_name) in keys_sorted:
+    for owner, visual_name in keys_sorted:
         visual = visuals[(owner, visual_name)]
         if owner == UserId.builtin() and (
             (not visual["packaged"] and not user.may(f"{what[:-1]}.{visual_name}"))

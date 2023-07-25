@@ -76,7 +76,6 @@ from cmk.base.config import ConfigCache
 __all__ = [
     "execute_checkmk_checks",
     "check_host_services",
-    "get_monitoring_data_kwargs",
     "get_aggregated_result",
 ]
 

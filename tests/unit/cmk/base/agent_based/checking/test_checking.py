@@ -17,7 +17,7 @@ from cmk.checkengine.fetcher import HostKey, SourceType
 from cmk.checkengine.legacy import LegacyCheckParameters
 from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
 
-import cmk.base.agent_based.checking._checking as checking
+import cmk.base.agent_based.checking as checking
 import cmk.base.config as config
 from cmk.base.api.agent_based.checking_classes import consume_check_results, Metric, Result, State
 from cmk.base.plugins.agent_based.agent_based_api.v1.type_defs import CheckResult

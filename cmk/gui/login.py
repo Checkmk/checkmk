@@ -47,7 +47,11 @@ from cmk.gui.utils.user_errors import user_errors
 
 
 def register(page_registry: PageRegistry) -> None:
-    page_registry.register_page("login")(LoginPage)
+    # TODO: only overwrite this in cse specific files
+    if cmk_version.edition() == cmk_version.Edition.CSE:
+        page_registry.register_page("login")(SaasLoginPage)
+    else:
+        page_registry.register_page("login")(LoginPage)
     page_registry.register_page("logout")(LogoutPage)
 
 
@@ -99,6 +103,11 @@ def del_auth_cookie() -> None:
         return
 
     response.unset_http_cookie(cookie_name)
+
+
+class SaasLoginPage(Page):
+    def page(self) -> None:
+        raise HTTPRedirect("cognito_sso.py")
 
 
 # TODO: Needs to be cleaned up. When using HTTP header auth or web server auth it is not

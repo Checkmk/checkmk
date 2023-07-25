@@ -62,15 +62,16 @@ class IHostGroup;
 class IServiceGroup;
 
 class DummyMonitoringCore : public ICore {
-    const IHost *find_host(const std::string & /*name*/) override {
+    [[nodiscard]] const IHost *find_host(
+        const std::string & /*name*/) const override {
         return nullptr;
     }
     [[nodiscard]] const IHostGroup *find_hostgroup(
         const std::string & /* name */) const override {
         return nullptr;
     }
-    std::unique_ptr<const IHost> getHostByDesignation(
-        const std::string & /*designation*/) override {
+    [[nodiscard]] std::unique_ptr<const IHost> getHostByDesignation(
+        const std::string & /*designation*/) const override {
         return {};
     }
     bool all_of_hosts(
@@ -81,18 +82,18 @@ class DummyMonitoringCore : public ICore {
         const std::function<bool(const IService &)> & /*pred*/) const override {
         return true;
     }
-    const IService *find_service(
+    [[nodiscard]] const IService *find_service(
         const std::string & /*host_name*/,
-        const std::string & /*service_description*/) override {
+        const std::string & /*service_description*/) const override {
         return {};
     }
-    const IContactGroup *find_contactgroup(
-        const std::string & /*name*/) override {
+    [[nodiscard]] const IContactGroup *find_contactgroup(
+        const std::string & /*name*/) const override {
         return {};
     }
 
-    const IServiceGroup *find_servicegroup(
-        const std::string & /*name*/) override {
+    [[nodiscard]] const IServiceGroup *find_servicegroup(
+        const std::string & /*name*/) const override {
         return nullptr;
     }
 
@@ -104,8 +105,8 @@ class DummyMonitoringCore : public ICore {
         const std::function<bool(const IContact &)> & /*pred*/) const override {
         return true;
     }
-    std::unique_ptr<const User> find_user(
-        const std::string & /*name*/) override {
+    [[nodiscard]] std::unique_ptr<const User> find_user(
+        const std::string & /*name*/) const override {
         return {};
     }
 
@@ -194,7 +195,7 @@ class DummyMonitoringCore : public ICore {
         return {};
     }
 
-    bool mkeventdEnabled() override { return {}; }
+    [[nodiscard]] bool mkeventdEnabled() const override { return {}; }
 
     [[nodiscard]] std::unique_ptr<const IPaths> paths() const override {
         return {};
@@ -281,13 +282,15 @@ class DummyMonitoringCore : public ICore {
         return {};
     }
 
-    Encoding dataEncoding() override { return {}; }
-    size_t maxResponseSize() override { return {}; }
-    size_t maxCachedMessages() override { return {}; }
+    [[nodiscard]] Encoding dataEncoding() const override { return {}; }
+    [[nodiscard]] size_t maxResponseSize() const override { return {}; }
+    [[nodiscard]] size_t maxCachedMessages() const override { return {}; }
 
-    Logger *loggerCore() override { return Logger::getLogger("test"); }
-    Logger *loggerLivestatus() override { return {}; }
-    Logger *loggerRRD() override { return {}; }
+    [[nodiscard]] Logger *loggerCore() const override {
+        return Logger::getLogger("test");
+    }
+    [[nodiscard]] Logger *loggerLivestatus() const override { return {}; }
+    [[nodiscard]] Logger *loggerRRD() const override { return {}; }
 
     Triggers &triggers() override { return triggers_; }
 

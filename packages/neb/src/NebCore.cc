@@ -142,7 +142,7 @@ const IHostGroup *NebCore::ihostgroup(const ::hostgroup *handle) const {
     return it == ihostgroups_by_handle_.end() ? nullptr : it->second.get();
 }
 
-const IHost *NebCore::find_host(const std::string &name) {
+const IHost *NebCore::find_host(const std::string &name) const {
     // Older Nagios headers are not const-correct... :-P
     const auto *handle = ::find_host(const_cast<char *>(name.c_str()));
     return handle == nullptr ? nullptr : ihost(handle);
@@ -169,7 +169,7 @@ bool NebCore::all_of_services(
 }
 
 std::unique_ptr<const IHost> NebCore::getHostByDesignation(
-    const std::string &designation) {
+    const std::string &designation) const {
     auto it = _hosts_by_designation.find(mk::unsafe_tolower(designation));
     return it == _hosts_by_designation.end()
                ? nullptr
@@ -187,8 +187,9 @@ const IServiceGroup *NebCore::iservicegroup(
     return it == iservicegroups_by_handle_.end() ? nullptr : it->second.get();
 }
 
-const IService *NebCore::find_service(const std::string &host_name,
-                                      const std::string &service_description) {
+const IService *NebCore::find_service(
+    const std::string &host_name,
+    const std::string &service_description) const {
     // Older Nagios headers are not const-correct... :-P
     const auto *handle =
         ::find_service(const_cast<char *>(host_name.c_str()),
@@ -196,14 +197,14 @@ const IService *NebCore::find_service(const std::string &host_name,
     return handle == nullptr ? nullptr : iservice(handle);
 }
 
-const IContactGroup *NebCore::find_contactgroup(const std::string &name) {
+const IContactGroup *NebCore::find_contactgroup(const std::string &name) const {
     // Older Nagios headers are not const-correct... :-P
     auto it = icontactgroups_.find(
         ::find_contactgroup(const_cast<char *>(name.c_str())));
     return it == icontactgroups_.end() ? nullptr : it->second.get();
 }
 
-const IServiceGroup *NebCore::find_servicegroup(const std::string &name) {
+const IServiceGroup *NebCore::find_servicegroup(const std::string &name) const {
     const auto *handle = ::find_servicegroup(const_cast<char *>(name.c_str()));
     return handle == nullptr ? nullptr : iservicegroup(handle);
 }
@@ -221,7 +222,7 @@ bool NebCore::all_of_contacts(
         [&pred](const auto &entry) { return pred(*entry.second); });
 }
 
-std::unique_ptr<const User> NebCore::find_user(const std::string &name) {
+std::unique_ptr<const User> NebCore::find_user(const std::string &name) const {
     if (const auto *ctc = find_contact(name)) {
         return std::make_unique<AuthUser>(
             *ctc, _authorization._service, _authorization._group,
@@ -387,7 +388,7 @@ bool NebCore::all_of_service_groups(
     return true;
 }
 
-bool NebCore::mkeventdEnabled() {
+bool NebCore::mkeventdEnabled() const {
     if (const char *config_mkeventd = getenv("CONFIG_MKEVENTD")) {
         return config_mkeventd == std::string("on");
     }
@@ -458,13 +459,15 @@ std::chrono::system_clock::time_point NebCore::stateFileCreatedTime() const {
     return state_file_created_;
 }
 
-Encoding NebCore::dataEncoding() { return _data_encoding; }
-size_t NebCore::maxResponseSize() { return _limits._max_response_size; }
-size_t NebCore::maxCachedMessages() { return _limits._max_cached_messages; }
+Encoding NebCore::dataEncoding() const { return _data_encoding; }
+size_t NebCore::maxResponseSize() const { return _limits._max_response_size; }
+size_t NebCore::maxCachedMessages() const {
+    return _limits._max_cached_messages;
+}
 
-Logger *NebCore::loggerCore() { return _logger_livestatus; }
-Logger *NebCore::loggerLivestatus() { return _logger_livestatus; }
-Logger *NebCore::loggerRRD() { return _logger_livestatus; }
+Logger *NebCore::loggerCore() const { return _logger_livestatus; }
+Logger *NebCore::loggerLivestatus() const { return _logger_livestatus; }
+Logger *NebCore::loggerRRD() const { return _logger_livestatus; }
 
 Triggers &NebCore::triggers() { return _triggers; }
 

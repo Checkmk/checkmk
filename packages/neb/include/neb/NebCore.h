@@ -98,53 +98,60 @@ public:
     const IService *iservice(const ::service *handle) const;
     const IServiceGroup *iservicegroup(const ::servicegroup *handle) const;
 
-    const IHost *find_host(const std::string &name) override;
-    const IHostGroup *find_hostgroup(const std::string &name) const override;
-    std::unique_ptr<const IHost> getHostByDesignation(
-        const std::string &designation) override;
+    [[nodiscard]] const IHost *find_host(
+        const std::string &name) const override;
+    [[nodiscard]] const IHostGroup *find_hostgroup(
+        const std::string &name) const override;
+    [[nodiscard]] std::unique_ptr<const IHost> getHostByDesignation(
+        const std::string &designation) const override;
     bool all_of_hosts(
         const std::function<bool(const IHost &)> &pred) const override;
     bool all_of_services(
         const std::function<bool(const IService &)> &pred) const override;
 
-    const IService *find_service(
+    [[nodiscard]] const IService *find_service(
         const std::string &host_name,
-        const std::string &service_description) override;
-    const IServiceGroup *find_servicegroup(const std::string &name) override;
-    const IContactGroup *find_contactgroup(const std::string &name) override;
+        const std::string &service_description) const override;
+    [[nodiscard]] const IServiceGroup *find_servicegroup(
+        const std::string &name) const override;
+    [[nodiscard]] const IContactGroup *find_contactgroup(
+        const std::string &name) const override;
 
-    const IContact *find_contact(const std::string &name) const override;
+    [[nodiscard]] const IContact *find_contact(
+        const std::string &name) const override;
     bool all_of_contacts(
         const std::function<bool(const IContact &)> &pred) const override;
 
-    std::unique_ptr<const User> find_user(const std::string &name) override;
+    [[nodiscard]] std::unique_ptr<const User> find_user(
+        const std::string &name) const override;
 
-    std::chrono::system_clock::time_point last_logfile_rotation()
+    [[nodiscard]] std::chrono::system_clock::time_point last_logfile_rotation()
         const override;
-    std::chrono::system_clock::time_point last_config_change() const override;
-    size_t maxLinesPerLogFile() const override;
+    [[nodiscard]] std::chrono::system_clock::time_point last_config_change()
+        const override;
+    [[nodiscard]] size_t maxLinesPerLogFile() const override;
 
-    Command find_command(const std::string &name) const override;
-    std::vector<Command> commands() const override;
+    [[nodiscard]] Command find_command(const std::string &name) const override;
+    [[nodiscard]] std::vector<Command> commands() const override;
 
-    std::vector<std::unique_ptr<const IComment>> comments_unlocked(
+    [[nodiscard]] std::vector<std::unique_ptr<const IComment>>
+    comments_unlocked(const IHost &hst) const override;
+    [[nodiscard]] std::vector<std::unique_ptr<const IComment>> comments(
         const IHost &hst) const override;
-    std::vector<std::unique_ptr<const IComment>> comments(
-        const IHost &hst) const override;
-    std::vector<std::unique_ptr<const IComment>> comments_unlocked(
+    [[nodiscard]] std::vector<std::unique_ptr<const IComment>>
+    comments_unlocked(const IService &svc) const override;
+    [[nodiscard]] std::vector<std::unique_ptr<const IComment>> comments(
         const IService &svc) const override;
-    std::vector<std::unique_ptr<const IComment>> comments(
-        const IService &svc) const override;
-    bool all_of_comments(
+    [[nodiscard]] bool all_of_comments(
         const std::function<bool(const IComment &)> &pred) const override;
 
-    std::vector<std::unique_ptr<const IDowntime>> downtimes_unlocked(
+    [[nodiscard]] std::vector<std::unique_ptr<const IDowntime>>
+    downtimes_unlocked(const IHost &hst) const override;
+    [[nodiscard]] std::vector<std::unique_ptr<const IDowntime>> downtimes(
         const IHost &hst) const override;
-    std::vector<std::unique_ptr<const IDowntime>> downtimes(
-        const IHost &hst) const override;
-    std::vector<std::unique_ptr<const IDowntime>> downtimes_unlocked(
-        const IService &svc) const override;
-    std::vector<std::unique_ptr<const IDowntime>> downtimes(
+    [[nodiscard]] std::vector<std::unique_ptr<const IDowntime>>
+    downtimes_unlocked(const IService &svc) const override;
+    [[nodiscard]] std::vector<std::unique_ptr<const IDowntime>> downtimes(
         const IService &svc) const override;
     bool all_of_downtimes(
         const std::function<bool(const IDowntime &)> &pred) const override;
@@ -161,71 +168,74 @@ public:
     bool all_of_service_groups(
         const std::function<bool(const IServiceGroup &)> &pred) const override;
 
-    bool mkeventdEnabled() override;
+    [[nodiscard]] bool mkeventdEnabled() const override;
 
-    int32_t pid() const override;
+    [[nodiscard]] int32_t pid() const override;
     [[nodiscard]] std::unique_ptr<const IGlobalFlags> globalFlags()
         const override;
     [[nodiscard]] std::unique_ptr<const IPaths> paths() const override;
-    std::chrono::system_clock::time_point programStartTime() const override;
-    std::chrono::system_clock::time_point lastCommandCheckTime() const override;
-    int32_t intervalLength() const override;
-    int32_t numHosts() const override;
-    int32_t numServices() const override;
-    std::string programVersion() const override;
-    std::string edition() const override;
+    [[nodiscard]] std::chrono::system_clock::time_point programStartTime()
+        const override;
+    [[nodiscard]] std::chrono::system_clock::time_point lastCommandCheckTime()
+        const override;
+    [[nodiscard]] int32_t intervalLength() const override;
+    [[nodiscard]] int32_t numHosts() const override;
+    [[nodiscard]] int32_t numServices() const override;
+    [[nodiscard]] std::string programVersion() const override;
+    [[nodiscard]] std::string edition() const override;
 
-    int32_t externalCommandBufferSlots() const override;
-    int32_t externalCommandBufferUsage() const override;
-    int32_t externalCommandBufferMax() const override;
+    [[nodiscard]] int32_t externalCommandBufferSlots() const override;
+    [[nodiscard]] int32_t externalCommandBufferUsage() const override;
+    [[nodiscard]] int32_t externalCommandBufferMax() const override;
 
-    int32_t livestatusActiveConnectionsNum() const override;
-    std::string livestatusVersion() const override;
-    int32_t livestatusQueuedConnectionsNum() const override;
-    int32_t livestatusThreadsNum() const override;
-    double livestatusUsage() const override;
+    [[nodiscard]] int32_t livestatusActiveConnectionsNum() const override;
+    [[nodiscard]] std::string livestatusVersion() const override;
+    [[nodiscard]] int32_t livestatusQueuedConnectionsNum() const override;
+    [[nodiscard]] int32_t livestatusThreadsNum() const override;
+    [[nodiscard]] double livestatusUsage() const override;
 
-    double averageLatencyGeneric() const override;
-    double averageLatencyRealTime() const override;
-    double averageLatencyFetcher() const override;
-    double averageLatencyChecker() const override;
+    [[nodiscard]] double averageLatencyGeneric() const override;
+    [[nodiscard]] double averageLatencyRealTime() const override;
+    [[nodiscard]] double averageLatencyFetcher() const override;
+    [[nodiscard]] double averageLatencyChecker() const override;
 
-    double helperUsageGeneric() const override;
-    double helperUsageRealTime() const override;
-    double helperUsageFetcher() const override;
-    double helperUsageChecker() const override;
+    [[nodiscard]] double helperUsageGeneric() const override;
+    [[nodiscard]] double helperUsageRealTime() const override;
+    [[nodiscard]] double helperUsageFetcher() const override;
+    [[nodiscard]] double helperUsageChecker() const override;
 
-    bool hasEventHandlers() const override;
+    [[nodiscard]] bool hasEventHandlers() const override;
 
-    double averageRunnableJobsFetcher() const override;
-    double averageRunnableJobsChecker() const override;
+    [[nodiscard]] double averageRunnableJobsFetcher() const override;
+    [[nodiscard]] double averageRunnableJobsChecker() const override;
 
-    std::chrono::system_clock::time_point stateFileCreatedTime() const override;
+    [[nodiscard]] std::chrono::system_clock::time_point stateFileCreatedTime()
+        const override;
 
-    Encoding dataEncoding() override;
-    size_t maxResponseSize() override;
-    size_t maxCachedMessages() override;
+    [[nodiscard]] Encoding dataEncoding() const override;
+    [[nodiscard]] size_t maxResponseSize() const override;
+    [[nodiscard]] size_t maxCachedMessages() const override;
 
-    Logger *loggerCore() override;
-    Logger *loggerLivestatus() override;
-    Logger *loggerRRD() override;
+    [[nodiscard]] Logger *loggerCore() const override;
+    [[nodiscard]] Logger *loggerLivestatus() const override;
+    [[nodiscard]] Logger *loggerRRD() const override;
 
     Triggers &triggers() override;
 
-    size_t numQueuedNotifications() const override;
-    size_t numQueuedAlerts() const override;
-    size_t numCachedLogMessages() override;
+    [[nodiscard]] size_t numQueuedNotifications() const override;
+    [[nodiscard]] size_t numQueuedAlerts() const override;
+    [[nodiscard]] size_t numCachedLogMessages() override;
     [[nodiscard]] bool isPnpGraphPresent(const IHost &h) const override;
     [[nodiscard]] bool isPnpGraphPresent(const IService &s) const override;
-    std::vector<std::string> metrics(const IHost &h,
-                                     Logger *logger) const override;
-    std::vector<std::string> metrics(const IService &s,
-                                     Logger *logger) const override;
+    [[nodiscard]] std::vector<std::string> metrics(
+        const IHost &h, Logger *logger) const override;
+    [[nodiscard]] std::vector<std::string> metrics(
+        const IService &s, Logger *logger) const override;
 
-    MetricLocation metricLocation(const std::string &host_name,
-                                  const std::string &service_description,
-                                  const Metric::Name &var) const override;
-    bool pnp4nagiosEnabled() const override;
+    [[nodiscard]] MetricLocation metricLocation(
+        const std::string &host_name, const std::string &service_description,
+        const Metric::Name &var) const override;
+    [[nodiscard]] bool pnp4nagiosEnabled() const override;
 
     // specific for NebCore
     bool answerRequest(InputBuffer &input, OutputBuffer &output);

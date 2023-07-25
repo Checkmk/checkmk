@@ -111,6 +111,7 @@ def execute_checkmk_checks(
     params: HWSWInventoryParameters,
     services: Sequence[ConfiguredService],
     get_effective_host: Callable[[HostName, ServiceName], HostName],
+    get_check_period: Callable[[ServiceName], TimeperiodName | None],
     run_plugin_names: Container[CheckPluginName],
     perfdata_with_times: bool,
     submitter: Submitter,
@@ -133,6 +134,7 @@ def execute_checkmk_checks(
             check_plugins=check_plugins,
             run_plugin_names=run_plugin_names,
             get_effective_host=get_effective_host,
+            get_check_period=get_check_period,
             submitter=submitter,
             rtc_package=None,
         )
@@ -292,6 +294,7 @@ def check_host_services(
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     run_plugin_names: Container[CheckPluginName],
     get_effective_host: Callable[[HostName, ServiceName], HostName],
+    get_check_period: Callable[[ServiceName], TimeperiodName | None],
     submitter: Submitter,
     rtc_package: AgentRawData | None,
 ) -> Sequence[_AggregatedResult]:
@@ -306,11 +309,11 @@ def check_host_services(
             host_name, store_changes=not submitter.dry_run
         ) as value_store_manager:
             submittables: list[_AggregatedResult] = []
-            for service in _filter_services_to_check(
-                services=services,
-                run_plugin_names=run_plugin_names,
-                config_cache=config_cache,
-                host_name=host_name,
+            for service in (
+                s
+                for s in services
+                if s.check_plugin_name in run_plugin_names
+                and not service_outside_check_period(s.description, get_check_period(s.description))
             ):
                 if service.check_plugin_name not in check_plugins:
                     submittable = _AggregatedResult(
@@ -344,28 +347,6 @@ def check_host_services(
         )
 
     return submittables
-
-
-def _filter_services_to_check(
-    *,
-    services: Sequence[ConfiguredService],
-    run_plugin_names: Container[CheckPluginName],
-    config_cache: ConfigCache,
-    host_name: HostName,
-) -> Sequence[ConfiguredService]:
-    """Filter list of services to check
-
-    If check types are specified in `run_plugin_names` (e.g. via command line), drop all others
-    """
-    return [
-        service
-        for service in services
-        if service.check_plugin_name in run_plugin_names
-        and not service_outside_check_period(
-            service.description,
-            config_cache.check_period_of_service(host_name, service.description),
-        )
-    ]
 
 
 def service_outside_check_period(description: ServiceName, period: TimeperiodName | None) -> bool:

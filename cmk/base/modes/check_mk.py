@@ -2078,6 +2078,7 @@ def mode_check(
             services=config_cache.configured_services(hostname),
             run_plugin_names=run_plugin_names,
             get_effective_host=config_cache.effective_host,
+            get_check_period=partial(config_cache.check_period_of_service, hostname),
             submitter=get_submitter_(
                 check_submission=config.check_submission,
                 monitoring_core=config.monitoring_core,

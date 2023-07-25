@@ -488,7 +488,7 @@ def available(  # pylint: disable=too-many-branches
                 visuals[n] = visual
 
     # 5. packaged visuals
-    if user.may("general.see_packaged_" + what):
+    if user.may("general.see_packaged_" + what) and n not in visuals:
         for (u, n), visual in all_visuals.items():
             if not visual["packaged"]:
                 continue

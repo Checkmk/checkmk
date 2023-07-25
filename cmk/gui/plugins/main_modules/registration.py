@@ -59,6 +59,7 @@ from cmk.gui.views.join_service_rows import join_service_row_post_processor
 from cmk.gui.views.layout import layout_registry
 from cmk.gui.views.row_post_processing import register_row_post_processor
 from cmk.gui.views.sorter import sorter_registry
+from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
 from cmk.gui.watolib.automation_commands import automation_command_registry
@@ -139,7 +140,7 @@ def register() -> None:
     )
     robotmk.register(cmk.gui.pages.page_registry)
     cron.register(cmk.gui.pages.page_registry)
-    node_visualization.register(cmk.gui.pages.page_registry)
+    node_visualization.register(cmk.gui.pages.page_registry, filter_registry)
     notifications.register(cmk.gui.pages.page_registry)
     user_message.register(cmk.gui.pages.page_registry)
     valuespec.register(cmk.gui.pages.page_registry)

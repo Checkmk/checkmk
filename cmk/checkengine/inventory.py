@@ -33,7 +33,6 @@ from cmk.utils.structured_data import (
 )
 from cmk.utils.validatedstr import ValidatedString
 
-from ._api import SummarizerFunction
 from .checkresults import ActiveCheckResult
 from .fetcher import FetcherFunction, HostKey, SourceType
 from .parser import group_by_host, HostSections, ParserFunction
@@ -46,6 +45,7 @@ from .sectionparser import (
     store_piggybacked_sections,
 )
 from .sectionparserutils import check_parsing_errors, get_cache_info, get_section_kwargs
+from .summarize import SummarizerFunction
 
 __all__ = [
     "InventoryPluginName",

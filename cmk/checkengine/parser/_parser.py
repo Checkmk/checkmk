@@ -8,6 +8,7 @@ from __future__ import annotations
 import abc
 import enum
 from collections.abc import Iterable, Mapping, Sequence
+from functools import partial
 from typing import Final, Generic, Protocol, TypeVar
 
 import cmk.utils.resulttype as result
@@ -18,8 +19,16 @@ from cmk.utils.sectionname import SectionMap, SectionName
 from cmk.snmplib import SNMPRawData
 
 from cmk.checkengine.fetcher import SourceInfo
+from cmk.checkengine.type_defs import AgentRawDataSection
 
-__all__ = ["NO_SELECTION", "Parser", "ParserFunction", "SectionNameCollection", "HostSections"]
+__all__ = [
+    "NO_SELECTION",
+    "parse_raw_data",
+    "Parser",
+    "ParserFunction",
+    "SectionNameCollection",
+    "HostSections",
+]
 
 _Tin = TypeVar("_Tin")
 _Tout = TypeVar("_Tout", bound=SectionMap[Sequence])
@@ -90,3 +99,15 @@ class ParserFunction(Protocol):
         ],
     ) -> Sequence[tuple[SourceInfo, result.Result[HostSections, Exception]]]:
         ...
+
+
+def parse_raw_data(
+    parser: Parser,
+    raw_data: result.Result[AgentRawData | SNMPRawData, Exception],
+    *,
+    selection: SectionNameCollection,
+) -> result.Result[HostSections[AgentRawDataSection | SNMPRawData], Exception,]:
+    try:
+        return raw_data.map(partial(parser.parse, selection=selection))
+    except Exception as exc:
+        return result.Error(exc)

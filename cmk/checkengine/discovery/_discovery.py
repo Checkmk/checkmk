@@ -9,8 +9,8 @@ from typing import Protocol
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.checkengine._typedefs import Parameters
 from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.parameters import Parameters
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 from ._autochecks import AutocheckEntry

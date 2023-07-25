@@ -6,7 +6,14 @@
 from __future__ import annotations
 
 from ._agent import AgentParser
-from ._parser import HostSections, NO_SELECTION, Parser, ParserFunction, SectionNameCollection
+from ._parser import (
+    HostSections,
+    NO_SELECTION,
+    parse_raw_data,
+    Parser,
+    ParserFunction,
+    SectionNameCollection,
+)
 from ._snmp import SNMPParser
 from ._utils import group_by_host
 
@@ -15,6 +22,7 @@ __all__ = [
     "group_by_host",
     "HostSections",
     "NO_SELECTION",
+    "parse_raw_data",
     "Parser",
     "ParserFunction",
     "SectionNameCollection",

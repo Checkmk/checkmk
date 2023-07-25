@@ -23,7 +23,6 @@ from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionMap
 from cmk.utils.servicename import ServiceName
 
-from cmk.checkengine._api import SummarizerFunction
 from cmk.checkengine.check_table import ServiceID
 from cmk.checkengine.checking import CheckPluginName, Item
 from cmk.checkengine.fetcher import FetcherFunction, HostKey
@@ -34,6 +33,7 @@ from cmk.checkengine.sectionparser import (
     SectionPlugin,
     store_piggybacked_sections,
 )
+from cmk.checkengine.summarize import SummarizerFunction
 
 from ._autochecks import (
     AutocheckEntry,

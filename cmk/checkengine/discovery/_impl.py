@@ -20,7 +20,6 @@ from cmk.utils.servicename import ServiceName
 
 from cmk.snmplib import SNMPRawData
 
-from cmk.checkengine._api import SummarizerFunction
 from cmk.checkengine.check_table import ServiceID
 from cmk.checkengine.checking import CheckPluginName, Item
 from cmk.checkengine.checkresults import ActiveCheckResult
@@ -28,6 +27,7 @@ from cmk.checkengine.fetcher import HostKey, SourceInfo
 from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.sectionparser import make_providers, SectionPlugin, store_piggybacked_sections
 from cmk.checkengine.sectionparserutils import check_parsing_errors
+from cmk.checkengine.summarize import SummarizerFunction
 
 from ._autochecks import AutocheckServiceWithNodes
 from ._autodiscovery import get_host_services, ServicesByTransition

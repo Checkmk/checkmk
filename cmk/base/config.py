@@ -124,7 +124,7 @@ from cmk.fetchers.cache import SectionStore
 from cmk.fetchers.config import make_persisted_section_dir
 from cmk.fetchers.filecache import MaxAge
 
-from cmk.checkengine import CheckPlugin, Parameters
+from cmk.checkengine import CheckPlugin
 from cmk.checkengine.check_table import ConfiguredService, FilterMode, HostCheckTable, ServiceID
 from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr, Item
 from cmk.checkengine.discovery import AutochecksManager, DiscoveryCheckParameters, DiscoveryPlugin
@@ -132,7 +132,7 @@ from cmk.checkengine.error_handling import ExitSpec
 from cmk.checkengine.fetcher import SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin
 from cmk.checkengine.legacy import LegacyCheckParameters
-from cmk.checkengine.parameters import TimespecificParameters, TimespecificParameterSet
+from cmk.checkengine.parameters import Parameters, TimespecificParameters, TimespecificParameterSet
 from cmk.checkengine.parser import AgentParser, NO_SELECTION, SectionNameCollection
 from cmk.checkengine.type_defs import AgentRawDataSectionElem
 

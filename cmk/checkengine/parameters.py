@@ -5,15 +5,45 @@
 
 from __future__ import annotations
 
+import pprint
 import time
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from typing import Final, TypedDict
 
 import cmk.utils.debug
+from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.parameters import boil_down_parameters
 from cmk.utils.timeperiod import TimeperiodName
 
 from cmk.checkengine.legacy import LegacyCheckParameters
+
+__all__ = [
+    "Parameters",
+    "TimespecificParameters",
+    "TimespecificParametersPreview",
+    "TimespecificParameterSet",
+]
+
+
+class Parameters(ParametersTypeAlias):
+    """Parameter objects are used to pass parameters to plugin functions"""
+
+    def __init__(self, data: ParametersTypeAlias) -> None:
+        self._data = dict(data)
+
+    def __getitem__(self, key: str) -> object:
+        return self._data[key]
+
+    def __len__(self) -> int:
+        return len(self._data)
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._data)
+
+    def __repr__(self) -> str:
+        # use pformat to be testable.
+        return f"{self.__class__.__name__}({pprint.pformat(self._data)})"
+
 
 _IsTimeperiodActiveCallback = Callable[[TimeperiodName], bool | None]
 

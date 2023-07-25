@@ -30,13 +30,7 @@ from cmk.snmplib import SNMPRawData
 
 from cmk.fetchers import FetcherType
 
-from cmk.checkengine import (
-    CheckPlugin,
-    crash_reporting,
-    Parameters,
-    plugin_contexts,
-    SummarizerFunction,
-)
+from cmk.checkengine import CheckPlugin, crash_reporting, plugin_contexts
 from cmk.checkengine.check_table import ConfiguredService
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.checkresults import (
@@ -54,7 +48,7 @@ from cmk.checkengine.inventory import (
     InventoryPluginName,
 )
 from cmk.checkengine.legacy import LegacyCheckParameters
-from cmk.checkengine.parameters import TimespecificParameters
+from cmk.checkengine.parameters import Parameters, TimespecificParameters
 from cmk.checkengine.parser import group_by_host, ParserFunction
 from cmk.checkengine.sectionparser import (
     make_providers,
@@ -71,6 +65,7 @@ from cmk.checkengine.sectionparserutils import (
     get_section_kwargs,
 )
 from cmk.checkengine.submitters import Submittee, Submitter
+from cmk.checkengine.summarize import SummarizerFunction
 
 from cmk.base.api.agent_based import cluster_mode, value_store
 from cmk.base.api.agent_based.checking_classes import consume_check_results, IgnoreResultsError

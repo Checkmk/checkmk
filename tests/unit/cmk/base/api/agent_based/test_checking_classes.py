@@ -7,7 +7,7 @@ from collections.abc import Sequence
 
 import pytest
 
-from cmk.checkengine import Parameters
+from cmk.checkengine.parameters import Parameters
 
 from cmk.base.api.agent_based.checking_classes import (
     EvalableFloat,

@@ -59,17 +59,21 @@ from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers.filecache import FileCacheOptions
 
 import cmk.checkengine.inventory as inventory
-from cmk.checkengine import parse_raw_data, SummarizerFunction
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import execute_check_discovery, remove_autochecks_of_host
 from cmk.checkengine.error_handling import CheckResultErrorHandler
 from cmk.checkengine.fetcher import FetcherFunction, SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin, InventoryPluginName
-from cmk.checkengine.parser import NO_SELECTION, ParserFunction, SectionNameCollection
+from cmk.checkengine.parser import (
+    NO_SELECTION,
+    parse_raw_data,
+    ParserFunction,
+    SectionNameCollection,
+)
 from cmk.checkengine.sectionparser import SectionPlugin
 from cmk.checkengine.submitters import get_submitter, ServiceState, Submitter
-from cmk.checkengine.summarize import summarize
+from cmk.checkengine.summarize import summarize, SummarizerFunction
 
 import cmk.base.agent_based.discovery as discovery
 import cmk.base.api.agent_based.register as agent_based_register

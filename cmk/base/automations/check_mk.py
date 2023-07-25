@@ -110,7 +110,7 @@ from cmk.fetchers import FetcherType, get_raw_data, Mode, ProgramFetcher, TCPFet
 from cmk.fetchers.filecache import FileCacheOptions
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
 
-from cmk.checkengine import parse_raw_data, plugin_contexts
+from cmk.checkengine import plugin_contexts
 from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
 from cmk.checkengine.discovery import (
     AutocheckEntry,
@@ -123,7 +123,7 @@ from cmk.checkengine.discovery import (
     set_autochecks_of_real_hosts,
 )
 from cmk.checkengine.fetcher import SourceType
-from cmk.checkengine.parser import NO_SELECTION
+from cmk.checkengine.parser import NO_SELECTION, parse_raw_data
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 from cmk.checkengine.summarize import summarize
 

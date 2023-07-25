@@ -28,8 +28,7 @@ from cmk.snmplib import SNMPRawData
 from cmk.fetchers import Fetcher, get_raw_data, Mode
 from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
-from cmk.checkengine import CheckPlugin
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPlugin, CheckPluginName
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import DiscoveryPlugin, HostLabelPlugin
 from cmk.checkengine.error_handling import ExitSpec

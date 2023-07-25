@@ -19,9 +19,8 @@ from cmk.utils.timeperiod import timeperiod_active
 
 from cmk.automations.results import CheckPreviewEntry
 
-from cmk.checkengine import CheckPlugin
 from cmk.checkengine.check_table import ConfiguredService, ServiceID
-from cmk.checkengine.checking import CheckPluginName, Item
+from cmk.checkengine.checking import CheckPlugin, CheckPluginName, Item
 from cmk.checkengine.checkresults import ActiveCheckResult, ServiceCheckResult
 from cmk.checkengine.discovery import (
     analyse_cluster_labels,

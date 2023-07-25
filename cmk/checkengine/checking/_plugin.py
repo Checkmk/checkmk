@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 from cmk.utils.rulesets import RuleSetName
 
-from .sectionparser import ParsedSectionName
+from cmk.checkengine.sectionparser import ParsedSectionName
 
 __all__ = ["CheckPlugin"]
 

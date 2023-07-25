@@ -30,9 +30,9 @@ from cmk.snmplib import SNMPRawData
 
 from cmk.fetchers import FetcherType
 
-from cmk.checkengine import CheckPlugin, crash_reporting, plugin_contexts
+from cmk.checkengine import crash_reporting, plugin_contexts
 from cmk.checkengine.check_table import ConfiguredService
-from cmk.checkengine.checking import CheckPluginName
+from cmk.checkengine.checking import CheckPlugin, CheckPluginName
 from cmk.checkengine.checkresults import (
     ActiveCheckResult,
     MetricTuple,

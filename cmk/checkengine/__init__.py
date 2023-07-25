@@ -26,7 +26,3 @@ See Also:
     cmk.base.sources: The entry point into the core helpers from base.
 
 """
-
-from ._api import CheckPlugin
-
-__all__ = ["CheckPlugin"]

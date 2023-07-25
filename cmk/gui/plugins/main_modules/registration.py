@@ -129,6 +129,7 @@ def register() -> None:
         icon_and_action_registry,
         automation_command_registry,
         job_registry,
+        filter_registry,
     )
     bi_registration.register(
         data_source_registry,

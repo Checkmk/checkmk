@@ -15,8 +15,32 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _l
 from cmk.gui.type_defs import Choices, FilterHeader, FilterHTTPVariables
 from cmk.gui.valuespec import DualListChoice, ValueSpec
-from cmk.gui.visuals.filter import Filter, filter_registry
+from cmk.gui.visuals.filter import Filter, FilterRegistry
 from cmk.gui.watolib.hosts_and_folders import folder_tree
+
+
+def register(filter_registry: FilterRegistry) -> None:
+    filter_registry.register(
+        FilterWatoFolder(
+            ident="wato_folder",
+            title=_l("Folder"),
+            sort_index=10,
+            info="host",
+            htmlvars=["wato_folder"],
+            link_columns=[],
+        ),
+    )
+
+    filter_registry.register(
+        FilterMultipleWatoFolder(
+            ident="wato_folders",
+            title=_l("Multiple Setup Folders"),
+            sort_index=20,
+            info="host",
+            htmlvars=["wato_folders"],
+            link_columns=[],
+        ),
+    )
 
 
 def _wato_folders_to_lq_regex(path: str) -> str:
@@ -122,18 +146,6 @@ class FilterWatoFolder(Filter):
         return None
 
 
-filter_registry.register(
-    FilterWatoFolder(
-        ident="wato_folder",
-        title=_l("Folder"),
-        sort_index=10,
-        info="host",
-        htmlvars=["wato_folder"],
-        link_columns=[],
-    ),
-)
-
-
 class FilterMultipleWatoFolder(FilterWatoFolder):
     # Once filters are managed by a valuespec and we get more complex
     # datastuctures beyond FilterHTTPVariable there must be a back&forth
@@ -174,15 +186,3 @@ class FilterMultipleWatoFolder(FilterWatoFolder):
                 ),
             )
         )
-
-
-filter_registry.register(
-    FilterMultipleWatoFolder(
-        ident="wato_folders",
-        title=_l("Multiple Setup Folders"),
-        sort_index=20,
-        info="host",
-        htmlvars=["wato_folders"],
-        link_columns=[],
-    ),
-)

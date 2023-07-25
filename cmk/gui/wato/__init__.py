@@ -109,6 +109,7 @@ from cmk.gui.plugins.wato.utils.base_modes import WatoMode
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import PermissionName
 from cmk.gui.utils.html import HTML
+from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.wato.pages.analyze_configuration import ModeAnalyzeConfig
 from cmk.gui.wato.pages.audit_log import ModeAuditLog
 from cmk.gui.wato.pages.backup import (
@@ -255,6 +256,7 @@ from cmk.gui.watolib.automation_commands import AutomationCommandRegistry
 from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
 from cmk.gui.watolib.main_menu import MenuItem
 
+from . import filters
 from .icons import DownloadAgentOutputIcon, DownloadSnmpWalkIcon, WatoIcon
 from .views import (
     PainterHostFilename,
@@ -273,6 +275,7 @@ def register(
     icon_registry: IconRegistry,
     automation_command_registry: AutomationCommandRegistry,
     job_registry: background_job.BackgroundJobRegistry,
+    filter_registry: FilterRegistry,
 ) -> None:
     painter_registry.register(PainterHostFilename)
     painter_registry.register(PainterWatoFolderAbs)
@@ -306,6 +309,7 @@ def register(
     cmk.gui.wato.pages.fetch_agent_output.register(page_registry)
 
     sync_remote_sites.register(automation_command_registry, job_registry)
+    filters.register(filter_registry)
 
 
 # .

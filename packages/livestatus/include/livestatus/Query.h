@@ -104,10 +104,10 @@ private:
     void parseFilterLine(char *line, FilterStack &filters);
     void parseStatsLine(char *line);
     void parseStatsGroupLine(char *line);
-    void parseAndOrLine(char *line, Filter::Kind kind,
-                        const LogicalConnective &connective,
-                        FilterStack &filters);
-    void parseNegateLine(char *line, FilterStack &filters);
+    static void parseAndOrLine(char *line, Filter::Kind kind,
+                               const LogicalConnective &connective,
+                               FilterStack &filters);
+    static void parseNegateLine(char *line, FilterStack &filters);
     void parseStatsAndOrLine(char *line, const LogicalConnective &connective);
     void parseStatsNegateLine(char *line);
     void parseColumnsLine(const char *line);

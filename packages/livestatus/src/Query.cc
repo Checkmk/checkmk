@@ -156,7 +156,9 @@ Query::Query(const std::list<std::string> &lines, Table &table,
             }
         } catch (const std::runtime_error &e) {
             _output.setError(OutputBuffer::ResponseCode::bad_request,
-                             header + ": " + e.what());
+                             "while processing header '" + header +
+                                 "' for table '" + _table.name() +
+                                 "': " + e.what());
         }
     }
 
@@ -182,6 +184,17 @@ void Query::badGateway(const std::string &message) const {
     _output.setError(OutputBuffer::ResponseCode::bad_gateaway, message);
 }
 
+namespace {
+[[noreturn]] void stack_underflow(int expected, int actual) {
+    throw std::runtime_error("cannot combine filters: expecting " +
+                             std::to_string(expected) + " " +
+                             (expected == 1 ? "filter" : "filters") +
+                             ", but only " + std::to_string(actual) + " " +
+                             (actual == 1 ? "is" : "are") + " on stack");
+}
+}  // namespace
+
+// static
 void Query::parseAndOrLine(char *line, Filter::Kind kind,
                            const LogicalConnective &connective,
                            FilterStack &filters) {
@@ -189,11 +202,7 @@ void Query::parseAndOrLine(char *line, Filter::Kind kind,
     Filters subfilters;
     for (auto i = 0; i < number; ++i) {
         if (filters.empty()) {
-            throw std::runtime_error(
-                "error combining filters for table '" + _table.name() +
-                "': expected " + std::to_string(number) +
-                " filters, but only " + std::to_string(i) + " " +
-                (i == 1 ? "is" : "are") + " on stack");
+            stack_underflow(number, i);
         }
         subfilters.push_back(std::move(filters.back()));
         filters.pop_back();
@@ -202,14 +211,12 @@ void Query::parseAndOrLine(char *line, Filter::Kind kind,
     filters.push_back(connective(kind, subfilters));
 }
 
+// static
 void Query::parseNegateLine(char *line, FilterStack &filters) {
     checkNoArguments(line);
     if (filters.empty()) {
-        throw std::runtime_error(
-            "error combining filters for table '" + _table.name() +
-            "': expected 1 filters, but only 0 are on stack");
+        stack_underflow(1, 0);
     }
-
     auto top = std::move(filters.back());
     filters.pop_back();
     filters.push_back(top->negate());
@@ -221,11 +228,7 @@ void Query::parseStatsAndOrLine(char *line,
     Filters subfilters;
     for (auto i = 0; i < number; ++i) {
         if (_stats_columns.empty()) {
-            throw std::runtime_error(
-                "error combining filters for table '" + _table.name() +
-                "': expected " + std::to_string(number) +
-                " filters, but only " + std::to_string(i) + " " +
-                (i == 1 ? "is" : "are") + " on stack");
+            stack_underflow(number, i);
         }
         subfilters.push_back(_stats_columns.back()->stealFilter());
         _stats_columns.pop_back();
@@ -238,9 +241,7 @@ void Query::parseStatsAndOrLine(char *line,
 void Query::parseStatsNegateLine(char *line) {
     checkNoArguments(line);
     if (_stats_columns.empty()) {
-        throw std::runtime_error(
-            "error combining filters for table '" + _table.name() +
-            "': expected 1 filters, but only 0 are on stack");
+        stack_underflow(1, 0);
     }
     auto to_negate = _stats_columns.back()->stealFilter();
     _stats_columns.pop_back();

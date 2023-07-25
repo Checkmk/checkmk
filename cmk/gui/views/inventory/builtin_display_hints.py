@@ -10,8 +10,7 @@
 # each_dict_entry_on_separate_line=False
 
 from cmk.gui.i18n import _l
-from cmk.gui.num_split import cmp_version
-from cmk.gui.plugins.visuals.inventory import (
+from cmk.gui.inventory.filters import (
     FilterInvtableAdminStatus,
     FilterInvtableAvailable,
     FilterInvtableIDRange,
@@ -20,6 +19,7 @@ from cmk.gui.plugins.visuals.inventory import (
     FilterInvtableTimestampAsAge,
     FilterInvtableVersion,
 )
+from cmk.gui.num_split import cmp_version
 
 from .registry import InventoryHintRegistry
 

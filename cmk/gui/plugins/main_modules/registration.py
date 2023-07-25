@@ -90,7 +90,7 @@ def register() -> None:
         visual_type_registry,
         register_post_config_load_hook,
     )
-    inventory.register(cmk.gui.pages.page_registry, visual_info_registry)
+    inventory.register(cmk.gui.pages.page_registry, visual_info_registry, filter_registry)
     dashboard.register(
         permission_section_registry,
         cmk.gui.pages.page_registry,

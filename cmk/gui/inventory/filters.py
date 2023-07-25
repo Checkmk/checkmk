@@ -5,26 +5,26 @@
 
 import re
 from functools import partial
-from typing import get_args, Literal
+from typing import Callable, get_args, Literal
 
-import cmk.gui.inventory as inventory
 import cmk.gui.query_filters as query_filters
 from cmk.gui.exceptions import MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.i18n import _, _l
 from cmk.gui.ifaceoper import interface_oper_states, interface_port_types
 from cmk.gui.num_split import cmp_version
-from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Rows, VisualContext
+from cmk.gui.type_defs import FilterHeader, FilterHTTPVariables, Row, Rows, VisualContext
 from cmk.gui.visuals.filter import (
     CheckboxRowFilter,
     display_filter_radiobuttons,
     DualListFilter,
     Filter,
-    filter_registry,
     FilterNumberRange,
     FilterOption,
     InputTextFilter,
 )
+
+from ._inventory_path import InventoryPath
 
 RangedTableFilterName = Literal[
     "invswpac_install_date",
@@ -168,7 +168,7 @@ class FilterInvText(InputTextFilter):
         *,
         ident: str,
         title: str,
-        inventory_path: inventory.InventoryPath,
+        inventory_path: InventoryPath,
         is_show_more: bool = True,
     ) -> None:
         super().__init__(
@@ -176,7 +176,7 @@ class FilterInvText(InputTextFilter):
             sort_index=800,
             info="host",
             query_filter=query_filters.TableTextQuery(
-                ident=ident, row_filter=query_filters.filter_by_host_inventory(inventory_path)
+                ident=ident, row_filter=_filter_by_host_inventory(inventory_path)
             ),
             show_heading=False,
             is_show_more=is_show_more,
@@ -184,6 +184,28 @@ class FilterInvText(InputTextFilter):
 
     def need_inventory(self, value: FilterHTTPVariables) -> bool:
         return bool(value.get(self.htmlvars[0], "").strip().lower())
+
+
+def _filter_by_host_inventory(
+    inventory_path: InventoryPath,
+) -> Callable[[str, str], Callable[[Row], bool]]:
+    def row_filter(filtertext: str, column: str) -> Callable[[Row], bool]:
+        regex = query_filters.re_ignorecase(filtertext, column)
+
+        def filt(row: Row):  # type: ignore[no-untyped-def]
+            return bool(
+                regex.search(
+                    str(
+                        row["host_inventory"].get_attribute(
+                            inventory_path.path, inventory_path.key or ""
+                        )
+                    )
+                )
+            )
+
+        return filt
+
+    return row_filter
 
 
 class FilterInvtableTimestampAsAge(FilterNumberRange):
@@ -226,7 +248,7 @@ class FilterInvFloat(FilterNumberRange):
         *,
         ident: str,
         title: str,
-        inventory_path: inventory.InventoryPath,
+        inventory_path: InventoryPath,
         unit: str | None,
         scale: float | None,
         is_show_more: bool = True,
@@ -238,7 +260,7 @@ class FilterInvFloat(FilterNumberRange):
             query_filter=query_filters.NumberRangeQuery(
                 ident=ident,
                 filter_livestatus=False,
-                filter_row=query_filters.filter_in_host_inventory_range(inventory_path),
+                filter_row=_filter_in_host_inventory_range(inventory_path),
                 request_var_suffix="",
                 bound_rescaling=scale if scale is not None else 1.0,
             ),
@@ -247,6 +269,22 @@ class FilterInvFloat(FilterNumberRange):
 
     def need_inventory(self, value: FilterHTTPVariables) -> bool:
         return any(self.query_filter.extractor(value))
+
+
+def _filter_in_host_inventory_range(
+    inventory_path: InventoryPath,
+) -> Callable[[Row, str, query_filters.MaybeBounds], bool]:
+    def row_filter(row: Row, column: str, bounds: query_filters.MaybeBounds) -> bool:
+        if not isinstance(
+            invdata := row["host_inventory"].get_attribute(
+                inventory_path.path, inventory_path.key or ""
+            ),
+            (int, float),
+        ):
+            return False
+        return query_filters.value_in_range(invdata, bounds)
+
+    return row_filter
 
 
 class FilterInvtableVersion(Filter):
@@ -369,7 +407,7 @@ class FilterInvBool(FilterOption):
         *,
         ident: str,
         title: str,
-        inventory_path: inventory.InventoryPath,
+        inventory_path: InventoryPath,
         is_show_more: bool = True,
     ) -> None:
         super().__init__(
@@ -379,7 +417,7 @@ class FilterInvBool(FilterOption):
             query_filter=query_filters.TristateQuery(
                 ident=ident,
                 filter_code=lambda x: "",  # No Livestatus filtering right now
-                filter_row=query_filters.inside_inventory(inventory_path),
+                filter_row=inside_inventory(inventory_path),
             ),
             is_show_more=is_show_more,
         )
@@ -388,7 +426,17 @@ class FilterInvBool(FilterOption):
         return self.query_filter.selection_value(value) != self.query_filter.ignore
 
 
-class _FilterHasInv(FilterOption):
+# Filter tables
+def inside_inventory(inventory_path: InventoryPath) -> Callable[[bool, Row], bool]:
+    def keep_row(on: bool, row: Row) -> bool:
+        return (
+            row["host_inventory"].get_attribute(inventory_path.path, inventory_path.key or "") is on
+        )
+
+    return keep_row
+
+
+class FilterHasInv(FilterOption):
     def __init__(self) -> None:
         super().__init__(
             title=_l("Has Inventory Data"),
@@ -406,10 +454,7 @@ class _FilterHasInv(FilterOption):
         return self.query_filter.selection_value(value) != self.query_filter.ignore
 
 
-filter_registry.register(_FilterHasInv())
-
-
-class _FilterInvHasSoftwarePackage(Filter):
+class FilterInvHasSoftwarePackage(Filter):
     def __init__(self) -> None:
         self._varprefix = "invswpac_host_"
         super().__init__(
@@ -521,6 +566,3 @@ class _FilterInvHasSoftwarePackage(Filter):
 
     def version_is_higher(self, a: str | None, b: str | None) -> bool:
         return cmp_version(a, b) == 1
-
-
-filter_registry.register(_FilterInvHasSoftwarePackage())

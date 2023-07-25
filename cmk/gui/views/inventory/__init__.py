@@ -47,15 +47,7 @@ from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
 from cmk.gui.ifaceoper import interface_oper_state_name, interface_port_types
-from cmk.gui.pages import PageRegistry
-from cmk.gui.painter.v0.base import Cell, Painter, painter_registry, register_painter
-from cmk.gui.painter_options import (
-    paint_age,
-    painter_option_registry,
-    PainterOption,
-    PainterOptions,
-)
-from cmk.gui.plugins.visuals.inventory import (
+from cmk.gui.inventory.filters import (
     FilterInvBool,
     FilterInvFloat,
     FilterInvtableAdminStatus,
@@ -67,6 +59,14 @@ from cmk.gui.plugins.visuals.inventory import (
     FilterInvtableVersion,
     FilterInvText,
     get_ranged_table_filter_name,
+)
+from cmk.gui.pages import PageRegistry
+from cmk.gui.painter.v0.base import Cell, Painter, painter_registry, register_painter
+from cmk.gui.painter_options import (
+    paint_age,
+    painter_option_registry,
+    PainterOption,
+    PainterOptions,
 )
 from cmk.gui.type_defs import (
     ColumnName,

@@ -14,7 +14,7 @@ import cmk.gui.plugins.visuals.filters
 import cmk.gui.views
 import cmk.gui.visuals as visuals
 from cmk.gui.http import request
-from cmk.gui.plugins.visuals.inventory import RangedTableFilterName
+from cmk.gui.inventory.filters import RangedTableFilterName
 from cmk.gui.type_defs import SingleInfos, VisualContext
 from cmk.gui.visuals import filters_allowed_for_info, filters_allowed_for_infos
 from cmk.gui.visuals.filter import Filter, filter_registry

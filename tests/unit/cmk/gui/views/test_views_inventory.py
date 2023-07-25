@@ -21,9 +21,9 @@ from cmk.utils.structured_data import (
 
 import cmk.gui.inventory
 import cmk.gui.utils
+from cmk.gui.inventory.filters import FilterInvtableVersion
 from cmk.gui.num_split import cmp_version
 from cmk.gui.painter.v0.base import JoinCell
-from cmk.gui.plugins.visuals.inventory import FilterInvtableVersion
 from cmk.gui.type_defs import ColumnSpec, PainterParameters
 from cmk.gui.view import View
 from cmk.gui.views.inventory import (

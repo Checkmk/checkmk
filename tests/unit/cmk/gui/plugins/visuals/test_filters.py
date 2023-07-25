@@ -1130,9 +1130,9 @@ def test_filters_filter_table(test: FilterTableTest, monkeypatch: pytest.MonkeyP
         }[host_name]
 
     if cmk_version.edition() is not cmk_version.Edition.CRE:
-        import cmk.gui.cee.agent_bakery as agent_bakery  # pylint: disable=redefined-outer-name,import-outside-toplevel,no-name-in-module
+        import cmk.gui.cee.agent_bakery._filters as bakery_filters  # pylint: disable=redefined-outer-name,import-outside-toplevel,no-name-in-module
 
-        monkeypatch.setattr(agent_bakery, "get_cached_deployment_status", deployment_states)
+        monkeypatch.setattr(bakery_filters, "get_cached_deployment_status", deployment_states)
 
     # Needed for FilterAggrServiceUsed test
     def is_part_of_aggregation_patch(host: str, service: str) -> bool:

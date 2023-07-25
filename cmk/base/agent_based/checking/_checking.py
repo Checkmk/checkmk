@@ -107,13 +107,15 @@ def execute_checkmk_checks(
     section_plugins: SectionMap[SectionPlugin],
     check_plugins: Mapping[CheckPluginName, CheckPlugin],
     inventory_plugins: Mapping[InventoryPluginName, InventoryPlugin],
+    inventory_parameters: Callable[[HostName, InventoryPlugin], Mapping[str, object]],
+    params: HWSWInventoryParameters,
+    services: Sequence[ConfiguredService],
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     run_plugin_names: Container[CheckPluginName],
     perfdata_with_times: bool,
     submitter: Submitter,
+    exit_spec: ExitSpec,
 ) -> ActiveCheckResult:
-    exit_spec = config_cache.exit_code_spec(hostname)
-    services = config_cache.configured_services(hostname)
     host_sections = parser((f[0], f[1]) for f in fetched)
     host_sections_by_host = group_by_host(
         (HostKey(s.hostname, s.source_type), r.ok) for s, r in host_sections if r.is_ok()
@@ -137,9 +139,9 @@ def execute_checkmk_checks(
         if run_plugin_names is EVERYTHING:
             _do_inventory_actions_during_checking_for(
                 hostname,
-                inventory_parameters=config_cache.inventory_parameters,
+                inventory_parameters=inventory_parameters,
                 inventory_plugins=inventory_plugins,
-                params=config_cache.hwsw_inventory_parameters(hostname),
+                params=params,
                 providers=providers,
             )
         timed_results = itertools.chain(

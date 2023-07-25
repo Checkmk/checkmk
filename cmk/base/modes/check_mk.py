@@ -2073,6 +2073,9 @@ def mode_check(
             section_plugins=SectionPluginMapper(),
             check_plugins=CheckPluginMapper(),
             inventory_plugins=InventoryPluginMapper(),
+            inventory_parameters=config_cache.inventory_parameters,
+            params=config_cache.hwsw_inventory_parameters(hostname),
+            services=config_cache.configured_services(hostname),
             run_plugin_names=run_plugin_names,
             get_effective_host=config_cache.effective_host,
             submitter=get_submitter_(
@@ -2084,6 +2087,7 @@ def mode_check(
                 show_perfdata=options.get("perfdata", False),
             ),
             perfdata_with_times=config.check_mk_perfdata_with_times,
+            exit_spec=config_cache.exit_code_spec(hostname),
         )
         state, text = check_result.state, check_result.as_text()
 

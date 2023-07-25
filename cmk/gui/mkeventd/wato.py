@@ -136,6 +136,7 @@ from cmk.gui.valuespec import (
     ListOf,
     ListOfStrings,
     LogLevelChoice,
+    Migrate,
     MigrateNotUpdated,
     Optional,
     RegExp,
@@ -4973,7 +4974,10 @@ ActiveCheckMKEventsRulespec = HostRulespec(
     group=RulespecGroupEventConsole,
     match_type="all",
     name="active_checks:mkevents",
-    valuespec=_valuespec_active_checks_mkevents,
+    valuespec=lambda: Migrate(
+        valuespec=_valuespec_active_checks_mkevents(),
+        migrate=lambda value: {"show_last_log": "summary"} | value,
+    ),
 )
 
 

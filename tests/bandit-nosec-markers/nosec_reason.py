@@ -16,6 +16,7 @@ Call with --help for usage.
 from __future__ import annotations
 
 import argparse
+import logging
 import random
 import re
 import subprocess
@@ -86,6 +87,17 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
     )
     parser_check.set_defaults(run=cmd_check)
+
+    # -- local-check --
+
+    parser_local_check = subparsers.add_parser(
+        "local-check",
+        help="Output results as Checkmk local check output",
+    )
+    parser_local_check.add_argument(
+        "src_root", help="Path to the Check_MK repository root directory", type=Path
+    )
+    parser_local_check.set_defaults(run=cmd_local_check)
 
     # -- find --
 
@@ -201,7 +213,7 @@ def find_nosecs(src_root: Path, excluded: Sequence[Path]) -> Sequence[Nosec]:
     files = _format_output(
         subprocess.run(run_find_files, cwd=src_root, check=False, capture_output=True).stdout
     )
-    print(
+    logging.info(
         f"Checking {len(files)} python files in '{src_root}'"
         + (f" excluding '{', '.join(map(str, excluded))}'." if excluded else "")
     )
@@ -257,6 +269,8 @@ def cmd_new(args: argparse.Namespace) -> None:
 def cmd_check(args: argparse.Namespace) -> None:
     fail = False
 
+    logging.getLogger().setLevel(logging.INFO)
+
     excluded_paths = (
         []  # exclude nothing (as opposed to src_root/"")
         if args.exclude == ""
@@ -293,6 +307,34 @@ def cmd_check(args: argparse.Namespace) -> None:
 
     if fail:
         sys.exit(1)
+
+
+def cmd_local_check(args: argparse.Namespace) -> None:
+    markers = find_nosecs(args.src_root, [])
+    annotated, not_annotated = _partition(lambda marker: marker.bns_id is not None, markers)
+    bns_ids = existing_ids(args.doc)
+    invalid = [m for m in annotated if m.bns_id not in bns_ids]
+
+    sum_not_annotated = len(not_annotated)
+    sum_annotated = len(annotated)
+    sum_invalid = len(invalid)
+    sum_valid = sum_annotated - sum_invalid
+    print(
+        " ".join(
+            (
+                "P",
+                '"Bandit markers"',
+                "|".join(
+                    (
+                        f"not_annotated={sum_not_annotated};1;5",
+                        f"invalid={sum_invalid};1;5",
+                        f"valid={sum_valid}",
+                    )
+                ),
+                f"Found {sum_annotated} annotations of which {sum_invalid} were invalid and {sum_not_annotated} unnotated nosecs",
+            )
+        )
+    )
 
 
 def cmd_find(args: argparse.Namespace) -> None:

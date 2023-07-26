@@ -93,7 +93,8 @@ private:
     unsigned _current_line;
     std::chrono::seconds _timezone_offset;
     Logger *const _logger;
-    std::vector<std::shared_ptr<Column>> _columns;
+    using Columns = std::vector<std::shared_ptr<Column>>;
+    Columns _columns;
     using StatsColumns = std::vector<std::unique_ptr<StatsColumn>>;
     StatsColumns _stats_columns;
     std::map<RowFragment, std::vector<std::unique_ptr<Aggregator>>>
@@ -103,10 +104,15 @@ private:
 
     bool doStats() const;
     void doWait();
-    void parseFilterLine(char *line, FilterStack &filters,
-                         ColumnSet &all_columnsa);
-    void parseStatsLine(char *line, StatsColumns &stats_columns,
-                        ColumnSet &all_columns);
+    using ColumnCreator =
+        std::function<std::shared_ptr<Column>(const std::string &)>;
+    static void parseFilterLine(char *line, FilterStack &filters,
+                                ColumnSet &all_columns,
+                                const ColumnCreator &make_column);
+    static void parseStatsLine(char *line, StatsColumns &stats_columns,
+                               ColumnSet &all_columns,
+                               const ColumnCreator &make_column,
+                               bool &show_column_headers);
     static void parseAndOrLine(char *line, Filter::Kind kind,
                                const LogicalConnective &connective,
                                FilterStack &filters);
@@ -115,8 +121,11 @@ private:
                                     const LogicalConnective &connective,
                                     StatsColumns &stats_columns);
     static void parseStatsNegateLine(char *line, StatsColumns &stats_columns);
-    void parseColumnsLine(const char *line, ColumnSet &all_columns);
-    void parseColumnHeadersLine(char *line);
+    static void parseColumnsLine(const char *line, ColumnSet &all_columns,
+                                 const ColumnCreator &make_column,
+                                 bool &show_column_headers, Columns &columns,
+                                 Logger *logger);
+    static void parseColumnHeadersLine(char *line, bool &show_column_headers);
     void parseLimitLine(char *line);
     void parseTimelimitLine(char *line);
     void parseSeparatorsLine(char *line);
@@ -128,6 +137,7 @@ private:
     void parseWaitTriggerLine(char *line);
     void parseWaitObjectLine(const char *line);
     void parseLocaltimeLine(char *line);
+
     void start(QueryRenderer &q);
     void finish(QueryRenderer &q);
 

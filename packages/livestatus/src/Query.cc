@@ -77,6 +77,9 @@ Query::Query(const std::list<std::string> &lines, Table &table,
     , _logger(logger) {
     FilterStack filters;
     FilterStack wait_conditions;
+    auto make_column = [&table](const std::string &colname) {
+        return table.column(colname);
+    };
     for (const auto &line : lines) {
         auto stripped_line = mk::rstrip(line);
         if (stripped_line.empty()) {
@@ -96,7 +99,7 @@ Query::Query(const std::list<std::string> &lines, Table &table,
         char *arguments = rest_copy.data();
         try {
             if (header == "Filter") {
-                parseFilterLine(arguments, filters, _all_columns);
+                parseFilterLine(arguments, filters, _all_columns, make_column);
             } else if (header == "Or") {
                 parseAndOrLine(arguments, Filter::Kind::row, OringFilter::make,
                                filters);
@@ -114,15 +117,18 @@ Query::Query(const std::list<std::string> &lines, Table &table,
             } else if (header == "StatsNegate") {
                 parseStatsNegateLine(arguments, _stats_columns);
             } else if (header == "Stats") {
-                parseStatsLine(arguments, _stats_columns, _all_columns);
+                parseStatsLine(arguments, _stats_columns, _all_columns,
+                               make_column, _show_column_headers);
             } else if (header == "StatsGroupBy") {
                 Warning(_logger)
                     << "Warning: StatsGroupBy is deprecated. Please use Columns instead.";
-                parseColumnsLine(arguments, _all_columns);
+                parseColumnsLine(arguments, _all_columns, make_column,
+                                 _show_column_headers, _columns, _logger);
             } else if (header == "Columns") {
-                parseColumnsLine(arguments, _all_columns);
+                parseColumnsLine(arguments, _all_columns, make_column,
+                                 _show_column_headers, _columns, _logger);
             } else if (header == "ColumnHeaders") {
-                parseColumnHeadersLine(arguments);
+                parseColumnHeadersLine(arguments, _show_column_headers);
             } else if (header == "Limit") {
                 parseLimitLine(arguments);
             } else if (header == "Timelimit") {
@@ -138,7 +144,8 @@ Query::Query(const std::list<std::string> &lines, Table &table,
             } else if (header == "KeepAlive") {
                 parseKeepAliveLine(arguments);
             } else if (header == "WaitCondition") {
-                parseFilterLine(arguments, wait_conditions, _all_columns);
+                parseFilterLine(arguments, wait_conditions, _all_columns,
+                                make_column);
             } else if (header == "WaitConditionAnd") {
                 parseAndOrLine(arguments, Filter::Kind::wait_condition,
                                AndingFilter::make, wait_conditions);
@@ -367,33 +374,38 @@ const std::map<std::string, AggregationFactory> stats_ops{
     {"avginv", []() { return std::make_unique<AvgInvAggregation>(); }}};
 }  // namespace
 
+// static
 void Query::parseStatsLine(char *line, StatsColumns &stats_columns,
-                           ColumnSet &all_columns) {
+                           ColumnSet &all_columns,
+                           const ColumnCreator &make_column,
+                           bool &show_column_headers) {
     // first token is either aggregation operator or column name
     std::shared_ptr<Column> column;
     std::unique_ptr<StatsColumn> sc;
     auto col_or_op = nextStringArgument(&line);
     auto it = stats_ops.find(col_or_op);
     if (it == stats_ops.end()) {
-        column = _table.column(col_or_op);
+        column = make_column(col_or_op);
         auto rel_op = relationalOperatorForName(nextStringArgument(&line));
         auto operand = mk::lstrip(line);
         sc = std::make_unique<StatsColumnCount>(
             column->createFilter(Filter::Kind::stats, rel_op, operand));
     } else {
-        column = _table.column(nextStringArgument(&line));
+        column = make_column(nextStringArgument(&line));
         sc = std::make_unique<StatsColumnOp>(it->second, column.get());
     }
     stats_columns.push_back(std::move(sc));
     all_columns.insert(column);
     // Default to old behaviour: do not output column headers if we do Stats
     // queries
-    _show_column_headers = false;
+    show_column_headers = false;
 }
 
+// static
 void Query::parseFilterLine(char *line, FilterStack &filters,
-                            ColumnSet &all_columns) {
-    auto column = _table.column(nextStringArgument(&line));
+                            ColumnSet &all_columns,
+                            const ColumnCreator &make_column) {
+    auto column = make_column(nextStringArgument(&line));
     auto rel_op = relationalOperatorForName(nextStringArgument(&line));
     auto operand = mk::lstrip(line);
     auto sub_filter = column->createFilter(Filter::Kind::row, rel_op, operand);
@@ -405,7 +417,11 @@ void Query::parseAuthUserHeader(const char *line) {
     user_ = _table.core()->find_user(line);
 }
 
-void Query::parseColumnsLine(const char *line, ColumnSet &all_columns) {
+// static
+void Query::parseColumnsLine(const char *line, ColumnSet &all_columns,
+                             const ColumnCreator &make_column,
+                             bool &show_column_headers, Columns &columns,
+                             Logger *logger) {
     const std::string str = line;
     const std::string sep = " \t\n\v\f\r";
     for (auto pos = str.find_first_not_of(sep); pos != std::string::npos;) {
@@ -415,22 +431,22 @@ void Query::parseColumnsLine(const char *line, ColumnSet &all_columns) {
         pos = str.find_first_not_of(sep, space);
         std::shared_ptr<Column> column;
         try {
-            column = _table.column(column_name);
+            column = make_column(column_name);
         } catch (const std::runtime_error &e) {
             // Do not fail any longer. We might want to make this configurable.
             // But not failing has the advantage that an updated GUI, that
             // expects new columns, will be able to keep compatibility with
             // older Livestatus versions.
-            Informational(_logger)
+            Informational(logger)
                 << "replacing non-existing column '" << column_name
                 << "' with null column, reason: " << e.what();
             column = std::make_shared<NullColumn>(
                 column_name, "non-existing column", ColumnOffsets{});
         }
-        _columns.push_back(column);
+        columns.push_back(column);
         all_columns.insert(column);
     }
-    _show_column_headers = false;
+    show_column_headers = false;
 }
 
 void Query::parseSeparatorsLine(char *line) {
@@ -472,12 +488,13 @@ void Query::parseOutputFormatLine(const char *line) {
     _output_format = it->second;
 }
 
-void Query::parseColumnHeadersLine(char *line) {
+// static
+void Query::parseColumnHeadersLine(char *line, bool &show_column_headers) {
     auto value = nextStringArgument(&line);
     if (value == "on") {
-        _show_column_headers = true;
+        show_column_headers = true;
     } else if (value == "off") {
-        _show_column_headers = false;
+        show_column_headers = false;
     } else {
         throw std::runtime_error("expected 'on' or 'off'");
     }

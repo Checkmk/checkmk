@@ -10,3 +10,4 @@ Version: 2.3.0b1
 
 * Adapted ruleset and argument thingy
 * Parse argument in active check
+* Prepare functions in check_mkevents.cc for printing long output

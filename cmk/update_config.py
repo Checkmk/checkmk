@@ -1433,6 +1433,7 @@ class UpdateConfig:
         name_key = (spec["owner"], topic)
 
         topics_by_title = {v.title(): k for k, v in topics.items()}
+        published_topics_by_id = {k[1]: v.is_public() for k, v in topics.items()}
 
         if ("", topic) in topics:
             # No need to transform. Found a builtin topic which has the current topic
@@ -1449,7 +1450,7 @@ class UpdateConfig:
             spec["topic"] = name
             return True, False
 
-        if topic_key in topics:
+        if topic_key in topics or topic in published_topics_by_id:
             # No need to transform. Found a topic which has the current topic as ID
             return False, False
 

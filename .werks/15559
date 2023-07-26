@@ -8,6 +8,10 @@ Knowledge: doc
 Level: 1
 Version: 2.3.0b1
 
+
+ATTENTION: This werk was reverted with <a href="https://checkmk.com/werk/15289">Werk #15289</a>.
+
+
 This werk may be relevant for you, in case:
 
 <ul>
@@ -20,4 +24,3 @@ However, this needs the tool <tt>tnsping</tt> installed with the oracle client, 
 
 A failure led to silently ignoring the <tt>TNS_ALIAS</tt> and falling back to a potentially invalid connection string which is passed to <tt>sqlplus</tt>.
 The plugin now assumes that the given <tt>TNS_ALIAS</tt> can be reached and uses it.
-

@@ -6,8 +6,6 @@
 from cmk.gui import main_modules
 
 main_modules.load_plugins()
-from cmk.gui.plugins.visuals.utils import (  # type: ignore[attr-defined]  # pylint: disable=no-name-in-module
-    filter_registry,
-)
+from cmk.gui.visuals.filter import filter_registry
 
 print("test" in filter_registry)

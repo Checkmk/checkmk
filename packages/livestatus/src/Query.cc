@@ -61,8 +61,6 @@ Query::Query(const std::list<std::string> &lines, Table &table,
     , _output(output)
     , _renderer_query(nullptr)
     , _table(table)
-    , _wait_trigger(Triggers::Kind::all)
-    , _wait_object(nullptr)
     , _current_line(0)
     , _logger(logger) {
     FilterStack filters;
@@ -105,16 +103,13 @@ Query::Query(const std::list<std::string> &lines, Table &table,
             } else if (header == "Negate") {
                 parseNegateLine(arguments, filters);
             } else if (header == "StatsOr") {
-                parseStatsAndOrLine(arguments, OringFilter::make,
-                                    _stats_columns);
+                parseStatsAndOrLine(arguments, OringFilter::make);
             } else if (header == "StatsAnd") {
-                parseStatsAndOrLine(arguments, AndingFilter::make,
-                                    _stats_columns);
+                parseStatsAndOrLine(arguments, AndingFilter::make);
             } else if (header == "StatsNegate") {
-                parseStatsNegateLine(arguments, _stats_columns);
+                parseStatsNegateLine(arguments);
             } else if (header == "Stats") {
-                parseStatsLine(arguments, _stats_columns, _all_columns,
-                               make_column);
+                parseStatsLine(arguments, _all_columns, make_column);
             } else if (header == "StatsGroupBy") {
                 Warning(_logger)
                     << "Warning: StatsGroupBy is deprecated. Please use Columns instead.";
@@ -151,9 +146,9 @@ Query::Query(const std::list<std::string> &lines, Table &table,
             } else if (header == "WaitConditionNegate") {
                 parseNegateLine(arguments, wait_conditions);
             } else if (header == "WaitTrigger") {
-                parseWaitTriggerLine(arguments, _wait_trigger);
+                parseWaitTriggerLine(arguments);
             } else if (header == "WaitObject") {
-                parseWaitObjectLine(arguments, get, _wait_object);
+                parseWaitObjectLine(arguments, get);
             } else if (header == "WaitTimeout") {
                 parseWaitTimeoutLine(arguments);
             } else if (header == "Localtime") {
@@ -230,32 +225,30 @@ void Query::parseNegateLine(char *line, FilterStack &filters) {
     filters.push_back(top->negate());
 }
 
-// static
-void Query::parseStatsAndOrLine(char *line, const LogicalConnective &connective,
-                                StatsColumns &stats_columns) {
+void Query::parseStatsAndOrLine(char *line,
+                                const LogicalConnective &connective) {
     auto number = nextNonNegativeIntegerArgument(&line);
     Filters subfilters;
     for (auto i = 0; i < number; ++i) {
-        if (stats_columns.empty()) {
+        if (parsed_query_.stats_columns.empty()) {
             stack_underflow(number, i);
         }
-        subfilters.push_back(stats_columns.back()->stealFilter());
-        stats_columns.pop_back();
+        subfilters.push_back(parsed_query_.stats_columns.back()->stealFilter());
+        parsed_query_.stats_columns.pop_back();
     }
     std::reverse(subfilters.begin(), subfilters.end());
-    stats_columns.push_back(std::make_unique<StatsColumnCount>(
+    parsed_query_.stats_columns.push_back(std::make_unique<StatsColumnCount>(
         connective(Filter::Kind::stats, subfilters)));
 }
 
-// static
-void Query::parseStatsNegateLine(char *line, StatsColumns &stats_columns) {
+void Query::parseStatsNegateLine(char *line) {
     checkNoArguments(line);
-    if (stats_columns.empty()) {
+    if (parsed_query_.stats_columns.empty()) {
         stack_underflow(1, 0);
     }
-    auto to_negate = stats_columns.back()->stealFilter();
-    stats_columns.pop_back();
-    stats_columns.push_back(
+    auto to_negate = parsed_query_.stats_columns.back()->stealFilter();
+    parsed_query_.stats_columns.pop_back();
+    parsed_query_.stats_columns.push_back(
         std::make_unique<StatsColumnCount>(to_negate->negate()));
 }
 
@@ -371,8 +364,7 @@ const std::map<std::string, AggregationFactory> stats_ops{
     {"avginv", []() { return std::make_unique<AvgInvAggregation>(); }}};
 }  // namespace
 
-void Query::parseStatsLine(char *line, StatsColumns &stats_columns,
-                           ColumnSet &all_columns,
+void Query::parseStatsLine(char *line, ColumnSet &all_columns,
                            const ColumnCreator &make_column) {
     // first token is either aggregation operator or column name
     std::shared_ptr<Column> column;
@@ -389,7 +381,7 @@ void Query::parseStatsLine(char *line, StatsColumns &stats_columns,
         column = make_column(nextStringArgument(&line));
         sc = std::make_unique<StatsColumnOp>(it->second, column.get());
     }
-    stats_columns.push_back(std::move(sc));
+    parsed_query_.stats_columns.push_back(std::move(sc));
     all_columns.insert(column);
     // Default to old behaviour: do not output column headers if we do Stats
     // queries
@@ -534,18 +526,15 @@ void Query::parseWaitTimeoutLine(char *line) {
         std::chrono::milliseconds(nextNonNegativeIntegerArgument(&line));
 }
 
-// static
-void Query::parseWaitTriggerLine(char *line, Triggers::Kind &wait_trigger) {
-    wait_trigger = Triggers::find(nextStringArgument(&line));
+void Query::parseWaitTriggerLine(char *line) {
+    parsed_query_.wait_trigger = Triggers::find(nextStringArgument(&line));
 }
 
-// static
 void Query::parseWaitObjectLine(
-    const char *line, const std::function<Row(const std::string &)> &get,
-    Row &wait_object) {
+    const char *line, const std::function<Row(const std::string &)> &get) {
     auto primary_key = mk::lstrip(line);
-    wait_object = get(primary_key);
-    if (wait_object.isNull()) {
+    parsed_query_.wait_object = get(primary_key);
+    if (parsed_query_.wait_object.isNull()) {
         throw std::runtime_error("primary key '" + primary_key +
                                  "' not found or not supported by this table");
     }
@@ -578,7 +567,7 @@ void Query::parseLocaltimeLine(char *line, Logger *logger) {
     parsed_query_.timezone_offset = offset;
 }
 
-bool Query::doStats() const { return !_stats_columns.empty(); }
+bool Query::doStats() const { return !parsed_query_.stats_columns.empty(); }
 
 bool Query::process() {
     // Precondition: output has been reset
@@ -612,17 +601,17 @@ void Query::start(QueryRenderer &q) {
         }
 
         // Output dummy headers for stats columns
-        for (size_t col = 1; col <= _stats_columns.size(); ++col) {
+        for (size_t col = 1; col <= parsed_query_.stats_columns.size(); ++col) {
             r.output("stats_" + std::to_string(col));
         }
     }
 }
 
 bool Query::timelimitReached() const {
-    if (!_time_limit) {
+    if (!parsed_query_.time_limit) {
         return false;
     }
-    const auto &[duration, timeout] = *_time_limit;
+    const auto &[duration, timeout] = *parsed_query_.time_limit;
     if (std::chrono::steady_clock::now() >= timeout) {
         _output.setError(
             OutputBuffer::ResponseCode::payload_too_large,
@@ -789,8 +778,8 @@ const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
     auto it = _stats_groups.find(groupspec);
     if (it == _stats_groups.end()) {
         std::vector<std::unique_ptr<Aggregator>> aggrs;
-        aggrs.reserve(_stats_columns.size());
-        for (const auto &sc : _stats_columns) {
+        aggrs.reserve(parsed_query_.stats_columns.size());
+        for (const auto &sc : parsed_query_.stats_columns) {
             aggrs.push_back(sc->createAggregator(_logger));
         }
         it = _stats_groups.emplace(groupspec, std::move(aggrs)).first;
@@ -804,16 +793,18 @@ void Query::doWait() {
         invalidRequest("waiting for WaitCondition would hang forever");
         return;
     }
-    if (!_wait_condition->is_tautology() && _wait_object.isNull()) {
-        _wait_object = _table.getDefault();
-        if (_wait_object.isNull()) {
+    if (!_wait_condition->is_tautology() &&
+        parsed_query_.wait_object.isNull()) {
+        parsed_query_.wait_object = _table.getDefault();
+        if (parsed_query_.wait_object.isNull()) {
             invalidRequest("missing WaitObject");
             return;
         }
     }
     _table.core()->triggers().wait_for(
-        _wait_trigger, parsed_query_.wait_timeout, [this] {
-            return _wait_condition->accepts(_wait_object, *parsed_query_.user,
+        parsed_query_.wait_trigger, parsed_query_.wait_timeout, [this] {
+            return _wait_condition->accepts(parsed_query_.wait_object,
+                                            *parsed_query_.user,
                                             parsed_query_.timezone_offset);
         });
 }

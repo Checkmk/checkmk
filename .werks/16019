@@ -1,0 +1,33 @@
+Title: Update PHP version in SLES15P4 from 7 to 8
+Class: fix
+Compatible: compat
+Component: rpm
+Date: 1689864216
+Edition: cre
+Knowledge: doc
+Level: 2
+State: unknown
+Version: 2.1.0p31
+
+Checkmk was shipped with a dependency to PHP7 for SLES15SP4. Since PHP7 is
+part of the legacy module, this Werk updates the dependency from PHP7 to PHP8.
+
+As SLES only allows one version of PHP to be installed, the following steps
+will uninstall PHP7 from the system and install the new version of Checkmk
+with PHP8. Be aware that this procedure updates PHP from version 7 to 8 for the whole OS. In case you run additional PHP applications next to Checkmk, the update will also affect them.
+
+Run the following commands to perform the update to the new Checkmk version:
+
+LI: install the new Checkmk version with <tt>zypper install <NEW_CHECKMK.rpm></tt>
+LI:  Zypper will now complain about a conflict with several PHP packages and asks you to select a solution. There, select <tt>solution 1</tt> to confirm the deinstallation of the current Checkmk version, the PHP7 modules and to continue with the installation
+LI: confirm the installation of the new Checkmk version and PHP8 with <tt>yes</tt>
+LI: removing the existing Checkmk version will throw an error like <tt>Site <SITENAME> is still using this version! Removal of <OLD_CHECKMK>(@System) failed:</tt>, proceed by choosing <tt>ignore</tt> which creates a inconsistent state for the old Checkmk version package, which we will resolve in a later step.
+LI: PHP7 will be removed and PHP8 gets installed
+LI: change to the site user with <tt>omd <SITE_NAME></tt>
+LI: stop the site with <tt>omd stop</tt>
+LI: perform the update to the new Checkmk version with <tt>omd update</tt>, select <tt>Update</tt> at the user prompt
+LI: in case further prompts regarding wrong permissions of BUILD files appear, choose the default value with <tt>d</tt>
+LI: start the site again with <tt>omd start</tt>
+LI: exit from the site user
+LI: list all installed Checkmk version with <tt>omd versions</tt>
+LI: finally remove the old Checkmk installation with <tt>zypper remove <OLD_CHECKMK></tt>

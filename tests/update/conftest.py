@@ -380,7 +380,7 @@ def _agent_ctl(installed_agent_ctl_in_unknown_state: Path) -> Iterator[Path]:
 
 
 def logger_services_ok(version: str, services: list, hostname: str) -> None:
-    logger.info(
+    logger.debug(
         "%s service(s) found in `OK` status in %s host in %s-version:\n%s",
         len(services),
         hostname,

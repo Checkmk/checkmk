@@ -37,9 +37,9 @@ pytestmark = pytest.mark.checks
             [
                 "-u",
                 "user",
-                "--accept-any-hostkey",
                 "-i",
                 "lshost,lslicense,lsmdisk,lsmdiskgrp,lsnode,lsnodestats,lssystem,lssystemstats,lsportfc,lsenclosure,lsenclosurestats,lsarray,disks",
+                "--accept-any-hostkey",
                 "address",
             ],
         ),
@@ -63,7 +63,13 @@ pytestmark = pytest.mark.checks
                 "user": "user",
                 "accept-any-hostkey": False,
             },
-            ["-u", "user", "address"],
+            [
+                "-u",
+                "user",
+                "-i",
+                "lshost,lslicense,lsmdisk,lsmdiskgrp,lsnode,lsnodestats,lssystem,lssystemstats,lsportfc,lsenclosure,lsenclosurestats,lsarray,disks",
+                "address",
+            ],
         ),
     ],
 )

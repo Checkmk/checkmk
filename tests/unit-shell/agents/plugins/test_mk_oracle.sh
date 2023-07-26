@@ -14,6 +14,18 @@ MK_ORACLE_PLUGIN_PATH="${UNIT_SH_PLUGINS_DIR}/mk_oracle"
 #   |                                |_|                                   |
 #   '----------------------------------------------------------------------'
 
+setUp() {
+    # Fake the sqlplus binary
+    ORACLE_HOME=${SHUNIT_TMPDIR}/ora_home
+    FAKE_SQLPLUS=${ORACLE_HOME}/bin/sqlplus
+    mkdir -p "${ORACLE_HOME}"/bin
+    cat <<EOF >"${FAKE_SQLPLUS}"
+echo "SQL*Plus: Release 19.2.3.4.5 - Production
+Version 19.3.0.0.0"
+EOF
+    chmod +x "${FAKE_SQLPLUS}"
+}
+
 # shellcheck disable=SC2317 # overwritten function called indirectly
 oneTimeSetUp() {
     export MK_CONFDIR=${SHUNIT_TMPDIR}
@@ -28,16 +40,6 @@ oneTimeSetUp() {
     pwd() { echo "check_mk_agent/plugins"; }
 
     set_os_env
-
-    # Fake the sqlplus binary
-    ORACLE_HOME=${SHUNIT_TMPDIR}/ora_home
-    FAKE_SQLPLUS=${ORACLE_HOME}/bin/sqlplus
-    mkdir -p "${ORACLE_HOME}"/bin
-    cat <<EOF >"${FAKE_SQLPLUS}"
-echo "SQL*Plus: Release 19.2.3.4.5 - Production
-Version 19.3.0.0.0"
-EOF
-    chmod +x "${FAKE_SQLPLUS}"
 
     # Overwrite functions from mk_oracle which cannot/won't be unit tested for now
     mk_ora_sqlplus() { true; }
@@ -69,6 +71,7 @@ EOF
     sql_locks_old() { echo "mocked-sql_locks_old"; }
     sql_longactivesessions() { echo "mocked-sql_longactivesessions"; }
     sql_asm_diskgroup() { echo "mocked-sql_asm_diskgroup"; }
+    tearDown
 }
 
 tearDown() {
@@ -86,6 +89,10 @@ tearDown() {
     unset MK_SYNC_SECTIONS_QUERY MK_ASYNC_SECTIONS_QUERY
     unset ORACLE_SID MK_SID MK_ORA_SECTIONS
     unset custom_sqls_sections custom_sqls_sids
+    unset DBUSER DBUSER_MYSID SQLS_DBUSER SQLS_DBPASSWORD SQLS_DBSYSCONNECT
+    unset TNS_ADMIN SIDS NUMERIC_ORACLE_VERSION_FOUR_PARTS MK_ORA_TESTVERSION NUMERIC_ORACLE_VERSION SQLS_TNSALIAS
+    unset DBUSER_UT_ORACLE_SID DBUSER_ut_oracle_sid
+    unset PREFIX POSTIFX PREFIX_ut_another_sid POSTFIX_ut_another_sid
 }
 
 # .
@@ -514,6 +521,350 @@ mocked-sql_asm_diskgroup" "$MK_SYNC_SECTIONS_QUERY"
 # TODO
 
 #   ------------------------------------------------------------------------
+
+test_mk_oracle_mk_ora_db_connect_default() {
+    CONNECTION=$(mk_ora_db_connect)
+    assertEquals "${CONNECTION}" "/@localhost:1521/"
+}
+
+# "username:password:role:hostname:port:piggybackhost(optional):sid(mandatory):version(mandatory):tns_alias(optional)"
+# username/password@host:port/service
+
+test_mk_oracle_mk_ora_db_connect_remote_instance_1() {
+    # shellcheck disable=SC2034 # variable appears unused
+    REMOTE_INSTANCE_UNITTEST="ut_username:ut_password:ut_role:ut_hostname:ut_port::ut_sid:ut_version:"
+    CONNECTION=$(mk_ora_db_connect REMOTE_INSTANCE_UNITTEST)
+    assertEquals "ut_username/ut_password@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=ut_hostname)(PORT=ut_port))(CONNECT_DATA=(SID=ut_sid)(SERVER=DEDICATED)(UR=A))) as ut_role" "${CONNECTION}"
+}
+
+test_mk_oracle_mk_ora_db_connect_remote_instance_2() {
+    # shellcheck disable=SC2034 # variable appears unused
+    REMOTE_INSTANCE_UNITTEST="ut_username:ut_password:ut_role:ut_hostname_ignored:ut_port_ignored::ut_sid:ut_version:ut_tnsalias"
+    CONNECTION=$(mk_ora_db_connect REMOTE_INSTANCE_UNITTEST)
+    assertEquals "ut_username/ut_password@ut_tnsalias as ut_role" "${CONNECTION}"
+}
+
+test_mk_oracle_mk_ora_db_connect_remote_instance_4() {
+    # shellcheck disable=SC2034 # variable appears unused
+    REMOTE_INSTANCE_UNITTEST="ut_username_ignored:ut_password_ignored:ut_role_ignored:ut_hostname_ignored:ut_port_ignored::ut_sid_ignored:ut_version:ut_tnsalias"
+    # this is a special user to execute user provided sql statements
+    # (the main mk_oracle calls mk_ora_db_connect multiple times for the different connections)
+    SQLS_DBUSER="ut_sqlss_dbuser"
+    # shellcheck disable=SC2034 # variable appears unused
+    SQLS_DBPASSWORD="ut_sqls_password"
+    SQLS_DBSYSCONNECT="ut_dbsysconnect"
+    SQLS_TNSALIAS="ut_sqls_tnsalias"
+    CONNECTION=$(mk_ora_db_connect REMOTE_INSTANCE_UNITTEST)
+    assertEquals "ut_sqlss_dbuser/ut_sqls_password@ut_sqls_tnsalias as ut_dbsysconnect" "${CONNECTION}"
+}
+
+test_mk_oracle_mk_ora_db_connect_remote_instance_3() {
+    # same as above, but missing tnsalias in REMOTE_INSTANCE_UNITTEST
+    # shellcheck disable=SC2034 # variable appears unused
+    REMOTE_INSTANCE_UNITTEST="ut_username_ignored:ut_password_ignored:ut_role_ignored:ut_hostname:ut_port::ut_sid:ut_version"
+    SQLS_DBUSER="ut_sqlss_dbuser"
+    # shellcheck disable=SC2034 # variable appears unused
+    SQLS_DBPASSWORD="ut_sqls_password"
+    SQLS_DBSYSCONNECT="ut_dbsysconnect"
+    # shellcheck disable=SC2034 # variable appears unused
+    SQLS_TNSALIAS="ut_sqls_tnsalias"
+    # TODO: this is a BUG! ut_sqls_tnsalias should be visible in the result
+    CONNECTION=$(mk_ora_db_connect REMOTE_INSTANCE_UNITTEST)
+    assertEquals "ut_sqlss_dbuser/ut_sqls_password@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=ut_hostname)(PORT=ut_port))(CONNECT_DATA=(SID=ut_sid)(SERVER=DEDICATED)(UR=A))) as ut_dbsysconnect" "${CONNECTION}"
+}
+
+test_mk_oracle_mk_ora_db_connect_remote_instance_5() {
+    # shellcheck disable=SC2034 # variable appears unused
+    REMOTE_INSTANCE_UNITTEST="ut_username_ignored:ut_password_ignored:ut_role_ignored:ut_hostname:ut_port::ut_sid:ut_version"
+    # this is a special user to execute user provided sql statements
+    # (the main mk_oracle calls mk_ora_db_connect multiple times for the different connections)
+    SQLS_DBUSER="ut_sqlss_dbuser"
+    # shellcheck disable=SC2034 # variable appears unused
+    SQLS_DBPASSWORD="ut_sqls_password"
+    CONNECTION=$(mk_ora_db_connect REMOTE_INSTANCE_UNITTEST)
+    assertEquals "ut_sqlss_dbuser/ut_sqls_password@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=ut_hostname)(PORT=ut_port))(CONNECT_DATA=(SID=ut_sid)(SERVER=DEDICATED)(UR=A)))" "${CONNECTION}"
+}
+
+test_mk_oracle_mk_ora_db_connect_1() {
+    # shellcheck disable=SC2034 # variable appears unused
+    SQLS_DBUSER="ut_sqlss_dbuser"
+    # shellcheck disable=SC2034 # variable appears unused
+    SQLS_DBPASSWORD="ut_sqls_password"
+    # shellcheck disable=SC2034 # variable appears unused
+    SQLS_DBSYSCONNECT="ut_dbsysconnect"
+    # TODO: this is a BUG! ut_dbsysconnect should be visible in the result.
+    ORACLE_SID="ut_oracle_sid"
+    CONNECTION=$(mk_ora_db_connect)
+    assertEquals "ut_sqlss_dbuser/ut_sqls_password@localhost:1521/ut_oracle_sid" "${CONNECTION}"
+}
+
+test_mk_oracle_mk_ora_db_connect_2() {
+    DBUSER="ut_username:ut_password:ut_role:::ut_tnsalias"
+    ORACLE_SID="ut_oracle_sid"
+    CONNECTION=$(mk_ora_db_connect)
+    assertEquals "ut_username/ut_password@ut_tnsalias as ut_role" "${CONNECTION}"
+}
+
+test_mk_oracle_mk_ora_db_connect_2_lower_variable() {
+    DBUSER="ut_username_ignored:ut_password_ignored:ut_role_ignored:::ut_tnsalias_ignored"
+    # shellcheck disable=SC2034 # variable appears unused
+    DBUSER_ut_oracle_sid="ut_lower_username:ut_lower_password:ut_lower_role:::ut_lower_tnsalias"
+    ORACLE_SID="ut_OrAcLe_sid"
+    CONNECTION=$(mk_ora_db_connect)
+    assertEquals "ut_lower_username/ut_lower_password@ut_lower_tnsalias as ut_lower_role" "${CONNECTION}"
+}
+
+test_mk_oracle_mk_ora_db_connect_2_upper_variable() {
+    DBUSER="ut_username_ignored:ut_password_ignored:ut_role_ignored:::ut_tnsalias_ignored"
+    # shellcheck disable=SC2034 # variable appears unused
+    DBUSER_UT_ORACLE_SID="ut_upper_username:ut_upper_password:ut_upper_role:::ut_upper_tnsalias"
+    ORACLE_SID="ut_oRaClE_sid"
+    CONNECTION=$(mk_ora_db_connect)
+    assertEquals "ut_upper_username/ut_upper_password@ut_upper_tnsalias as ut_upper_role" "${CONNECTION}"
+}
+
+test_mk_oracle_mk_ora_db_connect_2_hostname_port() {
+    DBUSER="ut_username:ut_password:ut_role:ut_hostname:ut_port"
+    ORACLE_SID="ut_oracle_sid"
+    CONNECTION=$(mk_ora_db_connect)
+    assertEquals "ut_username/ut_password@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=ut_hostname)(PORT=ut_port))(CONNECT_DATA=(SID=ut_oracle_sid)(SERVER=DEDICATED)(UR=A))) as ut_role" "${CONNECTION}"
+}
+
+test_mk_oracle_mk_ora_db_connect_asm_1() {
+    # shellcheck disable=SC2034 # variable appears unused
+    ORACLE_SID="+asm"
+    # shellcheck disable=SC2034 # variable appears unused
+    ASMUSER="ut_asmuser_username:ut_asmuser_password:ut_role:ut_asmuser_hostname:ut_asmuser_port"
+    CONNECTION=$(mk_ora_db_connect)
+    assertEquals "ut_asmuser_username/ut_asmuser_password@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=ut_asmuser_hostname)(PORT=ut_asmuser_port))(CONNECT_DATA=(SID=+asm)(SERVER=DEDICATED)(UR=A))) as ut_role" "${CONNECTION}"
+}
+
+test_mk_oracle_mk_ora_db_connect_asm_1_tnsalias() {
+    # shellcheck disable=SC2034 # variable appears unused
+    ORACLE_SID="+asm"
+    # shellcheck disable=SC2034 # variable appears unused
+    ASMUSER="ut_asmuser_username:ut_asmuser_password:ut_role:ut_asmuser_hostname:ut_asmuser_port:ut_tnsalias"
+    CONNECTION=$(mk_ora_db_connect)
+    assertEquals "ut_asmuser_username/ut_asmuser_password@ut_tnsalias as ut_role" "${CONNECTION}"
+}
+
+test_mk_oracle_mk_ora_db_connect_asm_2() {
+    # shellcheck disable=SC2034 # variable appears unused
+    ORACLE_SID="+asm"
+    # shellcheck disable=SC2034 # variable appears unused
+    ASMUSER="ut_asmuser_username:ut_asmuser_password:ut_role"
+    CONNECTION=$(mk_ora_db_connect)
+    assertEquals "ut_asmuser_username/ut_asmuser_password@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SID=+asm)(SERVER=DEDICATED)(UR=A))) as ut_role" "${CONNECTION}"
+}
+
+test_mk_oracle_mk_ora_db_connect_gi_restart_1() {
+    TMP_PATH=$(mktemp -d)
+    echo 'echo "ut_hostname_hostname"' >"$TMP_PATH/hostname"
+    chmod +x "$TMP_PATH/hostname"
+    OLD_PATH="$PATH"
+    PATH="$TMP_PATH:$PATH"
+    OLRLOC=$(mktemp)
+    crs_home=$(mktemp -d)
+
+    DBUSER="ut_dbuser:ut_password"
+    CONNECTION=$(mk_ora_db_connect)
+    assertEquals "ut_dbuser/ut_password@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=ut_hostname_hostname)(PORT=1521))(CONNECT_DATA=(SID=)(SERVER=DEDICATED)(UR=A)))" "${CONNECTION}"
+
+    rm -d "$crs_home"
+    rm "$OLRLOC"
+    rm -r "$TMP_PATH"
+    PATH="$OLD_PATH"
+}
+
+test_mk_oracle_mk_ora_db_connect_gi_restart_2() {
+    OLRLOC=$(mktemp)
+
+    DBUSER="ut_dbuser:ut_password"
+    crs_home="defined_variable_but_no_folder"
+    CONNECTION=$(mk_ora_db_connect)
+    assertEquals "ut_dbuser/ut_password@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SID=)(SERVER=DEDICATED)(UR=A)))" "${CONNECTION}"
+
+    rm "$OLRLOC"
+}
+
+setup_tnsping() {
+    # set up the tnsping binary: three modes are implemented:
+    # * binary not available: `setup_tnsping`
+    # * host can be reached: `setup_tnsping true`
+    # * host can not be reached: `setup_tnsping false`
+    ORACLE_HOME=$(mktemp -d)
+    mkdir "$ORACLE_HOME/bin"
+    TNS_ADMIN=$(mktemp -d)
+    touch "${TNS_ADMIN}/tnsnames.ora"
+    if [ "$1" = "true" ] || [ "$1" = "false" ]; then
+        echo -e "#!/bin/bash\n$1" >"$ORACLE_HOME/bin/tnsping"
+        chmod +x "$ORACLE_HOME/bin/tnsping"
+    fi
+}
+
+teardown_tnsping() {
+    rm -r "$ORACLE_HOME"
+    rm -r "${TNS_ADMIN}"
+}
+
+test_mk_oracle_mk_ora_db_connect_sqls_tnsalias_tnsping_fail_no_password() {
+    setup_tnsping false
+
+    DBUSER="/@ut_user:ut_password::::ut_tnsalias"
+    # TODO: this is a strange configuration: if user starts with "/@" user and
+    # password are omitted and should not be set in the configuration. current
+    # code tests if user starts with "/@" so we keep this in order to document
+    # the current behavior.
+    # shellcheck disable=SC2034 # variable appears unused
+    ORACLE_SID="ut_sid"
+    CONNECTION=$(mk_ora_db_connect)
+    assertEquals "/@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=localhost)(PORT=1521))(CONNECT_DATA=(SID=ut_sid)(SERVER=DEDICATED)(UR=A)))" "${CONNECTION}"
+
+    teardown_tnsping
+}
+
+test_mk_oracle_mk_ora_db_connect_sqls_tnsalias_tnsping_fail() {
+    setup_tnsping false
+
+    DBUSER="ut_username:ut_password:ut_role:ut_hostname:ut_port:ut_tnsalias"
+    ORACLE_SID="ut_sid_two"
+    CONNECTION=$(mk_ora_db_connect)
+    assertEquals "ut_username/ut_password@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=ut_hostname)(PORT=ut_port))(CONNECT_DATA=(SID=ut_sid_two)(SERVER=DEDICATED)(UR=A))) as ut_role" "${CONNECTION}"
+
+    teardown_tnsping
+}
+
+test_mk_oracle_mk_ora_db_connect_sqls_tnsalias_tnsping_fail_1() {
+    setup_tnsping false
+
+    # shellcheck disable=SC2034 # variable appears unused
+    REMOTE_INSTANCE_UTINST="/ut_username:ut_password:ut_role:ut_hostname:ut_port:ut_piggyback_host:ut_sid:ut_version:"
+    CONNECTION=$(mk_ora_db_connect REMOTE_INSTANCE_UTINST)
+    assertEquals "/@ut_hostname:ut_port/ut_sid as ut_role" "${CONNECTION}"
+    # TODO: this is a BUG! username/password should be set!
+
+    teardown_tnsping
+}
+
+test_mk_oracle_mk_ora_db_connect_sqls_tnsalias_tnsping_fail_1_tnsalias() {
+    setup_tnsping false
+
+    # shellcheck disable=SC2034 # variable appears unused
+    REMOTE_INSTANCE_UTINST="/ut_username:ut_password:ut_role:ut_hostname:ut_port:ut_piggyback_host:ut_sid:ut_version:ut_tnsalias"
+    CONNECTION=$(mk_ora_db_connect REMOTE_INSTANCE_UTINST)
+    assertEquals "/@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=ut_hostname)(PORT=ut_port))(CONNECT_DATA=(SID=ut_sid)(SERVER=DEDICATED)(UR=A))) as ut_role" "${CONNECTION}"
+    # TODO: this is a BUG! username/password should be set!
+
+    teardown_tnsping
+}
+
+test_mk_oracle_mk_ora_db_connect_sqls_tnsalias_tnsping_missing() {
+    setup_tnsping
+
+    DBUSER="ut_username:ut_password:ut_role:ut_hostname:ut_port:ut_tnsalias"
+    ORACLE_SID="ut_sid_two"
+    CONNECTION=$(mk_ora_db_connect)
+    assertEquals "ut_username/ut_password@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=ut_hostname)(PORT=ut_port))(CONNECT_DATA=(SID=ut_sid_two)(SERVER=DEDICATED)(UR=A))) as ut_role" "${CONNECTION}"
+
+    teardown_tnsping
+}
+
+test_mk_oracle_mk_ora_db_connect_sqls_tnsalias_tnsping_missing_1() {
+    setup_tnsping
+
+    # shellcheck disable=SC2034 # variable appears unused
+    REMOTE_INSTANCE_UTINST="/ut_username:ut_password:ut_role:ut_hostname:ut_port:ut_piggyback_host:ut_sid:ut_version:"
+    CONNECTION=$(mk_ora_db_connect REMOTE_INSTANCE_UTINST)
+    assertEquals "/@ut_hostname:ut_port/ut_sid as ut_role" "${CONNECTION}"
+    # TODO: this is a BUG! username/password should be set!
+
+    teardown_tnsping
+}
+
+test_mk_oracle_mk_ora_db_connect_sqls_tnsalias_tnsping_missing_1_tnsalias() {
+    setup_tnsping
+
+    # shellcheck disable=SC2034 # variable appears unused
+    REMOTE_INSTANCE_UTINST="/ut_username:ut_password:ut_role:ut_hostname:ut_port:ut_piggyback_host:ut_sid:ut_version:ut_tnsalias"
+    CONNECTION=$(mk_ora_db_connect REMOTE_INSTANCE_UTINST)
+    assertEquals "/@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=ut_hostname)(PORT=ut_port))(CONNECT_DATA=(SID=ut_sid)(SERVER=DEDICATED)(UR=A))) as ut_role" "${CONNECTION}"
+    # TODO: this is a BUG! username/password should be set!
+
+    teardown_tnsping
+}
+
+test_mk_oracle_mk_ora_db_connect_sqls_tnsalias_tnsping_ok() {
+    setup_tnsping true
+
+    DBUSER="ut_username:ut_password:ut_role:ut_hostname:ut_port:ut_tnsalias"
+    ORACLE_SID="ut_sid_two"
+    CONNECTION=$(mk_ora_db_connect)
+    assertEquals "ut_username/ut_password@ut_tnsalias as ut_role" "${CONNECTION}"
+
+    teardown_tnsping
+}
+
+test_mk_oracle_mk_ora_db_connect_sqls_tnsalias_tnsping_ok_1() {
+    setup_tnsping true
+
+    # shellcheck disable=SC2034 # variable appears unused
+    REMOTE_INSTANCE_UTINST="/ut_username:ut_password:ut_role:ut_hostname:ut_port:ut_piggyback_host:ut_sid:ut_version:"
+    CONNECTION=$(mk_ora_db_connect REMOTE_INSTANCE_UTINST)
+
+    assertEquals "/@ut_sid as ut_role" "${CONNECTION}"
+    # TODO: this is a BUG! why ut_sid as hostname? username/password is also missing!
+
+    teardown_tnsping
+}
+
+test_mk_oracle_mk_ora_db_connect_sqls_tnsalias_tnsping_ok_prefix() {
+    setup_tnsping true
+
+    DBUSER="ut_username:ut_password:ut_role:ut_hostname:ut_port:ut_tnsalias"
+    # shellcheck disable=SC2034 # variable appears unused
+    PREFIX="ut_prefix__"
+    # shellcheck disable=SC2034 # variable appears unused
+    POSTFIX="__ut_postfix"
+    CONNECTION=$(mk_ora_db_connect ut_another_sid)
+    assertEquals "ut_username/ut_password@ut_prefix__ut_tnsalias__ut_postfix as ut_role" "${CONNECTION}"
+
+    teardown_tnsping
+}
+
+test_mk_oracle_mk_ora_db_connect_sqls_tnsalias_tnsping_ok_sid_specific_prefix() {
+    setup_tnsping true
+
+    DBUSER="ut_username:ut_password:ut_role:ut_hostname:ut_port:ut_tnsalias"
+    # shellcheck disable=SC2034 # variable appears unused
+    PREFIX_ut_another_sid="ut_spec_prefix__"
+    # shellcheck disable=SC2034 # variable appears unused
+    POSTFIX_ut_another_sid="__ut_spec_postfix"
+    CONNECTION=$(mk_ora_db_connect ut_another_sid)
+    assertEquals "ut_username/ut_password@ut_spec_prefix__ut_tnsalias__ut_spec_postfix as ut_role" "${CONNECTION}"
+
+    teardown_tnsping
+}
+
+test_mk_oracle_mk_ora_db_connect_sqls_tnsalias_tnsping_ok_sid_specific_prefix_broken() {
+    # this test is nearly identical to the previous one. the only difference in
+    # configuration is, that the previous one specifies ut_another_sid via $1
+    # of mk_ora_db_connect, and this one specifies it via ORACLE_SID
+    # environment variable.
+    setup_tnsping true
+
+    # shellcheck disable=SC2034 # variable appears unused
+    ORACLE_SID="ut_another_sid"
+    DBUSER="ut_username:ut_password:ut_role:ut_hostname:ut_port:ut_tnsalias"
+    # shellcheck disable=SC2034 # variable appears unused
+    PREFIX_ut_another_sid="ut_spec_prefix__"
+    # shellcheck disable=SC2034 # variable appears unused
+    POSTFIX_ut_another_sid="__ut_spec_postfix"
+    CONNECTION=$(mk_ora_db_connect)
+    assertEquals "ut_username/ut_password@ut_tnsalias__ut_postfix as ut_role" "${CONNECTION}"
+    # TODO: this has to be a BUG, right? why is only the postfix applied?
+
+    teardown_tnsping
+}
 
 # shellcheck disable=SC1090 # Can't follow
 . "$UNIT_SH_SHUNIT2"

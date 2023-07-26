@@ -737,7 +737,6 @@ graph_info["cpu_utilization_6_guest"] = {
     ],
     "conflicting_metrics": [
         "util",
-        "cpu_util_steal",
     ],
     "omit_zero_metrics": True,
     "range": (0, "user,system,io_wait,cpu_util_steal,+,+,+,100,MAX"),

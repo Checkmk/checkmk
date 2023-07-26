@@ -315,7 +315,7 @@ def test_reverse_translate_into_all_potentially_relevant_metrics(
         (
             ["user", "system", "io_wait", "guest", "steal"],
             "check_mk-statgrab_cpu",
-            ["cpu_utilization_7"],
+            ["cpu_utilization_7", "cpu_utilization_6_guest"],
         ),
         (["user", "system", "interrupt"], "check_mk-kernel_util", ["cpu_utilization_8"]),
         (
@@ -340,7 +340,356 @@ def test_get_graph_templates(
 ) -> None:
     perfdata: Perfdata = [(n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, check_command)
-    assert set(graph_ids) == {t.id for t in utils.get_graph_templates(translated_metrics)}
+    assert {t.id for t in utils.get_graph_templates(translated_metrics)} == set(graph_ids)
+
+
+@pytest.mark.parametrize(
+    "metric_names, graph_ids",
+    [
+        # cpu.py
+        pytest.param(
+            ["user_time", "children_user_time", "system_time", "children_system_time"],
+            ["used_cpu_time"],
+            id="used_cpu_time",
+        ),
+        pytest.param(
+            [
+                "user_time",
+                "children_user_time",
+                "system_time",
+                "children_system_time",
+                "cmk_time_agent",
+                "cmk_time_snmp",
+                "cmk_time_ds",
+            ],
+            [
+                "METRIC_children_system_time",
+                "METRIC_children_user_time",
+                "METRIC_cmk_time_agent",
+                "METRIC_cmk_time_ds",
+                "METRIC_cmk_time_snmp",
+                "METRIC_system_time",
+                "METRIC_user_time",
+            ],
+            id="used_cpu_time_conflicting_metrics",
+        ),
+        pytest.param(
+            ["user_time", "system_time"],
+            ["cpu_time"],
+            id="cpu_time",
+        ),
+        pytest.param(
+            ["user_time", "system_time", "children_user_time"],
+            ["METRIC_children_user_time", "METRIC_system_time", "METRIC_user_time"],
+            id="cpu_time_conflicting_metrics",
+        ),
+        pytest.param(
+            ["util", "util_average"],
+            ["util_average_1"],
+            id="util_average_1",
+        ),
+        pytest.param(
+            [
+                "util",
+                "util_average",
+                "util_average_1",
+                "idle",
+                "cpu_util_guest",
+                "cpu_util_steal",
+                "io_wait",
+                "user",
+                "system",
+            ],
+            ["cpu_utilization_4", "cpu_utilization_7_util", "METRIC_util_average_1"],
+            id="util_average_1_conflicting_metrics",
+        ),
+        pytest.param(
+            ["user", "system", "util_average", "util"],
+            ["cpu_utilization_simple"],
+            id="cpu_utilization_simple",
+        ),
+        pytest.param(
+            [
+                "user",
+                "system",
+                "util_average",
+                "util",
+                "idle",
+                "cpu_util_guest",
+                "cpu_util_steal",
+                "io_wait",
+            ],
+            ["cpu_utilization_4", "cpu_utilization_7_util"],
+            id="cpu_utilization_simple_conflicting_metrics",
+        ),
+        pytest.param(
+            ["user", "system", "io_wait", "util_average"],
+            ["cpu_utilization_5"],
+            id="cpu_utilization_5",
+        ),
+        pytest.param(
+            [
+                "user",
+                "system",
+                "io_wait",
+                "util_average",
+                "util",
+                "idle",
+                "cpu_util_guest",
+                "cpu_util_steal",
+            ],
+            ["cpu_utilization_4", "cpu_utilization_7_util"],
+            id="cpu_utilization_5_conflicting_metrics",
+        ),
+        # cpu_utilization_5_util
+        pytest.param(
+            ["user", "system", "io_wait", "util_average", "util"],
+            ["cpu_utilization_5_util"],
+            id="cpu_utilization_5_util",
+        ),
+        pytest.param(
+            [
+                "user",
+                "system",
+                "io_wait",
+                "util_average",
+                "util",
+                "cpu_util_guest",
+                "cpu_util_steal",
+            ],
+            ["cpu_utilization_7_util"],
+            id="cpu_utilization_5_util_conflicting_metrics",
+        ),
+        pytest.param(
+            ["user", "system", "io_wait", "cpu_util_steal", "util_average"],
+            ["cpu_utilization_6_steal"],
+            id="cpu_utilization_6_steal",
+        ),
+        pytest.param(
+            [
+                "user",
+                "system",
+                "io_wait",
+                "cpu_util_steal",
+                "util_average",
+                "util",
+                "cpu_util_guest",
+            ],
+            ["cpu_utilization_7_util"],
+            id="cpu_utilization_6_steal_conflicting_metrics",
+        ),
+        pytest.param(
+            ["user", "system", "io_wait", "cpu_util_steal", "util_average", "util"],
+            ["cpu_utilization_6_steal_util"],
+            id="cpu_utilization_6_steal_util",
+        ),
+        pytest.param(
+            [
+                "user",
+                "system",
+                "io_wait",
+                "cpu_util_steal",
+                "util_average",
+                "util",
+                "cpu_util_guest",
+            ],
+            ["cpu_utilization_7_util"],
+            id="cpu_utilization_6_steal_util_conflicting_metrics",
+        ),
+        pytest.param(
+            ["user", "system", "io_wait", "cpu_util_guest", "util_average", "cpu_util_steal"],
+            ["cpu_utilization_6_guest", "cpu_utilization_7"],
+            id="cpu_utilization_6_guest",
+        ),
+        pytest.param(
+            [
+                "user",
+                "system",
+                "io_wait",
+                "cpu_util_guest",
+                "util_average",
+                "cpu_util_steal",
+                "util",
+            ],
+            ["cpu_utilization_7_util"],
+            id="cpu_utilization_6_guest_conflicting_metrics",
+        ),
+        pytest.param(
+            ["user", "system", "io_wait", "cpu_util_guest", "util_average", "util"],
+            ["cpu_utilization_6_guest_util"],
+            id="cpu_utilization_6_guest_util",
+        ),
+        pytest.param(
+            [
+                "user",
+                "system",
+                "io_wait",
+                "cpu_util_guest",
+                "util_average",
+                "util",
+                "cpu_util_steal",
+            ],
+            ["cpu_utilization_7_util"],
+            id="cpu_utilization_6_guest_util_conflicting_metrics",
+        ),
+        #
+        pytest.param(
+            ["user", "system", "io_wait", "cpu_util_guest", "cpu_util_steal", "util_average"],
+            ["cpu_utilization_6_guest", "cpu_utilization_7"],
+            id="cpu_utilization_7",
+        ),
+        pytest.param(
+            [
+                "user",
+                "system",
+                "io_wait",
+                "cpu_util_guest",
+                "cpu_util_steal",
+                "util_average",
+                "util",
+            ],
+            ["cpu_utilization_7_util"],
+            id="cpu_utilization_7_conflicting_metrics",
+        ),
+        pytest.param(
+            ["util"],
+            ["util_fallback"],
+            id="util_fallback",
+        ),
+        pytest.param(
+            ["util", "util_average", "system", "engine_cpu_util"],
+            ["cpu_utilization", "METRIC_system", "METRIC_util_average"],
+            id="util_fallback_conflicting_metrics",
+        ),
+        # fs.py
+        pytest.param(
+            ["fs_used", "fs_size"],
+            ["fs_used"],
+            id="fs_used",
+        ),
+        pytest.param(
+            ["fs_used", "fs_size", "reserved"],
+            ["METRIC_fs_size", "METRIC_fs_used", "METRIC_reserved"],
+            id="fs_used_conflicting_metrics",
+        ),
+        # mail.py
+        pytest.param(
+            ["mail_queue_deferred_length", "mail_queue_active_length"],
+            ["amount_of_mails_in_queues"],
+            id="amount_of_mails_in_queues",
+        ),
+        pytest.param(
+            [
+                "mail_queue_deferred_length",
+                "mail_queue_active_length",
+                "mail_queue_postfix_total",
+                "mail_queue_z1_messenger",
+            ],
+            [
+                "METRIC_mail_queue_active_length",
+                "METRIC_mail_queue_deferred_length",
+                "METRIC_mail_queue_postfix_total",
+                "METRIC_mail_queue_z1_messenger",
+            ],
+            id="amount_of_mails_in_queues_conflicting_metrics",
+        ),
+        pytest.param(
+            ["mail_queue_deferred_size", "mail_queue_active_size"],
+            ["size_of_mails_in_queues"],
+            id="size_of_mails_in_queues",
+        ),
+        pytest.param(
+            [
+                "mail_queue_deferred_size",
+                "mail_queue_active_size",
+                "mail_queue_postfix_total",
+                "mail_queue_z1_messenger",
+            ],
+            [
+                "METRIC_mail_queue_active_size",
+                "METRIC_mail_queue_deferred_size",
+                "METRIC_mail_queue_postfix_total",
+                "METRIC_mail_queue_z1_messenger",
+            ],
+            id="size_of_mails_in_queues_conflicting_metrics",
+        ),
+        pytest.param(
+            ["mail_queue_hold_length", "mail_queue_incoming_length", "mail_queue_drop_length"],
+            ["amount_of_mails_in_secondary_queues"],
+            id="amount_of_mails_in_secondary_queues",
+        ),
+        pytest.param(
+            [
+                "mail_queue_hold_length",
+                "mail_queue_incoming_length",
+                "mail_queue_drop_length",
+                "mail_queue_postfix_total",
+                "mail_queue_z1_messenger",
+            ],
+            [
+                "METRIC_mail_queue_drop_length",
+                "METRIC_mail_queue_hold_length",
+                "METRIC_mail_queue_incoming_length",
+                "METRIC_mail_queue_postfix_total",
+                "METRIC_mail_queue_z1_messenger",
+            ],
+            id="amount_of_mails_in_secondary_queues_conflicting_metrics",
+        ),
+        # storage.py
+        pytest.param(
+            ["mem_used", "swap_used"],
+            ["ram_swap_used"],
+            id="ram_swap_used",
+        ),
+        pytest.param(
+            ["mem_used", "swap_used", "swap_total"],
+            ["METRIC_mem_used", "METRIC_swap_total", "METRIC_swap_used"],
+            id="ram_swap_used_conflicting_metrics",
+        ),
+        pytest.param(
+            ["mem_lnx_active", "mem_lnx_inactive"],
+            ["active_and_inactive_memory"],
+            id="active_and_inactive_memory",
+        ),
+        pytest.param(
+            ["mem_lnx_active", "mem_lnx_inactive", "mem_lnx_active_anon"],
+            [
+                "METRIC_mem_lnx_active",
+                "METRIC_mem_lnx_active_anon",
+                "METRIC_mem_lnx_inactive",
+            ],
+            id="active_and_inactive_memory_conflicting_metrics",
+        ),
+        pytest.param(
+            ["mem_used"],
+            ["ram_used"],
+            id="ram_used",
+        ),
+        pytest.param(
+            ["mem_used", "swap_used"],
+            ["ram_swap_used"],
+            id="ram_used_conflicting_metrics",
+        ),
+        pytest.param(
+            ["mem_heap", "mem_nonheap"],
+            ["heap_and_non_heap_memory"],
+            id="heap_and_non_heap_memory",
+        ),
+        pytest.param(
+            ["mem_heap", "mem_nonheap", "mem_heap_committed", "mem_nonheap_committed"],
+            ["heap_memory_usage", "non-heap_memory_usage"],
+            id="heap_and_non_heap_memory_conflicting_metrics",
+        ),
+    ],
+)
+def test_conflicting_metrics(metric_names: Sequence[str], graph_ids: Sequence[str]) -> None:
+    # Hard to find all avail metric names of a check plugin.
+    # We test conflicting metrics as following:
+    # 1. write test for expected metric names of a graph template if it has "conflicting_metrics"
+    # 2. use metric names from (1) and conflicting metrics
+    perfdata: Perfdata = [(n, 0, "", None, None, None, None) for n in metric_names]
+    translated_metrics = utils.translate_metrics(perfdata, "check_command")
+    assert [t.id for t in utils.get_graph_templates(translated_metrics)] == graph_ids
 
 
 def test_replace_expression() -> None:

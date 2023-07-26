@@ -71,8 +71,10 @@ std::ostream &operator<<(std::ostream &os, const State &state) {
 void usage() {
     reply(
         State::unknown,
-        "Usage: check_mkevents [-s SOCKETPATH] [-H REMOTE:PORT] [-a] HOST [APPLICATION]\n"
+        "Usage: check_mkevents [-s SOCKETPATH] [-H REMOTE:PORT] [-a] [-l|-L] HOST [APPLICATION]\n"
         " -a    do not take acknowledged events into account.\n"
+        " -l    show last log message in summary/short output\n"
+        " -L    show last log message in details/long output\n"
         " HOST  may be a hostname, and IP address or hostname/IP-address.");
 }
 
@@ -96,6 +98,8 @@ int main(int argc, char **argv) {
     char *remote_host = nullptr;
     char *application = nullptr;
     bool ignore_acknowledged = false;
+    bool last_log_in_summary = false;
+    bool last_log_in_details = false;
     std::string unixsocket_path;
 
     int argc_count = argc;
@@ -110,6 +114,12 @@ int main(int argc, char **argv) {
             argc_count -= 2;
         } else if (strcmp("-a", argv[i]) == 0) {
             ignore_acknowledged = true;
+            argc_count--;
+        } else if (strcmp("-l", argv[i]) == 0) {
+            last_log_in_summary = true;
+            argc_count--;
+        } else if (strcmp("-L", argv[i]) == 0) {
+            last_log_in_details = true;
             argc_count--;
         } else if (argc_count > 2) {
             host = argv[i];

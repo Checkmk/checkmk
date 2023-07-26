@@ -9,3 +9,4 @@ Level: 1
 Version: 2.3.0b1
 
 * Adapted ruleset and argument thingy
+* Parse argument in active check

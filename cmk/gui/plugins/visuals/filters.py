@@ -11,10 +11,9 @@ from typing import Any, Literal
 
 import livestatus
 
-import cmk.utils.version as cmk_version
-
 import cmk.gui.bi as bi
 import cmk.gui.mkeventd as mkeventd
+import cmk.gui.query_filters as query_filters
 import cmk.gui.sites as sites
 from cmk.gui.config import active_config
 from cmk.gui.exceptions import MKMissingDataError, MKUserError
@@ -37,13 +36,6 @@ from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import DualListChoice, LabelGroups
-
-if cmk_version.edition() is cmk_version.Edition.CME:
-    from cmk.gui.cme.filters import (  # pylint: disable=no-name-in-module
-        filter_cme_heading_info,
-    )
-
-import cmk.gui.query_filters as query_filters
 from cmk.gui.visuals import get_only_sites_from_context
 from cmk.gui.visuals.filter import (
     checkbox_component,
@@ -1031,6 +1023,8 @@ filter_nagios_flag_with_register(
 
 
 class SiteFilter(Filter):
+    heading_hook: Callable[[FilterHTTPVariables], str | None]
+
     def __init__(
         self,
         *,
@@ -1072,15 +1066,13 @@ class SiteFilter(Filter):
         )
 
     def heading_info(self, value: FilterHTTPVariables) -> str | None:
-        if cmk_version.edition() is cmk_version.Edition.CME:
-            return filter_cme_heading_info(value)
-        return filter_cre_heading_info(value)
+        return SiteFilter.heading_hook(value)
 
     def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {"site": row["site"]}
 
 
-def filter_cre_heading_info(value: FilterHTTPVariables) -> str | None:
+def cre_site_filter_heading_info(value: FilterHTTPVariables) -> str | None:
     current_value = value.get("site")
     return get_site_config(livestatus.SiteId(current_value))["alias"] if current_value else None
 

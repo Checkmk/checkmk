@@ -39,7 +39,13 @@ class BaseVersions:
     """Get all base versions used for the test."""
 
     # minimal version supported for an update that can merge the configuration
-    MIN_VERSION = os.getenv("MIN_VERSION", "2.1.0p31")
+    # for SLES15SP4 PHP got updated from 7 to 8 with Werk 16019 requiring
+    # additional user actions, skip this update for not p32
+    MIN_VERSION = (
+        os.getenv("MIN_VERSION", "2.1.0p31")
+        if not os.getenv("DISTRO", "sles-15sp4") == "sles-15sp4"
+        else "2.1.0p32"
+    )
     BASE_VERSIONS_STR = [
         "2.1.0p28",
         "2.1.0p29",

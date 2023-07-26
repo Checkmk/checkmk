@@ -24,7 +24,7 @@ hypothesis = "==6.36.2"    # used by unit tests
 mypy = "==0.931"  # used by test/static/Makefile's test-mypy target
 twine = "==3.8.0" # used to upload packages to internal PyPi mirror
 types-six = "==1.16.10"  # used for type checking
-types-requests = "*"  # used for type checking
+types-requests = "==2.27.10"  # used for type checking
 types-PyYAML = "==6.0.4"  # used for type checking
 types-freezegun = "==1.1.6"  # used for type checking
 types-mock = "==4.0.10"  # used for type checking
@@ -33,7 +33,7 @@ types-simplejson = "==3.17.3"  # used for type checking
 types-PyMySQL = "==1.0.13"  # used for type checking
 types-pytz = "==2021.3.5"  # used for type checking
 types-cryptography = "==3.3.15"  # used for type checking
-types-redis = "*"  # used for type checking
+types-redis = "==4.1.15"  # used for type checking
 types-protobuf = "==3.19.12"  # used for type checking
 types-setuptools = "==57.4.9"  # used for type checking
 playwright = "==1.19.0"  # used for in-browser testing
@@ -57,14 +57,13 @@ sphinx-rtd-theme = "==1.0.0"  # used for the plugin API documentation
 sphinxcontrib-plantuml = "==0.22"  # used for the API and architecture
 sphinxcontrib-spelling = "==7.3.2"
 3to2 = "==1.1.1"  # used for converting agent plugins from py3 to 2
-fakeredis = {version = "==2.10.3", extras = ["lua"]}  # used for testing code which uses Redis (freeze version due to some kwargs bug(???, see https://github.com/jamesls/fakeredis/pull/304/files#r680503761, lua is needed for faking features like "lock")
+fakeredis = {version = "==1.5.2", extras = ["lua"]}  # used for testing code which uses Redis (freeze version due to some kwargs bug(???, see https://github.com/jamesls/fakeredis/pull/304/files#r680503761, lua is needed for faking features like "lock")
 python-lsp-server = "==1.3.3"  # Note: There are extras, but the default seems sensible.
 python-lsp-black = "==1.1.0"  # black plugin for python-lsp-server
 pyls-isort = "==0.2.2"  # isort plugin for python-lsp-server
 pylsp-mypy = "==0.5.7"  # mypy plugin for python-lsp-server
 mypy-protobuf = "==3.0.0" # for mypy
 pipfile = "==0.0.2" # for generating import names during int tests
-httpx = "*"  # for testing the agent-receiver
 
 [packages]
 setuptools_scm = "==4.1.2"  # needed by various setup.py
@@ -96,9 +95,11 @@ urllib3 = "==1.26.7"  # needed by requests
 pyOpenSSL = "==19.1.0"  # needed by requests with extras = ["security"]
 pbr = "==5.10.0"  # needed by jira
 pyghmi = "==1.5.13"  # needed by base for IPMI
-requests = {version = "==2.31.0",extras = ["security"]}  # needed by DCD, connexion
+requests = {version = "==2.28.1",extras = ["security"]}  # needed by DCD, connexion
 pykerberos = "==1.2.1"  # needed by check_bi_aggr
 requests-kerberos = "==0.12.0"  # needed by check_bi_aggr
+MarkupSafe = "==2.0.1"  # needed by Jinja2
+itsdangerous = "==2.0.1"  # needed by Flask
 Jinja2 = "==3.0.3"  # needed by Flask
 more-itertools = "==8.12.0"  # needed by connexion through zipp, pytest
 zipp = "==3.7.0"  # needed by importlib_metadata
@@ -106,9 +107,9 @@ attrs = "==21.4.0"  # needed by jsonschema
 importlib_metadata = "==4.8.2"  # needed by jsonschema
 pyrsistent = "==0.18.0"  # needed by jsonschema
 click = "==8.0.3"  # needed by Flask
-Werkzeug = "==2.2.3"
+Werkzeug = "==2.1.2"
 jsonschema = "==4.2.1"  # needed by openapi-spec-validator
-Flask = "==2.2.5"  # direct dependency
+Flask = "==2.0.2"  # direct dependency
 pytz = "==2021.3"  # direct dependency
 openapi-spec-validator = "==0.2.9"  # direct dependency
 psutil = "==5.9.0"  # needed for omdlib
@@ -157,7 +158,7 @@ repoze-profile = "==2.3"  # used for GUI/API profiling
 pyparsing = "==2.4.7"  # direct dependency
 ordered-set = "==4.0.2"  # needed by deepdiff
 deepdiff = "==5.0.2"  # used for recording setup audit log
-redis = "==4.5.3"  # needed by GUI (caching)
+redis = "==3.5.3"  # needed by GUI (caching)
 fido2 = "==0.9.3"  # used for GUI 2fa webauthn
 tenacity = "==6.3.1"  # needed by opsgenie-sdk
 opsgenie-sdk = "==2.0.3"  # needed by opsgenie_issues

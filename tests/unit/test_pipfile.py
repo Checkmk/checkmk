@@ -241,6 +241,7 @@ def get_undeclared_dependencies() -> t.Iterable[ImportName]:
 CEE_UNUSED_PACKAGES = [
     "Cython",
     "Flask",
+    "MarkupSafe",
     "PyMySQL",
     "PyNaCl",
     "attrs",
@@ -255,6 +256,7 @@ CEE_UNUSED_PACKAGES = [
     "gunicorn",
     "idna",
     "importlib_metadata",
+    "itsdangerous",
     "jmespath",
     "jsonschema",
     "more-itertools",

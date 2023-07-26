@@ -5,11 +5,11 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 
 
-from typing import Mapping, MutableMapping, Optional, Protocol, Tuple
+from typing import Mapping, Optional, Protocol, Tuple
 
 
 class HTTPProxyConfig(Protocol):
-    def to_requests_proxies(self) -> Optional[MutableMapping[str, str]]:
+    def to_requests_proxies(self) -> Optional[Mapping[str, str]]:
         ...
 
     def serialize(self) -> str:
@@ -36,7 +36,7 @@ class EnvironmentProxyConfig:
 class NoProxyConfig:
     SERIALIZED = "NO_PROXY"
 
-    def to_requests_proxies(self) -> MutableMapping[str, str]:
+    def to_requests_proxies(self) -> Mapping[str, str]:
         return {
             "http": "",
             "https": "",
@@ -53,7 +53,7 @@ class ExplicitProxyConfig:
     def __init__(self, url: str) -> None:
         self._url = url
 
-    def to_requests_proxies(self) -> MutableMapping[str, str]:
+    def to_requests_proxies(self) -> Mapping[str, str]:
         return {
             "http": self._url,
             "https": self._url,

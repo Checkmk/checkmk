@@ -146,15 +146,6 @@ class TCPTimeout(BaseModel):
     connect: Optional[int]
     read: Optional[int]
 
-    def to_requests(self) -> None | tuple[float, float] | tuple[float, None]:
-        if self.connect is None:
-            return None
-        # mypy is confused here, a float, optional float is not valid for a
-        # union of float, float and float, None
-        if self.read is None:
-            return self.connect, None
-        return self.connect, self.read
-
 
 class PBFormatter(Protocol):
     def __call__(self, object_type: str, namespaced_name: str) -> str:
@@ -1950,7 +1941,7 @@ def request_cluster_collector(
             cluster_agent_url,
             headers={"Authorization": f"Bearer {token}"},
             verify=verify,
-            timeout=timeout.to_requests(),
+            timeout=(timeout.connect, timeout.read),
             proxies=proxy.to_requests_proxies(),
         )
         cluster_resp.raise_for_status()
@@ -1992,12 +1983,11 @@ def make_api_client(arguments: argparse.Namespace) -> client.ApiClient:
     # Mimic requests.get("GET", url=host, proxies=http_proxy_config.to_requests_proxies())
     # function call, in order to obtain proxies in the same way as the requests library
     with requests.Session() as session:
-        # mypy apparently doesn't handle the Self type well here, therefore the suppressions...
         req = requests.models.Request(method="GET", url=host, data={}, params={})
-        prep = session.prepare_request(req)  # type: ignore[attr-defined]
+        prep = session.prepare_request(req)
         proxies = http_proxy_config.to_requests_proxies() or {}
-        proxies = session.merge_environment_settings(  # type: ignore[attr-defined]
-            prep.url, proxies, session.stream, session.verify, session.cert  # type: ignore[attr-defined]
+        proxies = session.merge_environment_settings(
+            prep.url, proxies, session.stream, session.verify, session.cert
         )["proxies"]
 
     config.proxy = proxies.get(urlparse(host).scheme)

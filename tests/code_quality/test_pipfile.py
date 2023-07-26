@@ -279,6 +279,8 @@ CEE_UNUSED_PACKAGES = [
     "wrapt",
     "yarl",
     "zipp",
+    "icalendar",
+    "recurring_ical_events",
 ]
 
 

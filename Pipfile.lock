@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "6bba59a5857d981d55b3afb25ce64d0b71da87090b0268c115cc2e4c9faacba7"
+            "sha256": "a1557f2776e93e2489d639e16bbb81b255224129ae775bd578fba3b0d551c0d8"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -550,11 +550,11 @@
         },
         "elementpath": {
             "hashes": [
-                "sha256:e7c6d25546dfb381a2c9cde3b78c0c40f52811e06eb810faf019e16c531a74bf",
-                "sha256:f991c42ff66fa06e219141ccf65890261e6635b448e7d4c2d8b62dc5bf1de9e8"
+                "sha256:2ac1a2fb31eb22bbbf817f8cf6752f844513216263f0e3892c8e79782fe4bb55",
+                "sha256:c2d6dc524b29ef751ecfc416b0627668119d8812441c555d7471da41d4bacb8d"
             ],
             "markers": "python_version >= '3.7'",
-            "version": "==4.1.4"
+            "version": "==4.1.5"
         },
         "exchangelib": {
             "hashes": [
@@ -838,6 +838,14 @@
             ],
             "markers": "python_version >= '2.7' and python_version not in '3.0, 3.1, 3.2, 3.3'",
             "version": "==0.22.0"
+        },
+        "icalendar": {
+            "hashes": [
+                "sha256:18ad51f9d1741d33795ddaf5c886c59f6575f287d30e5a145c2d42ef72910c7f",
+                "sha256:e306014a64dc4dcf638da0acb2487ee4ada57b871b03a62ed7b513dfc135655c"
+            ],
+            "index": "pypi",
+            "version": "==5.0.7"
         },
         "idna": {
             "hashes": [
@@ -2103,6 +2111,14 @@
             "index": "pypi",
             "version": "==6.0.1"
         },
+        "recurring-ical-events": {
+            "hashes": [
+                "sha256:a618140129e2ff00afa6b7afc1a154c2cb2177166621a519941b7058d6f6c339",
+                "sha256:c4bc7d0d26fcda0ac3b773c9706fd1e271b7b0e0230ad0ee02ccab55e274ea11"
+            ],
+            "index": "pypi",
+            "version": "==2.0.2"
+        },
         "redis": {
             "hashes": [
                 "sha256:585dc516b9eb042a619ef0a39c3d7d55fe81bdb4df09a52c9cdde0d07bf1aa7d",
@@ -2548,6 +2564,13 @@
             ],
             "index": "pypi",
             "version": "==1.14.1"
+        },
+        "x-wr-timezone": {
+            "hashes": [
+                "sha256:c05cb34b9b58a4607a788db086dcae5766728e4b94e0672870dc5593a6e13fe6",
+                "sha256:e438b27b96635f5f712a4fb5dda4c82597a53a412fe834c9fe8409fddb3fc2b1"
+            ],
+            "version": "==0.0.5"
         },
         "xmlschema": {
             "hashes": [

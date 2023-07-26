@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 def test_update_from_backup() -> None:
     site_name = "update_central"
-    backup_path = Path("./backups/update_central_backup.tar.gz")
+    backup_path = Path(__file__).parent.resolve() / Path("backups/update_central_backup.tar.gz")
     base_version = CMKVersion("2.2.0", Edition.CEE, current_base_branch_name())
     target_version = CMKVersion(CMKVersion.DAILY, Edition.CEE, current_base_branch_name())
 

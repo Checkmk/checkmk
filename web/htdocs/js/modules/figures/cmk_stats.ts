@@ -5,9 +5,11 @@
  */
 
 import * as cmk_figures from "cmk_figures";
-import { BaseType } from "d3";
+import { figure_registry } from "cmk_figures";
 import * as d3 from "d3";
+import { BaseType } from "d3";
 import * as d3Hexbin from "d3-hexbin";
+import { FigureData } from "figure_types";
 
 interface FigurePart {
     count: number;
@@ -15,7 +17,7 @@ interface FigurePart {
     title: string;
     url: string;
 }
-interface FigureResponseData extends cmk_figures.FigureData {
+interface FigureResponseData extends FigureData {
     title: string;
     title_url: string;
     parts: FigurePart[];
@@ -71,6 +73,9 @@ export class HostStats extends cmk_figures.FigureBase<FigureResponseData> {
         this._title_url = data.title_url;
         //This assignment changes the type of our Data so it not FigureData but FigureData.Data
         //It's difficult to have a workaround for this...
+        //TODO: this is also a typing issue since _data was usually like {data, plot_definitions}
+        // and here the type is overwritten to be only data
+        //@ts-ignore
         this._data = data.data;
     }
 
@@ -174,6 +179,6 @@ export class EventStats extends HostStats {
     }
 }
 
-cmk_figures.figure_registry.register(HostStats);
-cmk_figures.figure_registry.register(ServiceStats);
-cmk_figures.figure_registry.register(EventStats);
+figure_registry.register(HostStats);
+figure_registry.register(ServiceStats);
+figure_registry.register(EventStats);

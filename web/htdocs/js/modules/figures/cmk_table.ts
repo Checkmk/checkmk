@@ -11,6 +11,7 @@ import crossfilter from "crossfilter2";
 import * as d3 from "d3";
 import * as dc from "dc";
 import {PieChart} from "dc";
+import {FigureData} from "figure_types";
 
 export interface Cell<Config = PieChartData | NtopTalkerData> {
     id?: string;
@@ -72,7 +73,7 @@ export interface Row<Config = PieChartData | NtopTalkerData> {
 }
 
 export interface TableFigureData<Config = PieChartData | NtopTalkerData>
-    extends cmk_figures.FigureData {
+    extends FigureData {
     title?: string;
     rows: Row<Config>[];
     classes?: string[];
@@ -146,7 +147,7 @@ export class TableFigure extends cmk_figures.FigureBase<TableFigureData> {
 }
 
 class HTMLTableCellElement extends HTMLElement {
-    __figure_instance__?: cmk_figures.FigureBase<cmk_figures.FigureData>;
+    __figure_instance__?: cmk_figures.FigureBase<FigureData>;
     __crossfilter__: any;
 }
 

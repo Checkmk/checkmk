@@ -10,8 +10,6 @@
 // in python and typescript, so maybe in the future it would be better to have
 // a way to automatically generate them from one sie to another
 
-import {FigureData} from "cmk_figures";
-
 export interface SubplotDataData {
     x?: [Date | undefined, Date | undefined];
     y?: [number, number | undefined];
@@ -81,6 +79,22 @@ export interface SingleMetricDataPlotDefinitions {
     color: string;
     opacity: number;
     metric: Record<string, Record<string, any>>;
+}
+
+export interface ElementMargin {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+}
+
+export interface FigureData<D = any, P = any> {
+    //TODO: in all figureBase subclasses data is an array of data or it's not used at all like
+    // in case of ntop figures, however, it's in some cases only on element (as type not a single element array)
+    // like in HostStateSummary and ServiceStateSummary. This causes typing confusion and possible errors
+    // so it might be better to change the structure of the above mentioned classes.
+    data: D[] | D;
+    plot_definitions: P[];
 }
 
 export interface SingleMetricData
@@ -216,6 +230,31 @@ export interface AverageScatterplotDashletConfig extends FigureBaseDashletSpec {
     avg_color: string | null;
     median_color: string | null;
 }
+
+export interface ElementSize {
+    width: number;
+    height: number;
+}
+
+export type Levels = {
+    from: number;
+    to: number;
+    style: string;
+};
+
+interface _Metric {
+    bounds: Bounds;
+    unit: any;
+}
+
+export interface Bounds {
+    warn?: number;
+    crit?: number;
+    min?: number;
+    max?: number;
+}
+
+export type Domain = [number, number];
 
 export interface TransformedData {
     label: any;

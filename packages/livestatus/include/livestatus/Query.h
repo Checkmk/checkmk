@@ -22,6 +22,7 @@
 
 #include "livestatus/Aggregator.h"  // IWYU pragma: keep
 #include "livestatus/Filter.h"
+#include "livestatus/OutputBuffer.h"
 #include "livestatus/Renderer.h"
 #include "livestatus/RendererBrokenCSV.h"
 #include "livestatus/Row.h"
@@ -30,7 +31,6 @@
 #include "livestatus/User.h"
 class Column;
 class Logger;
-class OutputBuffer;
 class Table;
 
 class Query {
@@ -103,7 +103,6 @@ private:
     ColumnSet _all_columns;
 
     bool doStats() const;
-    void doWait();
     using ColumnCreator =
         std::function<std::shared_ptr<Column>(const std::string &)>;
     static void parseFilterLine(char *line, FilterStack &filters,
@@ -126,20 +125,36 @@ private:
                                  bool &show_column_headers, Columns &columns,
                                  Logger *logger);
     static void parseColumnHeadersLine(char *line, bool &show_column_headers);
-    void parseLimitLine(char *line);
-    void parseTimelimitLine(char *line);
-    void parseSeparatorsLine(char *line);
-    void parseOutputFormatLine(const char *line);
-    void parseKeepAliveLine(char *line);
-    void parseResponseHeaderLine(char *line);
-    void parseAuthUserHeader(const char *line);
-    void parseWaitTimeoutLine(char *line);
-    void parseWaitTriggerLine(char *line);
-    void parseWaitObjectLine(const char *line);
-    void parseLocaltimeLine(char *line);
+    static void parseLimitLine(char *line, int &limit);
+    static void parseTimelimitLine(
+        char *line,
+        std::optional<std::pair<std::chrono::seconds,
+                                std::chrono::steady_clock::time_point>>
+            &time_limit);
+    static void parseSeparatorsLine(char *line, CSVSeparators &separators);
+    static void parseOutputFormatLine(const char *line,
+                                      OutputFormat &output_format);
+    static void parseKeepAliveLine(char *line, bool &keepalive);
+    static void parseResponseHeaderLine(
+        char *line, OutputBuffer::ResponseHeader &response_header);
+    static void parseAuthUserHeader(
+        const char *line,
+        const std::function<
+            std::unique_ptr<const User>(const std::string &name)> &find_user,
+        std::unique_ptr<const User> &user);
+    static void parseWaitTimeoutLine(char *line,
+                                     std::chrono::milliseconds &wait_timeout);
+    static void parseWaitTriggerLine(char *line, Triggers::Kind &wait_trigger);
+    static void parseWaitObjectLine(
+        const char *line, const std::function<Row(const std::string &)> &get,
+        Row &wait_object);
+    static void parseLocaltimeLine(char *line,
+                                   std::chrono::seconds &timezone_offset,
+                                   Logger *logger);
 
     void start(QueryRenderer &q);
     void finish(QueryRenderer &q);
+    void doWait();
 
     // NOTE: We cannot make this 'const' right now, it adds entries into
     // _stats_groups.

@@ -15,7 +15,6 @@
 #include <stdexcept>
 #include <type_traits>
 
-#include "livestatus/Aggregator.h"
 #include "livestatus/AndingFilter.h"
 #include "livestatus/ChronoUtils.h"
 #include "livestatus/Column.h"
@@ -23,7 +22,6 @@
 #include "livestatus/Logger.h"
 #include "livestatus/NullColumn.h"
 #include "livestatus/OringFilter.h"
-#include "livestatus/OutputBuffer.h"
 #include "livestatus/StringUtils.h"
 #include "livestatus/Table.h"
 #include "livestatus/opids.h"
@@ -80,6 +78,13 @@ Query::Query(const std::list<std::string> &lines, Table &table,
     auto make_column = [&table](const std::string &colname) {
         return table.column(colname);
     };
+    auto find_user = [&table](const std::string &name) {
+        return table.core()->find_user(name);
+    };
+    auto get = [&table](const std::string &primary_key) {
+        return table.get(primary_key);
+    };
+    auto response_header{OutputBuffer::ResponseHeader::off};
     for (const auto &line : lines) {
         auto stripped_line = mk::rstrip(line);
         if (stripped_line.empty()) {
@@ -130,19 +135,19 @@ Query::Query(const std::list<std::string> &lines, Table &table,
             } else if (header == "ColumnHeaders") {
                 parseColumnHeadersLine(arguments, _show_column_headers);
             } else if (header == "Limit") {
-                parseLimitLine(arguments);
+                parseLimitLine(arguments, _limit);
             } else if (header == "Timelimit") {
-                parseTimelimitLine(arguments);
+                parseTimelimitLine(arguments, _time_limit);
             } else if (header == "AuthUser") {
-                parseAuthUserHeader(arguments);
+                parseAuthUserHeader(arguments, find_user, user_);
             } else if (header == "Separators") {
-                parseSeparatorsLine(arguments);
+                parseSeparatorsLine(arguments, _separators);
             } else if (header == "OutputFormat") {
-                parseOutputFormatLine(arguments);
+                parseOutputFormatLine(arguments, _output_format);
             } else if (header == "ResponseHeader") {
-                parseResponseHeaderLine(arguments);
+                parseResponseHeaderLine(arguments, response_header);
             } else if (header == "KeepAlive") {
-                parseKeepAliveLine(arguments);
+                parseKeepAliveLine(arguments, _keepalive);
             } else if (header == "WaitCondition") {
                 parseFilterLine(arguments, wait_conditions, _all_columns,
                                 make_column);
@@ -155,13 +160,13 @@ Query::Query(const std::list<std::string> &lines, Table &table,
             } else if (header == "WaitConditionNegate") {
                 parseNegateLine(arguments, wait_conditions);
             } else if (header == "WaitTrigger") {
-                parseWaitTriggerLine(arguments);
+                parseWaitTriggerLine(arguments, _wait_trigger);
             } else if (header == "WaitObject") {
-                parseWaitObjectLine(arguments);
+                parseWaitObjectLine(arguments, get, _wait_object);
             } else if (header == "WaitTimeout") {
-                parseWaitTimeoutLine(arguments);
+                parseWaitTimeoutLine(arguments, _wait_timeout);
             } else if (header == "Localtime") {
-                parseLocaltimeLine(arguments);
+                parseLocaltimeLine(arguments, _timezone_offset, _logger);
             } else {
                 throw std::runtime_error("undefined request header");
             }
@@ -185,6 +190,7 @@ Query::Query(const std::list<std::string> &lines, Table &table,
     _filter = AndingFilter::make(Filter::Kind::row, filters);
     _wait_condition =
         AndingFilter::make(Filter::Kind ::wait_condition, wait_conditions);
+    _output.setResponseHeader(response_header);
 }
 
 void Query::invalidRequest(const std::string &message) const {
@@ -413,8 +419,13 @@ void Query::parseFilterLine(char *line, FilterStack &filters,
     all_columns.insert(column);
 }
 
-void Query::parseAuthUserHeader(const char *line) {
-    user_ = _table.core()->find_user(line);
+// static
+void Query::parseAuthUserHeader(
+    const char *line,
+    const std::function<std::unique_ptr<const User>(const std::string &)>
+        &find_user,
+    std::unique_ptr<const User> &user) {
+    user = find_user(line);
 }
 
 // static
@@ -449,7 +460,8 @@ void Query::parseColumnsLine(const char *line, ColumnSet &all_columns,
     show_column_headers = false;
 }
 
-void Query::parseSeparatorsLine(char *line) {
+// static
+void Query::parseSeparatorsLine(char *line, CSVSeparators &separators) {
     const std::string dsep = std::string(
         1, static_cast<char>(nextNonNegativeIntegerArgument(&line)));
     const std::string fsep = std::string(
@@ -458,7 +470,7 @@ void Query::parseSeparatorsLine(char *line) {
         1, static_cast<char>(nextNonNegativeIntegerArgument(&line)));
     const std::string hsep = std::string(
         1, static_cast<char>(nextNonNegativeIntegerArgument(&line)));
-    _separators = CSVSeparators(dsep, fsep, lsep, hsep);
+    separators = CSVSeparators(dsep, fsep, lsep, hsep);
 }
 
 namespace {
@@ -470,7 +482,9 @@ const std::map<std::string, OutputFormat> formats{
     {"python3", OutputFormat::python3}};
 }  // namespace
 
-void Query::parseOutputFormatLine(const char *line) {
+// static
+void Query::parseOutputFormatLine(const char *line,
+                                  OutputFormat &output_format) {
     auto format_and_rest = mk::nextField(line);
     auto it = formats.find(format_and_rest.first);
     if (it == formats.end()) {
@@ -485,7 +499,7 @@ void Query::parseOutputFormatLine(const char *line) {
     if (!mk::strip(format_and_rest.second).empty()) {
         throw std::runtime_error("only 1 argument expected");
     }
-    _output_format = it->second;
+    output_format = it->second;
 }
 
 // static
@@ -500,56 +514,74 @@ void Query::parseColumnHeadersLine(char *line, bool &show_column_headers) {
     }
 }
 
-void Query::parseKeepAliveLine(char *line) {
+// static
+void Query::parseKeepAliveLine(char *line, bool &keepalive) {
     auto value = nextStringArgument(&line);
     if (value == "on") {
-        _keepalive = true;
+        keepalive = true;
     } else if (value == "off") {
-        _keepalive = false;
+        keepalive = false;
     } else {
         throw std::runtime_error("expected 'on' or 'off'");
     }
 }
 
-void Query::parseResponseHeaderLine(char *line) {
+// static
+void Query::parseResponseHeaderLine(
+    char *line, OutputBuffer::ResponseHeader &response_header) {
     auto value = nextStringArgument(&line);
     if (value == "off") {
-        _output.setResponseHeader(OutputBuffer::ResponseHeader::off);
+        response_header = OutputBuffer::ResponseHeader::off;
     } else if (value == "fixed16") {
-        _output.setResponseHeader(OutputBuffer::ResponseHeader::fixed16);
+        response_header = OutputBuffer::ResponseHeader::fixed16;
     } else {
         throw std::runtime_error("expected 'off' or 'fixed16'");
     }
 }
 
-void Query::parseLimitLine(char *line) {
-    _limit = nextNonNegativeIntegerArgument(&line);
+// static
+void Query::parseLimitLine(char *line, int &limit) {
+    limit = nextNonNegativeIntegerArgument(&line);
 }
 
-void Query::parseTimelimitLine(char *line) {
+// static
+void Query::parseTimelimitLine(
+    char *line,
+    std::optional<
+        std::pair<std::chrono::seconds, std::chrono::steady_clock::time_point>>
+        &time_limit) {
     auto duration = std::chrono::seconds{nextNonNegativeIntegerArgument(&line)};
-    _time_limit = {duration, std::chrono::steady_clock::now() + duration};
+    time_limit = {duration, std::chrono::steady_clock::now() + duration};
 }
 
-void Query::parseWaitTimeoutLine(char *line) {
-    _wait_timeout =
+// static
+void Query::parseWaitTimeoutLine(char *line,
+                                 std::chrono::milliseconds &wait_timeout) {
+    wait_timeout =
         std::chrono::milliseconds(nextNonNegativeIntegerArgument(&line));
 }
 
-void Query::parseWaitTriggerLine(char *line) {
-    _wait_trigger = Triggers::find(nextStringArgument(&line));
+// static
+void Query::parseWaitTriggerLine(char *line, Triggers::Kind &wait_trigger) {
+    wait_trigger = Triggers::find(nextStringArgument(&line));
 }
 
-void Query::parseWaitObjectLine(const char *line) {
+// static
+void Query::parseWaitObjectLine(
+    const char *line, const std::function<Row(const std::string &)> &get,
+    Row &wait_object) {
     auto primary_key = mk::lstrip(line);
-    _wait_object = _table.get(primary_key);
-    if (_wait_object.isNull()) {
+    wait_object = get(primary_key);
+    if (wait_object.isNull()) {
         throw std::runtime_error("primary key '" + primary_key +
                                  "' not found or not supported by this table");
     }
 }
 
-void Query::parseLocaltimeLine(char *line) {
+// static
+void Query::parseLocaltimeLine(char *line,
+                               std::chrono::seconds &timezone_offset,
+                               Logger *logger) {
     auto value = nextNonNegativeIntegerArgument(&line);
     // Compute offset to be *added* each time we output our time and
     // *subtracted* from reference value by filter headers
@@ -570,10 +602,10 @@ void Query::parseLocaltimeLine(char *line) {
 
     if (offset != 0s) {
         using hour = std::chrono::duration<double, std::ratio<3600>>;
-        Debug(_logger) << "timezone offset is " << mk::ticks<hour>(offset)
-                       << "h";
+        Debug(logger) << "timezone offset is " << mk::ticks<hour>(offset)
+                      << "h";
     }
-    _timezone_offset = offset;
+    timezone_offset = offset;
 }
 
 bool Query::doStats() const { return !_stats_columns.empty(); }

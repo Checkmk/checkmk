@@ -33,6 +33,24 @@ class Column;
 class Logger;
 class Table;
 
+struct ParsedQuery {
+    ParsedQuery() : user{std::make_unique<NoAuthUser>()} {}
+
+    bool show_column_headers{true};
+    int limit{-1};
+    std::optional<
+        std::pair<std::chrono::seconds, std::chrono::steady_clock::time_point>>
+        time_limit;
+    CSVSeparators separators{"\n", ";", ",", "|"};
+    OutputFormat output_format{OutputFormat::broken_csv};
+    bool keepalive{false};
+    OutputBuffer::ResponseHeader response_header{
+        OutputBuffer::ResponseHeader::off};
+    std::unique_ptr<const User> user;
+    std::chrono::milliseconds wait_timeout{0};
+    std::chrono::seconds timezone_offset{0};
+};
+
 class Query {
 public:
     Query(const std::list<std::string> &lines, Table &table,
@@ -49,7 +67,9 @@ public:
     void invalidRequest(const std::string &message) const;
     void badGateway(const std::string &message) const;
 
-    std::chrono::seconds timezoneOffset() const { return _timezone_offset; }
+    std::chrono::seconds timezoneOffset() const {
+        return parsed_query_.timezone_offset;
+    }
 
     std::unique_ptr<Filter> partialFilter(const std::string &message,
                                           columnNamePredicate predicate) const;
@@ -67,6 +87,8 @@ public:
     }
 
 private:
+    ParsedQuery parsed_query_;
+
     using LogicalConnective =
         std::function<std::unique_ptr<Filter>(Filter::Kind, const Filters &)>;
 
@@ -75,23 +97,15 @@ private:
     OutputBuffer &_output;
     QueryRenderer *_renderer_query;
     Table &_table;
-    bool _keepalive;
     using FilterStack = Filters;
     std::unique_ptr<Filter> _filter;
-    std::unique_ptr<const User> user_;
     std::unique_ptr<Filter> _wait_condition;
-    std::chrono::milliseconds _wait_timeout;
     Triggers::Kind _wait_trigger;
     Row _wait_object;
-    CSVSeparators _separators;
-    bool _show_column_headers;
-    OutputFormat _output_format;
-    int _limit;
     std::optional<
         std::pair<std::chrono::seconds, std::chrono::steady_clock::time_point>>
         _time_limit;
     unsigned _current_line;
-    std::chrono::seconds _timezone_offset;
     Logger *const _logger;
     using Columns = std::vector<std::shared_ptr<Column>>;
     Columns _columns;
@@ -108,10 +122,9 @@ private:
     static void parseFilterLine(char *line, FilterStack &filters,
                                 ColumnSet &all_columns,
                                 const ColumnCreator &make_column);
-    static void parseStatsLine(char *line, StatsColumns &stats_columns,
-                               ColumnSet &all_columns,
-                               const ColumnCreator &make_column,
-                               bool &show_column_headers);
+    void parseStatsLine(char *line, StatsColumns &stats_columns,
+                        ColumnSet &all_columns,
+                        const ColumnCreator &make_column);
     static void parseAndOrLine(char *line, Filter::Kind kind,
                                const LogicalConnective &connective,
                                FilterStack &filters);
@@ -120,37 +133,25 @@ private:
                                     const LogicalConnective &connective,
                                     StatsColumns &stats_columns);
     static void parseStatsNegateLine(char *line, StatsColumns &stats_columns);
-    static void parseColumnsLine(const char *line, ColumnSet &all_columns,
-                                 const ColumnCreator &make_column,
-                                 bool &show_column_headers, Columns &columns,
-                                 Logger *logger);
-    static void parseColumnHeadersLine(char *line, bool &show_column_headers);
-    static void parseLimitLine(char *line, int &limit);
-    static void parseTimelimitLine(
-        char *line,
-        std::optional<std::pair<std::chrono::seconds,
-                                std::chrono::steady_clock::time_point>>
-            &time_limit);
-    static void parseSeparatorsLine(char *line, CSVSeparators &separators);
-    static void parseOutputFormatLine(const char *line,
-                                      OutputFormat &output_format);
-    static void parseKeepAliveLine(char *line, bool &keepalive);
-    static void parseResponseHeaderLine(
-        char *line, OutputBuffer::ResponseHeader &response_header);
-    static void parseAuthUserHeader(
-        const char *line,
-        const std::function<
-            std::unique_ptr<const User>(const std::string &name)> &find_user,
-        std::unique_ptr<const User> &user);
-    static void parseWaitTimeoutLine(char *line,
-                                     std::chrono::milliseconds &wait_timeout);
+    void parseColumnsLine(const char *line, ColumnSet &all_columns,
+                          const ColumnCreator &make_column, Columns &columns,
+                          Logger *logger);
+    void parseColumnHeadersLine(char *line);
+    void parseLimitLine(char *line);
+    void parseTimelimitLine(char *line);
+    void parseSeparatorsLine(char *line);
+    void parseOutputFormatLine(const char *line);
+    void parseKeepAliveLine(char *line);
+    void parseResponseHeaderLine(char *line);
+    void parseAuthUserHeader(const char *line,
+                             const std::function<std::unique_ptr<const User>(
+                                 const std::string &name)> &find_user);
+    void parseWaitTimeoutLine(char *line);
     static void parseWaitTriggerLine(char *line, Triggers::Kind &wait_trigger);
     static void parseWaitObjectLine(
         const char *line, const std::function<Row(const std::string &)> &get,
         Row &wait_object);
-    static void parseLocaltimeLine(char *line,
-                                   std::chrono::seconds &timezone_offset,
-                                   Logger *logger);
+    void parseLocaltimeLine(char *line, Logger *logger);
 
     void start(QueryRenderer &q);
     void finish(QueryRenderer &q);

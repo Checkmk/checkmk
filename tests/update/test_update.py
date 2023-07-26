@@ -7,6 +7,8 @@ import os
 import random
 from pathlib import Path
 
+import pytest
+
 from tests.testlib.agent import register_controller, wait_until_host_receives_data
 from tests.testlib.site import Site
 from tests.testlib.utils import current_base_branch_name
@@ -30,6 +32,11 @@ from .conftest import (
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.skipif(
+    os.environ.get("DISTRO") == "sles-15sp4",
+    reason="Test currently failing for missing `php7`. "
+    "This will be fixed  starting from  base-version 2.2.0p8",
+)
 def test_update(test_site: Site, agent_ctl: Path) -> None:
     # get version data
     base_version = test_site.version

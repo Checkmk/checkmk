@@ -1,6 +1,9 @@
 import logging
+import os
 from pathlib import Path
 from pprint import pformat
+
+import pytest
 
 from tests.testlib.site import SiteFactory
 from tests.testlib.utils import current_base_branch_name
@@ -13,6 +16,11 @@ from tests.plugins_integration.checks import get_host_names
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.skipif(
+    os.environ.get("DISTRO") == "sles-15sp4",
+    reason="Test currently failing for missing `php7`. "
+    "This will be fixed starting from base-version 2.2.0p8",
+)
 def test_update_from_backup() -> None:
     site_name = "update_central"
     backup_path = Path(__file__).parent.resolve() / Path("backups/update_central_backup.tar.gz")

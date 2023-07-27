@@ -45,18 +45,34 @@ from .filter import (
     display_filter_radiobuttons,
     DualListFilter,
     Filter,
-    filter_registry,
-    FilterNumberRange,
-    FilterOption,
-    FilterRegistry,
-    FilterTime,
-    InputTextFilter,
 )
+from .filter import filter_registry as global_filter_registry
+from .filter import FilterNumberRange, FilterOption, FilterRegistry, FilterTime, InputTextFilter
 
 
-def register(page_registry: PageRegistry, _filter_registry: FilterRegistry) -> None:
+def register(page_registry: PageRegistry, filter_registry: FilterRegistry) -> None:
     page_registry.register_page("ajax_validate_filter")(PageValidateFilter)
+    register_host_and_service_basic_filters(filter_registry)
+    register_host_address_filters(filter_registry)
+    register_host_and_service_group_filters(filter_registry)
+    register_host_and_service_state_filters(filter_registry)
+    register_host_and_service_flag_filters(filter_registry)
+    register_host_and_service_detail_filters(filter_registry)
+    register_contact_filters(filter_registry)
+    register_group_table_filters(filter_registry)
     register_site_filters(filter_registry)
+    register_comment_filters(filter_registry)
+    register_downtime_filters(filter_registry)
+    register_log_filters(filter_registry)
+    register_tag_and_label_filters(filter_registry)
+    register_kubernetes_filters(filter_registry)
+    register_custom_attribute_filters(filter_registry)
+    register_ec_sl_filters(filter_registry)
+    register_starred_filters(filter_registry)
+    register_discovery_filters(filter_registry)
+    register_bi_filters(filter_registry)
+    register_ec_filters(filter_registry)
+    register_site_statistics_by_core_filter(filter_registry)
 
 
 class RegexFilter(InputTextFilter):
@@ -167,7 +183,7 @@ class PageValidateFilter(AjaxPage):
         varname = str(api_request.get("varname"))
         value = str(api_request.get("value"))
         filter_ident = str(api_request.get("filter_ident"))
-        filt = filter_registry.get(filter_ident)
+        filt = global_filter_registry.get(filter_ident)
         if filt:
             try:
                 filt.validate_value({varname: value})
@@ -177,127 +193,152 @@ class PageValidateFilter(AjaxPage):
         return {"error_html": html.render_user_errors() if user_errors else ""}
 
 
-# TODO: Currently, we only validate the input for instances of RegexAjaxDropdownFilter (before form
-# submission) and RegexFilter (after form submission). In general we should validate all input - if
-# possible before form submission. That's not yet implemented.
-filter_registry.register(
-    RegexAjaxDropdownFilter(
-        title=_l("Hostname (regex)"),
-        sort_index=100,
-        info="host",
-        autocompleter=AutocompleterConfig(ident="monitored_hostname"),
-        query_filter=query_filters.TextQuery(
-            ident="hostregex",
-            column="host_name",
-            request_var="host_regex",
-            op="~~",
-            negateable=True,
-        ),
-        description=_l("Search field allowing regular expressions and partial matches"),
+def register_host_and_service_basic_filters(filter_registry: FilterRegistry) -> None:
+    filter_registry.register(
+        RegexAjaxDropdownFilter(
+            title=_l("Hostname (regex)"),
+            sort_index=100,
+            info="host",
+            autocompleter=AutocompleterConfig(ident="monitored_hostname"),
+            query_filter=query_filters.TextQuery(
+                ident="hostregex",
+                column="host_name",
+                request_var="host_regex",
+                op="~~",
+                negateable=True,
+            ),
+            description=_l("Search field allowing regular expressions and partial matches"),
+        )
     )
-)
 
-filter_registry.register(
-    AjaxDropdownFilter(
-        title=_l("Hostname (exact match)"),
-        sort_index=101,
-        info="host",
-        autocompleter=AutocompleterConfig(ident="monitored_hostname", strict=True),
-        query_filter=query_filters.TextQuery(
-            ident="host",
-            column="host_name",
-            op="=",
-            negateable=True,
-        ),
-        description=_l("Exact match, used for linking"),
-        is_show_more=True,
+    filter_registry.register(
+        AjaxDropdownFilter(
+            title=_l("Hostname (exact match)"),
+            sort_index=101,
+            info="host",
+            autocompleter=AutocompleterConfig(ident="monitored_hostname", strict=True),
+            query_filter=query_filters.TextQuery(
+                ident="host",
+                column="host_name",
+                op="=",
+                negateable=True,
+            ),
+            description=_l("Exact match, used for linking"),
+            is_show_more=True,
+        )
     )
-)
 
-filter_registry.register(
-    RegexFilter(
-        title=_l("Hostalias (regex)"),
-        sort_index=102,
-        info="host",
-        query_filter=query_filters.TextQuery(
-            ident="hostalias", column="host_alias", op="~~", negateable=True
-        ),
-        description=_l("Search field allowing regular expressions and partial matches"),
-        is_show_more=True,
+    filter_registry.register(
+        RegexFilter(
+            title=_l("Hostalias (regex)"),
+            sort_index=102,
+            info="host",
+            query_filter=query_filters.TextQuery(
+                ident="hostalias", column="host_alias", op="~~", negateable=True
+            ),
+            description=_l("Search field allowing regular expressions and partial matches"),
+            is_show_more=True,
+        )
     )
-)
 
-filter_registry.register(
-    RegexAjaxDropdownFilter(
-        title=_l("Service (regex)"),
-        sort_index=200,
-        info="service",
-        autocompleter=AutocompleterConfig(ident="monitored_service_description"),
-        query_filter=query_filters.TextQuery(
-            ident="serviceregex",
-            column="service_description",
-            request_var="service_regex",
-            op="~~",
-            negateable=True,
-        ),
-        description=_l("Search field allowing regular expressions and partial matches"),
+    filter_registry.register(
+        RegexAjaxDropdownFilter(
+            title=_l("Service (regex)"),
+            sort_index=200,
+            info="service",
+            autocompleter=AutocompleterConfig(ident="monitored_service_description"),
+            query_filter=query_filters.TextQuery(
+                ident="serviceregex",
+                column="service_description",
+                request_var="service_regex",
+                op="~~",
+                negateable=True,
+            ),
+            description=_l("Search field allowing regular expressions and partial matches"),
+        )
     )
-)
 
-filter_registry.register(
-    AjaxDropdownFilter(
-        title=_l("Service (exact match)"),
-        sort_index=201,
-        info="service",
-        autocompleter=AutocompleterConfig(ident="monitored_service_description", strict=True),
-        query_filter=query_filters.TextQuery(
-            ident="service",
-            column="service_description",
-            op="=",
-        ),
-        description=_l("Exact match, used for linking"),
-        is_show_more=True,
+    filter_registry.register(
+        AjaxDropdownFilter(
+            title=_l("Service (exact match)"),
+            sort_index=201,
+            info="service",
+            autocompleter=AutocompleterConfig(ident="monitored_service_description", strict=True),
+            query_filter=query_filters.TextQuery(
+                ident="service",
+                column="service_description",
+                op="=",
+            ),
+            description=_l("Exact match, used for linking"),
+            is_show_more=True,
+        )
     )
-)
 
-filter_registry.register(
-    RegexFilter(
-        title=_l("Service alternative display name (regex)"),
-        sort_index=202,
-        description=_l("Alternative display name of the service, regex match"),
-        info="service",
-        query_filter=query_filters.TextQuery(
-            ident="service_display_name",
-            op="~~",
-        ),
-        is_show_more=True,
+    filter_registry.register(
+        RegexFilter(
+            title=_l("Service alternative display name (regex)"),
+            sort_index=202,
+            description=_l("Alternative display name of the service, regex match"),
+            info="service",
+            query_filter=query_filters.TextQuery(
+                ident="service_display_name",
+                op="~~",
+            ),
+            is_show_more=True,
+        )
     )
-)
 
-filter_registry.register(
-    RegexFilter(
-        title=_l("Summary (plugin output) (regex)"),
-        sort_index=202,
-        info="service",
-        query_filter=query_filters.TextQuery(
-            ident="output",
-            column="service_plugin_output",
-            request_var="service_output",
-            op="~~",
-            negateable=True,
-        ),
+    filter_registry.register(
+        RegexFilter(
+            title=_l("Summary (plugin output) (regex)"),
+            sort_index=202,
+            info="service",
+            query_filter=query_filters.TextQuery(
+                ident="output",
+                column="service_plugin_output",
+                request_var="service_output",
+                op="~~",
+                negateable=True,
+            ),
+        )
     )
-)
 
-filter_registry.register(
-    RegexFilter(
-        title=_l("Hostname or alias (regex)"),  # HostnameOrAliasQuery implements a regex match
-        sort_index=102,
-        info="host",
-        description=_l("Search field allowing regular expressions and partial matches"),
-        query_filter=query_filters.HostnameOrAliasQuery(),
+    filter_registry.register(
+        RegexFilter(
+            title=_l("Hostname or alias (regex)"),  # HostnameOrAliasQuery implements a regex match
+            sort_index=102,
+            info="host",
+            description=_l("Search field allowing regular expressions and partial matches"),
+            query_filter=query_filters.HostnameOrAliasQuery(),
+        )
     )
-)
+
+    filter_registry.register(
+        AjaxDropdownFilter(
+            title=_l("Host check command"),
+            sort_index=110,
+            info="host",
+            autocompleter=AutocompleterConfig(ident="check_cmd"),
+            query_filter=query_filters.CheckCommandQuery(
+                ident="host_check_command",
+                op="~",
+            ),
+        )
+    )
+
+    filter_registry.register(
+        AjaxDropdownFilter(
+            title=_l("Service check command"),
+            sort_index=210,
+            info="service",
+            autocompleter=AutocompleterConfig(ident="check_cmd"),
+            query_filter=query_filters.CheckCommandQuery(
+                ident="check_command",
+                op="~",
+                column="service_check_command",
+            ),
+        )
+    )
 
 
 class IPAddressFilter(Filter):
@@ -343,98 +384,133 @@ class IPAddressFilter(Filter):
         return value.get(self.query_filter.request_vars[0])
 
 
-filter_registry.register(
-    IPAddressFilter(
-        title=_l("Host address (Primary)"),
-        sort_index=102,
-        link_columns=["host_address"],
-        query_filter=query_filters.IPAddressQuery(
-            ident="host_address",
-            what="primary",
-        ),
-        is_show_more=True,
+def register_host_address_filters(filter_registry: FilterRegistry) -> None:
+    filter_registry.register(
+        IPAddressFilter(
+            title=_l("Host address (Primary)"),
+            sort_index=102,
+            link_columns=["host_address"],
+            query_filter=query_filters.IPAddressQuery(
+                ident="host_address",
+                what="primary",
+            ),
+            is_show_more=True,
+        )
     )
-)
 
-filter_registry.register(
-    IPAddressFilter(
-        title=_l("Host address (IPv4)"),
-        sort_index=102,
-        link_columns=[],
-        query_filter=query_filters.IPAddressQuery(
-            ident="host_ipv4_address",
-            what="ipv4",
-        ),
+    filter_registry.register(
+        IPAddressFilter(
+            title=_l("Host address (IPv4)"),
+            sort_index=102,
+            link_columns=[],
+            query_filter=query_filters.IPAddressQuery(
+                ident="host_ipv4_address",
+                what="ipv4",
+            ),
+        )
     )
-)
 
-filter_registry.register(
-    IPAddressFilter(
-        title=_l("Host address (IPv6)"),
-        sort_index=102,
-        link_columns=[],
-        query_filter=query_filters.IPAddressQuery(
-            ident="host_ipv6_address",
-            what="ipv6",
-        ),
+    filter_registry.register(
+        IPAddressFilter(
+            title=_l("Host address (IPv6)"),
+            sort_index=102,
+            link_columns=[],
+            query_filter=query_filters.IPAddressQuery(
+                ident="host_ipv6_address",
+                what="ipv6",
+            ),
+        )
     )
-)
 
-filter_registry.register(
-    FilterOption(
-        title=_l("Host address family (Primary)"),
-        sort_index=103,
-        info="host",
-        query_filter=query_filters.SingleOptionQuery(
-            ident="address_family",
-            options=query_filters.ip_address_family_options(),
-            filter_code=query_filters.address_family,
-        ),
-        is_show_more=True,
+    filter_registry.register(
+        FilterOption(
+            title=_l("Host address family (Primary)"),
+            sort_index=103,
+            info="host",
+            query_filter=query_filters.SingleOptionQuery(
+                ident="address_family",
+                options=query_filters.ip_address_family_options(),
+                filter_code=query_filters.address_family,
+            ),
+            is_show_more=True,
+        )
     )
-)
 
-
-filter_registry.register(
-    FilterOption(
-        title=_l("Host address families"),
-        sort_index=103,
-        info="host",
-        query_filter=query_filters.SingleOptionQuery(
-            ident="address_families",
-            options=query_filters.ip_address_families_options(),
-            filter_code=query_filters.address_families,
-        ),
-        is_show_more=True,
+    filter_registry.register(
+        FilterOption(
+            title=_l("Host address families"),
+            sort_index=103,
+            info="host",
+            query_filter=query_filters.SingleOptionQuery(
+                ident="address_families",
+                options=query_filters.ip_address_families_options(),
+                filter_code=query_filters.address_families,
+            ),
+            is_show_more=True,
+        )
     )
-)
 
 
-filter_registry.register(
-    DualListFilter(
-        title=_l("Several host groups"),
-        sort_index=105,
-        description=_l("Selection of multiple host groups"),
-        info="host",
-        query_filter=query_filters.MultipleQuery(
-            ident="hostgroups", column="host_groups", op=">=", negateable=True
-        ),
-        options=sites.all_groups,
+def register_host_and_service_group_filters(filter_registry: FilterRegistry) -> None:
+    filter_registry.register(
+        DualListFilter(
+            title=_l("Several host groups"),
+            sort_index=105,
+            description=_l("Selection of multiple host groups"),
+            info="host",
+            query_filter=query_filters.MultipleQuery(
+                ident="hostgroups", column="host_groups", op=">=", negateable=True
+            ),
+            options=sites.all_groups,
+        )
     )
-)
 
-filter_registry.register(
-    DualListFilter(
-        title=_l("Several service groups"),
-        sort_index=205,
-        description=_l("Selection of multiple service groups"),
-        info="service",
-        query_filter=query_filters.MultipleQuery(
-            ident="servicegroups", column="service_groups", op=">=", negateable=True
-        ),
-        options=sites.all_groups,
+    filter_registry.register(
+        DualListFilter(
+            title=_l("Several service groups"),
+            sort_index=205,
+            description=_l("Selection of multiple service groups"),
+            info="service",
+            query_filter=query_filters.MultipleQuery(
+                ident="servicegroups", column="service_groups", op=">=", negateable=True
+            ),
+            options=sites.all_groups,
+        )
     )
-)
+    filter_registry.register(
+        FilterGroupCombo(
+            title=_l("Host is in Group"),
+            sort_index=104,
+            description=_l("Optional selection of host group"),
+            autocompleter=GroupAutocompleterConfig(ident="allgroups", group_type="host"),
+            query_filter=query_filters.MultipleQuery(
+                ident="opthostgroup",
+                request_var="opthost_group",
+                column="host_groups",
+                op=">=",
+                negateable=True,
+            ),
+            group_type="host",
+        )
+    )
+
+    filter_registry.register(
+        FilterGroupCombo(
+            title=_l("Service is in Group"),
+            sort_index=204,
+            description=_l("Optional selection of service group"),
+            autocompleter=GroupAutocompleterConfig(ident="allgroups", group_type="service"),
+            query_filter=query_filters.MultipleQuery(
+                ident="optservicegroup",
+                request_var="optservice_group",
+                column="service_groups",
+                op=">=",
+                negateable=True,
+            ),
+            group_type="service",
+        )
+    )
+
 
 GroupType = Literal[
     "host", "service", "contact", "host_contact", "service_contact", "event_effective_contact"
@@ -492,234 +568,192 @@ class FilterGroupCombo(AjaxDropdownFilter):
         return None
 
 
-filter_registry.register(
-    FilterGroupCombo(
-        title=_l("Host is in Group"),
-        sort_index=104,
-        description=_l("Optional selection of host group"),
-        autocompleter=GroupAutocompleterConfig(ident="allgroups", group_type="host"),
-        query_filter=query_filters.MultipleQuery(
-            ident="opthostgroup",
-            request_var="opthost_group",
-            column="host_groups",
-            op=">=",
-            negateable=True,
-        ),
-        group_type="host",
+def register_contact_filters(filter_registry: FilterRegistry) -> None:
+    filter_registry.register(
+        FilterGroupCombo(
+            title=_l("Host Contact Group"),
+            sort_index=106,
+            description=_l("Optional selection of host contact group"),
+            autocompleter=GroupAutocompleterConfig(ident="allgroups", group_type="contact"),
+            query_filter=query_filters.MultipleQuery(
+                ident="opthost_contactgroup",
+                request_var="opthost_contact_group",
+                column="host_contact_groups",
+                op=">=",
+                negateable=True,
+            ),
+            group_type="host_contact",
+        )
     )
-)
 
-filter_registry.register(
-    FilterGroupCombo(
-        title=_l("Service is in Group"),
-        sort_index=204,
-        description=_l("Optional selection of service group"),
-        autocompleter=GroupAutocompleterConfig(ident="allgroups", group_type="service"),
-        query_filter=query_filters.MultipleQuery(
-            ident="optservicegroup",
-            request_var="optservice_group",
-            column="service_groups",
-            op=">=",
-            negateable=True,
-        ),
-        group_type="service",
+    filter_registry.register(
+        FilterGroupCombo(
+            title=_l("Service Contact Group"),
+            sort_index=206,
+            description=_l("Optional selection of service contact group"),
+            autocompleter=GroupAutocompleterConfig(ident="allgroups", group_type="contact"),
+            query_filter=query_filters.MultipleQuery(
+                ident="optservice_contactgroup",
+                request_var="optservice_contact_group",
+                column="service_contact_groups",
+                op=">=",
+                negateable=True,
+            ),
+            group_type="service_contact",
+        )
     )
-)
 
-filter_registry.register(
-    FilterGroupCombo(
-        title=_l("Host Contact Group"),
-        sort_index=106,
-        description=_l("Optional selection of host contact group"),
-        autocompleter=GroupAutocompleterConfig(ident="allgroups", group_type="contact"),
-        query_filter=query_filters.MultipleQuery(
-            ident="opthost_contactgroup",
-            request_var="opthost_contact_group",
-            column="host_contact_groups",
-            op=">=",
-            negateable=True,
-        ),
-        group_type="host_contact",
+    filter_registry.register(
+        InputTextFilter(
+            title=_l("Host Contact"),
+            sort_index=107,
+            info="host",
+            query_filter=query_filters.TextQuery(ident="host_ctc", column="host_contacts", op=">="),
+            is_show_more=True,
+        )
     )
-)
 
-filter_registry.register(
-    FilterGroupCombo(
-        title=_l("Service Contact Group"),
-        sort_index=206,
-        description=_l("Optional selection of service contact group"),
-        autocompleter=GroupAutocompleterConfig(ident="allgroups", group_type="contact"),
-        query_filter=query_filters.MultipleQuery(
-            ident="optservice_contactgroup",
-            request_var="optservice_contact_group",
-            column="service_contact_groups",
-            op=">=",
-            negateable=True,
-        ),
-        group_type="service_contact",
+    filter_registry.register(
+        RegexFilter(
+            title=_l("Host contact (regex)"),
+            sort_index=107,
+            info="host",
+            query_filter=query_filters.TextQuery(
+                ident="host_ctc_regex", column="host_contacts", op="~~"
+            ),
+            is_show_more=True,
+        )
     )
-)
 
-filter_registry.register(
-    InputTextFilter(
-        title=_l("Host Contact"),
-        sort_index=107,
-        info="host",
-        query_filter=query_filters.TextQuery(ident="host_ctc", column="host_contacts", op=">="),
-        is_show_more=True,
+    filter_registry.register(
+        InputTextFilter(
+            title=_l("Service Contact"),
+            sort_index=207,
+            info="service",
+            query_filter=query_filters.TextQuery(
+                ident="service_ctc", column="service_contacts", op=">="
+            ),
+            is_show_more=True,
+        )
     )
-)
 
-filter_registry.register(
-    RegexFilter(
-        title=_l("Host contact (regex)"),
-        sort_index=107,
-        info="host",
-        query_filter=query_filters.TextQuery(
-            ident="host_ctc_regex", column="host_contacts", op="~~"
-        ),
-        is_show_more=True,
+    filter_registry.register(
+        RegexFilter(
+            title=_l("Service contact (regex)"),
+            sort_index=207,
+            info="service",
+            query_filter=query_filters.TextQuery(
+                ident="service_ctc_regex",
+                column="service_contacts",
+                op="~~",
+            ),
+            is_show_more=True,
+        )
     )
-)
-
-filter_registry.register(
-    InputTextFilter(
-        title=_l("Service Contact"),
-        sort_index=207,
-        info="service",
-        query_filter=query_filters.TextQuery(
-            ident="service_ctc", column="service_contacts", op=">="
-        ),
-        is_show_more=True,
-    )
-)
-
-filter_registry.register(
-    RegexFilter(
-        title=_l("Service contact (regex)"),
-        sort_index=207,
-        info="service",
-        query_filter=query_filters.TextQuery(
-            ident="service_ctc_regex",
-            column="service_contacts",
-            op="~~",
-        ),
-        is_show_more=True,
-    )
-)
-
-filter_registry.register(
-    AjaxDropdownFilter(
-        title=_l("Host group (exact match)"),
-        sort_index=104,
-        description=_l("Selection of the host group"),
-        info="hostgroup",
-        autocompleter=GroupAutocompleterConfig(ident="allgroups", group_type="host", strict=True),
-        query_filter=query_filters.TextQuery(
-            ident="hostgroup",
-            column="hostgroup_name",
-            op="=",
-        ),
-    )
-)
-
-filter_registry.register(
-    AjaxDropdownFilter(
-        title=_l("Service group (exact match)"),
-        sort_index=104,
-        description=_l("Selection of the service group"),
-        info="servicegroup",
-        autocompleter=GroupAutocompleterConfig(
-            ident="allgroups", group_type="service", strict=True
-        ),
-        query_filter=query_filters.TextQuery(
-            ident="servicegroup",
-            column="servicegroup_name",
-            op="=",
-        ),
-    )
-)
-
-filter_registry.register(
-    RegexFilter(
-        title=_l("Host group (regex)"),
-        sort_index=101,
-        description=_l(
-            "Search field allowing regular expressions and partial matches on the names of host groups"
-        ),
-        info="hostgroup",
-        query_filter=query_filters.TextQuery(
-            ident="hostgroupnameregex",
-            column="hostgroup_name",
-            request_var="hostgroup_regex",
-            op="~~",
-        ),
-    )
-)
-
-filter_registry.register(
-    RegexFilter(
-        title=_l("Service group (regex)"),
-        sort_index=101,
-        description=_l("Search field allowing regular expression and partial matches"),
-        info="servicegroup",
-        query_filter=query_filters.TextQuery(
-            ident="servicegroupnameregex",
-            column="servicegroup_name",
-            request_var="servicegroup_regex",
-            op="~~",
-            negateable=True,
-        ),
-    )
-)
-
-# TODO: Check whether this filter "Service group (enforced)" is a duplicate of "Service group (exact
-#       match)" and if so, remove this one.
-filter_registry.register(
-    AjaxDropdownFilter(
-        title=_l("Service group (enforced)"),
-        sort_index=101,
-        description=_l("Exact match, used for linking"),
-        info="servicegroup",
-        autocompleter=GroupAutocompleterConfig(
-            ident="allgroups", group_type="service", strict=True
-        ),
-        query_filter=query_filters.TextQuery(
-            ident="servicegroupname",
-            column="servicegroup_name",
-            request_var="servicegroup_name",
-            op="=",
-        ),
-    )
-)
 
 
-filter_registry.register(
-    AjaxDropdownFilter(
-        title=_l("Host check command"),
-        sort_index=110,
-        info="host",
-        autocompleter=AutocompleterConfig(ident="check_cmd"),
-        query_filter=query_filters.CheckCommandQuery(
-            ident="host_check_command",
-            op="~",
-        ),
+def register_group_table_filters(filter_registry: FilterRegistry) -> None:
+    filter_registry.register(
+        AjaxDropdownFilter(
+            title=_l("Host group (exact match)"),
+            sort_index=104,
+            description=_l("Selection of the host group"),
+            info="hostgroup",
+            autocompleter=GroupAutocompleterConfig(
+                ident="allgroups", group_type="host", strict=True
+            ),
+            query_filter=query_filters.TextQuery(
+                ident="hostgroup",
+                column="hostgroup_name",
+                op="=",
+            ),
+        )
     )
-)
 
-filter_registry.register(
-    AjaxDropdownFilter(
-        title=_l("Service check command"),
-        sort_index=210,
-        info="service",
-        autocompleter=AutocompleterConfig(ident="check_cmd"),
-        query_filter=query_filters.CheckCommandQuery(
-            ident="check_command",
-            op="~",
-            column="service_check_command",
-        ),
+    filter_registry.register(
+        AjaxDropdownFilter(
+            title=_l("Service group (exact match)"),
+            sort_index=104,
+            description=_l("Selection of the service group"),
+            info="servicegroup",
+            autocompleter=GroupAutocompleterConfig(
+                ident="allgroups", group_type="service", strict=True
+            ),
+            query_filter=query_filters.TextQuery(
+                ident="servicegroup",
+                column="servicegroup_name",
+                op="=",
+            ),
+        )
     )
-)
+
+    filter_registry.register(
+        RegexFilter(
+            title=_l("Host group (regex)"),
+            sort_index=101,
+            description=_l(
+                "Search field allowing regular expressions and partial matches on the names of host groups"
+            ),
+            info="hostgroup",
+            query_filter=query_filters.TextQuery(
+                ident="hostgroupnameregex",
+                column="hostgroup_name",
+                request_var="hostgroup_regex",
+                op="~~",
+            ),
+        )
+    )
+
+    filter_registry.register(
+        RegexFilter(
+            title=_l("Service group (regex)"),
+            sort_index=101,
+            description=_l("Search field allowing regular expression and partial matches"),
+            info="servicegroup",
+            query_filter=query_filters.TextQuery(
+                ident="servicegroupnameregex",
+                column="servicegroup_name",
+                request_var="servicegroup_regex",
+                op="~~",
+                negateable=True,
+            ),
+        )
+    )
+
+    # TODO: Check whether this filter "Service group (enforced)" is a duplicate of "Service group (exact
+    #       match)" and if so, remove this one.
+    filter_registry.register(
+        AjaxDropdownFilter(
+            title=_l("Service group (enforced)"),
+            sort_index=101,
+            description=_l("Exact match, used for linking"),
+            info="servicegroup",
+            autocompleter=GroupAutocompleterConfig(
+                ident="allgroups", group_type="service", strict=True
+            ),
+            query_filter=query_filters.TextQuery(
+                ident="servicegroupname",
+                column="servicegroup_name",
+                request_var="servicegroup_name",
+                op="=",
+            ),
+        )
+    )
+
+    filter_registry.register(_FilterHostgroupProblems())
+
+    filter_registry.register(
+        CheckboxRowFilter(
+            title=_l("Empty host group visibilitiy"),
+            sort_index=102,
+            info="hostgroup",
+            query_filter=query_filters.MultipleOptionsQuery(
+                ident="hostgroupvisibility",
+                options=[("hostgroupshowempty", _("Show empty groups"))],
+                livestatus_query=query_filters.empty_hostgroup_filter,
+            ),
+        )
+    )
 
 
 # TODO: I would be great to split this in two filters for host & service kind of problems
@@ -749,79 +783,131 @@ class _FilterHostgroupProblems(CheckboxRowFilter):
         checkbox_row(self.host_problems, value, "Host states: ")
 
 
-filter_registry.register(_FilterHostgroupProblems())
-
-
-filter_registry.register(
-    CheckboxRowFilter(
-        title=_l("Empty host group visibilitiy"),
-        sort_index=102,
-        info="hostgroup",
-        query_filter=query_filters.MultipleOptionsQuery(
-            ident="hostgroupvisibility",
-            options=[("hostgroupshowempty", _("Show empty groups"))],
-            livestatus_query=query_filters.empty_hostgroup_filter,
-        ),
+def register_host_and_service_state_filters(filter_registry: FilterRegistry) -> None:
+    filter_registry.register(
+        CheckboxRowFilter(
+            title=_l("Service states"),
+            sort_index=215,
+            info="service",
+            query_filter=query_filters.MultipleOptionsQuery(
+                ident="svcstate",
+                options=query_filters.svc_state_options(""),
+                livestatus_query=partial(query_filters.service_state_filter, ""),
+            ),
+        )
     )
-)
 
-
-filter_registry.register(
-    CheckboxRowFilter(
-        title=_l("Service states"),
-        sort_index=215,
-        info="service",
-        query_filter=query_filters.MultipleOptionsQuery(
-            ident="svcstate",
-            options=query_filters.svc_state_options(""),
-            livestatus_query=partial(query_filters.service_state_filter, ""),
-        ),
+    filter_registry.register(
+        CheckboxRowFilter(
+            title=_l("Service hard states"),
+            sort_index=216,
+            info="service",
+            is_show_more=True,
+            query_filter=query_filters.MultipleOptionsQuery(
+                ident="svchardstate",
+                options=query_filters.svc_state_options("hd"),
+                livestatus_query=partial(query_filters.service_state_filter, "hd"),
+            ),
+        )
     )
-)
 
-filter_registry.register(
-    CheckboxRowFilter(
-        title=_l("Service hard states"),
-        sort_index=216,
-        info="service",
-        is_show_more=True,
-        query_filter=query_filters.MultipleOptionsQuery(
-            ident="svchardstate",
-            options=query_filters.svc_state_options("hd"),
-            livestatus_query=partial(query_filters.service_state_filter, "hd"),
-        ),
+    filter_registry.register(
+        CheckboxRowFilter(
+            title=_l("Host states"),
+            sort_index=115,
+            info="host",
+            query_filter=query_filters.MultipleOptionsQuery(
+                ident="hoststate",
+                options=query_filters.host_state_options(),
+                livestatus_query=query_filters.host_state_filter,
+            ),
+        )
     )
-)
 
-filter_registry.register(
-    CheckboxRowFilter(
-        title=_l("Host states"),
-        sort_index=115,
+    filter_registry.register(
+        CheckboxRowFilter(
+            title=_l("Hosts having certain service problems"),
+            sort_index=120,
+            info="host",
+            query_filter=query_filters.MultipleOptionsQuery(
+                ident="hosts_having_service_problems",
+                options=query_filters.svc_problems_options("hosts_having_services_"),
+                livestatus_query=query_filters.host_having_svc_problems_filter,
+            ),
+        )
+    )
+
+    filter_state_type_with_register(
+        filter_registry=filter_registry,
+        ident="host_state_type",
+        title=_l("Host state type"),
+        sort_index=116,
         info="host",
-        query_filter=query_filters.MultipleOptionsQuery(
-            ident="hoststate",
-            options=query_filters.host_state_options(),
-            livestatus_query=query_filters.host_state_filter,
-        ),
     )
-)
 
-filter_registry.register(
-    CheckboxRowFilter(
-        title=_l("Hosts having certain service problems"),
-        sort_index=120,
-        info="host",
-        query_filter=query_filters.MultipleOptionsQuery(
-            ident="hosts_having_service_problems",
-            options=query_filters.svc_problems_options("hosts_having_services_"),
-            livestatus_query=query_filters.host_having_svc_problems_filter,
-        ),
+    filter_state_type_with_register(
+        filter_registry=filter_registry,
+        ident="service_state_type",
+        title=_l("Service state type"),
+        sort_index=217,
+        info="service",
     )
-)
+
+    filter_registry.register(
+        FilterOption(
+            title=_l("Has performance data"),
+            sort_index=251,
+            info="service",
+            query_filter=query_filters.TristateQuery(
+                ident="has_performance_data", filter_code=query_filters.service_perfdata_toggle
+            ),
+            is_show_more=True,
+        )
+    )
+
+    filter_registry.register(
+        FilterOption(
+            title=_l("Host/service in downtime"),
+            sort_index=232,
+            info="service",
+            query_filter=query_filters.TristateQuery(
+                ident="in_downtime", filter_code=query_filters.host_service_perfdata_toggle
+            ),
+        )
+    )
+
+    filter_registry.register(
+        FilterOption(
+            title=_l("Host is stale"),
+            sort_index=232,
+            info="host",
+            query_filter=query_filters.TristateQuery(
+                ident="host_staleness", filter_code=query_filters.staleness("host")
+            ),
+            is_show_more=True,
+        )
+    )
+
+    filter_registry.register(
+        FilterOption(
+            title=_l("Service is stale"),
+            sort_index=232,
+            info="service",
+            query_filter=query_filters.TristateQuery(
+                ident="service_staleness", filter_code=query_filters.staleness("service")
+            ),
+            is_show_more=True,
+        )
+    )
 
 
 def filter_state_type_with_register(
-    *, ident: str, title: str | LazyString, sort_index: int, info: str
+    *,
+    filter_registry: FilterRegistry,
+    ident: str,
+    title: str | LazyString,
+    sort_index: int,
+    info: str,
 ) -> None:
     filter_registry.register(
         FilterOption(
@@ -838,74 +924,9 @@ def filter_state_type_with_register(
     )
 
 
-filter_state_type_with_register(
-    ident="host_state_type",
-    title=_l("Host state type"),
-    sort_index=116,
-    info="host",
-)
-
-filter_state_type_with_register(
-    ident="service_state_type",
-    title=_l("Service state type"),
-    sort_index=217,
-    info="service",
-)
-
-
-filter_registry.register(
-    FilterOption(
-        title=_l("Has performance data"),
-        sort_index=251,
-        info="service",
-        query_filter=query_filters.TristateQuery(
-            ident="has_performance_data", filter_code=query_filters.service_perfdata_toggle
-        ),
-        is_show_more=True,
-    )
-)
-
-
-filter_registry.register(
-    FilterOption(
-        title=_l("Host/service in downtime"),
-        sort_index=232,
-        info="service",
-        query_filter=query_filters.TristateQuery(
-            ident="in_downtime", filter_code=query_filters.host_service_perfdata_toggle
-        ),
-    )
-)
-
-
-filter_registry.register(
-    FilterOption(
-        title=_l("Host is stale"),
-        sort_index=232,
-        info="host",
-        query_filter=query_filters.TristateQuery(
-            ident="host_staleness", filter_code=query_filters.staleness("host")
-        ),
-        is_show_more=True,
-    )
-)
-
-
-filter_registry.register(
-    FilterOption(
-        title=_l("Service is stale"),
-        sort_index=232,
-        info="service",
-        query_filter=query_filters.TristateQuery(
-            ident="service_staleness", filter_code=query_filters.staleness("service")
-        ),
-        is_show_more=True,
-    )
-)
-
-
 def filter_nagios_flag_with_register(
     *,
+    filter_registry: FilterRegistry,
     ident: str,
     title: str | LazyString,
     sort_index: int,
@@ -925,107 +946,122 @@ def filter_nagios_flag_with_register(
     )
 
 
-filter_nagios_flag_with_register(
-    ident="service_process_performance_data",
-    title=_l("Processes performance data"),
-    sort_index=250,
-    info="service",
-    is_show_more=True,
-)
+def register_host_and_service_flag_filters(filter_registry: FilterRegistry) -> None:
+    filter_nagios_flag_with_register(
+        filter_registry=filter_registry,
+        ident="service_process_performance_data",
+        title=_l("Processes performance data"),
+        sort_index=250,
+        info="service",
+        is_show_more=True,
+    )
 
-filter_nagios_flag_with_register(
-    ident="host_in_notification_period",
-    title=_l("Host in notification period"),
-    sort_index=130,
-    info="host",
-)
+    filter_nagios_flag_with_register(
+        filter_registry=filter_registry,
+        ident="host_in_notification_period",
+        title=_l("Host in notification period"),
+        sort_index=130,
+        info="host",
+    )
 
-filter_nagios_flag_with_register(
-    ident="host_in_service_period",
-    title=_l("Host in service period"),
-    sort_index=130,
-    info="host",
-)
+    filter_nagios_flag_with_register(
+        filter_registry=filter_registry,
+        ident="host_in_service_period",
+        title=_l("Host in service period"),
+        sort_index=130,
+        info="host",
+    )
 
-filter_nagios_flag_with_register(
-    ident="host_acknowledged",
-    title=_l("Host problem has been acknowledged"),
-    sort_index=131,
-    info="host",
-)
+    filter_nagios_flag_with_register(
+        filter_registry=filter_registry,
+        ident="host_acknowledged",
+        title=_l("Host problem has been acknowledged"),
+        sort_index=131,
+        info="host",
+    )
 
-filter_nagios_flag_with_register(
-    ident="host_active_checks_enabled",
-    title=_l("Host active checks enabled"),
-    sort_index=132,
-    info="host",
-    is_show_more=True,
-)
+    filter_nagios_flag_with_register(
+        filter_registry=filter_registry,
+        ident="host_active_checks_enabled",
+        title=_l("Host active checks enabled"),
+        sort_index=132,
+        info="host",
+        is_show_more=True,
+    )
 
-filter_nagios_flag_with_register(
-    ident="host_notifications_enabled",
-    title=_l("Host notifications enabled"),
-    sort_index=133,
-    info="host",
-)
+    filter_nagios_flag_with_register(
+        filter_registry=filter_registry,
+        ident="host_notifications_enabled",
+        title=_l("Host notifications enabled"),
+        sort_index=133,
+        info="host",
+    )
 
-filter_nagios_flag_with_register(
-    ident="service_acknowledged",
-    title=_l("Problem acknowledged"),
-    sort_index=230,
-    info="service",
-)
+    filter_nagios_flag_with_register(
+        filter_registry=filter_registry,
+        ident="service_acknowledged",
+        title=_l("Problem acknowledged"),
+        sort_index=230,
+        info="service",
+    )
 
-filter_nagios_flag_with_register(
-    ident="service_in_notification_period",
-    title=_l("Service in notification period"),
-    sort_index=231,
-    info="service",
-)
+    filter_nagios_flag_with_register(
+        filter_registry=filter_registry,
+        ident="service_in_notification_period",
+        title=_l("Service in notification period"),
+        sort_index=231,
+        info="service",
+    )
 
-filter_nagios_flag_with_register(
-    ident="service_in_service_period",
-    title=_l("Service in service period"),
-    sort_index=231,
-    info="service",
-)
+    filter_nagios_flag_with_register(
+        filter_registry=filter_registry,
+        ident="service_in_service_period",
+        title=_l("Service in service period"),
+        sort_index=231,
+        info="service",
+    )
 
-filter_nagios_flag_with_register(
-    ident="service_active_checks_enabled",
-    title=_l("Active checks enabled"),
-    sort_index=233,
-    info="service",
-    is_show_more=True,
-)
+    filter_nagios_flag_with_register(
+        filter_registry=filter_registry,
+        ident="service_active_checks_enabled",
+        title=_l("Active checks enabled"),
+        sort_index=233,
+        info="service",
+        is_show_more=True,
+    )
 
-filter_nagios_flag_with_register(
-    ident="service_notifications_enabled",
-    title=_l("Notifications enabled"),
-    sort_index=234,
-    info="service",
-)
+    filter_nagios_flag_with_register(
+        filter_registry=filter_registry,
+        ident="service_notifications_enabled",
+        title=_l("Notifications enabled"),
+        sort_index=234,
+        info="service",
+    )
 
-filter_nagios_flag_with_register(
-    ident="service_is_flapping",
-    title=_l("Flapping"),
-    sort_index=236,
-    info="service",
-    is_show_more=True,
-)
+    filter_nagios_flag_with_register(
+        filter_registry=filter_registry,
+        ident="service_is_flapping",
+        title=_l("Flapping"),
+        sort_index=236,
+        info="service",
+        is_show_more=True,
+    )
 
-filter_nagios_flag_with_register(
-    ident="service_scheduled_downtime_depth",
-    title=_l("Service in downtime"),
-    sort_index=231,
-    info="service",
-)
+    filter_nagios_flag_with_register(
+        filter_registry=filter_registry,
+        ident="service_scheduled_downtime_depth",
+        title=_l("Service in downtime"),
+        sort_index=231,
+        info="service",
+    )
 
-filter_nagios_flag_with_register(
-    ident="host_scheduled_downtime_depth",
-    title=_l("Host in downtime"),
-    sort_index=132,
-    info="host",
-)
+    filter_nagios_flag_with_register(
+        filter_registry=filter_registry,
+        ident="host_scheduled_downtime_depth",
+        title=_l("Host in downtime"),
+        sort_index=132,
+        info="host",
+    )
 
 
 class SiteFilter(Filter):
@@ -1097,8 +1133,8 @@ class MultipleSitesFilter(SiteFilter):
         sites_vs.render_input(self.htmlvars[0], self.get_request_sites(value))
 
 
-def register_site_filters(_filter_registry: FilterRegistry) -> None:
-    _filter_registry.register(
+def register_site_filters(filter_registry: FilterRegistry) -> None:
+    filter_registry.register(
         SiteFilter(
             title=_l("Site"),
             sort_index=500,
@@ -1130,210 +1166,280 @@ def register_site_filters(_filter_registry: FilterRegistry) -> None:
     )
 
 
-filter_registry.register(
-    FilterNumberRange(
-        title=_l("Current Host Notification Number"),
-        sort_index=232,
-        info="host",
-        query_filter=query_filters.NumberRangeQuery(
-            ident="host_notif_number", column="current_notification_number"
-        ),
+def register_host_and_service_detail_filters(filter_registry: FilterRegistry) -> None:
+    filter_registry.register(
+        FilterNumberRange(
+            title=_l("Current Host Notification Number"),
+            sort_index=232,
+            info="host",
+            query_filter=query_filters.NumberRangeQuery(
+                ident="host_notif_number", column="current_notification_number"
+            ),
+        )
     )
-)
 
-filter_registry.register(
-    FilterNumberRange(
-        title=_l("Current Service Notification Number"),
-        sort_index=232,
-        info="service",
-        query_filter=query_filters.NumberRangeQuery(
-            ident="svc_notif_number", column="current_notification_number"
-        ),
+    filter_registry.register(
+        FilterNumberRange(
+            title=_l("Current Service Notification Number"),
+            sort_index=232,
+            info="service",
+            query_filter=query_filters.NumberRangeQuery(
+                ident="svc_notif_number", column="current_notification_number"
+            ),
+        )
     )
-)
 
-filter_registry.register(
-    FilterNumberRange(
-        title=_l("Number of Services of the Host"),
-        sort_index=234,
-        info="host",
-        query_filter=query_filters.NumberRangeQuery(
-            ident="host_num_services", column="num_services"
-        ),
+    filter_registry.register(
+        FilterNumberRange(
+            title=_l("Number of Services of the Host"),
+            sort_index=234,
+            info="host",
+            query_filter=query_filters.NumberRangeQuery(
+                ident="host_num_services", column="num_services"
+            ),
+        )
     )
-)
 
-filter_registry.register(
-    FilterTime(
-        title=_l("Last service state change"),
-        sort_index=250,
-        info="service",
-        query_filter=query_filters.TimeQuery(
-            ident="svc_last_state_change", column="service_last_state_change"
-        ),
+    filter_registry.register(
+        FilterTime(
+            title=_l("Last service state change"),
+            sort_index=250,
+            info="service",
+            query_filter=query_filters.TimeQuery(
+                ident="svc_last_state_change", column="service_last_state_change"
+            ),
+        )
     )
-)
 
-filter_registry.register(
-    FilterTime(
-        title=_l("Last service check"),
-        sort_index=251,
-        info="service",
-        query_filter=query_filters.TimeQuery(ident="svc_last_check", column="service_last_check"),
+    filter_registry.register(
+        FilterTime(
+            title=_l("Last service check"),
+            sort_index=251,
+            info="service",
+            query_filter=query_filters.TimeQuery(
+                ident="svc_last_check", column="service_last_check"
+            ),
+        )
     )
-)
 
-filter_registry.register(
-    FilterTime(
-        title=_l("Last host state change"),
-        sort_index=250,
-        info="host",
-        query_filter=query_filters.TimeQuery(ident="host_last_state_change"),
+    filter_registry.register(
+        FilterTime(
+            title=_l("Last host state change"),
+            sort_index=250,
+            info="host",
+            query_filter=query_filters.TimeQuery(ident="host_last_state_change"),
+        )
     )
-)
 
-filter_registry.register(
-    FilterTime(
-        title=_l("Last host check"),
-        sort_index=251,
-        info="host",
-        query_filter=query_filters.TimeQuery(ident="host_last_check"),
+    filter_registry.register(
+        FilterTime(
+            title=_l("Last host check"),
+            sort_index=251,
+            info="host",
+            query_filter=query_filters.TimeQuery(ident="host_last_check"),
+        )
     )
-)
-
-filter_registry.register(
-    FilterTime(
-        title=_l("Time of comment"),
-        sort_index=253,
-        info="comment",
-        query_filter=query_filters.TimeQuery(ident="comment_entry_time"),
-    )
-)
-
-filter_registry.register(
-    RegexFilter(
-        title=_l("Comment (regex)"),
-        sort_index=258,
-        info="comment",
-        query_filter=query_filters.TextQuery(
-            ident="comment_comment",
-            op="~~",
-            negateable=True,
-        ),
-    )
-)
-
-filter_registry.register(
-    RegexFilter(
-        title=_l("Author comment (regex)"),
-        sort_index=259,
-        info="comment",
-        query_filter=query_filters.TextQuery(
-            ident="comment_author",
-            op="~~",
-            negateable=True,
-        ),
-    )
-)
-
-filter_registry.register(
-    FilterTime(
-        title=_l("Time when downtime was created"),
-        sort_index=253,
-        info="downtime",
-        query_filter=query_filters.TimeQuery(ident="downtime_entry_time"),
-    )
-)
-
-filter_registry.register(
-    RegexFilter(
-        title=_l("Downtime comment (regex)"),
-        sort_index=254,
-        info="downtime",
-        query_filter=query_filters.TextQuery(ident="downtime_comment", op="~"),
-    )
-)
-
-filter_registry.register(
-    FilterTime(
-        title=_l("Start of downtime"),
-        sort_index=255,
-        info="downtime",
-        query_filter=query_filters.TimeQuery(ident="downtime_start_time"),
-    )
-)
-
-filter_registry.register(
-    RegexFilter(
-        title=_l("Downtime author (regex)"),
-        sort_index=256,
-        info="downtime",
-        query_filter=query_filters.TextQuery(ident="downtime_author", op="~"),
-    )
-)
-
-filter_registry.register(
-    FilterTime(
-        title=_l("Time of log entry"),
-        sort_index=252,
-        info="log",
-        query_filter=query_filters.TimeQuery(ident="logtime", column="log_time"),
-    )
-)
-
-filter_registry.register(
-    CheckboxRowFilter(
-        title=_l("Logentry class"),
-        sort_index=255,
-        info="log",
-        query_filter=query_filters.MultipleOptionsQuery(
-            ident="log_class",
-            options=query_filters.log_class_options(),
-            livestatus_query=query_filters.log_class_filter,
-        ),
-    )
-)
 
 
-filter_registry.register(
-    RegexFilter(
-        title=_l("Log: plugin output (regex)"),
-        sort_index=202,
-        info="log",
-        query_filter=query_filters.TextQuery(
-            ident="log_plugin_output",
-            op="~~",
-        ),
+def register_comment_filters(filter_registry: FilterRegistry) -> None:
+    filter_registry.register(
+        FilterTime(
+            title=_l("Time of comment"),
+            sort_index=253,
+            info="comment",
+            query_filter=query_filters.TimeQuery(ident="comment_entry_time"),
+        )
     )
-)
 
-filter_registry.register(
-    RegexFilter(
-        title=_l("Log: message type (regex)"),
-        sort_index=203,
-        info="log",
-        query_filter=query_filters.TextQuery(ident="log_type", op="~~"),
-        show_heading=False,
+    filter_registry.register(
+        RegexFilter(
+            title=_l("Comment (regex)"),
+            sort_index=258,
+            info="comment",
+            query_filter=query_filters.TextQuery(
+                ident="comment_comment",
+                op="~~",
+                negateable=True,
+            ),
+        )
     )
-)
 
-filter_registry.register(
-    RegexFilter(
-        title=_l('Log: state type (DEPRECATED: Use "state information") (regex)'),
-        sort_index=204,
-        info="log",
-        query_filter=query_filters.TextQuery(ident="log_state_type", op="~~"),
+    filter_registry.register(
+        RegexFilter(
+            title=_l("Author comment (regex)"),
+            sort_index=259,
+            info="comment",
+            query_filter=query_filters.TextQuery(
+                ident="comment_author",
+                op="~~",
+                negateable=True,
+            ),
+        )
     )
-)
 
-filter_registry.register(
-    RegexFilter(
-        title=_l("Log: state information (regex)"),
-        sort_index=204,
-        info="log",
-        query_filter=query_filters.TextQuery(ident="log_state_info", op="~~"),
+
+def register_downtime_filters(filter_registry: FilterRegistry) -> None:
+    filter_registry.register(
+        InputTextFilter(
+            title=_l("Downtime ID (exact match)"),
+            sort_index=301,
+            info="downtime",
+            query_filter=query_filters.TextQuery(ident="downtime_id", op="="),
+        )
     )
-)
+
+    filter_registry.register(
+        FilterTime(
+            title=_l("Time when downtime was created"),
+            sort_index=253,
+            info="downtime",
+            query_filter=query_filters.TimeQuery(ident="downtime_entry_time"),
+        )
+    )
+
+    filter_registry.register(
+        RegexFilter(
+            title=_l("Downtime comment (regex)"),
+            sort_index=254,
+            info="downtime",
+            query_filter=query_filters.TextQuery(ident="downtime_comment", op="~"),
+        )
+    )
+
+    filter_registry.register(
+        FilterTime(
+            title=_l("Start of downtime"),
+            sort_index=255,
+            info="downtime",
+            query_filter=query_filters.TimeQuery(ident="downtime_start_time"),
+        )
+    )
+
+    filter_registry.register(
+        RegexFilter(
+            title=_l("Downtime author (regex)"),
+            sort_index=256,
+            info="downtime",
+            query_filter=query_filters.TextQuery(ident="downtime_author", op="~"),
+        )
+    )
+
+
+def register_log_filters(filter_registry: FilterRegistry) -> None:
+    filter_registry.register(
+        FilterTime(
+            title=_l("Time of log entry"),
+            sort_index=252,
+            info="log",
+            query_filter=query_filters.TimeQuery(ident="logtime", column="log_time"),
+        )
+    )
+
+    filter_registry.register(
+        CheckboxRowFilter(
+            title=_l("Logentry class"),
+            sort_index=255,
+            info="log",
+            query_filter=query_filters.MultipleOptionsQuery(
+                ident="log_class",
+                options=query_filters.log_class_options(),
+                livestatus_query=query_filters.log_class_filter,
+            ),
+        )
+    )
+
+    filter_registry.register(
+        RegexFilter(
+            title=_l("Log: plugin output (regex)"),
+            sort_index=202,
+            info="log",
+            query_filter=query_filters.TextQuery(
+                ident="log_plugin_output",
+                op="~~",
+            ),
+        )
+    )
+
+    filter_registry.register(
+        RegexFilter(
+            title=_l("Log: message type (regex)"),
+            sort_index=203,
+            info="log",
+            query_filter=query_filters.TextQuery(ident="log_type", op="~~"),
+            show_heading=False,
+        )
+    )
+
+    filter_registry.register(
+        RegexFilter(
+            title=_l('Log: state type (DEPRECATED: Use "state information") (regex)'),
+            sort_index=204,
+            info="log",
+            query_filter=query_filters.TextQuery(ident="log_state_type", op="~~"),
+        )
+    )
+
+    filter_registry.register(
+        RegexFilter(
+            title=_l("Log: state information (regex)"),
+            sort_index=204,
+            info="log",
+            query_filter=query_filters.TextQuery(ident="log_state_info", op="~~"),
+        )
+    )
+
+    filter_registry.register(
+        FilterLogContactName(
+            title=_l("Log: contact name (exact match)"),
+            sort_index=260,
+            description=_l("Exact match, used for linking"),
+            info="log",
+            query_filter=query_filters.TextQuery(ident="log_contact_name", op="~"),
+        )
+    )
+
+    filter_registry.register(
+        RegexFilter(
+            title=_l("Log: contact name (regex)"),
+            sort_index=261,
+            info="log",
+            query_filter=query_filters.TextQuery(
+                ident="log_contact_name_regex",
+                column="log_contact_name",
+                op="~~",
+                negateable=True,
+            ),
+        )
+    )
+
+    filter_registry.register(
+        RegexFilter(
+            title=_l("Log: command (regex)"),
+            sort_index=262,
+            info="log",
+            query_filter=query_filters.TextQuery(
+                ident="log_command_name_regex",
+                column="log_command_name",
+                op="~~",
+                negateable=True,
+            ),
+        )
+    )
+
+    filter_registry.register(_FilterLogState())
+
+    filter_registry.register(
+        FilterOption(
+            title=_l("Notification phase"),
+            sort_index=271,
+            info="log",
+            query_filter=query_filters.TristateQuery(
+                ident="log_notification_phase",
+                filter_code=query_filters.log_notification_phase("log_command_name"),
+                options=query_filters.tri_state_log_notifications_options(),
+            ),
+        )
+    )
 
 
 class FilterLogContactName(InputTextFilter):
@@ -1346,45 +1452,6 @@ class FilterLogContactName(InputTextFilter):
             new_value[self.htmlvars[0]] = "(,|^)" + current_value.replace(".", "\\.") + "(,|$)"
             return self.query_filter._filter(new_value)
         return ""
-
-
-filter_registry.register(
-    FilterLogContactName(
-        title=_l("Log: contact name (exact match)"),
-        sort_index=260,
-        description=_l("Exact match, used for linking"),
-        info="log",
-        query_filter=query_filters.TextQuery(ident="log_contact_name", op="~"),
-    )
-)
-
-filter_registry.register(
-    RegexFilter(
-        title=_l("Log: contact name (regex)"),
-        sort_index=261,
-        info="log",
-        query_filter=query_filters.TextQuery(
-            ident="log_contact_name_regex",
-            column="log_contact_name",
-            op="~~",
-            negateable=True,
-        ),
-    )
-)
-
-filter_registry.register(
-    RegexFilter(
-        title=_l("Log: command (regex)"),
-        sort_index=262,
-        info="log",
-        query_filter=query_filters.TextQuery(
-            ident="log_command_name_regex",
-            column="log_command_name",
-            op="~~",
-            negateable=True,
-        ),
-    )
-)
 
 
 # TODO: I would be great to split this in two filters for host & service states
@@ -1419,51 +1486,9 @@ class _FilterLogState(CheckboxRowFilter):
         checkbox_row(self.service_states, value, "Services: ")
 
 
-filter_registry.register(_FilterLogState())
-
-
-filter_registry.register(
-    FilterOption(
-        title=_l("Notification phase"),
-        sort_index=271,
-        info="log",
-        query_filter=query_filters.TristateQuery(
-            ident="log_notification_phase",
-            filter_code=query_filters.log_notification_phase("log_command_name"),
-            options=query_filters.tri_state_log_notifications_options(),
-        ),
-    )
-)
-
-
 def bi_aggr_service_used(on: bool, row: Row) -> bool:
     # should be in query_filters, but it creates a cyclical import at the moment
     return bi.is_part_of_aggregation(row["host_name"], row["service_description"]) is on
-
-
-filter_registry.register(
-    FilterOption(
-        title=_l("Used in BI aggregate"),
-        sort_index=300,
-        info="service",
-        query_filter=query_filters.TristateQuery(
-            ident="aggr_service_used",
-            filter_code=lambda x: "",
-            filter_row=bi_aggr_service_used,
-        ),
-        is_show_more=True,
-    )
-)
-
-
-filter_registry.register(
-    InputTextFilter(
-        title=_l("Downtime ID (exact match)"),
-        sort_index=301,
-        info="downtime",
-        query_filter=query_filters.TextQuery(ident="downtime_id", op="="),
-    )
-)
 
 
 class TagFilter(Filter):
@@ -1550,22 +1575,6 @@ class TagFilter(Filter):
         return self.query_filter.filter(value)
 
 
-filter_registry.register(
-    TagFilter(
-        title=_l("Host tags"),
-        query_filter=query_filters.TagsQuery(object_type="host"),
-    )
-)
-
-filter_registry.register(
-    TagFilter(
-        title=_l("Tags"),
-        query_filter=query_filters.TagsQuery(object_type="service"),
-        is_show_more=True,
-    )
-)
-
-
 class _FilterHostAuxTags(Filter):
     def __init__(self) -> None:
         self.query_filter = query_filters.AuxTagsQuery(object_type="host")
@@ -1597,9 +1606,6 @@ class _FilterHostAuxTags(Filter):
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
-
-
-filter_registry.register(_FilterHostAuxTags())
 
 
 class LabelGroupFilter(Filter):
@@ -1637,25 +1643,53 @@ class LabelGroupFilter(Filter):
         return dict(request.itervars(self.query_filter.ident))
 
 
-filter_registry.register(
-    LabelGroupFilter(
-        title=_l("Host labels"),
-        object_type="host",
+def register_tag_and_label_filters(filter_registry: FilterRegistry) -> None:
+    filter_registry.register(
+        TagFilter(
+            title=_l("Host tags"),
+            query_filter=query_filters.TagsQuery(object_type="host"),
+        )
     )
-)
 
-filter_registry.register(
-    LabelGroupFilter(
-        title=_l("Service labels"),
-        object_type="service",
+    filter_registry.register(
+        TagFilter(
+            title=_l("Tags"),
+            query_filter=query_filters.TagsQuery(object_type="service"),
+            is_show_more=True,
+        )
     )
-)
+
+    filter_registry.register(_FilterHostAuxTags())
+
+    filter_registry.register(
+        LabelGroupFilter(
+            title=_l("Host labels"),
+            object_type="host",
+        )
+    )
+
+    filter_registry.register(
+        LabelGroupFilter(
+            title=_l("Service labels"),
+            object_type="service",
+        )
+    )
 
 
-def filter_kubernetes_register(  # type: ignore[no-untyped-def]
+def register_kubernetes_filters(filter_registry: FilterRegistry) -> None:
+    filter_kubernetes_register(filter_registry, _("Kubernetes Cluster"), "cluster")
+    filter_kubernetes_register(filter_registry, _("Kubernetes Namespace"), "namespace")
+    filter_kubernetes_register(filter_registry, _("Kubernetes Node"), "node")
+    filter_kubernetes_register(filter_registry, _("Kubernetes Deployment"), "deployment")
+    filter_kubernetes_register(filter_registry, _("Kubernetes DaemonSet"), "daemonset")
+    filter_kubernetes_register(filter_registry, _("Kubernetes StatefulSet"), "statefulset")
+
+
+def filter_kubernetes_register(
+    filter_registry: FilterRegistry,
     title: str,
     object_name: Literal["cluster", "node", "deployment", "namespace", "daemonset", "statefulset"],
-):
+) -> None:
     filter_registry.register(
         AjaxDropdownFilter(
             title=title,
@@ -1671,14 +1705,6 @@ def filter_kubernetes_register(  # type: ignore[no-untyped-def]
             ),
         )
     )
-
-
-filter_kubernetes_register(_("Kubernetes Cluster"), "cluster")
-filter_kubernetes_register(_("Kubernetes Namespace"), "namespace")
-filter_kubernetes_register(_("Kubernetes Node"), "node")
-filter_kubernetes_register(_("Kubernetes Deployment"), "deployment")
-filter_kubernetes_register(_("Kubernetes DaemonSet"), "daemonset")
-filter_kubernetes_register(_("Kubernetes StatefulSet"), "statefulset")
 
 
 class CustomAttributeFilter(Filter):
@@ -1754,16 +1780,6 @@ def _service_attribute_choices() -> Choices:
     return sorted(choices, key=lambda x: x[1])
 
 
-filter_registry.register(
-    CustomAttributeFilter(
-        ident="service_custom_variable",
-        title=_l("Service custom attribute (regex)"),
-        info="service",
-        choice_func=_service_attribute_choices,
-    )
-)
-
-
 def _host_attribute_choices() -> Choices:
     choices: Choices = []
     for attr_spec in active_config.wato_host_attrs:
@@ -1771,14 +1787,24 @@ def _host_attribute_choices() -> Choices:
     return sorted(choices, key=lambda x: x[1])
 
 
-filter_registry.register(
-    CustomAttributeFilter(
-        ident="host_custom_variable",
-        title=_l("Host custom attribute (regex)"),
-        info="host",
-        choice_func=_host_attribute_choices,
+def register_custom_attribute_filters(filter_registry: FilterRegistry) -> None:
+    filter_registry.register(
+        CustomAttributeFilter(
+            ident="service_custom_variable",
+            title=_l("Service custom attribute (regex)"),
+            info="service",
+            choice_func=_service_attribute_choices,
+        )
     )
-)
+
+    filter_registry.register(
+        CustomAttributeFilter(
+            ident="host_custom_variable",
+            title=_l("Host custom attribute (regex)"),
+            info="host",
+            choice_func=_host_attribute_choices,
+        )
+    )
 
 
 # choices = [ (value, "readable"), .. ]
@@ -1861,25 +1887,30 @@ class FilterECServiceLevelRange(Filter):
             yield "%s_custom_variables" % self.info
 
 
-filter_registry.register(
-    FilterECServiceLevelRange(
-        ident="svc_service_level",
-        title=_l("Service service level"),
-        info="service",
+def register_ec_sl_filters(filter_registry: FilterRegistry) -> None:
+    filter_registry.register(
+        FilterECServiceLevelRange(
+            ident="svc_service_level",
+            title=_l("Service service level"),
+            info="service",
+        )
     )
-)
 
-filter_registry.register(
-    FilterECServiceLevelRange(
-        ident="hst_service_level",
-        title=_l("Host service level"),
-        info="host",
+    filter_registry.register(
+        FilterECServiceLevelRange(
+            ident="hst_service_level",
+            title=_l("Host service level"),
+            info="host",
+        )
     )
-)
 
 
 def filter_starred_with_register(
-    *, what: Literal["host", "service"], title: str | LazyString, sort_index: int
+    *,
+    filter_registry: FilterRegistry,
+    what: Literal["host", "service"],
+    title: str | LazyString,
+    sort_index: int,
 ) -> None:
     filter_registry.register(
         FilterOption(
@@ -1895,30 +1926,113 @@ def filter_starred_with_register(
     )
 
 
-filter_starred_with_register(
-    what="host",
-    title=_l("Favorite Hosts"),
-    sort_index=501,
-)
-
-filter_starred_with_register(
-    what="service",
-    title=_l("Favorite Services"),
-    sort_index=501,
-)
-
-filter_registry.register(
-    CheckboxRowFilter(
-        title=_l("Discovery state"),
-        sort_index=601,
-        info="discovery",
-        query_filter=query_filters.MultipleOptionsQuery(
-            ident="discovery_state",
-            options=query_filters.discovery_state_options(),
-            rows_filter=partial(query_filters.discovery_state_filter_table, "discovery_state"),
-        ),
+def register_starred_filters(filter_registry: FilterRegistry) -> None:
+    filter_starred_with_register(
+        filter_registry=filter_registry,
+        what="host",
+        title=_l("Favorite Hosts"),
+        sort_index=501,
     )
-)
+
+    filter_starred_with_register(
+        filter_registry=filter_registry,
+        what="service",
+        title=_l("Favorite Services"),
+        sort_index=501,
+    )
+
+
+def register_discovery_filters(filter_registry: FilterRegistry) -> None:
+    filter_registry.register(
+        CheckboxRowFilter(
+            title=_l("Discovery state"),
+            sort_index=601,
+            info="discovery",
+            query_filter=query_filters.MultipleOptionsQuery(
+                ident="discovery_state",
+                options=query_filters.discovery_state_options(),
+                rows_filter=partial(query_filters.discovery_state_filter_table, "discovery_state"),
+            ),
+        )
+    )
+
+
+def register_bi_filters(filter_registry: FilterRegistry) -> None:
+    filter_registry.register(_FilterAggrGroup())
+    filter_registry.register(_FilterAggrGroupTree())
+    filter_registry.register(_BIFrozenAggregations())
+
+    filter_registry.register(
+        BITextFilter(
+            ident="aggr_name_regex",
+            title=_l("Aggregation name regex"),
+            sort_index=120,
+            what="name",
+            suffix="_regex",
+        )
+    )
+
+    filter_registry.register(
+        BITextFilter(
+            ident="aggr_name",
+            title=_l("Aggregation name (exact match)"),
+            sort_index=120,
+            what="name",
+            how="exact",
+        )
+    )
+
+    filter_registry.register(
+        BITextFilter(
+            ident="aggr_output",
+            title=_l("Aggregation output"),
+            sort_index=121,
+            what="output",
+        )
+    )
+
+    filter_registry.register(_FilterAggrHosts())
+    filter_registry.register(_FilterAggrService())
+    filter_registry.register(
+        BIStatusFilter(
+            ident="aggr_state",
+            title=_l(" State"),
+            sort_index=150,
+            what="",
+        )
+    )
+
+    filter_registry.register(
+        BIStatusFilter(
+            ident="aggr_effective_state",
+            title=_l("Effective  State"),
+            sort_index=151,
+            what="effective_",
+        )
+    )
+
+    filter_registry.register(
+        BIStatusFilter(
+            ident="aggr_assumed_state",
+            title=_l("Assumed  State"),
+            sort_index=152,
+            what="assumed_",
+        )
+    )
+
+    filter_registry.register(
+        FilterOption(
+            title=_l("Used in BI aggregate"),
+            sort_index=300,
+            info="service",
+            query_filter=query_filters.TristateQuery(
+                ident="aggr_service_used",
+                filter_code=lambda x: "",
+                filter_row=bi_aggr_service_used,
+            ),
+            is_show_more=True,
+        )
+    )
 
 
 class _FilterAggrGroup(Filter):
@@ -1953,9 +2067,6 @@ class _FilterAggrGroup(Filter):
 
     def heading_info(self, value: FilterHTTPVariables) -> str | None:
         return value.get(self.htmlvars[0])
-
-
-filter_registry.register(_FilterAggrGroup())
 
 
 class _FilterAggrGroupTree(Filter):
@@ -2020,9 +2131,6 @@ class _FilterAggrGroupTree(Filter):
         return empty + selection
 
 
-filter_registry.register(_FilterAggrGroupTree())
-
-
 class _BIFrozenAggregations(Filter):
     def __init__(self):
         super().__init__(
@@ -2069,9 +2177,6 @@ class _BIFrozenAggregations(Filter):
                     new_rows.append(row)
 
         return new_rows
-
-
-filter_registry.register(_BIFrozenAggregations())
 
 
 # how is either "regex" or "exact"
@@ -2125,36 +2230,6 @@ class BITextFilter(Filter):
         return [row for row in rows if row[self.column] == val]
 
 
-filter_registry.register(
-    BITextFilter(
-        ident="aggr_name_regex",
-        title=_l("Aggregation name regex"),
-        sort_index=120,
-        what="name",
-        suffix="_regex",
-    )
-)
-
-filter_registry.register(
-    BITextFilter(
-        ident="aggr_name",
-        title=_l("Aggregation name (exact match)"),
-        sort_index=120,
-        what="name",
-        how="exact",
-    )
-)
-
-filter_registry.register(
-    BITextFilter(
-        ident="aggr_output",
-        title=_l("Aggregation output"),
-        sort_index=121,
-        what="output",
-    )
-)
-
-
 class _FilterAggrHosts(Filter):
     def __init__(self) -> None:
         super().__init__(
@@ -2192,9 +2267,6 @@ class _FilterAggrHosts(Filter):
         return rows
 
 
-filter_registry.register(_FilterAggrHosts())
-
-
 class _FilterAggrService(Filter):
     """Not performing filter(), nor filter_table(). The filtering is done directly in BI by
     bi.table(), which calls service_spec()."""
@@ -2227,9 +2299,6 @@ class _FilterAggrService(Filter):
             "host": row["host_name"],
             "service": row["service_description"],
         }
-
-
-filter_registry.register(_FilterAggrService())
 
 
 class BIStatusFilter(Filter):
@@ -2306,272 +2375,238 @@ class BIStatusFilter(Filter):
         return newrows
 
 
-filter_registry.register(
-    BIStatusFilter(
-        ident="aggr_state",
-        title=_l(" State"),
-        sort_index=150,
-        what="",
+def register_ec_filters(filter_registry: FilterRegistry) -> None:
+    filter_registry.register(
+        InputTextFilter(
+            title=_l("Event ID (exact match)"),
+            sort_index=200,
+            info="event",
+            query_filter=query_filters.TextQuery(ident="event_id", op="="),
+        )
     )
-)
 
-filter_registry.register(
-    BIStatusFilter(
-        ident="aggr_effective_state",
-        title=_l("Effective  State"),
-        sort_index=151,
-        what="effective_",
+    filter_registry.register(
+        InputTextFilter(
+            title=_l("ID of rule (exact match)"),
+            sort_index=200,
+            info="event",
+            query_filter=query_filters.TextQuery(ident="event_rule_id", op="="),
+        )
     )
-)
 
-filter_registry.register(
-    BIStatusFilter(
-        ident="aggr_assumed_state",
-        title=_l("Assumed  State"),
-        sort_index=152,
-        what="assumed_",
+    filter_registry.register(
+        RegexFilter(
+            title=_l("Message/Text of event (regex)"),
+            sort_index=201,
+            info="event",
+            query_filter=query_filters.TextQuery(ident="event_text", op="~~"),
+        )
     )
-)
 
-filter_registry.register(
-    InputTextFilter(
-        title=_l("Event ID (exact match)"),
-        sort_index=200,
+    filter_registry.register(
+        RegexFilter(
+            title=_l("Application / Syslog-Tag (regex)"),
+            sort_index=201,
+            info="event",
+            query_filter=query_filters.TextQuery(
+                ident="event_application",
+                op="~~",
+            ),
+        )
+    )
+
+    filter_registry.register(
+        RegexFilter(
+            title=_l("Contact person (regex)"),
+            sort_index=201,
+            info="event",
+            query_filter=query_filters.TextQuery(ident="event_contact", op="~~"),
+        )
+    )
+
+    filter_registry.register(
+        RegexFilter(
+            title=_l("Comment to the event (regex)"),
+            sort_index=201,
+            info="event",
+            query_filter=query_filters.TextQuery(ident="event_comment", op="~~"),
+        )
+    )
+
+    filter_registry.register(
+        RegexFilter(
+            title=_l("Hostname of original event (regex)"),
+            sort_index=201,
+            info="event",
+            query_filter=query_filters.TextQuery(
+                ident="event_host_regex", op="~~", column="event_host"
+            ),
+        )
+    )
+
+    filter_registry.register(
+        InputTextFilter(
+            title=_l("Hostname of event (exact match)"),
+            sort_index=201,
+            info="event",
+            query_filter=query_filters.TextQuery(ident="event_host", op="="),
+        )
+    )
+
+    filter_registry.register(
+        RegexFilter(
+            title=_l("Original IP address of event (regex)"),
+            sort_index=201,
+            info="event",
+            query_filter=query_filters.TextQuery(ident="event_ipaddress", op="~~"),
+        )
+    )
+
+    filter_registry.register(
+        RegexFilter(
+            title=_l("Owner of event (regex)"),
+            sort_index=201,
+            info="event",
+            query_filter=query_filters.TextQuery(ident="event_owner", op="~~"),
+        )
+    )
+
+    filter_registry.register(
+        RegexFilter(
+            title=_l("User that performed action (regex)"),
+            sort_index=221,
+            info="history",
+            query_filter=query_filters.TextQuery(ident="history_who", op="~~"),
+        )
+    )
+
+    filter_registry.register(
+        InputTextFilter(
+            title=_l("Line number in history logfile (exact match)"),
+            sort_index=222,
+            info="history",
+            query_filter=query_filters.TextQuery(ident="history_line", op="="),
+        )
+    )
+
+    filter_nagios_flag_with_register(
+        filter_registry=filter_registry,
+        ident="event_host_in_downtime",
+        title=_l("Host in downtime during event creation"),
+        sort_index=223,
         info="event",
-        query_filter=query_filters.TextQuery(ident="event_id", op="="),
     )
-)
 
-filter_registry.register(
-    InputTextFilter(
-        title=_l("ID of rule (exact match)"),
-        sort_index=200,
-        info="event",
-        query_filter=query_filters.TextQuery(ident="event_rule_id", op="="),
+    filter_registry.register(
+        FilterNumberRange(
+            title=_l("Message count"),
+            sort_index=205,
+            info="event",
+            query_filter=query_filters.NumberRangeQuery(ident="event_count"),
+        )
     )
-)
 
-filter_registry.register(
-    RegexFilter(
-        title=_l("Message/Text of event (regex)"),
-        sort_index=201,
-        info="event",
-        query_filter=query_filters.TextQuery(ident="event_text", op="~~"),
+    filter_registry.register(
+        CheckboxRowFilter(
+            title=_l("State classification"),
+            sort_index=206,
+            info="event",
+            query_filter=query_filters.MultipleOptionsQuery(
+                ident="event_state",
+                options=query_filters.svc_state_min_options("event_state_"),
+                livestatus_query=partial(query_filters.options_toggled_filter, "event_state"),
+            ),
+        )
     )
-)
 
-filter_registry.register(
-    RegexFilter(
-        title=_l("Application / Syslog-Tag (regex)"),
-        sort_index=201,
-        info="event",
-        query_filter=query_filters.TextQuery(
-            ident="event_application",
-            op="~~",
-        ),
+    filter_registry.register(
+        CheckboxRowFilter(
+            title=_l("Phase"),
+            sort_index=207,
+            info="event",
+            query_filter=query_filters.MultipleOptionsQuery(
+                ident="event_phase",
+                options=[
+                    ("event_phase_" + var, title) for var, title in mkeventd.phase_names.items()
+                ],
+                livestatus_query=partial(query_filters.options_toggled_filter, "event_phase"),
+            ),
+        )
     )
-)
 
-filter_registry.register(
-    RegexFilter(
-        title=_l("Contact person (regex)"),
-        sort_index=201,
-        info="event",
-        query_filter=query_filters.TextQuery(ident="event_contact", op="~~"),
+    filter_registry.register(
+        CheckboxRowFilter(
+            title=_l("Syslog Priority"),
+            sort_index=209,
+            info="event",
+            query_filter=query_filters.MultipleOptionsQuery(
+                ident="event_priority",
+                options=[("event_priority_%d" % e[0], e[1]) for e in mkeventd.syslog_priorities],
+                livestatus_query=partial(query_filters.options_toggled_filter, "event_priority"),
+            ),
+        )
     )
-)
 
-filter_registry.register(
-    RegexFilter(
-        title=_l("Comment to the event (regex)"),
-        sort_index=201,
-        info="event",
-        query_filter=query_filters.TextQuery(ident="event_comment", op="~~"),
+    filter_registry.register(
+        FilterTime(
+            title=_l("First occurrence of event"),
+            sort_index=220,
+            info="event",
+            query_filter=query_filters.TimeQuery(ident="event_first"),
+        )
     )
-)
 
-filter_registry.register(
-    RegexFilter(
-        title=_l("Hostname of original event (regex)"),
-        sort_index=201,
-        info="event",
-        query_filter=query_filters.TextQuery(
-            ident="event_host_regex", op="~~", column="event_host"
-        ),
+    filter_registry.register(
+        FilterTime(
+            title=_l("Last occurrance of event"),
+            sort_index=221,
+            info="event",
+            query_filter=query_filters.TimeQuery(ident="event_last"),
+        )
     )
-)
 
-filter_registry.register(
-    InputTextFilter(
-        title=_l("Hostname of event (exact match)"),
-        sort_index=201,
-        info="event",
-        query_filter=query_filters.TextQuery(ident="event_host", op="="),
+    filter_registry.register(
+        FilterTime(
+            title=_l("Time of entry in event history"),
+            sort_index=222,
+            info="history",
+            query_filter=query_filters.TimeQuery(
+                ident="history_time",
+            ),
+        )
     )
-)
 
-filter_registry.register(
-    RegexFilter(
-        title=_l("Original IP address of event (regex)"),
-        sort_index=201,
-        info="event",
-        query_filter=query_filters.TextQuery(ident="event_ipaddress", op="~~"),
+    filter_registry.register(
+        AjaxDropdownFilter(
+            title=_l("Syslog Facility (exact match)"),
+            sort_index=210,
+            info="event",
+            autocompleter=AutocompleterConfig(ident="syslog_facilities", strict=True),
+            query_filter=query_filters.TextQuery(ident="event_facility", op="="),
+        )
     )
-)
 
-filter_registry.register(
-    RegexFilter(
-        title=_l("Owner of event (regex)"),
-        sort_index=201,
-        info="event",
-        query_filter=query_filters.TextQuery(ident="event_owner", op="~~"),
+    filter_registry.register(
+        AjaxDropdownFilter(
+            title=_l("Service Level at least"),
+            sort_index=211,
+            info="event",
+            autocompleter=AutocompleterConfig(ident="service_levels"),
+            query_filter=query_filters.TextQuery(ident="event_sl", op=">="),
+        )
     )
-)
 
-filter_registry.register(
-    RegexFilter(
-        title=_l("User that performed action (regex)"),
-        sort_index=221,
-        info="history",
-        query_filter=query_filters.TextQuery(ident="history_who", op="~~"),
+    filter_registry.register(
+        AjaxDropdownFilter(
+            title=_l("Service Level at most"),
+            sort_index=211,
+            info="event",
+            autocompleter=AutocompleterConfig(ident="service_levels"),
+            query_filter=query_filters.TextQuery(ident="event_sl_max", op="<=", column="event_sl"),
+        )
     )
-)
 
-filter_registry.register(
-    InputTextFilter(
-        title=_l("Line number in history logfile (exact match)"),
-        sort_index=222,
-        info="history",
-        query_filter=query_filters.TextQuery(ident="history_line", op="="),
-    )
-)
-
-filter_nagios_flag_with_register(
-    ident="event_host_in_downtime",
-    title=_l("Host in downtime during event creation"),
-    sort_index=223,
-    info="event",
-)
-
-filter_registry.register(
-    FilterNumberRange(
-        title=_l("Message count"),
-        sort_index=205,
-        info="event",
-        query_filter=query_filters.NumberRangeQuery(ident="event_count"),
-    )
-)
-
-filter_registry.register(
-    CheckboxRowFilter(
-        title=_l("State classification"),
-        sort_index=206,
-        info="event",
-        query_filter=query_filters.MultipleOptionsQuery(
-            ident="event_state",
-            options=query_filters.svc_state_min_options("event_state_"),
-            livestatus_query=partial(query_filters.options_toggled_filter, "event_state"),
-        ),
-    )
-)
-
-filter_registry.register(
-    CheckboxRowFilter(
-        title=_l("Phase"),
-        sort_index=207,
-        info="event",
-        query_filter=query_filters.MultipleOptionsQuery(
-            ident="event_phase",
-            options=[("event_phase_" + var, title) for var, title in mkeventd.phase_names.items()],
-            livestatus_query=partial(query_filters.options_toggled_filter, "event_phase"),
-        ),
-    )
-)
-
-filter_registry.register(
-    CheckboxRowFilter(
-        title=_l("Syslog Priority"),
-        sort_index=209,
-        info="event",
-        query_filter=query_filters.MultipleOptionsQuery(
-            ident="event_priority",
-            options=[("event_priority_%d" % e[0], e[1]) for e in mkeventd.syslog_priorities],
-            livestatus_query=partial(query_filters.options_toggled_filter, "event_priority"),
-        ),
-    )
-)
-
-filter_registry.register(
-    CheckboxRowFilter(
-        title=_l("History action type"),
-        sort_index=225,
-        info="history",
-        query_filter=query_filters.MultipleOptionsQuery(
-            ident="history_what",
-            options=[("history_what_%s" % k, k) for k in mkeventd.action_whats],
-            livestatus_query=partial(query_filters.options_toggled_filter, "history_what"),
-        ),
-    )
-)
-
-filter_registry.register(
-    FilterTime(
-        title=_l("First occurrence of event"),
-        sort_index=220,
-        info="event",
-        query_filter=query_filters.TimeQuery(ident="event_first"),
-    )
-)
-
-filter_registry.register(
-    FilterTime(
-        title=_l("Last occurrance of event"),
-        sort_index=221,
-        info="event",
-        query_filter=query_filters.TimeQuery(ident="event_last"),
-    )
-)
-
-filter_registry.register(
-    FilterTime(
-        title=_l("Time of entry in event history"),
-        sort_index=222,
-        info="history",
-        query_filter=query_filters.TimeQuery(
-            ident="history_time",
-        ),
-    )
-)
-
-filter_registry.register(
-    AjaxDropdownFilter(
-        title=_l("Syslog Facility (exact match)"),
-        sort_index=210,
-        info="event",
-        autocompleter=AutocompleterConfig(ident="syslog_facilities", strict=True),
-        query_filter=query_filters.TextQuery(ident="event_facility", op="="),
-    )
-)
-
-filter_registry.register(
-    AjaxDropdownFilter(
-        title=_l("Service Level at least"),
-        sort_index=211,
-        info="event",
-        autocompleter=AutocompleterConfig(ident="service_levels"),
-        query_filter=query_filters.TextQuery(ident="event_sl", op=">="),
-    )
-)
-
-filter_registry.register(
-    AjaxDropdownFilter(
-        title=_l("Service Level at most"),
-        sort_index=211,
-        info="event",
-        autocompleter=AutocompleterConfig(ident="service_levels"),
-        query_filter=query_filters.TextQuery(ident="event_sl_max", op="<=", column="event_sl"),
-    )
-)
+    filter_registry.register(_FilterOptEventEffectiveContactgroup())
 
 
 # TODO: Cleanup as a dropdown visual Filter later on
@@ -2587,9 +2622,6 @@ class _FilterOptEventEffectiveContactgroup(FilterGroupCombo):
 
     def request_vars_from_row(self, row: Row) -> dict[str, str]:
         return {}
-
-
-filter_registry.register(_FilterOptEventEffectiveContactgroup())
 
 
 class FilterCMKSiteStatisticsByCorePIDs(Filter):
@@ -2730,13 +2762,14 @@ class FilterCMKSiteStatisticsByCorePIDs(Filter):
         }
 
 
-filter_registry.register(
-    FilterCMKSiteStatisticsByCorePIDs(
-        ident=FilterCMKSiteStatisticsByCorePIDs.ID,
-        title=_l("cmk_site_statistics (core PIDs)"),
-        sort_index=900,
-        info="service",
-        htmlvars=[FilterCMKSiteStatisticsByCorePIDs.ID],
-        link_columns=[],
+def register_site_statistics_by_core_filter(filter_registry: FilterRegistry) -> None:
+    filter_registry.register(
+        FilterCMKSiteStatisticsByCorePIDs(
+            ident=FilterCMKSiteStatisticsByCorePIDs.ID,
+            title=_l("cmk_site_statistics (core PIDs)"),
+            sort_index=900,
+            info="service",
+            htmlvars=[FilterCMKSiteStatisticsByCorePIDs.ID],
+            link_columns=[],
+        )
     )
-)

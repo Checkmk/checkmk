@@ -85,7 +85,7 @@ public:
     std::optional<std::bitset<32>> valueSetLeastUpperBoundFor(
         const std::string &column_name) const;
 
-    std::unordered_set<std::string> allColumnNames() const;
+    const std::unordered_set<std::string> &allColumnNames() const;
 
 private:
     ParsedQuery parsed_query_;
@@ -107,7 +107,7 @@ private:
     Columns _columns;
     std::map<RowFragment, std::vector<std::unique_ptr<Aggregator>>>
         _stats_groups;
-    using ColumnSet = std::unordered_set<std::shared_ptr<Column>>;
+    using ColumnSet = std::unordered_set<std::string>;
     ColumnSet _all_columns;
 
     bool doStats() const;

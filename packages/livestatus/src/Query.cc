@@ -166,7 +166,7 @@ Query::Query(const std::list<std::string> &lines, Table &table,
 
     if (_columns.empty() && !doStats()) {
         table.any_column([this](const auto &c) {
-            return _columns.push_back(c), _all_columns.insert(c), false;
+            return _columns.push_back(c), _all_columns.insert(c->name()), false;
         });
         // TODO(sp) We overwrite the value from a possible ColumnHeaders: line
         // here, is that really what we want?
@@ -367,22 +367,24 @@ const std::map<std::string, AggregationFactory> stats_ops{
 void Query::parseStatsLine(char *line, ColumnSet &all_columns,
                            const ColumnCreator &make_column) {
     // first token is either aggregation operator or column name
-    std::shared_ptr<Column> column;
+    std::string column_name;
     std::unique_ptr<StatsColumn> sc;
     auto col_or_op = nextStringArgument(&line);
     auto it = stats_ops.find(col_or_op);
     if (it == stats_ops.end()) {
-        column = make_column(col_or_op);
+        column_name = col_or_op;
         auto rel_op = relationalOperatorForName(nextStringArgument(&line));
         auto operand = mk::lstrip(line);
         sc = std::make_unique<StatsColumnCount>(
-            column->createFilter(Filter::Kind::stats, rel_op, operand));
+            make_column(column_name)
+                ->createFilter(Filter::Kind::stats, rel_op, operand));
     } else {
-        column = make_column(nextStringArgument(&line));
-        sc = std::make_unique<StatsColumnOp>(it->second, column);
+        column_name = nextStringArgument(&line);
+        sc = std::make_unique<StatsColumnOp>(it->second,
+                                             make_column(column_name));
     }
     parsed_query_.stats_columns.push_back(std::move(sc));
-    all_columns.insert(column);
+    all_columns.insert(column_name);
     // Default to old behaviour: do not output column headers if we do Stats
     // queries
     parsed_query_.show_column_headers = false;
@@ -392,12 +394,13 @@ void Query::parseStatsLine(char *line, ColumnSet &all_columns,
 void Query::parseFilterLine(char *line, FilterStack &filters,
                             ColumnSet &all_columns,
                             const ColumnCreator &make_column) {
-    auto column = make_column(nextStringArgument(&line));
+    auto column_name = nextStringArgument(&line);
     auto rel_op = relationalOperatorForName(nextStringArgument(&line));
     auto operand = mk::lstrip(line);
-    auto sub_filter = column->createFilter(Filter::Kind::row, rel_op, operand);
+    auto sub_filter = make_column(column_name)
+                          ->createFilter(Filter::Kind::row, rel_op, operand);
     filters.push_back(std::move(sub_filter));
-    all_columns.insert(column);
+    all_columns.insert(column_name);
 }
 
 // static
@@ -433,7 +436,7 @@ void Query::parseColumnsLine(const char *line, ColumnSet &all_columns,
                 column_name, "non-existing column", ColumnOffsets{});
         }
         columns.push_back(column);
-        all_columns.insert(column);
+        all_columns.insert(column_name);
     }
     parsed_query_.show_column_headers = false;
 }
@@ -773,12 +776,8 @@ std::optional<std::bitset<32>> Query::valueSetLeastUpperBoundFor(
     return result;
 }
 
-std::unordered_set<std::string> Query::allColumnNames() const {
-    std::unordered_set<std::string> names;
-    for (const auto &column : _all_columns) {
-        names.insert(column->name());
-    }
-    return names;
+const std::unordered_set<std::string> &Query::allColumnNames() const {
+    return _all_columns;
 }
 
 const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(

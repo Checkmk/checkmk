@@ -93,7 +93,7 @@ Query::Query(const std::list<std::string> &lines, Table &table,
         char *arguments = rest_copy.data();
         try {
             if (header == "Filter") {
-                parseFilterLine(arguments, filters, _all_columns, make_column);
+                parseFilterLine(arguments, filters, make_column);
             } else if (header == "Or") {
                 parseAndOrLine(arguments, Filter::Kind::row, OringFilter::make,
                                filters);
@@ -109,15 +109,13 @@ Query::Query(const std::list<std::string> &lines, Table &table,
             } else if (header == "StatsNegate") {
                 parseStatsNegateLine(arguments);
             } else if (header == "Stats") {
-                parseStatsLine(arguments, _all_columns, make_column);
+                parseStatsLine(arguments, make_column);
             } else if (header == "StatsGroupBy") {
                 Warning(_logger)
                     << "Warning: StatsGroupBy is deprecated. Please use Columns instead.";
-                parseColumnsLine(arguments, _all_columns, make_column, _columns,
-                                 _logger);
+                parseColumnsLine(arguments, make_column, _logger);
             } else if (header == "Columns") {
-                parseColumnsLine(arguments, _all_columns, make_column, _columns,
-                                 _logger);
+                parseColumnsLine(arguments, make_column, _logger);
             } else if (header == "ColumnHeaders") {
                 parseColumnHeadersLine(arguments);
             } else if (header == "Limit") {
@@ -135,8 +133,7 @@ Query::Query(const std::list<std::string> &lines, Table &table,
             } else if (header == "KeepAlive") {
                 parseKeepAliveLine(arguments);
             } else if (header == "WaitCondition") {
-                parseFilterLine(arguments, wait_conditions, _all_columns,
-                                make_column);
+                parseFilterLine(arguments, wait_conditions, make_column);
             } else if (header == "WaitConditionAnd") {
                 parseAndOrLine(arguments, Filter::Kind::wait_condition,
                                AndingFilter::make, wait_conditions);
@@ -164,17 +161,18 @@ Query::Query(const std::list<std::string> &lines, Table &table,
         }
     }
 
-    if (_columns.empty() && !doStats()) {
+    if (parsed_query_.columns.empty() && !doStats()) {
         table.any_column([this](const auto &c) {
-            return _columns.push_back(c), _all_columns.insert(c->name()), false;
+            return parsed_query_.columns.push_back(c),
+                   parsed_query_.all_column_names.insert(c->name()), false;
         });
         // TODO(sp) We overwrite the value from a possible ColumnHeaders: line
         // here, is that really what we want?
         parsed_query_.show_column_headers = true;
     }
 
-    _filter = AndingFilter::make(Filter::Kind::row, filters);
-    _wait_condition =
+    parsed_query_.filter = AndingFilter::make(Filter::Kind::row, filters);
+    parsed_query_.wait_condition =
         AndingFilter::make(Filter::Kind ::wait_condition, wait_conditions);
     _output.setResponseHeader(parsed_query_.response_header);
 }
@@ -364,8 +362,7 @@ const std::map<std::string, AggregationFactory> stats_ops{
     {"avginv", []() { return std::make_unique<AvgInvAggregation>(); }}};
 }  // namespace
 
-void Query::parseStatsLine(char *line, ColumnSet &all_columns,
-                           const ColumnCreator &make_column) {
+void Query::parseStatsLine(char *line, const ColumnCreator &make_column) {
     // first token is either aggregation operator or column name
     std::string column_name;
     std::unique_ptr<StatsColumn> sc;
@@ -384,15 +381,13 @@ void Query::parseStatsLine(char *line, ColumnSet &all_columns,
                                              make_column(column_name));
     }
     parsed_query_.stats_columns.push_back(std::move(sc));
-    all_columns.insert(column_name);
+    parsed_query_.all_column_names.insert(column_name);
     // Default to old behaviour: do not output column headers if we do Stats
     // queries
     parsed_query_.show_column_headers = false;
 }
 
-// static
 void Query::parseFilterLine(char *line, FilterStack &filters,
-                            ColumnSet &all_columns,
                             const ColumnCreator &make_column) {
     auto column_name = nextStringArgument(&line);
     auto rel_op = relationalOperatorForName(nextStringArgument(&line));
@@ -400,7 +395,7 @@ void Query::parseFilterLine(char *line, FilterStack &filters,
     auto sub_filter = make_column(column_name)
                           ->createFilter(Filter::Kind::row, rel_op, operand);
     filters.push_back(std::move(sub_filter));
-    all_columns.insert(column_name);
+    parsed_query_.all_column_names.insert(column_name);
 }
 
 // static
@@ -411,8 +406,7 @@ void Query::parseAuthUserHeader(
     parsed_query_.user = find_user(line);
 }
 
-void Query::parseColumnsLine(const char *line, ColumnSet &all_columns,
-                             const ColumnCreator &make_column, Columns &columns,
+void Query::parseColumnsLine(const char *line, const ColumnCreator &make_column,
                              Logger *logger) {
     const std::string str = line;
     const std::string sep = " \t\n\v\f\r";
@@ -435,8 +429,8 @@ void Query::parseColumnsLine(const char *line, ColumnSet &all_columns,
             column = std::make_shared<NullColumn>(
                 column_name, "non-existing column", ColumnOffsets{});
         }
-        columns.push_back(column);
-        all_columns.insert(column_name);
+        parsed_query_.columns.push_back(column);
+        parsed_query_.all_column_names.insert(column_name);
     }
     parsed_query_.show_column_headers = false;
 }
@@ -594,12 +588,12 @@ bool Query::process() {
 }
 
 void Query::start(QueryRenderer &q) {
-    if (_columns.empty()) {
+    if (parsed_query_.columns.empty()) {
         getAggregatorsFor({});
     }
     if (parsed_query_.show_column_headers) {
         RowRenderer r(q);
-        for (const auto &column : _columns) {
+        for (const auto &column : parsed_query_.columns) {
             r.output(column->name());
         }
 
@@ -642,8 +636,8 @@ bool Query::processDataset(Row row) {
         return false;
     }
 
-    if (!_filter->accepts(row, *parsed_query_.user,
-                          parsed_query_.timezone_offset)) {
+    if (!parsed_query_.filter->accepts(row, *parsed_query_.user,
+                                       parsed_query_.timezone_offset)) {
         return true;
     }
 
@@ -673,7 +667,7 @@ bool Query::processDataset(Row row) {
                 parsed_query_.separators, _data_encoding);
             QueryRenderer q(*renderer, EmitBeginEnd::off);
             RowRenderer r(q);
-            for (const auto &column : _columns) {
+            for (const auto &column : parsed_query_.columns) {
                 column->output(row, r, *parsed_query_.user,
                                parsed_query_.timezone_offset);
             }
@@ -685,7 +679,7 @@ bool Query::processDataset(Row row) {
     } else {
         assert(_renderer_query);  // Missing call to `process()`.
         RowRenderer r(*_renderer_query);
-        for (const auto &column : _columns) {
+        for (const auto &column : parsed_query_.columns) {
             column->output(row, r, *parsed_query_.user,
                            parsed_query_.timezone_offset);
         }
@@ -709,14 +703,14 @@ void Query::finish(QueryRenderer &q) {
 
 std::unique_ptr<Filter> Query::partialFilter(
     const std::string &message, columnNamePredicate predicate) const {
-    auto result = _filter->partialFilter(std::move(predicate));
+    auto result = parsed_query_.filter->partialFilter(std::move(predicate));
     Debug(_logger) << "partial filter for " << message << ": " << *result;
     return result;
 }
 
 std::optional<std::string> Query::stringValueRestrictionFor(
     const std::string &column_name) const {
-    auto result = _filter->stringValueRestrictionFor(column_name);
+    auto result = parsed_query_.filter->stringValueRestrictionFor(column_name);
     if (result) {
         Debug(_logger) << "column " << _table.name() << "." << column_name
                        << " is restricted to '" << *result << "'";
@@ -729,8 +723,8 @@ std::optional<std::string> Query::stringValueRestrictionFor(
 
 std::optional<int32_t> Query::greatestLowerBoundFor(
     const std::string &column_name) const {
-    auto result = _filter->greatestLowerBoundFor(column_name,
-                                                 parsed_query_.timezone_offset);
+    auto result = parsed_query_.filter->greatestLowerBoundFor(
+        column_name, parsed_query_.timezone_offset);
     if (result) {
         Debug(_logger) << "column " << _table.name() << "." << column_name
                        << " has greatest lower bound " << *result << " ("
@@ -746,8 +740,8 @@ std::optional<int32_t> Query::greatestLowerBoundFor(
 
 std::optional<int32_t> Query::leastUpperBoundFor(
     const std::string &column_name) const {
-    auto result =
-        _filter->leastUpperBoundFor(column_name, parsed_query_.timezone_offset);
+    auto result = parsed_query_.filter->leastUpperBoundFor(
+        column_name, parsed_query_.timezone_offset);
     if (result) {
         Debug(_logger) << "column " << _table.name() << "." << column_name
                        << " has least upper bound " << *result << " ("
@@ -763,7 +757,7 @@ std::optional<int32_t> Query::leastUpperBoundFor(
 
 std::optional<std::bitset<32>> Query::valueSetLeastUpperBoundFor(
     const std::string &column_name) const {
-    auto result = _filter->valueSetLeastUpperBoundFor(
+    auto result = parsed_query_.filter->valueSetLeastUpperBoundFor(
         column_name, parsed_query_.timezone_offset);
     if (result) {
         Debug(_logger) << "column " << _table.name() << "." << column_name
@@ -777,7 +771,7 @@ std::optional<std::bitset<32>> Query::valueSetLeastUpperBoundFor(
 }
 
 const std::unordered_set<std::string> &Query::allColumnNames() const {
-    return _all_columns;
+    return parsed_query_.all_column_names;
 }
 
 const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
@@ -795,12 +789,12 @@ const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
 }
 
 void Query::doWait() {
-    if (_wait_condition->is_contradiction() &&
+    if (parsed_query_.wait_condition->is_contradiction() &&
         parsed_query_.wait_timeout == 0ms) {
         invalidRequest("waiting for WaitCondition would hang forever");
         return;
     }
-    if (!_wait_condition->is_tautology() &&
+    if (!parsed_query_.wait_condition->is_tautology() &&
         parsed_query_.wait_object.isNull()) {
         parsed_query_.wait_object = _table.getDefault();
         if (parsed_query_.wait_object.isNull()) {
@@ -810,8 +804,8 @@ void Query::doWait() {
     }
     _table.core()->triggers().wait_for(
         parsed_query_.wait_trigger, parsed_query_.wait_timeout, [this] {
-            return _wait_condition->accepts(parsed_query_.wait_object,
-                                            *parsed_query_.user,
-                                            parsed_query_.timezone_offset);
+            return parsed_query_.wait_condition->accepts(
+                parsed_query_.wait_object, *parsed_query_.user,
+                parsed_query_.timezone_offset);
         });
 }

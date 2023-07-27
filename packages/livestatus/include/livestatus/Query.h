@@ -36,6 +36,10 @@ class Table;
 struct ParsedQuery {
     ParsedQuery() : user{std::make_unique<NoAuthUser>()} {}
 
+    std::unordered_set<std::string> all_column_names;
+    std::vector<std::shared_ptr<Column>> columns;
+    std::unique_ptr<Filter> filter;
+    std::unique_ptr<Filter> wait_condition;
     std::vector<std::unique_ptr<StatsColumn>> stats_columns;
     bool show_column_headers{true};
     int limit{-1};
@@ -99,33 +103,24 @@ private:
     QueryRenderer *_renderer_query;
     Table &_table;
     using FilterStack = Filters;
-    std::unique_ptr<Filter> _filter;
-    std::unique_ptr<Filter> _wait_condition;
     unsigned _current_line;
     Logger *const _logger;
-    using Columns = std::vector<std::shared_ptr<Column>>;
-    Columns _columns;
     std::map<RowFragment, std::vector<std::unique_ptr<Aggregator>>>
         _stats_groups;
-    using ColumnSet = std::unordered_set<std::string>;
-    ColumnSet _all_columns;
 
     bool doStats() const;
     using ColumnCreator =
         std::function<std::shared_ptr<Column>(const std::string &)>;
-    static void parseFilterLine(char *line, FilterStack &filters,
-                                ColumnSet &all_columns,
-                                const ColumnCreator &make_column);
-    void parseStatsLine(char *line, ColumnSet &all_columns,
-                        const ColumnCreator &make_column);
+    void parseFilterLine(char *line, FilterStack &filters,
+                         const ColumnCreator &make_column);
+    void parseStatsLine(char *line, const ColumnCreator &make_column);
     static void parseAndOrLine(char *line, Filter::Kind kind,
                                const LogicalConnective &connective,
                                FilterStack &filters);
     static void parseNegateLine(char *line, FilterStack &filters);
     void parseStatsAndOrLine(char *line, const LogicalConnective &connective);
     void parseStatsNegateLine(char *line);
-    void parseColumnsLine(const char *line, ColumnSet &all_columns,
-                          const ColumnCreator &make_column, Columns &columns,
+    void parseColumnsLine(const char *line, const ColumnCreator &make_column,
                           Logger *logger);
     void parseColumnHeadersLine(char *line);
     void parseLimitLine(char *line);

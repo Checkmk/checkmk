@@ -334,7 +334,7 @@ def get_site(request: pytest.FixtureRequest) -> Generator[Site, None, None]:
     base_version = request.param
     logger.info("Setting up test-site ...")
     test_site = _get_site(base_version, interactive=True)
-    yield _get_site(base_version, interactive=True)
+    yield test_site
     logger.info("Removing test-site...")
     test_site.rm()
 

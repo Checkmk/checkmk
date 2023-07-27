@@ -16,7 +16,6 @@ from cmk.utils.check_utils import maincheckify, unwrap_parameters, wrap_paramete
 
 from cmk.checkengine.parameters import Parameters
 
-from cmk.base import item_state  # pylint: disable=cmk-module-layer-violation
 from cmk.base.api.agent_based.checking_classes import (
     CheckPlugin,
     CheckResult,
@@ -147,8 +146,6 @@ def _create_check_function(name: str, check_info_element: LegacyCheckDefinition)
             parameters = copy.deepcopy(parameters._data)
         kwargs["params"] = unwrap_parameters(parameters)
 
-        item_state.reset_wrapped_counters()  # not supported by the new API!
-
         if not requires_item:
             # this handles a very weird case, in which check plugins do not have an '%s'
             # in their description (^= no item) but do in fact discover an empty string.
@@ -168,8 +165,6 @@ def _create_check_function(name: str, check_info_element: LegacyCheckDefinition)
                 break
 
             yield from _create_new_result(*subresult)
-
-        item_state.raise_counter_wrap()
 
     return check_result_generator
 

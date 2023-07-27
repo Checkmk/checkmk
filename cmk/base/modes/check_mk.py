@@ -2013,14 +2013,8 @@ def mode_check(
     keepalive: bool,
 ) -> ServiceState:
     import cmk.base.agent_based.checking as checking  # pylint: disable=import-outside-toplevel
-    import cmk.base.item_state as item_state  # pylint: disable=import-outside-toplevel
 
     file_cache_options = _handle_fetcher_options(options)
-
-    if "no-submit" in options:
-        # this has no effect for the new Check API. For the old one (cmk/base/check_api.py)
-        # it makes get_rate return 0 instead of raising MKCounterError
-        item_state.continue_on_counter_wrap()
 
     # handle adhoc-check
     hostname = HostName(args[0])

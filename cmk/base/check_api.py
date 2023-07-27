@@ -36,7 +36,6 @@ from cmk.checkengine.checkresults import state_markers as state_markers
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
 import cmk.base.config as _config
-import cmk.base.item_state as _item_state
 from cmk.base.agent_based.plugin_contexts import host_name as _internal_host_name
 from cmk.base.agent_based.plugin_contexts import service_description
 from cmk.base.api.agent_based import render as _render
@@ -148,17 +147,6 @@ def get_timestamp_human_readable(timestamp: float) -> str:
     if timestamp:
         return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(float(timestamp)))
     return "never"
-
-
-#
-# Counter handling
-#
-
-
-get_rate = _item_state.get_rate
-
-SKIP = _item_state.SKIP
-RAISE = _item_state.RAISE
 
 
 def _normalize_levels(levels: Levels) -> Levels:

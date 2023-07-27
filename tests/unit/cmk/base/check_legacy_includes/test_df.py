@@ -145,10 +145,6 @@ def test_df_check_filesystem_single_coroutine(
         "cmk.base.check_legacy_includes.size_trend.get_value_store",
         return_value=mock_state,
     )
-    mocker.patch(
-        "cmk.base.item_state.get_value_store",
-        return_value=mock_state,
-    )
     assert (
         list(
             df_check_filesystem_single_coroutine(

@@ -13,10 +13,9 @@ from cmk.utils.sectionname import SectionName
 
 from cmk.checkengine.checking import CheckPluginName
 
-from cmk.base import item_state
 from cmk.base.api.agent_based.checking_classes import CheckPlugin
 from cmk.base.api.agent_based.type_defs import StringTable
-from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
+from cmk.base.plugins.agent_based.agent_based_api.v1 import get_value_store, Metric, Result, State
 
 
 @pytest.fixture(name="check")
@@ -89,7 +88,7 @@ def test_check_graylog_sources(
         SectionName("graylog_sources")
     ].parse_function
 
-    item_state.set_item_state("graylog_msgs_avg.rate", (1670328674.09963, 457))
+    get_value_store()["graylog_msgs_avg.rate"] = 1670328674.09963, 457
 
     assert (
         list(

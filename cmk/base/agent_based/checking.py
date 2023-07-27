@@ -72,6 +72,7 @@ from cmk.base.api.agent_based import cluster_mode, value_store
 from cmk.base.api.agent_based.checking_classes import consume_check_results, IgnoreResultsError
 from cmk.base.api.agent_based.checking_classes import Result as CheckFunctionResult
 from cmk.base.api.agent_based.checking_classes import State
+from cmk.base.api.agent_based.value_store import ValueStoreManager
 from cmk.base.config import ConfigCache
 
 __all__ = [
@@ -124,20 +125,25 @@ def execute_checkmk_checks(
     store_piggybacked_sections(host_sections_by_host)
     providers = make_providers(host_sections_by_host, section_plugins)
     with CPUTracker() as tracker:
-        service_results = check_host_services(
-            hostname,
-            is_cluster=is_cluster,
-            cluster_nodes=cluster_nodes,
-            config_cache=config_cache,
-            providers=providers,
-            services=services,
-            check_plugins=check_plugins,
-            run_plugin_names=run_plugin_names,
-            get_effective_host=get_effective_host,
-            get_check_period=get_check_period,
-            submitter=submitter,
-            rtc_package=None,
-        )
+        with plugin_contexts.current_host(hostname):
+            with value_store.load_host_value_store(
+                hostname, store_changes=not submitter.dry_run
+            ) as value_store_manager:
+                service_results = check_host_services(
+                    hostname,
+                    is_cluster=is_cluster,
+                    cluster_nodes=cluster_nodes,
+                    config_cache=config_cache,
+                    providers=providers,
+                    services=services,
+                    check_plugins=check_plugins,
+                    run_plugin_names=run_plugin_names,
+                    get_effective_host=get_effective_host,
+                    get_check_period=get_check_period,
+                    submitter=submitter,
+                    value_store_manager=value_store_manager,
+                    rtc_package=None,
+                )
         if run_plugin_names is EVERYTHING:
             _do_inventory_actions_during_checking_for(
                 hostname,
@@ -297,6 +303,7 @@ def check_host_services(
     get_check_period: Callable[[ServiceName], TimeperiodName | None],
     submitter: Submitter,
     rtc_package: AgentRawData | None,
+    value_store_manager: ValueStoreManager,
 ) -> Sequence[_AggregatedResult]:
     """Compute service state results for all given services on node or cluster
 
@@ -304,39 +311,35 @@ def check_host_services(
     * calls the check
     * examines the result and sends it to the core (unless `dry_run` is True).
     """
-    with plugin_contexts.current_host(host_name):
-        with value_store.load_host_value_store(
-            host_name, store_changes=not submitter.dry_run
-        ) as value_store_manager:
-            submittables: list[_AggregatedResult] = []
-            for service in (
-                s
-                for s in services
-                if s.check_plugin_name in run_plugin_names
-                and not service_outside_check_period(s.description, get_check_period(s.description))
-            ):
-                if service.check_plugin_name not in check_plugins:
-                    submittable = _AggregatedResult(
-                        service=service,
-                        submit=True,
-                        data_received=True,
-                        result=ServiceCheckResult.check_not_implemented(),
-                        cache_info=None,
-                    )
-                else:
-                    submittable = get_aggregated_result(
-                        host_name,
-                        is_cluster,
-                        cluster_nodes,
-                        config_cache,
-                        providers,
-                        service,
-                        check_plugins[service.check_plugin_name],
-                        value_store_manager=value_store_manager,
-                        rtc_package=rtc_package,
-                        get_effective_host=get_effective_host,
-                    )
-                submittables.append(submittable)
+    submittables: list[_AggregatedResult] = []
+    for service in (
+        s
+        for s in services
+        if s.check_plugin_name in run_plugin_names
+        and not service_outside_check_period(s.description, get_check_period(s.description))
+    ):
+        if service.check_plugin_name not in check_plugins:
+            submittable = _AggregatedResult(
+                service=service,
+                submit=True,
+                data_received=True,
+                result=ServiceCheckResult.check_not_implemented(),
+                cache_info=None,
+            )
+        else:
+            submittable = get_aggregated_result(
+                host_name,
+                is_cluster,
+                cluster_nodes,
+                config_cache,
+                providers,
+                service,
+                check_plugins[service.check_plugin_name],
+                value_store_manager=value_store_manager,
+                rtc_package=rtc_package,
+                get_effective_host=get_effective_host,
+            )
+        submittables.append(submittable)
 
     if submittables:
         submitter.submit(

@@ -5,7 +5,7 @@
 
 from pathlib import Path
 
-from cmk.utils.prediction import PredictionData, PredictionInfo, Timegroup
+from cmk.utils.prediction import PredictionData, PredictionInfo, PredictionParameters, Timegroup
 
 from cmk.update_config.plugins.actions.prediction_files_cleanup import RemoveUnreadablePredictions
 
@@ -22,8 +22,8 @@ def test_ok_files_are_kept(tmp_path: Path) -> None:
             cf="MAX",
             dsname="kuchen_count",
             slice=3600,
-            params={"horizon": 3, "period": "nothing matters in this test"},
-        ).dumps(),
+            params=PredictionParameters(horizon=3, period="wday"),
+        ).json(),
     )
     data_file.write_text(
         PredictionData(
@@ -31,7 +31,7 @@ def test_ok_files_are_kept(tmp_path: Path) -> None:
             points=[[1.0, 2.0, 3.0], [4.0, None, 6.0]],
             data_twindow=[1, 10],
             step=2,
-        ).dumps(),
+        ).json(),
     )
 
     RemoveUnreadablePredictions.cleanup_unreadable_files(tmp_path)
@@ -51,7 +51,7 @@ def test_corrupt_files_are_removed(tmp_path: Path) -> None:
             points=[[1.0, 2.0, 3.0], [4.0, None, 6.0]],
             data_twindow=[1, 10],
             step=2,
-        ).dumps(),
+        ).json(),
     )
 
     RemoveUnreadablePredictions.cleanup_unreadable_files(tmp_path)

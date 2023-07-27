@@ -4,7 +4,6 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Code for predictive monitoring / anomaly detection"""
 
-import json
 import logging
 import time
 from typing import assert_never, Literal
@@ -14,15 +13,13 @@ from cmk.utils.log import VERBOSE
 from ._prediction import (
     compute_prediction,
     ConsolidationFunctionName,
+    LevelsSpec,
     PREDICTION_PERIODS,
     PredictionData,
     PredictionParameters,
     PredictionStore,
     Timegroup,
 )
-
-_LevelsType = Literal["absolute", "relative", "stdev"]
-_LevelsSpec = tuple[_LevelsType, tuple[float, float]]
 
 EstimatedLevels = tuple[float | None, float | None, float | None, float | None]
 
@@ -45,14 +42,13 @@ def _get_prediction(
     if (last_info := store.get_info(timegroup)) is None:
         return None
 
-    period_info = PREDICTION_PERIODS[params["period"]]
+    period_info = PREDICTION_PERIODS[params.period]
     now = time.time()
     if last_info.time + period_info.valid * period_info.slice < now:
         logger.log(VERBOSE, "Prediction of %s outdated", timegroup)
         return None
 
-    jsonized_params = json.loads(json.dumps(params))
-    if last_info.params != jsonized_params:
+    if last_info.params != params:
         logger.log(VERBOSE, "Prediction parameters have changed.")
         return None
 
@@ -72,7 +68,7 @@ def get_predictive_levels(
     levels_factor: float = 1.0,
 ) -> tuple[float | None, EstimatedLevels]:
     now = int(time.time())
-    period_info = PREDICTION_PERIODS[params["period"]]
+    period_info = PREDICTION_PERIODS[params.period]
 
     timegroup, rel_time = period_info.groupby(now)
 
@@ -107,9 +103,9 @@ def get_predictive_levels(
     return reference["average"], estimate_levels(
         reference_value=reference["average"],
         stdev=reference["stdev"],
-        levels_lower=params.get("levels_lower"),
-        levels_upper=params.get("levels_upper"),
-        levels_upper_lower_bound=params.get("levels_upper_min"),
+        levels_lower=params.levels_lower,
+        levels_upper=params.levels_upper,
+        levels_upper_lower_bound=params.levels_upper_min,
         levels_factor=levels_factor,
     )
 
@@ -118,8 +114,8 @@ def estimate_levels(
     *,
     reference_value: float,
     stdev: float | None,
-    levels_lower: _LevelsSpec | None,
-    levels_upper: _LevelsSpec | None,
+    levels_lower: LevelsSpec | None,
+    levels_upper: LevelsSpec | None,
     levels_upper_lower_bound: tuple[float, float] | None,
     levels_factor: float,
 ) -> EstimatedLevels:
@@ -164,7 +160,7 @@ def estimate_levels(
 
 def _get_levels_from_params(
     *,
-    levels: _LevelsSpec,
+    levels: LevelsSpec,
     sig: Literal[1, -1],
     reference: float,
     stdev: float | None,

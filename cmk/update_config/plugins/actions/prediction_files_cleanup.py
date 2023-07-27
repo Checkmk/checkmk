@@ -30,8 +30,8 @@ class RemoveUnreadablePredictions(UpdateAction):
         for info_file in path.rglob("*.info"):
             data_file = info_file.with_suffix("")
             try:
-                _ = PredictionInfo.loads(info_file.read_text())
-                _ = PredictionData.loads(data_file.read_text())
+                _ = PredictionInfo.parse_raw(info_file.read_text())
+                _ = PredictionData.parse_raw(data_file.read_text())
             except (ValueError, FileNotFoundError):
                 info_file.unlink(missing_ok=True)
                 data_file.unlink(missing_ok=True)

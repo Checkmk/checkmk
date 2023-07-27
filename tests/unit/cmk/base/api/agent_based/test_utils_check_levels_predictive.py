@@ -23,7 +23,11 @@ def test_check_levels_predictive_default_render_func(mocker: MockerFixture) -> N
     with current_host(HostName("unittest")), current_service(
         CheckPluginName("test_check"), "unittest-service-description"
     ):
-        result = next(utils.check_levels_predictive(42.42, metric_name="metric_name", levels={}))
+        result = next(
+            utils.check_levels_predictive(
+                42.42, metric_name="metric_name", levels={"period": "wday", "horizon": 10}
+            )
+        )
 
     assert isinstance(result, Result)
     assert result.summary.startswith("42.42")

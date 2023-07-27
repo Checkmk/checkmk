@@ -104,11 +104,11 @@ def page_graph() -> None:
 
     create_graph(timegroup.name, graph_size, timegroup.range, vertical_range, legend)
 
-    if "levels_upper" in timegroup.params:
+    if timegroup.params.levels_upper is not None:
         render_dual_area(swapped["upper_warn"], swapped["upper_crit"], "#fff000", 0.4)
         render_area_reverse(swapped["upper_crit"], "#ff0000", 0.1)
 
-    if "levels_lower" in timegroup.params:
+    if timegroup.params.levels_lower is not None:
         render_dual_area(swapped["lower_crit"], swapped["lower_warn"], "#fff000", 0.4)
         render_area(swapped["lower_crit"], "#ff0000", 0.1)
 
@@ -118,12 +118,12 @@ def page_graph() -> None:
     time_scala = [[timegroup.range[0] + i * 3600, "%02d:00" % i] for i in range(0, 25, 2)]
     render_coordinates(vert_scala, time_scala)
 
-    if "levels_lower" in timegroup.params:
+    if timegroup.params.levels_lower is not None:
         render_dual_area(swapped["average"], swapped["lower_warn"], "#ffffff", 0.5)
         render_curve(swapped["lower_warn"], "#e0e000", square=True)
         render_curve(swapped["lower_crit"], "#f0b0a0", square=True)
 
-    if "levels_upper" in timegroup.params:
+    if timegroup.params.levels_upper is not None:
         render_dual_area(swapped["upper_warn"], swapped["average"], "#ffffff", 0.5)
         render_curve(swapped["upper_warn"], "#e0e000", square=True)
         render_curve(swapped["upper_crit"], "#f0b0b0", square=True)

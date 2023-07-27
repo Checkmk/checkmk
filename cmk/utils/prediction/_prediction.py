@@ -3,15 +3,16 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 
-import json
 import logging
 import math
 import time
 from collections.abc import Callable, Iterable, Iterator
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 from statistics import fmean
-from typing import Any, Final, NamedTuple, NewType, Sequence
+from typing import Final, Literal, Mapping, NamedTuple, NewType, Sequence
+
+from pydantic import BaseModel
 
 import livestatus
 
@@ -37,7 +38,18 @@ ConsolidationFunctionName = str
 Timegroup = NewType("Timegroup", str)
 EstimatedLevel = float | None
 EstimatedLevels = tuple[EstimatedLevel, EstimatedLevel, EstimatedLevel, EstimatedLevel]
-PredictionParameters = dict[str, Any]  # TODO: improve this type
+
+_PeriodName = Literal["wday", "day", "hour", "minute"]
+LevelsSpec = tuple[Literal["absolute", "relative", "stdev"], tuple[float, float]]
+
+
+class PredictionParameters(BaseModel, frozen=True):
+    period: _PeriodName
+    horizon: int
+    levels_upper: LevelsSpec | None = None
+    levels_upper_min: tuple[float, float] | None = None
+    levels_lower: LevelsSpec | None = None
+
 
 _DataStatValue = float | None
 _DataStat = list[_DataStatValue]
@@ -66,8 +78,7 @@ class _PeriodInfo(NamedTuple):
     valid: int
 
 
-@dataclass(frozen=True)
-class PredictionInfo:
+class PredictionInfo(BaseModel, frozen=True):
     name: Timegroup
     time: int
     range: tuple[Timestamp, Timestamp]
@@ -76,43 +87,12 @@ class PredictionInfo:
     slice: int
     params: PredictionParameters
 
-    @classmethod
-    def loads(cls, raw: str) -> "PredictionInfo":
-        data = json.loads(raw)
-        range_ = data["range"]
-        return cls(
-            name=data["name"],
-            time=int(data["time"]),
-            range=(Timestamp(range_[0]), Timestamp(range_[1])),
-            cf=ConsolidationFunctionName(data["cf"]),
-            dsname=MetricName(data["dsname"]),
-            slice=int(data["slice"]),
-            params=dict(data["params"]),
-        )
 
-    def dumps(self) -> str:
-        return json.dumps(asdict(self))
-
-
-@dataclass(frozen=True)
-class PredictionData:
+class PredictionData(BaseModel, frozen=True):
     columns: list[str]
     points: DataStats
     data_twindow: list[Timestamp]
     step: Seconds
-
-    @classmethod
-    def loads(cls, raw: str) -> "PredictionData":
-        data = json.loads(raw)
-        return cls(
-            columns=[str(e) for e in data["columns"]],
-            points=[[None if e is None else float(e) for e in elist] for elist in data["points"]],
-            data_twindow=[Timestamp(e) for e in data["data_twindow"]],
-            step=Seconds(data["step"]),
-        )
-
-    def dumps(self) -> str:
-        return json.dumps(asdict(self))
 
     @property
     def num_points(self) -> int:
@@ -391,13 +371,11 @@ class PredictionStore:
     def save_prediction(
         self,
         info: PredictionInfo,
-        data_for_pred: PredictionData,
+        data: PredictionData,
     ) -> None:
         self._dir.mkdir(exist_ok=True, parents=True)
-        with self._info_file(info.name).open("w") as fname:
-            fname.write(info.dumps())
-        with self._data_file(info.name).open("w") as fname:
-            fname.write(data_for_pred.dumps())
+        self._info_file(info.name).write_text(info.json())
+        self._data_file(info.name).write_text(data.json())
 
     def remove_prediction(self, timegroup: Timegroup) -> None:
         self._data_file(timegroup).unlink(missing_ok=True)
@@ -406,7 +384,7 @@ class PredictionStore:
     def get_info(self, timegroup: Timegroup) -> PredictionInfo | None:
         file_path = self._info_file(timegroup)
         try:
-            return PredictionInfo.loads(file_path.read_text())
+            return PredictionInfo.parse_raw(file_path.read_text())
         except FileNotFoundError:
             logger.log(VERBOSE, "No prediction info for group %s available.", timegroup)
         return None
@@ -414,7 +392,7 @@ class PredictionStore:
     def get_data(self, timegroup: Timegroup) -> PredictionData | None:
         file_path = self._data_file(timegroup)
         try:
-            return PredictionData.loads(file_path.read_text())
+            return PredictionData.parse_raw(file_path.read_text())
         except FileNotFoundError:
             logger.log(VERBOSE, "No prediction for group %s available.", timegroup)
         return None
@@ -434,7 +412,7 @@ def compute_prediction(
     logger.log(VERBOSE, "Calculating prediction data for time group %s", timegroup)
     prediction_store.remove_prediction(timegroup)
 
-    time_windows = _time_slices(now, int(params["horizon"] * 86400), period_info, timegroup)
+    time_windows = _time_slices(now, params.horizon * 86400, period_info, timegroup)
 
     from_time = time_windows[0][0]
     rrd_responses = [
@@ -493,7 +471,7 @@ def _group_by_everyhour(t: Timestamp) -> tuple[Timegroup, Timestamp]:
     return Timegroup("everyhour"), _window_start(t, 3600)
 
 
-PREDICTION_PERIODS: Final = {
+PREDICTION_PERIODS: Final[Mapping[_PeriodName, _PeriodInfo]] = {
     "wday": _PeriodInfo(
         slice=86400,  # 7 slices
         groupby=_group_by_wday,

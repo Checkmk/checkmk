@@ -14,7 +14,7 @@ from typing import Any, overload
 import cmk.utils.debug
 from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
-from cmk.utils.prediction import get_predictive_levels
+from cmk.utils.prediction import get_predictive_levels, PredictionParameters
 
 from cmk.base.api.agent_based import plugin_contexts
 from cmk.base.api.agent_based.checking_classes import IgnoreResultsError, Metric, Result, State
@@ -387,7 +387,7 @@ def check_levels_predictive(
             HostName(plugin_contexts.host_name()),
             plugin_contexts.service_description(),
             metric_name,
-            levels,
+            PredictionParameters.parse_obj(levels),
             "MAX",
         )
         if ref_value is not None:

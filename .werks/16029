@@ -1,0 +1,18 @@
+Title: Renamed MobileIron to Ivanti Neurons for MDM
+Class: feature
+Compatible: compat
+Component: checks
+Date: 1690466528
+Edition: cre
+Knowledge: undoc
+Level: 1
+Version: 2.3.0b1
+
+MobileIron exists both as an on-premises and cloud version. 
+The included integration only applied for MobileIron Cloud, 
+which was not apparent by the name of the checks etc. 
+
+In the meantime, MobileIron was acquired and MobileIron Cloud was 
+renamed to Ivanti Neurons for MDM. This is now being properly 
+reflected in Checkmk. 
+

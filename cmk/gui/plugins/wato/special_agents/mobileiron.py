@@ -33,9 +33,9 @@ def _validate_regex_choices(
 
 def _valuespec_special_agents_mobileiron() -> Dictionary:
     return Dictionary(
-        title=_("MobileIron API"),
+        title=_("IvantiNeurons for MDM (formerly MobileIron Cloud)"),
         help=_(
-            "Requests data from Mobileiron API and outputs a piggyback host per returned device."
+            "Requests data from the API of IvantiNeurons for MDM (formerly MobileIron Cloud) and outputs a piggyback host per returned device."
         ),
         elements=[
             ("username", TextInput(title=_("Username"), allow_empty=False)),

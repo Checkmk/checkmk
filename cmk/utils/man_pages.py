@@ -293,7 +293,7 @@ CATALOG_TITLES: Final = {
     "mqtt": "MQTT",
     "smb_share": "SMB Share",
     "gcp": "Google Cloud Platform",
-    "mobileiron": "Mobileiron",
+    "ivantineurons": "Ivanti Neurons for MDM (formerly MobileIron Cloud)",
     "azure_status": "Microsoft Azure Status",
     "aws_status": "Amazon Web Service (AWS) Status",
     "gcp_status": "Google Cloud Platform (GCP) Status",
@@ -313,7 +313,7 @@ CHECK_MK_AGENTS: Final = {
     "nutanix": "Nutanix",
     "emcvnx": "EMC VNX",
     "vnx_quotas": "VNX Quotas",
-    "mobileiron": "Mobileiron",
+    "mobileiron": "Ivanti Neurons for MDM (formerly MobileIron Cloud)",
 }
 
 

@@ -18,6 +18,7 @@ import cmk.utils.version as cmk_version
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.structured_data import ImmutableTree
 
+from cmk.gui.bi import _filters as bi_filters
 from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
 from cmk.gui.visuals import _filters as filters
@@ -1132,7 +1133,7 @@ def test_filters_filter_table(test: FilterTableTest, monkeypatch: pytest.MonkeyP
     def is_part_of_aggregation_patch(host: str, service: str) -> bool:
         return {("h", "srv1"): True}.get((host, service), False)
 
-    monkeypatch.setattr(cmk.gui.bi, "is_part_of_aggregation", is_part_of_aggregation_patch)
+    monkeypatch.setattr(bi_filters, "is_part_of_aggregation", is_part_of_aggregation_patch)
 
     with on_time("2018-04-15 16:50", "CET"):
         context: VisualContext = {test.ident: dict(test.request_vars)}

@@ -8,7 +8,9 @@ from cmk.gui.pages import PageRegistry
 from cmk.gui.painter.v0.base import PainterRegistry
 from cmk.gui.painter_options import PainterOptionRegistry
 from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
+from cmk.gui.visuals.filter import FilterRegistry
 
+from . import _filters
 from .ajax_endpoints import ajax_render_tree, ajax_save_treestate, ajax_set_assumption
 from .permissions import PermissionBISeeAll, PermissionSectionBI
 from .view import (
@@ -45,6 +47,7 @@ def register(
     permission_section_registry: PermissionSectionRegistry,
     permission_registry: PermissionRegistry,
     page_registry: PageRegistry,
+    filter_registry: FilterRegistry,
 ) -> None:
     data_source_registry.register(DataSourceBIAggregations)
     data_source_registry.register(DataSourceBIHostAggregations)
@@ -78,3 +81,5 @@ def register(
     page_registry.register_page_handler("bi_set_assumption", ajax_set_assumption)
     page_registry.register_page_handler("bi_save_treestate", ajax_save_treestate)
     page_registry.register_page_handler("bi_render_tree", ajax_render_tree)
+
+    _filters.register(filter_registry)

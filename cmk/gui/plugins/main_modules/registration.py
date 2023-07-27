@@ -139,6 +139,7 @@ def register() -> None:
         permission_section_registry,
         permission_registry,
         cmk.gui.pages.page_registry,
+        filter_registry,
     )
     robotmk.register(cmk.gui.pages.page_registry)
     cron.register(cmk.gui.pages.page_registry)

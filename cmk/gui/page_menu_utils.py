@@ -216,11 +216,15 @@ def _get_context_page_menu_topics(
     """Create the page menu topics for the given dropdown from the flat linked visuals list"""
     by_topic: dict[pagetypes.PagetypeTopics, list[PageMenuEntry]] = {}
 
+    host_name = singlecontext_request_vars.get("host")
+    service_description = singlecontext_request_vars.get("service")
+
     for visual_type, visual in sorted(
         dropdown_visuals, key=lambda i: (i[1]["sort_index"], i[1]["title"])
     ):
-        if visual.get("topic") == "bi" and not is_part_of_aggregation(
-            singlecontext_request_vars.get("host"), singlecontext_request_vars.get("service")
+        if visual.get("topic") == "bi" and (
+            host_name is not None
+            and not is_part_of_aggregation(host_name, service_description or "")
         ):
             continue
 

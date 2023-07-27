@@ -773,6 +773,14 @@ std::optional<std::bitset<32>> Query::valueSetLeastUpperBoundFor(
     return result;
 }
 
+std::unordered_set<std::string> Query::allColumnNames() const {
+    std::unordered_set<std::string> names;
+    for (const auto &column : _all_columns) {
+        names.insert(column->name());
+    }
+    return names;
+}
+
 const std::vector<std::unique_ptr<Aggregator>> &Query::getAggregatorsFor(
     const RowFragment &groupspec) {
     auto it = _stats_groups.find(groupspec);

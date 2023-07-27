@@ -18,7 +18,6 @@
 #include <utility>
 #include <variant>  // IWYU pragma: keep
 
-#include "livestatus/Column.h"
 #include "livestatus/ColumnFilter.h"
 #include "livestatus/DoubleColumn.h"
 #include "livestatus/EventConsoleConnection.h"
@@ -77,7 +76,7 @@ private:
     void emitColumnsHeader(std::ostream &os) {
         os << "\nColumns:";
         // Initially we consider all columns used in the query...
-        auto all = query_.allColumns();
+        auto column_names = query_.allColumnNames();
         // ... then we add some special columns which we might need irrespective
         // of the actual query...
         static std::unordered_set<std::string> special_columns{
@@ -89,15 +88,15 @@ private:
             "event_contact_groups"};
         table_.any_column([&](const auto &col) {
             if (special_columns.find(col->name()) != special_columns.end()) {
-                all.insert(col);
+                column_names.insert(col->name());
             }
             return false;
         });
         // .. and then we ignore all host-related columns, they are implicitly
         // joined later via ECRow._host later.
-        for (const auto &c : all) {
-            if (!mk::starts_with(c->name(), "host_")) {
-                os << " " << c->name();
+        for (const auto &name : column_names) {
+            if (!mk::starts_with(name, "host_")) {
+                os << " " << name;
             }
         }
     }

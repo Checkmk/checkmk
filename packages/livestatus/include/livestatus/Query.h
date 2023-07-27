@@ -85,9 +85,7 @@ public:
     std::optional<std::bitset<32>> valueSetLeastUpperBoundFor(
         const std::string &column_name) const;
 
-    const std::unordered_set<std::shared_ptr<Column>> &allColumns() const {
-        return _all_columns;
-    }
+    std::unordered_set<std::string> allColumnNames() const;
 
 private:
     ParsedQuery parsed_query_;

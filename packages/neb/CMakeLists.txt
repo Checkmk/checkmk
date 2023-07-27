@@ -16,7 +16,7 @@ add_compile_options(
 
 project(
   neb
-  VERSION 1.0
+  VERSION 2.3.0
   DESCRIPTION "Livestatus NEB"
   LANGUAGES CXX)
 

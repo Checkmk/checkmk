@@ -195,12 +195,17 @@ version:
 	@newversion=$$(dialog --stdout --inputbox "New Version:" 0 0 "$(VERSION)") ; \
 	if [ -n "$$newversion" ] ; then $(MAKE) NEW_VERSION=$$newversion setversion ; fi
 
+# NOTE: CMake accepts only up to 4 non-negative integer version parts, so we
+# replace any character (like 'p' or 'b') with a dot. Not completely correct,
+# but better than nothing. We have to rethink this setversion madness, anyway.
 setversion:
 	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" defines.make
 	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' cmk/utils/version.py bin/livedump
+	sed -i "s/^\\( *VERSION *\\).*/\\1${NEW_VERSION/[a-z]/.}/" packages/neb/CMakeLists.txt
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
 	$(MAKE) -C docker_image NEW_VERSION=$(NEW_VERSION) setversion
 ifeq ($(ENTERPRISE),yes)
+	sed -i "s/^\\( *VERSION *\\).*/\\1${NEW_VERSION/[a-z]/.}/" packages/cmc/CMakeLists.txt
 	$(MAKE) -C enterprise NEW_VERSION=$(NEW_VERSION) setversion
 endif
 

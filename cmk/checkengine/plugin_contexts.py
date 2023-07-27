@@ -31,6 +31,9 @@ def current_host(host_name_: HostName) -> Iterator[None]:
     So that functions called by checks know this context.
     This is used for both legacy and agent_based API.
     """
+    # The host name must at least (!) be set for
+    # * the host_name() calls commonly used in the legacy checks
+    # * predictive levels
     global _hostname
     # we do not encourage nested contexts at all -- but it should work.
     previous_host_name = _hostname

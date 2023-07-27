@@ -59,6 +59,7 @@ from cmk.fetchers import Mode as FetchMode
 from cmk.fetchers.filecache import FileCacheOptions
 
 import cmk.checkengine.inventory as inventory
+from cmk.checkengine import plugin_contexts
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.checkresults import ActiveCheckResult
 from cmk.checkengine.discovery import execute_check_discovery, remove_autochecks_of_host
@@ -1649,23 +1650,24 @@ def mode_check_discovery(
     state, text = 3, "unknown error"
     with error_handler:
         fetched = fetcher(hostname, ip_address=None)
-        check_result = execute_check_discovery(
-            hostname,
-            is_cluster=config_cache.is_cluster(hostname),
-            cluster_nodes=config_cache.nodes_of(hostname) or (),
-            params=config_cache.discovery_check_parameters(hostname),
-            fetched=((f[0], f[1]) for f in fetched),
-            parser=parser,
-            summarizer=summarizer,
-            section_plugins=SectionPluginMapper(),
-            host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
-            plugins=DiscoveryPluginMapper(config_cache=config_cache),
-            ignore_service=config_cache.service_ignored,
-            ignore_plugin=config_cache.check_plugin_ignored,
-            get_effective_host=config_cache.effective_host,
-            find_service_description=config.service_description,
-            enforced_services=config_cache.enforced_services_table(hostname),
-        )
+        with plugin_contexts.current_host(hostname):
+            check_result = execute_check_discovery(
+                hostname,
+                is_cluster=config_cache.is_cluster(hostname),
+                cluster_nodes=config_cache.nodes_of(hostname) or (),
+                params=config_cache.discovery_check_parameters(hostname),
+                fetched=((f[0], f[1]) for f in fetched),
+                parser=parser,
+                summarizer=summarizer,
+                section_plugins=SectionPluginMapper(),
+                host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
+                plugins=DiscoveryPluginMapper(config_cache=config_cache),
+                ignore_service=config_cache.service_ignored,
+                ignore_plugin=config_cache.check_plugin_ignored,
+                get_effective_host=config_cache.effective_host,
+                find_service_description=config.service_description,
+                enforced_services=config_cache.enforced_services_table(hostname),
+            )
         state, text = check_result.state, check_result.as_text()
 
     if error_handler.result is not None:

@@ -13,7 +13,6 @@ from cmk.utils.exceptions import MKTimeout, OnError
 from cmk.utils.hostaddress import HostName
 from cmk.utils.log import console
 
-from cmk.checkengine import plugin_contexts
 from cmk.checkengine.check_table import ServiceID
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.fetcher import HostKey, SourceType
@@ -119,39 +118,34 @@ def discover_services(
     on_error: OnError,
 ) -> Iterable[AutocheckEntry]:
     service_table: MutableMapping[ServiceID, AutocheckEntry] = {}
-
-    # The host name must at least (!) be set for
-    # * the host_name() calls commonly used in the legacy checks
-    # * predictive levels
-    with plugin_contexts.current_host(host_name):
-        for check_plugin_name in plugin_names:
-            try:
-                service_table.update(
-                    {
-                        entry.id(): entry
-                        for entry in _discover_plugins_services(
-                            check_plugin_name=check_plugin_name,
-                            plugins=plugins,
-                            host_key=HostKey(
-                                host_name,
-                                (
-                                    SourceType.MANAGEMENT
-                                    if check_plugin_name.is_management_name()
-                                    else SourceType.HOST
-                                ),
+    for check_plugin_name in plugin_names:
+        try:
+            service_table.update(
+                {
+                    entry.id(): entry
+                    for entry in _discover_plugins_services(
+                        check_plugin_name=check_plugin_name,
+                        plugins=plugins,
+                        host_key=HostKey(
+                            host_name,
+                            (
+                                SourceType.MANAGEMENT
+                                if check_plugin_name.is_management_name()
+                                else SourceType.HOST
                             ),
-                            providers=providers,
-                            on_error=on_error,
-                        )
-                    }
-                )
-            except (KeyboardInterrupt, MKTimeout):
+                        ),
+                        providers=providers,
+                        on_error=on_error,
+                    )
+                }
+            )
+        except (KeyboardInterrupt, MKTimeout):
+            raise
+        except Exception as e:
+            if on_error is OnError.RAISE:
                 raise
-            except Exception as e:
-                if on_error is OnError.RAISE:
-                    raise
-                if on_error is OnError.WARN:
-                    console.error(f"Discovery of '{check_plugin_name}' failed: {e}\n")
+            if on_error is OnError.WARN:
+                console.error(f"Discovery of '{check_plugin_name}' failed: {e}\n")
 
     # TODO: Building a dict to discard its keys isn't efficient.
     return service_table.values()

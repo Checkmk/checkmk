@@ -19,6 +19,7 @@ from cmk.utils.log import console, section
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionMap
 
+from cmk.checkengine import plugin_contexts
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import (
     analyse_services,
@@ -195,13 +196,14 @@ def _commandline_discovery_on_host(
         console.vverbose(f"  Skip ignored check plugin name {plugin_name!r}\n")
 
     try:
-        discovered_services = discover_services(
-            real_host_name,
-            candidates - skip,
-            providers=providers,
-            plugins=plugins,
-            on_error=on_error,
-        )
+        with plugin_contexts.current_host(real_host_name):
+            discovered_services = discover_services(
+                real_host_name,
+                candidates - skip,
+                providers=providers,
+                plugins=plugins,
+                on_error=on_error,
+            )
     except KeyboardInterrupt:
         raise MKGeneralException("Interrupted by Ctrl-C.")
 

@@ -254,32 +254,33 @@ class AutomationDiscovery(DiscoveryAutomation):
             max_cachefile_age=config.max_cachefile_age(),
         )
         for hostname in hostnames:
-            results[hostname] = automation_discovery(
-                hostname,
-                is_cluster=config_cache.is_cluster(hostname),
-                cluster_nodes=config_cache.nodes_of(hostname) or (),
-                active_hosts=config_cache.all_active_hosts(),
-                ruleset_matcher=config_cache.ruleset_matcher,
-                parser=parser,
-                fetcher=fetcher,
-                summarizer=CMKSummarizer(
-                    config_cache,
+            with plugin_contexts.current_host(hostname):
+                results[hostname] = automation_discovery(
                     hostname,
-                    override_non_ok_state=None,
-                ),
-                section_plugins=SectionPluginMapper(),
-                host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
-                plugins=DiscoveryPluginMapper(config_cache=config_cache),
-                ignore_service=config_cache.service_ignored,
-                ignore_plugin=config_cache.check_plugin_ignored,
-                get_effective_host=config_cache.effective_host,
-                get_service_description=config.service_description,
-                mode=mode,
-                keep_clustered_vanished_services=True,
-                service_filters=None,
-                enforced_services=config_cache.enforced_services_table(hostname),
-                on_error=on_error,
-            )
+                    is_cluster=config_cache.is_cluster(hostname),
+                    cluster_nodes=config_cache.nodes_of(hostname) or (),
+                    active_hosts=config_cache.all_active_hosts(),
+                    ruleset_matcher=config_cache.ruleset_matcher,
+                    parser=parser,
+                    fetcher=fetcher,
+                    summarizer=CMKSummarizer(
+                        config_cache,
+                        hostname,
+                        override_non_ok_state=None,
+                    ),
+                    section_plugins=SectionPluginMapper(),
+                    host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
+                    plugins=DiscoveryPluginMapper(config_cache=config_cache),
+                    ignore_service=config_cache.service_ignored,
+                    ignore_plugin=config_cache.check_plugin_ignored,
+                    get_effective_host=config_cache.effective_host,
+                    get_service_description=config.service_description,
+                    mode=mode,
+                    keep_clustered_vanished_services=True,
+                    service_filters=None,
+                    enforced_services=config_cache.enforced_services_table(hostname),
+                    on_error=on_error,
+                )
 
             if results[hostname].error_text is None:
                 # Trigger the discovery service right after performing the discovery to
@@ -420,38 +421,39 @@ def _execute_discovery(
         # doing it the other way around breaks one integration test.
         else config.lookup_ip_address(config_cache, host_name)
     )
-    passive_check_preview = discovery.get_check_preview(
-        host_name,
-        ip_address,
-        is_cluster=config_cache.is_cluster(host_name),
-        cluster_nodes=config_cache.nodes_of(host_name) or (),
-        config_cache=config_cache,
-        parser=parser,
-        fetcher=fetcher,
-        summarizer=CMKSummarizer(
-            config_cache,
+    with plugin_contexts.current_host(host_name):
+        passive_check_preview = discovery.get_check_preview(
             host_name,
-            override_non_ok_state=None,
-        ),
-        section_plugins=SectionPluginMapper(),
-        host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
-        check_plugins=CheckPluginMapper(),
-        compute_check_parameters=(
-            lambda host_name, entry: config.compute_check_parameters(
+            ip_address,
+            is_cluster=config_cache.is_cluster(host_name),
+            cluster_nodes=config_cache.nodes_of(host_name) or (),
+            config_cache=config_cache,
+            parser=parser,
+            fetcher=fetcher,
+            summarizer=CMKSummarizer(
+                config_cache,
                 host_name,
-                entry.check_plugin_name,
-                entry.item,
-                entry.parameters,
-            )
-        ),
-        discovery_plugins=DiscoveryPluginMapper(config_cache=config_cache),
-        ignore_service=config_cache.service_ignored,
-        ignore_plugin=config_cache.check_plugin_ignored,
-        get_effective_host=config_cache.effective_host,
-        find_service_description=config.service_description,
-        enforced_services=config_cache.enforced_services_table(host_name),
-        on_error=on_error,
-    )
+                override_non_ok_state=None,
+            ),
+            section_plugins=SectionPluginMapper(),
+            host_label_plugins=HostLabelPluginMapper(config_cache=config_cache),
+            check_plugins=CheckPluginMapper(),
+            compute_check_parameters=(
+                lambda host_name, entry: config.compute_check_parameters(
+                    host_name,
+                    entry.check_plugin_name,
+                    entry.item,
+                    entry.parameters,
+                )
+            ),
+            discovery_plugins=DiscoveryPluginMapper(config_cache=config_cache),
+            ignore_service=config_cache.service_ignored,
+            ignore_plugin=config_cache.check_plugin_ignored,
+            get_effective_host=config_cache.effective_host,
+            find_service_description=config.service_description,
+            enforced_services=config_cache.enforced_services_table(host_name),
+            on_error=on_error,
+        )
     return discovery.CheckPreview(
         table=[
             *passive_check_preview.table,
@@ -556,33 +558,34 @@ def _execute_autodiscovery() -> tuple[Mapping[HostName, DiscoveryResult], bool]:
                     console.verbose("  failed: discovery check disabled\n")
                     discovery_result, activate_host = None, False
                 else:
-                    discovery_result, activate_host = autodiscovery(
-                        host_name,
-                        is_cluster=config_cache.is_cluster(host_name),
-                        cluster_nodes=config_cache.nodes_of(host_name) or (),
-                        active_hosts=config_cache.all_active_hosts(),
-                        ruleset_matcher=config_cache.ruleset_matcher,
-                        parser=parser,
-                        fetcher=fetcher,
-                        summarizer=CMKSummarizer(
-                            config_cache, host_name, override_non_ok_state=None
-                        ),
-                        section_plugins=section_plugins,
-                        host_label_plugins=host_label_plugins,
-                        plugins=plugins,
-                        ignore_service=config_cache.service_ignored,
-                        ignore_plugin=config_cache.check_plugin_ignored,
-                        get_effective_host=config_cache.effective_host,
-                        get_service_description=get_service_description,
-                        schedule_discovery_check=_schedule_discovery_check,
-                        rediscovery_parameters=params.rediscovery,
-                        invalidate_host_config=config_cache.invalidate_host_config,
-                        autodiscovery_queue=autodiscovery_queue,
-                        reference_time=rediscovery_reference_time,
-                        oldest_queued=oldest_queued,
-                        enforced_services=config_cache.enforced_services_table(host_name),
-                        on_error=on_error,
-                    )
+                    with plugin_contexts.current_host(host_name):
+                        discovery_result, activate_host = autodiscovery(
+                            host_name,
+                            is_cluster=config_cache.is_cluster(host_name),
+                            cluster_nodes=config_cache.nodes_of(host_name) or (),
+                            active_hosts=config_cache.all_active_hosts(),
+                            ruleset_matcher=config_cache.ruleset_matcher,
+                            parser=parser,
+                            fetcher=fetcher,
+                            summarizer=CMKSummarizer(
+                                config_cache, host_name, override_non_ok_state=None
+                            ),
+                            section_plugins=section_plugins,
+                            host_label_plugins=host_label_plugins,
+                            plugins=plugins,
+                            ignore_service=config_cache.service_ignored,
+                            ignore_plugin=config_cache.check_plugin_ignored,
+                            get_effective_host=config_cache.effective_host,
+                            get_service_description=get_service_description,
+                            schedule_discovery_check=_schedule_discovery_check,
+                            rediscovery_parameters=params.rediscovery,
+                            invalidate_host_config=config_cache.invalidate_host_config,
+                            autodiscovery_queue=autodiscovery_queue,
+                            reference_time=rediscovery_reference_time,
+                            oldest_queued=oldest_queued,
+                            enforced_services=config_cache.enforced_services_table(host_name),
+                            on_error=on_error,
+                        )
                 if discovery_result:
                     discovery_results[host_name] = discovery_result
                     activation_required |= activate_host

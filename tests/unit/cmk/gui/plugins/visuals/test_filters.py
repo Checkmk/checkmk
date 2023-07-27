@@ -18,15 +18,9 @@ import cmk.utils.version as cmk_version
 from cmk.utils.livestatus_helpers.testing import MockLiveStatusConnection
 from cmk.utils.structured_data import ImmutableTree
 
-import cmk.gui.inventory
-import cmk.gui.plugins.visuals
-
-# Triggers plugin loading
-import cmk.gui.views
-import cmk.gui.visuals
-from cmk.gui.plugins.visuals import filters
 from cmk.gui.type_defs import Rows, VisualContext
 from cmk.gui.utils.output_funnel import output_funnel
+from cmk.gui.visuals import _filters as filters
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.wato.filters import FilterWatoFolder
 

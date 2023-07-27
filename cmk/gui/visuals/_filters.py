@@ -20,7 +20,7 @@ from cmk.gui.exceptions import MKMissingDataError, MKUserError
 from cmk.gui.htmllib.html import html
 from cmk.gui.http import request
 from cmk.gui.i18n import _, _l
-from cmk.gui.pages import AjaxPage, page_registry, PageResult
+from cmk.gui.pages import AjaxPage, PageRegistry, PageResult
 from cmk.gui.site_config import get_site_config
 from cmk.gui.type_defs import (
     Choices,
@@ -36,8 +36,9 @@ from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.utils.user_errors import user_errors
 from cmk.gui.valuespec import DualListChoice, LabelGroups
-from cmk.gui.visuals import get_only_sites_from_context
-from cmk.gui.visuals.filter import (
+
+from ._livestatus import get_only_sites_from_context
+from .filter import (
     checkbox_component,
     checkbox_row,
     CheckboxRowFilter,
@@ -47,9 +48,15 @@ from cmk.gui.visuals.filter import (
     filter_registry,
     FilterNumberRange,
     FilterOption,
+    FilterRegistry,
     FilterTime,
     InputTextFilter,
 )
+
+
+def register(page_registry: PageRegistry, _filter_registry: FilterRegistry) -> None:
+    page_registry.register_page("ajax_validate_filter")(PageValidateFilter)
+    register_site_filters(filter_registry)
 
 
 class RegexFilter(InputTextFilter):
@@ -154,7 +161,6 @@ class RegexAjaxDropdownFilter(AjaxDropdownFilter):
         )
 
 
-@page_registry.register_page("ajax_validate_filter")
 class PageValidateFilter(AjaxPage):
     def page(self) -> PageResult:
         api_request = self.webapi_request()
@@ -1077,29 +1083,6 @@ def cre_site_filter_heading_info(value: FilterHTTPVariables) -> str | None:
     return get_site_config(livestatus.SiteId(current_value))["alias"] if current_value else None
 
 
-filter_registry.register(
-    SiteFilter(
-        title=_l("Site"),
-        sort_index=500,
-        query_filter=query_filters.Query(
-            ident="siteopt",
-            request_vars=["site"],
-        ),
-        description=_l("Optional selection of a site"),
-    )
-)
-
-filter_registry.register(
-    SiteFilter(
-        title=_l("Site (enforced)"),
-        sort_index=501,
-        query_filter=query_filters.Query(ident="site", request_vars=["site"]),
-        description=_l("Selection of site is enforced, use this filter for joining"),
-        is_show_more=True,
-    )
-)
-
-
 class MultipleSitesFilter(SiteFilter):
     # Poor man's composition:  Renderer differs between CME and non-CME.
     sites_options: Callable[[], list[tuple[str, str]]] | None = None
@@ -1114,14 +1097,37 @@ class MultipleSitesFilter(SiteFilter):
         sites_vs.render_input(self.htmlvars[0], self.get_request_sites(value))
 
 
-filter_registry.register(
-    MultipleSitesFilter(
-        title=_l("Multiple Sites"),
-        sort_index=502,
-        query_filter=query_filters.Query(ident="sites", request_vars=["sites"]),
-        description=_l("Associative selection of multiple sites"),
+def register_site_filters(_filter_registry: FilterRegistry) -> None:
+    _filter_registry.register(
+        SiteFilter(
+            title=_l("Site"),
+            sort_index=500,
+            query_filter=query_filters.Query(
+                ident="siteopt",
+                request_vars=["site"],
+            ),
+            description=_l("Optional selection of a site"),
+        )
     )
-)
+
+    filter_registry.register(
+        SiteFilter(
+            title=_l("Site (enforced)"),
+            sort_index=501,
+            query_filter=query_filters.Query(ident="site", request_vars=["site"]),
+            description=_l("Selection of site is enforced, use this filter for joining"),
+            is_show_more=True,
+        )
+    )
+
+    filter_registry.register(
+        MultipleSitesFilter(
+            title=_l("Multiple Sites"),
+            sort_index=502,
+            query_filter=query_filters.Query(ident="sites", request_vars=["sites"]),
+            description=_l("Associative selection of multiple sites"),
+        )
+    )
 
 
 filter_registry.register(

@@ -47,8 +47,6 @@ from cmk.gui.painter.v0.base import painter_registry
 from cmk.gui.painter_options import painter_option_registry
 from cmk.gui.permissions import permission_registry, permission_section_registry
 from cmk.gui.plugins.userdb.utils import user_attribute_registry
-from cmk.gui.plugins.visuals import filters
-from cmk.gui.plugins.visuals.filters import cre_site_filter_heading_info
 from cmk.gui.plugins.wato.utils import mode_registry
 from cmk.gui.query_filters import cre_sites_options
 from cmk.gui.userdb import registration as userdb_registration
@@ -75,8 +73,8 @@ from cmk.gui.watolib.rulespecs import rulespec_group_registry, rulespec_registry
 
 
 def register_sites_options() -> None:
-    filters.MultipleSitesFilter.sites_options = cre_sites_options
-    filters.SiteFilter.heading_hook = cre_site_filter_heading_info
+    visuals.MultipleSitesFilter.sites_options = cre_sites_options
+    visuals.SiteFilter.heading_hook = visuals.cre_site_filter_heading_info
 
     autocompleter_registry.register_expression("sites")(
         partial(autocompleters.sites_autocompleter, sites_options=cre_sites_options)
@@ -85,7 +83,7 @@ def register_sites_options() -> None:
 
 def register() -> None:
     register_cre_licensing_handler()
-    visuals.register(cmk.gui.pages.page_registry, visual_info_registry)
+    visuals.register(cmk.gui.pages.page_registry, visual_info_registry, filter_registry)
     views.register(
         permission_section_registry,
         cmk.gui.pages.page_registry,

@@ -10,8 +10,6 @@ import pytest
 
 import cmk.utils.version as cmk_version
 
-import cmk.gui.plugins.visuals.filters
-import cmk.gui.views
 import cmk.gui.visuals as visuals
 from cmk.gui.http import request
 from cmk.gui.inventory.filters import RangedTableFilterName
@@ -35,14 +33,14 @@ def test_get_not_existing_filter() -> None:
 # TODO: The Next two are really poor tests. Put something better
 def test_filters_allowed_for_info() -> None:
     allowed = dict(filters_allowed_for_info("host"))
-    assert isinstance(allowed["host"], cmk.gui.plugins.visuals.filters.AjaxDropdownFilter)
+    assert isinstance(allowed["host"], visuals.AjaxDropdownFilter)
     assert "service" not in allowed
 
 
 def test_filters_allowed_for_infos() -> None:
     allowed = filters_allowed_for_infos(["host", "service"])
-    assert isinstance(allowed["host"], cmk.gui.plugins.visuals.filters.AjaxDropdownFilter)
-    assert isinstance(allowed["service"], cmk.gui.plugins.visuals.filters.AjaxDropdownFilter)
+    assert isinstance(allowed["host"], visuals.AjaxDropdownFilter)
+    assert isinstance(allowed["service"], visuals.AjaxDropdownFilter)
 
 
 def _expected_visual_types():

@@ -6,7 +6,7 @@
 from cmk.gui import utils
 from cmk.gui.pages import PageRegistry
 
-from . import info
+from . import _filters, info
 from ._add_to_visual import ajax_add_visual, ajax_popup_add
 from ._add_to_visual import page_menu_dropdown_add_to_visual as page_menu_dropdown_add_to_visual
 from ._add_to_visual import set_page_context as set_page_context
@@ -33,6 +33,10 @@ from ._filter_valuespecs import filters_allowed_for_infos as filters_allowed_for
 from ._filter_valuespecs import PageAjaxVisualFilterListGetChoice
 from ._filter_valuespecs import VisualFilterList as VisualFilterList
 from ._filter_valuespecs import VisualFilterListWithAddPopup as VisualFilterListWithAddPopup
+from ._filters import AjaxDropdownFilter as AjaxDropdownFilter
+from ._filters import cre_site_filter_heading_info as cre_site_filter_heading_info
+from ._filters import MultipleSitesFilter as MultipleSitesFilter
+from ._filters import SiteFilter as SiteFilter
 from ._livestatus import get_filter_headers as get_filter_headers
 from ._livestatus import get_livestatus_filter_headers as get_livestatus_filter_headers
 from ._livestatus import get_only_sites_from_context as get_only_sites_from_context
@@ -59,18 +63,30 @@ from ._store import save as save
 from ._store import TVisual as TVisual
 from ._title import view_title as view_title
 from ._title import visual_title as visual_title
-from .filter import Filter, filter_registry, FilterOption, FilterTime, InputTextFilter
+from .filter import (
+    Filter,
+    filter_registry,
+    FilterOption,
+    FilterRegistry,
+    FilterTime,
+    InputTextFilter,
+)
 from .info import visual_info_registry, VisualInfo, VisualInfoRegistry
 from .type import visual_type_registry, VisualType
 
 
-def register(page_registry: PageRegistry, _visual_info_registry: VisualInfoRegistry) -> None:
+def register(
+    page_registry: PageRegistry,
+    _visual_info_registry: VisualInfoRegistry,
+    _filter_registry: FilterRegistry,
+) -> None:
     page_registry.register_page("ajax_visual_filter_list_get_choice")(
         PageAjaxVisualFilterListGetChoice
     )
     page_registry.register_page_handler("ajax_popup_add_visual", ajax_popup_add)
     page_registry.register_page_handler("ajax_add_visual", ajax_add_visual)
     info.register(_visual_info_registry)
+    _filters.register(page_registry, filter_registry)
 
 
 def load_plugins() -> None:

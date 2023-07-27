@@ -3,8 +3,10 @@
 # This file is part of Checkmk (https://checkmk.com). It is subject to the terms and
 # conditions defined in the file COPYING, which is part of this source code package.
 import logging
+import os
 from pathlib import Path
 
+import pytest
 from faker import Faker
 
 from tests.testlib.site import Site
@@ -33,6 +35,11 @@ from .conftest import (
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.skipif(
+    os.environ.get("DISTRO") == "sles-15sp4",
+    reason="Test currently failing for missing `php7`. "
+    "This will be fixed starting from  base-version 2.1.0p31",
+)
 def test_update(test_site: Site, agent_ctl: Path) -> None:
     # TODO: set config - see CMK-13493
 

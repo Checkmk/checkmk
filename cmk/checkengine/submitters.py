@@ -91,26 +91,17 @@ def get_submitter(
     """Enterprise should use `cmk.base.cee.keepalive.submitters`."""
     if dry_run:
         return NoOpSubmitter(
-            host_name,
-            dry_run=dry_run,
-            perfdata_format=perfdata_format,
-            show_perfdata=show_perfdata,
+            host_name, perfdata_format=perfdata_format, show_perfdata=show_perfdata
         )
 
     if check_submission == "pipe" or monitoring_core == "cmc":
         return PipeSubmitter(
-            host_name,
-            dry_run=dry_run,
-            perfdata_format=perfdata_format,
-            show_perfdata=show_perfdata,
+            host_name, perfdata_format=perfdata_format, show_perfdata=show_perfdata
         )
 
     if check_submission == "file":
         return FileSubmitter(
-            host_name,
-            dry_run=dry_run,
-            perfdata_format=perfdata_format,
-            show_perfdata=show_perfdata,
+            host_name, perfdata_format=perfdata_format, show_perfdata=show_perfdata
         )
 
     raise MKGeneralException(f"Invalid setting {check_submission=} (expected 'pipe' or 'file')")
@@ -135,12 +126,10 @@ class Submitter(abc.ABC):
         self,
         host_name: HostName,
         *,
-        dry_run: bool,
         perfdata_format: Literal["pnp", "standard"],
         show_perfdata: bool,
     ):
         self.host_name: Final = host_name
-        self.dry_run: Final = dry_run
         self.perfdata_format: Final = perfdata_format
         self.show_perfdata: Final = show_perfdata
 

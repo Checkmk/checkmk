@@ -2061,6 +2061,7 @@ def mode_check(
         keepalive=keepalive,
     )
     state, text = (3, "unknown error")
+    dry_run = options.get("no-submit", False)
     with error_handler:
         console.vverbose("Checkmk version %s\n", cmk_version.__version__)
         fetched = fetcher(hostname, ip_address=ipaddress)
@@ -2081,10 +2082,11 @@ def mode_check(
             run_plugin_names=run_plugin_names,
             get_effective_host=config_cache.effective_host,
             get_check_period=partial(config_cache.check_period_of_service, hostname),
+            dry_run=dry_run,
             submitter=get_submitter_(
                 check_submission=config.check_submission,
                 monitoring_core=config.monitoring_core,
-                dry_run=options.get("no-submit", False),
+                dry_run=dry_run,
                 host_name=hostname,
                 perfdata_format="pnp" if config.perfdata_format == "pnp" else "standard",
                 show_perfdata=options.get("perfdata", False),

@@ -115,6 +115,7 @@ def execute_checkmk_checks(
     get_check_period: Callable[[ServiceName], TimeperiodName | None],
     run_plugin_names: Container[CheckPluginName],
     perfdata_with_times: bool,
+    dry_run: bool,
     submitter: Submitter,
     exit_spec: ExitSpec,
 ) -> ActiveCheckResult:
@@ -127,7 +128,7 @@ def execute_checkmk_checks(
     with CPUTracker() as tracker:
         with plugin_contexts.current_host(hostname):
             with value_store.load_host_value_store(
-                hostname, store_changes=not submitter.dry_run
+                hostname, store_changes=not dry_run
             ) as value_store_manager:
                 service_results = check_host_services(
                     hostname,

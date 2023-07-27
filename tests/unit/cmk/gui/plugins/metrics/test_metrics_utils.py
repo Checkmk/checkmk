@@ -315,7 +315,7 @@ def test_reverse_translate_into_all_potentially_relevant_metrics(
         (
             ["user", "system", "io_wait", "guest", "steal"],
             "check_mk-statgrab_cpu",
-            ["cpu_utilization_7", "cpu_utilization_6_guest"],
+            ["cpu_utilization_6_guest", "cpu_utilization_7"],
         ),
         (["user", "system", "interrupt"], "check_mk-kernel_util", ["cpu_utilization_8"]),
         (
@@ -340,7 +340,7 @@ def test_get_graph_templates(
 ) -> None:
     perfdata: Perfdata = [(n, 0, "", None, None, None, None) for n in metric_names]
     translated_metrics = utils.translate_metrics(perfdata, check_command)
-    assert {t.id for t in utils.get_graph_templates(translated_metrics)} == set(graph_ids)
+    assert [t.id for t in utils.get_graph_templates(translated_metrics)] == graph_ids
 
 
 @pytest.mark.parametrize(

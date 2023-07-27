@@ -108,7 +108,9 @@ class CMKOpenApiSession(requests.Session):
         logger.debug("< [%s] %s", response.status_code, response.text)
 
         if response.status_code == 401:
-            raise AuthorizationFailed(self.headers["Authorization"], self.site)
+            authorization = self.headers["Authorization"]
+            assert isinstance(authorization, str)
+            raise AuthorizationFailed(authorization, self.site)
 
         return response
 

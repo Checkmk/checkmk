@@ -250,7 +250,7 @@ def _fetch_certificate_chain_verify_results(
         certificate_store = sock.get_context().get_cert_store()
         certificate_chain = sock.get_peer_cert_chain()
 
-    return _verify_certificate_chain(certificate_store, certificate_chain)
+    return _verify_certificate_chain(certificate_store, certificate_chain)  # type: ignore[arg-type]
 
 
 def _verify_certificate_chain(

@@ -9,13 +9,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
 # shellcheck source=buildscripts/infrastructure/build-nodes/scripts/build_lib.sh
 . "${SCRIPT_DIR}/build_lib.sh"
 
-OPENSSL_VERSION=1.1.1t
+OPENSSL_VERSION=1.1.1u
 DIR_NAME=openssl-${OPENSSL_VERSION}
 ARCHIVE_NAME=${DIR_NAME}.tar.gz
 TARGET_DIR=/opt
 
 # Increase this to enforce a recreation of the build cache
-BUILD_ID=4
+BUILD_ID=5
 
 build_package() {
     mkdir -p /opt/src

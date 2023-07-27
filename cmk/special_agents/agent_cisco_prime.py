@@ -66,7 +66,7 @@ def write_section_from_get_request(argv: Sequence[str]) -> None:
         logging.info("fetch data from url=%r", url)
         response = requests.get(
             url=url,
-            auth=tuple(args.basic_auth.split(":")) if args.basic_auth else None,
+            auth=tuple(args.basic_auth.split(":", maxsplit=1)) if args.basic_auth else None,  # type: ignore[arg-type]
             timeout=args.timeout,
             verify=not args.no_cert_check,
         )

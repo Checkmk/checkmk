@@ -169,7 +169,6 @@ class PageKeyManagement:
 
     def page(self):
         with table_element(title=self._table_title(), searchable=False, sortable=False) as table:
-
             for key_id, key in sorted(self.keys.items()):
                 cert = crypto.load_certificate(crypto.FILETYPE_PEM, key["certificate"])
 
@@ -377,7 +376,7 @@ class PageUploadKey:
             return time.strptime(timestr, "%Y%m%d%H%M%SZ")
 
         created = time.mktime(
-            parse_asn1_generalized_time(certificate.get_notBefore().decode("ascii"))
+            parse_asn1_generalized_time(certificate.get_notBefore().decode("ascii"))  # type: ignore[union-attr]
         )
 
         # Check for valid passphrase

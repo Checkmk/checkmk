@@ -26,7 +26,7 @@ LI: PHP7 will be removed and PHP8 gets installed
 LI: change to the site user with <tt>omd <SITE_NAME></tt>
 LI: stop the site with <tt>omd stop</tt>
 LI: perform the update to the new Checkmk version with <tt>omd update</tt>, select <tt>Update</tt> at the user prompt
-LI: in case further prompts regarding wrong permissions of BUILD files appear, choose the default value with <tt>d</tt>
+LI: in case further prompts regarding wrong permissions of files appear, choose the default value with <tt>d</tt>
 LI: start the site again with <tt>omd start</tt>
 LI: exit from the site user
 LI: list all installed Checkmk version with <tt>omd versions</tt>

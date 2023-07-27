@@ -35,6 +35,7 @@ def get_flashed_messages() -> List[HTML]:
     Move the flashes from the session object to the current request once and
     cache them for the current request.
     """
+    assert _request_ctx_stack.top is not None
     flashes = _request_ctx_stack.top.flashes
     if flashes is None:
         if not hasattr(session, "session_info") or not session.session_info.flashes:

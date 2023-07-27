@@ -58,7 +58,7 @@ class _AppCtxGlobals:
 #####################################################################
 # application context
 
-_app_ctx_stack = LocalStack()
+_app_ctx_stack: LocalStack = LocalStack()
 
 
 def _lookup_app_object(name):
@@ -115,7 +115,7 @@ class _PrependURLFilter(logging.Filter):
 ######################################################################
 # request context
 
-_request_ctx_stack = LocalStack()
+_request_ctx_stack: LocalStack = LocalStack()
 
 
 def _lookup_req_object(name):

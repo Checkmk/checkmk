@@ -80,7 +80,7 @@ def check_cisco_redundancy(_no_item, params, info):
         state = 0
         infotext = "{}, Last swact reason code: {}".format(
             infotexts["now"],
-            map_states["swact_reason"][info[0][5]],
+            map_states["swact_reason"].get(info[0][5], f"unknown ({info[0][5]})"),
         )
     else:
         if unit_state in ["2", "9", "14"] or peer_state in ["2", "9", "14"]:

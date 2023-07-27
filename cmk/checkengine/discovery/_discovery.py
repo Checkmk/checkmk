@@ -5,22 +5,15 @@
 
 from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
-from typing import Protocol
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.parameters import Parameters
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 from ._autochecks import AutocheckEntry
 
 __all__ = ["DiscoveryPlugin"]
-
-
-class PService(Protocol):
-    def as_autocheck_entry(self, name: CheckPluginName) -> AutocheckEntry:
-        ...
 
 
 @dataclass(frozen=True)
@@ -30,5 +23,5 @@ class DiscoveryPlugin:
     # *really* needed?  Does it *really* belong to the check plugin?
     # This doesn't feel right.
     service_name: str
-    function: Callable[..., Iterable[PService]]
+    function: Callable[..., Iterable[AutocheckEntry]]
     parameters: Callable[[HostName], Sequence[Parameters] | Parameters | None]

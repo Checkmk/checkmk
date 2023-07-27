@@ -188,9 +188,7 @@ def _discover_plugins_services(
         kwargs = {**kwargs, "params": disco_params}
 
     try:
-        yield from (
-            service.as_autocheck_entry(check_plugin_name) for service in plugin.function(**kwargs)
-        )
+        yield from plugin.function(check_plugin_name, **kwargs)
     except Exception as e:
         if on_error is OnError.RAISE:
             raise

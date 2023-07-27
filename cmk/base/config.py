@@ -125,7 +125,12 @@ from cmk.fetchers.filecache import MaxAge
 
 from cmk.checkengine.check_table import ConfiguredService, FilterMode, HostCheckTable, ServiceID
 from cmk.checkengine.checking import CheckPlugin, CheckPluginName, CheckPluginNameStr, Item
-from cmk.checkengine.discovery import AutochecksManager, DiscoveryCheckParameters, DiscoveryPlugin
+from cmk.checkengine.discovery import (
+    AutocheckEntry,
+    AutochecksManager,
+    DiscoveryCheckParameters,
+    DiscoveryPlugin,
+)
 from cmk.checkengine.error_handling import ExitSpec
 from cmk.checkengine.fetcher import SourceType
 from cmk.checkengine.inventory import HWSWInventoryParameters, InventoryPlugin
@@ -1275,10 +1280,24 @@ def service_description(
             return f"Unimplemented check {check_plugin_name} / {item}"
         return "Unimplemented check %s" % check_plugin_name
 
+    def __discovery_function(
+        check_plugin_name: CheckPluginName, *args: object, **kw: object
+    ) -> Iterable[AutocheckEntry]:
+        # Deal with impededance mismatch between check API and check engine.
+        yield from (
+            AutocheckEntry(
+                check_plugin_name=check_plugin_name,
+                item=service.item,
+                parameters=unwrap_parameters(service.parameters),
+                service_labels={label.name: label.value for label in service.labels},
+            )
+            for service in check_plugin.discovery_function(*args, **kw)
+        )
+
     plugin = DiscoveryPlugin(
         sections=check_plugin.sections,
         service_name=check_plugin.service_name,
-        function=check_plugin.discovery_function,
+        function=__discovery_function,
         parameters=functools.partial(
             get_plugin_parameters,
             config_cache=config_cache,

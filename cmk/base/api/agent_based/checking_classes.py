@@ -13,12 +13,11 @@ from collections.abc import Callable, Iterable, Sequence
 from typing import NamedTuple, Optional, overload, Self, Union
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
-from cmk.utils.check_utils import ParametersTypeAlias, unwrap_parameters
+from cmk.utils.check_utils import ParametersTypeAlias
 from cmk.utils.rulesets import RuleSetName
 
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.checkresults import MetricTuple
-from cmk.checkengine.discovery import AutocheckEntry
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 from cmk.base.api.agent_based.type_defs import RuleSetTypeName
@@ -145,14 +144,6 @@ class Service(
             if v
         )
         return f"{self.__class__.__name__}({args})"
-
-    def as_autocheck_entry(self, name: CheckPluginName) -> AutocheckEntry:
-        return AutocheckEntry(
-            check_plugin_name=name,
-            item=self.item,
-            parameters=unwrap_parameters(self.parameters),
-            service_labels={label.name: label.value for label in self.labels},
-        )
 
 
 @enum.unique

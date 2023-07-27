@@ -16,6 +16,7 @@ from typing import Final
 import cmk.utils.resulttype as result
 import cmk.utils.tty as tty
 from cmk.utils.agentdatatype import AgentRawData
+from cmk.utils.check_utils import unwrap_parameters
 from cmk.utils.cpu_tracking import CPUTracker, Snapshot
 from cmk.utils.exceptions import OnError
 from cmk.utils.hostaddress import HostAddress, HostName
@@ -30,7 +31,7 @@ from cmk.fetchers.filecache import FileCache, FileCacheOptions, MaxAge
 
 from cmk.checkengine.checking import CheckPlugin, CheckPluginName
 from cmk.checkengine.checkresults import ActiveCheckResult
-from cmk.checkengine.discovery import DiscoveryPlugin, HostLabelPlugin
+from cmk.checkengine.discovery import AutocheckEntry, DiscoveryPlugin, HostLabelPlugin
 from cmk.checkengine.error_handling import ExitSpec
 from cmk.checkengine.fetcher import SourceInfo
 from cmk.checkengine.inventory import InventoryPlugin, InventoryPluginName
@@ -353,10 +354,24 @@ class DiscoveryPluginMapper(Mapping[CheckPluginName, DiscoveryPlugin]):
         if plugin is None:
             raise KeyError(__key)
 
+        def __discovery_function(
+            check_plugin_name: CheckPluginName, *args: object, **kw: object
+        ) -> Iterable[AutocheckEntry]:
+            # Deal with impededance mismatch between check API and check engine.
+            yield from (
+                AutocheckEntry(
+                    check_plugin_name=check_plugin_name,
+                    item=service.item,
+                    parameters=unwrap_parameters(service.parameters),
+                    service_labels={label.name: label.value for label in service.labels},
+                )
+                for service in plugin.discovery_function(*args, **kw)
+            )
+
         return DiscoveryPlugin(
             sections=plugin.sections,
             service_name=plugin.service_name,
-            function=plugin.discovery_function,
+            function=__discovery_function,
             parameters=partial(
                 config.get_plugin_parameters,
                 config_cache=self.config_cache,

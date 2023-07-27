@@ -379,7 +379,7 @@ void Query::parseStatsLine(char *line, ColumnSet &all_columns,
             column->createFilter(Filter::Kind::stats, rel_op, operand));
     } else {
         column = make_column(nextStringArgument(&line));
-        sc = std::make_unique<StatsColumnOp>(it->second, column.get());
+        sc = std::make_unique<StatsColumnOp>(it->second, column);
     }
     parsed_query_.stats_columns.push_back(std::move(sc));
     all_columns.insert(column);

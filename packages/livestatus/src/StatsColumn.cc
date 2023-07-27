@@ -27,9 +27,10 @@ std::unique_ptr<Aggregator> StatsColumnCount::createAggregator(
 
 // Note: We create an "accept all" filter, just in case we fall back to
 // counting.
-StatsColumnOp::StatsColumnOp(AggregationFactory factory, Column *column)
+StatsColumnOp::StatsColumnOp(AggregationFactory factory,
+                             std::shared_ptr<Column> column)
     : _factory(std::move(factory))
-    , _column(column)
+    , _column(std::move(column))
     , _filter(AndingFilter::make(Filter::Kind::stats, {})) {}
 
 std::unique_ptr<Filter> StatsColumnOp::stealFilter() {

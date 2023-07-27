@@ -9,6 +9,7 @@ from collections.abc import Container, Iterable, Iterator, Mapping, MutableMappi
 import cmk.utils.debug
 import cmk.utils.misc
 import cmk.utils.paths
+from cmk.utils.check_utils import unwrap_parameters
 from cmk.utils.exceptions import MKGeneralException, MKTimeout, OnError
 from cmk.utils.log import console, section
 from cmk.utils.type_defs import CheckPluginName, HostName, ParsedSectionName, ServiceID
@@ -301,7 +302,13 @@ def _discover_plugins_services(
 
     try:
         yield from (
-            service.as_autocheck_entry(check_plugin.name)
+            AutocheckEntry(
+                check_plugin_name=check_plugin.name,
+                item=service.item,
+                parameters=unwrap_parameters(service.parameters),
+                # Convert from APIs ServiceLabel to internal ServiceLabel
+                service_labels={label.name: label.value for label in service.labels},
+            )
             for service in check_plugin.discovery_function(**kwargs)
         )
     except Exception as e:

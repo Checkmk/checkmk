@@ -8,7 +8,6 @@ import enum
 from typing import Callable, Iterable, List, NamedTuple, Optional, overload, Sequence, Tuple, Union
 
 from cmk.utils import pnp_cleanup as quote_pnp_string
-from cmk.utils.check_utils import unwrap_parameters
 from cmk.utils.type_defs import (
     CheckPluginName,
     EvalableFloat,
@@ -18,7 +17,6 @@ from cmk.utils.type_defs import (
 )
 
 from cmk.checkers import PluginSuppliedLabel
-from cmk.checkers.discovery import AutocheckEntry
 
 from cmk.base.api.agent_based.type_defs import ParametersTypeAlias, RuleSetTypeName
 
@@ -112,14 +110,6 @@ class Service(
             if v
         )
         return f"{self.__class__.__name__}({args})"
-
-    def as_autocheck_entry(self, name: CheckPluginName) -> AutocheckEntry:
-        return AutocheckEntry(
-            check_plugin_name=name,
-            item=self.item,
-            parameters=unwrap_parameters(self.parameters),
-            service_labels={label.name: label.value for label in self.labels},
-        )
 
 
 @enum.unique

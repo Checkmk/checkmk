@@ -1,0 +1,14 @@
+Title: ldap: resolve error when saving LDAP connection config with global customer
+Class: fix
+Compatible: compat
+Component: wato
+Date: 1690532069
+Edition: cme
+Knowledge: doc
+Level: 1
+Version: 2.2.0p8
+
+Prior to this werk, Checkmk raised an error whenever the user attempted to create
+a LDAP connection config with the customer option set to "Global". This werk resolves
+this issue.
+

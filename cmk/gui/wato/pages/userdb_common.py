@@ -33,7 +33,7 @@ from cmk.gui.plugins.userdb.utils import (
     UserConnectionSpec,
 )
 from cmk.gui.plugins.wato.utils import make_confirm_delete_link, redirect
-from cmk.gui.site_config import get_login_sites
+from cmk.gui.site_config import get_login_sites, sitenames
 from cmk.gui.table import table_element
 from cmk.gui.type_defs import ActionResult
 from cmk.gui.utils.transaction_manager import transactions
@@ -211,7 +211,9 @@ def add_change(action_name: str, text: LogMessage, sites: list[SiteId]) -> None:
 
 def get_affected_sites(connection: UserConnectionSpec) -> list[SiteId]:
     if cmk_version.is_managed_edition():
-        return list(managed_helpers.get_sites_of_customer(connection["customer"]).keys())
+        if managed.is_global(customer := connection["customer"]):
+            return sitenames()
+        return list(managed_helpers.get_sites_of_customer(customer).keys())
     return get_login_sites()
 
 

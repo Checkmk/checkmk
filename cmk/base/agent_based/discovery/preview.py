@@ -19,7 +19,6 @@ from cmk.utils.timeperiod import timeperiod_active
 
 from cmk.automations.results import CheckPreviewEntry
 
-from cmk.checkengine import plugin_contexts
 from cmk.checkengine.check_table import ConfiguredService, ServiceID
 from cmk.checkengine.checking import CheckPlugin, CheckPluginName, Item
 from cmk.checkengine.checkresults import ActiveCheckResult, ServiceCheckResult
@@ -45,6 +44,7 @@ from cmk.checkengine.sectionparserutils import check_parsing_errors
 from cmk.checkengine.summarize import SummarizerFunction
 
 import cmk.base.agent_based.checking as checking
+from cmk.base.agent_based import plugin_contexts
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.config import ConfigCache
 

@@ -110,7 +110,6 @@ from cmk.fetchers import FetcherType, get_raw_data, Mode, ProgramFetcher, TCPFet
 from cmk.fetchers.filecache import FileCacheOptions
 from cmk.fetchers.snmp import make_backend as make_snmp_backend
 
-from cmk.checkengine import plugin_contexts
 from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
 from cmk.checkengine.discovery import (
     AutocheckEntry,
@@ -138,6 +137,7 @@ import cmk.base.nagios_utils
 import cmk.base.notify as notify
 import cmk.base.parent_scan
 import cmk.base.sources as sources
+from cmk.base.agent_based import plugin_contexts
 from cmk.base.automations import Automation, automations, MKAutomationError
 from cmk.base.checkers import (
     CheckPluginMapper,

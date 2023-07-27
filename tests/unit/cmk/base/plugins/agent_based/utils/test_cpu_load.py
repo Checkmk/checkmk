@@ -8,8 +8,8 @@ from unittest.mock import Mock
 from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.plugin_contexts import current_host, current_service
 
+from cmk.base.agent_based.plugin_contexts import current_host, current_service
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Metric, Result, State
 from cmk.base.plugins.agent_based.utils.cpu import Load, ProcessorType, Section, Threads
 from cmk.base.plugins.agent_based.utils.cpu_load import check_cpu_load

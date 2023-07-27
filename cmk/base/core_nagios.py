@@ -33,7 +33,6 @@ from cmk.utils.servicename import ServiceName
 from cmk.utils.store.host_storage import ContactgroupName
 from cmk.utils.timeperiod import TimeperiodName
 
-from cmk.checkengine import plugin_contexts
 from cmk.checkengine.check_table import FilterMode
 from cmk.checkengine.checking import CheckPluginName, CheckPluginNameStr
 from cmk.checkengine.inventory import InventoryPluginName
@@ -44,6 +43,7 @@ import cmk.base.core_config as core_config
 import cmk.base.ip_lookup as ip_lookup
 import cmk.base.obsolete_output as out
 import cmk.base.utils
+from cmk.base.agent_based import plugin_contexts
 from cmk.base.config import ConfigCache, HostgroupName, ObjectAttributes, ServicegroupName
 from cmk.base.core_config import (
     AbstractServiceID,

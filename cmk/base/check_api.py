@@ -33,12 +33,12 @@ from cmk.utils.prediction import get_predictive_levels as _get_predictive_levels
 from cmk.utils.regex import regex as regex  # pylint: disable=unused-import
 
 from cmk.checkengine.checkresults import state_markers as state_markers
-from cmk.checkengine.plugin_contexts import host_name as _internal_host_name
-from cmk.checkengine.plugin_contexts import service_description
 from cmk.checkengine.submitters import ServiceDetails, ServiceState
 
 import cmk.base.config as _config
 import cmk.base.item_state as _item_state
+from cmk.base.agent_based.plugin_contexts import host_name as _internal_host_name
+from cmk.base.agent_based.plugin_contexts import service_description
 from cmk.base.api.agent_based import render as _render
 
 # pylint: disable=unused-import

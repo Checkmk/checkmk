@@ -19,7 +19,6 @@ from cmk.utils.log import console, section
 from cmk.utils.rulesets.ruleset_matcher import RulesetMatcher
 from cmk.utils.sectionname import SectionMap
 
-from cmk.checkengine import plugin_contexts
 from cmk.checkengine.checking import CheckPluginName
 from cmk.checkengine.discovery import (
     analyse_services,
@@ -41,6 +40,7 @@ from cmk.checkengine.sectionparser import (
 )
 from cmk.checkengine.sectionparserutils import check_parsing_errors
 
+from cmk.base.agent_based import plugin_contexts
 from cmk.base.config import ConfigCache
 
 __all__ = ["commandline_discovery"]

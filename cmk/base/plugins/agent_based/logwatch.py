@@ -37,7 +37,9 @@ from typing import (
 import cmk.utils.debug  # pylint: disable=cmk-module-layer-violation
 import cmk.utils.paths  # pylint: disable=cmk-module-layer-violation
 
-from cmk.checkengine.plugin_contexts import host_name  # pylint: disable=cmk-module-layer-violation
+from cmk.base.agent_based.plugin_contexts import (  # pylint: disable=cmk-module-layer-violation
+    host_name,
+)
 
 from .agent_based_api.v1 import get_value_store, regex, register, render, Result, Service, State
 from .agent_based_api.v1.type_defs import CheckResult, DiscoveryResult

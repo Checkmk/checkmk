@@ -8,8 +8,8 @@ from pytest_mock import MockerFixture
 from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.plugin_contexts import current_host, current_service
 
+from cmk.base.agent_based.plugin_contexts import current_host, current_service
 from cmk.base.api.agent_based import utils
 from cmk.base.plugins.agent_based.agent_based_api.v1 import Result
 

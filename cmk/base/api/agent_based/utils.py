@@ -16,8 +16,7 @@ from cmk.utils.exceptions import MKGeneralException
 from cmk.utils.hostaddress import HostName
 from cmk.utils.prediction import get_predictive_levels
 
-from cmk.checkengine import plugin_contexts
-
+from cmk.base.agent_based import plugin_contexts  # pylint: disable=cmk-module-layer-violation
 from cmk.base.api.agent_based.checking_classes import IgnoreResultsError, Metric, Result, State
 from cmk.base.api.agent_based.section_classes import SNMPDetectSpecification
 

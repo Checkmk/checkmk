@@ -13,7 +13,8 @@ from cmk.utils.check_utils import maincheckify
 from cmk.utils.hostaddress import HostName
 
 from cmk.checkengine.checking import CheckPluginName
-from cmk.checkengine.plugin_contexts import current_host, current_service
+
+from cmk.base.agent_based.plugin_contexts import current_host, current_service
 
 from ..checktestlib import (
     assertCheckResultsEqual,

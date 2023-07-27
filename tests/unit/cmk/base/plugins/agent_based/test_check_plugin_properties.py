@@ -14,10 +14,10 @@ from tests.unit.conftest import FixRegister
 
 from cmk.utils.hostaddress import HostName
 
-from cmk.checkengine.plugin_contexts import current_host
 from cmk.checkengine.sectionparser import ParsedSectionName
 
 import cmk.base.api.agent_based.register as agent_based_register
+from cmk.base.agent_based.plugin_contexts import current_host
 from cmk.base.api.agent_based.type_defs import SectionPlugin, SNMPSectionPlugin
 
 

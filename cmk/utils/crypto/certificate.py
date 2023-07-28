@@ -133,7 +133,7 @@ class CertificateWithPrivateKey(NamedTuple):
             common_name,
             organization or f"Checkmk Site {omd_site()}",
             expiry,
-            start_date=start_date or datetime.now(tz=timezone.utc),
+            start_date=start_date or Certificate._naive_utcnow(),
             organizational_unit_name=organizational_unit_name,
             subject_alt_dns_names=subject_alt_dns_names,
         )
@@ -298,6 +298,10 @@ class Certificate:
         The reason is that extensions and key usages are hard-coded in a way only appropriate for
         self-signed certificates.
         """
+        assert not Certificate._is_timezone_aware(
+            start_date
+        ), "Certificate expiry must use naive datetimes"
+
         name_attrs = [
             x509.NameAttribute(x509.oid.NameOID.COMMON_NAME, common_name),
             x509.NameAttribute(x509.oid.NameOID.ORGANIZATION_NAME, organization),
@@ -490,14 +494,22 @@ class Certificate:
         if allowed_drift is None:
             allowed_drift = relativedelta(hours=+2)
 
-        if datetime.now() + allowed_drift < self._cert.not_valid_before:
+        if self._is_not_valid_before(Certificate._naive_utcnow() + allowed_drift):
             raise InvalidExpiryError(
                 f"Certificate is not yet valid (not_valid_before: {self._cert.not_valid_before})"
             )
-        if datetime.now() - allowed_drift > self._cert.not_valid_after:
+        if self._is_expired_after(Certificate._naive_utcnow() - allowed_drift):
             raise InvalidExpiryError(
                 f"Certificate is expired (not_valid_after: {self._cert.not_valid_after})"
             )
+
+    def _is_not_valid_before(self, time: datetime) -> bool:
+        assert not Certificate._is_timezone_aware(time)
+        return time < self._cert.not_valid_before
+
+    def _is_expired_after(self, time: datetime) -> bool:
+        assert not Certificate._is_timezone_aware(time)
+        return time > self._cert.not_valid_after
 
     def days_til_expiry(self) -> int:
         """
@@ -551,6 +563,19 @@ class Certificate:
         assert all(isinstance(x, str) for x in sans)
         # Well look at that assert...
         return sans  # type: ignore[no-any-return]
+
+    @staticmethod
+    def _is_timezone_aware(dt: datetime) -> bool:
+        return dt.tzinfo is not None
+
+    @staticmethod
+    def _naive_utcnow() -> datetime:
+        """
+        Create a not timezone aware, "naive", datetime at UTC now. This mimics the deprecated
+        datetime.utcnow(), but we still need it to be naive because that's what pyca/cryptography
+        certificates use. See also https://github.com/pyca/cryptography/issues/9186.
+        """
+        return datetime.now(tz=timezone.utc).replace(tzinfo=None)
 
 
 class RsaPrivateKey:

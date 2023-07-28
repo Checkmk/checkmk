@@ -174,8 +174,9 @@ def _make_cert_builder(
         .subject_name(subject_name)
         .public_key(public_key)
         .serial_number(random_serial_number())
-        .not_valid_before(datetime.now(tz=timezone.utc))
-        .not_valid_after(datetime.now(tz=timezone.utc) + validity)
+        # use naive datetimes -- see cmk.utils.crypto.certificate.Certificate._naive_utcnow
+        .not_valid_before(datetime.now(tz=timezone.utc).replace(tzinfo=None))
+        .not_valid_after(datetime.now(tz=timezone.utc).replace(tzinfo=None) + validity)
     )
 
 

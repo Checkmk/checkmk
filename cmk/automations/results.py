@@ -538,7 +538,7 @@ result_type_registry.register(CreateDiagnosticsDumpResult)
 
 @dataclass
 class BakeAgentsResult(ABCAutomationResult):
-    warnings_as_json: str
+    output: str | None
 
     @staticmethod
     def automation_call() -> str:

@@ -34,7 +34,6 @@ from cmk.gui import (
     valuespec,
     views,
     visuals,
-    wato,
     watolib,
     werks,
 )
@@ -62,6 +61,7 @@ from cmk.gui.views.sorter import sorter_registry
 from cmk.gui.visuals.filter import filter_registry
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
+from cmk.gui.wato import registration as wato_registration
 from cmk.gui.watolib.automation_commands import automation_command_registry
 from cmk.gui.watolib.config_domain_name import (
     config_domain_registry,
@@ -126,7 +126,8 @@ def register() -> None:
     mobile.register(layout_registry)
     userdb_registration.register(user_attribute_registry)
     watolib.register()
-    wato.register(
+    wato_registration.register(
+        cmk.gui.pages.page_registry,
         painter_registry,
         sorter_registry,
         icon_and_action_registry,

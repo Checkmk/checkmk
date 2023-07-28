@@ -238,7 +238,6 @@ from cmk.gui.watolib.sites import LivestatusViaTCP
 modes: dict[Any, Any] = {}
 
 from cmk.gui.page_menu import search_form
-from cmk.gui.painter.v0.base import PainterRegistry
 from cmk.gui.plugins.wato.utils.html_elements import (
     initialize_wato_html_head,
     wato_html_footer,
@@ -249,68 +248,9 @@ from cmk.gui.plugins.wato.utils.main_menu import (  # Kept for compatibility wit
     register_modules,
     WatoModule,
 )
-from cmk.gui.views.icon import IconRegistry
-from cmk.gui.views.sorter import SorterRegistry
 from cmk.gui.wato.page_handler import page_handler
-from cmk.gui.watolib.automation_commands import AutomationCommandRegistry
 from cmk.gui.watolib.hosts_and_folders import ajax_popup_host_action_menu
 from cmk.gui.watolib.main_menu import MenuItem
-
-from . import filters
-from .icons import DownloadAgentOutputIcon, DownloadSnmpWalkIcon, WatoIcon
-from .views import (
-    PainterHostFilename,
-    PainterWatoFolderAbs,
-    PainterWatoFolderPlain,
-    PainterWatoFolderRel,
-    SorterWatoFolderAbs,
-    SorterWatoFolderPlain,
-    SorterWatoFolderRel,
-)
-
-
-def register(
-    painter_registry: PainterRegistry,
-    sorter_registry: SorterRegistry,
-    icon_registry: IconRegistry,
-    automation_command_registry: AutomationCommandRegistry,
-    job_registry: background_job.BackgroundJobRegistry,
-    filter_registry: FilterRegistry,
-) -> None:
-    painter_registry.register(PainterHostFilename)
-    painter_registry.register(PainterWatoFolderAbs)
-    painter_registry.register(PainterWatoFolderRel)
-    painter_registry.register(PainterWatoFolderPlain)
-    sorter_registry.register(SorterWatoFolderAbs)
-    sorter_registry.register(SorterWatoFolderRel)
-    sorter_registry.register(SorterWatoFolderPlain)
-
-    icon_registry.register(DownloadAgentOutputIcon)
-    icon_registry.register(DownloadSnmpWalkIcon)
-    icon_registry.register(WatoIcon)
-
-    page_registry.register_page_handler("wato", page_handler)
-    page_registry.register_page_handler("ajax_popup_host_action_menu", ajax_popup_host_action_menu)
-    cmk.gui.wato.pages.diagnostics.register(page_registry)
-    cmk.gui.wato.pages.user_profile.mega_menu.register(page_registry)
-    cmk.gui.wato.pages.user_profile.two_factor.register(page_registry)
-    cmk.gui.wato.pages.user_profile.two_factor.register(page_registry)
-    cmk.gui.wato.pages.user_profile.edit_profile.register(page_registry)
-    cmk.gui.wato.pages.user_profile.change_password.register(page_registry)
-    cmk.gui.wato.pages.user_profile.async_replication.register(page_registry)
-    cmk.gui.wato.pages.user_profile.replicate.register(page_registry)
-    cmk.gui.wato.pages.services.register(page_registry)
-    cmk.gui.wato.pages.host_diagnose.register(page_registry)
-    cmk.gui.wato.pages.activate_changes.register(page_registry)
-    cmk.gui.wato.pages.backup.register(page_registry)
-    cmk.gui.wato.pages.folders.register(page_registry)
-    cmk.gui.wato.pages.automation.register(page_registry)
-    cmk.gui.wato.pages.sites.register(page_registry)
-    cmk.gui.wato.pages.fetch_agent_output.register(page_registry)
-
-    sync_remote_sites.register(automation_command_registry, job_registry)
-    filters.register(filter_registry)
-
 
 # .
 #   .--Plugins-------------------------------------------------------------.

@@ -62,7 +62,7 @@ target_include_directories(
   neb PUBLIC ../include ../third_party/include ${asio_ext_include}
              ${root_repo_dir}/packages/livestatus/include)
 
-target_compile_definitions(neb PRIVATE VERSION="${CMAKE_PROJECT_VERSION}")
+target_compile_definitions(neb PRIVATE VERSION="${CMK_VERSION}")
 
 target_link_libraries(
   neb

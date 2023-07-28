@@ -201,11 +201,11 @@ version:
 setversion:
 	sed -ri 's/^(VERSION[[:space:]]*:?= *).*/\1'"$(NEW_VERSION)/" defines.make
 	sed -i 's/^__version__ = ".*"$$/__version__ = "$(NEW_VERSION)"/' cmk/utils/version.py bin/livedump
-	sed -i "s/^\\( *VERSION *\\).*/\\1${NEW_VERSION/[a-z]/.}/" packages/neb/CMakeLists.txt
+	sed -i 's/^set(CMK_VERSION .*)/set(CMK_VERSION ${NEW_VERSION})/' packages/neb/CMakeLists.txt
 	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
 	$(MAKE) -C docker_image NEW_VERSION=$(NEW_VERSION) setversion
 ifeq ($(ENTERPRISE),yes)
-	sed -i "s/^\\( *VERSION *\\).*/\\1${NEW_VERSION/[a-z]/.}/" packages/cmc/CMakeLists.txt
+	sed -i 's/^set(CMK_VERSION .*)/set(CMK_VERSION ${NEW_VERSION})/' packages/cmc/CMakeLists.txt
 	$(MAKE) -C enterprise NEW_VERSION=$(NEW_VERSION) setversion
 endif
 

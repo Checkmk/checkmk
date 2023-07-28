@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMK_VERSION 2.3.0)
 set(PLANTUTML_VERSION 1.2022.13)
 set(CMAKE_CXX_COMPILER g++-12) # TODO: replace with more intelligent approach
 set(root_repo_dir ${CMAKE_CURRENT_SOURCE_DIR}/../..)
@@ -14,9 +15,11 @@ add_compile_options(
   -std=c++17
   -O3)
 
+string(REGEX REPLACE "([0-9]+)\.([0-9]+)\.([0-9]+).*" "\\1.\\2.\\3"
+                     MANGLED_VERSION ${CMK_VERSION})
 project(
   neb
-  VERSION 2.3.0
+  VERSION ${MANGLED_VERSION}
   DESCRIPTION "Livestatus NEB"
   LANGUAGES CXX)
 

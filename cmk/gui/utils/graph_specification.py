@@ -18,7 +18,6 @@ from cmk.gui.type_defs import (
     CombinedGraphSpec,
     ExplicitGraphSpec,
     GraphConsoldiationFunction,
-    GraphIdentifier,
     GraphMetric,
     GraphPresentation,
     HorizontalRule,
@@ -155,17 +154,3 @@ def parse_raw_graph_specification(raw: Mapping[str, object]) -> GraphSpecificati
     # See https://github.com/pydantic/pydantic/issues/1847 and the linked mypy issue for the
     # suppressions below
     return parse_obj_as(GraphSpecification, raw)  # type: ignore[arg-type]
-
-
-def parse_legacy_graph_identifier(identifier: GraphIdentifier) -> GraphSpecification:
-    # In the currrent transitional state, we have a mix of old graph identifiers and new graph
-    # specifications. Once the identifiers have benn completely purged, this will move to
-    # cmk.udpate_config.
-    graph_spec: Mapping[str, object]
-    if identifier[0] == "custom":
-        graph_spec = {"id": identifier[1]}
-    elif identifier[0] == "forecast":
-        graph_spec = {"id": identifier[1]}
-    else:
-        graph_spec = identifier[1]
-    return parse_raw_graph_specification({"graph_type": identifier[0]} | graph_spec)

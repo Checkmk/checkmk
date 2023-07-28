@@ -21,7 +21,7 @@ $SIG{ALRM} = sub {
     my @caller = caller;
     $lastquery =~ s/\n+/\n/g;
     print STDERR 'last query: '.$lastquery."\n" if defined $lastquery;
-    confess "timeout reached:".Dumper(\@caller)."\n" 
+    confess "timeout reached:".Dumper(\@caller)."\n"
 };
 
 use_ok('Monitoring::Livestatus');
@@ -90,15 +90,15 @@ for my $key (sort keys %{$objects_to_test}) {
                 undef $lastquery;
                 is($Monitoring::Livestatus::ErrorCode, 0, "GET ".$type." Filter: ".$key." >= ".$value." Stats: $stats_part") or BAIL_OUT("query failed:\n".$statement);
 
-                $statement  = "GET $type\n".$filter.$typefilter."\nStats: $stats_part\nStatsGroupBy: $key";
+                $statement  = "GET $type\n".$filter.$typefilter."\nStats: $stats_part\nColumns: $key";
                 $lastquery = $statement;
                 $hash_ref   = $ml->selectrow_hashref($statement );
                 undef $lastquery;
-                is($Monitoring::Livestatus::ErrorCode, 0, "GET ".$type." Filter: ".$key." >= ".$value." Stats: $stats_part StatsGroupBy: $key") or BAIL_OUT("query failed:\n".$statement);
+                is($Monitoring::Livestatus::ErrorCode, 0, "GET ".$type." Filter: ".$key." >= ".$value." Stats: $stats_part Columns: $key") or BAIL_OUT("query failed:\n".$statement);
             }
 
             # wait till backend is started up again
-            if(!defined $hash_ref and $Monitoring::Livestatus::ErrorCode > 200) { 
+            if(!defined $hash_ref and $Monitoring::Livestatus::ErrorCode > 200) {
                 sleep(2);
             }
         }

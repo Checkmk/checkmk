@@ -110,10 +110,6 @@ Query::Query(const std::list<std::string> &lines, Table &table,
                 parseStatsNegateLine(arguments);
             } else if (header == "Stats") {
                 parseStatsLine(arguments, make_column);
-            } else if (header == "StatsGroupBy") {
-                Warning(_logger)
-                    << "Warning: StatsGroupBy is deprecated. Please use Columns instead.";
-                parseColumnsLine(arguments, make_column);
             } else if (header == "Columns") {
                 parseColumnsLine(arguments, make_column);
             } else if (header == "ColumnHeaders") {

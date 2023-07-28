@@ -3,5 +3,5 @@ Stats: state = 0
 Stats: state = 1
 Stats: state = 2
 Stats: state = 3
-StatsGroupBy: host_name
+Columns: host_name
 OutputFormat: json

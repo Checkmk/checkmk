@@ -239,7 +239,7 @@ class SNMPTrapTranslator:
         match config["translate_snmptraps"]:
             case False:
                 self.translate = self._translate_simple
-            case (True, {}):
+            case (True, {**extra}) if not extra:  # matches empty dict
                 self._init_translate_via_mibs(
                     settings.paths.compiled_mibs_dir.value,
                     load_texts=False,

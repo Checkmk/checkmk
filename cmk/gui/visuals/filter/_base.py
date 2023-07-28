@@ -20,6 +20,7 @@ from cmk.gui.type_defs import (
     Rows,
     VisualContext,
 )
+from cmk.gui.utils.regex import validate_regex
 from cmk.gui.utils.speaklater import LazyString
 from cmk.gui.valuespec import DualListChoice
 
@@ -426,3 +427,9 @@ class DualListFilter(Filter):
 
     def filter(self, value: FilterHTTPVariables) -> FilterHeader:
         return self.query_filter.filter(value)
+
+
+class RegexFilter(InputTextFilter):
+    def validate_value(self, value: FilterHTTPVariables) -> None:
+        htmlvar = self.htmlvars[0]
+        validate_regex(value.get(htmlvar, ""), htmlvar)

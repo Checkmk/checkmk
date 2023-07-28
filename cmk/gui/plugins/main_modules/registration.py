@@ -119,6 +119,7 @@ def register() -> None:
         rulespec_group_registry,
         rulespec_registry,
         autocompleter_registry,
+        filter_registry,
     )
     mobile.register(layout_registry)
     userdb_registration.register(user_attribute_registry)

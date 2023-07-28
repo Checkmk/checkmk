@@ -15,7 +15,7 @@ from cmk.gui.http import request
 from cmk.gui.inventory.filters import RangedTableFilterName
 from cmk.gui.type_defs import SingleInfos, VisualContext
 from cmk.gui.visuals import filters_allowed_for_info, filters_allowed_for_infos
-from cmk.gui.visuals.filter import Filter, filter_registry
+from cmk.gui.visuals.filter import AjaxDropdownFilter, Filter, filter_registry
 from cmk.gui.visuals.info import visual_info_registry
 from cmk.gui.visuals.type import visual_type_registry
 
@@ -33,14 +33,14 @@ def test_get_not_existing_filter() -> None:
 # TODO: The Next two are really poor tests. Put something better
 def test_filters_allowed_for_info() -> None:
     allowed = dict(filters_allowed_for_info("host"))
-    assert isinstance(allowed["host"], visuals.AjaxDropdownFilter)
+    assert isinstance(allowed["host"], AjaxDropdownFilter)
     assert "service" not in allowed
 
 
 def test_filters_allowed_for_infos() -> None:
     allowed = filters_allowed_for_infos(["host", "service"])
-    assert isinstance(allowed["host"], visuals.AjaxDropdownFilter)
-    assert isinstance(allowed["service"], visuals.AjaxDropdownFilter)
+    assert isinstance(allowed["host"], AjaxDropdownFilter)
+    assert isinstance(allowed["service"], AjaxDropdownFilter)
 
 
 def _expected_visual_types():

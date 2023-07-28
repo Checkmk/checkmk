@@ -33,7 +33,6 @@ from ._filter_valuespecs import filters_allowed_for_infos as filters_allowed_for
 from ._filter_valuespecs import PageAjaxVisualFilterListGetChoice
 from ._filter_valuespecs import VisualFilterList as VisualFilterList
 from ._filter_valuespecs import VisualFilterListWithAddPopup as VisualFilterListWithAddPopup
-from ._filters import AjaxDropdownFilter as AjaxDropdownFilter
 from ._filters import cre_site_filter_heading_info as cre_site_filter_heading_info
 from ._filters import MultipleSitesFilter as MultipleSitesFilter
 from ._filters import SiteFilter as SiteFilter

@@ -9,6 +9,7 @@ from cmk.gui.permissions import PermissionRegistry, PermissionSectionRegistry
 from cmk.gui.plugins.wato.utils.base_modes import ModeRegistry
 from cmk.gui.valuespec import AutocompleterRegistry
 from cmk.gui.views.icon import IconRegistry
+from cmk.gui.visuals.filter import FilterRegistry
 from cmk.gui.watolib.config_domain_name import (
     ConfigDomainRegistry,
     ConfigVariableGroupRegistry,
@@ -19,7 +20,7 @@ from cmk.gui.watolib.main_menu import MainModuleRegistry
 from cmk.gui.watolib.rulespecs import RulespecGroupRegistry, RulespecRegistry
 from cmk.gui.watolib.search import match_item_generator_registry
 
-from . import views, wato
+from . import _filters, views, wato
 from .autocompleters import service_levels_autocompleter, syslog_facilities_autocompleter
 from .config_domain import ConfigDomainEventConsole
 from .icon import MkeventdIcon
@@ -43,6 +44,7 @@ def register(
     rulespec_group_registry: RulespecGroupRegistry,
     rulespec_registry: RulespecRegistry,
     autocompleter_registry: AutocompleterRegistry,
+    filter_registry: FilterRegistry,
 ) -> None:
     views.register(data_source_registry, painter_registry, permission_registry)
     icon_registry.register(MkeventdIcon)
@@ -61,3 +63,4 @@ def register(
     config_domain_registry.register(ConfigDomainEventConsole)
     autocompleter_registry.register_expression("syslog_facilities")(syslog_facilities_autocompleter)
     autocompleter_registry.register_expression("service_levels")(service_levels_autocompleter)
+    _filters.register(filter_registry)

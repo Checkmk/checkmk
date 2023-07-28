@@ -226,7 +226,6 @@ def _check_preview_table_row(
             service,
             check_plugin,
             get_effective_host=get_effective_host,
-            value_store_manager=value_store_manager,
             check_function=checking.get_check_function(
                 config_cache,
                 host_name,

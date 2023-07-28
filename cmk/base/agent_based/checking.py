@@ -4,6 +4,7 @@
 # conditions defined in the file COPYING, which is part of this source code package.
 """Performing the actual checks."""
 
+import functools
 import itertools
 from collections import defaultdict
 from collections.abc import Callable, Container, Iterable, Mapping, Sequence
@@ -167,10 +168,7 @@ def execute_checkmk_checks(
                     resolver.parsing_errors for resolver in providers.values()
                 )
             ),
-            _check_plugins_missing_data(
-                service_results,
-                exit_spec,
-            ),
+            _check_plugins_missing_data(service_results, exit_spec),
         )
     return ActiveCheckResult.from_subresults(
         *timed_results,
@@ -337,7 +335,6 @@ def check_host_services(
                 providers,
                 service,
                 plugin,
-                value_store_manager=value_store_manager,
                 rtc_package=rtc_package,
                 get_effective_host=get_effective_host,
                 check_function=get_check_function(
@@ -368,8 +365,8 @@ def get_check_function(
     plugin: CheckPlugin,
     service: ConfiguredService,
     value_store_manager: value_store.ValueStoreManager,
-) -> Callable[..., Iterable[object]]:
-    return (
+) -> Callable[..., ServiceCheckResult]:
+    check_function = (
         cluster_mode.get_cluster_check_function(
             *config_cache.get_clustered_service_configuration(host_name, service.description),
             plugin=plugin,
@@ -379,6 +376,15 @@ def get_check_function(
         if is_cluster
         else plugin.function
     )
+
+    @functools.wraps(check_function)
+    def __check_function(*args: object, **kw: object) -> ServiceCheckResult:
+        with plugin_contexts.current_service(
+            service.check_plugin_name, service.description
+        ), value_store_manager.namespace(service.id()):
+            return _aggregate_results(consume_check_results(check_function(*args, **kw)))
+
+    return __check_function
 
 
 def get_aggregated_result(
@@ -391,9 +397,8 @@ def get_aggregated_result(
     plugin: CheckPlugin,
     *,
     rtc_package: AgentRawData | None,
-    value_store_manager: value_store.ValueStoreManager,
     get_effective_host: Callable[[HostName, ServiceName], HostName],
-    check_function: Callable[..., Iterable[object]],
+    check_function: Callable[..., ServiceCheckResult],
 ) -> AggregatedResult:
     """Run the check function and aggregate the subresults
 
@@ -425,19 +430,7 @@ def get_aggregated_result(
     )
 
     try:
-        with plugin_contexts.current_service(
-            service.check_plugin_name, service.description
-        ), value_store_manager.namespace(service.id()):
-            result = _aggregate_results(
-                consume_check_results(
-                    check_function(
-                        **item_kw,
-                        **params_kw,
-                        **section_kws,
-                    )
-                )
-            )
-
+        result = check_function(**item_kw, **params_kw, **section_kws)
     except IgnoreResultsError as e:
         msg = str(e) or "No service summary available"
         return AggregatedResult(

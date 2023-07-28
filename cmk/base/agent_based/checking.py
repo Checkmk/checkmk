@@ -79,6 +79,7 @@ __all__ = [
     "execute_checkmk_checks",
     "check_host_services",
     "get_aggregated_result",
+    "get_check_function",
 ]
 
 
@@ -328,6 +329,7 @@ def check_host_services(
                 cache_info=None,
             )
         else:
+            plugin = check_plugins[service.check_plugin_name]
             submittable = get_aggregated_result(
                 host_name,
                 is_cluster,
@@ -335,10 +337,18 @@ def check_host_services(
                 config_cache,
                 providers,
                 service,
-                check_plugins[service.check_plugin_name],
+                plugin,
                 value_store_manager=value_store_manager,
                 rtc_package=rtc_package,
                 get_effective_host=get_effective_host,
+                check_function=get_check_function(
+                    config_cache,
+                    host_name,
+                    is_cluster=is_cluster,
+                    plugin=plugin,
+                    service=service,
+                    value_store_manager=value_store_manager,
+                ),
             )
         submittables.append(submittable)
 
@@ -363,7 +373,7 @@ def service_outside_check_period(description: ServiceName, period: TimeperiodNam
     return True
 
 
-def _get_check_function(
+def get_check_function(
     config_cache: ConfigCache,
     host_name: HostName,
     is_cluster: bool,
@@ -395,20 +405,12 @@ def get_aggregated_result(
     rtc_package: AgentRawData | None,
     value_store_manager: value_store.ValueStoreManager,
     get_effective_host: Callable[[HostName, ServiceName], HostName],
+    check_function: Callable[..., Iterable[object]],
 ) -> _AggregatedResult:
     """Run the check function and aggregate the subresults
 
     This function is also called during discovery.
     """
-    check_function = _get_check_function(
-        config_cache,
-        host_name,
-        is_cluster=is_cluster,
-        plugin=plugin,
-        service=service,
-        value_store_manager=value_store_manager,
-    )
-
     section_kws, error_result = get_monitoring_data_kwargs(
         host_name,
         is_cluster,

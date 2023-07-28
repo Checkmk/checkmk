@@ -48,10 +48,7 @@ from cmk.base.agent_based import plugin_contexts
 from cmk.base.api.agent_based.value_store import load_host_value_store, ValueStoreManager
 from cmk.base.config import ConfigCache
 
-__all__ = [
-    "CheckPreview",
-    "get_check_preview",
-]
+__all__ = ["CheckPreview", "get_check_preview"]
 
 
 @dataclass(frozen=True)
@@ -230,6 +227,14 @@ def _check_preview_table_row(
             check_plugin,
             get_effective_host=get_effective_host,
             value_store_manager=value_store_manager,
+            check_function=checking.get_check_function(
+                config_cache,
+                host_name,
+                is_cluster,
+                plugin=check_plugin,
+                service=service,
+                value_store_manager=value_store_manager,
+            ),
             rtc_package=None,
         ).result
         if check_plugin is not None

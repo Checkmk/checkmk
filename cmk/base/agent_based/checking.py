@@ -83,7 +83,7 @@ __all__ = [
 ]
 
 
-class _AggregatedResult(NamedTuple):
+class AggregatedResult(NamedTuple):
     service: ConfiguredService
     submit: bool
     data_received: bool
@@ -131,21 +131,27 @@ def execute_checkmk_checks(
             with value_store.load_host_value_store(
                 hostname, store_changes=not dry_run
             ) as value_store_manager:
-                service_results = check_host_services(
-                    hostname,
-                    is_cluster=is_cluster,
-                    cluster_nodes=cluster_nodes,
-                    config_cache=config_cache,
-                    providers=providers,
-                    services=services,
-                    check_plugins=check_plugins,
-                    run_plugin_names=run_plugin_names,
-                    get_effective_host=get_effective_host,
-                    get_check_period=get_check_period,
-                    submitter=submitter,
-                    value_store_manager=value_store_manager,
-                    rtc_package=None,
+                service_results = list(
+                    check_host_services(
+                        hostname,
+                        is_cluster=is_cluster,
+                        cluster_nodes=cluster_nodes,
+                        config_cache=config_cache,
+                        providers=providers,
+                        services=services,
+                        check_plugins=check_plugins,
+                        run_plugin_names=run_plugin_names,
+                        get_effective_host=get_effective_host,
+                        get_check_period=get_check_period,
+                        value_store_manager=value_store_manager,
+                        rtc_package=None,
+                    )
                 )
+                submitter.submit(
+                    Submittee(s.service.description, s.result, s.cache_info, pending=not s.submit)
+                    for s in service_results
+                )
+
         if run_plugin_names is EVERYTHING:
             _do_inventory_actions_during_checking_for(
                 hostname,
@@ -245,7 +251,7 @@ def _timing_results(
 
 
 def _check_plugins_missing_data(
-    service_results: Sequence[_AggregatedResult],
+    service_results: Sequence[AggregatedResult],
     exit_spec: ExitSpec,
 ) -> Iterable[ActiveCheckResult]:
     """Compute a state for the fact that plugins did not get any data"""
@@ -303,17 +309,10 @@ def check_host_services(
     run_plugin_names: Container[CheckPluginName],
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     get_check_period: Callable[[ServiceName], TimeperiodName | None],
-    submitter: Submitter,
     rtc_package: AgentRawData | None,
     value_store_manager: ValueStoreManager,
-) -> Sequence[_AggregatedResult]:
-    """Compute service state results for all given services on node or cluster
-
-    * Loops over all services,
-    * calls the check
-    * examines the result and sends it to the core (unless `dry_run` is True).
-    """
-    submittables: list[_AggregatedResult] = []
+) -> Iterable[AggregatedResult]:
+    """Compute service state results for all given services on node or cluster"""
     for service in (
         s
         for s in services
@@ -321,7 +320,7 @@ def check_host_services(
         and not service_outside_check_period(s.description, get_check_period(s.description))
     ):
         if service.check_plugin_name not in check_plugins:
-            submittable = _AggregatedResult(
+            yield AggregatedResult(
                 service=service,
                 submit=True,
                 data_received=True,
@@ -330,7 +329,7 @@ def check_host_services(
             )
         else:
             plugin = check_plugins[service.check_plugin_name]
-            submittable = get_aggregated_result(
+            yield get_aggregated_result(
                 host_name,
                 is_cluster,
                 cluster_nodes,
@@ -350,17 +349,6 @@ def check_host_services(
                     value_store_manager=value_store_manager,
                 ),
             )
-        submittables.append(submittable)
-
-    if submittables:
-        submitter.submit(
-            submittees=[
-                Submittee(s.service.description, s.result, s.cache_info, pending=not s.submit)
-                for s in submittables
-            ],
-        )
-
-    return submittables
 
 
 def service_outside_check_period(description: ServiceName, period: TimeperiodName | None) -> bool:
@@ -406,7 +394,7 @@ def get_aggregated_result(
     value_store_manager: value_store.ValueStoreManager,
     get_effective_host: Callable[[HostName, ServiceName], HostName],
     check_function: Callable[..., Iterable[object]],
-) -> _AggregatedResult:
+) -> AggregatedResult:
     """Run the check function and aggregate the subresults
 
     This function is also called during discovery.
@@ -421,7 +409,7 @@ def get_aggregated_result(
         get_effective_host=get_effective_host,
     )
     if not section_kws:  # no data found
-        return _AggregatedResult(
+        return AggregatedResult(
             service=service,
             submit=False,
             data_received=False,
@@ -452,7 +440,7 @@ def get_aggregated_result(
 
     except IgnoreResultsError as e:
         msg = str(e) or "No service summary available"
-        return _AggregatedResult(
+        return AggregatedResult(
             service=service,
             submit=False,
             data_received=True,
@@ -488,7 +476,7 @@ def get_aggregated_result(
                 if (resolved := provider.resolve(section_name)) is not None
             )
 
-    return _AggregatedResult(
+    return AggregatedResult(
         service=service,
         submit=True,
         data_received=True,

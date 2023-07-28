@@ -11,7 +11,7 @@ import time
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
 from random import Random
-from typing import Final, IO, Literal, NamedTuple
+from typing import final, Final, IO, Literal, NamedTuple
 
 import cmk.utils.paths
 import cmk.utils.tty as tty
@@ -133,6 +133,7 @@ class Submitter(abc.ABC):
         self.perfdata_format: Final = perfdata_format
         self.show_perfdata: Final = show_perfdata
 
+    @final
     def submit(self, submittees: Iterable[Submittee]) -> None:
         formatted_submittees = [
             (
@@ -156,7 +157,8 @@ class Submitter(abc.ABC):
         for submittee, pending in formatted_submittees:
             _output_check_result(submittee, show_perfdata=self.show_perfdata, pending=pending)
 
-        self._submit((submittee for submittee, pending in formatted_submittees if not pending))
+        if formatted_submittees:
+            self._submit((submittee for submittee, pending in formatted_submittees if not pending))
 
     @abc.abstractmethod
     def _submit(self, formatted_submittees: Iterable[FormattedSubmittee]) -> None:

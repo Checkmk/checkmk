@@ -20,6 +20,7 @@ PYTEST_UNIT_TEST_OPTS = \
     ../cmk/special_agents \
     ../cmk/update_config \
     ../cmk/utils \
+    ../cmk_metrics \
     ../agent-receiver \
     ../omd/packages/omd \
 	../cmk/active_checks \

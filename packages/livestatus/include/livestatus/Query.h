@@ -120,8 +120,7 @@ private:
     static void parseNegateLine(char *line, FilterStack &filters);
     void parseStatsAndOrLine(char *line, const LogicalConnective &connective);
     void parseStatsNegateLine(char *line);
-    void parseColumnsLine(const char *line, const ColumnCreator &make_column,
-                          Logger *logger);
+    void parseColumnsLine(const char *line, const ColumnCreator &make_column);
     void parseColumnHeadersLine(char *line);
     void parseLimitLine(char *line);
     void parseTimelimitLine(char *line);
@@ -136,7 +135,7 @@ private:
     void parseWaitTriggerLine(char *line);
     void parseWaitObjectLine(
         const char *line, const std::function<Row(const std::string &)> &get);
-    void parseLocaltimeLine(char *line, Logger *logger);
+    void parseLocaltimeLine(char *line);
 
     void start(QueryRenderer &q);
     void finish(QueryRenderer &q);

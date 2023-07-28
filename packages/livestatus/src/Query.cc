@@ -113,9 +113,9 @@ Query::Query(const std::list<std::string> &lines, Table &table,
             } else if (header == "StatsGroupBy") {
                 Warning(_logger)
                     << "Warning: StatsGroupBy is deprecated. Please use Columns instead.";
-                parseColumnsLine(arguments, make_column, _logger);
+                parseColumnsLine(arguments, make_column);
             } else if (header == "Columns") {
-                parseColumnsLine(arguments, make_column, _logger);
+                parseColumnsLine(arguments, make_column);
             } else if (header == "ColumnHeaders") {
                 parseColumnHeadersLine(arguments);
             } else if (header == "Limit") {
@@ -149,7 +149,7 @@ Query::Query(const std::list<std::string> &lines, Table &table,
             } else if (header == "WaitTimeout") {
                 parseWaitTimeoutLine(arguments);
             } else if (header == "Localtime") {
-                parseLocaltimeLine(arguments, _logger);
+                parseLocaltimeLine(arguments);
             } else {
                 throw std::runtime_error("undefined request header");
             }
@@ -406,8 +406,8 @@ void Query::parseAuthUserHeader(
     parsed_query_.user = find_user(line);
 }
 
-void Query::parseColumnsLine(const char *line, const ColumnCreator &make_column,
-                             Logger *logger) {
+void Query::parseColumnsLine(const char *line,
+                             const ColumnCreator &make_column) {
     const std::string str = line;
     const std::string sep = " \t\n\v\f\r";
     for (auto pos = str.find_first_not_of(sep); pos != std::string::npos;) {
@@ -419,13 +419,9 @@ void Query::parseColumnsLine(const char *line, const ColumnCreator &make_column,
         try {
             column = make_column(column_name);
         } catch (const std::runtime_error &e) {
-            // Do not fail any longer. We might want to make this configurable.
-            // But not failing has the advantage that an updated GUI, that
-            // expects new columns, will be able to keep compatibility with
-            // older Livestatus versions.
-            Informational(logger)
-                << "replacing non-existing column '" << column_name
-                << "' with null column, reason: " << e.what();
+            // TODO(sp): Do we still need this fallback now that we require the
+            // remote sites to be updated before the central site? We don't do
+            // this for stats/filter lines, either.
             column = std::make_shared<NullColumn>(
                 column_name, "non-existing column", ColumnOffsets{});
         }
@@ -537,7 +533,7 @@ void Query::parseWaitObjectLine(
     }
 }
 
-void Query::parseLocaltimeLine(char *line, Logger *logger) {
+void Query::parseLocaltimeLine(char *line) {
     auto value = nextNonNegativeIntegerArgument(&line);
     // Compute offset to be *added* each time we output our time and
     // *subtracted* from reference value by filter headers
@@ -554,12 +550,6 @@ void Query::parseLocaltimeLine(char *line, Logger *logger) {
     if (std::chrono::abs(offset) >= 24h) {
         throw std::runtime_error(
             "timezone difference greater than or equal to 24 hours");
-    }
-
-    if (offset != 0s) {
-        using hour = std::chrono::duration<double, std::ratio<3600>>;
-        Debug(logger) << "timezone offset is " << mk::ticks<hour>(offset)
-                      << "h";
     }
     parsed_query_.timezone_offset = offset;
 }
